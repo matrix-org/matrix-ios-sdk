@@ -24,4 +24,47 @@ FOUNDATION_EXPORT const unsigned char MatrixSDKVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like #import <MatrixSDK/PublicHeader.h>
 
+#import <MatrixSDK/MXData.h>
 
+#import "MXEvent.h"
+#import "MXPublicRoom.h"
+#import "MXError.h"
+
+// @TBD
+typedef NSString* MXRoomVisibility;
+
+@interface MatrixSDK : NSObject
+
+@property (readonly, nonatomic) NSString *homeserver;
+@property (nonatomic) NSString *user_id;
+@property (readonly, nonatomic) NSString *accessToken;
+@property (readonly, nonatomic) MXData *data;
+
+- (id)initWithHomeServer:(NSString*)homeserver;
+
+/*
+ #pragma mark - Registration operations
+ - (void)getRegisterFlow:(void (^)(NSObject *tbd))success
+ failure:(void (^)(MXError *error))failure;
+ 
+ - (void)register:(void (^)(NSObject *tbd))success
+ failure:(void (^)(MXError *error))failure;
+ 
+ 
+ #pragma mark - Login operations
+ - (void)getLoginFlow:(void (^)(NSObject *tbd))success
+ failure:(void (^)(MXError *error))failure;
+ - (void)login:(void (^)(NSObject *tbd))success
+ failure:(void (^)(MXError *error))failure;
+ */
+
+/**
+ Get the list of public rooms hosted by the home server.
+ 
+ @param success A block object called when the operation succeeds. rooms is an array of MXPublicRoom objects
+ @param failure A block object called when the operation fails.
+ */
+- (void)publicRooms:(void (^)(NSArray *rooms))success
+failure:(void (^)(MXError *error))failure;
+
+@end

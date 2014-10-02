@@ -1,0 +1,75 @@
+/*
+ Copyright 2014 OpenMarket Ltd
+ 
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+ 
+ http://www.apache.org/licenses/LICENSE-2.0
+ 
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ */
+
+#import "MatrixSDK.h"
+
+#import <Mantle.h>
+
+#import "MXRestClient.h"
+
+
+@interface MatrixSDK ()
+{
+    MXRestClient *hsClient;
+}
+@end
+
+@implementation MatrixSDK
+
+
+@synthesize homeserver, user_id, accessToken, data;
+
+- (id)initWithHomeServer:(NSString*)homeserver2
+{
+    self = [super init];
+    if (self)
+    {
+        homeserver = homeserver2;
+        
+        hsClient = [[MXRestClient alloc] initWithHomeServer:homeserver];
+        
+    }
+    return self;
+}
+
+#pragma mark - Event operations
+- (void)publicRooms:(void (^)(NSArray *rooms))success
+            failure:(void (^)(MXError *error))failure
+{
+    [hsClient requestWithMethod:@"GET"
+                           path:@"publicRooms"
+      parameters:nil
+         success:^(NSDictionary *JSONResponse)
+    {
+        NSArray *results = JSONResponse[@"chunk"];
+        NSValueTransformer *transformer = [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXPublicRoom.class];
+        
+        NSArray *publicRooms = [transformer transformedValue:results];
+        
+        NSLog(@"publicRooms: %@", ((MXPublicRoom*)publicRooms[0]).name);
+        
+        NSLog(@"publicRooms: %ld", publicRooms.count);
+        
+        success(publicRooms);
+    }
+         failure:^(MXError *error)
+    {
+        NSLog(@"Error: %@", error);
+        failure(error);
+    }];
+}
+
+@end
