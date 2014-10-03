@@ -19,11 +19,11 @@
 
 #import "MXHomeServer.h"
 
-@interface MXHomeTests : XCTestCase
+@interface MXHomeServerTests : XCTestCase
 
 @end
 
-@implementation MXHomeTests
+@implementation MXHomeServerTests
 
 - (void)setUp {
     [super setUp];
