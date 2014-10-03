@@ -57,24 +57,26 @@
 
         XCTAssert(0 < rooms.count, @"Valid init");
 
-        BOOL bMatrixHQRoom;
+        MXPublicRoom *matrixHQRoom;
         for (MXPublicRoom *room in rooms)
         {
-            // Find the Matrix HQ room by its ID
+            // Find the Matrix HQ room (#matrix:matrix.org) by its ID
             if ([room.room_id isEqualToString:@"!cURbafjkfsMDVwdRDQ:matrix.org"])
             {
-                bMatrixHQRoom = YES;
+                matrixHQRoom = room;
             }
         }
 
-        XCTAssert(bMatrixHQRoom, @"Matrix HQ must be listed in public rooms");
+        XCTAssert(matrixHQRoom, @"Matrix HQ must be listed in public rooms");
+        XCTAssert(matrixHQRoom.name && matrixHQRoom.name.length, @"Matrix HQ should be set");
+        XCTAssert(matrixHQRoom.topic && matrixHQRoom.topic.length, @"Matrix HQ must be listed in public rooms");
+        XCTAssert(0 < matrixHQRoom.num_joined_members, @"The are always someone at #matrix:matrix.org");
 
         [expectation fulfill];
 
     } failure:^(MXError *error) {
-        XCTAssert(NO, @"Error");
+        XCTAssert(NO, @"Unexpecter error");
         [expectation fulfill];
-
     }];
 
     [self waitForExpectationsWithTimeout:1 handler:^(NSError *error) {
