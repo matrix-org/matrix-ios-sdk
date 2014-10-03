@@ -14,23 +14,22 @@
  limitations under the License.
  */
 
-#import "MatrixSDK.h"
+#import "MXHomeServer.h"
 
 #import <Mantle.h>
-
 #import "MXRestClient.h"
 
 
-@interface MatrixSDK ()
+@interface MXHomeServer ()
 {
     MXRestClient *hsClient;
 }
 @end
 
-@implementation MatrixSDK
+@implementation MXHomeServer
 
 
-@synthesize homeserver, user_id, accessToken, data;
+@synthesize homeserver;
 
 - (id)initWithHomeServer:(NSString*)homeserver2
 {
@@ -51,25 +50,25 @@
 {
     [hsClient requestWithMethod:@"GET"
                            path:@"publicRooms"
-      parameters:nil
-         success:^(NSDictionary *JSONResponse)
-    {
-        NSArray *results = JSONResponse[@"chunk"];
-        NSValueTransformer *transformer = [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXPublicRoom.class];
-        
-        NSArray *publicRooms = [transformer transformedValue:results];
-        
-        NSLog(@"publicRooms: %@", ((MXPublicRoom*)publicRooms[0]).name);
-        
-        NSLog(@"publicRooms: %ld", publicRooms.count);
-        
-        success(publicRooms);
-    }
-         failure:^(MXError *error)
-    {
-        NSLog(@"Error: %@", error);
-        failure(error);
-    }];
+                     parameters:nil
+                        success:^(NSDictionary *JSONResponse)
+     {
+         NSArray *results = JSONResponse[@"chunk"];
+         NSValueTransformer *transformer = [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXPublicRoom.class];
+         
+         NSArray *publicRooms = [transformer transformedValue:results];
+         
+         NSLog(@"publicRooms: %@", ((MXPublicRoom*)publicRooms[0]).name);
+         
+         NSLog(@"publicRooms: %d", (int)publicRooms.count);
+         
+         success(publicRooms);
+     }
+                        failure:^(MXError *error)
+     {
+         NSLog(@"Error: %@", error);
+         failure(error);
+     }];
 }
 
 @end
