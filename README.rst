@@ -6,6 +6,12 @@ This open-source library allows you to build iOS apps compatible with Matrix (ht
 This SDK implements an interface to communicate with the Matrix Home Server API which is defined at http://matrix.org/docs/api/client-server/.
 
 
+WARNING: Work in progess
+========================
+
+The SDK is in its early days of development. It is actually unusable as is. Please wait for our official launch announcement before using it.
+
+
 Installation
 ============
 
