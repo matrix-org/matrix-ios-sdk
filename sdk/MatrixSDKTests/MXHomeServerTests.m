@@ -19,7 +19,12 @@
 
 #import "MXHomeServer.h"
 
+#define MX_HOMESERVER_URL @"http://matrix.org"
+
 @interface MXHomeServerTests : XCTestCase
+{
+    MXHomeServer *homeServer;
+}
 
 @end
 
@@ -27,23 +32,52 @@
 
 - (void)setUp {
     [super setUp];
-    // Put setup code here. This method is called before the invocation of each test method in the class.
+
+    homeServer = [[MXHomeServer alloc] initWithHomeServer:MX_HOMESERVER_URL];
 }
 
 - (void)tearDown {
-    // Put teardown code here. This method is called after the invocation of each test method in the class.
+    homeServer = nil;
+
     [super tearDown];
 }
 
-- (void)testExample {
-    // This is an example of a functional test case.
-    XCTAssert(YES, @"Pass");
+- (void)testInit {
+    XCTAssert(nil != homeServer, @"Valid init");
+    XCTAssert([homeServer.homeserver isEqualToString:MX_HOMESERVER_URL], @"Pass");
 }
 
-- (void)testPerformanceExample {
-    // This is an example of a performance test case.
-    [self measureBlock:^{
-        // Put the code you want to measure the time of here.
+- (void)testPublicRooms {
+
+    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
+
+    // Use the hs running at matrix.org as we know there are public rooms there
+    homeServer = [[MXHomeServer alloc] initWithHomeServer:@"http://matrix.org"];
+    [homeServer publicRooms:^(NSArray *rooms) {
+
+        XCTAssert(0 < rooms.count, @"Valid init");
+
+        BOOL bMatrixHQRoom;
+        for (MXPublicRoom *room in rooms)
+        {
+            // Find the Matrix HQ room by its ID
+            if ([room.room_id isEqualToString:@"!cURbafjkfsMDVwdRDQ:matrix.org"])
+            {
+                bMatrixHQRoom = YES;
+            }
+        }
+
+        XCTAssert(bMatrixHQRoom, @"Matrix HQ must be listed in public rooms");
+
+        [expectation fulfill];
+
+    } failure:^(MXError *error) {
+        XCTAssert(NO, @"Error");
+        [expectation fulfill];
+
+    }];
+
+    [self waitForExpectationsWithTimeout:1 handler:^(NSError *error) {
     }];
 }
 
