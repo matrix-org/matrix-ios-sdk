@@ -56,7 +56,6 @@
                  [self handleRoomMessages:room[@"messages"]
                              isLiveEvents:NO direction:NO];
              }
-             
              if ([room objectForKey:@"state"])
              {
                  [self handleEvents:room[@"state"] isLiveEvents:NO isStateEvents:YES pagFrom:nil];
