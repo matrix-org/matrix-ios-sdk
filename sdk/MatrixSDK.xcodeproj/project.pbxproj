@@ -23,6 +23,7 @@
 		320DFDE719DD99B60068622A /* MXRestClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 320DFDD819DD99B60068622A /* MXRestClient.m */; };
 		32C6F93319DD814400EA4E9C /* MatrixSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C6F93219DD814400EA4E9C /* MatrixSDK.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32C6F93D19DD814400EA4E9C /* MatrixSDKTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32C6F93C19DD814400EA4E9C /* MatrixSDKTests.m */; };
+		32D8CAC219DEE6ED002AF8A0 /* MXHomeTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32D8CAC119DEE6ED002AF8A0 /* MXHomeTests.m */; };
 		32F2127A19DE970F009C6DCD /* MXHomeServer.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F2127819DE970F009C6DCD /* MXHomeServer.h */; };
 		32F2127B19DE970F009C6DCD /* MXHomeServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 32F2127919DE970F009C6DCD /* MXHomeServer.m */; };
 		A23A8594855481FEFA0E9A22 /* libPods-MatrixSDK.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E1674C6FF8BBF074E7F76059 /* libPods-MatrixSDK.a */; };
@@ -50,6 +51,7 @@
 		32C6F93819DD814400EA4E9C /* MatrixSDKTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MatrixSDKTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		32C6F93B19DD814400EA4E9C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		32C6F93C19DD814400EA4E9C /* MatrixSDKTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MatrixSDKTests.m; sourceTree = "<group>"; };
+		32D8CAC119DEE6ED002AF8A0 /* MXHomeTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXHomeTests.m; sourceTree = "<group>"; };
 		32F1FE9AF82A426C2EAED587 /* Pods-MatrixSDK.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDK.release.xcconfig"; path = "Pods/Target Support Files/Pods-MatrixSDK/Pods-MatrixSDK.release.xcconfig"; sourceTree = "<group>"; };
 		32F2127819DE970F009C6DCD /* MXHomeServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXHomeServer.h; sourceTree = "<group>"; };
 		32F2127919DE970F009C6DCD /* MXHomeServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXHomeServer.m; sourceTree = "<group>"; };
@@ -164,8 +166,9 @@
 		32C6F93919DD814400EA4E9C /* MatrixSDKTests */ = {
 			isa = PBXGroup;
 			children = (
-				32C6F93C19DD814400EA4E9C /* MatrixSDKTests.m */,
 				32C6F93A19DD814400EA4E9C /* Supporting Files */,
+				32C6F93C19DD814400EA4E9C /* MatrixSDKTests.m */,
+				32D8CAC119DEE6ED002AF8A0 /* MXHomeTests.m */,
 			);
 			path = MatrixSDKTests;
 			sourceTree = "<group>";
@@ -351,6 +354,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				32C6F93D19DD814400EA4E9C /* MatrixSDKTests.m in Sources */,
+				32D8CAC219DEE6ED002AF8A0 /* MXHomeTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -486,8 +490,15 @@
 					"DEBUG=1",
 					"$(inherited)",
 				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"\"${PODS_ROOT}/Headers/Public\"",
+					"\"${PODS_ROOT}/Headers/Public/Mantle\"",
+				);
 				INFOPLIST_FILE = MatrixSDKTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PODS_ROOT = "${SRCROOT}/Pods";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -499,8 +510,15 @@
 					"$(SDKROOT)/Developer/Library/Frameworks",
 					"$(inherited)",
 				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"\"${PODS_ROOT}/Headers/Public\"",
+					"\"${PODS_ROOT}/Headers/Public/Mantle\"",
+				);
 				INFOPLIST_FILE = MatrixSDKTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PODS_ROOT = "${SRCROOT}/Pods";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
