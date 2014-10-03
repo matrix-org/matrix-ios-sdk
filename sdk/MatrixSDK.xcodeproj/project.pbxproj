@@ -21,6 +21,7 @@
 		320DFDE519DD99B60068622A /* MXSession.m in Sources */ = {isa = PBXBuildFile; fileRef = 320DFDD519DD99B60068622A /* MXSession.m */; };
 		320DFDE619DD99B60068622A /* MXRestClient.h in Headers */ = {isa = PBXBuildFile; fileRef = 320DFDD719DD99B60068622A /* MXRestClient.h */; };
 		320DFDE719DD99B60068622A /* MXRestClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 320DFDD819DD99B60068622A /* MXRestClient.m */; };
+		3226DC3819DEED3B00866530 /* MatrixSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32C6F92D19DD814400EA4E9C /* MatrixSDK.framework */; };
 		32C6F93319DD814400EA4E9C /* MatrixSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C6F93219DD814400EA4E9C /* MatrixSDK.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32C6F93D19DD814400EA4E9C /* MatrixSDKTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32C6F93C19DD814400EA4E9C /* MatrixSDKTests.m */; };
 		32D8CAC219DEE6ED002AF8A0 /* MXHomeServerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32D8CAC119DEE6ED002AF8A0 /* MXHomeServerTests.m */; };
@@ -28,6 +29,16 @@
 		32F2127B19DE970F009C6DCD /* MXHomeServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 32F2127919DE970F009C6DCD /* MXHomeServer.m */; };
 		A23A8594855481FEFA0E9A22 /* libPods-MatrixSDK.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E1674C6FF8BBF074E7F76059 /* libPods-MatrixSDK.a */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		3226DC3619DEED2100866530 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 32C6F92419DD814400EA4E9C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 32C6F92C19DD814400EA4E9C;
+			remoteInfo = MatrixSDK;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		2BF02FACC417CA3368671024 /* Pods-MatrixSDK.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDK.debug.xcconfig"; path = "Pods/Target Support Files/Pods-MatrixSDK/Pods-MatrixSDK.debug.xcconfig"; sourceTree = "<group>"; };
@@ -71,6 +82,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3226DC3819DEED3B00866530 /* MatrixSDK.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -242,6 +254,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				3226DC3719DEED2100866530 /* PBXTargetDependency */,
 			);
 			name = MatrixSDKTests;
 			productName = MatrixSDKTests;
@@ -359,6 +372,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		3226DC3719DEED2100866530 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 32C6F92C19DD814400EA4E9C /* MatrixSDK */;
+			targetProxy = 3226DC3619DEED2100866530 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		32C6F93E19DD814400EA4E9C /* Debug */ = {
