@@ -58,7 +58,7 @@
              }
              if ([room objectForKey:@"state"])
              {
-                 [self handleEvents:room[@"state"] isLiveEvents:NO isStateEvents:YES pagFrom:nil];
+                 //[self handleEvents:room[@"state"] isLiveEvents:NO isStateEvents:YES pagFrom:nil];
              }
          }
      }
@@ -106,7 +106,8 @@
         // InitialSync returns messages in chronological order
         for (NSInteger i = events.count - 1; i >= 0; i--)
         {
-            [self handleEvent:events[i] isLiveEvent:isLiveEvents
+            MXEvent *event = events[i];
+            [self handleEvent:event isLiveEvent:isLiveEvents
                  isStateEvent:NO pagFrom:messages[@"end"]];
         }
         
