@@ -56,7 +56,8 @@ NSInteger const kMatrixNSErrorCode = 6;
                                code:kMatrixNSErrorCode
                            userInfo:@{
                                       @"errCode": self.errCode,
-                                      @"error": self.error
+                                      @"error": self.error,
+                                      NSLocalizedDescriptionKey: self.error
                                       }];
 }
 
