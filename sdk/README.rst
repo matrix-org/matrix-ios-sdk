@@ -14,4 +14,4 @@ Then, open ``MatrixSDK.xcworkspace``.
 Tests
 =====
 
-You can run unitary testing from the Xcode Test navigator tab or select the MatrixSDKTests scheme and launch the "Test" action.
+You can run unit tests from the Xcode Test navigator tab or select the MatrixSDKTests scheme and launch the "Test" action.
