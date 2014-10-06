@@ -24,7 +24,6 @@
 		3226DC3819DEED3B00866530 /* MatrixSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32C6F92D19DD814400EA4E9C /* MatrixSDK.framework */; };
 		3281E89E19E299C000976E1A /* MXErrorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3281E89D19E299C000976E1A /* MXErrorTests.m */; };
 		32C6F93319DD814400EA4E9C /* MatrixSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C6F93219DD814400EA4E9C /* MatrixSDK.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		32C6F93D19DD814400EA4E9C /* MatrixSDKTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32C6F93C19DD814400EA4E9C /* MatrixSDKTests.m */; };
 		32D8CAC219DEE6ED002AF8A0 /* MXHomeServerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32D8CAC119DEE6ED002AF8A0 /* MXHomeServerTests.m */; };
 		32F2127A19DE970F009C6DCD /* MXHomeServer.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F2127819DE970F009C6DCD /* MXHomeServer.h */; };
 		32F2127B19DE970F009C6DCD /* MXHomeServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 32F2127919DE970F009C6DCD /* MXHomeServer.m */; };
@@ -63,7 +62,6 @@
 		32C6F93219DD814400EA4E9C /* MatrixSDK.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MatrixSDK.h; sourceTree = "<group>"; };
 		32C6F93819DD814400EA4E9C /* MatrixSDKTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MatrixSDKTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		32C6F93B19DD814400EA4E9C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		32C6F93C19DD814400EA4E9C /* MatrixSDKTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MatrixSDKTests.m; sourceTree = "<group>"; };
 		32D8CAC119DEE6ED002AF8A0 /* MXHomeServerTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXHomeServerTests.m; sourceTree = "<group>"; };
 		32F1FE9AF82A426C2EAED587 /* Pods-MatrixSDK.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDK.release.xcconfig"; path = "Pods/Target Support Files/Pods-MatrixSDK/Pods-MatrixSDK.release.xcconfig"; sourceTree = "<group>"; };
 		32F2127819DE970F009C6DCD /* MXHomeServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXHomeServer.h; sourceTree = "<group>"; };
@@ -181,7 +179,6 @@
 			isa = PBXGroup;
 			children = (
 				32C6F93A19DD814400EA4E9C /* Supporting Files */,
-				32C6F93C19DD814400EA4E9C /* MatrixSDKTests.m */,
 				32D8CAC119DEE6ED002AF8A0 /* MXHomeServerTests.m */,
 				3281E89D19E299C000976E1A /* MXErrorTests.m */,
 			);
@@ -369,7 +366,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				32C6F93D19DD814400EA4E9C /* MatrixSDKTests.m in Sources */,
 				3281E89E19E299C000976E1A /* MXErrorTests.m in Sources */,
 				32D8CAC219DEE6ED002AF8A0 /* MXHomeServerTests.m in Sources */,
 			);
