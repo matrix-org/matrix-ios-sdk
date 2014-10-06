@@ -25,6 +25,13 @@ typedef NSString* MXRoomVisibility;
 
 @property (readonly, nonatomic) NSString *homeserver;
 
+/**
+ Create a MXHomeServer instance.
+ 
+ @param homeserver The home server location (ex: http://matrix.org)
+ 
+ @return The newly-initialized MXHomeServer.
+ */
 - (id)initWithHomeServer:(NSString*)homeserver;
 
 /*

@@ -29,11 +29,39 @@
  */
 @interface MXData : NSObject
 
+/**
+ Create a MXHomeServer instance.
+ This instance will use the passed MXSession to make requests to the home server.
+ 
+ @param mSession The MXSession to the home server.
+ 
+ @return The newly-initialized MXHomeServer.
+ */
 - (id)initWithMatrixSession:(MXSession*)mSession;
 
 - (void)start;
 - (void)stop;
 
+/*
+- (id)registerListener:(NSString*)room_id types:(NSArray*)types block:(void (^)(MXEvent *event))listener;   // room_id: bof. Add a registerListener method to MXRoomData too?
+- (id)unregisterListener:listenerId;
+ */
+
+/**
+ Get the MXRoomData instance of a room.
+ 
+ @param room_id The room id to the room.
+
+ @return the MXRoomData instance.
+ */
 - (MXRoomData *)getRoomData:(NSString*)room_id;
+
+/**
+ Get the list of all last event of all rooms.
+ The returned array is time ordered: the first item is the more recent event.
+ 
+ @return an array of MXEvents.
+ */
+- (NSArray*)recents;
 
 @end

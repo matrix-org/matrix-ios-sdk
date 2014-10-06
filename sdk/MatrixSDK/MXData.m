@@ -77,6 +77,18 @@
     return [rooms objectForKey:room_id];
 }
 
+- (NSArray *)recents
+{
+    NSMutableArray *recents = [NSMutableArray arrayWithCapacity:rooms.count];
+    for (MXRoomData *room in rooms) {
+        [recents addObject:room.lastEvent];
+    }
+    
+    // @TODO: Do time order
+    
+    return recents;
+}
+
 - (MXRoomData *)createRoomData:(NSString *)room_id
 {
     MXRoomData *room = [[MXRoomData alloc] initWithRoomId:room_id];

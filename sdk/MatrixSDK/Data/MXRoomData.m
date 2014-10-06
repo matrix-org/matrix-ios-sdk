@@ -41,6 +41,11 @@
     return events;
 }
 
+- (MXEvent *)lastEvent
+{
+    return events.lastObject;
+}
+
 - (NSArray *)stateEvents
 {
     return stateEvents;

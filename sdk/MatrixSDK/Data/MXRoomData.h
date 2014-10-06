@@ -34,6 +34,11 @@
 @property (nonatomic, readonly, copy) NSArray *events;
 
 /**
+ The last event.
+ */
+@property (nonatomic, readonly, copy) MXEvent *lastEvent;
+
+/**
  The list of state events (actually MXEvent instances).
  
  */
