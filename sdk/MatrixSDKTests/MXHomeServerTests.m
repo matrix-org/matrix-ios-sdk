@@ -75,7 +75,7 @@
         [expectation fulfill];
 
     } failure:^(NSError *error) {
-        XCTAssert(NO, @"Unexpecter error");
+        XCTAssert(NO, @"Unexpecter error: %@", error);
         [expectation fulfill];
     }];
 

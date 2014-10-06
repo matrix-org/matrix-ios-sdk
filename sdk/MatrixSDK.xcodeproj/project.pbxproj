@@ -22,6 +22,7 @@
 		320DFDE619DD99B60068622A /* MXRestClient.h in Headers */ = {isa = PBXBuildFile; fileRef = 320DFDD719DD99B60068622A /* MXRestClient.h */; };
 		320DFDE719DD99B60068622A /* MXRestClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 320DFDD819DD99B60068622A /* MXRestClient.m */; };
 		3226DC3819DEED3B00866530 /* MatrixSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32C6F92D19DD814400EA4E9C /* MatrixSDK.framework */; };
+		3281E89E19E299C000976E1A /* MXErrorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3281E89D19E299C000976E1A /* MXErrorTests.m */; };
 		32C6F93319DD814400EA4E9C /* MatrixSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C6F93219DD814400EA4E9C /* MatrixSDK.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32C6F93D19DD814400EA4E9C /* MatrixSDKTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32C6F93C19DD814400EA4E9C /* MatrixSDKTests.m */; };
 		32D8CAC219DEE6ED002AF8A0 /* MXHomeServerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32D8CAC119DEE6ED002AF8A0 /* MXHomeServerTests.m */; };
@@ -56,6 +57,7 @@
 		320DFDD519DD99B60068622A /* MXSession.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXSession.m; sourceTree = "<group>"; };
 		320DFDD719DD99B60068622A /* MXRestClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRestClient.h; sourceTree = "<group>"; };
 		320DFDD819DD99B60068622A /* MXRestClient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRestClient.m; sourceTree = "<group>"; };
+		3281E89D19E299C000976E1A /* MXErrorTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXErrorTests.m; sourceTree = "<group>"; };
 		32C6F92D19DD814400EA4E9C /* MatrixSDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MatrixSDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		32C6F93119DD814400EA4E9C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		32C6F93219DD814400EA4E9C /* MatrixSDK.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MatrixSDK.h; sourceTree = "<group>"; };
@@ -181,6 +183,7 @@
 				32C6F93A19DD814400EA4E9C /* Supporting Files */,
 				32C6F93C19DD814400EA4E9C /* MatrixSDKTests.m */,
 				32D8CAC119DEE6ED002AF8A0 /* MXHomeServerTests.m */,
+				3281E89D19E299C000976E1A /* MXErrorTests.m */,
 			);
 			path = MatrixSDKTests;
 			sourceTree = "<group>";
@@ -367,6 +370,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				32C6F93D19DD814400EA4E9C /* MatrixSDKTests.m in Sources */,
+				3281E89E19E299C000976E1A /* MXErrorTests.m in Sources */,
 				32D8CAC219DEE6ED002AF8A0 /* MXHomeServerTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
