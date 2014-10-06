@@ -48,8 +48,15 @@ NSString *const kMatrixNSErrorDomain;
 /**
  Generate an NSError for this MXError instance
  
-  @return The newly-initialized NSError..
+  @return The newly-initialized NSError.
  */
 - (NSError*)createNSError;
+
+/**
+ Check if an NSError is in the Matrix error domain
+ 
+ @return A boolean that will be YES if the NSError contains MXError data.
+ */
++ (BOOL)isMXError:(NSError*)nsError;
 
 @end

@@ -37,7 +37,7 @@ NSInteger const kMatrixNSErrorCode = 6;
 
 -(id)initWithNSError:(NSError*)nsError
 {
-    if (nsError && [nsError.domain isEqualToString:kMatrixNSErrorDomain])
+    if ([MXError isMXError:nsError])
     {
         self = [self initWithErrorCode:nsError.userInfo[@"errCode"]
                                  error:nsError.userInfo[@"error"]];
@@ -58,6 +58,15 @@ NSInteger const kMatrixNSErrorCode = 6;
                                       @"errCode": self.errCode,
                                       @"error": self.error
                                       }];
+}
+
++ (BOOL)isMXError:(NSError *)nsError
+{
+    if (nsError && [nsError.domain isEqualToString:kMatrixNSErrorDomain])
+    {
+        return YES;
+    }
+    return NO;
 }
 
 @end
