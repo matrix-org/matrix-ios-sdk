@@ -18,7 +18,8 @@
 
 @implementation MXPublicRoom
 
-+ (NSDictionary *)JSONKeyPathsByPropertyKey {
++ (NSDictionary *)JSONKeyPathsByPropertyKey
+{
     // The key in the JSON and in the class are the sames
     return @{};
 }

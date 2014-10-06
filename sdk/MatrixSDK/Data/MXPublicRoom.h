@@ -21,6 +21,7 @@
 
 @property (nonatomic) NSString *room_id;
 @property (nonatomic) NSString *name;
+@property (nonatomic) NSArray *aliases; // Array of NSString
 @property (nonatomic) NSString *topic;
 @property (nonatomic) NSUInteger num_joined_members;
 
