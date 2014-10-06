@@ -69,4 +69,9 @@ NSInteger const kMatrixNSErrorCode = 6;
     return NO;
 }
 
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"%@ - %@", self.errCode, self.error];
+}
+
 @end
