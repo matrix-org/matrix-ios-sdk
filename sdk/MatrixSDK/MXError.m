@@ -52,13 +52,22 @@ NSInteger const kMatrixNSErrorCode = 6;
 
 - (NSError *)createNSError
 {
+    NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
+
+    if (self.error)
+    {
+        userInfo[@"error"] = self.error;
+        userInfo[NSLocalizedDescriptionKey] = self.error;
+    }
+
+    if (self.errCode)
+    {
+        userInfo[@"errCode"] = self.errCode;
+    }
+
     return [NSError errorWithDomain:kMatrixNSErrorDomain
                                code:kMatrixNSErrorCode
-                           userInfo:@{
-                                      @"errCode": self.errCode,
-                                      @"error": self.error,
-                                      NSLocalizedDescriptionKey: self.error
-                                      }];
+                           userInfo:userInfo];
 }
 
 + (BOOL)isMXError:(NSError *)nsError
