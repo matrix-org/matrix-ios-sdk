@@ -16,7 +16,7 @@
 
 #import <Mantle/Mantle.h>
 
-NSString *const kMatrixEventTypeRoomMessage;
+FOUNDATION_EXPORT NSString *const kMatrixEventTypeRoomMessage;
 
 /**
  `MXEvent` is the generic model of events received from the home server.

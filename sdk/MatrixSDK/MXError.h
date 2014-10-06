@@ -16,7 +16,7 @@
 
 #import <Foundation/Foundation.h>
 
-NSString *const kMatrixNSErrorDomain;
+FOUNDATION_EXPORT NSString *const kMatrixNSErrorDomain;
 
 /**
  `MXError` represents an error sent by the home server.
