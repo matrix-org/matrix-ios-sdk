@@ -79,8 +79,7 @@
         [expectation fulfill];
     }];
 
-    [self waitForExpectationsWithTimeout:10000 handler:^(NSError *error) {
-    }];
+    [self waitForExpectationsWithTimeout:10000 handler:nil];
 }
 
 @end
