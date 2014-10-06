@@ -16,7 +16,6 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXError.h"
 #import "MXPublicRoom.h"
 
 // @TBD
@@ -31,17 +30,17 @@ typedef NSString* MXRoomVisibility;
 /*
  #pragma mark - Registration operations
  - (void)getRegisterFlow:(void (^)(NSObject *tbd))success
- failure:(void (^)(MXError *error))failure;
+ failure:(void (^)(NSError *error))failure;
  
  - (void)register:(void (^)(NSObject *tbd))success
- failure:(void (^)(MXError *error))failure;
+ failure:(void (^)(NSError *error))failure;
  
  
  #pragma mark - Login operations
  - (void)getLoginFlow:(void (^)(NSObject *tbd))success
- failure:(void (^)(MXError *error))failure;
+ failure:(void (^)(NSError *error))failure;
  - (void)login:(void (^)(NSObject *tbd))success
- failure:(void (^)(MXError *error))failure;
+ failure:(void (^)(NSError *error))failure;
  */
 
 /**
@@ -51,6 +50,6 @@ typedef NSString* MXRoomVisibility;
  @param failure A block object called when the operation fails.
  */
 - (void)publicRooms:(void (^)(NSArray *rooms))success
-            failure:(void (^)(MXError *error))failure;
+            failure:(void (^)(NSError *error))failure;
 
 @end

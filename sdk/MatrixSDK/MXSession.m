@@ -48,7 +48,7 @@
 
 -(void)initialSync:(NSInteger)limit
            success:(void (^)(NSDictionary *))success
-           failure:(void (^)(MXError *))failure
+           failure:(void (^)(NSError *))failure
 {
     [hsClient requestWithMethod:@"GET"
                            path:@"initialSync"
@@ -60,7 +60,7 @@
          
          success(JSONResponse);
      }
-                        failure:^(MXError *error)
+                        failure:^(NSError *error)
      {
          NSLog(@"Error: %@", error);
      }];

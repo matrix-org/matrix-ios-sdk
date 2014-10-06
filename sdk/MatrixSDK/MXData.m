@@ -62,7 +62,7 @@
              }
          }
      }
-     failure:^(MXError *error) {
+     failure:^(NSError *error) {
          NSLog(@"%@", error);
      }];
 }

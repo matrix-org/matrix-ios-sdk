@@ -16,9 +16,15 @@
 
 #import "MXError.h"
 
+NSString *const kMatrixNSErrorDomain = @"org.matrix.sdk";
+
+// Random NSError code
+// Matrix does not use integer but string for error code
+NSInteger const kMatrixNSErrorCode = 6;
+
 @implementation MXError
 
--(id)initWithErrorCode:(MXErrorCode)errCode error:(NSString*)error
+-(id)initWithErrorCode:(NSString*)errCode error:(NSString*)error
 {
     self = [super init];
     if (self)
@@ -31,11 +37,27 @@
 
 -(id)initWithNSError:(NSError*)nsError
 {
-    self = [super init];
-    if (self)
+    if (nsError && [nsError.domain isEqualToString:kMatrixNSErrorDomain])
     {
-        _nsError = nsError;
+        self = [self initWithErrorCode:nsError.userInfo[@"errCode"]
+                                 error:nsError.userInfo[@"error"]];
     }
+    else
+    {
+        self = nil;
+    }
+
     return self;
 }
+
+- (NSError *)createNSError
+{
+    return [NSError errorWithDomain:kMatrixNSErrorDomain
+                               code:kMatrixNSErrorCode
+                           userInfo:@{
+                                      @"errCode": self.errCode,
+                                      @"error": self.error
+                                      }];
+}
+
 @end

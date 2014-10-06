@@ -25,3 +25,4 @@ FOUNDATION_EXPORT const unsigned char MatrixSDKVersionString[];
 #import <MatrixSDK/MXHomeServer.h>
 #import <MatrixSDK/MXSession.h>
 #import <MatrixSDK/MXData.h>
+#import <MatrixSDK/MXError.h>

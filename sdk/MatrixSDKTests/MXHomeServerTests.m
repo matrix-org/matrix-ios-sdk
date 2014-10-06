@@ -74,12 +74,12 @@
 
         [expectation fulfill];
 
-    } failure:^(MXError *error) {
+    } failure:^(NSError *error) {
         XCTAssert(NO, @"Unexpecter error");
         [expectation fulfill];
     }];
 
-    [self waitForExpectationsWithTimeout:1 handler:^(NSError *error) {
+    [self waitForExpectationsWithTimeout:10000 handler:^(NSError *error) {
     }];
 }
 

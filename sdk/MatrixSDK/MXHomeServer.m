@@ -46,7 +46,7 @@
 
 #pragma mark - Event operations
 - (void)publicRooms:(void (^)(NSArray *rooms))success
-            failure:(void (^)(MXError *error))failure
+            failure:(void (^)(NSError *error))failure
 {
     [hsClient requestWithMethod:@"GET"
                            path:@"publicRooms"
@@ -64,7 +64,7 @@
          
          success(publicRooms);
      }
-                        failure:^(MXError *error)
+                        failure:^(NSError *error)
      {
          NSLog(@"Error: %@", error);
          failure(error);

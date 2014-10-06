@@ -51,7 +51,7 @@
                                          path:(NSString *)path
                                    parameters:(id)parameters
                                       success:(void (^)(NSDictionary *JSONResponse))success
-                                      failure:(void (^)(MXError *error))failure
+                                      failure:(void (^)(NSError *error))failure
 {
     if (access_token)
     {
@@ -67,8 +67,7 @@
             success(JSONResponse);
         }
         failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-            MXError *mError = [[MXError alloc] initWithNSError:error];
-            failure(mError);
+            failure(error);
         }];
     
     [httpManager.operationQueue addOperation:operation];

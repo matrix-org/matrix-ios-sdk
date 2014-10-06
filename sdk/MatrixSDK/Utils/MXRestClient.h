@@ -16,8 +16,6 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXError.h"
-
 /**
  `MXRestClient` is an abstraction layer for making HTTP requests to the home server.
 */
@@ -31,5 +29,5 @@
                    path:(NSString *)path
              parameters:(id)parameters
                 success:(void (^)(NSDictionary *JSONResponse))success
-                failure:(void (^)(MXError *error))failure;
+                failure:(void (^)(NSError *error))failure;
 @end

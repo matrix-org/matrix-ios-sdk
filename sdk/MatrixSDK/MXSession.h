@@ -16,8 +16,6 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXError.h"
-
 // TODO
 typedef NSString* MXRoomVisibility;
 
@@ -38,81 +36,81 @@ typedef NSString* MXRoomVisibility;
 #pragma mark - Room operations
 - (void)join:(NSString*)room_id
      success:(void (^)())success
-     failure:(void (^)(MXError *error))failure;
+     failure:(void (^)(NSError *error))failure;
 
 - (void)leave:(NSString*)room_id
       success:(void (^)())success
-      failure:(void (^)(MXError *error))failure;
+      failure:(void (^)(NSError *error))failure;
 
 - (void)invite:(NSString*)room_id
        user_id:(NSString*)user_id
        success:(void (^)())success
-       failure:(void (^)(MXError *error))failure;
+       failure:(void (^)(NSError *error))failure;
 
 - (void)kick:(NSString*)room_id
      user_id:(NSString*)user_id
      success:(void (^)())success
-     failure:(void (^)(MXError *error))failure;
+     failure:(void (^)(NSError *error))failure;
 
 - (void)ban:(NSString*)room_id
     user_id:(NSString*)user_id
     success:(void (^)())success
-    failure:(void (^)(MXError *error))failure;
+    failure:(void (^)(NSError *error))failure;
 
 - (void)createRoom:(NSString*)name
         visibility:(MXRoomVisibility)visibility
    room_alias_name:(NSString*)room_alias_name
              topic:(NSString*)topic
            success:(void (^)(NSArray *members))success
-           failure:(void (^)(MXError *error))failure;
+           failure:(void (^)(NSError *error))failure;
 
 // Duplicate???
 - (void)messages:(NSString*)room_id
          success:(void (^)(NSArray *members))success
-         failure:(void (^)(MXError *error))failure;
+         failure:(void (^)(NSError *error))failure;
 
 - (void)messages:(NSString*)room_id
             from:(NSString*)from
               to:(NSString*)from
            limit:(NSString*)from
          success:(void (^)(NSArray *members))success
-         failure:(void (^)(MXError *error))failure;
+         failure:(void (^)(NSError *error))failure;
 
 - (void)members:(NSString*)room_id
         success:(void (^)(NSArray *members))success
-        failure:(void (^)(MXError *error))failure;
+        failure:(void (^)(NSError *error))failure;
 
 - (void)state:(NSString*)room_id
       success:(void (^)(NSArray *states))success
-      failure:(void (^)(MXError *error))failure;
+      failure:(void (^)(NSError *error))failure;
 
 - (void)initialRoomSync:(NSString*)room_id
                 success:(void (^)(NSObject *tbd))success
-                failure:(void (^)(MXError *error))failure;
+                failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Profile operations
 - (void)setDisplayName:(NSString*)displayname
                success:(void (^)())success
-               failure:(void (^)(MXError *error))failure;
+               failure:(void (^)(NSError *error))failure;
 
 - (void)getDisplayName:(NSString*)user_id
                success:(void (^)(NSString *displayname))success
-               failure:(void (^)(MXError *error))failure;
+               failure:(void (^)(NSError *error))failure;
 
 - (void)setAvatarUrl:(NSString*)avatar_url
              success:(void (^)())success
-             failure:(void (^)(MXError *error))failure;
+             failure:(void (^)(NSError *error))failure;
 
 - (void)getAvatarUrl:(NSString*)user_id
              success:(void (^)(NSString *avatar_url))success
-             failure:(void (^)(MXError *error))failure;
+             failure:(void (^)(NSError *error))failure;
 
 */
 
 #pragma mark - Event operations
 - (void)initialSync:(NSInteger)limit
             success:(void (^)(NSDictionary *JSONData))success
-            failure:(void (^)(MXError *error))failure;
+            failure:(void (^)(NSError *error))failure;
 
 @end

@@ -16,16 +16,40 @@
 
 #import <Foundation/Foundation.h>
 
-typedef NSString* MXErrorCode;
+NSString *const kMatrixNSErrorDomain;
 
+/**
+ `MXError` represents an error sent by the home server.
+ MXErrors are encapsulated in NSError. This class is an helper to create NSError or extract MXError from NSError.
+ */
 @interface MXError : NSObject
 
-@property (nonatomic, readonly) MXErrorCode errCode;
+/**
+ The error code. This is a string like "M_FORBIDDEN"
+ */
+@property (nonatomic, readonly) NSString *errCode;
+
+/**
+ The error description
+ */
 @property (nonatomic, readonly) NSString *error;
 
-@property (nonatomic, readonly) NSError *nsError;
+- (id)initWithErrorCode:(NSString*)errCode error:(NSString*)error;
 
--(id)initWithErrorCode:(MXErrorCode)errCode error:(NSString*)error;
--(id)initWithNSError:(NSError*)nsError;
+/**
+ Create a MXError from a NSError.
+ 
+ @param nsError The NSError object that is supposed to contain MXError data in its userInfo.
+ 
+ @return The newly-initialized MXError. nil if nsError does not contain MXData.
+ */
+- (id)initWithNSError:(NSError*)nsError;
+
+/**
+ Generate an NSError for this MXError instance
+ 
+  @return The newly-initialized NSError..
+ */
+- (NSError*)createNSError;
 
 @end
