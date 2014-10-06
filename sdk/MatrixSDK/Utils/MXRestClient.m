@@ -15,6 +15,7 @@
  */
 
 #import "MXRestClient.h"
+#import "MXError.h"
 
 #import <AFNetworking.h>
 
@@ -22,6 +23,7 @@
 
 @interface MXRestClient ()
 {
+    // Use AFNetworking as HTTP client
     AFHTTPRequestOperationManager *httpManager;
     
     NSString *access_token;
@@ -67,6 +69,23 @@
             success(JSONResponse);
         }
         failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+            NSLog(@"Request failed for path: %@ - HTTP code: %ld", path, operation.response.statusCode);
+
+            if (operation.responseData)
+            {
+                // If the home server sent data, it contains errCode and error
+                // Try to send an NSError encapsulating MXError information
+                NSError *serializationError = nil;
+                NSDictionary *JSONResponse = [httpManager.responseSerializer responseObjectForResponse:operation.response
+                                                                                      data:operation.responseData
+                                                                                     error:&serializationError];
+                if (JSONResponse)
+                {
+                    // Extract values from the home server JSON response
+                    error = [[[MXError alloc] initWithErrorCode:JSONResponse[@"errCode"]
+                                                         error:JSONResponse[@"error"]] createNSError];
+                }
+            }
             failure(error);
         }];
     
