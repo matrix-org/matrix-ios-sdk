@@ -10,3 +10,8 @@ The project has some third party library dependencies declared in a pod file. Yo
 
 Then, open ``MatrixSDK.xcworkspace``. 
 
+
+Tests
+=====
+
+You can run unitary testing from the Xcode Test navigator tab or select the MatrixSDKTests scheme and launch the "Test" action.
