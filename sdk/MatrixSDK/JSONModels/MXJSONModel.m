@@ -13,20 +13,17 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  */
-#import <Foundation/Foundation.h>
 
-#import <Mantle/Mantle.h>
+#import "MXJSONModel.h"
 
-@interface MXPublicRoom : MTLModel <MTLJSONSerializing>
+@implementation MXJSONModel
 
-@property (nonatomic) NSString *room_id;
-@property (nonatomic) NSString *name;
-@property (nonatomic) NSArray *aliases; // Array of NSString
-@property (nonatomic) NSString *topic;
-@property (nonatomic) NSUInteger num_joined_members;
-
-// The display name is computed from available information
-// @TODO: move it to MXData as this class has additional information to compute the optimal display name
-@property (nonatomic, readonly) NSString *displayname;
++ (NSDictionary *)JSONKeyPathsByPropertyKey
+{
+    // The class that inherits from MXJSONModel should declare its properties as they are
+    // defined in the Matrix home server JSON response.
+    // So, let Mantle do the mapping automatically
+    return @{};
+}
 
 @end

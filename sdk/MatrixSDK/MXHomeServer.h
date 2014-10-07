@@ -16,7 +16,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXPublicRoom.h"
+#import "MXJSONModels.h"
 
 // @TBD
 typedef NSString* MXRoomVisibility;

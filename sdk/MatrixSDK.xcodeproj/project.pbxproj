@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		320DFDD919DD99B60068622A /* MXPublicRoom.h in Headers */ = {isa = PBXBuildFile; fileRef = 320DFDC819DD99B60068622A /* MXPublicRoom.h */; };
-		320DFDDA19DD99B60068622A /* MXPublicRoom.m in Sources */ = {isa = PBXBuildFile; fileRef = 320DFDC919DD99B60068622A /* MXPublicRoom.m */; };
 		320DFDDB19DD99B60068622A /* MXRoomData.h in Headers */ = {isa = PBXBuildFile; fileRef = 320DFDCA19DD99B60068622A /* MXRoomData.h */; };
 		320DFDDC19DD99B60068622A /* MXRoomData.m in Sources */ = {isa = PBXBuildFile; fileRef = 320DFDCB19DD99B60068622A /* MXRoomData.m */; };
 		320DFDDD19DD99B60068622A /* MXEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 320DFDCD19DD99B60068622A /* MXEvent.h */; };
@@ -26,6 +24,10 @@
 		3281E8A019E2CC1200976E1A /* MXRestClientTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3281E89F19E2CC1200976E1A /* MXRestClientTests.m */; };
 		3281E8A219E2DE4300976E1A /* MXDataTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3281E8A119E2DE4300976E1A /* MXDataTests.m */; };
 		3281E8A819E41A2000976E1A /* MatrixSDKTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3281E8A719E41A2000976E1A /* MatrixSDKTests.m */; };
+		3281E8B719E42DFE00976E1A /* MXJSONModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 3281E8B319E42DFE00976E1A /* MXJSONModel.h */; };
+		3281E8B819E42DFE00976E1A /* MXJSONModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 3281E8B419E42DFE00976E1A /* MXJSONModel.m */; };
+		3281E8B919E42DFE00976E1A /* MXJSONModels.h in Headers */ = {isa = PBXBuildFile; fileRef = 3281E8B519E42DFE00976E1A /* MXJSONModels.h */; };
+		3281E8BA19E42DFE00976E1A /* MXJSONModels.m in Sources */ = {isa = PBXBuildFile; fileRef = 3281E8B619E42DFE00976E1A /* MXJSONModels.m */; };
 		32C6F93319DD814400EA4E9C /* MatrixSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C6F93219DD814400EA4E9C /* MatrixSDK.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32D8CAC219DEE6ED002AF8A0 /* MXHomeServerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32D8CAC119DEE6ED002AF8A0 /* MXHomeServerTests.m */; };
 		32F2127A19DE970F009C6DCD /* MXHomeServer.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F2127819DE970F009C6DCD /* MXHomeServer.h */; };
@@ -45,8 +47,6 @@
 
 /* Begin PBXFileReference section */
 		2BF02FACC417CA3368671024 /* Pods-MatrixSDK.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDK.debug.xcconfig"; path = "Pods/Target Support Files/Pods-MatrixSDK/Pods-MatrixSDK.debug.xcconfig"; sourceTree = "<group>"; };
-		320DFDC819DD99B60068622A /* MXPublicRoom.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXPublicRoom.h; sourceTree = "<group>"; };
-		320DFDC919DD99B60068622A /* MXPublicRoom.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXPublicRoom.m; sourceTree = "<group>"; };
 		320DFDCA19DD99B60068622A /* MXRoomData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRoomData.h; sourceTree = "<group>"; };
 		320DFDCB19DD99B60068622A /* MXRoomData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRoomData.m; sourceTree = "<group>"; };
 		320DFDCD19DD99B60068622A /* MXEvent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXEvent.h; sourceTree = "<group>"; };
@@ -64,6 +64,10 @@
 		3281E8A119E2DE4300976E1A /* MXDataTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXDataTests.m; sourceTree = "<group>"; };
 		3281E8A619E41A2000976E1A /* MatrixSDKTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MatrixSDKTests.h; sourceTree = "<group>"; };
 		3281E8A719E41A2000976E1A /* MatrixSDKTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MatrixSDKTests.m; sourceTree = "<group>"; };
+		3281E8B319E42DFE00976E1A /* MXJSONModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXJSONModel.h; sourceTree = "<group>"; };
+		3281E8B419E42DFE00976E1A /* MXJSONModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXJSONModel.m; sourceTree = "<group>"; };
+		3281E8B519E42DFE00976E1A /* MXJSONModels.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXJSONModels.h; sourceTree = "<group>"; };
+		3281E8B619E42DFE00976E1A /* MXJSONModels.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXJSONModels.m; sourceTree = "<group>"; };
 		32C6F92D19DD814400EA4E9C /* MatrixSDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MatrixSDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		32C6F93119DD814400EA4E9C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		32C6F93219DD814400EA4E9C /* MatrixSDK.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MatrixSDK.h; sourceTree = "<group>"; };
@@ -108,8 +112,6 @@
 		320DFDC719DD99B60068622A /* Data */ = {
 			isa = PBXGroup;
 			children = (
-				320DFDC819DD99B60068622A /* MXPublicRoom.h */,
-				320DFDC919DD99B60068622A /* MXPublicRoom.m */,
 				320DFDCA19DD99B60068622A /* MXRoomData.h */,
 				320DFDCB19DD99B60068622A /* MXRoomData.m */,
 			);
@@ -132,6 +134,17 @@
 				320DFDD819DD99B60068622A /* MXRestClient.m */,
 			);
 			path = Utils;
+			sourceTree = "<group>";
+		};
+		3281E8B219E42DFE00976E1A /* JSONModels */ = {
+			isa = PBXGroup;
+			children = (
+				3281E8B319E42DFE00976E1A /* MXJSONModel.h */,
+				3281E8B419E42DFE00976E1A /* MXJSONModel.m */,
+				3281E8B519E42DFE00976E1A /* MXJSONModels.h */,
+				3281E8B619E42DFE00976E1A /* MXJSONModels.m */,
+			);
+			path = JSONModels;
 			sourceTree = "<group>";
 		};
 		32C6F92319DD814400EA4E9C = {
@@ -159,6 +172,7 @@
 			children = (
 				320DFDC719DD99B60068622A /* Data */,
 				320DFDCC19DD99B60068622A /* Events */,
+				3281E8B219E42DFE00976E1A /* JSONModels */,
 				320DFDD619DD99B60068622A /* Utils */,
 				32C6F93219DD814400EA4E9C /* MatrixSDK.h */,
 				32F2127819DE970F009C6DCD /* MXHomeServer.h */,
@@ -220,8 +234,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				32F2127A19DE970F009C6DCD /* MXHomeServer.h in Headers */,
+				3281E8B719E42DFE00976E1A /* MXJSONModel.h in Headers */,
 				32C6F93319DD814400EA4E9C /* MatrixSDK.h in Headers */,
-				320DFDD919DD99B60068622A /* MXPublicRoom.h in Headers */,
+				3281E8B919E42DFE00976E1A /* MXJSONModels.h in Headers */,
 				320DFDE419DD99B60068622A /* MXSession.h in Headers */,
 				320DFDDD19DD99B60068622A /* MXEvent.h in Headers */,
 				320DFDE019DD99B60068622A /* MXData.h in Headers */,
@@ -362,8 +377,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				320DFDDA19DD99B60068622A /* MXPublicRoom.m in Sources */,
+				3281E8B819E42DFE00976E1A /* MXJSONModel.m in Sources */,
 				320DFDE319DD99B60068622A /* MXError.m in Sources */,
+				3281E8BA19E42DFE00976E1A /* MXJSONModels.m in Sources */,
 				320DFDE719DD99B60068622A /* MXRestClient.m in Sources */,
 				320DFDDE19DD99B60068622A /* MXEvent.m in Sources */,
 				320DFDE119DD99B60068622A /* MXData.m in Sources */,

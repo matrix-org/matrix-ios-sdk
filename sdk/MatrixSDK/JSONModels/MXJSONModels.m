@@ -14,10 +14,23 @@
  limitations under the License.
  */
 
-#import "MXEvent.h"
+#import "MXJSONModels.h"
 
-@implementation MXEvent
-
-NSString *const kMatrixEventTypeRoomMessage = @"m.room.message";
-
+@implementation MXPublicRoom
+-(NSString *)displayname
+{
+    NSString *displayname;
+    if (self.aliases && 0 < self.aliases.count)
+    {
+        // TODO(same as in webclient code): select the smarter alias from the array
+        displayname = self.aliases[0];
+    }
+    else
+    {
+        NSLog(@"Warning: room id leak for %@", self.room_id);
+        displayname = self.room_id;
+    }
+    
+    return displayname;
+}
 @end

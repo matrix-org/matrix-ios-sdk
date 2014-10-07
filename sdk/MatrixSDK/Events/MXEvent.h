@@ -14,7 +14,7 @@
  limitations under the License.
  */
 
-#import <Mantle/Mantle.h>
+#import "MXJSONModel.h"
 
 FOUNDATION_EXPORT NSString *const kMatrixEventTypeRoomMessage;
 
@@ -27,7 +27,7 @@ FOUNDATION_EXPORT NSString *const kMatrixEventTypeRoomMessage;
  @TODO: Create specialised event classes
  
  */
-@interface MXEvent : MTLModel <MTLJSONSerializing>
+@interface MXEvent : MXJSONModel
 
 @property (nonatomic) NSString *event_id;
 

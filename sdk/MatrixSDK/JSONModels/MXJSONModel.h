@@ -14,31 +14,14 @@
  limitations under the License.
  */
 
-#import "MXPublicRoom.h"
+#import <Foundation/Foundation.h>
 
-@implementation MXPublicRoom
+#import <Mantle/Mantle.h>
 
-+ (NSDictionary *)JSONKeyPathsByPropertyKey
-{
-    // The key in the JSON and in the class are the sames
-    return @{};
-}
-
--(NSString *)displayname
-{
-    NSString *displayname;
-    if (self.aliases && 0 < self.aliases.count)
-    {
-        // TODO(same as webclient): select the smarter alias from the array
-        displayname = self.aliases[0];
-    }
-    else
-    {
-        NSLog(@"Warning: room id leak for %@", self.room_id);
-        displayname = self.room_id;
-    }
-
-    return displayname;
-}
-
+/**
+ A class that inherits from `MXJSONModel` represents the response to a request to a Matrix home server.
+ 
+ Matrix home server responses are a JSON string. The `MXJSONModel` class maps the members in the JSON object to the properties declared in the class that inherits from MXJSONModel
+ */
+@interface MXJSONModel : MTLModel <MTLJSONSerializing>
 @end
