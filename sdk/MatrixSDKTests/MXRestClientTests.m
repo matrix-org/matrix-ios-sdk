@@ -20,8 +20,7 @@
 #import "MXRestClient.h"
 #import "MXError.h"
 
-#define MX_HOMESERVER_URL @"http://matrix.org"
-#define MX_NOT_A_HOMESERVER_URL @"http://matrix.org/non-existing-path"
+#import "MatrixSDKTests.h"
 
 @interface MXRestClientTests : XCTestCase
 
@@ -44,7 +43,7 @@
 
 - (void)testMainThread {
 
-    MXRestClient *hsClient = [[MXRestClient alloc] initWithHomeServer:MX_HOMESERVER_URL];
+    MXRestClient *hsClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsMatrixHomeServerURL];
 
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
 
@@ -68,7 +67,7 @@
 
 - (void)testMXError {
     
-    MXRestClient *hsClient = [[MXRestClient alloc] initWithHomeServer:MX_HOMESERVER_URL];
+    MXRestClient *hsClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsMatrixHomeServerURL];
     
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
 
@@ -94,7 +93,7 @@
 
 - (void)testNSError {
     
-    MXRestClient *hsClient = [[MXRestClient alloc] initWithHomeServer:MX_NOT_A_HOMESERVER_URL];
+    MXRestClient *hsClient = [[MXRestClient alloc] initWithHomeServer:@"http://matrix.org/non-existing-path"];
     
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
     

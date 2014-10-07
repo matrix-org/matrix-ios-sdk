@@ -17,9 +17,9 @@
 #import <UIKit/UIKit.h>
 #import <XCTest/XCTest.h>
 
-#import "MXHomeServer.h"
+#import "MatrixSDKTests.h"
 
-#define MX_HOMESERVER_URL @"http://matrix.org"
+#import "MXHomeServer.h"
 
 @interface MXHomeServerTests : XCTestCase
 {
@@ -33,7 +33,7 @@
 - (void)setUp {
     [super setUp];
 
-    homeServer = [[MXHomeServer alloc] initWithHomeServer:MX_HOMESERVER_URL];
+    homeServer = [[MXHomeServer alloc] initWithHomeServer:kMXTestsMatrixHomeServerURL];
 }
 
 - (void)tearDown {
@@ -44,7 +44,7 @@
 
 - (void)testInit {
     XCTAssert(nil != homeServer, @"Valid init");
-    XCTAssert([homeServer.homeserver isEqualToString:MX_HOMESERVER_URL], @"Pass");
+    XCTAssert([homeServer.homeserver isEqualToString:kMXTestsMatrixHomeServerURL], @"Pass");
 }
 
 - (void)testPublicRooms {

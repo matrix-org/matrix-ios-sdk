@@ -17,9 +17,10 @@
 #import <UIKit/UIKit.h>
 #import <XCTest/XCTest.h>
 
+#import "MatrixSDKTests.h"
+
 #import "MXData.h"
 
-#define MX_HOMESERVER_URL @"http://matrix.org"
 
 // @TODO: Find an automatic way to test with an user account
 #define MX_USER_ID @"@your_name:matrig.org"
@@ -37,7 +38,7 @@
 {
     [super setUp];
 
-    MXSession *matrixSession = [[MXSession alloc] initWithHomeServer:MX_HOMESERVER_URL
+    MXSession *matrixSession = [[MXSession alloc] initWithHomeServer:kMXTestsHomeServerURL
                                                               userId:MX_USER_ID
                                                          accessToken:MX_ACCESS_TOKEN];
     
