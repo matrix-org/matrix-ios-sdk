@@ -41,6 +41,31 @@
     [super tearDown];
 }
 
+
+- (void)testMainThread {
+
+    MXRestClient *hsClient = [[MXRestClient alloc] initWithHomeServer:MX_HOMESERVER_URL];
+
+    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
+
+    [hsClient requestWithMethod:@"GET"
+                           path:@"publicRooms"
+                     parameters:nil
+                        success:^(NSDictionary *JSONResponse)
+     {
+         XCTAssert([NSThread isMainThread], @"The block callback must be called from the main thread");
+         [expectation fulfill];
+     }
+                        failure:^(NSError *error)
+     {
+         XCTAssert(NO, @"The request should succeed");
+         [expectation fulfill];
+     }];
+
+    [self waitForExpectationsWithTimeout:10000 handler:nil];
+}
+
+
 - (void)testMXError {
     
     MXRestClient *hsClient = [[MXRestClient alloc] initWithHomeServer:MX_HOMESERVER_URL];
@@ -58,6 +83,8 @@
                         failure:^(NSError *error)
      {
          XCTAssert([MXError isMXError:error], @"The HTTP client must have detected a Home Server error");
+   
+         XCTAssert([NSThread isMainThread], @"The block callback must be called from the main thread");
          
          [expectation fulfill];
      }];
@@ -83,6 +110,8 @@
      {
          XCTAssert(NO == [MXError isMXError:error], @"The HTTP client must not have detected a Home Server error");
          
+         XCTAssert([NSThread isMainThread], @"The block callback must be called from the main thread");
+
          [expectation fulfill];
      }];
     
