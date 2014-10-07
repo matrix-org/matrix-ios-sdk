@@ -62,7 +62,7 @@
      }
                         failure:^(NSError *error)
      {
-         NSLog(@"Error: %@", error);
+         failure(error);
      }];
 }
 
