@@ -39,8 +39,25 @@
  */
 - (id)initWithMatrixSession:(MXSession*)mSession;
 
-- (void)start;
-- (void)stop;
+/**
+ Start fetching events from the home server to feed the local data storage.
+ 
+ The function begins with making a initialSync request to the home server to get information
+ about the rooms the user has interactions.
+ During the initialSync, the last message of each room is retrieved (and stored as all
+ events coming from the server).
+ 
+ After the initialSync, the function keeps an open connection with the home server to
+ listen to new coming events.
+ 
+ @param initialSyncDone A block object called when the initialSync step is done. This means
+                        this instance is ready to shared data.
+ @param failure A block object called when the operation fails.
+ */
+- (void)start:(void (^)())initialSyncDone
+      failure:(void (^)(NSError *error))failure;
+
+- (void)close;
 
 /*
 - (id)registerListener:(NSString*)room_id types:(NSArray*)types block:(void (^)(MXEvent *event))listener;   // room_id: bof. Add a registerListener method to MXRoomData too?

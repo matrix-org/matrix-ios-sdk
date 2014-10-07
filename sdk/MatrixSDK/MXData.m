@@ -46,11 +46,12 @@
     return self;
 }
 
-- (void)start
+- (void)start:(void (^)())initialSyncDone
+      failure:(void (^)(NSError *error))failure
 {
     [matrixSession initialSync:1 success:^(NSDictionary *JSONData) {
-         for (NSDictionary *room in JSONData[@"rooms"]) {
-             
+         for (NSDictionary *room in JSONData[@"rooms"])
+         {
              if ([room objectForKey:@"messages"])
              {
                  [self handleRoomMessages:room[@"messages"]
@@ -60,14 +61,19 @@
              {
                  //[self handleEvents:room[@"state"] isLiveEvents:NO isStateEvents:YES pagFrom:nil];
              }
-         }
+        }
+        
+        // We have data, the MXData client can start using it
+        initialSyncDone();
+        
+        // @TODO: Start listening to live events
      }
      failure:^(NSError *error) {
-         NSLog(@"%@", error);
+         failure(error);
      }];
 }
 
-- (void)stop
+- (void)close
 {
     // @TODO
 }
