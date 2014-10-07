@@ -86,7 +86,8 @@
 - (NSArray *)recents
 {
     NSMutableArray *recents = [NSMutableArray arrayWithCapacity:rooms.count];
-    for (MXRoomData *room in rooms) {
+    for (MXRoomData *room in rooms.allValues)
+    {
         [recents addObject:room.lastEvent];
     }
     
