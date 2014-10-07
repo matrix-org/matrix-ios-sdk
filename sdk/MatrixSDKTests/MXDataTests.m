@@ -23,7 +23,7 @@
 
 // @TODO: Find an automatic way to test with an user account
 #define MX_USER_ID @"@your_name:matrig.org"
-#define MX_ACCESS_TOKEN @"Your access token"
+#define MX_ACCESS_TOKEN @"your_access_token"
 
 @interface MXDataTests : XCTestCase
 {
@@ -70,9 +70,8 @@
         [expectation fulfill];
         
     } failure:^(NSError *error) {
-        
+        XCTAssert(NO, @"The request should not fail");
         [expectation fulfill];
-        
     }];
     
     [self waitForExpectationsWithTimeout:10000 handler:nil];
