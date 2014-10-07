@@ -25,6 +25,9 @@
  Note: some such class can be defined in their own file (ex: MXEvent)
  */
 
+/**
+  `MXPublicRoom` represents a public room returned by the publicRoom request
+ */
 @interface MXPublicRoom : MXJSONModel
 
     @property (nonatomic) NSString *room_id;
@@ -36,5 +39,33 @@
     // The display name is computed from available information
     // @TODO: move it to MXData as this class has additional information to compute the optimal display name
     @property (nonatomic, readonly) NSString *displayname;
+
+@end
+
+
+/**
+ Login flow types
+ */
+FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypePassword;
+FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeOAuth2;
+FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeTypeEmailCode;
+FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeEmailUrl;
+FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeEmailIdentity;
+
+/**
+ `MXLoginFlow` represents a login flow supported by the home server.
+ */
+@interface MXLoginFlow : MXJSONModel
+
+    /**
+     The flow type among kMatrixLoginFlowType* types.
+     @see http://matrix.org/docs/spec/#password-based and below for the types descriptions
+     */
+    @property (nonatomic) NSString *type;
+
+    /**
+     The list of stages to proceed the login. This is an array of NSStrings
+     */
+    @property (nonatomic) NSArray *stages;
 
 @end

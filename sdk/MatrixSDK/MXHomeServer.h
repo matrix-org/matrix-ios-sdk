@@ -41,14 +41,21 @@ typedef NSString* MXRoomVisibility;
  
  - (void)register:(void (^)(NSObject *tbd))success
  failure:(void (^)(NSError *error))failure;
- 
+ */
  
  #pragma mark - Login operations
- - (void)getLoginFlow:(void (^)(NSObject *tbd))success
+/**
+ Get the list of login flows supported by the home server
+ 
+ @param success A block object called when the operation succeeds. flows is an array of MXLoginFlow objects
+ @param failure A block object called when the operation fails.
+ */
+ - (void)getLoginFlow:(void (^)(NSArray *flows))success
  failure:(void (^)(NSError *error))failure;
+
  - (void)login:(void (^)(NSObject *tbd))success
  failure:(void (^)(NSError *error))failure;
- */
+
 
 /**
  Get the list of public rooms hosted by the home server.

@@ -33,7 +33,7 @@
 - (void)setUp {
     [super setUp];
 
-    homeServer = [[MXHomeServer alloc] initWithHomeServer:kMXTestsMatrixHomeServerURL];
+    homeServer = [[MXHomeServer alloc] initWithHomeServer:kMXTestsHomeServerURL];
 }
 
 - (void)tearDown {
@@ -42,17 +42,18 @@
     [super tearDown];
 }
 
-- (void)testInit {
+- (void)testInit
+{
     XCTAssert(nil != homeServer, @"Valid init");
     XCTAssert([homeServer.homeserver isEqualToString:kMXTestsMatrixHomeServerURL], @"Pass");
 }
 
-- (void)testPublicRooms {
-
+- (void)testPublicRooms
+{
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
 
     // Use the hs running at matrix.org as we know there are public rooms there
-    homeServer = [[MXHomeServer alloc] initWithHomeServer:@"http://matrix.org"];
+    homeServer = [[MXHomeServer alloc] initWithHomeServer:kMXTestsMatrixHomeServerURL];
     [homeServer publicRooms:^(NSArray *rooms) {
 
         XCTAssert(0 < rooms.count, @"Valid init");
@@ -75,11 +76,40 @@
         [expectation fulfill];
 
     } failure:^(NSError *error) {
-        XCTAssert(NO, @"Unexpecter error: %@", error);
+        XCTAssert(NO, @"The request should not fail");
         [expectation fulfill];
     }];
 
     [self waitForExpectationsWithTimeout:10000 handler:nil];
+}
+
+- (void)testLoginFlow
+{
+    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
+
+    [homeServer getLoginFlow:^(NSArray *flows) {
+        
+        XCTAssert(0 < flows.count, @"There must be at least one way to login");
+        
+        BOOL foundPasswordFlowType;
+        for (MXLoginFlow *flow in flows)
+        {
+            if ([flow.type isEqualToString:kMatrixLoginFlowTypePassword])
+            {
+                foundPasswordFlowType = YES;
+            }
+        }
+        XCTAssert(foundPasswordFlowType, @"Password-based login is the basic type");
+        
+        [expectation fulfill];
+        
+    } failure:^(NSError *error) {
+        XCTAssert(NO, @"The request should not fail");
+        [expectation fulfill];
+    }];
+    
+    [self waitForExpectationsWithTimeout:10000 handler:nil];
+
 }
 
 @end

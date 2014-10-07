@@ -44,6 +44,34 @@
     return self;
 }
 
+
+#pragma mark - Login operations
+- (void)getLoginFlow:(void (^)(NSArray *flows))success
+             failure:(void (^)(NSError *error))failure
+{
+    [hsClient requestWithMethod:@"GET"
+                           path:@"login"
+                     parameters:nil
+                        success:^(NSDictionary *JSONResponse)
+     {
+         NSArray *array = JSONResponse[@"flows"];
+         NSValueTransformer *transformer = [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXLoginFlow.class];
+         
+         NSArray *flows = [transformer transformedValue:array];
+         
+         success(flows);
+     }
+                        failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
+- (void)login:(void (^)(NSObject *tbd))success
+      failure:(void (^)(NSError *error))failure
+{
+}
+
 #pragma mark - Event operations
 - (void)publicRooms:(void (^)(NSArray *rooms))success
             failure:(void (^)(NSError *error))failure
@@ -53,10 +81,10 @@
                      parameters:nil
                         success:^(NSDictionary *JSONResponse)
      {
-         NSArray *results = JSONResponse[@"chunk"];
+         NSArray *array = JSONResponse[@"chunk"];
          NSValueTransformer *transformer = [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXPublicRoom.class];
          
-         NSArray *publicRooms = [transformer transformedValue:results];
+         NSArray *publicRooms = [transformer transformedValue:array];
          
          NSLog(@"publicRooms: %@", ((MXPublicRoom*)publicRooms[0]).name);
          
