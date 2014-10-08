@@ -56,7 +56,7 @@ typedef NSString* MXRoomVisibility;
 /**
  Log a user in with the password-based flow.
  
- @param user the id of the user to log in.
+ @param user the user id (ex: "@bob:matrix.org") or the user localpart (ex: "bob") of the user to log in.
  @param password his password.
  @param success A block object called when the operation succeeds. It provides credentials to use to open a MXSession.
  @param failure A block object called when the operation fails.
