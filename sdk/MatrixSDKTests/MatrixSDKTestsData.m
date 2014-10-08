@@ -16,6 +16,9 @@
 
 #import "MatrixSDKTestsData.h"
 
+#import "MXHomeServer.h"
+#import "MXError.h"
+
 /*
  Out of the box, the tests are supposed to be run with the iOS simulator attacking
  a test home server running on the same Mac machine.
@@ -28,8 +31,80 @@
  Here, we use one of the home servers launched by the ./demo/start.sh script
  */
 
+
+#define MXTESTS_BOB @"mxBob"
+#define MXTESTS_BOB_PWD @"bobbob"
+
+
 NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
 
+@interface MatrixSDKTestsData ()
+{
+    MXHomeServer *homeServer;
+}
+@end
+
 @implementation MatrixSDKTestsData
+
+- (id)init
+{
+    self = [super init];
+    if (self)
+    {
+        homeServer = [[MXHomeServer alloc] initWithHomeServer:kMXTestsHomeServerURL];
+    }
+    return self;
+}
+
++ (id)sharedData
+{
+    static MatrixSDKTestsData *sharedData = nil;
+    @synchronized(self) {
+        if (sharedData == nil)
+            sharedData = [[self alloc] init];
+    }
+    return sharedData;
+}
+
+
+- (void)getBobCredentials:(void (^)())success
+{
+    if (self.bobCredentials)
+    {
+        // Credentials are already here, they are ready
+        success();
+    }
+    else
+    {
+        // First, try register the user
+        [homeServer registerWithUser:MXTESTS_BOB andPassword:MXTESTS_BOB_PWD success:^(MXLoginResponse *credentials) {
+            
+            _bobCredentials = credentials;
+            success();
+            
+        } failure:^(NSError *error) {
+            MXError *mxError = [[MXError alloc] initWithNSError:error];
+            if (mxError && [mxError.errcode isEqualToString:@"M_USER_IN_USE"])
+            {
+                // The user already exists. This error is normal.
+                // Log Bob in to get his keys
+                [homeServer loginWithUser:MXTESTS_BOB andPassword:MXTESTS_BOB_PWD success:^(MXLoginResponse *credentials) {
+                    
+                    _bobCredentials = credentials;
+                    success();
+                    
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot log mxBOB in");
+                }];
+            }
+            else
+            {
+                NSAssert(NO, @"Cannot create mxBOB account");
+            }
+        }];
+    }
+}
+
+
 
 @end
