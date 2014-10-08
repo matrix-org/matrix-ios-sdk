@@ -27,14 +27,14 @@ FOUNDATION_EXPORT NSString *const kMatrixNSErrorDomain;
 /**
  The error code. This is a string like "M_FORBIDDEN"
  */
-@property (nonatomic, readonly) NSString *errCode;
+@property (nonatomic, readonly) NSString *errcode;
 
 /**
  The error description
  */
 @property (nonatomic, readonly) NSString *error;
 
-- (id)initWithErrorCode:(NSString*)errCode error:(NSString*)error;
+- (id)initWithErrorCode:(NSString*)errcode error:(NSString*)error;
 
 /**
  Create a MXError from a NSError.

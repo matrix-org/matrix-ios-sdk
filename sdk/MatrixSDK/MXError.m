@@ -24,12 +24,12 @@ NSInteger const kMatrixNSErrorCode = 6;
 
 @implementation MXError
 
--(id)initWithErrorCode:(NSString*)errCode error:(NSString*)error
+-(id)initWithErrorCode:(NSString*)errcode error:(NSString*)error
 {
     self = [super init];
     if (self)
     {
-        _errCode = errCode;
+        _errcode = errcode;
         _error = error;
     }
     return self;
@@ -39,7 +39,7 @@ NSInteger const kMatrixNSErrorCode = 6;
 {
     if ([MXError isMXError:nsError])
     {
-        self = [self initWithErrorCode:nsError.userInfo[@"errCode"]
+        self = [self initWithErrorCode:nsError.userInfo[@"errcode"]
                                  error:nsError.userInfo[@"error"]];
     }
     else
@@ -54,9 +54,9 @@ NSInteger const kMatrixNSErrorCode = 6;
 {
     NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
     
-    if (self.errCode)
+    if (self.errcode)
     {
-        userInfo[@"errCode"] = self.errCode;
+        userInfo[@"errcode"] = self.errcode;
     }
 
     if (self.error)
@@ -65,10 +65,10 @@ NSInteger const kMatrixNSErrorCode = 6;
         userInfo[NSLocalizedDescriptionKey] = self.error;
     }
     
-    if ((nil == self.error || 0 == self.error.length) && self.errCode)
+    if ((nil == self.error || 0 == self.error.length) && self.errcode)
     {
-        // Fallback: use errCode as description
-        userInfo[NSLocalizedDescriptionKey] = self.errCode;
+        // Fallback: use errcode as description
+        userInfo[NSLocalizedDescriptionKey] = self.errcode;
     }
     
     return [NSError errorWithDomain:kMatrixNSErrorDomain
@@ -87,7 +87,7 @@ NSInteger const kMatrixNSErrorCode = 6;
 
 - (NSString *)description
 {
-    return [NSString stringWithFormat:@"%@ - %@", self.errCode, self.error];
+    return [NSString stringWithFormat:@"%@ - %@", self.errcode, self.error];
 }
 
 @end

@@ -76,7 +76,7 @@
 
             if (operation.responseData)
             {
-                // If the home server sent data, it contains errCode and error
+                // If the home server sent data, it contains errcode and error
                 // Try to send an NSError encapsulating MXError information
                 NSError *serializationError = nil;
                 NSDictionary *JSONResponse = [httpManager.responseSerializer responseObjectForResponse:operation.response
