@@ -30,8 +30,6 @@
 
 NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
 
-NSString *const kMXTestsMatrixHomeServerURL = @"http://matrix.org";
-
 @implementation MatrixSDKTestsData
 
 @end

@@ -43,7 +43,7 @@
 
 - (void)testMainThread {
 
-    MXRestClient *hsClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsMatrixHomeServerURL];
+    MXRestClient *hsClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL];
 
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
 
@@ -52,12 +52,12 @@
                      parameters:nil
                         success:^(NSDictionary *JSONResponse)
      {
-         XCTAssert([NSThread isMainThread], @"The block callback must be called from the main thread");
+         XCTAssertTrue([NSThread isMainThread], @"The block callback must be called from the main thread");
          [expectation fulfill];
      }
                         failure:^(NSError *error)
      {
-         XCTAssert(NO, @"The request should succeed");
+         XCTFail(@"The request should not fail - NSError: %@", error);
          [expectation fulfill];
      }];
 
@@ -67,7 +67,7 @@
 
 - (void)testMXError {
     
-    MXRestClient *hsClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsMatrixHomeServerURL];
+    MXRestClient *hsClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL];
     
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
 
@@ -76,14 +76,14 @@
                      parameters:nil
                         success:^(NSDictionary *JSONResponse)
      {
-         XCTAssert(NO, @"The request must fail as the API path does not exist");
+         XCTFail(@"The request must fail as the API path does not exist");
          [expectation fulfill];
      }
                         failure:^(NSError *error)
      {
-         XCTAssert([MXError isMXError:error], @"The HTTP client must have detected a Home Server error");
+         XCTAssertTrue([MXError isMXError:error], @"The HTTP client must have detected a Home Server error");
    
-         XCTAssert([NSThread isMainThread], @"The block callback must be called from the main thread");
+         XCTAssertTrue([NSThread isMainThread], @"The block callback must be called from the main thread");
          
          [expectation fulfill];
      }];
@@ -93,7 +93,7 @@
 
 - (void)testNSError {
     
-    MXRestClient *hsClient = [[MXRestClient alloc] initWithHomeServer:@"http://matrix.org/non-existing-path"];
+    MXRestClient *hsClient = [[MXRestClient alloc] initWithHomeServer:[NSString stringWithFormat:@"%@/non-existing-path", kMXTestsHomeServerURL]];
     
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
     
@@ -102,14 +102,14 @@
                      parameters:nil
                         success:^(NSDictionary *JSONResponse)
      {
-         XCTAssert(NO, @"The request must fail as we are not targetting a home server");
+         XCTFail(@"The request must fail as we are not targetting a home server");
          [expectation fulfill];
      }
                         failure:^(NSError *error)
      {
-         XCTAssert(NO == [MXError isMXError:error], @"The HTTP client must not have detected a Home Server error");
+         XCTAssertFalse([MXError isMXError:error], @"The HTTP client must not have detected a Home Server error");
          
-         XCTAssert([NSThread isMainThread], @"The block callback must be called from the main thread");
+         XCTAssertTrue([NSThread isMainThread], @"The block callback must be called from the main thread");
 
          [expectation fulfill];
      }];

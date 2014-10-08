@@ -44,8 +44,8 @@
 
 - (void)testInit
 {
-    XCTAssert(nil != homeServer, @"Valid init");
-    XCTAssert([homeServer.homeserver isEqualToString:kMXTestsHomeServerURL], @"Pass");
+    XCTAssertNotNil(homeServer, @"Valid init");
+    XCTAssertTrue([homeServer.homeserver isEqualToString:kMXTestsHomeServerURL], @"Pass");
 }
 
 - (void)testPublicRooms
@@ -53,10 +53,10 @@
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
 
     // Use the hs running at matrix.org as we know there are public rooms there
-    homeServer = [[MXHomeServer alloc] initWithHomeServer:kMXTestsMatrixHomeServerURL];
+    homeServer = [[MXHomeServer alloc] initWithHomeServer:@"http://matrix.org"];
     [homeServer publicRooms:^(NSArray *rooms) {
 
-        XCTAssert(0 < rooms.count, @"Valid init");
+        XCTAssertTrue(0 < rooms.count, @"Valid init");
 
         MXPublicRoom *matrixHQRoom;
         for (MXPublicRoom *room in rooms)
@@ -68,15 +68,15 @@
             }
         }
 
-        XCTAssert(matrixHQRoom, @"Matrix HQ must be listed in public rooms");
-        XCTAssert(matrixHQRoom.name && matrixHQRoom.name.length, @"Matrix HQ should be set");
-        XCTAssert(matrixHQRoom.topic && matrixHQRoom.topic.length, @"Matrix HQ must be listed in public rooms");
+        XCTAssertNotNil(matrixHQRoom, @"Matrix HQ must be listed in public rooms");
+        XCTAssertTrue(matrixHQRoom.name && matrixHQRoom.name.length, @"Matrix HQ should be set");
+        XCTAssertTrue(matrixHQRoom.topic && matrixHQRoom.topic.length, @"Matrix HQ must be listed in public rooms");
         XCTAssert(0 < matrixHQRoom.num_joined_members, @"The are always someone at #matrix:matrix.org");
 
         [expectation fulfill];
 
     } failure:^(NSError *error) {
-        XCTAssert(NO, @"The request should not fail");
+        XCTFail(@"The request should not fail - NSError: %@", error);
         [expectation fulfill];
     }];
 
@@ -94,7 +94,7 @@
                           [expectation fulfill];
                           
                       } failure:^(NSError *error) {
-                          XCTAssert(NO, @"The request should not fail");
+                          XCTFail(@"The request should not fail - NSError: %@", error);
                           [expectation fulfill];
                       }];
     
@@ -107,7 +107,7 @@
 
     [homeServer getLoginFlow:^(NSArray *flows) {
         
-        XCTAssert(0 < flows.count, @"There must be at least one way to login");
+        XCTAssertTrue(0 < flows.count, @"There must be at least one way to login");
         
         BOOL foundPasswordFlowType;
         for (MXLoginFlow *flow in flows)
@@ -117,12 +117,12 @@
                 foundPasswordFlowType = YES;
             }
         }
-        XCTAssert(foundPasswordFlowType, @"Password-based login is the basic type");
+        XCTAssertTrue(foundPasswordFlowType, @"Password-based login is the basic type");
         
         [expectation fulfill];
         
     } failure:^(NSError *error) {
-        XCTAssert(NO, @"The request should not fail");
+        XCTFail(@"The request should not fail - NSError: %@", error);
         [expectation fulfill];
     }];
     
@@ -140,7 +140,7 @@
         [expectation fulfill];
         
     } failure:^(NSError *error) {
-        XCTAssert(NO, @"The request should not fail");
+        XCTFail(@"The request should not fail - NSError: %@", error);
         [expectation fulfill];
     }];
     

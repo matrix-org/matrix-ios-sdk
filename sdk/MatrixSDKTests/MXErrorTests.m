@@ -47,22 +47,22 @@ NSString *const myError = @"This is detailed information about this fake error";
 
 - (void)testInit
 {
-    XCTAssert([mxError.errcode isEqualToString:myErrCode], @"Valid error");
-    XCTAssert([mxError.error isEqualToString:myError], @"Valid errcode");
+    XCTAssertTrue([mxError.errcode isEqualToString:myErrCode], @"Valid error");
+    XCTAssertTrue([mxError.error isEqualToString:myError], @"Valid errcode");
 }
 
 - (void)testNSError
 {
     NSError *nsError = [mxError createNSError];
-    XCTAssert(nil != nsError, @"Valid nsError");
-    XCTAssert([nsError.domain isEqualToString:kMatrixNSErrorDomain], @"Valid nsError domain");
+    XCTAssertNotNil(nsError, @"Valid nsError");
+    XCTAssertTrue([nsError.domain isEqualToString:kMatrixNSErrorDomain], @"Valid nsError domain");
     
-    XCTAssert([MXError isMXError:nsError], @"This NSError must be in MXError domain");
+    XCTAssertTrue([MXError isMXError:nsError], @"This NSError must be in MXError domain");
 
     MXError *mxError2 = [[MXError alloc] initWithNSError:nsError];
-    XCTAssert(nil != nsError, @"Valid MXError extraction");
-    XCTAssert([mxError2.errcode isEqualToString:mxError.errcode], @"Valid error");
-    XCTAssert([mxError2.error isEqualToString:mxError.error], @"Valid errcode");
+    XCTAssertNotNil(nsError, @"Valid MXError extraction");
+    XCTAssertTrue([mxError2.errcode isEqualToString:mxError.errcode], @"Valid error");
+    XCTAssertTrue([mxError2.error isEqualToString:mxError.error], @"Valid errcode");
 }
 
 - (void)testNonMatrixNSError
@@ -71,10 +71,10 @@ NSString *const myError = @"This is detailed information about this fake error";
                                            code: 1
                                        userInfo: nil];
     
-    XCTAssert(NO == [MXError isMXError:nsError], @"This NSError must not be in MXError domain");
+    XCTAssertFalse([MXError isMXError:nsError], @"This NSError must not be in MXError domain");
     
     MXError *mxError2 = [[MXError alloc] initWithNSError:nsError];
-    XCTAssert(nil == mxError2, @"We should not be init an MXError from this non-compatible NSError");
+    XCTAssertNil(mxError2, @"We should not be init an MXError from this non-compatible NSError");
 }
 
 

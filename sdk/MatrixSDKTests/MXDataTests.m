@@ -65,13 +65,13 @@
         
         for (MXEvent *event in recents)
         {
-            XCTAssert(nil != event.event_id, @"The event must have an event_id to be valid");
+            XCTAssertNotNil(event.event_id, @"The event must have an event_id to be valid");
         }
         
         [expectation fulfill];
         
     } failure:^(NSError *error) {
-        XCTAssert(NO, @"The request should not fail");
+        XCTFail(@"The request should not fail - NSError: %@", error);
         [expectation fulfill];
     }];
     
