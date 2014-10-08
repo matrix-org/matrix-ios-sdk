@@ -18,8 +18,12 @@
 #import <XCTest/XCTest.h>
 
 #import "MatrixSDKTestsData.h"
+#import "MXError.h"
 
 #import "MXHomeServer.h"
+
+#define MXTESTS_USER @"mxtest"
+#define MXTESTS_PWD @"password"
 
 @interface MXHomeServerTests : XCTestCase
 {
@@ -42,65 +46,61 @@
     [super tearDown];
 }
 
+// Make sure MXTESTS_USER exists on the HS
+- (void)createTestAccount:(void (^)())onReady
+{
+    // Register the user
+    [homeServer registerWithUser:MXTESTS_USER andPassword:MXTESTS_PWD
+                         success:^(MXLoginResponse *credentials) {
+                             
+                             onReady();
+
+                         } failure:^(NSError *error) {
+                             MXError *mxError = [[MXError alloc] initWithNSError:error];
+                             if (mxError && [mxError.errcode isEqualToString:@"M_USER_IN_USE"])
+                             {
+                                 // The user already exists. This error is normal
+                                 onReady();
+                             }
+                             else
+                             {
+                                 NSAssert(NO, @"Cannot create the test account");
+                             }
+                         }];
+}
+
 - (void)testInit
 {
     XCTAssertNotNil(homeServer, @"Valid init");
     XCTAssertTrue([homeServer.homeserver isEqualToString:kMXTestsHomeServerURL], @"Pass");
 }
 
-- (void)testPublicRooms
-{
-    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
 
-    // Use the hs running at matrix.org as we know there are public rooms there
-    homeServer = [[MXHomeServer alloc] initWithHomeServer:@"http://matrix.org"];
-    [homeServer publicRooms:^(NSArray *rooms) {
-
-        XCTAssertTrue(0 < rooms.count, @"Valid init");
-
-        MXPublicRoom *matrixHQRoom;
-        for (MXPublicRoom *room in rooms)
-        {
-            // Find the Matrix HQ room (#matrix:matrix.org) by its ID
-            if ([room.room_id isEqualToString:@"!cURbafjkfsMDVwdRDQ:matrix.org"])
-            {
-                matrixHQRoom = room;
-            }
-        }
-
-        XCTAssertNotNil(matrixHQRoom, @"Matrix HQ must be listed in public rooms");
-        XCTAssertTrue(matrixHQRoom.name && matrixHQRoom.name.length, @"Matrix HQ should be set");
-        XCTAssertTrue(matrixHQRoom.topic && matrixHQRoom.topic.length, @"Matrix HQ must be listed in public rooms");
-        XCTAssert(0 < matrixHQRoom.num_joined_members, @"The are always someone at #matrix:matrix.org");
-
-        [expectation fulfill];
-
-    } failure:^(NSError *error) {
-        XCTFail(@"The request should not fail - NSError: %@", error);
-        [expectation fulfill];
-    }];
-
-    [self waitForExpectationsWithTimeout:10000 handler:nil];
-}
-
-
+#pragma mark - Registration operations
 - (void)testRegisterPasswordBased
 {
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
     
-    [homeServer registerWithUser:@"mxtest" andPassword:@"password"
-                      success:^(MXLoginResponse *credentials) {
-                          
-                          [expectation fulfill];
-                          
-                      } failure:^(NSError *error) {
-                          XCTFail(@"The request should not fail - NSError: %@", error);
-                          [expectation fulfill];
-                      }];
-    
+    [homeServer registerWithUser:MXTESTS_USER andPassword:MXTESTS_PWD
+                         success:^(MXLoginResponse *credentials) {
+                             
+                             XCTAssertNotNil(credentials);
+                             XCTAssertNotNil(credentials.home_server);
+                             XCTAssertNotNil(credentials.user_id);
+                             XCTAssertNotNil(credentials.access_token);
+                             
+                             [expectation fulfill];
+                             
+                         } failure:^(NSError *error) {
+                             XCTFail(@"The request should not fail - NSError: %@", error);
+                             [expectation fulfill];
+                         }];
+
     [self waitForExpectationsWithTimeout:10000 handler:nil];
 }
 
+
+#pragma mark - Login operations
 - (void)testLoginFlow
 {
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
@@ -133,9 +133,79 @@
 {
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
     
-    [homeServer loginWithUser:@"mxtest" andPassword:@"password"
-                      success:^(MXLoginResponse *credentials) {
+    [self createTestAccount:^{
+        [homeServer loginWithUser:MXTESTS_USER andPassword:MXTESTS_PWD
+                          success:^(MXLoginResponse *credentials) {
+                              
+                              XCTAssertNotNil(credentials);
+                              XCTAssertNotNil(credentials.home_server);
+                              XCTAssertNotNil(credentials.user_id);
+                              XCTAssertNotNil(credentials.access_token);
+                              
+                              [expectation fulfill];
+                              
+                          } failure:^(NSError *error) {
+                              XCTFail(@"The request should not fail - NSError: %@", error);
+                              [expectation fulfill];
+                          }];
+    }];
+    
+    [self waitForExpectationsWithTimeout:10000 handler:nil];
+}
+
+- (void)testLoginPasswordBasedWithWrongPassword
+{
+    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
+    
+    [self createTestAccount:^{
+        [homeServer loginWithUser:MXTESTS_USER andPassword:[NSString stringWithFormat:@"wrong%@", MXTESTS_PWD]
+                          success:^(MXLoginResponse *credentials) {
+                              
+                              XCTFail(@"The request should fail (Wrong password)");
+                              
+                              [expectation fulfill];
+                              
+                          } failure:^(NSError *error) {
+                              XCTAssertTrue([MXError isMXError:error], @"HS should have sent detailed error in the body");
+                              
+                              MXError *mxError = [[MXError alloc] initWithNSError:error];
+                              XCTAssertNotNil(mxError);
+                              
+                              XCTAssertTrue([mxError.errcode isEqualToString:@"M_FORBIDDEN"], @"M_FORBIDDEN errcode is expected. Received: %@", error);
+                              
+                              [expectation fulfill];
+                          }];
+    }];
+    
+    [self waitForExpectationsWithTimeout:10000 handler:nil];
+}
+
+
+#pragma mark - Event operations
+- (void)testPublicRooms
+{
+    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
+    
+    // Use the hs running at matrix.org as we know there are public rooms there
+    homeServer = [[MXHomeServer alloc] initWithHomeServer:@"http://matrix.org"];
+    [homeServer publicRooms:^(NSArray *rooms) {
         
+        XCTAssertTrue(0 < rooms.count, @"Valid init");
+        
+        MXPublicRoom *matrixHQRoom;
+        for (MXPublicRoom *room in rooms)
+        {
+            // Find the Matrix HQ room (#matrix:matrix.org) by its ID
+            if ([room.room_id isEqualToString:@"!cURbafjkfsMDVwdRDQ:matrix.org"])
+            {
+                matrixHQRoom = room;
+            }
+        }
+        
+        XCTAssertNotNil(matrixHQRoom, @"Matrix HQ must be listed in public rooms");
+        XCTAssertTrue(matrixHQRoom.name && matrixHQRoom.name.length, @"Matrix HQ should be set");
+        XCTAssertTrue(matrixHQRoom.topic && matrixHQRoom.topic.length, @"Matrix HQ must be listed in public rooms");
+        XCTAssert(0 < matrixHQRoom.num_joined_members, @"The are always someone at #matrix:matrix.org");
         
         [expectation fulfill];
         
