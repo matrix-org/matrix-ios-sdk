@@ -47,8 +47,8 @@ NSString *const myError = @"This is detailed information about this fake error";
 
 - (void)testInit
 {
-    XCTAssert([mxError.errCode isEqualToString:myErrCode], @"Valid error");
-    XCTAssert([mxError.error isEqualToString:myError], @"Valid errCode");
+    XCTAssert([mxError.errcode isEqualToString:myErrCode], @"Valid error");
+    XCTAssert([mxError.error isEqualToString:myError], @"Valid errcode");
 }
 
 - (void)testNSError
@@ -61,8 +61,8 @@ NSString *const myError = @"This is detailed information about this fake error";
 
     MXError *mxError2 = [[MXError alloc] initWithNSError:nsError];
     XCTAssert(nil != nsError, @"Valid MXError extraction");
-    XCTAssert([mxError2.errCode isEqualToString:mxError.errCode], @"Valid error");
-    XCTAssert([mxError2.error isEqualToString:mxError.error], @"Valid errCode");
+    XCTAssert([mxError2.errcode isEqualToString:mxError.errcode], @"Valid error");
+    XCTAssert([mxError2.error isEqualToString:mxError.error], @"Valid errcode");
 }
 
 - (void)testNonMatrixNSError
