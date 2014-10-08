@@ -77,11 +77,40 @@
 
 
 #pragma mark - Registration operations
+- (void)testRegisterFlow
+{
+    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
+    
+    [homeServer getRegisterFlow:^(NSArray *flows) {
+        
+        XCTAssertTrue(0 < flows.count, @"There must be at least one way to login");
+        
+        BOOL foundPasswordFlowType;
+        for (MXLoginFlow *flow in flows)
+        {
+            if ([flow.type isEqualToString:kMatrixLoginFlowTypePassword])
+            {
+                foundPasswordFlowType = YES;
+            }
+        }
+        XCTAssertTrue(foundPasswordFlowType, @"Password-based login is the basic type");
+        
+        [expectation fulfill];
+        
+    } failure:^(NSError *error) {
+        XCTFail(@"The request should not fail - NSError: %@", error);
+        [expectation fulfill];
+    }];
+    
+    [self waitForExpectationsWithTimeout:10000 handler:nil];
+}
+
 - (void)testRegisterPasswordBased
 {
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
     
-    [homeServer registerWithUser:MXTESTS_USER andPassword:MXTESTS_PWD
+    // Provide an empty string as user, the HS will provide one for us
+    [homeServer registerWithUser:@"" andPassword:MXTESTS_PWD
                          success:^(MXLoginResponse *credentials) {
                              
                              XCTAssertNotNil(credentials);
@@ -99,6 +128,34 @@
     [self waitForExpectationsWithTimeout:10000 handler:nil];
 }
 
+- (void)testRegisterPasswordBasedWithExistingUser
+{
+    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
+    
+    [self createTestAccount:^{
+        // Register the same user
+        [homeServer registerWithUser:MXTESTS_PWD andPassword:MXTESTS_PWD
+                             success:^(MXLoginResponse *credentials) {
+                                 
+                                 XCTFail(@"The request should fail (User already exists)");
+                                 
+                                 [expectation fulfill];
+                                 
+                             } failure:^(NSError *error) {
+                                 XCTAssertTrue([MXError isMXError:error], @"HS should have sent detailed error in the body");
+                                 
+                                 MXError *mxError = [[MXError alloc] initWithNSError:error];
+                                 XCTAssertNotNil(mxError);
+                                 
+                                 XCTAssertTrue([mxError.errcode isEqualToString:@"M_USER_IN_USE"], @"M_USER_IN_USE errcode is expected. Received: %@", error);
+                                 
+                                 [expectation fulfill];
+                             }];
+    }];
+
+    
+    [self waitForExpectationsWithTimeout:10000 handler:nil];
+}
 
 #pragma mark - Login operations
 - (void)testLoginFlow
