@@ -34,7 +34,6 @@ MXAuthAction;
 
 @implementation MXHomeServer
 
-
 @synthesize homeserver;
 
 - (id)initWithHomeServer:(NSString*)homeserver2
@@ -147,7 +146,6 @@ MXAuthAction;
          failure(error);
      }];
 }
-
 
 
 #pragma mark - Event operations

@@ -78,6 +78,7 @@
                 failure:(void (^)(NSError *error))failure;
 
 
+#pragma mark - Event operations
 /**
  Get the list of public rooms hosted by the home server.
  
