@@ -20,7 +20,7 @@
 #import "MXRestClient.h"
 #import "MXError.h"
 
-#import "MatrixSDKTests.h"
+#import "MatrixSDKTestsData.h"
 
 @interface MXRestClientTests : XCTestCase
 

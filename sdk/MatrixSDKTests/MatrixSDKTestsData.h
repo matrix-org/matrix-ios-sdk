@@ -24,6 +24,6 @@ FOUNDATION_EXPORT NSString * const kMXTestsHomeServerURL;
 FOUNDATION_EXPORT NSString * const kMXTestsMatrixHomeServerURL;
 
 
-@interface MatrixSDKTests : NSObject
+@interface MatrixSDKTestsData : NSObject
 
 @end

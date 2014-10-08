@@ -23,7 +23,7 @@
 		3281E89E19E299C000976E1A /* MXErrorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3281E89D19E299C000976E1A /* MXErrorTests.m */; };
 		3281E8A019E2CC1200976E1A /* MXRestClientTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3281E89F19E2CC1200976E1A /* MXRestClientTests.m */; };
 		3281E8A219E2DE4300976E1A /* MXDataTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3281E8A119E2DE4300976E1A /* MXDataTests.m */; };
-		3281E8A819E41A2000976E1A /* MatrixSDKTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3281E8A719E41A2000976E1A /* MatrixSDKTests.m */; };
+		3281E8A819E41A2000976E1A /* MatrixSDKTestsData.m in Sources */ = {isa = PBXBuildFile; fileRef = 3281E8A719E41A2000976E1A /* MatrixSDKTestsData.m */; };
 		3281E8B719E42DFE00976E1A /* MXJSONModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 3281E8B319E42DFE00976E1A /* MXJSONModel.h */; };
 		3281E8B819E42DFE00976E1A /* MXJSONModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 3281E8B419E42DFE00976E1A /* MXJSONModel.m */; };
 		3281E8B919E42DFE00976E1A /* MXJSONModels.h in Headers */ = {isa = PBXBuildFile; fileRef = 3281E8B519E42DFE00976E1A /* MXJSONModels.h */; };
@@ -62,8 +62,8 @@
 		3281E89D19E299C000976E1A /* MXErrorTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXErrorTests.m; sourceTree = "<group>"; };
 		3281E89F19E2CC1200976E1A /* MXRestClientTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRestClientTests.m; sourceTree = "<group>"; };
 		3281E8A119E2DE4300976E1A /* MXDataTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXDataTests.m; sourceTree = "<group>"; };
-		3281E8A619E41A2000976E1A /* MatrixSDKTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MatrixSDKTests.h; sourceTree = "<group>"; };
-		3281E8A719E41A2000976E1A /* MatrixSDKTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MatrixSDKTests.m; sourceTree = "<group>"; };
+		3281E8A619E41A2000976E1A /* MatrixSDKTestsData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MatrixSDKTestsData.h; sourceTree = "<group>"; };
+		3281E8A719E41A2000976E1A /* MatrixSDKTestsData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MatrixSDKTestsData.m; sourceTree = "<group>"; };
 		3281E8B319E42DFE00976E1A /* MXJSONModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXJSONModel.h; sourceTree = "<group>"; };
 		3281E8B419E42DFE00976E1A /* MXJSONModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXJSONModel.m; sourceTree = "<group>"; };
 		3281E8B519E42DFE00976E1A /* MXJSONModels.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXJSONModels.h; sourceTree = "<group>"; };
@@ -204,8 +204,8 @@
 				3281E89D19E299C000976E1A /* MXErrorTests.m */,
 				3281E89F19E2CC1200976E1A /* MXRestClientTests.m */,
 				3281E8A119E2DE4300976E1A /* MXDataTests.m */,
-				3281E8A619E41A2000976E1A /* MatrixSDKTests.h */,
-				3281E8A719E41A2000976E1A /* MatrixSDKTests.m */,
+				3281E8A619E41A2000976E1A /* MatrixSDKTestsData.h */,
+				3281E8A719E41A2000976E1A /* MatrixSDKTestsData.m */,
 			);
 			path = MatrixSDKTests;
 			sourceTree = "<group>";
@@ -393,7 +393,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3281E8A819E41A2000976E1A /* MatrixSDKTests.m in Sources */,
+				3281E8A819E41A2000976E1A /* MatrixSDKTestsData.m in Sources */,
 				3281E89E19E299C000976E1A /* MXErrorTests.m in Sources */,
 				3281E8A019E2CC1200976E1A /* MXRestClientTests.m in Sources */,
 				3281E8A219E2DE4300976E1A /* MXDataTests.m in Sources */,

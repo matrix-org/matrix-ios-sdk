@@ -14,7 +14,7 @@
  limitations under the License.
  */
 
-#import "MatrixSDKTests.h"
+#import "MatrixSDKTestsData.h"
 
 /*
  Out of the box, the tests are supposed to be run with the iOS simulator attacking
@@ -32,6 +32,6 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
 
 NSString *const kMXTestsMatrixHomeServerURL = @"http://matrix.org";
 
-@implementation MatrixSDKTests
+@implementation MatrixSDKTestsData
 
 @end
