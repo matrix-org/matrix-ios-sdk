@@ -16,10 +16,21 @@
 
 #import "MatrixSDKTests.h"
 
-NSString *const kMXTestsHomeServerURL = @"http://matrix.org";   // @TODO: replace by a test home server
+/*
+ Out of the box, the tests are supposed to be run with the iOS simulator attacking
+ a test home server running on the same Mac machine.
+ The reason is that the simulator can access to the home server running on the Mac 
+ via localhost. So everyone can use a localhost HS url that works everywhere.
+ 
+ You are free to change this URL and you have to if you want to run tests on a true
+ device.
+ 
+ Here, we use one of the home servers launched by the ./demo/start.sh script
+ */
+
+NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
 
 NSString *const kMXTestsMatrixHomeServerURL = @"http://matrix.org";
-
 
 @implementation MatrixSDKTests
 

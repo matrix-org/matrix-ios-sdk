@@ -20,6 +20,7 @@
 FOUNDATION_EXPORT NSString * const kMXTestsHomeServerURL;
 
 // The URL to the home server hosted on matrix.org
+// @TODO: To remove once we will be able to feed a test HS with data.
 FOUNDATION_EXPORT NSString * const kMXTestsMatrixHomeServerURL;
 
 
