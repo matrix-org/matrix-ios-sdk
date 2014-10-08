@@ -54,6 +54,21 @@
     [self waitForExpectationsWithTimeout:10000 handler:nil];
 }
 
+// Prepare a MXSession for mxBob so that we can make test on it
+- (void)doMXSessionTestWithBobAndARoom:(void (^)(MXSession *bobSession, NSString* room_id, XCTestExpectation *expectation))readyToTest
+{
+    [self doMXSessionTestWithBob:^(MXSession *bobSession, XCTestExpectation *expectation) {
+        // Create a random room to use
+        [bobSession createRoom:nil visibility:nil room_alias_name:nil topic:nil invite:nil success:^(MXCreateRoomResponse *response) {
+            
+            readyToTest(bobSession, response.room_id, expectation);
+            
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot create a room - error: %@", error);
+        }];
+    }];
+}
+
 - (void)testInit
 {
     [self doMXSessionTestWithBob:^(MXSession *bobSession, XCTestExpectation *expectation) {
@@ -69,6 +84,22 @@
 }
 
 #pragma mark - Room operations
+- (void)testJoin
+{
+    [self doMXSessionTestWithBobAndARoom:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
+        
+        [bobSession join:room_id success:^{
+            
+            // No data to test. Just happy to go here.
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 - (void)testCreateRoom
 {
     [self doMXSessionTestWithBob:^(MXSession *bobSession, XCTestExpectation *expectation) {
@@ -89,6 +120,5 @@
         }];
     }];
 }
-
 
 @end

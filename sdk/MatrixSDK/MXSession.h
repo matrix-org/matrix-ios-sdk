@@ -34,12 +34,28 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
 
 - (void)close;
 
-/*
+
 #pragma mark - Room operations
+/**
+ Send a generic non state event to this room
+ *
+- (void)postEvent:(NSString*)room_id
+     success:(void (^)())success
+     failure:(void (^)(NSError *error))failure;
+*/
+
+/**
+ Join a room.
+ 
+ @param room_id the id of the room to join
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
 - (void)join:(NSString*)room_id
      success:(void (^)())success
      failure:(void (^)(NSError *error))failure;
 
+/*
 - (void)leave:(NSString*)room_id
       success:(void (^)())success
       failure:(void (^)(NSError *error))failure;
@@ -67,9 +83,9 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
  @param visibility (optional) the visibility of the room (kMXRoomVisibilityPublic or kMXRoomVisibilityPrivate).
  @param room_alias_name (optional) the room alias on the home server the room will be created.
  @param topic (optional) the room topic.
- @param userIds (optional) an arry of user ids strings for users to invite in this room.
+ @param userIds (optional) an array of user ids strings for users to invite in this room.
 
- @param success A block object called when the operation succeeds. @TODO
+ @param success A block object called when the operation succeeds. It provides a MXCreateRoomResponse object.
  @param failure A block object called when the operation fails.
  */
 - (void)createRoom:(NSString*)name

@@ -48,6 +48,28 @@
 
 
 #pragma mark - Room operations
+- (void)join:(NSString*)room_id
+     success:(void (^)())success
+     failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/join", room_id];
+    
+    [hsClient requestWithMethod:@"POST"
+                           path:path
+                     parameters:@{
+                                  user_id: self.user_id
+                                  }
+                        success:^(NSDictionary *JSONResponse)
+     {
+         success();
+     }
+                        failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
+
 - (void)createRoom:(NSString*)name
         visibility:(MXRoomVisibility)visibility
    room_alias_name:(NSString*)room_alias_name
