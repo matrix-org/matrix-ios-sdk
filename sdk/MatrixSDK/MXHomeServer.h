@@ -34,15 +34,30 @@ typedef NSString* MXRoomVisibility;
  */
 - (id)initWithHomeServer:(NSString*)homeserver;
 
-/*
+
  #pragma mark - Registration operations
- - (void)getRegisterFlow:(void (^)(NSObject *tbd))success
- failure:(void (^)(NSError *error))failure;
+/**
+ Get the list of register flows supported by the home server.
  
- - (void)register:(void (^)(NSObject *tbd))success
- failure:(void (^)(NSError *error))failure;
+ @param success A block object called when the operation succeeds. flows is an array of MXLoginFlow objects
+ @param failure A block object called when the operation fails.
  */
+- (void)getRegisterFlow:(void (^)(NSArray *flows))success
+             failure:(void (^)(NSError *error))failure;
+
+/**
+ Register a user with the password-based flow.
  
+ @param user the user id (ex: "@bob:matrix.org") or the user localpart (ex: "bob") of the user to register.
+ @param password his password.
+ @param success A block object called when the operation succeeds. It provides credentials to use to open a MXSession.
+ @param failure A block object called when the operation fails.
+ */
+- (void)registerWithUser:(NSString*)user andPassword:(NSString*)password
+              success:(void (^)(MXLoginResponse *credentials))success
+              failure:(void (^)(NSError *error))failure;
+
+
  #pragma mark - Login operations
 /**
  Get the list of login flows supported by the home server.

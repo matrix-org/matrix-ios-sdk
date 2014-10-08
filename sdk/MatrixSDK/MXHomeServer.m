@@ -19,6 +19,12 @@
 #import <Mantle.h>
 #import "MXRestClient.h"
 
+typedef enum
+{
+    MXAuthActionRegister,
+    MXAuthActionLogin
+}
+MXAuthAction;
 
 @interface MXHomeServer ()
 {
@@ -45,12 +51,62 @@
 }
 
 
+#pragma mark - Registration operations
+- (void)getRegisterFlow:(void (^)(NSArray *flows))success
+             failure:(void (^)(NSError *error))failure
+{
+    [self getRegisterOrLoginFlow:MXAuthActionRegister success:success failure:failure];
+}
+
+- (void)registerWithUser:(NSString*)user andPassword:(NSString*)password
+                 success:(void (^)(MXLoginResponse *credentials))success
+                 failure:(void (^)(NSError *error))failure
+{
+    [self registerOrLoginWithUser:MXAuthActionRegister user:user andPassword:password
+                          success:success failure:failure];
+}
+
+
 #pragma mark - Login operations
 - (void)getLoginFlow:(void (^)(NSArray *flows))success
              failure:(void (^)(NSError *error))failure
 {
+    [self getRegisterOrLoginFlow:MXAuthActionLogin success:success failure:failure];
+}
+
+- (void)loginWithUser:(NSString *)user andPassword:(NSString *)password
+                success:(void (^)(MXLoginResponse *))success failure:(void (^)(NSError *))failure
+{
+    [self registerOrLoginWithUser:MXAuthActionLogin user:user andPassword:password
+                          success:success failure:failure];
+}
+
+
+#pragma mark - Common operations for register and login
+/*
+ The only difference between register and login request are the path of the requests. 
+ The parameters and the responses are of the same types.
+ So, use common functions to implement their functions.
+ */
+
+/**
+ Return the home server path to use for register or for login actions.
+ */
+- (NSString*)authActionPath:(MXAuthAction)authAction
+{
+    NSString *authActionPath = @"register";
+    if (MXAuthActionLogin == authAction)
+    {
+        authActionPath = @"login";
+    }
+    return authActionPath;
+}
+
+- (void)getRegisterOrLoginFlow:(MXAuthAction)authAction
+                       success:(void (^)(NSArray *flows))success failure:(void (^)(NSError *error))failure
+{
     [hsClient requestWithMethod:@"GET"
-                           path:@"login"
+                           path:[self authActionPath:authAction]
                      parameters:nil
                         success:^(NSDictionary *JSONResponse)
      {
@@ -67,17 +123,17 @@
      }];
 }
 
-- (void)loginWithUser:(NSString *)user andPassword:(NSString *)password
-                success:(void (^)(MXLoginResponse *))success failure:(void (^)(NSError *))failure
+- (void)registerOrLoginWithUser:(MXAuthAction)authAction user:(NSString *)user andPassword:(NSString *)password
+              success:(void (^)(MXLoginResponse *))success failure:(void (^)(NSError *))failure
 {
     NSDictionary *parameters = @{
-        @"type": kMatrixLoginFlowTypePassword,
-        @"user": user,
-        @"password": password
-    };
+                                 @"type": kMatrixLoginFlowTypePassword,
+                                 @"user": user,
+                                 @"password": password
+                                 };
     
     [hsClient requestWithMethod:@"POST"
-                           path:@"login"
+                           path:[self authActionPath:authAction]
                      parameters:parameters
                         success:^(NSDictionary *JSONResponse)
      {
@@ -91,6 +147,8 @@
          failure(error);
      }];
 }
+
+
 
 #pragma mark - Event operations
 - (void)publicRooms:(void (^)(NSArray *rooms))success
@@ -106,15 +164,10 @@
          
          NSArray *publicRooms = [transformer transformedValue:array];
          
-         NSLog(@"publicRooms: %@", ((MXPublicRoom*)publicRooms[0]).name);
-         
-         NSLog(@"publicRooms: %d", (int)publicRooms.count);
-         
          success(publicRooms);
      }
                         failure:^(NSError *error)
      {
-         NSLog(@"Error: %@", error);
          failure(error);
      }];
 }
