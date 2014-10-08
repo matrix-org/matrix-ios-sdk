@@ -45,6 +45,9 @@
         access_token = accessToken;
         
         httpManager = [[AFHTTPRequestOperationManager alloc] initWithBaseURL:[NSURL URLWithString:[NSString stringWithFormat:@"%@%@", homeserver, MX_PREFIX_PATH]]];
+        
+        // Send requests parameters in JSON format 
+        httpManager.requestSerializer = [AFJSONRequestSerializer serializer];
     }
     return self;
 }
