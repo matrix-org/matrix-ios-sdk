@@ -53,18 +53,24 @@ NSInteger const kMatrixNSErrorCode = 6;
 - (NSError *)createNSError
 {
     NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
+    
+    if (self.errCode)
+    {
+        userInfo[@"errCode"] = self.errCode;
+    }
 
     if (self.error)
     {
         userInfo[@"error"] = self.error;
         userInfo[NSLocalizedDescriptionKey] = self.error;
     }
-
-    if (self.errCode)
+    
+    if ((nil == self.error || 0 == self.error.length) && self.errCode)
     {
-        userInfo[@"errCode"] = self.errCode;
+        // Fallback: use errCode as description
+        userInfo[NSLocalizedDescriptionKey] = self.errCode;
     }
-
+    
     return [NSError errorWithDomain:kMatrixNSErrorDomain
                                code:kMatrixNSErrorCode
                            userInfo:userInfo];
