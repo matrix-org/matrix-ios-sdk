@@ -85,7 +85,7 @@
                 if (JSONResponse)
                 {
                     // Extract values from the home server JSON response
-                    error = [[[MXError alloc] initWithErrorCode:JSONResponse[@"errCode"]
+                    error = [[[MXError alloc] initWithErrorCode:JSONResponse[@"errcode"]
                                                          error:JSONResponse[@"error"]] createNSError];
                 }
             }
