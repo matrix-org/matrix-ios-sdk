@@ -53,7 +53,7 @@ FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeEmailUrl;
 FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeEmailIdentity;
 
 /**
- `MXLoginFlow` represents a login flow supported by the home server.
+ `MXLoginFlow` represents a login or a register flow supported by the home server.
  */
 @interface MXLoginFlow : MXJSONModel
 
@@ -72,7 +72,9 @@ FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeEmailIdentity;
 
 
 /**
- `MXLoginResponse` represents the response to a login request.
+ `MXLoginResponse` represents the response to a login or a register request.
+ Login and register requests are similar at the home server API level. That's why they 
+ share the same objects.
  */
 @interface MXLoginResponse : MXJSONModel
 
