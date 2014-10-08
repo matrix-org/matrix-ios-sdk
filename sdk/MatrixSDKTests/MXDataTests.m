@@ -17,7 +17,7 @@
 #import <UIKit/UIKit.h>
 #import <XCTest/XCTest.h>
 
-#import "MatrixSDKTests.h"
+#import "MatrixSDKTestsData.h"
 
 #import "MXData.h"
 
