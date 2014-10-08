@@ -44,3 +44,7 @@ NSString *const kMatrixLoginFlowTypeEmailIdentity = @"m.login.email.identity";
 
 @implementation MXLoginFlow
 @end
+
+@implementation MXLoginResponse
+@end
+

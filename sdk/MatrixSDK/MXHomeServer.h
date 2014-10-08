@@ -45,7 +45,7 @@ typedef NSString* MXRoomVisibility;
  
  #pragma mark - Login operations
 /**
- Get the list of login flows supported by the home server
+ Get the list of login flows supported by the home server.
  
  @param success A block object called when the operation succeeds. flows is an array of MXLoginFlow objects
  @param failure A block object called when the operation fails.
@@ -53,8 +53,17 @@ typedef NSString* MXRoomVisibility;
  - (void)getLoginFlow:(void (^)(NSArray *flows))success
  failure:(void (^)(NSError *error))failure;
 
- - (void)login:(void (^)(NSObject *tbd))success
- failure:(void (^)(NSError *error))failure;
+/**
+ Log a user in with the password-based flow.
+ 
+ @param user the id of the user to log in.
+ @param password his password.
+ @param success A block object called when the operation succeeds. It provides credentials to use to open a MXSession.
+ @param failure A block object called when the operation fails.
+ */
+- (void)loginWithUser:(NSString*)user andPassword:(NSString*)password
+                success:(void (^)(MXLoginResponse *credentials))success
+                failure:(void (^)(NSError *error))failure;
 
 
 /**

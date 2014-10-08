@@ -67,9 +67,29 @@
      }];
 }
 
-- (void)login:(void (^)(NSObject *tbd))success
-      failure:(void (^)(NSError *error))failure
+- (void)loginWithUser:(NSString *)user andPassword:(NSString *)password
+                success:(void (^)(MXLoginResponse *))success failure:(void (^)(NSError *))failure
 {
+    NSDictionary *parameters = @{
+        @"type": kMatrixLoginFlowTypePassword,
+        @"user": user,
+        @"password": password
+    };
+    
+    [hsClient requestWithMethod:@"POST"
+                           path:@"login"
+                     parameters:parameters
+                        success:^(NSDictionary *JSONResponse)
+     {
+         MXLoginResponse *credentials = [MTLJSONAdapter modelOfClass:[MXLoginResponse class]
+                                                  fromJSONDictionary:JSONResponse
+                                                               error:nil];
+         success(credentials);
+     }
+                        failure:^(NSError *error)
+     {
+         failure(error);
+     }];
 }
 
 #pragma mark - Event operations

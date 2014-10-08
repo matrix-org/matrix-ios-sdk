@@ -69,3 +69,26 @@ FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeEmailIdentity;
     @property (nonatomic) NSArray *stages;
 
 @end
+
+
+/**
+ `MXLoginResponse` represents the response to a login request.
+ */
+@interface MXLoginResponse : MXJSONModel
+
+    /**
+     The home server name.
+     */
+    @property (nonatomic) NSString *home_server;
+
+    /**
+     The obtained user id.
+     */
+    @property (nonatomic) NSString *user_id;
+
+    /**
+     The access token to open a MXSession
+     */
+    @property (nonatomic) NSString *access_token;
+
+@end
