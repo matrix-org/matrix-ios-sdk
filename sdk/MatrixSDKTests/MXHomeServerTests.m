@@ -17,7 +17,7 @@
 #import <UIKit/UIKit.h>
 #import <XCTest/XCTest.h>
 
-#import "MatrixSDKTests.h"
+#import "MatrixSDKTestsData.h"
 
 #import "MXHomeServer.h"
 
@@ -45,7 +45,7 @@
 - (void)testInit
 {
     XCTAssert(nil != homeServer, @"Valid init");
-    XCTAssert([homeServer.homeserver isEqualToString:kMXTestsMatrixHomeServerURL], @"Pass");
+    XCTAssert([homeServer.homeserver isEqualToString:kMXTestsHomeServerURL], @"Pass");
 }
 
 - (void)testPublicRooms
@@ -83,6 +83,24 @@
     [self waitForExpectationsWithTimeout:10000 handler:nil];
 }
 
+
+- (void)testRegisterPasswordBased
+{
+    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
+    
+    [homeServer registerWithUser:@"mxtest" andPassword:@"password"
+                      success:^(MXLoginResponse *credentials) {
+                          
+                          [expectation fulfill];
+                          
+                      } failure:^(NSError *error) {
+                          XCTAssert(NO, @"The request should not fail");
+                          [expectation fulfill];
+                      }];
+    
+    [self waitForExpectationsWithTimeout:10000 handler:nil];
+}
+
 - (void)testLoginFlow
 {
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
@@ -109,7 +127,24 @@
     }];
     
     [self waitForExpectationsWithTimeout:10000 handler:nil];
+}
 
+- (void)testLoginPasswordBased
+{
+    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
+    
+    [homeServer loginWithUser:@"mxtest" andPassword:@"password"
+                      success:^(MXLoginResponse *credentials) {
+        
+        
+        [expectation fulfill];
+        
+    } failure:^(NSError *error) {
+        XCTAssert(NO, @"The request should not fail");
+        [expectation fulfill];
+    }];
+    
+    [self waitForExpectationsWithTimeout:10000 handler:nil];
 }
 
 @end
