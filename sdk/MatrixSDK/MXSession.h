@@ -16,8 +16,10 @@
 
 #import <Foundation/Foundation.h>
 
-// TODO
+
 typedef NSString* MXRoomVisibility;
+FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPublic;
+FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
 
 @interface MXSession : NSObject
 
@@ -28,7 +30,6 @@ typedef NSString* MXRoomVisibility;
 -(id)initWithHomeServer:(NSString*)homeserver
                  userId:(NSString*)userId
             accessToken:(NSString*)accessToken;
-
 
 - (void)close;
 
@@ -56,14 +57,29 @@ typedef NSString* MXRoomVisibility;
     user_id:(NSString*)user_id
     success:(void (^)())success
     failure:(void (^)(NSError *error))failure;
+*/
 
+/**
+ Create a room.
+ 
+ @param name (optional) the room name.
+ @param visibility (optional) the visibility of the room (kMXRoomVisibilityPublic or kMXRoomVisibilityPrivate).
+ @param room_alias_name (optional) the room alias on the home server the room will be created.
+ @param topic (optional) the room topic.
+ @param userIds (optional) an arry of user ids strings for users to invite in this room.
+
+ @param success A block object called when the operation succeeds. @TODO
+ @param failure A block object called when the operation fails.
+ */
 - (void)createRoom:(NSString*)name
         visibility:(MXRoomVisibility)visibility
    room_alias_name:(NSString*)room_alias_name
              topic:(NSString*)topic
-           success:(void (^)(NSArray *members))success
+            invite:(NSArray*)userIds
+           success:(void (^)(NSDictionary *JSONResponse))success
            failure:(void (^)(NSError *error))failure;
 
+/*
 // Duplicate???
 - (void)messages:(NSString*)room_id
          success:(void (^)(NSArray *members))success

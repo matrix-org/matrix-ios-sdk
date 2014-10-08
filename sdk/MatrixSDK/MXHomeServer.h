@@ -18,9 +18,6 @@
 
 #import "MXJSONModels.h"
 
-// @TBD
-typedef NSString* MXRoomVisibility;
-
 @interface MXHomeServer : NSObject
 
 @property (readonly, nonatomic) NSString *homeserver;

@@ -46,6 +46,55 @@
     //@TODO
 }
 
+
+#pragma mark - Room operations
+- (void)createRoom:(NSString*)name
+        visibility:(MXRoomVisibility)visibility
+   room_alias_name:(NSString*)room_alias_name
+             topic:(NSString*)topic
+            invite:(NSArray*)userIds
+           success:(void (^)(NSDictionary *JSONResponse))success
+           failure:(void (^)(NSError *error))failure
+{
+    // All parameters are optional. Fill the request parameters on demand
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+
+    if (name)
+    {
+        parameters[@"name"] = name;
+    }
+    if (visibility)
+    {
+        parameters[@"visibility"] = visibility;
+    }
+    if (room_alias_name)
+    {
+        parameters[@"room_alias_name"] = room_alias_name;
+    }
+    if (topic)
+    {
+        parameters[@"topic"] = topic;
+    }
+    if (userIds)
+    {
+        parameters[@"userIds"] = userIds;
+    }
+    
+    [hsClient requestWithMethod:@"POST"
+                           path:@"createRoom"
+                     parameters:parameters
+                        success:^(NSDictionary *JSONResponse)
+     {
+         //@TODO
+         success(JSONResponse);
+     }
+                        failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
+#pragma mark - Event operations
 -(void)initialSync:(NSInteger)limit
            success:(void (^)(NSDictionary *))success
            failure:(void (^)(NSError *))failure
