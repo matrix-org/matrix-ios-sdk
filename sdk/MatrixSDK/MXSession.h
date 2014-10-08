@@ -16,6 +16,7 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MXJSONModels.h"
 
 typedef NSString* MXRoomVisibility;
 FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPublic;
@@ -76,7 +77,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
    room_alias_name:(NSString*)room_alias_name
              topic:(NSString*)topic
             invite:(NSArray*)userIds
-           success:(void (^)(NSDictionary *JSONResponse))success
+           success:(void (^)(MXCreateRoomResponse *response))success
            failure:(void (^)(NSError *error))failure;
 
 /*

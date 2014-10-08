@@ -37,7 +37,7 @@
 }
 
 // Prepare a MXSession for mxBob so that we can make test on it
--(void)doMXSessionTestWithBob:(void (^)(MXSession *bobSession, XCTestExpectation *expectation))readyToTest
+- (void)doMXSessionTestWithBob:(void (^)(MXSession *bobSession, XCTestExpectation *expectation))readyToTest
 {
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
     
@@ -45,7 +45,7 @@
     
     [sharedData getBobCredentials:^{
         
-        MXSession *session = [[MXSession alloc] initWithHomeServer:sharedData.bobCredentials.home_server userId:sharedData.bobCredentials.user_id accessToken:sharedData.bobCredentials.access_token];
+        MXSession *session = [[MXSession alloc] initWithHomeServer:kMXTestsHomeServerURL userId:sharedData.bobCredentials.user_id accessToken:sharedData.bobCredentials.access_token];
         
         readyToTest(session, expectation);
 
@@ -54,17 +54,39 @@
     [self waitForExpectationsWithTimeout:10000 handler:nil];
 }
 
-- (void)testInit {
-    
+- (void)testInit
+{
     [self doMXSessionTestWithBob:^(MXSession *bobSession, XCTestExpectation *expectation) {
         
         MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
         
-        XCTAssertTrue([bobSession.homeserver isEqualToString:sharedData.bobCredentials.home_server], "bobSession.homeserver(%@) is wrong", bobSession.homeserver);
+        XCTAssertTrue([bobSession.homeserver isEqualToString:kMXTestsHomeServerURL], "bobSession.homeserver(%@) is wrong", bobSession.homeserver);
         XCTAssertTrue([bobSession.user_id isEqualToString:sharedData.bobCredentials.user_id], "bobSession.user_id(%@) is wrong", bobSession.user_id);
         XCTAssertTrue([bobSession.access_token isEqualToString:sharedData.bobCredentials.access_token], "bobSession.access_token(%@) is wrong", bobSession.access_token);
         
         [expectation fulfill];
+    }];
+}
+
+#pragma mark - Room operations
+- (void)testCreateRoom
+{
+    [self doMXSessionTestWithBob:^(MXSession *bobSession, XCTestExpectation *expectation) {
+        
+        // Create a random room with no params
+        [bobSession createRoom:nil visibility:nil room_alias_name:nil topic:nil invite:nil success:^(MXCreateRoomResponse *response) {
+            
+            XCTAssertNotNil(response);
+            XCTAssertNotNil(response.room_id, "The home server should have allocated a room id");
+            
+            // Do not test response.room_alias as it is not filled here
+            
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
     }];
 }
 

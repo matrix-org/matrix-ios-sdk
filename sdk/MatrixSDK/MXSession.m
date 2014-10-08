@@ -53,7 +53,7 @@
    room_alias_name:(NSString*)room_alias_name
              topic:(NSString*)topic
             invite:(NSArray*)userIds
-           success:(void (^)(NSDictionary *JSONResponse))success
+           success:(void (^)(MXCreateRoomResponse *response))success
            failure:(void (^)(NSError *error))failure
 {
     // All parameters are optional. Fill the request parameters on demand
@@ -85,8 +85,10 @@
                      parameters:parameters
                         success:^(NSDictionary *JSONResponse)
      {
-         //@TODO
-         success(JSONResponse);
+         MXCreateRoomResponse *response = [MTLJSONAdapter modelOfClass:[MXCreateRoomResponse class]
+                                                  fromJSONDictionary:JSONResponse
+                                                               error:nil];
+         success(response);
      }
                         failure:^(NSError *error)
      {

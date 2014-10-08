@@ -94,3 +94,21 @@ FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeEmailIdentity;
     @property (nonatomic) NSString *access_token;
 
 @end
+
+
+/**
+ `MXCreateRoomResponse` represents the response to createRoom request.
+ */
+@interface MXCreateRoomResponse : MXJSONModel
+
+    /**
+     The allocated room id.
+     */
+    @property (nonatomic) NSString *room_id;
+
+    /**
+     The alias on this home server.
+     */
+    @property (nonatomic) NSString *room_alias;
+
+@end
