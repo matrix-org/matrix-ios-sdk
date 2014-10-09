@@ -18,6 +18,8 @@
 
 @implementation MXEvent
 
-NSString *const kMatrixEventTypeRoomMessage = @"m.room.message";
-
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"%@: %@ - %@: %@", self.event_id, self.type, [NSDate dateWithTimeIntervalSince1970:self.ts/1000], self.content];
+}
 @end
