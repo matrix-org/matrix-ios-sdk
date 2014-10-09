@@ -74,12 +74,14 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
  Send a message to a room
  
  @param room_id the id of the room.
+ @param msgType the type of the message. See MXMessageType.
  @param content the message content that will be sent to the server as a JSON object.
  @param success A block object called when the operation succeeds. It returns
                 the event id of the event generated on the home server
  @param failure A block object called when the operation fails.
  */
 - (void)postMessage:(NSString*)room_id
+            msgType:(MXMessageType)msgType
             content:(NSDictionary*)content
             success:(void (^)(NSString *event_id))success
             failure:(void (^)(NSError *error))failure;

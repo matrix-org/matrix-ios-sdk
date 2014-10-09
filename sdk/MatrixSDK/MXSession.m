@@ -79,11 +79,16 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
 }
 
 - (void)postMessage:(NSString*)room_id
+            msgType:(MXMessageType)msgType
             content:(NSDictionary*)content
             success:(void (^)(NSString *event_id))success
             failure:(void (^)(NSError *error))failure
 {
-    [self postEvent:room_id eventType:kMXEventTypeRoomMessage content:content success:success failure:failure];
+    // Add the messsage type to the data to send
+    NSMutableDictionary *eventContent = [NSMutableDictionary dictionaryWithDictionary:content];
+    eventContent[@"msgtype"] = msgType;
+    
+    [self postEvent:room_id eventType:kMXEventTypeRoomMessage content:eventContent success:success failure:failure];
 }
 
 - (void)postTextMessage:(NSString*)room_id
@@ -91,10 +96,10 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
                 success:(void (^)(NSString *event_id))success
                 failure:(void (^)(NSError *error))failure
 {
-    [self postMessage:room_id content:@{
-                                        @"msgtype": kMXMessageTypeText,
-                                        @"body": text
-                                        }
+    [self postMessage:room_id msgType:kMXMessageTypeText
+              content:@{
+                        @"body": text
+                        }
               success:success failure:failure];
 }
 
