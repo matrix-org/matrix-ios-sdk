@@ -71,6 +71,23 @@
     [self waitForExpectationsWithTimeout:10000 handler:nil];
 }
 
+- (void)doMXDataTestWihBobAndSeveralRoomsAndMessages:(void (^)(MXSession *bobSession, XCTestExpectation *expectation))readyToTest
+{
+    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
+    
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+    
+    [sharedData getBobMXSession:^(MXSession *bobSession) {
+        
+        // Fill Bob's account with 5 rooms of 3 messages
+        [sharedData for:bobSession createRooms:5 withMessages:3 success:^{
+            readyToTest(bobSession, expectation);
+        }];
+    }];
+    
+    [self waitForExpectationsWithTimeout:10000 handler:nil];
+}
+
 - (void)testRecents
 {
     [self doMXDataTestInABobRoomAndANewTextMessage:@"This is a text message for recents" onReadyToTest:^(MXSession *bobSession, NSString *room_id, NSString *new_text_message_event_id, XCTestExpectation *expectation) {
@@ -102,8 +119,44 @@
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
-        
     }];
 }
 
+- (void)testRecentsOrder
+{
+    [self doMXDataTestWihBobAndSeveralRoomsAndMessages:^(MXSession *bobSession, XCTestExpectation *expectation) {
+
+        matrixData = [[MXData alloc] initWithMatrixSession:bobSession];
+        [matrixData start:^{
+            
+            NSArray *recents = [matrixData recents];
+            
+            XCTAssertGreaterThanOrEqual(recents.count, 5, @"There must be at least 5 recents");
+            
+            NSUInteger prev_ts = ULONG_MAX;
+            for (MXEvent *event in recents)
+            {
+                XCTAssertNotNil(event.event_id, @"The event must have an event_id to be valid");
+                
+                if (event.ts)
+                {
+                    XCTAssertLessThanOrEqual(event.ts, prev_ts, @"Events must be listed in antichronological order");
+                    prev_ts = event.ts;
+                }
+                else
+                {
+                    NSLog(@"No timestamp in the event data: %@", event);
+                }
+            }
+            
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+    
+
+}
 @end
