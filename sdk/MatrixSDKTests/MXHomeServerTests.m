@@ -134,7 +134,7 @@
     
     [self createTestAccount:^{
         // Register the same user
-        [homeServer registerWithUser:MXTESTS_PWD andPassword:MXTESTS_PWD
+        [homeServer registerWithUser:MXTESTS_USER andPassword:MXTESTS_PWD
                              success:^(MXLoginResponse *credentials) {
                                  
                                  XCTFail(@"The request should fail (User already exists)");
