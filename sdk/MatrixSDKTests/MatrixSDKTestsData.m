@@ -105,7 +105,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
     }
 }
 
--(void)getBobMXSession:(void (^)(MXSession *))success
+- (void)getBobMXSession:(void (^)(MXSession *))success
 {
     [self getBobCredentials:^{
         
@@ -115,6 +115,51 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
     }];
 }
 
+- (void)for:(MXSession *)mxSession andRoom:(NSString*)room_id postMessages:(NSUInteger)messagesCount success:(void (^)())success
+{
+    NSLog(@"postMessages :%ld", messagesCount);
+    if (0 == messagesCount)
+    {
+        success();
+    }
+    else
+    {
+        [mxSession postTextMessage:room_id text:[NSString stringWithFormat:@"Fake message #-%ld", messagesCount]
+                           success:^(NSString *event_id) {
 
+            // Post the next message
+            [self for:mxSession andRoom:room_id postMessages:messagesCount - 1 success:success];
+
+        } failure:^(NSError *error) {
+            // If the error is M_LIMIT_EXCEEDED, make sure your home server rate limit is high
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }
+}
+
+- (void)for:(MXSession *)mxSession createRooms:(NSUInteger)roomsCount withMessages:(NSUInteger)messagesCount success:(void (^)())success
+{
+    if (0 == roomsCount)
+    {
+        // The recursivity is done
+        success();
+    }
+    else
+    {
+        // Create the room
+        [mxSession createRoom:nil visibility:nil room_alias_name:nil topic:nil invite:nil success:^(MXCreateRoomResponse *response) {
+
+            // Fill it with messages
+            [self for:mxSession andRoom:response.room_id postMessages:messagesCount success:^{
+
+                // Go to the next room
+                [self for:mxSession createRooms:roomsCount - 1 withMessages:messagesCount success:success];
+            }];
+        } failure:^(NSError *error) {
+            // If the error is M_LIMIT_EXCEEDED, make sure your home server rate limit is high
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }
+}
 
 @end
