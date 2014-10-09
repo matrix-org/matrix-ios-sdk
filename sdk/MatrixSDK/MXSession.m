@@ -18,6 +18,15 @@
 
 #import "MXRestClient.h"
 
+#pragma mark - Constants definitions
+NSString *const kMXEventTypeRoomMessage = @"m.room.message";
+
+NSString *const kMXMessageTypeText = @"m.text";
+
+NSString *const kMXRoomVisibilityPublic = @"public";
+NSString *const kMXRoomVisibilityPrivate = @"private";
+
+#pragma mark - MXSession
 @interface MXSession ()
 {
     MXRestClient *hsClient;
@@ -48,6 +57,47 @@
 
 
 #pragma mark - Room operations
+- (void)postEvent:(NSString*)room_id
+        eventType:(MXEventType)eventType
+          content:(NSDictionary*)content
+          success:(void (^)(NSString *event_id))success
+          failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/send/%@", room_id, eventType];
+    [hsClient requestWithMethod:@"POST"
+                           path:path
+                     parameters:content
+                        success:^(NSDictionary *JSONResponse)
+     {
+         
+         success(JSONResponse[@"event_id"]);
+     }
+                        failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
+- (void)postMessage:(NSString*)room_id
+            content:(NSDictionary*)content
+            success:(void (^)(NSString *event_id))success
+            failure:(void (^)(NSError *error))failure
+{
+    [self postEvent:room_id eventType:kMXEventTypeRoomMessage content:content success:success failure:failure];
+}
+
+- (void)postTextMessage:(NSString*)room_id
+                   text:(NSString*)text
+                success:(void (^)(NSString *event_id))success
+                failure:(void (^)(NSError *error))failure
+{
+    [self postMessage:room_id content:@{
+                                        @"msgtype": kMXMessageTypeText,
+                                        @"body": text
+                                        }
+              success:success failure:failure];
+}
+
 - (void)join:(NSString*)room_id
      success:(void (^)())success
      failure:(void (^)(NSError *error))failure

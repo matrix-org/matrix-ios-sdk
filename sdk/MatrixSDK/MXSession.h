@@ -18,9 +18,27 @@
 
 #import "MXJSONModels.h"
 
+
+
+/**
+ Types of Matrix events
+ */
+typedef NSString* MXEventType;
+FOUNDATION_EXPORT NSString *const kMXEventTypeRoomMessage;
+
+/**
+ Types of room messages
+ */
+typedef NSString* MXMessageType;
+FOUNDATION_EXPORT NSString *const kMXMessageTypeText;
+
+/**
+ Room visibility
+ */
 typedef NSString* MXRoomVisibility;
 FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPublic;
 FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
+
 
 @interface MXSession : NSObject
 
@@ -37,17 +55,53 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
 
 #pragma mark - Room operations
 /**
- Send a generic non state event to this room
- *
+ Send a generic non state event to a room.
+ 
+ @param room_id the id of the room.
+ @param eventType the type of the event. See MXEventType.
+ @param content the content that will be sent to the server as a JSON object.
+ @param success A block object called when the operation succeeds. It returns 
+                the event id of the event generated on the home server
+ @param failure A block object called when the operation fails.
+ */
 - (void)postEvent:(NSString*)room_id
-     success:(void (^)())success
-     failure:(void (^)(NSError *error))failure;
-*/
+             eventType:(MXEventType)eventType
+          content:(NSDictionary*)content
+          success:(void (^)(NSString *event_id))success
+          failure:(void (^)(NSError *error))failure;
+
+/**
+ Send a message to a room
+ 
+ @param room_id the id of the room.
+ @param content the message content that will be sent to the server as a JSON object.
+ @param success A block object called when the operation succeeds. It returns
+                the event id of the event generated on the home server
+ @param failure A block object called when the operation fails.
+ */
+- (void)postMessage:(NSString*)room_id
+            content:(NSDictionary*)content
+            success:(void (^)(NSString *event_id))success
+            failure:(void (^)(NSError *error))failure;
+
+/**
+ Send a text message to a room
+ 
+ @param room_id the id of the room.
+ @param text the text to send.
+ @param success A block object called when the operation succeeds. It returns
+                the event id of the event generated on the home server
+ @param failure A block object called when the operation fails.
+ */
+- (void)postTextMessage:(NSString*)room_id
+                   text:(NSString*)text
+                success:(void (^)(NSString *event_id))success
+                failure:(void (^)(NSError *error))failure;
 
 /**
  Join a room.
  
- @param room_id the id of the room to join
+ @param room_id the id of the room to join.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */

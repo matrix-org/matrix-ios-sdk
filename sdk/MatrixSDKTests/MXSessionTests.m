@@ -84,6 +84,24 @@
 }
 
 #pragma mark - Room operations
+- (void)testPostTextMessage
+{
+    // This test on postTextMessage validates postMessage and postEvent too
+    [self doMXSessionTestWithBobAndARoom:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
+        
+        [bobSession postTextMessage:room_id text:@"This is text message" success:^(NSString *event_id) {
+            
+            XCTAssertNotNil(event_id);
+            XCTAssertGreaterThan(event_id.length, 0, @"The event_id string must not be empty");
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 - (void)testJoin
 {
     [self doMXSessionTestWithBobAndARoom:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
