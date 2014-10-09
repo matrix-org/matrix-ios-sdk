@@ -16,7 +16,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXJSONModels.h"
+#import "MXSession.h"
 
 // The URL of your test home server
 FOUNDATION_EXPORT NSString * const kMXTestsHomeServerURL;
@@ -26,9 +26,13 @@ FOUNDATION_EXPORT NSString * const kMXTestsHomeServerURL;
 + (id)sharedData;
 
 // Credentials for the user mxBob on the home server located at kMXTestsHomeServerURL
+@property (nonatomic, readonly) MXLoginResponse *bobCredentials;
+
+// Get credentials asynchronously
 // The user will be created if needed
 - (void)getBobCredentials:(void (^)())success;
-@property (nonatomic, readonly) MXLoginResponse *bobCredentials;
+- (void)getBobMXSession:(void (^)(MXSession *bobSession))success;
+
 
 //- (void)AliceCredentials:(void (^)())success;
 //@property (nonatomic, readonly) MXLoginResponse *aliceCredentials;

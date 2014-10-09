@@ -105,6 +105,16 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
     }
 }
 
+-(void)getBobMXSession:(void (^)(MXSession *))success
+{
+    [self getBobCredentials:^{
+        
+        MXSession *session = [[MXSession alloc] initWithHomeServer:kMXTestsHomeServerURL userId:self.bobCredentials.user_id accessToken:self.bobCredentials.access_token];
+        
+        success(session);
+    }];
+}
+
 
 
 @end

@@ -21,11 +21,6 @@
 
 #import "MXData.h"
 
-
-// @TODO: Find an automatic way to test with an user account
-#define MX_USER_ID @"@your_name:matrig.org"
-#define MX_ACCESS_TOKEN @"your_access_token"
-
 @interface MXDataTests : XCTestCase
 {
     MXData *matrixData;
@@ -37,12 +32,6 @@
 - (void)setUp
 {
     [super setUp];
-
-    MXSession *matrixSession = [[MXSession alloc] initWithHomeServer:kMXTestsHomeServerURL
-                                                              userId:MX_USER_ID
-                                                         accessToken:MX_ACCESS_TOKEN];
-    
-    matrixData = [[MXData alloc] initWithMatrixSession:matrixSession];
 }
 
 - (void)tearDown
@@ -53,29 +42,68 @@
     [super tearDown];
 }
 
-- (void)testRecents
+// Prepare a MXSession for mxBob so that we can make test on it
+- (void)doMXDataTestInABobRoomAndANewTextMessage:(NSString*)newTextMessage
+                                   onReadyToTest:(void (^)(MXSession *bobSession, NSString* room_id, NSString* new_text_message_event_id, XCTestExpectation *expectation))readyToTest
 {
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
-
-    [matrixData start:^{
-        
-        NSArray *recents = [matrixData recents];
-        
-        XCTAssert(0 < recents.count, @"There must be recents");
-        
-        for (MXEvent *event in recents)
-        {
-            XCTAssertNotNil(event.event_id, @"The event must have an event_id to be valid");
-        }
-        
-        [expectation fulfill];
-        
-    } failure:^(NSError *error) {
-        XCTFail(@"The request should not fail - NSError: %@", error);
-        [expectation fulfill];
-    }];
     
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+    
+    [sharedData getBobMXSession:^(MXSession *bobSession) {
+        // Create a random room to use
+        [bobSession createRoom:nil visibility:nil room_alias_name:nil topic:nil invite:nil success:^(MXCreateRoomResponse *response) {
+            
+            // Post the the message text in it
+            [bobSession postTextMessage:response.room_id text:newTextMessage success:^(NSString *event_id) {
+                
+                readyToTest(bobSession, response.room_id, event_id, expectation);
+                
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions");
+            }];
+            
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot create a room - error: %@", error);
+        }];
+    }];
+
     [self waitForExpectationsWithTimeout:10000 handler:nil];
+}
+
+- (void)testRecents
+{
+    [self doMXDataTestInABobRoomAndANewTextMessage:@"This is a text message for recents" onReadyToTest:^(MXSession *bobSession, NSString *room_id, NSString *new_text_message_event_id, XCTestExpectation *expectation) {
+        
+        matrixData = [[MXData alloc] initWithMatrixSession:bobSession];
+        [matrixData start:^{
+            
+            NSArray *recents = [matrixData recents];
+            
+            XCTAssertGreaterThan(recents.count, 0, @"There must be at least one recent");
+            
+            MXEvent *myNewTextMessageEvent;
+            for (MXEvent *event in recents)
+            {
+                XCTAssertNotNil(event.event_id, @"The event must have an event_id to be valid");
+                
+                if ([event.event_id isEqualToString:new_text_message_event_id])
+                {
+                    myNewTextMessageEvent = event;
+                }
+            }
+            
+            XCTAssertNotNil(myNewTextMessageEvent);
+            XCTAssertTrue([myNewTextMessageEvent.type isEqualToString:kMXEventTypeRoomMessage]);
+            
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        
+    }];
 }
 
 @end
