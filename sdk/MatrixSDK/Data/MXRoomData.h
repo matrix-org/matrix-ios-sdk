@@ -29,14 +29,16 @@
 @property (nonatomic, readonly) NSString *room_id;
 
 /**
- The list of events (MXEvent instances) currently loaded for this room.
+ The list of messages (MXEvent instances) currently loaded for this room.
+ A message is either a non-state or a state event that is intended to be 
+ displayed in a room chat history.
  */
-@property (nonatomic, readonly, copy) NSArray *events;
+@property (nonatomic, readonly, copy) NSArray *messages;
 
 /**
- The last event.
+ The last message.
  */
-@property (nonatomic, readonly, copy) MXEvent *lastEvent;
+@property (nonatomic, readonly, copy) MXEvent *lastMessage;
 
 /**
  The list of state events (actually MXEvent instances).

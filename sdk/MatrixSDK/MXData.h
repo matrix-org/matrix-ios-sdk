@@ -74,7 +74,7 @@
 - (MXRoomData *)getRoomData:(NSString*)room_id;
 
 /**
- Get the list of all last event of all rooms.
+ Get the list of all last message of all rooms.
  The returned array is time ordered: the first item is the more recent event.
  
  @return an array of MXEvents.

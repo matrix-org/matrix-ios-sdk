@@ -88,7 +88,7 @@
     NSMutableArray *recents = [NSMutableArray arrayWithCapacity:rooms.count];
     for (MXRoomData *room in rooms.allValues)
     {
-        [recents addObject:room.lastEvent];
+        [recents addObject:room.lastMessage];
     }
     
     // Order them by ts

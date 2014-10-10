@@ -18,7 +18,7 @@
 
 @interface MXRoomData ()
 {
-    NSMutableArray *events;
+    NSMutableArray *messages;
     NSMutableArray *stateEvents;
 }
 @end
@@ -31,19 +31,19 @@
     if (self)
     {
         _room_id = room_id;
-        events = [NSMutableArray array];
+        messages = [NSMutableArray array];
     }
     return self;
 }
 
-- (NSArray *)events
+- (NSArray *)messages
 {
-    return events;
+    return messages;
 }
 
-- (MXEvent *)lastEvent
+- (MXEvent *)lastMessage
 {
-    return events.lastObject;
+    return messages.lastObject;
 }
 
 - (NSArray *)stateEvents
@@ -60,11 +60,11 @@
     {
         if (isLiveEvent)
         {
-            [events addObject:event];
+            [messages addObject:event];
         }
         else
         {
-            [events insertObject:event atIndex:0];
+            [messages insertObject:event atIndex:0];
         }
     }
     else
