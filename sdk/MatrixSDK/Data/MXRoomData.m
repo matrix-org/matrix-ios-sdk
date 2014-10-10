@@ -55,7 +55,7 @@
         isLiveEvent:(BOOL)isLiveEvent isStateEvent:(BOOL)isStateEvent
             pagFrom:(NSString*)pagFrom
 {
-    NSLog(@"handleEvent: %@", event.type);
+    NSLog(@"handleEvent: %@", event);
     if (!isStateEvent)
     {
         if (isLiveEvent)
