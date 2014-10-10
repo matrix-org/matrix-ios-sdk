@@ -19,9 +19,10 @@
 /**
  Types of Matrix events
  
- Matrix events types are exchanged as strings with the home server.
- The types specified by the Matrix standard are listed here as NSUInteger enum 
- in order to ease the type handling.
+ Matrix events types are exchanged as strings with the home server. The types
+ specified by the Matrix standard are listed here as NSUInteger enum in order
+ to ease the type handling.
+ 
  Custom events types, out of the specification, may exist. In this case, 
  `MXEventTypeString` must be checked.
  */
@@ -102,8 +103,9 @@ FOUNDATION_EXPORT NSString *const kMXMessageTypeLocation;
 
 /**
  The event content.
- The keys in this dictionary depend on the event type. Check `MXEventType` 
- definitions to get a list of content keys per event type.
+ The keys in this dictionary depend on the event type. 
+ Check http://matrix.org/docs/spec/#room-events to get a list of content keys per 
+ event type.
  */
 @property (nonatomic) NSDictionary *content;
 
