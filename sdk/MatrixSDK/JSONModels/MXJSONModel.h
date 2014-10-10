@@ -24,4 +24,10 @@
  Matrix home server responses are a JSON string. The `MXJSONModel` class maps the members in the JSON object to the properties declared in the class that inherits from MXJSONModel
  */
 @interface MXJSONModel : MTLModel <MTLJSONSerializing>
+
+    /**
+     This dictionary contains keys/values that have been in the JSON source object.
+     */
+    @property (nonatomic, readonly) NSDictionary *others;
+
 @end

@@ -65,6 +65,7 @@ NSString *const kMXMessageTypeLocation  = @"m.video";
     });
     return inst;
 }
+
 - (NSString *)description
 {
     return [NSString stringWithFormat:@"%@: %@ - %@: %@", self.event_id, self.type, [NSDate dateWithTimeIntervalSince1970:self.ts/1000], self.content];

@@ -17,6 +17,9 @@
 #import "MXJSONModel.h"
 
 @implementation MXJSONModel
+{
+    NSMutableDictionary *others;
+}
 
 + (NSDictionary *)JSONKeyPathsByPropertyKey
 {
@@ -26,4 +29,30 @@
     return @{};
 }
 
+- (instancetype)initWithDictionary:(NSDictionary *)dictionaryValue error:(NSError *__autoreleasing *)error
+{
+    // Do the JSON -> class instance properties mapping
+    id instance = [super initWithDictionary:dictionaryValue error:error];
+    
+    // Store non declared JSON keys into the others property
+    NSSet *propertyKeys = [self.class propertyKeys];
+    for (NSString *key in dictionaryValue)
+    {
+        if ([propertyKeys containsObject:key])
+        {
+            if (nil == others)
+            {
+                others = [NSMutableDictionary dictionary];
+            }
+            others[key] = dictionaryValue[key];
+        }
+    }
+    
+    return instance;
+}
+
+-(NSDictionary *)others
+{
+    return others;
+}
 @end
