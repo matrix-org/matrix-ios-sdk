@@ -19,12 +19,9 @@
 #import "MXRestClient.h"
 
 #pragma mark - Constants definitions
-NSString *const kMXEventTypeRoomMessage = @"m.room.message";
-
-NSString *const kMXMessageTypeText = @"m.text";
-
 NSString *const kMXRoomVisibilityPublic = @"public";
 NSString *const kMXRoomVisibilityPrivate = @"private";
+
 
 #pragma mark - MXSession
 @interface MXSession ()

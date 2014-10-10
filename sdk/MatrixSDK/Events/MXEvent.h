@@ -16,7 +16,33 @@
 
 #import "MXJSONModel.h"
 
-FOUNDATION_EXPORT NSString *const kMatrixEventTypeRoomMessage;
+/**
+ Types of Matrix events
+ */
+typedef NSString* MXEventType;
+FOUNDATION_EXPORT NSString *const kMXEventTypeRoomMessage;
+FOUNDATION_EXPORT NSString *const kMXEventTypeRoomTopic;
+FOUNDATION_EXPORT NSString *const kMXEventTypeRoomMember;
+FOUNDATION_EXPORT NSString *const kMXEventTypeRoomCreate;
+FOUNDATION_EXPORT NSString *const kMXEventTypeRoomJoinRules;
+FOUNDATION_EXPORT NSString *const kMXEventTypeRoomPowerLevels;
+FOUNDATION_EXPORT NSString *const kMXEventTypeRoomAddStateLevel;
+FOUNDATION_EXPORT NSString *const kMXEventTypeRoomSendEventLevel;
+FOUNDATION_EXPORT NSString *const kMXEventTypeRoomAliases;
+FOUNDATION_EXPORT NSString *const kMXEventTypeRoomMessage;
+FOUNDATION_EXPORT NSString *const kMXEventTypeRoomMessageFeedback;
+
+/**
+ Types of room messages
+ */
+typedef NSString* MXMessageType;
+FOUNDATION_EXPORT NSString *const kMXMessageTypeText;
+FOUNDATION_EXPORT NSString *const kMXMessageTypeEmote;
+FOUNDATION_EXPORT NSString *const kMXMessageTypeImage;
+FOUNDATION_EXPORT NSString *const kMXMessageTypeAudio;
+FOUNDATION_EXPORT NSString *const kMXMessageTypeVideo;
+FOUNDATION_EXPORT NSString *const kMXMessageTypeLocation;
+
 
 /**
  `MXEvent` is the generic model of events received from the home server.
@@ -34,7 +60,10 @@ FOUNDATION_EXPORT NSString *const kMatrixEventTypeRoomMessage;
 @property (nonatomic) NSString *type;
 @property (nonatomic) NSString *room_id;
 @property (nonatomic) NSString *user_id;
-@property (nonatomic) id content;   // Depends on the event type
+
+/*
+ */
+@property (nonatomic) NSDictionary *content;
 
 @property (nonatomic) NSString *state_key;
 

@@ -16,10 +16,35 @@
 
 #import "MXEvent.h"
 
+#pragma mark - Constants definitions
+
+NSString *const kMXEventTypeRoomName            = @"m.room.name";
+NSString *const kMXEventTypeRoomTopic           = @"m.room.topic";
+NSString *const kMXEventTypeRoomMember          = @"m.room.member";
+NSString *const kMXEventTypeRoomCreate          = @"m.room.create";
+NSString *const kMXEventTypeRoomJoinRules       = @"m.room.join_rules";
+NSString *const kMXEventTypeRoomPowerLevels     = @"m.room.power_levels";
+NSString *const kMXEventTypeRoomAddStateLevel   = @"m.room.add_state_level";
+NSString *const kMXEventTypeRoomSendEventLevel  = @"m.room.send_event_level";
+NSString *const kMXEventTypeRoomOpsLevel        = @"m.room.ops_levels";
+NSString *const kMXEventTypeRoomAliases         = @"m.room.aliases";
+NSString *const kMXEventTypeRoomMessage         = @"m.room.message";
+NSString *const kMXEventTypeRoomMessageFeedback = @"m.room.message.feedback";
+
+NSString *const kMXMessageTypeText      = @"m.text";
+NSString *const kMXMessageTypeEmote     = @"m.emote";
+NSString *const kMXMessageTypeImage     = @"m.image";
+NSString *const kMXMessageTypeAudio     = @"m.audio";
+NSString *const kMXMessageTypeVideo     = @"m.video";
+NSString *const kMXMessageTypeLocation  = @"m.video";
+
+
+#pragma mark - MXEvent
 @implementation MXEvent
 
 - (NSString *)description
 {
     return [NSString stringWithFormat:@"%@: %@ - %@: %@", self.event_id, self.type, [NSDate dateWithTimeIntervalSince1970:self.ts/1000], self.content];
 }
+
 @end

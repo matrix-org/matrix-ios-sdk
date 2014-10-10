@@ -16,21 +16,9 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MXEvent.h"
 #import "MXJSONModels.h"
 
-
-
-/**
- Types of Matrix events
- */
-typedef NSString* MXEventType;
-FOUNDATION_EXPORT NSString *const kMXEventTypeRoomMessage;
-
-/**
- Types of room messages
- */
-typedef NSString* MXMessageType;
-FOUNDATION_EXPORT NSString *const kMXMessageTypeText;
 
 /**
  Room visibility
