@@ -26,16 +26,28 @@
     - retrieving events from the home server
     - storing them
     - serving them to the app
+ 
+ `MXData` maintains an array of messages per room. The term message designates either
+  a non-state or a state event that is intended to be displayed in a room chat history.
  */
 @interface MXData : NSObject
 
 /**
- Create a MXHomeServer instance.
+ An array of `MXEventTypeString` indicating which events must be stored as messages in MXData.
+ By default, this list contains some event types like:
+     - kMXEventTypeStringRoomMessage to display messages texts, images, etc.
+     - kMXEventTypeStringRoomMember to display user membership changes in the history
+     - ...
+ */
+@property (nonatomic) NSArray *eventTypesToUseAsMessages;
+
+/**
+ Create a MXData instance.
  This instance will use the passed MXSession to make requests to the home server.
  
  @param mSession The MXSession to the home server.
  
- @return The newly-initialized MXHomeServer.
+ @return The newly-initialized MXData.
  */
 - (id)initWithMatrixSession:(MXSession*)mSession;
 
@@ -75,7 +87,7 @@
 
 /**
  Get the list of all last message of all rooms.
- The returned array is time ordered: the first item is the more recent event.
+ The returned array is time ordered: the first item is the more recent message.
  
  @return an array of MXEvents.
  */

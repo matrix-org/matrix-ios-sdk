@@ -33,6 +33,7 @@
 @end
 
 @implementation MXData
+@synthesize eventTypesToUseAsMessages;
 
 - (id)initWithMatrixSession:(MXSession*)mSession;
 {
@@ -42,6 +43,14 @@
         matrixSession = mSession;
         rooms = [NSMutableDictionary dictionary];
         presence = [NSMutableDictionary dictionary];
+        
+        // Define default events to consider as messages
+        eventTypesToUseAsMessages = @[
+                                      kMXEventTypeStringRoomName,
+                                      kMXEventTypeStringRoomTopic,
+                                      kMXEventTypeStringRoomMember,
+                                      kMXEventTypeStringRoomMessage
+                                      ];
     }
     return self;
 }
