@@ -55,12 +55,12 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
 
 #pragma mark - Room operations
 - (void)postEvent:(NSString*)room_id
-        eventType:(MXEventType)eventType
+        eventType:(MXEventTypeString)eventTypeString
           content:(NSDictionary*)content
           success:(void (^)(NSString *event_id))success
           failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"rooms/%@/send/%@", room_id, eventType];
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/send/%@", room_id, eventTypeString];
     [hsClient requestWithMethod:@"POST"
                            path:path
                      parameters:content
@@ -85,7 +85,7 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
     NSMutableDictionary *eventContent = [NSMutableDictionary dictionaryWithDictionary:content];
     eventContent[@"msgtype"] = msgType;
     
-    [self postEvent:room_id eventType:kMXEventTypeRoomMessage content:eventContent success:success failure:failure];
+    [self postEvent:room_id eventType:kMXEventTypeStringRoomMessage content:eventContent success:success failure:failure];
 }
 
 - (void)postTextMessage:(NSString*)room_id

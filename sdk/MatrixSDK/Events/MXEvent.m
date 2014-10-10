@@ -18,18 +18,18 @@
 
 #pragma mark - Constants definitions
 
-NSString *const kMXEventTypeRoomName            = @"m.room.name";
-NSString *const kMXEventTypeRoomTopic           = @"m.room.topic";
-NSString *const kMXEventTypeRoomMember          = @"m.room.member";
-NSString *const kMXEventTypeRoomCreate          = @"m.room.create";
-NSString *const kMXEventTypeRoomJoinRules       = @"m.room.join_rules";
-NSString *const kMXEventTypeRoomPowerLevels     = @"m.room.power_levels";
-NSString *const kMXEventTypeRoomAddStateLevel   = @"m.room.add_state_level";
-NSString *const kMXEventTypeRoomSendEventLevel  = @"m.room.send_event_level";
-NSString *const kMXEventTypeRoomOpsLevel        = @"m.room.ops_levels";
-NSString *const kMXEventTypeRoomAliases         = @"m.room.aliases";
-NSString *const kMXEventTypeRoomMessage         = @"m.room.message";
-NSString *const kMXEventTypeRoomMessageFeedback = @"m.room.message.feedback";
+NSString *const kMXEventTypeStringRoomName            = @"m.room.name";
+NSString *const kMXEventTypeStringRoomTopic           = @"m.room.topic";
+NSString *const kMXEventTypeStringRoomMember          = @"m.room.member";
+NSString *const kMXEventTypeStringRoomCreate          = @"m.room.create";
+NSString *const kMXEventTypeStringRoomJoinRules       = @"m.room.join_rules";
+NSString *const kMXEventTypeStringRoomPowerLevels     = @"m.room.power_levels";
+NSString *const kMXEventTypeStringRoomAddStateLevel   = @"m.room.add_state_level";
+NSString *const kMXEventTypeStringRoomSendEventLevel  = @"m.room.send_event_level";
+NSString *const kMXEventTypeStringRoomOpsLevel        = @"m.room.ops_levels";
+NSString *const kMXEventTypeStringRoomAliases         = @"m.room.aliases";
+NSString *const kMXEventTypeStringRoomMessage         = @"m.room.message";
+NSString *const kMXEventTypeStringRoomMessageFeedback = @"m.room.message.feedback";
 
 NSString *const kMXMessageTypeText      = @"m.text";
 NSString *const kMXMessageTypeEmote     = @"m.emote";

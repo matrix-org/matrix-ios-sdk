@@ -111,7 +111,7 @@
             }
             
             XCTAssertNotNil(myNewTextMessageEvent);
-            XCTAssertTrue([myNewTextMessageEvent.type isEqualToString:kMXEventTypeRoomMessage]);
+            XCTAssertTrue([myNewTextMessageEvent.type isEqualToString:kMXEventTypeStringRoomMessage]);
             
             [expectation fulfill];
             

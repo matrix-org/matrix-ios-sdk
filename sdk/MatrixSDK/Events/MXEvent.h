@@ -18,19 +18,45 @@
 
 /**
  Types of Matrix events
+ 
+ Matrix events types are exchanged as strings with the home server.
+ The types specified by the Matrix standard are listed here as NSUInteger enum 
+ in order to ease the type handling.
+ Custom events types, out of the specification, may exists. In this case, MXEventTypeString
+ must be checked
  */
-typedef NSString* MXEventType;
-FOUNDATION_EXPORT NSString *const kMXEventTypeRoomMessage;
-FOUNDATION_EXPORT NSString *const kMXEventTypeRoomTopic;
-FOUNDATION_EXPORT NSString *const kMXEventTypeRoomMember;
-FOUNDATION_EXPORT NSString *const kMXEventTypeRoomCreate;
-FOUNDATION_EXPORT NSString *const kMXEventTypeRoomJoinRules;
-FOUNDATION_EXPORT NSString *const kMXEventTypeRoomPowerLevels;
-FOUNDATION_EXPORT NSString *const kMXEventTypeRoomAddStateLevel;
-FOUNDATION_EXPORT NSString *const kMXEventTypeRoomSendEventLevel;
-FOUNDATION_EXPORT NSString *const kMXEventTypeRoomAliases;
-FOUNDATION_EXPORT NSString *const kMXEventTypeRoomMessage;
-FOUNDATION_EXPORT NSString *const kMXEventTypeRoomMessageFeedback;
+typedef enum : NSUInteger
+{
+    MXEventTypeRoomTopic,
+    MXEventTypeRoomMember,
+    MXEventTypeRoomCreate,
+    MXEventTypeRoomJoinRules,
+    MXEventTypeRoomPowerLevels,
+    MXEventTypeRoomAddStateLevel,
+    MXEventTypeRoomSendEventLevel,
+    MXEventTypeRoomAliases,
+    MXEventTypeRoomMessage,
+    MXEventTypeRoomMessageFeedback,
+    
+    // The event is a custom event. Refer to its MXEventTypeString version
+    MXEventTypeCustom = 1000
+} MXEventType;
+
+/**
+ Types of Matrix events - String version
+ T
+ */
+typedef NSString* MXEventTypeString;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomTopic;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomMember;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomCreate;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomJoinRules;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomPowerLevels;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomAddStateLevel;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomSendEventLevel;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomAliases;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomMessage;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomMessageFeedback;
 
 /**
  Types of room messages
@@ -57,7 +83,8 @@ FOUNDATION_EXPORT NSString *const kMXMessageTypeLocation;
 
 @property (nonatomic) NSString *event_id;
 
-@property (nonatomic) NSString *type;
+@property (nonatomic) MXEventType nType;        // @TODO: type may be renamed to stringType
+@property (nonatomic) MXEventTypeString type;
 @property (nonatomic) NSString *room_id;
 @property (nonatomic) NSString *user_id;
 

@@ -53,7 +53,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
  @param failure A block object called when the operation fails.
  */
 - (void)postEvent:(NSString*)room_id
-             eventType:(MXEventType)eventType
+             eventType:(MXEventTypeString)eventTypeString
           content:(NSDictionary*)content
           success:(void (^)(NSString *event_id))success
           failure:(void (^)(NSError *error))failure;
