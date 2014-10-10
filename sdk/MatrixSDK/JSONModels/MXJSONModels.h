@@ -112,3 +112,42 @@ FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeEmailIdentity;
     @property (nonatomic) NSString *room_alias;
 
 @end
+
+
+/**
+ `MXRoomMember` represents a room member.
+ */
+@interface MXRoomMember : MXJSONModel
+
+    /**
+     The user id.
+     */
+    @property (nonatomic) NSString *user_id;
+
+    /**
+     The user display name.
+     */
+    @property (nonatomic) NSString *displayname;
+
+    /**
+     The url of the user of the avatar.
+     */
+    @property (nonatomic) NSString *avatar_url;
+
+    /**
+     The timestamp of the last time the user has been active.
+     */
+    @property (nonatomic) NSUInteger last_active_ago;
+
+    /**
+     The membership state.
+     */
+    @property (nonatomic) NSString *membership;
+
+    /* @TODO
+    @property (nonatomic) NSString *presence;
+    @property (nonatomic) NSString *status_msg;
+     */
+
+@end
+

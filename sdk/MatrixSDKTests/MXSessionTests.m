@@ -139,4 +139,25 @@
     }];
 }
 
+- (void)testMembers
+{
+    [self doMXSessionTestWithBobAndARoom:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
+        
+        [bobSession members:room_id success:^(NSArray *members) {
+            
+            XCTAssertEqual(members.count, 1);
+            
+            MXRoomMember *roomMember = members[0];
+            XCTAssertTrue([roomMember.user_id isEqualToString:bobSession.user_id]);
+            
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        
+    }];
+}
+
 @end

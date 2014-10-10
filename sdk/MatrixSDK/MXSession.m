@@ -170,6 +170,39 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
      }];
 }
 
+- (void)members:(NSString*)room_id
+        success:(void (^)(NSArray *members))success
+        failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/members", room_id];
+
+    [hsClient requestWithMethod:@"GET"
+                           path:path
+                     parameters:nil
+                        success:^(NSDictionary *JSONResponse)
+     {
+         NSMutableArray *members = [NSMutableArray array];
+         
+         for (NSDictionary *event in JSONResponse[@"chunk"])
+         {
+             MXRoomMember *roomMember = [MTLJSONAdapter modelOfClass:[MXRoomMember class]
+                                                  fromJSONDictionary:event[@"content"]
+                                                               error:nil];
+             
+             roomMember.user_id = event[@"user_id"];
+             
+             [members addObject:roomMember];
+         }
+         
+         success(members);
+     }
+                        failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
+
 #pragma mark - Event operations
 -(void)initialSync:(NSInteger)limit
            success:(void (^)(NSDictionary *))success
