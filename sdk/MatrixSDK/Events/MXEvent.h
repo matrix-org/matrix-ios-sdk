@@ -22,11 +22,12 @@
  Matrix events types are exchanged as strings with the home server.
  The types specified by the Matrix standard are listed here as NSUInteger enum 
  in order to ease the type handling.
- Custom events types, out of the specification, may exists. In this case, MXEventTypeString
- must be checked
+ Custom events types, out of the specification, may exist. In this case, 
+ `MXEventTypeString` must be checked.
  */
 typedef enum : NSUInteger
 {
+    MXEventTypeRoomName,
     MXEventTypeRoomTopic,
     MXEventTypeRoomMember,
     MXEventTypeRoomCreate,
@@ -34,19 +35,21 @@ typedef enum : NSUInteger
     MXEventTypeRoomPowerLevels,
     MXEventTypeRoomAddStateLevel,
     MXEventTypeRoomSendEventLevel,
+    MXEventTypeRoomOpsLevel,
     MXEventTypeRoomAliases,
     MXEventTypeRoomMessage,
     MXEventTypeRoomMessageFeedback,
     
-    // The event is a custom event. Refer to its MXEventTypeString version
+    // The event is a custom event. Refer to its `MXEventTypeString` version
     MXEventTypeCustom = 1000
 } MXEventType;
 
 /**
  Types of Matrix events - String version
- T
+ The event types as described by the Matrix standard.
  */
 typedef NSString* MXEventTypeString;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomName;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomTopic;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomMember;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomCreate;
@@ -54,6 +57,7 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomJoinRules;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomPowerLevels;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomAddStateLevel;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomSendEventLevel;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomOpsLevel;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomAliases;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomMessage;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomMessageFeedback;
@@ -72,23 +76,34 @@ FOUNDATION_EXPORT NSString *const kMXMessageTypeLocation;
 
 /**
  `MXEvent` is the generic model of events received from the home server.
- It contains all possible keys an event can contain (according to the list SynapseEvent.valid_keys
- defined in home server Python source code).
+ It contains all possible keys an event can contain (according to the 
+ list SynapseEvent.valid_keys defined in home server Python source code).
  Thus, all events can be resolved by this model.
- 
- @TODO: Create specialised event classes
  
  */
 @interface MXEvent : MXJSONModel
 
 @property (nonatomic) NSString *event_id;
 
-@property (nonatomic) MXEventType nType;        // @TODO: type may be renamed to stringType
+/**
+ The enum version of the event type.
+ */
+@property (nonatomic) MXEventType eventType;
+
+/**
+ The string event type as provided by the home server.
+ Unlike eventType, this field is always filled even for custom events.
+ */
 @property (nonatomic) MXEventTypeString type;
+
+
 @property (nonatomic) NSString *room_id;
 @property (nonatomic) NSString *user_id;
 
-/*
+/**
+ The event content.
+ The keys in this dictionary depend on the event type. Check `MXEventType` 
+ definitions to get a list of content keys per event type.
  */
 @property (nonatomic) NSDictionary *content;
 
@@ -105,5 +120,10 @@ FOUNDATION_EXPORT NSString *const kMXMessageTypeLocation;
 // Not listed in home server source code but actually received
 @property (nonatomic) NSUInteger age;
 @property (nonatomic) NSUInteger ts;
+
+/**
+ Mapping from MXEventTypeString to MXEventType
+ */
++ (NSDictionary*)eventTypesMap;
 
 @end

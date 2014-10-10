@@ -39,12 +39,55 @@ NSString *const kMXMessageTypeVideo     = @"m.video";
 NSString *const kMXMessageTypeLocation  = @"m.video";
 
 
+
 #pragma mark - MXEvent
 @implementation MXEvent
 
++ (NSDictionary*)eventTypesMap
+{
+    static NSDictionary *inst = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        inst = @{
+                 kMXEventTypeStringRoomName: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomName],
+                 kMXEventTypeStringRoomTopic: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomTopic],
+                 kMXEventTypeStringRoomMember: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMember],
+                 kMXEventTypeStringRoomCreate: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomCreate],
+                 kMXEventTypeStringRoomJoinRules: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomJoinRules],
+                 kMXEventTypeStringRoomPowerLevels: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomPowerLevels],
+                 kMXEventTypeStringRoomAddStateLevel: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomAddStateLevel],
+                 kMXEventTypeStringRoomSendEventLevel: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomSendEventLevel],
+                 kMXEventTypeStringRoomOpsLevel: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomOpsLevel],
+                 kMXEventTypeStringRoomAliases: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomAliases],
+                 kMXEventTypeStringRoomMessage: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMessage],
+                 kMXEventTypeStringRoomMessageFeedback: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMessageFeedback],
+                 };
+    });
+    return inst;
+}
 - (NSString *)description
 {
     return [NSString stringWithFormat:@"%@: %@ - %@: %@", self.event_id, self.type, [NSDate dateWithTimeIntervalSince1970:self.ts/1000], self.content];
+}
+
+- (instancetype)initWithDictionary:(NSDictionary *)dictionaryValue error:(NSError *__autoreleasing *)error
+{
+    // Do the JSON -> class instance properties mapping
+    id instance = [super initWithDictionary:dictionaryValue error:error];
+    
+    // Then, compute eventType
+    NSNumber *number = [[MXEvent eventTypesMap] objectForKey:_type];
+    if (number)
+    {
+        _eventType = [number unsignedIntegerValue];
+    }
+    else
+    {
+        // Do not know this event type
+        _eventType = MXEventTypeCustom;
+    }
+    
+    return instance;
 }
 
 @end
