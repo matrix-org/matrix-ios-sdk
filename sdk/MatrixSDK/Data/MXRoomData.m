@@ -24,11 +24,13 @@
     NSMutableArray *messages;
     NSMutableArray *stateEvents;
     NSMutableDictionary *members;
+    
+    // The token used to know from where to paginate back.
+    NSString *pagEarliestToken;
 }
 @end
 
 @implementation MXRoomData
-@synthesize pagEarliestToken;
 
 - (id)initWithRoomId:(NSString *)room_id andMatrixData:(MXData *)matrixData2
 {
@@ -41,6 +43,8 @@
         messages = [NSMutableArray array];
         stateEvents = [NSMutableArray array];
         members = [NSMutableDictionary dictionary];
+        
+        pagEarliestToken = @"END";
     }
     return self;
 }
@@ -160,5 +164,9 @@
     [stateEvents addObject:event];
 }
 
+- (void)paginateBackMessages:(NSUInteger)numItems
+{
+    
+}
 
 @end
