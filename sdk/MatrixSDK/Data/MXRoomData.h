@@ -17,6 +17,7 @@
 #import <Foundation/Foundation.h>
 
 #import "MXEvent.h"
+#import "MXJSONModels.h"
 
 /**
  `MXRoomData` is the storage class for the room data.
@@ -42,9 +43,13 @@
 
 /**
  The list of state events (actually MXEvent instances).
- 
  */
 @property (nonatomic, readonly, copy) NSArray *stateEvents;
+
+/**
+ The room members (actually MXRoomMember instances).
+ */
+@property (nonatomic, readonly, copy) NSArray *members;
 
 - (id)initWithRoomId:(NSString*)room_id andEventTypesToUseAsMessages:(NSArray*)eventTypesToUseAsMessages;
 
@@ -54,6 +59,6 @@
 
 - (void)handleStateEvents:(NSArray*)roomStateEvents;
 
-- (NSString*)getMember:(NSString*)user;
+- (NSString*)getMember:(NSString*)user_id;
 
 @end

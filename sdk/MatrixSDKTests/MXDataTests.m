@@ -156,7 +156,38 @@
             [expectation fulfill];
         }];
     }];
-    
-
 }
+
+
+- (void)testRoomDataMembers
+{
+    [self doMXDataTestInABobRoomAndANewTextMessage:@"This is a text message for recents" onReadyToTest:^(MXSession *bobSession, NSString *room_id, NSString *new_text_message_event_id, XCTestExpectation *expectation) {
+        
+        matrixData = [[MXData alloc] initWithMatrixSession:bobSession];
+        [matrixData start:^{
+            
+            MXRoomData *roomData = [matrixData getRoomData:room_id];
+            XCTAssertNotNil(roomData);
+            
+            NSArray *members = roomData.members;
+            XCTAssertEqual(members.count, 1, "There must be only one member: mxBob, the creator");
+            
+            for (MXRoomMember *member in roomData.members)
+            {
+                XCTAssertTrue([member.user_id isEqualToString:bobSession.user_id], "This must be mxBob");
+            }
+            
+            XCTAssertNotNil([roomData getMember:bobSession.user_id], @"Bob must be retrieved");
+            
+            XCTAssertNil([roomData getMember:@"NonExistingUserId"], @"getMember must return nil if the user does not exist");
+            
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 @end

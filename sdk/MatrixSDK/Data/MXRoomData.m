@@ -20,6 +20,7 @@
 {
     NSMutableArray *messages;
     NSMutableArray *stateEvents;
+    NSMutableDictionary *members;
     
     NSArray *eventTypesToUseAsMessages;
 }
@@ -35,6 +36,7 @@
         _room_id = room_id;
         messages = [NSMutableArray array];
         stateEvents = [NSMutableArray array];
+        members = [NSMutableDictionary dictionary];
         
         eventTypesToUseAsMessages = eventTypesToUseAsMessages2;
     }
@@ -56,6 +58,16 @@
     return stateEvents;
 }
 
+- (NSArray *)members
+{
+    return [members allValues];
+}
+
+
+- (NSString *)getMember:(NSString *)user_id
+{
+    return members[user_id];
+}
 
 #pragma mark - Messages handling
 - (void)handleMessages:(NSDictionary*)roomMessages
@@ -119,6 +131,30 @@
 
 - (void)handleStateEvent:(MXEvent*)event
 {
+    switch (event.eventType)
+    {
+        case MXEventTypeRoomMember:
+        {
+            MXRoomMember *roomMember = [MTLJSONAdapter modelOfClass:[MXRoomMember class]
+                                                 fromJSONDictionary:event.content
+                                                              error:nil];
+            
+            roomMember.user_id = event.user_id;
+            
+            members[roomMember.user_id] = roomMember;
+            break;
+        }
+
+        // @TODO
+            
+        default:
+            break;
+    }
+    
+    // @TODO: Not the good way to store them
+    // Would be better to use a dict where keys are the event types as most of them are unique
+    // and the latest value overwrite the previous one.
+    // Exception m.room.member but it would go to self.members
     [stateEvents addObject:event];
 }
 
