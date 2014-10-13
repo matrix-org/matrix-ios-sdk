@@ -32,6 +32,9 @@
  */
 @interface MXData : NSObject
 
+// The matrix session to make Matrix API requests
+@property (nonatomic, readonly) MXSession *matrixSession;
+
 /**
  An array of `MXEventTypeString` indicating which events must be stored as messages in MXData.
  By default, this list contains some event types like:

@@ -19,9 +19,6 @@
 
 @interface MXData ()
 {
-    // The matrix session to make Matrix API requests
-    MXSession *matrixSession;
-    
     // Rooms data
     // The key is the room ID. The value, the MXRoomData instance.
     NSMutableDictionary *rooms;
@@ -33,7 +30,7 @@
 @end
 
 @implementation MXData
-@synthesize eventTypesToUseAsMessages;
+@synthesize matrixSession, eventTypesToUseAsMessages;
 
 - (id)initWithMatrixSession:(MXSession*)mSession;
 {
@@ -118,7 +115,7 @@
 
 - (MXRoomData *)createRoomData:(NSString *)room_id
 {
-    MXRoomData *room = [[MXRoomData alloc] initWithRoomId:room_id andEventTypesToUseAsMessages:eventTypesToUseAsMessages];
+    MXRoomData *room = [[MXRoomData alloc] initWithRoomId:room_id andMatrixData:self];
     [rooms setObject:room forKey:room_id];
     return room;
 }

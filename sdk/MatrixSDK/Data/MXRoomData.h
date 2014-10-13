@@ -19,6 +19,9 @@
 #import "MXEvent.h"
 #import "MXJSONModels.h"
 
+
+@class MXData;
+
 /**
  `MXRoomData` is the storage class for the room data.
  */
@@ -56,7 +59,7 @@
  */
 @property (nonatomic, readonly) NSString *pagEarliestToken;
 
-- (id)initWithRoomId:(NSString*)room_id andEventTypesToUseAsMessages:(NSArray*)eventTypesToUseAsMessages;
+- (id)initWithRoomId:(NSString*)room_id andMatrixData:(MXData*)matrixData;
 
 - (void)handleMessages:(NSDictionary*)roomMessages
           isLiveEvents:(BOOL)isLiveEvents

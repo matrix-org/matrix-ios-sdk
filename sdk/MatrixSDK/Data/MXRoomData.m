@@ -16,30 +16,31 @@
 
 #import "MXRoomData.h"
 
+#import "MXData.h"
+
 @interface MXRoomData ()
 {
+    MXData *matrixData;
     NSMutableArray *messages;
     NSMutableArray *stateEvents;
     NSMutableDictionary *members;
-    
-    NSArray *eventTypesToUseAsMessages;
 }
 @end
 
 @implementation MXRoomData
 @synthesize pagEarliestToken;
 
-- (id)initWithRoomId:(NSString *)room_id andEventTypesToUseAsMessages:(NSArray *)eventTypesToUseAsMessages2;
+- (id)initWithRoomId:(NSString *)room_id andMatrixData:(MXData *)matrixData2
 {
     self = [super init];
     if (self)
     {
+        matrixData = matrixData2;
+        
         _room_id = room_id;
         messages = [NSMutableArray array];
         stateEvents = [NSMutableArray array];
         members = [NSMutableDictionary dictionary];
-        
-        eventTypesToUseAsMessages = eventTypesToUseAsMessages2;
     }
     return self;
 }
