@@ -46,10 +46,14 @@
  */
 @property (nonatomic, readonly, copy) NSArray *stateEvents;
 
-- (id)initWithRoomId:(NSString*)room_id;
+- (id)initWithRoomId:(NSString*)room_id andEventTypesToUseAsMessages:(NSArray*)eventTypesToUseAsMessages;
 
-- (BOOL)handleEvent:(MXEvent*)event
-        isLiveEvent:(BOOL)isLiveEvent isStateEvent:(BOOL)isStateEvent
-            pagFrom:(NSString*)pagFrom;
+- (void)handleMessages:(NSDictionary*)roomMessages
+          isLiveEvents:(BOOL)isLiveEvents
+             direction:(BOOL)direction;
+
+- (void)handleStateEvents:(NSArray*)roomStateEvents;
+
+- (NSString*)getMember:(NSString*)user;
 
 @end

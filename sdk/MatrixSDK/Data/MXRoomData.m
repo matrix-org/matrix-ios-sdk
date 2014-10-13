@@ -20,18 +20,23 @@
 {
     NSMutableArray *messages;
     NSMutableArray *stateEvents;
+    
+    NSArray *eventTypesToUseAsMessages;
 }
 @end
 
 @implementation MXRoomData
 
-- (id)initWithRoomId:(NSString *)room_id
+- (id)initWithRoomId:(NSString *)room_id andEventTypesToUseAsMessages:(NSArray *)eventTypesToUseAsMessages2;
 {
     self = [super init];
     if (self)
     {
         _room_id = room_id;
         messages = [NSMutableArray array];
+        stateEvents = [NSMutableArray array];
+        
+        eventTypesToUseAsMessages = eventTypesToUseAsMessages2;
     }
     return self;
 }
@@ -51,28 +56,70 @@
     return stateEvents;
 }
 
-- (BOOL)handleEvent:(MXEvent*)event
-        isLiveEvent:(BOOL)isLiveEvent isStateEvent:(BOOL)isStateEvent
-            pagFrom:(NSString*)pagFrom
+
+#pragma mark - Messages handling
+- (void)handleMessages:(NSDictionary*)roomMessages
+              isLiveEvents:(BOOL)isLiveEvents
+                 direction:(BOOL)direction
 {
-    NSLog(@"handleEvent: %@", event);
-    if (!isStateEvent)
+    NSValueTransformer *transformer = [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXEvent.class];
+    
+    NSArray *events = [transformer transformedValue:roomMessages[@"chunk"]];
+    
+    // Handles messages according to their time order
+    if (direction)
     {
-        if (isLiveEvent)
-        {
-            [messages addObject:event];
+        // paginateBackMessages requests messages to be in reverse chronological order
+        for (MXEvent *event in events) {
+            [self handleMessage:event isLiveEvent:NO pagFrom:roomMessages[@"start"]];
         }
-        else
+        
+        // Store how far back we've paginated
+        //$rootScope.events.rooms[room_id].pagination.earliest_token = messages.end;
+    }
+    else {
+        // InitialSync returns messages in chronological order
+        for (NSInteger i = events.count - 1; i >= 0; i--)
         {
-            [messages insertObject:event atIndex:0];
+            MXEvent *event = events[i];
+            [self handleMessage:event isLiveEvent:NO pagFrom:roomMessages[@"end"]];
         }
+        
+        // Store where to start pagination
+        //$rootScope.events.rooms[room_id].pagination.earliest_token = messages.start;
+    }
+    
+    //NSLog(@"%@", messageEvents);
+}
+
+- (void)handleMessage:(MXEvent*)event isLiveEvent:(BOOL)isLiveEvent pagFrom:(NSString*)pagFrom
+{
+    if (isLiveEvent)
+    {
+        [messages addObject:event];
     }
     else
     {
-        [stateEvents addObject:event];
+        [messages insertObject:event atIndex:0];
     }
+}
 
-    return YES;
+
+#pragma mark - State events handling
+- (void)handleStateEvents:(NSArray*)roomStateEvents
+{
+    NSValueTransformer *transformer = [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXEvent.class];
+    
+    NSArray *events = [transformer transformedValue:roomStateEvents];
+    
+    for (MXEvent *event in events) {
+        [self handleStateEvent:event];
+    }
+}
+
+- (void)handleStateEvent:(MXEvent*)event
+{
+    [stateEvents addObject:event];
 }
 
 
