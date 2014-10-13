@@ -65,6 +65,6 @@
 
 - (void)paginateBackMessages:(NSUInteger)numItems;
                                                                                                                                      
-- (NSString*)getMember:(NSString*)user_id;
+- (MXRoomMember*)getMember:(NSString*)user_id;
 
 @end

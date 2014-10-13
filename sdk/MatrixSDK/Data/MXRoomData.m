@@ -70,7 +70,7 @@
 }
 
 
-- (NSString *)getMember:(NSString *)user_id
+- (MXRoomMember*)getMember:(NSString *)user_id
 {
     return members[user_id];
 }
