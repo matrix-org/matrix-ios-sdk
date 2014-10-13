@@ -113,6 +113,28 @@ FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeEmailIdentity;
 
 @end
 
+/**
+ `MXPaginationResponse` represents a response from an api that supports pagination.
+ */
+@interface MXPaginationResponse : MXJSONModel
+
+    /**
+     An array of MXEvents.
+     */
+    @property (nonatomic) NSArray *chunk;
+
+    /**
+     The opaque token for the start.
+     */
+    @property (nonatomic) NSString *start;
+
+    /**
+     The opaque token for the end.
+     */
+    @property (nonatomic) NSString *end;
+
+@end
+
 
 /**
  `MXRoomMember` represents a room member.

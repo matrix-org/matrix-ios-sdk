@@ -170,6 +170,50 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
      }];
 }
 
+- (void)messages:(NSString*)room_id
+            from:(NSString*)from
+              to:(NSString*)to
+           limit:(NSUInteger)limit
+         success:(void (^)(MXPaginationResponse *paginatedResponse))success
+         failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/messages", room_id];
+    
+    // All query parameters are optional. Fill the request parameters on demand
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+    
+    if (from)
+    {
+        parameters[@"from"] = from;
+    }
+    if (to)
+    {
+        parameters[@"to"] = to;
+    }
+    if (-1 != limit)
+    {
+        parameters[@"limit"] = [NSNumber numberWithUnsignedInteger:limit];
+    }
+    
+    // List messages in backward order to make the API answer
+    parameters[@"dir"] = @"b";
+    
+    [hsClient requestWithMethod:@"GET"
+                           path:path
+                     parameters:parameters
+                        success:^(NSDictionary *JSONResponse)
+     {
+         MXPaginationResponse *paginatedResponse = [MTLJSONAdapter modelOfClass:[MXPaginationResponse class]
+                                                             fromJSONDictionary:JSONResponse
+                                                           error:nil];
+         success(paginatedResponse);
+     }
+                        failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
 - (void)members:(NSString*)room_id
         success:(void (^)(NSArray *members))success
         failure:(void (^)(NSError *error))failure

@@ -15,6 +15,7 @@
  */
 
 #import "MXJSONModels.h"
+#import "MXEvent.h"
 
 @implementation MXPublicRoom
 -(NSString *)displayname
@@ -49,6 +50,15 @@ NSString *const kMatrixLoginFlowTypeEmailIdentity = @"m.login.email.identity";
 @end
 
 @implementation MXCreateRoomResponse
+@end
+
+@implementation MXPaginationResponse
+
+// Automatically convert array in chunk to an array of MXEvents.
++ (NSValueTransformer *)chunkJSONTransformer {
+    return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXEvent.class];
+}
+
 @end
 
 @implementation MXRoomMember

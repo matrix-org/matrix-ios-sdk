@@ -69,6 +69,21 @@
     }];
 }
 
+- (void)doMXSessionTestWithBobAndARoomWithMessages:(void (^)(MXSession *bobSession, NSString* room_id, XCTestExpectation *expectation))readyToTest
+{
+   [self doMXSessionTestWithBobAndARoom:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
+       
+       MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+       
+       // Add 5 messages to the room
+       [sharedData for:bobSession andRoom:room_id postMessages:5 success:^{
+           
+           readyToTest(bobSession, room_id, expectation);
+       }];
+       
+   }];
+}
+
 - (void)testInit
 {
     [self doMXSessionTestWithBob:^(MXSession *bobSession, XCTestExpectation *expectation) {
@@ -136,6 +151,28 @@
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
+    }];
+}
+
+- (void)testMessages
+{
+    [self doMXSessionTestWithBobAndARoomWithMessages:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
+        
+        [bobSession messages:room_id from:nil to:nil limit:-1 success:^(MXPaginationResponse *paginatedResponse) {
+            
+            XCTAssertNotNil(paginatedResponse);
+            XCTAssertNotNil(paginatedResponse.start);
+            XCTAssertNotNil(paginatedResponse.end);
+            XCTAssertNotNil(paginatedResponse.chunk);
+            XCTAssertGreaterThan(paginatedResponse.chunk.count, 0);
+            
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        
     }];
 }
 

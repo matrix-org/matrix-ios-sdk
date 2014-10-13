@@ -42,4 +42,7 @@ FOUNDATION_EXPORT NSString * const kMXTestsHomeServerURL;
 // Creates roomsCount rooms with messagesCount messages in the mxSession
 - (void)for:(MXSession*)mxSession createRooms:(NSUInteger)roomsCount withMessages:(NSUInteger)messagesCount success:(void (^)())success;
 
+// Posts messagesCount messages to the room
+- (void)for:(MXSession *)mxSession andRoom:(NSString*)room_id postMessages:(NSUInteger)messagesCount success:(void (^)())success;
+
 @end

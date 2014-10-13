@@ -140,19 +140,23 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
            success:(void (^)(MXCreateRoomResponse *response))success
            failure:(void (^)(NSError *error))failure;
 
-/*
-// Duplicate???
-- (void)messages:(NSString*)room_id
-         success:(void (^)(NSArray *members))success
-         failure:(void (^)(NSError *error))failure;
-
+/**
+ Get a list of messages for this room
+ 
+ @param room_id the id of the room.
+ @param from (optional) the token to start getting results from.
+ @param to (optional)the token to stop getting results at.
+ @param limit (optional, use -1 to not defined this value) the maximum nuber of messages to return.
+ 
+ @param success A block object called when the operation succeeds. It provides a `MXPaginationResponse` object.
+ @param failure A block object called when the operation fails.
+ */
 - (void)messages:(NSString*)room_id
             from:(NSString*)from
-              to:(NSString*)from
-           limit:(NSString*)from
-         success:(void (^)(NSArray *members))success
+              to:(NSString*)to
+           limit:(NSUInteger)limit
+         success:(void (^)(MXPaginationResponse *paginatedResponse))success
          failure:(void (^)(NSError *error))failure;
-*/
 
 /**
  Get a list of members for this room
