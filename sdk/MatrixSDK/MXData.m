@@ -102,7 +102,14 @@
     NSMutableArray *recents = [NSMutableArray arrayWithCapacity:rooms.count];
     for (MXRoomData *room in rooms.allValues)
     {
-        [recents addObject:room.lastMessage];
+        if (room.lastMessage)
+        {
+            [recents addObject:room.lastMessage];
+        }
+        else
+        {
+            NSLog(@"WARNING: Ignore corrupted room (%@): no last message", room.room_id);
+        }
     }
     
     // Order them by ts
