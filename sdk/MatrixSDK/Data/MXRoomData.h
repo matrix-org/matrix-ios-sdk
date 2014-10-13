@@ -51,6 +51,11 @@
  */
 @property (nonatomic, readonly, copy) NSArray *members;
 
+/**
+ The token used to know from where to paginate back.
+ */
+@property (nonatomic, readonly) NSString *pagEarliestToken;
+
 - (id)initWithRoomId:(NSString*)room_id andEventTypesToUseAsMessages:(NSArray*)eventTypesToUseAsMessages;
 
 - (void)handleMessages:(NSDictionary*)roomMessages

@@ -27,6 +27,7 @@
 @end
 
 @implementation MXRoomData
+@synthesize pagEarliestToken;
 
 - (id)initWithRoomId:(NSString *)room_id andEventTypesToUseAsMessages:(NSArray *)eventTypesToUseAsMessages2;
 {
@@ -87,7 +88,7 @@
         }
         
         // Store how far back we've paginated
-        //$rootScope.events.rooms[room_id].pagination.earliest_token = messages.end;
+        pagEarliestToken = roomMessages[@"end"];
     }
     else {
         // InitialSync returns messages in chronological order
@@ -98,7 +99,7 @@
         }
         
         // Store where to start pagination
-        //$rootScope.events.rooms[room_id].pagination.earliest_token = messages.start;
+        pagEarliestToken = roomMessages[@"start"];
     }
     
     //NSLog(@"%@", messageEvents);
