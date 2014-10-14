@@ -76,35 +76,33 @@
 }
 
 #pragma mark - Messages handling
-- (void)handleMessages:(NSDictionary*)roomMessages
+- (void)handleMessages:(MXPaginationResponse*)roomMessages
               isLiveEvents:(BOOL)isLiveEvents
                  direction:(BOOL)direction
 {
-    NSValueTransformer *transformer = [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXEvent.class];
-    
-    NSArray *events = [transformer transformedValue:roomMessages[@"chunk"]];
+    NSArray *events = roomMessages.chunk;
     
     // Handles messages according to their time order
     if (direction)
     {
         // paginateBackMessages requests messages to be in reverse chronological order
         for (MXEvent *event in events) {
-            [self handleMessage:event isLiveEvent:NO pagFrom:roomMessages[@"start"]];
+            [self handleMessage:event isLiveEvent:NO pagFrom:roomMessages.start];
         }
         
         // Store how far back we've paginated
-        pagEarliestToken = roomMessages[@"end"];
+        pagEarliestToken = roomMessages.end;
     }
     else {
         // InitialSync returns messages in chronological order
         for (NSInteger i = events.count - 1; i >= 0; i--)
         {
             MXEvent *event = events[i];
-            [self handleMessage:event isLiveEvent:NO pagFrom:roomMessages[@"end"]];
+            [self handleMessage:event isLiveEvent:NO pagFrom:roomMessages.end];
         }
         
         // Store where to start pagination
-        pagEarliestToken = roomMessages[@"start"];
+        pagEarliestToken = roomMessages.start;
     }
     
     //NSLog(@"%@", messageEvents);

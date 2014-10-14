@@ -66,7 +66,12 @@
              
              if ([room objectForKey:@"messages"])
              {
-                 [roomData handleMessages:room[@"messages"]
+                 MXPaginationResponse *roomMessages =
+                 [MTLJSONAdapter modelOfClass:[MXPaginationResponse class]
+                           fromJSONDictionary:[room objectForKey:@"messages"]
+                                        error:nil];;
+                 
+                 [roomData handleMessages:roomMessages
                              isLiveEvents:NO direction:NO];
              }
              if ([room objectForKey:@"state"])
