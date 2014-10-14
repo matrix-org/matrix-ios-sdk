@@ -19,6 +19,22 @@
 FOUNDATION_EXPORT NSString *const kMatrixNSErrorDomain;
 
 /**
+ Matrix error codes
+ The error as described by the Matrix standard (http://matrix.org/docs/spec/#api-standards).
+ */
+typedef NSString* MXErrCodeString;
+FOUNDATION_EXPORT NSString *const kMXErrCodeStringForbidden;
+FOUNDATION_EXPORT NSString *const kMXErrCodeStringUnknown;
+FOUNDATION_EXPORT NSString *const kMXErrCodeStringUnknownToken;
+FOUNDATION_EXPORT NSString *const kMXErrCodeStringBadJSON;
+FOUNDATION_EXPORT NSString *const kMXErrCodeStringNotJSON;
+FOUNDATION_EXPORT NSString *const kMXErrCodeStringNotFound;
+FOUNDATION_EXPORT NSString *const kMXErrCodeStringLimitExceeded;
+FOUNDATION_EXPORT NSString *const kMXErrCodeStringUserInUse;
+FOUNDATION_EXPORT NSString *const kMXErrCodeStringRoomInUse;
+FOUNDATION_EXPORT NSString *const kMXErrCodeStringBadPagination;
+
+/**
  `MXError` represents an error sent by the home server.
  MXErrors are encapsulated in NSError. This class is an helper to create NSError or extract MXError from NSError.
  */
@@ -27,7 +43,7 @@ FOUNDATION_EXPORT NSString *const kMatrixNSErrorDomain;
 /**
  The error code. This is a string like "M_FORBIDDEN"
  */
-@property (nonatomic, readonly) NSString *errcode;
+@property (nonatomic, readonly) MXErrCodeString errcode;
 
 /**
  The error description

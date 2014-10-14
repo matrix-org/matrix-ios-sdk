@@ -16,7 +16,21 @@
 
 #import "MXError.h"
 
+#pragma mark - Constants definitions
+
 NSString *const kMatrixNSErrorDomain = @"org.matrix.sdk";
+
+NSString *const kMXErrCodeStringForbidden       = @"M_FORBIDDEN";
+NSString *const kMXErrCodeStringUnknown         = @"M_UNKNOWN";
+NSString *const kMXErrCodeStringUnknownToken    = @"M_UNKNOWN_TOKEN";
+NSString *const kMXErrCodeStringBadJSON         = @"M_BAD_JSON";
+NSString *const kMXErrCodeStringNotJSON         = @"M_NOT_JSON";
+NSString *const kMXErrCodeStringNotFound        = @"M_NOT_FOUND";
+NSString *const kMXErrCodeStringLimitExceeded   = @"M_LIMIT_EXCEEDED";
+NSString *const kMXErrCodeStringUserInUse       = @"M_USER_IN_USE";
+NSString *const kMXErrCodeStringRoomInUse       = @"M_ROOM_IN_USE";
+NSString *const kMXErrCodeStringBadPagination   = @"M_BAD_PAGINATION";
+
 
 // Random NSError code
 // Matrix does not use integer but string for error code
