@@ -43,6 +43,7 @@
         messages = [NSMutableArray array];
         stateEvents = [NSMutableArray array];
         members = [NSMutableDictionary dictionary];
+        _canPaginate = YES;
         
         pagEarliestToken = @"END";
     }
@@ -181,7 +182,14 @@
                                   from:pagEarliestToken to:nil
                                  limit:numItems
                                success:^(MXPaginationResponse *paginatedResponse) {
-                                   
+        
+        // Check pagination end
+        if (paginatedResponse.chunk.count < numItems)
+        {
+            // We run out of items
+            _canPaginate = NO;
+        }
+            
         // Event duplication management:
         // Remove the message we already have
         if (![pagEarliestToken isEqualToString:@"END"])

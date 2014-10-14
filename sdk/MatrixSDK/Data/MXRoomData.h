@@ -55,6 +55,11 @@
  */
 @property (nonatomic, readonly) NSArray *members;
 
+/**
+ Flag indicating if there are still events (in the past) to get with paginateBackMessages.
+ */
+@property (nonatomic, readonly) BOOL canPaginate;
+
 
 - (id)initWithRoomId:(NSString*)room_id andMatrixData:(MXData*)matrixData;
 

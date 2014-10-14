@@ -258,7 +258,6 @@
     }];
 }
 
-
 - (void)testSeveralPaginateBacks
 {
     [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXData *matrixData, MXRoomData *roomData, XCTestExpectation *expectation) {
@@ -301,6 +300,25 @@
                 XCTFail(@"The request should not fail - NSError: %@", error);
                 [expectation fulfill];
             }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testCanPaginate
+{
+    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXData *matrixData, MXRoomData *roomData, XCTestExpectation *expectation) {
+        
+        XCTAssertTrue(roomData.canPaginate, @"We can always paginate at the beginning");
+        
+        [roomData paginateBackMessages:100 success:^(NSArray *messages) {
+            
+            XCTAssertFalse(roomData.canPaginate, @"We must have reached the end of the pagination");
+            
+            [expectation fulfill];
             
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
