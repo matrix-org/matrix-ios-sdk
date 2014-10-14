@@ -63,7 +63,17 @@
 
 - (void)handleStateEvents:(NSArray*)roomStateEvents;
 
-- (void)paginateBackMessages:(NSUInteger)numItems;
+/**
+ Get more messages from the past.
+ The `messages` will be updated in case of successful response.
+ 
+ @param numItems the number of items to get.
+ @param success A block object called when the operation succeeds. It provides an array of retrieved `MXEvent` objects.
+ @param failure A block object called when the operation fails.
+ */
+- (void)paginateBackMessages:(NSUInteger)numItems
+                     success:(void (^)(NSArray *messages))success
+                     failure:(void (^)(NSError *error))failure;
                                                                                                                                      
 - (MXRoomMember*)getMember:(NSString*)user_id;
 

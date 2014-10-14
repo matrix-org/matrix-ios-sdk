@@ -163,8 +163,20 @@
 }
 
 - (void)paginateBackMessages:(NSUInteger)numItems
+                     success:(void (^)(NSArray *messages))success
+                     failure:(void (^)(NSError *error))failure
 {
-    
+    // Paginate from last known token
+    [matrixData.matrixSession messages:_room_id from:pagEarliestToken to:nil limit:numItems success:^(MXPaginationResponse *paginatedResponse) {
+        
+        [self handleMessages:paginatedResponse isLiveEvents:NO direction:NO];
+        
+        success(paginatedResponse.chunk);
+        
+    } failure:^(NSError *error) {
+        NSLog(@"paginateBackMessages error: %@", error);
+        failure(error);
+    }];
 }
 
 @end

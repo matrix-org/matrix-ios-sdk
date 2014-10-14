@@ -23,9 +23,6 @@
 
 @interface MXRoomDataTests : XCTestCase
 {
-    MXData *matrixData;
-    
-    MXRoomData *roomData;
 }
 
 @end
@@ -39,12 +36,25 @@
 
 - (void)tearDown
 {
-    [matrixData close];
-    
-    roomData = nil;
-    matrixData = nil;
-    
     [super tearDown];
+}
+
+- (void)doMXRoomDataTestWithBobAndARoomWithMessages:(void (^)(MXRoomData *roomData, XCTestExpectation *expectation))readyToTest
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
+        
+        MXData *matrixData = [[MXData alloc] initWithMatrixSession:bobSession];
+        
+        
+        [matrixData start:^{
+            MXRoomData *roomData = [matrixData getRoomData:room_id];
+            
+            readyToTest(roomData, expectation);
+            
+        } failure:^(NSError *error) {
+            
+        }];
+    }];
 }
 
 
@@ -52,10 +62,10 @@
 {
     [[MatrixSDKTestsData sharedData] doMXSessionTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXSession *bobSession, NSString *room_id, NSString *new_text_message_event_id, XCTestExpectation *expectation) {
         
-        matrixData = [[MXData alloc] initWithMatrixSession:bobSession];
+        MXData *matrixData = [[MXData alloc] initWithMatrixSession:bobSession];
         [matrixData start:^{
             
-            roomData = [matrixData getRoomData:room_id];
+            MXRoomData *roomData = [matrixData getRoomData:room_id];
             XCTAssertNotNil(roomData);
             
             NSArray *members = roomData.members;
@@ -79,5 +89,55 @@
     }];
 }
 
+- (void)testMessagesPropertyCopy
+{
+    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXRoomData *roomData, XCTestExpectation *expectation) {
+        
+        NSArray *messagesBeforePagination = roomData.messages;
+        
+        XCTAssertEqual(messagesBeforePagination.count, 1, @"Just after initialSync, we should have 1 message");
+        
+        MXEvent *event = messagesBeforePagination[0];
+        NSString *event_id = event.event_id;
+        
+        [roomData paginateBackMessages:50 success:^(NSArray *messages) {
+            
+            
+            XCTAssertEqual(messagesBeforePagination.count, 1, @"roomData.messages is a copy property. messagesBeforePagination must not have changed");
+            
+            MXEvent *eventAfterPagination = messagesBeforePagination[0];
+            
+            XCTAssertTrue([eventAfterPagination.event_id isEqualToString:event_id], @"The only event must be the same as before the pagination action");
+            
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+
+- (void)testPaginateBack
+{
+    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXRoomData *roomData, XCTestExpectation *expectation) {
+        
+        NSArray *messagesBeforePagination = roomData.messages;
+        
+        [roomData paginateBackMessages:50 success:^(NSArray *messages) {
+            
+            NSArray *messagesAfterPagination = roomData.messages;
+            
+            XCTAssertEqual(messagesAfterPagination.count, messagesBeforePagination.count + messages.count, @"roomData.messages count must have increased by the number of new messages got by pagination");
+            
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
 
 @end
