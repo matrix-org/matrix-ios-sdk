@@ -107,7 +107,37 @@
             
             MXEvent *eventAfterPagination = messagesBeforePagination[0];
             
-            XCTAssertTrue([eventAfterPagination.event_id isEqualToString:event_id], @"The only event must be the same as before the pagination action");
+            XCTAssertEqual(eventAfterPagination, event, @"The only event must be the same as before the pagination action");
+            XCTAssertTrue([eventAfterPagination.event_id isEqualToString:event_id], @"The only event content must be the same as before the pagination action");
+            
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testMessagesOrder
+{
+    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXRoomData *roomData, XCTestExpectation *expectation) {
+        
+        [roomData paginateBackMessages:100 success:^(NSArray *messages) {
+            
+            NSUInteger prev_ts = 0;
+            for (MXEvent *event in roomData.messages)
+            {
+                if (event.ts)
+                {
+                    XCTAssertGreaterThanOrEqual(event.ts, prev_ts, @"Events in messages must be listed in chronological order");
+                    prev_ts = event.ts;
+                }
+                else
+                {
+                    NSLog(@"No timestamp in the event data: %@", event);
+                }
+            }
             
             [expectation fulfill];
             
@@ -125,10 +155,12 @@
         
         NSArray *messagesBeforePagination = roomData.messages;
         
-        [roomData paginateBackMessages:50 success:^(NSArray *messages) {
+        [roomData paginateBackMessages:5 success:^(NSArray *messages) {
             
             NSArray *messagesAfterPagination = roomData.messages;
             
+            XCTAssertEqual(messages.count, 5, @"We should get as many messages as requested");
+
             XCTAssertEqual(messagesAfterPagination.count, messagesBeforePagination.count + messages.count, @"roomData.messages count must have increased by the number of new messages got by pagination");
             
             [expectation fulfill];
@@ -139,5 +171,35 @@
         }];
     }];
 }
+
+- (void)testPaginateBackOrder
+{
+    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXRoomData *roomData, XCTestExpectation *expectation) {
+        
+        [roomData paginateBackMessages:100 success:^(NSArray *messages) {
+            
+            NSUInteger prev_ts = ULONG_MAX;
+            for (MXEvent *event in messages)
+            {
+                if (event.ts)
+                {
+                    XCTAssertLessThanOrEqual(event.ts, prev_ts, @"Events in messages must be listed in antichronological order");
+                    prev_ts = event.ts;
+                }
+                else
+                {
+                    NSLog(@"No timestamp in the event data: %@", event);
+                }
+            }
+            
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 
 @end

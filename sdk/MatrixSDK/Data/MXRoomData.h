@@ -36,6 +36,7 @@
  A copy of the list of messages (MXEvent instances) currently loaded for this room.
  A message is either a non-state or a state event that is intended to be 
  displayed in a room chat history.
+ The order is chronological: the first item is the oldest message retrieved so far.
  */
 @property (nonatomic, readonly) NSArray *messages;
 
@@ -65,10 +66,11 @@
 
 /**
  Get more messages from the past.
- The `messages` will be updated in case of successful response.
+ The MXRoomData `messages` property will be updated in case of successful response.
  
  @param numItems the number of items to get.
- @param success A block object called when the operation succeeds. It provides an array of retrieved `MXEvent` objects.
+ @param success A block object called when the operation succeeds. It provides an array of retrieved
+                `MXEvent` objects where the first item is the the more recent MXEvent in the array.
  @param failure A block object called when the operation fails.
  */
 - (void)paginateBackMessages:(NSUInteger)numItems
