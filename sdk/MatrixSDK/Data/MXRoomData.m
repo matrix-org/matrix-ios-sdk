@@ -22,7 +22,7 @@
 {
     MXData *matrixData;
     NSMutableArray *messages;
-    NSMutableArray *stateEvents;
+    NSMutableDictionary *stateEvents;
     NSMutableDictionary *members;
     
     // The token used to know from where to paginate back.
@@ -41,7 +41,7 @@
         
         _room_id = room_id;
         messages = [NSMutableArray array];
-        stateEvents = [NSMutableArray array];
+        stateEvents = [NSMutableDictionary dictionary];
         members = [NSMutableDictionary dictionary];
         _canPaginate = YES;
         
@@ -50,6 +50,7 @@
     return self;
 }
 
+#pragma mark - Properties getters implementation
 - (NSArray *)messages
 {
     return [messages copy];
@@ -62,7 +63,7 @@
 
 - (NSArray *)stateEvents
 {
-    return [stateEvents copy];
+    return [stateEvents allValues];
 }
 
 - (NSArray *)members
@@ -70,11 +71,24 @@
     return [members allValues];
 }
 
-
-- (MXRoomMember*)getMember:(NSString *)user_id
+- (BOOL)isPublic
 {
-    return members[user_id];
+    BOOL isPublic = NO;
+    
+    // Check this in the room states
+    MXEvent *joinRulesEvent = [stateEvents objectForKey:kMXEventTypeStringRoomJoinRules];
+    
+    if (joinRulesEvent && joinRulesEvent.content)
+    {
+        NSString *join_rule = joinRulesEvent.content[@"join_rule"];
+        if ([join_rule isEqualToString:kMXRoomVisibilityPublic])
+        {
+            isPublic = YES;
+        }
+    }
+    return isPublic;
 }
+
 
 #pragma mark - Messages handling
 - (void)handleMessages:(MXPaginationResponse*)roomMessages
@@ -150,17 +164,12 @@
             break;
         }
 
-        // @TODO
-            
         default:
+            // Store other states into the stateEvents dictionary.
+            // The latest value overwrite the previous one.
+            stateEvents[event.type] = event;
             break;
     }
-    
-    // @TODO: Not the good way to store them
-    // Would be better to use a dict where keys are the event types as most of them are unique
-    // and the latest value overwrite the previous one.
-    // Exception m.room.member but it would go to self.members
-    [stateEvents addObject:event];
 }
 
 - (void)paginateBackMessages:(NSUInteger)numItems
@@ -209,6 +218,11 @@
         NSLog(@"paginateBackMessages error: %@", error);
         failure(error);
     }];
+}
+
+- (MXRoomMember*)getMember:(NSString *)user_id
+{
+    return members[user_id];
 }
 
 @end

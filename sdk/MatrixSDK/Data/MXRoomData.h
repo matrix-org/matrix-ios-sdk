@@ -56,6 +56,16 @@
 @property (nonatomic, readonly) NSArray *members;
 
 /**
+ The visibility of the room: public or, else, private
+ */
+@property (nonatomic, readonly) BOOL isPublic;
+
+/**
+ The display name of the room.
+ */
+@property (nonatomic, readonly) NSString *displayname;
+
+/**
  Flag indicating if there are still events (in the past) to get with paginateBackMessages.
  */
 @property (nonatomic, readonly) BOOL canPaginate;
