@@ -166,11 +166,29 @@
                      success:(void (^)(NSArray *messages))success
                      failure:(void (^)(NSError *error))failure
 {
+    // Event duplication management:
+    // As we paginate from a token that corresponds to an event (the oldest one, ftr),
+    // we will receive this event in the response. But we already have it.
+    // So, ask for one more message, and do not take into account in the response the message
+    // we already have
+    numItems = numItems + 1;
+    
     // Paginate from last known token
-    [matrixData.matrixSession messages:_room_id from:pagEarliestToken to:nil limit:numItems success:^(MXPaginationResponse *paginatedResponse) {
+    [matrixData.matrixSession messages:_room_id
+                                  from:pagEarliestToken to:nil
+                                 limit:numItems
+                               success:^(MXPaginationResponse *paginatedResponse) {
+                                   
+        // Event duplication management:
+        // Remove the message we already have
+        NSMutableArray *newChunk = [NSMutableArray arrayWithArray:paginatedResponse.chunk];
+        [newChunk removeObjectAtIndex:0];
+        paginatedResponse.chunk = newChunk;
         
-        [self handleMessages:paginatedResponse isLiveEvents:NO direction:NO];
+        // Process these new events
+        [self handleMessages:paginatedResponse isLiveEvents:NO direction:YES];
         
+        // Inform the method caller
         success(paginatedResponse.chunk);
         
     } failure:^(NSError *error) {

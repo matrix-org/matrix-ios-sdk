@@ -57,6 +57,20 @@
     }];
 }
 
+- (void)assertNoDuplicate:(NSArray*)events text:(NSString*)text
+{
+    NSMutableDictionary *eventIDs = [NSMutableDictionary dictionary];
+    
+    for (MXEvent *event in events)
+    {
+        if ([eventIDs objectForKey:event.event_id])
+        {
+            XCTAssert(NO, @"Duplicated event in %@ - MXEvent: %@", text, event);
+        }
+        eventIDs[event.event_id] = event;
+    }
+}
+
 
 - (void)testMembers
 {
@@ -191,6 +205,25 @@
                     NSLog(@"No timestamp in the event data: %@", event);
                 }
             }
+            
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testPaginateBackDuplicates
+{
+    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXRoomData *roomData, XCTestExpectation *expectation) {
+        
+        [roomData paginateBackMessages:100 success:^(NSArray *messages) {
+            
+            [self assertNoDuplicate:messages text:@"the 'messages' array response of paginateBackMessages"];
+            
+            [self assertNoDuplicate:roomData.messages text:@" roomData.messages"];
             
             [expectation fulfill];
             
