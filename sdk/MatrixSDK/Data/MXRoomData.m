@@ -89,6 +89,10 @@
     return isPublic;
 }
 
+- (NSString *)displayname
+{
+    return self.room_id;
+}
 
 #pragma mark - Messages handling
 - (void)handleMessages:(MXPaginationResponse*)roomMessages
