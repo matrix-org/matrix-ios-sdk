@@ -348,4 +348,14 @@
     }];
 }
 
+- (void)testStateEvents
+{
+    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXData *matrixData, MXRoomData *roomData, XCTestExpectation *expectation) {
+        
+        XCTAssertNotNil(roomData.stateEvents);
+        XCTAssertGreaterThan(roomData.stateEvents.count, 0);
+ 
+        [expectation fulfill];
+    }];
+}
 @end
