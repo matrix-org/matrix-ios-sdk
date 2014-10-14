@@ -41,6 +41,8 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
 @interface MatrixSDKTestsData ()
 {
     MXHomeServer *homeServer;
+    
+    NSDate *startDate;
 }
 @end
 
@@ -52,6 +54,8 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
     if (self)
     {
         homeServer = [[MXHomeServer alloc] initWithHomeServer:kMXTestsHomeServerURL];
+        
+        startDate = [NSDate date];
     }
     return self;
 }
@@ -224,7 +228,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
     }
     else
     {
-        [mxSession postTextMessage:room_id text:[NSString stringWithFormat:@"Fake message #-%ld", messagesCount]
+        [mxSession postTextMessage:room_id text:[NSString stringWithFormat:@"Fake message posted at %.0f ms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000]
                            success:^(NSString *event_id) {
 
             // Post the next message
