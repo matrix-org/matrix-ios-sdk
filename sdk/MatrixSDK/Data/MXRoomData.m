@@ -171,7 +171,10 @@
     // we will receive this event in the response. But we already have it.
     // So, ask for one more message, and do not take into account in the response the message
     // we already have
-    numItems = numItems + 1;
+    if (![pagEarliestToken isEqualToString:@"END"])
+    {
+        numItems = numItems + 1;
+    }
     
     // Paginate from last known token
     [matrixData.matrixSession messages:_room_id
@@ -181,9 +184,12 @@
                                    
         // Event duplication management:
         // Remove the message we already have
-        NSMutableArray *newChunk = [NSMutableArray arrayWithArray:paginatedResponse.chunk];
-        [newChunk removeObjectAtIndex:0];
-        paginatedResponse.chunk = newChunk;
+        if (![pagEarliestToken isEqualToString:@"END"])
+        {
+            NSMutableArray *newChunk = [NSMutableArray arrayWithArray:paginatedResponse.chunk];
+            [newChunk removeObjectAtIndex:0];
+            paginatedResponse.chunk = newChunk;
+        }
         
         // Process these new events
         [self handleMessages:paginatedResponse isLiveEvents:NO direction:YES];

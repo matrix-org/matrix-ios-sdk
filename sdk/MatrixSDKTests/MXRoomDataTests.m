@@ -238,6 +238,7 @@
 {
     [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXData *matrixData, MXRoomData *roomData, XCTestExpectation *expectation) {
         
+        // Instantiate another MXRoomData object and test pagination from cold
         MXRoomData *roomData2 = [[MXRoomData alloc] initWithRoomId:roomData.room_id andMatrixData:matrixData];
         
         XCTAssertEqual(roomData2.messages.count, 0, @"No initialSync means no data");
@@ -257,5 +258,55 @@
     }];
 }
 
+
+- (void)testSeveralPaginateBacks
+{
+    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXData *matrixData, MXRoomData *roomData, XCTestExpectation *expectation) {
+        
+        [roomData paginateBackMessages:100 success:^(NSArray *messages) {
+            
+            // Use another MXRoomData instance to do pagination in several times
+            MXRoomData *roomData2 = [[MXRoomData alloc] initWithRoomId:roomData.room_id andMatrixData:matrixData];
+            
+            // The several paginations
+            [roomData2 paginateBackMessages:2 success:^(NSArray *messages) {
+                
+                [roomData2 paginateBackMessages:5 success:^(NSArray *messages) {
+                    
+                    [roomData2 paginateBackMessages:100 success:^(NSArray *messages) {
+                        
+                        // Now, compare the result with the reference
+                        XCTAssertEqual(roomData2.messages.count, roomData.messages.count);
+                        
+                        // Compare events one by one
+                        for (NSUInteger i = 0; i < roomData2.messages.count; i++)
+                        {
+                            MXEvent *event = roomData.messages[i];
+                            MXEvent *event2 = roomData2.messages[i];
+                            
+                            XCTAssertTrue([event2.event_id isEqualToString:event.event_id], @"Events mismatch: %@ - %@", event, event2);
+                        }
+                        
+                        [expectation fulfill];
+                        
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The request should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
 
 @end
