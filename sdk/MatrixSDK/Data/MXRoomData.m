@@ -75,18 +75,31 @@
 {
     BOOL isPublic = NO;
     
-    // Check this in the room states
-    MXEvent *joinRulesEvent = [stateEvents objectForKey:kMXEventTypeStringRoomJoinRules];
+    // Check this in the room state events
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomJoinRules];
     
-    if (joinRulesEvent && joinRulesEvent.content)
+    if (event && event.content)
     {
-        NSString *join_rule = joinRulesEvent.content[@"join_rule"];
+        NSString *join_rule = event.content[@"join_rule"];
         if ([join_rule isEqualToString:kMXRoomVisibilityPublic])
         {
             isPublic = YES;
         }
     }
     return isPublic;
+}
+
+- (NSArray *)aliases
+{
+    NSArray *aliases;
+    
+    // Get it from the state events
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomAliases];
+    if (event && event.content)
+    {
+        aliases = [event.content[@"aliases"] copy];
+    }
+    return aliases;
 }
 
 - (NSString *)displayname

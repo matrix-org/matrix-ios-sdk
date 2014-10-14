@@ -61,6 +61,11 @@
 @property (nonatomic, readonly) BOOL isPublic;
 
 /**
+ The aliases of this room.
+ */
+@property (nonatomic, readonly) NSArray *aliases;
+
+/**
  The display name of the room.
  */
 @property (nonatomic, readonly) NSString *displayname;

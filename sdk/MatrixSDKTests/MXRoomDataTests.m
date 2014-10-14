@@ -45,6 +45,22 @@
         
         MXData *matrixData = [[MXData alloc] initWithMatrixSession:bobSession];
         
+        [matrixData start:^{
+            MXRoomData *roomData = [matrixData getRoomData:room_id];
+            
+            readyToTest(matrixData, roomData, expectation);
+            
+        } failure:^(NSError *error) {
+            
+        }];
+    }];
+}
+
+- (void)doMXRoomDataTestWithBobAndThePublicRoom:(void (^)(MXData *matrixData, MXRoomData *roomData, XCTestExpectation *expectation))readyToTest
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
+        
+        MXData *matrixData = [[MXData alloc] initWithMatrixSession:bobSession];
         
         [matrixData start:^{
             MXRoomData *roomData = [matrixData getRoomData:room_id];
@@ -358,4 +374,21 @@
         [expectation fulfill];
     }];
 }
+
+
+- (void)testAliases
+{
+    [self doMXRoomDataTestWithBobAndThePublicRoom:^(MXData *matrixData, MXRoomData *roomData, XCTestExpectation *expectation) {
+        
+        XCTAssertNotNil(roomData.aliases);
+        XCTAssertGreaterThanOrEqual(roomData.aliases.count, 1);
+        
+        NSString *alias = roomData.aliases[0];
+        
+        XCTAssertTrue([alias hasPrefix:@"#mxPublic:"]);
+        
+        [expectation fulfill];
+    }];
+}
+
 @end
