@@ -51,7 +51,7 @@
 
 - (NSArray *)messages
 {
-    return messages;
+    return [messages copy];
 }
 
 - (MXEvent *)lastMessage
@@ -61,7 +61,7 @@
 
 - (NSArray *)stateEvents
 {
-    return stateEvents;
+    return [stateEvents copy];
 }
 
 - (NSArray *)members
