@@ -268,4 +268,26 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
      }];
 }
 
+
+#pragma mark - Directory operations
+- (void)roomIDForRoomAlias:(NSString*)room_alias
+                   success:(void (^)(NSString *room_id))success
+                   failure:(void (^)(NSError *error))failure
+{
+    // Note: characters in a room alias need to be escaped in the URL
+    NSString *path = [NSString stringWithFormat:@"directory/room/%@", [room_alias stringByAddingPercentEscapesUsingEncoding:NSASCIIStringEncoding]];
+    
+    [hsClient requestWithMethod:@"GET"
+                           path:path
+                     parameters:nil
+                        success:^(NSDictionary *JSONResponse)
+     {
+         success(JSONResponse[@"room_id"]);
+     }
+                        failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+
+}
 @end

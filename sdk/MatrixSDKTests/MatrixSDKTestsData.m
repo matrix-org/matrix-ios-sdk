@@ -154,6 +154,44 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
     }];
 }
 
+- (void)doMXSessionTestWithBobAndThePublicRoom:(XCTestCase*)testCase
+                                   readyToTest:(void (^)(MXSession *bobSession, NSString* room_id, XCTestExpectation *expectation))readyToTest
+{
+    [self doMXSessionTestWithBob:testCase
+                     readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation) {
+                         
+        // Create THE allocated public room: #mxPublic
+        [bobSession createRoom:@"MX Public Room test"
+                    visibility:kMXRoomVisibilityPublic
+               room_alias_name:@"mxPublic"
+                         topic:@"The public room used by SDK tests"
+                        invite:nil
+                       success:^(MXCreateRoomResponse *response) {
+            
+            readyToTest(bobSession, response.room_id, expectation);
+            
+        } failure:^(NSError *error) {
+            if ([MXError isMXError:error])
+            {
+                NSString *mxPublicAlias = [NSString stringWithFormat:@"#mxPublic:%@", self.bobCredentials.home_server];
+                
+                // The room may already exist, try to retrieve its room id
+                [bobSession roomIDForRoomAlias:mxPublicAlias success:^(NSString *room_id) {
+                    
+                    readyToTest(bobSession, room_id, expectation);
+                    
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot retrieve mxPublic from its alias - error: %@", error);
+                }];
+            }
+            else
+            {
+                NSAssert(NO, @"Cannot create a room - error: %@", error);
+            }
+        }];
+    }];
+}
+
 - (void)doMXSessionTestInABobRoomAndANewTextMessage:(XCTestCase*)testCase
                                   newTextMessage:(NSString*)newTextMessage
                                    onReadyToTest:(void (^)(MXSession *bobSession, NSString* room_id, NSString* new_text_message_event_id, XCTestExpectation *expectation))readyToTest

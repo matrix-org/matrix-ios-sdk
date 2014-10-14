@@ -43,6 +43,9 @@ FOUNDATION_EXPORT NSString * const kMXTestsHomeServerURL;
 - (void)doMXSessionTestWithBobAndARoom:(XCTestCase*)testCase
                            readyToTest:(void (^)(MXSession *bobSession, NSString* room_id, XCTestExpectation *expectation))readyToTest;
 
+- (void)doMXSessionTestWithBobAndThePublicRoom:(XCTestCase*)testCase
+                           readyToTest:(void (^)(MXSession *bobSession, NSString* room_id, XCTestExpectation *expectation))readyToTest;
+
 - (void)doMXSessionTestInABobRoomAndANewTextMessage:(XCTestCase*)testCase
                                      newTextMessage:(NSString*)newTextMessage
                                       onReadyToTest:(void (^)(MXSession *bobSession, NSString* room_id, NSString* new_text_message_event_id, XCTestExpectation *expectation))readyToTest;

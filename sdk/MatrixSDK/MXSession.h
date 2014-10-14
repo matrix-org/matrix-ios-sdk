@@ -205,4 +205,18 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
             success:(void (^)(NSDictionary *JSONData))success
             failure:(void (^)(NSError *error))failure;
 
+
+#pragma mark - Directory operations
+/**
+ Get the room ID corresponding to this room alias
+ 
+ @param room_alias the alias of the room to look for.
+ 
+ @param success A block object called when the operation succeeds. It provides an array of `MXRoomMember`.
+ @param failure A block object called when the operation fails.
+ */
+- (void)roomIDForRoomAlias:(NSString*)room_alias
+            success:(void (^)(NSString *room_id))success
+            failure:(void (^)(NSError *error))failure;
+
 @end
