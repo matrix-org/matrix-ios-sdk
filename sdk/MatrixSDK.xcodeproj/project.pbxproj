@@ -28,6 +28,7 @@
 		3281E8B819E42DFE00976E1A /* MXJSONModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 3281E8B419E42DFE00976E1A /* MXJSONModel.m */; };
 		3281E8B919E42DFE00976E1A /* MXJSONModels.h in Headers */ = {isa = PBXBuildFile; fileRef = 3281E8B519E42DFE00976E1A /* MXJSONModels.h */; };
 		3281E8BA19E42DFE00976E1A /* MXJSONModels.m in Sources */ = {isa = PBXBuildFile; fileRef = 3281E8B619E42DFE00976E1A /* MXJSONModels.m */; };
+		32A27D1F19EC335300BAFADE /* MXRoomDataTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A27D1E19EC335300BAFADE /* MXRoomDataTests.m */; };
 		32C6F93319DD814400EA4E9C /* MatrixSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C6F93219DD814400EA4E9C /* MatrixSDK.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32D8CAC219DEE6ED002AF8A0 /* MXHomeServerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32D8CAC119DEE6ED002AF8A0 /* MXHomeServerTests.m */; };
 		32F2127A19DE970F009C6DCD /* MXHomeServer.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F2127819DE970F009C6DCD /* MXHomeServer.h */; };
@@ -69,6 +70,7 @@
 		3281E8B419E42DFE00976E1A /* MXJSONModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXJSONModel.m; sourceTree = "<group>"; };
 		3281E8B519E42DFE00976E1A /* MXJSONModels.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXJSONModels.h; sourceTree = "<group>"; };
 		3281E8B619E42DFE00976E1A /* MXJSONModels.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXJSONModels.m; sourceTree = "<group>"; };
+		32A27D1E19EC335300BAFADE /* MXRoomDataTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRoomDataTests.m; sourceTree = "<group>"; };
 		32C6F92D19DD814400EA4E9C /* MatrixSDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MatrixSDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		32C6F93119DD814400EA4E9C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		32C6F93219DD814400EA4E9C /* MatrixSDK.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MatrixSDK.h; sourceTree = "<group>"; };
@@ -209,6 +211,7 @@
 				3281E89D19E299C000976E1A /* MXErrorTests.m */,
 				3281E89F19E2CC1200976E1A /* MXRestClientTests.m */,
 				3281E8A119E2DE4300976E1A /* MXDataTests.m */,
+				32A27D1E19EC335300BAFADE /* MXRoomDataTests.m */,
 			);
 			path = MatrixSDKTests;
 			sourceTree = "<group>";
@@ -400,6 +403,7 @@
 				3281E89E19E299C000976E1A /* MXErrorTests.m in Sources */,
 				3281E8A019E2CC1200976E1A /* MXRestClientTests.m in Sources */,
 				3281E8A219E2DE4300976E1A /* MXDataTests.m in Sources */,
+				32A27D1F19EC335300BAFADE /* MXRoomDataTests.m in Sources */,
 				32D8CAC219DEE6ED002AF8A0 /* MXHomeServerTests.m in Sources */,
 				32FCAB4D19E578860049C555 /* MXSessionTests.m in Sources */,
 			);

@@ -115,6 +115,106 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
     }];
 }
 
+
+- (void)doMXSessionTestWithBob:(XCTestCase*)testCase
+                   readyToTest:(void (^)(MXSession *bobSession, XCTestExpectation *expectation))readyToTest
+{
+    XCTestExpectation *expectation = [testCase expectationWithDescription:@"asyncTest"];
+    
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+    
+    [sharedData getBobCredentials:^{
+        
+        MXSession *session = [[MXSession alloc] initWithHomeServer:kMXTestsHomeServerURL userId:sharedData.bobCredentials.user_id accessToken:sharedData.bobCredentials.access_token];
+        
+        readyToTest(session, expectation);
+        
+    }];
+    
+    [testCase waitForExpectationsWithTimeout:10000 handler:nil];
+}
+
+- (void)doMXSessionTestWithBobAndARoom:(XCTestCase*)testCase
+                           readyToTest:(void (^)(MXSession *bobSession, NSString* room_id, XCTestExpectation *expectation))readyToTest
+{
+    [self doMXSessionTestWithBob:testCase
+                     readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation) {
+        // Create a random room to use
+        [bobSession createRoom:nil visibility:nil room_alias_name:nil topic:nil invite:nil success:^(MXCreateRoomResponse *response) {
+            
+            readyToTest(bobSession, response.room_id, expectation);
+            
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot create a room - error: %@", error);
+        }];
+    }];
+}
+
+- (void)doMXSessionTestInABobRoomAndANewTextMessage:(XCTestCase*)testCase
+                                  newTextMessage:(NSString*)newTextMessage
+                                   onReadyToTest:(void (^)(MXSession *bobSession, NSString* room_id, NSString* new_text_message_event_id, XCTestExpectation *expectation))readyToTest
+{
+    XCTestExpectation *expectation = [testCase expectationWithDescription:@"asyncTest"];
+    
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+    
+    [sharedData getBobMXSession:^(MXSession *bobSession) {
+        // Create a random room to use
+        [bobSession createRoom:nil visibility:nil room_alias_name:nil topic:nil invite:nil success:^(MXCreateRoomResponse *response) {
+            
+            // Post the the message text in it
+            [bobSession postTextMessage:response.room_id text:newTextMessage success:^(NSString *event_id) {
+                
+                readyToTest(bobSession, response.room_id, event_id, expectation);
+                
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions");
+            }];
+            
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot create a room - error: %@", error);
+        }];
+    }];
+    
+    [testCase waitForExpectationsWithTimeout:10000 handler:nil];
+}
+
+- (void)doMXSessionTestWithBobAndARoomWithMessages:(XCTestCase*)testCase
+                                       readyToTest:(void (^)(MXSession *bobSession, NSString* room_id, XCTestExpectation *expectation))readyToTest
+{
+    [self doMXSessionTestWithBobAndARoom:testCase
+                             readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
+        
+        MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+        
+        // Add 5 messages to the room
+        [sharedData for:bobSession andRoom:room_id postMessages:5 success:^{
+            
+            readyToTest(bobSession, room_id, expectation);
+        }];
+        
+    }];
+}
+
+- (void)doMXSessionTestWihBobAndSeveralRoomsAndMessages:(XCTestCase*)testCase
+                                         readyToTest:(void (^)(MXSession *bobSession, XCTestExpectation *expectation))readyToTest
+{
+    XCTestExpectation *expectation = [testCase expectationWithDescription:@"asyncTest"];
+    
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+    
+    [sharedData getBobMXSession:^(MXSession *bobSession) {
+        
+        // Fill Bob's account with 5 rooms of 3 messages
+        [sharedData for:bobSession createRooms:5 withMessages:3 success:^{
+            readyToTest(bobSession, expectation);
+        }];
+    }];
+    
+    [testCase waitForExpectationsWithTimeout:10000 handler:nil];
+}
+
+
 - (void)for:(MXSession *)mxSession andRoom:(NSString*)room_id postMessages:(NSUInteger)messagesCount success:(void (^)())success
 {
     NSLog(@"postMessages :%ld", messagesCount);

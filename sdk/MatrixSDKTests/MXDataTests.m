@@ -42,55 +42,10 @@
     [super tearDown];
 }
 
-// Prepare a MXSession for mxBob so that we can make test on it
-- (void)doMXDataTestInABobRoomAndANewTextMessage:(NSString*)newTextMessage
-                                   onReadyToTest:(void (^)(MXSession *bobSession, NSString* room_id, NSString* new_text_message_event_id, XCTestExpectation *expectation))readyToTest
-{
-    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
-    
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-    
-    [sharedData getBobMXSession:^(MXSession *bobSession) {
-        // Create a random room to use
-        [bobSession createRoom:nil visibility:nil room_alias_name:nil topic:nil invite:nil success:^(MXCreateRoomResponse *response) {
-            
-            // Post the the message text in it
-            [bobSession postTextMessage:response.room_id text:newTextMessage success:^(NSString *event_id) {
-                
-                readyToTest(bobSession, response.room_id, event_id, expectation);
-                
-            } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot set up intial test conditions");
-            }];
-            
-        } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot create a room - error: %@", error);
-        }];
-    }];
-
-    [self waitForExpectationsWithTimeout:10000 handler:nil];
-}
-
-- (void)doMXDataTestWihBobAndSeveralRoomsAndMessages:(void (^)(MXSession *bobSession, XCTestExpectation *expectation))readyToTest
-{
-    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
-    
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-    
-    [sharedData getBobMXSession:^(MXSession *bobSession) {
-        
-        // Fill Bob's account with 5 rooms of 3 messages
-        [sharedData for:bobSession createRooms:5 withMessages:3 success:^{
-            readyToTest(bobSession, expectation);
-        }];
-    }];
-    
-    [self waitForExpectationsWithTimeout:10000 handler:nil];
-}
 
 - (void)testRecents
 {
-    [self doMXDataTestInABobRoomAndANewTextMessage:@"This is a text message for recents" onReadyToTest:^(MXSession *bobSession, NSString *room_id, NSString *new_text_message_event_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXSession *bobSession, NSString *room_id, NSString *new_text_message_event_id, XCTestExpectation *expectation) {
         
         matrixData = [[MXData alloc] initWithMatrixSession:bobSession];
         [matrixData start:^{
@@ -124,7 +79,7 @@
 
 - (void)testRecentsOrder
 {
-    [self doMXDataTestWihBobAndSeveralRoomsAndMessages:^(MXSession *bobSession, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData]doMXSessionTestWihBobAndSeveralRoomsAndMessages:self readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation) {
 
         matrixData = [[MXData alloc] initWithMatrixSession:bobSession];
         [matrixData start:^{
@@ -158,36 +113,5 @@
     }];
 }
 
-
-- (void)testRoomDataMembers
-{
-    [self doMXDataTestInABobRoomAndANewTextMessage:@"This is a text message for recents" onReadyToTest:^(MXSession *bobSession, NSString *room_id, NSString *new_text_message_event_id, XCTestExpectation *expectation) {
-        
-        matrixData = [[MXData alloc] initWithMatrixSession:bobSession];
-        [matrixData start:^{
-            
-            MXRoomData *roomData = [matrixData getRoomData:room_id];
-            XCTAssertNotNil(roomData);
-            
-            NSArray *members = roomData.members;
-            XCTAssertEqual(members.count, 1, "There must be only one member: mxBob, the creator");
-            
-            for (MXRoomMember *member in roomData.members)
-            {
-                XCTAssertTrue([member.user_id isEqualToString:bobSession.user_id], "This must be mxBob");
-            }
-            
-            XCTAssertNotNil([roomData getMember:bobSession.user_id], @"Bob must be retrieved");
-            
-            XCTAssertNil([roomData getMember:@"NonExistingUserId"], @"getMember must return nil if the user does not exist");
-            
-            [expectation fulfill];
-            
-        } failure:^(NSError *error) {
-            XCTFail(@"The request should not fail - NSError: %@", error);
-            [expectation fulfill];
-        }];
-    }];
-}
 
 @end

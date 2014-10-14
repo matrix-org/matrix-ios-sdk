@@ -36,57 +36,9 @@
     [super tearDown];
 }
 
-// Prepare a MXSession for mxBob so that we can make test on it
-- (void)doMXSessionTestWithBob:(void (^)(MXSession *bobSession, XCTestExpectation *expectation))readyToTest
-{
-    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
-    
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-    
-    [sharedData getBobCredentials:^{
-        
-        MXSession *session = [[MXSession alloc] initWithHomeServer:kMXTestsHomeServerURL userId:sharedData.bobCredentials.user_id accessToken:sharedData.bobCredentials.access_token];
-        
-        readyToTest(session, expectation);
-
-    }];
-    
-    [self waitForExpectationsWithTimeout:10000 handler:nil];
-}
-
-// Prepare a MXSession for mxBob so that we can make test on it
-- (void)doMXSessionTestWithBobAndARoom:(void (^)(MXSession *bobSession, NSString* room_id, XCTestExpectation *expectation))readyToTest
-{
-    [self doMXSessionTestWithBob:^(MXSession *bobSession, XCTestExpectation *expectation) {
-        // Create a random room to use
-        [bobSession createRoom:nil visibility:nil room_alias_name:nil topic:nil invite:nil success:^(MXCreateRoomResponse *response) {
-            
-            readyToTest(bobSession, response.room_id, expectation);
-            
-        } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot create a room - error: %@", error);
-        }];
-    }];
-}
-
-- (void)doMXSessionTestWithBobAndARoomWithMessages:(void (^)(MXSession *bobSession, NSString* room_id, XCTestExpectation *expectation))readyToTest
-{
-   [self doMXSessionTestWithBobAndARoom:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
-       
-       MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-       
-       // Add 5 messages to the room
-       [sharedData for:bobSession andRoom:room_id postMessages:5 success:^{
-           
-           readyToTest(bobSession, room_id, expectation);
-       }];
-       
-   }];
-}
-
 - (void)testInit
 {
-    [self doMXSessionTestWithBob:^(MXSession *bobSession, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBob:self readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation) {
         
         MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
         
@@ -102,7 +54,7 @@
 - (void)testPostTextMessage
 {
     // This test on postTextMessage validates postMessage and postEvent too
-    [self doMXSessionTestWithBobAndARoom:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoom:self readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
         
         [bobSession postTextMessage:room_id text:@"This is text message" success:^(NSString *event_id) {
             
@@ -119,7 +71,7 @@
 
 - (void)testJoin
 {
-    [self doMXSessionTestWithBobAndARoom:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoom:self readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
         
         [bobSession join:room_id success:^{
             
@@ -135,7 +87,7 @@
 
 - (void)testCreateRoom
 {
-    [self doMXSessionTestWithBob:^(MXSession *bobSession, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBob:self readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation) {
         
         // Create a random room with no params
         [bobSession createRoom:nil visibility:nil room_alias_name:nil topic:nil invite:nil success:^(MXCreateRoomResponse *response) {
@@ -156,7 +108,7 @@
 
 - (void)testMessages
 {
-    [self doMXSessionTestWithBobAndARoomWithMessages:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData]  doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
         
         [bobSession messages:room_id from:nil to:nil limit:-1 success:^(MXPaginationResponse *paginatedResponse) {
             
@@ -178,7 +130,7 @@
 
 - (void)testMembers
 {
-    [self doMXSessionTestWithBobAndARoom:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoom:self readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
         
         [bobSession members:room_id success:^(NSArray *members) {
             
