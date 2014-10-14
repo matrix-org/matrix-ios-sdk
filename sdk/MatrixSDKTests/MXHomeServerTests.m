@@ -241,37 +241,35 @@
 #pragma mark - Event operations
 - (void)testPublicRooms
 {
-    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
-    
-    // Use the hs running at matrix.org as we know there are public rooms there
-    homeServer = [[MXHomeServer alloc] initWithHomeServer:@"http://matrix.org"];
-    [homeServer publicRooms:^(NSArray *rooms) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
         
-        XCTAssertTrue(0 < rooms.count, @"Valid init");
-        
-        MXPublicRoom *matrixHQRoom;
-        for (MXPublicRoom *room in rooms)
-        {
-            // Find the Matrix HQ room (#matrix:matrix.org) by its ID
-            if ([room.room_id isEqualToString:@"!cURbafjkfsMDVwdRDQ:matrix.org"])
+        [homeServer publicRooms:^(NSArray *rooms) {
+            
+            XCTAssertTrue(0 < rooms.count, @"Valid init");
+            
+            MXPublicRoom *theMXPublicRoom;
+            for (MXPublicRoom *room in rooms)
             {
-                matrixHQRoom = room;
+                // Find the Matrix HQ room (#matrix:matrix.org) by its ID
+                if ([room.room_id isEqualToString:room_id])
+                {
+                    theMXPublicRoom = room;
+                }
             }
-        }
-        
-        XCTAssertNotNil(matrixHQRoom, @"Matrix HQ must be listed in public rooms");
-        XCTAssertTrue(matrixHQRoom.name && matrixHQRoom.name.length, @"Matrix HQ should be set");
-        XCTAssertTrue(matrixHQRoom.topic && matrixHQRoom.topic.length, @"Matrix HQ must be listed in public rooms");
-        XCTAssert(0 < matrixHQRoom.num_joined_members, @"The are always someone at #matrix:matrix.org");
-        
-        [expectation fulfill];
-        
-    } failure:^(NSError *error) {
-        XCTFail(@"The request should not fail - NSError: %@", error);
-        [expectation fulfill];
+            
+            XCTAssertNotNil(theMXPublicRoom);
+            XCTAssertTrue([theMXPublicRoom.name  isEqualToString:@"MX Public Room test"]);
+            XCTAssertTrue([theMXPublicRoom.topic isEqualToString:@"The public room used by SDK tests"]);
+            XCTAssertGreaterThan(theMXPublicRoom.num_joined_members, 0, @"The is at least mxBob at #matrix:matrix.org");
+            
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
     }];
-    
-    [self waitForExpectationsWithTimeout:10000 handler:nil];
 }
 
 @end
