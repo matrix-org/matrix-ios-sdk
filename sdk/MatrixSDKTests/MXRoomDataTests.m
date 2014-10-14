@@ -39,7 +39,7 @@
     [super tearDown];
 }
 
-- (void)doMXRoomDataTestWithBobAndARoomWithMessages:(void (^)(MXRoomData *roomData, XCTestExpectation *expectation))readyToTest
+- (void)doMXRoomDataTestWithBobAndARoomWithMessages:(void (^)(MXData *matrixData, MXRoomData *roomData, XCTestExpectation *expectation))readyToTest
 {
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
         
@@ -49,7 +49,7 @@
         [matrixData start:^{
             MXRoomData *roomData = [matrixData getRoomData:room_id];
             
-            readyToTest(roomData, expectation);
+            readyToTest(matrixData, roomData, expectation);
             
         } failure:^(NSError *error) {
             
@@ -105,7 +105,7 @@
 
 - (void)testMessagesPropertyCopy
 {
-    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXRoomData *roomData, XCTestExpectation *expectation) {
+    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXData *matrixData, MXRoomData *roomData, XCTestExpectation *expectation) {
         
         NSArray *messagesBeforePagination = roomData.messages;
         
@@ -135,7 +135,7 @@
 
 - (void)testMessagesOrder
 {
-    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXRoomData *roomData, XCTestExpectation *expectation) {
+    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXData *matrixData, MXRoomData *roomData, XCTestExpectation *expectation) {
         
         [roomData paginateBackMessages:100 success:^(NSArray *messages) {
             
@@ -165,7 +165,7 @@
 
 - (void)testPaginateBack
 {
-    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXRoomData *roomData, XCTestExpectation *expectation) {
+    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXData *matrixData, MXRoomData *roomData, XCTestExpectation *expectation) {
         
         NSArray *messagesBeforePagination = roomData.messages;
         
@@ -188,7 +188,7 @@
 
 - (void)testPaginateBackOrder
 {
-    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXRoomData *roomData, XCTestExpectation *expectation) {
+    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXData *matrixData, MXRoomData *roomData, XCTestExpectation *expectation) {
         
         [roomData paginateBackMessages:100 success:^(NSArray *messages) {
             
@@ -217,13 +217,36 @@
 
 - (void)testPaginateBackDuplicates
 {
-    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXRoomData *roomData, XCTestExpectation *expectation) {
+    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXData *matrixData, MXRoomData *roomData, XCTestExpectation *expectation) {
         
         [roomData paginateBackMessages:100 success:^(NSArray *messages) {
             
             [self assertNoDuplicate:messages text:@"the 'messages' array response of paginateBackMessages"];
             
             [self assertNoDuplicate:roomData.messages text:@" roomData.messages"];
+            
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testPaginateBackWithNoInitialSync
+{
+    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXData *matrixData, MXRoomData *roomData, XCTestExpectation *expectation) {
+        
+        MXRoomData *roomData2 = [[MXRoomData alloc] initWithRoomId:roomData.room_id andMatrixData:matrixData];
+        
+        XCTAssertEqual(roomData2.messages.count, 0, @"No initialSync means no data");
+        
+        [roomData2 paginateBackMessages:5 success:^(NSArray *messages) {
+            
+            XCTAssertEqual(messages.count, 5, @"We should get as many messages as requested");
+            
+            XCTAssertEqual(roomData2.messages.count, 5, @"roomData.messages count must be 5 now");
             
             [expectation fulfill];
             
