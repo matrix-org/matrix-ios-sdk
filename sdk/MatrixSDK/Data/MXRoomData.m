@@ -27,12 +27,27 @@
     
     // The token used to know from where to paginate back.
     NSString *pagEarliestToken;
+    
+    /*
+     Additional and optional metadata got from initialSync
+     */
+    
+    // kMXRoomVisibilityPublic or kMXRoomVisibilityPrivate
+    MXRoomVisibility visibility;
+    
+    // The ID of the user who invited the current user
+    NSString *inviter;
 }
 @end
 
 @implementation MXRoomData
 
 - (id)initWithRoomId:(NSString *)room_id andMatrixData:(MXData *)matrixData2
+{
+    return [self initWithRoomId:room_id andMatrixData:matrixData2 andJSONData:nil];
+}
+
+- (id)initWithRoomId:(NSString *)room_id andMatrixData:(MXData *)matrixData2 andJSONData:(NSDictionary*)JSONData
 {
     self = [super init];
     if (self)
@@ -46,6 +61,19 @@
         _canPaginate = YES;
         
         pagEarliestToken = @"END";
+        
+        // Store optional metadata
+        if (JSONData)
+        {
+            if ([JSONData objectForKey:@"visibility"])
+            {
+                visibility = JSONData[@"visibility"];
+            }
+            if ([JSONData objectForKey:@"inviter"])
+            {
+                inviter = JSONData[@"inviter"];
+            }
+        }
     }
     return self;
 }
@@ -75,17 +103,29 @@
 {
     BOOL isPublic = NO;
     
-    // Check this in the room state events
-    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomJoinRules];
-    
-    if (event && event.content)
+    if (visibility)
     {
-        NSString *join_rule = event.content[@"join_rule"];
-        if ([join_rule isEqualToString:kMXRoomVisibilityPublic])
+        // Check the visibility metadata
+        if ([visibility isEqualToString:kMXRoomVisibilityPublic])
         {
             isPublic = YES;
         }
     }
+    else
+    {
+        // Check this in the room state events
+        MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomJoinRules];
+        
+        if (event && event.content)
+        {
+            NSString *join_rule = event.content[@"join_rule"];
+            if ([join_rule isEqualToString:kMXRoomVisibilityPublic])
+            {
+                isPublic = YES;
+            }
+        }
+    }
+    
     return isPublic;
 }
 
@@ -153,14 +193,12 @@
             }
             else
             {
-                /* TODO
-                if (self.inviter)
+                if (inviter)
                 {
                     // This is an invite
-                    otherUserId = self.inviter;
+                    otherUserId = inviter;
                 }
                 else
-                 */
                 {
                     // This is a self chat
                     otherUserId = matrixData.matrixSession.user_id;

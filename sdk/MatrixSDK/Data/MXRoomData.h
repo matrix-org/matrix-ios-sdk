@@ -79,6 +79,8 @@
 
 - (id)initWithRoomId:(NSString*)room_id andMatrixData:(MXData*)matrixData;
 
+- (id)initWithRoomId:(NSString*)room_id andMatrixData:(MXData*)matrixData andJSONData:(NSDictionary*)JSONData;
+
 - (void)handleMessages:(MXPaginationResponse*)roomMessages
           isLiveEvents:(BOOL)isLiveEvents
              direction:(BOOL)direction;

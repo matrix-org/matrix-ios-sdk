@@ -61,7 +61,7 @@
              MXRoomData *roomData = [self getRoomData:room[@"room_id"]];
              if (nil == roomData)
              {
-                 roomData = [self createRoomData:room[@"room_id"]];
+                 roomData = [self createRoomData:room[@"room_id"] withJSONData:room];
              }
              
              if ([room objectForKey:@"messages"])
@@ -125,9 +125,9 @@
     return recents;
 }
 
-- (MXRoomData *)createRoomData:(NSString *)room_id
+- (MXRoomData *)createRoomData:(NSString *)room_id withJSONData:(NSDictionary*)JSONData
 {
-    MXRoomData *room = [[MXRoomData alloc] initWithRoomId:room_id andMatrixData:self];
+    MXRoomData *room = [[MXRoomData alloc] initWithRoomId:room_id andMatrixData:self andJSONData:JSONData];
     [rooms setObject:room forKey:room_id];
     return room;
 }
