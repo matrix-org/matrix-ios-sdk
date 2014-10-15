@@ -74,10 +74,6 @@
 
 - (void)close;
 
-/*
-- (id)registerListener:(NSString*)room_id types:(NSArray*)types block:(void (^)(MXEvent *event))listener;   // room_id: bof. Add a registerListener method to MXRoomData too?
-- (id)unregisterListener:listenerId;
- */
 
 /**
  Get the MXRoomData instance of a room.

@@ -18,7 +18,7 @@
 
 #import "MXEvent.h"
 #import "MXJSONModels.h"
-
+#import "MXRoomDataEventListener.h"
 
 @class MXData;
 
@@ -117,5 +117,22 @@
  It is his displayname member or, if nil, his user_id
  */
 - (NSString*)memberName:(NSString*)user_id;
+
+
+/**
+ Register a listener for some types of events.
+ 
+ @param types an array of event types strings (MXEventTypeString). nil to listen to all events.
+ @param listenerBlock the block that will called once a new event has been handled.
+ @return a reference to use for unregister the listener
+ */
+- (id)registerEventListenerForTypes:(NSArray*)types block:(MXRoomDataEventListenerBlock)listenerBlock;
+
+/**
+ Unregister a listener.
+ 
+ @param listener the reference of the listener to remove.
+ */
+- (void)unregisterListener:(id)listener;
 
 @end

@@ -37,6 +37,9 @@
     
     // The ID of the user who invited the current user
     NSString *inviter;
+    
+    // The list of event listener (`MXRoomDataEventListener`) in this room
+    NSMutableArray *eventListeners;
 }
 @end
 
@@ -61,6 +64,8 @@
         _canPaginate = YES;
         
         pagEarliestToken = @"END";
+        
+        eventListeners = [NSMutableArray array];
         
         // Store optional metadata
         if (JSONData)
@@ -265,6 +270,13 @@
     {
         [messages insertObject:event atIndex:0];
     }
+
+    // Notify listener only for past events here
+    // Live events are already notified from handleLiveEvent
+    if (NO == isLiveEvent)
+    {
+        [self notifyListeners:event isLiveEvent:NO];
+    }
     
     return YES;
 }
@@ -279,6 +291,9 @@
     
     for (MXEvent *event in events) {
         [self handleStateEvent:event];
+
+        // Notify state events coming from initialSync
+        [self notifyListeners:event isLiveEvent:NO];
     }
 }
 
@@ -314,8 +329,14 @@
     {
         [self handleStateEvent:event];
     }
+
+    // Process the event
+    BOOL isEventEndedInMessages = [self handleMessage:event isLiveEvent:YES pagFrom:nil];
+
+    // And notify the listeners
+    [self notifyListeners:event isLiveEvent:YES];
     
-    return [self handleMessage:event isLiveEvent:YES pagFrom:nil];
+    return isEventEndedInMessages;
 }
 
 
@@ -388,6 +409,34 @@
         }
     }
     return memberName;
+}
+
+#pragma mark - Events listeners
+- (id)registerEventListenerForTypes:(NSArray*)types block:(MXRoomDataEventListenerBlock)listenerBlock
+{
+    MXRoomDataEventListener *listener = [[MXRoomDataEventListener alloc] initWithEventTypes:types andListenerBlock:listenerBlock];
+    
+    [eventListeners addObject:listener];
+    
+    return listener;
+}
+
+- (void)unregisterListener:(id)listener
+{
+    [eventListeners removeObject:listener];
+}
+
+- (void)notifyListeners:(MXEvent*)event isLiveEvent:(BOOL)isLiveEvent
+{
+    // Check all listeners
+    for (MXRoomDataEventListener *listener in eventListeners)
+    {
+        if ([listener doesEventMatch:event])
+        {
+            // Notify this one
+            listener.listenerBlock(self, event, isLiveEvent);
+        }
+    }
 }
 
 @end
