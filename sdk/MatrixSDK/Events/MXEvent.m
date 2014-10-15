@@ -93,4 +93,10 @@ NSString *const kMXMessageTypeLocation  = @"m.video";
     return instance;
 }
 
+- (BOOL)isState
+{
+    // The event is a state event if has a state_key
+    return (nil != self.state_key);
+}
+
 @end

@@ -127,6 +127,11 @@ FOUNDATION_EXPORT NSString *const kMXMessageTypeLocation;
 @property (nonatomic) NSUInteger ts;
 
 /**
+ Indicates if the event hosts state data
+ */
+@property (nonatomic, readonly) BOOL isState;
+
+/**
  Mapping from MXEventTypeString to MXEventType
  */
 + (NSDictionary*)eventTypesMap;
