@@ -57,7 +57,7 @@
             readyToTest(matrixData, roomData, expectation);
             
         } failure:^(NSError *error) {
-            
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
         }];
     }];
 }
@@ -74,7 +74,7 @@
             readyToTest(matrixData, roomData, expectation);
             
         } failure:^(NSError *error) {
-            
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
         }];
     }];
 }
@@ -441,6 +441,78 @@
         XCTAssertTrue([roomData.displayname isEqualToString:matrixData.matrixSession.user_id], @"The room name must be Bob's userID as he has no displayname: %@ - %@", roomData.displayname, matrixData.matrixSession.user_id);
         
         [expectation fulfill];
+    }];
+}
+
+- (void)testListenerForAllLiveEvents
+{
+    [self doMXRoomDataTestWithBobAndThePublicRoom:^(MXData *matrixData, MXRoomData *roomData, XCTestExpectation *expectation) {
+        
+        __block NSString *messageEventID;
+        
+        // Register the listener
+        [roomData registerEventListenerForTypes:nil block:^(MXRoomData *roomData2, MXEvent *event, BOOL isLive) {
+            
+            XCTAssertEqual(roomData, roomData2);
+            XCTAssertTrue(isLive);
+            
+            XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
+            XCTAssertTrue([event.event_id isEqualToString:messageEventID]);
+            
+            
+            [expectation fulfill];
+            
+        }];
+        
+        
+        // Populate a text message in parallel
+        [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:nil readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation2) {
+            
+            [bobSession postTextMessage:room_id text:@"Hello listeners!" success:^(NSString *event_id) {
+                
+                messageEventID = event_id;
+                
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+        }];
+        
+    }];
+}
+
+- (void)testListenerForRoomMessageLiveEvents
+{
+    [self doMXRoomDataTestWithBobAndThePublicRoom:^(MXData *matrixData, MXRoomData *roomData, XCTestExpectation *expectation) {
+        
+        __block NSString *messageEventID;
+        
+        // Register the listener for m.room.message.only
+        [roomData registerEventListenerForTypes:@[kMXEventTypeStringRoomMessage]
+                                          block:^(MXRoomData *roomData2, MXEvent *event, BOOL isLive) {
+            
+            XCTAssertEqual(roomData, roomData2);
+            XCTAssertTrue(isLive);
+            
+            XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
+            XCTAssertTrue([event.event_id isEqualToString:messageEventID]);
+            
+            
+            [expectation fulfill];
+            
+        }];
+        
+        // Populate a text message in parallel
+        [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:nil readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation2) {
+            
+            [bobSession postTextMessage:room_id text:@"Hello listeners!" success:^(NSString *event_id) {
+                
+                messageEventID = event_id;
+                
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+        }];
+        
     }];
 }
 
