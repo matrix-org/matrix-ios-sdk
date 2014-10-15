@@ -30,6 +30,7 @@ NSString *const kMXEventTypeStringRoomOpsLevel        = @"m.room.ops_levels";
 NSString *const kMXEventTypeStringRoomAliases         = @"m.room.aliases";
 NSString *const kMXEventTypeStringRoomMessage         = @"m.room.message";
 NSString *const kMXEventTypeStringRoomMessageFeedback = @"m.room.message.feedback";
+NSString *const kMXEventTypeStringPresence            = @"m.presence";
 
 NSString *const kMXMessageTypeText      = @"m.text";
 NSString *const kMXMessageTypeEmote     = @"m.emote";
@@ -61,6 +62,7 @@ NSString *const kMXMessageTypeLocation  = @"m.video";
                  kMXEventTypeStringRoomAliases: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomAliases],
                  kMXEventTypeStringRoomMessage: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMessage],
                  kMXEventTypeStringRoomMessageFeedback: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMessageFeedback],
+                 kMXEventTypeStringPresence :[NSNumber numberWithUnsignedInteger:MXEventTypePresence]
                  };
     });
     return inst;
