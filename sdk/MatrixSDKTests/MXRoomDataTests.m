@@ -296,7 +296,9 @@
 
 - (void)testPaginateBackWithNoInitialSync
 {
-    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXData *matrixData, MXRoomData *roomData, XCTestExpectation *expectation) {
+    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXData *matrixData2, MXRoomData *roomData, XCTestExpectation *expectation) {
+        
+        matrixData = matrixData2;
         
         // Instantiate another MXRoomData object and test pagination from cold
         MXRoomData *roomData2 = [[MXRoomData alloc] initWithRoomId:roomData.room_id andMatrixData:matrixData];
@@ -320,10 +322,12 @@
 
 - (void)testSeveralPaginateBacks
 {
-    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXData *matrixData, MXRoomData *roomData, XCTestExpectation *expectation) {
+    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXData *matrixData2, MXRoomData *roomData, XCTestExpectation *expectation) {
         
         [roomData paginateBackMessages:100 success:^(NSArray *messages) {
             
+            matrixData = matrixData2;
+
             // Use another MXRoomData instance to do pagination in several times
             MXRoomData *roomData2 = [[MXRoomData alloc] initWithRoomId:roomData.room_id andMatrixData:matrixData];
             
@@ -428,8 +432,10 @@
 // Test the room display name formatting: "userID" (self chat)
 - (void)testDisplayName2
 {
-    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXData *matrixData, MXRoomData *roomData, XCTestExpectation *expectation) {
+    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXData *matrixData2, MXRoomData *roomData, XCTestExpectation *expectation) {
         
+        matrixData = matrixData2;
+
         // Test room the display formatting: "roomName (roomAlias)"
         XCTAssertNotNil(roomData.displayname);
         XCTAssertTrue([roomData.displayname isEqualToString:matrixData.matrixSession.user_id], @"The room name must be Bob's userID as he has no displayname: %@ - %@", roomData.displayname, matrixData.matrixSession.user_id);
