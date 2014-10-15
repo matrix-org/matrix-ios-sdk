@@ -36,9 +36,11 @@
 
 - (void)tearDown
 {
-    [matrixData close];
-    matrixData = nil;
-    
+    if (matrixData)
+    {
+        [matrixData close];
+        matrixData = nil;
+    }
     [super tearDown];
 }
 

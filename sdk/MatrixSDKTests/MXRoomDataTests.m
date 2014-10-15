@@ -23,6 +23,7 @@
 
 @interface MXRoomDataTests : XCTestCase
 {
+    MXData *matrixData;
 }
 
 @end
@@ -36,6 +37,11 @@
 
 - (void)tearDown
 {
+    if (matrixData)
+    {
+        [matrixData close];
+        matrixData = nil;
+    }
     [super tearDown];
 }
 
@@ -43,7 +49,7 @@
 {
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
         
-        MXData *matrixData = [[MXData alloc] initWithMatrixSession:bobSession];
+        matrixData = [[MXData alloc] initWithMatrixSession:bobSession];
         
         [matrixData start:^{
             MXRoomData *roomData = [matrixData getRoomData:room_id];
@@ -60,7 +66,7 @@
 {
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
         
-        MXData *matrixData = [[MXData alloc] initWithMatrixSession:bobSession];
+        matrixData = [[MXData alloc] initWithMatrixSession:bobSession];
         
         [matrixData start:^{
             MXRoomData *roomData = [matrixData getRoomData:room_id];
@@ -112,7 +118,7 @@
 {
     [[MatrixSDKTestsData sharedData] doMXSessionTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXSession *bobSession, NSString *room_id, NSString *new_text_message_event_id, XCTestExpectation *expectation) {
         
-        MXData *matrixData = [[MXData alloc] initWithMatrixSession:bobSession];
+        matrixData = [[MXData alloc] initWithMatrixSession:bobSession];
         [matrixData start:^{
             
             MXRoomData *roomData = [matrixData getRoomData:room_id];
