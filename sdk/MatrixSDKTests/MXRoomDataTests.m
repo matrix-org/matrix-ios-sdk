@@ -90,22 +90,11 @@
 
 - (void)testIsPublic
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXSession *bobSession, NSString *room_id, NSString *new_text_message_event_id, XCTestExpectation *expectation) {
+    [self doMXRoomDataTestWithBobAndThePublicRoom:^(MXData *matrixData, MXRoomData *roomData, XCTestExpectation *expectation) {
         
-        MXData *matrixData = [[MXData alloc] initWithMatrixSession:bobSession];
-        [matrixData start:^{
+        XCTAssertTrue(roomData.isPublic, @"The room must be public");
             
-            MXRoomData *roomData = [matrixData getRoomData:room_id];
-            XCTAssertNotNil(roomData);
-            
-            XCTAssertTrue(roomData.isPublic, @"The room must be public");
-            
-            [expectation fulfill];
-            
-        } failure:^(NSError *error) {
-            XCTFail(@"The request should not fail - NSError: %@", error);
-            [expectation fulfill];
-        }];
+        [expectation fulfill];
     }];
 }
 
