@@ -255,7 +255,7 @@
     //NSLog(@"%@", messageEvents);
 }
 
-- (void)handleMessage:(MXEvent*)event isLiveEvent:(BOOL)isLiveEvent pagFrom:(NSString*)pagFrom
+- (BOOL)handleMessage:(MXEvent*)event isLiveEvent:(BOOL)isLiveEvent pagFrom:(NSString*)pagFrom
 {
     if (isLiveEvent)
     {
@@ -265,6 +265,8 @@
     {
         [messages insertObject:event atIndex:0];
     }
+    
+    return YES;
 }
 
 
@@ -303,6 +305,19 @@
             break;
     }
 }
+
+
+#pragma mark - Handle live event
+- (BOOL)handleLiveEvent:(MXEvent*)event
+{
+    if (event.isState)
+    {
+        [self handleStateEvent:event];
+    }
+    
+    return [self handleMessage:event isLiveEvent:YES pagFrom:nil];
+}
+
 
 - (void)paginateBackMessages:(NSUInteger)numItems
                      success:(void (^)(NSArray *messages))success
