@@ -67,6 +67,7 @@
 
 /**
  The display name of the room.
+ It is computed from information retrieved so far.
  */
 @property (nonatomic, readonly) NSString *displayname;
 
@@ -98,5 +99,11 @@
                      failure:(void (^)(NSError *error))failure;
                                                                                                                                      
 - (MXRoomMember*)getMember:(NSString*)user_id;
+
+/**
+ Return a display name for a member.
+ It is his displayname member or, if nil, his user_id
+ */
+- (NSString*)memberName:(NSString*)user_id;
 
 @end

@@ -98,6 +98,16 @@
     }];
 }
 
+- (void)testIsPublicForAPrivateRoom
+{
+    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXData *matrixData, MXRoomData *roomData, XCTestExpectation *expectation) {
+        
+        XCTAssertFalse(roomData.isPublic, @"This room must be private");
+        
+        [expectation fulfill];
+    }];
+}
+
 - (void)testMembers
 {
     [[MatrixSDKTestsData sharedData] doMXSessionTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXSession *bobSession, NSString *room_id, NSString *new_text_message_event_id, XCTestExpectation *expectation) {
@@ -126,6 +136,24 @@
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
+    }];
+}
+
+- (void)testMemberName
+{
+    [self doMXRoomDataTestWithBobAndThePublicRoom:^(MXData *matrixData, MXRoomData *roomData, XCTestExpectation *expectation) {
+        
+        MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+        
+        NSString *bobUserId = sharedData.bobCredentials.user_id;
+        NSString *bobMemberName = [roomData memberName:bobUserId];
+        
+        XCTAssertNotNil(bobMemberName);
+        XCTAssertFalse([bobMemberName isEqualToString:@""], @"bobMemberName must not be an empty string");
+        
+       XCTAssertNil([roomData memberName:@"NonExistingUserId"], @"memberName must return nil if the user does not exist");
+        
+        [expectation fulfill];
     }];
 }
 
@@ -364,7 +392,6 @@
     }];
 }
 
-
 - (void)testAliases
 {
     [self doMXRoomDataTestWithBobAndThePublicRoom:^(MXData *matrixData, MXRoomData *roomData, XCTestExpectation *expectation) {
@@ -375,6 +402,31 @@
         NSString *alias = roomData.aliases[0];
         
         XCTAssertTrue([alias hasPrefix:@"#mxPublic:"]);
+        
+        [expectation fulfill];
+    }];
+}
+
+// Test the room display name formatting: "roomName (roomAlias)"
+- (void)testDisplayName1
+{
+    [self doMXRoomDataTestWithBobAndThePublicRoom:^(MXData *matrixData, MXRoomData *roomData, XCTestExpectation *expectation) {
+        
+        XCTAssertNotNil(roomData.displayname);
+        XCTAssertTrue([roomData.displayname hasPrefix:@"MX Public Room test (#mxPublic:"], @"We must retrieve the #mxPublic room settings");
+        
+        [expectation fulfill];
+    }];
+}
+
+// Test the room display name formatting: "userID" (self chat)
+- (void)testDisplayName2
+{
+    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXData *matrixData, MXRoomData *roomData, XCTestExpectation *expectation) {
+        
+        // Test room the display formatting: "roomName (roomAlias)"
+        XCTAssertNotNil(roomData.displayname);
+        XCTAssertTrue([roomData.displayname isEqualToString:matrixData.matrixSession.user_id], @"The room name must be Bob's userID as he has no displayname: %@ - %@", roomData.displayname, matrixData.matrixSession.user_id);
         
         [expectation fulfill];
     }];
