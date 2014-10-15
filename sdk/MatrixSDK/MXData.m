@@ -161,6 +161,8 @@
 - (void)close
 {
     streamingActive = NO;
+    
+    // @TODO: Cancel the pending eventsFromToken request
 }
 
 - (MXRoomData *)getRoomData:(NSString *)room_id
