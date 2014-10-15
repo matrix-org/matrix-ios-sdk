@@ -123,7 +123,11 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
 - (void)doMXSessionTestWithBob:(XCTestCase*)testCase
                    readyToTest:(void (^)(MXSession *bobSession, XCTestExpectation *expectation))readyToTest
 {
-    XCTestExpectation *expectation = [testCase expectationWithDescription:@"asyncTest"];
+    XCTestExpectation *expectation;
+    if (testCase)
+    {
+        expectation = [testCase expectationWithDescription:@"asyncTest"];
+    }
     
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
     
@@ -135,7 +139,10 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
         
     }];
     
-    [testCase waitForExpectationsWithTimeout:10000 handler:nil];
+    if (testCase)
+    {
+        [testCase waitForExpectationsWithTimeout:10000 handler:nil];
+    }
 }
 
 - (void)doMXSessionTestWithBobAndARoom:(XCTestCase*)testCase
@@ -196,7 +203,11 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
                                   newTextMessage:(NSString*)newTextMessage
                                    onReadyToTest:(void (^)(MXSession *bobSession, NSString* room_id, NSString* new_text_message_event_id, XCTestExpectation *expectation))readyToTest
 {
-    XCTestExpectation *expectation = [testCase expectationWithDescription:@"asyncTest"];
+    XCTestExpectation *expectation;
+    if (testCase)
+    {
+        expectation = [testCase expectationWithDescription:@"asyncTest"];
+    }
     
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
     
@@ -218,7 +229,10 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
         }];
     }];
     
-    [testCase waitForExpectationsWithTimeout:10000 handler:nil];
+    if (testCase)
+    {
+        [testCase waitForExpectationsWithTimeout:10000 handler:nil];
+    }
 }
 
 - (void)doMXSessionTestWithBobAndARoomWithMessages:(XCTestCase*)testCase
@@ -241,7 +255,11 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
 - (void)doMXSessionTestWihBobAndSeveralRoomsAndMessages:(XCTestCase*)testCase
                                          readyToTest:(void (^)(MXSession *bobSession, XCTestExpectation *expectation))readyToTest
 {
-    XCTestExpectation *expectation = [testCase expectationWithDescription:@"asyncTest"];
+    XCTestExpectation *expectation;
+    if (testCase)
+    {
+        expectation = [testCase expectationWithDescription:@"asyncTest"];
+    }
     
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
     
@@ -253,7 +271,10 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
         }];
     }];
     
-    [testCase waitForExpectationsWithTimeout:10000 handler:nil];
+    if (testCase)
+    {
+        [testCase waitForExpectationsWithTimeout:10000 handler:nil];
+    }
 }
 
 
