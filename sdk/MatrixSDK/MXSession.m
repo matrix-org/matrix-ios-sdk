@@ -248,7 +248,7 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
 
 
 #pragma mark - Event operations
--(void)initialSync:(NSInteger)limit
+- (void)initialSync:(NSInteger)limit
            success:(void (^)(NSDictionary *))success
            failure:(void (^)(NSError *))failure
 {
@@ -257,6 +257,57 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
                      parameters:@{
                                   @"limit": [NSNumber numberWithInteger:limit]
                                   }
+                        success:^(NSDictionary *JSONResponse)
+     {
+         
+         success(JSONResponse);
+     }
+                        failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
+- (void)eventsFromToken:(NSString *)token
+          serverTimeout:(NSUInteger)serverTimeout
+          clientTimeout:(NSUInteger)clientTimeout
+                success:(void (^)(NSDictionary *))success
+                failure:(void (^)(NSError *))failure
+{
+    
+    /*
+     if (clientTimeout) {
+     // If the Internet connection is lost, this timeout is used to be able to
+     // cancel the current request and notify the client so that it can retry with a new request.
+     $httpParams = {
+     timeout: clientTimeout
+     };
+     }
+     */
+    
+    // All query parameters are optional. Fill the request parameters on demand
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+    
+    if (token)
+    {
+        parameters[@"from"] = token;
+    }
+    if (-1 != serverTimeout)
+    {
+        parameters[@"timeout"] = [NSNumber numberWithInteger:serverTimeout];
+    }
+    
+    NSTimeInterval clientTimeoutInSeconds = clientTimeout;
+    if (-1 != clientTimeoutInSeconds)
+    {
+        // If the Internet connection is lost, this timeout is used to be able to
+        // cancel the current request and notify the client so that it can retry with a new request.
+        clientTimeoutInSeconds = clientTimeoutInSeconds / 1000;
+    }
+    
+    [hsClient requestWithMethod:@"GET"
+                           path:@"events"
+                     parameters:parameters timeout:clientTimeoutInSeconds
                         success:^(NSDictionary *JSONResponse)
      {
          

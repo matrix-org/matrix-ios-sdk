@@ -204,7 +204,21 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
 - (void)initialSync:(NSInteger)limit
             success:(void (^)(NSDictionary *JSONData))success
             failure:(void (^)(NSError *error))failure;
-
+/**
+ Get events from the given token.
+ 
+ @param token the token to stream from.
+ @param serverTimeout the maximum time in ms to wait for an event.
+ @param clientTimeout the maximum time in ms the SDK must wait for the server response.
+ 
+ @param success A block object called when the operation succeeds. TODO: return .
+ @param failure A block object called when the operation fails.
+ */
+- (void)eventsFromToken:(NSString*)token
+          serverTimeout:(NSUInteger)serverTimeout
+          clientTimeout:(NSUInteger)clientTimeout
+                success:(void (^)(NSDictionary *JSONData))success
+                failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Directory operations
 /**

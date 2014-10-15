@@ -149,4 +149,56 @@
     }];
 }
 
+#pragma mark - Event operations
+- (void)testEventsFromTokenServerTimeout
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBob:self readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation) {
+        
+        NSDate *refDate = [NSDate date];
+        
+        [bobSession eventsFromToken:@"END" serverTimeout:1000 clientTimeout:40000 success:^(NSDictionary *JSONData) {
+            
+            XCTAssertNotNil(JSONData);
+            
+            // Check expected response params
+            XCTAssertNotNil(JSONData[@"start"]);
+            XCTAssertNotNil(JSONData[@"end"]);
+            XCTAssertNotNil(JSONData[@"chunk"]);
+            XCTAssertEqual([JSONData[@"chunk"] count], 0, @"Events should not come in this short stream time (1s)");
+            
+            NSDate *now  = [NSDate date];
+            XCTAssertLessThanOrEqual([now timeIntervalSinceDate:refDate], 2, @"The HS did not timeout as expected");    // Give 2s for the HS to timeout
+ 
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testEventsFromTokenClientTimeout
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBob:self readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation) {
+        
+        NSDate *refDate = [NSDate date];
+        
+        [bobSession eventsFromToken:@"END" serverTimeout:5000 clientTimeout:1000 success:^(NSDictionary *JSONData) {
+            
+            XCTFail(@"The request must fail. The client timeout should have fired");
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            
+            XCTAssertEqual(error.code, NSURLErrorTimedOut);
+            
+            NSDate *now  = [NSDate date];
+            XCTAssertLessThanOrEqual([now timeIntervalSinceDate:refDate], 2, @"The SDK did not timeout as expected");    // Give 2s for the SDK MXRestClient to timeout
+
+            [expectation fulfill];
+        }];
+    }];
+}
+
 @end

@@ -53,11 +53,22 @@
 }
 
 - (id)requestWithMethod:(NSString *)httpMethod
-                                         path:(NSString *)path
-                                   parameters:(id)parameters
-                                      success:(void (^)(NSDictionary *JSONResponse))success
-                                      failure:(void (^)(NSError *error))failure
+                   path:(NSString *)path
+             parameters:(NSDictionary*)parameters
+                success:(void (^)(NSDictionary *JSONResponse))success
+                failure:(void (^)(NSError *error))failure
 {
+    return [self requestWithMethod:httpMethod path:path parameters:parameters timeout:-1 success:success failure:failure];
+}
+
+- (id)requestWithMethod:(NSString *)httpMethod
+                   path:(NSString *)path
+             parameters:(NSDictionary*)parameters
+                timeout:(NSTimeInterval)timeoutInSeconds
+                success:(void (^)(NSDictionary *JSONResponse))success
+                failure:(void (^)(NSError *error))failure
+{
+    // If an access token is set, use it
     if (access_token)
     {
         path = [path stringByAppendingString:[NSString stringWithFormat:@"?access_token=%@", access_token]];
@@ -66,6 +77,12 @@
     NSString *URLString = [[NSURL URLWithString:path relativeToURL:httpManager.baseURL] absoluteString];
 
     NSMutableURLRequest *request = [httpManager.requestSerializer requestWithMethod:httpMethod URLString: URLString parameters:parameters error:nil];
+    
+    // If a timeout is specified, set it
+    if (-1 != timeoutInSeconds)
+    {
+        [request setTimeoutInterval:timeoutInSeconds];
+    }
     
     AFHTTPRequestOperation *operation = [httpManager HTTPRequestOperationWithRequest:request
         success:^(AFHTTPRequestOperation *operation, NSDictionary *JSONResponse) {

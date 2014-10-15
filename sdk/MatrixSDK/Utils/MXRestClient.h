@@ -21,13 +21,21 @@
 */
 @interface MXRestClient : NSObject
 
--(id)initWithHomeServer:(NSString*)homeserver;
+- (id)initWithHomeServer:(NSString*)homeserver;
 
--(id)initWithHomeServer:(NSString*)homeserver andAccessToken:(NSString*)access_token;
+- (id)initWithHomeServer:(NSString*)homeserver andAccessToken:(NSString*)access_token;
 
--(id)requestWithMethod:(NSString *)httpMethod
+- (id)requestWithMethod:(NSString *)httpMethod
                    path:(NSString *)path
-             parameters:(id)parameters
+             parameters:(NSDictionary*)parameters
                 success:(void (^)(NSDictionary *JSONResponse))success
                 failure:(void (^)(NSError *error))failure;
+
+- (id)requestWithMethod:(NSString *)httpMethod
+                   path:(NSString *)path
+             parameters:(NSDictionary*)parameters
+                timeout:(NSTimeInterval)timeoutInSeconds
+                success:(void (^)(NSDictionary *JSONResponse))success
+                failure:(void (^)(NSError *error))failure;
+
 @end
