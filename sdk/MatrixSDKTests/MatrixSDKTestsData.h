@@ -27,13 +27,13 @@ FOUNDATION_EXPORT NSString * const kMXTestsHomeServerURL;
 
 + (id)sharedData;
 
+#pragma mark - mxBob
 // Credentials for the user mxBob on the home server located at kMXTestsHomeServerURL
 @property (nonatomic, readonly) MXLoginResponse *bobCredentials;
 
 // Get credentials asynchronously
 // The user will be created if needed
 - (void)getBobCredentials:(void (^)())success;
-- (void)getBobMXSession:(void (^)(MXSession *bobSession))success;
 
 // Prepare a test with a MXSession for mxBob so that we can make test on it
 - (void)doMXSessionTestWithBob:(XCTestCase*)testCase
@@ -56,15 +56,14 @@ FOUNDATION_EXPORT NSString * const kMXTestsHomeServerURL;
 - (void)doMXSessionTestWihBobAndSeveralRoomsAndMessages:(XCTestCase*)testCase
                                             readyToTest:(void (^)(MXSession *bobSession, XCTestExpectation *expectation))readyToTest;
 
-//- (void)AliceCredentials:(void (^)())success;
-//@property (nonatomic, readonly) MXLoginResponse *aliceCredentials;
+#pragma mark - mxAlice
+@property (nonatomic, readonly) MXLoginResponse *aliceCredentials;
+
+- (void)getAliceCredentials:(void (^)())success;
+
+- (void)doMXSessionTestWithAlice:(XCTestCase*)testCase
+                   readyToTest:(void (^)(MXSession *aliceSession, XCTestExpectation *expectation))readyToTest;
 
 //- (void)randomCredentials:(void (^)(MXLoginResponse *randomCredentials))success;
-
-// Creates roomsCount rooms with messagesCount messages in the mxSession
-- (void)for:(MXSession*)mxSession createRooms:(NSUInteger)roomsCount withMessages:(NSUInteger)messagesCount success:(void (^)())success;
-
-// Posts messagesCount messages to the room
-- (void)for:(MXSession *)mxSession andRoom:(NSString*)room_id postMessages:(NSUInteger)messagesCount success:(void (^)())success;
 
 @end

@@ -35,6 +35,8 @@
 #define MXTESTS_BOB @"mxBob"
 #define MXTESTS_BOB_PWD @"bobbob"
 
+#define MXTESTS_ALICE @"mxAlice"
+#define MXTESTS_ALICE_PWD @"alicealice"
 
 NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
 
@@ -321,6 +323,82 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
             // If the error is M_LIMIT_EXCEEDED, make sure your home server rate limit is high
             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
         }];
+    }
+}
+
+
+#pragma mark - mxAlice
+- (void)getAliceCredentials:(void (^)())success
+{
+    if (self.aliceCredentials)
+    {
+        // Credentials are already here, they are ready
+        success();
+    }
+    else
+    {
+        // First, try register the user
+        [homeServer registerWithUser:MXTESTS_ALICE andPassword:MXTESTS_ALICE_PWD success:^(MXLoginResponse *credentials) {
+            
+            _aliceCredentials = credentials;
+            success();
+            
+        } failure:^(NSError *error) {
+            MXError *mxError = [[MXError alloc] initWithNSError:error];
+            if (mxError && [mxError.errcode isEqualToString:@"M_USER_IN_USE"])
+            {
+                // The user already exists. This error is normal.
+                // Log Bob in to get his keys
+                [homeServer loginWithUser:MXTESTS_ALICE andPassword:MXTESTS_ALICE_PWD success:^(MXLoginResponse *credentials) {
+                    
+                    _aliceCredentials = credentials;
+                    success();
+                    
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot log mxAlice in");
+                }];
+            }
+            else
+            {
+                NSAssert(NO, @"Cannot create mxAlice account");
+            }
+        }];
+    }
+}
+
+- (void)getAliceMXSession:(void (^)(MXSession *))success
+{
+    [self getAliceCredentials:^{
+        
+        MXSession *session = [[MXSession alloc] initWithHomeServer:kMXTestsHomeServerURL userId:self.aliceCredentials.user_id accessToken:self.aliceCredentials.access_token];
+        
+        success(session);
+    }];
+}
+
+
+- (void)doMXSessionTestWithAlice:(XCTestCase*)testCase
+                   readyToTest:(void (^)(MXSession *aliceSession, XCTestExpectation *expectation))readyToTest
+{
+    XCTestExpectation *expectation;
+    if (testCase)
+    {
+        expectation = [testCase expectationWithDescription:@"asyncTest"];
+    }
+    
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+    
+    [sharedData getAliceCredentials:^{
+        
+        MXSession *session = [[MXSession alloc] initWithHomeServer:kMXTestsHomeServerURL userId:sharedData.aliceCredentials.user_id accessToken:sharedData.aliceCredentials.access_token];
+        
+        readyToTest(session, expectation);
+        
+    }];
+    
+    if (testCase)
+    {
+        [testCase waitForExpectationsWithTimeout:10000 handler:nil];
     }
 }
 
