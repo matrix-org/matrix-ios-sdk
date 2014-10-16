@@ -338,6 +338,84 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
 }
 
 
+#pragma mark - Profile operations
+- (void)setDisplayName:(NSString*)displayname
+               success:(void (^)())success
+               failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"profile/%@/displayname", _user_id];
+    [hsClient requestWithMethod:@"PUT"
+                           path:path
+                     parameters:@{
+                                  @"displayname": displayname
+                                  }
+                        success:^(NSDictionary *JSONResponse)
+     {
+         success();
+     }
+                        failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
+- (void)displayName:(NSString*)user_id
+            success:(void (^)(NSString *displayname))success
+            failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"profile/%@/displayname", _user_id];
+    [hsClient requestWithMethod:@"GET"
+                           path:path
+                     parameters:nil
+                        success:^(NSDictionary *JSONResponse)
+     {
+         success(JSONResponse[@"displayname"]);
+     }
+                        failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
+- (void)setAvatarUrl:(NSString*)avatar_url
+             success:(void (^)())success
+             failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"profile/%@/avatar_url", _user_id];
+    [hsClient requestWithMethod:@"PUT"
+                           path:path
+                     parameters:@{
+                                  @"avatar_url": avatar_url
+                                  }
+                        success:^(NSDictionary *JSONResponse)
+     {
+         success();
+     }
+                        failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
+- (void)avatarUrl:(NSString*)user_id
+          success:(void (^)(NSString *avatar_url))success
+          failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"profile/%@/avatar_url", _user_id];
+    [hsClient requestWithMethod:@"GET"
+                           path:path
+                     parameters:nil
+                        success:^(NSDictionary *JSONResponse)
+     {
+         success(JSONResponse[@"avatar_url"]);
+     }
+                        failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
+
 #pragma mark - Event operations
 - (void)initialSync:(NSInteger)limit
            success:(void (^)(NSDictionary *))success

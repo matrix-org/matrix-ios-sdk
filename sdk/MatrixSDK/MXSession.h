@@ -183,7 +183,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
            failure:(void (^)(NSError *error))failure;
 
 /**
- Get a list of messages for this room
+ Get a list of messages for this room.
  
  @param room_id the id of the room.
  @param from (optional) the token to start getting results from.
@@ -201,7 +201,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
          failure:(void (^)(NSError *error))failure;
 
 /**
- Get a list of members for this room
+ Get a list of members for this room.
  
  @param room_id the id of the room.
  
@@ -212,40 +212,61 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
         success:(void (^)(NSArray *members))success
         failure:(void (^)(NSError *error))failure;
 
-/*
-
-- (void)state:(NSString*)room_id
-      success:(void (^)(NSArray *states))success
-      failure:(void (^)(NSError *error))failure;
-
-- (void)initialRoomSync:(NSString*)room_id
-                success:(void (^)(NSObject *tbd))success
-                failure:(void (^)(NSError *error))failure;
-
 
 #pragma mark - Profile operations
+/**
+ Set the logged-in user display name.
+ 
+ @param displayname the new display name.
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
 - (void)setDisplayName:(NSString*)displayname
                success:(void (^)())success
                failure:(void (^)(NSError *error))failure;
 
-- (void)getDisplayName:(NSString*)user_id
+/**
+ Get the display name of a user.
+ 
+ @param user_id the user id.
+
+ @param success A block object called when the operation succeeds. It provides the user displayname.
+ @param failure A block object called when the operation fails.
+ */
+- (void)displayName:(NSString*)user_id
                success:(void (^)(NSString *displayname))success
                failure:(void (^)(NSError *error))failure;
 
+/**
+ Set the logged-in user avatar url.
+ 
+ @param avatar_url the new avatar url.
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
 - (void)setAvatarUrl:(NSString*)avatar_url
              success:(void (^)())success
              failure:(void (^)(NSError *error))failure;
 
-- (void)getAvatarUrl:(NSString*)user_id
+/**
+ Get the display name of a user.
+ 
+ @param user_id the user id.
+ @param success A block object called when the operation succeeds. It provides the user avatar url.
+ @param failure A block object called when the operation fails.
+ */
+- (void)avatarUrl:(NSString*)user_id
              success:(void (^)(NSString *avatar_url))success
              failure:(void (^)(NSError *error))failure;
 
-*/
 
 #pragma mark - Event operations
 - (void)initialSync:(NSInteger)limit
             success:(void (^)(NSDictionary *JSONData))success
             failure:(void (^)(NSError *error))failure;
+
 /**
  Get events from the given token.
  

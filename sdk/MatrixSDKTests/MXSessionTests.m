@@ -218,6 +218,128 @@
     }];
 }
 
+#pragma mark - Profile operations
+- (void)testUserDisplayName
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
+        
+        // Set the name
+        __block NSString *newDisplayName = @"mxAlice";
+        [aliceSession setDisplayName:newDisplayName success:^{
+            
+            [[MatrixSDKTestsData sharedData] doMXSessionTestWithAlice:self readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
+                
+                // Then retrieve it
+                [aliceSession displayName:nil success:^(NSString *displayname) {
+                    
+                    XCTAssertTrue([displayname isEqualToString:newDisplayName], @"Must retrieved the set string: %@ - %@", displayname, newDisplayName);
+                    [expectation fulfill];
+                    
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testOtherUserDisplayName
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
+        
+        // Set the name
+        __block NSString *newDisplayName = @"mxAlice";
+        [aliceSession setDisplayName:newDisplayName success:^{
+            
+            [[MatrixSDKTestsData sharedData] doMXSessionTestWithBob:self readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation) {
+                
+                MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+                
+                // Then retrieve it from a Bob session
+                [bobSession displayName:sharedData.aliceCredentials.user_id success:^(NSString *displayname) {
+                    
+                    XCTAssertTrue([displayname isEqualToString:newDisplayName], @"Must retrieved the set string: %@ - %@", displayname, newDisplayName);
+                    [expectation fulfill];
+                    
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testUserAvatarUrl
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
+        
+        // Set the avatar url
+        __block NSString *newAvatarUrl = @"http://matrix.org/matrix.png";
+        [aliceSession setAvatarUrl:newAvatarUrl success:^{
+            
+            [[MatrixSDKTestsData sharedData] doMXSessionTestWithAlice:self readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
+                
+                // Then retrieve it
+                [aliceSession avatarUrl:nil success:^(NSString *avatar_url) {
+                    
+                    XCTAssertTrue([avatar_url isEqualToString:newAvatarUrl], @"Must retrieved the set string: %@ - %@", avatar_url, newAvatarUrl);
+                    [expectation fulfill];
+                    
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testOtherUserAvatarUrl
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
+        
+        // Set the avatar url
+        __block NSString *newAvatarUrl = @"http://matrix.org/matrix.png";
+        [aliceSession setAvatarUrl:newAvatarUrl success:^{
+            
+            [[MatrixSDKTestsData sharedData] doMXSessionTestWithBob:self readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation) {
+                
+                MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+                
+                // Then retrieve it from a Bob session
+                [bobSession avatarUrl:sharedData.aliceCredentials.user_id success:^(NSString *avatarUrl) {
+                    
+                    XCTAssertTrue([avatarUrl isEqualToString:newAvatarUrl], @"Must retrieved the set string: %@ - %@", avatarUrl, newAvatarUrl);
+                    [expectation fulfill];
+                    
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+
 #pragma mark - Event operations
 - (void)testEventsFromTokenServerTimeout
 {
