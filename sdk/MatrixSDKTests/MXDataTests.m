@@ -116,4 +116,84 @@
 }
 
 
+- (void)testListenerForAllLiveEvents
+{
+    [[MatrixSDKTestsData sharedData]doMXSessionTestWihBobAndSeveralRoomsAndMessages:self readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation) {
+        
+        matrixData = [[MXData alloc] initWithMatrixSession:bobSession];
+        
+        // The listener must catch at least these events
+        __block NSMutableArray *expectedEvents =
+        [NSMutableArray arrayWithArray:@[
+                                         kMXEventTypeStringRoomCreate,
+                                         kMXEventTypeStringRoomMember,
+                                         
+                                         // Expect the 5 text messages created by doMXSessionTestWithBobAndARoomWithMessages
+                                         kMXEventTypeStringRoomMessage,
+                                         kMXEventTypeStringRoomMessage,
+                                         kMXEventTypeStringRoomMessage,
+                                         kMXEventTypeStringRoomMessage,
+                                         kMXEventTypeStringRoomMessage,
+                                         ]];
+        
+        [matrixData registerEventListenerForTypes:nil block:^(MXData *matrixData, MXEvent *event, BOOL isLive) {
+            
+            if (isLive)
+            {
+                [expectedEvents removeObject:event.type];
+                
+                if (0 == expectedEvents.count)
+                {
+                    XCTAssert(YES, @"All expected events must be catch");
+                    [expectation fulfill];
+                }
+            }
+            
+        }];
+        
+        
+        // Create a room with messages in parallel
+        [matrixData start:^{
+            
+            [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:nil readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
+            }];
+            
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
+- (void)testListenerForRoomMessageOnly
+{
+    [[MatrixSDKTestsData sharedData]doMXSessionTestWihBobAndSeveralRoomsAndMessages:self readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation) {
+        
+        matrixData = [[MXData alloc] initWithMatrixSession:bobSession];
+        
+        // Listen to m.room.message only
+        // We should not see events coming before (m.room.create, and all state events)
+        [matrixData registerEventListenerForTypes:@[kMXEventTypeStringRoomMessage]
+                                            block:^(MXData *matrixData, MXEvent *event, BOOL isLive) {
+            
+            if (isLive)
+            {
+                XCTAssertEqual(event.eventType, MXEventTypeRoomMessage, @"We must receive only m.room.message event - Event: %@", event);
+                [expectation fulfill];
+            }
+            
+        }];
+        
+        
+        // Create a room with messages in parallel
+        [matrixData start:^{
+            
+            [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:nil readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
+            }];
+            
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
 @end

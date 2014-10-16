@@ -14,34 +14,36 @@
  limitations under the License.
  */
 
-#import "MXRoomDataEventListener.h"
+#import "MXEventListener.h"
 
-@interface MXRoomDataEventListener ()
-{
-    NSArray *eventTypes;
-}
+@interface MXEventListener ()
+
 @end
 
-@implementation MXRoomDataEventListener
+@implementation MXEventListener
 
-- (instancetype)initWithEventTypes:(NSArray *)eventTypes2 andListenerBlock:(MXRoomDataEventListenerBlock)listenerBlock
+-(instancetype)initWithSender:(id)sender
+                andEventTypes:(NSArray *)eventTypes
+             andListenerBlock:(MXEventListenerBlock)listenerBlock
 {
     self = [super init];
     if (self)
     {
-        eventTypes = eventTypes2;
+        _sender = sender;
+        _eventTypes = [eventTypes copy];
         _listenerBlock =listenerBlock;
     }
     
     return self;
 }
 
-- (BOOL)doesEventMatch:(MXEvent *)event
+- (void)notify:(MXEvent *)event isLiveEvent:(BOOL)isLiveEvent
 {
+    // Check if the event match with eventTypes
     BOOL match = NO;
-    if (eventTypes)
+    if (_eventTypes)
     {
-        if (NSNotFound != [eventTypes indexOfObject:event.type])
+        if (NSNotFound != [_eventTypes indexOfObject:event.type])
         {
             match = YES;
         }
@@ -51,7 +53,12 @@
         // Listen for all events
         match = YES;
     }
-    return match;
+    
+    // If YES, call the listener block
+    if (match)
+    {
+        _listenerBlock(_sender, event, isLiveEvent);
+    }
 }
 
 @end

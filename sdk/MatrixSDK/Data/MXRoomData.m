@@ -38,7 +38,7 @@
     // The ID of the user who invited the current user
     NSString *inviter;
     
-    // The list of event listener (`MXRoomDataEventListener`) in this room
+    // The list of event listeners (`MXEventListener`) in this room
     NSMutableArray *eventListeners;
 }
 @end
@@ -411,10 +411,11 @@
     return memberName;
 }
 
+
 #pragma mark - Events listeners
 - (id)registerEventListenerForTypes:(NSArray*)types block:(MXRoomDataEventListenerBlock)listenerBlock
 {
-    MXRoomDataEventListener *listener = [[MXRoomDataEventListener alloc] initWithEventTypes:types andListenerBlock:listenerBlock];
+    MXEventListener *listener = [[MXEventListener alloc] initWithSender:self andEventTypes:types andListenerBlock:listenerBlock];
     
     [eventListeners addObject:listener];
     
@@ -426,16 +427,17 @@
     [eventListeners removeObject:listener];
 }
 
+- (void)unregisterAllListeners
+{
+    [eventListeners removeAllObjects];
+}
+
 - (void)notifyListeners:(MXEvent*)event isLiveEvent:(BOOL)isLiveEvent
 {
-    // Check all listeners
-    for (MXRoomDataEventListener *listener in eventListeners)
+    // notifify all listeners
+    for (MXEventListener *listener in eventListeners)
     {
-        if ([listener doesEventMatch:event])
-        {
-            // Notify this one
-            listener.listenerBlock(self, event, isLiveEvent);
-        }
+        [listener notify:event isLiveEvent:isLiveEvent];
     }
 }
 

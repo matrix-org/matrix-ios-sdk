@@ -18,9 +18,19 @@
 
 #import "MXEvent.h"
 #import "MXJSONModels.h"
-#import "MXRoomDataEventListener.h"
+#import "MXEventListener.h"
 
 @class MXData;
+
+/**
+ Block called when an event of the registered types has been handled by the `MXRoomData` instance.
+ This is a specialisation of the `MXEventListenerBlock`.
+ 
+ @param roomData the `MXRoomData` that handled the event.
+ @param event the new event.
+ @param isLive YES if it is new event.
+ */
+typedef void (^MXRoomDataEventListenerBlock)(MXRoomData *roomData, MXEvent *event, BOOL isLive);
 
 /**
  `MXRoomData` is the storage class for the room data.
@@ -124,7 +134,7 @@
  
  @param types an array of event types strings (MXEventTypeString). nil to listen to all events.
  @param listenerBlock the block that will called once a new event has been handled.
- @return a reference to use for unregister the listener
+ @return a reference to use to unregister the listener
  */
 - (id)registerEventListenerForTypes:(NSArray*)types block:(MXRoomDataEventListenerBlock)listenerBlock;
 
@@ -134,5 +144,10 @@
  @param listener the reference of the listener to remove.
  */
 - (void)unregisterListener:(id)listener;
+
+/**
+ Unregister all listeners.
+ */
+- (void)unregisterAllListeners;
 
 @end

@@ -17,8 +17,8 @@
 #import <Foundation/Foundation.h>
 
 #import "MXSession.h"
-
 #import "MXRoomData.h"
+#import "MXDataEventListener.h"
 
 /**
  `MXData` manages data and events from the home server
@@ -91,5 +91,28 @@
  @return an array of MXEvents.
  */
 - (NSArray*)recents;
+
+/**
+ Register a global listener for some types of events.
+ 
+ The listener is able to receive all events including all events of all rooms.
+ 
+ @param types an array of event types strings (MXEventTypeString). nil to listen to all events.
+ @param listenerBlock the block that will called once a new event has been handled.
+ @return a reference to use to unregister the listener
+ */
+- (id)registerEventListenerForTypes:(NSArray*)types block:(MXDataEventListenerBlock)listenerBlock;
+
+/**
+ Unregister a listener.
+ 
+ @param listener the reference of the listener to remove.
+ */
+- (void)unregisterListener:(id)listener;
+
+/**
+ Unregister all listeners.
+ */
+- (void)unregisterAllListeners;
 
 @end
