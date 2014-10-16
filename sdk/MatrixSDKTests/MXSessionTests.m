@@ -101,6 +101,58 @@
     }];
 }
 
+- (void)testInviteUserToRoom
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoom:self readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
+        
+        [bobSession inviteUser:@"@someone:matrix.org" toRoom:room_id success:^{
+            
+            // No data to test. Just happy to go here.
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testKickUserFromRoom
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoom:self readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
+        
+        MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+        
+        [bobSession kickUser:sharedData.bobCredentials.user_id fromRoom:room_id reason:@"No particular reason" success:^{
+            
+            // No data to test. Just happy to go here.
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testBanUserInRoom
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoom:self readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
+        
+        MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+        
+        [bobSession banUser:sharedData.bobCredentials.user_id inRoom:room_id reason:@"No particular reason" success:^{
+            
+            // No data to test. Just happy to go here.
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 
 - (void)testCreateRoom
 {

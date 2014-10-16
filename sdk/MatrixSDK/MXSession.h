@@ -96,8 +96,8 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
  @param failure A block object called when the operation fails.
  */
 - (void)joinRoom:(NSString*)room_id
-     success:(void (^)())success
-     failure:(void (^)(NSError *error))failure;
+         success:(void (^)())success
+         failure:(void (^)(NSError *error))failure;
 
 /**
  Leave a room.
@@ -107,25 +107,62 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
  @param failure A block object called when the operation fails.
  */
 - (void)leaveRoom:(NSString*)room_id
-      success:(void (^)())success
-      failure:(void (^)(NSError *error))failure;
+          success:(void (^)())success
+          failure:(void (^)(NSError *error))failure;
 
-/*
-- (void)invite:(NSString*)room_id
-       user_id:(NSString*)user_id
-       success:(void (^)())success
-       failure:(void (^)(NSError *error))failure;
+/**
+ Invite a user to a room.
+ 
+ @param user_id the user id.
+ @param room_id the id of the room.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)inviteUser:(NSString*)user_id
+            toRoom:(NSString*)room_id
+           success:(void (^)())success
+           failure:(void (^)(NSError *error))failure;
 
-- (void)kick:(NSString*)room_id
-     user_id:(NSString*)user_id
-     success:(void (^)())success
-     failure:(void (^)(NSError *error))failure;
+/**
+ Kick a user from a room.
+ 
+ @param user_id the user id.
+ @param room_id the id of the room.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)kickUser:(NSString*)user_id
+        fromRoom:(NSString*)room_id
+          reason:(NSString*)reason
+         success:(void (^)())success
+         failure:(void (^)(NSError *error))failure;
 
-- (void)ban:(NSString*)room_id
-    user_id:(NSString*)user_id
-    success:(void (^)())success
-    failure:(void (^)(NSError *error))failure;
-*/
+/**
+ Ban a user in a room.
+ 
+ @param user_id the user id.
+ @param room_id the id of the room.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)banUser:(NSString*)user_id
+         inRoom:(NSString*)room_id
+         reason:(NSString*)reason
+        success:(void (^)())success
+        failure:(void (^)(NSError *error))failure;
+
+/**
+ Unban a user in a room.
+ 
+ @param user_id the user id.
+ @param room_id the id of the room.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)unbanUser:(NSString*)user_id
+           inRoom:(NSString*)room_id
+          success:(void (^)())success
+          failure:(void (^)(NSError *error))failure;
 
 /**
  Create a room.

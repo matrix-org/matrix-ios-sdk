@@ -31,7 +31,7 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
 @end
 
 @implementation MXSession
-@synthesize homeserver, user_id, access_token;
+@synthesize homeserver, access_token;
 
 -(id)initWithHomeServer:(NSString *)homeserver2 userId:(NSString *)userId accessToken:(NSString *)accessToken
 {
@@ -39,7 +39,7 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
     if (self)
     {
         homeserver = homeserver2;
-        user_id = userId;
+        _user_id = userId;
         access_token = accessToken;
         
         hsClient = [[MXRestClient alloc] initWithHomeServer:homeserver andAccessToken:access_token];
@@ -110,11 +110,15 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
 {
     NSString *path = [NSString stringWithFormat:@"rooms/%@/%@", room_id, membership];
     
+    // A body is required even if empty
+    if (nil == parameters)
+    {
+        parameters = @{};
+    }
+    
     [hsClient requestWithMethod:@"POST"
                            path:path
-                     parameters:@{
-                                  user_id: self.user_id
-                                  }
+                     parameters:parameters
                         success:^(NSDictionary *JSONResponse)
      {
          success();
@@ -142,6 +146,75 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
     [self doMembershipRequest:room_id
                    membership:@"leave"
                    parameters:nil
+                      success:success failure:failure];
+}
+
+- (void)inviteUser:(NSString*)user_id
+            toRoom:(NSString*)room_id
+           success:(void (^)())success
+           failure:(void (^)(NSError *error))failure
+{
+    [self doMembershipRequest:room_id
+                   membership:@"invite"
+                   parameters:@{
+                                @"user_id": user_id
+                                }
+                      success:success failure:failure];
+}
+
+- (void)kickUser:(NSString*)user_id
+        fromRoom:(NSString*)room_id
+          reason:(NSString*)reason
+         success:(void (^)())success
+         failure:(void (^)(NSError *error))failure
+{
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+    parameters[@"user_id"] = user_id;
+    
+    if (reason)
+    {
+        parameters[@"reason"] = reason;
+    }
+    
+    // Set the user membership to "leave" to kick him
+    [self doMembershipRequest:room_id
+                   membership:@"leave"
+                   parameters:parameters
+                      success:success failure:failure];
+}
+
+- (void)banUser:(NSString*)user_id
+         inRoom:(NSString*)room_id
+         reason:(NSString*)reason
+        success:(void (^)())success
+        failure:(void (^)(NSError *error))failure
+{
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+    parameters[@"user_id"] = user_id;
+    
+    if (reason)
+    {
+        parameters[@"reason"] = reason;
+    }
+    
+    // Set the user membership to "leave" to kick him
+    [self doMembershipRequest:room_id
+                   membership:@"leave"
+                   parameters:parameters
+                      success:success failure:failure];
+}
+
+- (void)unbanUser:(NSString*)user_id
+           inRoom:(NSString*)room_id
+          success:(void (^)())success
+          failure:(void (^)(NSError *error))failure
+{
+    // Do an unban by resetting the user membership to "leave"
+    [self doMembershipRequest:room_id
+                   membership:@"ban"
+                   parameters:@{
+                                @"user_id": user_id
+                                }
                       success:success failure:failure];
 }
 
