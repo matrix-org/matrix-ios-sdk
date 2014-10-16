@@ -95,7 +95,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)join:(NSString*)room_id
+- (void)joinRoom:(NSString*)room_id
      success:(void (^)())success
      failure:(void (^)(NSError *error))failure;
 
@@ -106,7 +106,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)leave:(NSString*)room_id
+- (void)leaveRoom:(NSString*)room_id
       success:(void (^)())success
       failure:(void (^)(NSError *error))failure;
 

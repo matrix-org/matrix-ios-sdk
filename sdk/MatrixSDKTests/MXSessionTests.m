@@ -69,11 +69,11 @@
     }];
 }
 
-- (void)testJoin
+- (void)testJoinRoom
 {
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoom:self readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
         
-        [bobSession join:room_id success:^{
+        [bobSession joinRoom:room_id success:^{
             
             // No data to test. Just happy to go here.
             [expectation fulfill];
@@ -85,11 +85,11 @@
     }];
 }
 
-- (void)testLeave
+- (void)testLeaveRoom
 {
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoom:self readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
         
-        [bobSession leave:room_id success:^{
+        [bobSession leaveRoom:room_id success:^{
             
             // No data to test. Just happy to go here.
             [expectation fulfill];

@@ -125,7 +125,7 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
      }];
 }
 
-- (void)join:(NSString*)room_id
+- (void)joinRoom:(NSString*)room_id
      success:(void (^)())success
      failure:(void (^)(NSError *error))failure
 {
@@ -135,7 +135,7 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
                       success:success failure:failure];
 }
 
-- (void)leave:(NSString*)room_id
+- (void)leaveRoom:(NSString*)room_id
       success:(void (^)())success
       failure:(void (^)(NSError *error))failure
 {
