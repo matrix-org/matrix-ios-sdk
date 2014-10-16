@@ -229,7 +229,7 @@
     MXDataEventListener *listener = [[MXDataEventListener alloc] initWithSender:self andEventTypes:types andListenerBlock:listenerBlock];
     
     // This listener must be listen to all existing rooms
-    for (MXRoomData *roomData in rooms)
+    for (MXRoomData *roomData in rooms.allValues)
     {
         [listener addRoomDataToSpy:roomData];
     }
