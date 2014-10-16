@@ -130,7 +130,7 @@ typedef void (^MXRoomDataEventListenerBlock)(MXRoomData *roomData, MXEvent *even
  Register a listener for some types of events.
  
  To get only notifications for events that modify the `messages` property, use 
- matrixSession.eventsFilterForMessages as types parameter.
+ matrixData.eventsFilterForMessages as types parameter.
  
  @param types an array of event types strings (MXEventTypeString). nil to listen to all events.
  @param listenerBlock the block that will called once a new event has been handled.

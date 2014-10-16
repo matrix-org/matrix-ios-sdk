@@ -98,7 +98,7 @@
  The listener is able to receive all events including all events of all rooms.
  
  To get only notifications for events that modify the `recents` property,
- use matrixSession.eventsFilterForMessages as types parameter.
+ use matrixData.eventsFilterForMessages as types parameter.
  
  @param types an array of event types strings (MXEventTypeString). nil to listen to all events.
  @param listenerBlock the block that will called once a new event has been handled.
