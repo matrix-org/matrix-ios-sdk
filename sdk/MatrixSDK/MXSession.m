@@ -100,11 +100,15 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
               success:success failure:failure];
 }
 
-- (void)join:(NSString*)room_id
-     success:(void (^)())success
-     failure:(void (^)(NSError *error))failure
+
+// Generic methods to change membership
+- (void)doMembershipRequest:(NSString*)room_id
+                 membership:(NSString*)membership
+                 parameters:(NSDictionary*)parameters
+                    success:(void (^)())success
+                    failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"rooms/%@/join", room_id];
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/%@", room_id, membership];
     
     [hsClient requestWithMethod:@"POST"
                            path:path
@@ -121,6 +125,15 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
      }];
 }
 
+- (void)join:(NSString*)room_id
+     success:(void (^)())success
+     failure:(void (^)(NSError *error))failure
+{
+    [self doMembershipRequest:room_id
+                   membership:@"join"
+                   parameters:nil
+                      success:success failure:failure];
+}
 
 - (void)createRoom:(NSString*)name
         visibility:(MXRoomVisibility)visibility
