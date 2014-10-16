@@ -378,9 +378,19 @@
         
         // Process these new events
         [self handleMessages:paginatedResponse isLiveEvents:NO direction:YES];
-        
+                                   
+        // Filter events: we want to provide only those which went to `messages`
+        NSMutableArray *filteredChunk = [NSMutableArray array];
+        for (MXEvent *event in paginatedResponse.chunk)
+        {
+             if (NSNotFound != [matrixData.eventsFilterForMessages indexOfObject:event.type])
+             {
+                 [filteredChunk addObject:event];
+             }
+        }      
+                                   
         // Inform the method caller
-        success(paginatedResponse.chunk);
+        success(filteredChunk);
         
     } failure:^(NSError *error) {
         NSLog(@"paginateBackMessages error: %@", error);
