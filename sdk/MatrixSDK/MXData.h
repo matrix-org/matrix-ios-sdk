@@ -36,13 +36,13 @@
 @property (nonatomic, readonly) MXSession *matrixSession;
 
 /**
- An array of `MXEventTypeString` indicating which events must be stored as messages in MXData.
+ An array of `MXEventTypeString` indicating which events must be stored as messages in MXData and its MXDataRoom.
  By default, this list contains some event types like:
      - kMXEventTypeStringRoomMessage to display messages texts, images, etc.
      - kMXEventTypeStringRoomMember to display user membership changes in the history
      - ...
  */
-@property (nonatomic) NSArray *eventTypesToUseAsMessages;
+@property (nonatomic, copy) NSArray *eventsFilterForMessages;
 
 /**
  Create a MXData instance.

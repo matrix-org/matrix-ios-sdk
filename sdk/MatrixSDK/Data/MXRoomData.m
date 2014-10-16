@@ -262,13 +262,17 @@
 
 - (BOOL)handleMessage:(MXEvent*)event isLiveEvent:(BOOL)isLiveEvent pagFrom:(NSString*)pagFrom
 {
-    if (isLiveEvent)
+    // Put only expected messages into `messages`
+    if (NSNotFound != [matrixData.eventsFilterForMessages indexOfObject:event.type])
     {
-        [messages addObject:event];
-    }
-    else
-    {
-        [messages insertObject:event atIndex:0];
+        if (isLiveEvent)
+        {
+            [messages addObject:event];
+        }
+        else
+        {
+            [messages insertObject:event atIndex:0];
+        }
     }
 
     // Notify listener only for past events here

@@ -42,7 +42,7 @@
 @end
 
 @implementation MXData
-@synthesize matrixSession, eventTypesToUseAsMessages;
+@synthesize matrixSession, eventsFilterForMessages;
 
 - (id)initWithMatrixSession:(MXSession*)mSession;
 {
@@ -58,12 +58,12 @@
         globalEventListeners = [NSMutableArray array];
         
         // Define default events to consider as messages
-        eventTypesToUseAsMessages = @[
-                                      kMXEventTypeStringRoomName,
-                                      kMXEventTypeStringRoomTopic,
-                                      kMXEventTypeStringRoomMember,
-                                      kMXEventTypeStringRoomMessage
-                                      ];
+        eventsFilterForMessages = @[
+                                    kMXEventTypeStringRoomName,
+                                    kMXEventTypeStringRoomTopic,
+                                    kMXEventTypeStringRoomMember,
+                                    kMXEventTypeStringRoomMessage
+                                    ];
     }
     return self;
 }

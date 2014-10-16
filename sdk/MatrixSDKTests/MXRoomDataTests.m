@@ -223,6 +223,31 @@
 }
 
 
+- (void)testMessagesFilter
+{
+    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXData *matrixData2, MXRoomData *roomData, XCTestExpectation *expectation) {
+        
+        matrixData = matrixData2;
+        
+        [roomData paginateBackMessages:100 success:^(NSArray *messages) {
+            
+            for (MXEvent *event in roomData.messages)
+            {
+                // Only events with a type declared in `eventsFilterForMessages`
+                // must appear in messages
+                XCTAssertNotEqual([matrixData.eventsFilterForMessages indexOfObject:event.type], NSNotFound, "Event of this type must not be in messages. Event: %@", event);
+            }
+            
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+
 - (void)testPaginateBack
 {
     [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXData *matrixData, MXRoomData *roomData, XCTestExpectation *expectation) {
