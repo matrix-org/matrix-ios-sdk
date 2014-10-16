@@ -126,7 +126,6 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
         visibility:(MXRoomVisibility)visibility
    room_alias_name:(NSString*)room_alias_name
              topic:(NSString*)topic
-            invite:(NSArray*)userIds
            success:(void (^)(MXCreateRoomResponse *response))success
            failure:(void (^)(NSError *error))failure
 {
@@ -148,10 +147,6 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
     if (topic)
     {
         parameters[@"topic"] = topic;
-    }
-    if (userIds)
-    {
-        parameters[@"userIds"] = userIds;
     }
     
     [hsClient requestWithMethod:@"POST"

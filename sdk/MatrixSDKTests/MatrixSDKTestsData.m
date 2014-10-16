@@ -151,7 +151,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
     [self doMXSessionTestWithBob:testCase
                      readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation) {
         // Create a random room to use
-        [bobSession createRoom:nil visibility:kMXRoomVisibilityPrivate room_alias_name:nil topic:nil invite:nil success:^(MXCreateRoomResponse *response) {
+        [bobSession createRoom:nil visibility:kMXRoomVisibilityPrivate room_alias_name:nil topic:nil success:^(MXCreateRoomResponse *response) {
             
             readyToTest(bobSession, response.room_id, expectation);
             
@@ -172,7 +172,6 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
                     visibility:kMXRoomVisibilityPublic
                room_alias_name:@"mxPublic"
                          topic:@"The public room used by SDK tests"
-                        invite:nil
                        success:^(MXCreateRoomResponse *response) {
             
             readyToTest(bobSession, response.room_id, expectation);
@@ -213,7 +212,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
     
     [sharedData getBobMXSession:^(MXSession *bobSession) {
         // Create a random room to use
-        [bobSession createRoom:nil visibility:kMXRoomVisibilityPrivate room_alias_name:nil topic:nil invite:nil success:^(MXCreateRoomResponse *response) {
+        [bobSession createRoom:nil visibility:kMXRoomVisibilityPrivate room_alias_name:nil topic:nil success:^(MXCreateRoomResponse *response) {
             
             // Post the the message text in it
             [bobSession postTextMessage:response.room_id text:newTextMessage success:^(NSString *event_id) {
@@ -310,7 +309,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
     else
     {
         // Create the room
-        [mxSession createRoom:nil visibility:kMXRoomVisibilityPrivate room_alias_name:nil topic:nil invite:nil success:^(MXCreateRoomResponse *response) {
+        [mxSession createRoom:nil visibility:kMXRoomVisibilityPrivate room_alias_name:nil topic:nil success:^(MXCreateRoomResponse *response) {
 
             // Fill it with messages
             [self for:mxSession andRoom:response.room_id postMessages:messagesCount success:^{

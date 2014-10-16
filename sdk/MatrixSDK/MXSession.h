@@ -127,7 +127,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
  @param visibility (optional) the visibility of the room (kMXRoomVisibilityPublic or kMXRoomVisibilityPrivate).
  @param room_alias_name (optional) the room alias on the home server the room will be created.
  @param topic (optional) the room topic.
- @param userIds (optional) an array of user ids strings for users to invite in this room.
 
  @param success A block object called when the operation succeeds. It provides a MXCreateRoomResponse object.
  @param failure A block object called when the operation fails.
@@ -136,7 +135,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
         visibility:(MXRoomVisibility)visibility
    room_alias_name:(NSString*)room_alias_name
              topic:(NSString*)topic
-            invite:(NSArray*)userIds
            success:(void (^)(MXCreateRoomResponse *response))success
            failure:(void (^)(NSError *error))failure;
 
