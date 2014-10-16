@@ -101,11 +101,8 @@ typedef void (^MXRoomDataEventListenerBlock)(MXRoomData *roomData, MXEvent *even
  Handle an event (message or state) that comes from the events streaming.
  
  @param event the event to handle.
- 
- @return a boolean which sets to YES if the event ended in `messages` array
-         of the room.
  */
-- (BOOL)handleLiveEvent:(MXEvent*)event;
+- (void)handleLiveEvent:(MXEvent*)event;
 
 /**
  Get more messages from the past.

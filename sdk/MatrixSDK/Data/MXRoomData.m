@@ -260,7 +260,7 @@
     //NSLog(@"%@", messageEvents);
 }
 
-- (BOOL)handleMessage:(MXEvent*)event isLiveEvent:(BOOL)isLiveEvent pagFrom:(NSString*)pagFrom
+- (void)handleMessage:(MXEvent*)event isLiveEvent:(BOOL)isLiveEvent pagFrom:(NSString*)pagFrom
 {
     // Put only expected messages into `messages`
     if (NSNotFound != [matrixData.eventsFilterForMessages indexOfObject:event.type])
@@ -281,8 +281,6 @@
     {
         [self notifyListeners:event isLiveEvent:NO];
     }
-    
-    return YES;
 }
 
 
@@ -327,7 +325,7 @@
 
 
 #pragma mark - Handle live event
-- (BOOL)handleLiveEvent:(MXEvent*)event
+- (void)handleLiveEvent:(MXEvent*)event
 {
     if (event.isState)
     {
@@ -335,12 +333,10 @@
     }
 
     // Process the event
-    BOOL isEventEndedInMessages = [self handleMessage:event isLiveEvent:YES pagFrom:nil];
+    [self handleMessage:event isLiveEvent:YES pagFrom:nil];
 
     // And notify the listeners
     [self notifyListeners:event isLiveEvent:YES];
-    
-    return isEventEndedInMessages;
 }
 
 
