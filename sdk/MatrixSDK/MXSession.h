@@ -99,11 +99,18 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
      success:(void (^)())success
      failure:(void (^)(NSError *error))failure;
 
-/*
+/**
+ Leave a room.
+ 
+ @param room_id the id of the room to leave.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
 - (void)leave:(NSString*)room_id
       success:(void (^)())success
       failure:(void (^)(NSError *error))failure;
 
+/*
 - (void)invite:(NSString*)room_id
        user_id:(NSString*)user_id
        success:(void (^)())success

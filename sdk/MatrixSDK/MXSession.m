@@ -135,6 +135,16 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
                       success:success failure:failure];
 }
 
+- (void)leave:(NSString*)room_id
+      success:(void (^)())success
+      failure:(void (^)(NSError *error))failure
+{
+    [self doMembershipRequest:room_id
+                   membership:@"leave"
+                   parameters:nil
+                      success:success failure:failure];
+}
+
 - (void)createRoom:(NSString*)name
         visibility:(MXRoomVisibility)visibility
    room_alias_name:(NSString*)room_alias_name
