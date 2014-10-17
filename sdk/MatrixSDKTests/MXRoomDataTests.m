@@ -301,12 +301,12 @@
         
         [roomData paginateBackMessages:100 success:^(NSArray *messages) {
             
-            NSUInteger prev_ts = ULONG_MAX;
+            NSUInteger prev_ts = 0;
             for (MXEvent *event in messages)
             {
                 if (event.ts)
                 {
-                    XCTAssertLessThanOrEqual(event.ts, prev_ts, @"Events in messages must be listed in antichronological order");
+                    XCTAssertGreaterThanOrEqual(event.ts, prev_ts, @"Events in messages must be listed in chronological order");
                     prev_ts = event.ts;
                 }
                 else

@@ -237,7 +237,7 @@
     // Handles messages according to their time order
     if (direction)
     {
-        // paginateBackMessages requests messages to be in reverse chronological order
+        // [MXSession messages] returns messages in reverse chronological order
         for (MXEvent *event in events) {
             [self handleMessage:event isLiveEvent:NO pagFrom:roomMessages.start];
         }
@@ -379,15 +379,20 @@
         // Process these new events
         [self handleMessages:paginatedResponse isLiveEvents:NO direction:YES];
                                    
-        // Filter events: we want to provide only those which went to `messages`
+        // Reorder events chronologically
+        // And filter them: we want to provide only those which went to `messages`
         NSMutableArray *filteredChunk = [NSMutableArray array];
-        for (MXEvent *event in paginatedResponse.chunk)
+        if (paginatedResponse.chunk.count)
         {
-             if (NSNotFound != [matrixData.eventsFilterForMessages indexOfObject:event.type])
-             {
-                 [filteredChunk addObject:event];
-             }
-        }      
+            for (NSInteger i = paginatedResponse.chunk.count - 1; i >= 0; i--)
+            {
+                MXEvent *event = paginatedResponse.chunk[i];
+                if (NSNotFound != [matrixData.eventsFilterForMessages indexOfObject:event.type])
+                {
+                    [filteredChunk addObject:event];
+                }
+            }
+        }
                                    
         // Inform the method caller
         success(filteredChunk);

@@ -110,7 +110,7 @@ typedef void (^MXRoomDataEventListenerBlock)(MXRoomData *roomData, MXEvent *even
  
  @param numItems the number of items to get.
  @param success A block object called when the operation succeeds. It provides an array of retrieved
-                `MXEvent` objects where the first item is the the more recent MXEvent in the array.
+                `MXEvent` objects where the first item is the the oldest MXEvent in the array.
  @param failure A block object called when the operation fails.
  */
 - (void)paginateBackMessages:(NSUInteger)numItems
