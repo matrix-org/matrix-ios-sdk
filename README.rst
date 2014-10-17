@@ -26,8 +26,6 @@ Overview
 
 As a quick overview, there are four classes to know to use the SDK.
 
-TODO: Drawing in reStructuredText
-
 Matrix API level
 ----------------
 The Matrix API level classes expose the Matrix Client-Server API as specified by the Matrix standard to make requests to a Home Server. 
@@ -48,7 +46,6 @@ These classes does logic to maintain consistent chat rooms data.
 :``MXData``:
     This is the main point to handle all data: it uses a MXSession instance to loads and maintains data from the home server. The collected data is then dispatched into MXRoomData objects.
 
-
 :``MXRoomData``:
 	 This is the data associated to one room. Among other things, it contains messages downloaded so far and the list of members. The app can register handlers to be notified when there was changes in the room (new events).
 
@@ -56,7 +53,7 @@ These classes does logic to maintain consistent chat rooms data.
 Usage
 =====
 
-The sample app demonstrates how to build a chat app on top of Matrix. You can refer to it, play with it, hack it to understand the full integration of the Matrix SDK.
+The sample app (https://github.com/matrix-org/matrix-ios-sdk/tree/master/samples/syMessaging) demonstrates how to build a chat app on top of Matrix. You can refer to it, play with it, hack it to understand the full integration of the Matrix SDK.
 This section comes back to the basics with sample codes for basic use cases.
 
 One file to import::
@@ -153,7 +150,7 @@ Tests
 =====
 The SDK Xcode project embeds both unit and integration tests.
 
-The integration tests use one of the home servers of the "Demo Federation of Homeservers" (TODO: add link to synapse). You have to start them from your local Synapse folder::
+The integration tests use one of the home servers of the "Demo Federation of Homeservers" (https://github.com/matrix-org/synapse#running-a-demo-federation-of-homeservers). You have to start them from your local Synapse folder::
 
       $ demo/start.sh
 
