@@ -74,7 +74,7 @@
     [matrixSession initialSync:1 success:^(NSDictionary *JSONData) {
          for (NSDictionary *room in JSONData[@"rooms"])
          {
-             MXRoomData *roomData = [self getOrCreateRoomData:room[@"room_id"] withJSONData:JSONData];
+             MXRoomData *roomData = [self getOrCreateRoomData:room[@"room_id"] withJSONData:room];
              
              if ([room objectForKey:@"messages"])
              {
