@@ -30,6 +30,7 @@
  
  Here, we use one of the home servers launched by the ./demo/start.sh script
  */
+NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
 
 
 #define MXTESTS_BOB @"mxBob"
@@ -37,8 +38,6 @@
 
 #define MXTESTS_ALICE @"mxAlice"
 #define MXTESTS_ALICE_PWD @"alicealice"
-
-NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
 
 @interface MatrixSDKTestsData ()
 {
