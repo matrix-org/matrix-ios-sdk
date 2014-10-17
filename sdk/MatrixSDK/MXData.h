@@ -85,6 +85,13 @@
 - (MXRoomData *)getRoomData:(NSString*)room_id;
 
 /**
+ Get the list of all rooms data.
+ 
+ @return an array of MXRoomData.
+ */
+- (NSArray*)roomDatas;
+
+/**
  Get the list of all last message of all rooms.
  The returned array is time ordered: the first item is the more recent message.
  

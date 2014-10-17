@@ -175,6 +175,11 @@
     return [rooms objectForKey:room_id];
 }
 
+- (NSArray *)roomDatas
+{
+    return [rooms allValues];
+}
+
 - (MXRoomData *)getOrCreateRoomData:(NSString *)room_id withJSONData:JSONData
 {
     MXRoomData *roomData = [self getRoomData:room_id];
