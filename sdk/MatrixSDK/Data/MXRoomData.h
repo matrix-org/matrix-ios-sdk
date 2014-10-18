@@ -82,6 +82,11 @@ typedef void (^MXRoomDataEventListenerBlock)(MXRoomData *roomData, MXEvent *even
 @property (nonatomic, readonly) NSString *displayname;
 
 /**
+ The membership state of the logged in user for this room
+ */
+@property (nonatomic, readonly) MXMembership membership;
+
+/**
  Flag indicating if there are still events (in the past) to get with paginateBackMessages.
  */
 @property (nonatomic, readonly) BOOL canPaginate;

@@ -28,19 +28,21 @@
     // The token used to know from where to paginate back.
     NSString *pagEarliestToken;
     
+    // The list of event listeners (`MXEventListener`) in this room
+    NSMutableArray *eventListeners;
+
     /*
      Additional and optional metadata got from initialSync
      */
+    MXMembership membership;
     
     // kMXRoomVisibilityPublic or kMXRoomVisibilityPrivate
     MXRoomVisibility visibility;
     
     // The ID of the user who invited the current user
     NSString *inviter;
-    
-    // The list of event listeners (`MXEventListener`) in this room
-    NSMutableArray *eventListeners;
 }
+
 @end
 
 @implementation MXRoomData
@@ -77,6 +79,10 @@
             if ([JSONData objectForKey:@"inviter"])
             {
                 inviter = JSONData[@"inviter"];
+            }
+            if ([JSONData objectForKey:@"membership"])
+            {
+                membership = JSONData[@"membership"];
             }
         }
     }
@@ -225,6 +231,24 @@
     }
 
     return displayname;
+}
+
+- (MXMembership)membership
+{
+    NSString *result;
+    
+    // Find the uptodate value in room state events
+    MXRoomMember *user = [self getMember:matrixData.matrixSession.user_id];
+    if (user)
+    {
+        result = user.membership;
+    }
+    else
+    {
+        result = membership;
+    }
+    
+    return [result copy];
 }
 
 #pragma mark - Messages handling

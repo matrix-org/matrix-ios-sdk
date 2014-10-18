@@ -39,6 +39,10 @@ NSString *const kMXMessageTypeAudio     = @"m.audio";
 NSString *const kMXMessageTypeVideo     = @"m.video";
 NSString *const kMXMessageTypeLocation  = @"m.video";
 
+NSString *const kMXMembershipInvite = @"invite";
+NSString *const kMXMembershipJoin   = @"join";
+NSString *const kMXMembershipLeave  = @"leave";
+NSString *const kMXMembershipBan    = @"ban";
 
 
 #pragma mark - MXEvent

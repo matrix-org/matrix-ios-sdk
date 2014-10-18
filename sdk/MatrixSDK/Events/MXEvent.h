@@ -77,6 +77,15 @@ FOUNDATION_EXPORT NSString *const kMXMessageTypeAudio;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeVideo;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeLocation;
 
+/**
+ Membership definitions
+ */
+typedef NSString* MXMembership;
+FOUNDATION_EXPORT NSString *const kMXMembershipInvite;
+FOUNDATION_EXPORT NSString *const kMXMembershipJoin;
+FOUNDATION_EXPORT NSString *const kMXMembershipLeave;
+FOUNDATION_EXPORT NSString *const kMXMembershipBan;
+
 
 /**
  `MXEvent` is the generic model of events received from the home server.
