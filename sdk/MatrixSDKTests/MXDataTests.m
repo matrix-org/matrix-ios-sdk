@@ -95,10 +95,10 @@
             {
                 XCTAssertNotNil(event.event_id, @"The event must have an event_id to be valid");
                 
-                if (event.ts)
+                if (event.origin_server_ts)
                 {
-                    XCTAssertLessThanOrEqual(event.ts, prev_ts, @"Events must be listed in antichronological order");
-                    prev_ts = event.ts;
+                    XCTAssertLessThanOrEqual(event.origin_server_ts, prev_ts, @"Events must be listed in antichronological order");
+                    prev_ts = event.origin_server_ts;
                 }
                 else
                 {

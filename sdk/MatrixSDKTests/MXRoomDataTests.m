@@ -202,10 +202,10 @@
             NSUInteger prev_ts = 0;
             for (MXEvent *event in roomData.messages)
             {
-                if (event.ts)
+                if (event.origin_server_ts)
                 {
-                    XCTAssertGreaterThanOrEqual(event.ts, prev_ts, @"Events in messages must be listed in chronological order");
-                    prev_ts = event.ts;
+                    XCTAssertGreaterThanOrEqual(event.origin_server_ts, prev_ts, @"Events in messages must be listed in chronological order");
+                    prev_ts = event.origin_server_ts;
                 }
                 else
                 {
@@ -304,10 +304,10 @@
             NSUInteger prev_ts = 0;
             for (MXEvent *event in messages)
             {
-                if (event.ts)
+                if (event.origin_server_ts)
                 {
-                    XCTAssertGreaterThanOrEqual(event.ts, prev_ts, @"Events in messages must be listed in chronological order");
-                    prev_ts = event.ts;
+                    XCTAssertGreaterThanOrEqual(event.origin_server_ts, prev_ts, @"Events in messages must be listed in chronological order");
+                    prev_ts = event.origin_server_ts;
                 }
                 else
                 {
