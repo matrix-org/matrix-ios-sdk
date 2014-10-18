@@ -74,7 +74,7 @@ NSString *const kMXMembershipBan    = @"ban";
 
 - (NSString *)description
 {
-    return [NSString stringWithFormat:@"%@: %@ - %@: %@", self.event_id, self.type, [NSDate dateWithTimeIntervalSince1970:self.ts/1000], self.content];
+    return [NSString stringWithFormat:@"%@: %@ - %@: %@", self.event_id, self.type, [NSDate dateWithTimeIntervalSince1970:self.origin_server_ts/1000], self.content];
 }
 
 - (instancetype)initWithDictionary:(NSDictionary *)dictionaryValue error:(NSError *__autoreleasing *)error

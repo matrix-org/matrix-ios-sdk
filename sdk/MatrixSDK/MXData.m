@@ -207,7 +207,7 @@
     
     // Order them by ts
     [recents sortUsingComparator:^NSComparisonResult(MXEvent *obj1, MXEvent *obj2) {
-        return obj2.ts - obj1.ts;
+        return obj2.origin_server_ts - obj1.origin_server_ts;
     }];
     
     return recents;
