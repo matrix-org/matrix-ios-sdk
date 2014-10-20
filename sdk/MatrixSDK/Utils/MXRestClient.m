@@ -89,7 +89,7 @@
             success(JSONResponse);
         }
         failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-            NSLog(@"Request failed for path: %@ - HTTP code: %ld", path, operation.response.statusCode);
+            NSLog(@"Request failed for path: %@ - HTTP code: %ld", path, (long)operation.response.statusCode);
 
             if (operation.responseData)
             {
