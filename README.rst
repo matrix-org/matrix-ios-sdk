@@ -144,17 +144,11 @@ Tests
 =====
 The SDK Xcode project embeds both unit and integration tests.
 
-The integration tests use one of the home servers of the "Demo Federation of Homeservers" (https://github.com/matrix-org/synapse#running-a-demo-federation-of-homeservers). You have to start them from your local Synapse folder::
+Out of the box, the tests use one of the home servers (located at http://localhost:8080 )of the "Demo Federation of Homeservers" (https://github.com/matrix-org/synapse#running-a-demo-federation-of-homeservers). You have to start them from your local Synapse folder::
 
-      $ demo/start.sh
+      $ demo/start.sh --no-rate-limit
 
 Then, you can run the tests from the Xcode Test navigator tab or select the MatrixSDKTests scheme and click on the "Test" action.
-
-Out of the box, tests point to a home server located at http://localhost:8080. This is very convenient when you launch tests on the iOS simulator with a home server running on the same Mac machine. 
-
-If you want to run tests on a real iOS device, you will need to replace localhost by the name or the IP of the machine hosting the homeserver. This can be achieved by changing the value of kMXTestsHomeServerURL in MatrixSDKTestsData.m::
-
-      NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
 
 
 Known issues
