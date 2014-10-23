@@ -19,7 +19,7 @@
 /**
  `MXRestClient` is an abstraction layer for making HTTP requests to the home server.
 */
-@interface MXRestClient : NSObject
+@interface MXHTTPClient : NSObject
 
 - (id)initWithHomeServer:(NSString*)homeserver;
 

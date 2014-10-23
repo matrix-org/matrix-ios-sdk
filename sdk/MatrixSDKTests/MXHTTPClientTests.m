@@ -17,16 +17,16 @@
 #import <UIKit/UIKit.h>
 #import <XCTest/XCTest.h>
 
-#import "MXRestClient.h"
+#import "MXHTTPClient.h"
 #import "MXError.h"
 
 #import "MatrixSDKTestsData.h"
 
-@interface MXRestClientTests : XCTestCase
+@interface MXHTTPClientTests : XCTestCase
 
 @end
 
-@implementation MXRestClientTests
+@implementation MXHTTPClientTests
 
 - (void)setUp
 {
@@ -43,7 +43,7 @@
 
 - (void)testMainThread {
 
-    MXRestClient *hsClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL];
+    MXHTTPClient *hsClient = [[MXHTTPClient alloc] initWithHomeServer:kMXTestsHomeServerURL];
 
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
 
@@ -67,7 +67,7 @@
 
 - (void)testMXError {
     
-    MXRestClient *hsClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL];
+    MXHTTPClient *hsClient = [[MXHTTPClient alloc] initWithHomeServer:kMXTestsHomeServerURL];
     
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
 
@@ -93,7 +93,7 @@
 
 - (void)testNSError {
     
-    MXRestClient *hsClient = [[MXRestClient alloc] initWithHomeServer:[NSString stringWithFormat:@"%@/non-existing-path", kMXTestsHomeServerURL]];
+    MXHTTPClient *hsClient = [[MXHTTPClient alloc] initWithHomeServer:[NSString stringWithFormat:@"%@/non-existing-path", kMXTestsHomeServerURL]];
     
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
     

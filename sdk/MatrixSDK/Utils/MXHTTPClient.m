@@ -14,14 +14,14 @@
  limitations under the License.
  */
 
-#import "MXRestClient.h"
+#import "MXHTTPClient.h"
 #import "MXError.h"
 
 #import <AFNetworking.h>
 
 #define MX_PREFIX_PATH  @"/_matrix/client/api/v1"
 
-@interface MXRestClient ()
+@interface MXHTTPClient ()
 {
     // Use AFNetworking as HTTP client
     AFHTTPRequestOperationManager *httpManager;
@@ -30,7 +30,7 @@
 }
 @end
 
-@implementation MXRestClient
+@implementation MXHTTPClient
 
 -(id)initWithHomeServer:(NSString *)homeserver
 {

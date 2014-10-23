@@ -16,7 +16,7 @@
 
 #import "MXSession.h"
 
-#import "MXRestClient.h"
+#import "MXHTTPClient.h"
 
 #pragma mark - Constants definitions
 NSString *const kMXRoomVisibilityPublic = @"public";
@@ -26,7 +26,7 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
 #pragma mark - MXSession
 @interface MXSession ()
 {
-    MXRestClient *hsClient;
+    MXHTTPClient *hsClient;
 }
 @end
 
@@ -42,7 +42,7 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
         _user_id = userId;
         access_token = accessToken;
         
-        hsClient = [[MXRestClient alloc] initWithHomeServer:homeserver andAccessToken:access_token];
+        hsClient = [[MXHTTPClient alloc] initWithHomeServer:homeserver andAccessToken:access_token];
     }
     return self;
 }

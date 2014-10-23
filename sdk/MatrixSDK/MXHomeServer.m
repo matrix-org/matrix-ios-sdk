@@ -17,7 +17,7 @@
 #import "MXHomeServer.h"
 
 #import <Mantle.h>
-#import "MXRestClient.h"
+#import "MXHTTPClient.h"
 
 typedef enum
 {
@@ -28,7 +28,7 @@ MXAuthAction;
 
 @interface MXHomeServer ()
 {
-    MXRestClient *hsClient;
+    MXHTTPClient *hsClient;
 }
 @end
 
@@ -43,7 +43,7 @@ MXAuthAction;
     {
         homeserver = homeserver2;
         
-        hsClient = [[MXRestClient alloc] initWithHomeServer:homeserver];
+        hsClient = [[MXHTTPClient alloc] initWithHomeServer:homeserver];
         
     }
     return self;
