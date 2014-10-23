@@ -241,7 +241,7 @@
 #pragma mark - Event operations
 - (void)testPublicRooms
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXRestClient *bobSession, NSString *room_id, XCTestExpectation *expectation) {
         
         [homeServer publicRooms:^(NSArray *rooms) {
             

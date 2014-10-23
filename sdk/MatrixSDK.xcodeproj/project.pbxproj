@@ -15,8 +15,8 @@
 		320DFDE119DD99B60068622A /* MXData.m in Sources */ = {isa = PBXBuildFile; fileRef = 320DFDD119DD99B60068622A /* MXData.m */; };
 		320DFDE219DD99B60068622A /* MXError.h in Headers */ = {isa = PBXBuildFile; fileRef = 320DFDD219DD99B60068622A /* MXError.h */; };
 		320DFDE319DD99B60068622A /* MXError.m in Sources */ = {isa = PBXBuildFile; fileRef = 320DFDD319DD99B60068622A /* MXError.m */; };
-		320DFDE419DD99B60068622A /* MXSession.h in Headers */ = {isa = PBXBuildFile; fileRef = 320DFDD419DD99B60068622A /* MXSession.h */; };
-		320DFDE519DD99B60068622A /* MXSession.m in Sources */ = {isa = PBXBuildFile; fileRef = 320DFDD519DD99B60068622A /* MXSession.m */; };
+		320DFDE419DD99B60068622A /* MXRestClient.h in Headers */ = {isa = PBXBuildFile; fileRef = 320DFDD419DD99B60068622A /* MXRestClient.h */; };
+		320DFDE519DD99B60068622A /* MXRestClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 320DFDD519DD99B60068622A /* MXRestClient.m */; };
 		320DFDE619DD99B60068622A /* MXHTTPClient.h in Headers */ = {isa = PBXBuildFile; fileRef = 320DFDD719DD99B60068622A /* MXHTTPClient.h */; };
 		320DFDE719DD99B60068622A /* MXHTTPClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 320DFDD819DD99B60068622A /* MXHTTPClient.m */; };
 		321809B919EEBF3000377451 /* MXEventTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 321809B819EEBF3000377451 /* MXEventTests.m */; };
@@ -38,7 +38,7 @@
 		32D8CAC219DEE6ED002AF8A0 /* MXHomeServerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32D8CAC119DEE6ED002AF8A0 /* MXHomeServerTests.m */; };
 		32F2127A19DE970F009C6DCD /* MXHomeServer.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F2127819DE970F009C6DCD /* MXHomeServer.h */; };
 		32F2127B19DE970F009C6DCD /* MXHomeServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 32F2127919DE970F009C6DCD /* MXHomeServer.m */; };
-		32FCAB4D19E578860049C555 /* MXSessionTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32FCAB4C19E578860049C555 /* MXSessionTests.m */; };
+		32FCAB4D19E578860049C555 /* MXRestClientTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32FCAB4C19E578860049C555 /* MXRestClientTests.m */; };
 		A23A8594855481FEFA0E9A22 /* libPods-MatrixSDK.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E1674C6FF8BBF074E7F76059 /* libPods-MatrixSDK.a */; };
 /* End PBXBuildFile section */
 
@@ -62,8 +62,8 @@
 		320DFDD119DD99B60068622A /* MXData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXData.m; sourceTree = "<group>"; };
 		320DFDD219DD99B60068622A /* MXError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXError.h; sourceTree = "<group>"; };
 		320DFDD319DD99B60068622A /* MXError.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXError.m; sourceTree = "<group>"; };
-		320DFDD419DD99B60068622A /* MXSession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXSession.h; sourceTree = "<group>"; };
-		320DFDD519DD99B60068622A /* MXSession.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXSession.m; sourceTree = "<group>"; };
+		320DFDD419DD99B60068622A /* MXRestClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRestClient.h; sourceTree = "<group>"; };
+		320DFDD519DD99B60068622A /* MXRestClient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRestClient.m; sourceTree = "<group>"; };
 		320DFDD719DD99B60068622A /* MXHTTPClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXHTTPClient.h; sourceTree = "<group>"; };
 		320DFDD819DD99B60068622A /* MXHTTPClient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXHTTPClient.m; sourceTree = "<group>"; };
 		321809B819EEBF3000377451 /* MXEventTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXEventTests.m; sourceTree = "<group>"; };
@@ -90,7 +90,7 @@
 		32F1FE9AF82A426C2EAED587 /* Pods-MatrixSDK.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDK.release.xcconfig"; path = "Pods/Target Support Files/Pods-MatrixSDK/Pods-MatrixSDK.release.xcconfig"; sourceTree = "<group>"; };
 		32F2127819DE970F009C6DCD /* MXHomeServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXHomeServer.h; sourceTree = "<group>"; };
 		32F2127919DE970F009C6DCD /* MXHomeServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXHomeServer.m; sourceTree = "<group>"; };
-		32FCAB4C19E578860049C555 /* MXSessionTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXSessionTests.m; sourceTree = "<group>"; };
+		32FCAB4C19E578860049C555 /* MXRestClientTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRestClientTests.m; sourceTree = "<group>"; };
 		E1674C6FF8BBF074E7F76059 /* libPods-MatrixSDK.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MatrixSDK.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -195,8 +195,8 @@
 				32C6F93219DD814400EA4E9C /* MatrixSDK.h */,
 				32F2127819DE970F009C6DCD /* MXHomeServer.h */,
 				32F2127919DE970F009C6DCD /* MXHomeServer.m */,
-				320DFDD419DD99B60068622A /* MXSession.h */,
-				320DFDD519DD99B60068622A /* MXSession.m */,
+				320DFDD419DD99B60068622A /* MXRestClient.h */,
+				320DFDD519DD99B60068622A /* MXRestClient.m */,
 				320DFDD019DD99B60068622A /* MXData.h */,
 				320DFDD119DD99B60068622A /* MXData.m */,
 				320DFDD219DD99B60068622A /* MXError.h */,
@@ -221,7 +221,7 @@
 				3281E8A619E41A2000976E1A /* MatrixSDKTestsData.h */,
 				3281E8A719E41A2000976E1A /* MatrixSDKTestsData.m */,
 				32D8CAC119DEE6ED002AF8A0 /* MXHomeServerTests.m */,
-				32FCAB4C19E578860049C555 /* MXSessionTests.m */,
+				32FCAB4C19E578860049C555 /* MXRestClientTests.m */,
 				3281E89D19E299C000976E1A /* MXErrorTests.m */,
 				3281E89F19E2CC1200976E1A /* MXHTTPClientTests.m */,
 				3281E8A119E2DE4300976E1A /* MXDataTests.m */,
@@ -258,7 +258,7 @@
 				3281E8B719E42DFE00976E1A /* MXJSONModel.h in Headers */,
 				32C6F93319DD814400EA4E9C /* MatrixSDK.h in Headers */,
 				3281E8B919E42DFE00976E1A /* MXJSONModels.h in Headers */,
-				320DFDE419DD99B60068622A /* MXSession.h in Headers */,
+				320DFDE419DD99B60068622A /* MXRestClient.h in Headers */,
 				320DFDDD19DD99B60068622A /* MXEvent.h in Headers */,
 				3220094519EFBF30008DE41D /* MXDataEventListener.h in Headers */,
 				320DFDE019DD99B60068622A /* MXData.h in Headers */,
@@ -410,7 +410,7 @@
 				320DFDDC19DD99B60068622A /* MXRoomData.m in Sources */,
 				3220093919EFA4C9008DE41D /* MXEventListener.m in Sources */,
 				32F2127B19DE970F009C6DCD /* MXHomeServer.m in Sources */,
-				320DFDE519DD99B60068622A /* MXSession.m in Sources */,
+				320DFDE519DD99B60068622A /* MXRestClient.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -425,7 +425,7 @@
 				3281E8A219E2DE4300976E1A /* MXDataTests.m in Sources */,
 				32A27D1F19EC335300BAFADE /* MXRoomDataTests.m in Sources */,
 				32D8CAC219DEE6ED002AF8A0 /* MXHomeServerTests.m in Sources */,
-				32FCAB4D19E578860049C555 /* MXSessionTests.m in Sources */,
+				32FCAB4D19E578860049C555 /* MXRestClientTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

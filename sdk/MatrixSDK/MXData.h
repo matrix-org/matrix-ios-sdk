@@ -16,7 +16,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXSession.h"
+#import "MXRestClient.h"
 #import "MXRoomData.h"
 #import "MXDataEventListener.h"
 
@@ -33,7 +33,7 @@
 @interface MXData : NSObject
 
 // The matrix session to make Matrix API requests
-@property (nonatomic, readonly) MXSession *matrixSession;
+@property (nonatomic, readonly) MXRestClient *matrixSession;
 
 /**
  An array of `MXEventTypeString` indicating which events must be stored as messages in MXData and its MXDataRoom.
@@ -52,7 +52,7 @@
  
  @return The newly-initialized MXData.
  */
-- (id)initWithMatrixSession:(MXSession*)mSession;
+- (id)initWithMatrixSession:(MXRestClient*)mSession;
 
 /**
  Start fetching events from the home server to feed the local data storage.

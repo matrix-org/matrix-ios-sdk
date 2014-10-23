@@ -44,7 +44,7 @@
 @implementation MXData
 @synthesize matrixSession, eventsFilterForMessages;
 
-- (id)initWithMatrixSession:(MXSession*)mSession;
+- (id)initWithMatrixSession:(MXRestClient*)mSession;
 {
     self = [super init];
     if (self)

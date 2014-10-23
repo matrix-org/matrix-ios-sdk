@@ -110,11 +110,11 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
     }
 }
 
-- (void)getBobMXSession:(void (^)(MXSession *))success
+- (void)getBobMXSession:(void (^)(MXRestClient *))success
 {
     [self getBobCredentials:^{
         
-        MXSession *session = [[MXSession alloc] initWithHomeServer:kMXTestsHomeServerURL userId:self.bobCredentials.user_id accessToken:self.bobCredentials.access_token];
+        MXRestClient *session = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL userId:self.bobCredentials.user_id accessToken:self.bobCredentials.access_token];
         
         success(session);
     }];
@@ -122,7 +122,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
 
 
 - (void)doMXSessionTestWithBob:(XCTestCase*)testCase
-                   readyToTest:(void (^)(MXSession *bobSession, XCTestExpectation *expectation))readyToTest
+                   readyToTest:(void (^)(MXRestClient *bobSession, XCTestExpectation *expectation))readyToTest
 {
     XCTestExpectation *expectation;
     if (testCase)
@@ -134,7 +134,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
     
     [sharedData getBobCredentials:^{
         
-        MXSession *session = [[MXSession alloc] initWithHomeServer:kMXTestsHomeServerURL userId:sharedData.bobCredentials.user_id accessToken:sharedData.bobCredentials.access_token];
+        MXRestClient *session = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL userId:sharedData.bobCredentials.user_id accessToken:sharedData.bobCredentials.access_token];
         
         readyToTest(session, expectation);
         
@@ -147,10 +147,10 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
 }
 
 - (void)doMXSessionTestWithBobAndARoom:(XCTestCase*)testCase
-                           readyToTest:(void (^)(MXSession *bobSession, NSString* room_id, XCTestExpectation *expectation))readyToTest
+                           readyToTest:(void (^)(MXRestClient *bobSession, NSString* room_id, XCTestExpectation *expectation))readyToTest
 {
     [self doMXSessionTestWithBob:testCase
-                     readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation) {
+                     readyToTest:^(MXRestClient *bobSession, XCTestExpectation *expectation) {
         // Create a random room to use
         [bobSession createRoom:nil visibility:kMXRoomVisibilityPrivate room_alias_name:nil topic:nil success:^(MXCreateRoomResponse *response) {
             
@@ -163,10 +163,10 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
 }
 
 - (void)doMXSessionTestWithBobAndThePublicRoom:(XCTestCase*)testCase
-                                   readyToTest:(void (^)(MXSession *bobSession, NSString* room_id, XCTestExpectation *expectation))readyToTest
+                                   readyToTest:(void (^)(MXRestClient *bobSession, NSString* room_id, XCTestExpectation *expectation))readyToTest
 {
     [self doMXSessionTestWithBob:testCase
-                     readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation) {
+                     readyToTest:^(MXRestClient *bobSession, XCTestExpectation *expectation) {
                          
         // Create THE allocated public room: #mxPublic
         [bobSession createRoom:@"MX Public Room test"
@@ -201,7 +201,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
 
 - (void)doMXSessionTestInABobRoomAndANewTextMessage:(XCTestCase*)testCase
                                   newTextMessage:(NSString*)newTextMessage
-                                   onReadyToTest:(void (^)(MXSession *bobSession, NSString* room_id, NSString* new_text_message_event_id, XCTestExpectation *expectation))readyToTest
+                                   onReadyToTest:(void (^)(MXRestClient *bobSession, NSString* room_id, NSString* new_text_message_event_id, XCTestExpectation *expectation))readyToTest
 {
     XCTestExpectation *expectation;
     if (testCase)
@@ -211,7 +211,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
     
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
     
-    [sharedData getBobMXSession:^(MXSession *bobSession) {
+    [sharedData getBobMXSession:^(MXRestClient *bobSession) {
         // Create a random room to use
         [bobSession createRoom:nil visibility:kMXRoomVisibilityPrivate room_alias_name:nil topic:nil success:^(MXCreateRoomResponse *response) {
             
@@ -236,10 +236,10 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
 }
 
 - (void)doMXSessionTestWithBobAndARoomWithMessages:(XCTestCase*)testCase
-                                       readyToTest:(void (^)(MXSession *bobSession, NSString* room_id, XCTestExpectation *expectation))readyToTest
+                                       readyToTest:(void (^)(MXRestClient *bobSession, NSString* room_id, XCTestExpectation *expectation))readyToTest
 {
     [self doMXSessionTestWithBobAndARoom:testCase
-                             readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
+                             readyToTest:^(MXRestClient *bobSession, NSString *room_id, XCTestExpectation *expectation) {
         
         MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
         
@@ -253,7 +253,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
 }
 
 - (void)doMXSessionTestWihBobAndSeveralRoomsAndMessages:(XCTestCase*)testCase
-                                         readyToTest:(void (^)(MXSession *bobSession, XCTestExpectation *expectation))readyToTest
+                                         readyToTest:(void (^)(MXRestClient *bobSession, XCTestExpectation *expectation))readyToTest
 {
     XCTestExpectation *expectation;
     if (testCase)
@@ -263,7 +263,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
     
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
     
-    [sharedData getBobMXSession:^(MXSession *bobSession) {
+    [sharedData getBobMXSession:^(MXRestClient *bobSession) {
         
         // Fill Bob's account with 5 rooms of 3 messages
         [sharedData for:bobSession createRooms:5 withMessages:3 success:^{
@@ -278,7 +278,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
 }
 
 
-- (void)for:(MXSession *)mxSession andRoom:(NSString*)room_id postMessages:(NSUInteger)messagesCount success:(void (^)())success
+- (void)for:(MXRestClient *)mxSession andRoom:(NSString*)room_id postMessages:(NSUInteger)messagesCount success:(void (^)())success
 {
     NSLog(@"postMessages :%ld", messagesCount);
     if (0 == messagesCount)
@@ -300,7 +300,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
     }
 }
 
-- (void)for:(MXSession *)mxSession createRooms:(NSUInteger)roomsCount withMessages:(NSUInteger)messagesCount success:(void (^)())success
+- (void)for:(MXRestClient *)mxSession createRooms:(NSUInteger)roomsCount withMessages:(NSUInteger)messagesCount success:(void (^)())success
 {
     if (0 == roomsCount)
     {
@@ -365,11 +365,11 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
     }
 }
 
-- (void)getAliceMXSession:(void (^)(MXSession *))success
+- (void)getAliceMXSession:(void (^)(MXRestClient *))success
 {
     [self getAliceCredentials:^{
         
-        MXSession *session = [[MXSession alloc] initWithHomeServer:kMXTestsHomeServerURL userId:self.aliceCredentials.user_id accessToken:self.aliceCredentials.access_token];
+        MXRestClient *session = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL userId:self.aliceCredentials.user_id accessToken:self.aliceCredentials.access_token];
         
         success(session);
     }];
@@ -377,7 +377,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
 
 
 - (void)doMXSessionTestWithAlice:(XCTestCase*)testCase
-                   readyToTest:(void (^)(MXSession *aliceSession, XCTestExpectation *expectation))readyToTest
+                   readyToTest:(void (^)(MXRestClient *aliceSession, XCTestExpectation *expectation))readyToTest
 {
     XCTestExpectation *expectation;
     if (testCase)
@@ -389,7 +389,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
     
     [sharedData getAliceCredentials:^{
         
-        MXSession *session = [[MXSession alloc] initWithHomeServer:kMXTestsHomeServerURL userId:sharedData.aliceCredentials.user_id accessToken:sharedData.aliceCredentials.access_token];
+        MXRestClient *session = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL userId:sharedData.aliceCredentials.user_id accessToken:sharedData.aliceCredentials.access_token];
         
         readyToTest(session, expectation);
         

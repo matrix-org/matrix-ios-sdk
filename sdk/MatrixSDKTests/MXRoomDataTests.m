@@ -47,7 +47,7 @@
 
 - (void)doMXRoomDataTestWithBobAndARoomWithMessages:(void (^)(MXData *matrixData, MXRoomData *roomData, XCTestExpectation *expectation))readyToTest
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobSession, NSString *room_id, XCTestExpectation *expectation) {
         
         matrixData = [[MXData alloc] initWithMatrixSession:bobSession];
         
@@ -64,7 +64,7 @@
 
 - (void)doMXRoomDataTestWithBobAndThePublicRoom:(void (^)(MXData *matrixData, MXRoomData *roomData, XCTestExpectation *expectation))readyToTest
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXRestClient *bobSession, NSString *room_id, XCTestExpectation *expectation) {
         
         matrixData = [[MXData alloc] initWithMatrixSession:bobSession];
         
@@ -116,7 +116,7 @@
 
 - (void)testMembers
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXSession *bobSession, NSString *room_id, NSString *new_text_message_event_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobSession, NSString *room_id, NSString *new_text_message_event_id, XCTestExpectation *expectation) {
         
         matrixData = [[MXData alloc] initWithMatrixSession:bobSession];
         [matrixData start:^{
@@ -515,7 +515,7 @@
         
         
         // Populate a text message in parallel
-        [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:nil readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation2) {
+        [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:nil readyToTest:^(MXRestClient *bobSession, NSString *room_id, XCTestExpectation *expectation2) {
             
             [bobSession postTextMessage:room_id text:@"Hello listeners!" success:^(NSString *event_id) {
                 
@@ -551,7 +551,7 @@
         }];
         
         // Populate a text message in parallel
-        [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:nil readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation2) {
+        [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:nil readyToTest:^(MXRestClient *bobSession, NSString *room_id, XCTestExpectation *expectation2) {
             
             [bobSession postTextMessage:room_id text:@"Hello listeners!" success:^(NSString *event_id) {
                 
