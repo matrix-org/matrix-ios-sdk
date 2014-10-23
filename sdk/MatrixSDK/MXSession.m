@@ -363,7 +363,12 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
             success:(void (^)(NSString *displayname))success
             failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"profile/%@/displayname", _user_id];
+    if (!user_id)
+    {
+        user_id = _user_id;
+    }
+    
+    NSString *path = [NSString stringWithFormat:@"profile/%@/displayname", user_id];
     [hsClient requestWithMethod:@"GET"
                            path:path
                      parameters:nil
@@ -401,7 +406,12 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
           success:(void (^)(NSString *avatar_url))success
           failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"profile/%@/avatar_url", _user_id];
+    if (!user_id)
+    {
+        user_id = _user_id;
+    }
+
+    NSString *path = [NSString stringWithFormat:@"profile/%@/avatar_url", user_id];
     [hsClient requestWithMethod:@"GET"
                            path:path
                      parameters:nil
