@@ -221,13 +221,13 @@
 #pragma mark - Profile operations
 - (void)testUserDisplayName
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithAlice:self readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
         
         // Set the name
         __block NSString *newDisplayName = @"mxAlice";
         [aliceSession setDisplayName:newDisplayName success:^{
             
-            [[MatrixSDKTestsData sharedData] doMXSessionTestWithAlice:self readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
+            [[MatrixSDKTestsData sharedData] doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
                 
                 // Then retrieve it
                 [aliceSession displayName:nil success:^(NSString *displayname) {
@@ -250,13 +250,13 @@
 
 - (void)testOtherUserDisplayName
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithAlice:self readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
         
         // Set the name
         __block NSString *newDisplayName = @"mxAlice";
         [aliceSession setDisplayName:newDisplayName success:^{
             
-            [[MatrixSDKTestsData sharedData] doMXSessionTestWithBob:self readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation) {
+            [[MatrixSDKTestsData sharedData] doMXSessionTestWithBob:nil readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation2) {
                 
                 MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
                 
@@ -281,13 +281,13 @@
 
 - (void)testUserAvatarUrl
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithAlice:self readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
         
         // Set the avatar url
         __block NSString *newAvatarUrl = @"http://matrix.org/matrix.png";
         [aliceSession setAvatarUrl:newAvatarUrl success:^{
             
-            [[MatrixSDKTestsData sharedData] doMXSessionTestWithAlice:self readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
+            [[MatrixSDKTestsData sharedData] doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
                 
                 // Then retrieve it
                 [aliceSession avatarUrl:nil success:^(NSString *avatar_url) {
@@ -310,13 +310,13 @@
 
 - (void)testOtherUserAvatarUrl
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithAlice:self readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
         
         // Set the avatar url
         __block NSString *newAvatarUrl = @"http://matrix.org/matrix.png";
         [aliceSession setAvatarUrl:newAvatarUrl success:^{
             
-            [[MatrixSDKTestsData sharedData] doMXSessionTestWithBob:self readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation) {
+            [[MatrixSDKTestsData sharedData] doMXSessionTestWithBob:nil readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation2) {
                 
                 MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
                 
