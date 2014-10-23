@@ -35,34 +35,34 @@ FOUNDATION_EXPORT NSString * const kMXTestsHomeServerURL;
 // The user will be created if needed
 - (void)getBobCredentials:(void (^)())success;
 
-// Prepare a test with a MXSession for mxBob so that we can make test on it
-- (void)doMXSessionTestWithBob:(XCTestCase*)testCase
-                   readyToTest:(void (^)(MXRestClient *bobSession, XCTestExpectation *expectation))readyToTest;
+// Prepare a test with a MXRestClient for mxBob so that we can make test on it
+- (void)doMXRestClientTestWithBob:(XCTestCase*)testCase
+                   readyToTest:(void (^)(MXRestClient *bobRestClient, XCTestExpectation *expectation))readyToTest;
 
-// Prepare a test with a a MXSession for mxBob so that we can make test on it
-- (void)doMXSessionTestWithBobAndARoom:(XCTestCase*)testCase
-                           readyToTest:(void (^)(MXRestClient *bobSession, NSString* room_id, XCTestExpectation *expectation))readyToTest;
+// Prepare a test with a a MXRestClient for mxBob so that we can make test on it
+- (void)doMXRestClientTestWithBobAndARoom:(XCTestCase*)testCase
+                           readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* room_id, XCTestExpectation *expectation))readyToTest;
 
-- (void)doMXSessionTestWithBobAndThePublicRoom:(XCTestCase*)testCase
-                           readyToTest:(void (^)(MXRestClient *bobSession, NSString* room_id, XCTestExpectation *expectation))readyToTest;
+- (void)doMXRestClientTestWithBobAndThePublicRoom:(XCTestCase*)testCase
+                           readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* room_id, XCTestExpectation *expectation))readyToTest;
 
-- (void)doMXSessionTestInABobRoomAndANewTextMessage:(XCTestCase*)testCase
+- (void)doMXRestClientTestInABobRoomAndANewTextMessage:(XCTestCase*)testCase
                                      newTextMessage:(NSString*)newTextMessage
-                                      onReadyToTest:(void (^)(MXRestClient *bobSession, NSString* room_id, NSString* new_text_message_event_id, XCTestExpectation *expectation))readyToTest;
+                                      onReadyToTest:(void (^)(MXRestClient *bobRestClient, NSString* room_id, NSString* new_text_message_event_id, XCTestExpectation *expectation))readyToTest;
 
-- (void)doMXSessionTestWithBobAndARoomWithMessages:(XCTestCase*)testCase
-                                       readyToTest:(void (^)(MXRestClient *bobSession, NSString* room_id, XCTestExpectation *expectation))readyToTest;
+- (void)doMXRestClientTestWithBobAndARoomWithMessages:(XCTestCase*)testCase
+                                       readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* room_id, XCTestExpectation *expectation))readyToTest;
 
-- (void)doMXSessionTestWihBobAndSeveralRoomsAndMessages:(XCTestCase*)testCase
-                                            readyToTest:(void (^)(MXRestClient *bobSession, XCTestExpectation *expectation))readyToTest;
+- (void)doMXRestClientTestWihBobAndSeveralRoomsAndMessages:(XCTestCase*)testCase
+                                            readyToTest:(void (^)(MXRestClient *bobRestClient, XCTestExpectation *expectation))readyToTest;
 
 #pragma mark - mxAlice
 @property (nonatomic, readonly) MXLoginResponse *aliceCredentials;
 
 - (void)getAliceCredentials:(void (^)())success;
 
-- (void)doMXSessionTestWithAlice:(XCTestCase*)testCase
-                   readyToTest:(void (^)(MXRestClient *aliceSession, XCTestExpectation *expectation))readyToTest;
+- (void)doMXRestClientTestWithAlice:(XCTestCase*)testCase
+                   readyToTest:(void (^)(MXRestClient *aliceRestClient, XCTestExpectation *expectation))readyToTest;
 
 //- (void)randomCredentials:(void (^)(MXLoginResponse *randomCredentials))success;
 

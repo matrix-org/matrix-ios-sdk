@@ -47,7 +47,7 @@
  
  @param user the user id (ex: "@bob:matrix.org") or the user localpart (ex: "bob") of the user to register.
  @param password his password.
- @param success A block object called when the operation succeeds. It provides credentials to use to open a MXSession.
+ @param success A block object called when the operation succeeds. It provides credentials to use to create a MXRestClient.
  @param failure A block object called when the operation fails.
  */
 - (void)registerWithUser:(NSString*)user andPassword:(NSString*)password
@@ -70,7 +70,7 @@
  
  @param user the user id (ex: "@bob:matrix.org") or the user localpart (ex: "bob") of the user to log in.
  @param password his password.
- @param success A block object called when the operation succeeds. It provides credentials to use to open a MXSession.
+ @param success A block object called when the operation succeeds. It provides credentials to use to create a MXRestClient.
  @param failure A block object called when the operation fails.
  */
 - (void)loginWithUser:(NSString*)user andPassword:(NSString*)password

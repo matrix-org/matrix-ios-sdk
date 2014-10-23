@@ -47,9 +47,9 @@
 
 - (void)testIsState
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobSession, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
         
-        matrixData = [[MXData alloc] initWithMatrixSession:bobSession];
+        matrixData = [[MXData alloc] initWithMatrixRestClient:bobRestClient];
         
         [matrixData start:^{
             MXRoomData *roomData = [matrixData getRoomData:room_id];

@@ -32,8 +32,8 @@
  */
 @interface MXData : NSObject
 
-// The matrix session to make Matrix API requests
-@property (nonatomic, readonly) MXRestClient *matrixSession;
+// The matrix REST Client to make Matrix API requests
+@property (nonatomic, readonly) MXRestClient *matrixRestClient;
 
 /**
  An array of `MXEventTypeString` indicating which events must be stored as messages in MXData and its MXDataRoom.
@@ -46,13 +46,13 @@
 
 /**
  Create a MXData instance.
- This instance will use the passed MXSession to make requests to the home server.
+ This instance will use the passed MXRestClient to make requests to the home server.
  
- @param mSession The MXSession to the home server.
+ @param mRestClient The MXRestClient to the home server.
  
  @return The newly-initialized MXData.
  */
-- (id)initWithMatrixSession:(MXRestClient*)mSession;
+- (id)initWithMatrixRestClient:(MXRestClient*)mRestClient;
 
 /**
  Start fetching events from the home server to feed the local data storage.

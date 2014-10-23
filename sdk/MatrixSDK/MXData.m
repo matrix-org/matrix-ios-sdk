@@ -42,14 +42,14 @@
 @end
 
 @implementation MXData
-@synthesize matrixSession, eventsFilterForMessages;
+@synthesize matrixRestClient, eventsFilterForMessages;
 
-- (id)initWithMatrixSession:(MXRestClient*)mSession;
+- (id)initWithMatrixRestClient:(MXRestClient*)mRestClient;
 {
     self = [super init];
     if (self)
     {
-        matrixSession = mSession;
+        matrixRestClient = mRestClient;
         rooms = [NSMutableDictionary dictionary];
         presence = [NSMutableDictionary dictionary];
         
@@ -71,7 +71,7 @@
 - (void)start:(void (^)())initialSyncDone
       failure:(void (^)(NSError *error))failure
 {
-    [matrixSession initialSync:1 success:^(NSDictionary *JSONData) {
+    [matrixRestClient initialSync:1 success:^(NSDictionary *JSONData) {
          for (NSDictionary *room in JSONData[@"rooms"])
          {
              MXRoomData *roomData = [self getOrCreateRoomData:room[@"room_id"] withJSONData:room];
@@ -110,7 +110,7 @@
 {
     streamingActive = YES;
     
-    [matrixSession eventsFromToken:token serverTimeout:SERVER_TIMEOUT_MS clientTimeout:CLIENT_TIMEOUT_MS success:^(NSDictionary *JSONData) {
+    [matrixRestClient eventsFromToken:token serverTimeout:SERVER_TIMEOUT_MS clientTimeout:CLIENT_TIMEOUT_MS success:^(NSDictionary *JSONData) {
         
         if (streamingActive)
         {

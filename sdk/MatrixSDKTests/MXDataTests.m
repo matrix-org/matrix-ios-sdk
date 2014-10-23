@@ -47,9 +47,9 @@
 
 - (void)testRecents
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobSession, NSString *room_id, NSString *new_text_message_event_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *room_id, NSString *new_text_message_event_id, XCTestExpectation *expectation) {
         
-        matrixData = [[MXData alloc] initWithMatrixSession:bobSession];
+        matrixData = [[MXData alloc] initWithMatrixRestClient:bobRestClient];
         [matrixData start:^{
             
             NSArray *recents = [matrixData recents];
@@ -81,9 +81,9 @@
 
 - (void)testRecentsOrder
 {
-    [[MatrixSDKTestsData sharedData]doMXSessionTestWihBobAndSeveralRoomsAndMessages:self readyToTest:^(MXRestClient *bobSession, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData]doMXRestClientTestWihBobAndSeveralRoomsAndMessages:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
 
-        matrixData = [[MXData alloc] initWithMatrixSession:bobSession];
+        matrixData = [[MXData alloc] initWithMatrixRestClient:bobRestClient];
         [matrixData start:^{
             
             NSArray *recents = [matrixData recents];
@@ -118,9 +118,9 @@
 
 - (void)testListenerForAllLiveEvents
 {
-    [[MatrixSDKTestsData sharedData]doMXSessionTestWihBobAndSeveralRoomsAndMessages:self readyToTest:^(MXRestClient *bobSession, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData]doMXRestClientTestWihBobAndSeveralRoomsAndMessages:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
         
-        matrixData = [[MXData alloc] initWithMatrixSession:bobSession];
+        matrixData = [[MXData alloc] initWithMatrixRestClient:bobRestClient];
         
         // The listener must catch at least these events
         __block NSMutableArray *expectedEvents =
@@ -128,7 +128,7 @@
                                          kMXEventTypeStringRoomCreate,
                                          kMXEventTypeStringRoomMember,
                                          
-                                         // Expect the 5 text messages created by doMXSessionTestWithBobAndARoomWithMessages
+                                         // Expect the 5 text messages created by doMXRestClientTestWithBobAndARoomWithMessages
                                          kMXEventTypeStringRoomMessage,
                                          kMXEventTypeStringRoomMessage,
                                          kMXEventTypeStringRoomMessage,
@@ -155,7 +155,7 @@
         // Create a room with messages in parallel
         [matrixData start:^{
             
-            [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:nil readyToTest:^(MXRestClient *bobSession, NSString *room_id, XCTestExpectation *expectation) {
+            [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:nil readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
             }];
             
         } failure:^(NSError *error) {
@@ -166,9 +166,9 @@
 
 - (void)testListenerForRoomMessageOnly
 {
-    [[MatrixSDKTestsData sharedData]doMXSessionTestWihBobAndSeveralRoomsAndMessages:self readyToTest:^(MXRestClient *bobSession, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData]doMXRestClientTestWihBobAndSeveralRoomsAndMessages:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
         
-        matrixData = [[MXData alloc] initWithMatrixSession:bobSession];
+        matrixData = [[MXData alloc] initWithMatrixRestClient:bobRestClient];
         
         // Listen to m.room.message only
         // We should not see events coming before (m.room.create, and all state events)
@@ -187,7 +187,7 @@
         // Create a room with messages in parallel
         [matrixData start:^{
             
-            [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:nil readyToTest:^(MXRestClient *bobSession, NSString *room_id, XCTestExpectation *expectation) {
+            [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:nil readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
             }];
             
         } failure:^(NSError *error) {

@@ -187,7 +187,7 @@
         {
             for (NSString *memberUserId in members.allKeys)
             {
-                if (NO == [memberUserId isEqualToString:matrixData.matrixSession.user_id])
+                if (NO == [memberUserId isEqualToString:matrixData.matrixRestClient.user_id])
                 {
                     displayname = [self memberName:memberUserId];
                     break;
@@ -198,7 +198,7 @@
         {
             NSString *otherUserId;
             
-            if (1 == members.allKeys.count && NO == [matrixData.matrixSession.user_id isEqualToString:members.allKeys[0]])
+            if (1 == members.allKeys.count && NO == [matrixData.matrixRestClient.user_id isEqualToString:members.allKeys[0]])
             {
                 otherUserId = members.allKeys[0];
             }
@@ -212,7 +212,7 @@
                 else
                 {
                     // This is a self chat
-                    otherUserId = matrixData.matrixSession.user_id;
+                    otherUserId = matrixData.matrixRestClient.user_id;
                 }
             }
             displayname = [self memberName:otherUserId];
@@ -238,7 +238,7 @@
     NSString *result;
     
     // Find the uptodate value in room state events
-    MXRoomMember *user = [self getMember:matrixData.matrixSession.user_id];
+    MXRoomMember *user = [self getMember:matrixData.matrixRestClient.user_id];
     if (user)
     {
         result = user.membership;
@@ -261,7 +261,7 @@
     // Handles messages according to their time order
     if (direction)
     {
-        // [MXSession messages] returns messages in reverse chronological order
+        // [MXRestClient messages] returns messages in reverse chronological order
         for (MXEvent *event in events) {
             [self handleMessage:event isLiveEvent:NO pagFrom:roomMessages.start];
         }
@@ -379,7 +379,7 @@
     }
     
     // Paginate from last known token
-    [matrixData.matrixSession messages:_room_id
+    [matrixData.matrixRestClient messages:_room_id
                                   from:pagEarliestToken to:nil
                                  limit:numItems
                                success:^(MXPaginationResponse *paginatedResponse) {

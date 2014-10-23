@@ -89,7 +89,7 @@ FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeEmailIdentity;
     @property (nonatomic) NSString *user_id;
 
     /**
-     The access token to open a MXSession
+     The access token to create a MXRestClient
      */
     @property (nonatomic) NSString *access_token;
 
