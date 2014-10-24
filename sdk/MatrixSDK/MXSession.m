@@ -1,0 +1,274 @@
+/*
+ Copyright 2014 OpenMarket Ltd
+ 
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+ 
+ http://www.apache.org/licenses/LICENSE-2.0
+ 
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ */
+
+#import "MXSession.h"
+#import "MatrixSDK.h"
+
+#import "MXDataEventListener.h"
+
+#define SERVER_TIMEOUT_MS 30000
+#define CLIENT_TIMEOUT_MS 40000
+#define ERR_TIMEOUT_MS    5000
+
+@interface MXSession ()
+{
+    // Rooms data
+    // The key is the room ID. The value, the MXRoomData instance.
+    NSMutableDictionary *rooms;
+    
+    // Presence data
+    // The key is the user ID. The value, the TBD instance.
+    NSMutableDictionary *presence;
+
+    // Indicates if we are streaming
+    BOOL streamingActive;
+    
+    // The list of global events listeners (`MXDataEventListener`)
+    NSMutableArray *globalEventListeners;
+}
+@end
+
+@implementation MXSession
+@synthesize matrixRestClient, eventsFilterForMessages;
+
+- (id)initWithMatrixRestClient:(MXRestClient*)mRestClient;
+{
+    self = [super init];
+    if (self)
+    {
+        matrixRestClient = mRestClient;
+        rooms = [NSMutableDictionary dictionary];
+        presence = [NSMutableDictionary dictionary];
+        
+        streamingActive = NO;
+        
+        globalEventListeners = [NSMutableArray array];
+        
+        // Define default events to consider as messages
+        eventsFilterForMessages = @[
+                                    kMXEventTypeStringRoomName,
+                                    kMXEventTypeStringRoomTopic,
+                                    kMXEventTypeStringRoomMember,
+                                    kMXEventTypeStringRoomMessage
+                                    ];
+    }
+    return self;
+}
+
+- (void)start:(void (^)())initialSyncDone
+      failure:(void (^)(NSError *error))failure
+{
+    [matrixRestClient initialSync:1 success:^(NSDictionary *JSONData) {
+         for (NSDictionary *room in JSONData[@"rooms"])
+         {
+             MXRoom *roomData = [self getOrCreateRoomData:room[@"room_id"] withJSONData:room];
+             
+             if ([room objectForKey:@"messages"])
+             {
+                 MXPaginationResponse *roomMessages =
+                 [MTLJSONAdapter modelOfClass:[MXPaginationResponse class]
+                           fromJSONDictionary:[room objectForKey:@"messages"]
+                                        error:nil];;
+                 
+                 [roomData handleMessages:roomMessages
+                             isLiveEvents:NO direction:NO];
+             }
+             if ([room objectForKey:@"state"])
+             {
+                 [roomData handleStateEvents:room[@"state"]];
+             }
+        }
+        
+        // @TODO: Manage presence
+        // And signal them with notifyListeners
+        
+        // We have data, the MXData client can start using it
+        initialSyncDone();
+        
+        // Start listening to live events
+        [self streamEventsFromToken:JSONData[@"end"]];
+     }
+     failure:^(NSError *error) {
+         failure(error);
+     }];
+}
+
+- (void)streamEventsFromToken:(NSString*)token
+{
+    streamingActive = YES;
+    
+    [matrixRestClient eventsFromToken:token serverTimeout:SERVER_TIMEOUT_MS clientTimeout:CLIENT_TIMEOUT_MS success:^(NSDictionary *JSONData) {
+        
+        if (streamingActive)
+        {
+            // Convert chunk array into an array of MXEvents
+            NSValueTransformer *transformer = [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXEvent.class];
+            NSArray *events = [transformer transformedValue:JSONData[@"chunk"]];
+            
+            // And handle them
+            [self handleLiveEvents:events];
+            
+            // Go streaming from the returned token
+            [self streamEventsFromToken:JSONData[@"end"]];
+        }
+        
+    } failure:^(NSError *error) {
+        
+       if (streamingActive)
+       {
+           // Relaunch the request later
+           dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, ERR_TIMEOUT_MS * NSEC_PER_MSEC);
+           dispatch_after(delayTime, dispatch_get_main_queue(), ^(void) {
+               
+               [self streamEventsFromToken:token];
+           });
+       }
+    }];
+}
+
+- (void)handleLiveEvents:(NSArray*)events
+{
+    for (MXEvent *event in events)
+    {
+        switch (event.eventType)
+        {
+            case MXEventTypePresence:
+                // @TODO
+                break;
+                
+            default:
+                if (event.room_id)
+                {
+                    // Make room data digest the event
+                    MXRoom *roomData = [self getOrCreateRoomData:event.room_id withJSONData:nil];
+                    [roomData handleLiveEvent:event];
+                }
+                break;
+        }
+    }
+}
+
+- (void)close
+{
+    streamingActive = NO;
+    
+    [self unregisterAllListeners];
+    
+    // @TODO: Cancel the pending eventsFromToken request
+}
+
+- (MXRoom *)getRoomData:(NSString *)room_id
+{
+    return [rooms objectForKey:room_id];
+}
+
+- (NSArray *)roomDatas
+{
+    return [rooms allValues];
+}
+
+- (MXRoom *)getOrCreateRoomData:(NSString *)room_id withJSONData:JSONData
+{
+    MXRoom *roomData = [self getRoomData:room_id];
+    if (nil == roomData)
+    {
+        roomData = [self createRoomData:room_id withJSONData:JSONData];
+    }
+    return roomData;
+}
+
+- (NSArray *)recents
+{
+    NSMutableArray *recents = [NSMutableArray arrayWithCapacity:rooms.count];
+    for (MXRoom *room in rooms.allValues)
+    {
+        if (room.lastMessage)
+        {
+            [recents addObject:room.lastMessage];
+        }
+        else
+        {
+            NSLog(@"WARNING: Ignore corrupted room (%@): no last message", room.room_id);
+        }
+    }
+    
+    // Order them by origin_server_ts
+    [recents sortUsingComparator:^NSComparisonResult(MXEvent *obj1, MXEvent *obj2) {
+        return (NSComparisonResult)(obj2.origin_server_ts - obj1.origin_server_ts);
+    }];
+    
+    return recents;
+}
+
+- (MXRoom *)createRoomData:(NSString *)room_id withJSONData:(NSDictionary*)JSONData
+{
+    MXRoom *roomData = [[MXRoom alloc] initWithRoomId:room_id andMatrixData:self andJSONData:JSONData];
+    
+    // Register global listeners for this room
+    for (MXDataEventListener *listener in globalEventListeners)
+    {
+        [listener addRoomDataToSpy:roomData];
+    }
+    
+    [rooms setObject:roomData forKey:room_id];
+    return roomData;
+}
+
+
+#pragma mark - Events listeners
+- (id)registerEventListenerForTypes:(NSArray*)types block:(MXDataEventListenerBlock)listenerBlock
+{
+    MXDataEventListener *listener = [[MXDataEventListener alloc] initWithSender:self andEventTypes:types andListenerBlock:listenerBlock];
+    
+    // This listener must be listen to all existing rooms
+    for (MXRoom *roomData in rooms.allValues)
+    {
+        [listener addRoomDataToSpy:roomData];
+    }
+    
+    [globalEventListeners addObject:listener];
+    
+    return listener;
+}
+
+- (void)unregisterListener:(id)listenerId
+{
+    // Clean the MXDataEventListener
+    MXDataEventListener *listener = (MXDataEventListener *)listenerId;
+    [listener removeAllSpiedRoomDatas];
+    
+    // Before removing it
+    [globalEventListeners removeObject:listener];
+}
+
+- (void)unregisterAllListeners
+{
+    for (MXDataEventListener *listener in globalEventListeners)
+    {
+        [self unregisterListener:listener];
+    }
+}
+
+- (void)notifyListeners:(MXEvent*)event isLiveEvent:(BOOL)isLiveEvent
+{
+    // Notify all listeners
+    for (MXEventListener *listener in globalEventListeners)
+    {
+        [listener notify:event isLiveEvent:isLiveEvent];
+    }
+}
+
+@end
