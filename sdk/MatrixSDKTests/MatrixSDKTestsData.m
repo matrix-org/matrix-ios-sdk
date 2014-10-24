@@ -180,7 +180,9 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
         } failure:^(NSError *error) {
             if ([MXError isMXError:error])
             {
-                NSString *mxPublicAlias = [NSString stringWithFormat:@"#mxPublic:%@", self.bobCredentials.home_server];
+                // @TODO: Workaround for HS weird behavior: it returns a buggy alias "#mxPublic:localhost:8480"
+                //NSString *mxPublicAlias = [NSString stringWithFormat:@"#mxPublic:%@", self.bobCredentials.home_server];
+                NSString *mxPublicAlias = [NSString stringWithFormat:@"#mxPublic:%@", @"localhost:8080"];
                 
                 // The room may already exist, try to retrieve its room id
                 [bobRestClient roomIDForRoomAlias:mxPublicAlias success:^(NSString *room_id) {
