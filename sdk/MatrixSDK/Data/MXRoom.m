@@ -187,7 +187,7 @@
         {
             for (NSString *memberUserId in members.allKeys)
             {
-                if (NO == [memberUserId isEqualToString:mxSession.matrixRestClient.user_id])
+                if (NO == [memberUserId isEqualToString:mxSession.matrixRestClient.credentials.user_id])
                 {
                     displayname = [self memberName:memberUserId];
                     break;
@@ -198,7 +198,7 @@
         {
             NSString *otherUserId;
             
-            if (1 == members.allKeys.count && NO == [mxSession.matrixRestClient.user_id isEqualToString:members.allKeys[0]])
+            if (1 == members.allKeys.count && NO == [mxSession.matrixRestClient.credentials.user_id isEqualToString:members.allKeys[0]])
             {
                 otherUserId = members.allKeys[0];
             }
@@ -212,7 +212,7 @@
                 else
                 {
                     // This is a self chat
-                    otherUserId = mxSession.matrixRestClient.user_id;
+                    otherUserId = mxSession.matrixRestClient.credentials.user_id;
                 }
             }
             displayname = [self memberName:otherUserId];
@@ -238,7 +238,7 @@
     NSString *result;
     
     // Find the uptodate value in room state events
-    MXRoomMember *user = [self getMember:mxSession.matrixRestClient.user_id];
+    MXRoomMember *user = [self getMember:mxSession.matrixRestClient.credentials.user_id];
     if (user)
     {
         result = user.membership;

@@ -31,14 +31,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
 @interface MXRestClient : NSObject
 
 @property (nonatomic, readonly) NSString *homeserver;
-@property (nonatomic, readonly) NSString *user_id;
-@property (nonatomic, readonly) NSString *access_token;
+@property (nonatomic, readonly) MXCredentials *credentials;
 
 -(id)initWithHomeServer:(NSString *)homeserver;
 
--(id)initWithHomeServer:(NSString*)homeserver
-                 userId:(NSString*)userId
-            accessToken:(NSString*)accessToken;
+-(id)initWithCredentials:(MXCredentials*)credentials;
 
 - (void)close;
 

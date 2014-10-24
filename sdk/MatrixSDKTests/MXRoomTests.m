@@ -129,10 +129,10 @@
             
             for (MXRoomMember *member in room.members)
             {
-                XCTAssertTrue([member.user_id isEqualToString:bobRestClient.user_id], "This must be mxBob");
+                XCTAssertTrue([member.user_id isEqualToString:bobRestClient.credentials.user_id], "This must be mxBob");
             }
             
-            XCTAssertNotNil([room getMember:bobRestClient.user_id], @"Bob must be retrieved");
+            XCTAssertNotNil([room getMember:bobRestClient.credentials.user_id], @"Bob must be retrieved");
             
             XCTAssertNil([room getMember:@"NonExistingUserId"], @"getMember must return nil if the user does not exist");
             
@@ -487,7 +487,7 @@
 
         // Test room the display formatting: "roomName (roomAlias)"
         XCTAssertNotNil(room.displayname);
-        XCTAssertTrue([room.displayname isEqualToString:mxSession.matrixRestClient.user_id], @"The room name must be Bob's userID as he has no displayname: %@ - %@", room.displayname, mxSession.matrixRestClient.user_id);
+        XCTAssertTrue([room.displayname isEqualToString:mxSession.matrixRestClient.credentials.user_id], @"The room name must be Bob's userID as he has no displayname: %@ - %@", room.displayname, mxSession.matrixRestClient.credentials.user_id);
         
         [expectation fulfill];
     }];

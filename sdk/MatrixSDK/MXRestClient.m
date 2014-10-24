@@ -39,23 +39,29 @@ MXAuthAction;
 @end
 
 @implementation MXRestClient
-@synthesize homeserver, access_token;
+@synthesize homeserver, credentials;
 
 -(id)initWithHomeServer:(NSString *)homeserver2
-{
-    return [self initWithHomeServer:homeserver2 userId:nil accessToken:nil];
-}
-
--(id)initWithHomeServer:(NSString *)homeserver2 userId:(NSString *)userId accessToken:(NSString *)accessToken
 {
     self = [super init];
     if (self)
     {
         homeserver = homeserver2;
-        _user_id = userId;
-        access_token = accessToken;
         
-        httpClient = [[MXHTTPClient alloc] initWithHomeServer:homeserver andAccessToken:access_token];
+        httpClient = [[MXHTTPClient alloc] initWithHomeServer:homeserver andAccessToken:nil];
+    }
+    return self;
+}
+
+-(id)initWithCredentials:(MXCredentials*)credentials2
+{
+    self = [super init];
+    if (self)
+    {
+        homeserver = credentials2.home_server;
+        credentials = credentials2;
+        
+        httpClient = [[MXHTTPClient alloc] initWithHomeServer:homeserver andAccessToken:credentials.access_token];
     }
     return self;
 }
@@ -152,9 +158,14 @@ MXAuthAction;
                        parameters:parameters
                           success:^(NSDictionary *JSONResponse)
      {
-         MXCredentials *credentials = [MTLJSONAdapter modelOfClass:[MXCredentials class]
+         // Update our credentials
+         credentials = [MTLJSONAdapter modelOfClass:[MXCredentials class]
                                                   fromJSONDictionary:JSONResponse
                                                                error:nil];
+         
+         // Workaround: HS does not return the right URL. Use the one we used to make the request
+         credentials.home_server = homeserver;
+         
          success(credentials);
      }
                           failure:^(NSError *error)
@@ -454,7 +465,7 @@ MXAuthAction;
                success:(void (^)())success
                failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"profile/%@/displayname", _user_id];
+    NSString *path = [NSString stringWithFormat:@"profile/%@/displayname", credentials.user_id];
     [httpClient requestWithMethod:@"PUT"
                            path:path
                      parameters:@{
@@ -476,7 +487,7 @@ MXAuthAction;
 {
     if (!user_id)
     {
-        user_id = _user_id;
+        user_id = credentials.user_id;
     }
     
     NSString *path = [NSString stringWithFormat:@"profile/%@/displayname", user_id];
@@ -497,7 +508,7 @@ MXAuthAction;
              success:(void (^)())success
              failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"profile/%@/avatar_url", _user_id];
+    NSString *path = [NSString stringWithFormat:@"profile/%@/avatar_url", credentials.user_id];
     [httpClient requestWithMethod:@"PUT"
                            path:path
                      parameters:@{
@@ -519,7 +530,7 @@ MXAuthAction;
 {
     if (!user_id)
     {
-        user_id = _user_id;
+        user_id = credentials.user_id;
     }
 
     NSString *path = [NSString stringWithFormat:@"profile/%@/avatar_url", user_id];

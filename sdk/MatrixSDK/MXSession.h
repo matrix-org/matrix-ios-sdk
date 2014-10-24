@@ -32,7 +32,7 @@
  */
 @interface MXSession : NSObject
 
-// The matrix REST Client to make Matrix API requests
+// The matrix REST Client used to make Matrix API requests
 @property (nonatomic, readonly) MXRestClient *matrixRestClient;
 
 /**

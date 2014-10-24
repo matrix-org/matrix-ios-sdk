@@ -114,7 +114,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
 {
     [self getBobCredentials:^{
         
-        MXRestClient *restClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL userId:self.bobCredentials.user_id accessToken:self.bobCredentials.access_token];
+        MXRestClient *restClient = [[MXRestClient alloc] initWithCredentials:self.bobCredentials];
         
         success(restClient);
     }];
@@ -134,7 +134,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
     
     [sharedData getBobCredentials:^{
         
-        MXRestClient *restClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL userId:sharedData.bobCredentials.user_id accessToken:sharedData.bobCredentials.access_token];
+        MXRestClient *restClient = [[MXRestClient alloc] initWithCredentials:self.bobCredentials];
         
         readyToTest(restClient, expectation);
         
@@ -369,7 +369,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
 {
     [self getAliceCredentials:^{
         
-        MXRestClient *restClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL userId:self.aliceCredentials.user_id accessToken:self.aliceCredentials.access_token];
+        MXRestClient *restClient = [[MXRestClient alloc] initWithCredentials:self.aliceCredentials];
         
         success(restClient);
     }];
@@ -389,7 +389,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
     
     [sharedData getAliceCredentials:^{
         
-        MXRestClient *restClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL userId:sharedData.aliceCredentials.user_id accessToken:sharedData.aliceCredentials.access_token];
+        MXRestClient *restClient = [[MXRestClient alloc] initWithCredentials:self.aliceCredentials];
         
         readyToTest(restClient, expectation);
         

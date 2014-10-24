@@ -43,8 +43,8 @@
         MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
         
         XCTAssertTrue([bobRestClient.homeserver isEqualToString:kMXTestsHomeServerURL], "bobRestClient.homeserver(%@) is wrong", bobRestClient.homeserver);
-        XCTAssertTrue([bobRestClient.user_id isEqualToString:sharedData.bobCredentials.user_id], "bobRestClient.user_id(%@) is wrong", bobRestClient.user_id);
-        XCTAssertTrue([bobRestClient.access_token isEqualToString:sharedData.bobCredentials.access_token], "bobRestClient.access_token(%@) is wrong", bobRestClient.access_token);
+        XCTAssertTrue([bobRestClient.credentials.user_id isEqualToString:sharedData.bobCredentials.user_id], "bobRestClient.user_id(%@) is wrong", bobRestClient.credentials.user_id);
+        XCTAssertTrue([bobRestClient.credentials.access_token isEqualToString:sharedData.bobCredentials.access_token], "bobRestClient.access_token(%@) is wrong", bobRestClient.credentials.access_token);
         
         [expectation fulfill];
     }];
@@ -206,7 +206,7 @@
             XCTAssertEqual(members.count, 1);
             
             MXRoomMember *roomMember = members[0];
-            XCTAssertTrue([roomMember.user_id isEqualToString:bobRestClient.user_id]);
+            XCTAssertTrue([roomMember.user_id isEqualToString:bobRestClient.credentials.user_id]);
             
             [expectation fulfill];
             
