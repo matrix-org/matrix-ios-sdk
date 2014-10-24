@@ -37,7 +37,7 @@ NSString *const kMXMessageTypeEmote     = @"m.emote";
 NSString *const kMXMessageTypeImage     = @"m.image";
 NSString *const kMXMessageTypeAudio     = @"m.audio";
 NSString *const kMXMessageTypeVideo     = @"m.video";
-NSString *const kMXMessageTypeLocation  = @"m.video";
+NSString *const kMXMessageTypeLocation  = @"m.location";
 
 NSString *const kMXMembershipInvite = @"invite";
 NSString *const kMXMembershipJoin   = @"join";
