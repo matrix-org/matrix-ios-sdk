@@ -17,7 +17,7 @@
 #import "MXDataEventListener.h"
 
 #import "MXSession.h"
-#import "MXRoomData.h"
+#import "MXRoom.h"
 
 @interface MXDataEventListener()
 {
@@ -40,19 +40,19 @@
     return self;
 }
 
-- (void)addRoomDataToSpy:(MXRoomData*)roomData
+- (void)addRoomDataToSpy:(MXRoom*)roomData
 {
     if (![roomDataEventListeners objectForKey:roomData.room_id])
     {
         roomDataEventListeners[roomData.room_id] =
-        [roomData registerEventListenerForTypes:self.eventTypes block:^(MXRoomData *roomData, MXEvent *event, BOOL isLive) {
+        [roomData registerEventListenerForTypes:self.eventTypes block:^(MXRoom *roomData, MXEvent *event, BOOL isLive) {
             self.listenerBlock(self.sender, event, isLive);
         }];
     }
 
 }
 
-- (void)removeSpiedRoomData:(MXRoomData*)roomData
+- (void)removeSpiedRoomData:(MXRoom*)roomData
 {
     if ([roomDataEventListeners objectForKey:roomData.room_id])
     {
@@ -68,7 +68,7 @@
     
     for (NSString *room_id in roomDataEventListeners)
     {
-        MXRoomData *roomData = [mxSession getRoomData:room_id];
+        MXRoom *roomData = [mxSession getRoomData:room_id];
         [roomData unregisterListener:roomDataEventListeners[roomData.room_id]];
         
     }

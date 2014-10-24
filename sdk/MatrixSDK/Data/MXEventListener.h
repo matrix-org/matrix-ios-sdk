@@ -18,7 +18,7 @@
 
 #import "MXEvent.h"
 
-@class MXRoomData;
+@class MXRoom;
 
 /**
  Block called when an event of the registered types has been handled by MXData modules.

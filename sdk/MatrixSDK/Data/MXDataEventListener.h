@@ -19,7 +19,7 @@
 #import "MXEventListener.h"
 
 @class MXSession;
-@class MXRoomData;
+@class MXRoom;
 
 /**
  Block called when an event of the registered types has been handled by the `MXRoomData` instance.
@@ -43,14 +43,14 @@ typedef void (^MXDataEventListenerBlock)(MXSession *mxSession, MXEvent *event, B
  
  @param roomData the MXRoomData to listen to.
  */
-- (void)addRoomDataToSpy:(MXRoomData*)roomData;
+- (void)addRoomDataToSpy:(MXRoom*)roomData;
 
 /**
  Stop spying to a MXRoomData events.
  
  @param roomData the MXRoomData to stop listening to.
  */
-- (void)removeSpiedRoomData:(MXRoomData*)roomData;
+- (void)removeSpiedRoomData:(MXRoom*)roomData;
 
 /**
  Stop spying to all registered MXRoomDatas.
