@@ -82,7 +82,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
     else
     {
         // First, try register the user
-        [mxRestClient registerWithUser:MXTESTS_BOB andPassword:MXTESTS_BOB_PWD success:^(MXLoginResponse *credentials) {
+        [mxRestClient registerWithUser:MXTESTS_BOB andPassword:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
             
             _bobCredentials = credentials;
             success();
@@ -93,7 +93,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
             {
                 // The user already exists. This error is normal.
                 // Log Bob in to get his keys
-                [mxRestClient loginWithUser:MXTESTS_BOB andPassword:MXTESTS_BOB_PWD success:^(MXLoginResponse *credentials) {
+                [mxRestClient loginWithUser:MXTESTS_BOB andPassword:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
                     
                     _bobCredentials = credentials;
                     success();
@@ -337,7 +337,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
     else
     {
         // First, try register the user
-        [mxRestClient registerWithUser:MXTESTS_ALICE andPassword:MXTESTS_ALICE_PWD success:^(MXLoginResponse *credentials) {
+        [mxRestClient registerWithUser:MXTESTS_ALICE andPassword:MXTESTS_ALICE_PWD success:^(MXCredentials *credentials) {
             
             _aliceCredentials = credentials;
             success();
@@ -348,7 +348,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
             {
                 // The user already exists. This error is normal.
                 // Log Bob in to get his keys
-                [mxRestClient loginWithUser:MXTESTS_ALICE andPassword:MXTESTS_ALICE_PWD success:^(MXLoginResponse *credentials) {
+                [mxRestClient loginWithUser:MXTESTS_ALICE andPassword:MXTESTS_ALICE_PWD success:^(MXCredentials *credentials) {
                     
                     _aliceCredentials = credentials;
                     success();

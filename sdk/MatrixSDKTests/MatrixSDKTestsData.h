@@ -29,7 +29,7 @@ FOUNDATION_EXPORT NSString * const kMXTestsHomeServerURL;
 
 #pragma mark - mxBob
 // Credentials for the user mxBob on the home server located at kMXTestsHomeServerURL
-@property (nonatomic, readonly) MXLoginResponse *bobCredentials;
+@property (nonatomic, readonly) MXCredentials *bobCredentials;
 
 // Get credentials asynchronously
 // The user will be created if needed
@@ -57,13 +57,13 @@ FOUNDATION_EXPORT NSString * const kMXTestsHomeServerURL;
                                             readyToTest:(void (^)(MXRestClient *bobRestClient, XCTestExpectation *expectation))readyToTest;
 
 #pragma mark - mxAlice
-@property (nonatomic, readonly) MXLoginResponse *aliceCredentials;
+@property (nonatomic, readonly) MXCredentials *aliceCredentials;
 
 - (void)getAliceCredentials:(void (^)())success;
 
 - (void)doMXRestClientTestWithAlice:(XCTestCase*)testCase
                    readyToTest:(void (^)(MXRestClient *aliceRestClient, XCTestExpectation *expectation))readyToTest;
 
-//- (void)randomCredentials:(void (^)(MXLoginResponse *randomCredentials))success;
+//- (void)randomCredentials:(void (^)(MXCredentials *randomCredentials))success;
 
 @end

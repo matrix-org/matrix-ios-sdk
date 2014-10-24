@@ -51,7 +51,7 @@
 {
     // Register the user
     [mxRestClient registerWithUser:MXTESTS_USER andPassword:MXTESTS_PWD
-                         success:^(MXLoginResponse *credentials) {
+                         success:^(MXCredentials *credentials) {
                              
                              onReady();
 
@@ -111,7 +111,7 @@
     
     // Provide an empty string as user, the HS will provide one for us
     [mxRestClient registerWithUser:@"" andPassword:MXTESTS_PWD
-                         success:^(MXLoginResponse *credentials) {
+                         success:^(MXCredentials *credentials) {
                              
                              XCTAssertNotNil(credentials);
                              XCTAssertNotNil(credentials.home_server);
@@ -135,7 +135,7 @@
     [self createTestAccount:^{
         // Register the same user
         [mxRestClient registerWithUser:MXTESTS_USER andPassword:MXTESTS_PWD
-                             success:^(MXLoginResponse *credentials) {
+                             success:^(MXCredentials *credentials) {
                                  
                                  XCTFail(@"The request should fail (User already exists)");
                                  
@@ -192,7 +192,7 @@
     
     [self createTestAccount:^{
         [mxRestClient loginWithUser:MXTESTS_USER andPassword:MXTESTS_PWD
-                          success:^(MXLoginResponse *credentials) {
+                          success:^(MXCredentials *credentials) {
                               
                               XCTAssertNotNil(credentials);
                               XCTAssertNotNil(credentials.home_server);
@@ -216,7 +216,7 @@
     
     [self createTestAccount:^{
         [mxRestClient loginWithUser:MXTESTS_USER andPassword:[NSString stringWithFormat:@"wrong%@", MXTESTS_PWD]
-                          success:^(MXLoginResponse *credentials) {
+                          success:^(MXCredentials *credentials) {
                               
                               XCTFail(@"The request should fail (Wrong password)");
                               

@@ -72,11 +72,9 @@ FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeEmailIdentity;
 
 
 /**
- `MXLoginResponse` represents the response to a login or a register request.
- Login and register requests are similar at the home server API level. That's why they 
- share the same objects.
+ `MXCredentials` represents the response to a login or a register request.
  */
-@interface MXLoginResponse : MXJSONModel
+@interface MXCredentials : MXJSONModel
 
     /**
      The home server name.

@@ -61,7 +61,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
  @param failure A block object called when the operation fails.
  */
 - (void)registerWithUser:(NSString*)user andPassword:(NSString*)password
-                 success:(void (^)(MXLoginResponse *credentials))success
+                 success:(void (^)(MXCredentials *credentials))success
                  failure:(void (^)(NSError *error))failure;
 
 
@@ -84,7 +84,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
  @param failure A block object called when the operation fails.
  */
 - (void)loginWithUser:(NSString*)user andPassword:(NSString*)password
-              success:(void (^)(MXLoginResponse *credentials))success
+              success:(void (^)(MXCredentials *credentials))success
               failure:(void (^)(NSError *error))failure;
 
 

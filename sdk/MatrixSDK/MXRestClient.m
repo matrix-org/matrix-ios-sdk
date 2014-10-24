@@ -74,7 +74,7 @@ MXAuthAction;
 }
 
 - (void)registerWithUser:(NSString*)user andPassword:(NSString*)password
-                 success:(void (^)(MXLoginResponse *credentials))success
+                 success:(void (^)(MXCredentials *credentials))success
                  failure:(void (^)(NSError *error))failure
 {
     [self registerOrLoginWithUser:MXAuthActionRegister user:user andPassword:password
@@ -90,7 +90,7 @@ MXAuthAction;
 }
 
 - (void)loginWithUser:(NSString *)user andPassword:(NSString *)password
-              success:(void (^)(MXLoginResponse *))success failure:(void (^)(NSError *))failure
+              success:(void (^)(MXCredentials *))success failure:(void (^)(NSError *))failure
 {
     [self registerOrLoginWithUser:MXAuthActionLogin user:user andPassword:password
                           success:success failure:failure];
@@ -139,7 +139,7 @@ MXAuthAction;
 }
 
 - (void)registerOrLoginWithUser:(MXAuthAction)authAction user:(NSString *)user andPassword:(NSString *)password
-                        success:(void (^)(MXLoginResponse *))success failure:(void (^)(NSError *))failure
+                        success:(void (^)(MXCredentials *))success failure:(void (^)(NSError *))failure
 {
     NSDictionary *parameters = @{
                                  @"type": kMatrixLoginFlowTypePassword,
@@ -152,7 +152,7 @@ MXAuthAction;
                        parameters:parameters
                           success:^(NSDictionary *JSONResponse)
      {
-         MXLoginResponse *credentials = [MTLJSONAdapter modelOfClass:[MXLoginResponse class]
+         MXCredentials *credentials = [MTLJSONAdapter modelOfClass:[MXCredentials class]
                                                   fromJSONDictionary:JSONResponse
                                                                error:nil];
          success(credentials);
