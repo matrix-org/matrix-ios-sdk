@@ -29,7 +29,7 @@
  @param event the new event.
  @param isLive YES if it is new event.
  */
-typedef void (^MXDataEventListenerBlock)(MXSession *matrixData, MXEvent *event, BOOL isLive);
+typedef void (^MXDataEventListenerBlock)(MXSession *mxSession, MXEvent *event, BOOL isLive);
 
 /**
  The `MXDataEventListener` class stores information about a listener to MXData events

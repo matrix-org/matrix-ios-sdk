@@ -64,11 +64,11 @@
 - (void)removeAllSpiedRoomDatas
 {
     // Here sender is the MXData instance. @TODO: not nice
-    MXSession *matrixData = (MXSession *)self.sender;
+    MXSession *mxSession = (MXSession *)self.sender;
     
     for (NSString *room_id in roomDataEventListeners)
     {
-        MXRoomData *roomData = [matrixData getRoomData:room_id];
+        MXRoomData *roomData = [mxSession getRoomData:room_id];
         [roomData unregisterListener:roomDataEventListeners[roomData.room_id]];
         
     }

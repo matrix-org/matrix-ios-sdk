@@ -20,7 +20,7 @@
 
 @interface MXRoomData ()
 {
-    MXSession *matrixData;
+    MXSession *mxSession;
     NSMutableArray *messages;
     NSMutableDictionary *stateEvents;
     NSMutableDictionary *members;
@@ -47,17 +47,17 @@
 
 @implementation MXRoomData
 
-- (id)initWithRoomId:(NSString *)room_id andMatrixData:(MXSession *)matrixData2
+- (id)initWithRoomId:(NSString *)room_id andMatrixData:(MXSession *)mxSession2
 {
-    return [self initWithRoomId:room_id andMatrixData:matrixData2 andJSONData:nil];
+    return [self initWithRoomId:room_id andMatrixData:mxSession2 andJSONData:nil];
 }
 
-- (id)initWithRoomId:(NSString *)room_id andMatrixData:(MXSession *)matrixData2 andJSONData:(NSDictionary*)JSONData
+- (id)initWithRoomId:(NSString *)room_id andMatrixData:(MXSession *)mxSession2 andJSONData:(NSDictionary*)JSONData
 {
     self = [super init];
     if (self)
     {
-        matrixData = matrixData2;
+        mxSession = mxSession2;
         
         _room_id = room_id;
         messages = [NSMutableArray array];
@@ -187,7 +187,7 @@
         {
             for (NSString *memberUserId in members.allKeys)
             {
-                if (NO == [memberUserId isEqualToString:matrixData.matrixRestClient.user_id])
+                if (NO == [memberUserId isEqualToString:mxSession.matrixRestClient.user_id])
                 {
                     displayname = [self memberName:memberUserId];
                     break;
@@ -198,7 +198,7 @@
         {
             NSString *otherUserId;
             
-            if (1 == members.allKeys.count && NO == [matrixData.matrixRestClient.user_id isEqualToString:members.allKeys[0]])
+            if (1 == members.allKeys.count && NO == [mxSession.matrixRestClient.user_id isEqualToString:members.allKeys[0]])
             {
                 otherUserId = members.allKeys[0];
             }
@@ -212,7 +212,7 @@
                 else
                 {
                     // This is a self chat
-                    otherUserId = matrixData.matrixRestClient.user_id;
+                    otherUserId = mxSession.matrixRestClient.user_id;
                 }
             }
             displayname = [self memberName:otherUserId];
@@ -238,7 +238,7 @@
     NSString *result;
     
     // Find the uptodate value in room state events
-    MXRoomMember *user = [self getMember:matrixData.matrixRestClient.user_id];
+    MXRoomMember *user = [self getMember:mxSession.matrixRestClient.user_id];
     if (user)
     {
         result = user.membership;
@@ -287,7 +287,7 @@
 - (void)handleMessage:(MXEvent*)event isLiveEvent:(BOOL)isLiveEvent pagFrom:(NSString*)pagFrom
 {
     // Put only expected messages into `messages`
-    if (NSNotFound != [matrixData.eventsFilterForMessages indexOfObject:event.type])
+    if (NSNotFound != [mxSession.eventsFilterForMessages indexOfObject:event.type])
     {
         if (isLiveEvent)
         {
@@ -379,7 +379,7 @@
     }
     
     // Paginate from last known token
-    [matrixData.matrixRestClient messages:_room_id
+    [mxSession.matrixRestClient messages:_room_id
                                   from:pagEarliestToken to:nil
                                  limit:numItems
                                success:^(MXPaginationResponse *paginatedResponse) {
@@ -411,7 +411,7 @@
             for (NSInteger i = paginatedResponse.chunk.count - 1; i >= 0; i--)
             {
                 MXEvent *event = paginatedResponse.chunk[i];
-                if (NSNotFound != [matrixData.eventsFilterForMessages indexOfObject:event.type])
+                if (NSNotFound != [mxSession.eventsFilterForMessages indexOfObject:event.type])
                 {
                     [filteredChunk addObject:event];
                 }

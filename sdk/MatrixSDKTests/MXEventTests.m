@@ -23,7 +23,7 @@
 
 @interface MXEventTests : XCTestCase
 {
-    MXSession *matrixData;
+    MXSession *mxSession;
 }
 
 @end
@@ -36,10 +36,10 @@
 }
 
 - (void)tearDown {
-    if (matrixData)
+    if (mxSession)
     {
-        [matrixData close];
-        matrixData = nil;
+        [mxSession close];
+        mxSession = nil;
     }
     [super tearDown];
 }
@@ -49,10 +49,10 @@
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
         
-        matrixData = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         
-        [matrixData start:^{
-            MXRoomData *roomData = [matrixData getRoomData:room_id];
+        [mxSession start:^{
+            MXRoomData *roomData = [mxSession getRoomData:room_id];
             
             for (MXEvent *stateEvent in roomData.stateEvents)
             {

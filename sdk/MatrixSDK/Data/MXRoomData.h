@@ -92,9 +92,9 @@ typedef void (^MXRoomDataEventListenerBlock)(MXRoomData *roomData, MXEvent *even
 @property (nonatomic, readonly) BOOL canPaginate;
 
 
-- (id)initWithRoomId:(NSString*)room_id andMatrixData:(MXSession*)matrixData;
+- (id)initWithRoomId:(NSString*)room_id andMatrixData:(MXSession*)mxSession;
 
-- (id)initWithRoomId:(NSString*)room_id andMatrixData:(MXSession*)matrixData andJSONData:(NSDictionary*)JSONData;
+- (id)initWithRoomId:(NSString*)room_id andMatrixData:(MXSession*)mxSession andJSONData:(NSDictionary*)JSONData;
 
 - (void)handleMessages:(MXPaginationResponse*)roomMessages
           isLiveEvents:(BOOL)isLiveEvents
@@ -135,7 +135,7 @@ typedef void (^MXRoomDataEventListenerBlock)(MXRoomData *roomData, MXEvent *even
  Register a listener for some types of events.
  
  To get only notifications for events that modify the `messages` property, use 
- matrixData.eventsFilterForMessages as types parameter.
+ mxSession.eventsFilterForMessages as types parameter.
  
  @param types an array of event types strings (MXEventTypeString). nil to listen to all events.
  @param listenerBlock the block that will called once a new event has been handled.
