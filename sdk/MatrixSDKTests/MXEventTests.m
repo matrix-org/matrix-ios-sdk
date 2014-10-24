@@ -19,11 +19,11 @@
 
 #import "MatrixSDKTestsData.h"
 
-#import "MXData.h"
+#import "MXSession.h"
 
 @interface MXEventTests : XCTestCase
 {
-    MXData *matrixData;
+    MXSession *matrixData;
 }
 
 @end
@@ -49,7 +49,7 @@
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
         
-        matrixData = [[MXData alloc] initWithMatrixRestClient:bobRestClient];
+        matrixData = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         
         [matrixData start:^{
             MXRoomData *roomData = [matrixData getRoomData:room_id];

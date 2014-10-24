@@ -16,7 +16,7 @@
 
 #import "MXDataEventListener.h"
 
-#import "MXData.h"
+#import "MXSession.h"
 #import "MXRoomData.h"
 
 @interface MXDataEventListener()
@@ -64,7 +64,7 @@
 - (void)removeAllSpiedRoomDatas
 {
     // Here sender is the MXData instance. @TODO: not nice
-    MXData *matrixData = (MXData *)self.sender;
+    MXSession *matrixData = (MXSession *)self.sender;
     
     for (NSString *room_id in roomDataEventListeners)
     {

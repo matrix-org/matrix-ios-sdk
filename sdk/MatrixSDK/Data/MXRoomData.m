@@ -16,11 +16,11 @@
 
 #import "MXRoomData.h"
 
-#import "MXData.h"
+#import "MXSession.h"
 
 @interface MXRoomData ()
 {
-    MXData *matrixData;
+    MXSession *matrixData;
     NSMutableArray *messages;
     NSMutableDictionary *stateEvents;
     NSMutableDictionary *members;
@@ -47,12 +47,12 @@
 
 @implementation MXRoomData
 
-- (id)initWithRoomId:(NSString *)room_id andMatrixData:(MXData *)matrixData2
+- (id)initWithRoomId:(NSString *)room_id andMatrixData:(MXSession *)matrixData2
 {
     return [self initWithRoomId:room_id andMatrixData:matrixData2 andJSONData:nil];
 }
 
-- (id)initWithRoomId:(NSString *)room_id andMatrixData:(MXData *)matrixData2 andJSONData:(NSDictionary*)JSONData
+- (id)initWithRoomId:(NSString *)room_id andMatrixData:(MXSession *)matrixData2 andJSONData:(NSDictionary*)JSONData
 {
     self = [super init];
     if (self)

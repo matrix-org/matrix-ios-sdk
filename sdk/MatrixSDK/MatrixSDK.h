@@ -23,5 +23,5 @@ FOUNDATION_EXPORT double MatrixSDKVersionNumber;
 FOUNDATION_EXPORT const unsigned char MatrixSDKVersionString[];
 
 #import <MatrixSDK/MXRestClient.h>
-#import <MatrixSDK/MXData.h>
+#import <MatrixSDK/MXSession.h>
 #import <MatrixSDK/MXError.h>

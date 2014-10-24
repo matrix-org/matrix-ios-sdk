@@ -20,7 +20,7 @@
 #import "MXJSONModels.h"
 #import "MXEventListener.h"
 
-@class MXData;
+@class MXSession;
 
 /**
  Block called when an event of the registered types has been handled by the `MXRoomData` instance.
@@ -92,9 +92,9 @@ typedef void (^MXRoomDataEventListenerBlock)(MXRoomData *roomData, MXEvent *even
 @property (nonatomic, readonly) BOOL canPaginate;
 
 
-- (id)initWithRoomId:(NSString*)room_id andMatrixData:(MXData*)matrixData;
+- (id)initWithRoomId:(NSString*)room_id andMatrixData:(MXSession*)matrixData;
 
-- (id)initWithRoomId:(NSString*)room_id andMatrixData:(MXData*)matrixData andJSONData:(NSDictionary*)JSONData;
+- (id)initWithRoomId:(NSString*)room_id andMatrixData:(MXSession*)matrixData andJSONData:(NSDictionary*)JSONData;
 
 - (void)handleMessages:(MXPaginationResponse*)roomMessages
           isLiveEvents:(BOOL)isLiveEvents
