@@ -52,7 +52,7 @@
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         
         [mxSession start:^{
-            MXRoom *room = [mxSession getRoomData:room_id];
+            MXRoom *room = [mxSession room:room_id];
             
             for (MXEvent *stateEvent in room.stateEvents)
             {

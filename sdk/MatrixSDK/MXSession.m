@@ -17,7 +17,7 @@
 #import "MXSession.h"
 #import "MatrixSDK.h"
 
-#import "MXDataEventListener.h"
+#import "MXSessionEventListener.h"
 
 #define SERVER_TIMEOUT_MS 30000
 #define CLIENT_TIMEOUT_MS 40000
@@ -26,7 +26,7 @@
 @interface MXSession ()
 {
     // Rooms data
-    // The key is the room ID. The value, the MXRoomData instance.
+    // The key is the room ID. The value, the MXRoom instance.
     NSMutableDictionary *rooms;
     
     // Presence data
@@ -36,7 +36,7 @@
     // Indicates if we are streaming
     BOOL streamingActive;
     
-    // The list of global events listeners (`MXDataEventListener`)
+    // The list of global events listeners (`MXSessionEventListener`)
     NSMutableArray *globalEventListeners;
 }
 @end
@@ -74,7 +74,7 @@
     [matrixRestClient initialSync:1 success:^(NSDictionary *JSONData) {
          for (NSDictionary *roomDict in JSONData[@"rooms"])
          {
-             MXRoom *room = [self getOrCreateRoomData:roomDict[@"room_id"] withJSONData:roomDict];
+             MXRoom *room = [self getOrCreateRoom:roomDict[@"room_id"] withJSONData:roomDict];
              
              if ([roomDict objectForKey:@"messages"])
              {
@@ -95,7 +95,7 @@
         // @TODO: Manage presence
         // And signal them with notifyListeners
         
-        // We have data, the MXData client can start using it
+        // We have data, the SDK user can start using it
         initialSyncDone();
         
         // Start listening to live events
@@ -153,7 +153,7 @@
                 if (event.room_id)
                 {
                     // Make room data digest the event
-                    MXRoom *room = [self getOrCreateRoomData:event.room_id withJSONData:nil];
+                    MXRoom *room = [self getOrCreateRoom:event.room_id withJSONData:nil];
                     [room handleLiveEvent:event];
                 }
                 break;
@@ -170,7 +170,7 @@
     // @TODO: Cancel the pending eventsFromToken request
 }
 
-- (MXRoom *)getRoomData:(NSString *)room_id
+- (MXRoom *)room:(NSString *)room_id
 {
     return [rooms objectForKey:room_id];
 }
@@ -180,12 +180,12 @@
     return [rooms allValues];
 }
 
-- (MXRoom *)getOrCreateRoomData:(NSString *)room_id withJSONData:JSONData
+- (MXRoom *)getOrCreateRoom:(NSString *)room_id withJSONData:JSONData
 {
-    MXRoom *room = [self getRoomData:room_id];
+    MXRoom *room = [self room:room_id];
     if (nil == room)
     {
-        room = [self createRoomData:room_id withJSONData:JSONData];
+        room = [self createRoom:room_id withJSONData:JSONData];
     }
     return room;
 }
@@ -213,14 +213,14 @@
     return recents;
 }
 
-- (MXRoom *)createRoomData:(NSString *)room_id withJSONData:(NSDictionary*)JSONData
+- (MXRoom *)createRoom:(NSString *)room_id withJSONData:(NSDictionary*)JSONData
 {
-    MXRoom *room = [[MXRoom alloc] initWithRoomId:room_id andMatrixData:self andJSONData:JSONData];
+    MXRoom *room = [[MXRoom alloc] initWithRoomId:room_id andMatrixSession:self andJSONData:JSONData];
     
     // Register global listeners for this room
-    for (MXDataEventListener *listener in globalEventListeners)
+    for (MXSessionEventListener *listener in globalEventListeners)
     {
-        [listener addRoomDataToSpy:room];
+        [listener addRoomToSpy:room];
     }
     
     [rooms setObject:room forKey:room_id];
@@ -229,14 +229,14 @@
 
 
 #pragma mark - Events listeners
-- (id)registerEventListenerForTypes:(NSArray*)types block:(MXDataEventListenerBlock)listenerBlock
+- (id)registerEventListenerForTypes:(NSArray*)types block:(MXSessionEventListenerBlock)listenerBlock
 {
-    MXDataEventListener *listener = [[MXDataEventListener alloc] initWithSender:self andEventTypes:types andListenerBlock:listenerBlock];
+    MXSessionEventListener *listener = [[MXSessionEventListener alloc] initWithSender:self andEventTypes:types andListenerBlock:listenerBlock];
     
     // This listener must be listen to all existing rooms
     for (MXRoom *room in rooms.allValues)
     {
-        [listener addRoomDataToSpy:room];
+        [listener addRoomToSpy:room];
     }
     
     [globalEventListeners addObject:listener];
@@ -246,9 +246,9 @@
 
 - (void)unregisterListener:(id)listenerId
 {
-    // Clean the MXDataEventListener
-    MXDataEventListener *listener = (MXDataEventListener *)listenerId;
-    [listener removeAllSpiedRoomDatas];
+    // Clean the MXSessionEventListener
+    MXSessionEventListener *listener = (MXSessionEventListener *)listenerId;
+    [listener removeAllSpiedRooms];
     
     // Before removing it
     [globalEventListeners removeObject:listener];
@@ -256,7 +256,7 @@
 
 - (void)unregisterAllListeners
 {
-    for (MXDataEventListener *listener in globalEventListeners)
+    for (MXSessionEventListener *listener in globalEventListeners)
     {
         [self unregisterListener:listener];
     }

@@ -57,7 +57,7 @@ FOUNDATION_EXPORT NSString *const kMXErrCodeStringBadPagination;
  
  @param nsError The NSError object that is supposed to contain MXError data in its userInfo.
  
- @return The newly-initialized MXError. nil if nsError does not contain MXData.
+ @return The newly-initialized MXError. nil if nsError does not contain MXError information.
  */
 - (id)initWithNSError:(NSError*)nsError;
 

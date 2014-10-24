@@ -22,39 +22,39 @@
 @class MXRoom;
 
 /**
- Block called when an event of the registered types has been handled by the `MXRoomData` instance.
+ Block called when an event of the registered types has been handled by the `MXRoom` instance.
  This is a specialisation of the `MXEventListenerBlock`.
  
- @param room the `MXRoomData` that handled the event.
+ @param room the `MXRoom` that handled the event.
  @param event the new event.
  @param isLive YES if it is new event.
  */
-typedef void (^MXDataEventListenerBlock)(MXSession *mxSession, MXEvent *event, BOOL isLive);
+typedef void (^MXSessionEventListenerBlock)(MXSession *mxSession, MXEvent *event, BOOL isLive);
 
 /**
- The `MXDataEventListener` class stores information about a listener to MXData events
+ The `MXSessionEventListener` class stores information about a listener to MXSession events
  Such listener is called here global listener since it listens to all events and not the ones limited to a room.
  */
-@interface MXDataEventListener : MXEventListener
+@interface MXSessionEventListener : MXEventListener
 
 
 /**
- Add a MXRoomData the MXDataEventListener must listen to events from.
+ Add a MXRoom the MXSessionEventListener must listen to events from.
  
- @param room the MXRoomData to listen to.
+ @param room the MXRoom to listen to.
  */
-- (void)addRoomDataToSpy:(MXRoom*)room;
+- (void)addRoomToSpy:(MXRoom*)room;
 
 /**
- Stop spying to a MXRoomData events.
+ Stop spying to a MXRoom events.
  
- @param room the MXRoomData to stop listening to.
+ @param room the MXRoom to stop listening to.
  */
-- (void)removeSpiedRoomData:(MXRoom*)room;
+- (void)removeSpiedRoom:(MXRoom*)room;
 
 /**
- Stop spying to all registered MXRoomDatas.
+ Stop spying to all registered MXRooms.
  */
-- (void)removeAllSpiedRoomDatas;
+- (void)removeAllSpiedRooms;
 
 @end

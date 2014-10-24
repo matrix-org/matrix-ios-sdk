@@ -23,17 +23,17 @@
 @class MXSession;
 
 /**
- Block called when an event of the registered types has been handled by the `MXRoomData` instance.
+ Block called when an event of the registered types has been handled by the `MXRoom` instance.
  This is a specialisation of the `MXEventListenerBlock`.
  
- @param room the `MXRoomData` that handled the event.
+ @param room the `MXRoom` that handled the event.
  @param event the new event.
  @param isLive YES if it is new event.
  */
-typedef void (^MXRoomDataEventListenerBlock)(MXRoom *room, MXEvent *event, BOOL isLive);
+typedef void (^MXRoomEventListenerBlock)(MXRoom *room, MXEvent *event, BOOL isLive);
 
 /**
- `MXRoomData` is the storage class for the room data.
+ `MXRoom` is the class
  */
 @interface MXRoom : NSObject
 
@@ -92,9 +92,9 @@ typedef void (^MXRoomDataEventListenerBlock)(MXRoom *room, MXEvent *event, BOOL 
 @property (nonatomic, readonly) BOOL canPaginate;
 
 
-- (id)initWithRoomId:(NSString*)room_id andMatrixData:(MXSession*)mxSession;
+- (id)initWithRoomId:(NSString*)room_id andMatrixSession:(MXSession*)mxSession;
 
-- (id)initWithRoomId:(NSString*)room_id andMatrixData:(MXSession*)mxSession andJSONData:(NSDictionary*)JSONData;
+- (id)initWithRoomId:(NSString*)room_id andMatrixSession:(MXSession*)mxSession andJSONData:(NSDictionary*)JSONData;
 
 - (void)handleMessages:(MXPaginationResponse*)roomMessages
           isLiveEvents:(BOOL)isLiveEvents
@@ -111,7 +111,7 @@ typedef void (^MXRoomDataEventListenerBlock)(MXRoom *room, MXEvent *event, BOOL 
 
 /**
  Get more messages from the past.
- The MXRoomData `messages` property will be updated in case of successful response.
+ The MXRoom `messages` property will be updated in case of successful response.
  
  @param numItems the number of items to get.
  @param success A block object called when the operation succeeds. It provides an array of retrieved
@@ -141,7 +141,7 @@ typedef void (^MXRoomDataEventListenerBlock)(MXRoom *room, MXEvent *event, BOOL 
  @param listenerBlock the block that will called once a new event has been handled.
  @return a reference to use to unregister the listener
  */
-- (id)registerEventListenerForTypes:(NSArray*)types block:(MXRoomDataEventListenerBlock)listenerBlock;
+- (id)registerEventListenerForTypes:(NSArray*)types block:(MXRoomEventListenerBlock)listenerBlock;
 
 /**
  Unregister a listener.

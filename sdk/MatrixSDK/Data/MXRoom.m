@@ -47,12 +47,12 @@
 
 @implementation MXRoom
 
-- (id)initWithRoomId:(NSString *)room_id andMatrixData:(MXSession *)mxSession2
+- (id)initWithRoomId:(NSString *)room_id andMatrixSession:(MXSession *)mxSession2
 {
-    return [self initWithRoomId:room_id andMatrixData:mxSession2 andJSONData:nil];
+    return [self initWithRoomId:room_id andMatrixSession:mxSession2 andJSONData:nil];
 }
 
-- (id)initWithRoomId:(NSString *)room_id andMatrixData:(MXSession *)mxSession2 andJSONData:(NSDictionary*)JSONData
+- (id)initWithRoomId:(NSString *)room_id andMatrixSession:(MXSession *)mxSession2 andJSONData:(NSDictionary*)JSONData
 {
     self = [super init];
     if (self)
@@ -452,7 +452,7 @@
 
 
 #pragma mark - Events listeners
-- (id)registerEventListenerForTypes:(NSArray*)types block:(MXRoomDataEventListenerBlock)listenerBlock
+- (id)registerEventListenerForTypes:(NSArray*)types block:(MXRoomEventListenerBlock)listenerBlock
 {
     MXEventListener *listener = [[MXEventListener alloc] initWithSender:self andEventTypes:types andListenerBlock:listenerBlock];
     

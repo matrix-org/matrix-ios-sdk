@@ -37,7 +37,7 @@
     @property (nonatomic) NSUInteger num_joined_members;
 
     // The display name is computed from available information
-    // @TODO: move it to MXData as this class has additional information to compute the optimal display name
+    // @TODO: move it to MXSession as this class has additional information to compute the optimal display name
     @property (nonatomic, readonly) NSString *displayname;
 
 @end

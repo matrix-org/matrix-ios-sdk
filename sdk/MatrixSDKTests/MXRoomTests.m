@@ -45,14 +45,14 @@
     [super tearDown];
 }
 
-- (void)doMXRoomDataTestWithBobAndARoomWithMessages:(void (^)(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation))readyToTest
+- (void)doMXRoomTestWithBobAndARoomWithMessages:(void (^)(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation))readyToTest
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         
         [mxSession start:^{
-            MXRoom *room = [mxSession getRoomData:room_id];
+            MXRoom *room = [mxSession room:room_id];
             
             readyToTest(mxSession, room, expectation);
             
@@ -62,14 +62,14 @@
     }];
 }
 
-- (void)doMXRoomDataTestWithBobAndThePublicRoom:(void (^)(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation))readyToTest
+- (void)doMXRoomTestWithBobAndThePublicRoom:(void (^)(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation))readyToTest
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndThePublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         
         [mxSession start:^{
-            MXRoom *room = [mxSession getRoomData:room_id];
+            MXRoom *room = [mxSession room:room_id];
             
             readyToTest(mxSession, room, expectation);
             
@@ -96,7 +96,7 @@
 
 - (void)testIsPublic
 {
-    [self doMXRoomDataTestWithBobAndThePublicRoom:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [self doMXRoomTestWithBobAndThePublicRoom:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
         
         XCTAssertTrue(room.isPublic, @"The room must be public");
             
@@ -106,7 +106,7 @@
 
 - (void)testIsPublicForAPrivateRoom
 {
-    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [self doMXRoomTestWithBobAndARoomWithMessages:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
         
         XCTAssertFalse(room.isPublic, @"This room must be private");
         
@@ -121,7 +121,7 @@
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         [mxSession start:^{
             
-            MXRoom *room = [mxSession getRoomData:room_id];
+            MXRoom *room = [mxSession room:room_id];
             XCTAssertNotNil(room);
             
             NSArray *members = room.members;
@@ -147,7 +147,7 @@
 
 - (void)testMemberName
 {
-    [self doMXRoomDataTestWithBobAndThePublicRoom:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [self doMXRoomTestWithBobAndThePublicRoom:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
         
         MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
         
@@ -165,7 +165,7 @@
 
 - (void)testMessagesPropertyCopy
 {
-    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [self doMXRoomTestWithBobAndARoomWithMessages:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
         
         NSArray *messagesBeforePagination = room.messages;
         
@@ -195,7 +195,7 @@
 
 - (void)testMessagesOrder
 {
-    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [self doMXRoomTestWithBobAndARoomWithMessages:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
         
         [room paginateBackMessages:100 success:^(NSArray *messages) {
             
@@ -225,7 +225,7 @@
 
 - (void)testMessagesFilter
 {
-    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+    [self doMXRoomTestWithBobAndARoomWithMessages:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
         mxSession = mxSession2;
         
@@ -250,7 +250,7 @@
 
 - (void)testPaginateBack
 {
-    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [self doMXRoomTestWithBobAndARoomWithMessages:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
         
         NSArray *messagesBeforePagination = room.messages;
         
@@ -273,7 +273,7 @@
 
 - (void)testPaginateBackFilter
 {
-    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+    [self doMXRoomTestWithBobAndARoomWithMessages:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
         mxSession = mxSession2;
         
@@ -297,7 +297,7 @@
 
 - (void)testPaginateBackOrder
 {
-    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [self doMXRoomTestWithBobAndARoomWithMessages:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
         
         [room paginateBackMessages:100 success:^(NSArray *messages) {
             
@@ -326,7 +326,7 @@
 
 - (void)testPaginateBackDuplicates
 {
-    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [self doMXRoomTestWithBobAndARoomWithMessages:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
         
         [room paginateBackMessages:100 success:^(NSArray *messages) {
             
@@ -345,12 +345,12 @@
 
 - (void)testPaginateBackWithNoInitialSync
 {
-    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+    [self doMXRoomTestWithBobAndARoomWithMessages:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
         mxSession = mxSession2;
         
-        // Instantiate another MXRoomData object and test pagination from cold
-        MXRoom *room2 = [[MXRoom alloc] initWithRoomId:room.room_id andMatrixData:mxSession];
+        // Instantiate another MXRoom object and test pagination from cold
+        MXRoom *room2 = [[MXRoom alloc] initWithRoomId:room.room_id andMatrixSession:mxSession];
         
         XCTAssertEqual(room2.messages.count, 0, @"No initialSync means no data");
         
@@ -371,14 +371,14 @@
 
 - (void)testSeveralPaginateBacks
 {
-    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+    [self doMXRoomTestWithBobAndARoomWithMessages:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
         [room paginateBackMessages:100 success:^(NSArray *messages) {
             
             mxSession = mxSession2;
 
-            // Use another MXRoomData instance to do pagination in several times
-            MXRoom *room2 = [[MXRoom alloc] initWithRoomId:room.room_id andMatrixData:mxSession];
+            // Use another MXRoom instance to do pagination in several times
+            MXRoom *room2 = [[MXRoom alloc] initWithRoomId:room.room_id andMatrixSession:mxSession];
             
             // The several paginations
             [room2 paginateBackMessages:2 success:^(NSArray *messages) {
@@ -423,7 +423,7 @@
 
 - (void)testCanPaginate
 {
-    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [self doMXRoomTestWithBobAndARoomWithMessages:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
         
         XCTAssertTrue(room.canPaginate, @"We can always paginate at the beginning");
         
@@ -442,7 +442,7 @@
 
 - (void)testStateEvents
 {
-    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [self doMXRoomTestWithBobAndARoomWithMessages:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
         
         XCTAssertNotNil(room.stateEvents);
         XCTAssertGreaterThan(room.stateEvents.count, 0);
@@ -453,7 +453,7 @@
 
 - (void)testAliases
 {
-    [self doMXRoomDataTestWithBobAndThePublicRoom:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [self doMXRoomTestWithBobAndThePublicRoom:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
         
         XCTAssertNotNil(room.aliases);
         XCTAssertGreaterThanOrEqual(room.aliases.count, 1);
@@ -469,7 +469,7 @@
 // Test the room display name formatting: "roomName (roomAlias)"
 - (void)testDisplayName1
 {
-    [self doMXRoomDataTestWithBobAndThePublicRoom:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [self doMXRoomTestWithBobAndThePublicRoom:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
         
         XCTAssertNotNil(room.displayname);
         XCTAssertTrue([room.displayname hasPrefix:@"MX Public Room test (#mxPublic:"], @"We must retrieve the #mxPublic room settings");
@@ -481,7 +481,7 @@
 // Test the room display name formatting: "userID" (self chat)
 - (void)testDisplayName2
 {
-    [self doMXRoomDataTestWithBobAndARoomWithMessages:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+    [self doMXRoomTestWithBobAndARoomWithMessages:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
         mxSession = mxSession2;
 
@@ -495,7 +495,7 @@
 
 - (void)testListenerForAllLiveEvents
 {
-    [self doMXRoomDataTestWithBobAndThePublicRoom:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [self doMXRoomTestWithBobAndThePublicRoom:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
         
         __block NSString *messageEventID;
         
@@ -531,7 +531,7 @@
 
 - (void)testListenerForRoomMessageLiveEvents
 {
-    [self doMXRoomDataTestWithBobAndThePublicRoom:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [self doMXRoomTestWithBobAndThePublicRoom:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
         
         __block NSString *messageEventID;
         

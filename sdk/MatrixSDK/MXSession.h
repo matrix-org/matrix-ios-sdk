@@ -18,7 +18,7 @@
 
 #import "MXRestClient.h"
 #import "MXRoom.h"
-#import "MXDataEventListener.h"
+#import "MXSessionEventListener.h"
 
 /**
  `MXSession` manages data and events from the home server
@@ -27,7 +27,7 @@
     - storing them
     - serving them to the app
  
- `MXData` maintains an array of messages per room. The term message designates either
+ `MXRoom` maintains an array of messages per room. The term message designates either
   a non-state or a state event that is intended to be displayed in a room chat history.
  */
 @interface MXSession : NSObject
@@ -36,7 +36,7 @@
 @property (nonatomic, readonly) MXRestClient *matrixRestClient;
 
 /**
- An array of `MXEventTypeString` indicating which events must be stored as messages in MXData and its MXDataRoom.
+ An array of `MXEventTypeString` indicating which events must be stored as messages in MXSession and its MXRooms.
  By default, this list contains some event types like:
      - kMXEventTypeStringRoomMessage to display messages texts, images, etc.
      - kMXEventTypeStringRoomMember to display user membership changes in the history
@@ -45,12 +45,12 @@
 @property (nonatomic, copy) NSArray *eventsFilterForMessages;
 
 /**
- Create a MXData instance.
+ Create a MXSession instance.
  This instance will use the passed MXRestClient to make requests to the home server.
  
  @param mRestClient The MXRestClient to the home server.
  
- @return The newly-initialized MXData.
+ @return The newly-initialized MXSession.
  */
 - (id)initWithMatrixRestClient:(MXRestClient*)mRestClient;
 
@@ -76,18 +76,18 @@
 
 
 /**
- Get the MXRoomData instance of a room.
+ Get the MXRoom instance of a room.
  
  @param room_id The room id to the room.
 
- @return the MXRoomData instance.
+ @return the MXRoom instance.
  */
-- (MXRoom *)getRoomData:(NSString*)room_id;
+- (MXRoom *)room:(NSString*)room_id;
 
 /**
  Get the list of all rooms data.
  
- @return an array of MXRoomData.
+ @return an array of MXRooms.
  */
 - (NSArray*)rooms;
 
@@ -111,7 +111,7 @@
  @param listenerBlock the block that will called once a new event has been handled.
  @return a reference to use to unregister the listener
  */
-- (id)registerEventListenerForTypes:(NSArray*)types block:(MXDataEventListenerBlock)listenerBlock;
+- (id)registerEventListenerForTypes:(NSArray*)types block:(MXSessionEventListenerBlock)listenerBlock;
 
 /**
  Unregister a listener.

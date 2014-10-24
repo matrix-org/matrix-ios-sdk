@@ -21,9 +21,9 @@
 @class MXRoom;
 
 /**
- Block called when an event of the registered types has been handled by MXData modules.
+ Block called when an event of the registered types has been handled by the Matrix SDK.
  
- @param sender the object that handled the event (`MXData` or `MXRoomData` instance)
+ @param sender the object that handled the event (`MXSession` or `MXRoom` instance)
  @param event the new event.
  @param isLive YES if it is new event.
  */
@@ -31,7 +31,7 @@ typedef void (^MXEventListenerBlock)(id sender, MXEvent *event, BOOL isLive);
 
 /**
  The `MXEventListener` class stores information about a listener to MXEvents that
- are handled by MXData modules.
+ are handled by the Matrix SDK.
  */
 @interface MXEventListener : NSObject
 
