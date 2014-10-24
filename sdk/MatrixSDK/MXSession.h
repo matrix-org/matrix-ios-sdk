@@ -89,7 +89,7 @@
  
  @return an array of MXRoomData.
  */
-- (NSArray*)roomDatas;
+- (NSArray*)rooms;
 
 /**
  Get the list of all last message of all rooms.

@@ -26,11 +26,11 @@
  Block called when an event of the registered types has been handled by the `MXRoomData` instance.
  This is a specialisation of the `MXEventListenerBlock`.
  
- @param roomData the `MXRoomData` that handled the event.
+ @param room the `MXRoomData` that handled the event.
  @param event the new event.
  @param isLive YES if it is new event.
  */
-typedef void (^MXRoomDataEventListenerBlock)(MXRoom *roomData, MXEvent *event, BOOL isLive);
+typedef void (^MXRoomDataEventListenerBlock)(MXRoom *room, MXEvent *event, BOOL isLive);
 
 /**
  `MXRoomData` is the storage class for the room data.

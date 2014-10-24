@@ -25,7 +25,7 @@
  Block called when an event of the registered types has been handled by the `MXRoomData` instance.
  This is a specialisation of the `MXEventListenerBlock`.
  
- @param roomData the `MXRoomData` that handled the event.
+ @param room the `MXRoomData` that handled the event.
  @param event the new event.
  @param isLive YES if it is new event.
  */
@@ -41,16 +41,16 @@ typedef void (^MXDataEventListenerBlock)(MXSession *mxSession, MXEvent *event, B
 /**
  Add a MXRoomData the MXDataEventListener must listen to events from.
  
- @param roomData the MXRoomData to listen to.
+ @param room the MXRoomData to listen to.
  */
-- (void)addRoomDataToSpy:(MXRoom*)roomData;
+- (void)addRoomDataToSpy:(MXRoom*)room;
 
 /**
  Stop spying to a MXRoomData events.
  
- @param roomData the MXRoomData to stop listening to.
+ @param room the MXRoomData to stop listening to.
  */
-- (void)removeSpiedRoomData:(MXRoom*)roomData;
+- (void)removeSpiedRoomData:(MXRoom*)room;
 
 /**
  Stop spying to all registered MXRoomDatas.

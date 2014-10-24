@@ -52,14 +52,14 @@
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         
         [mxSession start:^{
-            MXRoom *roomData = [mxSession getRoomData:room_id];
+            MXRoom *room = [mxSession getRoomData:room_id];
             
-            for (MXEvent *stateEvent in roomData.stateEvents)
+            for (MXEvent *stateEvent in room.stateEvents)
             {
-                XCTAssertTrue(stateEvent.isState, "All events in roomData.stateEvents must be states. stateEvent: %@", stateEvent);
+                XCTAssertTrue(stateEvent.isState, "All events in room.stateEvents must be states. stateEvent: %@", stateEvent);
             }
             
-            for (MXEvent *message in roomData.messages)
+            for (MXEvent *message in room.messages)
             {
                 if (message.eventType == MXEventTypeRoomMessage)
                 {

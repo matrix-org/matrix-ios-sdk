@@ -72,23 +72,23 @@
       failure:(void (^)(NSError *error))failure
 {
     [matrixRestClient initialSync:1 success:^(NSDictionary *JSONData) {
-         for (NSDictionary *room in JSONData[@"rooms"])
+         for (NSDictionary *roomDict in JSONData[@"rooms"])
          {
-             MXRoom *roomData = [self getOrCreateRoomData:room[@"room_id"] withJSONData:room];
+             MXRoom *room = [self getOrCreateRoomData:roomDict[@"room_id"] withJSONData:roomDict];
              
-             if ([room objectForKey:@"messages"])
+             if ([roomDict objectForKey:@"messages"])
              {
                  MXPaginationResponse *roomMessages =
                  [MTLJSONAdapter modelOfClass:[MXPaginationResponse class]
-                           fromJSONDictionary:[room objectForKey:@"messages"]
+                           fromJSONDictionary:[roomDict objectForKey:@"messages"]
                                         error:nil];;
                  
-                 [roomData handleMessages:roomMessages
+                 [room handleMessages:roomMessages
                              isLiveEvents:NO direction:NO];
              }
-             if ([room objectForKey:@"state"])
+             if ([roomDict objectForKey:@"state"])
              {
-                 [roomData handleStateEvents:room[@"state"]];
+                 [room handleStateEvents:roomDict[@"state"]];
              }
         }
         
@@ -153,8 +153,8 @@
                 if (event.room_id)
                 {
                     // Make room data digest the event
-                    MXRoom *roomData = [self getOrCreateRoomData:event.room_id withJSONData:nil];
-                    [roomData handleLiveEvent:event];
+                    MXRoom *room = [self getOrCreateRoomData:event.room_id withJSONData:nil];
+                    [room handleLiveEvent:event];
                 }
                 break;
         }
@@ -175,19 +175,19 @@
     return [rooms objectForKey:room_id];
 }
 
-- (NSArray *)roomDatas
+- (NSArray *)rooms
 {
     return [rooms allValues];
 }
 
 - (MXRoom *)getOrCreateRoomData:(NSString *)room_id withJSONData:JSONData
 {
-    MXRoom *roomData = [self getRoomData:room_id];
-    if (nil == roomData)
+    MXRoom *room = [self getRoomData:room_id];
+    if (nil == room)
     {
-        roomData = [self createRoomData:room_id withJSONData:JSONData];
+        room = [self createRoomData:room_id withJSONData:JSONData];
     }
-    return roomData;
+    return room;
 }
 
 - (NSArray *)recents
@@ -215,16 +215,16 @@
 
 - (MXRoom *)createRoomData:(NSString *)room_id withJSONData:(NSDictionary*)JSONData
 {
-    MXRoom *roomData = [[MXRoom alloc] initWithRoomId:room_id andMatrixData:self andJSONData:JSONData];
+    MXRoom *room = [[MXRoom alloc] initWithRoomId:room_id andMatrixData:self andJSONData:JSONData];
     
     // Register global listeners for this room
     for (MXDataEventListener *listener in globalEventListeners)
     {
-        [listener addRoomDataToSpy:roomData];
+        [listener addRoomDataToSpy:room];
     }
     
-    [rooms setObject:roomData forKey:room_id];
-    return roomData;
+    [rooms setObject:room forKey:room_id];
+    return room;
 }
 
 
@@ -234,9 +234,9 @@
     MXDataEventListener *listener = [[MXDataEventListener alloc] initWithSender:self andEventTypes:types andListenerBlock:listenerBlock];
     
     // This listener must be listen to all existing rooms
-    for (MXRoom *roomData in rooms.allValues)
+    for (MXRoom *room in rooms.allValues)
     {
-        [listener addRoomDataToSpy:roomData];
+        [listener addRoomDataToSpy:room];
     }
     
     [globalEventListeners addObject:listener];

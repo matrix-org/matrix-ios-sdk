@@ -40,24 +40,24 @@
     return self;
 }
 
-- (void)addRoomDataToSpy:(MXRoom*)roomData
+- (void)addRoomDataToSpy:(MXRoom*)room
 {
-    if (![roomDataEventListeners objectForKey:roomData.room_id])
+    if (![roomDataEventListeners objectForKey:room.room_id])
     {
-        roomDataEventListeners[roomData.room_id] =
-        [roomData registerEventListenerForTypes:self.eventTypes block:^(MXRoom *roomData, MXEvent *event, BOOL isLive) {
+        roomDataEventListeners[room.room_id] =
+        [room registerEventListenerForTypes:self.eventTypes block:^(MXRoom *room, MXEvent *event, BOOL isLive) {
             self.listenerBlock(self.sender, event, isLive);
         }];
     }
 
 }
 
-- (void)removeSpiedRoomData:(MXRoom*)roomData
+- (void)removeSpiedRoomData:(MXRoom*)room
 {
-    if ([roomDataEventListeners objectForKey:roomData.room_id])
+    if ([roomDataEventListeners objectForKey:room.room_id])
     {
-        [roomData unregisterListener:roomDataEventListeners[roomData.room_id]];
-        [roomDataEventListeners removeObjectForKey:roomData.room_id];
+        [room unregisterListener:roomDataEventListeners[room.room_id]];
+        [roomDataEventListeners removeObjectForKey:room.room_id];
     }
 }
 
@@ -68,8 +68,8 @@
     
     for (NSString *room_id in roomDataEventListeners)
     {
-        MXRoom *roomData = [mxSession getRoomData:room_id];
-        [roomData unregisterListener:roomDataEventListeners[roomData.room_id]];
+        MXRoom *room = [mxSession getRoomData:room_id];
+        [room unregisterListener:roomDataEventListeners[room.room_id]];
         
     }
     [roomDataEventListeners removeAllObjects];
