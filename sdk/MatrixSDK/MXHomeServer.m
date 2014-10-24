@@ -28,7 +28,7 @@ MXAuthAction;
 
 @interface MXHomeServer ()
 {
-    MXHTTPClient *hsClient;
+    MXHTTPClient *httpClient;
 }
 @end
 
@@ -43,7 +43,7 @@ MXAuthAction;
     {
         homeserver = homeserver2;
         
-        hsClient = [[MXHTTPClient alloc] initWithHomeServer:homeserver];
+        httpClient = [[MXHTTPClient alloc] initWithHomeServer:homeserver];
         
     }
     return self;
@@ -104,7 +104,7 @@ MXAuthAction;
 - (void)getRegisterOrLoginFlow:(MXAuthAction)authAction
                        success:(void (^)(NSArray *flows))success failure:(void (^)(NSError *error))failure
 {
-    [hsClient requestWithMethod:@"GET"
+    [httpClient requestWithMethod:@"GET"
                            path:[self authActionPath:authAction]
                      parameters:nil
                         success:^(NSDictionary *JSONResponse)
@@ -131,7 +131,7 @@ MXAuthAction;
                                  @"password": password
                                  };
     
-    [hsClient requestWithMethod:@"POST"
+    [httpClient requestWithMethod:@"POST"
                            path:[self authActionPath:authAction]
                      parameters:parameters
                         success:^(NSDictionary *JSONResponse)
@@ -152,7 +152,7 @@ MXAuthAction;
 - (void)publicRooms:(void (^)(NSArray *rooms))success
             failure:(void (^)(NSError *error))failure
 {
-    [hsClient requestWithMethod:@"GET"
+    [httpClient requestWithMethod:@"GET"
                            path:@"publicRooms"
                      parameters:nil
                         success:^(NSDictionary *JSONResponse)

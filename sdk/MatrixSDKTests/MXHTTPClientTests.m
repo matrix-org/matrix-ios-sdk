@@ -43,11 +43,11 @@
 
 - (void)testMainThread {
 
-    MXHTTPClient *hsClient = [[MXHTTPClient alloc] initWithHomeServer:kMXTestsHomeServerURL];
+    MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithHomeServer:kMXTestsHomeServerURL];
 
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
 
-    [hsClient requestWithMethod:@"GET"
+    [httpClient requestWithMethod:@"GET"
                            path:@"publicRooms"
                      parameters:nil
                         success:^(NSDictionary *JSONResponse)
@@ -67,11 +67,11 @@
 
 - (void)testMXError {
     
-    MXHTTPClient *hsClient = [[MXHTTPClient alloc] initWithHomeServer:kMXTestsHomeServerURL];
+    MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithHomeServer:kMXTestsHomeServerURL];
     
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
 
-    [hsClient requestWithMethod:@"GET"
+    [httpClient requestWithMethod:@"GET"
                            path:@"notExistingAPI"
                      parameters:nil
                         success:^(NSDictionary *JSONResponse)
@@ -93,11 +93,11 @@
 
 - (void)testNSError {
     
-    MXHTTPClient *hsClient = [[MXHTTPClient alloc] initWithHomeServer:[NSString stringWithFormat:@"%@/non-existing-path", kMXTestsHomeServerURL]];
+    MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithHomeServer:[NSString stringWithFormat:@"%@/non-existing-path", kMXTestsHomeServerURL]];
     
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
     
-    [hsClient requestWithMethod:@"GET"
+    [httpClient requestWithMethod:@"GET"
                            path:@"publicRooms"
                      parameters:nil
                         success:^(NSDictionary *JSONResponse)
