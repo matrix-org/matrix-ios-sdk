@@ -22,7 +22,6 @@ FOUNDATION_EXPORT double MatrixSDKVersionNumber;
 //! Project version string for MatrixSDK.
 FOUNDATION_EXPORT const unsigned char MatrixSDKVersionString[];
 
-#import <MatrixSDK/MXHomeServer.h>
 #import <MatrixSDK/MXRestClient.h>
 #import <MatrixSDK/MXData.h>
 #import <MatrixSDK/MXError.h>

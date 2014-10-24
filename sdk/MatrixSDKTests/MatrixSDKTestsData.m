@@ -16,7 +16,7 @@
 
 #import "MatrixSDKTestsData.h"
 
-#import "MXHomeServer.h"
+#import "MXRestClient.h"
 #import "MXError.h"
 
 /*
@@ -41,7 +41,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
 
 @interface MatrixSDKTestsData ()
 {
-    MXHomeServer *homeServer;
+    MXRestClient *mxRestClient;
     
     NSDate *startDate;
 }
@@ -54,7 +54,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
     self = [super init];
     if (self)
     {
-        homeServer = [[MXHomeServer alloc] initWithHomeServer:kMXTestsHomeServerURL];
+        mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL];
         
         startDate = [NSDate date];
     }
@@ -82,7 +82,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
     else
     {
         // First, try register the user
-        [homeServer registerWithUser:MXTESTS_BOB andPassword:MXTESTS_BOB_PWD success:^(MXLoginResponse *credentials) {
+        [mxRestClient registerWithUser:MXTESTS_BOB andPassword:MXTESTS_BOB_PWD success:^(MXLoginResponse *credentials) {
             
             _bobCredentials = credentials;
             success();
@@ -93,7 +93,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
             {
                 // The user already exists. This error is normal.
                 // Log Bob in to get his keys
-                [homeServer loginWithUser:MXTESTS_BOB andPassword:MXTESTS_BOB_PWD success:^(MXLoginResponse *credentials) {
+                [mxRestClient loginWithUser:MXTESTS_BOB andPassword:MXTESTS_BOB_PWD success:^(MXLoginResponse *credentials) {
                     
                     _bobCredentials = credentials;
                     success();
@@ -278,7 +278,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
 }
 
 
-- (void)for:(MXRestClient *)mxRestClient andRoom:(NSString*)room_id postMessages:(NSUInteger)messagesCount success:(void (^)())success
+- (void)for:(MXRestClient *)mxRestClient2 andRoom:(NSString*)room_id postMessages:(NSUInteger)messagesCount success:(void (^)())success
 {
     NSLog(@"postMessages :%ld", messagesCount);
     if (0 == messagesCount)
@@ -287,11 +287,11 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
     }
     else
     {
-        [mxRestClient postTextMessage:room_id text:[NSString stringWithFormat:@"Fake message posted at %.0f ms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000]
+        [mxRestClient2 postTextMessage:room_id text:[NSString stringWithFormat:@"Fake message posted at %.0f ms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000]
                            success:^(NSString *event_id) {
 
             // Post the next message
-            [self for:mxRestClient andRoom:room_id postMessages:messagesCount - 1 success:success];
+            [self for:mxRestClient2 andRoom:room_id postMessages:messagesCount - 1 success:success];
 
         } failure:^(NSError *error) {
             // If the error is M_LIMIT_EXCEEDED, make sure your home server rate limit is high
@@ -300,7 +300,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
     }
 }
 
-- (void)for:(MXRestClient *)mxRestClient createRooms:(NSUInteger)roomsCount withMessages:(NSUInteger)messagesCount success:(void (^)())success
+- (void)for:(MXRestClient *)mxRestClient2 createRooms:(NSUInteger)roomsCount withMessages:(NSUInteger)messagesCount success:(void (^)())success
 {
     if (0 == roomsCount)
     {
@@ -310,13 +310,13 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
     else
     {
         // Create the room
-        [mxRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate room_alias_name:nil topic:nil success:^(MXCreateRoomResponse *response) {
+        [mxRestClient2 createRoom:nil visibility:kMXRoomVisibilityPrivate room_alias_name:nil topic:nil success:^(MXCreateRoomResponse *response) {
 
             // Fill it with messages
-            [self for:mxRestClient andRoom:response.room_id postMessages:messagesCount success:^{
+            [self for:mxRestClient2 andRoom:response.room_id postMessages:messagesCount success:^{
 
                 // Go to the next room
-                [self for:mxRestClient createRooms:roomsCount - 1 withMessages:messagesCount success:success];
+                [self for:mxRestClient2 createRooms:roomsCount - 1 withMessages:messagesCount success:success];
             }];
         } failure:^(NSError *error) {
             // If the error is M_LIMIT_EXCEEDED, make sure your home server rate limit is high
@@ -337,7 +337,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
     else
     {
         // First, try register the user
-        [homeServer registerWithUser:MXTESTS_ALICE andPassword:MXTESTS_ALICE_PWD success:^(MXLoginResponse *credentials) {
+        [mxRestClient registerWithUser:MXTESTS_ALICE andPassword:MXTESTS_ALICE_PWD success:^(MXLoginResponse *credentials) {
             
             _aliceCredentials = credentials;
             success();
@@ -348,7 +348,7 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
             {
                 // The user already exists. This error is normal.
                 // Log Bob in to get his keys
-                [homeServer loginWithUser:MXTESTS_ALICE andPassword:MXTESTS_ALICE_PWD success:^(MXLoginResponse *credentials) {
+                [mxRestClient loginWithUser:MXTESTS_ALICE andPassword:MXTESTS_ALICE_PWD success:^(MXLoginResponse *credentials) {
                     
                     _aliceCredentials = credentials;
                     success();
