@@ -103,17 +103,57 @@
 
 - (void)testInviteUserToRoom
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoom:self readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+    
+    [sharedData doMXSessionTestWithBobAndARoom:self readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
         
-        [bobSession inviteUser:@"@someone:matrix.org" toRoom:room_id success:^{
+        [sharedData doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
             
-            // No data to test. Just happy to go here.
-            [expectation fulfill];
+            // Do the test
+            [bobSession inviteUser:sharedData.aliceCredentials.user_id toRoom:room_id success:^{
+                
+                // Check room actual members
+                [bobSession members:room_id success:^(NSArray *members) {
+                    
+                    XCTAssertEqual(2, members.count, @"There must 2 members");
+                    
+                    MXRoomMember *member1 = members[0];
+                    MXRoomMember *member2 = members[1];
+                    
+                    MXRoomMember *alice;
+                    
+                    if ([member1.user_id isEqualToString:sharedData.bobCredentials.user_id])
+                    {
+                        XCTAssert([member2.user_id isEqualToString:sharedData.aliceCredentials.user_id]);
+                        alice = member2;
+                    }
+                    else if ([member1.user_id isEqualToString:sharedData.aliceCredentials.user_id])
+                    {
+                        XCTAssert([member2.user_id isEqualToString:sharedData.bobCredentials.user_id]);
+                        alice = member1;
+                    }
+                    else
+                    {
+                        XCTFail(@"mxBob or mxAlice is not listed in the invite");
+                    }
+                    
+                    XCTAssert([alice.membership isEqualToString:kMXMembershipInvite]);
+                    
+                    [expectation fulfill];
+                    
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot check test result - error: %@", error);
+                    [expectation fulfill];
+                }];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
             
-        } failure:^(NSError *error) {
-            XCTFail(@"The request should not fail - NSError: %@", error);
-            [expectation fulfill];
         }];
+        
+
     }];
 }
 
