@@ -447,6 +447,10 @@
             memberName = member.user_id;
         }
     }
+    else
+    {
+        memberName = user_id;
+    }
     return memberName;
 }
 
