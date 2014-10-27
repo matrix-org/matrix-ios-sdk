@@ -115,29 +115,20 @@
                 // Check room actual members
                 [bobSession members:room_id success:^(NSArray *members) {
                     
-                    XCTAssertEqual(2, members.count, @"There must 2 members");
+                    XCTAssertEqual(2, members.count, @"There must be 2 members");
                     
-                    MXRoomMember *member1 = members[0];
-                    MXRoomMember *member2 = members[1];
-                    
-                    MXRoomMember *alice;
-                    
-                    if ([member1.user_id isEqualToString:sharedData.bobCredentials.user_id])
+                    for (MXRoomMember *member in members)
                     {
-                        XCTAssert([member2.user_id isEqualToString:sharedData.aliceCredentials.user_id]);
-                        alice = member2;
+                        if ([member.user_id isEqualToString:sharedData.aliceCredentials.user_id])
+                        {
+                            XCTAssert([member.membership isEqualToString:kMXMembershipInvite], @"A invited user membership is invite, not %@", member.membership);
+                        }
+                        else
+                        {
+                            // The other user is Bob
+                            XCTAssert([member.user_id isEqualToString:sharedData.bobCredentials.user_id], @"Unexpected member: %@", member);
+                        }
                     }
-                    else if ([member1.user_id isEqualToString:sharedData.aliceCredentials.user_id])
-                    {
-                        XCTAssert([member2.user_id isEqualToString:sharedData.bobCredentials.user_id]);
-                        alice = member1;
-                    }
-                    else
-                    {
-                        XCTFail(@"mxBob or mxAlice is not listed in the invite");
-                    }
-                    
-                    XCTAssert([alice.membership isEqualToString:kMXMembershipInvite]);
                     
                     [expectation fulfill];
                     
@@ -152,26 +143,47 @@
             }];
             
         }];
-        
-
     }];
 }
 
 - (void)testKickUserFromRoom
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoom:self readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+    
+    [sharedData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, NSString *room_id, XCTestExpectation *expectation) {
         
-        MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-        
-        [bobSession kickUser:sharedData.bobCredentials.user_id fromRoom:room_id reason:@"No particular reason" success:^{
+        [bobSession kickUser:sharedData.aliceCredentials.user_id fromRoom:room_id reason:@"No particular reason" success:^{
             
-            // No data to test. Just happy to go here.
-            [expectation fulfill];
+            // Check room actual members
+            [bobSession members:room_id success:^(NSArray *members) {
+                
+                XCTAssertEqual(2, members.count, @"There must still be 2 members");
+                
+                for (MXRoomMember *member in members)
+                {
+                    if ([member.user_id isEqualToString:sharedData.aliceCredentials.user_id])
+                    {
+                        XCTAssert([member.membership isEqualToString:kMXMembershipLeave], @"A kicked user membership is leave, not %@", member.membership);
+                    }
+                    else
+                    {
+                        // The other user is Bob
+                        XCTAssert([member.user_id isEqualToString:sharedData.bobCredentials.user_id], @"Unexpected member: %@", member);
+                    }
+                }
+                
+                [expectation fulfill];
+            }
+            failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot check test result - error: %@", error);
+                [expectation fulfill];
+             }];
             
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
+        
     }];
 }
 
