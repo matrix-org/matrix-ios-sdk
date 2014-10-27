@@ -326,7 +326,7 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
                                                   fromJSONDictionary:event[@"content"]
                                                                error:nil];
              
-             roomMember.user_id = event[@"user_id"];
+             roomMember.user_id = event[@"state_key"];
              
              [members addObject:roomMember];
          }
