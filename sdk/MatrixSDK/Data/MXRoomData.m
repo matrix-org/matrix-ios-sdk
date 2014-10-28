@@ -110,6 +110,19 @@
     return [members allValues];
 }
 
+- (NSDictionary *)powerLevels
+{
+    NSDictionary *powerLevels = nil;
+    
+    // Get it from the state events
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomPowerLevels];
+    if (event && event.content)
+    {
+        powerLevels = [event.content copy];
+    }
+    return powerLevels;
+}
+
 - (BOOL)isPublic
 {
     BOOL isPublic = NO;
