@@ -326,7 +326,20 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
                                                   fromJSONDictionary:event[@"content"]
                                                                error:nil];
              
-             roomMember.user_id = event[@"state_key"];
+             if (event[@"state_key"])
+             {
+                 roomMember.user_id = event[@"state_key"];
+             }
+             else
+             {
+                 roomMember.user_id = event[@"user_id"];
+             }
+             
+             // Ignore banned and kicked (leave) user
+             if ([roomMember.membership isEqualToString:@"ban"] || [roomMember.membership isEqualToString:@"leave"])
+             {
+                 continue;
+             }
              
              [members addObject:roomMember];
          }

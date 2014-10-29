@@ -345,10 +345,25 @@
             MXRoomMember *roomMember = [MTLJSONAdapter modelOfClass:[MXRoomMember class]
                                                  fromJSONDictionary:event.content
                                                               error:nil];
+            if (event.state_key)
+            {
+                roomMember.user_id = event.state_key;
+            }
+            else
+            {
+                roomMember.user_id = event.user_id;
+            }
             
-            roomMember.user_id = event.user_id;
+            // Ignore banned and kicked (leave) user
+            if ([roomMember.membership isEqualToString:@"ban"] || [roomMember.membership isEqualToString:@"leave"])
+            {
+                [members removeObjectForKey:roomMember.user_id];
+            }
+            else
+            {
+                members[roomMember.user_id] = roomMember;
+            }
             
-            members[roomMember.user_id] = roomMember;
             break;
         }
 
