@@ -544,12 +544,13 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
               failure:(void (^)(NSError *error))failure
 {
     NSString* path = @"/_matrix/content";
-    NSDictionary *param = @{@"Content-Type": mimeType};
+    NSDictionary *headers = @{@"Content-Type": mimeType};
     
     [hsClient requestWithMethod:@"POST"
                            path:path
-                     parameters:param
+                     parameters:nil
                            data:data
+                        headers:headers
                         timeout:timeoutInSeconds
                         success:^(NSDictionary *JSONResponse) {
                             NSString *contentURL = JSONResponse[@"content_token"];

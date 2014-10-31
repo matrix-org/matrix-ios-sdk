@@ -68,13 +68,14 @@
                 success:(void (^)(NSDictionary *JSONResponse))success
                 failure:(void (^)(NSError *error))failure
 {
-    return [self requestWithMethod:httpMethod path:path parameters:parameters data:nil timeout:timeoutInSeconds success:success failure:failure];
+    return [self requestWithMethod:httpMethod path:path parameters:parameters data:nil headers:nil timeout:timeoutInSeconds success:success failure:failure];
 }
 
 - (id)requestWithMethod:(NSString *)httpMethod
                    path:(NSString *)path
              parameters:(NSDictionary*)parameters
                    data:(NSData *)data
+                headers:(NSDictionary*)headers
                 timeout:(NSTimeInterval)timeoutInSeconds
                 success:(void (^)(NSDictionary *JSONResponse))success
                 failure:(void (^)(NSError *error))failure
@@ -88,21 +89,16 @@
     NSString *URLString = [[NSURL URLWithString:path relativeToURL:httpManager.baseURL] absoluteString];
     
     NSMutableURLRequest *request;
-    if (data == nil)
-    {
-        request = [httpManager.requestSerializer requestWithMethod:httpMethod URLString:URLString parameters:parameters error:nil];
+    request = [httpManager.requestSerializer requestWithMethod:httpMethod URLString:URLString parameters:parameters error:nil];
+    if (data) {
+        NSParameterAssert(![httpMethod isEqualToString:@"GET"] && ![httpMethod isEqualToString:@"HEAD"]);
+        request.HTTPBody = data;
+        for (NSString *key in headers.allKeys)
+        {
+            [request setValue:[headers valueForKey:key] forHTTPHeaderField:key];
+        }
     }
-    else
-    {
-        request = [httpManager.requestSerializer multipartFormRequestWithMethod:httpMethod
-                                                                      URLString:URLString
-                                                                     parameters:parameters
-                                                      constructingBodyWithBlock:^(id < AFMultipartFormData > formData) {
-                                                          [formData appendPartWithFormData:data name:@"content"];
-                                                      }
-                                                                          error:nil];
-    }
-    
+
     // If a timeout is specified, set it
     if (-1 != timeoutInSeconds)
     {
