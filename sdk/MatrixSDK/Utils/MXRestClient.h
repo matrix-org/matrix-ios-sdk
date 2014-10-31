@@ -38,4 +38,15 @@
                 success:(void (^)(NSDictionary *JSONResponse))success
                 failure:(void (^)(NSError *error))failure;
 
+- (id)uploadContent:(NSData *)data
+           mimeType:(NSString *)mimeType
+            timeout:(NSTimeInterval)timeoutInSeconds
+            success:(void (^)(NSString *url))success
+            failure:(void (^)(NSError *error))failure;
+
+- (id)uploadImage:(UIImage *)image
+          timeout:(NSTimeInterval)timeoutInSeconds
+          success:(void (^)(NSDictionary *imageMessage))success
+          failure:(void (^)(NSError *error))failure;
+
 @end

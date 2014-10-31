@@ -535,4 +535,14 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
      }];
 
 }
+
+#pragma mark - Content upload
+- (void)uploadContent:(NSData *)data
+             mimeType:(NSString *)mimeType
+              timeout:(NSTimeInterval)timeoutInSeconds
+              success:(void (^)(NSString *url))success
+              failure:(void (^)(NSError *error))failure
+{
+    [hsClient uploadContent:data mimeType:mimeType timeout:timeoutInSeconds success:success failure:failure];
+}
 @end
