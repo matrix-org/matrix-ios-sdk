@@ -313,4 +313,9 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
               success:(void (^)(NSString *url))success
               failure:(void (^)(NSError *error))failure;
 
+- (void)uploadImage:(UIImage *)image
+          timeout:(NSTimeInterval)timeoutInSeconds
+          success:(void (^)(NSDictionary *imageMessage))success
+          failure:(void (^)(NSError *error))failure;
+
 @end

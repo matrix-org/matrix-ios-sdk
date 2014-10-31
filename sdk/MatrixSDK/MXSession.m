@@ -543,6 +543,28 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
               success:(void (^)(NSString *url))success
               failure:(void (^)(NSError *error))failure
 {
-    [hsClient uploadContent:data mimeType:mimeType timeout:timeoutInSeconds success:success failure:failure];
+    NSString* path = @"/_matrix/content";
+    NSDictionary *param = @{@"Content-Type": mimeType};
+    
+    [hsClient requestWithMethod:@"POST"
+                           path:path
+                     parameters:param
+                           data:data
+                        timeout:timeoutInSeconds
+                        success:^(NSDictionary *JSONResponse) {
+                            NSString *contentURL = JSONResponse[@"content_token"];
+                            NSLog(@"uploadContent succeeded: %@",contentURL);
+                            success(contentURL);
+                        }
+                        failure:failure];
 }
+
+- (void)uploadImage:(UIImage *)image
+          timeout:(NSTimeInterval)timeoutInSeconds
+          success:(void (^)(NSDictionary *imageMessage))success
+          failure:(void (^)(NSError *error))failure
+{
+    // TODO
+}
+
 @end

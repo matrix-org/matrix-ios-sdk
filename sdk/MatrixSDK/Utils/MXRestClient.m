@@ -68,7 +68,7 @@
                 success:(void (^)(NSDictionary *JSONResponse))success
                 failure:(void (^)(NSError *error))failure
 {
-    return [self requestWithMethod:httpMethod path:path parameters:parameters data:nil timeout:-1 success:success failure:failure];
+    return [self requestWithMethod:httpMethod path:path parameters:parameters data:nil timeout:timeoutInSeconds success:success failure:failure];
 }
 
 - (id)requestWithMethod:(NSString *)httpMethod
@@ -138,37 +138,5 @@
     
     return operation;
 }
-
-- (id)uploadContent:(NSData *)data
-           mimeType:(NSString *)mimeType
-            timeout:(NSTimeInterval)timeoutInSeconds
-            success:(void (^)(NSString *url))success
-            failure:(void (^)(NSError *error))failure
-{
-    NSString* path = @"/_matrix/content";
-    NSDictionary *param = @{@"Content-Type": mimeType};
-    
-    return [self requestWithMethod:@"POST"
-                              path:path
-                        parameters:param
-                              data:data
-                           timeout:timeoutInSeconds
-                           success:^(NSDictionary *JSONResponse) {
-                               NSString *contentURL = JSONResponse[@"content_token"];
-                               NSLog(@"uploadContent succeeded: %@",contentURL);
-                               success(contentURL);
-                           }
-                           failure:failure];
-}
-
-- (id)uploadImage:(UIImage *)image
-          timeout:(NSTimeInterval)timeoutInSeconds
-          success:(void (^)(NSDictionary *imageMessage))success
-          failure:(void (^)(NSError *error))failure
-{
-    // TODO
-    return nil;
-}
-
 
 @end
