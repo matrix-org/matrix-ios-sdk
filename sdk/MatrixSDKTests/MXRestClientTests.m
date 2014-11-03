@@ -103,30 +103,81 @@
 
 - (void)testInviteUserToRoom
 {
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+    
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
         
-        [bobRestClient inviteUser:@"@someone:matrix.org" toRoom:room_id success:^{
+        [sharedData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
             
-            // No data to test. Just happy to go here.
-            [expectation fulfill];
+            // Do the test
+            [bobRestClient inviteUser:sharedData.aliceCredentials.user_id toRoom:room_id success:^{
+                
+                // Check room actual members
+                [bobRestClient members:room_id success:^(NSArray *members) {
+                    
+                    XCTAssertEqual(2, members.count, @"There must be 2 members");
+                    
+                    for (MXRoomMember *member in members)
+                    {
+                        if ([member.user_id isEqualToString:sharedData.aliceCredentials.user_id])
+                        {
+                            XCTAssert([member.membership isEqualToString:kMXMembershipInvite], @"A invited user membership is invite, not %@", member.membership);
+                        }
+                        else
+                        {
+                            // The other user is Bob
+                            XCTAssert([member.user_id isEqualToString:sharedData.bobCredentials.user_id], @"Unexpected member: %@", member);
+                        }
+                    }
+                    
+                    [expectation fulfill];
+                    
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot check test result - error: %@", error);
+                    [expectation fulfill];
+                }];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
             
-        } failure:^(NSError *error) {
-            XCTFail(@"The request should not fail - NSError: %@", error);
-            [expectation fulfill];
         }];
     }];
 }
 
 - (void)testKickUserFromRoom
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+    
+    [sharedData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
         
-        MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-        
-        [bobRestClient kickUser:sharedData.bobCredentials.user_id fromRoom:room_id reason:@"No particular reason" success:^{
+        [bobRestClient kickUser:sharedData.aliceCredentials.user_id fromRoom:room_id reason:@"No particular reason" success:^{
             
-            // No data to test. Just happy to go here.
-            [expectation fulfill];
+            // Check room actual members
+            [bobRestClient members:room_id success:^(NSArray *members) {
+                
+                XCTAssertEqual(2, members.count, @"There must still be 2 members");
+                
+                for (MXRoomMember *member in members)
+                {
+                    if ([member.user_id isEqualToString:sharedData.aliceCredentials.user_id])
+                    {
+                        XCTAssert([member.membership isEqualToString:kMXMembershipLeave], @"A kicked user membership is leave, not %@", member.membership);
+                    }
+                    else
+                    {
+                        // The other user is Bob
+                        XCTAssert([member.user_id isEqualToString:sharedData.bobCredentials.user_id], @"Unexpected member: %@", member);
+                    }
+                }
+                
+                [expectation fulfill];
+            }
+                        failure:^(NSError *error) {
+                            NSAssert(NO, @"Cannot check test result - error: %@", error);
+                            [expectation fulfill];
+                        }];
             
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
@@ -137,14 +188,36 @@
 
 - (void)testBanUserInRoom
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+    
+    [sharedData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
         
-        MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-        
-        [bobRestClient banUser:sharedData.bobCredentials.user_id inRoom:room_id reason:@"No particular reason" success:^{
+        [bobRestClient banUser:sharedData.aliceCredentials.user_id inRoom:room_id reason:@"No particular reason" success:^{
             
-            // No data to test. Just happy to go here.
-            [expectation fulfill];
+            // Check room actual members
+            [bobRestClient members:room_id success:^(NSArray *members) {
+                
+                XCTAssertEqual(2, members.count, @"There must still be 2 members");
+                
+                for (MXRoomMember *member in members)
+                {
+                    if ([member.user_id isEqualToString:sharedData.aliceCredentials.user_id])
+                    {
+                        XCTAssert([member.membership isEqualToString:kMXMembershipBan], @"A banned user membership is ban, not %@", member.membership);
+                    }
+                    else
+                    {
+                        // The other user is Bob
+                        XCTAssert([member.user_id isEqualToString:sharedData.bobCredentials.user_id], @"Unexpected member: %@", member);
+                    }
+                }
+                
+                [expectation fulfill];
+            }
+                           failure:^(NSError *error) {
+                               NSAssert(NO, @"Cannot check test result - error: %@", error);
+                               [expectation fulfill];
+                           }];
             
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
@@ -152,7 +225,6 @@
         }];
     }];
 }
-
 
 - (void)testCreateRoom
 {
