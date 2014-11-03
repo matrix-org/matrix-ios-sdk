@@ -159,9 +159,7 @@ MXAuthAction;
                           success:^(NSDictionary *JSONResponse)
      {
          // Update our credentials
-         credentials = [MTLJSONAdapter modelOfClass:[MXCredentials class]
-                                                  fromJSONDictionary:JSONResponse
-                                                               error:nil];
+         credentials = [MXCredentials modelFromJSON:JSONResponse];
          
          // Workaround: HS does not return the right URL. Use the one we used to make the request
          credentials.home_server = homeserver;
@@ -374,9 +372,7 @@ MXAuthAction;
                      parameters:parameters
                         success:^(NSDictionary *JSONResponse)
      {
-         MXCreateRoomResponse *response = [MTLJSONAdapter modelOfClass:[MXCreateRoomResponse class]
-                                                  fromJSONDictionary:JSONResponse
-                                                               error:nil];
+         MXCreateRoomResponse *response = [MXCreateRoomResponse modelFromJSON:JSONResponse];
          success(response);
      }
                         failure:^(NSError *error)
@@ -418,9 +414,7 @@ MXAuthAction;
                      parameters:parameters
                         success:^(NSDictionary *JSONResponse)
      {
-         MXPaginationResponse *paginatedResponse = [MTLJSONAdapter modelOfClass:[MXPaginationResponse class]
-                                                             fromJSONDictionary:JSONResponse
-                                                           error:nil];
+         MXPaginationResponse *paginatedResponse = [MXPaginationResponse modelFromJSON:JSONResponse];
          success(paginatedResponse);
      }
                         failure:^(NSError *error)
@@ -444,9 +438,7 @@ MXAuthAction;
          
          for (NSDictionary *event in JSONResponse[@"chunk"])
          {
-             MXRoomMember *roomMember = [MTLJSONAdapter modelOfClass:[MXRoomMember class]
-                                                  fromJSONDictionary:event[@"content"]
-                                                               error:nil];
+             MXRoomMember *roomMember = [MXRoomMember modelFromJSON:event[@"content"]];
              
              roomMember.userId = event[@"state_key"];
              

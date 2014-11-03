@@ -29,6 +29,14 @@
     return @{};
 }
 
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    // Use Mantle 
+    return [MTLJSONAdapter modelOfClass:[self class]
+                     fromJSONDictionary:JSONDictionary
+                                  error:nil];
+}
+
 - (instancetype)initWithDictionary:(NSDictionary *)dictionaryValue error:(NSError *__autoreleasing *)error
 {
     // Do the JSON -> class instance properties mapping

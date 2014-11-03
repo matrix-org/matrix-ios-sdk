@@ -342,9 +342,8 @@
     {
         case MXEventTypeRoomMember:
         {
-            MXRoomMember *roomMember = [MTLJSONAdapter modelOfClass:[MXRoomMember class]
-                                                 fromJSONDictionary:event.content
-                                                              error:nil];
+            MXRoomMember *roomMember = [MXRoomMember modelFromJSON:event.content];
+            
             if (event.state_key)
             {
                 roomMember.userId = event.state_key;

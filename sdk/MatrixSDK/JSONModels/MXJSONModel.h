@@ -25,9 +25,17 @@
  */
 @interface MXJSONModel : MTLModel <MTLJSONSerializing>
 
-    /**
-     This dictionary contains keys/values that have been in the JSON source object.
-     */
-    @property (nonatomic, readonly) NSDictionary *others;
+/**
+ This dictionary contains keys/values that have been in the JSON source object.
+ */
+@property (nonatomic, readonly) NSDictionary *others;
+
+/**
+ Create a model instance from a JSON dictionary
+ 
+ @param JSONDictionary the JSON data.
+ @return the newly created instance.
+ */
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary;
 
 @end

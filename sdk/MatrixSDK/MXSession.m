@@ -78,10 +78,7 @@
              
              if ([roomDict objectForKey:@"messages"])
              {
-                 MXPaginationResponse *roomMessages =
-                 [MTLJSONAdapter modelOfClass:[MXPaginationResponse class]
-                           fromJSONDictionary:[roomDict objectForKey:@"messages"]
-                                        error:nil];;
+                 MXPaginationResponse *roomMessages = [MXPaginationResponse modelFromJSON:[roomDict objectForKey:@"messages"]];
                  
                  [room handleMessages:roomMessages
                              isLiveEvents:NO direction:NO];
