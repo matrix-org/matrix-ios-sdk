@@ -290,19 +290,27 @@ MXAuthAction;
          success:(void (^)())success
          failure:(void (^)(NSError *error))failure
 {
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/state/m.room.member/%@", room_id, user_id];
+    
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
-    parameters[@"user_id"] = user_id;
+    parameters[@"membership"] = @"leave";
     
     if (reason)
     {
         parameters[@"reason"] = reason;
     }
     
-    // Set the user membership to "leave" to kick him
-    [self doMembershipRequest:room_id
-                   membership:@"leave"
-                   parameters:parameters
-                      success:success failure:failure];
+    [httpClient requestWithMethod:@"PUT"
+                           path:path
+                     parameters:parameters
+                        success:^(NSDictionary *JSONResponse)
+     {
+         success();
+     }
+                        failure:^(NSError *error)
+     {
+         failure(error);
+     }];
 }
 
 - (void)banUser:(NSString*)user_id
@@ -319,9 +327,8 @@ MXAuthAction;
         parameters[@"reason"] = reason;
     }
     
-    // Set the user membership to "leave" to kick him
     [self doMembershipRequest:room_id
-                   membership:@"leave"
+                   membership:@"ban"
                    parameters:parameters
                       success:success failure:failure];
 }
@@ -332,12 +339,7 @@ MXAuthAction;
           failure:(void (^)(NSError *error))failure
 {
     // Do an unban by resetting the user membership to "leave"
-    [self doMembershipRequest:room_id
-                   membership:@"ban"
-                   parameters:@{
-                                @"user_id": user_id
-                                }
-                      success:success failure:failure];
+    [self kickUser:user_id fromRoom:room_id reason:nil success:success failure:failure];
 }
 
 - (void)createRoom:(NSString*)name
@@ -446,7 +448,7 @@ MXAuthAction;
                                                   fromJSONDictionary:event[@"content"]
                                                                error:nil];
              
-             roomMember.user_id = event[@"user_id"];
+             roomMember.user_id = event[@"state_key"];
              
              [members addObject:roomMember];
          }
