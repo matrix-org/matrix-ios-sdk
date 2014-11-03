@@ -119,14 +119,14 @@
                     
                     for (MXRoomMember *member in members)
                     {
-                        if ([member.user_id isEqualToString:sharedData.aliceCredentials.user_id])
+                        if ([member.userId isEqualToString:sharedData.aliceCredentials.user_id])
                         {
                             XCTAssert([member.membership isEqualToString:kMXMembershipInvite], @"A invited user membership is invite, not %@", member.membership);
                         }
                         else
                         {
                             // The other user is Bob
-                            XCTAssert([member.user_id isEqualToString:sharedData.bobCredentials.user_id], @"Unexpected member: %@", member);
+                            XCTAssert([member.userId isEqualToString:sharedData.bobCredentials.user_id], @"Unexpected member: %@", member);
                         }
                     }
                     
@@ -161,14 +161,14 @@
                 
                 for (MXRoomMember *member in members)
                 {
-                    if ([member.user_id isEqualToString:sharedData.aliceCredentials.user_id])
+                    if ([member.userId isEqualToString:sharedData.aliceCredentials.user_id])
                     {
                         XCTAssert([member.membership isEqualToString:kMXMembershipLeave], @"A kicked user membership is leave, not %@", member.membership);
                     }
                     else
                     {
                         // The other user is Bob
-                        XCTAssert([member.user_id isEqualToString:sharedData.bobCredentials.user_id], @"Unexpected member: %@", member);
+                        XCTAssert([member.userId isEqualToString:sharedData.bobCredentials.user_id], @"Unexpected member: %@", member);
                     }
                 }
                 
@@ -201,14 +201,14 @@
                 
                 for (MXRoomMember *member in members)
                 {
-                    if ([member.user_id isEqualToString:sharedData.aliceCredentials.user_id])
+                    if ([member.userId isEqualToString:sharedData.aliceCredentials.user_id])
                     {
                         XCTAssert([member.membership isEqualToString:kMXMembershipBan], @"A banned user membership is ban, not %@", member.membership);
                     }
                     else
                     {
                         // The other user is Bob
-                        XCTAssert([member.user_id isEqualToString:sharedData.bobCredentials.user_id], @"Unexpected member: %@", member);
+                        XCTAssert([member.userId isEqualToString:sharedData.bobCredentials.user_id], @"Unexpected member: %@", member);
                     }
                 }
                 
@@ -278,7 +278,7 @@
             XCTAssertEqual(members.count, 1);
             
             MXRoomMember *roomMember = members[0];
-            XCTAssertTrue([roomMember.user_id isEqualToString:bobRestClient.credentials.user_id]);
+            XCTAssertTrue([roomMember.userId isEqualToString:bobRestClient.credentials.user_id]);
             
             [expectation fulfill];
             

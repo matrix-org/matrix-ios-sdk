@@ -151,7 +151,7 @@ FOUNDATION_EXPORT NSString *const kMatrixPresenceHidden;
     /**
      The user id.
      */
-    @property (nonatomic) NSString *user_id;
+    @property (nonatomic) NSString *userId;
     
     /**
      The user display name.

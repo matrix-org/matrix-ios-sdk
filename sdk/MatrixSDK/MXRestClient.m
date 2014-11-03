@@ -448,7 +448,7 @@ MXAuthAction;
                                                   fromJSONDictionary:event[@"content"]
                                                                error:nil];
              
-             roomMember.user_id = event[@"state_key"];
+             roomMember.userId = event[@"state_key"];
              
              [members addObject:roomMember];
          }

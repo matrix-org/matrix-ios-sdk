@@ -129,7 +129,7 @@
             
             for (MXRoomMember *member in room.members)
             {
-                XCTAssertTrue([member.user_id isEqualToString:bobRestClient.credentials.user_id], "This must be mxBob");
+                XCTAssertTrue([member.userId isEqualToString:bobRestClient.credentials.user_id], "This must be mxBob");
             }
             
             XCTAssertNotNil([room getMember:bobRestClient.credentials.user_id], @"Bob must be retrieved");

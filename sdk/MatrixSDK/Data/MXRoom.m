@@ -347,21 +347,21 @@
                                                               error:nil];
             if (event.state_key)
             {
-                roomMember.user_id = event.state_key;
+                roomMember.userId = event.state_key;
             }
             else
             {
-                roomMember.user_id = event.user_id;
+                roomMember.userId = event.user_id;
             }
             
             // Ignore banned and kicked (leave) user
             if ([roomMember.membership isEqualToString:@"ban"] || [roomMember.membership isEqualToString:@"leave"])
             {
-                [members removeObjectForKey:roomMember.user_id];
+                [members removeObjectForKey:roomMember.userId];
             }
             else
             {
-                members[roomMember.user_id] = roomMember;
+                members[roomMember.userId] = roomMember;
             }
             
             break;
@@ -472,7 +472,7 @@
         }
         else
         {
-            memberName = member.user_id;
+            memberName = member.userId;
         }
     }
     else
