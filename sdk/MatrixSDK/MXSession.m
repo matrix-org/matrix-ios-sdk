@@ -335,12 +335,6 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
                  roomMember.user_id = event[@"user_id"];
              }
              
-             // Ignore banned and kicked (leave) user
-             if ([roomMember.membership isEqualToString:@"ban"] || [roomMember.membership isEqualToString:@"leave"])
-             {
-                 continue;
-             }
-             
              [members addObject:roomMember];
          }
          
