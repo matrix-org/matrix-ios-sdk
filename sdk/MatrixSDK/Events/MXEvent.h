@@ -125,7 +125,7 @@ FOUNDATION_EXPORT NSString *const kMXMembershipBan;
 
 @property (nonatomic) NSUInteger required_power_level;
 @property (nonatomic) NSUInteger age_ts;
-@property (nonatomic) id prev_content;
+@property (nonatomic) NSDictionary *prev_content;
 
 // @TODO: What are their types?
 @property (nonatomic) id prev_state;

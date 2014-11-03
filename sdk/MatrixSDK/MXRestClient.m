@@ -650,6 +650,39 @@ MXAuthAction;
      {
          failure(error);
      }];
-
 }
+
+
+#pragma mark - Content upload
+- (void)uploadContent:(NSData *)data
+             mimeType:(NSString *)mimeType
+              timeout:(NSTimeInterval)timeoutInSeconds
+              success:(void (^)(NSString *url))success
+              failure:(void (^)(NSError *error))failure
+{
+    NSString* path = @"/_matrix/content";
+    NSDictionary *headers = @{@"Content-Type": mimeType};
+    
+    [httpClient requestWithMethod:@"POST"
+                           path:path
+                     parameters:nil
+                           data:data
+                        headers:headers
+                        timeout:timeoutInSeconds
+                        success:^(NSDictionary *JSONResponse) {
+                            NSString *contentURL = JSONResponse[@"content_token"];
+                            NSLog(@"uploadContent succeeded: %@",contentURL);
+                            success(contentURL);
+                        }
+                        failure:failure];
+}
+
+- (void)uploadImage:(UIImage *)image
+            timeout:(NSTimeInterval)timeoutInSeconds
+            success:(void (^)(NSDictionary *imageMessage))success
+            failure:(void (^)(NSError *error))failure
+{
+    // TODO
+}
+
 @end

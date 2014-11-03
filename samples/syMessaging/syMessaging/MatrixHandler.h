@@ -16,18 +16,28 @@
 
 #import <MatrixSDK/MatrixSDK.h>
 
+// Presently the SDK is not able to handle correctly the context for the room recently joined
+// PATCH: we force initial sync if this is necessary (see TEMPORARY_PATCH_INITIAL_SYNC occurences)
+// FIXME: this compilation flag must be removed when SDK will fix the issue
+#define TEMPORARY_PATCH_INITIAL_SYNC 1
+
+extern NSString *const kMatrixHandlerUnsupportedMessagePrefix;
+
 @interface MatrixHandler : NSObject
 
 @property (strong, nonatomic) MXHomeServer *mxHomeServer;
 @property (strong, nonatomic) MXSession *mxSession;
 @property (strong, nonatomic) MXData *mxData;
 
-
 @property (strong, nonatomic) NSString *homeServerURL;
 @property (strong, nonatomic) NSString *homeServer;
 @property (strong, nonatomic) NSString *userLogin;
 @property (strong, nonatomic) NSString *userId;
 @property (strong, nonatomic) NSString *accessToken;
+
+// Matrix user's settings
+@property (strong, nonatomic) NSString *userDisplayName;
+@property (strong, nonatomic) NSString *userPictureURL;
 
 @property (nonatomic,readonly) BOOL isLogged;
 @property (nonatomic,readonly) BOOL isInitialSyncDone;
@@ -36,16 +46,13 @@
 
 - (void)logout;
 
-// ******************
-// Presently the SDK is not able to handle correctly the context for the room recently joined
-// PATCH: we define temporarily a method to force initial sync
-// FIXME: this method should be removed when SDK will fix the issue
+// Flush and restore Matrix data
 - (void)forceInitialSync;
-// ******************
+
+- (void)enableEventsNotifications:(BOOL)isEnabled;
 
 - (BOOL)isAttachment:(MXEvent*)message;
 - (BOOL)isNotification:(MXEvent*)message;
 - (NSString*)displayTextFor:(MXEvent*)message inSubtitleMode:(BOOL)isSubtitle;
-- (NSString*)displayNameFor:(MXRoomMember*)member;
 
 @end

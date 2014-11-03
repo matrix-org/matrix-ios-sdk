@@ -15,6 +15,7 @@
  */
 
 #import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 
 #import "MXEvent.h"
 #import "MXJSONModels.h"
@@ -351,6 +352,29 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
  */
 - (void)roomIDForRoomAlias:(NSString*)room_alias
             success:(void (^)(NSString *room_id))success
+            failure:(void (^)(NSError *error))failure;
+
+
+#pragma mark - Content upload
+/**
+ Upload content to HomeServer
+ 
+ @param data the content to upload
+ @param mimetype the content type (image/jpeg, audio/aac...)
+ @param timeoutInSeconds the maximum time in ms the SDK must wait for the server response.
+ 
+ @param success A block object called when the operation succeeds. It provides the uploaded content url.
+ @param failure A block object called when the operation fails.
+ */
+- (void)uploadContent:(NSData *)data
+             mimeType:(NSString *)mimeType
+              timeout:(NSTimeInterval)timeoutInSeconds
+              success:(void (^)(NSString *url))success
+              failure:(void (^)(NSError *error))failure;
+
+- (void)uploadImage:(UIImage *)image
+            timeout:(NSTimeInterval)timeoutInSeconds
+            success:(void (^)(NSDictionary *imageMessage))success
             failure:(void (^)(NSError *error))failure;
 
 @end

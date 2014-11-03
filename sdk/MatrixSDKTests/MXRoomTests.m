@@ -157,7 +157,7 @@
         XCTAssertNotNil(bobMemberName);
         XCTAssertFalse([bobMemberName isEqualToString:@""], @"bobMemberName must not be an empty string");
         
-       XCTAssertNil([room memberName:@"NonExistingUserId"], @"memberName must return nil if the user does not exist");
+        XCTAssert([[room memberName:@"NonExistingUserId"] isEqualToString:@"NonExistingUserId"], @"memberName must return his id if the user does not exist");
         
         [expectation fulfill];
     }];

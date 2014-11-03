@@ -16,21 +16,14 @@
 
 #import <UIKit/UIKit.h>
 
-#import "MasterTabBarController.h"
-#import "CustomAlert.h"
-
-@interface AppDelegate : UIResponder <UIApplicationDelegate, UITabBarControllerDelegate>
-
-@property (strong, nonatomic) UIWindow *window;
-@property (strong, nonatomic) MasterTabBarController *masterTabBarController;
-
-@property (strong, nonatomic) CustomAlert *errorNotification;
-
-+ (AppDelegate*)theDelegate;
-
-- (void)logout;
-
-- (CustomAlert*)showErrorAsAlert:(NSError*)error;
-
+@interface SettingsTableViewCell : UITableViewCell
 @end
 
+@interface SettingsTableCellWithSwitch : SettingsTableViewCell
+@property (strong, nonatomic) IBOutlet UILabel *settingLabel;
+@property (strong, nonatomic) IBOutlet UISwitch *settingSwitch;
+@end
+
+@interface SettingsTableCellWithTextView : SettingsTableViewCell
+@property (strong, nonatomic) IBOutlet UITextView *settingTextView;
+@end

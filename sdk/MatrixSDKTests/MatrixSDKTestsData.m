@@ -403,4 +403,30 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
     }
 }
 
+#pragma mark - both
+- (void)doMXSessionTestWithBobAndAliceInARoom:(XCTestCase*)testCase
+                                  readyToTest:(void (^)(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString* room_id, XCTestExpectation *expectation))readyToTest
+{
+    [self doMXRestClientTestWithBobAndARoom:testCase readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+        
+        [self doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+            
+            [bobRestClient inviteUser:self.aliceCredentials.user_id toRoom:room_id success:^{
+                
+                [aliceRestClient joinRoom:room_id success:^{
+                    
+                    readyToTest(bobRestClient, aliceRestClient, room_id, expectation);
+                    
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"mxAlice cannot join room");
+                }];
+                
+            } failure:^(NSError *error) {
+                 NSAssert(NO, @"Cannot invite mxAlice");
+            }];
+        }];
+    }];
+}
+
+
 @end

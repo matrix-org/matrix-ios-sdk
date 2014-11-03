@@ -66,6 +66,12 @@ typedef void (^MXRoomEventListenerBlock)(MXRoom *room, MXEvent *event, BOOL isLi
 @property (nonatomic, readonly) NSArray *members;
 
 /**
+ The power level of room members
+ If a user is in the list, then they have the associated power level. Otherwise they have the default level. If not default key is supplied, it is assumed to be 0.
+ */
+@property (nonatomic, readonly) NSDictionary *powerLevels;
+
+/**
  The visibility of the room: public or, else, private
  */
 @property (nonatomic, readonly) BOOL isPublic;

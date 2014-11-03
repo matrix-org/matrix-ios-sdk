@@ -66,4 +66,9 @@ FOUNDATION_EXPORT NSString * const kMXTestsHomeServerURL;
 
 //- (void)randomCredentials:(void (^)(MXCredentials *randomCredentials))success;
 
+#pragma mark - both
+- (void)doMXSessionTestWithBobAndAliceInARoom:(XCTestCase*)testCase
+                   readyToTest:(void (^)(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString* room_id, XCTestExpectation *expectation))readyToTest;
+
+
 @end

@@ -14,23 +14,13 @@
  limitations under the License.
  */
 
-#import <UIKit/UIKit.h>
+#import "SettingsTableViewCell.h"
 
-#import "MasterTabBarController.h"
-#import "CustomAlert.h"
-
-@interface AppDelegate : UIResponder <UIApplicationDelegate, UITabBarControllerDelegate>
-
-@property (strong, nonatomic) UIWindow *window;
-@property (strong, nonatomic) MasterTabBarController *masterTabBarController;
-
-@property (strong, nonatomic) CustomAlert *errorNotification;
-
-+ (AppDelegate*)theDelegate;
-
-- (void)logout;
-
-- (CustomAlert*)showErrorAsAlert:(NSError*)error;
-
+@implementation SettingsTableViewCell
 @end
 
+@implementation SettingsTableCellWithSwitch
+@end
+
+@implementation SettingsTableCellWithTextView
+@end

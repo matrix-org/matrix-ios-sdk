@@ -15,6 +15,7 @@
  */
 
 #import "AppDelegate.h"
+#import "AppSettings.h"
 #import "RoomViewController.h"
 #import "MatrixHandler.h"
 #import "MediaManager.h"
@@ -64,6 +65,11 @@
 - (void)applicationDidEnterBackground:(UIApplication *)application {
     // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
     // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
+    
+    if (self.errorNotification) {
+        [self.errorNotification dismiss:NO];
+        self.errorNotification = nil;
+    }
 }
 
 - (void)applicationWillEnterForeground:(UIApplication *)application {
@@ -83,6 +89,8 @@
 - (void)logout {
     // Clear cache
     [MediaManager clearCache];
+    // Reset App settings
+    [[AppSettings sharedSettings] reset];
     // Logout Matrix
     [[MatrixHandler sharedHandler] logout];
     [self.masterTabBarController showLoginScreen];
@@ -90,7 +98,11 @@
     [self.masterTabBarController setSelectedIndex:TABBAR_HOME_INDEX];
 }
 
-- (UIAlertView*)showErrorAsAlert:(NSError*)error {
+- (CustomAlert*)showErrorAsAlert:(NSError*)error {
+    if (self.errorNotification) {
+        [self.errorNotification dismiss:NO];
+    }
+    
     NSString *title = [error.userInfo valueForKey:NSLocalizedFailureReasonErrorKey];
     if (!title)
     {
@@ -98,10 +110,11 @@
     }
     NSString *msg = [error.userInfo valueForKey:NSLocalizedDescriptionKey];
     
-    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:title message:msg delegate:nil cancelButtonTitle:@"OK" otherButtonTitles: nil];
-    [alert show];
+    self.errorNotification = [[CustomAlert alloc] initWithTitle:title message:msg style:CustomAlertStyleAlert];
+    self.errorNotification.cancelButtonIndex = [self.errorNotification addActionWithTitle:@"OK" style:CustomAlertActionStyleDefault handler:nil];
+    [self.errorNotification showInViewController:[self.masterTabBarController selectedViewController]];
     
-    return alert;
+    return self.errorNotification;
 }
 
 #pragma mark - Split view

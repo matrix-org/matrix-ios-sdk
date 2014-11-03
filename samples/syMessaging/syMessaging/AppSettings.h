@@ -13,24 +13,15 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  */
-
 #import <UIKit/UIKit.h>
 
-#import "MasterTabBarController.h"
-#import "CustomAlert.h"
+@interface AppSettings : NSObject
 
-@interface AppDelegate : UIResponder <UIApplicationDelegate, UITabBarControllerDelegate>
+@property (nonatomic) BOOL enableNotifications;
+@property (nonatomic) BOOL displayAllEvents;
 
-@property (strong, nonatomic) UIWindow *window;
-@property (strong, nonatomic) MasterTabBarController *masterTabBarController;
++ (AppSettings *)sharedSettings;
 
-@property (strong, nonatomic) CustomAlert *errorNotification;
-
-+ (AppDelegate*)theDelegate;
-
-- (void)logout;
-
-- (CustomAlert*)showErrorAsAlert:(NSError*)error;
+- (void)reset;
 
 @end
-

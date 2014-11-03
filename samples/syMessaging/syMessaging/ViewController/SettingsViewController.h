@@ -16,8 +16,9 @@
 
 #import <UIKit/UIKit.h>
 
-@interface SettingsViewController : UITableViewController <UITextFieldDelegate>
+@interface SettingsViewController : UITableViewController <UITextFieldDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate>
 
+- (void)reset;
 
 @end
 
