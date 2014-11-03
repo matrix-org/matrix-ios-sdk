@@ -61,6 +61,16 @@ NSString *const kMatrixLoginFlowTypeEmailIdentity = @"m.login.email.identity";
 
 @end
 
+
+NSString *const kMatrixPresenceOnline = @"online";
+NSString *const kMatrixPresenceUnavailable = @"unavailable";
+NSString *const kMatrixPresenceOffline = @"offline";
+NSString *const kMatrixPresenceFreeForChat = @"free_for_chat";
+NSString *const kMatrixPresenceHidden = @"hidden";
+
+@implementation MXUser
+@end
+
 @implementation MXRoomMember
 @end
 

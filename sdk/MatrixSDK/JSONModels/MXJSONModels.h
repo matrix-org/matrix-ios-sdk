@@ -135,39 +135,62 @@ FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeEmailIdentity;
 
 
 /**
- `MXRoomMember` represents a room member.
+ Presence types
  */
-@interface MXRoomMember : MXJSONModel
+FOUNDATION_EXPORT NSString *const kMatrixPresenceOnline;
+FOUNDATION_EXPORT NSString *const kMatrixPresenceUnavailable;
+FOUNDATION_EXPORT NSString *const kMatrixPresenceOffline;
+FOUNDATION_EXPORT NSString *const kMatrixPresenceFreeForChat;
+FOUNDATION_EXPORT NSString *const kMatrixPresenceHidden;
 
+/**
+ `MXUser` represents a user.
+ */
+@interface MXUser : MXJSONModel
+    
     /**
      The user id.
      */
     @property (nonatomic) NSString *user_id;
-
+    
     /**
      The user display name.
      */
     @property (nonatomic) NSString *displayname;
-
+    
     /**
      The url of the user of the avatar.
      */
     @property (nonatomic) NSString *avatar_url;
-
+    
     /**
      The timestamp of the last time the user has been active.
      */
     @property (nonatomic) NSUInteger last_active_ago;
+    
+    /**
+     The presence status.
+     */
+    @property (nonatomic) NSString *presence;
+
+    /**
+     The user status.
+     */
+    @property (nonatomic) NSString *statusMsg;
+
+@end
+
+
+/**
+ `MXRoomMember` represents a room member.
+ This is a MXUser inside a room.
+ */
+@interface MXRoomMember : MXUser
 
     /**
      The membership state.
      */
     @property (nonatomic) NSString *membership;
-
-    /* @TODO
-    @property (nonatomic) NSString *presence;
-    @property (nonatomic) NSString *status_msg;
-     */
 
 @end
 
