@@ -183,20 +183,41 @@
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
-        
     }];
 }
 
 - (void)testBanUserInRoom
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoom:self readyToTest:^(MXSession *bobSession, NSString *room_id, XCTestExpectation *expectation) {
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+    
+    [sharedData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, NSString *room_id, XCTestExpectation *expectation) {
         
-        MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-        
-        [bobSession banUser:sharedData.bobCredentials.user_id inRoom:room_id reason:@"No particular reason" success:^{
+        [bobSession banUser:sharedData.aliceCredentials.user_id inRoom:room_id reason:@"No particular reason" success:^{
             
-            // No data to test. Just happy to go here.
-            [expectation fulfill];
+            // Check room actual members
+            [bobSession members:room_id success:^(NSArray *members) {
+                
+                XCTAssertEqual(2, members.count, @"There must still be 2 members");
+                
+                for (MXRoomMember *member in members)
+                {
+                    if ([member.user_id isEqualToString:sharedData.aliceCredentials.user_id])
+                    {
+                        XCTAssert([member.membership isEqualToString:kMXMembershipBan], @"A banned user membership is ban, not %@", member.membership);
+                    }
+                    else
+                    {
+                        // The other user is Bob
+                        XCTAssert([member.user_id isEqualToString:sharedData.bobCredentials.user_id], @"Unexpected member: %@", member);
+                    }
+                }
+                
+                [expectation fulfill];
+            }
+                        failure:^(NSError *error) {
+                            NSAssert(NO, @"Cannot check test result - error: %@", error);
+                            [expectation fulfill];
+                        }];
             
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
