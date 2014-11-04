@@ -141,7 +141,7 @@ FOUNDATION_EXPORT NSString *const kMXMembershipBan;
 /**
  Indicates if the event hosts state data
  */
-@property (nonatomic, readonly) BOOL isState;
+- (BOOL)isState;
 
 /**
  Mapping from MXEventTypeString to MXEventType

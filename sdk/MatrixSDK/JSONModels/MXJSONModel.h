@@ -28,7 +28,7 @@
 /**
  This dictionary contains keys/values that have been in the JSON source object.
  */
-@property (nonatomic, readonly) NSDictionary *others;
+- (NSDictionary *)others;
 
 /**
  Create a model instance from a JSON dictionary

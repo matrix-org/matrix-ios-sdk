@@ -18,7 +18,7 @@
 #import "MXEvent.h"
 
 @implementation MXPublicRoom
--(NSString *)displayname
+- (NSString *)displayname
 {
     NSString *displayname;
     if (self.aliases && 0 < self.aliases.count)
