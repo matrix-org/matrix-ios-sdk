@@ -94,7 +94,7 @@
              NSArray *publicRooms = [MXPublicRoom modelsFromJSON:JSONResponse[@"chunk"]];
              XCTAssertNotNil(publicRooms);
              XCTAssertGreaterThanOrEqual(publicRooms.count, 1);
-                
+             
              MXPublicRoom *publicRoom = publicRooms[0];
              XCTAssert([publicRoom isKindOfClass:[MXPublicRoom class]]);
              XCTAssertNotNil(publicRoom.room_id);
@@ -108,7 +108,6 @@
     }];
 }
 
-/* TODO: Manu's WIP
 - (void)testOthers
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndThePublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
@@ -119,7 +118,20 @@
                               success:^(NSDictionary *JSONResponse)
          {
              NSArray *chunk = JSONResponse[@"chunk"];
- 
+             
+             // Convert the JSON in a MXJSONModel class with no property
+             // All values in the JSON must go into the MXJSONModel.others dictionary
+             MXJSONModelTestClass *nonTypedObject = [MXJSONModelTestClass modelFromJSON:chunk[0]];
+             XCTAssertNotNil(nonTypedObject.others);
+             
+             // Check expected keys for a MXPublicRoom JSON
+             NSDictionary *others = nonTypedObject.others;
+             XCTAssertNotNil(others[@"room_id"]);
+             XCTAssertNotNil(others[@"name"]);
+             XCTAssertNotNil(others[@"aliases"]);
+             
+             MXPublicRoom *publicRoom = [MXPublicRoom modelFromJSON:chunk[0]];
+             XCTAssertNil(publicRoom.others, @"Each field of a publicRooms JSON response should be declared as property in MXPublicRoom.");
              
              [expectation fulfill];
              
@@ -130,7 +142,6 @@
     }];
 
 }
-*/
 
 
 @end

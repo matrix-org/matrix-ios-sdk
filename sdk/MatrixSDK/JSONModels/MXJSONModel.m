@@ -32,9 +32,14 @@
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
     // Use Mantle 
-    return [MTLJSONAdapter modelOfClass:[self class]
+    id model = [MTLJSONAdapter modelOfClass:[self class]
                      fromJSONDictionary:JSONDictionary
                                   error:nil];
+    
+    // Put JSON keys not defined as class properties under the others dict
+    [model setOthers:JSONDictionary];
+    
+    return model;
 }
 
 + (NSArray *)modelsFromJSON:(NSArray *)JSONDictionaries
@@ -57,26 +62,21 @@
     return models;
 }
 
-- (instancetype)initWithDictionary:(NSDictionary *)dictionaryValue error:(NSError *__autoreleasing *)error
+- (void)setOthers:(NSDictionary *)JSONDictionary
 {
-    // Do the JSON -> class instance properties mapping
-    id instance = [super initWithDictionary:dictionaryValue error:error];
-    
     // Store non declared JSON keys into the others property
     NSSet *propertyKeys = [self.class propertyKeys];
-    for (NSString *key in dictionaryValue)
+    for (NSString *key in JSONDictionary)
     {
-        if ([propertyKeys containsObject:key])
+        if (![propertyKeys containsObject:key])
         {
             if (nil == others)
             {
                 others = [NSMutableDictionary dictionary];
             }
-            others[key] = dictionaryValue[key];
+            others[key] = JSONDictionary[key];
         }
     }
-    
-    return instance;
 }
 
 -(NSDictionary *)others
