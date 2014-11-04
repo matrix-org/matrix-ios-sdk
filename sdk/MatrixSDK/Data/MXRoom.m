@@ -324,9 +324,7 @@
 #pragma mark - State events handling
 - (void)handleStateEvents:(NSArray*)roomStateEvents
 {
-    NSValueTransformer *transformer = [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXEvent.class];
-    
-    NSArray *events = [transformer transformedValue:roomStateEvents];
+    NSArray *events = [MXEvent modelsFromJSON:roomStateEvents];
     
     for (MXEvent *event in events) {
         [self handleStateEvent:event];

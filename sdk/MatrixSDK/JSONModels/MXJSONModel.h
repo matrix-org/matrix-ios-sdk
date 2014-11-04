@@ -38,4 +38,12 @@
  */
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary;
 
+/**
+ Create model instances from an array of JSON dictionaries.
+ 
+ @param JSONDictionaries the JSON data array.
+ @return the newly created instances.
+ */
++ (NSArray *)modelsFromJSON:(NSArray *)JSONDictionaries;
+
 @end

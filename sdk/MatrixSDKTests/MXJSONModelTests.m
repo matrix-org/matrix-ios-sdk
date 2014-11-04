@@ -79,7 +79,33 @@
              [expectation fulfill];
          }];
     }];
-    
+}
+
+- (void)testModelsFromJSON
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndThePublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+        
+        // Use publicRooms JSON response to check modelFromJSON
+        [httpClient requestWithMethod:@"GET"
+                                 path:@"publicRooms"
+                           parameters:nil
+                              success:^(NSDictionary *JSONResponse)
+         {
+             NSArray *publicRooms = [MXPublicRoom modelsFromJSON:JSONResponse[@"chunk"]];
+             XCTAssertNotNil(publicRooms);
+             XCTAssertGreaterThanOrEqual(publicRooms.count, 1);
+                
+             MXPublicRoom *publicRoom = publicRooms[0];
+             XCTAssert([publicRoom isKindOfClass:[MXPublicRoom class]]);
+             XCTAssertNotNil(publicRoom.room_id);
+             
+             [expectation fulfill];
+             
+         } failure:^(NSError *error) {
+             XCTFail(@"The request should not fail - NSError: %@", error);
+             [expectation fulfill];
+         }];
+    }];
 }
 
 /* TODO: Manu's WIP

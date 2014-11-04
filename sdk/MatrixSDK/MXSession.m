@@ -112,8 +112,7 @@
         if (streamingActive)
         {
             // Convert chunk array into an array of MXEvents
-            NSValueTransformer *transformer = [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXEvent.class];
-            NSArray *events = [transformer transformedValue:JSONData[@"chunk"]];
+            NSArray *events = [MXEvent modelsFromJSON:JSONData[@"chunk"]];
             
             // And handle them
             [self handleLiveEvents:events];

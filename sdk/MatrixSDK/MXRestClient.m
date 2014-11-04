@@ -131,11 +131,7 @@ MXAuthAction;
                        parameters:nil
                           success:^(NSDictionary *JSONResponse)
      {
-         NSArray *array = JSONResponse[@"flows"];
-         NSValueTransformer *transformer = [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXLoginFlow.class];
-         
-         NSArray *flows = [transformer transformedValue:array];
-         
+         NSArray *flows = [MXLoginFlow modelsFromJSON:JSONResponse[@"flows"]];
          success(flows);
      }
                           failure:^(NSError *error)
@@ -612,11 +608,7 @@ MXAuthAction;
                        parameters:nil
                           success:^(NSDictionary *JSONResponse)
      {
-         NSArray *array = JSONResponse[@"chunk"];
-         NSValueTransformer *transformer = [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXPublicRoom.class];
-         
-         NSArray *publicRooms = [transformer transformedValue:array];
-         
+         NSArray *publicRooms = [MXPublicRoom modelsFromJSON:JSONResponse[@"chunk"]];
          success(publicRooms);
      }
                           failure:^(NSError *error)

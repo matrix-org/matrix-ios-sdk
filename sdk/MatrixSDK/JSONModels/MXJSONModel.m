@@ -37,6 +37,26 @@
                                   error:nil];
 }
 
++ (NSArray *)modelsFromJSON:(NSArray *)JSONDictionaries
+{
+    NSMutableArray *models;
+    
+    for (NSDictionary *JSONDictionary in JSONDictionaries)
+    {
+        id model = [self modelFromJSON:JSONDictionary];
+        if (model)
+        {
+            if (nil == models)
+            {
+                models = [NSMutableArray array];
+            }
+            
+            [models addObject:model];
+        }
+    }
+    return models;
+}
+
 - (instancetype)initWithDictionary:(NSDictionary *)dictionaryValue error:(NSError *__autoreleasing *)error
 {
     // Do the JSON -> class instance properties mapping
