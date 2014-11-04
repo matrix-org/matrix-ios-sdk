@@ -290,13 +290,36 @@
     }];
 }
 
+- (void)testMXRoomMember
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
+        
+        [bobRestClient members:room_id success:^(NSArray *members) {
+            for (MXRoomMember *member in members)
+            {
+                if ([member.userId isEqualToString:aliceRestClient.credentials.user_id])
+                {
+                    XCTAssert([member.displayname isEqualToString:kMXTestsAliceDisplayName], @"displayname is wrong: %@", member.displayname);
+                    XCTAssert([member.avatar_url isEqualToString:kMXTestsAliceAvatarURL], @"member.avatarUrl is wrong: %@", member.avatar_url);
+                }
+            }
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 #pragma mark - Profile operations
 - (void)testUserDisplayName
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
         
         // Set the name
-        __block NSString *newDisplayName = @"mxAlice";
+        __block NSString *newDisplayName = @"mxAlice2";
         [aliceRestClient setDisplayName:newDisplayName success:^{
             
             [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
@@ -325,7 +348,7 @@
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
         
         // Set the name
-        __block NSString *newDisplayName = @"mxAlice";
+        __block NSString *newDisplayName = @"mxAlice2";
         [aliceRestClient setDisplayName:newDisplayName success:^{
             
             [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBob:nil readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation2) {
@@ -356,7 +379,7 @@
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
         
         // Set the avatar url
-        __block NSString *newAvatarUrl = @"http://matrix.org/matrix.png";
+        __block NSString *newAvatarUrl = @"http://matrix.org/matrix2.png";
         [aliceRestClient setAvatarUrl:newAvatarUrl success:^{
             
             [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
@@ -385,7 +408,7 @@
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
         
         // Set the avatar url
-        __block NSString *newAvatarUrl = @"http://matrix.org/matrix.png";
+        __block NSString *newAvatarUrl = @"http://matrix.org/matrix2.png";
         [aliceRestClient setAvatarUrl:newAvatarUrl success:^{
             
             [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBob:nil readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation2) {

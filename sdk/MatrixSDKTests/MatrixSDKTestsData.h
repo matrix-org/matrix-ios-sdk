@@ -23,6 +23,10 @@
 // The URL of your test home server
 FOUNDATION_EXPORT NSString * const kMXTestsHomeServerURL;
 
+// Alice has a displayname and an avatar
+FOUNDATION_EXPORT NSString * const kMXTestsAliceDisplayName;
+FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
+
 @interface MatrixSDKTestsData : NSObject
 
 + (id)sharedData;
@@ -58,8 +62,6 @@ FOUNDATION_EXPORT NSString * const kMXTestsHomeServerURL;
 
 #pragma mark - mxAlice
 @property (nonatomic, readonly) MXCredentials *aliceCredentials;
-
-- (void)getAliceCredentials:(void (^)())success;
 
 - (void)doMXRestClientTestWithAlice:(XCTestCase*)testCase
                    readyToTest:(void (^)(MXRestClient *aliceRestClient, XCTestExpectation *expectation))readyToTest;

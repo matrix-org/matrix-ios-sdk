@@ -32,6 +32,9 @@
  */
 NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
 
+NSString * const kMXTestsAliceDisplayName = @"mxAlice";
+NSString * const kMXTestsAliceAvatarURL = @"http://matrix.org/matrix.png";
+
 
 #define MXTESTS_BOB @"mxBob"
 #define MXTESTS_BOB_PWD @"bobbob"
@@ -367,13 +370,30 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
     }
 }
 
-- (void)getAliceMXRestClient:(void (^)(MXRestClient *))success
+- (void)getAliceMXRestClient:(void (^)(MXRestClient *aliceRestClient))success
 {
     [self getAliceCredentials:^{
         
-        MXRestClient *restClient = [[MXRestClient alloc] initWithCredentials:self.aliceCredentials];
+        MXRestClient *aliceRestClient = [[MXRestClient alloc] initWithCredentials:self.aliceCredentials];
+        __block MXRestClient *aliceRestClient2 = aliceRestClient;
         
-        success(restClient);
+        // Set Alice displayname and avator
+        [aliceRestClient setDisplayName:kMXTestsAliceDisplayName success:^{
+            
+            __block MXRestClient *aliceRestClient3 = aliceRestClient2;
+            
+            [aliceRestClient2 setAvatarUrl:kMXTestsAliceAvatarURL success:^{
+                
+                success(aliceRestClient3);
+                
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set mxAlice avatar");
+            }];
+            
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set mxAlice displayname");
+        }];
+        
     }];
 }
 
@@ -387,14 +407,8 @@ NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
         expectation = [testCase expectationWithDescription:@"asyncTest"];
     }
     
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-    
-    [sharedData getAliceCredentials:^{
-        
-        MXRestClient *restClient = [[MXRestClient alloc] initWithCredentials:self.aliceCredentials];
-        
-        readyToTest(restClient, expectation);
-        
+    [self getAliceMXRestClient:^(MXRestClient *aliceRestClient) {
+        readyToTest(aliceRestClient, expectation);
     }];
     
     if (testCase)
