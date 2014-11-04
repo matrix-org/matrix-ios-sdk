@@ -318,22 +318,21 @@
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
         
+        __block MXRestClient *aliceRestClient2 = aliceRestClient;
+        
         // Set the name
         __block NSString *newDisplayName = @"mxAlice2";
         [aliceRestClient setDisplayName:newDisplayName success:^{
             
-            [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+            // Then retrieve it
+            [aliceRestClient2 displayName:nil success:^(NSString *displayname) {
                 
-                // Then retrieve it
-                [aliceRestClient displayName:nil success:^(NSString *displayname) {
-                    
-                    XCTAssertTrue([displayname isEqualToString:newDisplayName], @"Must retrieved the set string: %@ - %@", displayname, newDisplayName);
-                    [expectation fulfill];
-                    
-                } failure:^(NSError *error) {
-                    XCTFail(@"The request should not fail - NSError: %@", error);
-                    [expectation fulfill];
-                }];
+                XCTAssertTrue([displayname isEqualToString:newDisplayName], @"Must retrieved the set string: %@ - %@", displayname, newDisplayName);
+                [expectation fulfill];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
             }];
 
         } failure:^(NSError *error) {
@@ -378,22 +377,21 @@
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
         
+        __block MXRestClient *aliceRestClient2 = aliceRestClient;
+        
         // Set the avatar url
         __block NSString *newAvatarUrl = @"http://matrix.org/matrix2.png";
         [aliceRestClient setAvatarUrl:newAvatarUrl success:^{
-            
-            [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+              
+            // Then retrieve it
+            [aliceRestClient2 avatarUrl:nil success:^(NSString *avatar_url) {
                 
-                // Then retrieve it
-                [aliceRestClient avatarUrl:nil success:^(NSString *avatar_url) {
-                    
-                    XCTAssertTrue([avatar_url isEqualToString:newAvatarUrl], @"Must retrieved the set string: %@ - %@", avatar_url, newAvatarUrl);
-                    [expectation fulfill];
-                    
-                } failure:^(NSError *error) {
-                    XCTFail(@"The request should not fail - NSError: %@", error);
-                    [expectation fulfill];
-                }];
+                XCTAssertTrue([avatar_url isEqualToString:newAvatarUrl], @"Must retrieved the set string: %@ - %@", avatar_url, newAvatarUrl);
+                [expectation fulfill];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
             }];
             
         } failure:^(NSError *error) {
