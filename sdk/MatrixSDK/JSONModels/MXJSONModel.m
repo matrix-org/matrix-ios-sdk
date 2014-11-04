@@ -23,10 +23,21 @@
 
 + (NSDictionary *)JSONKeyPathsByPropertyKey
 {
-    // The class that inherits from MXJSONModel should declare its properties as they are
-    // defined in the Matrix home server JSON response.
-    // So, let Mantle do the mapping automatically
-    return @{};
+    NSMutableDictionary *JSONKeyPathsByPropertyKey = [NSMutableDictionary dictionary];
+    
+    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"(?<=[a-z])([A-Z])|([A-Z])(?=[a-z])" options:0 error:nil];
+
+    // List all properties defined by the class
+    NSSet *propertyKeys = [self.class propertyKeys];
+    for (NSString *propertyKey in propertyKeys)
+    {
+        // Manage camel-cased properties
+        // Home server uses underscore-separated compounds keys like "event_id". ObjC properties name trend is more CamelCase like "eventId".
+        NSString *underscoredString = [[regex stringByReplacingMatchesInString:propertyKey options:0 range:NSMakeRange(0, propertyKey.length) withTemplate:@"_$1$2"] lowercaseString];
+        JSONKeyPathsByPropertyKey[propertyKey] = underscoredString;
+    }
+
+    return JSONKeyPathsByPropertyKey;
 }
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
