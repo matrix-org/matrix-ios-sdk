@@ -74,7 +74,7 @@ NSString *const kMXMembershipBan    = @"ban";
 
 - (NSString *)description
 {
-    return [NSString stringWithFormat:@"%@: %@ - %@: %@", self.event_id, self.type, [NSDate dateWithTimeIntervalSince1970:self.origin_server_ts/1000], self.content];
+    return [NSString stringWithFormat:@"%@: %@ - %@: %@", self.eventId, self.type, [NSDate dateWithTimeIntervalSince1970:self.originServerTs/1000], self.content];
 }
 
 - (instancetype)initWithDictionary:(NSDictionary *)dictionaryValue error:(NSError *__autoreleasing *)error
@@ -100,7 +100,7 @@ NSString *const kMXMembershipBan    = @"ban";
 - (BOOL)isState
 {
     // The event is a state event if has a state_key
-    return (nil != self.state_key);
+    return (nil != self.stateKey);
 }
 
 @end

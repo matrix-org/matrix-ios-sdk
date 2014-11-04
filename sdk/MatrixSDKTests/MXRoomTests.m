@@ -85,11 +85,11 @@
     
     for (MXEvent *event in events)
     {
-        if ([eventIDs objectForKey:event.event_id])
+        if ([eventIDs objectForKey:event.eventId])
         {
             XCTAssert(NO, @"Duplicated event in %@ - MXEvent: %@", text, event);
         }
-        eventIDs[event.event_id] = event;
+        eventIDs[event.eventId] = event;
     }
 }
 
@@ -129,10 +129,10 @@
             
             for (MXRoomMember *member in room.members)
             {
-                XCTAssertTrue([member.userId isEqualToString:bobRestClient.credentials.user_id], "This must be mxBob");
+                XCTAssertTrue([member.userId isEqualToString:bobRestClient.credentials.userId], "This must be mxBob");
             }
             
-            XCTAssertNotNil([room getMember:bobRestClient.credentials.user_id], @"Bob must be retrieved");
+            XCTAssertNotNil([room getMember:bobRestClient.credentials.userId], @"Bob must be retrieved");
             
             XCTAssertNil([room getMember:@"NonExistingUserId"], @"getMember must return nil if the user does not exist");
             
@@ -151,7 +151,7 @@
         
         MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
         
-        NSString *bobUserId = sharedData.bobCredentials.user_id;
+        NSString *bobUserId = sharedData.bobCredentials.userId;
         NSString *bobMemberName = [room memberName:bobUserId];
         
         XCTAssertNotNil(bobMemberName);
@@ -172,7 +172,7 @@
         XCTAssertEqual(messagesBeforePagination.count, 1, @"Just after initialSync, we should have 1 message");
         
         MXEvent *event = messagesBeforePagination[0];
-        NSString *event_id = event.event_id;
+        NSString *event_id = event.eventId;
         
         [room paginateBackMessages:50 success:^(NSArray *messages) {
             
@@ -182,7 +182,7 @@
             MXEvent *eventAfterPagination = messagesBeforePagination[0];
             
             XCTAssertEqual(eventAfterPagination, event, @"The only event must be the same as before the pagination action");
-            XCTAssertTrue([eventAfterPagination.event_id isEqualToString:event_id], @"The only event content must be the same as before the pagination action");
+            XCTAssertTrue([eventAfterPagination.eventId isEqualToString:event_id], @"The only event content must be the same as before the pagination action");
             
             [expectation fulfill];
             
@@ -202,10 +202,10 @@
             NSUInteger prev_ts = 0;
             for (MXEvent *event in room.messages)
             {
-                if (event.origin_server_ts)
+                if (event.originServerTs)
                 {
-                    XCTAssertGreaterThanOrEqual(event.origin_server_ts, prev_ts, @"Events in messages must be listed in chronological order");
-                    prev_ts = event.origin_server_ts;
+                    XCTAssertGreaterThanOrEqual(event.originServerTs, prev_ts, @"Events in messages must be listed in chronological order");
+                    prev_ts = event.originServerTs;
                 }
                 else
                 {
@@ -304,10 +304,10 @@
             NSUInteger prev_ts = 0;
             for (MXEvent *event in messages)
             {
-                if (event.origin_server_ts)
+                if (event.originServerTs)
                 {
-                    XCTAssertGreaterThanOrEqual(event.origin_server_ts, prev_ts, @"Events in messages must be listed in chronological order");
-                    prev_ts = event.origin_server_ts;
+                    XCTAssertGreaterThanOrEqual(event.originServerTs, prev_ts, @"Events in messages must be listed in chronological order");
+                    prev_ts = event.originServerTs;
                 }
                 else
                 {
@@ -396,7 +396,7 @@
                             MXEvent *event = room.messages[i];
                             MXEvent *event2 = room2.messages[i];
                             
-                            XCTAssertTrue([event2.event_id isEqualToString:event.event_id], @"Events mismatch: %@ - %@", event, event2);
+                            XCTAssertTrue([event2.eventId isEqualToString:event.eventId], @"Events mismatch: %@ - %@", event, event2);
                         }
                         
                         [expectation fulfill];
@@ -487,7 +487,7 @@
 
         // Test room the display formatting: "roomName (roomAlias)"
         XCTAssertNotNil(room.displayname);
-        XCTAssertTrue([room.displayname isEqualToString:mxSession.matrixRestClient.credentials.user_id], @"The room name must be Bob's userID as he has no displayname: %@ - %@", room.displayname, mxSession.matrixRestClient.credentials.user_id);
+        XCTAssertTrue([room.displayname isEqualToString:mxSession.matrixRestClient.credentials.userId], @"The room name must be Bob's userID as he has no displayname: %@ - %@", room.displayname, mxSession.matrixRestClient.credentials.userId);
         
         [expectation fulfill];
     }];
@@ -506,7 +506,7 @@
             XCTAssertTrue(isLive);
             
             XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
-            XCTAssertTrue([event.event_id isEqualToString:messageEventID]);
+            XCTAssertTrue([event.eventId isEqualToString:messageEventID]);
             
             
             [expectation fulfill];
@@ -543,7 +543,7 @@
             XCTAssertTrue(isLive);
             
             XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
-            XCTAssertTrue([event.event_id isEqualToString:messageEventID]);
+            XCTAssertTrue([event.eventId isEqualToString:messageEventID]);
             
             
             [expectation fulfill];

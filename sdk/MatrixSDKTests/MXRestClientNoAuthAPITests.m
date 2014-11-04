@@ -114,9 +114,9 @@
                          success:^(MXCredentials *credentials) {
                              
                              XCTAssertNotNil(credentials);
-                             XCTAssertNotNil(credentials.home_server);
-                             XCTAssertNotNil(credentials.user_id);
-                             XCTAssertNotNil(credentials.access_token);
+                             XCTAssertNotNil(credentials.homeServer);
+                             XCTAssertNotNil(credentials.userId);
+                             XCTAssertNotNil(credentials.accessToken);
                              
                              [expectation fulfill];
                              
@@ -195,9 +195,9 @@
                           success:^(MXCredentials *credentials) {
                               
                               XCTAssertNotNil(credentials);
-                              XCTAssertNotNil(credentials.home_server);
-                              XCTAssertNotNil(credentials.user_id);
-                              XCTAssertNotNil(credentials.access_token);
+                              XCTAssertNotNil(credentials.homeServer);
+                              XCTAssertNotNil(credentials.userId);
+                              XCTAssertNotNil(credentials.accessToken);
                               
                               [expectation fulfill];
                               
@@ -251,7 +251,7 @@
             for (MXPublicRoom *room in rooms)
             {
                 // Find the Matrix HQ room (#matrix:matrix.org) by its ID
-                if ([room.room_id isEqualToString:room_id])
+                if ([room.roomId isEqualToString:room_id])
                 {
                     theMXPublicRoom = room;
                 }
@@ -260,7 +260,7 @@
             XCTAssertNotNil(theMXPublicRoom);
             XCTAssertTrue([theMXPublicRoom.name  isEqualToString:@"MX Public Room test"]);
             XCTAssertTrue([theMXPublicRoom.topic isEqualToString:@"The public room used by SDK tests"]);
-            XCTAssertGreaterThan(theMXPublicRoom.num_joined_members, 0, @"The is at least mxBob at #matrix:matrix.org");
+            XCTAssertGreaterThan(theMXPublicRoom.numJoinedMembers, 0, @"The is at least mxBob at #matrix:matrix.org");
             
             [expectation fulfill];
             

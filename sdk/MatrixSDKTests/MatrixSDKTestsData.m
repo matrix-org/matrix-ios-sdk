@@ -157,7 +157,7 @@ NSString * const kMXTestsAliceAvatarURL = @"http://matrix.org/matrix.png";
         // Create a random room to use
         [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate room_alias_name:nil topic:nil success:^(MXCreateRoomResponse *response) {
             
-            readyToTest(bobRestClient, response.room_id, expectation);
+            readyToTest(bobRestClient, response.roomId, expectation);
             
         } failure:^(NSError *error) {
             NSAssert(NO, @"Cannot create a room - error: %@", error);
@@ -178,7 +178,7 @@ NSString * const kMXTestsAliceAvatarURL = @"http://matrix.org/matrix.png";
                          topic:@"The public room used by SDK tests"
                        success:^(MXCreateRoomResponse *response) {
             
-            readyToTest(bobRestClient, response.room_id, expectation);
+            readyToTest(bobRestClient, response.roomId, expectation);
             
         } failure:^(NSError *error) {
             if ([MXError isMXError:error])
@@ -221,9 +221,9 @@ NSString * const kMXTestsAliceAvatarURL = @"http://matrix.org/matrix.png";
         [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate room_alias_name:nil topic:nil success:^(MXCreateRoomResponse *response) {
             
             // Post the the message text in it
-            [bobRestClient postTextMessage:response.room_id text:newTextMessage success:^(NSString *event_id) {
+            [bobRestClient postTextMessage:response.roomId text:newTextMessage success:^(NSString *event_id) {
                 
-                readyToTest(bobRestClient, response.room_id, event_id, expectation);
+                readyToTest(bobRestClient, response.roomId, event_id, expectation);
                 
             } failure:^(NSError *error) {
                 NSAssert(NO, @"Cannot set up intial test conditions");
@@ -318,7 +318,7 @@ NSString * const kMXTestsAliceAvatarURL = @"http://matrix.org/matrix.png";
         [mxRestClient2 createRoom:nil visibility:kMXRoomVisibilityPrivate room_alias_name:nil topic:nil success:^(MXCreateRoomResponse *response) {
 
             // Fill it with messages
-            [self for:mxRestClient2 andRoom:response.room_id postMessages:messagesCount success:^{
+            [self for:mxRestClient2 andRoom:response.roomId postMessages:messagesCount success:^{
 
                 // Go to the next room
                 [self for:mxRestClient2 createRooms:roomsCount - 1 withMessages:messagesCount success:success];
@@ -425,7 +425,7 @@ NSString * const kMXTestsAliceAvatarURL = @"http://matrix.org/matrix.png";
         
         [self doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
             
-            [bobRestClient inviteUser:self.aliceCredentials.user_id toRoom:room_id success:^{
+            [bobRestClient inviteUser:self.aliceCredentials.userId toRoom:room_id success:^{
                 
                 [aliceRestClient joinRoom:room_id success:^{
                     

@@ -43,8 +43,8 @@
         MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
         
         XCTAssertTrue([bobRestClient.homeserver isEqualToString:kMXTestsHomeServerURL], "bobRestClient.homeserver(%@) is wrong", bobRestClient.homeserver);
-        XCTAssertTrue([bobRestClient.credentials.user_id isEqualToString:sharedData.bobCredentials.user_id], "bobRestClient.user_id(%@) is wrong", bobRestClient.credentials.user_id);
-        XCTAssertTrue([bobRestClient.credentials.access_token isEqualToString:sharedData.bobCredentials.access_token], "bobRestClient.access_token(%@) is wrong", bobRestClient.credentials.access_token);
+        XCTAssertTrue([bobRestClient.credentials.userId isEqualToString:sharedData.bobCredentials.userId], "bobRestClient.user_id(%@) is wrong", bobRestClient.credentials.userId);
+        XCTAssertTrue([bobRestClient.credentials.accessToken isEqualToString:sharedData.bobCredentials.accessToken], "bobRestClient.access_token(%@) is wrong", bobRestClient.credentials.accessToken);
         
         [expectation fulfill];
     }];
@@ -110,7 +110,7 @@
         [sharedData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
             
             // Do the test
-            [bobRestClient inviteUser:sharedData.aliceCredentials.user_id toRoom:room_id success:^{
+            [bobRestClient inviteUser:sharedData.aliceCredentials.userId toRoom:room_id success:^{
                 
                 // Check room actual members
                 [bobRestClient members:room_id success:^(NSArray *members) {
@@ -119,14 +119,14 @@
                     
                     for (MXRoomMember *member in members)
                     {
-                        if ([member.userId isEqualToString:sharedData.aliceCredentials.user_id])
+                        if ([member.userId isEqualToString:sharedData.aliceCredentials.userId])
                         {
                             XCTAssert([member.membership isEqualToString:kMXMembershipInvite], @"A invited user membership is invite, not %@", member.membership);
                         }
                         else
                         {
                             // The other user is Bob
-                            XCTAssert([member.userId isEqualToString:sharedData.bobCredentials.user_id], @"Unexpected member: %@", member);
+                            XCTAssert([member.userId isEqualToString:sharedData.bobCredentials.userId], @"Unexpected member: %@", member);
                         }
                     }
                     
@@ -152,7 +152,7 @@
     
     [sharedData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
         
-        [bobRestClient kickUser:sharedData.aliceCredentials.user_id fromRoom:room_id reason:@"No particular reason" success:^{
+        [bobRestClient kickUser:sharedData.aliceCredentials.userId fromRoom:room_id reason:@"No particular reason" success:^{
             
             // Check room actual members
             [bobRestClient members:room_id success:^(NSArray *members) {
@@ -161,14 +161,14 @@
                 
                 for (MXRoomMember *member in members)
                 {
-                    if ([member.userId isEqualToString:sharedData.aliceCredentials.user_id])
+                    if ([member.userId isEqualToString:sharedData.aliceCredentials.userId])
                     {
                         XCTAssert([member.membership isEqualToString:kMXMembershipLeave], @"A kicked user membership is leave, not %@", member.membership);
                     }
                     else
                     {
                         // The other user is Bob
-                        XCTAssert([member.userId isEqualToString:sharedData.bobCredentials.user_id], @"Unexpected member: %@", member);
+                        XCTAssert([member.userId isEqualToString:sharedData.bobCredentials.userId], @"Unexpected member: %@", member);
                     }
                 }
                 
@@ -192,7 +192,7 @@
     
     [sharedData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
         
-        [bobRestClient banUser:sharedData.aliceCredentials.user_id inRoom:room_id reason:@"No particular reason" success:^{
+        [bobRestClient banUser:sharedData.aliceCredentials.userId inRoom:room_id reason:@"No particular reason" success:^{
             
             // Check room actual members
             [bobRestClient members:room_id success:^(NSArray *members) {
@@ -201,14 +201,14 @@
                 
                 for (MXRoomMember *member in members)
                 {
-                    if ([member.userId isEqualToString:sharedData.aliceCredentials.user_id])
+                    if ([member.userId isEqualToString:sharedData.aliceCredentials.userId])
                     {
                         XCTAssert([member.membership isEqualToString:kMXMembershipBan], @"A banned user membership is ban, not %@", member.membership);
                     }
                     else
                     {
                         // The other user is Bob
-                        XCTAssert([member.userId isEqualToString:sharedData.bobCredentials.user_id], @"Unexpected member: %@", member);
+                        XCTAssert([member.userId isEqualToString:sharedData.bobCredentials.userId], @"Unexpected member: %@", member);
                     }
                 }
                 
@@ -234,7 +234,7 @@
         [bobRestClient createRoom:nil visibility:nil room_alias_name:nil topic:nil success:^(MXCreateRoomResponse *response) {
             
             XCTAssertNotNil(response);
-            XCTAssertNotNil(response.room_id, "The home server should have allocated a room id");
+            XCTAssertNotNil(response.roomId, "The home server should have allocated a room id");
             
             // Do not test response.room_alias as it is not filled here
             
@@ -278,7 +278,7 @@
             XCTAssertEqual(members.count, 1);
             
             MXRoomMember *roomMember = members[0];
-            XCTAssertTrue([roomMember.userId isEqualToString:bobRestClient.credentials.user_id]);
+            XCTAssertTrue([roomMember.userId isEqualToString:bobRestClient.credentials.userId]);
             
             [expectation fulfill];
             
@@ -297,10 +297,10 @@
         [bobRestClient members:room_id success:^(NSArray *members) {
             for (MXRoomMember *member in members)
             {
-                if ([member.userId isEqualToString:aliceRestClient.credentials.user_id])
+                if ([member.userId isEqualToString:aliceRestClient.credentials.userId])
                 {
                     XCTAssert([member.displayname isEqualToString:kMXTestsAliceDisplayName], @"displayname is wrong: %@", member.displayname);
-                    XCTAssert([member.avatar_url isEqualToString:kMXTestsAliceAvatarURL], @"member.avatarUrl is wrong: %@", member.avatar_url);
+                    XCTAssert([member.avatarUrl isEqualToString:kMXTestsAliceAvatarURL], @"member.avatarUrl is wrong: %@", member.avatarUrl);
                 }
             }
 
@@ -355,7 +355,7 @@
                 MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
                 
                 // Then retrieve it from a Bob restClient
-                [bobRestClient displayName:sharedData.aliceCredentials.user_id success:^(NSString *displayname) {
+                [bobRestClient displayName:sharedData.aliceCredentials.userId success:^(NSString *displayname) {
                     
                     XCTAssertTrue([displayname isEqualToString:newDisplayName], @"Must retrieved the set string: %@ - %@", displayname, newDisplayName);
                     [expectation fulfill];
@@ -414,7 +414,7 @@
                 MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
                 
                 // Then retrieve it from a Bob restClient
-                [bobRestClient avatarUrl:sharedData.aliceCredentials.user_id success:^(NSString *avatarUrl) {
+                [bobRestClient avatarUrl:sharedData.aliceCredentials.userId success:^(NSString *avatarUrl) {
                     
                     XCTAssertTrue([avatarUrl isEqualToString:newAvatarUrl], @"Must retrieved the set string: %@ - %@", avatarUrl, newAvatarUrl);
                     [expectation fulfill];

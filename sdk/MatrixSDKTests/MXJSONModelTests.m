@@ -70,7 +70,7 @@
              MXPublicRoom *publicRoom = [MXPublicRoom modelFromJSON:chunk[0]];
              
              XCTAssert([publicRoom isKindOfClass:[MXPublicRoom class]]);
-             XCTAssertNotNil(publicRoom.room_id);
+             XCTAssertNotNil(publicRoom.roomId);
              
              [expectation fulfill];
              
@@ -97,7 +97,7 @@
              
              MXPublicRoom *publicRoom = publicRooms[0];
              XCTAssert([publicRoom isKindOfClass:[MXPublicRoom class]]);
-             XCTAssertNotNil(publicRoom.room_id);
+             XCTAssertNotNil(publicRoom.roomId);
              
              [expectation fulfill];
              

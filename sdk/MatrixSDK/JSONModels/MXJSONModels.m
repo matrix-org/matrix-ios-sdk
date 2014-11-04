@@ -28,8 +28,8 @@
     }
     else
     {
-        NSLog(@"Warning: room id leak for %@", self.room_id);
-        displayname = self.room_id;
+        NSLog(@"Warning: room id leak for %@", self.roomId);
+        displayname = self.roomId;
     }
     
     return displayname;

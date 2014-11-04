@@ -59,9 +59,9 @@
             MXEvent *myNewTextMessageEvent;
             for (MXEvent *event in recents)
             {
-                XCTAssertNotNil(event.event_id, @"The event must have an event_id to be valid");
+                XCTAssertNotNil(event.eventId, @"The event must have an event_id to be valid");
                 
-                if ([event.event_id isEqualToString:new_text_message_event_id])
+                if ([event.eventId isEqualToString:new_text_message_event_id])
                 {
                     myNewTextMessageEvent = event;
                 }
@@ -93,12 +93,12 @@
             NSUInteger prev_ts = ULONG_MAX;
             for (MXEvent *event in recents)
             {
-                XCTAssertNotNil(event.event_id, @"The event must have an event_id to be valid");
+                XCTAssertNotNil(event.eventId, @"The event must have an event_id to be valid");
                 
-                if (event.origin_server_ts)
+                if (event.originServerTs)
                 {
-                    XCTAssertLessThanOrEqual(event.origin_server_ts, prev_ts, @"Events must be listed in antichronological order");
-                    prev_ts = event.origin_server_ts;
+                    XCTAssertLessThanOrEqual(event.originServerTs, prev_ts, @"Events must be listed in antichronological order");
+                    prev_ts = event.originServerTs;
                 }
                 else
                 {

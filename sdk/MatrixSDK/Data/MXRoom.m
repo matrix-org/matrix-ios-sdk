@@ -200,7 +200,7 @@
         {
             for (NSString *memberUserId in members.allKeys)
             {
-                if (NO == [memberUserId isEqualToString:mxSession.matrixRestClient.credentials.user_id])
+                if (NO == [memberUserId isEqualToString:mxSession.matrixRestClient.credentials.userId])
                 {
                     displayname = [self memberName:memberUserId];
                     break;
@@ -211,7 +211,7 @@
         {
             NSString *otherUserId;
             
-            if (1 == members.allKeys.count && NO == [mxSession.matrixRestClient.credentials.user_id isEqualToString:members.allKeys[0]])
+            if (1 == members.allKeys.count && NO == [mxSession.matrixRestClient.credentials.userId isEqualToString:members.allKeys[0]])
             {
                 otherUserId = members.allKeys[0];
             }
@@ -225,7 +225,7 @@
                 else
                 {
                     // This is a self chat
-                    otherUserId = mxSession.matrixRestClient.credentials.user_id;
+                    otherUserId = mxSession.matrixRestClient.credentials.userId;
                 }
             }
             displayname = [self memberName:otherUserId];
@@ -251,7 +251,7 @@
     NSString *result;
     
     // Find the uptodate value in room state events
-    MXRoomMember *user = [self getMember:mxSession.matrixRestClient.credentials.user_id];
+    MXRoomMember *user = [self getMember:mxSession.matrixRestClient.credentials.userId];
     if (user)
     {
         result = user.membership;
@@ -342,13 +342,13 @@
         {
             MXRoomMember *roomMember = [MXRoomMember modelFromJSON:event.content];
             
-            if (event.state_key)
+            if (event.stateKey)
             {
-                roomMember.userId = event.state_key;
+                roomMember.userId = event.stateKey;
             }
             else
             {
-                roomMember.userId = event.user_id;
+                roomMember.userId = event.userId;
             }
             
             // Ignore banned and kicked (leave) user

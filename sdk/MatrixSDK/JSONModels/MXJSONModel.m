@@ -76,10 +76,10 @@
 - (void)setOthers:(NSDictionary *)JSONDictionary
 {
     // Store non declared JSON keys into the others property
-    NSSet *propertyKeys = [self.class propertyKeys];
+    NSArray *modelJSONKeys = [[self.class JSONKeyPathsByPropertyKey] allValues];
     for (NSString *key in JSONDictionary)
     {
-        if (![propertyKeys containsObject:key])
+        if (![modelJSONKeys containsObject:key])
         {
             if (nil == others)
             {

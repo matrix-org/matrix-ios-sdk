@@ -146,10 +146,10 @@
                 break;
                 
             default:
-                if (event.room_id)
+                if (event.roomId)
                 {
                     // Make room data digest the event
-                    MXRoom *room = [self getOrCreateRoom:event.room_id withJSONData:nil];
+                    MXRoom *room = [self getOrCreateRoom:event.roomId withJSONData:nil];
                     [room handleLiveEvent:event];
                 }
                 break;
@@ -203,7 +203,7 @@
     
     // Order them by origin_server_ts
     [recents sortUsingComparator:^NSComparisonResult(MXEvent *obj1, MXEvent *obj2) {
-        return (NSComparisonResult)(obj2.origin_server_ts - obj1.origin_server_ts);
+        return (NSComparisonResult)(obj2.originServerTs - obj1.originServerTs);
     }];
     
     return recents;

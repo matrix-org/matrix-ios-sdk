@@ -30,11 +30,11 @@
  */
 @interface MXPublicRoom : MXJSONModel
 
-    @property (nonatomic) NSString *room_id;
+    @property (nonatomic) NSString *roomId;
     @property (nonatomic) NSString *name;
     @property (nonatomic) NSArray *aliases; // Array of NSString
     @property (nonatomic) NSString *topic;
-    @property (nonatomic) NSUInteger num_joined_members;
+    @property (nonatomic) NSUInteger numJoinedMembers;
 
     // The display name is computed from available information
     // @TODO: move it to MXSession as this class has additional information to compute the optimal display name
@@ -79,17 +79,17 @@ FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeEmailIdentity;
     /**
      The home server name.
      */
-    @property (nonatomic) NSString *home_server;
+    @property (nonatomic) NSString *homeServer;
 
     /**
      The obtained user id.
      */
-    @property (nonatomic) NSString *user_id;
+    @property (nonatomic) NSString *userId;
 
     /**
      The access token to create a MXRestClient
      */
-    @property (nonatomic) NSString *access_token;
+    @property (nonatomic) NSString *accessToken;
 
 @end
 
@@ -102,12 +102,12 @@ FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeEmailIdentity;
     /**
      The allocated room id.
      */
-    @property (nonatomic) NSString *room_id;
+    @property (nonatomic) NSString *roomId;
 
     /**
      The alias on this home server.
      */
-    @property (nonatomic) NSString *room_alias;
+    @property (nonatomic) NSString *roomAlias;
 
 @end
 
@@ -161,12 +161,12 @@ FOUNDATION_EXPORT NSString *const kMatrixPresenceHidden;
     /**
      The url of the user of the avatar.
      */
-    @property (nonatomic) NSString *avatar_url;
+    @property (nonatomic) NSString *avatarUrl;
     
     /**
      The timestamp of the last time the user has been active.
      */
-    @property (nonatomic) NSUInteger last_active_ago;
+    @property (nonatomic) NSUInteger lastActiveAgo;
     
     /**
      The presence status.
