@@ -33,8 +33,9 @@
     {
         membership = MXMembershipLeave;
     }
-    else if ([membershipString isEqualToString:kMXMembershipStringBan])
+    else
     {
+        // Last case is ban
         membership = MXMembershipBan;
     }
     return membership;
