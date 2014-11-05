@@ -254,11 +254,12 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
  
  @param room_id the id of the room.
  
- @param success A block object called when the operation succeeds. It provides an array of `MXRoomMember`.
+ @param success A block object called when the operation succeeds. It provides an array of `MXEvent`
+                objects  which type is m.room.member.
  @param failure A block object called when the operation fails.
  */
 - (void)members:(NSString*)room_id
-        success:(void (^)(NSArray *members))success
+        success:(void (^)(NSArray *roomMemberEvents))success
         failure:(void (^)(NSError *error))failure;
 
 

@@ -420,7 +420,7 @@ MXAuthAction;
 }
 
 - (void)members:(NSString*)room_id
-        success:(void (^)(NSArray *members))success
+        success:(void (^)(NSArray *roomMemberEvents))success
         failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"rooms/%@/members", room_id];
@@ -430,18 +430,15 @@ MXAuthAction;
                      parameters:nil
                         success:^(NSDictionary *JSONResponse)
      {
-         NSMutableArray *members = [NSMutableArray array];
+         NSMutableArray *roomMemberEvents = [NSMutableArray array];
          
          for (NSDictionary *event in JSONResponse[@"chunk"])
          {
-             MXRoomMemberEventContent *roomMember = [MXRoomMemberEventContent modelFromJSON:event[@"content"]];
-             
-             roomMember.userId = event[@"state_key"];
-             
-             [members addObject:roomMember];
+             MXEvent *roomMemberEvent = [MXEvent modelFromJSON:event];
+            [roomMemberEvents addObject:roomMemberEvent];
          }
          
-         success(members);
+         success(roomMemberEvents);
      }
                         failure:^(NSError *error)
      {

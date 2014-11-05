@@ -19,6 +19,7 @@
 
 #import "MXRestClient.h"
 #import "MatrixSDKTestsData.h"
+#import "MXRoomMember.h"
 
 @interface MXRestClientTests : XCTestCase
 
@@ -113,15 +114,17 @@
             [bobRestClient inviteUser:sharedData.aliceCredentials.userId toRoom:room_id success:^{
                 
                 // Check room actual members
-                [bobRestClient members:room_id success:^(NSArray *members) {
+                [bobRestClient members:room_id success:^(NSArray *roomMemberEvents) {
                     
-                    XCTAssertEqual(2, members.count, @"There must be 2 members");
+                    XCTAssertEqual(2, roomMemberEvents.count, @"There must be 2 members");
                     
-                    for (MXRoomMemberEventContent *member in members)
+                    for (MXEvent *roomMemberEvent in roomMemberEvents)
                     {
+                        MXRoomMember *member = [[MXRoomMember alloc] initWithMXEvent:roomMemberEvent];
+                        
                         if ([member.userId isEqualToString:sharedData.aliceCredentials.userId])
                         {
-                            XCTAssert([member.membership isEqualToString:kMXMembershipStringInvite], @"A invited user membership is invite, not %@", member.membership);
+                            XCTAssertEqual(member.membership, MXMembershipInvite, @"A invited user membership is invite, not %lu", member.membership);
                         }
                         else
                         {
@@ -155,15 +158,17 @@
         [bobRestClient kickUser:sharedData.aliceCredentials.userId fromRoom:room_id reason:@"No particular reason" success:^{
             
             // Check room actual members
-            [bobRestClient members:room_id success:^(NSArray *members) {
+            [bobRestClient members:room_id success:^(NSArray *roomMemberEvents) {
                 
-                XCTAssertEqual(2, members.count, @"There must still be 2 members");
+                XCTAssertEqual(2, roomMemberEvents.count, @"There must still be 2 members");
                 
-                for (MXRoomMemberEventContent *member in members)
+                for (MXEvent *roomMemberEvent in roomMemberEvents)
                 {
+                    MXRoomMember *member = [[MXRoomMember alloc] initWithMXEvent:roomMemberEvent];
+                    
                     if ([member.userId isEqualToString:sharedData.aliceCredentials.userId])
                     {
-                        XCTAssert([member.membership isEqualToString:kMXMembershipStringLeave], @"A kicked user membership is leave, not %@", member.membership);
+                        XCTAssertEqual(member.membership, MXMembershipLeave, @"A kicked user membership is leave, not %lu", member.membership);
                     }
                     else
                     {
@@ -195,15 +200,17 @@
         [bobRestClient banUser:sharedData.aliceCredentials.userId inRoom:room_id reason:@"No particular reason" success:^{
             
             // Check room actual members
-            [bobRestClient members:room_id success:^(NSArray *members) {
+            [bobRestClient members:room_id success:^(NSArray *roomMemberEvents) {
                 
-                XCTAssertEqual(2, members.count, @"There must still be 2 members");
+                XCTAssertEqual(2, roomMemberEvents.count, @"There must still be 2 members");
                 
-                for (MXRoomMemberEventContent *member in members)
+                for (MXEvent *roomMemberEvent in roomMemberEvents)
                 {
+                    MXRoomMember *member = [[MXRoomMember alloc] initWithMXEvent:roomMemberEvent];
+                    
                     if ([member.userId isEqualToString:sharedData.aliceCredentials.userId])
                     {
-                        XCTAssert([member.membership isEqualToString:kMXMembershipStringBan], @"A banned user membership is ban, not %@", member.membership);
+                        XCTAssertEqual(member.membership, MXMembershipBan, @"A banned user membership is ban, not %lu", member.membership);
                     }
                     else
                     {
@@ -273,12 +280,12 @@
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
         
-        [bobRestClient members:room_id success:^(NSArray *members) {
+        [bobRestClient members:room_id success:^(NSArray *roomMemberEvents) {
             
-            XCTAssertEqual(members.count, 1);
+            XCTAssertEqual(roomMemberEvents.count, 1);
             
-            MXRoomMemberEventContent *roomMember = members[0];
-            XCTAssertTrue([roomMember.userId isEqualToString:bobRestClient.credentials.userId]);
+            MXEvent *roomMemberEvent = roomMemberEvents[0];
+            XCTAssertTrue([roomMemberEvent.userId isEqualToString:bobRestClient.credentials.userId]);
             
             [expectation fulfill];
             
@@ -290,17 +297,18 @@
     }];
 }
 
-- (void)testMXRoomMember
+- (void)testMXRoomMemberEventContent
 {
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
         
-        [bobRestClient members:room_id success:^(NSArray *members) {
-            for (MXRoomMemberEventContent *member in members)
+        [bobRestClient members:room_id success:^(NSArray *roomMemberEvents) {
+            for (MXEvent *roomMemberEvent in roomMemberEvents)
             {
-                if ([member.userId isEqualToString:aliceRestClient.credentials.userId])
+                MXRoomMemberEventContent *roomMemberEventContent = [MXRoomMemberEventContent modelFromJSON:roomMemberEvent.content];
+                if ([roomMemberEventContent.userId isEqualToString:aliceRestClient.credentials.userId])
                 {
-                    XCTAssert([member.displayname isEqualToString:kMXTestsAliceDisplayName], @"displayname is wrong: %@", member.displayname);
-                    XCTAssert([member.avatarUrl isEqualToString:kMXTestsAliceAvatarURL], @"member.avatarUrl is wrong: %@", member.avatarUrl);
+                    XCTAssert([roomMemberEventContent.displayname isEqualToString:kMXTestsAliceDisplayName], @"displayname is wrong: %@", roomMemberEventContent.displayname);
+                    XCTAssert([roomMemberEventContent.avatarUrl isEqualToString:kMXTestsAliceAvatarURL], @"member.avatarUrl is wrong: %@", roomMemberEventContent.avatarUrl);
                 }
             }
 
