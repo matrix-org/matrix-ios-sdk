@@ -31,6 +31,15 @@
 
 @end
 
+@interface MXJSONModelTestClass2 : MXJSONModel
+
+@property (nonatomic) NSString *foo;
+
+@end
+@implementation MXJSONModelTestClass2
+
+@end
+
 
 
 @interface MXJSONModelTests : XCTestCase
@@ -140,8 +149,17 @@
              [expectation fulfill];
          }];
     }];
-
 }
 
+- (void)testNullValue
+{
+    NSDictionary *JSONDict = @{
+                               @"foo" : [NSNull null]
+                               };
+    
+    MXJSONModelTestClass2 *model = [MXJSONModelTestClass2 modelFromJSON:JSONDict];
+    
+    XCTAssertNil(model.foo, @"JSON null value must be converted to nil. Found: %@", model.foo);
+}
 
 @end
