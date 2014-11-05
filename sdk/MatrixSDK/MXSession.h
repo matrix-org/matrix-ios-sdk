@@ -325,7 +325,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
  @param failure A block object called when the operation fails.
  */
 - (void)uploadImage:(UIImage *)image
-      thumbnailSize:(CGFloat)thumbnailSize
+      thumbnailSize:(NSUInteger)thumbnailSize
           timeout:(NSTimeInterval)timeoutInSeconds
           success:(void (^)(NSDictionary *imageMessage))success
           failure:(void (^)(NSError *error))failure;

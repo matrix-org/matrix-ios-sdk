@@ -555,7 +555,7 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
 }
 
 - (void)uploadImage:(UIImage *)image
-      thumbnailSize:(CGFloat)thumbnailSize
+      thumbnailSize:(NSUInteger)thumbnailSize
             timeout:(NSTimeInterval)timeoutInSeconds
             success:(void (^)(NSDictionary *imageMessage))success
             failure:(void (^)(NSError *error))failure
@@ -569,9 +569,11 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
         CGFloat width, height;
         if (image.size.width > image.size.height) {
             height = (image.size.height * thumbnailSize) / image.size.width;
+            height = floorf(height / 2) * 2;
             width = thumbnailSize;
         } else {
             width = (image.size.width * thumbnailSize) / image.size.height;
+            width = floorf(width / 2) * 2;
             height = thumbnailSize;
         }
         
@@ -593,10 +595,10 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
         // Upload thumbnail
         NSMutableDictionary *thumbnailInfo = [[NSMutableDictionary alloc] init];
         [thumbnailInfo setValue:@"image/jpeg" forKey:@"mimetype"];
-        [thumbnailInfo setValue:[NSString stringWithFormat:@"%f",thumbnail.size.width] forKey:@"w"];
-        [thumbnailInfo setValue:[NSString stringWithFormat:@"%f",thumbnail.size.height] forKey:@"h"];
+        [thumbnailInfo setValue:[NSNumber numberWithFloat:thumbnail.size.width] forKey:@"w"];
+        [thumbnailInfo setValue:[NSNumber numberWithFloat:thumbnail.size.height] forKey:@"h"];
         NSData *thumbnailData = UIImageJPEGRepresentation(thumbnail, 0.9);
-        [thumbnailInfo setValue:[NSString stringWithFormat:@"%lu",(unsigned long)thumbnailData.length] forKey:@"size"];
+        [thumbnailInfo setValue:[NSNumber numberWithUnsignedInteger:thumbnailData.length] forKey:@"size"];
         
         [self uploadContent:thumbnailData mimeType:@"image/jpeg" timeout:timeoutInSeconds success:^(NSString *url) {
             [imageMessage setValue:url forKey:@"thumbnail_url"];
@@ -621,10 +623,10 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
 {
     NSMutableDictionary *imageInfo = [[NSMutableDictionary alloc] init];
     [imageInfo setValue:@"image/jpeg" forKey:@"mimetype"];
-    [imageInfo setValue:[NSString stringWithFormat:@"%f",image.size.width] forKey:@"w"];
-    [imageInfo setValue:[NSString stringWithFormat:@"%f",image.size.height] forKey:@"h"];
+    [imageInfo setValue:[NSNumber numberWithFloat:image.size.width] forKey:@"w"];
+    [imageInfo setValue:[NSNumber numberWithFloat:image.size.height] forKey:@"h"];
     NSData *imageData = UIImageJPEGRepresentation(image, 0.8);
-    [imageInfo setValue:[NSString stringWithFormat:@"%lu",(unsigned long)imageData.length] forKey:@"size"];
+    [imageInfo setValue:[NSNumber numberWithUnsignedInteger:imageData.length] forKey:@"size"];
     
     [self uploadContent:imageData mimeType:@"image/jpeg" timeout:timeoutInSeconds success:^(NSString *url) {
         [imageMessage setValue:url forKey:@"url"];
