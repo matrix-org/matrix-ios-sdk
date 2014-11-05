@@ -372,7 +372,18 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
               success:(void (^)(NSString *url))success
               failure:(void (^)(NSError *error))failure;
 
+/**
+ Upload an image and its thumbnail to HomeServer
+ 
+ @param image the content to upload
+ @param thumbnailSize the max size (width and height) of the thumbnail
+ @param timeoutInSeconds the maximum time in ms the SDK must wait for the server response.
+ 
+ @param success A block object called when the operation succeeds. It provides the uploaded content url.
+ @param failure A block object called when the operation fails.
+ */
 - (void)uploadImage:(UIImage *)image
+      thumbnailSize:(NSUInteger)thumbnailSize
             timeout:(NSTimeInterval)timeoutInSeconds
             success:(void (^)(NSDictionary *imageMessage))success
             failure:(void (^)(NSError *error))failure;

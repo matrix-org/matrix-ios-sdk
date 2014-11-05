@@ -13,6 +13,7 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  */
+#import <MobileCoreServices/MobileCoreServices.h>
 
 #import "RoomViewController.h"
 #import "RoomMessageTableCell.h"
@@ -20,10 +21,13 @@
 
 #import "MatrixHandler.h"
 #import "AppDelegate.h"
+#import "AppSettings.h"
 
+#define ROOM_MESSAGE_CELL_MAX_TEXTVIEW_WIDTH 200
 #define ROOM_MESSAGE_CELL_TOP_MARGIN 5
 #define ROOM_MESSAGE_CELL_BOTTOM_MARGIN 5
 #define INCOMING_MESSAGE_CELL_USER_LABEL_HEIGHT 20
+#define ROOM_MESSAGE_CELL_IMAGE_MARGIN 5
 
 NSString *const kCmdChangeDisplayName = @"/nick";
 NSString *const kCmdEmote = @"/me";
@@ -49,7 +53,7 @@ NSString *const kFailedEventId = @"failedEventId";
     id messagesListener;
     
     // Members list
-    NSArray       *members;
+    NSArray *members;
     id membersListener;
 }
 
@@ -64,6 +68,7 @@ NSString *const kFailedEventId = @"failedEventId";
 @property (weak, nonatomic) IBOutlet UIView *membersView;
 @property (weak, nonatomic) IBOutlet UITableView *membersTableView;
 
+@property (strong, nonatomic) CustomAlert *actionMenu;
 @end
 
 @implementation RoomViewController
@@ -101,6 +106,11 @@ NSString *const kFailedEventId = @"failedEventId";
         [mxRoomData unregisterListener:membersListener];
         membersListener = nil;
     }
+    
+    if (_actionMenu) {
+        [_actionMenu dismiss:NO];
+        _actionMenu = nil;
+    }
 }
 
 - (void)didReceiveMemoryWarning {
@@ -125,6 +135,12 @@ NSString *const kFailedEventId = @"failedEventId";
 
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
+    
+    // hide action
+    if (_actionMenu) {
+        [_actionMenu dismiss:NO];
+        _actionMenu = nil;
+    }
     
     // Hide members by default
     [self hideRoomMembers];
@@ -349,11 +365,57 @@ NSString *const kFailedEventId = @"failedEventId";
     }
 }
 
+- (void)updateRoomMembers {
+     members = [[mxRoomData members] sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+         MXRoomMember *member1 = (MXRoomMember*)obj1;
+         MXRoomMember *member2 = (MXRoomMember*)obj2;
+         
+         // Move banned and left members at the end of the list
+         if ([member1.membership isEqualToString:@"leave"] || [member1.membership isEqualToString:@"ban"]) {
+             if (![member2.membership isEqualToString:@"leave"] && ![member2.membership isEqualToString:@"ban"]) {
+                 return NSOrderedDescending;
+             }
+         } else if ([member2.membership isEqualToString:@"leave"] || [member2.membership isEqualToString:@"ban"]) {
+             return NSOrderedAscending;
+         }
+         
+         // Move invited members just before left and banned members
+         if ([member1.membership isEqualToString:@"invite"]) {
+             if (![member2.membership isEqualToString:@"invite"]) {
+                 return NSOrderedDescending;
+             }
+         } else if ([member2.membership isEqualToString:@"invite"]) {
+             return NSOrderedAscending;
+         }
+         
+         if ([[AppSettings sharedSettings] sortMembersUsingLastSeenTime]) {
+             // FIXME: handle last_active_ago duration and presence when they will be available from SDK
+             if (member1.last_active_ago < member2.last_active_ago) {
+                 return NSOrderedAscending;
+             } else if (member1.last_active_ago == member2.last_active_ago) {
+                 return [[mxRoomData memberName:member1.user_id] compare:[mxRoomData memberName:member2.user_id] options:NSCaseInsensitiveSearch];
+             }
+             return NSOrderedDescending;
+         } else {
+             // Move user without display name at the end (before invited users)
+             if (member1.displayname) {
+                 if (!member2.displayname) {
+                     return NSOrderedAscending;
+                 }
+             } else if (member2.displayname) {
+                 return NSOrderedDescending;
+             }
+             
+             return [[mxRoomData memberName:member1.user_id] compare:[mxRoomData memberName:member2.user_id] options:NSCaseInsensitiveSearch];
+         }
+     }];
+}
+
 - (void)showRoomMembers {
     // Dismiss keyboard
     [self dismissKeyboard];
     
-    members = [mxRoomData members];
+    [self updateRoomMembers];
     // Register a listener for events that concern room members
     NSArray *mxMembersEvents = @[
                                  kMXEventTypeStringRoomMember,
@@ -364,7 +426,7 @@ NSString *const kFailedEventId = @"failedEventId";
         // consider only live event
         if (isLive) {
             // Refresh members list
-            members = [mxRoomData members];
+            [self updateRoomMembers];
             [self.membersTableView reloadData];
         }
     }];
@@ -436,22 +498,27 @@ NSString *const kFailedEventId = @"failedEventId";
         return 50;
     }
     
-    // Handle here room thread cells
+    // Compute here height of message cells
     CGFloat rowHeight;
     // Get event related to this row
     MatrixHandler *mxHandler = [MatrixHandler sharedHandler];
     MXEvent *mxEvent = [messages objectAtIndex:indexPath.row];
     BOOL isIncomingMsg = ([mxEvent.user_id isEqualToString:mxHandler.userId] == NO);
+    CGSize contentSize;
     
-    // Use a TextView template to compute cell height
-    UITextView *dummyTextView = [[UITextView alloc] initWithFrame:CGRectMake(0, 0, 200, MAXFLOAT)];
-    dummyTextView.font = [UIFont systemFontOfSize:14];
-    dummyTextView.text = [mxHandler displayTextFor:mxEvent inSubtitleMode:NO];
-    CGSize contentSize = [dummyTextView sizeThatFits:dummyTextView.frame.size];
+    if ([mxHandler isAttachment:mxEvent]) {
+        contentSize = [self attachmentContentSize:mxEvent];
+    } else {
+        // Use a TextView template to compute cell height
+        UITextView *dummyTextView = [[UITextView alloc] initWithFrame:CGRectMake(0, 0, ROOM_MESSAGE_CELL_MAX_TEXTVIEW_WIDTH, MAXFLOAT)];
+        dummyTextView.font = [UIFont systemFontOfSize:14];
+        dummyTextView.text = [mxHandler displayTextFor:mxEvent inSubtitleMode:NO];
+        contentSize = [dummyTextView sizeThatFits:dummyTextView.frame.size];
+    }
     
     // Handle incoming / outgoing layout
     if (isIncomingMsg) {
-        // By default the user name is displayed above the message
+        // By default the user name is displayed above the message or attachment
         rowHeight = contentSize.height + ROOM_MESSAGE_CELL_TOP_MARGIN + INCOMING_MESSAGE_CELL_USER_LABEL_HEIGHT + ROOM_MESSAGE_CELL_BOTTOM_MARGIN;
         
         if (indexPath.row) {
@@ -551,16 +618,72 @@ NSString *const kFailedEventId = @"failedEventId";
         }
     }
     
-    NSString *displayText = [mxHandler displayTextFor:mxEvent inSubtitleMode:NO];
-    if ([displayText hasPrefix:kMatrixHandlerUnsupportedMessagePrefix]) {
-        cell.messageTextView.textColor = [UIColor redColor];
-    } else if (isIncomingMsg && ([displayText rangeOfString:mxHandler.userDisplayName options:NSCaseInsensitiveSearch].location != NSNotFound || [displayText rangeOfString:mxHandler.userId options:NSCaseInsensitiveSearch].location != NSNotFound)) {
-        cell.messageTextView.textColor = [UIColor blueColor];
+    if ([mxHandler isAttachment:mxEvent]) {
+        cell.attachmentView.hidden = NO;
+        cell.messageTextView.text = nil; // Note: Text view is used as attachment background view
+        CGSize contentSize = [self attachmentContentSize:mxEvent];
+        cell.msgTextViewWidthConstraint.constant = contentSize.width;
+        cell.attachmentViewWidthConstraint.constant = contentSize.width - 2 * ROOM_MESSAGE_CELL_IMAGE_MARGIN;
+        
+        NSString *msgtype = mxEvent.content[@"msgtype"];
+        if ([msgtype isEqualToString:kMXMessageTypeImage]) {
+            NSString *url = mxEvent.content[@"thumbnail_url"];
+            if (url == nil) {
+                url = mxEvent.content[@"url"];
+            }
+            cell.attachedImageURL = url;
+        } else {
+            cell.attachedImageURL = nil;
+        }
     } else {
-        cell.messageTextView.textColor = [UIColor blackColor];
+        // Text message will be displayed in textView with max width
+        cell.msgTextViewWidthConstraint.constant = ROOM_MESSAGE_CELL_MAX_TEXTVIEW_WIDTH;
+        // Cancel potential attachment loading
+        cell.attachedImageURL = nil;
+        cell.attachmentView.hidden = YES;
+        
+        NSString *displayText = [mxHandler displayTextFor:mxEvent inSubtitleMode:NO];
+        if ([displayText hasPrefix:kMatrixHandlerUnsupportedMessagePrefix]) {
+            cell.messageTextView.textColor = [UIColor redColor];
+        } else if (isIncomingMsg && ([displayText rangeOfString:mxHandler.userDisplayName options:NSCaseInsensitiveSearch].location != NSNotFound || [displayText rangeOfString:mxHandler.userId options:NSCaseInsensitiveSearch].location != NSNotFound)) {
+            cell.messageTextView.textColor = [UIColor blueColor];
+        } else {
+            cell.messageTextView.textColor = [UIColor blackColor];
+        }
+        cell.messageTextView.text = displayText;
     }
-    cell.messageTextView.text = displayText;
+    
     return cell;
+}
+
+- (CGSize)attachmentContentSize:(MXEvent*)mxEvent;
+{
+    CGSize contentSize;
+    NSString *msgtype = mxEvent.content[@"msgtype"];
+    if ([msgtype isEqualToString:kMXMessageTypeImage]) {
+        CGFloat width, height;
+        width = height = ROOM_MESSAGE_CELL_MAX_TEXTVIEW_WIDTH;
+        NSDictionary *thumbInfo = mxEvent.content[@"thumbnail_info"];
+        if (thumbInfo) {
+            width = [thumbInfo[@"w"] integerValue] + 2 * ROOM_MESSAGE_CELL_IMAGE_MARGIN;
+            height = [thumbInfo[@"h"] integerValue] + 2 * ROOM_MESSAGE_CELL_IMAGE_MARGIN;
+            if (width > ROOM_MESSAGE_CELL_MAX_TEXTVIEW_WIDTH || height > ROOM_MESSAGE_CELL_MAX_TEXTVIEW_WIDTH) {
+                if (width > height) {
+                    height = (height * ROOM_MESSAGE_CELL_MAX_TEXTVIEW_WIDTH) / width;
+                    height = floorf(height / 2) * 2;
+                    width = ROOM_MESSAGE_CELL_MAX_TEXTVIEW_WIDTH;
+                } else {
+                    width = (width * ROOM_MESSAGE_CELL_MAX_TEXTVIEW_WIDTH) / height;
+                    width = floorf(width / 2) * 2;
+                    height = ROOM_MESSAGE_CELL_MAX_TEXTVIEW_WIDTH;
+                }
+            }
+        }
+        contentSize = CGSizeMake(width, height);
+    } else {
+        contentSize = CGSizeMake(40, 40);
+    }
+    return contentSize;
 }
 
 #pragma mark - Table view delegate
@@ -622,15 +745,118 @@ NSString *const kFailedEventId = @"failedEventId";
     } else if (sender == _optionBtn) {
         [self dismissKeyboard];
         
-        //TODO: display action menu: Add attachments, Invite user...
-        
+        // Display action menu: Add attachments, Invite user...
+        __weak typeof(self) weakSelf = self;
+        self.actionMenu = [[CustomAlert alloc] initWithTitle:@"Select an action:" message:nil style:CustomAlertStyleActionSheet];
+        // Attachments
+        [self.actionMenu addActionWithTitle:@"Attach" style:CustomAlertActionStyleDefault handler:^(CustomAlert *alert) {
+            if (weakSelf) {
+                // Ask for attachment type
+                weakSelf.actionMenu = [[CustomAlert alloc] initWithTitle:@"Select an attachment type:" message:nil style:CustomAlertStyleActionSheet];
+                [weakSelf.actionMenu addActionWithTitle:@"Media" style:CustomAlertActionStyleDefault handler:^(CustomAlert *alert) {
+                    if (weakSelf) {
+                        // Open picture gallery
+                        UIImagePickerController *mediaPicker = [[UIImagePickerController alloc] init];
+                        mediaPicker.delegate = weakSelf;
+                        mediaPicker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
+                        mediaPicker.allowsEditing = NO;
+                        mediaPicker.mediaTypes = [NSArray arrayWithObjects:(NSString *)kUTTypeImage, (NSString *)kUTTypeMovie, nil];
+                        [[AppDelegate theDelegate].masterTabBarController presentMediaPicker:mediaPicker];
+                    }
+                }];
+                weakSelf.actionMenu.cancelButtonIndex = [weakSelf.actionMenu addActionWithTitle:@"Cancel" style:CustomAlertActionStyleDefault handler:^(CustomAlert *alert) {
+                    weakSelf.actionMenu = nil;
+                }];
+                [weakSelf.actionMenu showInViewController:weakSelf];
+            }
+        }];
+        // Invitation
+        [self.actionMenu addActionWithTitle:@"Invite" style:CustomAlertActionStyleDefault handler:^(CustomAlert *alert) {
+            if (weakSelf) {
+                // Ask for userId to invite
+                weakSelf.actionMenu = [[CustomAlert alloc] initWithTitle:@"User ID:" message:nil style:CustomAlertStyleAlert];
+                weakSelf.actionMenu.cancelButtonIndex = [weakSelf.actionMenu addActionWithTitle:@"Cancel" style:CustomAlertActionStyleDefault handler:^(CustomAlert *alert) {
+                    weakSelf.actionMenu = nil;
+                }];
+                [weakSelf.actionMenu addTextFieldWithConfigurationHandler:^(UITextField *textField) {
+                    textField.secureTextEntry = NO;
+                    textField.placeholder = @"ex: @bob:homeserver";
+                }];
+                [weakSelf.actionMenu addActionWithTitle:@"Invite" style:CustomAlertActionStyleDefault handler:^(CustomAlert *alert) {
+                    UITextField *textField = [alert textFieldAtIndex:0];
+                    NSString *userId = textField.text;
+                    weakSelf.actionMenu = nil;
+                    if (userId.length) {
+                        [[MatrixHandler sharedHandler].mxSession inviteUser:userId toRoom:weakSelf.roomId success:^{
+                            
+                        } failure:^(NSError *error) {
+                            NSLog(@"Invite %@ failed: %@", userId, error);
+                            //Alert user
+                            [[AppDelegate theDelegate] showErrorAsAlert:error];
+                        }];
+                    }
+                }];
+                [weakSelf.actionMenu showInViewController:weakSelf];
+            }
+        }];
+        self.actionMenu.cancelButtonIndex = [self.actionMenu addActionWithTitle:@"Cancel" style:CustomAlertActionStyleDefault handler:^(CustomAlert *alert) {
+             weakSelf.actionMenu = nil;
+        }];
+        [self.actionMenu showInViewController:self];
+    }
+}
 
-//        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Invite a user" message:nil preferredStyle:UIAlertControllerStyleAlert];
-//        or
-//        UIAlertView *plainTextInputAlert = [[UIAlertView alloc]initWithTitle:@"Invite a user" message:nil delegate:self cancelButtonTitle:@"cancel" otherButtonTitles:@"ok", nil];
-//        // apply style
-//        plainTextInputAlert.alertViewStyle = UIAlertViewStylePlainTextInput;
+#pragma mark - Post messages
+
+- (void)postMessage:(NSDictionary*)msgContent {
+    MXMessageType msgType = msgContent[@"msgtype"];
+    if (msgType) {
+        // Create a temporary event to displayed outgoing message (local echo)
+        NSString *localEventId = [NSString stringWithFormat:@"%@%@", kLocalEchoEventIdPrefix, [[NSProcessInfo processInfo] globallyUniqueString]];
+        MXEvent *mxEvent = [[MXEvent alloc] init];
+        mxEvent.room_id = self.roomId;
+        mxEvent.event_id = localEventId;
+        mxEvent.eventType = MXEventTypeRoomMessage;
+        mxEvent.type = kMXEventTypeStringRoomMessage;
+        mxEvent.content = msgContent;
+        mxEvent.user_id = [MatrixHandler sharedHandler].userId;
+        // Update table sources
+        NSIndexPath *indexPath = [NSIndexPath indexPathForRow:messages.count inSection:0];
+        [messages addObject:mxEvent];
+        // Refresh table display
+        [self.messagesTableView insertRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationBottom];
+        [self scrollToBottomAnimated:YES];
         
+        // Send message to the room
+        [[[MatrixHandler sharedHandler] mxSession] postMessage:self.roomId msgType:msgType content:mxEvent.content success:^(NSString *event_id) {
+            // Update the temporary event with the actual event id
+            NSUInteger index = messages.count;
+            while (index--) {
+                MXEvent *mxEvent = [messages objectAtIndex:index];
+                if ([mxEvent.event_id isEqualToString:localEventId]) {
+                    mxEvent.event_id = event_id;
+                    // Refresh table display
+                    NSIndexPath *indexPath = [NSIndexPath indexPathForRow:index inSection:0];
+                    [self.messagesTableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
+                    break;
+                }
+            }
+        } failure:^(NSError *error) {
+            NSLog(@"Failed to send message (%@): %@", mxEvent.description, error);
+            // Update the temporary event with the failed event id
+            NSUInteger index = messages.count;
+            while (index--) {
+                MXEvent *mxEvent = [messages objectAtIndex:index];
+                if ([mxEvent.event_id isEqualToString:localEventId]) {
+                    mxEvent.event_id = kFailedEventId;
+                    // Refresh table display
+                    NSIndexPath *indexPath = [NSIndexPath indexPathForRow:index inSection:0];
+                    [self.messagesTableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
+                    [self scrollToBottomAnimated:YES];
+                    break;
+                }
+            }
+        }];
     }
 }
 
@@ -643,52 +869,7 @@ NSString *const kFailedEventId = @"failedEventId";
         msgTxt = [msgTxt substringFromIndex:4];
     }
     
-    // Create a temporary event to displayed outgoing message (local echo)
-    NSString *localEventId = [NSString stringWithFormat:@"%@%@", kLocalEchoEventIdPrefix, [[NSProcessInfo processInfo] globallyUniqueString]];
-    MXEvent *mxEvent = [[MXEvent alloc] init];
-    mxEvent.room_id = self.roomId;
-    mxEvent.event_id = localEventId;
-    mxEvent.eventType = MXEventTypeRoomMessage;
-    mxEvent.type = kMXEventTypeStringRoomMessage;
-    mxEvent.content = @{@"msgtype":msgType, @"body":msgTxt};
-    mxEvent.user_id = [MatrixHandler sharedHandler].userId;
-    // Update table sources
-    NSIndexPath *indexPath = [NSIndexPath indexPathForRow:messages.count inSection:0];
-    [messages addObject:mxEvent];
-    // Refresh table display
-    [self.messagesTableView insertRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationBottom];
-    [self scrollToBottomAnimated:YES];
-    
-    // Send message to the room
-    [[[MatrixHandler sharedHandler] mxSession] postMessage:self.roomId msgType:msgType content:mxEvent.content success:^(NSString *event_id) {
-        // Update the temporary event with the actual event id
-        NSUInteger index = messages.count;
-        while (index--) {
-            MXEvent *mxEvent = [messages objectAtIndex:index];
-            if ([mxEvent.event_id isEqualToString:localEventId]) {
-                mxEvent.event_id = event_id;
-                // Refresh table display
-                NSIndexPath *indexPath = [NSIndexPath indexPathForRow:index inSection:0];
-                [self.messagesTableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
-                break;
-            }
-        }
-    } failure:^(NSError *error) {
-        NSLog(@"Failed to send message (%@): %@", self.messageTextField.text, error);
-        // Update the temporary event with the failed event id
-        NSUInteger index = messages.count;
-        while (index--) {
-            MXEvent *mxEvent = [messages objectAtIndex:index];
-            if ([mxEvent.event_id isEqualToString:localEventId]) {
-                mxEvent.event_id = kFailedEventId;
-                // Refresh table display
-                NSIndexPath *indexPath = [NSIndexPath indexPathForRow:index inSection:0];
-                [self.messagesTableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
-                [self scrollToBottomAnimated:YES];
-                break;
-            }
-        }
-    }];
+    [self postMessage:@{@"msgtype":msgType, @"body":msgTxt}];
 }
 
 - (BOOL)isIRCStyleCommand:(NSString*)text{
@@ -851,5 +1032,39 @@ NSString *const kFailedEventId = @"failedEventId";
         }
     }
     return YES;
+}
+
+# pragma mark - UIImagePickerControllerDelegate
+
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info {
+    NSString *mediaType = [info objectForKey:UIImagePickerControllerMediaType];
+    if ([mediaType isEqualToString:(NSString *)kUTTypeImage]) {
+        UIImage *selectedImage = [info objectForKey:UIImagePickerControllerOriginalImage];
+        if (selectedImage) {
+            // Upload image and its thumbnail
+            MatrixHandler *mxHandler = [MatrixHandler sharedHandler];
+            NSUInteger thumbnailSize = ROOM_MESSAGE_CELL_MAX_TEXTVIEW_WIDTH - 5 * ROOM_MESSAGE_CELL_IMAGE_MARGIN;
+            [mxHandler.mxSession uploadImage:selectedImage thumbnailSize:thumbnailSize timeout:30 success:^(NSDictionary *imageMessage) {
+                // Send image
+                [self postMessage:imageMessage];
+            } failure:^(NSError *error) {
+                NSLog(@"Failed to upload image: %@", error);
+                //Alert user
+                [[AppDelegate theDelegate] showErrorAsAlert:error];
+            }];
+        }
+    } else if ([mediaType isEqualToString:(NSString *)kUTTypeMovie]) {
+        //TODO
+    }
+    
+    [self dismissMediaPicker];
+}
+
+- (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker {
+    [self dismissMediaPicker];
+}
+
+- (void)dismissMediaPicker {
+    [[AppDelegate theDelegate].masterTabBarController dismissMediaPicker];
 }
 @end
