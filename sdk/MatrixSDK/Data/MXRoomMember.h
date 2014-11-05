@@ -48,6 +48,9 @@
 //@property (nonatomic, readonly) NSString *originUserId;
 //@property (nonatomic, readonly) MXUser *user;
 
+// @TODO: To move to MXUser
+@property (nonatomic, readonly) NSUInteger lastActiveAgo;
+
 /**
  Create the room member from a Matrix room member event.
  
