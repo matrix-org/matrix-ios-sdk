@@ -18,6 +18,7 @@
 
 #import "MXEvent.h"
 #import "MXJSONModels.h"
+#import "MXRoomMember.h"
 #import "MXEventListener.h"
 
 @class MXSession;

@@ -434,7 +434,7 @@ MXAuthAction;
          
          for (NSDictionary *event in JSONResponse[@"chunk"])
          {
-             MXRoomMember *roomMember = [MXRoomMember modelFromJSON:event[@"content"]];
+             MXRoomMemberEventContent *roomMember = [MXRoomMemberEventContent modelFromJSON:event[@"content"]];
              
              roomMember.userId = event[@"state_key"];
              

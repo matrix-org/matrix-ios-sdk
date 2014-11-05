@@ -117,11 +117,11 @@
                     
                     XCTAssertEqual(2, members.count, @"There must be 2 members");
                     
-                    for (MXRoomMember *member in members)
+                    for (MXRoomMemberEventContent *member in members)
                     {
                         if ([member.userId isEqualToString:sharedData.aliceCredentials.userId])
                         {
-                            XCTAssert([member.membership isEqualToString:kMXMembershipInvite], @"A invited user membership is invite, not %@", member.membership);
+                            XCTAssert([member.membership isEqualToString:kMXMembershipStringInvite], @"A invited user membership is invite, not %@", member.membership);
                         }
                         else
                         {
@@ -159,11 +159,11 @@
                 
                 XCTAssertEqual(2, members.count, @"There must still be 2 members");
                 
-                for (MXRoomMember *member in members)
+                for (MXRoomMemberEventContent *member in members)
                 {
                     if ([member.userId isEqualToString:sharedData.aliceCredentials.userId])
                     {
-                        XCTAssert([member.membership isEqualToString:kMXMembershipLeave], @"A kicked user membership is leave, not %@", member.membership);
+                        XCTAssert([member.membership isEqualToString:kMXMembershipStringLeave], @"A kicked user membership is leave, not %@", member.membership);
                     }
                     else
                     {
@@ -199,11 +199,11 @@
                 
                 XCTAssertEqual(2, members.count, @"There must still be 2 members");
                 
-                for (MXRoomMember *member in members)
+                for (MXRoomMemberEventContent *member in members)
                 {
                     if ([member.userId isEqualToString:sharedData.aliceCredentials.userId])
                     {
-                        XCTAssert([member.membership isEqualToString:kMXMembershipBan], @"A banned user membership is ban, not %@", member.membership);
+                        XCTAssert([member.membership isEqualToString:kMXMembershipStringBan], @"A banned user membership is ban, not %@", member.membership);
                     }
                     else
                     {
@@ -277,7 +277,7 @@
             
             XCTAssertEqual(members.count, 1);
             
-            MXRoomMember *roomMember = members[0];
+            MXRoomMemberEventContent *roomMember = members[0];
             XCTAssertTrue([roomMember.userId isEqualToString:bobRestClient.credentials.userId]);
             
             [expectation fulfill];
@@ -295,7 +295,7 @@
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
         
         [bobRestClient members:room_id success:^(NSArray *members) {
-            for (MXRoomMember *member in members)
+            for (MXRoomMemberEventContent *member in members)
             {
                 if ([member.userId isEqualToString:aliceRestClient.credentials.userId])
                 {

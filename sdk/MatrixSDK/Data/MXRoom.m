@@ -17,6 +17,7 @@
 #import "MXRoom.h"
 
 #import "MXSession.h"
+#import "MXTools.h"
 
 @interface MXRoom ()
 {
@@ -82,7 +83,7 @@
             }
             if ([JSONData objectForKey:@"membership"])
             {
-                membership = JSONData[@"membership"];
+                membership = [MXTools membership:JSONData[@"membership"]];
             }
         }
     }
@@ -248,7 +249,7 @@
 
 - (MXMembership)membership
 {
-    NSString *result;
+    MXMembership result;
     
     // Find the uptodate value in room state events
     MXRoomMember *user = [self getMember:mxSession.matrixRestClient.credentials.userId];
@@ -261,7 +262,7 @@
         result = membership;
     }
     
-    return [result copy];
+    return membership;
 }
 
 #pragma mark - Messages handling
@@ -340,26 +341,8 @@
     {
         case MXEventTypeRoomMember:
         {
-            MXRoomMember *roomMember = [MXRoomMember modelFromJSON:event.content];
-            
-            if (event.stateKey)
-            {
-                roomMember.userId = event.stateKey;
-            }
-            else
-            {
-                roomMember.userId = event.userId;
-            }
-            
-            // Ignore banned and kicked (leave) user
-            if ([roomMember.membership isEqualToString:@"ban"] || [roomMember.membership isEqualToString:@"leave"])
-            {
-                [members removeObjectForKey:roomMember.userId];
-            }
-            else
-            {
-                members[roomMember.userId] = roomMember;
-            }
+            MXRoomMember *roomMember = [[MXRoomMember alloc] initWithMXEvent:event];
+            members[roomMember.userId] = roomMember;
             
             break;
         }

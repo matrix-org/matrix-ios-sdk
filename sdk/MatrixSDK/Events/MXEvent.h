@@ -80,11 +80,22 @@ FOUNDATION_EXPORT NSString *const kMXMessageTypeLocation;
 /**
  Membership definitions
  */
-typedef NSString* MXMembership;
-FOUNDATION_EXPORT NSString *const kMXMembershipInvite;
-FOUNDATION_EXPORT NSString *const kMXMembershipJoin;
-FOUNDATION_EXPORT NSString *const kMXMembershipLeave;
-FOUNDATION_EXPORT NSString *const kMXMembershipBan;
+typedef enum : NSUInteger
+{
+    MXMembershipInvite,
+    MXMembershipJoin,
+    MXMembershipLeave,
+    MXMembershipBan
+} MXMembership;
+
+/**
+ Membership definitions - String version
+ */
+typedef NSString* MXMembershipString;
+FOUNDATION_EXPORT NSString *const kMXMembershipStringInvite;
+FOUNDATION_EXPORT NSString *const kMXMembershipStringJoin;
+FOUNDATION_EXPORT NSString *const kMXMembershipStringLeave;
+FOUNDATION_EXPORT NSString *const kMXMembershipStringBan;
 
 
 /**
@@ -142,10 +153,5 @@ FOUNDATION_EXPORT NSString *const kMXMembershipBan;
  Indicates if the event hosts state data
  */
 - (BOOL)isState;
-
-/**
- Mapping from MXEventTypeString to MXEventType
- */
-+ (NSDictionary*)eventTypesMap;
 
 @end

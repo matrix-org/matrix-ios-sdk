@@ -144,30 +144,31 @@ FOUNDATION_EXPORT NSString *const kMatrixPresenceFreeForChat;
 FOUNDATION_EXPORT NSString *const kMatrixPresenceHidden;
 
 /**
- `MXUser` represents a user.
+ `MXRoomMemberEventContent` represents the content of a m.room.member event.
+ @TODO: Check this model can work with presence API.
  */
-@interface MXUser : MXJSONModel
-    
-    /**
-     The user id.
-     */
-    @property (nonatomic) NSString *userId;
-    
+@interface MXRoomMemberEventContent : MXJSONModel
+
     /**
      The user display name.
      */
     @property (nonatomic) NSString *displayname;
-    
+
     /**
      The url of the user of the avatar.
      */
     @property (nonatomic) NSString *avatarUrl;
-    
+
+    /**
+     The membership state.
+     */
+    @property (nonatomic) NSString *membership;
+
     /**
      The timestamp of the last time the user has been active.
      */
     @property (nonatomic) NSUInteger lastActiveAgo;
-    
+
     /**
      The presence status.
      */
@@ -178,19 +179,8 @@ FOUNDATION_EXPORT NSString *const kMatrixPresenceHidden;
      */
     @property (nonatomic) NSString *statusMsg;
 
-@end
-
-
-/**
- `MXRoomMember` represents a room member.
- This is a MXUser inside a room.
- */
-@interface MXRoomMember : MXUser
-
-    /**
-     The membership state.
-     */
-    @property (nonatomic) NSString *membership;
+// @TODO: to remove
+@property (nonatomic) NSString *userId;
 
 @end
 

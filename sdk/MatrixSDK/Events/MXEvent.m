@@ -39,15 +39,18 @@ NSString *const kMXMessageTypeAudio     = @"m.audio";
 NSString *const kMXMessageTypeVideo     = @"m.video";
 NSString *const kMXMessageTypeLocation  = @"m.location";
 
-NSString *const kMXMembershipInvite = @"invite";
-NSString *const kMXMembershipJoin   = @"join";
-NSString *const kMXMembershipLeave  = @"leave";
-NSString *const kMXMembershipBan    = @"ban";
+NSString *const kMXMembershipStringInvite = @"invite";
+NSString *const kMXMembershipStringJoin   = @"join";
+NSString *const kMXMembershipStringLeave  = @"leave";
+NSString *const kMXMembershipStringBan    = @"ban";
 
 
 #pragma mark - MXEvent
 @implementation MXEvent
 
+/**
+ Mapping from MXEventTypeString to MXEventType
+ */
 + (NSDictionary*)eventTypesMap
 {
     static NSDictionary *inst = nil;

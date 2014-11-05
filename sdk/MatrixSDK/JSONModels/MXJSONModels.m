@@ -68,9 +68,6 @@ NSString *const kMatrixPresenceOffline = @"offline";
 NSString *const kMatrixPresenceFreeForChat = @"free_for_chat";
 NSString *const kMatrixPresenceHidden = @"hidden";
 
-@implementation MXUser
-@end
-
-@implementation MXRoomMember
+@implementation MXRoomMemberEventContent
 @end
 
