@@ -19,7 +19,7 @@
 
 + (MXMembership)membership:(MXMembershipString)membershipString
 {
-    MXMembership membership;
+    MXMembership membership = MXMembershipUnknown;
     
     if ([membershipString isEqualToString:kMXMembershipStringInvite])
     {
@@ -33,9 +33,8 @@
     {
         membership = MXMembershipLeave;
     }
-    else
+    else if ([membershipString isEqualToString:kMXMembershipStringBan])
     {
-        // Last case is ban
         membership = MXMembershipBan;
     }
     return membership;

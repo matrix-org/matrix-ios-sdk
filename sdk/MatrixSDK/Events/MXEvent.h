@@ -82,6 +82,7 @@ FOUNDATION_EXPORT NSString *const kMXMessageTypeLocation;
  */
 typedef enum : NSUInteger
 {
+    MXMembershipUnknown,    // The home server did not provide the information
     MXMembershipInvite,
     MXMembershipJoin,
     MXMembershipLeave,

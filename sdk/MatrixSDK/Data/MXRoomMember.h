@@ -43,9 +43,17 @@
  */
 @property (nonatomic, readonly) MXMembership membership;
 
+/**
+ The previous membership state.
+ */
+@property (nonatomic, readonly) MXMembership prevMembership;
+
+/**
+ The id of the user that made the last change on this member membership.
+ */
+@property (nonatomic, readonly) NSString *originUserId;
+
 // @TODO
-//@property (nonatomic, readonly) MXMembership prevMembership;
-//@property (nonatomic, readonly) NSString *originUserId;
 //@property (nonatomic, readonly) MXUser *user;
 
 // @TODO: To move to MXUser

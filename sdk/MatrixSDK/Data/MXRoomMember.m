@@ -35,7 +35,7 @@
         _membership = [MXTools membership:roomMemberContent.membership];
         _lastActiveAgo = roomMemberContent.lastActiveAgo;
 
-        // Set who is this user
+        // Set who is this member
         if (roomMemberEvent.stateKey)
         {
             _userId = roomMemberEvent.stateKey;
@@ -43,6 +43,20 @@
         else
         {
             _userId = roomMemberEvent.userId;
+        }
+        
+        // The user who made the last membership change is the event user id
+        _originUserId = roomMemberEvent.userId;
+        
+        // If defined, keep the previous membership information
+        if (roomMemberEvent.prevContent)
+        {
+            MXRoomMemberEventContent *roomMemberPrevContent = [MXRoomMemberEventContent modelFromJSON:roomMemberEvent.prevContent];
+            _prevMembership = [MXTools membership:roomMemberPrevContent.membership];
+        }
+        else
+        {
+            _prevMembership = MXMembershipUnknown;
         }
     }
     return self;

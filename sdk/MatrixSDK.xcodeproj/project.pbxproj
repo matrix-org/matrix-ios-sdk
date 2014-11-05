@@ -38,6 +38,7 @@
 		329FB1761A0A3A1600A5E88E /* MXRoomMember.m in Sources */ = {isa = PBXBuildFile; fileRef = 329FB1741A0A3A1600A5E88E /* MXRoomMember.m */; };
 		329FB1791A0A74B100A5E88E /* MXTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 329FB1771A0A74B100A5E88E /* MXTools.h */; };
 		329FB17A1A0A74B100A5E88E /* MXTools.m in Sources */ = {isa = PBXBuildFile; fileRef = 329FB1781A0A74B100A5E88E /* MXTools.m */; };
+		329FB17C1A0A963700A5E88E /* MXRoomMemberTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 329FB17B1A0A963700A5E88E /* MXRoomMemberTests.m */; };
 		32A27D1F19EC335300BAFADE /* MXRoomTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A27D1E19EC335300BAFADE /* MXRoomTests.m */; };
 		32C6F93319DD814400EA4E9C /* MatrixSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C6F93219DD814400EA4E9C /* MatrixSDK.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32D8CAC219DEE6ED002AF8A0 /* MXRestClientNoAuthAPITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32D8CAC119DEE6ED002AF8A0 /* MXRestClientNoAuthAPITests.m */; };
@@ -88,6 +89,7 @@
 		329FB1741A0A3A1600A5E88E /* MXRoomMember.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRoomMember.m; sourceTree = "<group>"; };
 		329FB1771A0A74B100A5E88E /* MXTools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXTools.h; sourceTree = "<group>"; };
 		329FB1781A0A74B100A5E88E /* MXTools.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXTools.m; sourceTree = "<group>"; };
+		329FB17B1A0A963700A5E88E /* MXRoomMemberTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRoomMemberTests.m; sourceTree = "<group>"; };
 		32A27D1E19EC335300BAFADE /* MXRoomTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = MXRoomTests.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		32C6F92D19DD814400EA4E9C /* MatrixSDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MatrixSDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		32C6F93119DD814400EA4E9C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -236,6 +238,7 @@
 				32A27D1E19EC335300BAFADE /* MXRoomTests.m */,
 				321809B819EEBF3000377451 /* MXEventTests.m */,
 				328DDEC01A07E57E008C7DC8 /* MXJSONModelTests.m */,
+				329FB17B1A0A963700A5E88E /* MXRoomMemberTests.m */,
 			);
 			path = MatrixSDKTests;
 			sourceTree = "<group>";
@@ -438,6 +441,7 @@
 				32A27D1F19EC335300BAFADE /* MXRoomTests.m in Sources */,
 				32D8CAC219DEE6ED002AF8A0 /* MXRestClientNoAuthAPITests.m in Sources */,
 				32FCAB4D19E578860049C555 /* MXRestClientTests.m in Sources */,
+				329FB17C1A0A963700A5E88E /* MXRoomMemberTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
