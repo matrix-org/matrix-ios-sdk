@@ -595,8 +595,8 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
         // Upload thumbnail
         NSMutableDictionary *thumbnailInfo = [[NSMutableDictionary alloc] init];
         [thumbnailInfo setValue:@"image/jpeg" forKey:@"mimetype"];
-        [thumbnailInfo setValue:[NSNumber numberWithFloat:thumbnail.size.width] forKey:@"w"];
-        [thumbnailInfo setValue:[NSNumber numberWithFloat:thumbnail.size.height] forKey:@"h"];
+        [thumbnailInfo setValue:[NSNumber numberWithUnsignedInteger:(NSUInteger)thumbnail.size.width] forKey:@"w"];
+        [thumbnailInfo setValue:[NSNumber numberWithUnsignedInteger:(NSUInteger)thumbnail.size.height] forKey:@"h"];
         NSData *thumbnailData = UIImageJPEGRepresentation(thumbnail, 0.9);
         [thumbnailInfo setValue:[NSNumber numberWithUnsignedInteger:thumbnailData.length] forKey:@"size"];
         
@@ -623,8 +623,8 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
 {
     NSMutableDictionary *imageInfo = [[NSMutableDictionary alloc] init];
     [imageInfo setValue:@"image/jpeg" forKey:@"mimetype"];
-    [imageInfo setValue:[NSNumber numberWithFloat:image.size.width] forKey:@"w"];
-    [imageInfo setValue:[NSNumber numberWithFloat:image.size.height] forKey:@"h"];
+    [imageInfo setValue:[NSNumber numberWithUnsignedInteger:(NSUInteger)image.size.width] forKey:@"w"];
+    [imageInfo setValue:[NSNumber numberWithUnsignedInteger:(NSUInteger)image.size.height] forKey:@"h"];
     NSData *imageData = UIImageJPEGRepresentation(image, 0.8);
     [imageInfo setValue:[NSNumber numberWithUnsignedInteger:imageData.length] forKey:@"size"];
     
