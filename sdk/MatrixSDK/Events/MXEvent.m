@@ -97,6 +97,10 @@ NSString *const kMXMembershipStringBan    = @"ban";
         _eventType = MXEventTypeCustom;
     }
     
+    // Clean JSON data by removing all null values
+    _content = [MXJSONModel removeNullValuesInJSON:_content];
+    _prevContent = [MXJSONModel removeNullValuesInJSON:_prevContent];
+    
     return instance;
 }
 

@@ -117,6 +117,23 @@
     }];
 }
 
+- (void)testRemoveNullValuesInJSON
+{
+    NSDictionary *JSONDict = @{@"foo" : [NSNull null],
+                               @"John" : @"Doe",
+                               @"toons" : @{@"Mickey" : @"Mouse",
+                                             @"Donald" : @"Duck",
+                                             @"Pluto" : [NSNull null]},
+                               @"dict1" : @{@"dict2" : @{@"key" : [NSNull null]}}
+                               };
+
+    NSDictionary *cleanDict = [MXJSONModel removeNullValuesInJSON:JSONDict];
+    XCTAssertNil(cleanDict[@"foo"], @"JSON null value must be removed. Found: %@", cleanDict[@"foo"]);
+    XCTAssertNotNil(cleanDict[@"John"], @"JSON null value must be removed. Found: %@", cleanDict[@"John"]);
+    XCTAssertNil(cleanDict[@"toons"][@"Pluto"], @"JSON null value must be removed. Found: %@", cleanDict[@"toons"][@"Pluto"]);
+    XCTAssert(((NSDictionary*)cleanDict[@"dict1"][@"dict2"]).count == 0, @"JSON null value must be removed. Found: %@", cleanDict[@"dict1"][@"dict2"]);
+}
+
 - (void)testOthers
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndThePublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {

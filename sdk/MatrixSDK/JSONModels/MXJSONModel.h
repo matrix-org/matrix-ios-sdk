@@ -46,4 +46,12 @@
  */
 + (NSArray *)modelsFromJSON:(NSArray *)JSONDictionaries;
 
+/**
+ Clean a JSON dictionary by removing null values
+ 
+ @param JSONDictionary the JSON data.
+ @return JSON data without null values
+ */
++ (NSDictionary *)removeNullValuesInJSON:(NSDictionary *)JSONDictionary;
+
 @end

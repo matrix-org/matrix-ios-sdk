@@ -73,6 +73,25 @@
     return models;
 }
 
++ (NSDictionary *)removeNullValuesInJSON:(NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *dictionary = [NSMutableDictionary dictionaryWithDictionary:JSONDictionary];
+    NSArray *keys = dictionary.allKeys;
+    for (NSString *key in keys)
+    {
+        id value = dictionary[key];
+        if ([value isEqual:[NSNull null]])
+        {
+            [dictionary removeObjectForKey:key];
+        }
+        else if ([value isKindOfClass:[NSDictionary class]])
+        {
+            [dictionary setObject:[MXJSONModel removeNullValuesInJSON:value] forKey:key];
+        }
+    }
+    return dictionary;
+}
+
 - (void)setOthers:(NSDictionary *)JSONDictionary
 {
     // Store non declared JSON keys into the others property
