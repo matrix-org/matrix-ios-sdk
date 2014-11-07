@@ -29,9 +29,9 @@
     // The key is the room ID. The value, the MXRoom instance.
     NSMutableDictionary *rooms;
     
-    // Presence data
-    // The key is the user ID. The value, the TBD instance.
-    NSMutableDictionary *presence;
+    // Users data
+    // The key is the user ID. The value, the MXUser instance.
+    NSMutableDictionary *users;
 
     // Indicates if we are streaming
     BOOL streamingActive;
@@ -51,7 +51,7 @@
     {
         matrixRestClient = mRestClient;
         rooms = [NSMutableDictionary dictionary];
-        presence = [NSMutableDictionary dictionary];
+        users = [NSMutableDictionary dictionary];
         
         streamingActive = NO;
         
@@ -89,8 +89,12 @@
              }
         }
         
-        // @TODO: Manage presence
-        // And signal them with notifyListeners
+        // Manage presence
+        for (NSDictionary *presenceDict in JSONData[@"presence"])
+        {
+            MXEvent *presenceEvent = [MXEvent modelFromJSON:presenceDict];
+            [self handlePresenceEvent:presenceEvent];
+        }
         
         // We have data, the SDK user can start using it
         initialSyncDone();
@@ -142,8 +146,10 @@
         switch (event.eventType)
         {
             case MXEventTypePresence:
-                // @TODO
+            {
+                [self handlePresenceEvent:event];
                 break;
+            }
                 
             default:
                 if (event.roomId)
@@ -157,6 +163,23 @@
     }
 }
 
+- (void) handlePresenceEvent:(MXEvent *)event
+{
+    // Update MXUser with presence data
+    NSString *userId = event.userId;
+    if (nil == userId)
+    {
+        // userId may be in the event content
+        userId = event.content[@"user_id"];
+    }
+    
+    if (userId)
+    {
+        MXUser *user = [self getOrCreateUser:userId];
+        [user updateWithPresenceEvent:event];
+    }
+}
+
 - (void)close
 {
     streamingActive = NO;
@@ -166,6 +189,8 @@
     // @TODO: Cancel the pending eventsFromToken request
 }
 
+
+#pragma mark - the user's rooms
 - (MXRoom *)room:(NSString *)room_id
 {
     return [rooms objectForKey:room_id];
@@ -186,6 +211,45 @@
     return room;
 }
 
+- (MXRoom *)createRoom:(NSString *)room_id withJSONData:(NSDictionary*)JSONData
+{
+    MXRoom *room = [[MXRoom alloc] initWithRoomId:room_id andMatrixSession:self andJSONData:JSONData];
+    
+    // Register global listeners for this room
+    for (MXSessionEventListener *listener in globalEventListeners)
+    {
+        [listener addRoomToSpy:room];
+    }
+    
+    [rooms setObject:room forKey:room_id];
+    return room;
+}
+
+
+#pragma mark - Matrix users
+- (MXUser *)user:(NSString *)userId
+{
+    return [users objectForKey:userId];
+}
+
+- (NSArray *)users
+{
+    return [users allValues];
+}
+
+- (MXUser *)getOrCreateUser:(NSString *)userId
+{
+    MXUser *user = [self user:userId];
+    
+    if (nil == user)
+    {
+        user = [[MXUser alloc] initWithUserId:userId];
+        [users setObject:user forKey:userId];
+    }
+    return user;
+}
+
+#pragma mark - User's recents
 - (NSArray *)recents
 {
     NSMutableArray *recents = [NSMutableArray arrayWithCapacity:rooms.count];
@@ -209,22 +273,8 @@
     return recents;
 }
 
-- (MXRoom *)createRoom:(NSString *)room_id withJSONData:(NSDictionary*)JSONData
-{
-    MXRoom *room = [[MXRoom alloc] initWithRoomId:room_id andMatrixSession:self andJSONData:JSONData];
-    
-    // Register global listeners for this room
-    for (MXSessionEventListener *listener in globalEventListeners)
-    {
-        [listener addRoomToSpy:room];
-    }
-    
-    [rooms setObject:room forKey:room_id];
-    return room;
-}
 
-
-#pragma mark - Events listeners
+#pragma mark - Global events listeners
 - (id)registerEventListenerForTypes:(NSArray*)types block:(MXSessionEventListenerBlock)listenerBlock
 {
     MXSessionEventListener *listener = [[MXSessionEventListener alloc] initWithSender:self andEventTypes:types andListenerBlock:listenerBlock];

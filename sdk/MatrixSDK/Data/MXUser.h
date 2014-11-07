@@ -16,13 +16,14 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXEvent.h"
-#import "MXUser.h"
+#import "MXJSONModels.h"
+
+@class MXEvent;
 
 /**
- `MXRoomMember` is the information about a user in a room.
+ `MXUser` represents a user in Matrix.
  */
-@interface MXRoomMember : NSObject
+@interface MXUser : NSObject
 
 /**
  The user id.
@@ -36,29 +37,25 @@
 
 /**
  The url of the user of the avatar.
-  */
+ */
 @property (nonatomic, readonly) NSString *avatarUrl;
 
 /**
- The membership state.
+ The presence status.
  */
-@property (nonatomic, readonly) MXMembership membership;
+@property (nonatomic) NSString *presence;
 
 /**
- The previous membership state.
+ The time since the last presence update occured.
+ This is the duration in milliseconds between the last presence update and the time when the
+ presence event, that provides the information, has been fired by the home server.
  */
-@property (nonatomic, readonly) MXMembership prevMembership;
+@property (nonatomic, readonly) NSUInteger lastActiveAgo;
 
-/**
- The id of the user that made the last change on this member membership.
- */
-@property (nonatomic, readonly) NSString *originUserId;
 
-/**
- Create the room member from a Matrix room member event.
- 
- @param roomMemberEvent The MXEvent room member event.
- */
-- (instancetype)initWithMXEvent:(MXEvent*)roomMemberEvent;
+- (instancetype)initWithUserId:(NSString*)userId;
+
+- (void)updateWithRoomMemberEvent:(MXEvent*)roomMemberEvent;
+- (void)updateWithPresenceEvent:(MXEvent*)presenceEvent;
 
 @end

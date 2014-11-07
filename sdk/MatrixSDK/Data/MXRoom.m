@@ -344,6 +344,10 @@
             MXRoomMember *roomMember = [[MXRoomMember alloc] initWithMXEvent:event];
             members[roomMember.userId] = roomMember;
             
+            // Update MXUser data
+            MXUser *user = [mxSession getOrCreateUser:roomMember.userId];
+            [user updateWithRoomMemberEvent:event];
+            
             break;
         }
 

@@ -75,6 +75,7 @@
 - (void)close;
 
 
+#pragma mark - the user's rooms
 /**
  Get the MXRoom instance of a room.
  
@@ -91,6 +92,36 @@
  */
 - (NSArray*)rooms;
 
+
+#pragma mark - Matrix users
+/**
+ Get the MXUser instance of a user.
+ 
+ @param userId The id to the user.
+ 
+ @return the MXUser instance.
+ */
+- (MXUser*)user:(NSString*)userId;
+
+/**
+ Get the MXUser instance of a user.
+ Create it if does not exist yet.
+ 
+ @param userId The id to the user.
+ 
+ @return the MXUser instance.
+ */
+- (MXUser*)getOrCreateUser:(NSString*)userId;
+
+/**
+ Get the list of all users.
+ 
+ @return an array of MXUsers.
+ */
+- (NSArray*)users;
+
+
+#pragma mark - User's recents
 /**
  Get the list of all last message of all rooms.
  The returned array is time ordered: the first item is the more recent message.
@@ -99,6 +130,8 @@
  */
 - (NSArray*)recents;
 
+
+#pragma mark - Global events listeners
 /**
  Register a global listener for some types of events.
  
