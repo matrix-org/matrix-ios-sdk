@@ -446,7 +446,7 @@
     MXRoomMember *member = [self getMember:user_id];
     if (member)
     {
-        if (member.displayname)
+        if (member.displayname.length)
         {
             memberName = member.displayname;
         }
