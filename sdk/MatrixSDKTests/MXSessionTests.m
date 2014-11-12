@@ -247,16 +247,65 @@
                     NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
                 }];
                 
-                
             } failure:^(NSError *error) {
-                
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
             }];
             
         } failure:^(NSError *error) {
-            
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
         }];
-        
+    }];
+}
 
+
+- (void)testListenerForPresence
+{
+    // Make sure Alice and Bob have activities
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
+        
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        
+        __block MXSession *mxSession2 = mxSession;
+        __block NSUInteger lastAliceActivity = -1;
+        
+        // Listen to m.presence only
+        [mxSession registerEventListenerForTypes:@[kMXEventTypeStringPresence]
+                                           block:^(MXSession *mxSession, MXEvent *event, BOOL isLive) {
+                                               
+                                               if (isLive)
+                                               {
+                                                   XCTAssertEqual(event.eventType, MXEventTypePresence, @"We must receive only m.presence - Event: %@", event);
+                                                   
+                                                   MXPresenceEventContent *eventContent = [MXPresenceEventContent modelFromJSON:event.content];
+                                                   XCTAssert([eventContent.userId isEqualToString:aliceRestClient.credentials.userId]);
+                                                   
+                                                   MXUser *mxAlice = [mxSession2 user:eventContent.userId];
+                                                   
+                                                   NSUInteger newLastAliceActivity = mxAlice.lastActiveAgo;
+                                                   XCTAssertLessThan(newLastAliceActivity, lastAliceActivity, @"alice activity must be updated");
+                                                   
+                                                   [expectation fulfill];
+                                               }
+                                           }];
+        
+        // Start the session
+        [mxSession start:^{
+            
+            // Get the last Alice activity before making her active again
+            lastAliceActivity = [mxSession2 user:aliceRestClient.credentials.userId].lastActiveAgo;
+            
+            // Wait a bit before making her active again
+            [NSThread sleepForTimeInterval:1.0];
+            
+            [aliceRestClient postTextMessage:room_id text:@"Hi Bob!" success:^(NSString *event_id) {
+                
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+        }
+         failure:^(NSError *error) {
+             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+         }];
     }];
     
 }

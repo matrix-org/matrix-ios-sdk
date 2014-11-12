@@ -93,7 +93,7 @@
         for (NSDictionary *presenceDict in JSONData[@"presence"])
         {
             MXEvent *presenceEvent = [MXEvent modelFromJSON:presenceDict];
-            [self handlePresenceEvent:presenceEvent];
+            [self handlePresenceEvent:presenceEvent isLiveEvent:NO];
         }
         
         // We have data, the SDK user can start using it
@@ -147,7 +147,7 @@
         {
             case MXEventTypePresence:
             {
-                [self handlePresenceEvent:event];
+                [self handlePresenceEvent:event isLiveEvent:YES];
                 break;
             }
                 
@@ -163,7 +163,7 @@
     }
 }
 
-- (void) handlePresenceEvent:(MXEvent *)event
+- (void) handlePresenceEvent:(MXEvent *)event isLiveEvent:(BOOL)isLiveEvent
 {
     // Update MXUser with presence data
     NSString *userId = event.userId;
@@ -178,6 +178,8 @@
         MXUser *user = [self getOrCreateUser:userId];
         [user updateWithPresenceEvent:event];
     }
+    
+    [self notifyListeners:event isLiveEvent:isLiveEvent];
 }
 
 - (void)close
