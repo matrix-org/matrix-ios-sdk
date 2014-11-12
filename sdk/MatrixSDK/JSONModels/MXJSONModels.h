@@ -158,13 +158,26 @@ FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeEmailIdentity;
 
 
 /**
- Presence types
+ Presence definitions
  */
-FOUNDATION_EXPORT NSString *const kMatrixPresenceOnline;
-FOUNDATION_EXPORT NSString *const kMatrixPresenceUnavailable;
-FOUNDATION_EXPORT NSString *const kMatrixPresenceOffline;
-FOUNDATION_EXPORT NSString *const kMatrixPresenceFreeForChat;
-FOUNDATION_EXPORT NSString *const kMatrixPresenceHidden;
+typedef enum : NSUInteger
+{
+    MXPresenceOnline,
+    MXPresenceUnavailable,
+    MXPresenceOffline,
+    MXPresenceFreeForChat,
+    MXPresenceHidden
+} MXPresence;
+
+/**
+ Presence definitions - String version
+ */
+typedef NSString* MXPresenceString;
+FOUNDATION_EXPORT NSString *const kMXPresenceOnline;
+FOUNDATION_EXPORT NSString *const kMXPresenceUnavailable;
+FOUNDATION_EXPORT NSString *const kMXPresenceOffline;
+FOUNDATION_EXPORT NSString *const kMXPresenceFreeForChat;
+FOUNDATION_EXPORT NSString *const kMXPresenceHidden;
 
 /**
  `MXPresenceEventContent` represents the content of a presence event.
@@ -192,13 +205,18 @@ FOUNDATION_EXPORT NSString *const kMatrixPresenceHidden;
     @property (nonatomic) NSUInteger lastActiveAgo;
 
     /**
-     The presence status.
+     The presence status string as provided by the home server.
      */
-    @property (nonatomic) NSString *presence;
+    @property (nonatomic) MXPresenceString presence;
 
     /**
      The user status.
      */
     @property (nonatomic) NSString *statusMsg;
+
+    /**
+     The enum version of the presence status.
+     */
+    @property (nonatomic) MXPresence presenceStatus;
 
 @end

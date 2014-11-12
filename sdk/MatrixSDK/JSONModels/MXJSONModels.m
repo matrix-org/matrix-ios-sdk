@@ -66,11 +66,42 @@ NSString *const kMatrixLoginFlowTypeEmailIdentity = @"m.login.email.identity";
 @end
 
 
-NSString *const kMatrixPresenceOnline = @"online";
-NSString *const kMatrixPresenceUnavailable = @"unavailable";
-NSString *const kMatrixPresenceOffline = @"offline";
-NSString *const kMatrixPresenceFreeForChat = @"free_for_chat";
-NSString *const kMatrixPresenceHidden = @"hidden";
+NSString *const kMXPresenceOnline = @"online";
+NSString *const kMXPresenceUnavailable = @"unavailable";
+NSString *const kMXPresenceOffline = @"offline";
+NSString *const kMXPresenceFreeForChat = @"free_for_chat";
+NSString *const kMXPresenceHidden = @"hidden";
 
 @implementation MXPresenceEventContent
+
+- (instancetype)initWithDictionary:(NSDictionary *)dictionaryValue error:(NSError *__autoreleasing *)error
+{
+    // Do the JSON -> class instance properties mapping
+    id instance = [super initWithDictionary:dictionaryValue error:error];
+
+    // Convert presence string into enum value
+    if ([_presence isEqualToString:kMXPresenceOnline])
+    {
+        _presenceStatus = MXPresenceOnline;
+    }
+    else if ([_presence isEqualToString:kMXPresenceUnavailable])
+    {
+        _presenceStatus = MXPresenceUnavailable;
+    }
+    else if ([_presence isEqualToString:kMXPresenceOffline])
+    {
+        _presenceStatus = MXPresenceOffline;
+    }
+    else if ([_presence isEqualToString:kMXPresenceFreeForChat])
+    {
+        _presenceStatus = MXPresenceFreeForChat;
+    }
+    else if ([_presence isEqualToString:kMXPresenceHidden])
+    {
+        _presenceStatus = MXPresenceHidden;
+    }
+    
+    return instance;
+}
+
 @end

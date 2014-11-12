@@ -43,7 +43,7 @@
 /**
  The presence status.
  */
-@property (nonatomic) NSString *presence;
+@property (nonatomic) MXPresence presence;
 
 /**
  The time since the last presence update occured.

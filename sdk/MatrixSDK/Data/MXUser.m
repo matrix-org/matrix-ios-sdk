@@ -47,7 +47,7 @@
     MXPresenceEventContent *presenceContent = [MXPresenceEventContent modelFromJSON:presenceEvent.content];
     _displayname = [presenceContent.displayname copy];
     _avatarUrl = [presenceContent.avatarUrl copy];
-    _presence = [presenceContent.presence copy];
+    _presence = presenceContent.presenceStatus;
     _lastActiveAgo = presenceContent.lastActiveAgo;
 }
 @end
