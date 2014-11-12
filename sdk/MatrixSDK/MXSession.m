@@ -267,7 +267,13 @@
     
     // Order them by origin_server_ts
     [recents sortUsingComparator:^NSComparisonResult(MXEvent *obj1, MXEvent *obj2) {
-        return (NSComparisonResult)(obj2.originServerTs - obj1.originServerTs);
+        NSComparisonResult result = NSOrderedAscending;
+        if (obj2.originServerTs > obj1.originServerTs) {
+            result = NSOrderedDescending;
+        } else if (obj2.originServerTs == obj1.originServerTs) {
+            result = NSOrderedSame;
+        }
+        return result;
     }];
     
     return recents;
