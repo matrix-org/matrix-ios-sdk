@@ -196,4 +196,61 @@
     }];
 }
 
+- (void)testUsers
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
+        
+        [bobRestClient postTextMessage:room_id text:@"Hi Alice!" success:^(NSString *event_id) {
+            
+            [aliceRestClient postTextMessage:room_id text:@"Hi Bob!" success:^(NSString *event_id) {
+                
+                
+                mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                
+                // Create a room with messages in parallel
+                [mxSession start:^{
+                    
+                    NSArray *users = mxSession.users;
+                    
+                    XCTAssertNotNil(users);
+                    XCTAssertGreaterThanOrEqual(users.count, 2, "mxBob must know at least mxBob and mxAlice");
+                    
+                    for (MXUser *user in users)
+                    {
+                        if ([user.userId isEqualToString:bobRestClient.credentials.userId])
+                        {
+                            XCTAssertEqual(user.presence, MXPresenceOnline, @"mxBob has just posted a message. It should be marked as online. Found: %ld", user.presence);
+                            XCTAssertLessThan(user.lastActiveAgo, 1000, @"mxBob has just posted a message. lastActiveAgo should not exceeds 1s. Found: %ld", user.lastActiveAgo);
+                        }
+                        if ([user.userId isEqualToString:aliceRestClient.credentials.userId])
+                        {
+                            XCTAssertEqual(user.presence, MXPresenceOnline, @"mxAlice has just posted a message. It should be marked as online. Found: %ld", user.presence);
+                            XCTAssertLessThan(user.lastActiveAgo, 1000, @"mxAlice has just posted a message. lastActiveAgo should not exceeds 1s. Found: %ld", user.lastActiveAgo);
+
+                            // mxAlice has a displayname and avatar defined. They should be found in the presence event
+                            XCTAssert([user.displayname isEqualToString:kMXTestsAliceDisplayName]);
+                            XCTAssert([user.avatarUrl isEqualToString:kMXTestsAliceAvatarURL]);
+                        }
+                    }
+                    
+                    [expectation fulfill];
+                    
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                }];
+                
+                
+            } failure:^(NSError *error) {
+                
+            }];
+            
+        } failure:^(NSError *error) {
+            
+        }];
+        
+
+    }];
+    
+}
+
 @end

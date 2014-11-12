@@ -100,7 +100,10 @@ NSString *const kMXPresenceHidden = @"hidden";
     {
         _presenceStatus = MXPresenceHidden;
     }
-    
+    else
+    {
+        _presenceStatus = MXPresenceUnknown;
+    }
     return instance;
 }
 

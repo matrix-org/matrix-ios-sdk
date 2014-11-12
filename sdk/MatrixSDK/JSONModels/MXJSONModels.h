@@ -162,6 +162,7 @@ FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeEmailIdentity;
  */
 typedef enum : NSUInteger
 {
+    MXPresenceUnknown,    // The home server did not provide the information
     MXPresenceOnline,
     MXPresenceUnavailable,
     MXPresenceOffline,
