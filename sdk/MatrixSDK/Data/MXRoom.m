@@ -294,8 +294,6 @@
         // Store where to start pagination
         pagEarliestToken = roomMessages.start;
     }
-    
-    //NSLog(@"%@", messageEvents);
 }
 
 - (void)handleMessage:(MXEvent*)event isLiveEvent:(BOOL)isLiveEvent pagFrom:(NSString*)pagFrom

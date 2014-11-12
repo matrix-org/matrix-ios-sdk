@@ -19,6 +19,16 @@
 #import "MXEvent.h"
 #import "MXJSONModels.h"
 
+@interface MXUser ()
+{
+    /**
+     The time in milliseconds since epoch the last activity by the user has
+     been tracked by the home server.
+     */
+    uint64_t lastActiveLocalTS;
+}
+@end
+
 @implementation MXUser
 
 - (instancetype)initWithUserId:(NSString *)userId
@@ -27,6 +37,7 @@
     if (self)
     {
         _userId = [userId copy];
+        lastActiveLocalTS = -1;
     }
     return self;
 }
@@ -48,6 +59,18 @@
     _displayname = [presenceContent.displayname copy];
     _avatarUrl = [presenceContent.avatarUrl copy];
     _presence = presenceContent.presenceStatus;
-    _lastActiveAgo = presenceContent.lastActiveAgo;
+    
+    lastActiveLocalTS = [[NSDate date] timeIntervalSince1970] * 1000 - presenceContent.lastActiveAgo;
 }
+
+- (NSUInteger)lastActiveAgo
+{
+    NSUInteger lastActiveAgo = -1;
+    if (-1 != lastActiveLocalTS)
+    {
+        lastActiveAgo = [[NSDate date] timeIntervalSince1970] * 1000 - lastActiveLocalTS;
+    }
+    return lastActiveAgo;
+}
+
 @end

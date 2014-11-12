@@ -43,19 +43,36 @@
 /**
  The presence status.
  */
-@property (nonatomic) MXPresence presence;
+@property (nonatomic, readonly) MXPresence presence;
 
 /**
- The time since the last presence update occured.
- This is the duration in milliseconds between the last presence update and the time when the
- presence event, that provides the information, has been fired by the home server.
+ The time since the last activity by the user.
+ This value in milliseconds is recomputed at each property reading.
  */
 @property (nonatomic, readonly) NSUInteger lastActiveAgo;
 
-
+/**
+ Create an instance for an user ID.
+ 
+ @param userId The id to the user.
+ 
+ @return the newly created MXUser instance.
+ */
 - (instancetype)initWithUserId:(NSString*)userId;
 
+/**
+ Update the MXUser data with a m.room.member event.
+ 
+ @param roomMemberEvent The event.
+ */
 - (void)updateWithRoomMemberEvent:(MXEvent*)roomMemberEvent;
+
+
+/**
+ Update the MXUser data with a m.presence event.
+ 
+ @param roomMemberEvent The event.
+ */
 - (void)updateWithPresenceEvent:(MXEvent*)presenceEvent;
 
 @end
