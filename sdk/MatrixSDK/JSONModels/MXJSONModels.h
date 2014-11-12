@@ -135,17 +135,7 @@ FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeEmailIdentity;
 
 
 /**
- Presence types
- */
-FOUNDATION_EXPORT NSString *const kMatrixPresenceOnline;
-FOUNDATION_EXPORT NSString *const kMatrixPresenceUnavailable;
-FOUNDATION_EXPORT NSString *const kMatrixPresenceOffline;
-FOUNDATION_EXPORT NSString *const kMatrixPresenceFreeForChat;
-FOUNDATION_EXPORT NSString *const kMatrixPresenceHidden;
-
-/**
  `MXRoomMemberEventContent` represents the content of a m.room.member event.
- @TODO: Check this model can work with presence API.
  */
 @interface MXRoomMemberEventContent : MXJSONModel
 
@@ -164,6 +154,38 @@ FOUNDATION_EXPORT NSString *const kMatrixPresenceHidden;
      */
     @property (nonatomic) NSString *membership;
 
+@end
+
+
+/**
+ Presence types
+ */
+FOUNDATION_EXPORT NSString *const kMatrixPresenceOnline;
+FOUNDATION_EXPORT NSString *const kMatrixPresenceUnavailable;
+FOUNDATION_EXPORT NSString *const kMatrixPresenceOffline;
+FOUNDATION_EXPORT NSString *const kMatrixPresenceFreeForChat;
+FOUNDATION_EXPORT NSString *const kMatrixPresenceHidden;
+
+/**
+ `MXPresenceEventContent` represents the content of a presence event.
+ */
+@interface MXPresenceEventContent : MXJSONModel
+
+    /**
+     The user id.
+     */
+    @property (nonatomic) NSString *userId;
+
+    /**
+     The user display name.
+     */
+    @property (nonatomic) NSString *displayname;
+
+    /**
+     The url of the user of the avatar.
+     */
+    @property (nonatomic) NSString *avatarUrl;
+
     /**
      The timestamp of the last time the user has been active.
      */
@@ -179,8 +201,4 @@ FOUNDATION_EXPORT NSString *const kMatrixPresenceHidden;
      */
     @property (nonatomic) NSString *statusMsg;
 
-// @TODO: to remove
-@property (nonatomic) NSString *userId;
-
 @end
-

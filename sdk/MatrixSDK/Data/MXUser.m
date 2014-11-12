@@ -38,19 +38,16 @@
     MXRoomMemberEventContent *roomMemberContent = [MXRoomMemberEventContent modelFromJSON:roomMemberEvent.content];
     _displayname = [roomMemberContent.displayname copy];
     _avatarUrl = [roomMemberContent.avatarUrl copy];
-    _presence = [roomMemberContent.presence copy];
-    _lastActiveAgo = roomMemberContent.lastActiveAgo;
 }
 
 - (void)updateWithPresenceEvent:(MXEvent*)presenceEvent
 {
     NSParameterAssert(presenceEvent.eventType == MXEventTypePresence);
     
-    // @TODO: Check if MXRoomMemberEventContent is the right representation for presence events
-    MXRoomMemberEventContent *roomMemberContent = [MXRoomMemberEventContent modelFromJSON:presenceEvent.content];
-    _displayname = [roomMemberContent.displayname copy];
-    _avatarUrl = [roomMemberContent.avatarUrl copy];
-    _presence = [roomMemberContent.presence copy];
-    _lastActiveAgo = roomMemberContent.lastActiveAgo;
+    MXPresenceEventContent *presenceContent = [MXPresenceEventContent modelFromJSON:presenceEvent.content];
+    _displayname = [presenceContent.displayname copy];
+    _avatarUrl = [presenceContent.avatarUrl copy];
+    _presence = [presenceContent.presence copy];
+    _lastActiveAgo = presenceContent.lastActiveAgo;
 }
 @end

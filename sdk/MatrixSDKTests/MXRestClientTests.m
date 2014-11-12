@@ -305,7 +305,7 @@
             for (MXEvent *roomMemberEvent in roomMemberEvents)
             {
                 MXRoomMemberEventContent *roomMemberEventContent = [MXRoomMemberEventContent modelFromJSON:roomMemberEvent.content];
-                if ([roomMemberEventContent.userId isEqualToString:aliceRestClient.credentials.userId])
+                if ([roomMemberEvent.userId isEqualToString:aliceRestClient.credentials.userId])
                 {
                     XCTAssert([roomMemberEventContent.displayname isEqualToString:kMXTestsAliceDisplayName], @"displayname is wrong: %@", roomMemberEventContent.displayname);
                     XCTAssert([roomMemberEventContent.avatarUrl isEqualToString:kMXTestsAliceAvatarURL], @"member.avatarUrl is wrong: %@", roomMemberEventContent.avatarUrl);
