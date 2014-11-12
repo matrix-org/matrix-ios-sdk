@@ -262,7 +262,7 @@
         result = membership;
     }
     
-    return membership;
+    return result;
 }
 
 #pragma mark - Messages handling
