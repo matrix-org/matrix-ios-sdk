@@ -40,7 +40,14 @@
 
 @end
 
+@interface MXJSONModelTestClass64Bits : MXJSONModel
 
+@property (nonatomic) uint64_t ts;
+
+@end
+@implementation MXJSONModelTestClass64Bits
+
+@end
 
 @interface MXJSONModelTests : XCTestCase
 {
@@ -177,6 +184,17 @@
     MXJSONModelTestClass2 *model = [MXJSONModelTestClass2 modelFromJSON:JSONDict];
     
     XCTAssertNil(model.foo, @"JSON null value must be converted to nil. Found: %@", model.foo);
+}
+
+- (void)test64BitsValue
+{
+    NSDictionary *JSONDict = @{
+                               @"ts" : [NSNumber numberWithLongLong:1414159014100]
+                               };
+    
+    MXJSONModelTestClass64Bits *model = [MXJSONModelTestClass64Bits modelFromJSON:JSONDict];
+    
+    XCTAssertEqual(model.ts, 1414159014100, @"The 64bits value must be 1414159014100. Found: %lld", model.ts);
 }
 
 @end

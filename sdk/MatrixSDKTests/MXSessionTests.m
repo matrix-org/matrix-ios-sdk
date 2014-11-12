@@ -90,7 +90,7 @@
             
             XCTAssertGreaterThanOrEqual(recents.count, 5, @"There must be at least 5 recents");
             
-            NSUInteger prev_ts = ULONG_MAX;
+            uint64_t prev_ts = ULONG_MAX;
             for (MXEvent *event in recents)
             {
                 XCTAssertNotNil(event.eventId, @"The event must have an event_id to be valid");
@@ -105,7 +105,7 @@
                     NSLog(@"No timestamp in the event data: %@", event);
                 }
             }
-            
+
             [expectation fulfill];
             
         } failure:^(NSError *error) {
