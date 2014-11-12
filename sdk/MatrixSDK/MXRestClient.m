@@ -535,6 +535,52 @@ MXAuthAction;
 }
 
 
+#pragma mark - Presence operations
+- (void)setPresence:(NSString*)presence andStatusMessage:(NSString*)statusMessage
+            success:(void (^)())success
+            failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"presence/%@/status", credentials.userId];
+    [httpClient requestWithMethod:@"PUT"
+                             path:path
+                       parameters:@{
+                                    @"presence": presence,
+                                    @"status_msg": statusMessage
+                                    }
+                          success:^(NSDictionary *JSONResponse)
+     {
+         success();
+     }
+                          failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
+- (void)presence:(NSString*)user_id
+         success:(void (^)(NSDictionary *JSONData))success
+         failure:(void (^)(NSError *error))failure
+{
+    if (!user_id)
+    {
+        user_id = credentials.userId;
+    }
+    
+    NSString *path = [NSString stringWithFormat:@"presence/%@/status", user_id];
+    [httpClient requestWithMethod:@"GET"
+                             path:path
+                       parameters:nil
+                          success:^(NSDictionary *JSONResponse)
+     {
+         success(JSONResponse);
+     }
+                          failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
+
 #pragma mark - Event operations
 - (void)initialSync:(NSInteger)limit
            success:(void (^)(NSDictionary *))success

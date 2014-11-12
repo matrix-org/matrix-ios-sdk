@@ -312,6 +312,33 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
              failure:(void (^)(NSError *error))failure;
 
 
+#pragma mark - Presence operations
+/**
+ Set the current user presence status.
+ 
+ @param presence the new presence status.
+ @param statusMessage the new message status.
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)setPresence:(NSString*)presence andStatusMessage:(NSString*)statusMessage
+            success:(void (^)())success
+            failure:(void (^)(NSError *error))failure;
+
+/**
+ Get the presence status of a user.
+ 
+ @param user_id the user id.
+ 
+ @param success A block object called when the operation succeeds. returns @TODO
+ @param failure A block object called when the operation fails.
+ */
+- (void)presence:(NSString*)user_id
+         success:(void (^)(NSDictionary *JSONData))success
+         failure:(void (^)(NSError *error))failure;
+
+
 #pragma mark - Event operations
 - (void)initialSync:(NSInteger)limit
             success:(void (^)(NSDictionary *JSONData))success

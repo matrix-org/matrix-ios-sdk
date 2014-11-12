@@ -441,6 +441,38 @@
 }
 
 
+#pragma mark - Presence operations
+- (void)testUserPresence
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
+        
+        __block MXRestClient *aliceRestClient2 = aliceRestClient;
+        
+        // Set new presence
+        __block NSString *newStatusMessage = @"Gone for dinner";
+        [aliceRestClient setPresence:kMXPresenceOnline andStatusMessage:newStatusMessage success:^{
+            
+            // Then retrieve it
+            [aliceRestClient2 presence:nil success:^(NSDictionary *JSONData) {
+                
+                //@TODO: 
+                //XCTAssertTrue([displayname isEqualToString:newDisplayName], @"Must retrieved the set string: %@ - %@", displayname, newDisplayName);
+                [expectation fulfill];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        
+    }];
+}
+
+
 #pragma mark - Event operations
 - (void)testEventsFromTokenServerTimeout
 {
