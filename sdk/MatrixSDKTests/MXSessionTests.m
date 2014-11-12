@@ -90,7 +90,7 @@
             
             XCTAssertGreaterThanOrEqual(recents.count, 5, @"There must be at least 5 recents");
             
-            uint64_t prev_ts = ULONG_MAX;
+            uint64_t prev_ts = ULONG_LONG_MAX;
             for (MXEvent *event in recents)
             {
                 XCTAssertNotNil(event.eventId, @"The event must have an event_id to be valid");
