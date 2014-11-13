@@ -97,6 +97,18 @@ NSString *const kMXMembershipStringBan    = @"ban";
         _eventType = MXEventTypeCustom;
     }
     
+    if (MXEventTypePresence == self.eventType)
+    {
+        // Workaround: Presence events provided by the home server do not contain userId
+        // in the root of the JSON event object but under its content sub object.
+        // Set self.userId in order to follow other events format.
+        if (nil == self.userId)
+        {
+            // userId may be in the event content
+            self.userId = self.content[@"user_id"];
+        }
+    }
+    
     // Clean JSON data by removing all null values
     _content = [MXJSONModel removeNullValuesInJSON:_content];
     _prevContent = [MXJSONModel removeNullValuesInJSON:_prevContent];

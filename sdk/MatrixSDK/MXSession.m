@@ -167,12 +167,6 @@
 {
     // Update MXUser with presence data
     NSString *userId = event.userId;
-    if (nil == userId)
-    {
-        // userId may be in the event content
-        userId = event.content[@"user_id"];
-    }
-    
     if (userId)
     {
         MXUser *user = [self getOrCreateUser:userId];
