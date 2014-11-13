@@ -132,9 +132,9 @@
                 XCTAssertTrue([member.userId isEqualToString:bobRestClient.credentials.userId], "This must be mxBob");
             }
             
-            XCTAssertNotNil([room.state getMember:bobRestClient.credentials.userId], @"Bob must be retrieved");
+            XCTAssertNotNil([room.state memberWithUserId:bobRestClient.credentials.userId], @"Bob must be retrieved");
             
-            XCTAssertNil([room.state getMember:@"NonExistingUserId"], @"getMember must return nil if the user does not exist");
+            XCTAssertNil([room.state memberWithUserId:@"NonExistingUserId"], @"getMember must return nil if the user does not exist");
             
             [expectation fulfill];
             

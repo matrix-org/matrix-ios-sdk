@@ -223,7 +223,7 @@
     MXMembership result;
     
     // Find the uptodate value in room state events
-    MXRoomMember *user = [self getMember:mxSession.matrixRestClient.credentials.userId];
+    MXRoomMember *user = [self memberWithUserId:mxSession.matrixRestClient.credentials.userId];
     if (user)
     {
         result = user.membership;
@@ -257,7 +257,7 @@
 }
 
 
-- (MXRoomMember*)getMember:(NSString *)user_id
+- (MXRoomMember*)memberWithUserId:(NSString *)user_id
 {
     return members[user_id];
 }
@@ -265,7 +265,7 @@
 - (NSString*)memberName:(NSString*)user_id
 {
     NSString *memberName;
-    MXRoomMember *member = [self getMember:user_id];
+    MXRoomMember *member = [self memberWithUserId:user_id];
     if (member)
     {
         if (member.displayname.length)

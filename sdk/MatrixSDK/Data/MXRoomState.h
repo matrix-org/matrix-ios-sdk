@@ -72,11 +72,35 @@
 @property (nonatomic, readonly) MXMembership membership;
 
 
+/**
+ Create a `MXRoomState` instance.
+ 
+ @param room_id the room id to the room.
+ @param mxSession the mxSession to the home server. It is used to get information about the user
+                  currently connected to the home server.
+ @param JSONData the JSON object obtained at the initialSync of the room. It is used to store 
+                  additional metadata coming outside state events.
+ 
+ @return The newly-initialized MXRoomState.
+ */
+
 - (id)initWithRoomId:(NSString*)room_id andMatrixSession:(MXSession*)mxSession andJSONData:(NSDictionary*)JSONData;
 
+
+/**
+ Process a state event in order to update the room state.
+ 
+ @param event the state event.
+ */
 - (void)handleStateEvent:(MXEvent*)event;
 
-- (MXRoomMember*)getMember:(NSString*)user_id;
+/**
+ Return the member with the given user id.
+ 
+ @param user_id the id of the member to retrieve.
+ @return the room member.
+ */
+- (MXRoomMember*)memberWithUserId:(NSString*)user_id;
 
 /**
  Return a display name for a member.
