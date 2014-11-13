@@ -23,13 +23,20 @@
 
 - (instancetype)initWithMXEvent:(MXEvent*)roomMemberEvent
 {
+    // Use roomMemberEvent.content by default
+    return [self initWithMXEvent:roomMemberEvent andEventContent:roomMemberEvent.content];
+}
+
+- (instancetype)initWithMXEvent:(MXEvent*)roomMemberEvent
+                andEventContent:(NSDictionary*)roomMemberEventContent
+{
     self = [super init];
     if (self)
     {
         NSParameterAssert(roomMemberEvent.eventType == MXEventTypeRoomMember);
         
         // Use MXRoomMemberEventContent to parse the JSON event content
-        MXRoomMemberEventContent *roomMemberContent = [MXRoomMemberEventContent modelFromJSON:roomMemberEvent.content];
+        MXRoomMemberEventContent *roomMemberContent = [MXRoomMemberEventContent modelFromJSON:roomMemberEventContent];
         _displayname = roomMemberContent.displayname;
         _avatarUrl = roomMemberContent.avatarUrl;
         _membership = [MXTools membership:roomMemberContent.membership];
@@ -44,17 +51,27 @@
             _userId = roomMemberEvent.userId;
         }
         
-        // The user who made the last membership change is the event user id
-        _originUserId = roomMemberEvent.userId;
-        
-        // If defined, keep the previous membership information
-        if (roomMemberEvent.prevContent)
+        if (roomMemberEventContent == roomMemberEvent.content)
         {
-            MXRoomMemberEventContent *roomMemberPrevContent = [MXRoomMemberEventContent modelFromJSON:roomMemberEvent.prevContent];
-            _prevMembership = [MXTools membership:roomMemberPrevContent.membership];
+            // The user who made the last membership change is the event user id
+            _originUserId = roomMemberEvent.userId;
+            
+            // If defined, keep the previous membership information
+            if (roomMemberEvent.prevContent)
+            {
+                MXRoomMemberEventContent *roomMemberPrevContent = [MXRoomMemberEventContent modelFromJSON:roomMemberEvent.prevContent];
+                _prevMembership = [MXTools membership:roomMemberPrevContent.membership];
+            }
+            else
+            {
+                _prevMembership = MXMembershipUnknown;
+            }
         }
         else
         {
+            // If roomMemberEventContent was roomMemberEvent.prevContent,
+            // The following values have no meaning
+            _originUserId = nil;
             _prevMembership = MXMembershipUnknown;
         }
     }

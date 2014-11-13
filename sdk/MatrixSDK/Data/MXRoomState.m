@@ -26,6 +26,8 @@
     NSMutableDictionary *stateEvents;
     NSMutableDictionary *members;
     
+    BOOL isLive;
+    
     /*
      Additional and optional metadata got from initialSync
      */
@@ -41,13 +43,18 @@
 
 @implementation MXRoomState
 
-- (id)initWithRoomId:(NSString*)room_id andMatrixSession:(MXSession*)mxSession2 andJSONData:(NSDictionary*)JSONData
+- (id)initWithRoomId:(NSString*)room_id
+    andMatrixSession:(MXSession*)mxSession2
+         andJSONData:(NSDictionary*)JSONData
+        andDirection:(BOOL)isLive2
 {
     self = [super init];
     if (self)
     {
         mxSession = mxSession2;
         _room_id = room_id;
+        
+        isLive = isLive2;
         
         stateEvents = [NSMutableDictionary dictionary];
         members = [NSMutableDictionary dictionary];
@@ -72,6 +79,25 @@
     return self;
 }
 
+// According to the direction of the instance, we are interested either by
+// the content of the event or its prev_content
+- (NSDictionary*)contentOfEvent:(MXEvent*)event
+{
+    NSDictionary *content;
+    if (event)
+    {
+        if (isLive)
+        {
+            content = event.content;
+        }
+        else
+        {
+            content = event.prevContent;
+        }
+    }
+    return content;
+}
+
 - (NSArray *)stateEvents
 {
     return [stateEvents allValues];
@@ -88,9 +114,9 @@
     
     // Get it from the state events
     MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomPowerLevels];
-    if (event && event.content)
+    if (event && [self contentOfEvent:event])
     {
-        powerLevels = [event.content copy];
+        powerLevels = [[self contentOfEvent:event] copy];
     }
     return powerLevels;
 }
@@ -112,9 +138,9 @@
         // Check this in the room state events
         MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomJoinRules];
         
-        if (event && event.content)
+        if (event && [self contentOfEvent:event])
         {
-            NSString *join_rule = event.content[@"join_rule"];
+            NSString *join_rule = [self contentOfEvent:event][@"join_rule"];
             if ([join_rule isEqualToString:kMXRoomVisibilityPublic])
             {
                 isPublic = YES;
@@ -131,9 +157,9 @@
     
     // Get it from the state events
     MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomAliases];
-    if (event && event.content)
+    if (event && [self contentOfEvent:event])
     {
-        aliases = [event.content[@"aliases"] copy];
+        aliases = [[self contentOfEvent:event][@"aliases"] copy];
     }
     return aliases;
 }
@@ -155,9 +181,9 @@
     
     // Check it from the state events
     MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomName];
-    if (event && event.content)
+    if (event && [self contentOfEvent:event])
     {
-        displayname = [event.content[@"name"] copy];
+        displayname = [[self contentOfEvent:event][@"name"] copy];
     }
     
     else if (alias)
@@ -243,7 +269,7 @@
     {
         case MXEventTypeRoomMember:
         {
-            MXRoomMember *roomMember = [[MXRoomMember alloc] initWithMXEvent:event];
+            MXRoomMember *roomMember = [[MXRoomMember alloc] initWithMXEvent:event andEventContent:[self contentOfEvent:event]];
             members[roomMember.userId] = roomMember;
             break;
         }

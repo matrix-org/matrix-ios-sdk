@@ -61,4 +61,16 @@
  */
 - (instancetype)initWithMXEvent:(MXEvent*)roomMemberEvent;
 
+/**
+ Create the room member from a Matrix room member event by specifying the content to use.
+ 
+ MXEvents come with content and prev_content data. According to the situation, we may want
+ to create an MXRoomMember from content or from prev_content.
+ 
+ @param roomMemberEvent The MXEvent room member event.
+ @param roomMemberEventContent roomMemberEvent.content or roomMemberEvent.prevContent
+ */
+- (instancetype)initWithMXEvent:(MXEvent*)roomMemberEvent
+                andEventContent:(NSDictionary*)roomMemberEventContent;
+
 @end

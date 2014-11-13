@@ -54,7 +54,7 @@
         
         eventListeners = [NSMutableArray array];
         
-        _state = [[MXRoomState alloc] initWithRoomId:room_id andMatrixSession:mxSession2 andJSONData:JSONData];
+        _state = [[MXRoomState alloc] initWithRoomId:room_id andMatrixSession:mxSession2 andJSONData:JSONData andDirection:YES];
 
     }
     return self;

@@ -80,11 +80,14 @@
                   currently connected to the home server.
  @param JSONData the JSON object obtained at the initialSync of the room. It is used to store 
                   additional metadata coming outside state events.
+ @paran isLive the direction in which this `MXRoomState` instance will be updated.
  
  @return The newly-initialized MXRoomState.
  */
-
-- (id)initWithRoomId:(NSString*)room_id andMatrixSession:(MXSession*)mxSession andJSONData:(NSDictionary*)JSONData;
+- (id)initWithRoomId:(NSString*)room_id
+    andMatrixSession:(MXSession*)mxSession
+         andJSONData:(NSDictionary*)JSONData
+        andDirection:(BOOL)isLive;
 
 
 /**
