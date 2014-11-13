@@ -30,7 +30,7 @@
 @property (nonatomic, readonly) NSString *userId;
 
 /**
- The user display name.
+ The user display name as provided by the home sever.
  */
 @property (nonatomic, readonly) NSString *displayname;
 
