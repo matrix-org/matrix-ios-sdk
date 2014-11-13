@@ -444,6 +444,8 @@
 #pragma mark - Presence operations
 - (void)testUserPresence
 {
+    // @TODO: Currently, Synapse on the develop branch fails to handle the setPresence request
+    // Make sure the test is valid once the bug is fixed server side
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
         
         __block MXRestClient *aliceRestClient2 = aliceRestClient;
