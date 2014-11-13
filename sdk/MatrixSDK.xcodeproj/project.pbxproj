@@ -25,6 +25,8 @@
 		3220094519EFBF30008DE41D /* MXSessionEventListener.h in Headers */ = {isa = PBXBuildFile; fileRef = 3220094319EFBF30008DE41D /* MXSessionEventListener.h */; };
 		3220094619EFBF30008DE41D /* MXSessionEventListener.m in Sources */ = {isa = PBXBuildFile; fileRef = 3220094419EFBF30008DE41D /* MXSessionEventListener.m */; };
 		3226DC3819DEED3B00866530 /* MatrixSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32C6F92D19DD814400EA4E9C /* MatrixSDK.framework */; };
+		3265CB381A14C43E00E24B2F /* MXRoomState.h in Headers */ = {isa = PBXBuildFile; fileRef = 3265CB361A14C43E00E24B2F /* MXRoomState.h */; };
+		3265CB391A14C43E00E24B2F /* MXRoomState.m in Sources */ = {isa = PBXBuildFile; fileRef = 3265CB371A14C43E00E24B2F /* MXRoomState.m */; };
 		3281E89E19E299C000976E1A /* MXErrorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3281E89D19E299C000976E1A /* MXErrorTests.m */; };
 		3281E8A019E2CC1200976E1A /* MXHTTPClientTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3281E89F19E2CC1200976E1A /* MXHTTPClientTests.m */; };
 		3281E8A219E2DE4300976E1A /* MXSessionTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3281E8A119E2DE4300976E1A /* MXSessionTests.m */; };
@@ -77,6 +79,8 @@
 		3220093719EFA4C9008DE41D /* MXEventListener.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXEventListener.m; sourceTree = "<group>"; };
 		3220094319EFBF30008DE41D /* MXSessionEventListener.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXSessionEventListener.h; sourceTree = "<group>"; };
 		3220094419EFBF30008DE41D /* MXSessionEventListener.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXSessionEventListener.m; sourceTree = "<group>"; };
+		3265CB361A14C43E00E24B2F /* MXRoomState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRoomState.h; sourceTree = "<group>"; };
+		3265CB371A14C43E00E24B2F /* MXRoomState.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRoomState.m; sourceTree = "<group>"; };
 		3281E89D19E299C000976E1A /* MXErrorTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXErrorTests.m; sourceTree = "<group>"; };
 		3281E89F19E2CC1200976E1A /* MXHTTPClientTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXHTTPClientTests.m; sourceTree = "<group>"; };
 		3281E8A119E2DE4300976E1A /* MXSessionTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = MXSessionTests.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
@@ -140,6 +144,8 @@
 			children = (
 				320DFDCA19DD99B60068622A /* MXRoom.h */,
 				320DFDCB19DD99B60068622A /* MXRoom.m */,
+				3265CB361A14C43E00E24B2F /* MXRoomState.h */,
+				3265CB371A14C43E00E24B2F /* MXRoomState.m */,
 				3220093619EFA4C9008DE41D /* MXEventListener.h */,
 				3220093719EFA4C9008DE41D /* MXEventListener.m */,
 				3220094319EFBF30008DE41D /* MXSessionEventListener.h */,
@@ -277,6 +283,7 @@
 				329FB1791A0A74B100A5E88E /* MXTools.h in Headers */,
 				3281E8B919E42DFE00976E1A /* MXJSONModels.h in Headers */,
 				320DFDE419DD99B60068622A /* MXRestClient.h in Headers */,
+				3265CB381A14C43E00E24B2F /* MXRoomState.h in Headers */,
 				320DFDDD19DD99B60068622A /* MXEvent.h in Headers */,
 				3220094519EFBF30008DE41D /* MXSessionEventListener.h in Headers */,
 				329FB1751A0A3A1600A5E88E /* MXRoomMember.h in Headers */,
@@ -421,6 +428,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				329FB1761A0A3A1600A5E88E /* MXRoomMember.m in Sources */,
+				3265CB391A14C43E00E24B2F /* MXRoomState.m in Sources */,
 				3281E8B819E42DFE00976E1A /* MXJSONModel.m in Sources */,
 				320DFDE319DD99B60068622A /* MXError.m in Sources */,
 				3281E8BA19E42DFE00976E1A /* MXJSONModels.m in Sources */,

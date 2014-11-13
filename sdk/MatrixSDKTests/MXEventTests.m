@@ -54,7 +54,7 @@
         [mxSession start:^{
             MXRoom *room = [mxSession room:room_id];
             
-            for (MXEvent *stateEvent in room.stateEvents)
+            for (MXEvent *stateEvent in room.state.stateEvents)
             {
                 XCTAssertTrue(stateEvent.isState, "All events in room.stateEvents must be states. stateEvent: %@", stateEvent);
             }

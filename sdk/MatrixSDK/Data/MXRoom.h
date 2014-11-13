@@ -20,6 +20,7 @@
 #import "MXJSONModels.h"
 #import "MXRoomMember.h"
 #import "MXEventListener.h"
+#import "MXRoomState.h"
 
 @class MXSession;
 
@@ -39,11 +40,6 @@ typedef void (^MXRoomEventListenerBlock)(MXRoom *room, MXEvent *event, BOOL isLi
 @interface MXRoom : NSObject
 
 /**
- The room ID
- */
-@property (nonatomic, readonly) NSString *room_id;
-
-/**
  A copy of the list of messages (MXEvent instances) currently loaded for this room.
  A message is either a non-state or a state event that is intended to be 
  displayed in a room chat history.
@@ -57,41 +53,9 @@ typedef void (^MXRoomEventListenerBlock)(MXRoom *room, MXEvent *event, BOOL isLi
 @property (nonatomic, readonly) MXEvent *lastMessage;
 
 /**
- A copy of the list of state events (actually MXEvent instances).
+ The uptodate state of the room.
  */
-@property (nonatomic, readonly) NSArray *stateEvents;
-
-/**
- A copy of the list of room members (actually MXRoomMember instances).
- */
-@property (nonatomic, readonly) NSArray *members;
-
-/**
- The power level of room members
- If a user is in the list, then they have the associated power level. Otherwise they have the default level. If not default key is supplied, it is assumed to be 0.
- */
-@property (nonatomic, readonly) NSDictionary *powerLevels;
-
-/**
- The visibility of the room: public or, else, private
- */
-@property (nonatomic, readonly) BOOL isPublic;
-
-/**
- The aliases of this room.
- */
-@property (nonatomic, readonly) NSArray *aliases;
-
-/**
- The display name of the room.
- It is computed from information retrieved so far.
- */
-@property (nonatomic, readonly) NSString *displayname;
-
-/**
- The membership state of the logged in user for this room
- */
-@property (nonatomic, readonly) MXMembership membership;
+@property (nonatomic, readonly) MXRoomState *state;
 
 /**
  Flag indicating if there are still events (in the past) to get with paginateBackMessages.
@@ -128,14 +92,6 @@ typedef void (^MXRoomEventListenerBlock)(MXRoom *room, MXEvent *event, BOOL isLi
 - (void)paginateBackMessages:(NSUInteger)numItems
                      success:(void (^)(NSArray *messages))success
                      failure:(void (^)(NSError *error))failure;
-                                                                                                                                     
-- (MXRoomMember*)getMember:(NSString*)user_id;
-
-/**
- Return a display name for a member.
- It is his displayname member or, if nil, his user_id
- */
-- (NSString*)memberName:(NSString*)user_id;
 
 
 /**

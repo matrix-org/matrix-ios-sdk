@@ -257,7 +257,7 @@
         }
         else
         {
-            NSLog(@"WARNING: Ignore corrupted room (%@): no last message", room.room_id);
+            NSLog(@"WARNING: Ignore corrupted room (%@): no last message", room.state.room_id);
         }
     }
     

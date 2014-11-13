@@ -98,7 +98,7 @@
 {
     [self doMXRoomTestWithBobAndThePublicRoom:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
         
-        XCTAssertTrue(room.isPublic, @"The room must be public");
+        XCTAssertTrue(room.state.isPublic, @"The room must be public");
             
         [expectation fulfill];
     }];
@@ -108,7 +108,7 @@
 {
     [self doMXRoomTestWithBobAndARoomWithMessages:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
         
-        XCTAssertFalse(room.isPublic, @"This room must be private");
+        XCTAssertFalse(room.state.isPublic, @"This room must be private");
         
         [expectation fulfill];
     }];
@@ -124,17 +124,17 @@
             MXRoom *room = [mxSession room:room_id];
             XCTAssertNotNil(room);
             
-            NSArray *members = room.members;
+            NSArray *members = room.state.members;
             XCTAssertEqual(members.count, 1, "There must be only one member: mxBob, the creator");
             
-            for (MXRoomMember *member in room.members)
+            for (MXRoomMember *member in room.state.members)
             {
                 XCTAssertTrue([member.userId isEqualToString:bobRestClient.credentials.userId], "This must be mxBob");
             }
             
-            XCTAssertNotNil([room getMember:bobRestClient.credentials.userId], @"Bob must be retrieved");
+            XCTAssertNotNil([room.state getMember:bobRestClient.credentials.userId], @"Bob must be retrieved");
             
-            XCTAssertNil([room getMember:@"NonExistingUserId"], @"getMember must return nil if the user does not exist");
+            XCTAssertNil([room.state getMember:@"NonExistingUserId"], @"getMember must return nil if the user does not exist");
             
             [expectation fulfill];
             
@@ -152,12 +152,12 @@
         MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
         
         NSString *bobUserId = sharedData.bobCredentials.userId;
-        NSString *bobMemberName = [room memberName:bobUserId];
+        NSString *bobMemberName = [room.state  memberName:bobUserId];
         
         XCTAssertNotNil(bobMemberName);
         XCTAssertFalse([bobMemberName isEqualToString:@""], @"bobMemberName must not be an empty string");
         
-        XCTAssert([[room memberName:@"NonExistingUserId"] isEqualToString:@"NonExistingUserId"], @"memberName must return his id if the user does not exist");
+        XCTAssert([[room.state memberName:@"NonExistingUserId"] isEqualToString:@"NonExistingUserId"], @"memberName must return his id if the user does not exist");
         
         [expectation fulfill];
     }];
@@ -350,7 +350,7 @@
         mxSession = mxSession2;
         
         // Instantiate another MXRoom object and test pagination from cold
-        MXRoom *room2 = [[MXRoom alloc] initWithRoomId:room.room_id andMatrixSession:mxSession];
+        MXRoom *room2 = [[MXRoom alloc] initWithRoomId:room.state.room_id andMatrixSession:mxSession];
         
         XCTAssertEqual(room2.messages.count, 0, @"No initialSync means no data");
         
@@ -378,7 +378,7 @@
             mxSession = mxSession2;
 
             // Use another MXRoom instance to do pagination in several times
-            MXRoom *room2 = [[MXRoom alloc] initWithRoomId:room.room_id andMatrixSession:mxSession];
+            MXRoom *room2 = [[MXRoom alloc] initWithRoomId:room.state.room_id andMatrixSession:mxSession];
             
             // The several paginations
             [room2 paginateBackMessages:2 success:^(NSArray *messages) {
@@ -444,8 +444,8 @@
 {
     [self doMXRoomTestWithBobAndARoomWithMessages:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
         
-        XCTAssertNotNil(room.stateEvents);
-        XCTAssertGreaterThan(room.stateEvents.count, 0);
+        XCTAssertNotNil(room.state.stateEvents);
+        XCTAssertGreaterThan(room.state.stateEvents.count, 0);
  
         [expectation fulfill];
     }];
@@ -455,10 +455,10 @@
 {
     [self doMXRoomTestWithBobAndThePublicRoom:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
         
-        XCTAssertNotNil(room.aliases);
-        XCTAssertGreaterThanOrEqual(room.aliases.count, 1);
+        XCTAssertNotNil(room.state.aliases);
+        XCTAssertGreaterThanOrEqual(room.state.aliases.count, 1);
         
-        NSString *alias = room.aliases[0];
+        NSString *alias = room.state.aliases[0];
         
         XCTAssertTrue([alias hasPrefix:@"#mxPublic:"]);
         
@@ -471,8 +471,8 @@
 {
     [self doMXRoomTestWithBobAndThePublicRoom:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
         
-        XCTAssertNotNil(room.displayname);
-        XCTAssertTrue([room.displayname hasPrefix:@"MX Public Room test (#mxPublic:"], @"We must retrieve the #mxPublic room settings");
+        XCTAssertNotNil(room.state.displayname);
+        XCTAssertTrue([room.state.displayname hasPrefix:@"MX Public Room test (#mxPublic:"], @"We must retrieve the #mxPublic room settings");
         
         [expectation fulfill];
     }];
@@ -486,8 +486,8 @@
         mxSession = mxSession2;
 
         // Test room the display formatting: "roomName (roomAlias)"
-        XCTAssertNotNil(room.displayname);
-        XCTAssertTrue([room.displayname isEqualToString:mxSession.matrixRestClient.credentials.userId], @"The room name must be Bob's userID as he has no displayname: %@ - %@", room.displayname, mxSession.matrixRestClient.credentials.userId);
+        XCTAssertNotNil(room.state.displayname);
+        XCTAssertTrue([room.state.displayname isEqualToString:mxSession.matrixRestClient.credentials.userId], @"The room name must be Bob's userID as he has no displayname: %@ - %@", room.state.displayname, mxSession.matrixRestClient.credentials.userId);
         
         [expectation fulfill];
     }];
