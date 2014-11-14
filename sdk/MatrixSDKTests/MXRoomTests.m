@@ -72,6 +72,7 @@
         MXEvent *event = messagesBeforePagination[0];
         NSString *event_id = event.eventId;
         
+        [room resetBackState];
         [room paginateBackMessages:50 success:^(NSArray *messages) {
             
             
@@ -97,6 +98,7 @@
         
         mxSession = mxSession2;
 
+        [room resetBackState];
         [room paginateBackMessages:100 success:^(NSArray *messages) {
             
             NSUInteger prev_ts = 0;
@@ -129,6 +131,7 @@
         
         mxSession = mxSession2;
         
+        [room resetBackState];
         [room paginateBackMessages:100 success:^(NSArray *messages) {
             
             for (MXEvent *event in room.messages)
@@ -156,6 +159,7 @@
 
         NSArray *messagesBeforePagination = room.messages;
         
+        [room resetBackState];
         [room paginateBackMessages:5 success:^(NSArray *messages) {
             
             NSArray *messagesAfterPagination = room.messages;
@@ -179,6 +183,7 @@
         
         mxSession = mxSession2;
         
+        [room resetBackState];
         [room paginateBackMessages:100 success:^(NSArray *messages) {
             
             for (MXEvent *event in messages)
@@ -203,6 +208,7 @@
         
         mxSession = mxSession2;
 
+        [room resetBackState];
         [room paginateBackMessages:100 success:^(NSArray *messages) {
             
             NSUInteger prev_ts = 0;
@@ -234,6 +240,7 @@
         
         mxSession = mxSession2;
 
+        [room resetBackState];
         [room paginateBackMessages:100 success:^(NSArray *messages) {
             
             [self assertNoDuplicate:messages text:@"the 'messages' array response of paginateBackMessages"];
@@ -260,7 +267,8 @@
         
         XCTAssertEqual(room2.messages.count, 0, @"No initialSync means no data");
         
-        [room2 paginateBackMessages:5 success:^(NSArray *messages) {
+       [room2 resetBackState];
+       [room2 paginateBackMessages:5 success:^(NSArray *messages) {
             
             XCTAssertEqual(messages.count, 5, @"We should get as many messages as requested");
             
@@ -279,6 +287,7 @@
 {
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
+        [room resetBackState];
         [room paginateBackMessages:100 success:^(NSArray *messages) {
             
             mxSession = mxSession2;
@@ -287,6 +296,7 @@
             MXRoom *room2 = [[MXRoom alloc] initWithRoomId:room.state.room_id andMatrixSession:mxSession];
             
             // The several paginations
+            [room2 resetBackState];
             [room2 paginateBackMessages:2 success:^(NSArray *messages) {
                 
                 [room2 paginateBackMessages:5 success:^(NSArray *messages) {
@@ -335,6 +345,7 @@
 
         XCTAssertTrue(room.canPaginate, @"We can always paginate at the beginning");
         
+        [room resetBackState];
         [room paginateBackMessages:100 success:^(NSArray *messages) {
             
             XCTAssertFalse(room.canPaginate, @"We must have reached the end of the pagination");

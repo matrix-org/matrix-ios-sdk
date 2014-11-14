@@ -29,6 +29,9 @@
     
     // The list of event listeners (`MXEventListener`) in this room
     NSMutableArray *eventListeners;
+
+    // The historical state of the room when paginating back
+    MXRoomState *backState;
 }
 
 @end
@@ -105,6 +108,11 @@
 
 - (void)handleMessage:(MXEvent*)event isLiveEvent:(BOOL)isLiveEvent pagFrom:(NSString*)pagFrom
 {
+    if (event.isState)
+    {
+        [self handleStateEvent:event isLiveEvent:NO];
+    }
+    
     // Put only expected messages into `messages`
     if (NSNotFound != [mxSession.eventsFilterForMessages indexOfObject:event.type])
     {
@@ -133,32 +141,43 @@
     NSArray *events = [MXEvent modelsFromJSON:roomStateEvents];
     
     for (MXEvent *event in events) {
-        [self handleStateEvent:event];
+        [self handleStateEvent:event isLiveEvent:YES];
 
         // Notify state events coming from initialSync
         [self notifyListeners:event isLiveEvent:NO];
     }
 }
 
-- (void)handleStateEvent:(MXEvent*)event
+- (void)handleStateEvent:(MXEvent*)event isLiveEvent:(BOOL)isLiveEvent
 {
-    switch (event.eventType)
+    if (isLiveEvent)
     {
-        case MXEventTypeRoomMember:
+        switch (event.eventType)
         {
-            // Update MXUser data
-            MXUser *user = [mxSession getOrCreateUser:event.userId];
-            [user updateWithRoomMemberEvent:event];
-
-            break;
+            case MXEventTypeRoomMember:
+            {
+                // Update MXUser data
+                MXUser *user = [mxSession getOrCreateUser:event.userId];
+                [user updateWithRoomMemberEvent:event];
+                
+                break;
+            }
+                
+            default:
+                break;
         }
-
-        default:
-            break;
     }
 
+
     // Update the room state
-    [_state handleStateEvent:event];
+    if (isLiveEvent)
+    {
+        [_state handleStateEvent:event];
+    }
+    else
+    {
+        [backState handleStateEvent:event];
+    }
 }
 
 
@@ -167,7 +186,7 @@
 {
     if (event.isState)
     {
-        [self handleStateEvent:event];
+        [self handleStateEvent:event isLiveEvent:YES];
     }
 
     // Process the event
@@ -177,11 +196,19 @@
     [self notifyListeners:event isLiveEvent:YES];
 }
 
+#pragma mark - Back pagination
+- (void)resetBackState
+{
+    backState = [_state copy];
+    backState.isLive = NO;
+}
 
 - (void)paginateBackMessages:(NSUInteger)numItems
                      success:(void (^)(NSArray *messages))success
                      failure:(void (^)(NSError *error))failure
 {
+    NSAssert(nil != backState, @"resetBackState must be called before starting the back pagination");
+    
     // Event duplication management:
     // As we paginate from a token that corresponds to an event (the oldest one, ftr),
     // we will receive this event in the response. But we already have it.
@@ -216,7 +243,8 @@
         
         // Process these new events
         [self handleMessages:paginatedResponse isLiveEvents:NO direction:YES];
-                                   
+
+        // @TODO(roomStateInOnEvent): to remove                         
         // Reorder events chronologically
         // And filter them: we want to provide only those which went to `messages`
         NSMutableArray *filteredChunk = [NSMutableArray array];
@@ -233,6 +261,7 @@
         }
                                    
         // Inform the method caller
+        // @TODO(roomStateInOnEvent): Replaced success by complete with no arg
         success(filteredChunk);
         
     } failure:^(NSError *error) {

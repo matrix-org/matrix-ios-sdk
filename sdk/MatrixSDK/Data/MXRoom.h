@@ -80,6 +80,14 @@ typedef void (^MXRoomEventListenerBlock)(MXRoom *room, MXEvent *event, BOOL isLi
  */
 - (void)handleLiveEvent:(MXEvent*)event;
 
+
+#pragma mark - Back pagination
+/**
+ Reset the back state so that future calls to paginate start over from live.
+ Must be called when opening a room if interested in history.
+ */
+- (void)resetBackState;
+    
 /**
  Get more messages from the past.
  The MXRoom `messages` property will be updated in case of successful response.
@@ -94,6 +102,7 @@ typedef void (^MXRoomEventListenerBlock)(MXRoom *room, MXEvent *event, BOOL isLi
                      failure:(void (^)(NSError *error))failure;
 
 
+#pragma mark - Events listeners
 /**
  Register a listener for some types of events.
  
