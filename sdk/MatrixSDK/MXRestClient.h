@@ -86,10 +86,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
               failure:(void (^)(NSError *error))failure;
 
 
-#pragma mark - Event operations
-
-
-
 #pragma mark - Room operations
 /**
  Send a generic non state event to a room.
