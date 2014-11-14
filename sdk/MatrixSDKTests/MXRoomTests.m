@@ -61,8 +61,10 @@
 
 - (void)testMessagesPropertyCopy
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
-        
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+
+        mxSession = mxSession2;
+
         NSArray *messagesBeforePagination = room.messages;
         
         XCTAssertEqual(messagesBeforePagination.count, 1, @"Just after initialSync, we should have 1 message");
@@ -91,8 +93,10 @@
 
 - (void)testMessagesOrder
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
+        mxSession = mxSession2;
+
         [room paginateBackMessages:100 success:^(NSArray *messages) {
             
             NSUInteger prev_ts = 0;
@@ -146,8 +150,10 @@
 
 - (void)testPaginateBack
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
+        mxSession = mxSession2;
+
         NSArray *messagesBeforePagination = room.messages;
         
         [room paginateBackMessages:5 success:^(NSArray *messages) {
@@ -193,8 +199,10 @@
 
 - (void)testPaginateBackOrder
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
+        mxSession = mxSession2;
+
         [room paginateBackMessages:100 success:^(NSArray *messages) {
             
             NSUInteger prev_ts = 0;
@@ -222,8 +230,10 @@
 
 - (void)testPaginateBackDuplicates
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
+        mxSession = mxSession2;
+
         [room paginateBackMessages:100 success:^(NSArray *messages) {
             
             [self assertNoDuplicate:messages text:@"the 'messages' array response of paginateBackMessages"];
@@ -319,8 +329,10 @@
 
 - (void)testCanPaginate
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
+        mxSession = mxSession2;
+
         XCTAssertTrue(room.canPaginate, @"We can always paginate at the beginning");
         
         [room paginateBackMessages:100 success:^(NSArray *messages) {
@@ -338,8 +350,10 @@
 
 - (void)testListenerForAllLiveEvents
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
+        mxSession = mxSession2;
+
         __block NSString *messageEventID;
         
         // Register the listener
@@ -374,8 +388,10 @@
 
 - (void)testListenerForRoomMessageLiveEvents
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
+        mxSession = mxSession2;
+
         __block NSString *messageEventID;
         
         // Register the listener for m.room.message.only

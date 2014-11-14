@@ -46,8 +46,10 @@
 
 - (void)testIsPublic
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
-        
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+
+        mxSession = mxSession2;
+
         XCTAssertTrue(room.state.isPublic, @"The room must be public");
         
         [expectation fulfill];
@@ -56,8 +58,10 @@
 
 - (void)testIsPublicForAPrivateRoom
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
+        mxSession = mxSession2;
+
         XCTAssertFalse(room.state.isPublic, @"This room must be private");
         
         [expectation fulfill];
@@ -97,8 +101,10 @@
 
 - (void)testMemberName
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
+        mxSession = mxSession2;
+
         MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
         
         NSString *bobUserId = sharedData.bobCredentials.userId;
@@ -115,8 +121,10 @@
 
 - (void)testStateEvents
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
+        mxSession = mxSession2;
+
         XCTAssertNotNil(room.state.stateEvents);
         XCTAssertGreaterThan(room.state.stateEvents.count, 0);
         
@@ -126,8 +134,10 @@
 
 - (void)testAliases
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
+        mxSession = mxSession2;
+
         XCTAssertNotNil(room.state.aliases);
         XCTAssertGreaterThanOrEqual(room.state.aliases.count, 1);
         
@@ -142,8 +152,10 @@
 // Test the room display name formatting: "roomName (roomAlias)"
 - (void)testDisplayName1
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
+        mxSession = mxSession2;
+
         XCTAssertNotNil(room.state.displayname);
         XCTAssertTrue([room.state.displayname hasPrefix:@"MX Public Room test (#mxPublic:"], @"We must retrieve the #mxPublic room settings");
         
