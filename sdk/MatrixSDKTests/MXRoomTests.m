@@ -59,6 +59,7 @@
     }
 }
 
+// @TODO(roomStateInOnEvent): to remove
 - (void)testMessagesPropertyCopy
 {
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
@@ -92,6 +93,7 @@
     }];
 }
 
+// @TODO(roomStateInOnEvent): to remove
 - (void)testMessagesOrder
 {
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
@@ -125,6 +127,7 @@
 }
 
 
+// @TODO(roomStateInOnEvent): to remove
 - (void)testMessagesFilter
 {
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
@@ -157,16 +160,16 @@
         
         mxSession = mxSession2;
 
-        NSArray *messagesBeforePagination = room.messages;
+        __block NSUInteger eventCount = 0;
+        [room registerEventListenerForTypes:mxSession.eventsFilterForMessages block:^(MXRoom *room, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+            
+            eventCount++;
+        }];
         
         [room resetBackState];
         [room paginateBackMessages:5 success:^(NSArray *messages) {
             
-            NSArray *messagesAfterPagination = room.messages;
-            
-            XCTAssertEqual(messages.count, 5, @"We should get as many messages as requested");
-
-            XCTAssertEqual(messagesAfterPagination.count, messagesBeforePagination.count + messages.count, @"room.messages count must have increased by the number of new messages got by pagination");
+            XCTAssertEqual(eventCount, 5, @"We should get as many messages as requested");
             
             [expectation fulfill];
             
@@ -183,15 +186,21 @@
         
         mxSession = mxSession2;
         
+        __block NSUInteger eventCount = 0;
+        [room registerEventListenerForTypes:mxSession.eventsFilterForMessages block:^(MXRoom *room, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+            
+            eventCount++;
+            
+            // Only events with a type declared in `eventsFilterForMessages`
+            // must appear in messages
+            XCTAssertNotEqual([mxSession.eventsFilterForMessages indexOfObject:event.type], NSNotFound, "Event of this type must not be in messages. Event: %@", event);
+            
+        }];
+        
         [room resetBackState];
         [room paginateBackMessages:100 success:^(NSArray *messages) {
             
-            for (MXEvent *event in messages)
-            {
-                // Only events with a type declared in `eventsFilterForMessages`
-                // must appear in messages
-                XCTAssertNotEqual([mxSession.eventsFilterForMessages indexOfObject:event.type], NSNotFound, "Event of this type must not be in messages. Event: %@", event);
-            }
+            XCTAssert(eventCount, "We should have received events in registerEventListenerForTypes");
             
             [expectation fulfill];
             
@@ -207,23 +216,21 @@
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
         mxSession = mxSession2;
+        
+        __block NSUInteger prev_ts = -1;
+        [room registerEventListenerForTypes:mxSession.eventsFilterForMessages block:^(MXRoom *room, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+            
+            XCTAssert(event.originServerTs, @"The event should have an attempt: %@", event);
+            
+            XCTAssertLessThanOrEqual(event.originServerTs, prev_ts, @"Events in messages must be listed  one by one in antichronological order");
+            prev_ts = event.originServerTs;
+            
+        }];
 
         [room resetBackState];
         [room paginateBackMessages:100 success:^(NSArray *messages) {
             
-            NSUInteger prev_ts = 0;
-            for (MXEvent *event in messages)
-            {
-                if (event.originServerTs)
-                {
-                    XCTAssertGreaterThanOrEqual(event.originServerTs, prev_ts, @"Events in messages must be listed in chronological order");
-                    prev_ts = event.originServerTs;
-                }
-                else
-                {
-                    NSLog(@"No timestamp in the event data: %@", event);
-                }
-            }
+            XCTAssertNotEqual(prev_ts, -1, "We should have received events in registerEventListenerForTypes");
             
             [expectation fulfill];
             
@@ -239,40 +246,22 @@
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
         mxSession = mxSession2;
+        
+        __block NSUInteger eventCount = 0;
+        __block NSMutableArray *events = [NSMutableArray array];
+        [room registerEventListenerForTypes:nil block:^(MXRoom *room, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+            
+            eventCount++;
+            
+            [events addObject:event];
+        }];
 
         [room resetBackState];
         [room paginateBackMessages:100 success:^(NSArray *messages) {
             
-            [self assertNoDuplicate:messages text:@"the 'messages' array response of paginateBackMessages"];
+            XCTAssert(eventCount, "We should have received events in registerEventListenerForTypes");
             
-            [self assertNoDuplicate:room.messages text:@" room.messages"];
-            
-            [expectation fulfill];
-            
-        } failure:^(NSError *error) {
-            XCTFail(@"The request should not fail - NSError: %@", error);
-            [expectation fulfill];
-        }];
-    }];
-}
-
-- (void)testPaginateBackWithNoInitialSync
-{
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
-        
-        mxSession = mxSession2;
-        
-        // Instantiate another MXRoom object and test pagination from cold
-        MXRoom *room2 = [[MXRoom alloc] initWithRoomId:room.state.room_id andMatrixSession:mxSession];
-        
-        XCTAssertEqual(room2.messages.count, 0, @"No initialSync means no data");
-        
-       [room2 resetBackState];
-       [room2 paginateBackMessages:5 success:^(NSArray *messages) {
-            
-            XCTAssertEqual(messages.count, 5, @"We should get as many messages as requested");
-            
-            XCTAssertEqual(room2.messages.count, 5, @"room.messages count must be 5 now");
+            [self assertNoDuplicate:events text:@"events got one by one with paginateBackMessages"];
             
             [expectation fulfill];
             
@@ -283,6 +272,7 @@
     }];
 }
 
+// @TODO(roomStateInOnEvent): to rewrite
 - (void)testSeveralPaginateBacks
 {
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
@@ -434,5 +424,4 @@
         
     }];
 }
-
 @end
