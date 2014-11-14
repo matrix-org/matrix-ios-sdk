@@ -77,4 +77,21 @@
     }
     return self;
 }
+
+
+#pragma mark - NSCopying
+-(id)copyWithZone:(NSZone *)zone
+{
+    MXRoomMember *memberCopy = [[MXRoomMember allocWithZone:zone] init];
+    
+    memberCopy->_userId = [_userId copyWithZone:zone];
+    memberCopy->_displayname = [_displayname copyWithZone:zone];
+    memberCopy->_avatarUrl = [_avatarUrl copyWithZone:zone];
+    memberCopy->_membership = _membership;
+    memberCopy->_prevMembership = _prevMembership;
+    memberCopy->_originUserId = [_originUserId copyWithZone:zone];
+
+    return memberCopy;
+}
+
 @end

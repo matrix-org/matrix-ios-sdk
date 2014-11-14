@@ -26,8 +26,6 @@
     NSMutableDictionary *stateEvents;
     NSMutableDictionary *members;
     
-    BOOL isLive;
-    
     /*
      Additional and optional metadata got from initialSync
      */
@@ -46,7 +44,7 @@
 - (id)initWithRoomId:(NSString*)room_id
     andMatrixSession:(MXSession*)mxSession2
          andJSONData:(NSDictionary*)JSONData
-        andDirection:(BOOL)isLive2
+        andDirection:(BOOL)isLive
 {
     self = [super init];
     if (self)
@@ -54,7 +52,7 @@
         mxSession = mxSession2;
         _room_id = room_id;
         
-        isLive = isLive2;
+        _isLive = isLive;
         
         stateEvents = [NSMutableDictionary dictionary];
         members = [NSMutableDictionary dictionary];
@@ -79,6 +77,36 @@
     return self;
 }
 
+
+#pragma mark - NSCopying
+- (id)copyWithZone:(NSZone *)zone
+{
+    MXRoomState *stateCopy = [[MXRoomState allocWithZone:zone] init];
+    
+    stateCopy->mxSession = mxSession;
+    stateCopy->_room_id = [_room_id copyWithZone:zone];
+    
+    stateCopy->_isLive = _isLive;
+    
+    // Use [NSMutableDictionary initWithDictionary:copyItems:] to deep copy NSDictionaries values
+    stateCopy->stateEvents = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:stateEvents copyItems:YES];
+    
+    stateCopy->members = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:members copyItems:YES];
+    
+    if (visibility)
+    {
+        stateCopy->visibility = [visibility copyWithZone:zone];
+    }
+    if (inviter)
+    {
+        stateCopy->inviter = [inviter copyWithZone:zone];
+    }
+    stateCopy->membership = membership;
+
+    return stateCopy;
+}
+
+
 // According to the direction of the instance, we are interested either by
 // the content of the event or its prev_content
 - (NSDictionary*)contentOfEvent:(MXEvent*)event
@@ -86,7 +114,7 @@
     NSDictionary *content;
     if (event)
     {
-        if (isLive)
+        if (_isLive)
         {
             content = event.content;
         }

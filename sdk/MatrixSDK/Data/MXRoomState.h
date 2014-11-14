@@ -27,12 +27,18 @@
  
  The room state is ca ombination of information obtained from state events received so far.
  */
-@interface MXRoomState : NSObject
+@interface MXRoomState : NSObject <NSCopying>
 
 /**
  The room ID
  */
 @property (nonatomic, readonly) NSString *room_id;
+
+/**
+ Indicate if this instance is used to store the live state of the room or
+ the state of the room in the history.
+ */
+@property (nonatomic) BOOL isLive;
 
 /**
  A copy of the list of state events (actually MXEvent instances).
