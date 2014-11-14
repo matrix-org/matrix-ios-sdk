@@ -42,14 +42,6 @@ typedef void (^MXRoomEventListenerBlock)(MXRoom *room, MXEvent *event, BOOL isLi
 @interface MXRoom : NSObject
 
 /**
- A copy of the list of messages (MXEvent instances) currently loaded for this room.
- A message is either a non-state or a state event that is intended to be 
- displayed in a room chat history.
- The order is chronological: the first item is the oldest message retrieved so far.
- */
-@property (nonatomic, readonly) NSArray *messages;
-
-/**
  The last message.
  */
 @property (nonatomic, readonly) MXEvent *lastMessage;

@@ -64,10 +64,12 @@
 }
 
 #pragma mark - Properties getters implementation
+/*
 - (NSArray *)messages
 {
     return [messages copy];
 }
+ */
 
 - (MXEvent *)lastMessage
 {

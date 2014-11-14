@@ -59,15 +59,26 @@
                 XCTAssertTrue(stateEvent.isState, "All events in room.stateEvents must be states. stateEvent: %@", stateEvent);
             }
             
-            for (MXEvent *message in room.messages)
-            {
-                if (message.eventType == MXEventTypeRoomMessage)
-                {
-                    XCTAssertFalse(message.isState, "Room messages are not states. message: %@", message);
-                }
-            }
             
-            [expectation fulfill];
+            __block NSUInteger eventCount = 0;
+            [room registerEventListenerForTypes:@[kMXEventTypeStringRoomMessage] block:^(MXRoom *room, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+                
+                eventCount++;
+                XCTAssertFalse(event.isState, "Room messages are not states. message: %@", event);
+                
+            }];
+            
+            [room resetBackState];
+            [room paginateBackMessages:100 complete:^() {
+                
+                XCTAssert(eventCount, "We should have received events in registerEventListenerForTypes");
+                
+                [expectation fulfill];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
             
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
