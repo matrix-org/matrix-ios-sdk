@@ -201,9 +201,9 @@
     // Make sure Alice and Bob have activities
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
         
-        [bobRestClient postTextMessage:room_id text:@"Hi Alice!" success:^(NSString *event_id) {
+        [bobRestClient postTextMessageToRoom:room_id text:@"Hi Alice!" success:^(NSString *event_id) {
             
-            [aliceRestClient postTextMessage:room_id text:@"Hi Bob!" success:^(NSString *event_id) {
+            [aliceRestClient postTextMessageToRoom:room_id text:@"Hi Bob!" success:^(NSString *event_id) {
                 
                 mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
                 
@@ -297,7 +297,7 @@
             // Wait a bit before making her active again
             [NSThread sleepForTimeInterval:1.0];
             
-            [aliceRestClient postTextMessage:room_id text:@"Hi Bob!" success:^(NSString *event_id) {
+            [aliceRestClient postTextMessageToRoom:room_id text:@"Hi Bob!" success:^(NSString *event_id) {
                 
             } failure:^(NSError *error) {
                 NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);

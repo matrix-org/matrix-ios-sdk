@@ -48,7 +48,7 @@
         [bobRestClient kickUser:sharedData.aliceCredentials.userId fromRoom:room_id reason:@"No particular reason" success:^{
             
             // Check room actual members
-            [bobRestClient members:room_id success:^(NSArray *roomMemberEvents) {
+            [bobRestClient membersOfRoom:room_id success:^(NSArray *roomMemberEvents) {
                 
                 for (MXEvent *roomMemberEvent in roomMemberEvents)
                 {

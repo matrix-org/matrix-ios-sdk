@@ -71,7 +71,7 @@
 - (void)start:(void (^)())initialSyncDone
       failure:(void (^)(NSError *error))failure
 {
-    [matrixRestClient initialSync:1 success:^(NSDictionary *JSONData) {
+    [matrixRestClient initialSyncWithLimit:1 success:^(NSDictionary *JSONData) {
          for (NSDictionary *roomDict in JSONData[@"rooms"])
          {
              MXRoom *room = [self getOrCreateRoom:roomDict[@"room_id"] withJSONData:roomDict];

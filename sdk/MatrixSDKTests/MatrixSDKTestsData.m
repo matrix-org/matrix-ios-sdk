@@ -221,7 +221,7 @@ NSString * const kMXTestsAliceAvatarURL = @"http://matrix.org/matrix.png";
         [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate room_alias_name:nil topic:nil success:^(MXCreateRoomResponse *response) {
             
             // Post the the message text in it
-            [bobRestClient postTextMessage:response.roomId text:newTextMessage success:^(NSString *event_id) {
+            [bobRestClient postTextMessageToRoom:response.roomId text:newTextMessage success:^(NSString *event_id) {
                 
                 readyToTest(bobRestClient, response.roomId, event_id, expectation);
                 
@@ -292,7 +292,7 @@ NSString * const kMXTestsAliceAvatarURL = @"http://matrix.org/matrix.png";
     }
     else
     {
-        [mxRestClient2 postTextMessage:room_id text:[NSString stringWithFormat:@"Fake message posted at %.0f ms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000]
+        [mxRestClient2 postTextMessageToRoom:room_id text:[NSString stringWithFormat:@"Fake message posted at %.0f ms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000]
                            success:^(NSString *event_id) {
 
             // Post the next message

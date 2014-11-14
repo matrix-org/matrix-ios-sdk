@@ -517,7 +517,7 @@
         // Populate a text message in parallel
         [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndThePublicRoom:nil readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation2) {
             
-            [bobRestClient postTextMessage:room_id text:@"Hello listeners!" success:^(NSString *event_id) {
+            [bobRestClient postTextMessageToRoom:room_id text:@"Hello listeners!" success:^(NSString *event_id) {
                 
                 messageEventID = event_id;
                 
@@ -553,7 +553,7 @@
         // Populate a text message in parallel
         [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndThePublicRoom:nil readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation2) {
             
-            [bobRestClient postTextMessage:room_id text:@"Hello listeners!" success:^(NSString *event_id) {
+            [bobRestClient postTextMessageToRoom:room_id text:@"Hello listeners!" success:^(NSString *event_id) {
                 
                 messageEventID = event_id;
                 
