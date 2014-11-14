@@ -22,6 +22,8 @@
 @interface MXRoom ()
 {
     MXSession *mxSession;
+    
+    // The events downloaded so far
     NSMutableArray *messages;
 
     // The token used to know from where to paginate back.
@@ -64,12 +66,6 @@
 }
 
 #pragma mark - Properties getters implementation
-/*
-- (NSArray *)messages
-{
-    return [messages copy];
-}
- */
 
 - (MXEvent *)lastMessage
 {
@@ -203,6 +199,13 @@
 {
     backState = [_state copy];
     backState.isLive = NO;
+
+    // Reset everything
+    // Trash downloaded messages to restart pagination from the server to the beginning.
+    // @TODO: Do not do that. Keep downloaded messages and request pagination from the server only when needed.
+    messages = [NSMutableArray array];
+    _canPaginate = YES;
+    pagEarliestToken = @"END";
 }
 
 - (void)paginateBackMessages:(NSUInteger)numItems

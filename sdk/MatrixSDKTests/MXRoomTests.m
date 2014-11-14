@@ -180,6 +180,11 @@
 - (void)testSeveralPaginateBacks
 {
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+        __block NSMutableArray *roomEvents = [NSMutableArray array];
+        [room registerEventListenerForTypes:nil block:^(MXRoom *room, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+            
+            [roomEvents addObject:event];
+        }];
         
         [room resetBackState];
         [room paginateBackMessages:100 complete:^() {
@@ -189,6 +194,12 @@
             // Use another MXRoom instance to do pagination in several times
             MXRoom *room2 = [[MXRoom alloc] initWithRoomId:room.state.room_id andMatrixSession:mxSession];
             
+            __block NSMutableArray *room2Events = [NSMutableArray array];
+            [room2 registerEventListenerForTypes:nil block:^(MXRoom *room, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+                
+                [room2Events addObject:event];
+            }];
+            
             // The several paginations
             [room2 resetBackState];
             [room2 paginateBackMessages:2 complete:^() {
@@ -197,22 +208,18 @@
                     
                     [room2 paginateBackMessages:100 complete:^() {
                         
-                        /*
-                        // @TODO(roomStateInOnEvent): to rewrite
                         
                         // Now, compare the result with the reference
-                        XCTAssertEqual(room2.messages.count, room.messages.count);
+                        XCTAssertEqual(roomEvents.count, room2Events.count);
                         
                         // Compare events one by one
-                        for (NSUInteger i = 0; i < room2.messages.count; i++)
+                        for (NSUInteger i = 0; i < room2Events.count; i++)
                         {
-                            MXEvent *event = room.messages[i];
-                            MXEvent *event2 = room2.messages[i];
+                            MXEvent *event = roomEvents[i];
+                            MXEvent *event2 = room2Events[i];
                             
                             XCTAssertTrue([event2.eventId isEqualToString:event.eventId], @"Events mismatch: %@ - %@", event, event2);
                         }
-                        
-                         */
                          
                         [expectation fulfill];
                         
