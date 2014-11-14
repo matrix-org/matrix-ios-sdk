@@ -315,7 +315,7 @@
     // Notify all listeners
     for (MXEventListener *listener in globalEventListeners)
     {
-        [listener notify:event isLiveEvent:isLiveEvent];
+        [listener notify:event isLiveEvent:isLiveEvent andCustomObject:nil];
     }
 }
 

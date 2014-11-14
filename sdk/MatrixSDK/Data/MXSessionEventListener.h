@@ -28,8 +28,10 @@
  @param room the `MXRoom` that handled the event.
  @param event the new event.
  @param isLive YES if it is new event.
+ @param customObject additional contect for the event. In case of room event, customObject is a
+                     RoomState instance.
  */
-typedef void (^MXSessionEventListenerBlock)(MXSession *mxSession, MXEvent *event, BOOL isLive);
+typedef void (^MXSessionEventListenerBlock)(MXSession *mxSession, MXEvent *event, BOOL isLive, id customObject);
 
 /**
  The `MXSessionEventListener` class stores information about a listener to MXSession events

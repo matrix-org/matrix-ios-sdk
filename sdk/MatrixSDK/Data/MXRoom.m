@@ -293,10 +293,17 @@
 
 - (void)notifyListeners:(MXEvent*)event isLiveEvent:(BOOL)isLiveEvent
 {
+    id customObject;
+    
+    if (NO == isLiveEvent)
+    {
+        customObject = backState;
+    }
+    
     // notifify all listeners
     for (MXEventListener *listener in eventListeners)
     {
-        [listener notify:event isLiveEvent:isLiveEvent];
+        [listener notify:event isLiveEvent:isLiveEvent andCustomObject:customObject];
     }
 }
 

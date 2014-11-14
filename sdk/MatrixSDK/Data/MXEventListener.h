@@ -18,7 +18,7 @@
 
 #import "MXEvent.h"
 
-@class MXRoom;
+//@class MXRoom;
 
 /**
  Block called when an event of the registered types has been handled by the Matrix SDK.
@@ -27,7 +27,7 @@
  @param event the new event.
  @param isLive YES if it is new event.
  */
-typedef void (^MXEventListenerBlock)(id sender, MXEvent *event, BOOL isLive);
+typedef void (^MXEventListenerBlock)(id sender, MXEvent *event, BOOL isLive, id customObject);
 
 /**
  The `MXEventListener` class stores information about a listener to MXEvents that
@@ -47,8 +47,7 @@ typedef void (^MXEventListenerBlock)(id sender, MXEvent *event, BOOL isLive);
  @param event the new event.
  @param isLive YES if it is new event.
  */
-
-- (void)notify:(MXEvent*)event isLiveEvent:(BOOL)isLiveEvent;
+- (void)notify:(MXEvent*)event isLiveEvent:(BOOL)isLiveEvent andCustomObject:(id)customObject;
 
 @property (nonatomic, readonly) id sender;
 @property (nonatomic, readonly) NSArray* eventTypes;

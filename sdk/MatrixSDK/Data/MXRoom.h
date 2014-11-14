@@ -22,6 +22,7 @@
 #import "MXEventListener.h"
 #import "MXRoomState.h"
 
+@class MXRoom;
 @class MXSession;
 
 /**
@@ -31,8 +32,9 @@
  @param room the `MXRoom` that handled the event.
  @param event the new event.
  @param isLive YES if it is new event.
+ @param roomState the room state right before the event
  */
-typedef void (^MXRoomEventListenerBlock)(MXRoom *room, MXEvent *event, BOOL isLive);
+typedef void (^MXRoomEventListenerBlock)(MXRoom *room, MXEvent *event, BOOL isLive, MXRoomState *roomState);
 
 /**
  `MXRoom` is the class

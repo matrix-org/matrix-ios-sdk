@@ -136,7 +136,7 @@
                                          kMXEventTypeStringRoomMessage,
                                          ]];
         
-        [mxSession registerEventListenerForTypes:nil block:^(MXSession *mxSession, MXEvent *event, BOOL isLive) {
+        [mxSession registerEventListenerForTypes:nil block:^(MXSession *mxSession, MXEvent *event, BOOL isLive, id customObject) {
             
             if (isLive)
             {
@@ -173,7 +173,7 @@
         // Listen to m.room.message only
         // We should not see events coming before (m.room.create, and all state events)
         [mxSession registerEventListenerForTypes:@[kMXEventTypeStringRoomMessage]
-                                            block:^(MXSession *mxSession, MXEvent *event, BOOL isLive) {
+                                            block:^(MXSession *mxSession, MXEvent *event, BOOL isLive, id customObject) {
             
             if (isLive)
             {
@@ -270,7 +270,7 @@
         
         // Listen to m.presence only
         [mxSession registerEventListenerForTypes:@[kMXEventTypeStringPresence]
-                                           block:^(MXSession *mxSession, MXEvent *event, BOOL isLive) {
+                                           block:^(MXSession *mxSession, MXEvent *event, BOOL isLive, id customObject) {
                                                
                                                if (isLive)
                                                {

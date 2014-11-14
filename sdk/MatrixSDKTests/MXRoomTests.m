@@ -368,7 +368,7 @@
         __block NSString *messageEventID;
         
         // Register the listener
-        [room registerEventListenerForTypes:nil block:^(MXRoom *room2, MXEvent *event, BOOL isLive) {
+        [room registerEventListenerForTypes:nil block:^(MXRoom *room2, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
             
             XCTAssertEqual(room, room2);
             XCTAssertTrue(isLive);
@@ -407,7 +407,7 @@
         
         // Register the listener for m.room.message.only
         [room registerEventListenerForTypes:@[kMXEventTypeStringRoomMessage]
-                                          block:^(MXRoom *room2, MXEvent *event, BOOL isLive) {
+                                          block:^(MXRoom *room2, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
             
             XCTAssertEqual(room, room2);
             XCTAssertTrue(isLive);
