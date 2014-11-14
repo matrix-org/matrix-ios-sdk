@@ -204,7 +204,7 @@
 }
 
 - (void)paginateBackMessages:(NSUInteger)numItems
-                     success:(void (^)(NSArray *messages))success
+                    complete:(void (^)())complete
                      failure:(void (^)(NSError *error))failure
 {
     NSAssert(nil != backState, @"resetBackState must be called before starting the back pagination");
@@ -243,26 +243,9 @@
         
         // Process these new events
         [self handleMessages:paginatedResponse isLiveEvents:NO direction:YES];
-
-        // @TODO(roomStateInOnEvent): to remove                         
-        // Reorder events chronologically
-        // And filter them: we want to provide only those which went to `messages`
-        NSMutableArray *filteredChunk = [NSMutableArray array];
-        if (paginatedResponse.chunk.count)
-        {
-            for (NSInteger i = paginatedResponse.chunk.count - 1; i >= 0; i--)
-            {
-                MXEvent *event = paginatedResponse.chunk[i];
-                if (NSNotFound != [mxSession.eventsFilterForMessages indexOfObject:event.type])
-                {
-                    [filteredChunk addObject:event];
-                }
-            }
-        }
-                                   
+                       
         // Inform the method caller
-        // @TODO(roomStateInOnEvent): Replaced success by complete with no arg
-        success(filteredChunk);
+        complete();
         
     } failure:^(NSError *error) {
         NSLog(@"paginateBackMessages error: %@", error);

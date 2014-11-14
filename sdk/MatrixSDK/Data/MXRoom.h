@@ -92,15 +92,14 @@ typedef void (^MXRoomEventListenerBlock)(MXRoom *room, MXEvent *event, BOOL isLi
     
 /**
  Get more messages from the past.
- The MXRoom `messages` property will be updated in case of successful response.
+ The retrieved events will be sent to registered listeners.
  
  @param numItems the number of items to get.
- @param success A block object called when the operation succeeds. It provides an array of retrieved
-                `MXEvent` objects where the first item is the the oldest MXEvent in the array.
+ @param complete A block object called when the operation is complete.
  @param failure A block object called when the operation fails.
  */
 - (void)paginateBackMessages:(NSUInteger)numItems
-                     success:(void (^)(NSArray *messages))success
+                     complete:(void (^)())complete
                      failure:(void (^)(NSError *error))failure;
 
 

@@ -74,7 +74,7 @@
         NSString *event_id = event.eventId;
         
         [room resetBackState];
-        [room paginateBackMessages:50 success:^(NSArray *messages) {
+        [room paginateBackMessages:50 complete:^() {
             
             
             XCTAssertEqual(messagesBeforePagination.count, 1, @"room.messages is a copy property. messagesBeforePagination must not have changed");
@@ -101,7 +101,7 @@
         mxSession = mxSession2;
 
         [room resetBackState];
-        [room paginateBackMessages:100 success:^(NSArray *messages) {
+        [room paginateBackMessages:100 complete:^() {
             
             NSUInteger prev_ts = 0;
             for (MXEvent *event in room.messages)
@@ -135,7 +135,7 @@
         mxSession = mxSession2;
         
         [room resetBackState];
-        [room paginateBackMessages:100 success:^(NSArray *messages) {
+        [room paginateBackMessages:100 complete:^() {
             
             for (MXEvent *event in room.messages)
             {
@@ -167,7 +167,7 @@
         }];
         
         [room resetBackState];
-        [room paginateBackMessages:5 success:^(NSArray *messages) {
+        [room paginateBackMessages:5 complete:^() {
             
             XCTAssertEqual(eventCount, 5, @"We should get as many messages as requested");
             
@@ -198,7 +198,7 @@
         }];
         
         [room resetBackState];
-        [room paginateBackMessages:100 success:^(NSArray *messages) {
+        [room paginateBackMessages:100 complete:^() {
             
             XCTAssert(eventCount, "We should have received events in registerEventListenerForTypes");
             
@@ -228,7 +228,7 @@
         }];
 
         [room resetBackState];
-        [room paginateBackMessages:100 success:^(NSArray *messages) {
+        [room paginateBackMessages:100 complete:^() {
             
             XCTAssertNotEqual(prev_ts, -1, "We should have received events in registerEventListenerForTypes");
             
@@ -257,7 +257,7 @@
         }];
 
         [room resetBackState];
-        [room paginateBackMessages:100 success:^(NSArray *messages) {
+        [room paginateBackMessages:100 complete:^() {
             
             XCTAssert(eventCount, "We should have received events in registerEventListenerForTypes");
             
@@ -278,7 +278,7 @@
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
         [room resetBackState];
-        [room paginateBackMessages:100 success:^(NSArray *messages) {
+        [room paginateBackMessages:100 complete:^() {
             
             mxSession = mxSession2;
 
@@ -287,11 +287,11 @@
             
             // The several paginations
             [room2 resetBackState];
-            [room2 paginateBackMessages:2 success:^(NSArray *messages) {
+            [room2 paginateBackMessages:2 complete:^() {
                 
-                [room2 paginateBackMessages:5 success:^(NSArray *messages) {
+                [room2 paginateBackMessages:5 complete:^() {
                     
-                    [room2 paginateBackMessages:100 success:^(NSArray *messages) {
+                    [room2 paginateBackMessages:100 complete:^() {
                         
                         // Now, compare the result with the reference
                         XCTAssertEqual(room2.messages.count, room.messages.count);
@@ -336,7 +336,7 @@
         XCTAssertTrue(room.canPaginate, @"We can always paginate at the beginning");
         
         [room resetBackState];
-        [room paginateBackMessages:100 success:^(NSArray *messages) {
+        [room paginateBackMessages:100 complete:^() {
             
             XCTAssertFalse(room.canPaginate, @"We must have reached the end of the pagination");
             
