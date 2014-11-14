@@ -193,10 +193,10 @@
     }
     
     // Paginate from last known token
-    [mxSession.matrixRestClient messages:_state.room_id
-                                  from:pagEarliestToken to:nil
-                                 limit:numItems
-                               success:^(MXPaginationResponse *paginatedResponse) {
+    [mxSession.matrixRestClient messagesForRoom:_state.room_id
+                                           from:pagEarliestToken to:nil
+                                          limit:numItems
+                                        success:^(MXPaginationResponse *paginatedResponse) {
         
         // Check pagination end
         if (paginatedResponse.chunk.count < numItems)
