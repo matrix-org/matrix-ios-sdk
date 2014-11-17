@@ -197,8 +197,8 @@
 #pragma mark - Back pagination
 - (void)resetBackState
 {
-    backState = [_state copy];
-    backState.isLive = NO;
+    // Reset the back state to the current room state
+    backState = [[MXRoomState alloc] initBackStateWith:_state];
 
     // Reset everything
     // Trash downloaded messages to restart pagination from the server to the beginning.

@@ -38,7 +38,7 @@
  Indicate if this instance is used to store the live state of the room or
  the state of the room in the history.
  */
-@property (nonatomic) BOOL isLive;
+@property (nonatomic, readonly) BOOL isLive;
 
 /**
  A copy of the list of state events (actually MXEvent instances).
@@ -105,6 +105,14 @@
          andJSONData:(NSDictionary*)JSONData
         andDirection:(BOOL)isLive;
 
+/**
+ Create a `MXRoomState` instance used as a back state of a room.
+ Such instance holds the state of a room at a given time in the room history.
+ 
+ @param state the uptodate state of the room (MXRoom.state)
+ @return The newly-initialized MXRoomState.
+ */
+- (id)initBackStateWith:(MXRoomState*)state;
 
 /**
  Process a state event in order to update the room state.

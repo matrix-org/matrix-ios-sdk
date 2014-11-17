@@ -77,6 +77,24 @@
     return self;
 }
 
+- (id)initBackStateWith:(MXRoomState*)state
+{
+    self = [state copy];
+    if (self)
+    {
+        _isLive = NO;
+
+        // At the beginning of pagination, the back room state must be the same
+        // as the current current room state.
+        // So, use the same state events content.
+        for (MXEvent *event in stateEvents.allValues)
+        {
+            event.prevContent = event.content;
+        }
+    }
+    return self;
+}
+
 
 #pragma mark - NSCopying
 - (id)copyWithZone:(NSZone *)zone
