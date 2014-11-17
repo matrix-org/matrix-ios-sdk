@@ -86,10 +86,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
               failure:(void (^)(NSError *error))failure;
 
 
-#pragma mark - Event operations
-
-
-
 #pragma mark - Room operations
 /**
  Send a generic non state event to a room.
@@ -136,6 +132,30 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
                          text:(NSString*)text
                       success:(void (^)(NSString *event_id))success
                       failure:(void (^)(NSError *error))failure;
+
+/**
+ Set the name of a room.
+ 
+ @param room_id the id of the room.
+ @param name the name to set.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)setRoomName:(NSString*)room_id
+            name:(NSString*)name
+         success:(void (^)())success
+         failure:(void (^)(NSError *error))failure;
+
+/**
+ Get the name of a room.
+ 
+ @param room_id the id of the room.
+ @param success A block object called when the operation succeeds. It provides the room name.
+ @param failure A block object called when the operation fails.
+ */
+- (void)nameOfRoom:(NSString*)room_id
+            success:(void (^)(NSString *name))success
+            failure:(void (^)(NSError *error))failure;
 
 /**
  Join a room.
