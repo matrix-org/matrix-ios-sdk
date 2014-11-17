@@ -245,6 +245,45 @@ MXAuthAction;
      }];
 }
 
+- (void)setRoomTopic:(NSString*)room_id
+               topic:(NSString*)topic
+             success:(void (^)())success
+             failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/state/m.room.topic", room_id];
+    [httpClient requestWithMethod:@"PUT"
+                             path:path
+                       parameters:@{
+                                    @"topic": topic
+                                    }
+                          success:^(NSDictionary *JSONResponse)
+     {
+         success();
+     }
+                          failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
+- (void)topicOfRoom:(NSString*)room_id
+            success:(void (^)(NSString *topic))success
+            failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/state/m.room.topic", room_id];
+    [httpClient requestWithMethod:@"GET"
+                             path:path
+                       parameters:nil
+                          success:^(NSDictionary *JSONResponse)
+     {
+         success(JSONResponse[@"topic"]);
+     }
+                          failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
 - (void)setRoomName:(NSString*)room_id
                name:(NSString*)name
             success:(void (^)())success

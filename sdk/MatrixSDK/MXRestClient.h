@@ -134,6 +134,30 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
                       failure:(void (^)(NSError *error))failure;
 
 /**
+ Set the topic of a room.
+ 
+ @param room_id the id of the room.
+ @param topic the topic to set.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)setRoomTopic:(NSString*)room_id
+               topic:(NSString*)topic
+             success:(void (^)())success
+             failure:(void (^)(NSError *error))failure;
+
+/**
+ Get the topic of a room.
+ 
+ @param room_id the id of the room.
+ @param success A block object called when the operation succeeds. It provides the room topic.
+ @param failure A block object called when the operation fails.
+ */
+- (void)topicOfRoom:(NSString*)room_id
+            success:(void (^)(NSString *topic))success
+            failure:(void (^)(NSError *error))failure;
+
+/**
  Set the name of a room.
  
  @param room_id the id of the room.

@@ -70,6 +70,32 @@
     }];
 }
 
+- (void)testRoomTopic
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+        
+        __block MXRestClient *bobRestClient2 = bobRestClient;
+        [bobRestClient setRoomTopic:room_id topic:@"Topic setter and getter functions are tested here" success:^{
+            
+            [bobRestClient2 topicOfRoom:room_id success:^(NSString *topic) {
+                
+                XCTAssertNotNil(topic);
+                XCTAssertNotEqual(topic.length, 0);
+                XCTAssert([topic isEqualToString:@"Topic setter and getter functions are tested here"], @"Room name must have been changed to \"Topic setter and getter functions are tested here\". Found: %@", topic);
+                [expectation fulfill];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 - (void)testRoomName
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
