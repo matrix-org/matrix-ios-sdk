@@ -68,6 +68,152 @@
     }];
 }
 
+- (void)testRoomTopicProvidedByInitialSync
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *room_id, NSString *new_text_message_event_id, XCTestExpectation *expectation) {
+        
+        MXRestClient *bobRestClient2 = bobRestClient;
+        
+        [bobRestClient setRoomTopic:room_id topic:@"My topic" success:^{
+            
+            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+            [mxSession start:^{
+                
+                MXRoom *room = [mxSession room:room_id];
+                
+                XCTAssertNotNil(room.state.topic);
+                XCTAssert([room.state.topic isEqualToString:@"My topic"], @"The room topic shoud be \"My topic\". Found: %@", room.state.topic);
+                
+                [expectation fulfill];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        
+    }];
+}
+
+- (void)testRoomTopicLive
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *room_id, NSString *new_text_message_event_id, XCTestExpectation *expectation) {
+        
+        MXRestClient *bobRestClient2 = bobRestClient;
+        
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+        [mxSession start:^{
+            
+            MXRoom *room = [mxSession room:room_id];
+            
+            XCTAssertNil(room.state.topic, @"There must be no room topic yet. Found: %@", room.state.topic);
+            
+            // Listen to live event. We should receive only one: a m.room.topic event
+            [room registerEventListenerForTypes:nil block:^(MXRoom *room2, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+                
+                XCTAssertEqual(event.eventType, MXEventTypeRoomTopic);
+                
+                XCTAssertNotNil(room.state.topic);
+                XCTAssert([room.state.topic isEqualToString:@"My topic"], @"The room topic shoud be \"My topic\". Found: %@", room.state.topic);
+                
+                [expectation fulfill];
+                
+            }];
+        
+            // Change the topic
+            [bobRestClient2 setRoomTopic:room_id topic:@"My topic" success:^{
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        
+    }];
+}
+
+
+- (void)testRoomNameProvidedByInitialSync
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *room_id, NSString *new_text_message_event_id, XCTestExpectation *expectation) {
+        
+        MXRestClient *bobRestClient2 = bobRestClient;
+        
+        [bobRestClient setRoomName:room_id name:@"My room name" success:^{
+            
+            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+            [mxSession start:^{
+                
+                MXRoom *room = [mxSession room:room_id];
+                
+                XCTAssertNotNil(room.state.name);
+                XCTAssert([room.state.name isEqualToString:@"My room name"], @"The room name shoud be \"My room name\". Found: %@", room.state.name);
+                
+                [expectation fulfill];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        
+    }];
+}
+
+- (void)testRoomNameLive
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *room_id, NSString *new_text_message_event_id, XCTestExpectation *expectation) {
+        
+        MXRestClient *bobRestClient2 = bobRestClient;
+        
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+        [mxSession start:^{
+            
+            MXRoom *room = [mxSession room:room_id];
+            
+            XCTAssertNil(room.state.name, @"There must be no room name yet. Found: %@", room.state.name);
+            
+            // Listen to live event. We should receive only one: a m.room.name event
+            [room registerEventListenerForTypes:nil block:^(MXRoom *room2, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+                
+                XCTAssertEqual(event.eventType, MXEventTypeRoomName);
+                
+                XCTAssertNotNil(room.state.name);
+                XCTAssert([room.state.name isEqualToString:@"My room name"], @"The room topic shoud be \"My room name\". Found: %@", room.state.name);
+                
+                [expectation fulfill];
+                
+            }];
+            
+            // Change the topic
+            [bobRestClient2 setRoomName:room_id name:@"My room name" success:^{
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        
+    }];
+}
+
+
 - (void)testMembers
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *room_id, NSString *new_text_message_event_id, XCTestExpectation *expectation) {
