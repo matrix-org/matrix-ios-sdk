@@ -170,11 +170,11 @@ MXAuthAction;
 
 
 #pragma mark - Room operations
-- (void)postEvent:(NSString*)room_id
-        eventType:(MXEventTypeString)eventTypeString
-          content:(NSDictionary*)content
-          success:(void (^)(NSString *event_id))success
-          failure:(void (^)(NSError *error))failure
+- (void)postEventToRoom:(NSString*)room_id
+              eventType:(MXEventTypeString)eventTypeString
+                content:(NSDictionary*)content
+                success:(void (^)(NSString *event_id))success
+                failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"rooms/%@/send/%@", room_id, eventTypeString];
     [httpClient requestWithMethod:@"POST"
@@ -191,25 +191,25 @@ MXAuthAction;
      }];
 }
 
-- (void)postMessage:(NSString*)room_id
-            msgType:(MXMessageType)msgType
-            content:(NSDictionary*)content
-            success:(void (^)(NSString *event_id))success
-            failure:(void (^)(NSError *error))failure
+- (void)postMessageToRoom:(NSString*)room_id
+                  msgType:(MXMessageType)msgType
+                  content:(NSDictionary*)content
+                  success:(void (^)(NSString *event_id))success
+                  failure:(void (^)(NSError *error))failure
 {
     // Add the messsage type to the data to send
     NSMutableDictionary *eventContent = [NSMutableDictionary dictionaryWithDictionary:content];
     eventContent[@"msgtype"] = msgType;
     
-    [self postEvent:room_id eventType:kMXEventTypeStringRoomMessage content:eventContent success:success failure:failure];
+    [self postEventToRoom:room_id eventType:kMXEventTypeStringRoomMessage content:eventContent success:success failure:failure];
 }
 
-- (void)postTextMessage:(NSString*)room_id
-                   text:(NSString*)text
-                success:(void (^)(NSString *event_id))success
-                failure:(void (^)(NSError *error))failure
+- (void)postTextMessageToRoom:(NSString*)room_id
+                         text:(NSString*)text
+                      success:(void (^)(NSString *event_id))success
+                      failure:(void (^)(NSError *error))failure
 {
-    [self postMessage:room_id msgType:kMXMessageTypeText
+    [self postMessageToRoom:room_id msgType:kMXMessageTypeText
               content:@{
                         @"body": text
                         }
@@ -240,6 +240,84 @@ MXAuthAction;
          success();
      }
                         failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
+- (void)setRoomTopic:(NSString*)room_id
+               topic:(NSString*)topic
+             success:(void (^)())success
+             failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/state/m.room.topic", room_id];
+    [httpClient requestWithMethod:@"PUT"
+                             path:path
+                       parameters:@{
+                                    @"topic": topic
+                                    }
+                          success:^(NSDictionary *JSONResponse)
+     {
+         success();
+     }
+                          failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
+- (void)topicOfRoom:(NSString*)room_id
+            success:(void (^)(NSString *topic))success
+            failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/state/m.room.topic", room_id];
+    [httpClient requestWithMethod:@"GET"
+                             path:path
+                       parameters:nil
+                          success:^(NSDictionary *JSONResponse)
+     {
+         success(JSONResponse[@"topic"]);
+     }
+                          failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
+- (void)setRoomName:(NSString*)room_id
+               name:(NSString*)name
+            success:(void (^)())success
+            failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/state/m.room.name", room_id];
+    [httpClient requestWithMethod:@"PUT"
+                             path:path
+                       parameters:@{
+                                    @"name": name
+                                    }
+                          success:^(NSDictionary *JSONResponse)
+     {
+         success();
+     }
+                          failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
+- (void)nameOfRoom:(NSString*)room_id
+           success:(void (^)(NSString *name))success
+           failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/state/m.room.name", room_id];
+    [httpClient requestWithMethod:@"GET"
+                             path:path
+                       parameters:nil
+                          success:^(NSDictionary *JSONResponse)
+     {
+         success(JSONResponse[@"name"]);
+     }
+                          failure:^(NSError *error)
      {
          failure(error);
      }];
@@ -377,12 +455,12 @@ MXAuthAction;
      }];
 }
 
-- (void)messages:(NSString*)room_id
-            from:(NSString*)from
-              to:(NSString*)to
-           limit:(NSUInteger)limit
-         success:(void (^)(MXPaginationResponse *paginatedResponse))success
-         failure:(void (^)(NSError *error))failure
+- (void)messagesForRoom:(NSString*)room_id
+                   from:(NSString*)from
+                     to:(NSString*)to
+                  limit:(NSUInteger)limit
+                success:(void (^)(MXPaginationResponse *paginatedResponse))success
+                failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"rooms/%@/messages", room_id];
     
@@ -419,9 +497,9 @@ MXAuthAction;
      }];
 }
 
-- (void)members:(NSString*)room_id
-        success:(void (^)(NSArray *roomMemberEvents))success
-        failure:(void (^)(NSError *error))failure
+- (void)membersOfRoom:(NSString*)room_id
+              success:(void (^)(NSArray *roomMemberEvents))success
+              failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"rooms/%@/members", room_id];
 
@@ -468,9 +546,9 @@ MXAuthAction;
      }];
 }
 
-- (void)displayName:(NSString*)user_id
-            success:(void (^)(NSString *displayname))success
-            failure:(void (^)(NSError *error))failure
+- (void)displayNameForUser:(NSString*)user_id
+                   success:(void (^)(NSString *displayname))success
+                   failure:(void (^)(NSError *error))failure
 {
     if (!user_id)
     {
@@ -511,9 +589,9 @@ MXAuthAction;
      }];
 }
 
-- (void)avatarUrl:(NSString*)user_id
-          success:(void (^)(NSString *avatar_url))success
-          failure:(void (^)(NSError *error))failure
+- (void)avatarUrlForUser:(NSString*)user_id
+                 success:(void (^)(NSString *avatar_url))success
+                 failure:(void (^)(NSError *error))failure
 {
     if (!user_id)
     {
@@ -582,9 +660,9 @@ MXAuthAction;
 
 
 #pragma mark - Event operations
-- (void)initialSync:(NSInteger)limit
-           success:(void (^)(NSDictionary *))success
-           failure:(void (^)(NSError *))failure
+- (void)initialSyncWithLimit:(NSInteger)limit
+                     success:(void (^)(NSDictionary *))success
+                     failure:(void (^)(NSError *))failure
 {
     [httpClient requestWithMethod:@"GET"
                            path:@"initialSync"

@@ -97,11 +97,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
                 the event id of the event generated on the home server
  @param failure A block object called when the operation fails.
  */
-- (void)postEvent:(NSString*)room_id
-             eventType:(MXEventTypeString)eventTypeString
-          content:(NSDictionary*)content
-          success:(void (^)(NSString *event_id))success
-          failure:(void (^)(NSError *error))failure;
+- (void)postEventToRoom:(NSString*)room_id
+              eventType:(MXEventTypeString)eventTypeString
+                content:(NSDictionary*)content
+                success:(void (^)(NSString *event_id))success
+                failure:(void (^)(NSError *error))failure;
 
 /**
  Send a message to a room
@@ -113,11 +113,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
                 the event id of the event generated on the home server
  @param failure A block object called when the operation fails.
  */
-- (void)postMessage:(NSString*)room_id
-            msgType:(MXMessageType)msgType
-            content:(NSDictionary*)content
-            success:(void (^)(NSString *event_id))success
-            failure:(void (^)(NSError *error))failure;
+- (void)postMessageToRoom:(NSString*)room_id
+                  msgType:(MXMessageType)msgType
+                  content:(NSDictionary*)content
+                  success:(void (^)(NSString *event_id))success
+                  failure:(void (^)(NSError *error))failure;
 
 /**
  Send a text message to a room
@@ -128,10 +128,58 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
                 the event id of the event generated on the home server
  @param failure A block object called when the operation fails.
  */
-- (void)postTextMessage:(NSString*)room_id
-                   text:(NSString*)text
-                success:(void (^)(NSString *event_id))success
-                failure:(void (^)(NSError *error))failure;
+- (void)postTextMessageToRoom:(NSString*)room_id
+                         text:(NSString*)text
+                      success:(void (^)(NSString *event_id))success
+                      failure:(void (^)(NSError *error))failure;
+
+/**
+ Set the topic of a room.
+ 
+ @param room_id the id of the room.
+ @param topic the topic to set.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)setRoomTopic:(NSString*)room_id
+               topic:(NSString*)topic
+             success:(void (^)())success
+             failure:(void (^)(NSError *error))failure;
+
+/**
+ Get the topic of a room.
+ 
+ @param room_id the id of the room.
+ @param success A block object called when the operation succeeds. It provides the room topic.
+ @param failure A block object called when the operation fails.
+ */
+- (void)topicOfRoom:(NSString*)room_id
+            success:(void (^)(NSString *topic))success
+            failure:(void (^)(NSError *error))failure;
+
+/**
+ Set the name of a room.
+ 
+ @param room_id the id of the room.
+ @param name the name to set.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)setRoomName:(NSString*)room_id
+            name:(NSString*)name
+         success:(void (^)())success
+         failure:(void (^)(NSError *error))failure;
+
+/**
+ Get the name of a room.
+ 
+ @param room_id the id of the room.
+ @param success A block object called when the operation succeeds. It provides the room name.
+ @param failure A block object called when the operation fails.
+ */
+- (void)nameOfRoom:(NSString*)room_id
+            success:(void (^)(NSString *name))success
+            failure:(void (^)(NSError *error))failure;
 
 /**
  Join a room.
@@ -238,12 +286,12 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
  @param success A block object called when the operation succeeds. It provides a `MXPaginationResponse` object.
  @param failure A block object called when the operation fails.
  */
-- (void)messages:(NSString*)room_id
-            from:(NSString*)from
-              to:(NSString*)to
-           limit:(NSUInteger)limit
-         success:(void (^)(MXPaginationResponse *paginatedResponse))success
-         failure:(void (^)(NSError *error))failure;
+- (void)messagesForRoom:(NSString*)room_id
+                   from:(NSString*)from
+                     to:(NSString*)to
+                  limit:(NSUInteger)limit
+                success:(void (^)(MXPaginationResponse *paginatedResponse))success
+                failure:(void (^)(NSError *error))failure;
 
 /**
  Get a list of members for this room.
@@ -254,9 +302,9 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
                 objects  which type is m.room.member.
  @param failure A block object called when the operation fails.
  */
-- (void)members:(NSString*)room_id
-        success:(void (^)(NSArray *roomMemberEvents))success
-        failure:(void (^)(NSError *error))failure;
+- (void)membersOfRoom:(NSString*)room_id
+              success:(void (^)(NSArray *roomMemberEvents))success
+              failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Profile operations
@@ -280,9 +328,9 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
  @param success A block object called when the operation succeeds. It provides the user displayname.
  @param failure A block object called when the operation fails.
  */
-- (void)displayName:(NSString*)user_id
-               success:(void (^)(NSString *displayname))success
-               failure:(void (^)(NSError *error))failure;
+- (void)displayNameForUser:(NSString*)user_id
+                   success:(void (^)(NSString *displayname))success
+                   failure:(void (^)(NSError *error))failure;
 
 /**
  Set the logged-in user avatar url.
@@ -303,9 +351,9 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
  @param success A block object called when the operation succeeds. It provides the user avatar url.
  @param failure A block object called when the operation fails.
  */
-- (void)avatarUrl:(NSString*)user_id
-             success:(void (^)(NSString *avatar_url))success
-             failure:(void (^)(NSError *error))failure;
+- (void)avatarUrlForUser:(NSString*)user_id
+                 success:(void (^)(NSString *avatar_url))success
+                 failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Presence operations
@@ -336,9 +384,9 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
 
 
 #pragma mark - Event operations
-- (void)initialSync:(NSInteger)limit
-            success:(void (^)(NSDictionary *JSONData))success
-            failure:(void (^)(NSError *error))failure;
+- (void)initialSyncWithLimit:(NSInteger)limit
+                     success:(void (^)(NSDictionary *JSONData))success
+                     failure:(void (^)(NSError *error))failure;
 
 /**
  Get the list of public rooms hosted by the home server.
