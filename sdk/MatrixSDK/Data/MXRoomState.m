@@ -192,6 +192,32 @@
     return aliases;
 }
 
+- (NSString *)name
+{
+    NSString *name;
+    
+    // Check it from the state events
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomName];
+    if (event && [self contentOfEvent:event])
+    {
+        name = [[self contentOfEvent:event][@"name"] copy];
+    }
+    return name;
+}
+
+- (NSString *)topic
+{
+    NSString *topic;
+    
+    // Check it from the state events
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomTopic];
+    if (event && [self contentOfEvent:event])
+    {
+        topic = [[self contentOfEvent:event][@"topic"] copy];
+    }
+    return topic;
+}
+
 - (NSString *)displayname
 {
     // Reuse the Synapse web client algo

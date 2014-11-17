@@ -67,6 +67,16 @@
 @property (nonatomic, readonly) NSArray *aliases;
 
 /**
+ The name of the room as provided by the home server.
+ */
+@property (nonatomic, readonly) NSString *name;
+
+/**
+ The topic of the room.
+ */
+@property (nonatomic, readonly) NSString *topic;
+
+/**
  The display name of the room.
  It is computed from information retrieved so far.
  */
