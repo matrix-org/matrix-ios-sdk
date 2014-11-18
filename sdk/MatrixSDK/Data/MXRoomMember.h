@@ -67,6 +67,9 @@
  MXEvents come with content and prev_content data. According to the situation, we may want
  to create an MXRoomMember from content or from prev_content.
  
+ The method returns nil if the roomMemberEvent indicates that the user is not part of the 
+ room.
+ 
  @param roomMemberEvent The MXEvent room member event.
  @param roomMemberEventContent roomMemberEvent.content or roomMemberEvent.prevContent
  */

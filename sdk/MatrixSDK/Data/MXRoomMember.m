@@ -35,6 +35,13 @@
     {
         NSParameterAssert(roomMemberEvent.eventType == MXEventTypeRoomMember);
         
+        // Check if there is information about user membership
+        if (nil == roomMemberEventContent || 0 == roomMemberEventContent.count)
+        {
+            // No. The user is not part of the room
+            return nil;
+        }
+        
         // Use MXRoomMemberEventContent to parse the JSON event content
         MXRoomMemberEventContent *roomMemberContent = [MXRoomMemberEventContent modelFromJSON:roomMemberEventContent];
         _displayname = roomMemberContent.displayname;

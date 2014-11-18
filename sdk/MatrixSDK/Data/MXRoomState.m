@@ -87,6 +87,7 @@
         // At the beginning of pagination, the back room state must be the same
         // as the current current room state.
         // So, use the same state events content.
+        // @TODO: Find another way than modifying the event content.
         for (MXEvent *event in stateEvents.allValues)
         {
             event.prevContent = event.content;
@@ -342,7 +343,15 @@
         case MXEventTypeRoomMember:
         {
             MXRoomMember *roomMember = [[MXRoomMember alloc] initWithMXEvent:event andEventContent:[self contentOfEvent:event]];
-            members[roomMember.userId] = roomMember;
+            if (roomMember)
+            {
+                members[roomMember.userId] = roomMember;
+            }
+            else
+            {
+                // The user is no more part of the room. Remove him.
+                [members removeObjectForKey:event.stateKey];
+            }
             break;
         }
             
