@@ -27,14 +27,14 @@
 
 /**
  Block called when an event of the registered types has been handled by the `MXRoom` instance.
- This is a specialisation of the `MXEventListenerBlock`.
+ This is a specialisation of the `MXOnEvent` block.
  
  @param room the `MXRoom` that handled the event.
  @param event the new event.
  @param isLive YES if it is new event.
  @param roomState the room state right before the event
  */
-typedef void (^MXRoomEventListenerBlock)(MXRoom *room, MXEvent *event, BOOL isLive, MXRoomState *roomState);
+typedef void (^MXOnRoomEvent)(MXRoom *room, MXEvent *event, BOOL isLive, MXRoomState *roomState);
 
 /**
  `MXRoom` is the class
@@ -100,21 +100,21 @@ typedef void (^MXRoomEventListenerBlock)(MXRoom *room, MXEvent *event, BOOL isLi
  Register a listener for some types of events.
  
  @param types an array of event types strings (MXEventTypeString). nil to listen to all events.
- @param listenerBlock the block that will called once a new event has been handled.
+ @param onEvent the block that will called once a new event has been handled.
  @return a reference to use to unregister the listener
  */
-- (id)registerEventListenerForTypes:(NSArray*)types block:(MXRoomEventListenerBlock)listenerBlock;
+- (id)listenToEventsOfTypes:(NSArray*)types onEvent:(MXOnRoomEvent)onEvent;
 
 /**
  Unregister a listener.
  
  @param listener the reference of the listener to remove.
  */
-- (void)unregisterListener:(id)listener;
+- (void)removeListener:(id)listener;
 
 /**
  Unregister all listeners.
  */
-- (void)unregisterAllListeners;
+- (void)removeAllListeners;
 
 @end

@@ -113,7 +113,7 @@
             XCTAssertNil(room.state.topic, @"There must be no room topic yet. Found: %@", room.state.topic);
             
             // Listen to live event. We should receive only one: a m.room.topic event
-            [room registerEventListenerForTypes:nil block:^(MXRoom *room2, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+            [room listenToEventsOfTypes:nil onEvent:^(MXRoom *room2, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
                 
                 XCTAssertEqual(event.eventType, MXEventTypeRoomTopic);
                 
@@ -186,7 +186,7 @@
             XCTAssertNil(room.state.name, @"There must be no room name yet. Found: %@", room.state.name);
             
             // Listen to live event. We should receive only one: a m.room.name event
-            [room registerEventListenerForTypes:nil block:^(MXRoom *room2, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+            [room listenToEventsOfTypes:nil onEvent:^(MXRoom *room2, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
                 
                 XCTAssertEqual(event.eventType, MXEventTypeRoomName);
                 

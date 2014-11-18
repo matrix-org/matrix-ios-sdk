@@ -27,7 +27,7 @@
  @param event the new event.
  @param isLive YES if it is new event.
  */
-typedef void (^MXEventListenerBlock)(id sender, MXEvent *event, BOOL isLive, id customObject);
+typedef void (^MXOnEvent)(id sender, MXEvent *event, BOOL isLive, id customObject);
 
 /**
  The `MXEventListener` class stores information about a listener to MXEvents that
@@ -37,7 +37,7 @@ typedef void (^MXEventListenerBlock)(id sender, MXEvent *event, BOOL isLive, id 
 
 - (instancetype)initWithSender:(id)sender
                  andEventTypes:(NSArray*)eventTypes
-              andListenerBlock:(MXEventListenerBlock)listenerBlock;
+              andListenerBlock:(MXOnEvent)listenerBlock;
 
 /**
  Inform the listener about a new event.
@@ -51,6 +51,6 @@ typedef void (^MXEventListenerBlock)(id sender, MXEvent *event, BOOL isLive, id 
 
 @property (nonatomic, readonly) id sender;
 @property (nonatomic, readonly) NSArray* eventTypes;
-@property (nonatomic, readonly) MXEventListenerBlock listenerBlock;
+@property (nonatomic, readonly) MXOnEvent listenerBlock;
 
 @end

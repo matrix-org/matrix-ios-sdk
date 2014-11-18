@@ -24,7 +24,7 @@
 
 -(instancetype)initWithSender:(id)sender
                 andEventTypes:(NSArray *)eventTypes
-             andListenerBlock:(MXEventListenerBlock)listenerBlock
+             andListenerBlock:(MXOnEvent)listenerBlock
 {
     self = [super init];
     if (self)

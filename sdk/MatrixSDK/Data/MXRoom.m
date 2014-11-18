@@ -260,21 +260,21 @@
 
 
 #pragma mark - Events listeners
-- (id)registerEventListenerForTypes:(NSArray*)types block:(MXRoomEventListenerBlock)listenerBlock
+- (id)listenToEventsOfTypes:(NSArray*)types onEvent:(MXOnRoomEvent)onEvent
 {
-    MXEventListener *listener = [[MXEventListener alloc] initWithSender:self andEventTypes:types andListenerBlock:listenerBlock];
+    MXEventListener *listener = [[MXEventListener alloc] initWithSender:self andEventTypes:types andListenerBlock:onEvent];
     
     [eventListeners addObject:listener];
     
     return listener;
 }
 
-- (void)unregisterListener:(id)listener
+- (void)removeListener:(id)listener
 {
     [eventListeners removeObject:listener];
 }
 
-- (void)unregisterAllListeners
+- (void)removeAllListeners
 {
     [eventListeners removeAllObjects];
 }
@@ -294,7 +294,7 @@
         if ([event isState])
         {
             // If this is a state event, compute the room state before this event
-            // as this is the information we pass to MXRoomEventListenerBlock
+            // as this is the information we pass to the MXOnRoomEvent callback block
             [stateBeforeThisEvent handleStateEvent:event];
         }
     }
