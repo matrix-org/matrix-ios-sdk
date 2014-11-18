@@ -277,6 +277,11 @@
 
 
 #pragma mark - Global events listeners
+- (id)listenToEvents:(MXOnSessionEvent)onEvent
+{
+    return [self listenToEventsOfTypes:nil onEvent:onEvent];
+}
+
 - (id)listenToEventsOfTypes:(NSArray*)types onEvent:(MXOnSessionEvent)onEvent
 {
     MXSessionEventListener *listener = [[MXSessionEventListener alloc] initWithSender:self andEventTypes:types andListenerBlock:onEvent];

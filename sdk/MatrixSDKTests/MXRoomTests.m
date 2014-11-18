@@ -274,7 +274,7 @@
         __block NSString *messageEventID;
         
         // Register the listener
-        [room listenToEventsOfTypes:nil onEvent:^(MXRoom *room2, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+        [room listenToEvents:^(MXRoom *room2, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
             
             XCTAssertEqual(room, room2);
             XCTAssertTrue(isLive);

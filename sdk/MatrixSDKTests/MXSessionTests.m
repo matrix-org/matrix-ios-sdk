@@ -136,7 +136,7 @@
                                          kMXEventTypeStringRoomMessage,
                                          ]];
         
-        [mxSession listenToEventsOfTypes:nil onEvent:^(MXSession *mxSession, MXEvent *event, BOOL isLive, id customObject) {
+        [mxSession listenToEvents:^(MXSession *mxSession, MXEvent *event, BOOL isLive, id customObject) {
             
             if (isLive)
             {

@@ -97,9 +97,17 @@ typedef void (^MXOnRoomEvent)(MXRoom *room, MXEvent *event, BOOL isLive, MXRoomS
 
 #pragma mark - Events listeners
 /**
+ Register a listener to events of this room.
+ 
+ @param onEvent the block that will called once a new event has been handled.
+ @return a reference to use to unregister the listener
+ */
+- (id)listenToEvents:(MXOnRoomEvent)onEvent;
+
+/**
  Register a listener for some types of events.
  
- @param types an array of event types strings (MXEventTypeString). nil to listen to all events.
+ @param types an array of event types strings (MXEventTypeString).
  @param onEvent the block that will called once a new event has been handled.
  @return a reference to use to unregister the listener
  */

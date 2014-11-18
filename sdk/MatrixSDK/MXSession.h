@@ -133,11 +133,21 @@
 
 #pragma mark - Global events listeners
 /**
+ Register a global listener to events related to the current session.
+ 
+ The listener will receive all events including all events of all rooms.
+ 
+ @param listenerBlock the block that will called once a new event has been handled.
+ @return a reference to use to unregister the listener
+ */
+- (id)listenToEvents:(MXOnSessionEvent)onEvent;
+
+/**
  Register a global listener for some types of events.
  
  The listener is able to receive all events including all events of all rooms.
  
- @param types an array of event types strings (MXEventTypeString). nil to listen to all events.
+ @param types an array of event types strings (MXEventTypeString).
  @param listenerBlock the block that will called once a new event has been handled.
  @return a reference to use to unregister the listener
  */

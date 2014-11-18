@@ -260,6 +260,11 @@
 
 
 #pragma mark - Events listeners
+- (id)listenToEvents:(MXOnRoomEvent)onEvent
+{
+    return [self listenToEventsOfTypes:nil onEvent:onEvent];
+}
+
 - (id)listenToEventsOfTypes:(NSArray*)types onEvent:(MXOnRoomEvent)onEvent
 {
     MXEventListener *listener = [[MXEventListener alloc] initWithSender:self andEventTypes:types andListenerBlock:onEvent];
