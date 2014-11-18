@@ -266,9 +266,7 @@
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
-        
-        
-    
+
     }];
 }
 
@@ -526,6 +524,178 @@
                 [expectation fulfill];
             }];
             
+        }];
+        
+    }];
+}
+
+- (void)testLiveEventsForScenario2
+{
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+    
+    [sharedData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+        
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        
+        [mxSession start:^{
+            
+            MXRoom *room = [mxSession room:room_id];
+            
+            __block NSUInteger eventCount = 0;
+            [room registerEventListenerForTypes:nil block:^(MXRoom *room, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+                
+                MXRoomMember *beforeEventAliceMember = [roomState memberWithUserId:sharedData.aliceCredentials.userId];
+                MXRoomMember *aliceMember = [room.state memberWithUserId:sharedData.aliceCredentials.userId];
+                
+                // Check each expected event and their roomState contect
+                // Events are live. Then comes in order
+                switch (eventCount++) {
+                        
+                    case 0:
+                        // 2 - Bob: "Hello World"
+                        XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
+                        
+                        XCTAssertEqual(roomState.members.count, 1);
+                        XCTAssertEqual(room.state.members.count, 1);
+                        
+                        // Alice member doest not exist at that time
+                        XCTAssertNil(beforeEventAliceMember);
+                        XCTAssertNil(aliceMember);
+                        break;
+                        
+                    case 1:
+                        // 3 - Bob invites Alice
+                        XCTAssertEqual(event.eventType, MXEventTypeRoomMember);
+                        
+                        XCTAssertEqual(roomState.members.count, 1);
+                        XCTAssertEqual(room.state.members.count, 2);
+                        
+                        XCTAssertEqual(aliceMember.membership, MXMembershipInvite);
+                        XCTAssertNil(aliceMember.displayname);
+                        
+                        // Alice member did not exist at that time
+                        XCTAssertNil(beforeEventAliceMember);
+                        break;
+                        
+                    case 2:
+                        // 4 - Bob: "I wait for Alice"
+                        XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
+                        
+                        XCTAssertEqual(roomState.members.count, 2);
+                        XCTAssertEqual(room.state.members.count, 2);
+                        
+                        XCTAssertEqual(beforeEventAliceMember.membership, MXMembershipInvite);
+                        XCTAssertEqual(aliceMember.membership, MXMembershipInvite);
+                        
+                        XCTAssertNil(beforeEventAliceMember.displayname);
+                        XCTAssertNil(aliceMember.displayname);
+                        break;
+                        
+                    case 3:
+                        // 5 - Alice joins
+                        XCTAssertEqual(event.eventType, MXEventTypeRoomMember);
+                        
+                        XCTAssertEqual(roomState.members.count, 2);
+                        XCTAssertEqual(room.state.members.count, 2);
+                        
+                        XCTAssertEqual(beforeEventAliceMember.membership, MXMembershipInvite);
+                        XCTAssertEqual(aliceMember.membership, MXMembershipJoin);
+                        
+                        // Alice was not yet part of the room. The home server does not provide her display name
+                        XCTAssertNil(beforeEventAliceMember.displayname);
+                        XCTAssert([aliceMember.displayname isEqualToString:@"mxAlice"]);
+                        break;
+                        
+                    case 4:
+                        // 6 - Alice: "Hi"
+                        XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
+                        
+                        XCTAssertEqual(roomState.members.count, 2);
+                        XCTAssertEqual(room.state.members.count, 2);
+                        
+                        XCTAssertEqual(beforeEventAliceMember.membership, MXMembershipJoin);
+                        XCTAssertEqual(aliceMember.membership, MXMembershipJoin);
+                        
+                        XCTAssert([beforeEventAliceMember.displayname isEqualToString:@"mxAlice"], @"Wrong displayname. Found: %@", beforeEventAliceMember.displayname);
+                        XCTAssert([aliceMember.displayname isEqualToString:@"mxAlice"], @"Wrong displayname. Found: %@", beforeEventAliceMember.displayname);
+                        break;
+                        
+                    case 5:
+                        // 7 - Alice changes her displayname to "Alice in Wonderland"
+                        XCTAssertEqual(event.eventType, MXEventTypeRoomMember);
+                        
+                        XCTAssertEqual(roomState.members.count, 2);
+                        XCTAssertEqual(room.state.members.count, 2);
+                        
+                        XCTAssertEqual(beforeEventAliceMember.membership, MXMembershipJoin);
+                        XCTAssertEqual(aliceMember.membership, MXMembershipJoin);
+                        
+                        XCTAssert([beforeEventAliceMember.displayname isEqualToString:@"mxAlice"], @"Wrong displayname. Found: %@", beforeEventAliceMember.displayname);
+                        XCTAssert([aliceMember.displayname isEqualToString:@"Alice in Wonderland"]);
+                        break;
+                        
+                    case 6:
+                        // 8 - Alice: "What's going on?"
+                        XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
+                        
+                        XCTAssertEqual(roomState.members.count, 2);
+                        XCTAssertEqual(room.state.members.count, 2);
+                        
+                        XCTAssertEqual(beforeEventAliceMember.membership, MXMembershipJoin);
+                        XCTAssertEqual(aliceMember.membership, MXMembershipJoin);
+                        
+                        XCTAssert([beforeEventAliceMember.displayname isEqualToString:@"Alice in Wonderland"]);
+                        XCTAssert([aliceMember.displayname isEqualToString:@"Alice in Wonderland"]);
+                        break;
+                        
+                    case 7:
+                        // 9 - Alice leaves the room
+                        XCTAssertEqual(event.eventType, MXEventTypeRoomMember);
+                        
+                        XCTAssertEqual(roomState.members.count, 2);
+                        XCTAssertEqual(room.state.members.count, 2);
+                        
+                        XCTAssertEqual(beforeEventAliceMember.membership, MXMembershipJoin);
+                        XCTAssertEqual(aliceMember.membership, MXMembershipLeave);
+                        
+                        XCTAssert([beforeEventAliceMember.displayname isEqualToString:@"Alice in Wonderland"]);
+                        XCTAssertNil(aliceMember.displayname);
+                        break;
+                        
+                    case 8:
+                        // 10 - Bob: "Good bye"
+                        XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
+                        
+                        XCTAssertEqual(roomState.members.count, 2);
+                        XCTAssertEqual(room.state.members.count, 2);
+                        
+                        XCTAssertEqual(beforeEventAliceMember.membership, MXMembershipLeave);
+                        XCTAssertEqual(aliceMember.membership, MXMembershipLeave);
+                        
+                        // Alice is no more part of the room. The home server does not provide her display name
+                        XCTAssertNil(beforeEventAliceMember.displayname);
+                        XCTAssertNil(aliceMember.displayname);
+                        
+                        // No more events. This is the end of the test
+                        [expectation fulfill];
+                        
+                        break;
+                        
+                    default:
+                        XCTFail(@"No more events are expected");
+                        break;
+                }
+                
+            }];
+            
+            // Post events of the scenario
+            [self createScenario2:bobRestClient inRoom:room_id onComplete:^(MXRestClient *aliceRestClient) {
+                
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
         }];
         
     }];
