@@ -161,7 +161,7 @@
                 [room resetBackState];
                 [room paginateBackMessages:10 complete:^{
                     
-                    XCTAssertGreaterThan(eventCount, 0, @"We must have received events");
+                    XCTAssertGreaterThan(eventCount, 4, @"We must have received events");
                     
                     [expectation fulfill];
                     
@@ -177,6 +177,98 @@
 
         }];
         
+    }];
+}
+
+- (void)testLiveEventsForScenario1
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+        
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        
+        [mxSession start:^{
+            
+            MXRoom *room = [mxSession room:room_id];
+            
+            __block NSUInteger eventCount = 0;
+            [room registerEventListenerForTypes:nil block:^(MXRoom *room, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+                
+                // Check each expected event and their roomState contect
+                // Events are live. Then comes in order
+                switch (eventCount++) {
+
+                    case 0:
+                        //  2 - Bob: "Hello World"
+                        XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
+                        
+                        XCTAssertNotNil(roomState);
+                        
+                        XCTAssertNil(roomState.topic, @"The room topic is not yet defined. Found: %@", roomState.topic);
+                        XCTAssertNil(room.state.topic, @"The room topic is not yet defined. Found: %@", roomState.topic);
+                        break;
+                        
+                    case 1:
+                        //  3 - Bob changes the room topic to "Topic #1"
+                        XCTAssertEqual(event.eventType, MXEventTypeRoomTopic);
+
+                        XCTAssertNotNil(roomState);
+
+                        XCTAssertNil(roomState.topic, @"The room topic was not yet defined before this event. Found: %@", roomState.topic);
+                        XCTAssert([room.state.topic isEqualToString:@"Topic #1"]);
+                        break;
+                        
+                    case 2:
+                        //  4 - Bob: "Hola"
+                        XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
+
+                        XCTAssertNotNil(roomState);
+
+                        XCTAssert([roomState.topic isEqualToString:@"Topic #1"], @"roomState.topic is wrong. Found: %@", roomState.topic);
+                        XCTAssert([room.state.topic isEqualToString:@"Topic #1"]);
+                        break;
+                        
+                    case 3:
+                        //  5 - Bob changes the room topic to "Topic #2"
+                        XCTAssertEqual(event.eventType, MXEventTypeRoomTopic);
+
+                        XCTAssertNotNil(roomState);
+
+                        XCTAssert([roomState.topic isEqualToString:@"Topic #1"], @"roomState.topic is wrong. Found: %@", roomState.topic);
+                        XCTAssert([room.state.topic isEqualToString:@"Topic #2"]);
+                        break;
+                        
+                    case 4:
+                        // 6 - Bob: "Bonjour"
+                        XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
+
+                        XCTAssertNotNil(roomState);
+
+                        XCTAssert([roomState.topic isEqualToString:@"Topic #2"], @"roomState.topic is wrong. Found: %@", roomState.topic);
+                        XCTAssert([room.state.topic isEqualToString:@"Topic #2"]);
+                        
+                        // No more events. This is the end of the test
+                        [expectation fulfill];
+                        break;
+
+                    default:
+                        XCTFail(@"No more events are expected");
+                        break;
+                }
+                
+            }];
+            
+            // Post events of the scenario
+            [self createScenario1:bobRestClient inRoom:room_id onComplete:^{
+                
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        
+        
+    
     }];
 }
 
@@ -420,7 +512,7 @@
                 [room resetBackState];
                 [room paginateBackMessages:20 complete:^{
                     
-                    XCTAssertGreaterThan(eventCount, 0, @"We must have received events");
+                    XCTAssertGreaterThan(eventCount, 8, @"We must have received events");
                     
                     [expectation fulfill];
                     

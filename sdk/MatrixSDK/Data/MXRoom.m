@@ -281,17 +281,28 @@
 
 - (void)notifyListeners:(MXEvent*)event isLiveEvent:(BOOL)isLiveEvent
 {
-    id customObject;
+    MXRoomState *stateBeforeThisEvent;
     
     if (NO == isLiveEvent)
     {
-        customObject = backState;
+        stateBeforeThisEvent = backState;
+    }
+    else
+    {
+        // Use the current state for live event
+        stateBeforeThisEvent = [[MXRoomState alloc] initBackStateWith:_state];
+        if ([event isState])
+        {
+            // If this is a state event, compute the room state before this event
+            // as this is the information we pass to MXRoomEventListenerBlock
+            [stateBeforeThisEvent handleStateEvent:event];
+        }
     }
     
     // notifify all listeners
     for (MXEventListener *listener in eventListeners)
     {
-        [listener notify:event isLiveEvent:isLiveEvent andCustomObject:customObject];
+        [listener notify:event isLiveEvent:isLiveEvent andCustomObject:stateBeforeThisEvent];
     }
 }
 
