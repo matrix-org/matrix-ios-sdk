@@ -136,7 +136,7 @@
                                          kMXEventTypeStringRoomMessage,
                                          ]];
         
-        [mxSession listenToEvents:^(MXSession *mxSession, MXEvent *event, BOOL isLive, id customObject) {
+        [mxSession listenToEvents:^(MXSession *mxSession2, MXEvent *event, BOOL isLive, id customObject) {
             
             if (isLive)
             {
@@ -145,6 +145,10 @@
                 if (0 == expectedEvents.count)
                 {
                     XCTAssert(YES, @"All expected events must be catch");
+                    
+                    [mxSession close];
+                    mxSession = nil;
+                    
                     [expectation fulfill];
                 }
             }
@@ -173,11 +177,15 @@
         // Listen to m.room.message only
         // We should not see events coming before (m.room.create, and all state events)
         [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage]
-                                            onEvent:^(MXSession *mxSession, MXEvent *event, BOOL isLive, id customObject) {
+                                            onEvent:^(MXSession *mxSession2, MXEvent *event, BOOL isLive, id customObject) {
             
             if (isLive)
             {
                 XCTAssertEqual(event.eventType, MXEventTypeRoomMessage, @"We must receive only m.room.message event - Event: %@", event);
+                
+                [mxSession close];
+                mxSession = nil;
+                
                 [expectation fulfill];
             }
             
