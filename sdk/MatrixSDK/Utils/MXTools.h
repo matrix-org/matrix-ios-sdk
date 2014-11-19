@@ -17,9 +17,13 @@
 #import <Foundation/Foundation.h>
 
 #import "MXEvent.h"
+#import "MXJSONModels.h"
 
 @interface MXTools : NSObject
 
 + (MXMembership)membership:(MXMembershipString)membershipString;
+
++ (MXPresence)presence:(MXPresenceString)presenceString;
++ (MXPresenceString)presenceString:(MXPresence)presence;
 
 @end

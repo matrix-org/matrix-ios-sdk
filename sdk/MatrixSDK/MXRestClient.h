@@ -366,7 +366,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)setPresence:(NSString*)presence andStatusMessage:(NSString*)statusMessage
+- (void)setPresence:(MXPresence)presence andStatusMessage:(NSString*)statusMessage
             success:(void (^)())success
             failure:(void (^)(NSError *error))failure;
 
@@ -379,7 +379,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
  @param failure A block object called when the operation fails.
  */
 - (void)presence:(NSString*)user_id
-         success:(void (^)(NSDictionary *JSONData))success
+         success:(void (^)(MXPresenceResponse *presence))success
          failure:(void (^)(NSError *error))failure;
 
 

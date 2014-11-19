@@ -17,6 +17,7 @@
 #import "MXRestClient.h"
 
 #import "MXHTTPClient.h"
+#import "MXTools.h"
 
 #pragma mark - Constants definitions
 NSString *const kMXRoomVisibilityPublic = @"public";
@@ -614,7 +615,7 @@ MXAuthAction;
 
 
 #pragma mark - Presence operations
-- (void)setPresence:(NSString*)presence andStatusMessage:(NSString*)statusMessage
+- (void)setPresence:(MXPresence)presence andStatusMessage:(NSString*)statusMessage
             success:(void (^)())success
             failure:(void (^)(NSError *error))failure
 {
@@ -622,7 +623,7 @@ MXAuthAction;
     [httpClient requestWithMethod:@"PUT"
                              path:path
                        parameters:@{
-                                    @"presence": presence,
+                                    @"presence": [MXTools presenceString:presence],
                                     @"status_msg": statusMessage
                                     }
                           success:^(NSDictionary *JSONResponse)
@@ -636,7 +637,7 @@ MXAuthAction;
 }
 
 - (void)presence:(NSString*)user_id
-         success:(void (^)(NSDictionary *JSONData))success
+         success:(void (^)(MXPresenceResponse *presence))success
          failure:(void (^)(NSError *error))failure
 {
     if (!user_id)
@@ -650,7 +651,8 @@ MXAuthAction;
                        parameters:nil
                           success:^(NSDictionary *JSONResponse)
      {
-         success(JSONResponse);
+         MXPresenceResponse *presence = [MXPresenceResponse modelFromJSON:JSONResponse];
+         success(presence);
      }
                           failure:^(NSError *error)
      {

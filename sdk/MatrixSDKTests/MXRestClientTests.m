@@ -496,7 +496,6 @@
 #pragma mark - Presence operations
 - (void)testUserPresence
 {
-    // @TODO: Currently, Synapse on the develop branch fails to handle the setPresence request
     // Make sure the test is valid once the bug is fixed server side
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
         
@@ -504,13 +503,16 @@
         
         // Set new presence
         __block NSString *newStatusMessage = @"Gone for dinner";
-        [aliceRestClient setPresence:kMXPresenceOnline andStatusMessage:newStatusMessage success:^{
+        [aliceRestClient setPresence:MXPresenceOnline andStatusMessage:newStatusMessage success:^{
             
             // Then retrieve it
-            [aliceRestClient2 presence:nil success:^(NSDictionary *JSONData) {
+            [aliceRestClient2 presence:nil success:^(MXPresenceResponse *presence) {
                 
-                //@TODO: 
-                //XCTAssertTrue([displayname isEqualToString:newDisplayName], @"Must retrieved the set string: %@ - %@", displayname, newDisplayName);
+                XCTAssertNotNil(presence);
+                XCTAssert([presence.presence isEqualToString:kMXPresenceOnline]);
+                XCTAssertEqual(presence.presenceStatus, MXPresenceOnline);
+                XCTAssert([presence.statusMsg isEqualToString:@"Gone for dinner"]);
+                
                 [expectation fulfill];
                 
             } failure:^(NSError *error) {

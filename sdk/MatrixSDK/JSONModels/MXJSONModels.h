@@ -211,13 +211,40 @@ FOUNDATION_EXPORT NSString *const kMXPresenceHidden;
     @property (nonatomic) MXPresenceString presence;
 
     /**
+     The enum version of the presence status.
+     */
+    @property (nonatomic) MXPresence presenceStatus;
+
+    /**
      The user status.
      */
     @property (nonatomic) NSString *statusMsg;
+
+@end
+
+/**
+ `MXCreateRoomResponse` represents the response to presence request.
+ */
+@interface MXPresenceResponse : MXJSONModel
+
+    /**
+     The timestamp of the last time the user has been active.
+     */
+    @property (nonatomic) NSUInteger lastActiveAgo;
+
+    /**
+     The presence status string as provided by the home server.
+     */
+    @property (nonatomic) MXPresenceString presence;
 
     /**
      The enum version of the presence status.
      */
     @property (nonatomic) MXPresence presenceStatus;
+
+    /**
+     The user status.
+     */
+    @property (nonatomic) NSString *statusMsg;
 
 @end

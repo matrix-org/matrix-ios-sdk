@@ -15,7 +15,9 @@
  */
 
 #import "MXJSONModels.h"
+
 #import "MXEvent.h"
+#import "MXTools.h"
 
 @implementation MXPublicRoom
 - (NSString *)displayname
@@ -78,32 +80,24 @@ NSString *const kMXPresenceHidden = @"hidden";
 {
     // Do the JSON -> class instance properties mapping
     id instance = [super initWithDictionary:dictionaryValue error:error];
+    
+    _presenceStatus = [MXTools presence:_presence];
 
-    // Convert presence string into enum value
-    if ([_presence isEqualToString:kMXPresenceOnline])
-    {
-        _presenceStatus = MXPresenceOnline;
-    }
-    else if ([_presence isEqualToString:kMXPresenceUnavailable])
-    {
-        _presenceStatus = MXPresenceUnavailable;
-    }
-    else if ([_presence isEqualToString:kMXPresenceOffline])
-    {
-        _presenceStatus = MXPresenceOffline;
-    }
-    else if ([_presence isEqualToString:kMXPresenceFreeForChat])
-    {
-        _presenceStatus = MXPresenceFreeForChat;
-    }
-    else if ([_presence isEqualToString:kMXPresenceHidden])
-    {
-        _presenceStatus = MXPresenceHidden;
-    }
-    else
-    {
-        _presenceStatus = MXPresenceUnknown;
-    }
+    return instance;
+}
+
+@end
+
+
+@implementation MXPresenceResponse
+
+- (instancetype)initWithDictionary:(NSDictionary *)dictionaryValue error:(NSError *__autoreleasing *)error
+{
+    // Do the JSON -> class instance properties mapping
+    id instance = [super initWithDictionary:dictionaryValue error:error];
+    
+    _presenceStatus = [MXTools presence:_presence];
+    
     return instance;
 }
 
