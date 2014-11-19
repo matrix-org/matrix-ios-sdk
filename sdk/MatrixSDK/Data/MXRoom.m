@@ -236,16 +236,6 @@
 {
     NSAssert(nil != backState, @"resetBackState must be called before starting the back pagination");
     
-    // Event duplication management:
-    // As we paginate from a token that corresponds to an event (the oldest one, ftr),
-    // we will receive this event in the response. But we already have it.
-    // So, ask for one more message, and do not take into account in the response the message
-    // we already have
-    if (![pagEarliestToken isEqualToString:@"END"])
-    {
-        numItems = numItems + 1;
-    }
-    
     // Paginate from last known token
     [mxSession.matrixRestClient messagesForRoom:_state.room_id
                                            from:pagEarliestToken to:nil
@@ -257,15 +247,6 @@
         {
             // We run out of items
             _canPaginate = NO;
-        }
-            
-        // Event duplication management:
-        // Remove the message we already have
-        if (![pagEarliestToken isEqualToString:@"END"])
-        {
-            NSMutableArray *newChunk = [NSMutableArray arrayWithArray:paginatedResponse.chunk];
-            [newChunk removeObjectAtIndex:0];
-            paginatedResponse.chunk = newChunk;
         }
         
         // Process these new events
