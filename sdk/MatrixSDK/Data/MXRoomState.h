@@ -27,12 +27,18 @@
  
  The room state is ca ombination of information obtained from state events received so far.
  */
-@interface MXRoomState : NSObject
+@interface MXRoomState : NSObject <NSCopying>
 
 /**
  The room ID
  */
 @property (nonatomic, readonly) NSString *room_id;
+
+/**
+ Indicate if this instance is used to store the live state of the room or
+ the state of the room in the history.
+ */
+@property (nonatomic, readonly) BOOL isLive;
 
 /**
  A copy of the list of state events (actually MXEvent instances).
@@ -90,12 +96,23 @@
                   currently connected to the home server.
  @param JSONData the JSON object obtained at the initialSync of the room. It is used to store 
                   additional metadata coming outside state events.
+ @paran isLive the direction in which this `MXRoomState` instance will be updated.
  
  @return The newly-initialized MXRoomState.
  */
+- (id)initWithRoomId:(NSString*)room_id
+    andMatrixSession:(MXSession*)mxSession
+         andJSONData:(NSDictionary*)JSONData
+        andDirection:(BOOL)isLive;
 
-- (id)initWithRoomId:(NSString*)room_id andMatrixSession:(MXSession*)mxSession andJSONData:(NSDictionary*)JSONData;
-
+/**
+ Create a `MXRoomState` instance used as a back state of a room.
+ Such instance holds the state of a room at a given time in the room history.
+ 
+ @param state the uptodate state of the room (MXRoom.state)
+ @return The newly-initialized MXRoomState.
+ */
+- (id)initBackStateWith:(MXRoomState*)state;
 
 /**
  Process a state event in order to update the room state.

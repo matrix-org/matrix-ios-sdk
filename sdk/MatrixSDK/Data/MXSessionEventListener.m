@@ -30,7 +30,7 @@
 
 @implementation MXSessionEventListener
 
-- (instancetype)initWithSender:(id)sender andEventTypes:(NSArray *)eventTypes andListenerBlock:(MXEventListenerBlock)listenerBlock
+- (instancetype)initWithSender:(id)sender andEventTypes:(NSArray *)eventTypes andListenerBlock:(MXOnEvent)listenerBlock
 {
     self = [super initWithSender:sender andEventTypes:eventTypes andListenerBlock:listenerBlock];
     if (self)
@@ -45,8 +45,8 @@
     if (![roomEventListeners objectForKey:room.state.room_id])
     {
         roomEventListeners[room.state.room_id] =
-        [room registerEventListenerForTypes:self.eventTypes block:^(MXRoom *room, MXEvent *event, BOOL isLive) {
-            self.listenerBlock(self.sender, event, isLive);
+        [room listenToEventsOfTypes:self.eventTypes onEvent:^(MXRoom *room, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+            self.listenerBlock(self.sender, event, isLive, roomState);
         }];
     }
 
@@ -56,7 +56,7 @@
 {
     if ([roomEventListeners objectForKey:room.state.room_id])
     {
-        [room unregisterListener:roomEventListeners[room.state.room_id]];
+        [room removeListener:roomEventListeners[room.state.room_id]];
         [roomEventListeners removeObjectForKey:room.state.room_id];
     }
 }
@@ -69,7 +69,7 @@
     for (NSString *room_id in roomEventListeners)
     {
         MXRoom *room = [mxSession room:room_id];
-        [room unregisterListener:roomEventListeners[room.state.room_id]];
+        [room removeListener:roomEventListeners[room.state.room_id]];
         
     }
     [roomEventListeners removeAllObjects];

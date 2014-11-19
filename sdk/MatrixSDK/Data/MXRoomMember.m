@@ -23,13 +23,27 @@
 
 - (instancetype)initWithMXEvent:(MXEvent*)roomMemberEvent
 {
+    // Use roomMemberEvent.content by default
+    return [self initWithMXEvent:roomMemberEvent andEventContent:roomMemberEvent.content];
+}
+
+- (instancetype)initWithMXEvent:(MXEvent*)roomMemberEvent
+                andEventContent:(NSDictionary*)roomMemberEventContent
+{
     self = [super init];
     if (self)
     {
         NSParameterAssert(roomMemberEvent.eventType == MXEventTypeRoomMember);
         
+        // Check if there is information about user membership
+        if (nil == roomMemberEventContent || 0 == roomMemberEventContent.count)
+        {
+            // No. The user is not part of the room
+            return nil;
+        }
+        
         // Use MXRoomMemberEventContent to parse the JSON event content
-        MXRoomMemberEventContent *roomMemberContent = [MXRoomMemberEventContent modelFromJSON:roomMemberEvent.content];
+        MXRoomMemberEventContent *roomMemberContent = [MXRoomMemberEventContent modelFromJSON:roomMemberEventContent];
         _displayname = roomMemberContent.displayname;
         _avatarUrl = roomMemberContent.avatarUrl;
         _membership = [MXTools membership:roomMemberContent.membership];
@@ -44,20 +58,47 @@
             _userId = roomMemberEvent.userId;
         }
         
-        // The user who made the last membership change is the event user id
-        _originUserId = roomMemberEvent.userId;
-        
-        // If defined, keep the previous membership information
-        if (roomMemberEvent.prevContent)
+        if (roomMemberEventContent == roomMemberEvent.content)
         {
-            MXRoomMemberEventContent *roomMemberPrevContent = [MXRoomMemberEventContent modelFromJSON:roomMemberEvent.prevContent];
-            _prevMembership = [MXTools membership:roomMemberPrevContent.membership];
+            // The user who made the last membership change is the event user id
+            _originUserId = roomMemberEvent.userId;
+            
+            // If defined, keep the previous membership information
+            if (roomMemberEvent.prevContent)
+            {
+                MXRoomMemberEventContent *roomMemberPrevContent = [MXRoomMemberEventContent modelFromJSON:roomMemberEvent.prevContent];
+                _prevMembership = [MXTools membership:roomMemberPrevContent.membership];
+            }
+            else
+            {
+                _prevMembership = MXMembershipUnknown;
+            }
         }
         else
         {
+            // If roomMemberEventContent was roomMemberEvent.prevContent,
+            // The following values have no meaning
+            _originUserId = nil;
             _prevMembership = MXMembershipUnknown;
         }
     }
     return self;
 }
+
+
+#pragma mark - NSCopying
+-(id)copyWithZone:(NSZone *)zone
+{
+    MXRoomMember *memberCopy = [[MXRoomMember allocWithZone:zone] init];
+    
+    memberCopy->_userId = [_userId copyWithZone:zone];
+    memberCopy->_displayname = [_displayname copyWithZone:zone];
+    memberCopy->_avatarUrl = [_avatarUrl copyWithZone:zone];
+    memberCopy->_membership = _membership;
+    memberCopy->_prevMembership = _prevMembership;
+    memberCopy->_originUserId = [_originUserId copyWithZone:zone];
+
+    return memberCopy;
+}
+
 @end

@@ -180,7 +180,7 @@
 {
     streamingActive = NO;
     
-    [self unregisterAllListeners];
+    [self removeAllListeners];
     
     // @TODO: Cancel the pending eventsFromToken request
 }
@@ -277,9 +277,14 @@
 
 
 #pragma mark - Global events listeners
-- (id)registerEventListenerForTypes:(NSArray*)types block:(MXSessionEventListenerBlock)listenerBlock
+- (id)listenToEvents:(MXOnSessionEvent)onEvent
 {
-    MXSessionEventListener *listener = [[MXSessionEventListener alloc] initWithSender:self andEventTypes:types andListenerBlock:listenerBlock];
+    return [self listenToEventsOfTypes:nil onEvent:onEvent];
+}
+
+- (id)listenToEventsOfTypes:(NSArray*)types onEvent:(MXOnSessionEvent)onEvent
+{
+    MXSessionEventListener *listener = [[MXSessionEventListener alloc] initWithSender:self andEventTypes:types andListenerBlock:onEvent];
     
     // This listener must be listen to all existing rooms
     for (MXRoom *room in rooms.allValues)
@@ -292,7 +297,7 @@
     return listener;
 }
 
-- (void)unregisterListener:(id)listenerId
+- (void)removeListener:(id)listenerId
 {
     // Clean the MXSessionEventListener
     MXSessionEventListener *listener = (MXSessionEventListener *)listenerId;
@@ -302,11 +307,11 @@
     [globalEventListeners removeObject:listener];
 }
 
-- (void)unregisterAllListeners
+- (void)removeAllListeners
 {
     for (MXSessionEventListener *listener in globalEventListeners)
     {
-        [self unregisterListener:listener];
+        [self removeListener:listener];
     }
 }
 
@@ -315,7 +320,7 @@
     // Notify all listeners
     for (MXEventListener *listener in globalEventListeners)
     {
-        [listener notify:event isLiveEvent:isLiveEvent];
+        [listener notify:event isLiveEvent:isLiveEvent andCustomObject:nil];
     }
 }
 

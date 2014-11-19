@@ -22,30 +22,24 @@
 #import "MXEventListener.h"
 #import "MXRoomState.h"
 
+@class MXRoom;
 @class MXSession;
 
 /**
  Block called when an event of the registered types has been handled by the `MXRoom` instance.
- This is a specialisation of the `MXEventListenerBlock`.
+ This is a specialisation of the `MXOnEvent` block.
  
  @param room the `MXRoom` that handled the event.
  @param event the new event.
  @param isLive YES if it is new event.
+ @param roomState the room state right before the event
  */
-typedef void (^MXRoomEventListenerBlock)(MXRoom *room, MXEvent *event, BOOL isLive);
+typedef void (^MXOnRoomEvent)(MXRoom *room, MXEvent *event, BOOL isLive, MXRoomState *roomState);
 
 /**
  `MXRoom` is the class
  */
 @interface MXRoom : NSObject
-
-/**
- A copy of the list of messages (MXEvent instances) currently loaded for this room.
- A message is either a non-state or a state event that is intended to be 
- displayed in a room chat history.
- The order is chronological: the first item is the oldest message retrieved so far.
- */
-@property (nonatomic, readonly) NSArray *messages;
 
 /**
  The last message.
@@ -80,42 +74,55 @@ typedef void (^MXRoomEventListenerBlock)(MXRoom *room, MXEvent *event, BOOL isLi
  */
 - (void)handleLiveEvent:(MXEvent*)event;
 
+
+#pragma mark - Back pagination
+/**
+ Reset the back state so that future calls to paginate start over from live.
+ Must be called when opening a room if interested in history.
+ */
+- (void)resetBackState;
+    
 /**
  Get more messages from the past.
- The MXRoom `messages` property will be updated in case of successful response.
+ The retrieved events will be sent to registered listeners.
  
  @param numItems the number of items to get.
- @param success A block object called when the operation succeeds. It provides an array of retrieved
-                `MXEvent` objects where the first item is the the oldest MXEvent in the array.
+ @param complete A block object called when the operation is complete.
  @param failure A block object called when the operation fails.
  */
 - (void)paginateBackMessages:(NSUInteger)numItems
-                     success:(void (^)(NSArray *messages))success
+                     complete:(void (^)())complete
                      failure:(void (^)(NSError *error))failure;
 
+
+#pragma mark - Events listeners
+/**
+ Register a listener to events of this room.
+ 
+ @param onEvent the block that will called once a new event has been handled.
+ @return a reference to use to unregister the listener
+ */
+- (id)listenToEvents:(MXOnRoomEvent)onEvent;
 
 /**
  Register a listener for some types of events.
  
- To get only notifications for events that modify the `messages` property, use 
- mxSession.eventsFilterForMessages as types parameter.
- 
- @param types an array of event types strings (MXEventTypeString). nil to listen to all events.
- @param listenerBlock the block that will called once a new event has been handled.
+ @param types an array of event types strings (MXEventTypeString).
+ @param onEvent the block that will called once a new event has been handled.
  @return a reference to use to unregister the listener
  */
-- (id)registerEventListenerForTypes:(NSArray*)types block:(MXRoomEventListenerBlock)listenerBlock;
+- (id)listenToEventsOfTypes:(NSArray*)types onEvent:(MXOnRoomEvent)onEvent;
 
 /**
  Unregister a listener.
  
  @param listener the reference of the listener to remove.
  */
-- (void)unregisterListener:(id)listener;
+- (void)removeListener:(id)listener;
 
 /**
  Unregister all listeners.
  */
-- (void)unregisterAllListeners;
+- (void)removeAllListeners;
 
 @end

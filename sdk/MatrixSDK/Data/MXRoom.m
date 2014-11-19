@@ -22,6 +22,8 @@
 @interface MXRoom ()
 {
     MXSession *mxSession;
+    
+    // The events downloaded so far
     NSMutableArray *messages;
 
     // The token used to know from where to paginate back.
@@ -29,6 +31,9 @@
     
     // The list of event listeners (`MXEventListener`) in this room
     NSMutableArray *eventListeners;
+
+    // The historical state of the room when paginating back
+    MXRoomState *backState;
 }
 
 @end
@@ -54,17 +59,35 @@
         
         eventListeners = [NSMutableArray array];
         
-        _state = [[MXRoomState alloc] initWithRoomId:room_id andMatrixSession:mxSession2 andJSONData:JSONData];
+        _state = [[MXRoomState alloc] initWithRoomId:room_id andMatrixSession:mxSession2 andJSONData:JSONData andDirection:YES];
+        
+        if ([JSONData objectForKey:@"inviter"])
+        {
+            // On an initialSync, an home server does not provide the room invitation under an event form
+            // whereas it does when getting the information from a live event (see SPEC-54).
+            // In order to make the SDK behaves the same in both cases, when getting the data from an initialSync,
+            // create and handle a fake membership event that contains the same information.
+            
+            // In both case, the application will see a MXRoom which MXRoomState.membership is invite. The MXRoomState
+            // will contain only one MXRoomMember who is the logged in user. MXRoomMember.originUserId is the inviter.
+            MXEvent *fakeMembershipEvent = [MXEvent modelFromJSON:@{
+                                                                    @"type": kMXEventTypeStringRoomMember,
+                                                                    @"room_id": room_id,
+                                                                    @"content": @{
+                                                                            @"membership": kMXMembershipStringInvite
+                                                                            },
+                                                                    @"user_id": JSONData[@"inviter"],
+                                                                    @"state_key": mxSession.matrixRestClient.credentials.userId
+                                                                    }];
+            
+            [self handleStateEvent:fakeMembershipEvent isLiveEvent:YES];
+        }
 
     }
     return self;
 }
 
 #pragma mark - Properties getters implementation
-- (NSArray *)messages
-{
-    return [messages copy];
-}
 
 - (MXEvent *)lastMessage
 {
@@ -105,6 +128,11 @@
 
 - (void)handleMessage:(MXEvent*)event isLiveEvent:(BOOL)isLiveEvent pagFrom:(NSString*)pagFrom
 {
+    if (event.isState)
+    {
+        [self handleStateEvent:event isLiveEvent:NO];
+    }
+    
     // Put only expected messages into `messages`
     if (NSNotFound != [mxSession.eventsFilterForMessages indexOfObject:event.type])
     {
@@ -133,32 +161,43 @@
     NSArray *events = [MXEvent modelsFromJSON:roomStateEvents];
     
     for (MXEvent *event in events) {
-        [self handleStateEvent:event];
+        [self handleStateEvent:event isLiveEvent:YES];
 
         // Notify state events coming from initialSync
         [self notifyListeners:event isLiveEvent:NO];
     }
 }
 
-- (void)handleStateEvent:(MXEvent*)event
+- (void)handleStateEvent:(MXEvent*)event isLiveEvent:(BOOL)isLiveEvent
 {
-    switch (event.eventType)
+    if (isLiveEvent)
     {
-        case MXEventTypeRoomMember:
+        switch (event.eventType)
         {
-            // Update MXUser data
-            MXUser *user = [mxSession getOrCreateUser:event.userId];
-            [user updateWithRoomMemberEvent:event];
-
-            break;
+            case MXEventTypeRoomMember:
+            {
+                // Update MXUser data
+                MXUser *user = [mxSession getOrCreateUser:event.userId];
+                [user updateWithRoomMemberEvent:event];
+                
+                break;
+            }
+                
+            default:
+                break;
         }
-
-        default:
-            break;
     }
 
+
     // Update the room state
-    [_state handleStateEvent:event];
+    if (isLiveEvent)
+    {
+        [_state handleStateEvent:event];
+    }
+    else
+    {
+        [backState handleStateEvent:event];
+    }
 }
 
 
@@ -167,7 +206,7 @@
 {
     if (event.isState)
     {
-        [self handleStateEvent:event];
+        [self handleStateEvent:event isLiveEvent:YES];
     }
 
     // Process the event
@@ -177,11 +216,26 @@
     [self notifyListeners:event isLiveEvent:YES];
 }
 
+#pragma mark - Back pagination
+- (void)resetBackState
+{
+    // Reset the back state to the current room state
+    backState = [[MXRoomState alloc] initBackStateWith:_state];
+
+    // Reset everything
+    // Trash downloaded messages to restart pagination from the server to the beginning.
+    // @TODO: Do not do that. Keep downloaded messages and request pagination from the server only when needed.
+    messages = [NSMutableArray array];
+    _canPaginate = YES;
+    pagEarliestToken = @"END";
+}
 
 - (void)paginateBackMessages:(NSUInteger)numItems
-                     success:(void (^)(NSArray *messages))success
+                    complete:(void (^)())complete
                      failure:(void (^)(NSError *error))failure
 {
+    NSAssert(nil != backState, @"resetBackState must be called before starting the back pagination");
+    
     // Event duplication management:
     // As we paginate from a token that corresponds to an event (the oldest one, ftr),
     // we will receive this event in the response. But we already have it.
@@ -216,24 +270,9 @@
         
         // Process these new events
         [self handleMessages:paginatedResponse isLiveEvents:NO direction:YES];
-                                   
-        // Reorder events chronologically
-        // And filter them: we want to provide only those which went to `messages`
-        NSMutableArray *filteredChunk = [NSMutableArray array];
-        if (paginatedResponse.chunk.count)
-        {
-            for (NSInteger i = paginatedResponse.chunk.count - 1; i >= 0; i--)
-            {
-                MXEvent *event = paginatedResponse.chunk[i];
-                if (NSNotFound != [mxSession.eventsFilterForMessages indexOfObject:event.type])
-                {
-                    [filteredChunk addObject:event];
-                }
-            }
-        }
-                                   
+                       
         // Inform the method caller
-        success(filteredChunk);
+        complete();
         
     } failure:^(NSError *error) {
         NSLog(@"paginateBackMessages error: %@", error);
@@ -243,31 +282,54 @@
 
 
 #pragma mark - Events listeners
-- (id)registerEventListenerForTypes:(NSArray*)types block:(MXRoomEventListenerBlock)listenerBlock
+- (id)listenToEvents:(MXOnRoomEvent)onEvent
 {
-    MXEventListener *listener = [[MXEventListener alloc] initWithSender:self andEventTypes:types andListenerBlock:listenerBlock];
+    return [self listenToEventsOfTypes:nil onEvent:onEvent];
+}
+
+- (id)listenToEventsOfTypes:(NSArray*)types onEvent:(MXOnRoomEvent)onEvent
+{
+    MXEventListener *listener = [[MXEventListener alloc] initWithSender:self andEventTypes:types andListenerBlock:onEvent];
     
     [eventListeners addObject:listener];
     
     return listener;
 }
 
-- (void)unregisterListener:(id)listener
+- (void)removeListener:(id)listener
 {
     [eventListeners removeObject:listener];
 }
 
-- (void)unregisterAllListeners
+- (void)removeAllListeners
 {
     [eventListeners removeAllObjects];
 }
 
 - (void)notifyListeners:(MXEvent*)event isLiveEvent:(BOOL)isLiveEvent
 {
+    MXRoomState *stateBeforeThisEvent;
+    
+    if (NO == isLiveEvent)
+    {
+        stateBeforeThisEvent = backState;
+    }
+    else
+    {
+        // Use the current state for live event
+        stateBeforeThisEvent = [[MXRoomState alloc] initBackStateWith:_state];
+        if ([event isState])
+        {
+            // If this is a state event, compute the room state before this event
+            // as this is the information we pass to the MXOnRoomEvent callback block
+            [stateBeforeThisEvent handleStateEvent:event];
+        }
+    }
+    
     // notifify all listeners
     for (MXEventListener *listener in eventListeners)
     {
-        [listener notify:event isLiveEvent:isLiveEvent];
+        [listener notify:event isLiveEvent:isLiveEvent andCustomObject:stateBeforeThisEvent];
     }
 }
 
