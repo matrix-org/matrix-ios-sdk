@@ -60,6 +60,28 @@
         eventListeners = [NSMutableArray array];
         
         _state = [[MXRoomState alloc] initWithRoomId:room_id andMatrixSession:mxSession2 andJSONData:JSONData andDirection:YES];
+        
+        if ([JSONData objectForKey:@"inviter"])
+        {
+            // On an initialSync, an home server does not provide the room invitation under an event form
+            // whereas it does when getting the information from a live event (see SPEC-54).
+            // In order to make the SDK behaves the same in both cases, when getting the data from an initialSync,
+            // create and handle a fake membership event that contains the same information.
+            
+            // In both case, the application will see a MXRoom which MXRoomState.membership is invite. The MXRoomState
+            // will contain only one MXRoomMember who is the logged in user. MXRoomMember.originUserId is the inviter.
+            MXEvent *fakeMembershipEvent = [MXEvent modelFromJSON:@{
+                                                                    @"type": kMXEventTypeStringRoomMember,
+                                                                    @"room_id": room_id,
+                                                                    @"content": @{
+                                                                            @"membership": kMXMembershipStringInvite
+                                                                            },
+                                                                    @"user_id": JSONData[@"inviter"],
+                                                                    @"state_key": mxSession.matrixRestClient.credentials.userId
+                                                                    }];
+            
+            [self handleStateEvent:fakeMembershipEvent isLiveEvent:YES];
+        }
 
     }
     return self;

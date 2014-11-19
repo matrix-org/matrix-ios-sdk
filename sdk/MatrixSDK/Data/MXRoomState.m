@@ -33,9 +33,6 @@
     
     // kMXRoomVisibilityPublic or kMXRoomVisibilityPrivate
     MXRoomVisibility visibility;
-    
-    // The ID of the user who invited the current user
-    NSString *inviter;
 }
 @end
 
@@ -63,10 +60,6 @@
             if ([JSONData objectForKey:@"visibility"])
             {
                 visibility = JSONData[@"visibility"];
-            }
-            if ([JSONData objectForKey:@"inviter"])
-            {
-                inviter = JSONData[@"inviter"];
             }
             if ([JSONData objectForKey:@"membership"])
             {
@@ -115,10 +108,6 @@
     if (visibility)
     {
         stateCopy->visibility = [visibility copyWithZone:zone];
-    }
-    if (inviter)
-    {
-        stateCopy->inviter = [inviter copyWithZone:zone];
     }
     stateCopy->membership = membership;
 
@@ -278,26 +267,22 @@
                 }
             }
         }
-        else if (1 >= members.count)
+        else if (1 == members.count)
         {
             NSString *otherUserId;
             
-            if (1 == members.allKeys.count && NO == [mxSession.matrixRestClient.credentials.userId isEqualToString:members.allKeys[0]])
+            MXRoomMember *member = members.allValues[0];
+            
+            if ([mxSession.matrixRestClient.credentials.userId isEqualToString:member.userId])
             {
-                otherUserId = members.allKeys[0];
+                // It is an invite or a self chat
+                otherUserId = member.originUserId;
             }
             else
             {
-                if (inviter)
-                {
-                    // This is an invite
-                    otherUserId = inviter;
-                }
-                else
-                {
-                    // This is a self chat
-                    otherUserId = mxSession.matrixRestClient.credentials.userId;
-                }
+                // XXX: Not sure how it can happen
+                // The logged-in user should be always in the list of the room members
+                otherUserId = member.userId;
             }
             displayname = [self memberName:otherUserId];
         }
