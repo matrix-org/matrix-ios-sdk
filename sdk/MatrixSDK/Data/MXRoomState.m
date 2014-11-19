@@ -208,7 +208,7 @@
     MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomName];
     if (event && event.content)
     {
-        name = [event.content[@"name"] copy];
+        name = [[self contentOfEvent:event][@"name"] copy];
     }
     return name;
 }
@@ -221,7 +221,7 @@
     MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomTopic];
     if (event && event.content)
     {
-        topic = [event.content[@"topic"] copy];
+        topic = [[self contentOfEvent:event][@"topic"] copy];
     }
     return topic;
 }
