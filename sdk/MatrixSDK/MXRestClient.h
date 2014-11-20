@@ -306,6 +306,21 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
               success:(void (^)(NSArray *roomMemberEvents))success
               failure:(void (^)(NSError *error))failure;
 
+/**
+ Get all the current information for this room, including messages and state events.
+ 
+ @param room_id the id of the room.
+ @param limit the maximum number of messages to return.
+ 
+ @param success A block object called when the operation succeeds. It provides the raw 
+                home server JSON response (see: http://matrix.org/docs/api/client-server/#!/-rooms/get_room_sync_data).
+ @param failure A block object called when the operation fails.
+ */
+- (void)initialSyncOfRoom:(NSString*)room_id
+                withLimit:(NSInteger)limit
+                  success:(void (^)(NSDictionary *JSONData))success
+                  failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - Profile operations
 /**
@@ -375,7 +390,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
  
  @param user_id the user id.
  
- @param success A block object called when the operation succeeds. returns @TODO
+ @param success A block object called when the operation succeeds. It provides a MXPresenceResponse object.
  @param failure A block object called when the operation fails.
  */
 - (void)presence:(NSString*)user_id
@@ -384,6 +399,17 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
 
 
 #pragma mark - Event operations
+/**
+ Get this user's current state.
+ Get all the current information for all rooms (including messages and state events) and
+ presence of the users he has interaction with
+ 
+ @param limit the maximum number of messages to return.
+ 
+ @param success A block object called when the operation succeeds. It provides the raw
+                home server JSON response. See http://matrix.org/docs/api/client-server/#!/-events/initial_sync
+ @param failure A block object called when the operation fails.
+ */
 - (void)initialSyncWithLimit:(NSInteger)limit
                      success:(void (^)(NSDictionary *JSONData))success
                      failure:(void (^)(NSError *error))failure;
@@ -404,7 +430,8 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
  @param serverTimeout the maximum time in ms to wait for an event.
  @param clientTimeout the maximum time in ms the SDK must wait for the server response.
  
- @param success A block object called when the operation succeeds. TODO: return .
+ @param success A block object called when the operation succeeds. It provides the raw
+                home server JSON response. See http://matrix.org/docs/api/client-server/#!/-events/get_event_stream
  @param failure A block object called when the operation fails.
  */
 - (void)eventsFromToken:(NSString*)token
@@ -412,6 +439,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
           clientTimeout:(NSUInteger)clientTimeout
                 success:(void (^)(NSDictionary *JSONData))success
                 failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - Directory operations
 /**

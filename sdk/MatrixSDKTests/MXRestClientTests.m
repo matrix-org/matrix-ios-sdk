@@ -349,6 +349,43 @@
     }];
 }
 
+- (void)testRoomInitialSync
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+        
+        [bobRestClient initialSyncOfRoom:room_id withLimit:3 success:^(NSDictionary *JSONData) {
+            
+            XCTAssertNotNil(JSONData);
+            XCTAssertNotNil(JSONData[@"room_id"]);
+            XCTAssertNotNil(JSONData[@"membership"]);
+            XCTAssertNotNil(JSONData[@"messages"]);
+            XCTAssertNotNil(JSONData[@"messages"][@"chunk"]);
+            XCTAssertNotNil(JSONData[@"state"]);
+            XCTAssertNotNil(JSONData[@"presence"]);
+            
+            XCTAssert([JSONData[@"room_id"] isEqualToString:room_id]);
+            XCTAssert([JSONData[@"membership"] isEqualToString:@"join"]);
+            
+            XCTAssert([JSONData[@"messages"][@"chunk"] isKindOfClass:[NSArray class]]);
+            NSArray *messages = JSONData[@"messages"][@"chunk"];
+            XCTAssertEqual(messages.count, 3);
+            
+            XCTAssert([JSONData[@"state"] isKindOfClass:[NSArray class]]);
+            
+            XCTAssert([JSONData[@"presence"] isKindOfClass:[NSArray class]]);
+            NSArray *presences = JSONData[@"presence"];
+            XCTAssertEqual(presences.count, 1);
+            
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        
+    }];
+}
+
 - (void)testMXRoomMemberEventContent
 {
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {

@@ -525,6 +525,29 @@ MXAuthAction;
      }];
 }
 
+- (void)initialSyncOfRoom:(NSString*)room_id
+                withLimit:(NSInteger)limit
+                  success:(void (^)(NSDictionary *JSONData))success
+                  failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/initialSync", room_id];
+    
+    [httpClient requestWithMethod:@"GET"
+                             path:path
+                       parameters:@{
+                                    @"limit": [NSNumber numberWithInteger:limit]
+                                    }
+                          success:^(NSDictionary *JSONResponse)
+     {
+         
+         success(JSONResponse);
+     }
+                          failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
 
 #pragma mark - Profile operations
 - (void)setDisplayName:(NSString*)displayname
