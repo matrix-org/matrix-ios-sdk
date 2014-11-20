@@ -358,7 +358,7 @@
             XCTAssertNotNil(JSONData);
             
             XCTAssert([JSONData isKindOfClass:[NSArray class]]);
-            NSArray *states = JSONData;
+            NSArray *states = (NSArray*)JSONData;
             XCTAssertGreaterThan(states.count, 0);
             
             // Check that all provided events are state events
