@@ -157,9 +157,7 @@
 /**
  Register a global listener for some types of events.
  
- The listener is able to receive all events including all events of all rooms.
- 
- @param types an array of event types strings (MXEventTypeString).
+ @param types an array of event types strings (MXEventTypeString) to listen to.
  @param listenerBlock the block that will called once a new event has been handled.
  @return a reference to use to unregister the listener
  */

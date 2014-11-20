@@ -117,7 +117,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 /**
  Register a listener for some types of events.
  
- @param types an array of event types strings (MXEventTypeString).
+ @param types an array of event types strings (MXEventTypeString) to listen to.
  @param onEvent the block that will called once a new event has been handled.
  @return a reference to use to unregister the listener
  */
