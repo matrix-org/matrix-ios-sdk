@@ -97,13 +97,13 @@
 
 #pragma mark - Messages handling
 - (void)handleMessages:(MXPaginationResponse*)roomMessages
-              isLiveEvents:(BOOL)isLiveEvents
-                 direction:(BOOL)direction
+             direction:(MXEventDirection)direction
+         isTimeOrdered:(BOOL)isTimeOrdered
 {
     NSArray *events = roomMessages.chunk;
     
     // Handles messages according to their time order
-    if (direction)
+    if (NO == isTimeOrdered)
     {
         // [MXRestClient messages] returns messages in reverse chronological order
         for (MXEvent *event in events) {
@@ -250,7 +250,7 @@
         }
         
         // Process these new events
-        [self handleMessages:paginatedResponse isLiveEvents:NO direction:YES];
+        [self handleMessages:paginatedResponse direction:MXEventDirectionBackwards isTimeOrdered:NO];
                        
         // Inform the method caller
         complete();

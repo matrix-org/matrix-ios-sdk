@@ -61,8 +61,8 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 - (id)initWithRoomId:(NSString*)room_id andMatrixSession:(MXSession*)mxSession andJSONData:(NSDictionary*)JSONData;
 
 - (void)handleMessages:(MXPaginationResponse*)roomMessages
-          isLiveEvents:(BOOL)isLiveEvents
-             direction:(BOOL)direction;
+             direction:(MXEventDirection)direction
+         isTimeOrdered:(BOOL)isTimeOrdered;
 
 - (void)handleStateEvents:(NSArray*)roomStateEvents;
 
