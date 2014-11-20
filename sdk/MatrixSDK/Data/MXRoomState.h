@@ -25,7 +25,10 @@
 /**
  `MXRoomState` holds the state of a room at a given instant.
  
- The room state is ca ombination of information obtained from state events received so far.
+ The room state is a combination of information obtained from state events received so far.
+ 
+ If the current membership state is `invite`, the room state will contain only few information.
+ Join the room with [MXRoom join] to get full information about the room.
  */
 @interface MXRoomState : NSObject <NSCopying>
 
@@ -84,6 +87,9 @@
 
 /**
  The membership state of the logged in user for this room
+ 
+ If the membership is `invite`, the room state contains few information.
+ Join the room with [MXRoom join] to get full information about the room.
  */
 @property (nonatomic, readonly) MXMembership membership;
 
