@@ -81,7 +81,7 @@
                  MXPaginationResponse *roomMessages = [MXPaginationResponse modelFromJSON:[roomDict objectForKey:@"messages"]];
                  
                  [room handleMessages:roomMessages
-                             isLiveEvents:NO direction:NO];
+                            direction:MXEventDirectionBackwards isTimeOrdered:YES];
              }
              if ([roomDict objectForKey:@"state"])
              {
@@ -201,7 +201,7 @@
                 MXPaginationResponse *roomMessages = [MXPaginationResponse modelFromJSON:[JSONData objectForKey:@"messages"]];
                 
                 [room handleMessages:roomMessages
-                        isLiveEvents:NO direction:NO];
+                           direction:MXEventDirectionBackwards isTimeOrdered:YES];
             }
             if ([JSONData objectForKey:@"state"])
             {
