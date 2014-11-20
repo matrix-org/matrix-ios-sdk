@@ -262,6 +262,18 @@
 }
 
 
+#pragma mark - Room operations
+- (void)join:(void (^)())complete
+     failure:(void (^)(NSError *error))failure
+{
+    [mxSession joinRoom:_state.room_id success:^(MXRoom *room) {
+        complete();
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
+}
+
+
 #pragma mark - Events listeners
 - (id)listenToEvents:(MXOnRoomEvent)onEvent
 {

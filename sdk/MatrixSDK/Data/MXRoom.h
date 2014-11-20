@@ -95,6 +95,17 @@ typedef void (^MXOnRoomEvent)(MXRoom *room, MXEvent *event, BOOL isLive, MXRoomS
                      failure:(void (^)(NSError *error))failure;
 
 
+#pragma mark - Room operations
+/**
+ Join this room where the user has been invited.
+ 
+ @param complete A block object called when the operation is complete.
+ @param failure A block object called when the operation fails.
+ */
+- (void)join:(void (^)())complete
+     failure:(void (^)(NSError *error))failure;
+
+
 #pragma mark - Events listeners
 /**
  Register a listener to events of this room.

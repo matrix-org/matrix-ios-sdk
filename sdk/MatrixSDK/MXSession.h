@@ -74,8 +74,20 @@
 
 - (void)close;
 
+/**
+ Join a room.
+ 
+ @param room_id the id of the room to join.
+ @param success A block object called when the operation succeeds. It provides the MXRoom 
+        instance of the joined room.
+ @param failure A block object called when the operation fails.
+ */
+- (void)joinRoom:(NSString*)room_id
+         success:(void (^)(MXRoom *room))success
+         failure:(void (^)(NSError *error))failure;
 
-#pragma mark - the user's rooms
+
+#pragma mark - The user's rooms
 /**
  Get the MXRoom instance of a room.
  

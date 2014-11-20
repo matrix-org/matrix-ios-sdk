@@ -185,8 +185,47 @@
     // @TODO: Cancel the pending eventsFromToken request
 }
 
+- (void)joinRoom:(NSString*)room_id
+         success:(void (^)(MXRoom *room))success
+         failure:(void (^)(NSError *error))failure
+{
+    
+    [matrixRestClient joinRoom:room_id success:^{
+        
+        [matrixRestClient initialSyncOfRoom:room_id withLimit:1 success:^(NSDictionary *JSONData) {
+            
+            MXRoom *room = [self getOrCreateRoom:JSONData[@"room_id"] withJSONData:JSONData];
+            
+            if ([JSONData objectForKey:@"messages"])
+            {
+                MXPaginationResponse *roomMessages = [MXPaginationResponse modelFromJSON:[JSONData objectForKey:@"messages"]];
+                
+                [room handleMessages:roomMessages
+                        isLiveEvents:NO direction:NO];
+            }
+            if ([JSONData objectForKey:@"state"])
+            {
+                [room handleStateEvents:JSONData[@"JSONData"]];
+            }
+            
+            // Manage presence provided by this API
+            for (NSDictionary *presenceDict in JSONData[@"presence"])
+            {
+                MXEvent *presenceEvent = [MXEvent modelFromJSON:presenceDict];
+                [self handlePresenceEvent:presenceEvent isLiveEvent:NO];
+            }
+            
+        } failure:^(NSError *error) {
+            failure(error);
+        }];
+        
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
+}
 
-#pragma mark - the user's rooms
+
+#pragma mark - The user's rooms
 - (MXRoom *)room:(NSString *)room_id
 {
     return [rooms objectForKey:room_id];
