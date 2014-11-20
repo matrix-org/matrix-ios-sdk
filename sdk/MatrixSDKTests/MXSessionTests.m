@@ -136,7 +136,7 @@
                                          kMXEventTypeStringRoomMessage,
                                          ]];
         
-        [mxSession listenToEvents:^(MXSession *mxSession2, MXEvent *event, BOOL isLive, id customObject) {
+        [mxSession listenToEvents:^(MXEvent *event, BOOL isLive, id customObject) {
             
             if (isLive)
             {
@@ -177,7 +177,7 @@
         // Listen to m.room.message only
         // We should not see events coming before (m.room.create, and all state events)
         [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage]
-                                            onEvent:^(MXSession *mxSession2, MXEvent *event, BOOL isLive, id customObject) {
+                                            onEvent:^(MXEvent *event, BOOL isLive, id customObject) {
             
             if (isLive)
             {
@@ -278,7 +278,7 @@
         
         // Listen to m.presence only
         [mxSession listenToEventsOfTypes:@[kMXEventTypeStringPresence]
-                                           onEvent:^(MXSession *mxSession, MXEvent *event, BOOL isLive, id customObject) {
+                                           onEvent:^(MXEvent *event, BOOL isLive, id customObject) {
                                                
                                                if (isLive)
                                                {

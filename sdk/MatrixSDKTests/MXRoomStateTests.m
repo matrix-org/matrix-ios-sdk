@@ -113,7 +113,7 @@
             XCTAssertNil(room.state.topic, @"There must be no room topic yet. Found: %@", room.state.topic);
             
             // Listen to live event. We should receive only one: a m.room.topic event
-            [room listenToEventsOfTypes:nil onEvent:^(MXRoom *room2, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+            [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, BOOL isLive, MXRoomState *roomState) {
                 
                 XCTAssertEqual(event.eventType, MXEventTypeRoomTopic);
                 
@@ -186,7 +186,7 @@
             XCTAssertNil(room.state.name, @"There must be no room name yet. Found: %@", room.state.name);
             
             // Listen to live event. We should receive only one: a m.room.name event
-            [room listenToEventsOfTypes:nil onEvent:^(MXRoom *room2, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+            [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, BOOL isLive, MXRoomState *roomState) {
                 
                 XCTAssertEqual(event.eventType, MXEventTypeRoomName);
                 
@@ -419,7 +419,7 @@
                 
                 __block MXRoom *newRoom;
                 
-                [mxSession listenToEvents:^(MXSession *mxSession2, MXEvent *event, BOOL isLive, id customObject) {
+                [mxSession listenToEvents:^(MXEvent *event, BOOL isLive, id customObject) {
                     
                     if ([event.roomId isEqualToString:room_id])
                     {

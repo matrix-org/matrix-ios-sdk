@@ -23,11 +23,12 @@
 /**
  Block called when an event of the registered types has been handled by the Matrix SDK.
  
- @param sender the object that handled the event (`MXSession` or `MXRoom` instance)
  @param event the new event.
  @param isLive YES if it is new event.
+ @param customObject additional contect for the event. In case of room event, customObject is a
+ RoomState instance.
  */
-typedef void (^MXOnEvent)(id sender, MXEvent *event, BOOL isLive, id customObject);
+typedef void (^MXOnEvent)(MXEvent *event, BOOL isLive, id customObject);
 
 /**
  The `MXEventListener` class stores information about a listener to MXEvents that

@@ -66,7 +66,7 @@
         mxSession = mxSession2;
 
         __block NSUInteger eventCount = 0;
-        [room listenToEventsOfTypes:mxSession.eventsFilterForMessages onEvent:^(MXRoom *room, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+        [room listenToEventsOfTypes:mxSession.eventsFilterForMessages onEvent:^(MXEvent *event, BOOL isLive, MXRoomState *roomState) {
             
             eventCount++;
         }];
@@ -92,7 +92,7 @@
         mxSession = mxSession2;
         
         __block NSUInteger eventCount = 0;
-        [room listenToEventsOfTypes:mxSession.eventsFilterForMessages onEvent:^(MXRoom *room, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+        [room listenToEventsOfTypes:mxSession.eventsFilterForMessages onEvent:^(MXEvent *event, BOOL isLive, MXRoomState *roomState) {
             
             eventCount++;
             
@@ -123,7 +123,7 @@
         mxSession = mxSession2;
         
         __block NSUInteger prev_ts = -1;
-        [room listenToEventsOfTypes:mxSession.eventsFilterForMessages onEvent:^(MXRoom *room, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+        [room listenToEventsOfTypes:mxSession.eventsFilterForMessages onEvent:^(MXEvent *event, BOOL isLive, MXRoomState *roomState) {
             
             XCTAssert(event.originServerTs, @"The event should have an attempt: %@", event);
             
@@ -154,7 +154,7 @@
         
         __block NSUInteger eventCount = 0;
         __block NSMutableArray *events = [NSMutableArray array];
-        [room listenToEventsOfTypes:nil onEvent:^(MXRoom *room, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+        [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, BOOL isLive, MXRoomState *roomState) {
             
             eventCount++;
             
@@ -181,7 +181,7 @@
 {
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         __block NSMutableArray *roomEvents = [NSMutableArray array];
-        [room listenToEventsOfTypes:nil onEvent:^(MXRoom *room, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+        [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, BOOL isLive, MXRoomState *roomState) {
             
             [roomEvents addObject:event];
         }];
@@ -195,7 +195,7 @@
             MXRoom *room2 = [[MXRoom alloc] initWithRoomId:room.state.room_id andMatrixSession:mxSession];
             
             __block NSMutableArray *room2Events = [NSMutableArray array];
-            [room2 listenToEventsOfTypes:nil onEvent:^(MXRoom *room, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+            [room2 listenToEventsOfTypes:nil onEvent:^(MXEvent *event, BOOL isLive, MXRoomState *roomState) {
                 
                 [room2Events addObject:event];
             }];
@@ -274,9 +274,8 @@
         __block NSString *messageEventID;
         
         // Register the listener
-        [room listenToEvents:^(MXRoom *room2, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+        [room listenToEvents:^(MXEvent *event, BOOL isLive, MXRoomState *roomState) {
             
-            XCTAssertEqual(room, room2);
             XCTAssertTrue(isLive);
             
             XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
@@ -313,9 +312,8 @@
         
         // Register the listener for m.room.message.only
         [room listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage]
-                                          onEvent:^(MXRoom *room2, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+                                          onEvent:^(MXEvent *event, BOOL isLive, MXRoomState *roomState) {
             
-            XCTAssertEqual(room, room2);
             XCTAssertTrue(isLive);
             
             XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);

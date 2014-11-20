@@ -107,7 +107,7 @@
                 MXRoom *room = [mxSession room:room_id];
                 
                 __block NSUInteger eventCount = 0;
-                [room listenToEventsOfTypes:nil onEvent:^(MXRoom *room, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+                [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, BOOL isLive, MXRoomState *roomState) {
                     
                     // Check each expected event and their roomState contect
                     // Events are received in the reverse order
@@ -191,7 +191,7 @@
             MXRoom *room = [mxSession room:room_id];
             
             __block NSUInteger eventCount = 0;
-            [room listenToEventsOfTypes:nil onEvent:^(MXRoom *room, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+            [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, BOOL isLive, MXRoomState *roomState) {
                 
                 // Check each expected event and their roomState contect
                 // Events are live. Then comes in order
@@ -364,7 +364,7 @@
                 MXRoom *room = [mxSession room:room_id];
                 
                 __block NSUInteger eventCount = 0;
-                [room listenToEventsOfTypes:nil onEvent:^(MXRoom *room, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+                [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, BOOL isLive, MXRoomState *roomState) {
                     
                     MXRoomMember *beforeEventAliceMember = [roomState memberWithUserId:aliceRestClient.credentials.userId];
                     MXRoomMember *aliceMember = [room.state memberWithUserId:aliceRestClient.credentials.userId];
@@ -542,7 +542,7 @@
             MXRoom *room = [mxSession room:room_id];
             
             __block NSUInteger eventCount = 0;
-            [room listenToEventsOfTypes:nil onEvent:^(MXRoom *room, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+            [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, BOOL isLive, MXRoomState *roomState) {
                 
                 MXRoomMember *beforeEventAliceMember = [roomState memberWithUserId:sharedData.aliceCredentials.userId];
                 MXRoomMember *aliceMember = [room.state memberWithUserId:sharedData.aliceCredentials.userId];

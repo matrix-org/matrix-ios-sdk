@@ -57,7 +57,7 @@
     // If YES, call the listener block
     if (match)
     {
-        _listenerBlock(_sender, event, isLiveEvent, customObject);
+        _listenerBlock(event, isLiveEvent, customObject);
     }
 }
 

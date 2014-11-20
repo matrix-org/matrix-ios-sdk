@@ -45,8 +45,8 @@
     if (![roomEventListeners objectForKey:room.state.room_id])
     {
         roomEventListeners[room.state.room_id] =
-        [room listenToEventsOfTypes:self.eventTypes onEvent:^(MXRoom *room, MXEvent *event, BOOL isLive, MXRoomState *roomState) {
-            self.listenerBlock(self.sender, event, isLive, roomState);
+        [room listenToEventsOfTypes:self.eventTypes onEvent:^(MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+            self.listenerBlock(event, isLive, roomState);
         }];
     }
 
