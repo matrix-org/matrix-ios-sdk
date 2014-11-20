@@ -349,7 +349,37 @@
     }];
 }
 
-- (void)testRoomInitialSync
+- (void)testStateOfRoom
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+        
+        [bobRestClient stateOfRoom:room_id success:^(NSDictionary *JSONData) {
+            
+            XCTAssertNotNil(JSONData);
+            
+            XCTAssert([JSONData isKindOfClass:[NSArray class]]);
+            NSArray *states = JSONData;
+            XCTAssertGreaterThan(states.count, 0);
+            
+            // Check that all provided events are state events
+            for (NSDictionary *eventDict in states)
+            {
+                MXEvent *event = [MXEvent modelFromJSON:eventDict];
+                
+                XCTAssertNotNil(event);
+                XCTAssert(event.isState);
+            }
+            
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testInitialSyncOfRoom
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
         
@@ -382,7 +412,6 @@
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
-        
     }];
 }
 

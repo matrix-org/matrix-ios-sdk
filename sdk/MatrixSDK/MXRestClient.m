@@ -525,6 +525,25 @@ MXAuthAction;
      }];
 }
 
+- (void)stateOfRoom:(NSString*)room_id
+            success:(void (^)(NSDictionary *JSONData))success
+            failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/state", room_id];
+    
+    [httpClient requestWithMethod:@"GET"
+                             path:path
+                       parameters:nil
+                          success:^(NSDictionary *JSONResponse)
+     {
+         success(JSONResponse);
+     }
+                          failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
 - (void)initialSyncOfRoom:(NSString*)room_id
                 withLimit:(NSInteger)limit
                   success:(void (^)(NSDictionary *JSONData))success
