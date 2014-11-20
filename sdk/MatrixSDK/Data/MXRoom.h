@@ -30,10 +30,10 @@
  This is a specialisation of the `MXOnEvent` block.
  
  @param event the new event.
- @param isLive YES if it is new event.
+ @param direction the origin of the event.
  @param roomState the room state right before the event
  */
-typedef void (^MXOnRoomEvent)(MXEvent *event, BOOL isLive, MXRoomState *roomState);
+typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoomState *roomState);
 
 /**
  `MXRoom` is the class

@@ -61,7 +61,7 @@
             
             
             __block NSUInteger eventCount = 0;
-            [room listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, BOOL isLive, MXRoomState *roomState) {
+            [room listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
                 
                 eventCount++;
                 XCTAssertFalse(event.isState, "Room messages are not states. message: %@", event);

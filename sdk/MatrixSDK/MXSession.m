@@ -93,7 +93,7 @@
         for (NSDictionary *presenceDict in JSONData[@"presence"])
         {
             MXEvent *presenceEvent = [MXEvent modelFromJSON:presenceDict];
-            [self handlePresenceEvent:presenceEvent isLiveEvent:NO];
+            [self handlePresenceEvent:presenceEvent direction:MXEventDirectionBackwards];
         }
         
         // We have data, the SDK user can start using it
@@ -147,7 +147,7 @@
         {
             case MXEventTypePresence:
             {
-                [self handlePresenceEvent:event isLiveEvent:YES];
+                [self handlePresenceEvent:event direction:MXEventDirectionForwards];
                 break;
             }
                 
@@ -163,7 +163,7 @@
     }
 }
 
-- (void) handlePresenceEvent:(MXEvent *)event isLiveEvent:(BOOL)isLiveEvent
+- (void) handlePresenceEvent:(MXEvent *)event direction:(MXEventDirection)direction
 {
     // Update MXUser with presence data
     NSString *userId = event.userId;
@@ -173,7 +173,7 @@
         [user updateWithPresenceEvent:event];
     }
     
-    [self notifyListeners:event isLiveEvent:isLiveEvent];
+    [self notifyListeners:event direction:direction];
 }
 
 - (void)close
@@ -212,7 +212,7 @@
             for (NSDictionary *presenceDict in JSONData[@"presence"])
             {
                 MXEvent *presenceEvent = [MXEvent modelFromJSON:presenceDict];
-                [self handlePresenceEvent:presenceEvent isLiveEvent:NO];
+                [self handlePresenceEvent:presenceEvent direction:MXEventDirectionBackwards];
             }
             
         } failure:^(NSError *error) {
@@ -354,12 +354,12 @@
     }
 }
 
-- (void)notifyListeners:(MXEvent*)event isLiveEvent:(BOOL)isLiveEvent
+- (void)notifyListeners:(MXEvent*)event direction:(MXEventDirection)direction
 {
     // Notify all listeners
     for (MXEventListener *listener in globalEventListeners)
     {
-        [listener notify:event isLiveEvent:isLiveEvent andCustomObject:nil];
+        [listener notify:event direction:direction andCustomObject:nil];
     }
 }
 

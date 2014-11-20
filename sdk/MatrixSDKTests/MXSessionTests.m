@@ -136,9 +136,9 @@
                                          kMXEventTypeStringRoomMessage,
                                          ]];
         
-        [mxSession listenToEvents:^(MXEvent *event, BOOL isLive, id customObject) {
+        [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
             
-            if (isLive)
+            if (MXEventDirectionForwards == direction)
             {
                 [expectedEvents removeObject:event.type];
                 
@@ -177,9 +177,9 @@
         // Listen to m.room.message only
         // We should not see events coming before (m.room.create, and all state events)
         [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage]
-                                            onEvent:^(MXEvent *event, BOOL isLive, id customObject) {
+                                            onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
             
-            if (isLive)
+            if (MXEventDirectionForwards == direction)
             {
                 XCTAssertEqual(event.eventType, MXEventTypeRoomMessage, @"We must receive only m.room.message event - Event: %@", event);
                 
@@ -278,9 +278,9 @@
         
         // Listen to m.presence only
         [mxSession listenToEventsOfTypes:@[kMXEventTypeStringPresence]
-                                           onEvent:^(MXEvent *event, BOOL isLive, id customObject) {
+                                           onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
                                                
-                                               if (isLive)
+                                               if (MXEventDirectionForwards == direction)
                                                {
                                                    XCTAssertEqual(event.eventType, MXEventTypePresence, @"We must receive only m.presence - Event: %@", event);
                                                    

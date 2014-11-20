@@ -80,7 +80,7 @@
                                                                     @"state_key": mxSession.matrixRestClient.credentials.userId
                                                                     }];
             
-            [self handleStateEvent:fakeMembershipEvent isLiveEvent:YES];
+            [self handleStateEvent:fakeMembershipEvent direction:MXEventDirectionForwards];
         }
 
     }
@@ -107,7 +107,7 @@
     {
         // [MXRestClient messages] returns messages in reverse chronological order
         for (MXEvent *event in events) {
-            [self handleMessage:event isLiveEvent:NO pagFrom:roomMessages.start];
+            [self handleMessage:event direction:MXEventDirectionBackwards pagFrom:roomMessages.start];
         }
         
         // Store how far back we've paginated
@@ -118,7 +118,7 @@
         for (NSInteger i = events.count - 1; i >= 0; i--)
         {
             MXEvent *event = events[i];
-            [self handleMessage:event isLiveEvent:NO pagFrom:roomMessages.end];
+            [self handleMessage:event direction:MXEventDirectionBackwards pagFrom:roomMessages.end];
         }
         
         // Store where to start pagination
@@ -126,17 +126,17 @@
     }
 }
 
-- (void)handleMessage:(MXEvent*)event isLiveEvent:(BOOL)isLiveEvent pagFrom:(NSString*)pagFrom
+- (void)handleMessage:(MXEvent*)event direction:(MXEventDirection)direction pagFrom:(NSString*)pagFrom
 {
     if (event.isState)
     {
-        [self handleStateEvent:event isLiveEvent:NO];
+        [self handleStateEvent:event direction:MXEventDirectionBackwards];
     }
     
     // Put only expected messages into `messages`
     if (NSNotFound != [mxSession.eventsFilterForMessages indexOfObject:event.type])
     {
-        if (isLiveEvent)
+        if (direction)
         {
             [messages addObject:event];
         }
@@ -148,9 +148,9 @@
 
     // Notify listener only for past events here
     // Live events are already notified from handleLiveEvent
-    if (NO == isLiveEvent)
+    if (MXEventDirectionBackwards == direction)
     {
-        [self notifyListeners:event isLiveEvent:NO];
+        [self notifyListeners:event direction:MXEventDirectionBackwards];
     }
 }
 
@@ -161,16 +161,16 @@
     NSArray *events = [MXEvent modelsFromJSON:roomStateEvents];
     
     for (MXEvent *event in events) {
-        [self handleStateEvent:event isLiveEvent:YES];
+        [self handleStateEvent:event direction:MXEventDirectionForwards];
 
         // Notify state events coming from initialSync
-        [self notifyListeners:event isLiveEvent:NO];
+        [self notifyListeners:event direction:MXEventDirectionBackwards];
     }
 }
 
-- (void)handleStateEvent:(MXEvent*)event isLiveEvent:(BOOL)isLiveEvent
+- (void)handleStateEvent:(MXEvent*)event direction:(MXEventDirection)direction
 {
-    if (isLiveEvent)
+    if (MXEventDirectionForwards == direction)
     {
         switch (event.eventType)
         {
@@ -190,7 +190,7 @@
 
 
     // Update the room state
-    if (isLiveEvent)
+    if (MXEventDirectionForwards == direction)
     {
         [_state handleStateEvent:event];
     }
@@ -206,14 +206,14 @@
 {
     if (event.isState)
     {
-        [self handleStateEvent:event isLiveEvent:YES];
+        [self handleStateEvent:event direction:MXEventDirectionForwards];
     }
 
     // Process the event
-    [self handleMessage:event isLiveEvent:YES pagFrom:nil];
+    [self handleMessage:event direction:MXEventDirectionForwards pagFrom:nil];
 
     // And notify the listeners
-    [self notifyListeners:event isLiveEvent:YES];
+    [self notifyListeners:event direction:MXEventDirectionForwards];
 }
 
 #pragma mark - Back pagination
@@ -299,11 +299,11 @@
     [eventListeners removeAllObjects];
 }
 
-- (void)notifyListeners:(MXEvent*)event isLiveEvent:(BOOL)isLiveEvent
+- (void)notifyListeners:(MXEvent*)event direction:(MXEventDirection)direction
 {
     MXRoomState *stateBeforeThisEvent;
     
-    if (NO == isLiveEvent)
+    if (MXEventDirectionBackwards == direction)
     {
         stateBeforeThisEvent = backState;
     }
@@ -322,7 +322,7 @@
     // notifify all listeners
     for (MXEventListener *listener in eventListeners)
     {
-        [listener notify:event isLiveEvent:isLiveEvent andCustomObject:stateBeforeThisEvent];
+        [listener notify:event direction:direction andCustomObject:stateBeforeThisEvent];
     }
 }
 

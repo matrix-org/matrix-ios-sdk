@@ -26,11 +26,11 @@
  This is a specialisation of the `MXOnEvent` block.
  
  @param event the new event.
- @param isLive YES if it is new event.
+ @param direction the origin of the event.
  @param customObject additional contect for the event. In case of room event, customObject is a
                      RoomState instance.
  */
-typedef void (^MXOnSessionEvent)(MXEvent *event, BOOL isLive, id customObject);
+typedef void (^MXOnSessionEvent)(MXEvent *event, MXEventDirection direction, id customObject);
 
 /**
  The `MXSessionEventListener` class stores information about a listener to MXSession events

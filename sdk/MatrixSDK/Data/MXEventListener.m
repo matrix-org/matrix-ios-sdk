@@ -37,7 +37,7 @@
     return self;
 }
 
-- (void)notify:(MXEvent*)event isLiveEvent:(BOOL)isLiveEvent andCustomObject:(id)customObject
+- (void)notify:(MXEvent*)event direction:(MXEventDirection)direction andCustomObject:(id)customObject
 {
     // Check if the event match with eventTypes
     BOOL match = NO;
@@ -57,7 +57,7 @@
     // If YES, call the listener block
     if (match)
     {
-        _listenerBlock(event, isLiveEvent, customObject);
+        _listenerBlock(event, direction, customObject);
     }
 }
 
