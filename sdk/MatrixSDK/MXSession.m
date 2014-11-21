@@ -238,6 +238,8 @@
         // Remove the room from the list
         [rooms removeObjectForKey:room_id];
         
+        success();
+        
     } failure:^(NSError *error) {
         failure(error);
     }];

@@ -338,4 +338,30 @@
         
     }];
 }
+
+- (void)testLeave
+{
+    
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+        
+        mxSession = mxSession2;
+        
+        NSString *room_id = room.state.room_id;
+        
+        // This implicitly tests MXSession leaveRoom
+        [room leave:^{
+            
+            MXRoom *room2 = [mxSession room:room_id];
+            
+            XCTAssertNil(room2, @"The room must be no more part of the MXSession rooms");
+            
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 @end
