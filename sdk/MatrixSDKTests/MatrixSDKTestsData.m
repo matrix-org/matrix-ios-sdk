@@ -165,6 +165,22 @@ NSString * const kMXTestsAliceAvatarURL = @"http://matrix.org/matrix.png";
     }];
 }
 
+- (void)doMXRestClientTestWithBobAndAPublicRoom:(XCTestCase*)testCase
+                                    readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* room_id, XCTestExpectation *expectation))readyToTest
+{
+    [self doMXRestClientTestWithBob:testCase
+                        readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+                            // Create a random room to use
+                            [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPublic room_alias_name:nil topic:nil success:^(MXCreateRoomResponse *response) {
+                                
+                                readyToTest(bobRestClient, response.roomId, expectation);
+                                
+                            } failure:^(NSError *error) {
+                                NSAssert(NO, @"Cannot create a room - error: %@", error);
+                            }];
+                        }];
+}
+
 - (void)doMXRestClientTestWithBobAndThePublicRoom:(XCTestCase*)testCase
                                    readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* room_id, XCTestExpectation *expectation))readyToTest
 {

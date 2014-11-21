@@ -46,7 +46,10 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
 
 // Prepare a test with a a MXRestClient for mxBob so that we can make test on it
 - (void)doMXRestClientTestWithBobAndARoom:(XCTestCase*)testCase
-                           readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* room_id, XCTestExpectation *expectation))readyToTest;
+                              readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* room_id, XCTestExpectation *expectation))readyToTest;
+
+- (void)doMXRestClientTestWithBobAndAPublicRoom:(XCTestCase*)testCase
+                              readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* room_id, XCTestExpectation *expectation))readyToTest;
 
 - (void)doMXRestClientTestWithBobAndThePublicRoom:(XCTestCase*)testCase
                            readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* room_id, XCTestExpectation *expectation))readyToTest;

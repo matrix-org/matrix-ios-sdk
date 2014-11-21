@@ -207,15 +207,17 @@
             // Manage room state
             if ([JSONData objectForKey:@"state"])
             {
-                [room handleStateEvents:JSONData[@"JSONData"] direction:MXEventDirectionSync];
+                [room handleStateEvents:JSONData[@"state"] direction:MXEventDirectionSync];
             }
             
             // Manage presence provided by this API
             for (NSDictionary *presenceDict in JSONData[@"presence"])
             {
                 MXEvent *presenceEvent = [MXEvent modelFromJSON:presenceDict];
-                [self handlePresenceEvent:presenceEvent direction:MXEventDirectionBackwards];
+                [self handlePresenceEvent:presenceEvent direction:MXEventDirectionSync];
             }
+            
+            success(room);
             
         } failure:^(NSError *error) {
             failure(error);

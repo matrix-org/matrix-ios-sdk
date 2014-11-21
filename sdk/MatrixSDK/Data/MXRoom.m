@@ -260,11 +260,11 @@
 
 
 #pragma mark - Room operations
-- (void)join:(void (^)())complete
+- (void)join:(void (^)())success
      failure:(void (^)(NSError *error))failure
 {
     [mxSession joinRoom:_state.room_id success:^(MXRoom *room) {
-        complete();
+        success();
     } failure:^(NSError *error) {
         failure(error);
     }];

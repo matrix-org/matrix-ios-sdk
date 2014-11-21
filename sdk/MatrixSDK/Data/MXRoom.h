@@ -98,10 +98,10 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 /**
  Join this room where the user has been invited.
  
- @param complete A block object called when the operation is complete.
+ @param success A block object called when the operation is complete.
  @param failure A block object called when the operation fails.
  */
-- (void)join:(void (^)())complete
+- (void)join:(void (^)())success
      failure:(void (^)(NSError *error))failure;
 
 
