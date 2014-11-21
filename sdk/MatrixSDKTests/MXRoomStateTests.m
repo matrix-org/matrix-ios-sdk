@@ -406,6 +406,12 @@
                     XCTAssertEqual(alice.membership, MXMembershipInvite);
                     XCTAssert([alice.originUserId isEqualToString:bobRestClient.credentials.userId], @"Wrong inviter: %@", alice.originUserId);
                     
+                    // The last message should be an invite m.room.member
+                    // Its time is -1 because this event is a fake one based on information provided by the home server
+                    // and the timestamps is not part of them
+                    XCTAssertEqual(newRoom.lastMessage.eventType, MXEventTypeRoomMember, @"The last message should be an invite m.room.member");
+                    XCTAssertEqual(newRoom.lastMessage.originServerTs, kMXUndefinedTimestamp);
+                    
                     [expectation fulfill];
                     
                 } failure:^(NSError *error) {

@@ -77,7 +77,8 @@
                                                                             @"membership": kMXMembershipStringInvite
                                                                             },
                                                                     @"user_id": JSONData[@"inviter"],
-                                                                    @"state_key": mxSession.matrixRestClient.credentials.userId
+                                                                    @"state_key": mxSession.matrixRestClient.credentials.userId,
+                                                                    @"origin_server_ts": [NSNumber numberWithLongLong:kMXUndefinedTimestamp]
                                                                     }];
             
             [self handleMessage:fakeMembershipEvent direction:MXEventDirectionSync pagFrom:@"END"];

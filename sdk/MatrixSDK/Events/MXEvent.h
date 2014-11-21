@@ -99,6 +99,10 @@ FOUNDATION_EXPORT NSString *const kMXMembershipStringLeave;
 FOUNDATION_EXPORT NSString *const kMXMembershipStringBan;
 
 
+// Timestamp value when the information is not available or not provided by the home server
+FOUNDATION_EXPORT uint64_t const kMXUndefinedTimestamp;
+
+
 /**
  `MXEvent` is the generic model of events received from the home server.
  It contains all possible keys an event can contain (according to the 
