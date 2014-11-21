@@ -23,8 +23,14 @@
 {
     MXSession *mxSession;
     
-    // The events downloaded so far
+    // The events downloaded so far.
+    // The order is chronological: the first item is the oldest message.
     NSMutableArray *messages;
+    
+    // The last message of the room.
+    // @TODO: this member should be temporary. It is used while `messages` is reset
+    //        at each resetBackState call.
+    MXEvent *lastMessage;
 
     // The token used to know from where to paginate back.
     NSString *pagEarliestToken;
@@ -92,7 +98,8 @@
 
 - (MXEvent *)lastMessage
 {
-    return messages.lastObject;
+    //return messages.lastObject;
+    return lastMessage;
 }
 
 
@@ -137,13 +144,14 @@
     // Put only expected messages into `messages`
     if (NSNotFound != [mxSession.eventsFilterForMessages indexOfObject:event.type])
     {
-        if (direction)
+        if (MXEventDirectionBackwards == direction)
         {
-            [messages addObject:event];
+            [messages insertObject:event atIndex:0];
         }
         else
         {
-            [messages insertObject:event atIndex:0];
+            [messages addObject:event];
+            lastMessage = event;
         }
     }
 
@@ -177,7 +185,6 @@
                 // Update MXUser data
                 MXUser *user = [mxSession getOrCreateUser:event.userId];
                 [user updateWithRoomMemberEvent:event];
-                
                 break;
             }
                 

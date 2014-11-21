@@ -265,6 +265,31 @@
     }];
 }
 
+- (void)testLastMessageAfterPaginate
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+        
+        mxSession = mxSession2;
+        
+        MXEvent *lastMessage = room.lastMessage;
+        XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
+        
+        [room resetBackState];
+        XCTAssertEqual(room.lastMessage, lastMessage, @"The last message should stay the same");
+        
+        [room paginateBackMessages:100 complete:^() {
+            
+            XCTAssertEqual(room.lastMessage, lastMessage, @"The last message should stay the same");
+            
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 - (void)testListenerForAllLiveEvents
 {
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
