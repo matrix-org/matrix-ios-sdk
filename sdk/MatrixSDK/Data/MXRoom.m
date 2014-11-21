@@ -148,7 +148,7 @@
 
     // Notify listener only for past events here
     // Live events are already notified from handleLiveEvent
-    if (MXEventDirectionBackwards == direction)
+    if (MXEventDirectionForwards != direction)
     {
         [self notifyListeners:event direction:direction];
     }

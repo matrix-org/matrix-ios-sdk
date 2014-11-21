@@ -204,6 +204,36 @@
     }];
 }
 
+- (void)testListenerForSyncEvents
+{
+    [[MatrixSDKTestsData sharedData]doMXRestClientTestWihBobAndSeveralRoomsAndMessages:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+        
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        
+        __block NSUInteger eventCount = 0;
+        
+        // Listen to events received during rooms state sync
+        [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
+                                     
+                                     eventCount++;
+                                     
+                                     XCTAssertEqual(direction, MXEventDirectionSync);
+                                     
+                                 }];
+        
+        
+        // Create a room with messages in parallel
+        [mxSession start:^{
+            
+            XCTAssertGreaterThan(eventCount, 0);
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
 - (void)testPresenceLastActiveAgo
 {
     // Make sure Alice and Bob have activities
@@ -315,7 +345,6 @@
              NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
          }];
     }];
-    
 }
 
 @end
