@@ -80,7 +80,7 @@
                                                                     @"state_key": mxSession.matrixRestClient.credentials.userId
                                                                     }];
             
-            [self handleStateEvent:fakeMembershipEvent direction:MXEventDirectionForwards];
+            [self handleMessage:fakeMembershipEvent direction:MXEventDirectionSync pagFrom:@"END"];
         }
 
     }
