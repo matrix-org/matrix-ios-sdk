@@ -81,11 +81,11 @@
                  MXPaginationResponse *roomMessages = [MXPaginationResponse modelFromJSON:[roomDict objectForKey:@"messages"]];
                  
                  [room handleMessages:roomMessages
-                            direction:MXEventDirectionBackwards isTimeOrdered:YES];
+                            direction:MXEventDirectionSync isTimeOrdered:YES];
              }
              if ([roomDict objectForKey:@"state"])
              {
-                 [room handleStateEvents:roomDict[@"state"]];
+                 [room handleStateEvents:roomDict[@"state"] direction:MXEventDirectionSync];
              }
         }
         
@@ -93,7 +93,7 @@
         for (NSDictionary *presenceDict in JSONData[@"presence"])
         {
             MXEvent *presenceEvent = [MXEvent modelFromJSON:presenceDict];
-            [self handlePresenceEvent:presenceEvent direction:MXEventDirectionBackwards];
+            [self handlePresenceEvent:presenceEvent direction:MXEventDirectionSync];
         }
         
         // We have data, the SDK user can start using it
@@ -196,16 +196,18 @@
             
             MXRoom *room = [self getOrCreateRoom:JSONData[@"room_id"] withJSONData:JSONData];
             
+            // Manage room messages
             if ([JSONData objectForKey:@"messages"])
             {
                 MXPaginationResponse *roomMessages = [MXPaginationResponse modelFromJSON:[JSONData objectForKey:@"messages"]];
                 
-                [room handleMessages:roomMessages
-                           direction:MXEventDirectionBackwards isTimeOrdered:YES];
+                [room handleMessages:roomMessages direction:MXEventDirectionSync isTimeOrdered:YES];
             }
+            
+            // Manage room state
             if ([JSONData objectForKey:@"state"])
             {
-                [room handleStateEvents:JSONData[@"JSONData"]];
+                [room handleStateEvents:JSONData[@"JSONData"] direction:MXEventDirectionSync];
             }
             
             // Manage presence provided by this API

@@ -64,7 +64,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
              direction:(MXEventDirection)direction
          isTimeOrdered:(BOOL)isTimeOrdered;
 
-- (void)handleStateEvents:(NSArray*)roomStateEvents;
+- (void)handleStateEvents:(NSArray*)roomStateEvents direction:(MXEventDirection)direction;
 
 /**
  Handle an event (message or state) that comes from the events streaming.

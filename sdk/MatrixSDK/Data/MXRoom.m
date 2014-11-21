@@ -107,7 +107,7 @@
     {
         // [MXRestClient messages] returns messages in reverse chronological order
         for (MXEvent *event in events) {
-            [self handleMessage:event direction:MXEventDirectionBackwards pagFrom:roomMessages.start];
+            [self handleMessage:event direction:direction pagFrom:roomMessages.start];
         }
         
         // Store how far back we've paginated
@@ -118,7 +118,7 @@
         for (NSInteger i = events.count - 1; i >= 0; i--)
         {
             MXEvent *event = events[i];
-            [self handleMessage:event direction:MXEventDirectionBackwards pagFrom:roomMessages.end];
+            [self handleMessage:event direction:direction pagFrom:roomMessages.end];
         }
         
         // Store where to start pagination
@@ -130,7 +130,7 @@
 {
     if (event.isState)
     {
-        [self handleStateEvent:event direction:MXEventDirectionBackwards];
+        [self handleStateEvent:event direction:direction];
     }
     
     // Put only expected messages into `messages`
@@ -150,21 +150,18 @@
     // Live events are already notified from handleLiveEvent
     if (MXEventDirectionBackwards == direction)
     {
-        [self notifyListeners:event direction:MXEventDirectionBackwards];
+        [self notifyListeners:event direction:direction];
     }
 }
 
 
 #pragma mark - State events handling
-- (void)handleStateEvents:(NSArray*)roomStateEvents
+- (void)handleStateEvents:(NSArray*)roomStateEvents direction:(MXEventDirection)direction
 {
     NSArray *events = [MXEvent modelsFromJSON:roomStateEvents];
     
     for (MXEvent *event in events) {
-        [self handleStateEvent:event direction:MXEventDirectionForwards];
-
-        // Notify state events coming from initialSync
-        [self notifyListeners:event direction:MXEventDirectionBackwards];
+        [self handleStateEvent:event direction:direction];
     }
 }
 
@@ -188,15 +185,15 @@
         }
     }
 
-
     // Update the room state
-    if (MXEventDirectionForwards == direction)
+    if (MXEventDirectionBackwards == direction)
     {
-        [_state handleStateEvent:event];
+        [backState handleStateEvent:event];
     }
     else
     {
-        [backState handleStateEvent:event];
+        // Forwards and initialSync events update the current state of the room
+        [_state handleStateEvent:event];
     }
 }
 
