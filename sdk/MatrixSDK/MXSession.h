@@ -86,6 +86,19 @@
          success:(void (^)(MXRoom *room))success
          failure:(void (^)(NSError *error))failure;
 
+/**
+ Leave a room.
+ 
+ The room will be removed from the rooms list.
+ 
+ @param room_id the id of the room to join.
+ @param success A block object called when the operation is complete.
+ @param failure A block object called when the operation fails.
+ */
+- (void)leaveRoom:(NSString*)room_id
+          success:(void (^)())success
+          failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - The user's rooms
 /**

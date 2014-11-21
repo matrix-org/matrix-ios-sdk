@@ -104,6 +104,15 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 - (void)join:(void (^)())success
      failure:(void (^)(NSError *error))failure;
 
+/**
+ Leave this room
+ 
+ @param success A block object called when the operation is complete.
+ @param failure A block object called when the operation fails.
+ */
+- (void)leave:(void (^)())success
+     failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - Events listeners
 /**

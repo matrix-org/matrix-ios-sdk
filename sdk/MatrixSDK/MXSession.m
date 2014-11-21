@@ -192,6 +192,7 @@
     
     [matrixRestClient joinRoom:room_id success:^{
         
+        // Do an initial to get state and messages in the room
         [matrixRestClient initialSyncOfRoom:room_id withLimit:1 success:^(NSDictionary *JSONData) {
             
             MXRoom *room = [self getOrCreateRoom:JSONData[@"room_id"] withJSONData:JSONData];
@@ -222,6 +223,20 @@
         } failure:^(NSError *error) {
             failure(error);
         }];
+        
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
+}
+
+- (void)leaveRoom:(NSString*)room_id
+          success:(void (^)())success
+          failure:(void (^)(NSError *error))failure
+{
+    [matrixRestClient leaveRoom:room_id success:^{
+        
+        // Remove the room from the list
+        [rooms removeObjectForKey:room_id];
         
     } failure:^(NSError *error) {
         failure(error);

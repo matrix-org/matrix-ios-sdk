@@ -271,6 +271,15 @@
     }];
 }
 
+- (void)leave:(void (^)())success
+      failure:(void (^)(NSError *error))failure
+{
+    [mxSession leaveRoom:_state.room_id success:^{
+        success();
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
+}
 
 #pragma mark - Events listeners
 - (id)listenToEvents:(MXOnRoomEvent)onEvent
