@@ -74,8 +74,33 @@
 
 - (void)close;
 
+/**
+ Join a room.
+ 
+ @param room_id the id of the room to join.
+ @param success A block object called when the operation succeeds. It provides the MXRoom 
+        instance of the joined room.
+ @param failure A block object called when the operation fails.
+ */
+- (void)joinRoom:(NSString*)room_id
+         success:(void (^)(MXRoom *room))success
+         failure:(void (^)(NSError *error))failure;
 
-#pragma mark - the user's rooms
+/**
+ Leave a room.
+ 
+ The room will be removed from the rooms list.
+ 
+ @param room_id the id of the room to join.
+ @param success A block object called when the operation is complete.
+ @param failure A block object called when the operation fails.
+ */
+- (void)leaveRoom:(NSString*)room_id
+          success:(void (^)())success
+          failure:(void (^)(NSError *error))failure;
+
+
+#pragma mark - The user's rooms
 /**
  Get the MXRoom instance of a room.
  
@@ -133,29 +158,34 @@
 
 #pragma mark - Global events listeners
 /**
- Register a global listener for some types of events.
+ Register a global listener to events related to the current session.
  
- The listener is able to receive all events including all events of all rooms.
+ The listener will receive all events including all events of all rooms.
  
- To get only notifications for events that modify the `recents` property,
- use mxSession.eventsFilterForMessages as types parameter.
- 
- @param types an array of event types strings (MXEventTypeString). nil to listen to all events.
  @param listenerBlock the block that will called once a new event has been handled.
  @return a reference to use to unregister the listener
  */
-- (id)registerEventListenerForTypes:(NSArray*)types block:(MXSessionEventListenerBlock)listenerBlock;
+- (id)listenToEvents:(MXOnSessionEvent)onEvent;
+
+/**
+ Register a global listener for some types of events.
+ 
+ @param types an array of event types strings (MXEventTypeString) to listen to.
+ @param listenerBlock the block that will called once a new event has been handled.
+ @return a reference to use to unregister the listener
+ */
+- (id)listenToEventsOfTypes:(NSArray*)types onEvent:(MXOnSessionEvent)onEvent;
 
 /**
  Unregister a listener.
  
  @param listener the reference of the listener to remove.
  */
-- (void)unregisterListener:(id)listener;
+- (void)removeListener:(id)listener;
 
 /**
  Unregister all listeners.
  */
-- (void)unregisterAllListeners;
+- (void)removeAllListeners;
 
 @end

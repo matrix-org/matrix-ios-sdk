@@ -165,6 +165,22 @@ NSString * const kMXTestsAliceAvatarURL = @"http://matrix.org/matrix.png";
     }];
 }
 
+- (void)doMXRestClientTestWithBobAndAPublicRoom:(XCTestCase*)testCase
+                                    readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* room_id, XCTestExpectation *expectation))readyToTest
+{
+    [self doMXRestClientTestWithBob:testCase
+                        readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+                            // Create a random room to use
+                            [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPublic room_alias_name:nil topic:nil success:^(MXCreateRoomResponse *response) {
+                                
+                                readyToTest(bobRestClient, response.roomId, expectation);
+                                
+                            } failure:^(NSError *error) {
+                                NSAssert(NO, @"Cannot create a room - error: %@", error);
+                            }];
+                        }];
+}
+
 - (void)doMXRestClientTestWithBobAndThePublicRoom:(XCTestCase*)testCase
                                    readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* room_id, XCTestExpectation *expectation))readyToTest
 {
@@ -328,6 +344,43 @@ NSString * const kMXTestsAliceAvatarURL = @"http://matrix.org/matrix.png";
             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
         }];
     }
+}
+
+
+- (void)doMXSessionTestWithBobAndARoomWithMessages:(XCTestCase*)testCase
+                                       readyToTest:(void (^)(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation))readyToTest
+{
+    [self doMXRestClientTestWithBobAndARoomWithMessages:testCase readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+        
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        
+        [mxSession start:^{
+            MXRoom *room = [mxSession room:room_id];
+            
+            readyToTest(mxSession, room, expectation);
+            
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
+- (void)doMXSessionTestWithBobAndThePublicRoom:(XCTestCase*)testCase
+                                   readyToTest:(void (^)(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation))readyToTest
+{
+    [self doMXRestClientTestWithBobAndThePublicRoom:testCase readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+        
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        
+        [mxSession start:^{
+            MXRoom *room = [mxSession room:room_id];
+            
+            readyToTest(mxSession, room, expectation);
+            
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
 }
 
 

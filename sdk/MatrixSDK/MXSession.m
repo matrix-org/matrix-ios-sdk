@@ -81,11 +81,11 @@
                  MXPaginationResponse *roomMessages = [MXPaginationResponse modelFromJSON:[roomDict objectForKey:@"messages"]];
                  
                  [room handleMessages:roomMessages
-                             isLiveEvents:NO direction:NO];
+                            direction:MXEventDirectionSync isTimeOrdered:YES];
              }
              if ([roomDict objectForKey:@"state"])
              {
-                 [room handleStateEvents:roomDict[@"state"]];
+                 [room handleStateEvents:roomDict[@"state"] direction:MXEventDirectionSync];
              }
         }
         
@@ -93,7 +93,7 @@
         for (NSDictionary *presenceDict in JSONData[@"presence"])
         {
             MXEvent *presenceEvent = [MXEvent modelFromJSON:presenceDict];
-            [self handlePresenceEvent:presenceEvent isLiveEvent:NO];
+            [self handlePresenceEvent:presenceEvent direction:MXEventDirectionSync];
         }
         
         // We have data, the SDK user can start using it
@@ -147,7 +147,7 @@
         {
             case MXEventTypePresence:
             {
-                [self handlePresenceEvent:event isLiveEvent:YES];
+                [self handlePresenceEvent:event direction:MXEventDirectionForwards];
                 break;
             }
                 
@@ -163,7 +163,7 @@
     }
 }
 
-- (void) handlePresenceEvent:(MXEvent *)event isLiveEvent:(BOOL)isLiveEvent
+- (void) handlePresenceEvent:(MXEvent *)event direction:(MXEventDirection)direction
 {
     // Update MXUser with presence data
     NSString *userId = event.userId;
@@ -173,20 +173,80 @@
         [user updateWithPresenceEvent:event];
     }
     
-    [self notifyListeners:event isLiveEvent:isLiveEvent];
+    [self notifyListeners:event direction:direction];
 }
 
 - (void)close
 {
     streamingActive = NO;
     
-    [self unregisterAllListeners];
+    [self removeAllListeners];
     
     // @TODO: Cancel the pending eventsFromToken request
 }
 
+- (void)joinRoom:(NSString*)room_id
+         success:(void (^)(MXRoom *room))success
+         failure:(void (^)(NSError *error))failure
+{
+    
+    [matrixRestClient joinRoom:room_id success:^{
+        
+        // Do an initial to get state and messages in the room
+        [matrixRestClient initialSyncOfRoom:room_id withLimit:1 success:^(NSDictionary *JSONData) {
+            
+            MXRoom *room = [self getOrCreateRoom:JSONData[@"room_id"] withJSONData:JSONData];
+            
+            // Manage room messages
+            if ([JSONData objectForKey:@"messages"])
+            {
+                MXPaginationResponse *roomMessages = [MXPaginationResponse modelFromJSON:[JSONData objectForKey:@"messages"]];
+                
+                [room handleMessages:roomMessages direction:MXEventDirectionSync isTimeOrdered:YES];
+            }
+            
+            // Manage room state
+            if ([JSONData objectForKey:@"state"])
+            {
+                [room handleStateEvents:JSONData[@"state"] direction:MXEventDirectionSync];
+            }
+            
+            // Manage presence provided by this API
+            for (NSDictionary *presenceDict in JSONData[@"presence"])
+            {
+                MXEvent *presenceEvent = [MXEvent modelFromJSON:presenceDict];
+                [self handlePresenceEvent:presenceEvent direction:MXEventDirectionSync];
+            }
+            
+            success(room);
+            
+        } failure:^(NSError *error) {
+            failure(error);
+        }];
+        
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
+}
 
-#pragma mark - the user's rooms
+- (void)leaveRoom:(NSString*)room_id
+          success:(void (^)())success
+          failure:(void (^)(NSError *error))failure
+{
+    [matrixRestClient leaveRoom:room_id success:^{
+        
+        // Remove the room from the list
+        [rooms removeObjectForKey:room_id];
+        
+        success();
+        
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
+}
+
+
+#pragma mark - The user's rooms
 - (MXRoom *)room:(NSString *)room_id
 {
     return [rooms objectForKey:room_id];
@@ -277,9 +337,14 @@
 
 
 #pragma mark - Global events listeners
-- (id)registerEventListenerForTypes:(NSArray*)types block:(MXSessionEventListenerBlock)listenerBlock
+- (id)listenToEvents:(MXOnSessionEvent)onEvent
 {
-    MXSessionEventListener *listener = [[MXSessionEventListener alloc] initWithSender:self andEventTypes:types andListenerBlock:listenerBlock];
+    return [self listenToEventsOfTypes:nil onEvent:onEvent];
+}
+
+- (id)listenToEventsOfTypes:(NSArray*)types onEvent:(MXOnSessionEvent)onEvent
+{
+    MXSessionEventListener *listener = [[MXSessionEventListener alloc] initWithSender:self andEventTypes:types andListenerBlock:onEvent];
     
     // This listener must be listen to all existing rooms
     for (MXRoom *room in rooms.allValues)
@@ -292,7 +357,7 @@
     return listener;
 }
 
-- (void)unregisterListener:(id)listenerId
+- (void)removeListener:(id)listenerId
 {
     // Clean the MXSessionEventListener
     MXSessionEventListener *listener = (MXSessionEventListener *)listenerId;
@@ -302,20 +367,20 @@
     [globalEventListeners removeObject:listener];
 }
 
-- (void)unregisterAllListeners
+- (void)removeAllListeners
 {
     for (MXSessionEventListener *listener in globalEventListeners)
     {
-        [self unregisterListener:listener];
+        [self removeListener:listener];
     }
 }
 
-- (void)notifyListeners:(MXEvent*)event isLiveEvent:(BOOL)isLiveEvent
+- (void)notifyListeners:(MXEvent*)event direction:(MXEventDirection)direction
 {
     // Notify all listeners
     for (MXEventListener *listener in globalEventListeners)
     {
-        [listener notify:event isLiveEvent:isLiveEvent];
+        [listener notify:event direction:direction andCustomObject:nil];
     }
 }
 

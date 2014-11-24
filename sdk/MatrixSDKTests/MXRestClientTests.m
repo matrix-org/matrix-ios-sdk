@@ -349,6 +349,72 @@
     }];
 }
 
+- (void)testStateOfRoom
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+        
+        [bobRestClient stateOfRoom:room_id success:^(NSDictionary *JSONData) {
+            
+            XCTAssertNotNil(JSONData);
+            
+            XCTAssert([JSONData isKindOfClass:[NSArray class]]);
+            NSArray *states = (NSArray*)JSONData;
+            XCTAssertGreaterThan(states.count, 0);
+            
+            // Check that all provided events are state events
+            for (NSDictionary *eventDict in states)
+            {
+                MXEvent *event = [MXEvent modelFromJSON:eventDict];
+                
+                XCTAssertNotNil(event);
+                XCTAssert(event.isState);
+            }
+            
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testInitialSyncOfRoom
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+        
+        [bobRestClient initialSyncOfRoom:room_id withLimit:3 success:^(NSDictionary *JSONData) {
+            
+            XCTAssertNotNil(JSONData);
+            XCTAssertNotNil(JSONData[@"room_id"]);
+            XCTAssertNotNil(JSONData[@"membership"]);
+            XCTAssertNotNil(JSONData[@"messages"]);
+            XCTAssertNotNil(JSONData[@"messages"][@"chunk"]);
+            XCTAssertNotNil(JSONData[@"state"]);
+            XCTAssertNotNil(JSONData[@"presence"]);
+            
+            XCTAssert([JSONData[@"room_id"] isEqualToString:room_id]);
+            XCTAssert([JSONData[@"membership"] isEqualToString:@"join"]);
+            
+            XCTAssert([JSONData[@"messages"][@"chunk"] isKindOfClass:[NSArray class]]);
+            NSArray *messages = JSONData[@"messages"][@"chunk"];
+            XCTAssertEqual(messages.count, 3);
+            
+            XCTAssert([JSONData[@"state"] isKindOfClass:[NSArray class]]);
+            
+            XCTAssert([JSONData[@"presence"] isKindOfClass:[NSArray class]]);
+            NSArray *presences = JSONData[@"presence"];
+            XCTAssertEqual(presences.count, 1);
+            
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 - (void)testMXRoomMemberEventContent
 {
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
@@ -496,7 +562,6 @@
 #pragma mark - Presence operations
 - (void)testUserPresence
 {
-    // @TODO: Currently, Synapse on the develop branch fails to handle the setPresence request
     // Make sure the test is valid once the bug is fixed server side
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
         
@@ -504,13 +569,16 @@
         
         // Set new presence
         __block NSString *newStatusMessage = @"Gone for dinner";
-        [aliceRestClient setPresence:kMXPresenceOnline andStatusMessage:newStatusMessage success:^{
+        [aliceRestClient setPresence:MXPresenceOnline andStatusMessage:newStatusMessage success:^{
             
             // Then retrieve it
-            [aliceRestClient2 presence:nil success:^(NSDictionary *JSONData) {
+            [aliceRestClient2 presence:nil success:^(MXPresenceResponse *presence) {
                 
-                //@TODO: 
-                //XCTAssertTrue([displayname isEqualToString:newDisplayName], @"Must retrieved the set string: %@ - %@", displayname, newDisplayName);
+                XCTAssertNotNil(presence);
+                XCTAssert([presence.presence isEqualToString:kMXPresenceOnline]);
+                XCTAssertEqual(presence.presenceStatus, MXPresenceOnline);
+                XCTAssert([presence.statusMsg isEqualToString:@"Gone for dinner"]);
+                
                 [expectation fulfill];
                 
             } failure:^(NSError *error) {

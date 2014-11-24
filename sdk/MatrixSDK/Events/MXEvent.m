@@ -45,6 +45,9 @@ NSString *const kMXMembershipStringLeave  = @"leave";
 NSString *const kMXMembershipStringBan    = @"ban";
 
 
+uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
+
+
 #pragma mark - MXEvent
 @implementation MXEvent
 

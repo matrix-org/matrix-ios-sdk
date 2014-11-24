@@ -14,16 +14,7 @@
  limitations under the License.
  */
 
-#import <Foundation/Foundation.h>
+#import "RecentsTableViewCell.h"
 
-#import "MXEvent.h"
-#import "MXJSONModels.h"
-
-@interface MXTools : NSObject
-
-+ (MXMembership)membership:(MXMembershipString)membershipString;
-
-+ (MXPresence)presence:(MXPresenceString)presenceString;
-+ (MXPresenceString)presenceString:(MXPresence)presence;
-
+@implementation RecentsTableViewCell
 @end

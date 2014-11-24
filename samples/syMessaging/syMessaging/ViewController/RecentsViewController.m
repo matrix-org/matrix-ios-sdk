@@ -17,23 +17,19 @@
 #import "RecentsViewController.h"
 #import "RoomViewController.h"
 
+#import "RecentsTableViewCell.h"
+
 #import "AppDelegate.h"
 #import "MatrixHandler.h"
-
-@interface RecentsTableViewCell : UITableViewCell
-
-@property (weak, nonatomic) IBOutlet UILabel *roomTitle;
-@property (weak, nonatomic) IBOutlet UILabel *lastEventDescription;
-@property (weak, nonatomic) IBOutlet UILabel *recentDate;
-
-@end
-
-@implementation RecentsTableViewCell
-@end
 
 @interface RecentsViewController () {
     NSMutableArray  *recents;
     id               recentsListener;
+    
+    // Date formatter
+    NSDateFormatter *dateFormatter;
+    
+    RoomViewController *currentRoomViewController;
 }
 @property (strong, nonatomic) IBOutlet UIActivityIndicatorView *activityIndicator;
 
@@ -64,15 +60,29 @@
     
     // Initialisation
     recents = nil;
+    
+    NSString *dateFormat =  @"MMM dd HH:mm";
+    dateFormatter = [[NSDateFormatter alloc] init];
+    [dateFormatter setLocale:[[NSLocale alloc] initWithLocaleIdentifier:[[[NSBundle mainBundle] preferredLocalizations] objectAtIndex:0]]];
+    [dateFormatter setFormatterBehavior:NSDateFormatterBehavior10_4];
+    [dateFormatter setTimeStyle:NSDateFormatterNoStyle];
+    [dateFormatter setDateFormat:dateFormat];
 }
 
 - (void)dealloc {
+    if (currentRoomViewController) {
+        currentRoomViewController.roomId = nil;
+    }
     if (recentsListener) {
-        [[MatrixHandler sharedHandler].mxSession unregisterListener:recentsListener];
+        [[MatrixHandler sharedHandler].mxSession removeListener:recentsListener];
         recentsListener = nil;
     }
     recents = nil;
     _preSelectedRoomId = nil;
+    
+    if (dateFormatter) {
+        dateFormatter = nil;
+    }
 }
 
 - (void)didReceiveMemoryWarning {
@@ -95,7 +105,7 @@
     [self setEditing:NO];
     
     if (recentsListener) {
-        [[MatrixHandler sharedHandler].mxSession unregisterListener:recentsListener];
+        [[MatrixHandler sharedHandler].mxSession removeListener:recentsListener];
         recentsListener = nil;
     }
     
@@ -148,7 +158,7 @@
     
     // Remove potential listener
     if (recentsListener && mxHandler.mxSession) {
-        [mxHandler.mxSession unregisterListener:recentsListener];
+        [mxHandler.mxSession removeListener:recentsListener];
         recentsListener = nil;
     }
     
@@ -159,9 +169,9 @@
         if (mxHandler.mxSession) {
             recents = [NSMutableArray arrayWithArray:mxHandler.mxSession.recents];
             // Register recent listener
-            recentsListener = [mxHandler.mxSession registerEventListenerForTypes:mxHandler.mxSession.eventsFilterForMessages block:^(MXSession *matrixSession, MXEvent *event, BOOL isLive) {
+            recentsListener = [mxHandler.mxSession listenToEventsOfTypes:mxHandler.mxSession.eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
                 // consider only live event
-                if (isLive) {
+                if (direction == MXEventDirectionForwards) {
                     // Refresh the whole recents list
                     recents = [NSMutableArray arrayWithArray:mxHandler.mxSession.recents];
                     // Reload table
@@ -220,7 +230,14 @@
         }
         
         if ([controller isKindOfClass:[RoomViewController class]]) {
-            [(RoomViewController *)controller setRoomId:mxEvent.roomId];
+            if (currentRoomViewController) {
+                if ((currentRoomViewController != controller) || (![currentRoomViewController.roomId isEqualToString:mxEvent.roomId])) {
+                    // Release the current one
+                    currentRoomViewController.roomId = nil;
+                }
+            }
+            currentRoomViewController = (RoomViewController *)controller;
+            currentRoomViewController.roomId = mxEvent.roomId;
         }
         
         controller.navigationItem.leftBarButtonItem = self.splitViewController.displayModeButtonItem;
@@ -260,15 +277,12 @@
         cell.roomTitle.font = [UIFont systemFontOfSize:19];
     }
     
-    NSDate *date = [NSDate dateWithTimeIntervalSince1970:mxEvent.originServerTs/1000];
-    NSString *dateFormat =  @"MMM dd HH:mm";
-    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
-    [dateFormatter setLocale:[[NSLocale alloc] initWithLocaleIdentifier:[[[NSBundle mainBundle] preferredLocalizations] objectAtIndex:0]]];
-    [dateFormatter setFormatterBehavior:NSDateFormatterBehavior10_4];
-    [dateFormatter setTimeStyle:NSDateFormatterNoStyle];
-    [dateFormatter setDateFormat:dateFormat];
-    cell.recentDate.text = [dateFormatter stringFromDate:date];
-    
+    if (mxEvent.originServerTs != kMXUndefinedTimestamp) {
+        NSDate *date = [NSDate dateWithTimeIntervalSince1970:mxEvent.originServerTs/1000];
+        cell.recentDate.text = [dateFormatter stringFromDate:date];
+    } else {
+        cell.recentDate.text = nil;
+    }    
     return cell;
 }
 
@@ -281,7 +295,8 @@
     if (editingStyle == UITableViewCellEditingStyleDelete) {
         // Leave the selected room
         MXEvent *mxEvent = recents[indexPath.row];
-        [[MatrixHandler sharedHandler].mxRestClient leaveRoom:mxEvent.roomId success:^{
+        MXRoom *mxRoom = [[MatrixHandler sharedHandler].mxSession room:mxEvent.roomId];
+        [mxRoom leave:^{
             // Refresh table display
             [recents removeObjectAtIndex:indexPath.row];
             [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];

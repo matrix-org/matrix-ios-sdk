@@ -40,4 +40,66 @@
     return membership;
 }
 
++ (MXPresence)presence:(MXPresenceString)presenceString
+{
+    MXPresence presence = MXPresenceUnknown;
+    
+    // Convert presence string into enum value
+    if ([presenceString isEqualToString:kMXPresenceOnline])
+    {
+        presence = MXPresenceOnline;
+    }
+    else if ([presenceString isEqualToString:kMXPresenceUnavailable])
+    {
+        presence = MXPresenceUnavailable;
+    }
+    else if ([presenceString isEqualToString:kMXPresenceOffline])
+    {
+        presence = MXPresenceOffline;
+    }
+    else if ([presenceString isEqualToString:kMXPresenceFreeForChat])
+    {
+        presence = MXPresenceFreeForChat;
+    }
+    else if ([presenceString isEqualToString:kMXPresenceHidden])
+    {
+        presence = MXPresenceHidden;
+    }
+    
+    return presence;
+}
+
++ (MXPresenceString)presenceString:(MXPresence)presence
+{
+    MXPresenceString presenceString;
+    
+    switch (presence)
+    {
+        case MXPresenceOnline:
+            presenceString = kMXPresenceOnline;
+            break;
+            
+        case MXPresenceUnavailable:
+            presenceString = kMXPresenceUnavailable;
+            break;
+            
+        case MXPresenceOffline:
+            presenceString = kMXPresenceOffline;
+            break;
+            
+        case MXPresenceFreeForChat:
+            presenceString = kMXPresenceFreeForChat;
+            break;
+            
+        case MXPresenceHidden:
+            presenceString = kMXPresenceHidden;
+            break;
+            
+        default:
+            break;
+    }
+    
+    return presenceString;
+}
+
 @end

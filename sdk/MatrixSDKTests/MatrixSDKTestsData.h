@@ -19,6 +19,7 @@
 #import <XCTest/XCTest.h>
 
 #import "MXRestClient.h"
+#import "MXSession.h"
 
 // The URL of your test home server
 FOUNDATION_EXPORT NSString * const kMXTestsHomeServerURL;
@@ -45,7 +46,10 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
 
 // Prepare a test with a a MXRestClient for mxBob so that we can make test on it
 - (void)doMXRestClientTestWithBobAndARoom:(XCTestCase*)testCase
-                           readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* room_id, XCTestExpectation *expectation))readyToTest;
+                              readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* room_id, XCTestExpectation *expectation))readyToTest;
+
+- (void)doMXRestClientTestWithBobAndAPublicRoom:(XCTestCase*)testCase
+                              readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* room_id, XCTestExpectation *expectation))readyToTest;
 
 - (void)doMXRestClientTestWithBobAndThePublicRoom:(XCTestCase*)testCase
                            readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* room_id, XCTestExpectation *expectation))readyToTest;
@@ -59,6 +63,14 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
 
 - (void)doMXRestClientTestWihBobAndSeveralRoomsAndMessages:(XCTestCase*)testCase
                                             readyToTest:(void (^)(MXRestClient *bobRestClient, XCTestExpectation *expectation))readyToTest;
+
+
+- (void)doMXSessionTestWithBobAndARoomWithMessages:(XCTestCase*)testCase
+                                    readyToTest:(void (^)(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation))readyToTest;
+
+
+- (void)doMXSessionTestWithBobAndThePublicRoom:(XCTestCase*)testCase
+                                readyToTest:(void (^)(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation))readyToTest;
 
 #pragma mark - mxAlice
 @property (nonatomic, readonly) MXCredentials *aliceCredentials;

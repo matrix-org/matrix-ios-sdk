@@ -14,16 +14,12 @@
  limitations under the License.
  */
 
-#import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 
-#import "MXEvent.h"
-#import "MXJSONModels.h"
+@interface RecentsTableViewCell : UITableViewCell
 
-@interface MXTools : NSObject
-
-+ (MXMembership)membership:(MXMembershipString)membershipString;
-
-+ (MXPresence)presence:(MXPresenceString)presenceString;
-+ (MXPresenceString)presenceString:(MXPresence)presence;
+@property (weak, nonatomic) IBOutlet UILabel *roomTitle;
+@property (weak, nonatomic) IBOutlet UILabel *lastEventDescription;
+@property (weak, nonatomic) IBOutlet UILabel *recentDate;
 
 @end

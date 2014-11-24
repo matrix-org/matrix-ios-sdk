@@ -25,14 +25,23 @@
 /**
  `MXRoomState` holds the state of a room at a given instant.
  
- The room state is ca ombination of information obtained from state events received so far.
+ The room state is a combination of information obtained from state events received so far.
+ 
+ If the current membership state is `invite`, the room state will contain only few information.
+ Join the room with [MXRoom join] to get full information about the room.
  */
-@interface MXRoomState : NSObject
+@interface MXRoomState : NSObject <NSCopying>
 
 /**
  The room ID
  */
 @property (nonatomic, readonly) NSString *room_id;
+
+/**
+ Indicate if this instance is used to store the live state of the room or
+ the state of the room in the history.
+ */
+@property (nonatomic, readonly) BOOL isLive;
 
 /**
  A copy of the list of state events (actually MXEvent instances).
@@ -78,6 +87,9 @@
 
 /**
  The membership state of the logged in user for this room
+ 
+ If the membership is `invite`, the room state contains few information.
+ Join the room with [MXRoom join] to get full information about the room.
  */
 @property (nonatomic, readonly) MXMembership membership;
 
@@ -90,12 +102,23 @@
                   currently connected to the home server.
  @param JSONData the JSON object obtained at the initialSync of the room. It is used to store 
                   additional metadata coming outside state events.
+ @paran isLive the direction in which this `MXRoomState` instance will be updated.
  
  @return The newly-initialized MXRoomState.
  */
+- (id)initWithRoomId:(NSString*)room_id
+    andMatrixSession:(MXSession*)mxSession
+         andJSONData:(NSDictionary*)JSONData
+        andDirection:(BOOL)isLive;
 
-- (id)initWithRoomId:(NSString*)room_id andMatrixSession:(MXSession*)mxSession andJSONData:(NSDictionary*)JSONData;
-
+/**
+ Create a `MXRoomState` instance used as a back state of a room.
+ Such instance holds the state of a room at a given time in the room history.
+ 
+ @param state the uptodate state of the room (MXRoom.state)
+ @return The newly-initialized MXRoomState.
+ */
+- (id)initBackStateWith:(MXRoomState*)state;
 
 /**
  Process a state event in order to update the room state.

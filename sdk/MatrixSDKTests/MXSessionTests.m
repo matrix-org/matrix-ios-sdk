@@ -136,15 +136,19 @@
                                          kMXEventTypeStringRoomMessage,
                                          ]];
         
-        [mxSession registerEventListenerForTypes:nil block:^(MXSession *mxSession, MXEvent *event, BOOL isLive) {
+        [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
             
-            if (isLive)
+            if (MXEventDirectionForwards == direction)
             {
                 [expectedEvents removeObject:event.type];
                 
                 if (0 == expectedEvents.count)
                 {
                     XCTAssert(YES, @"All expected events must be catch");
+                    
+                    [mxSession close];
+                    mxSession = nil;
+                    
                     [expectation fulfill];
                 }
             }
@@ -172,12 +176,16 @@
         
         // Listen to m.room.message only
         // We should not see events coming before (m.room.create, and all state events)
-        [mxSession registerEventListenerForTypes:@[kMXEventTypeStringRoomMessage]
-                                            block:^(MXSession *mxSession, MXEvent *event, BOOL isLive) {
+        [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage]
+                                            onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
             
-            if (isLive)
+            if (MXEventDirectionForwards == direction)
             {
                 XCTAssertEqual(event.eventType, MXEventTypeRoomMessage, @"We must receive only m.room.message event - Event: %@", event);
+                
+                [mxSession close];
+                mxSession = nil;
+                
                 [expectation fulfill];
             }
             
@@ -189,6 +197,36 @@
             
             [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:nil readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
             }];
+            
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
+- (void)testListenerForSyncEvents
+{
+    [[MatrixSDKTestsData sharedData]doMXRestClientTestWihBobAndSeveralRoomsAndMessages:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+        
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        
+        __block NSUInteger eventCount = 0;
+        
+        // Listen to events received during rooms state sync
+        [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
+                                     
+                                     eventCount++;
+                                     
+                                     XCTAssertEqual(direction, MXEventDirectionSync);
+                                     
+                                 }];
+        
+        
+        // Create a room with messages in parallel
+        [mxSession start:^{
+            
+            XCTAssertGreaterThan(eventCount, 0);
+            [expectation fulfill];
             
         } failure:^(NSError *error) {
             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
@@ -269,10 +307,10 @@
         __block NSUInteger lastAliceActivity = -1;
         
         // Listen to m.presence only
-        [mxSession registerEventListenerForTypes:@[kMXEventTypeStringPresence]
-                                           block:^(MXSession *mxSession, MXEvent *event, BOOL isLive) {
+        [mxSession listenToEventsOfTypes:@[kMXEventTypeStringPresence]
+                                           onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
                                                
-                                               if (isLive)
+                                               if (MXEventDirectionForwards == direction)
                                                {
                                                    XCTAssertEqual(event.eventType, MXEventTypePresence, @"We must receive only m.presence - Event: %@", event);
                                                    
@@ -307,7 +345,6 @@
              NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
          }];
     }];
-    
 }
 
 @end

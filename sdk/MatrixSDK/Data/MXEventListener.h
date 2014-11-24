@@ -18,16 +18,35 @@
 
 #import "MXEvent.h"
 
-@class MXRoom;
+//@class MXRoom;
+
+/**
+ The direction from which an incoming event is considered.
+ */
+typedef enum : NSUInteger
+{
+    // Forwards for events coming down the live event stream
+    MXEventDirectionForwards,
+    
+    // Backwards for old events requested through pagination
+    MXEventDirectionBackwards,
+    
+    // Sync for events coming from an initialSync API request to the home server
+    // The SDK internally makes such requests when the app call [MXSession start],
+    // [MXSession joinRoom] and [MXRoom join].
+    MXEventDirectionSync
+    
+} MXEventDirection;
 
 /**
  Block called when an event of the registered types has been handled by the Matrix SDK.
  
- @param sender the object that handled the event (`MXSession` or `MXRoom` instance)
  @param event the new event.
- @param isLive YES if it is new event.
+ @param direction the origin of the event.
+ @param customObject additional contect for the event. In case of room event, customObject is a
+ RoomState instance.
  */
-typedef void (^MXEventListenerBlock)(id sender, MXEvent *event, BOOL isLive);
+typedef void (^MXOnEvent)(MXEvent *event, MXEventDirection direction, id customObject);
 
 /**
  The `MXEventListener` class stores information about a listener to MXEvents that
@@ -37,7 +56,7 @@ typedef void (^MXEventListenerBlock)(id sender, MXEvent *event, BOOL isLive);
 
 - (instancetype)initWithSender:(id)sender
                  andEventTypes:(NSArray*)eventTypes
-              andListenerBlock:(MXEventListenerBlock)listenerBlock;
+              andListenerBlock:(MXOnEvent)listenerBlock;
 
 /**
  Inform the listener about a new event.
@@ -45,13 +64,12 @@ typedef void (^MXEventListenerBlock)(id sender, MXEvent *event, BOOL isLive);
  The listener will fire `listenerBlock` to its owner if the event matches `eventTypes`.
 
  @param event the new event.
- @param isLive YES if it is new event.
+ @param direction the origin of the event.
  */
-
-- (void)notify:(MXEvent*)event isLiveEvent:(BOOL)isLiveEvent;
+- (void)notify:(MXEvent*)event direction:(MXEventDirection)direction andCustomObject:(id)customObject;
 
 @property (nonatomic, readonly) id sender;
 @property (nonatomic, readonly) NSArray* eventTypes;
-@property (nonatomic, readonly) MXEventListenerBlock listenerBlock;
+@property (nonatomic, readonly) MXOnEvent listenerBlock;
 
 @end

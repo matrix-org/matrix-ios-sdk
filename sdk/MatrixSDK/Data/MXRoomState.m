@@ -33,21 +33,23 @@
     
     // kMXRoomVisibilityPublic or kMXRoomVisibilityPrivate
     MXRoomVisibility visibility;
-    
-    // The ID of the user who invited the current user
-    NSString *inviter;
 }
 @end
 
 @implementation MXRoomState
 
-- (id)initWithRoomId:(NSString*)room_id andMatrixSession:(MXSession*)mxSession2 andJSONData:(NSDictionary*)JSONData
+- (id)initWithRoomId:(NSString*)room_id
+    andMatrixSession:(MXSession*)mxSession2
+         andJSONData:(NSDictionary*)JSONData
+        andDirection:(BOOL)isLive
 {
     self = [super init];
     if (self)
     {
         mxSession = mxSession2;
         _room_id = room_id;
+        
+        _isLive = isLive;
         
         stateEvents = [NSMutableDictionary dictionary];
         members = [NSMutableDictionary dictionary];
@@ -59,10 +61,6 @@
             {
                 visibility = JSONData[@"visibility"];
             }
-            if ([JSONData objectForKey:@"inviter"])
-            {
-                inviter = JSONData[@"inviter"];
-            }
             if ([JSONData objectForKey:@"membership"])
             {
                 membership = [MXTools membership:JSONData[@"membership"]];
@@ -70,6 +68,70 @@
         }
     }
     return self;
+}
+
+- (id)initBackStateWith:(MXRoomState*)state
+{
+    self = [state copy];
+    if (self)
+    {
+        _isLive = NO;
+
+        // At the beginning of pagination, the back room state must be the same
+        // as the current current room state.
+        // So, use the same state events content.
+        // @TODO: Find another way than modifying the event content.
+        for (MXEvent *event in stateEvents.allValues)
+        {
+            event.prevContent = event.content;
+        }
+    }
+    return self;
+}
+
+
+#pragma mark - NSCopying
+- (id)copyWithZone:(NSZone *)zone
+{
+    MXRoomState *stateCopy = [[MXRoomState allocWithZone:zone] init];
+    
+    stateCopy->mxSession = mxSession;
+    stateCopy->_room_id = [_room_id copyWithZone:zone];
+    
+    stateCopy->_isLive = _isLive;
+    
+    // Use [NSMutableDictionary initWithDictionary:copyItems:] to deep copy NSDictionaries values
+    stateCopy->stateEvents = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:stateEvents copyItems:YES];
+    
+    stateCopy->members = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:members copyItems:YES];
+    
+    if (visibility)
+    {
+        stateCopy->visibility = [visibility copyWithZone:zone];
+    }
+    stateCopy->membership = membership;
+
+    return stateCopy;
+}
+
+
+// According to the direction of the instance, we are interested either by
+// the content of the event or its prev_content
+- (NSDictionary*)contentOfEvent:(MXEvent*)event
+{
+    NSDictionary *content;
+    if (event)
+    {
+        if (_isLive)
+        {
+            content = event.content;
+        }
+        else
+        {
+            content = event.prevContent;
+        }
+    }
+    return content;
 }
 
 - (NSArray *)stateEvents
@@ -88,9 +150,9 @@
     
     // Get it from the state events
     MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomPowerLevels];
-    if (event && event.content)
+    if (event && [self contentOfEvent:event])
     {
-        powerLevels = [event.content copy];
+        powerLevels = [[self contentOfEvent:event] copy];
     }
     return powerLevels;
 }
@@ -112,9 +174,9 @@
         // Check this in the room state events
         MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomJoinRules];
         
-        if (event && event.content)
+        if (event && [self contentOfEvent:event])
         {
-            NSString *join_rule = event.content[@"join_rule"];
+            NSString *join_rule = [self contentOfEvent:event][@"join_rule"];
             if ([join_rule isEqualToString:kMXRoomVisibilityPublic])
             {
                 isPublic = YES;
@@ -131,9 +193,9 @@
     
     // Get it from the state events
     MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomAliases];
-    if (event && event.content)
+    if (event && [self contentOfEvent:event])
     {
-        aliases = [event.content[@"aliases"] copy];
+        aliases = [[self contentOfEvent:event][@"aliases"] copy];
     }
     return aliases;
 }
@@ -146,7 +208,7 @@
     MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomName];
     if (event && event.content)
     {
-        name = [event.content[@"name"] copy];
+        name = [[self contentOfEvent:event][@"name"] copy];
     }
     return name;
 }
@@ -159,7 +221,7 @@
     MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomTopic];
     if (event && event.content)
     {
-        topic = [event.content[@"topic"] copy];
+        topic = [[self contentOfEvent:event][@"topic"] copy];
     }
     return topic;
 }
@@ -181,9 +243,9 @@
     
     // Check it from the state events
     MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomName];
-    if (event && event.content)
+    if (event && [self contentOfEvent:event])
     {
-        displayname = [event.content[@"name"] copy];
+        displayname = [[self contentOfEvent:event][@"name"] copy];
     }
     
     else if (alias)
@@ -205,26 +267,22 @@
                 }
             }
         }
-        else if (1 >= members.count)
+        else if (1 == members.count)
         {
             NSString *otherUserId;
             
-            if (1 == members.allKeys.count && NO == [mxSession.matrixRestClient.credentials.userId isEqualToString:members.allKeys[0]])
+            MXRoomMember *member = members.allValues[0];
+            
+            if ([mxSession.matrixRestClient.credentials.userId isEqualToString:member.userId])
             {
-                otherUserId = members.allKeys[0];
+                // It is an invite or a self chat
+                otherUserId = member.originUserId;
             }
             else
             {
-                if (inviter)
-                {
-                    // This is an invite
-                    otherUserId = inviter;
-                }
-                else
-                {
-                    // This is a self chat
-                    otherUserId = mxSession.matrixRestClient.credentials.userId;
-                }
+                // XXX: Not sure how it can happen
+                // The logged-in user should be always in the list of the room members
+                otherUserId = member.userId;
             }
             displayname = [self memberName:otherUserId];
         }
@@ -269,8 +327,16 @@
     {
         case MXEventTypeRoomMember:
         {
-            MXRoomMember *roomMember = [[MXRoomMember alloc] initWithMXEvent:event];
-            members[roomMember.userId] = roomMember;
+            MXRoomMember *roomMember = [[MXRoomMember alloc] initWithMXEvent:event andEventContent:[self contentOfEvent:event]];
+            if (roomMember)
+            {
+                members[roomMember.userId] = roomMember;
+            }
+            else
+            {
+                // The user is no more part of the room. Remove him.
+                [members removeObjectForKey:event.stateKey];
+            }
             break;
         }
             

@@ -22,14 +22,15 @@
 @class MXRoom;
 
 /**
- Block called when an event of the registered types has been handled by the `MXRoom` instance.
- This is a specialisation of the `MXEventListenerBlock`.
+ Block called when an event of the registered types has been handled by the `MXSession` instance.
+ This is a specialisation of the `MXOnEvent` block.
  
- @param room the `MXRoom` that handled the event.
  @param event the new event.
- @param isLive YES if it is new event.
+ @param direction the origin of the event.
+ @param customObject additional contect for the event. In case of room event, customObject is a
+                     RoomState instance.
  */
-typedef void (^MXSessionEventListenerBlock)(MXSession *mxSession, MXEvent *event, BOOL isLive);
+typedef void (^MXOnSessionEvent)(MXEvent *event, MXEventDirection direction, id customObject);
 
 /**
  The `MXSessionEventListener` class stores information about a listener to MXSession events
