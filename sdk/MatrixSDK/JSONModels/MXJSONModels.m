@@ -49,6 +49,19 @@ NSString *const kMatrixLoginFlowTypeEmailIdentity = @"m.login.email.identity";
 @end
 
 @implementation MXCredentials
+
+-(instancetype)initWithHomeServer:(NSString *)homeServer userId:(NSString *)userId accessToken:(NSString *)accessToken
+{
+    self = [super init];
+    if (self)
+    {
+        _homeServer = [homeServer copy];
+        _userId = [userId copy];
+        _accessToken = [accessToken copy];
+    }
+    return self;
+}
+
 @end
 
 @implementation MXCreateRoomResponse
