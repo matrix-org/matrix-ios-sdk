@@ -296,7 +296,18 @@
         
         mxSession = mxSession2;
 
-        __block NSString *messageEventID;
+        __block NSString *sentMessageEventID;
+        __block NSString *receivedMessageEventID;
+        
+        void (^checkEventIDs)() = ^ void ()
+        {
+            if (sentMessageEventID && receivedMessageEventID)
+            {
+                XCTAssertTrue([receivedMessageEventID isEqualToString:sentMessageEventID]);
+                
+                [expectation fulfill];
+            }
+        };
         
         // Register the listener
         [room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
@@ -304,11 +315,12 @@
             XCTAssertEqual(direction, MXEventDirectionForwards);
             
             XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
-            XCTAssertTrue([event.eventId isEqualToString:messageEventID]);
             
+            XCTAssertNotNil(event.eventId);
             
-            [expectation fulfill];
-            
+            receivedMessageEventID = event.eventId;
+           
+            checkEventIDs();
         }];
         
         
@@ -317,7 +329,11 @@
             
             [bobRestClient postTextMessageToRoom:room_id text:@"Hello listeners!" success:^(NSString *event_id) {
                 
-                messageEventID = event_id;
+                NSAssert(nil != event_id, @"Cannot set up intial test conditions");
+                
+                sentMessageEventID = event_id;
+                
+                checkEventIDs();
                 
             } failure:^(NSError *error) {
                 NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
@@ -333,7 +349,18 @@
         
         mxSession = mxSession2;
 
-        __block NSString *messageEventID;
+        __block NSString *sentMessageEventID;
+        __block NSString *receivedMessageEventID;
+        
+        void (^checkEventIDs)() = ^ void ()
+        {
+            if (sentMessageEventID && receivedMessageEventID)
+            {
+                XCTAssertTrue([receivedMessageEventID isEqualToString:sentMessageEventID]);
+                
+                [expectation fulfill];
+            }
+        };
         
         // Register the listener for m.room.message.only
         [room listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage]
@@ -342,11 +369,12 @@
             XCTAssertEqual(direction, MXEventDirectionForwards);
             
             XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
-            XCTAssertTrue([event.eventId isEqualToString:messageEventID]);
-            
-            
-            [expectation fulfill];
-            
+                                              
+            XCTAssertNotNil(event.eventId);
+                                              
+            receivedMessageEventID = event.eventId;
+                                              
+            checkEventIDs();
         }];
         
         // Populate a text message in parallel
@@ -354,7 +382,11 @@
             
             [bobRestClient postTextMessageToRoom:room_id text:@"Hello listeners!" success:^(NSString *event_id) {
                 
-                messageEventID = event_id;
+                NSAssert(nil != event_id, @"Cannot set up intial test conditions");
+                
+                sentMessageEventID = event_id;
+                
+                checkEventIDs();
                 
             } failure:^(NSError *error) {
                 NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);

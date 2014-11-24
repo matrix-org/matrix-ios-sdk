@@ -18,18 +18,12 @@ The best way to add the Matrix SDK to your application project is to add the Mat
 Overview
 ========
 
-As a quick overview, there are four classes to know to use the SDK.
+As a quick overview, there are the classes to know to use the SDK.
 
 Matrix API level
 ----------------
-The Matrix API level classes expose the Matrix Client-Server API as specified by the Matrix standard to make requests to a Home Server. 
-This is realised by two classes:
-
-:``MXHomeServer``:
-    It exposes the Matrix Client-Server API part that does not require the user to be authenticated. With this class, you can get a list of public rooms available on an home server. You can also register or login a user so that you can open a MXSession to the home server.
-
-:``MXSession``:
-    It exposes the Matrix Client-Server API part that requires the user to be authenticated. This class requires a user ID and his access token to be instantiated.
+:``MXRestClient``:
+    It exposes the Matrix Client-Server API as specified by the Matrix standard to make requests to a Home Server. 
 
 
 Business logic and data model
@@ -37,17 +31,25 @@ Business logic and data model
 At an upper level, you will find helper to handle data coming from the Home Server.
 These classes does logic to maintain consistent chat rooms data.
 
-:``MXData``:
-    This is the main point to handle all data: it uses a MXSession instance to loads and maintains data from the home server. The collected data is then dispatched into MXRoomData objects.
+:``MXSession``:
+    This is the main point to handle all data: it uses a MXRestClient instance to loads and maintains data from the home server. The collected data is then dispatched into MXRoom, MXRoomState, MXRoomMember and MXUser objects.
 
-:``MXRoomData``:
-	 This is the data associated to one room. Among other things, it contains messages downloaded so far and the list of members. The app can register handlers to be notified when there was changes in the room (new events).
+:``MXRoom``:
+     This class provides methods to get room data and to interact with the room (join, leave...).
 
+:``MXRoomState``:
+	 This is the state of room at a certain point in time: its name, topic, visibility (public/private), members, etc.
+	 
+:``MXRoomMember``:
+	 This is a member of a room.
+	 
+:``MXUser``:
+	 This is a user known by the current user. MXSession exposes and maintains the list of MXUsers. It provides the user id, displayname and the current presence state
 
 Usage
 =====
 
-The sample app (https://github.com/matrix-org/matrix-ios-sdk/tree/master/samples/syMessaging) demonstrates how to build a chat app on top of Matrix. You can refer to it, play with it, hack it to understand the full integration of the Matrix SDK.
+The sample app (https://github.com/matrix-org/matrix-ios-sdk/tree/master/samples/matrixConsole) demonstrates how to build a chat app on top of Matrix. You can refer to it, play with it, hack it to understand the full integration of the Matrix SDK.
 This section comes back to the basics with sample codes for basic use cases.
 
 One file to import::
@@ -56,10 +58,10 @@ One file to import::
   
 Use case #1: Get public rooms of an home server
 -----------------------------------------------
-This API does not require the user to be authenticated. So, MXHomeServer does the job::
+This API does not require the user to be authenticated. So, MXRestClient instantiated with initWithHomeServer does the job::
 
-    MXHomeServer *homeServer = [[MXHomeServer alloc] initWithHomeServer:@"http://matrix.org"];
-    [homeServer publicRooms:^(NSArray *rooms) {
+    MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:@"http://matrix.org"];
+    [mxRestClient publicRooms:^(NSArray *rooms) {
         
         // rooms is an array of MXPublicRoom objects containing information like room id
         NSLog(@"The public rooms are: %@", rooms);
@@ -70,71 +72,77 @@ This API does not require the user to be authenticated. So, MXHomeServer does th
 
 Use case #2: Get the rooms user has interaction with
 ----------------------------------------------------
-Here the user needs to be authenticated. We will use MXSession combined with MXData that will help us to get organised data.
+Here the user needs to be authenticated. We will use [MXRestClient initWithCredentials] combined with MXSession that will help us to get organised data.
 The set up of these two objects is usually done once in the app for the user login life::
 
+
+    MXCredentials *credentials = [[MXCredentials alloc] initWithHomeServer:@"http://matrix.org"
+                                                                    userId:@"@your_user_id:matrix.org"
+                                                               accessToken:@"your_access_tokem"];
+
     // Create a matrix session
-    MXSession *mxSession = [[MXSession alloc] initWithHomeServer:@"http://matrix.org"
-                                                              userId:@"@your_user_id:matrix.org"
-                                                         accessToken:@"your_access_tokem"];
+    MXRestClient *mxRestClient = [[MXRestClient alloc] initWithCredentials:credentials];
     
-    // Set up matrix data
-    MXData *mxData = [[MXData alloc] initWithMatrixSession:mxSession];
+    // Create a matrix session
+    MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:mxRestClient];
     
-    // Launch mxData: it will first make an initial sync with the home server
+    // Launch mxSession: it will first make an initial sync with the home server
     // Then it will listen to new coming events and update its data
-    [mxData start:^{
+    [mxSession start:^{
         
-        // mxData is ready to be used
+        // mxSession is ready to be used
+		// Now we can get all rooms with:
+		mxSession.rooms;
         
     } failure:^(NSError *error) {
     }];
 
-And now, we can get all rooms in::
-
-    mxData.roomDatas
 	
 	
 Use case #3: Get messages of a room
 -----------------------------------
-We reuse the mxData instance created before::
+We reuse the mxSession instance created before::
 
-    // Retrieve the room data
-    MXRoomData *roomData = [mxData getRoomData:@"!room_id:matrix.org"];
-    
-    // Messages are here (in the form of MXEvents array):
-    roomData.messages;
+    // Retrieve the room from its room id
+    MXRoom *room = [mxSession room:@"!room_id:matrix.org"];
 	
-roomData.messages are the most recents messages in the room downloaded so far. If you want more messages from the past, use paginateBackMessages::
+	// Add a listener on events related to this room
+	[room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+	
+		if (direction == MXEventDirectionForwards) {
+			// Live/New events come here
+		}
+		else if (direction == MXEventDirectionBackwards) {
+			// Events that occured in the past will come here when requesting pagination.
+			// roomState contains the state of the room just before this event occured.
+		}
+	}];
 
-    [roomData paginateBackMessages:10 success:^(NSArray *messages) {
+	
+Let's load a bit of room history using paginateBackMessages::
+
+	// Reset the pagination start point to now
+	[room resetBackState];
+
+    [room paginateBackMessages:10 complete:^{
         
-        // messages contains the newly retrieved past events
-        // Note that roomData.messages has been updated with these events
+        // At this point, the SDK has finished to enumerate the events to the attached listeners
         
     } failure:^(NSError *error) {
     }];
 	
-What about coming new events? You need to register a listener to get them::
-
-    [roomData registerEventListenerForTypes:nil block:^(MXRoomData *roomData, MXEvent *event, BOOL isLive) {
-        
-        // If isLive is YES, event is new event coming to the room
-        // Same note as before: roomData.messages has been updated with this new event
-        
-    }];
 
 
 Use case #4: Post a text message to a room
 ------------------------------------------
-This action does not require any business logic from MXData. MXSession is directly used::
+This action does not require any business logic from MXSession. MXRestClient is directly used::
 
-    [mxSession postTextMessage:@"the_room_id" text:@"Hello world!" success:^(NSString *event_id) {
+    [MXRestClient postTextMessage:@"the_room_id" text:@"Hello world!" success:^(NSString *event_id) {
         
         // event_id is for reference
         // If you have registered events listener like in the previous use case, you will get
         // a notification for this event coming down from the home server events stream and
-        // now handled by MXData.
+        // now handled by MXSession.
         
     } failure:^(NSError *error) {
     }];
@@ -142,7 +150,7 @@ This action does not require any business logic from MXData. MXSession is direct
 	
 Tests
 =====
-The SDK Xcode project embeds both unit and integration tests.
+The tests in the SDK Xcode project are both unit and integration tests.
 
 Out of the box, the tests use one of the home servers (located at http://localhost:8080 )of the "Demo Federation of Homeservers" (https://github.com/matrix-org/synapse#running-a-demo-federation-of-homeservers). You have to start them from your local Synapse folder::
 

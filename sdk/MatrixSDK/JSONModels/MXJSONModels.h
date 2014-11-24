@@ -91,6 +91,13 @@ FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeEmailIdentity;
      */
     @property (nonatomic) NSString *accessToken;
 
+    /**
+     Simple MXCredentials construtor
+     */
+    - (instancetype)initWithHomeServer:(NSString*)homeServer
+                                userId:(NSString*)userId
+                           accessToken:(NSString*)accessToken;
+
 @end
 
 

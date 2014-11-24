@@ -14,4 +14,10 @@ Then, open ``MatrixSDK.xcworkspace``.
 Tests
 =====
 
-You can run unit tests from the Xcode Test navigator tab or select the MatrixSDKTests scheme and launch the "Test" action.
+The tests in the SDK Xcode project are both unit and integration tests.
+
+Out of the box, the tests use one of the home servers (located at http://localhost:8080 )of the "Demo Federation of Homeservers" (https://github.com/matrix-org/synapse#running-a-demo-federation-of-homeservers). You have to start them from your local Synapse folder::
+
+      $ demo/start.sh --no-rate-limit
+
+Then, you can run the tests from the Xcode Test navigator tab or select the MatrixSDKTests scheme and click on the "Test" action.
