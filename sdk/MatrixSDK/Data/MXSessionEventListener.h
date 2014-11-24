@@ -28,7 +28,7 @@
  @param event the new event.
  @param direction the origin of the event.
  @param customObject additional contect for the event. In case of room event, customObject is a
-                     RoomState instance.
+                     RoomState instance. In the case of a presence, customObject is nil.
  */
 typedef void (^MXOnSessionEvent)(MXEvent *event, MXEventDirection direction, id customObject);
 
