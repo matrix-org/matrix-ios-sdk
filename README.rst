@@ -35,17 +35,16 @@ These classes does logic to maintain consistent chat rooms data.
     This is the main point to handle all data: it uses a MXRestClient instance to loads and maintains data from the home server. The collected data is then dispatched into MXRoom, MXRoomState, MXRoomMember and MXUser objects.
 
 :``MXRoom``:
-	 This is the data associated to one room. Among other things, it contains -messages downloaded so far- and the list of members. The app can register handlers to be notified when there was changes in the room (new events).
-	 TODO
+     This class provides methods to get room data and to interact with the room (join, leave...).
 
 :``MXRoomState``:
-	 TODO
+	 This is the state of room at a certain point in time: its name, topic, visibility (public/private), members, etc.
 	 
 :``MXRoomMember``:
-	 TODO
+	 This is a member of a room.
 	 
 :``MXUser``:
-	 TODO
+	 This is a user known by the current user. MXSession exposes and maintains the list of MXUsers. It provides the user id, displayname and the current presence state
 
 Usage
 =====
