@@ -189,4 +189,94 @@
     }];
 }
 
+- (void)testMyUserLastActiveUpdate
+{
+    [self doTestWithBobAndAliceActiveInARoom:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
+
+        [mxSession.myUser listenToUserUpdate:^(MXEvent *event) {
+
+            XCTAssertEqual(event.eventType, MXEventTypePresence);
+            [expectation fulfill];
+
+        }];
+
+        [bobRestClient postTextMessageToRoom:room_id text:@"A message to update my last active ago" success:^(NSString *event_id) {
+
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
+- (void)testMyUserProfileUpdate
+{
+    [self doTestWithBobAndAliceActiveInARoom:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
+
+        // Do tests with Alice since tests are not supposed to change Bob's profile
+        [mxSession close];
+
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+        [mxSession start:^{
+
+            [mxSession.myUser listenToUserUpdate:^(MXEvent *event) {
+
+                XCTAssertEqual(event.eventType, MXEventTypePresence);
+
+                XCTAssert([mxSession.myUser.displayname isEqualToString:@"ALICE"]);
+                XCTAssert([mxSession.myUser.avatarUrl isEqualToString:kMXTestsAliceAvatarURL]);
+
+                [expectation fulfill];
+
+            }];
+
+            [aliceRestClient setDisplayName:@"ALICE" success:^{
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+
+        } failure:^(NSError *error) {
+
+        }];
+    }];
+}
+
+
+- (void)testMyUserPresenceUpdate
+{
+    [self doTestWithBobAndAliceActiveInARoom:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
+
+        // Do tests with Alice since tests are not supposed to change Bob's profile
+        [mxSession close];
+
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+        [mxSession start:^{
+
+            [mxSession.myUser listenToUserUpdate:^(MXEvent *event) {
+
+                XCTAssertEqual(event.eventType, MXEventTypePresence);
+
+                XCTAssert([mxSession.myUser.displayname isEqualToString:kMXTestsAliceDisplayName]);
+                XCTAssert([mxSession.myUser.avatarUrl isEqualToString:kMXTestsAliceAvatarURL]);
+
+                XCTAssertEqual(mxSession.myUser.presence, MXPresenceUnavailable);
+                XCTAssert([mxSession.myUser.statusMsg isEqualToString:@"in Wonderland"]);
+
+                [expectation fulfill];
+
+            }];
+
+            [aliceRestClient setPresence:MXPresenceUnavailable andStatusMessage:@"in Wonderland" success:^{
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+
+        } failure:^(NSError *error) {
+
+        }];
+
+    }];
+}
+
 @end

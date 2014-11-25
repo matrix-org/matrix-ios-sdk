@@ -320,6 +320,7 @@
             MXUser *bob2 = [mxSession user:bobRestClient.credentials.userId];
             XCTAssertNil(bob2);
 
+            XCTAssertNil(mxSession.myUser);
 
             // Do some activity to check nothing comes through mxSession, room and bob
             [bobRestClient postTextMessageToRoom:room_id text:@"A message" success:^(NSString *event_id) {

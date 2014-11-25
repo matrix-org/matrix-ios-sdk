@@ -18,6 +18,7 @@
 
 #import "MXRestClient.h"
 #import "MXRoom.h"
+#import "MXMyUser.h"
 #import "MXSessionEventListener.h"
 
 /**
@@ -34,6 +35,9 @@
 
 // The matrix REST Client used to make Matrix API requests
 @property (nonatomic, readonly) MXRestClient *matrixRestClient;
+
+// The profile of the current user
+@property (nonatomic, readonly) MXMyUser *myUser;
 
 /**
  An array of `MXEventTypeString` indicating which events must be stored as messages in MXSession and its MXRooms.

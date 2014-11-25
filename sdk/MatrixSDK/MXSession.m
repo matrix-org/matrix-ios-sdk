@@ -196,6 +196,8 @@
     }
     [users removeAllObjects];
 
+    _myUser = nil;
+
     // @TODO: Cancel the pending eventsFromToken request
 }
 
@@ -313,7 +315,18 @@
     
     if (nil == user)
     {
-        user = [[MXUser alloc] initWithUserId:userId];
+        // If our current user has not been found yet, check it first
+        if (nil == _myUser && [userId isEqualToString:matrixRestClient.credentials.userId])
+        {
+            // Here he is. The current user is a special MXUser.
+            _myUser = [[MXMyUser alloc] initWithUserId:userId andMatrixSession:self];
+            user = _myUser;
+        }
+        else
+        {
+            user = [[MXUser alloc] initWithUserId:userId];
+        }
+
         [users setObject:user forKey:userId];
     }
     return user;
