@@ -496,6 +496,25 @@
                     
                     MXRoom *newRoom = [mxSession room:room_id];
                     
+                    [newRoom listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+                        // We should receive only join events
+                        XCTAssertEqual(event.eventType, MXEventTypeRoomMember);
+                        
+                        MXRoomMemberEventContent *roomMemberEventContent = [MXRoomMemberEventContent modelFromJSON:event.content];
+                        XCTAssert([roomMemberEventContent.membership isEqualToString:kMXMembershipStringJoin]);
+                    }];
+                    
+                    [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
+                        // Except presence, we should receive only join events
+                        if (MXEventTypePresence != event.eventType)
+                        {
+                            XCTAssertEqual(event.eventType, MXEventTypeRoomMember);
+                            
+                            MXRoomMemberEventContent *roomMemberEventContent = [MXRoomMemberEventContent modelFromJSON:event.content];
+                            XCTAssert([roomMemberEventContent.membership isEqualToString:kMXMembershipStringJoin]);                      
+                        }
+                    }];
+                    
                     [newRoom join:^{
                         
                         // Now, we must have more information about the room
@@ -508,7 +527,6 @@
                         XCTAssertEqual(newRoom.lastMessage.eventType, MXEventTypeRoomMember, @"The last should be a m.room.member event indicating Alice joining the room");
                         
                         [expectation fulfill];
-                        
                         
                     } failure:^(NSError *error) {
                         XCTFail(@"The request should not fail - NSError: %@", error);
