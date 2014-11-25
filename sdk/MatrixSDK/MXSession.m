@@ -181,7 +181,21 @@
     streamingActive = NO;
     
     [self removeAllListeners];
-    
+
+    // Clean MXRooms
+    for (MXRoom *room in rooms.allValues)
+    {
+        [room removeAllListeners];
+    }
+    [rooms removeAllObjects];
+
+    // Clean MXUsers
+    for (MXUser *user in users.allValues)
+    {
+        [user removeAllListeners];
+    }
+    [users removeAllObjects];
+
     // @TODO: Cancel the pending eventsFromToken request
 }
 

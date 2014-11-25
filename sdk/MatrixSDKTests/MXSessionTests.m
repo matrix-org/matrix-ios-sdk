@@ -285,4 +285,56 @@
     }];
 }
 
+- (void)testClose
+{
+    // Make sure Alice and Bob have activities
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
+
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+
+        [mxSession start:^{
+
+            [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
+                XCTFail(@"We should not receive events after closing the session. Received: %@", event);
+            }];
+
+            MXRoom *room = [mxSession room:room_id];
+            XCTAssert(room);
+            [room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+                XCTFail(@"We should not receive events after closing the session. Received: %@", event);
+            }];
+
+            MXUser *bob = [mxSession user:bobRestClient.credentials.userId];
+            XCTAssert(bob);
+            [bob listenToUserUpdate:^(MXEvent *event) {
+                XCTFail(@"We should not receive events after closing the session. Received: %@", event);
+            }];
+
+
+            // Now close the session
+            [mxSession close];
+
+            MXRoom *room2 = [mxSession room:room_id];
+            XCTAssertNil(room2);
+
+            MXUser *bob2 = [mxSession user:bobRestClient.credentials.userId];
+            XCTAssertNil(bob2);
+
+
+            // Do some activity to check nothing comes through mxSession, room and bob
+            [bobRestClient postTextMessageToRoom:room_id text:@"A message" success:^(NSString *event_id) {
+
+                [expectation performSelector:@selector(fulfill) withObject:nil afterDelay:5];
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+
+
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
 @end
