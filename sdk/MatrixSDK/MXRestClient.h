@@ -375,7 +375,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
              failure:(void (^)(NSError *error))failure;
 
 /**
- Get the display name of a user.
+ Get the avatar url of a user.
  
  @param user_id the user id.
  @param success A block object called when the operation succeeds. It provides the user avatar url.
