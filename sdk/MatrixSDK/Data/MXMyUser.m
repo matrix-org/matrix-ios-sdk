@@ -38,21 +38,40 @@
 
 - (void)setDisplayName:(NSString *)displayname success:(void (^)())success failure:(void (^)(NSError *))failure
 {
-    [mxSession.matrixRestClient setDisplayName:displayname success:success failure:^(NSError *error) {
+    [mxSession.matrixRestClient setDisplayName:displayname success:^{
+
+        // Update the information right now
+        _displayname = [displayname copy];
+        success();
+
+    } failure:^(NSError *error) {
         failure(error);
     }];
 }
 
 - (void)setAvatarUrl:(NSString *)avatar_url success:(void (^)())success failure:(void (^)(NSError *))failure
 {
-    [mxSession.matrixRestClient setAvatarUrl:avatar_url success:success failure:^(NSError *error) {
+    [mxSession.matrixRestClient setAvatarUrl:avatar_url success:^{
+
+        // Update the information right now
+        _avatarUrl = [avatar_url copy];
+        success();
+
+    } failure:^(NSError *error) {
         failure(error);
     }];
 }
 
 - (void)setPresence:(MXPresence)presence andStatusMessage:(NSString *)statusMessage success:(void (^)())success failure:(void (^)(NSError *))failure
 {
-    [mxSession.matrixRestClient setPresence:presence andStatusMessage:statusMessage success:success failure:^(NSError *error) {
+    [mxSession.matrixRestClient setPresence:presence andStatusMessage:statusMessage success:^{
+
+        // Update the information right now
+        _presence = presence;
+        _statusMsg = [statusMessage copy];
+        success();
+
+    } failure:^(NSError *error) {
         failure(error);
     }];
 }

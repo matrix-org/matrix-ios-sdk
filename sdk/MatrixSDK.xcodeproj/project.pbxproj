@@ -19,6 +19,7 @@
 		320DFDE519DD99B60068622A /* MXRestClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 320DFDD519DD99B60068622A /* MXRestClient.m */; };
 		320DFDE619DD99B60068622A /* MXHTTPClient.h in Headers */ = {isa = PBXBuildFile; fileRef = 320DFDD719DD99B60068622A /* MXHTTPClient.h */; };
 		320DFDE719DD99B60068622A /* MXHTTPClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 320DFDD819DD99B60068622A /* MXHTTPClient.m */; };
+		32114A7F1A24E15500FF2EC4 /* MXMyUserTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32114A7E1A24E15500FF2EC4 /* MXMyUserTests.m */; };
 		321809B919EEBF3000377451 /* MXEventTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 321809B819EEBF3000377451 /* MXEventTests.m */; };
 		3220093819EFA4C9008DE41D /* MXEventListener.h in Headers */ = {isa = PBXBuildFile; fileRef = 3220093619EFA4C9008DE41D /* MXEventListener.h */; };
 		3220093919EFA4C9008DE41D /* MXEventListener.m in Sources */ = {isa = PBXBuildFile; fileRef = 3220093719EFA4C9008DE41D /* MXEventListener.m */; };
@@ -79,6 +80,7 @@
 		320DFDD519DD99B60068622A /* MXRestClient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = MXRestClient.m; sourceTree = "<group>"; };
 		320DFDD719DD99B60068622A /* MXHTTPClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXHTTPClient.h; sourceTree = "<group>"; };
 		320DFDD819DD99B60068622A /* MXHTTPClient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXHTTPClient.m; sourceTree = "<group>"; };
+		32114A7E1A24E15500FF2EC4 /* MXMyUserTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXMyUserTests.m; sourceTree = "<group>"; };
 		321809B819EEBF3000377451 /* MXEventTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = MXEventTests.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		3220093619EFA4C9008DE41D /* MXEventListener.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXEventListener.h; sourceTree = "<group>"; };
 		3220093719EFA4C9008DE41D /* MXEventListener.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXEventListener.m; sourceTree = "<group>"; };
@@ -266,6 +268,7 @@
 				328DDEC01A07E57E008C7DC8 /* MXJSONModelTests.m */,
 				329FB17B1A0A963700A5E88E /* MXRoomMemberTests.m */,
 				327137231A24BDDE00DB6757 /* MXUserTests.m */,
+				32114A7E1A24E15500FF2EC4 /* MXMyUserTests.m */,
 			);
 			path = MatrixSDKTests;
 			sourceTree = "<group>";
@@ -466,6 +469,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3281E8A819E41A2000976E1A /* MatrixSDKTestsData.m in Sources */,
+				32114A7F1A24E15500FF2EC4 /* MXMyUserTests.m in Sources */,
 				3281E89E19E299C000976E1A /* MXErrorTests.m in Sources */,
 				3265CB3B1A151C3800E24B2F /* MXRoomStateTests.m in Sources */,
 				3281E8A019E2CC1200976E1A /* MXHTTPClientTests.m in Sources */,

@@ -24,6 +24,13 @@
  `MXUser` represents a user in Matrix.
  */
 @interface MXUser : NSObject
+{
+    // Let property members accessible to children classes
+    NSString *_displayname;
+    NSString *_avatarUrl;
+    MXPresence _presence;
+    NSString *_statusMsg;
+}
 
 /**
  The user id.
