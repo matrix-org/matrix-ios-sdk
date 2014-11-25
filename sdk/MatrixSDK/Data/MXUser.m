@@ -26,6 +26,9 @@
      been tracked by the home server.
      */
     uint64_t lastActiveLocalTS;
+
+    // The list of update listeners (`MXOnUserUpdate`) in this room
+    NSMutableArray *updateListeners;
 }
 @end
 
@@ -38,6 +41,8 @@
     {
         _userId = [userId copy];
         lastActiveLocalTS = -1;
+
+        updateListeners = [NSMutableArray array];
     }
     return self;
 }
@@ -47,8 +52,17 @@
     NSParameterAssert(roomMemberEvent.eventType == MXEventTypeRoomMember);
     
     MXRoomMemberEventContent *roomMemberContent = [MXRoomMemberEventContent modelFromJSON:roomMemberEvent.content];
-    _displayname = [roomMemberContent.displayname copy];
-    _avatarUrl = [roomMemberContent.avatarUrl copy];
+
+    // Update the MXUser only if there is change
+    if (NO == [_displayname isEqualToString:roomMemberContent.displayname]
+        || NO == [_avatarUrl isEqualToString:roomMemberContent.avatarUrl])
+    {
+        _displayname = [roomMemberContent.displayname copy];
+        _avatarUrl = [roomMemberContent.avatarUrl copy];
+
+        [self notifyListeners:roomMemberEvent];
+    }
+
 }
 
 - (void)updateWithPresenceEvent:(MXEvent*)presenceEvent
@@ -56,11 +70,14 @@
     NSParameterAssert(presenceEvent.eventType == MXEventTypePresence);
     
     MXPresenceEventContent *presenceContent = [MXPresenceEventContent modelFromJSON:presenceEvent.content];
+
     _displayname = [presenceContent.displayname copy];
     _avatarUrl = [presenceContent.avatarUrl copy];
     _presence = presenceContent.presenceStatus;
     
     lastActiveLocalTS = [[NSDate date] timeIntervalSince1970] * 1000 - presenceContent.lastActiveAgo;
+
+    [self notifyListeners:presenceEvent];
 }
 
 - (NSUInteger)lastActiveAgo
@@ -72,5 +89,34 @@
     }
     return lastActiveAgo;
 }
+
+#pragma mark - Events listeners
+
+-(id)listenToUserUpdate:(MXOnUserUpdate)onUserUpdate
+{
+    [updateListeners addObject:onUserUpdate];
+
+    return onUserUpdate;
+}
+
+- (void)removeListener:(id)listener
+{
+    [updateListeners removeObject:listener];
+}
+
+- (void)removeAllListeners
+{
+    [updateListeners removeAllObjects];
+}
+
+- (void)notifyListeners:(MXEvent*)event
+{
+    // Notifify all listeners
+    for (MXOnUserUpdate listener in updateListeners)
+    {
+        listener(event);
+    }
+}
+
 
 @end

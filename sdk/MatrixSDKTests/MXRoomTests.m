@@ -343,6 +343,7 @@
     }];
 }
 
+
 - (void)testListenerForRoomMessageLiveEvents
 {
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {

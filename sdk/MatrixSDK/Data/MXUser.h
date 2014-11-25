@@ -75,4 +75,33 @@
  */
 - (void)updateWithPresenceEvent:(MXEvent*)presenceEvent;
 
+
+#pragma mark - Events listeners
+/**
+ Block called when an event has modified the MXUser data.
+
+ @param event the event that modified the user data.
+ */
+typedef void (^MXOnUserUpdate)(MXEvent *event);
+
+/**
+ Register a listener to be notified on change of this user data.
+ 
+ @param onEvent the block that will called once a new event has been handled.
+ @return a reference to use to unregister the listener
+ */
+- (id)listenToUserUpdate:(MXOnUserUpdate)onUserUpdate;
+
+/**
+ Unregister a listener.
+ 
+ @param listener the reference of the listener to remove.
+ */
+- (void)removeListener:(id)listener;
+
+/**
+ Unregister all listeners.
+ */
+- (void)removeAllListeners;
+
 @end
