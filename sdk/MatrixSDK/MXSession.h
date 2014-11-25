@@ -76,8 +76,28 @@
 - (void)start:(void (^)())initialSyncDone
       failure:(void (^)(NSError *error))failure;
 
+/**
+ Pause the session events stream.
+ 
+ No more live events will be received by the listeners.
+ */
+- (void)pause;
+
+/**
+ Resume the session events stream.
+ */
+- (void)resume;
+
+/**
+ Close the session.
+ 
+ All data (rooms, users, ...) is reset.
+ No more data is retrieved from the home server.
+ */
 - (void)close;
 
+
+#pragma mark - Rooms operations
 /**
  Join a room.
  

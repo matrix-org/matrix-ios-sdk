@@ -35,6 +35,9 @@
 
     // Indicates if we are streaming
     BOOL streamingActive;
+
+    // The token returned by the last long polling used to manage streaming
+    NSString *lastStreamingToken;
     
     // The list of global events listeners (`MXSessionEventListener`)
     NSMutableArray *globalEventListeners;
@@ -122,7 +125,8 @@
             [self handleLiveEvents:events];
             
             // Go streaming from the returned token
-            [self streamEventsFromToken:JSONData[@"end"]];
+            lastStreamingToken = JSONData[@"end"];
+            [self streamEventsFromToken:lastStreamingToken];
         }
         
     } failure:^(NSError *error) {
@@ -176,9 +180,23 @@
     [self notifyListeners:event direction:direction];
 }
 
+- (void)pause
+{
+    // Disable the flag to avoid the event stream to restart by itself.
+    // The current request will silently die: its response will be not taken into account.
+    streamingActive = NO;
+}
+
+- (void)resume
+{
+    // Resume from the last known token
+    [self streamEventsFromToken:lastStreamingToken];
+}
+
 - (void)close
 {
     streamingActive = NO;
+    lastStreamingToken = nil;
     
     [self removeAllListeners];
 
@@ -201,6 +219,8 @@
     // @TODO: Cancel the pending eventsFromToken request
 }
 
+
+#pragma mark - Rooms operations
 - (void)joinRoom:(NSString*)room_id
          success:(void (^)(MXRoom *room))success
          failure:(void (^)(NSError *error))failure
