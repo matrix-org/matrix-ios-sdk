@@ -46,6 +46,11 @@
 @property (nonatomic, readonly) MXPresence presence;
 
 /**
+ The user status.
+ */
+@property (nonatomic, readonly) NSString *statusMsg;
+
+/**
  The time since the last activity by the user.
  This value in milliseconds is recomputed at each property reading.
  */

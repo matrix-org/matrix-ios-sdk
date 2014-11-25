@@ -175,6 +175,7 @@
             XCTAssert([mxAlice.avatarUrl isEqualToString:kMXTestsAliceAvatarURL]);
 
             XCTAssertEqual(mxAlice.presence, MXPresenceUnavailable);
+            XCTAssert([mxAlice.statusMsg isEqualToString:@"in Wonderland"]);
 
             [expectation fulfill];
 

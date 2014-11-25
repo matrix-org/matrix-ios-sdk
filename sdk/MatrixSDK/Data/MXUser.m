@@ -73,6 +73,7 @@
 
     _displayname = [presenceContent.displayname copy];
     _avatarUrl = [presenceContent.avatarUrl copy];
+    _statusMsg = [presenceContent.statusMsg copy];
     _presence = presenceContent.presenceStatus;
     
     lastActiveLocalTS = [[NSDate date] timeIntervalSince1970] * 1000 - presenceContent.lastActiveAgo;
