@@ -89,7 +89,7 @@
         {
             if ([user.userId isEqualToString:bobRestClient.credentials.userId])
             {
-                XCTAssertLessThan(user.lastActiveAgo, 1000, @"mxBob has just posted a message. lastActiveAgo should not exceeds 1s. Found: %ld", user.lastActiveAgo);
+                XCTAssertLessThan(user.lastActiveAgo, 5000, @"mxBob has just posted a message. lastActiveAgo should not exceeds 5s. Found: %ld", user.lastActiveAgo);
             }
             if ([user.userId isEqualToString:aliceRestClient.credentials.userId])
             {
