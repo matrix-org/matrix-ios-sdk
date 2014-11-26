@@ -338,4 +338,73 @@
     }];
 }
 
+- (void)testPauseResume
+{
+    // Make sure Alice and Bob have activities
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
+
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+
+        [mxSession start:^{
+
+            // Delay the test as the event stream is actually launched by the sdk after the call of the block passed in [MXSession start]
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+
+                __block BOOL paused = NO;
+                __block NSInteger eventCount = 0;
+
+                [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
+                    eventCount++;
+                    XCTAssertFalse(paused, @"We should not receive events when paused. Received: %@", event);
+                }];
+
+                MXRoom *room = [mxSession room:room_id];
+                [room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+                    eventCount++;
+                    XCTAssertFalse(paused, @"We should not receive events when paused. Received: %@", event);
+                }];
+
+                MXUser *bob = [mxSession user:bobRestClient.credentials.userId];
+                [bob listenToUserUpdate:^(MXEvent *event) {
+                    eventCount++;
+                    XCTAssertFalse(paused, @"We should not receive events when paused. Received: %@", event);
+                }];
+
+
+                // Pause the session
+                [mxSession pause];
+                paused = YES;
+
+                // Do some activity while MXSession is paused
+                // We should not receive events while paused
+                [bobRestClient postTextMessageToRoom:room_id text:@"A message" success:^(NSString *event_id) {
+
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                }];
+
+                // Resume the MXSession in 3 secs
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+
+                    [mxSession resume];
+                    paused = NO;
+
+                    // We should receive these events now
+                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                        
+                        XCTAssertGreaterThan(eventCount, 0, @"We should have received events");
+                        [expectation fulfill];
+                        
+                    });
+                    
+                });
+                
+            });
+            
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
 @end
