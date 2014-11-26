@@ -19,6 +19,8 @@
 
 #import "MXSessionEventListener.h"
 
+#import "MXNoStore.h"
+
 #define SERVER_TIMEOUT_MS 30000
 #define CLIENT_TIMEOUT_MS 40000
 #define ERR_TIMEOUT_MS    5000
@@ -36,9 +38,6 @@
     // Indicates if we are streaming
     BOOL streamingActive;
 
-    // The token returned by the last long polling used to manage streaming
-    NSString *lastStreamingToken;
-    
     // The list of global events listeners (`MXSessionEventListener`)
     NSMutableArray *globalEventListeners;
 }
@@ -59,6 +58,10 @@
         streamingActive = NO;
         
         globalEventListeners = [NSMutableArray array];
+
+        // Create a MXStore
+        // @TODO: Let the app choose and pass the type of store it
+        _store = [[MXNoStore alloc] init];
         
         // Define default events to consider as messages
         eventsFilterForMessages = @[
@@ -103,7 +106,7 @@
         initialSyncDone();
         
         // Start listening to live events
-        lastStreamingToken = JSONData[@"end"];
+        _store.eventStreamToken = JSONData[@"end"];
         [self resume];
      }
      failure:^(NSError *error) {
@@ -126,8 +129,8 @@
             [self handleLiveEvents:events];
             
             // Go streaming from the returned token
-            lastStreamingToken = JSONData[@"end"];
-            [self streamEventsFromToken:lastStreamingToken];
+            _store.eventStreamToken = JSONData[@"end"];
+            [self streamEventsFromToken:JSONData[@"end"]];
         }
         
     } failure:^(NSError *error) {
@@ -191,13 +194,13 @@
 - (void)resume
 {
     // Resume from the last known token
-    [self streamEventsFromToken:lastStreamingToken];
+    [self streamEventsFromToken:_store.eventStreamToken];
 }
 
 - (void)close
 {
     streamingActive = NO;
-    lastStreamingToken = nil;
+    _store.eventStreamToken = nil;
     
     [self removeAllListeners];
 

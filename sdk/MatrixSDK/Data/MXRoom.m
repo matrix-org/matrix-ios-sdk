@@ -32,9 +32,6 @@
     //        at each resetBackState call.
     MXEvent *lastMessage;
 
-    // The token used to know from where to paginate back.
-    NSString *pagEarliestToken;
-    
     // The list of event listeners (`MXEventListener`) in this room
     NSMutableArray *eventListeners;
 
@@ -60,8 +57,8 @@
         
         messages = [NSMutableArray array];
         _canPaginate = YES;
-        
-        pagEarliestToken = @"END";
+
+        [mxSession.store storePaginationTokenOfRoom:room_id andToken:@"END"];
         
         eventListeners = [NSMutableArray array];
         
@@ -119,7 +116,7 @@
         }
         
         // Store how far back we've paginated
-        pagEarliestToken = roomMessages.end;
+        [mxSession.store storePaginationTokenOfRoom:_state.room_id andToken:roomMessages.end];
     }
     else {
         // InitialSync returns messages in chronological order
@@ -130,7 +127,7 @@
         }
         
         // Store where to start pagination
-        pagEarliestToken = roomMessages.start;
+        [mxSession.store storePaginationTokenOfRoom:_state.room_id andToken:roomMessages.start];
     }
 }
 
@@ -232,7 +229,7 @@
     // @TODO: Do not do that. Keep downloaded messages and request pagination from the server only when needed.
     messages = [NSMutableArray array];
     _canPaginate = YES;
-    pagEarliestToken = @"END";
+    [mxSession.store storePaginationTokenOfRoom:_state.room_id andToken:@"END"];
 }
 
 - (void)paginateBackMessages:(NSUInteger)numItems
@@ -243,7 +240,8 @@
     
     // Paginate from last known token
     [mxSession.matrixRestClient messagesForRoom:_state.room_id
-                                           from:pagEarliestToken to:nil
+                                           from:[mxSession.store paginationTokenOfRoom:_state.room_id]
+                                             to:nil
                                           limit:numItems
                                         success:^(MXPaginationResponse *paginatedResponse) {
         

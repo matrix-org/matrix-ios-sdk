@@ -20,6 +20,7 @@
 #import "MXRoom.h"
 #import "MXMyUser.h"
 #import "MXSessionEventListener.h"
+#import "MXStore.h"
 
 /**
  `MXSession` manages data and events from the home server
@@ -38,6 +39,9 @@
 
 // The profile of the current user
 @property (nonatomic, readonly) MXMyUser *myUser;
+
+// The store used to store user's Matrix data
+@property (nonatomic, readonly) id<MXStore> store;
 
 /**
  An array of `MXEventTypeString` indicating which events must be stored as messages in MXSession and its MXRooms.
