@@ -21,21 +21,21 @@
  The `MXStore` protocol defines an interface that must be implemented in order to store
  Matrix data handled during a `MXSession`.
  */
-@protocol MXStore
+@protocol MXStore <NSObject>
 
 #pragma mark - Room data
 
 /**
- Store room events received from the home server.
+ Store room event received from the home server.
  
  Note: The `MXEvent` class implements the `NSCoding` protocol so their instances can
  be easily serialised/unserialised.
  
  @param roomId the id of the room.
- @param events the array of time-ordered MXEvent objects to store
+ @param event the MXEvent object to store.
  @param direction the origin of the event. Live or past events.
  */
-- (void)storeEventsForRoom:(NSString*)roomId events:(NSArray*)events direction:(MXEventDirection)direction;
+- (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXEventDirection)direction;
 
 /**
  Store/retrieve the current pagination token of a room.
@@ -67,7 +67,7 @@
 
  @param roomId the id of the room.
  @param numMessages the number or messages to get.
- @return an array of time-ordered MXEvent object. nil if no more are available.
+ @return an array of time-ordered MXEvent objects. nil if no more are available.
  */
 - (NSArray*)paginateRoom:(NSString*)roomId numMessages:(NSUInteger)numMessages;
 
@@ -75,5 +75,15 @@
 
 // @TODO
 //- (void)recents;
+
+@optional
+
+/**
+ Save/commit changes in the store.
+
+ If the store uses permanent storage like database or file. It is the optimised time
+ to commit the last changes.
+ */
+- (void)save;
 
 @end

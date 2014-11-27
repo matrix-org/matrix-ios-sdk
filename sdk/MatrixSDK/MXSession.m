@@ -169,6 +169,12 @@
                 break;
         }
     }
+
+    // Commit store changes done in [room handleLiveEvent]
+    if ([_store respondsToSelector:@selector(save)])
+    {
+        [_store save];
+    }
 }
 
 - (void) handlePresenceEvent:(MXEvent *)event direction:(MXEventDirection)direction

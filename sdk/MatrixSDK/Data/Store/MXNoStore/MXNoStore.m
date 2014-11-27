@@ -43,7 +43,7 @@
     return self;
 }
 
-- (void)storeEventsForRoom:(NSString*)roomId events:(NSArray*)events direction:(MXEventDirection)direction
+- (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXEventDirection)direction
 {
     // Store nothing in the MXNoStore
 }

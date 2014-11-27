@@ -113,6 +113,9 @@
         // [MXRestClient messages] returns messages in reverse chronological order
         for (MXEvent *event in events) {
             [self handleMessage:event direction:direction pagFrom:roomMessages.start];
+
+            // Store the event
+            [mxSession.store storeEventForRoom:_state.room_id event:event direction:MXEventDirectionBackwards];
         }
         
         // Store how far back we've paginated
@@ -128,6 +131,12 @@
         
         // Store where to start pagination
         [mxSession.store storePaginationTokenOfRoom:_state.room_id andToken:roomMessages.start];
+    }
+
+    // Commit store changes
+    if ([mxSession.store respondsToSelector:@selector(save)])
+    {
+        [mxSession.store save];
     }
 }
 
@@ -213,6 +222,9 @@
 
     // Process the event
     [self handleMessage:event direction:MXEventDirectionForwards pagFrom:nil];
+
+    // Store the event
+    [mxSession.store storeEventForRoom:_state.room_id event:event direction:MXEventDirectionForwards];
 
     // And notify the listeners
     [self notifyListeners:event direction:MXEventDirectionForwards];
