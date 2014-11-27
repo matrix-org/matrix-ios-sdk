@@ -17,6 +17,10 @@
 #import "MXJSONModels.h"
 #import "MXEventListener.h"
 
+/**
+ The `MXStore` protocol defines an interface that must be implemented in order to store
+ Matrix data handled during a `MXSession`.
+ */
 @protocol MXStore
 
 #pragma mark - Room data
@@ -28,7 +32,7 @@
  be easily serialised/unserialised.
  
  @param roomId the id of the room.
- @param events the array of MXEvent objects to store.
+ @param events the array of time-ordered MXEvent objects to store
  @param direction the origin of the event. Live or past events.
  */
 - (void)storeEventsForRoom:(NSString*)roomId events:(NSArray*)events direction:(MXEventDirection)direction;
@@ -51,7 +55,8 @@
 
  Events are retrieved from the MXStore by an enumeration mechanism. `resetPaginationOfRoom` initialises
  the enumeration.
- Then events are continously enumerated by chunk via `paginateRoom`.
+ The start point is the most recent events of a room.
+ Events are then continously enumerated by chunk via `paginateRoom`.
 
  @param roomId the id of the room.
  */
@@ -62,7 +67,7 @@
 
  @param roomId the id of the room.
  @param numMessages the number or messages to get.
- @return an array of MXEvent object. nil if no more are available.
+ @return an array of time-ordered MXEvent object. nil if no more are available.
  */
 - (NSArray*)paginateRoom:(NSString*)roomId numMessages:(NSUInteger)numMessages;
 
