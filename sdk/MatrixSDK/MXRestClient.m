@@ -724,11 +724,11 @@ MXAuthAction;
      }];
 }
 
-- (void)eventsFromToken:(NSString *)token
+- (void)eventsFromToken:(NSString*)token
           serverTimeout:(NSUInteger)serverTimeout
           clientTimeout:(NSUInteger)clientTimeout
-                success:(void (^)(NSDictionary *))success
-                failure:(void (^)(NSError *))failure
+                success:(void (^)(MXPaginationResponse *paginatedResponse))success
+                failure:(void (^)(NSError *error))failure
 {
 
     // All query parameters are optional. Fill the request parameters on demand
@@ -756,8 +756,8 @@ MXAuthAction;
                      parameters:parameters timeout:clientTimeoutInSeconds
                         success:^(NSDictionary *JSONResponse)
      {
-         
-         success(JSONResponse);
+         MXPaginationResponse *paginatedResponse = [MXPaginationResponse modelFromJSON:JSONResponse];
+         success(paginatedResponse);
      }
                         failure:^(NSError *error)
      {

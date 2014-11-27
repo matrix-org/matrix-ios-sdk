@@ -118,19 +118,19 @@
 {
     streamingActive = YES;
     
-    [matrixRestClient eventsFromToken:token serverTimeout:SERVER_TIMEOUT_MS clientTimeout:CLIENT_TIMEOUT_MS success:^(NSDictionary *JSONData) {
+    [matrixRestClient eventsFromToken:token serverTimeout:SERVER_TIMEOUT_MS clientTimeout:CLIENT_TIMEOUT_MS success:^(MXPaginationResponse *paginatedResponse) {
         
         if (streamingActive)
         {
             // Convert chunk array into an array of MXEvents
-            NSArray *events = [MXEvent modelsFromJSON:JSONData[@"chunk"]];
+            NSArray *events = paginatedResponse.chunk;
             
             // And handle them
             [self handleLiveEvents:events];
             
             // Go streaming from the returned token
-            _store.eventStreamToken = JSONData[@"end"];
-            [self streamEventsFromToken:JSONData[@"end"]];
+            _store.eventStreamToken = paginatedResponse.end;
+            [self streamEventsFromToken:paginatedResponse.end];
         }
         
     } failure:^(NSError *error) {
