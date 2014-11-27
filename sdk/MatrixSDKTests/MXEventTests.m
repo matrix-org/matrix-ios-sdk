@@ -87,4 +87,33 @@
     }];
 }
 
+// Make sure MXEvent is serialisable
+- (void)testNSCoding
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+
+        [bobRestClient messagesForRoom:room_id from:nil to:nil limit:100 success:^(MXPaginationResponse *paginatedResponse) {
+
+            NSAssert(0 < paginatedResponse.chunk.count, @"Cannot set up intial test conditions");
+
+            for (MXEvent *event in paginatedResponse.chunk)
+            {
+                // Check unserialisation of a serialised event
+                [NSKeyedArchiver archiveRootObject:event toFile:@"event"];
+                MXEvent *event2 = [NSKeyedUnarchiver unarchiveObjectWithFile:@"event"];
+
+                // XCTAssertEqualObjects will compare MXEvent.descriptions which
+                // provide good enough object data signature
+                XCTAssertEqualObjects(event, event2);
+            }
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 @end

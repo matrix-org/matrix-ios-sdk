@@ -24,8 +24,11 @@
 /**
  Store room events received from the home server.
  
+ Note: The `MXEvent` class implements the `NSCoding` protocol so their instances can
+ be easily serialised/unserialised.
+ 
  @param roomId the id of the room.
- @param events the array of events to store. Each event comes as a JSON NSDictionary.
+ @param events the array of MXEvent objects to store.
  @param direction the origin of the event. Live or past events.
  */
 - (void)storeEventsForRoom:(NSString*)roomId events:(NSArray*)events direction:(MXEventDirection)direction;
@@ -46,6 +49,10 @@
 /**
  Reset pagination mechanism in a room.
 
+ Events are retrieved from the MXStore by an enumeration mechanism. `resetPaginationOfRoom` initialises
+ the enumeration.
+ Then events are continously enumerated by chunk via `paginateRoom`.
+
  @param roomId the id of the room.
  */
 - (void)resetPaginationOfRoom:(NSString*)roomId;
@@ -55,8 +62,7 @@
 
  @param roomId the id of the room.
  @param numMessages the number or messages to get.
- @return an array of events. Each event must come as a JSON NSDictionary like they
-         have been stored with `storeEventsForRoom`.
+ @return an array of MXEvent object. nil if no more are available.
  */
 - (NSArray*)paginateRoom:(NSString*)roomId numMessages:(NSUInteger)numMessages;
 
