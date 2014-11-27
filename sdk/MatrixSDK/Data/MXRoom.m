@@ -23,10 +23,6 @@
 {
     MXSession *mxSession;
     
-    // The events downloaded so far.
-    // The order is chronological: the first item is the oldest message.
-    NSMutableArray *messages;
-    
     // The last message of the room.
     // @TODO: this member should be temporary. It is used while `messages` is reset
     //        at each resetBackState call.
@@ -54,8 +50,6 @@
     if (self)
     {
         mxSession = mxSession2;
-        
-        messages = [NSMutableArray array];
 
         [mxSession.store storePaginationTokenOfRoom:room_id andToken:@"END"];
         
@@ -151,11 +145,9 @@
     {
         if (MXEventDirectionBackwards == direction)
         {
-            [messages insertObject:event atIndex:0];
         }
         else
         {
-            [messages addObject:event];
             lastMessage = event;
         }
     }
@@ -235,12 +227,7 @@
     // Reset the back state to the current room state
     backState = [[MXRoomState alloc] initBackStateWith:_state];
 
-    // Reset everything
-    // Trash downloaded messages to restart pagination from the server to the beginning.
-    // @TODO: Do not do that. Keep downloaded messages and request pagination from the server only when needed.
-    messages = [NSMutableArray array];
-    [mxSession.store storePaginationTokenOfRoom:_state.room_id andToken:@"END"];
-
+    // Reset store pagination
     [mxSession.store resetPaginationOfRoom:_state.room_id];
 }
 
