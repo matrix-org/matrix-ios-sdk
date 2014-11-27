@@ -56,7 +56,6 @@
         mxSession = mxSession2;
         
         messages = [NSMutableArray array];
-        _canPaginate = YES;
 
         [mxSession.store storePaginationTokenOfRoom:room_id andToken:@"END"];
         
@@ -240,7 +239,6 @@
     // Trash downloaded messages to restart pagination from the server to the beginning.
     // @TODO: Do not do that. Keep downloaded messages and request pagination from the server only when needed.
     messages = [NSMutableArray array];
-    _canPaginate = YES;
     [mxSession.store storePaginationTokenOfRoom:_state.room_id andToken:@"END"];
 
     [mxSession.store resetPaginationOfRoom:_state.room_id];
@@ -287,7 +285,7 @@
                                                 if (paginatedResponse.chunk.count < numItems)
                                                 {
                                                     // We run out of items
-                                                    _canPaginate = NO;
+                                                    [mxSession.store storeHasReachedHomeServerPaginationEndForRoom:_state.room_id andValue:YES];
                                                 }
 
                                                 // Process these new events
@@ -306,6 +304,11 @@
         // Nothing more to do
         complete();
     }
+}
+
+- (BOOL)canPaginate
+{
+    return ![mxSession.store hasReachedHomeServerPaginationEndForRoom:_state.room_id];
 }
 
 

@@ -84,7 +84,8 @@
 
 - (void)resetPaginationOfRoom:(NSString*)roomId
 {
-    // Nothing to do
+    // As the back pagination is based on the HS back pagination API, reset this flag
+    [self storeHasReachedHomeServerPaginationEndForRoom:roomId andValue:NO];
 }
 
 - (NSArray*)paginateRoom:(NSString*)roomId numMessages:(NSUInteger)numMessages
