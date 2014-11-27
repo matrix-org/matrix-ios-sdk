@@ -306,7 +306,7 @@
     }];
 }
 
-- (void)testMessages
+- (void)testMessagesWithNoParams
 {
     [[MatrixSDKTestsData sharedData]  doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
         
@@ -325,6 +325,28 @@
             [expectation fulfill];
         }];
         
+    }];
+}
+
+- (void)testMessagesWithOneParam
+{
+    [[MatrixSDKTestsData sharedData]  doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+
+        [bobRestClient messagesForRoom:room_id from:nil to:nil limit:100 success:^(MXPaginationResponse *paginatedResponse) {
+
+            XCTAssertNotNil(paginatedResponse);
+            XCTAssertNotNil(paginatedResponse.start);
+            XCTAssertNotNil(paginatedResponse.end);
+            XCTAssertNotNil(paginatedResponse.chunk);
+            XCTAssertGreaterThan(paginatedResponse.chunk.count, 0);
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
     }];
 }
 
