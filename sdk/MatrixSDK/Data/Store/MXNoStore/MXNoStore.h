@@ -22,6 +22,8 @@
  `MXNoStore` is an implementation of the `MXStore` interface where no event is stored.
  That means that the Matrix SDK will always make requests to the home server to get events,
  even for those it already fetched.
+ 
+ It stores minimal information like tokens in memory to make the SDK able to work using it.
  */
 @interface MXNoStore : NSObject <MXStore>
 
