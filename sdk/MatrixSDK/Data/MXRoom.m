@@ -230,6 +230,8 @@
     messages = [NSMutableArray array];
     _canPaginate = YES;
     [mxSession.store storePaginationTokenOfRoom:_state.room_id andToken:@"END"];
+
+    [mxSession.store resetPaginationOfRoom:_state.room_id];
 }
 
 - (void)paginateBackMessages:(NSUInteger)numItems
@@ -237,31 +239,61 @@
                      failure:(void (^)(NSError *error))failure
 {
     NSAssert(nil != backState, @"resetBackState must be called before starting the back pagination");
-    
-    // Paginate from last known token
-    [mxSession.matrixRestClient messagesForRoom:_state.room_id
-                                           from:[mxSession.store paginationTokenOfRoom:_state.room_id]
-                                             to:nil
-                                          limit:numItems
-                                        success:^(MXPaginationResponse *paginatedResponse) {
-        
-        // Check pagination end
-        if (paginatedResponse.chunk.count < numItems)
+
+    // Return messages in the store first
+    NSUInteger messagesFromStoreCount = 0;
+    NSArray *messagesFromStore = [mxSession.store paginateRoom:_state.room_id numMessages:numItems];
+    if (messagesFromStore)
+    {
+        messagesFromStoreCount = messagesFromStore.count;
+    }
+
+    if (messagesFromStoreCount)
+    {
+        // messagesFromStore are in chronological order
+        // Handle events from the most recent
+        for (NSInteger i = messagesFromStoreCount - 1; i >= 0; i--)
         {
-            // We run out of items
-            _canPaginate = NO;
+            MXEvent *event = messagesFromStore[i];
+            [self handleMessage:event direction:MXEventDirectionBackwards pagFrom:nil];
         }
-        
-        // Process these new events
-        [self handleMessages:paginatedResponse direction:MXEventDirectionBackwards isTimeOrdered:NO];
-                       
-        // Inform the method caller
+
+        numItems -= messagesFromStoreCount;
+    }
+
+    if (0 < numItems)
+    {
+        // Not enough messages: make a pagination request to the home server
+        // from last known token
+        [mxSession.matrixRestClient messagesForRoom:_state.room_id
+                                               from:[mxSession.store paginationTokenOfRoom:_state.room_id]
+                                                 to:nil
+                                              limit:numItems
+                                            success:^(MXPaginationResponse *paginatedResponse) {
+
+                                                // Check pagination end
+                                                if (paginatedResponse.chunk.count < numItems)
+                                                {
+                                                    // We run out of items
+                                                    _canPaginate = NO;
+                                                }
+
+                                                // Process these new events
+                                                [self handleMessages:paginatedResponse direction:MXEventDirectionBackwards isTimeOrdered:NO];
+                                                
+                                                // Inform the method caller
+                                                complete();
+                                                
+                                            } failure:^(NSError *error) {
+                                                NSLog(@"paginateBackMessages error: %@", error);
+                                                failure(error);
+                                            }];
+    }
+    else
+    {
+        // Nothing more to do
         complete();
-        
-    } failure:^(NSError *error) {
-        NSLog(@"paginateBackMessages error: %@", error);
-        failure(error);
-    }];
+    }
 }
 
 
