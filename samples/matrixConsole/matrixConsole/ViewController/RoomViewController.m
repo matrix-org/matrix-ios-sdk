@@ -30,8 +30,10 @@
 
 #define UPLOAD_FILE_SIZE 5000000
 
-#define ROOM_MESSAGE_CELL_TEXTVIEW_TOP_CONST_DEFAULT 10
-#define ROOM_MESSAGE_CELL_TEXTVIEW_BOTTOM_CONST_DEFAULT 0
+#define ROOM_MESSAGE_CELL_DEFAULT_HEIGHT 50
+#define ROOM_MESSAGE_CELL_DEFAULT_TEXTVIEW_TOP_CONST 10
+#define ROOM_MESSAGE_CELL_DEFAULT_ATTACHMENTVIEW_TOP_CONST 18
+#define ROOM_MESSAGE_CELL_HEIGHT_REDUCTION_WHEN_SENDER_INFO_IS_HIDDEN -10
 
 NSString *const kCmdChangeDisplayName = @"/nick";
 NSString *const kCmdEmote = @"/me";
@@ -793,7 +795,8 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
     // Check table view members vs messages
     if (tableView == self.membersTableView) {
-        return 50;
+        // Use the same default height than message cell
+        return ROOM_MESSAGE_CELL_DEFAULT_HEIGHT;
     }
     
     // Compute here height of message cells
@@ -802,12 +805,33 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     RoomMessage* message = [messages objectAtIndex:indexPath.row];
     // Consider message content height
     rowHeight = message.contentSize.height;
-    rowHeight += ROOM_MESSAGE_CELL_TEXTVIEW_TOP_CONST_DEFAULT;
-    rowHeight += ROOM_MESSAGE_CELL_TEXTVIEW_BOTTOM_CONST_DEFAULT;
+    // Add top margin
+    if (message.messageType == RoomMessageTypeText) {
+        rowHeight += ROOM_MESSAGE_CELL_DEFAULT_TEXTVIEW_TOP_CONST;
+    } else {
+        rowHeight += ROOM_MESSAGE_CELL_DEFAULT_ATTACHMENTVIEW_TOP_CONST;
+    }
     
-    // We consider the minimun cell height (50) in order to display correctly user's picture
-    if (rowHeight < 50) {
-        rowHeight = 50;
+    // Check whether the previous message has been sent by the same user.
+    // The user's picture and name are displayed only for the first message.
+    BOOL shouldHideSenderInfo = NO;
+    if (indexPath.row) {
+        RoomMessage *previousMessage = [messages objectAtIndex:indexPath.row - 1];
+        if ([previousMessage.senderId isEqualToString:message.senderId]
+            && [previousMessage.senderName isEqualToString:message.senderName]
+            && [previousMessage.senderAvatarUrl isEqualToString:message.senderAvatarUrl]) {
+            shouldHideSenderInfo = YES;
+        }
+    }
+    
+    if (shouldHideSenderInfo) {
+        // Reduce top margin -> row height reduction
+        rowHeight += ROOM_MESSAGE_CELL_HEIGHT_REDUCTION_WHEN_SENDER_INFO_IS_HIDDEN;
+    } else {
+        // We consider a minimun cell height in order to display correctly user's picture
+        if (rowHeight < ROOM_MESSAGE_CELL_DEFAULT_HEIGHT) {
+            rowHeight = ROOM_MESSAGE_CELL_DEFAULT_HEIGHT;
+        }
     }
     return rowHeight;
 }
@@ -834,9 +858,9 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
         OutgoingMessageTableCell* outgoingMsgCell = (OutgoingMessageTableCell*)cell;
         // Hide potential loading wheel
         [outgoingMsgCell.activityIndicator stopAnimating];
-        // Hide unsent view by default, and remove potential unsent label(s)
-        outgoingMsgCell.unsentView.hidden = YES;
-        for (UIView *view in outgoingMsgCell.unsentView.subviews) {
+        // Hide unsent container by default, and remove potential unsent label(s)
+        outgoingMsgCell.unsentLabelContainer.hidden = YES;
+        for (UIView *view in outgoingMsgCell.unsentLabelContainer.subviews) {
             [view removeFromSuperview];
         }
     } else {
@@ -844,7 +868,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
         isIncomingMsg = YES;
     }
     
-    // Restore initial settings of attachment ImageView
+    // Restore initial settings
     cell.attachmentView.imageURL = nil; // Cancel potential attachment loading
     cell.attachmentView.hidden = YES;
     cell.playIconView.hidden = YES;
@@ -852,16 +876,14 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     while (cell.attachmentView.gestureRecognizers.count) {
         [cell.attachmentView removeGestureRecognizer:cell.attachmentView.gestureRecognizers[0]];
     }
-    cell.attachmentViewTopAlignmentConstraint.constant = 0;
-    cell.attachmentViewBottomAlignmentConstraint.constant = 0;
     // Remove potential dateTime label(s)
-    if (cell.dateTimeView.constraints.count) {
+    if (cell.dateTimeLabelContainer.constraints.count) {
         if ([NSLayoutConstraint respondsToSelector:@selector(deactivateConstraints:)]) {
-            [NSLayoutConstraint deactivateConstraints:cell.dateTimeView.constraints];
+            [NSLayoutConstraint deactivateConstraints:cell.dateTimeLabelContainer.constraints];
         } else {
-            [cell.dateTimeView removeConstraints:cell.dateTimeView.constraints];
+            [cell.dateTimeLabelContainer removeConstraints:cell.dateTimeLabelContainer.constraints];
         }
-        for (UIView *view in cell.dateTimeView.subviews) {
+        for (UIView *view in cell.dateTimeLabelContainer.subviews) {
             [view removeFromSuperview];
         }
     }
@@ -878,13 +900,16 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
         }
     }
     
-    // Adjust display
-    cell.msgTextViewTopConstraint.constant = ROOM_MESSAGE_CELL_TEXTVIEW_TOP_CONST_DEFAULT;
-    cell.msgTextViewBottomConstraint.constant = ROOM_MESSAGE_CELL_TEXTVIEW_BOTTOM_CONST_DEFAULT;
-    
-    // Handle user's picture
-    cell.pictureView.hidden = shouldHideSenderInfo;
-    if (!shouldHideSenderInfo) {
+    if (shouldHideSenderInfo) {
+        cell.pictureView.hidden = YES;
+        cell.msgTextViewTopConstraint.constant = ROOM_MESSAGE_CELL_DEFAULT_TEXTVIEW_TOP_CONST + ROOM_MESSAGE_CELL_HEIGHT_REDUCTION_WHEN_SENDER_INFO_IS_HIDDEN;
+        cell.attachViewTopConstraint.constant = ROOM_MESSAGE_CELL_DEFAULT_ATTACHMENTVIEW_TOP_CONST + ROOM_MESSAGE_CELL_HEIGHT_REDUCTION_WHEN_SENDER_INFO_IS_HIDDEN;
+        
+    } else {
+        cell.pictureView.hidden = NO;
+        cell.msgTextViewTopConstraint.constant = ROOM_MESSAGE_CELL_DEFAULT_TEXTVIEW_TOP_CONST;
+        cell.attachViewTopConstraint.constant = ROOM_MESSAGE_CELL_DEFAULT_ATTACHMENTVIEW_TOP_CONST;
+        // Handle user's picture
         cell.pictureView.placeholder = @"default-profile";
         cell.pictureView.imageURL = message.senderAvatarUrl;
         [cell.pictureView.layer setCornerRadius:cell.pictureView.frame.size.width / 2];
@@ -899,24 +924,32 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
         incomingMsgCell.userNameLabel.text = message.senderName;
     } else {
         OutgoingMessageTableCell* outgoingMsgCell = (OutgoingMessageTableCell*)cell;
+        // Adjust top constraint constant for unsent labels container
+        CGFloat yPosition;
+        if (message.messageType == RoomMessageTypeText) {
+            outgoingMsgCell.unsentLabelContainerTopConstraint.constant = cell.msgTextViewTopConstraint.constant;
+            yPosition = ROOM_MESSAGE_TEXTVIEW_MARGIN;
+        } else {
+            outgoingMsgCell.unsentLabelContainerTopConstraint.constant = cell.attachViewTopConstraint.constant;
+            yPosition = -ROOM_MESSAGE_TEXTVIEW_MARGIN;
+        }
         // Add unsent label for failed components
-        CGFloat yPosition = ROOM_MESSAGE_TEXTVIEW_MARGIN;
         for (RoomMessageComponent *component in message.components) {
             if (component.status == RoomMessageComponentStatusFailed) {
-                UILabel *unsentLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, yPosition, outgoingMsgCell.unsentView.frame.size.width , 20)];
+                UILabel *unsentLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, yPosition, outgoingMsgCell.unsentLabelContainer.frame.size.width , 20)];
                 unsentLabel.text = @"Unsent";
                 unsentLabel.textAlignment = NSTextAlignmentCenter;
                 unsentLabel.textColor = [UIColor redColor];
                 unsentLabel.font = [UIFont systemFontOfSize:14];
-                [outgoingMsgCell.unsentView addSubview:unsentLabel];
-                outgoingMsgCell.unsentView.hidden = NO;
+                [outgoingMsgCell.unsentLabelContainer addSubview:unsentLabel];
+                outgoingMsgCell.unsentLabelContainer.hidden = NO;
             }
             yPosition += component.height;
         }
     }
     CGSize contentSize = message.contentSize;
     if (message.messageType != RoomMessageTypeText) {
-        cell.messageTextView.attributedText = nil; // Note: Text view is used as attachment background view
+        cell.messageTextView.hidden = YES;
         cell.attachmentView.hidden = NO;
         // Update image view frame in order to center loading wheel (if any)
         CGRect frame = cell.attachmentView.frame;
@@ -954,11 +987,10 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
                                               @"info" : message.attachmentInfo};
         }
         
-        // Adjust constraint constant
-        cell.msgTextViewWidthConstraint.constant = contentSize.width;
-        cell.attachmentViewTopAlignmentConstraint.constant = ROOM_MESSAGE_IMAGE_MARGIN;
-        cell.attachmentViewBottomAlignmentConstraint.constant = -ROOM_MESSAGE_IMAGE_MARGIN;
+        // Adjust Attachment width constant
+        cell.attachViewWidthConstraint.constant = contentSize.width;
     } else {
+        cell.messageTextView.hidden = NO;
         cell.messageTextView.attributedText = message.attributedTextMessage;
         // Adjust textView width constraint
         cell.msgTextViewWidthConstraint.constant = contentSize.width;
@@ -966,12 +998,20 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     
     // Handle timestamp display
     if (dateFormatter) {
-        cell.dateTimeView.hidden = NO;
+        cell.dateTimeLabelContainer.hidden = NO;
+        CGFloat yPosition;
+        // Adjust top constraint constant
+        if (message.messageType == RoomMessageTypeText) {
+            cell.dateTimeLabelContainerTopConstraint.constant = cell.msgTextViewTopConstraint.constant;
+            yPosition = ROOM_MESSAGE_TEXTVIEW_MARGIN;
+        } else {
+            cell.dateTimeLabelContainerTopConstraint.constant = cell.attachViewTopConstraint.constant;
+            yPosition = -ROOM_MESSAGE_TEXTVIEW_MARGIN;
+        }
         // Add datetime label for each component
-        CGFloat yPosition = ROOM_MESSAGE_TEXTVIEW_MARGIN;
         for (RoomMessageComponent *component in message.components) {
             if (component.date) {
-                UILabel *dateTimeLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, yPosition, cell.dateTimeView.frame.size.width , 20)];
+                UILabel *dateTimeLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, yPosition, cell.dateTimeLabelContainer.frame.size.width , 20)];
                 dateTimeLabel.text = [dateFormatter stringFromDate:component.date];
                 if (isIncomingMsg) {
                     dateTimeLabel.textAlignment = NSTextAlignmentRight;
@@ -983,19 +1023,19 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
                 dateTimeLabel.adjustsFontSizeToFitWidth = YES;
                 dateTimeLabel.minimumScaleFactor = 0.6;
                 [dateTimeLabel setTranslatesAutoresizingMaskIntoConstraints:NO];
-                [cell.dateTimeView addSubview:dateTimeLabel];
+                [cell.dateTimeLabelContainer addSubview:dateTimeLabel];
                 // Force dateTimeLabel in full width (to handle auto-layout in case of screen rotation)
                 NSLayoutConstraint *leftConstraint = [NSLayoutConstraint constraintWithItem:dateTimeLabel
                                                                                   attribute:NSLayoutAttributeLeading
                                                                                   relatedBy:NSLayoutRelationEqual
-                                                                                     toItem:cell.dateTimeView
+                                                                                     toItem:cell.dateTimeLabelContainer
                                                                                   attribute:NSLayoutAttributeLeading
                                                                                  multiplier:1.0
                                                                                    constant:0];
                 NSLayoutConstraint *rightConstraint = [NSLayoutConstraint constraintWithItem:dateTimeLabel
                                                                                    attribute:NSLayoutAttributeTrailing
                                                                                    relatedBy:NSLayoutRelationEqual
-                                                                                      toItem:cell.dateTimeView
+                                                                                      toItem:cell.dateTimeLabelContainer
                                                                                    attribute:NSLayoutAttributeTrailing
                                                                                   multiplier:1.0
                                                                                     constant:0];
@@ -1003,7 +1043,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
                 NSLayoutConstraint *topConstraint = [NSLayoutConstraint constraintWithItem:dateTimeLabel
                                                                                  attribute:NSLayoutAttributeTop
                                                                                  relatedBy:NSLayoutRelationEqual
-                                                                                    toItem:cell.dateTimeView
+                                                                                    toItem:cell.dateTimeLabelContainer
                                                                                  attribute:NSLayoutAttributeTop
                                                                                 multiplier:1.0
                                                                                   constant:yPosition];
@@ -1017,16 +1057,16 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
                 if ([NSLayoutConstraint respondsToSelector:@selector(activateConstraints:)]) {
                     [NSLayoutConstraint activateConstraints:@[leftConstraint, rightConstraint, topConstraint, heightConstraint]];
                 } else {
-                    [cell.dateTimeView addConstraint:leftConstraint];
-                    [cell.dateTimeView addConstraint:rightConstraint];
-                    [cell.dateTimeView addConstraint:topConstraint];
+                    [cell.dateTimeLabelContainer addConstraint:leftConstraint];
+                    [cell.dateTimeLabelContainer addConstraint:rightConstraint];
+                    [cell.dateTimeLabelContainer addConstraint:topConstraint];
                     [dateTimeLabel addConstraint:heightConstraint];
                 }
             }
             yPosition += component.height;
         }
     } else {
-        cell.dateTimeView.hidden = YES;
+        cell.dateTimeLabelContainer.hidden = YES;
     }
     return cell;
 }
@@ -1734,7 +1774,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
             MXEvent *localEvent = [self addLocalEventForAttachedImage:selectedImage];
             // Upload image and its thumbnail
             MatrixHandler *mxHandler = [MatrixHandler sharedHandler];
-            NSUInteger thumbnailSize = ROOM_MESSAGE_MAX_TEXTVIEW_WIDTH - 2 * ROOM_MESSAGE_IMAGE_MARGIN;
+            NSUInteger thumbnailSize = ROOM_MESSAGE_MAX_ATTACHMENTVIEW_WIDTH;
             [mxHandler.mxRestClient uploadImage:selectedImage thumbnailSize:thumbnailSize timeout:30 success:^(NSDictionary *imageMessage) {
                 // Send image
                 [self postMessage:imageMessage withLocalEvent:localEvent];
@@ -1755,7 +1795,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
                 
                 if (videoThumbnail) {
                     // Prepare video thumbnail description
-                    NSUInteger thumbnailSize = ROOM_MESSAGE_MAX_TEXTVIEW_WIDTH - 2 * ROOM_MESSAGE_IMAGE_MARGIN;
+                    NSUInteger thumbnailSize = ROOM_MESSAGE_MAX_ATTACHMENTVIEW_WIDTH;
                     UIImage *thumbnail = [MediaManager resize:videoThumbnail toFitInSize:CGSizeMake(thumbnailSize, thumbnailSize)];
                     NSMutableDictionary *thumbnailInfo = [[NSMutableDictionary alloc] init];
                     [thumbnailInfo setValue:@"image/jpeg" forKey:@"mimetype"];
