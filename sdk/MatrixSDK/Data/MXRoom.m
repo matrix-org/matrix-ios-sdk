@@ -73,6 +73,8 @@
                                                                     }];
             
             [self handleMessage:fakeMembershipEvent direction:MXEventDirectionSync pagFrom:@"END"];
+
+            [mxSession.store storeEventForRoom:room_id event:fakeMembershipEvent direction:MXEventDirectionSync];
         }
 
     }
