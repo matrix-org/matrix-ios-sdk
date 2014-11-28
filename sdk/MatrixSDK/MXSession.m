@@ -107,6 +107,13 @@
         
         // Start listening to live events
         _store.eventStreamToken = JSONData[@"end"];
+
+        // Commit store changes done in [room handleMessages]
+        if ([_store respondsToSelector:@selector(save)])
+        {
+            [_store save];
+        }
+
         [self resume];
      }
      failure:^(NSError *error) {
@@ -263,7 +270,13 @@
                 MXEvent *presenceEvent = [MXEvent modelFromJSON:presenceDict];
                 [self handlePresenceEvent:presenceEvent direction:MXEventDirectionSync];
             }
-            
+
+            // Commit store changes done in [room handleMessages]
+            if ([_store respondsToSelector:@selector(save)])
+            {
+                [_store save];
+            }
+
             success(room);
             
         } failure:^(NSError *error) {

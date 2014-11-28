@@ -120,8 +120,11 @@
         {
             MXEvent *event = events[i];
             [self handleMessage:event direction:direction pagFrom:roomMessages.end];
+
+            // Store the event
+            [mxSession.store storeEventForRoom:_state.room_id event:event direction:direction];
         }
-        
+
         // Store where to start pagination
         [mxSession.store storePaginationTokenOfRoom:_state.room_id andToken:roomMessages.start];
     }
