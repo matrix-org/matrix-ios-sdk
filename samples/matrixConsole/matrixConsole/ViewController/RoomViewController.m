@@ -918,12 +918,19 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     if (message.messageType != RoomMessageTypeText) {
         cell.messageTextView.attributedText = nil; // Note: Text view is used as attachment background view
         cell.attachmentView.hidden = NO;
+        // Update image view frame in order to center loading wheel (if any)
+        CGRect frame = cell.attachmentView.frame;
+        frame.size.width = contentSize.width;
+        frame.size.height = contentSize.height;
+        cell.attachmentView.frame = frame;
         // Fade attachments during upload
         if (message.isUploadInProgress) {
             cell.attachmentView.alpha = 0.5;
             [((OutgoingMessageTableCell*)cell).activityIndicator startAnimating];
+            cell.attachmentView.hideActivityIndicator = YES;
         } else {
             cell.attachmentView.alpha = 1;
+            cell.attachmentView.hideActivityIndicator = NO;
         }
         NSString *url = message.thumbnailURL;
         if (!url && message.messageType == RoomMessageTypeImage) {
@@ -992,11 +999,28 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
                                                                                    attribute:NSLayoutAttributeTrailing
                                                                                   multiplier:1.0
                                                                                     constant:0];
+                // Vertical constraints are required for iOS > 8
+                NSLayoutConstraint *topConstraint = [NSLayoutConstraint constraintWithItem:dateTimeLabel
+                                                                                 attribute:NSLayoutAttributeTop
+                                                                                 relatedBy:NSLayoutRelationEqual
+                                                                                    toItem:cell.dateTimeView
+                                                                                 attribute:NSLayoutAttributeTop
+                                                                                multiplier:1.0
+                                                                                  constant:yPosition];
+                NSLayoutConstraint *heightConstraint = [NSLayoutConstraint constraintWithItem:dateTimeLabel
+                                                                                    attribute:NSLayoutAttributeHeight
+                                                                                    relatedBy:NSLayoutRelationEqual
+                                                                                       toItem:nil
+                                                                                    attribute:NSLayoutAttributeNotAnAttribute
+                                                                                   multiplier:1.0
+                                                                                     constant:20];
                 if ([NSLayoutConstraint respondsToSelector:@selector(activateConstraints:)]) {
-                    [NSLayoutConstraint activateConstraints:@[leftConstraint, rightConstraint]];
+                    [NSLayoutConstraint activateConstraints:@[leftConstraint, rightConstraint, topConstraint, heightConstraint]];
                 } else {
                     [cell.dateTimeView addConstraint:leftConstraint];
                     [cell.dateTimeView addConstraint:rightConstraint];
+                    [cell.dateTimeView addConstraint:topConstraint];
+                    [dateTimeLabel addConstraint:heightConstraint];
                 }
             }
             yPosition += component.height;
