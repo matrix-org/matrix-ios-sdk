@@ -22,10 +22,6 @@
     // The order is chronological: the first item is the oldest message.
     NSMutableArray *messages;
 
-    // The last message of the room.
-    // @TODO: Is it required??
-    MXEvent *lastMessage;
-
     // This is the position from the end
     NSInteger paginationPosition;
 }
@@ -53,10 +49,16 @@
     else
     {
         [messages addObject:event];
-        lastMessage = event;
+        _lastMessage = event;
 
         // The messages array end has changed, shift the current pagination position
         paginationPosition -= 1;
+    }
+
+    // If there not yet a last message, use anything
+    if (nil == _lastMessage)
+    {
+        _lastMessage = event;
     }
 }
 

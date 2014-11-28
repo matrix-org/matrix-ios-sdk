@@ -53,4 +53,9 @@
  */
 - (NSArray*)paginate:(NSUInteger)numMessages;
 
+/**
+ The last message.
+ */
+@property (nonatomic, readonly) MXEvent *lastMessage;
+
 @end

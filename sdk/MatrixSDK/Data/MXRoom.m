@@ -22,11 +22,6 @@
 @interface MXRoom ()
 {
     MXSession *mxSession;
-    
-    // The last message of the room.
-    // @TODO: this member should be temporary. It is used while `messages` is reset
-    //        at each resetBackState call.
-    MXEvent *lastMessage;
 
     // The list of event listeners (`MXEventListener`) in this room
     NSMutableArray *eventListeners;
@@ -84,12 +79,17 @@
     return self;
 }
 
-#pragma mark - Properties getters implementation
 
+#pragma mark - Properties getters implementation
 - (MXEvent *)lastMessage
 {
     //return messages.lastObject;
-    return lastMessage;
+    return [mxSession.store lastMessageOfRoom:_state.room_id];
+}
+
+- (BOOL)canPaginate
+{
+    return ![mxSession.store hasReachedHomeServerPaginationEndForRoom:_state.room_id];
 }
 
 
@@ -138,18 +138,6 @@
     if (event.isState)
     {
         [self handleStateEvent:event direction:direction];
-    }
-    
-    // Put only expected messages into `messages`
-    if (NSNotFound != [mxSession.eventsFilterForMessages indexOfObject:event.type])
-    {
-        if (MXEventDirectionBackwards == direction)
-        {
-        }
-        else
-        {
-            lastMessage = event;
-        }
     }
 
     // Notify listener only for past events here
@@ -291,11 +279,6 @@
         // Nothing more to do
         complete();
     }
-}
-
-- (BOOL)canPaginate
-{
-    return ![mxSession.store hasReachedHomeServerPaginationEndForRoom:_state.room_id];
 }
 
 

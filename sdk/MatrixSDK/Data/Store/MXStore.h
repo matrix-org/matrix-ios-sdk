@@ -71,10 +71,23 @@
  */
 - (NSArray*)paginateRoom:(NSString*)roomId numMessages:(NSUInteger)numMessages;
 
+/**
+ The last message of a room.
+ 
+ @TODO: Provide the a message of a type managed by the app.
+        @see testLastMessageAfterPaginate that currently fails.
+
+ @param roomId the id of the room.
+ @return the MXEvent object corresponding to the last message.
+ */
+- (MXEvent*)lastMessageOfRoom:(NSString*)roomId;
+
+/**
+ The token indicating from where to start listening event stream to get
+ live events.
+ */
 @property (nonatomic) NSString *eventStreamToken;
 
-// @TODO
-//- (void)recents;
 
 @optional
 

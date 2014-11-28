@@ -86,6 +86,11 @@
     return [roomStore paginate:numMessages];
 }
 
+- (MXEvent *)lastMessageOfRoom:(NSString *)roomId
+{
+    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    return roomStore.lastMessage;
+}
 
 #pragma mark - Private operations
 - (MXMemoryRoomStore*)getOrCreateRoomStore:(NSString*)roomId

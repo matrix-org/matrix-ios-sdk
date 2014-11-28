@@ -24,6 +24,9 @@
     // key: roomId, value: the bool value
     NSMutableDictionary *hasReachedHomeServerPaginations;
 
+    // key: roomId, value: the last message of this room
+    NSMutableDictionary *lastMessages;
+
     NSString *eventStreamToken;
 }
 @end
@@ -39,13 +42,24 @@
     {
         paginationTokens = [NSMutableDictionary dictionary];
         hasReachedHomeServerPaginations = [NSMutableDictionary dictionary];
+        lastMessages = [NSMutableDictionary dictionary];
     }
     return self;
 }
 
 - (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXEventDirection)direction
 {
-    // Store nothing in the MXNoStore
+    // Store nothing in the MXNoStore except the last message
+    if (nil == lastMessages[roomId])
+    {
+        // If there not yet a last message, store anything
+        lastMessages[roomId] = event;
+    }
+    else if (MXEventDirectionForwards == direction)
+    {
+        // Else keep always the latest one
+        lastMessages[roomId] = event;
+    }
 }
 
 
@@ -92,6 +106,11 @@
 - (NSArray*)paginateRoom:(NSString*)roomId numMessages:(NSUInteger)numMessages
 {
     return nil;
+}
+
+- (MXEvent*)lastMessageOfRoom:(NSString*)roomId
+{
+    return lastMessages[roomId];
 }
 
 @end
