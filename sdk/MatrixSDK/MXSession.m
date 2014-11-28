@@ -103,7 +103,8 @@
         initialSyncDone();
         
         // Start listening to live events
-        [self streamEventsFromToken:JSONData[@"end"]];
+        lastStreamingToken = JSONData[@"end"];
+        [self resume];
      }
      failure:^(NSError *error) {
          failure(error);
