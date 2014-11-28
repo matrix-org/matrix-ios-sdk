@@ -49,16 +49,9 @@
     else
     {
         [messages addObject:event];
-        _lastMessage = event;
 
         // The messages array end has changed, shift the current pagination position
         paginationPosition -= 1;
-    }
-
-    // If there not yet a last message, use anything
-    if (nil == _lastMessage)
-    {
-        _lastMessage = event;
     }
 }
 
@@ -88,6 +81,11 @@
     }
 
     return paginatedMessages;
+}
+
+- (MXEvent *)lastMessage
+{
+    return [messages lastObject];
 }
 
 @end
