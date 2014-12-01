@@ -324,8 +324,10 @@
                     XCTAssertEqual(eventCount, 0, @"There must be no more event");
                     XCTAssertFalse(room.canPaginate, @"SDK must now indicate there is no more event to paginate");
 
+                    [expectation fulfill];
+
                 } failure:^(NSError *error) {
-                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    XCTFail(@"The request should not fail - see SYN-162 - NSError: %@", error);
                     [expectation fulfill];
                 }];
 
@@ -333,8 +335,6 @@
                 NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
                 [expectation fulfill];
             }];
-
-            [expectation fulfill];
 
         } failure:^(NSError *error) {
             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
