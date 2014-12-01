@@ -56,11 +56,23 @@
  Create a MXSession instance.
  This instance will use the passed MXRestClient to make requests to the home server.
  
- @param mRestClient The MXRestClient to the home server.
+ @param mxRestClient The MXRestClient to the home server.
  
  @return The newly-initialized MXSession.
  */
-- (id)initWithMatrixRestClient:(MXRestClient*)mRestClient;
+- (id)initWithMatrixRestClient:(MXRestClient*)mxRestClient;
+
+/**
+ Create a MXSession instance using a Matrix storage component.
+ By default, initWithMatrixRestClient uses MXNoStore as memory storage
+
+ @param mxRestClient The MXRestClient to the home server.
+ @param mxStore The MXStore that will store matrix data. If nil, a MXNoStore will be used.
+
+ @return The newly-initialized MXSession.
+ */
+- (id)initWithMatrixRestClient:(MXRestClient*)mxRestClient andStore:(id<MXStore>)mxStore;
+
 
 /**
  Start fetching events from the home server to feed the local data storage.

@@ -46,12 +46,17 @@
 @implementation MXSession
 @synthesize matrixRestClient, eventsFilterForMessages;
 
-- (id)initWithMatrixRestClient:(MXRestClient*)mRestClient;
+- (id)initWithMatrixRestClient:(MXRestClient*)mxRestClient
+{
+    return [self initWithMatrixRestClient:mxRestClient andStore:nil];
+}
+
+- (id)initWithMatrixRestClient:(MXRestClient *)mxRestClient andStore:(id<MXStore>)mxStore
 {
     self = [super init];
     if (self)
     {
-        matrixRestClient = mRestClient;
+        matrixRestClient = mxRestClient;
         rooms = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
         
@@ -59,10 +64,17 @@
         
         globalEventListeners = [NSMutableArray array];
 
-        // Create a MXStore
-        // @TODO: Let the app choose and pass the type of store it
-        _store = [[MXNoStore alloc] init];
-        
+        // Define the MXStore
+        if (mxStore)
+        {
+            _store = mxStore;
+        }
+        else
+        {
+            // Use the default, MXNoStore
+            _store = [[MXNoStore alloc] init];
+        }
+
         // Define default events to consider as messages
         eventsFilterForMessages = @[
                                     kMXEventTypeStringRoomName,
