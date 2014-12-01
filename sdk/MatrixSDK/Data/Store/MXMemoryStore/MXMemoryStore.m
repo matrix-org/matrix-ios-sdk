@@ -86,10 +86,10 @@
     return [roomStore paginate:numMessages];
 }
 
-- (MXEvent *)lastMessageOfRoom:(NSString *)roomId
+- (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types
 {
     MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    return roomStore.lastMessage;
+    return [roomStore lastMessageWithTypeIn:types];
 }
 
 #pragma mark - Private operations

@@ -83,10 +83,9 @@
 
 
 #pragma mark - Properties getters implementation
-- (MXEvent *)lastMessage
+- (MXEvent *)lastMessageWithTypeIn:(NSArray*)types
 {
-    //return messages.lastObject;
-    return [mxSession.store lastMessageOfRoom:_state.room_id];
+    return [mxSession.store lastMessageOfRoom:_state.room_id withTypeIn:types];
 }
 
 - (BOOL)canPaginate

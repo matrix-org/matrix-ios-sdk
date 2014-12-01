@@ -383,19 +383,13 @@
 }
 
 #pragma mark - User's recents
-- (NSArray *)recents
+- (NSArray*)recentsWithTypeIn:(NSArray*)types
 {
     NSMutableArray *recents = [NSMutableArray arrayWithCapacity:rooms.count];
     for (MXRoom *room in rooms.allValues)
     {
-        if (room.lastMessage)
-        {
-            [recents addObject:room.lastMessage];
-        }
-        else
-        {
-            NSLog(@"WARNING: Ignore corrupted room (%@): no last message", room.state.room_id);
-        }
+        // All rooms should have a last message
+        [recents addObject:[room lastMessageWithTypeIn:types]];
     }
     
     // Order them by origin_server_ts

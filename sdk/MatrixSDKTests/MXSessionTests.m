@@ -52,7 +52,7 @@
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         [mxSession start:^{
             
-            NSArray *recents = [mxSession recents];
+            NSArray *recents = [mxSession recentsWithTypeIn:nil];
             
             XCTAssertGreaterThan(recents.count, 0, @"There must be at least one recent");
             
@@ -86,7 +86,7 @@
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         [mxSession start:^{
             
-            NSArray *recents = [mxSession recents];
+            NSArray *recents = [mxSession recentsWithTypeIn:nil];
             
             XCTAssertGreaterThanOrEqual(recents.count, 5, @"There must be at least 5 recents");
             

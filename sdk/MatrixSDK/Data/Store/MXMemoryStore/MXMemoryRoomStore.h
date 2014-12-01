@@ -56,6 +56,6 @@
 /**
  The last message.
  */
-@property (nonatomic, readonly) MXEvent *lastMessage;
+- (MXEvent*)lastMessageWithTypeIn:(NSArray*)types;
 
 @end

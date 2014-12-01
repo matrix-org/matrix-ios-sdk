@@ -73,14 +73,14 @@
 
 /**
  The last message of a room.
- 
- @TODO: Provide the a message of a type managed by the app.
-        @see testLastMessageAfterPaginate that currently fails.
 
  @param roomId the id of the room.
+ @param types an array of event types strings (MXEventTypeString). The last message
+        type should be among `types`. If no event matches `type`, the implementation
+        must return the true last event of the room whatever its type is.
  @return the MXEvent object corresponding to the last message.
  */
-- (MXEvent*)lastMessageOfRoom:(NSString*)roomId;
+- (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types;
 
 /**
  The token indicating from where to start listening event stream to get

@@ -108,8 +108,11 @@
     return nil;
 }
 
-- (MXEvent*)lastMessageOfRoom:(NSString*)roomId
+- (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types
 {
+    // MXNoStore stores only the last event whatever its type
+    NSParameterAssert(nil == types);
+
     return lastMessages[roomId];
 }
 

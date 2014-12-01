@@ -292,15 +292,15 @@
         
         mxSession = mxSession2;
         
-        MXEvent *lastMessage = room.lastMessage;
+        MXEvent *lastMessage = [room lastMessageWithTypeIn:nil];
         XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
         
         [room resetBackState];
-        XCTAssertEqual(room.lastMessage, lastMessage, @"The last message should stay the same");
+        XCTAssertEqual([room lastMessageWithTypeIn:nil], lastMessage, @"The last message should stay the same");
         
         [room paginateBackMessages:100 complete:^() {
             
-            XCTAssertEqual(room.lastMessage, lastMessage, @"The last message should stay the same");
+            XCTAssertEqual([room lastMessageWithTypeIn:nil], lastMessage, @"The last message should stay the same");
             
             [expectation fulfill];
             

@@ -41,14 +41,17 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 @interface MXRoom : NSObject
 
 /**
- The last message.
- */
-@property (nonatomic, readonly) MXEvent *lastMessage;
-
-/**
  The uptodate state of the room.
  */
 @property (nonatomic, readonly) MXRoomState *state;
+
+/**
+ The last message of the requested types.
+
+ @param types an array of event types strings (MXEventTypeString).
+ @return the last event of the requested types or the true last event if no event of the requested type is found.
+ */
+- (MXEvent*)lastMessageWithTypeIn:(NSArray*)type;
 
 /**
  Flag indicating if there are still events (in the past) to get with paginateBackMessages.

@@ -83,8 +83,9 @@
     return paginatedMessages;
 }
 
-- (MXEvent *)lastMessage
+- (MXEvent*)lastMessageWithTypeIn:(NSArray*)types
 {
+    // @TODO: To implement
     return [messages lastObject];
 }
 

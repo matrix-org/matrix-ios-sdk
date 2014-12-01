@@ -409,8 +409,8 @@
                     // The last message should be an invite m.room.member
                     // Its time is -1 because this event is a fake one based on information provided by the home server
                     // and the timestamps is not part of them
-                    XCTAssertEqual(newRoom.lastMessage.eventType, MXEventTypeRoomMember, @"The last message should be an invite m.room.member");
-                    XCTAssertEqual(newRoom.lastMessage.originServerTs, kMXUndefinedTimestamp);
+                    XCTAssertEqual([newRoom lastMessageWithTypeIn:nil].eventType, MXEventTypeRoomMember, @"The last message should be an invite m.room.member");
+                    XCTAssertEqual([newRoom lastMessageWithTypeIn:nil].originServerTs, kMXUndefinedTimestamp);
                     
                     [expectation fulfill];
                     
@@ -524,7 +524,7 @@
                         
                         XCTAssertEqual(newRoom.state.membership, MXMembershipJoin);
                         
-                        XCTAssertEqual(newRoom.lastMessage.eventType, MXEventTypeRoomMember, @"The last should be a m.room.member event indicating Alice joining the room");
+                        XCTAssertEqual([newRoom lastMessageWithTypeIn:nil].eventType, MXEventTypeRoomMember, @"The last should be a m.room.member event indicating Alice joining the room");
                         
                         [expectation fulfill];
                         
@@ -578,7 +578,7 @@
                         
                         XCTAssertEqual(newRoom.state.membership, MXMembershipJoin);
                         
-                        XCTAssertEqual(newRoom.lastMessage.eventType, MXEventTypeRoomMember, @"The last should be a m.room.member event indicating Alice joining the room");
+                        XCTAssertEqual([newRoom lastMessageWithTypeIn:nil].eventType, MXEventTypeRoomMember, @"The last should be a m.room.member event indicating Alice joining the room");
                         
                         [expectation fulfill];
                         
