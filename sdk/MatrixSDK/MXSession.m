@@ -20,6 +20,7 @@
 #import "MXSessionEventListener.h"
 
 #import "MXNoStore.h"
+#import "MXMemoryStore.h"
 
 #define SERVER_TIMEOUT_MS 30000
 #define CLIENT_TIMEOUT_MS 40000
@@ -73,6 +74,8 @@
         {
             // Use the default, MXNoStore
             _store = [[MXNoStore alloc] init];
+
+            //_store = [[MXMemoryStore alloc] init];    // For test
         }
 
         // Define default events to consider as messages
