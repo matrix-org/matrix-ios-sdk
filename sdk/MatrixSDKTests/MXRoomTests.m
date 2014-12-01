@@ -65,8 +65,15 @@
         
         mxSession = mxSession2;
 
+        NSArray *eventsFilterForMessages = @[
+                                    kMXEventTypeStringRoomName,
+                                    kMXEventTypeStringRoomTopic,
+                                    kMXEventTypeStringRoomMember,
+                                    kMXEventTypeStringRoomMessage
+                                    ];
+
         __block NSUInteger eventCount = 0;
-        [room listenToEventsOfTypes:mxSession.eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+        [room listenToEventsOfTypes:eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
             
             eventCount++;
         }];
@@ -90,15 +97,22 @@
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
         mxSession = mxSession2;
+
+        NSArray *eventsFilterForMessages = @[
+                                             kMXEventTypeStringRoomName,
+                                             kMXEventTypeStringRoomTopic,
+                                             kMXEventTypeStringRoomMember,
+                                             kMXEventTypeStringRoomMessage
+                                             ];
         
         __block NSUInteger eventCount = 0;
-        [room listenToEventsOfTypes:mxSession.eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+        [room listenToEventsOfTypes:eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
             
             eventCount++;
             
             // Only events with a type declared in `eventsFilterForMessages`
             // must appear in messages
-            XCTAssertNotEqual([mxSession.eventsFilterForMessages indexOfObject:event.type], NSNotFound, "Event of this type must not be in messages. Event: %@", event);
+            XCTAssertNotEqual([eventsFilterForMessages indexOfObject:event.type], NSNotFound, "Event of this type must not be in messages. Event: %@", event);
             
         }];
         
@@ -121,9 +135,16 @@
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
         mxSession = mxSession2;
+
+        NSArray *eventsFilterForMessages = @[
+                                             kMXEventTypeStringRoomName,
+                                             kMXEventTypeStringRoomTopic,
+                                             kMXEventTypeStringRoomMember,
+                                             kMXEventTypeStringRoomMessage
+                                             ];
         
         __block NSUInteger prev_ts = -1;
-        [room listenToEventsOfTypes:mxSession.eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+        [room listenToEventsOfTypes:eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
             
             XCTAssert(event.originServerTs, @"The event should have an attempt: %@", event);
             

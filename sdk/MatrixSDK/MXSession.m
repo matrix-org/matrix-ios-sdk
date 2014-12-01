@@ -45,7 +45,7 @@
 @end
 
 @implementation MXSession
-@synthesize matrixRestClient, eventsFilterForMessages;
+@synthesize matrixRestClient;
 
 - (id)initWithMatrixRestClient:(MXRestClient*)mxRestClient
 {
@@ -77,14 +77,6 @@
 
             //_store = [[MXMemoryStore alloc] init];    // For test
         }
-
-        // Define default events to consider as messages
-        eventsFilterForMessages = @[
-                                    kMXEventTypeStringRoomName,
-                                    kMXEventTypeStringRoomTopic,
-                                    kMXEventTypeStringRoomMember,
-                                    kMXEventTypeStringRoomMessage
-                                    ];
     }
     return self;
 }

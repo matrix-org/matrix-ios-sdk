@@ -44,15 +44,6 @@
 @property (nonatomic, readonly) id<MXStore> store;
 
 /**
- An array of `MXEventTypeString` indicating which events must be stored as messages in MXSession and its MXRooms.
- By default, this list contains some event types like:
-     - kMXEventTypeStringRoomMessage to display messages texts, images, etc.
-     - kMXEventTypeStringRoomMember to display user membership changes in the history
-     - ...
- */
-@property (nonatomic, copy) NSArray *eventsFilterForMessages;
-
-/**
  Create a MXSession instance.
  This instance will use the passed MXRestClient to make requests to the home server.
  
