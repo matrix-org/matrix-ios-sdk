@@ -290,6 +290,60 @@
     }];
 }
 
+// Test for https://matrix.org/jira/browse/SYN-162
+- (void)testPaginateWhenReachingTheExactBeginningOfTheRoom
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+
+        mxSession = mxSession2;
+
+        __block NSUInteger eventCount = 0;
+        [room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+
+            eventCount++;
+        }];
+
+        // First count how many messages to retrieve
+        [room resetBackState];
+        [room paginateBackMessages:100 complete:^() {
+
+            // Paginate for the exact number of events in the room
+            NSUInteger pagEnd = eventCount;
+            eventCount = 0;
+            [room resetBackState];
+            [room paginateBackMessages:pagEnd complete:^{
+
+                XCTAssertEqual(eventCount, pagEnd, @"We should get as many messages as requested");
+
+                XCTAssert(room.canPaginate, @"At this point the SDK cannot know it reaches the beginning of the history");
+
+                // Try to load more messages
+                eventCount = 0;
+                [room paginateBackMessages:1 complete:^{
+
+                    XCTAssertEqual(eventCount, 0, @"There must be no more event");
+                    XCTAssertFalse(room.canPaginate, @"SDK must now indicate there is no more event to paginate");
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+
 - (void)testListenerForAllLiveEvents
 {
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
