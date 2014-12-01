@@ -251,7 +251,7 @@
         numItems -= messagesFromStoreCount;
     }
 
-    if (0 < numItems)
+    if (0 < numItems && NO == [mxSession.store hasReachedHomeServerPaginationEndForRoom:_state.room_id])
     {
         // Not enough messages: make a pagination request to the home server
         // from last known token
