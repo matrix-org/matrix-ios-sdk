@@ -196,6 +196,9 @@
         if (_preSelectedRoomId) {
             self.preSelectedRoomId = _preSelectedRoomId;
         }
+    } else {
+        recents = nil;
+        [self.tableView reloadData];
     }
 }
 
@@ -205,10 +208,8 @@
 
 #pragma mark - KVO
 
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
-{
-    if ([@"isInitialSyncDone" isEqualToString:keyPath])
-    {
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
+    if ([@"isInitialSyncDone" isEqualToString:keyPath]) {
         dispatch_async(dispatch_get_main_queue(), ^{
             [self configureView];
         });
@@ -268,7 +269,7 @@
     MXRoom *mxRoom = [mxHandler.mxSession room:mxEvent.roomId];
     
     cell.roomTitle.text = [mxRoom.state displayname];
-    cell.lastEventDescription.text = [mxHandler displayTextFor:mxEvent inSubtitleMode:YES];
+    cell.lastEventDescription.text = [mxHandler displayTextForEvent:mxEvent withRoomState:mxRoom.state inSubtitleMode:YES];
     
     // Set in bold public room name
     if (mxRoom.state.isPublic) {
