@@ -24,9 +24,6 @@ NSString *const kMXEventTypeStringRoomMember          = @"m.room.member";
 NSString *const kMXEventTypeStringRoomCreate          = @"m.room.create";
 NSString *const kMXEventTypeStringRoomJoinRules       = @"m.room.join_rules";
 NSString *const kMXEventTypeStringRoomPowerLevels     = @"m.room.power_levels";
-NSString *const kMXEventTypeStringRoomAddStateLevel   = @"m.room.add_state_level";
-NSString *const kMXEventTypeStringRoomSendEventLevel  = @"m.room.send_event_level";
-NSString *const kMXEventTypeStringRoomOpsLevel        = @"m.room.ops_levels";
 NSString *const kMXEventTypeStringRoomAliases         = @"m.room.aliases";
 NSString *const kMXEventTypeStringRoomMessage         = @"m.room.message";
 NSString *const kMXEventTypeStringRoomMessageFeedback = @"m.room.message.feedback";
@@ -66,9 +63,6 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
                  kMXEventTypeStringRoomCreate: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomCreate],
                  kMXEventTypeStringRoomJoinRules: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomJoinRules],
                  kMXEventTypeStringRoomPowerLevels: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomPowerLevels],
-                 kMXEventTypeStringRoomAddStateLevel: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomAddStateLevel],
-                 kMXEventTypeStringRoomSendEventLevel: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomSendEventLevel],
-                 kMXEventTypeStringRoomOpsLevel: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomOpsLevel],
                  kMXEventTypeStringRoomAliases: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomAliases],
                  kMXEventTypeStringRoomMessage: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMessage],
                  kMXEventTypeStringRoomMessageFeedback: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMessageFeedback],
