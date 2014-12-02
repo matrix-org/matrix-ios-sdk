@@ -26,6 +26,13 @@
 #define CLIENT_TIMEOUT_MS 40000
 #define ERR_TIMEOUT_MS    5000
 
+/**
+ The number of messages to get at the initialSync.
+ This number should be big enough to be able to pick at least one message from the downloaded ones
+ that matches the type requested for `recentsWithTypeIn` but this depends on the app.
+ */
+#define INITIALSYNC_MESSAGES_NUMBER 10
+
 @interface MXSession ()
 {
     // Rooms data
@@ -84,7 +91,7 @@
 - (void)start:(void (^)())initialSyncDone
       failure:(void (^)(NSError *error))failure
 {
-    [matrixRestClient initialSyncWithLimit:1 success:^(NSDictionary *JSONData) {
+    [matrixRestClient initialSyncWithLimit:INITIALSYNC_MESSAGES_NUMBER success:^(NSDictionary *JSONData) {
          for (NSDictionary *roomDict in JSONData[@"rooms"])
          {
              MXRoom *room = [self getOrCreateRoom:roomDict[@"room_id"] withJSONData:roomDict];
@@ -253,7 +260,7 @@
     [matrixRestClient joinRoom:room_id success:^{
         
         // Do an initial to get state and messages in the room
-        [matrixRestClient initialSyncOfRoom:room_id withLimit:1 success:^(NSDictionary *JSONData) {
+        [matrixRestClient initialSyncOfRoom:room_id withLimit:INITIALSYNC_MESSAGES_NUMBER success:^(NSDictionary *JSONData) {
             
             MXRoom *room = [self getOrCreateRoom:JSONData[@"room_id"] withJSONData:JSONData];
             
