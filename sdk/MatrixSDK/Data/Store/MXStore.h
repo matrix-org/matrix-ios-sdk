@@ -15,7 +15,7 @@
  */
 
 #import "MXJSONModels.h"
-#import "MXEventListener.h"
+#import "MXEvent.h"
 
 /**
  The `MXStore` protocol defines an interface that must be implemented in order to store
