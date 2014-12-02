@@ -31,7 +31,7 @@
  This number should be big enough to be able to pick at least one message from the downloaded ones
  that matches the type requested for `recentsWithTypeIn` but this depends on the app.
  */
-#define INITIALSYNC_MESSAGES_NUMBER 10
+#define DEFAULT_INITIALSYNC_MESSAGES_NUMBER 10
 
 @interface MXSession ()
 {
@@ -48,6 +48,9 @@
 
     // The list of global events listeners (`MXSessionEventListener`)
     NSMutableArray *globalEventListeners;
+
+    // The limit value to use when doing initialSync
+    NSUInteger initialSyncMessagesLimit;
 }
 @end
 
@@ -91,7 +94,17 @@
 - (void)start:(void (^)())initialSyncDone
       failure:(void (^)(NSError *error))failure
 {
-    [matrixRestClient initialSyncWithLimit:INITIALSYNC_MESSAGES_NUMBER success:^(NSDictionary *JSONData) {
+    [self startWithMessagesLimit:DEFAULT_INITIALSYNC_MESSAGES_NUMBER initialSyncDone:initialSyncDone failure:failure];
+}
+
+- (void)startWithMessagesLimit:(NSUInteger)messagesLimit
+               initialSyncDone:(void (^)())initialSyncDone
+                       failure:(void (^)(NSError *error))failure
+{
+    // Store the passed limit to reuse it when initialSyncing per room
+    initialSyncMessagesLimit = messagesLimit;
+
+    [matrixRestClient initialSyncWithLimit:initialSyncMessagesLimit success:^(NSDictionary *JSONData) {
          for (NSDictionary *roomDict in JSONData[@"rooms"])
          {
              MXRoom *room = [self getOrCreateRoom:roomDict[@"room_id"] withJSONData:roomDict];
@@ -260,7 +273,7 @@
     [matrixRestClient joinRoom:room_id success:^{
         
         // Do an initial to get state and messages in the room
-        [matrixRestClient initialSyncOfRoom:room_id withLimit:INITIALSYNC_MESSAGES_NUMBER success:^(NSDictionary *JSONData) {
+        [matrixRestClient initialSyncOfRoom:room_id withLimit:initialSyncMessagesLimit success:^(NSDictionary *JSONData) {
             
             MXRoom *room = [self getOrCreateRoom:JSONData[@"room_id"] withJSONData:JSONData];
             

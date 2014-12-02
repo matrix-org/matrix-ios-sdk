@@ -84,6 +84,21 @@
       failure:(void (^)(NSError *error))failure;
 
 /**
+ Start the session like `[MXSession start]` but preload the requested number of messages
+ for each user's rooms.
+
+ By default, [MXSession start] preloads 10 messages. Use this method to use a custom limit.
+
+ @param messagesLimit the number of messages to retrieve in each room.
+ @param initialSyncDone A block object called when the initialSync step is done. This means
+                        this instance is ready to shared data.
+ @param failure A block object called when the operation fails.
+ */
+- (void)startWithMessagesLimit:(NSUInteger)messagesLimit
+               initialSyncDone:(void (^)())initialSyncDone
+                       failure:(void (^)(NSError *error))failure;
+
+/**
  Pause the session events stream.
  
  No more live events will be received by the listeners.

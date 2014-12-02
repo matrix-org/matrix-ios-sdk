@@ -58,8 +58,7 @@
         NSString *roomId = room.state.room_id;
         [mxSession2 close];
 
-        // @TODO: Add an option to start to limit the number of downloaded messages
-        [mxSession start:^{
+        [mxSession startWithMessagesLimit:1 initialSyncDone:^{
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
@@ -125,9 +124,7 @@
         NSString *roomId = room.state.room_id;
         [mxSession2 close];
 
-        // @TODO: Add an option to start to limit the number of downloaded messages
-        // The default limit is now 10 (rather than 1) and it breaks this test
-        [mxSession start:^{
+        [mxSession startWithMessagesLimit:1 initialSyncDone:^{
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
