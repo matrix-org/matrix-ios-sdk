@@ -79,7 +79,7 @@
             mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
             [mxSession start:^{
                 
-                MXRoom *room = [mxSession room:room_id];
+                MXRoom *room = [mxSession roomWithRoomId:room_id];
                 
                 XCTAssertNotNil(room.state.topic);
                 XCTAssert([room.state.topic isEqualToString:@"My topic"], @"The room topic shoud be \"My topic\". Found: %@", room.state.topic);
@@ -108,7 +108,7 @@
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
         [mxSession start:^{
             
-            MXRoom *room = [mxSession room:room_id];
+            MXRoom *room = [mxSession roomWithRoomId:room_id];
             
             XCTAssertNil(room.state.topic, @"There must be no room topic yet. Found: %@", room.state.topic);
             
@@ -152,7 +152,7 @@
             mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
             [mxSession start:^{
                 
-                MXRoom *room = [mxSession room:room_id];
+                MXRoom *room = [mxSession roomWithRoomId:room_id];
                 
                 XCTAssertNotNil(room.state.name);
                 XCTAssert([room.state.name isEqualToString:@"My room name"], @"The room name shoud be \"My room name\". Found: %@", room.state.name);
@@ -181,7 +181,7 @@
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
         [mxSession start:^{
             
-            MXRoom *room = [mxSession room:room_id];
+            MXRoom *room = [mxSession roomWithRoomId:room_id];
             
             XCTAssertNil(room.state.name, @"There must be no room name yet. Found: %@", room.state.name);
             
@@ -221,7 +221,7 @@
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         [mxSession start:^{
             
-            MXRoom *room = [mxSession room:room_id];
+            MXRoom *room = [mxSession roomWithRoomId:room_id];
             XCTAssertNotNil(room);
             
             NSArray *members = room.state.members;
@@ -391,7 +391,7 @@
                 
                 [mxSession start:^{
                     
-                    MXRoom *newRoom = [mxSession room:room_id];
+                    MXRoom *newRoom = [mxSession roomWithRoomId:room_id];
                     
                     XCTAssertNotNil(newRoom);
                     
@@ -409,8 +409,8 @@
                     // The last message should be an invite m.room.member
                     // Its time is -1 because this event is a fake one based on information provided by the home server
                     // and the timestamps is not part of them
-                    XCTAssertEqual(newRoom.lastMessage.eventType, MXEventTypeRoomMember, @"The last message should be an invite m.room.member");
-                    XCTAssertEqual(newRoom.lastMessage.originServerTs, kMXUndefinedTimestamp);
+                    XCTAssertEqual([newRoom lastMessageWithTypeIn:nil].eventType, MXEventTypeRoomMember, @"The last message should be an invite m.room.member");
+                    XCTAssertEqual([newRoom lastMessageWithTypeIn:nil].originServerTs, kMXUndefinedTimestamp);
                     
                     [expectation fulfill];
                     
@@ -443,7 +443,7 @@
                     
                     if ([event.roomId isEqualToString:room_id])
                     {
-                        newRoom = [mxSession room:room_id];
+                        newRoom = [mxSession roomWithRoomId:room_id];
                         
                         XCTAssertNotNil(newRoom);
                         
@@ -494,7 +494,7 @@
                 
                 [mxSession start:^{
                     
-                    MXRoom *newRoom = [mxSession room:room_id];
+                    MXRoom *newRoom = [mxSession roomWithRoomId:room_id];
                     
                     [newRoom listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
                         // We should receive only join events
@@ -524,7 +524,7 @@
                         
                         XCTAssertEqual(newRoom.state.membership, MXMembershipJoin);
                         
-                        XCTAssertEqual(newRoom.lastMessage.eventType, MXEventTypeRoomMember, @"The last should be a m.room.member event indicating Alice joining the room");
+                        XCTAssertEqual([newRoom lastMessageWithTypeIn:nil].eventType, MXEventTypeRoomMember, @"The last should be a m.room.member event indicating Alice joining the room");
                         
                         [expectation fulfill];
                         
@@ -559,7 +559,7 @@
                 
                 [mxSession start:^{
                     
-                    MXRoom *room = [mxSession room:room_id];
+                    MXRoom *room = [mxSession roomWithRoomId:room_id];
                     
                     XCTAssertNil(room, @"The room must not be known yet by the user");
                     
@@ -567,7 +567,7 @@
                         
                         XCTAssert([room.state.room_id isEqualToString:room_id]);
                         
-                        MXRoom *newRoom = [mxSession room:room_id];
+                        MXRoom *newRoom = [mxSession roomWithRoomId:room_id];
                         XCTAssert(newRoom, @"The room must be known now by the user");
                         
                         // Now, we must have more information about the room
@@ -578,7 +578,7 @@
                         
                         XCTAssertEqual(newRoom.state.membership, MXMembershipJoin);
                         
-                        XCTAssertEqual(newRoom.lastMessage.eventType, MXEventTypeRoomMember, @"The last should be a m.room.member event indicating Alice joining the room");
+                        XCTAssertEqual([newRoom lastMessageWithTypeIn:nil].eventType, MXEventTypeRoomMember, @"The last should be a m.room.member event indicating Alice joining the room");
                         
                         [expectation fulfill];
                         

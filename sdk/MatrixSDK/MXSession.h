@@ -20,6 +20,7 @@
 #import "MXRoom.h"
 #import "MXMyUser.h"
 #import "MXSessionEventListener.h"
+#import "MXStore.h"
 
 /**
  `MXSession` manages data and events from the home server
@@ -39,24 +40,30 @@
 // The profile of the current user
 @property (nonatomic, readonly) MXMyUser *myUser;
 
-/**
- An array of `MXEventTypeString` indicating which events must be stored as messages in MXSession and its MXRooms.
- By default, this list contains some event types like:
-     - kMXEventTypeStringRoomMessage to display messages texts, images, etc.
-     - kMXEventTypeStringRoomMember to display user membership changes in the history
-     - ...
- */
-@property (nonatomic, copy) NSArray *eventsFilterForMessages;
+// The store used to store user's Matrix data
+@property (nonatomic, readonly) id<MXStore> store;
 
 /**
  Create a MXSession instance.
  This instance will use the passed MXRestClient to make requests to the home server.
  
- @param mRestClient The MXRestClient to the home server.
+ @param mxRestClient The MXRestClient to the home server.
  
  @return The newly-initialized MXSession.
  */
-- (id)initWithMatrixRestClient:(MXRestClient*)mRestClient;
+- (id)initWithMatrixRestClient:(MXRestClient*)mxRestClient;
+
+/**
+ Create a MXSession instance using a Matrix storage component.
+ By default, initWithMatrixRestClient uses MXNoStore as memory storage
+
+ @param mxRestClient The MXRestClient to the home server.
+ @param mxStore The MXStore that will store matrix data. If nil, a MXNoStore will be used.
+
+ @return The newly-initialized MXSession.
+ */
+- (id)initWithMatrixRestClient:(MXRestClient*)mxRestClient andStore:(id<MXStore>)mxStore;
+
 
 /**
  Start fetching events from the home server to feed the local data storage.
@@ -132,7 +139,7 @@
 
  @return the MXRoom instance.
  */
-- (MXRoom *)room:(NSString*)room_id;
+- (MXRoom *)roomWithRoomId:(NSString*)room_id;
 
 /**
  Get the list of all rooms data.
@@ -150,7 +157,7 @@
  
  @return the MXUser instance.
  */
-- (MXUser*)user:(NSString*)userId;
+- (MXUser*)userWithUserId:(NSString*)userId;
 
 /**
  Get the MXUser instance of a user.
@@ -172,12 +179,16 @@
 
 #pragma mark - User's recents
 /**
- Get the list of all last message of all rooms.
+ Get the list of all last messages of all rooms.
  The returned array is time ordered: the first item is the more recent message.
  
+ The SDK will find the last event which type is among the requested event types. If
+ no event matches `types`, the true last event, whatever its type, will be returned.
+
+ @param types an array of event types strings (MXEventTypeString) the app is interested in.
  @return an array of MXEvents.
  */
-- (NSArray*)recents;
+- (NSArray*)recentsWithTypeIn:(NSArray*)types;
 
 
 #pragma mark - Global events listeners

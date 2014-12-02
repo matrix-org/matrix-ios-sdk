@@ -18,26 +18,6 @@
 
 #import "MXEvent.h"
 
-//@class MXRoom;
-
-/**
- The direction from which an incoming event is considered.
- */
-typedef enum : NSUInteger
-{
-    // Forwards for events coming down the live event stream
-    MXEventDirectionForwards,
-    
-    // Backwards for old events requested through pagination
-    MXEventDirectionBackwards,
-    
-    // Sync for events coming from an initialSync API request to the home server
-    // The SDK internally makes such requests when the app call [MXSession start],
-    // [MXSession joinRoom] and [MXRoom join].
-    MXEventDirectionSync
-    
-} MXEventDirection;
-
 /**
  Block called when an event of the registered types has been handled by the Matrix SDK.
  

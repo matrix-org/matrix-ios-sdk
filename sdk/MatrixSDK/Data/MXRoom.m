@@ -22,19 +22,7 @@
 @interface MXRoom ()
 {
     MXSession *mxSession;
-    
-    // The events downloaded so far.
-    // The order is chronological: the first item is the oldest message.
-    NSMutableArray *messages;
-    
-    // The last message of the room.
-    // @TODO: this member should be temporary. It is used while `messages` is reset
-    //        at each resetBackState call.
-    MXEvent *lastMessage;
 
-    // The token used to know from where to paginate back.
-    NSString *pagEarliestToken;
-    
     // The list of event listeners (`MXEventListener`) in this room
     NSMutableArray *eventListeners;
 
@@ -57,11 +45,8 @@
     if (self)
     {
         mxSession = mxSession2;
-        
-        messages = [NSMutableArray array];
-        _canPaginate = YES;
-        
-        pagEarliestToken = @"END";
+
+        [mxSession.store storePaginationTokenOfRoom:room_id andToken:@"END"];
         
         eventListeners = [NSMutableArray array];
         
@@ -88,18 +73,24 @@
                                                                     }];
             
             [self handleMessage:fakeMembershipEvent direction:MXEventDirectionSync pagFrom:@"END"];
+
+            [mxSession.store storeEventForRoom:room_id event:fakeMembershipEvent direction:MXEventDirectionSync];
         }
 
     }
     return self;
 }
 
-#pragma mark - Properties getters implementation
 
-- (MXEvent *)lastMessage
+#pragma mark - Properties getters implementation
+- (MXEvent *)lastMessageWithTypeIn:(NSArray*)types
 {
-    //return messages.lastObject;
-    return lastMessage;
+    return [mxSession.store lastMessageOfRoom:_state.room_id withTypeIn:types];
+}
+
+- (BOOL)canPaginate
+{
+    return ![mxSession.store hasReachedHomeServerPaginationEndForRoom:_state.room_id];
 }
 
 
@@ -116,10 +107,13 @@
         // [MXRestClient messages] returns messages in reverse chronological order
         for (MXEvent *event in events) {
             [self handleMessage:event direction:direction pagFrom:roomMessages.start];
+
+            // Store the event
+            [mxSession.store storeEventForRoom:_state.room_id event:event direction:MXEventDirectionBackwards];
         }
         
         // Store how far back we've paginated
-        pagEarliestToken = roomMessages.end;
+        [mxSession.store storePaginationTokenOfRoom:_state.room_id andToken:roomMessages.end];
     }
     else {
         // InitialSync returns messages in chronological order
@@ -127,10 +121,19 @@
         {
             MXEvent *event = events[i];
             [self handleMessage:event direction:direction pagFrom:roomMessages.end];
+
+            // Store the event
+            [mxSession.store storeEventForRoom:_state.room_id event:event direction:direction];
         }
-        
+
         // Store where to start pagination
-        pagEarliestToken = roomMessages.start;
+        [mxSession.store storePaginationTokenOfRoom:_state.room_id andToken:roomMessages.start];
+    }
+
+    // Commit store changes
+    if ([mxSession.store respondsToSelector:@selector(save)])
+    {
+        [mxSession.store save];
     }
 }
 
@@ -139,20 +142,6 @@
     if (event.isState)
     {
         [self handleStateEvent:event direction:direction];
-    }
-    
-    // Put only expected messages into `messages`
-    if (NSNotFound != [mxSession.eventsFilterForMessages indexOfObject:event.type])
-    {
-        if (MXEventDirectionBackwards == direction)
-        {
-            [messages insertObject:event atIndex:0];
-        }
-        else
-        {
-            [messages addObject:event];
-            lastMessage = event;
-        }
     }
 
     // Notify listener only for past events here
@@ -217,6 +206,9 @@
     // Process the event
     [self handleMessage:event direction:MXEventDirectionForwards pagFrom:nil];
 
+    // Store the event
+    [mxSession.store storeEventForRoom:_state.room_id event:event direction:MXEventDirectionForwards];
+
     // And notify the listeners
     [self notifyListeners:event direction:MXEventDirectionForwards];
 }
@@ -227,12 +219,8 @@
     // Reset the back state to the current room state
     backState = [[MXRoomState alloc] initBackStateWith:_state];
 
-    // Reset everything
-    // Trash downloaded messages to restart pagination from the server to the beginning.
-    // @TODO: Do not do that. Keep downloaded messages and request pagination from the server only when needed.
-    messages = [NSMutableArray array];
-    _canPaginate = YES;
-    pagEarliestToken = @"END";
+    // Reset store pagination
+    [mxSession.store resetPaginationOfRoom:_state.room_id];
 }
 
 - (void)paginateBackMessages:(NSUInteger)numItems
@@ -240,30 +228,61 @@
                      failure:(void (^)(NSError *error))failure
 {
     NSAssert(nil != backState, @"resetBackState must be called before starting the back pagination");
-    
-    // Paginate from last known token
-    [mxSession.matrixRestClient messagesForRoom:_state.room_id
-                                           from:pagEarliestToken to:nil
-                                          limit:numItems
-                                        success:^(MXPaginationResponse *paginatedResponse) {
-        
-        // Check pagination end
-        if (paginatedResponse.chunk.count < numItems)
+
+    // Return messages in the store first
+    NSUInteger messagesFromStoreCount = 0;
+    NSArray *messagesFromStore = [mxSession.store paginateRoom:_state.room_id numMessages:numItems];
+    if (messagesFromStore)
+    {
+        messagesFromStoreCount = messagesFromStore.count;
+    }
+
+    if (messagesFromStoreCount)
+    {
+        // messagesFromStore are in chronological order
+        // Handle events from the most recent
+        for (NSInteger i = messagesFromStoreCount - 1; i >= 0; i--)
         {
-            // We run out of items
-            _canPaginate = NO;
+            MXEvent *event = messagesFromStore[i];
+            [self handleMessage:event direction:MXEventDirectionBackwards pagFrom:nil];
         }
-        
-        // Process these new events
-        [self handleMessages:paginatedResponse direction:MXEventDirectionBackwards isTimeOrdered:NO];
-                       
-        // Inform the method caller
+
+        numItems -= messagesFromStoreCount;
+    }
+
+    if (0 < numItems && NO == [mxSession.store hasReachedHomeServerPaginationEndForRoom:_state.room_id])
+    {
+        // Not enough messages: make a pagination request to the home server
+        // from last known token
+        [mxSession.matrixRestClient messagesForRoom:_state.room_id
+                                               from:[mxSession.store paginationTokenOfRoom:_state.room_id]
+                                                 to:nil
+                                              limit:numItems
+                                            success:^(MXPaginationResponse *paginatedResponse) {
+
+                                                // Check pagination end
+                                                if (paginatedResponse.chunk.count < numItems)
+                                                {
+                                                    // We run out of items
+                                                    [mxSession.store storeHasReachedHomeServerPaginationEndForRoom:_state.room_id andValue:YES];
+                                                }
+
+                                                // Process these new events
+                                                [self handleMessages:paginatedResponse direction:MXEventDirectionBackwards isTimeOrdered:NO];
+                                                
+                                                // Inform the method caller
+                                                complete();
+                                                
+                                            } failure:^(NSError *error) {
+                                                NSLog(@"paginateBackMessages error: %@", error);
+                                                failure(error);
+                                            }];
+    }
+    else
+    {
+        // Nothing more to do
         complete();
-        
-    } failure:^(NSError *error) {
-        NSLog(@"paginateBackMessages error: %@", error);
-        failure(error);
-    }];
+    }
 }
 
 

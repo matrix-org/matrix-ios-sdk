@@ -52,7 +52,7 @@
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         [mxSession start:^{
             
-            NSArray *recents = [mxSession recents];
+            NSArray *recents = [mxSession recentsWithTypeIn:nil];
             
             XCTAssertGreaterThan(recents.count, 0, @"There must be at least one recent");
             
@@ -86,7 +86,7 @@
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         [mxSession start:^{
             
-            NSArray *recents = [mxSession recents];
+            NSArray *recents = [mxSession recentsWithTypeIn:nil];
             
             XCTAssertGreaterThanOrEqual(recents.count, 5, @"There must be at least 5 recents");
             
@@ -255,7 +255,7 @@
                                                    MXPresenceEventContent *eventContent = [MXPresenceEventContent modelFromJSON:event.content];
                                                    XCTAssert([eventContent.userId isEqualToString:aliceRestClient.credentials.userId]);
                                                    
-                                                   MXUser *mxAlice = [mxSession2 user:eventContent.userId];
+                                                   MXUser *mxAlice = [mxSession2 userWithUserId:eventContent.userId];
                                                    
                                                    NSUInteger newLastAliceActivity = mxAlice.lastActiveAgo;
                                                    XCTAssertLessThan(newLastAliceActivity, lastAliceActivity, @"alice activity must be updated");
@@ -268,7 +268,7 @@
         [mxSession start:^{
             
             // Get the last Alice activity before making her active again
-            lastAliceActivity = [mxSession2 user:aliceRestClient.credentials.userId].lastActiveAgo;
+            lastAliceActivity = [mxSession2 userWithUserId:aliceRestClient.credentials.userId].lastActiveAgo;
             
             // Wait a bit before making her active again
             [NSThread sleepForTimeInterval:1.0];
@@ -298,13 +298,13 @@
                 XCTFail(@"We should not receive events after closing the session. Received: %@", event);
             }];
 
-            MXRoom *room = [mxSession room:room_id];
+            MXRoom *room = [mxSession roomWithRoomId:room_id];
             XCTAssert(room);
             [room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
                 XCTFail(@"We should not receive events after closing the session. Received: %@", event);
             }];
 
-            MXUser *bob = [mxSession user:bobRestClient.credentials.userId];
+            MXUser *bob = [mxSession userWithUserId:bobRestClient.credentials.userId];
             XCTAssert(bob);
             [bob listenToUserUpdate:^(MXEvent *event) {
                 XCTFail(@"We should not receive events after closing the session. Received: %@", event);
@@ -314,10 +314,10 @@
             // Now close the session
             [mxSession close];
 
-            MXRoom *room2 = [mxSession room:room_id];
+            MXRoom *room2 = [mxSession roomWithRoomId:room_id];
             XCTAssertNil(room2);
 
-            MXUser *bob2 = [mxSession user:bobRestClient.credentials.userId];
+            MXUser *bob2 = [mxSession userWithUserId:bobRestClient.credentials.userId];
             XCTAssertNil(bob2);
 
             XCTAssertNil(mxSession.myUser);
@@ -358,13 +358,13 @@
                     XCTAssertFalse(paused, @"We should not receive events when paused. Received: %@", event);
                 }];
 
-                MXRoom *room = [mxSession room:room_id];
+                MXRoom *room = [mxSession roomWithRoomId:room_id];
                 [room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
                     eventCount++;
                     XCTAssertFalse(paused, @"We should not receive events when paused. Received: %@", event);
                 }];
 
-                MXUser *bob = [mxSession user:bobRestClient.credentials.userId];
+                MXUser *bob = [mxSession userWithUserId:bobRestClient.credentials.userId];
                 [bob listenToUserUpdate:^(MXEvent *event) {
                     eventCount++;
                     XCTAssertFalse(paused, @"We should not receive events when paused. Received: %@", event);

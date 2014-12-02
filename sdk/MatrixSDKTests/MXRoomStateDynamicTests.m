@@ -104,7 +104,7 @@
             
             [mxSession start:^{
                 
-                MXRoom *room = [mxSession room:room_id];
+                MXRoom *room = [mxSession roomWithRoomId:room_id];
                 
                 __block NSUInteger eventCount = 0;
                 [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
@@ -188,7 +188,7 @@
         
         [mxSession start:^{
             
-            MXRoom *room = [mxSession room:room_id];
+            MXRoom *room = [mxSession roomWithRoomId:room_id];
             
             __block NSUInteger eventCount = 0;
             [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
@@ -361,7 +361,7 @@
             
             [mxSession start:^{
                 
-                MXRoom *room = [mxSession room:room_id];
+                MXRoom *room = [mxSession roomWithRoomId:room_id];
                 
                 __block NSUInteger eventCount = 0;
                 [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
@@ -539,7 +539,7 @@
         
         [mxSession start:^{
             
-            MXRoom *room = [mxSession room:room_id];
+            MXRoom *room = [mxSession roomWithRoomId:room_id];
             
             __block NSUInteger eventCount = 0;
             [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {

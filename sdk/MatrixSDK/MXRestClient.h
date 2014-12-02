@@ -445,14 +445,13 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
  @param serverTimeout the maximum time in ms to wait for an event.
  @param clientTimeout the maximum time in ms the SDK must wait for the server response.
  
- @param success A block object called when the operation succeeds. It provides the raw
-                home server JSON response. @see http://matrix.org/docs/api/client-server/#!/-events/get_event_stream
+ @param success A block object called when the operation succeeds. It provides a `MXPaginationResponse` object.
  @param failure A block object called when the operation fails.
  */
 - (void)eventsFromToken:(NSString*)token
           serverTimeout:(NSUInteger)serverTimeout
           clientTimeout:(NSUInteger)clientTimeout
-                success:(void (^)(NSDictionary *JSONData))success
+                success:(void (^)(MXPaginationResponse *paginatedResponse))success
                 failure:(void (^)(NSError *error))failure;
 
 

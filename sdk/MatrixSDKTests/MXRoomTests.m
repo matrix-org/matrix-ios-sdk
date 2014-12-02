@@ -65,8 +65,15 @@
         
         mxSession = mxSession2;
 
+        NSArray *eventsFilterForMessages = @[
+                                    kMXEventTypeStringRoomName,
+                                    kMXEventTypeStringRoomTopic,
+                                    kMXEventTypeStringRoomMember,
+                                    kMXEventTypeStringRoomMessage
+                                    ];
+
         __block NSUInteger eventCount = 0;
-        [room listenToEventsOfTypes:mxSession.eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+        [room listenToEventsOfTypes:eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
             
             eventCount++;
         }];
@@ -90,15 +97,22 @@
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
         mxSession = mxSession2;
+
+        NSArray *eventsFilterForMessages = @[
+                                             kMXEventTypeStringRoomName,
+                                             kMXEventTypeStringRoomTopic,
+                                             kMXEventTypeStringRoomMember,
+                                             kMXEventTypeStringRoomMessage
+                                             ];
         
         __block NSUInteger eventCount = 0;
-        [room listenToEventsOfTypes:mxSession.eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+        [room listenToEventsOfTypes:eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
             
             eventCount++;
             
             // Only events with a type declared in `eventsFilterForMessages`
             // must appear in messages
-            XCTAssertNotEqual([mxSession.eventsFilterForMessages indexOfObject:event.type], NSNotFound, "Event of this type must not be in messages. Event: %@", event);
+            XCTAssertNotEqual([eventsFilterForMessages indexOfObject:event.type], NSNotFound, "Event of this type must not be in messages. Event: %@", event);
             
         }];
         
@@ -121,9 +135,16 @@
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
         mxSession = mxSession2;
+
+        NSArray *eventsFilterForMessages = @[
+                                             kMXEventTypeStringRoomName,
+                                             kMXEventTypeStringRoomTopic,
+                                             kMXEventTypeStringRoomMember,
+                                             kMXEventTypeStringRoomMessage
+                                             ];
         
         __block NSUInteger prev_ts = -1;
-        [room listenToEventsOfTypes:mxSession.eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+        [room listenToEventsOfTypes:eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
             
             XCTAssert(event.originServerTs, @"The event should have an attempt: %@", event);
             
@@ -271,15 +292,15 @@
         
         mxSession = mxSession2;
         
-        MXEvent *lastMessage = room.lastMessage;
+        MXEvent *lastMessage = [room lastMessageWithTypeIn:nil];
         XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
         
         [room resetBackState];
-        XCTAssertEqual(room.lastMessage, lastMessage, @"The last message should stay the same");
+        XCTAssertEqual([room lastMessageWithTypeIn:nil], lastMessage, @"The last message should stay the same");
         
         [room paginateBackMessages:100 complete:^() {
             
-            XCTAssertEqual(room.lastMessage, lastMessage, @"The last message should stay the same");
+            XCTAssertEqual([room lastMessageWithTypeIn:nil], lastMessage, @"The last message should stay the same");
             
             [expectation fulfill];
             
@@ -289,6 +310,60 @@
         }];
     }];
 }
+
+// Test for https://matrix.org/jira/browse/SYN-162
+- (void)testPaginateWhenReachingTheExactBeginningOfTheRoom
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+
+        mxSession = mxSession2;
+
+        __block NSUInteger eventCount = 0;
+        [room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+
+            eventCount++;
+        }];
+
+        // First count how many messages to retrieve
+        [room resetBackState];
+        [room paginateBackMessages:100 complete:^() {
+
+            // Paginate for the exact number of events in the room
+            NSUInteger pagEnd = eventCount;
+            eventCount = 0;
+            [room resetBackState];
+            [room paginateBackMessages:pagEnd complete:^{
+
+                XCTAssertEqual(eventCount, pagEnd, @"We should get as many messages as requested");
+
+                XCTAssert(room.canPaginate, @"At this point the SDK cannot know it reaches the beginning of the history");
+
+                // Try to load more messages
+                eventCount = 0;
+                [room paginateBackMessages:1 complete:^{
+
+                    XCTAssertEqual(eventCount, 0, @"There must be no more event");
+                    XCTAssertFalse(room.canPaginate, @"SDK must now indicate there is no more event to paginate");
+
+                    [expectation fulfill];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - see SYN-162 - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 
 - (void)testListenerForAllLiveEvents
 {
@@ -409,7 +484,7 @@
         // This implicitly tests MXSession leaveRoom
         [room leave:^{
             
-            MXRoom *room2 = [mxSession room:room_id];
+            MXRoom *room2 = [mxSession roomWithRoomId:room_id];
             
             XCTAssertNil(room2, @"The room must be no more part of the MXSession rooms");
             

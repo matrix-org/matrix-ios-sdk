@@ -306,7 +306,7 @@
     }];
 }
 
-- (void)testMessages
+- (void)testMessagesWithNoParams
 {
     [[MatrixSDKTestsData sharedData]  doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
         
@@ -325,6 +325,28 @@
             [expectation fulfill];
         }];
         
+    }];
+}
+
+- (void)testMessagesWithOneParam
+{
+    [[MatrixSDKTestsData sharedData]  doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+
+        [bobRestClient messagesForRoom:room_id from:nil to:nil limit:100 success:^(MXPaginationResponse *paginatedResponse) {
+
+            XCTAssertNotNil(paginatedResponse);
+            XCTAssertNotNil(paginatedResponse.start);
+            XCTAssertNotNil(paginatedResponse.end);
+            XCTAssertNotNil(paginatedResponse.chunk);
+            XCTAssertGreaterThan(paginatedResponse.chunk.count, 0);
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
     }];
 }
 
@@ -602,15 +624,15 @@
         
         NSDate *refDate = [NSDate date];
         
-        [bobRestClient eventsFromToken:@"END" serverTimeout:1000 clientTimeout:40000 success:^(NSDictionary *JSONData) {
+        [bobRestClient eventsFromToken:@"END" serverTimeout:1000 clientTimeout:40000 success:^(MXPaginationResponse *paginatedResponse) {
             
-            XCTAssertNotNil(JSONData);
+            XCTAssertNotNil(paginatedResponse);
             
             // Check expected response params
-            XCTAssertNotNil(JSONData[@"start"]);
-            XCTAssertNotNil(JSONData[@"end"]);
-            XCTAssertNotNil(JSONData[@"chunk"]);
-            XCTAssertEqual([JSONData[@"chunk"] count], 0, @"Events should not come in this short stream time (1s)");
+            XCTAssertNotNil(paginatedResponse.start);
+            XCTAssertNotNil(paginatedResponse.end);
+            XCTAssertNotNil(paginatedResponse.chunk);
+            XCTAssertEqual(paginatedResponse.chunk.count, 0, @"Events should not come in this short stream time (1s)");
             
             NSDate *now  = [NSDate date];
             XCTAssertLessThanOrEqual([now timeIntervalSinceDate:refDate], 2, @"The HS did not timeout as expected");    // Give 2s for the HS to timeout
@@ -630,7 +652,7 @@
         
         NSDate *refDate = [NSDate date];
         
-        [bobRestClient eventsFromToken:@"END" serverTimeout:5000 clientTimeout:1000 success:^(NSDictionary *JSONData) {
+        [bobRestClient eventsFromToken:@"END" serverTimeout:5000 clientTimeout:1000 success:^(MXPaginationResponse *paginatedResponse) {
             
             XCTFail(@"The request must fail. The client timeout should have fired");
             [expectation fulfill];

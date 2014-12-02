@@ -19,9 +19,19 @@
 
 #import "MXSessionEventListener.h"
 
+#import "MXNoStore.h"
+#import "MXMemoryStore.h"
+
 #define SERVER_TIMEOUT_MS 30000
 #define CLIENT_TIMEOUT_MS 40000
 #define ERR_TIMEOUT_MS    5000
+
+/**
+ The number of messages to get at the initialSync.
+ This number should be big enough to be able to pick at least one message from the downloaded ones
+ that matches the type requested for `recentsWithTypeIn` but this depends on the app.
+ */
+#define INITIALSYNC_MESSAGES_NUMBER 10
 
 @interface MXSession ()
 {
@@ -36,37 +46,44 @@
     // Indicates if we are streaming
     BOOL streamingActive;
 
-    // The token returned by the last long polling used to manage streaming
-    NSString *lastStreamingToken;
-    
     // The list of global events listeners (`MXSessionEventListener`)
     NSMutableArray *globalEventListeners;
 }
 @end
 
 @implementation MXSession
-@synthesize matrixRestClient, eventsFilterForMessages;
+@synthesize matrixRestClient;
 
-- (id)initWithMatrixRestClient:(MXRestClient*)mRestClient;
+- (id)initWithMatrixRestClient:(MXRestClient*)mxRestClient
+{
+    return [self initWithMatrixRestClient:mxRestClient andStore:nil];
+}
+
+- (id)initWithMatrixRestClient:(MXRestClient *)mxRestClient andStore:(id<MXStore>)mxStore
 {
     self = [super init];
     if (self)
     {
-        matrixRestClient = mRestClient;
+        matrixRestClient = mxRestClient;
         rooms = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
         
         streamingActive = NO;
         
         globalEventListeners = [NSMutableArray array];
-        
-        // Define default events to consider as messages
-        eventsFilterForMessages = @[
-                                    kMXEventTypeStringRoomName,
-                                    kMXEventTypeStringRoomTopic,
-                                    kMXEventTypeStringRoomMember,
-                                    kMXEventTypeStringRoomMessage
-                                    ];
+
+        // Define the MXStore
+        if (mxStore)
+        {
+            _store = mxStore;
+        }
+        else
+        {
+            // Use the default, MXNoStore
+            _store = [[MXNoStore alloc] init];
+
+            //_store = [[MXMemoryStore alloc] init];    // For test
+        }
     }
     return self;
 }
@@ -74,7 +91,7 @@
 - (void)start:(void (^)())initialSyncDone
       failure:(void (^)(NSError *error))failure
 {
-    [matrixRestClient initialSyncWithLimit:1 success:^(NSDictionary *JSONData) {
+    [matrixRestClient initialSyncWithLimit:INITIALSYNC_MESSAGES_NUMBER success:^(NSDictionary *JSONData) {
          for (NSDictionary *roomDict in JSONData[@"rooms"])
          {
              MXRoom *room = [self getOrCreateRoom:roomDict[@"room_id"] withJSONData:roomDict];
@@ -103,7 +120,14 @@
         initialSyncDone();
         
         // Start listening to live events
-        lastStreamingToken = JSONData[@"end"];
+        _store.eventStreamToken = JSONData[@"end"];
+
+        // Commit store changes done in [room handleMessages]
+        if ([_store respondsToSelector:@selector(save)])
+        {
+            [_store save];
+        }
+
         [self resume];
      }
      failure:^(NSError *error) {
@@ -115,19 +139,19 @@
 {
     streamingActive = YES;
     
-    [matrixRestClient eventsFromToken:token serverTimeout:SERVER_TIMEOUT_MS clientTimeout:CLIENT_TIMEOUT_MS success:^(NSDictionary *JSONData) {
+    [matrixRestClient eventsFromToken:token serverTimeout:SERVER_TIMEOUT_MS clientTimeout:CLIENT_TIMEOUT_MS success:^(MXPaginationResponse *paginatedResponse) {
         
         if (streamingActive)
         {
             // Convert chunk array into an array of MXEvents
-            NSArray *events = [MXEvent modelsFromJSON:JSONData[@"chunk"]];
+            NSArray *events = paginatedResponse.chunk;
             
             // And handle them
             [self handleLiveEvents:events];
             
             // Go streaming from the returned token
-            lastStreamingToken = JSONData[@"end"];
-            [self streamEventsFromToken:lastStreamingToken];
+            _store.eventStreamToken = paginatedResponse.end;
+            [self streamEventsFromToken:paginatedResponse.end];
         }
         
     } failure:^(NSError *error) {
@@ -166,6 +190,12 @@
                 break;
         }
     }
+
+    // Commit store changes done in [room handleLiveEvent]
+    if ([_store respondsToSelector:@selector(save)])
+    {
+        [_store save];
+    }
 }
 
 - (void) handlePresenceEvent:(MXEvent *)event direction:(MXEventDirection)direction
@@ -191,13 +221,13 @@
 - (void)resume
 {
     // Resume from the last known token
-    [self streamEventsFromToken:lastStreamingToken];
+    [self streamEventsFromToken:_store.eventStreamToken];
 }
 
 - (void)close
 {
     streamingActive = NO;
-    lastStreamingToken = nil;
+    _store.eventStreamToken = nil;
     
     [self removeAllListeners];
 
@@ -230,7 +260,7 @@
     [matrixRestClient joinRoom:room_id success:^{
         
         // Do an initial to get state and messages in the room
-        [matrixRestClient initialSyncOfRoom:room_id withLimit:1 success:^(NSDictionary *JSONData) {
+        [matrixRestClient initialSyncOfRoom:room_id withLimit:INITIALSYNC_MESSAGES_NUMBER success:^(NSDictionary *JSONData) {
             
             MXRoom *room = [self getOrCreateRoom:JSONData[@"room_id"] withJSONData:JSONData];
             
@@ -254,7 +284,13 @@
                 MXEvent *presenceEvent = [MXEvent modelFromJSON:presenceDict];
                 [self handlePresenceEvent:presenceEvent direction:MXEventDirectionSync];
             }
-            
+
+            // Commit store changes done in [room handleMessages]
+            if ([_store respondsToSelector:@selector(save)])
+            {
+                [_store save];
+            }
+
             success(room);
             
         } failure:^(NSError *error) {
@@ -284,7 +320,7 @@
 
 
 #pragma mark - The user's rooms
-- (MXRoom *)room:(NSString *)room_id
+- (MXRoom *)roomWithRoomId:(NSString *)room_id
 {
     return [rooms objectForKey:room_id];
 }
@@ -296,7 +332,7 @@
 
 - (MXRoom *)getOrCreateRoom:(NSString *)room_id withJSONData:JSONData
 {
-    MXRoom *room = [self room:room_id];
+    MXRoom *room = [self roomWithRoomId:room_id];
     if (nil == room)
     {
         room = [self createRoom:room_id withJSONData:JSONData];
@@ -320,7 +356,7 @@
 
 
 #pragma mark - Matrix users
-- (MXUser *)user:(NSString *)userId
+- (MXUser *)userWithUserId:(NSString *)userId
 {
     return [users objectForKey:userId];
 }
@@ -332,7 +368,7 @@
 
 - (MXUser *)getOrCreateUser:(NSString *)userId
 {
-    MXUser *user = [self user:userId];
+    MXUser *user = [self userWithUserId:userId];
     
     if (nil == user)
     {
@@ -354,19 +390,13 @@
 }
 
 #pragma mark - User's recents
-- (NSArray *)recents
+- (NSArray*)recentsWithTypeIn:(NSArray*)types
 {
     NSMutableArray *recents = [NSMutableArray arrayWithCapacity:rooms.count];
     for (MXRoom *room in rooms.allValues)
     {
-        if (room.lastMessage)
-        {
-            [recents addObject:room.lastMessage];
-        }
-        else
-        {
-            NSLog(@"WARNING: Ignore corrupted room (%@): no last message", room.state.room_id);
-        }
+        // All rooms should have a last message
+        [recents addObject:[room lastMessageWithTypeIn:types]];
     }
     
     // Order them by origin_server_ts
