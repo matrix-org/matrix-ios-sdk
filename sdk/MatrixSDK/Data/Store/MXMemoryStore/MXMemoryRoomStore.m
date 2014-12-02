@@ -42,16 +42,16 @@
 
 - (void)storeEvent:(MXEvent *)event direction:(MXEventDirection)direction
 {
-    if (MXEventDirectionBackwards == direction)
-    {
-        [messages insertObject:event atIndex:0];
-    }
-    else
+    if (MXEventDirectionForwards == direction)
     {
         [messages addObject:event];
 
         // The messages array end has changed, shift the current pagination position
         paginationPosition -= 1;
+    }
+    else
+    {
+        [messages insertObject:event atIndex:0];
     }
 }
 
