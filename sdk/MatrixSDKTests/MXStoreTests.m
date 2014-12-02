@@ -48,6 +48,72 @@
 }
 
 #pragma mark - MXMemoryStore
+- (void)testPaginateWithMXMemoryStore
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+
+        MXMemoryStore *store  = [[MXMemoryStore alloc] init];
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:mxSession2.matrixRestClient andStore:store];
+
+        NSString *roomId = room.state.room_id;
+        [mxSession2 close];
+
+        [mxSession startWithMessagesLimit:1 initialSyncDone:^{
+
+            MXRoom *room = [mxSession roomWithRoomId:roomId];
+
+            __block NSUInteger eventCount = 0;
+            __block MXEvent *firstEventInTheRoom;
+            [room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+
+                eventCount++;
+
+                firstEventInTheRoom = event;
+            }];
+
+            // First make a call to paginateBackMessages that will make a request to the server
+            [room resetBackState];
+            [room paginateBackMessages:100 complete:^{
+
+                XCTAssertEqual(firstEventInTheRoom.eventType, MXEventTypeRoomCreate, @"First event in a room is always m.room.create");
+
+                [room removeAllListeners];
+
+                __block NSUInteger eventCount2 = 0;
+                __block MXEvent *firstEventInTheRoom2;
+                [room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+
+                    eventCount2++;
+
+                    firstEventInTheRoom2 = event;
+                }];
+
+                [room resetBackState];
+                [room paginateBackMessages:100 complete:^{
+
+                    XCTAssertEqual(eventCount, eventCount2);
+                    XCTAssertEqual(firstEventInTheRoom2.eventType, MXEventTypeRoomCreate, @"First event in a room is always m.room.create");
+                    XCTAssertEqualObjects(firstEventInTheRoom, firstEventInTheRoom2);
+
+                    [expectation fulfill];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+
+        }];
+    }];
+}
+
+
 - (void)testPaginateAgainWithMXMemoryStore
 {
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
@@ -58,7 +124,7 @@
         NSString *roomId = room.state.room_id;
         [mxSession2 close];
 
-        [mxSession start:^{
+        [mxSession startWithMessagesLimit:1 initialSyncDone:^{
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
@@ -100,6 +166,8 @@
                     }
                 }];
 
+                XCTAssertTrue(room.canPaginate, @"There is still at least one event to retrieve from the server");
+
                 // The several paginations
                 [room resetBackState];
                 [room paginateBackMessages:2 complete:^() {
@@ -121,6 +189,11 @@
                                 XCTAssertTrue([event2.eventId isEqualToString:event.eventId], @"Events mismatch: %@ - %@", event, event2);
                             }
 
+                            XCTAssertFalse(room.canPaginate, @"We reach the beginning of the history");
+
+                            [room resetBackState];
+                            XCTAssertTrue(room.canPaginate, @"We must be able to paginate again");
+
                             [expectation fulfill];
 
                         } failure:^(NSError *error) {
@@ -134,21 +207,21 @@
                         XCTFail(@"The request should not fail - NSError: %@", error);
                         [expectation fulfill];
                     }];
-                    
+
                     paginateBackMessagesCallCount++;
-                    
+
                 } failure:^(NSError *error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
                     [expectation fulfill];
                 }];
-                
+
                 paginateBackMessagesCallCount++;
-                
+
             } failure:^(NSError *error) {
                 XCTFail(@"The request should not fail - NSError: %@", error);
                 [expectation fulfill];
             }];
-            
+
             paginateBackMessagesCallCount++;
 
         } failure:^(NSError *error) {
@@ -191,12 +264,11 @@
                 XCTFail(@"The request should not fail - NSError: %@", error);
                 [expectation fulfill];
             }];
-            
+
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
-
 
     }];
 
