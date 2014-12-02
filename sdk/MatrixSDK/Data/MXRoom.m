@@ -90,7 +90,11 @@
 
 - (BOOL)canPaginate
 {
-    return ![mxSession.store hasReachedHomeServerPaginationEndForRoom:_state.room_id];
+    // canPaginate depends on two things:
+    //  - did we end to paginate from the local MXStore?
+    //  - did we reach the top of the pagination in our requests to the home server
+    return [mxSession.store canPaginateInRoom:_state.room_id]
+    || ![mxSession.store hasReachedHomeServerPaginationEndForRoom:_state.room_id];
 }
 
 

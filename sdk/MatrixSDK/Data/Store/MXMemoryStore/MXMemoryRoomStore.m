@@ -83,6 +83,11 @@
     return paginatedMessages;
 }
 
+- (BOOL)canPaginate
+{
+    return (0 < paginationPosition);
+}
+
 - (MXEvent*)lastMessageWithTypeIn:(NSArray*)types
 {
     MXEvent *lastMessage = [messages lastObject];

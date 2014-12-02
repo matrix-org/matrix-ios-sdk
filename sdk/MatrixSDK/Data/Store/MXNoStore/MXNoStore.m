@@ -108,6 +108,12 @@
     return nil;
 }
 
+- (BOOL)canPaginateInRoom:(NSString*)roomId
+{
+    // There is nothing to paginate here
+    return NO;
+}
+
 - (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types
 {
     // MXNoStore stores only the last event whatever its type

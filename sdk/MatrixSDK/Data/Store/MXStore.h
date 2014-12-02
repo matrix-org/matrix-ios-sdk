@@ -72,6 +72,15 @@
 - (NSArray*)paginateRoom:(NSString*)roomId numMessages:(NSUInteger)numMessages;
 
 /**
+ Indicate if there are still events to paginate from the MXStore.
+
+ @param roomId the id of the room.
+ @return YES if the MXStore can still iterate on its stores events.
+ */
+- (BOOL)canPaginateInRoom:(NSString*)roomId;
+
+
+/**
  The last message of a room.
 
  @param roomId the id of the room.
