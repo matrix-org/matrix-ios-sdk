@@ -484,7 +484,7 @@
         // This implicitly tests MXSession leaveRoom
         [room leave:^{
             
-            MXRoom *room2 = [mxSession room:room_id];
+            MXRoom *room2 = [mxSession roomWithRoomId:room_id];
             
             XCTAssertNil(room2, @"The room must be no more part of the MXSession rooms");
             

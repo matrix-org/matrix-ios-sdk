@@ -68,7 +68,7 @@
     
     for (NSString *room_id in roomEventListeners)
     {
-        MXRoom *room = [mxSession room:room_id];
+        MXRoom *room = [mxSession roomWithRoomId:room_id];
         [room removeListener:roomEventListeners[room.state.room_id]];
         
     }

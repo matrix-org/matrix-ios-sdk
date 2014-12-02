@@ -320,7 +320,7 @@
 
 
 #pragma mark - The user's rooms
-- (MXRoom *)room:(NSString *)room_id
+- (MXRoom *)roomWithRoomId:(NSString *)room_id
 {
     return [rooms objectForKey:room_id];
 }
@@ -332,7 +332,7 @@
 
 - (MXRoom *)getOrCreateRoom:(NSString *)room_id withJSONData:JSONData
 {
-    MXRoom *room = [self room:room_id];
+    MXRoom *room = [self roomWithRoomId:room_id];
     if (nil == room)
     {
         room = [self createRoom:room_id withJSONData:JSONData];
@@ -356,7 +356,7 @@
 
 
 #pragma mark - Matrix users
-- (MXUser *)user:(NSString *)userId
+- (MXUser *)userWithUserId:(NSString *)userId
 {
     return [users objectForKey:userId];
 }
@@ -368,7 +368,7 @@
 
 - (MXUser *)getOrCreateUser:(NSString *)userId
 {
-    MXUser *user = [self user:userId];
+    MXUser *user = [self userWithUserId:userId];
     
     if (nil == user)
     {

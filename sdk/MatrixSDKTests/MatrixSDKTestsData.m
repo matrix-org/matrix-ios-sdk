@@ -355,7 +355,7 @@ NSString * const kMXTestsAliceAvatarURL = @"http://matrix.org/matrix.png";
         MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         
         [mxSession start:^{
-            MXRoom *room = [mxSession room:room_id];
+            MXRoom *room = [mxSession roomWithRoomId:room_id];
             
             readyToTest(mxSession, room, expectation);
             
@@ -373,7 +373,7 @@ NSString * const kMXTestsAliceAvatarURL = @"http://matrix.org/matrix.png";
         MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         
         [mxSession start:^{
-            MXRoom *room = [mxSession room:room_id];
+            MXRoom *room = [mxSession roomWithRoomId:room_id];
             
             readyToTest(mxSession, room, expectation);
             

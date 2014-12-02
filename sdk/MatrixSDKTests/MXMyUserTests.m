@@ -54,7 +54,7 @@
 
         XCTAssertNotNil(mxSession.myUser);
 
-        MXUser *myUser = [mxSession user:mxSession.matrixRestClient.credentials.userId];
+        MXUser *myUser = [mxSession userWithUserId:mxSession.matrixRestClient.credentials.userId];
         XCTAssertEqual(mxSession.myUser, myUser);
 
         [expectation fulfill];

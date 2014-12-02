@@ -118,7 +118,7 @@
 {
     [self doTestWithBobAndAliceActiveInARoom:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
 
-        MXUser *mxAlice = [mxSession user:aliceRestClient.credentials.userId];
+        MXUser *mxAlice = [mxSession userWithUserId:aliceRestClient.credentials.userId];
 
         [mxAlice listenToUserUpdate:^(MXEvent *event) {
 
@@ -139,7 +139,7 @@
 {
     [self doTestWithBobAndAliceActiveInARoom:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
 
-        MXUser *mxAlice = [mxSession user:aliceRestClient.credentials.userId];
+        MXUser *mxAlice = [mxSession userWithUserId:aliceRestClient.credentials.userId];
 
         [mxAlice listenToUserUpdate:^(MXEvent *event) {
 
@@ -165,7 +165,7 @@
 {
     [self doTestWithBobAndAliceActiveInARoom:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
 
-        MXUser *mxAlice = [mxSession user:aliceRestClient.credentials.userId];
+        MXUser *mxAlice = [mxSession userWithUserId:aliceRestClient.credentials.userId];
 
         [mxAlice listenToUserUpdate:^(MXEvent *event) {
 

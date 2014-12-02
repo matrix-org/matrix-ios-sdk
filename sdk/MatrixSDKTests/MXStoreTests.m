@@ -60,7 +60,7 @@
 
         [mxSession start:^{
 
-            MXRoom *room = [mxSession room:roomId];
+            MXRoom *room = [mxSession roomWithRoomId:roomId];
 
             __block NSInteger paginateBackMessagesCallCount = 0;
 
@@ -171,7 +171,7 @@
 
         [mxSession start:^{
 
-            MXRoom *room = [mxSession room:roomId];
+            MXRoom *room = [mxSession roomWithRoomId:roomId];
 
             [room resetBackState];
             [room paginateBackMessages:8 complete:^() {

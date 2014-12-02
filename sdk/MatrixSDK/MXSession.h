@@ -139,7 +139,7 @@
 
  @return the MXRoom instance.
  */
-- (MXRoom *)room:(NSString*)room_id;
+- (MXRoom *)roomWithRoomId:(NSString*)room_id;
 
 /**
  Get the list of all rooms data.
@@ -157,7 +157,7 @@
  
  @return the MXUser instance.
  */
-- (MXUser*)user:(NSString*)userId;
+- (MXUser*)userWithUserId:(NSString*)userId;
 
 /**
  Get the MXUser instance of a user.
