@@ -47,10 +47,10 @@
     [super tearDown];
 }
 
+#pragma mark - MXMemoryStore
 - (void)testPaginateAgainWithMXMemoryStore
 {
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
-
 
         MXMemoryStore *store  = [[MXMemoryStore alloc] init];
         mxSession = [[MXSession alloc] initWithMatrixRestClient:mxSession2.matrixRestClient andStore:store];
@@ -157,6 +157,49 @@
         }];
 
     }];
+}
+
+- (void)testLastMessageWithMXMemoryStore
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+
+        MXMemoryStore *store  = [[MXMemoryStore alloc] init];
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:mxSession2.matrixRestClient andStore:store];
+
+        NSString *roomId = room.state.room_id;
+        [mxSession2 close];
+
+        [mxSession start:^{
+
+            MXRoom *room = [mxSession room:roomId];
+
+            [room resetBackState];
+            [room paginateBackMessages:8 complete:^() {
+
+                MXEvent *lastMessage = [room lastMessageWithTypeIn:nil];
+                XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
+
+                lastMessage = [room lastMessageWithTypeIn:@[kMXEventTypeStringRoomMessage]];
+                XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
+
+                lastMessage = [room lastMessageWithTypeIn:@[kMXEventTypeStringRoomMember]];
+                XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMember);
+
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+
+    }];
+
 }
 
 @end

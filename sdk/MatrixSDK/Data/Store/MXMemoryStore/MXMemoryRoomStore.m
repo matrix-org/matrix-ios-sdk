@@ -85,8 +85,18 @@
 
 - (MXEvent*)lastMessageWithTypeIn:(NSArray*)types
 {
-    // @TODO: To implement
-    return [messages lastObject];
+    MXEvent *lastMessage = [messages lastObject];
+    for (NSInteger i = messages.count - 1; 0 <= i; i--)
+    {
+        MXEvent *event = messages[i];
+
+        if (NSNotFound != [types indexOfObject:event.type])
+        {
+            lastMessage = event;
+            break;
+        }
+    }
+    return lastMessage;
 }
 
 @end
