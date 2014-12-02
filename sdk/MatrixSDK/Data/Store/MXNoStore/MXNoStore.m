@@ -85,7 +85,7 @@
 
 - (BOOL)hasReachedHomeServerPaginationEndForRoom:(NSString*)roomId
 {
-    BOOL hasReachedHomeServerPaginationEnd;
+    BOOL hasReachedHomeServerPaginationEnd = NO;
 
     NSNumber *hasReachedHomeServerPaginationEndNumber = hasReachedHomeServerPaginations[roomId];
     if (hasReachedHomeServerPaginationEndNumber)
@@ -111,7 +111,7 @@
 - (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types
 {
     // MXNoStore stores only the last event whatever its type
-    NSParameterAssert(nil == types);
+    NSLog(@"Warning: MXNoStore implementation of lastMessageOfRoom is limited");
 
     return lastMessages[roomId];
 }
