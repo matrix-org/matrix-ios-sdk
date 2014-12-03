@@ -57,7 +57,7 @@
 
 - (void)resetPagination
 {
-    paginationPosition = messages.count - 1;
+    paginationPosition = messages.count;
 }
 
 - (NSArray *)paginate:(NSUInteger)numMessages
