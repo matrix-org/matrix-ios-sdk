@@ -285,8 +285,10 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
             
             // Handle first live events
             if (direction == MXEventDirectionForwards) {
-                shouldScrollToBottom = (self.messagesTableView.contentOffset.y + self.messagesTableView.frame.size.height >= self.messagesTableView.contentSize.height);
-                
+                // We will scroll to bottom after updating tableView only if the most recent message is entirely visible.
+                CGFloat maxPositionY = self.messagesTableView.contentOffset.y + (self.messagesTableView.frame.size.height - self.messagesTableView.contentInset.bottom);
+                shouldScrollToBottom = (maxPositionY >= self.messagesTableView.contentSize.height);
+                // Update Table
                 NSIndexPath *indexPathForInsertedRow = nil;
                 NSIndexPath *indexPathForDeletedRow = nil;
                 NSMutableArray *indexPathsForUpdatedRows = [NSMutableArray array];
@@ -428,7 +430,8 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
 - (void)scrollToBottomAnimated:(BOOL)animated {
     // Scroll table view to the bottom
     NSInteger rowNb = messages.count;
-    if (rowNb) {
+    // Check whether there is some data and whether the table has already been loaded
+    if (rowNb && self.messagesTableView.contentSize.height) {
         [self.messagesTableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:(rowNb - 1) inSection:0] atScrollPosition:UITableViewScrollPositionBottom animated:animated];
     }
 }
@@ -445,6 +448,10 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
         backPaginationAddedItemsNb = 0;
         
         [mxRoom paginateBackMessages:20 complete:^{
+            // Sanity check: check whether the view controller has not been released while back pagination was running
+            if (self.roomId == nil) {
+                return;
+            }
             if (backPaginationAddedItemsNb) {
                 // Prepare insertion of new rows at the top of the table (compute cumulative height of added cells)
                 NSMutableArray *indexPaths = [NSMutableArray arrayWithCapacity:backPaginationAddedItemsNb];
@@ -455,6 +462,9 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
                     [indexPaths addObject:indexPath];
                     verticalOffset += [self tableView:self.messagesTableView heightForRowAtIndexPath:indexPath];
                 }
+                // Here indexPath corresponds to the first added message (We will reuse it at the end of table update to make it visible)
+                // Reset count to enable tableView update
+                backPaginationAddedItemsNb = 0;
                 
                 // Disable animation during cells insertion to prevent flickering
                 [UIView setAnimationsEnabled:NO];
@@ -471,11 +481,13 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
                 [_activityIndicator stopAnimating];
                 isBackPaginationInProgress = NO;
                 
-                // Move the current message at the middle of the visible area (dispatch this action in order to let table end its refresh)
-                indexPath = [NSIndexPath indexPathForRow:(backPaginationAddedItemsNb - 1) inSection:0];
-                backPaginationAddedItemsNb = 0;
+                // Scroll tableView in order to make visible the first added message (dispatch this action in order to let table end its refresh)
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    [self.messagesTableView scrollToRowAtIndexPath:indexPath atScrollPosition:UITableViewScrollPositionMiddle animated:YES];
+                    if (indexPath.row == messages.count - 1) {
+                        [self scrollToBottomAnimated:NO];
+                    } else {
+                        [self.messagesTableView scrollToRowAtIndexPath:indexPath atScrollPosition:UITableViewScrollPositionMiddle animated:YES];
+                    }
                 });
             } else {
                 // Here there was no event related to the listened types
@@ -784,11 +796,15 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
     // Check table view members vs messages
-    if (tableView == self.membersTableView)
-    {
+    if (tableView == self.membersTableView) {
         return members.count;
     }
     
+    if (backPaginationAddedItemsNb) {
+        // Here some old messages have been added to messages during back pagination.
+        // Stop table refreshing, the table will be refreshed at the end of pagination
+        return 0;
+    }
     return messages.count;
 }
 
@@ -935,7 +951,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
         }
         // Add unsent label for failed components
         for (RoomMessageComponent *component in message.components) {
-            if (component.status == RoomMessageComponentStatusFailed) {
+            if (component.style == RoomMessageComponentStyleFailed) {
                 UILabel *unsentLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, yPosition, outgoingMsgCell.unsentLabelContainer.frame.size.width , 20)];
                 unsentLabel.text = @"Unsent";
                 unsentLabel.textAlignment = NSTextAlignmentCenter;
@@ -1789,6 +1805,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
             MPMoviePlayerController* moviePlayerController = [[MPMoviePlayerController alloc] initWithContentURL:selectedVideo];
             if (moviePlayerController) {
                 [moviePlayerController setShouldAutoplay:NO];
+                // TODO requestThumbnailImagesAtTimes
                 UIImage* videoThumbnail = [moviePlayerController thumbnailImageAtTime:(NSTimeInterval)1 timeOption:MPMovieTimeOptionNearestKeyFrame];
                 [moviePlayerController stop];
                 moviePlayerController = nil;

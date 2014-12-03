@@ -86,6 +86,13 @@
     return [roomStore paginate:numMessages];
 }
 
+-(BOOL)canPaginateInRoom:(NSString *)roomId
+{
+    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    return roomStore.canPaginate;
+}
+
+
 - (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types
 {
     MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];

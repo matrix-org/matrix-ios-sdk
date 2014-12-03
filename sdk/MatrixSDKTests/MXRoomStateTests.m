@@ -497,16 +497,19 @@
                     MXRoom *newRoom = [mxSession roomWithRoomId:room_id];
                     
                     [newRoom listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
-                        // We should receive only join events
-                        XCTAssertEqual(event.eventType, MXEventTypeRoomMember);
-                        
-                        MXRoomMemberEventContent *roomMemberEventContent = [MXRoomMemberEventContent modelFromJSON:event.content];
-                        XCTAssert([roomMemberEventContent.membership isEqualToString:kMXMembershipStringJoin]);
+                        if (MXEventDirectionForwards == event)
+                        {
+                            // We should receive only join events in live
+                            XCTAssertEqual(event.eventType, MXEventTypeRoomMember);
+
+                            MXRoomMemberEventContent *roomMemberEventContent = [MXRoomMemberEventContent modelFromJSON:event.content];
+                            XCTAssert([roomMemberEventContent.membership isEqualToString:kMXMembershipStringJoin]);
+                        }
                     }];
                     
                     [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
-                        // Except presence, we should receive only join events
-                        if (MXEventTypePresence != event.eventType)
+                        // Except presence, we should receive only join events in live
+                        if (MXEventDirectionForwards == event && MXEventTypePresence != event.eventType)
                         {
                             XCTAssertEqual(event.eventType, MXEventTypeRoomMember);
                             
