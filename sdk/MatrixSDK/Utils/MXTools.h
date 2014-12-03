@@ -21,6 +21,9 @@
 
 @interface MXTools : NSObject
 
++ (MXEventTypeString)eventTypeString:(MXEventType)eventType;
++ (MXEventType)eventType:(MXEventTypeString)eventTypeString;
+
 + (MXMembership)membership:(MXMembershipString)membershipString;
 
 + (MXPresence)presence:(MXPresenceString)presenceString;

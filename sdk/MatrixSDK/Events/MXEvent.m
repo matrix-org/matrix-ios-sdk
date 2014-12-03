@@ -16,6 +16,8 @@
 
 #import "MXEvent.h"
 
+#import "MXTools.h"
+
 #pragma mark - Constants definitions
 
 NSString *const kMXEventTypeStringRoomName            = @"m.room.name";
@@ -48,30 +50,6 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 #pragma mark - MXEvent
 @implementation MXEvent
 
-/**
- Mapping from MXEventTypeString to MXEventType
- */
-+ (NSDictionary*)eventTypesMap
-{
-    static NSDictionary *inst = nil;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        inst = @{
-                 kMXEventTypeStringRoomName: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomName],
-                 kMXEventTypeStringRoomTopic: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomTopic],
-                 kMXEventTypeStringRoomMember: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMember],
-                 kMXEventTypeStringRoomCreate: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomCreate],
-                 kMXEventTypeStringRoomJoinRules: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomJoinRules],
-                 kMXEventTypeStringRoomPowerLevels: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomPowerLevels],
-                 kMXEventTypeStringRoomAliases: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomAliases],
-                 kMXEventTypeStringRoomMessage: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMessage],
-                 kMXEventTypeStringRoomMessageFeedback: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMessageFeedback],
-                 kMXEventTypeStringPresence :[NSNumber numberWithUnsignedInteger:MXEventTypePresence]
-                 };
-    });
-    return inst;
-}
-
 - (NSString *)description
 {
     return [NSString stringWithFormat:@"%@: %@ - %@: %@", self.eventId, self.type, [NSDate dateWithTimeIntervalSince1970:self.originServerTs/1000], self.content];
@@ -83,16 +61,7 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     id instance = [super initWithDictionary:dictionaryValue error:error];
     
     // Then, compute eventType
-    NSNumber *number = [[MXEvent eventTypesMap] objectForKey:_type];
-    if (number)
-    {
-        _eventType = [number unsignedIntegerValue];
-    }
-    else
-    {
-        // Do not know this event type
-        _eventType = MXEventTypeCustom;
-    }
+    _eventType = [MXTools eventType:_type];
     
     if (MXEventTypePresence == self.eventType)
     {
