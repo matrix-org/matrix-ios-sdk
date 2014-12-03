@@ -229,7 +229,8 @@
                     
                     [room2 paginateBackMessages:100 complete:^() {
                         
-                        
+                        [self assertNoDuplicate:room2Events text:@"events got one by one with testSeveralPaginateBacks"];
+
                         // Now, compare the result with the reference
                         XCTAssertEqual(roomEvents.count, room2Events.count);
                         
