@@ -48,19 +48,16 @@
 }
 
 #pragma mark - MXMemoryStore
-- (void)testPaginateWithMXMemoryStore
+- (void)testMXMemoryStorePaginate
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
 
         MXMemoryStore *store  = [[MXMemoryStore alloc] init];
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:mxSession2.matrixRestClient andStore:store];
-
-        NSString *roomId = room.state.room_id;
-        [mxSession2 close];
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient andStore:store];
 
         [mxSession startWithMessagesLimit:0 initialSyncDone:^{
 
-            MXRoom *room = [mxSession roomWithRoomId:roomId];
+            MXRoom *room = [mxSession roomWithRoomId:room_id];
 
             __block NSUInteger eventCount = 0;
             __block MXEvent *firstEventInTheRoom;
@@ -114,19 +111,16 @@
 }
 
 
-- (void)testPaginateAgainWithMXMemoryStore
+- (void)testMXMemoryStorePaginateAgain
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
 
         MXMemoryStore *store  = [[MXMemoryStore alloc] init];
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:mxSession2.matrixRestClient andStore:store];
-
-        NSString *roomId = room.state.room_id;
-        [mxSession2 close];
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient andStore:store];
 
         [mxSession startWithMessagesLimit:0 initialSyncDone:^{
 
-            MXRoom *room = [mxSession roomWithRoomId:roomId];
+            MXRoom *room = [mxSession roomWithRoomId:room_id];
 
             __block NSInteger paginateBackMessagesCallCount = 0;
 
@@ -232,19 +226,16 @@
     }];
 }
 
-- (void)testLastMessageWithMXMemoryStore
+- (void)testMXMemoryStoreLastMessage
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
 
         MXMemoryStore *store  = [[MXMemoryStore alloc] init];
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:mxSession2.matrixRestClient andStore:store];
-
-        NSString *roomId = room.state.room_id;
-        [mxSession2 close];
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient andStore:store];
 
         [mxSession start:^{
 
-            MXRoom *room = [mxSession roomWithRoomId:roomId];
+            MXRoom *room = [mxSession roomWithRoomId:room_id];
 
             [room resetBackState];
             [room paginateBackMessages:8 complete:^() {
