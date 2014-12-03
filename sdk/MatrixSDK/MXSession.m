@@ -115,6 +115,12 @@
                  
                  [room handleMessages:roomMessages
                             direction:MXEventDirectionSync isTimeOrdered:YES];
+
+                 // If the initialSync returns less messages than requested, we got all history from the home server
+                 if (roomMessages.chunk.count < initialSyncMessagesLimit)
+                 {
+                     [_store storeHasReachedHomeServerPaginationEndForRoom:room.state.room_id andValue:YES];
+                 }
              }
              if ([roomDict objectForKey:@"state"])
              {
@@ -283,8 +289,14 @@
                 MXPaginationResponse *roomMessages = [MXPaginationResponse modelFromJSON:[JSONData objectForKey:@"messages"]];
                 
                 [room handleMessages:roomMessages direction:MXEventDirectionSync isTimeOrdered:YES];
+
+                // If the initialSync returns less messages than requested, we got all history from the home server
+                if (roomMessages.chunk.count < initialSyncMessagesLimit)
+                {
+                    [_store storeHasReachedHomeServerPaginationEndForRoom:room.state.room_id andValue:YES];
+                }
             }
-            
+
             // Manage room state
             if ([JSONData objectForKey:@"state"])
             {
