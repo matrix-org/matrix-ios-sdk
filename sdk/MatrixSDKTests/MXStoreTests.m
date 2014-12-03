@@ -58,7 +58,7 @@
         NSString *roomId = room.state.room_id;
         [mxSession2 close];
 
-        [mxSession startWithMessagesLimit:1 initialSyncDone:^{
+        [mxSession startWithMessagesLimit:0 initialSyncDone:^{
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
@@ -124,7 +124,7 @@
         NSString *roomId = room.state.room_id;
         [mxSession2 close];
 
-        [mxSession startWithMessagesLimit:1 initialSyncDone:^{
+        [mxSession startWithMessagesLimit:0 initialSyncDone:^{
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
