@@ -265,21 +265,64 @@
     }];
 }
 
-- (void)testCanPaginate
+- (void)testCanPaginateFromHomeServer
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
-        
-        mxSession = mxSession2;
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
 
-        XCTAssertTrue(room.canPaginate, @"We can always paginate at the beginning");
-        
-        [room resetBackState];
-        [room paginateBackMessages:100 complete:^() {
-            
-            XCTAssertFalse(room.canPaginate, @"We must have reached the end of the pagination");
-            
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+
+        // Preload less messages than the room history counts so that there are still requests to the HS to do
+        [mxSession startWithMessagesLimit:1 initialSyncDone:^{
+
+            MXRoom *room = [mxSession roomWithRoomId:room_id];
+
+            [room resetBackState];
+            XCTAssertTrue(room.canPaginate, @"We can always paginate at the beginning");
+
+            [room paginateBackMessages:100 complete:^() {
+
+                XCTAssertFalse(room.canPaginate, @"We must have reached the end of the pagination");
+
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
-            
+        }];
+    }];
+}
+
+- (void)testCanPaginateFromMXStore
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+
+        // Preload more messages than the room history counts so that all messages are already loaded
+        // room.canPaginate will use [MXStore canPaginateInRoom]
+        [mxSession startWithMessagesLimit:100 initialSyncDone:^{
+
+            MXRoom *room = [mxSession roomWithRoomId:room_id];
+
+            [room resetBackState];
+            XCTAssertTrue(room.canPaginate, @"We can always paginate at the beginning");
+
+            [room paginateBackMessages:100 complete:^() {
+
+                XCTAssertFalse(room.canPaginate, @"We must have reached the end of the pagination");
+
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
