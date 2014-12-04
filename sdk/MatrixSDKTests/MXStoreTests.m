@@ -497,6 +497,110 @@
 }
 
 
+- (void)checkPaginateWhenJoiningAgainAfterLeft:(MXRoom*)room
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+
+        [mxSession.matrixRestClient inviteUser:aliceRestClient.credentials.userId toRoom:room.state.room_id success:^{
+
+            NSString *roomId = room.state.room_id;
+
+            // Leave the room
+            [room leave:^{
+
+                __block NSString *aliceTextEventId;
+
+                // Listen for the invitation by Alice
+                [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
+
+                    // Join the room again
+                    MXRoom *room2 = [mxSession roomWithRoomId:roomId];
+
+                    XCTAssertNotNil(room2);
+
+                    if (MXMembershipInvite == room2.state.membership)
+                    {
+                        // Join the room on the invitation and check we can paginate all expected text messages
+                        [room2 join:^{
+
+                            NSMutableArray *events = [NSMutableArray array];
+                            [room2 listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+
+                                if (0 == events.count)
+                                {
+                                    // The most recent message must be "Hi bob" sent by Alice
+                                    XCTAssertEqualObjects(aliceTextEventId, event.eventId);
+                                }
+
+                                [events addObject:event];
+
+                            }];
+
+                            [room2 resetBackState];
+                            [room2 paginateBackMessages:100 complete:^{
+
+                                XCTAssertEqual(events.count, 6, "The room should contains 5 + 1 messages");
+                                [expectation fulfill];
+
+                            } failure:^(NSError *error) {
+                                XCTFail(@"The request should not fail - NSError: %@", error);
+                                [expectation fulfill];
+                            }];
+
+                        } failure:^(NSError *error) {
+                            XCTFail(@"The request should not fail - NSError: %@", error);
+                            [expectation fulfill];
+                        }];
+                    }
+                }];
+
+                // Make Alice post text message while Bob is not in the room.
+                // Then, invite him.
+                [aliceRestClient joinRoom:roomId success:^{
+
+                    [aliceRestClient postTextMessageToRoom:roomId text:@"Hi bob"  success:^(NSString *event_id) {
+
+                        aliceTextEventId = event_id;
+
+                        [aliceRestClient inviteUser:mxSession.matrixRestClient.credentials.userId toRoom:roomId success:^{
+
+                        } failure:^(NSError *error) {
+                            NSAssert(NO, @"Cannot set up intial test conditions");
+                        }];
+
+                    } failure:^(NSError *error) {
+                        NSAssert(NO, @"Cannot set up intial test conditions");
+                    }];
+
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot set up intial test conditions");
+                }];
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions");
+            }];
+
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions");
+        }];
+    }];
+}
+
+- (void)testMXNoStorePaginateWhenJoiningAgainAfterLeft
+{
+    [self doTestWithMXNoStore:^(MXRoom *room) {
+        [self checkPaginateWhenJoiningAgainAfterLeft:room];
+    }];
+}
+
+- (void)testMXMemoryStorePaginateWhenJoiningAgainAfterLeft
+{
+    [self doTestWithMXMemoryStore:^(MXRoom *room) {
+        [self checkPaginateWhenJoiningAgainAfterLeft:room];
+    }];
+}
+
+
 // Test for https://matrix.org/jira/browse/SYN-162
 - (void)checkPaginateWhenReachingTheExactBeginningOfTheRoom:(MXRoom*)room
 {
