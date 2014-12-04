@@ -38,6 +38,13 @@
 - (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXEventDirection)direction;
 
 /**
+ Clean all data related to a room.
+ 
+ @param roomId the id of the room.
+ */
+- (void)cleanDataOfRoom:(NSString*)roomId;
+
+/**
  Store/retrieve the current pagination token of a room.
  */
 - (void)storePaginationTokenOfRoom:(NSString*)roomId andToken:(NSString*)token;

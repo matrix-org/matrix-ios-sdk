@@ -47,6 +47,13 @@
     [roomStore storeEvent:event direction:direction];
 }
 
+- (void)cleanDataOfRoom:(NSString *)roomId
+{
+    if (roomStores[roomId])
+    {
+        [roomStores removeObjectForKey:roomId];
+    }
+}
 
 - (void)storePaginationTokenOfRoom:(NSString*)roomId andToken:(NSString*)token
 {

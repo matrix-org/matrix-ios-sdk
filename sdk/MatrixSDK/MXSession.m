@@ -349,8 +349,7 @@ typedef void (^MXOnResumeDone)();
 {
     [matrixRestClient leaveRoom:room_id success:^{
         
-        // Remove the room from the list
-        [rooms removeObjectForKey:room_id];
+        [self removeRoom:room_id];
         
         success();
         
@@ -393,6 +392,26 @@ typedef void (^MXOnResumeDone)();
     
     [rooms setObject:room forKey:room_id];
     return room;
+}
+
+- (void)removeRoom:(NSString *)room_id
+{
+    MXRoom *room = [self roomWithRoomId:room_id];
+
+    if (room)
+    {
+        // Unregister global listeners for this room
+        for (MXSessionEventListener *listener in globalEventListeners)
+        {
+            [listener removeSpiedRoom:room];
+        }
+
+        // Clean the store
+        [_store cleanDataOfRoom:room_id];
+
+        // And remove the room from the list
+        [rooms removeObjectForKey:room_id];
+    }
 }
 
 
