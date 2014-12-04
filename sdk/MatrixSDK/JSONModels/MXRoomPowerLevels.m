@@ -48,6 +48,11 @@
     return userPowerLevel;
 }
 
+- (NSUInteger)invite {
+    // TODO remove the following code when SYN-190 will be fixed
+    return [self minimumPowerLevelForPostingEventAsStateEvent:kMXEventTypeStringRoomMember];
+}
+
 - (NSUInteger)minimumPowerLevelForPostingEventAsMessage:(MXEventTypeString)eventTypeString
 {
     NSUInteger minimumPowerLevel;

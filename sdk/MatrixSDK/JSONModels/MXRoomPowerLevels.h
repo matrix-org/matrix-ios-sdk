@@ -64,6 +64,11 @@
  */
 @property (nonatomic) NSUInteger redact;
 
+/**
+ The minimum power level to invite someone.
+ */
+@property (nonatomic) NSUInteger invite;
+
 
 #pragma mark - minimum power level for posting events
 /**
@@ -79,7 +84,7 @@
 @property (nonatomic) NSUInteger eventsDefault;
 
 /**
- The default minimum power level to post a state event as a non state event when its event
+ The default minimum power level to post an event as a state event when its event
  type is not defined in `events`.
  */
 @property (nonatomic) NSUInteger stateDefault;
