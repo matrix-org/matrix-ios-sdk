@@ -588,14 +588,14 @@
 
 - (void)testMXNoStorePaginateWhenJoiningAgainAfterLeft
 {
-    [self doTestWithMXNoStore:^(MXRoom *room) {
+    [self doTestWithMXNoStoreAndMessagesLimit:10 readyToTest:^(MXRoom *room) {
         [self checkPaginateWhenJoiningAgainAfterLeft:room];
     }];
 }
 
 - (void)testMXMemoryStorePaginateWhenJoiningAgainAfterLeft
 {
-    [self doTestWithMXMemoryStore:^(MXRoom *room) {
+    [self doTestWithMXMemoryStoreAndMessagesLimit:100 readyToTest:^(MXRoom *room) {
         [self checkPaginateWhenJoiningAgainAfterLeft:room];
     }];
 }
