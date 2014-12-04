@@ -640,16 +640,16 @@
             NSUInteger minimumPowerLevelForEvent;
             for (MXEventTypeString eventTypeString in roomPowerLevels.events.allKeys)
             {
-                minimumPowerLevelForEvent = [roomPowerLevels minimumPowerLevelForEvent:[MXTools eventType:eventTypeString]];
+                minimumPowerLevelForEvent = [roomPowerLevels minimumPowerLevelForEvent:eventTypeString];
 
                 XCTAssertEqualObjects(roomPowerLevels.events[eventTypeString], [NSNumber numberWithUnsignedInteger:minimumPowerLevelForEvent]);
             }
 
-            minimumPowerLevelForEvent = [roomPowerLevels minimumPowerLevelForEvent:MXEventTypeRoomMessage];
+            minimumPowerLevelForEvent = [roomPowerLevels minimumPowerLevelForEvent:kMXEventTypeStringRoomMessage];
             XCTAssertEqual(minimumPowerLevelForEvent, roomPowerLevels.eventsDefault);
 
 
-            minimumPowerLevelForEvent = [roomPowerLevels minimumPowerLevelForEvent:MXEventTypeRoomTopic];
+            minimumPowerLevelForEvent = [roomPowerLevels minimumPowerLevelForEvent:kMXEventTypeStringRoomTopic];
             XCTAssertEqual(minimumPowerLevelForEvent, roomPowerLevels.stateDefault);
 
             [expectation fulfill];

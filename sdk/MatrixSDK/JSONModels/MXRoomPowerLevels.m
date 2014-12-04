@@ -48,13 +48,13 @@
     return userPowerLevel;
 }
 
-- (NSUInteger)minimumPowerLevelForEvent:(MXEventType)eventType
+- (NSUInteger)minimumPowerLevelForEvent:(MXEventTypeString)eventTypeString
 {
     NSUInteger minimumPowerLevel;
 
-    MXEventTypeString type = [MXTools eventTypeString:eventType];
+    MXEventType eventType = [MXTools eventType:eventTypeString];
 
-    NSNumber *powerLevel = _events[type];
+    NSNumber *powerLevel = _events[eventTypeString];
     if (powerLevel)
     {
         minimumPowerLevel = [powerLevel unsignedIntegerValue];

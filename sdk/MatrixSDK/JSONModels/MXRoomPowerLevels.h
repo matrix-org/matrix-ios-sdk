@@ -85,9 +85,9 @@
 /**
  Get the minimum power level the user must have to post an event of the given type.
 
- @param eventType the type of event.
+ @param eventTypeString the type of event.
  @return the required minimum power level.
  */
-- (NSUInteger)minimumPowerLevelForEvent:(MXEventType)eventType;
+- (NSUInteger)minimumPowerLevelForEvent:(MXEventTypeString)eventTypeString;
 
 @end
