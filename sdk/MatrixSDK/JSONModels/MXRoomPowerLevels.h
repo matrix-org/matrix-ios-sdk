@@ -30,7 +30,7 @@
 #pragma mark - Power levels of room members
 /**
  The users who have a defined power level.
- The dictionary keys are user ids and the values, their power levels
+ The dictionary keys are user ids and the values, their power levels.
  */
 @property (nonatomic) NSDictionary *users;
 
@@ -40,7 +40,7 @@
 @property (nonatomic) NSUInteger usersDefault;
 
 /**
- Get the power level of a member of the room.
+ Helper to get the power level of a member of the room.
 
  @param userId The id to the user.
  @return his power level.
@@ -68,26 +68,38 @@
 #pragma mark - minimum power level for posting events
 /**
  The event types for which a minimum power level has been defined.
- The dictionary keys are event type and the values, their minimum power levels
+ The dictionary keys are event type and the values, their minimum required power levels.
  */
 @property (nonatomic) NSDictionary *events;
 
 /**
- The default minimum power level to post an event as a message when its event type is not defined in `events`.
+ The default minimum power level to post an event as a message when its event type is not
+ defined in `events`.
  */
 @property (nonatomic) NSUInteger eventsDefault;
 
 /**
- The default minimum power level to post a non state event when its event type is not defined in `events`.
+ The default minimum power level to post a state event as a non state event when its event
+ type is not defined in `events`.
  */
 @property (nonatomic) NSUInteger stateDefault;
 
 /**
- Get the minimum power level the user must have to post an event of the given type.
+ Helper to get the minimum power level the user must have to post an event of the given type 
+ as a message.
 
  @param eventTypeString the type of event.
  @return the required minimum power level.
  */
-- (NSUInteger)minimumPowerLevelForEvent:(MXEventTypeString)eventTypeString;
+- (NSUInteger)minimumPowerLevelForPostingEventAsMessage:(MXEventTypeString)eventTypeString;
+
+/**
+ Helper to get the minimum power level the user must have to post an event of the given type
+ as a state event.
+
+ @param eventTypeString the type of event.
+ @return the required minimum power level.
+ */
+- (NSUInteger)minimumPowerLevelForPostingEventAsStateEvent:(MXEventTypeString)eventTypeString;
 
 @end

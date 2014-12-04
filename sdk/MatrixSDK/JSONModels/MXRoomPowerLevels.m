@@ -48,11 +48,9 @@
     return userPowerLevel;
 }
 
-- (NSUInteger)minimumPowerLevelForEvent:(MXEventTypeString)eventTypeString
+- (NSUInteger)minimumPowerLevelForPostingEventAsMessage:(MXEventTypeString)eventTypeString
 {
     NSUInteger minimumPowerLevel;
-
-    MXEventType eventType = [MXTools eventType:eventTypeString];
 
     NSNumber *powerLevel = _events[eventTypeString];
     if (powerLevel)
@@ -60,17 +58,28 @@
         minimumPowerLevel = [powerLevel unsignedIntegerValue];
     }
 
-    // Use the default value according to the type of event.
-    // The Matrix protocol allows to post a state event both as a state event and as a message.
-    // But currently, there is no such event type that has this behavior.
-    // Only m.room.message event are posted as message events. All other events are posted as state event.
-    // So, for now, do not manage this protocol open door.
-    else if (MXEventTypeRoomMessage == eventType)
+    // Use the default value for posting event as message
+    else
     {
         minimumPowerLevel = _eventsDefault;
     }
+
+    return minimumPowerLevel;
+}
+
+
+- (NSUInteger)minimumPowerLevelForPostingEventAsStateEvent:(MXEventTypeString)eventTypeString
+{
+    NSUInteger minimumPowerLevel;
+
+    NSNumber *powerLevel = _events[eventTypeString];
+    if (powerLevel)
+    {
+        minimumPowerLevel = [powerLevel unsignedIntegerValue];
+    }
     else
     {
+        // Use the default value for posting event as state event
         minimumPowerLevel = _stateDefault;
     }
 
