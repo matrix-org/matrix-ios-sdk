@@ -20,6 +20,7 @@
 #import "MatrixSDKTestsData.h"
 
 #import "MXSession.h"
+#import "MXTools.h"
 
 @interface MXRoomStateTests : XCTestCase
 {
@@ -598,6 +599,66 @@
             
         }];
         
+    }];
+}
+
+- (void)testPowerLevels
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
+
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+
+        [mxSession start:^{
+
+            MXRoom *room = [mxSession roomWithRoomId:room_id];
+
+            MXRoomPowerLevels *roomPowerLevels = room.state.powerLevels;
+
+            XCTAssertNotNil(roomPowerLevels);
+
+            // Check the user power level
+            XCTAssertNotNil(roomPowerLevels.users);
+            XCTAssertEqual(roomPowerLevels.users.count, 1);
+            XCTAssertEqualObjects(roomPowerLevels.users[bobRestClient.credentials.userId], [NSNumber numberWithUnsignedInteger: 100], @"By default power level of room creator is 100");
+
+            NSUInteger powerlLevel = [roomPowerLevels powerLevelOfUserWithUserID:bobRestClient.credentials.userId];
+            XCTAssertEqual(powerlLevel, 100, @"By default power level of room creator is 100");
+
+            powerlLevel = [roomPowerLevels powerLevelOfUserWithUserID:@"randomUserId"];
+            XCTAssertEqual(powerlLevel, roomPowerLevels.usersDefault, @"Power level of user with no attributed power level must default to usersDefault");
+
+            // Check minimum power level for actions
+            // Hope the HS will not change these values
+            XCTAssertEqual(roomPowerLevels.ban, 50);
+            XCTAssertEqual(roomPowerLevels.kick, 50);
+            XCTAssertEqual(roomPowerLevels.redact, 50);
+
+            // Check power level to post events
+            XCTAssertNotNil(roomPowerLevels.events);
+            XCTAssertGreaterThan(roomPowerLevels.events.allKeys.count, 0);
+
+            NSUInteger minimumPowerLevelForEvent;
+            for (MXEventTypeString eventTypeString in roomPowerLevels.events.allKeys)
+            {
+                minimumPowerLevelForEvent = [roomPowerLevels minimumPowerLevelForEvent:[MXTools eventType:eventTypeString]];
+
+                XCTAssertEqualObjects(roomPowerLevels.events[eventTypeString], [NSNumber numberWithUnsignedInteger:minimumPowerLevelForEvent]);
+            }
+
+            minimumPowerLevelForEvent = [roomPowerLevels minimumPowerLevelForEvent:MXEventTypeRoomMessage];
+            XCTAssertEqual(minimumPowerLevelForEvent, roomPowerLevels.eventsDefault);
+
+
+            minimumPowerLevelForEvent = [roomPowerLevels minimumPowerLevelForEvent:MXEventTypeRoomTopic];
+            XCTAssertEqual(minimumPowerLevelForEvent, roomPowerLevels.stateDefault);
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
     }];
 }
 
