@@ -386,16 +386,14 @@
                 // Resume the MXSession in 3 secs
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
 
-                    [mxSession resume];
                     paused = NO;
+                    [mxSession resume:^{
 
-                    // We should receive these events now
-                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-                        
+                        // We should receive these events now
                         XCTAssertGreaterThan(eventCount, 0, @"We should have received events");
                         [expectation fulfill];
-                        
-                    });
+
+                    }];
                     
                 });
                 

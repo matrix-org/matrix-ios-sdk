@@ -33,6 +33,10 @@
  */
 #define DEFAULT_INITIALSYNC_MESSAGES_NUMBER 10
 
+// Block called when MSSession resume is complete
+typedef void (^MXOnResumeDone)();
+
+
 @interface MXSession ()
 {
     // Rooms data
@@ -51,6 +55,9 @@
 
     // The limit value to use when doing initialSync
     NSUInteger initialSyncMessagesLimit;
+
+    // The block to call when MSSession resume is complete
+    MXOnResumeDone onResumeDone;
 }
 @end
 
@@ -147,7 +154,8 @@
             [_store save];
         }
 
-        [self resume];
+        // Resume from the last known token
+        [self streamEventsFromToken:_store.eventStreamToken];
      }
      failure:^(NSError *error) {
          failure(error);
@@ -167,6 +175,13 @@
             
             // And handle them
             [self handleLiveEvents:events];
+
+            // If we are resuming inform the app that it received the last uptodate data
+            if (onResumeDone)
+            {
+                onResumeDone();
+                onResumeDone = nil;
+            }
             
             // Go streaming from the returned token
             _store.eventStreamToken = paginatedResponse.end;
@@ -237,9 +252,10 @@
     streamingActive = NO;
 }
 
-- (void)resume
+- (void)resume:(void (^)())resumeDone;
 {
     // Resume from the last known token
+    onResumeDone = resumeDone;
     [self streamEventsFromToken:_store.eventStreamToken];
 }
 
