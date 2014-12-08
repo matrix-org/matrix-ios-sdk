@@ -518,7 +518,7 @@
 
                     XCTAssertNotNil(room2);
 
-                    if (direction == MXEventDirectionForwards &&  MXMembershipInvite == room2.state.membership)
+                    if (direction == MXEventDirectionForwards && MXMembershipInvite == room2.state.membership)
                     {
                         // Join the room on the invitation and check we can paginate all expected text messages
                         [room2 join:^{
@@ -539,7 +539,7 @@
                             [room2 resetBackState];
                             [room2 paginateBackMessages:100 complete:^{
 
-                                XCTAssertEqual(events.count, 6, "The room should contains 5 + 1 messages");
+                                XCTAssertEqual(events.count, 6, "The room should contain 5 + 1 messages");
                                 [expectation fulfill];
 
                             } failure:^(NSError *error) {
@@ -596,6 +596,18 @@
 - (void)testMXMemoryStorePaginateWhenJoiningAgainAfterLeft
 {
     [self doTestWithMXMemoryStoreAndMessagesLimit:100 readyToTest:^(MXRoom *room) {
+        [self checkPaginateWhenJoiningAgainAfterLeft:room];
+    }];
+}
+
+- (void)testMXMemoryStoreAndHomeServerPaginateWhenJoiningAgainAfterLeft
+{
+    // Not preloading all messages of the room causes a duplicated event issue with MXMemoryStore
+    // There is an overlap between the messages returned by the initialSync of the room and the
+    // messages returned by the back pagination request the HS.
+    // Is the pagination end token returned by initialSyncOfRoom wrong in the case a user rejoins a room?
+    // Or is the sdk going wrong? @TODO
+    [self doTestWithMXMemoryStoreAndMessagesLimit:10 readyToTest:^(MXRoom *room) {
         [self checkPaginateWhenJoiningAgainAfterLeft:room];
     }];
 }
