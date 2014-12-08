@@ -48,9 +48,10 @@
     return userPowerLevel;
 }
 
+// FIXME remove the following method when SYN-190 will be fixed
 - (NSUInteger)invite {
-    // TODO remove the following code when SYN-190 will be fixed
-    return [self minimumPowerLevelForPostingEventAsStateEvent:kMXEventTypeStringRoomMember];
+    // Consider here the minimum power level required to ban someone
+    return _ban;
 }
 
 - (NSUInteger)minimumPowerLevelForPostingEventAsMessage:(MXEventTypeString)eventTypeString
