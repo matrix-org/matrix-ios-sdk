@@ -518,7 +518,7 @@
 
                     XCTAssertNotNil(room2);
 
-                    if (MXMembershipInvite == room2.state.membership)
+                    if (direction == MXEventDirectionForwards &&  MXMembershipInvite == room2.state.membership)
                     {
                         // Join the room on the invitation and check we can paginate all expected text messages
                         [room2 join:^{
