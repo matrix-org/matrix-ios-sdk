@@ -155,18 +155,24 @@ typedef void (^MXOnResumeDone)();
         }
 
         // Resume from the last known token
-        [self streamEventsFromToken:_store.eventStreamToken];
+        [self streamEventsFromToken:_store.eventStreamToken withLongPoll:YES];
      }
      failure:^(NSError *error) {
          failure(error);
      }];
 }
 
-- (void)streamEventsFromToken:(NSString*)token
+- (void)streamEventsFromToken:(NSString*)token withLongPoll:(BOOL)longPoll
 {
     streamingActive = YES;
+
+    NSUInteger serverTimeout = 0;
+    if (longPoll)
+    {
+        serverTimeout = SERVER_TIMEOUT_MS;
+    }
     
-    [matrixRestClient eventsFromToken:token serverTimeout:SERVER_TIMEOUT_MS clientTimeout:CLIENT_TIMEOUT_MS success:^(MXPaginationResponse *paginatedResponse) {
+    [matrixRestClient eventsFromToken:token serverTimeout:serverTimeout clientTimeout:CLIENT_TIMEOUT_MS success:^(MXPaginationResponse *paginatedResponse) {
         
         if (streamingActive)
         {
@@ -185,7 +191,7 @@ typedef void (^MXOnResumeDone)();
             
             // Go streaming from the returned token
             _store.eventStreamToken = paginatedResponse.end;
-            [self streamEventsFromToken:paginatedResponse.end];
+            [self streamEventsFromToken:paginatedResponse.end withLongPoll:YES];
         }
         
     } failure:^(NSError *error) {
@@ -196,7 +202,7 @@ typedef void (^MXOnResumeDone)();
            dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, ERR_TIMEOUT_MS * NSEC_PER_MSEC);
            dispatch_after(delayTime, dispatch_get_main_queue(), ^(void) {
                
-               [self streamEventsFromToken:token];
+               [self streamEventsFromToken:token withLongPoll:longPoll];
            });
        }
     }];
@@ -265,7 +271,7 @@ typedef void (^MXOnResumeDone)();
 {
     // Resume from the last known token
     onResumeDone = resumeDone;
-    [self streamEventsFromToken:_store.eventStreamToken];
+    [self streamEventsFromToken:_store.eventStreamToken withLongPoll:NO];
 }
 
 - (void)close

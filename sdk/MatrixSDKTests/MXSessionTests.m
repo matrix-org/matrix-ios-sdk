@@ -405,4 +405,67 @@
     }];
 }
 
+- (void)testPauseResumeOnNothingNew
+{
+    // Make sure Alice and Bob have activities
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
+
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+
+        [mxSession start:^{
+
+            // Delay the test as the event stream is actually launched by the sdk after the call of the block passed in [MXSession start]
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+
+                __block BOOL paused = NO;
+                __block NSInteger eventCount = 0;
+
+                [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
+                    eventCount++;
+                    XCTAssertFalse(paused, @"We should not receive events when paused. Received: %@", event);
+                }];
+
+                MXRoom *room = [mxSession roomWithRoomId:room_id];
+                [room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+                    eventCount++;
+                    XCTAssertFalse(paused, @"We should not receive events when paused. Received: %@", event);
+                }];
+
+                MXUser *bob = [mxSession userWithUserId:bobRestClient.credentials.userId];
+                [bob listenToUserUpdate:^(MXEvent *event) {
+                    eventCount++;
+                    XCTAssertFalse(paused, @"We should not receive events when paused. Received: %@", event);
+                }];
+
+
+                // Pause the session
+                [mxSession pause];
+                paused = YES;
+
+                // Resume the MXSession in 3 secs
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+
+                    paused = NO;
+
+                    NSDate *refDate = [NSDate date];
+                    [mxSession resume:^{
+
+                        XCTAssertEqual(eventCount, 0, @"This test tests resuming when there were no new events");
+
+                        NSDate *now  = [NSDate date];
+                        XCTAssertLessThanOrEqual([now timeIntervalSinceDate:refDate], 1, @"The resume must be quick if there is no new event");
+                        [expectation fulfill];
+
+                    }];
+                    
+                });
+                
+            });
+            
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
 @end
