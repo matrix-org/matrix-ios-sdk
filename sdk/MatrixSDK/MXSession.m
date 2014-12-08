@@ -220,6 +220,15 @@ typedef void (^MXOnResumeDone)();
                     // Make room data digest the event
                     MXRoom *room = [self getOrCreateRoom:event.roomId withJSONData:nil];
                     [room handleLiveEvent:event];
+
+                    // Remove the room from the rooms list if the user has been kicked or banned 
+                    if (MXEventTypeRoomMember == event.eventType)
+                    {
+                        if (MXMembershipLeave == room.state.membership || MXMembershipBan == room.state.membership)
+                        {
+                            [self removeRoom:event.roomId];
+                        }
+                    }
                 }
                 break;
         }
