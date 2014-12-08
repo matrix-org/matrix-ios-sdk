@@ -47,8 +47,8 @@ typedef void (^MXOnResumeDone)();
     // The key is the user ID. The value, the MXUser instance.
     NSMutableDictionary *users;
 
-    // Indicates if we are streaming
-    BOOL streamingActive;
+    // The current request of the event stream
+    NSOperation *eventStreamRequest;
 
     // The list of global events listeners (`MXSessionEventListener`)
     NSMutableArray *globalEventListeners;
@@ -77,8 +77,6 @@ typedef void (^MXOnResumeDone)();
         matrixRestClient = mxRestClient;
         rooms = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
-        
-        streamingActive = NO;
         
         globalEventListeners = [NSMutableArray array];
 
@@ -164,47 +162,43 @@ typedef void (^MXOnResumeDone)();
 
 - (void)streamEventsFromToken:(NSString*)token withLongPoll:(BOOL)longPoll
 {
-    streamingActive = YES;
-
     NSUInteger serverTimeout = 0;
     if (longPoll)
     {
         serverTimeout = SERVER_TIMEOUT_MS;
     }
     
-    [matrixRestClient eventsFromToken:token serverTimeout:serverTimeout clientTimeout:CLIENT_TIMEOUT_MS success:^(MXPaginationResponse *paginatedResponse) {
-        
-        if (streamingActive)
-        {
-            // Convert chunk array into an array of MXEvents
-            NSArray *events = paginatedResponse.chunk;
-            
-            // And handle them
-            [self handleLiveEvents:events];
+    eventStreamRequest = [matrixRestClient eventsFromToken:token serverTimeout:serverTimeout clientTimeout:CLIENT_TIMEOUT_MS success:^(MXPaginationResponse *paginatedResponse) {
 
-            // If we are resuming inform the app that it received the last uptodate data
-            if (onResumeDone)
-            {
-                onResumeDone();
-                onResumeDone = nil;
-            }
-            
-            // Go streaming from the returned token
-            _store.eventStreamToken = paginatedResponse.end;
-            [self streamEventsFromToken:paginatedResponse.end withLongPoll:YES];
+        // Convert chunk array into an array of MXEvents
+        NSArray *events = paginatedResponse.chunk;
+
+        // And handle them
+        [self handleLiveEvents:events];
+
+        // If we are resuming inform the app that it received the last uptodate data
+        if (onResumeDone)
+        {
+            onResumeDone();
+            onResumeDone = nil;
         }
-        
+
+        // Go streaming from the returned token
+        _store.eventStreamToken = paginatedResponse.end;
+        [self streamEventsFromToken:paginatedResponse.end withLongPoll:YES];
+
     } failure:^(NSError *error) {
-        
-       if (streamingActive)
-       {
-           // Relaunch the request later
-           dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, ERR_TIMEOUT_MS * NSEC_PER_MSEC);
-           dispatch_after(delayTime, dispatch_get_main_queue(), ^(void) {
-               
-               [self streamEventsFromToken:token withLongPoll:longPoll];
-           });
-       }
+
+        // eventStreamRequest is nil when the request has been canceled
+        if (eventStreamRequest)
+        {
+            // Relaunch the request later
+            dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, ERR_TIMEOUT_MS * NSEC_PER_MSEC);
+            dispatch_after(delayTime, dispatch_get_main_queue(), ^(void) {
+
+                [self streamEventsFromToken:token withLongPoll:longPoll];
+            });
+        }
     }];
 }
 
@@ -262,9 +256,9 @@ typedef void (^MXOnResumeDone)();
 
 - (void)pause
 {
-    // Disable the flag to avoid the event stream to restart by itself.
-    // The current request will silently die: its response will be not taken into account.
-    streamingActive = NO;
+    // Cancel the current request managing the event stream
+    [eventStreamRequest cancel];
+    eventStreamRequest = nil;
 }
 
 - (void)resume:(void (^)())resumeDone;
@@ -276,7 +270,9 @@ typedef void (^MXOnResumeDone)();
 
 - (void)close
 {
-    streamingActive = NO;
+    // Stop streaming
+    [self pause];
+
     _store.eventStreamToken = nil;
     
     [self removeAllListeners];
@@ -296,8 +292,6 @@ typedef void (^MXOnResumeDone)();
     [users removeAllObjects];
 
     _myUser = nil;
-
-    // @TODO: Cancel the pending eventsFromToken request
 }
 
 
