@@ -33,6 +33,10 @@
  */
 #define DEFAULT_INITIALSYNC_MESSAGES_NUMBER 10
 
+// Block called when MSSession resume is complete
+typedef void (^MXOnResumeDone)();
+
+
 @interface MXSession ()
 {
     // Rooms data
@@ -43,14 +47,17 @@
     // The key is the user ID. The value, the MXUser instance.
     NSMutableDictionary *users;
 
-    // Indicates if we are streaming
-    BOOL streamingActive;
+    // The current request of the event stream
+    NSOperation *eventStreamRequest;
 
     // The list of global events listeners (`MXSessionEventListener`)
     NSMutableArray *globalEventListeners;
 
     // The limit value to use when doing initialSync
     NSUInteger initialSyncMessagesLimit;
+
+    // The block to call when MSSession resume is complete
+    MXOnResumeDone onResumeDone;
 }
 @end
 
@@ -70,8 +77,6 @@
         matrixRestClient = mxRestClient;
         rooms = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
-        
-        streamingActive = NO;
         
         globalEventListeners = [NSMutableArray array];
 
@@ -147,43 +152,53 @@
             [_store save];
         }
 
-        [self resume];
+        // Resume from the last known token
+        [self streamEventsFromToken:_store.eventStreamToken withLongPoll:YES];
      }
      failure:^(NSError *error) {
          failure(error);
      }];
 }
 
-- (void)streamEventsFromToken:(NSString*)token
+- (void)streamEventsFromToken:(NSString*)token withLongPoll:(BOOL)longPoll
 {
-    streamingActive = YES;
+    NSUInteger serverTimeout = 0;
+    if (longPoll)
+    {
+        serverTimeout = SERVER_TIMEOUT_MS;
+    }
     
-    [matrixRestClient eventsFromToken:token serverTimeout:SERVER_TIMEOUT_MS clientTimeout:CLIENT_TIMEOUT_MS success:^(MXPaginationResponse *paginatedResponse) {
-        
-        if (streamingActive)
+    eventStreamRequest = [matrixRestClient eventsFromToken:token serverTimeout:serverTimeout clientTimeout:CLIENT_TIMEOUT_MS success:^(MXPaginationResponse *paginatedResponse) {
+
+        // Convert chunk array into an array of MXEvents
+        NSArray *events = paginatedResponse.chunk;
+
+        // And handle them
+        [self handleLiveEvents:events];
+
+        // If we are resuming inform the app that it received the last uptodate data
+        if (onResumeDone)
         {
-            // Convert chunk array into an array of MXEvents
-            NSArray *events = paginatedResponse.chunk;
-            
-            // And handle them
-            [self handleLiveEvents:events];
-            
-            // Go streaming from the returned token
-            _store.eventStreamToken = paginatedResponse.end;
-            [self streamEventsFromToken:paginatedResponse.end];
+            onResumeDone();
+            onResumeDone = nil;
         }
-        
+
+        // Go streaming from the returned token
+        _store.eventStreamToken = paginatedResponse.end;
+        [self streamEventsFromToken:paginatedResponse.end withLongPoll:YES];
+
     } failure:^(NSError *error) {
-        
-       if (streamingActive)
-       {
-           // Relaunch the request later
-           dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, ERR_TIMEOUT_MS * NSEC_PER_MSEC);
-           dispatch_after(delayTime, dispatch_get_main_queue(), ^(void) {
-               
-               [self streamEventsFromToken:token];
-           });
-       }
+
+        // eventStreamRequest is nil when the request has been canceled
+        if (eventStreamRequest)
+        {
+            // Relaunch the request later
+            dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, ERR_TIMEOUT_MS * NSEC_PER_MSEC);
+            dispatch_after(delayTime, dispatch_get_main_queue(), ^(void) {
+
+                [self streamEventsFromToken:token withLongPoll:longPoll];
+            });
+        }
     }];
 }
 
@@ -205,6 +220,15 @@
                     // Make room data digest the event
                     MXRoom *room = [self getOrCreateRoom:event.roomId withJSONData:nil];
                     [room handleLiveEvent:event];
+
+                    // Remove the room from the rooms list if the user has been kicked or banned 
+                    if (MXEventTypeRoomMember == event.eventType)
+                    {
+                        if (MXMembershipLeave == room.state.membership || MXMembershipBan == room.state.membership)
+                        {
+                            [self removeRoom:event.roomId];
+                        }
+                    }
                 }
                 break;
         }
@@ -232,20 +256,23 @@
 
 - (void)pause
 {
-    // Disable the flag to avoid the event stream to restart by itself.
-    // The current request will silently die: its response will be not taken into account.
-    streamingActive = NO;
+    // Cancel the current request managing the event stream
+    [eventStreamRequest cancel];
+    eventStreamRequest = nil;
 }
 
-- (void)resume
+- (void)resume:(void (^)())resumeDone;
 {
     // Resume from the last known token
-    [self streamEventsFromToken:_store.eventStreamToken];
+    onResumeDone = resumeDone;
+    [self streamEventsFromToken:_store.eventStreamToken withLongPoll:NO];
 }
 
 - (void)close
 {
-    streamingActive = NO;
+    // Stop streaming
+    [self pause];
+
     _store.eventStreamToken = nil;
     
     [self removeAllListeners];
@@ -265,8 +292,6 @@
     [users removeAllObjects];
 
     _myUser = nil;
-
-    // @TODO: Cancel the pending eventsFromToken request
 }
 
 
@@ -333,8 +358,7 @@
 {
     [matrixRestClient leaveRoom:room_id success:^{
         
-        // Remove the room from the list
-        [rooms removeObjectForKey:room_id];
+        [self removeRoom:room_id];
         
         success();
         
@@ -377,6 +401,26 @@
     
     [rooms setObject:room forKey:room_id];
     return room;
+}
+
+- (void)removeRoom:(NSString *)room_id
+{
+    MXRoom *room = [self roomWithRoomId:room_id];
+
+    if (room)
+    {
+        // Unregister global listeners for this room
+        for (MXSessionEventListener *listener in globalEventListeners)
+        {
+            [listener removeSpiedRoom:room];
+        }
+
+        // Clean the store
+        [_store cleanDataOfRoom:room_id];
+
+        // And remove the room from the list
+        [rooms removeObjectForKey:room_id];
+    }
 }
 
 

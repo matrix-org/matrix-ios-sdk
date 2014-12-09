@@ -144,15 +144,15 @@
     return [members allValues];
 }
 
-- (NSDictionary *)powerLevels
+- (MXRoomPowerLevels *)powerLevels
 {
-    NSDictionary *powerLevels = nil;
+    MXRoomPowerLevels *powerLevels = nil;
     
     // Get it from the state events
     MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomPowerLevels];
     if (event && [self contentOfEvent:event])
     {
-        powerLevels = [[self contentOfEvent:event] copy];
+        powerLevels = [MXRoomPowerLevels modelFromJSON:[self contentOfEvent:event]];
     }
     return powerLevels;
 }

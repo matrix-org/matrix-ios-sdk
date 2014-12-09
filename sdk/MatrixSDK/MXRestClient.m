@@ -724,7 +724,7 @@ MXAuthAction;
      }];
 }
 
-- (void)eventsFromToken:(NSString*)token
+- (NSOperation *)eventsFromToken:(NSString*)token
           serverTimeout:(NSUInteger)serverTimeout
           clientTimeout:(NSUInteger)clientTimeout
                 success:(void (^)(MXPaginationResponse *paginatedResponse))success
@@ -751,7 +751,7 @@ MXAuthAction;
         clientTimeoutInSeconds = clientTimeoutInSeconds / 1000;
     }
     
-    [httpClient requestWithMethod:@"GET"
+    return [httpClient requestWithMethod:@"GET"
                            path:@"events"
                      parameters:parameters timeout:clientTimeoutInSeconds
                         success:^(NSDictionary *JSONResponse)

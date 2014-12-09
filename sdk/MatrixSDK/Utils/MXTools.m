@@ -17,6 +17,49 @@
 
 @implementation MXTools
 
+/**
+ Mapping from MXEventTypeString to MXEventType
+ */
++ (NSDictionary*)eventTypesMap
+{
+    static NSDictionary *inst = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        inst = @{
+                 kMXEventTypeStringRoomName: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomName],
+                 kMXEventTypeStringRoomTopic: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomTopic],
+                 kMXEventTypeStringRoomMember: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMember],
+                 kMXEventTypeStringRoomCreate: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomCreate],
+                 kMXEventTypeStringRoomJoinRules: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomJoinRules],
+                 kMXEventTypeStringRoomPowerLevels: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomPowerLevels],
+                 kMXEventTypeStringRoomAliases: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomAliases],
+                 kMXEventTypeStringRoomMessage: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMessage],
+                 kMXEventTypeStringRoomMessageFeedback: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMessageFeedback],
+                 kMXEventTypeStringPresence :[NSNumber numberWithUnsignedInteger:MXEventTypePresence]
+                 };
+    });
+    return inst;
+}
+
++ (MXEventTypeString)eventTypeString:(MXEventType)eventType
+{
+    NSArray *matches = [[MXTools eventTypesMap] allKeysForObject:[NSNumber numberWithUnsignedInteger:eventType]];
+    return [matches lastObject];
+}
+
++ (MXEventType)eventType:(MXEventTypeString)eventTypeString
+{
+    MXEventType eventType = MXEventTypeCustom;
+
+    NSNumber *number = [[MXTools eventTypesMap] objectForKey:eventTypeString];
+    if (number)
+    {
+        eventType = [number unsignedIntegerValue];
+    }
+    return eventType;
+}
+
+
 + (MXMembership)membership:(MXMembershipString)membershipString
 {
     MXMembership membership = MXMembershipUnknown;
@@ -39,6 +82,7 @@
     }
     return membership;
 }
+
 
 + (MXPresence)presence:(MXPresenceString)presenceString
 {

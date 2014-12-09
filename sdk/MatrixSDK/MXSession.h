@@ -107,8 +107,11 @@
 
 /**
  Resume the session events stream.
+ 
+ @param resumeDone A block called when the SDK has been successfully resumed and 
+                   the app has received uptodate data/events.
  */
-- (void)resume;
+- (void)resume:(void (^)())resumeDone;
 
 /**
  Close the session.

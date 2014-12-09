@@ -16,6 +16,8 @@
 
 #import "MXEvent.h"
 
+#import "MXTools.h"
+
 #pragma mark - Constants definitions
 
 NSString *const kMXEventTypeStringRoomName            = @"m.room.name";
@@ -24,9 +26,6 @@ NSString *const kMXEventTypeStringRoomMember          = @"m.room.member";
 NSString *const kMXEventTypeStringRoomCreate          = @"m.room.create";
 NSString *const kMXEventTypeStringRoomJoinRules       = @"m.room.join_rules";
 NSString *const kMXEventTypeStringRoomPowerLevels     = @"m.room.power_levels";
-NSString *const kMXEventTypeStringRoomAddStateLevel   = @"m.room.add_state_level";
-NSString *const kMXEventTypeStringRoomSendEventLevel  = @"m.room.send_event_level";
-NSString *const kMXEventTypeStringRoomOpsLevel        = @"m.room.ops_levels";
 NSString *const kMXEventTypeStringRoomAliases         = @"m.room.aliases";
 NSString *const kMXEventTypeStringRoomMessage         = @"m.room.message";
 NSString *const kMXEventTypeStringRoomMessageFeedback = @"m.room.message.feedback";
@@ -51,33 +50,6 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 #pragma mark - MXEvent
 @implementation MXEvent
 
-/**
- Mapping from MXEventTypeString to MXEventType
- */
-+ (NSDictionary*)eventTypesMap
-{
-    static NSDictionary *inst = nil;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        inst = @{
-                 kMXEventTypeStringRoomName: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomName],
-                 kMXEventTypeStringRoomTopic: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomTopic],
-                 kMXEventTypeStringRoomMember: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMember],
-                 kMXEventTypeStringRoomCreate: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomCreate],
-                 kMXEventTypeStringRoomJoinRules: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomJoinRules],
-                 kMXEventTypeStringRoomPowerLevels: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomPowerLevels],
-                 kMXEventTypeStringRoomAddStateLevel: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomAddStateLevel],
-                 kMXEventTypeStringRoomSendEventLevel: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomSendEventLevel],
-                 kMXEventTypeStringRoomOpsLevel: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomOpsLevel],
-                 kMXEventTypeStringRoomAliases: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomAliases],
-                 kMXEventTypeStringRoomMessage: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMessage],
-                 kMXEventTypeStringRoomMessageFeedback: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMessageFeedback],
-                 kMXEventTypeStringPresence :[NSNumber numberWithUnsignedInteger:MXEventTypePresence]
-                 };
-    });
-    return inst;
-}
-
 - (NSString *)description
 {
     return [NSString stringWithFormat:@"%@: %@ - %@: %@", self.eventId, self.type, [NSDate dateWithTimeIntervalSince1970:self.originServerTs/1000], self.content];
@@ -89,16 +61,7 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     id instance = [super initWithDictionary:dictionaryValue error:error];
     
     // Then, compute eventType
-    NSNumber *number = [[MXEvent eventTypesMap] objectForKey:_type];
-    if (number)
-    {
-        _eventType = [number unsignedIntegerValue];
-    }
-    else
-    {
-        // Do not know this event type
-        _eventType = MXEventTypeCustom;
-    }
+    _eventType = [MXTools eventType:_type];
     
     if (MXEventTypePresence == self.eventType)
     {

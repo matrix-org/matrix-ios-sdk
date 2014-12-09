@@ -14,19 +14,37 @@
  limitations under the License.
  */
 
-#import <Foundation/Foundation.h>
+#import "RecentRoom.h"
 
-#import "MXEvent.h"
-#import "MXJSONModels.h"
+@implementation RecentRoom
 
-@interface MXTools : NSObject
+- (id)initWithLastEvent:(MXEvent*)event andMarkAsUnread:(BOOL)isUnread {
+    if (self = [super init]) {
+        _lastEvent = event;
+        _unreadCount = isUnread ? 1 : 0;
+    }
+    return self;
+}
 
-+ (MXEventTypeString)eventTypeString:(MXEventType)eventType;
-+ (MXEventType)eventType:(MXEventTypeString)eventTypeString;
+- (void)updateWithLastEvent:(MXEvent*)event andMarkAsUnread:(BOOL)isUnread {
+    _lastEvent = event;
+    if (isUnread) {
+        _unreadCount ++;
+    }
+}
 
-+ (MXMembership)membership:(MXMembershipString)membershipString;
+- (void)resetUnreadCount {
+    _unreadCount = 0;
+}
 
-+ (MXPresence)presence:(MXPresenceString)presenceString;
-+ (MXPresenceString)presenceString:(MXPresence)presence;
+- (void)dealloc {
+    _lastEvent = nil;
+}
+
+#pragma mark -
+
+- (NSString*)roomId {
+    return _lastEvent.roomId;
+}
 
 @end

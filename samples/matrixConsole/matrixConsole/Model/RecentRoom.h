@@ -13,20 +13,16 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  */
+#import <MatrixSDK/MatrixSDK.h>
 
-#import <Foundation/Foundation.h>
+@interface RecentRoom : NSObject
 
-#import "MXEvent.h"
-#import "MXJSONModels.h"
+@property (nonatomic, readonly) NSString *roomId;
+@property (nonatomic, readonly) MXEvent  *lastEvent;
+@property (nonatomic, readonly) NSUInteger unreadCount;
 
-@interface MXTools : NSObject
-
-+ (MXEventTypeString)eventTypeString:(MXEventType)eventType;
-+ (MXEventType)eventType:(MXEventTypeString)eventTypeString;
-
-+ (MXMembership)membership:(MXMembershipString)membershipString;
-
-+ (MXPresence)presence:(MXPresenceString)presenceString;
-+ (MXPresenceString)presenceString:(MXPresence)presence;
+- (id)initWithLastEvent:(MXEvent*)event andMarkAsUnread:(BOOL)isUnread;
+- (void)updateWithLastEvent:(MXEvent*)event andMarkAsUnread:(BOOL)isUnread;
+- (void)resetUnreadCount;
 
 @end

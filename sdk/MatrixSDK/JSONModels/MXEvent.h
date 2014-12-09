@@ -34,9 +34,6 @@ typedef enum : NSUInteger
     MXEventTypeRoomCreate,
     MXEventTypeRoomJoinRules,
     MXEventTypeRoomPowerLevels,
-    MXEventTypeRoomAddStateLevel,
-    MXEventTypeRoomSendEventLevel,
-    MXEventTypeRoomOpsLevel,
     MXEventTypeRoomAliases,
     MXEventTypeRoomMessage,
     MXEventTypeRoomMessageFeedback,
@@ -57,9 +54,6 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomMember;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomCreate;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomJoinRules;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomPowerLevels;
-FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomAddStateLevel;
-FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomSendEventLevel;
-FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomOpsLevel;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomAliases;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomMessage;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomMessageFeedback;

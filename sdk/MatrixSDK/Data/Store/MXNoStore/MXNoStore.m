@@ -62,6 +62,21 @@
     }
 }
 
+- (void)cleanDataOfRoom:(NSString *)roomId
+{
+    if (paginationTokens[roomId])
+    {
+        [paginationTokens removeObjectForKey:roomId];
+    }
+    if (hasReachedHomeServerPaginations[roomId])
+    {
+        [hasReachedHomeServerPaginations removeObjectForKey:roomId];
+    }
+    if (lastMessages[roomId])
+    {
+        [lastMessages removeObjectForKey:roomId];
+    }
+}
 
 - (void)storePaginationTokenOfRoom:(NSString*)roomId andToken:(NSString*)token
 {
