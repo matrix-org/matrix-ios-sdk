@@ -437,6 +437,78 @@
     }];
 }
 
+// Remove the `age` field from a dictionary and all its sub dictionaries
+- (NSDictionary*)removeAgeFieldFromJSONDictionary:(NSDictionary*)JSONDict
+{
+    // As JSONDict is unmutable, transform it to a JSON string, remove the lines containing `age`
+    // and convert back the string to a JSON dict
+    NSError *error;
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:JSONDict
+                                                       options:NSJSONWritingPrettyPrinted
+                                                         error:&error];
+    NSString *JSONString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+
+    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"\"age\"(.*)," options:NSRegularExpressionCaseInsensitive error:&error];
+    NSString *modifiedJSONString = [regex stringByReplacingMatchesInString:JSONString options:0 range:NSMakeRange(0, JSONString.length) withTemplate:@""];
+
+    NSData *data = [modifiedJSONString dataUsingEncoding:NSUTF8StringEncoding];
+
+    return [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
+}
+
+// Compare the result of initialSyncOfRoom with the data retrieved from a global initialSync
+- (void)testInitialSyncOfRoomAndGlobalInitialSync
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+
+        [bobRestClient initialSyncWithLimit:3 success:^(NSDictionary *JSONData) {
+
+            NSDictionary *JSONRoomDataInGlobal;
+
+            for (NSDictionary *roomDict in JSONData[@"rooms"])
+            {
+                if ([room_id isEqualToString:roomDict[@"room_id"]])
+                {
+                    JSONRoomDataInGlobal = roomDict;
+                }
+            }
+
+            XCTAssertNotNil(JSONRoomDataInGlobal);
+
+            [bobRestClient initialSyncOfRoom:room_id withLimit:3 success:^(NSDictionary *JSONData) {
+
+                XCTAssertNotNil(JSONData);
+
+                // Do some cleaning before comparison
+                // Remove presence from initialSyncOfRoom result
+                NSMutableDictionary *JSONData2 = [NSMutableDictionary dictionaryWithDictionary:JSONData];
+                [JSONData2 removeObjectForKey:@"presence"];
+
+                // Remove visibility from global initialSync
+                NSMutableDictionary *JSONRoomDataInGlobal2 = [NSMutableDictionary dictionaryWithDictionary:JSONRoomDataInGlobal];
+                [JSONRoomDataInGlobal2 removeObjectForKey:@"visibility"];
+
+                // Remove the `age` field which is time dynamic
+                NSDictionary *JSONData3 = [self removeAgeFieldFromJSONDictionary:JSONData2];
+                NSDictionary *JSONRoomDataInGlobal3 = [self removeAgeFieldFromJSONDictionary:JSONRoomDataInGlobal2];
+
+                // Do the comparison
+                XCTAssertEqualObjects(JSONRoomDataInGlobal3, JSONData3);
+
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 - (void)testMXRoomMemberEventContent
 {
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
