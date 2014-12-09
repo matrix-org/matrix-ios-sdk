@@ -662,12 +662,17 @@ MXAuthAction;
             failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"presence/%@/status", credentials.userId];
+    
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+    parameters[@"presence"] = [MXTools presenceString:presence];
+    if (statusMessage)
+    {
+        parameters[@"status_msg"] = statusMessage;
+    }
+    
     [httpClient requestWithMethod:@"PUT"
                              path:path
-                       parameters:@{
-                                    @"presence": [MXTools presenceString:presence],
-                                    @"status_msg": statusMessage
-                                    }
+                       parameters:parameters
                           success:^(NSDictionary *JSONResponse)
      {
          success();
