@@ -92,11 +92,13 @@ NSString *const kMXPresenceHidden = @"hidden";
 - (instancetype)initWithDictionary:(NSDictionary *)dictionaryValue error:(NSError *__autoreleasing *)error
 {
     // Do the JSON -> class instance properties mapping
-    id instance = [super initWithDictionary:dictionaryValue error:error];
-    
-    _presenceStatus = [MXTools presence:_presence];
+    self = [super initWithDictionary:dictionaryValue error:error];
+    if (self)
+    {
+        _presenceStatus = [MXTools presence:_presence];
+    }
 
-    return instance;
+    return self;
 }
 
 @end
@@ -107,11 +109,13 @@ NSString *const kMXPresenceHidden = @"hidden";
 - (instancetype)initWithDictionary:(NSDictionary *)dictionaryValue error:(NSError *__autoreleasing *)error
 {
     // Do the JSON -> class instance properties mapping
-    id instance = [super initWithDictionary:dictionaryValue error:error];
-    
-    _presenceStatus = [MXTools presence:_presence];
-    
-    return instance;
+    self = [super initWithDictionary:dictionaryValue error:error];
+    if (self)
+    {
+        _presenceStatus = [MXTools presence:_presence];
+    }
+
+    return self;
 }
 
 @end
