@@ -509,6 +509,95 @@
     }];
 }
 
+- (void)testInitialSyncOfRoomAndGlobalInitialSyncOnRoomWithTwoUsers
+{
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+    [sharedData doMXSessionTestWithBobAndAliceInARoom:self
+ readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
+
+        [sharedData for:bobRestClient andRoom:room_id postMessages:5 success:^{
+            [bobRestClient leaveRoom:room_id success:^{
+                [aliceRestClient postTextMessageToRoom:room_id text:@"Hi bob"  success:^(NSString *event_id) {
+                    [aliceRestClient inviteUser:bobRestClient.credentials.userId toRoom:room_id success:^{
+                        [bobRestClient joinRoom:room_id success:^{
+
+                            [bobRestClient initialSyncWithLimit:10 success:^(NSDictionary *JSONData) {
+
+                                NSDictionary *JSONRoomDataInGlobal;
+
+                                for (NSDictionary *roomDict in JSONData[@"rooms"])
+                                {
+                                    if ([room_id isEqualToString:roomDict[@"room_id"]])
+                                    {
+                                        JSONRoomDataInGlobal = roomDict;
+                                    }
+                                }
+
+                                XCTAssertNotNil(JSONRoomDataInGlobal);
+
+                                [bobRestClient initialSyncOfRoom:room_id withLimit:10 success:^(NSDictionary *JSONData) {
+
+                                    XCTAssertNotNil(JSONData);
+
+                                    // Do some cleaning before comparison
+                                    // Remove presence from initialSyncOfRoom result
+                                    NSMutableDictionary *JSONData2 = [NSMutableDictionary dictionaryWithDictionary:JSONData];
+                                    [JSONData2 removeObjectForKey:@"presence"];
+
+                                    // Remove visibility from global initialSync
+                                    NSMutableDictionary *JSONRoomDataInGlobal2 = [NSMutableDictionary dictionaryWithDictionary:JSONRoomDataInGlobal];
+                                    [JSONRoomDataInGlobal2 removeObjectForKey:@"visibility"];
+
+                                    // Remove the `age` field which is time dynamic
+                                    NSDictionary *JSONData3 = [self removeAgeFieldFromJSONDictionary:JSONData2];
+                                    NSDictionary *JSONRoomDataInGlobal3 = [self removeAgeFieldFromJSONDictionary:JSONRoomDataInGlobal2];
+
+                                    // Do the comparison
+                                    XCTAssertEqualObjects(JSONRoomDataInGlobal3, JSONData3);
+
+                                    //[expectation fulfill];
+
+                                    [bobRestClient messagesForRoom:room_id from:JSONRoomDataInGlobal[@"messages"][@"start"] to:nil limit:1 success:^(MXPaginationResponse *paginatedResponse) {
+
+                                        //NSLog(@"%@", JSONData[@"messages"][@"chunk"]);
+                                        NSLog(@"%@", JSONRoomDataInGlobal[@"messages"][@"chunk"]);
+                                        NSLog(@"-------");
+                                        NSLog(@"%@", paginatedResponse.chunk);
+
+                                        [expectation fulfill];
+
+                                    } failure:^(NSError *error) {
+                                        XCTFail(@"The request should not fail - NSError: %@", error);
+                                        [expectation fulfill];
+                                    }];
+
+                                } failure:^(NSError *error) {
+                                    XCTFail(@"The request should not fail - NSError: %@", error);
+                                    [expectation fulfill];
+                                }];
+                                
+                            } failure:^(NSError *error) {
+                                XCTFail(@"The request should not fail - NSError: %@", error);
+                                [expectation fulfill];
+                            }];
+
+                        } failure:^(NSError *error) {
+                            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                        }];
+                    } failure:^(NSError *error) {
+                        NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                    }];
+                }failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                }];
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+        }];
+    }];
+}
+
+
 - (void)testMXRoomMemberEventContent
 {
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
