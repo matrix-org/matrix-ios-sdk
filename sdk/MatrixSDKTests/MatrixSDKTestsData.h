@@ -85,4 +85,7 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
                    readyToTest:(void (^)(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString* room_id, XCTestExpectation *expectation))readyToTest;
 
 
+#pragma mark - tools
+- (void)for:(MXRestClient *)mxRestClient2 andRoom:(NSString*)room_id postMessages:(NSUInteger)messagesCount success:(void (^)())success;
+
 @end

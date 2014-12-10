@@ -70,16 +70,52 @@
     }];
 }
 
+- (void)doTestWithTwoUsersAndStore:(id<MXStore>)store
+            readyToTest:(void (^)(MXRoom *room))readyToTest
+{
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+    [sharedData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation2) {
+
+        [sharedData for:bobRestClient andRoom:room_id postMessages:5 success:^{
+
+            expectation = expectation2;
+
+            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient andStore:store];
+
+            [mxSession start:^{
+                MXRoom *room = [mxSession roomWithRoomId:room_id];
+
+                readyToTest(room);
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+        }];
+    }];
+}
+
 - (void)doTestWithMXNoStore:(void (^)(MXRoom *room))readyToTest
 {
     MXNoStore *store = [[MXNoStore alloc] init];
     [self doTestWithStore:store readyToTest:readyToTest];
 }
 
+- (void)doTestWithTwoUsersAndMXNoStore:(void (^)(MXRoom *room))readyToTest
+{
+    MXNoStore *store = [[MXNoStore alloc] init];
+    [self doTestWithTwoUsersAndStore:store readyToTest:readyToTest];
+}
+
 - (void)doTestWithMXMemoryStore:(void (^)(MXRoom *room))readyToTest
 {
     MXMemoryStore *store = [[MXMemoryStore alloc] init];
     [self doTestWithStore:store readyToTest:readyToTest];
+}
+
+- (void)doTestWithTwoUsersAndMXMemoryStore:(void (^)(MXRoom *room))readyToTest
+{
+    MXMemoryStore *store = [[MXMemoryStore alloc] init];
+    [self doTestWithTwoUsersAndStore:store readyToTest:readyToTest];
 }
 
 
@@ -308,6 +344,21 @@
 - (void)testMXMemoryStorePaginateBackDuplicates
 {
     [self doTestWithMXMemoryStore:^(MXRoom *room) {
+        [self checkPaginateBackDuplicates:room];
+    }];
+}
+
+- (void)testMXNoStorePaginateBackDuplicatesInRoomWithTwoUsers
+{
+    [self doTestWithMXMemoryStore:^(MXRoom *room) {
+        [self checkPaginateBackDuplicates:room];
+    }];
+}
+
+// This test illustrates bug SYIOS-9
+- (void)testMXMemoryStorePaginateBackDuplicatesInRoomWithTwoUsers
+{
+    [self doTestWithTwoUsersAndMXMemoryStore:^(MXRoom *room) {
         [self checkPaginateBackDuplicates:room];
     }];
 }
@@ -606,7 +657,8 @@
     // There is an overlap between the messages returned by the initialSync of the room and the
     // messages returned by the back pagination request the HS.
     // Is the pagination end token returned by initialSyncOfRoom wrong in the case a user rejoins a room?
-    // Or is the sdk going wrong? @TODO
+    // Or is the sdk going wrong?
+    // `testMXMemoryStorePaginateBackDuplicatesInRoomWithTwoUsers` shows this is the home server token that is wrong.
     [self doTestWithMXMemoryStoreAndMessagesLimit:10 readyToTest:^(MXRoom *room) {
         [self checkPaginateWhenJoiningAgainAfterLeft:room];
     }];

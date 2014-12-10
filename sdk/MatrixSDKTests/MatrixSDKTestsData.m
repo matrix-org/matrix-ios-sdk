@@ -262,10 +262,8 @@ NSString * const kMXTestsAliceAvatarURL = @"http://matrix.org/matrix.png";
     [self doMXRestClientTestWithBobAndARoom:testCase
                              readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
         
-        MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-        
         // Add 5 messages to the room
-        [sharedData for:bobRestClient andRoom:room_id postMessages:5 success:^{
+        [self for:bobRestClient andRoom:room_id postMessages:5 success:^{
             
             readyToTest(bobRestClient, room_id, expectation);
         }];
