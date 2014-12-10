@@ -71,8 +71,19 @@
     
     MXPresenceEventContent *presenceContent = [MXPresenceEventContent modelFromJSON:presenceEvent.content];
 
-    _displayname = [presenceContent.displayname copy];
-    _avatarUrl = [presenceContent.avatarUrl copy];
+    // Displayname and avatar are optional in presence events, update user data with them
+    // only if they are provided.
+    // Note: It is about to change in a short future in Matrix spec.
+    // Displayname and avatar updates will come only through m.room.member events
+    if (presenceContent.displayname)
+    {
+        _displayname = [presenceContent.displayname copy];
+    }
+    if (presenceContent.avatarUrl)
+    {
+        _avatarUrl = [presenceContent.avatarUrl copy];
+    }
+
     _statusMsg = [presenceContent.statusMsg copy];
     _presence = presenceContent.presenceStatus;
     
