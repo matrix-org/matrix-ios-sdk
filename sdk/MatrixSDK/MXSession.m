@@ -87,10 +87,10 @@ typedef void (^MXOnResumeDone)();
         }
         else
         {
-            // Use the default, MXNoStore
-            _store = [[MXNoStore alloc] init];
+            // Use MXMemoryStore as default
+            _store = [[MXMemoryStore alloc] init];
 
-            //_store = [[MXMemoryStore alloc] init];    // For test
+            //_store = [[MXNoStore alloc] init];  // For test
         }
     }
     return self;
