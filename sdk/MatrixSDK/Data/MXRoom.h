@@ -140,6 +140,28 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
                 failure:(void (^)(NSError *error))failure;
 
 /**
+ Set the topic of the room.
+
+ @param topic the topic to set.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)setTopic:(NSString*)topic
+         success:(void (^)())success
+         failure:(void (^)(NSError *error))failure;
+
+/**
+ Set the name of the room.
+
+ @param name the name to set.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)setName:(NSString*)name
+        success:(void (^)())success
+        failure:(void (^)(NSError *error))failure;
+
+/**
  Join this room where the user has been invited.
  
  @param success A block object called when the operation is complete.

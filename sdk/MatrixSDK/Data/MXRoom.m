@@ -330,6 +330,20 @@
     [mxSession.matrixRestClient postTextMessageToRoom:text text:_state.room_id success:success failure:failure];
 }
 
+- (void)setTopic:(NSString*)topic
+         success:(void (^)())success
+         failure:(void (^)(NSError *error))failure
+{
+    [mxSession.matrixRestClient setRoomTopic:_state.room_id topic:topic success:success failure:failure];
+}
+
+- (void)setName:(NSString*)name
+        success:(void (^)())success
+        failure:(void (^)(NSError *error))failure
+{
+    [mxSession.matrixRestClient setRoomName:_state.room_id name:name success:success failure:failure];
+}
+
 - (void)join:(void (^)())success
      failure:(void (^)(NSError *error))failure
 {
