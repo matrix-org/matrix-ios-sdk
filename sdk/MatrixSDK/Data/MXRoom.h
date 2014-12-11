@@ -117,6 +117,52 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
      failure:(void (^)(NSError *error))failure;
 
 /**
+ Invite a user to this room.
+
+ @param user_id the user id.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)inviteUser:(NSString*)user_id
+           success:(void (^)())success
+           failure:(void (^)(NSError *error))failure;
+
+/**
+ Kick a user from this room.
+
+ @param user_id the user id.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)kickUser:(NSString*)user_id
+          reason:(NSString*)reason
+         success:(void (^)())success
+         failure:(void (^)(NSError *error))failure;
+
+/**
+ Ban a user in this room.
+
+ @param user_id the user id.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)banUser:(NSString*)user_id
+         reason:(NSString*)reason
+        success:(void (^)())success
+        failure:(void (^)(NSError *error))failure;
+
+/**
+ Unban a user in this room.
+
+ @param user_id the user id.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)unbanUser:(NSString*)user_id
+          success:(void (^)())success
+          failure:(void (^)(NSError *error))failure;
+
+/**
  Set the power level of a member of the room.
 
  @param userId the id of the user.
