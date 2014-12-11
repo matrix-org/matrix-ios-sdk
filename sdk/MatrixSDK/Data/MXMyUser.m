@@ -26,11 +26,13 @@
 
 @implementation MXMyUser
 
-- (instancetype)initWithUserId:(NSString *)userId andMatrixSession:(MXSession *)mxSession2
+- (instancetype)initWithUserId:(NSString *)userId andDisplayname:(NSString *)displayname andAvatarUrl:(NSString *)avatarUrl andMatrixSession:(MXSession *)mxSession2
 {
     self = [super initWithUserId:userId];
     if (self)
     {
+        _displayname = [displayname copy];
+        _avatarUrl = [avatarUrl copy];
         mxSession = mxSession2;
     }
     return self;

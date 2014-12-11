@@ -109,55 +109,74 @@ typedef void (^MXOnResumeDone)();
     // Store the passed limit to reuse it when initialSyncing per room
     initialSyncMessagesLimit = messagesLimit;
 
-    [matrixRestClient initialSyncWithLimit:initialSyncMessagesLimit success:^(NSDictionary *JSONData) {
-         for (NSDictionary *roomDict in JSONData[@"rooms"])
-         {
-             MXRoom *room = [self getOrCreateRoom:roomDict[@"room_id"] withJSONData:roomDict];
-             
-             if ([roomDict objectForKey:@"messages"])
-             {
-                 MXPaginationResponse *roomMessages = [MXPaginationResponse modelFromJSON:[roomDict objectForKey:@"messages"]];
-                 
-                 [room handleMessages:roomMessages
-                            direction:MXEventDirectionSync isTimeOrdered:YES];
+    // First of all, retrieve the user's profile information
+    [matrixRestClient displayNameForUser:matrixRestClient.credentials.userId success:^(NSString *displayname) {
 
-                 // If the initialSync returns less messages than requested, we got all history from the home server
-                 if (roomMessages.chunk.count < initialSyncMessagesLimit)
-                 {
-                     [_store storeHasReachedHomeServerPaginationEndForRoom:room.state.room_id andValue:YES];
-                 }
-             }
-             if ([roomDict objectForKey:@"state"])
-             {
-                 [room handleStateEvents:roomDict[@"state"] direction:MXEventDirectionSync];
-             }
-        }
-        
-        // Manage presence
-        for (NSDictionary *presenceDict in JSONData[@"presence"])
-        {
-            MXEvent *presenceEvent = [MXEvent modelFromJSON:presenceDict];
-            [self handlePresenceEvent:presenceEvent direction:MXEventDirectionSync];
-        }
-        
-        // We have data, the SDK user can start using it
-        initialSyncDone();
-        
-        // Start listening to live events
-        _store.eventStreamToken = JSONData[@"end"];
+        [matrixRestClient avatarUrlForUser:matrixRestClient.credentials.userId success:^(NSString *avatar_url) {
 
-        // Commit store changes done in [room handleMessages]
-        if ([_store respondsToSelector:@selector(save)])
-        {
-            [_store save];
-        }
+            // Create the user's profile
+            _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId andDisplayname:displayname andAvatarUrl:avatar_url andMatrixSession:self];
 
-        // Resume from the last known token
-        [self streamEventsFromToken:_store.eventStreamToken withLongPoll:YES];
-     }
-     failure:^(NSError *error) {
-         failure(error);
-     }];
+            // And store him as a common MXUser
+            users[matrixRestClient.credentials.userId] = _myUser;
+
+            // Then, we can do the global sync
+            [matrixRestClient initialSyncWithLimit:initialSyncMessagesLimit success:^(NSDictionary *JSONData) {
+                for (NSDictionary *roomDict in JSONData[@"rooms"])
+                {
+                    MXRoom *room = [self getOrCreateRoom:roomDict[@"room_id"] withJSONData:roomDict];
+
+                    if ([roomDict objectForKey:@"messages"])
+                    {
+                        MXPaginationResponse *roomMessages = [MXPaginationResponse modelFromJSON:[roomDict objectForKey:@"messages"]];
+
+                        [room handleMessages:roomMessages
+                                   direction:MXEventDirectionSync isTimeOrdered:YES];
+
+                        // If the initialSync returns less messages than requested, we got all history from the home server
+                        if (roomMessages.chunk.count < initialSyncMessagesLimit)
+                        {
+                            [_store storeHasReachedHomeServerPaginationEndForRoom:room.state.room_id andValue:YES];
+                        }
+                    }
+                    if ([roomDict objectForKey:@"state"])
+                    {
+                        [room handleStateEvents:roomDict[@"state"] direction:MXEventDirectionSync];
+                    }
+                }
+
+                // Manage presence
+                for (NSDictionary *presenceDict in JSONData[@"presence"])
+                {
+                    MXEvent *presenceEvent = [MXEvent modelFromJSON:presenceDict];
+                    [self handlePresenceEvent:presenceEvent direction:MXEventDirectionSync];
+                }
+
+                // We have data, the SDK user can start using it
+                initialSyncDone();
+
+                // Start listening to live events
+                _store.eventStreamToken = JSONData[@"end"];
+
+                // Commit store changes done in [room handleMessages]
+                if ([_store respondsToSelector:@selector(save)])
+                {
+                    [_store save];
+                }
+                
+                // Resume from the last known token
+                [self streamEventsFromToken:_store.eventStreamToken withLongPoll:YES];
+            }
+            failure:^(NSError *error) {
+                failure(error);
+            }];
+        } failure:^(NSError *error) {
+            failure(error);
+        }];
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
+
 }
 
 - (void)streamEventsFromToken:(NSString*)token withLongPoll:(BOOL)longPoll
@@ -441,18 +460,7 @@ typedef void (^MXOnResumeDone)();
     
     if (nil == user)
     {
-        // If our current user has not been found yet, check it first
-        if (nil == _myUser && [userId isEqualToString:matrixRestClient.credentials.userId])
-        {
-            // Here he is. The current user is a special MXUser.
-            _myUser = [[MXMyUser alloc] initWithUserId:userId andMatrixSession:self];
-            user = _myUser;
-        }
-        else
-        {
-            user = [[MXUser alloc] initWithUserId:userId];
-        }
-
+        user = [[MXUser alloc] initWithUserId:userId];
         [users setObject:user forKey:userId];
     }
     return user;

@@ -189,6 +189,29 @@
     }];
 }
 
+- (void)testMyUserAvailability
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
+
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+
+        XCTAssertNil(mxSession.myUser);
+
+        [mxSession start:^{
+
+            XCTAssertNotNil(mxSession.myUser);
+
+            XCTAssert([mxSession.myUser.displayname isEqualToString:kMXTestsAliceDisplayName]);
+            XCTAssert([mxSession.myUser.avatarUrl isEqualToString:kMXTestsAliceAvatarURL]);
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
 - (void)testMyUserLastActiveUpdate
 {
     [self doTestWithBobAndAliceActiveInARoom:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {

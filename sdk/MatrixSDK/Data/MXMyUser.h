@@ -33,7 +33,7 @@
 
  @return the newly created MXUser instance.
  */
-- (instancetype)initWithUserId:(NSString*)userId andMatrixSession:(MXSession*)mxSession;
+- (instancetype)initWithUserId:(NSString*)userId andDisplayname:(NSString*)displayname andAvatarUrl:(NSString*)avatarUrl andMatrixSession:(MXSession*)mxSession;
 
 /**
  Set the display name.
