@@ -98,6 +98,47 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 
 
 #pragma mark - Room operations
+
+/**
+ Send a generic non state event to a room.
+
+ @param eventType the type of the event. @see MXEventType.
+ @param content the content that will be sent to the server as a JSON object.
+ @param success A block object called when the operation succeeds. It returns
+                the event id of the event generated on the home server
+ @param failure A block object called when the operation fails.
+ */
+- (void)postEventOfType:(MXEventTypeString)eventTypeString
+                content:(NSDictionary*)content
+                success:(void (^)(NSString *event_id))success
+                failure:(void (^)(NSError *error))failure;
+
+/**
+ Send a room message to a room.
+
+ @param msgType the type of the message. @see MXMessageType.
+ @param content the message content that will be sent to the server as a JSON object.
+ @param success A block object called when the operation succeeds. It returns
+                the event id of the event generated on the home server
+ @param failure A block object called when the operation fails.
+ */
+- (void)postMessageOfType:(MXMessageType)msgType
+                  content:(NSDictionary*)content
+                  success:(void (^)(NSString *event_id))success
+                  failure:(void (^)(NSError *error))failure;
+
+/**
+ Send a text message to a room
+
+ @param text the text to send.
+ @param success A block object called when the operation succeeds. It returns
+                the event id of the event generated on the home server
+ @param failure A block object called when the operation fails.
+ */
+- (void)postTextMessage:(NSString*)text
+                success:(void (^)(NSString *event_id))success
+                failure:(void (^)(NSError *error))failure;
+
 /**
  Join this room where the user has been invited.
  

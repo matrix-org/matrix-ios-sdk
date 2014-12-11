@@ -307,6 +307,29 @@
 
 
 #pragma mark - Room operations
+- (void)postEventOfType:(MXEventTypeString)eventTypeString
+                content:(NSDictionary*)content
+                success:(void (^)(NSString *event_id))success
+                failure:(void (^)(NSError *error))failure
+{
+    [mxSession.matrixRestClient postEventToRoom:_state.room_id eventType:eventTypeString content:content success:success failure:failure];
+}
+
+- (void)postMessageOfType:(MXMessageType)msgType
+                  content:(NSDictionary*)content
+                  success:(void (^)(NSString *event_id))success
+                  failure:(void (^)(NSError *error))failure
+{
+    [mxSession.matrixRestClient postMessageToRoom:_state.room_id msgType:msgType content:content success:success failure:failure];
+}
+
+- (void)postTextMessage:(NSString*)text
+                success:(void (^)(NSString *event_id))success
+                failure:(void (^)(NSError *error))failure
+{
+    [mxSession.matrixRestClient postTextMessageToRoom:text text:_state.room_id success:success failure:failure];
+}
+
 - (void)join:(void (^)())success
      failure:(void (^)(NSError *error))failure
 {
@@ -365,7 +388,7 @@
     newPowerLevelsEventContent[@"users"] = newPowerLevelsEventContentUsers;
 
     // Make the request to the HS
-    [mxSession.matrixRestClient postEventToRoom:_state.room_id eventType:kMXEventTypeStringRoomPowerLevels content:newPowerLevelsEventContent success:^(NSString *event_id) {
+    [self postEventOfType:kMXEventTypeStringRoomPowerLevels content:newPowerLevelsEventContent success:^(NSString *event_id) {
         success();
     } failure:failure];
 }
