@@ -42,7 +42,7 @@
 /**
  Helper to get the power level of a member of the room.
 
- @param userId The id to the user.
+ @param userId the id of the user.
  @return his power level.
  */
 - (NSUInteger)powerLevelOfUserWithUserID:(NSString*)userId;
