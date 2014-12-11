@@ -108,13 +108,26 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
      failure:(void (^)(NSError *error))failure;
 
 /**
- Leave this room
+ Leave this room.
  
  @param success A block object called when the operation is complete.
  @param failure A block object called when the operation fails.
  */
 - (void)leave:(void (^)())success
      failure:(void (^)(NSError *error))failure;
+
+/**
+ Set the power level of a member of the room.
+
+ @param userId the id of the user.
+ @param powerLevel the value to set.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)setPowerLevelOfUserWithUserID:(NSString*)userId powerLevel:(NSUInteger)powerLevel
+                              success:(void (^)())success
+                              failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Events listeners

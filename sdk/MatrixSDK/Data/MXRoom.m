@@ -327,6 +327,28 @@
     }];
 }
 
+- (void)setPowerLevelOfUserWithUserID:(NSString *)userId powerLevel:(NSUInteger)powerLevel
+                              success:(void (^)())success
+                              failure:(void (^)(NSError *))failure
+{
+    // To set this new value, we have to take the current powerLevels content,
+    // Update it with expected values and send it to the home server.
+    NSMutableDictionary *newPowerLevelsEventContent = [NSMutableDictionary dictionaryWithDictionary:_state.powerLevels.dictionaryValue];
+
+    NSMutableDictionary *newPowerLevelsEventContentUsers = [NSMutableDictionary dictionaryWithDictionary:newPowerLevelsEventContent[@"users"]];
+    newPowerLevelsEventContentUsers[userId] = [NSNumber numberWithUnsignedInteger:powerLevel];
+
+    newPowerLevelsEventContent[@"users"] = newPowerLevelsEventContentUsers;
+
+    // Make the request to the HS
+    [mxSession.matrixRestClient postEventToRoom:_state.room_id eventType:kMXEventTypeStringRoomPowerLevels content:newPowerLevelsEventContent success:^(NSString *event_id) {
+        success();
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
+}
+
+
 #pragma mark - Events listeners
 - (id)listenToEvents:(MXOnRoomEvent)onEvent
 {
