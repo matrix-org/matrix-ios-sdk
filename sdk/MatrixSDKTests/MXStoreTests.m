@@ -167,6 +167,34 @@
     }
 }
 
+#pragma mark - Unit tests
+- (void)checkEventWithEventIdOfStore:(id<MXStore>)store
+{
+    MXEvent *event = [MXEvent modelFromJSON:@{@"event_id" : @"anID"}];
+
+    [store storeEventForRoom:@"roomId" event:event direction:MXEventDirectionForwards];
+
+    MXEvent *storedEvent = [store eventWithEventId:@"anID" inRoom:@"roomId"];
+
+    XCTAssertEqualObjects(storedEvent, event);
+
+    [expectation fulfill];
+}
+
+/* This feature is not available with MXNoStore
+- (void)testMXNoStoreEventWithEventId
+{
+    MXNoStore *store = [[MXNoStore alloc] init];
+    [self checkEventWithEventIdOfStore:store];
+}
+*/
+
+- (void)testMXMemoryEventWithEventId
+{
+    MXMemoryStore *store = [[MXMemoryStore alloc] init];
+    [self checkEventWithEventIdOfStore:store];
+}
+
 
 #pragma mark - MXStore generic tests
 - (void)checkPaginateBack:(MXRoom*)room
@@ -654,11 +682,8 @@
 - (void)testMXMemoryStoreAndHomeServerPaginateWhenJoiningAgainAfterLeft
 {
     // Not preloading all messages of the room causes a duplicated event issue with MXMemoryStore
-    // There is an overlap between the messages returned by the initialSync of the room and the
-    // messages returned by the back pagination request the HS.
-    // Is the pagination end token returned by initialSyncOfRoom wrong in the case a user rejoins a room?
-    // Or is the sdk going wrong?
-    // `testMXMemoryStorePaginateBackDuplicatesInRoomWithTwoUsers` shows this is the home server token that is wrong.
+    // See `testMXMemoryStorePaginateBackDuplicatesInRoomWithTwoUsers`.
+    // Check here if MXMemoryStore is able to filter this duplicate
     [self doTestWithMXMemoryStoreAndMessagesLimit:10 readyToTest:^(MXRoom *room) {
         [self checkPaginateWhenJoiningAgainAfterLeft:room];
     }];

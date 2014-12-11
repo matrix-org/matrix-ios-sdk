@@ -62,6 +62,14 @@
     }
 }
 
+- (MXEvent *)eventWithEventId:(NSString *)eventId inRoom:(NSString *)roomId
+{
+    // Events are not stored. So, we cannot find it.
+    // The drawback is the app using such MXStore will possibly get duplicated event and
+    // it will not be able to do redaction of an event.
+    return nil;
+}
+
 - (void)cleanDataOfRoom:(NSString *)roomId
 {
     if (paginationTokens[roomId])

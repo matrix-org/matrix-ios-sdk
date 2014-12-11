@@ -29,6 +29,13 @@
 - (void)storeEvent:(MXEvent*)event direction:(MXEventDirection)direction;
 
 /**
+ Get an event from this room.
+
+ @return the MXEvent object or nil if not found.
+ */
+- (MXEvent *)eventWithEventId:(NSString *)eventId;
+
+/**
  The current pagination token of the room.
  */
 @property (nonatomic) NSString *paginationToken;

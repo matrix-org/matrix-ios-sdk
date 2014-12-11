@@ -110,10 +110,16 @@
     {
         // [MXRestClient messages] returns messages in reverse chronological order
         for (MXEvent *event in events) {
-            [self handleMessage:event direction:direction pagFrom:roomMessages.start];
 
-            // Store the event
-            [mxSession.store storeEventForRoom:_state.room_id event:event direction:MXEventDirectionBackwards];
+            // Make sure we have not processed this event yet
+            MXEvent *storedEvent = [mxSession.store eventWithEventId:event.eventId inRoom:_state.room_id];
+            if (!storedEvent)
+            {
+                [self handleMessage:event direction:direction pagFrom:roomMessages.start];
+
+                // Store the event
+                [mxSession.store storeEventForRoom:_state.room_id event:event direction:MXEventDirectionBackwards];
+            }
         }
         
         // Store how far back we've paginated
@@ -124,10 +130,16 @@
         for (NSInteger i = events.count - 1; i >= 0; i--)
         {
             MXEvent *event = events[i];
-            [self handleMessage:event direction:direction pagFrom:roomMessages.end];
 
-            // Store the event
-            [mxSession.store storeEventForRoom:_state.room_id event:event direction:direction];
+            // Make sure we have not processed this event yet
+            MXEvent *storedEvent = [mxSession.store eventWithEventId:event.eventId inRoom:_state.room_id];
+            if (!storedEvent)
+            {
+                [self handleMessage:event direction:direction pagFrom:roomMessages.end];
+
+                // Store the event
+                [mxSession.store storeEventForRoom:_state.room_id event:event direction:direction];
+            }
         }
 
         // Store where to start pagination
@@ -207,11 +219,15 @@
         [self handleStateEvent:event direction:MXEventDirectionForwards];
     }
 
-    // Process the event
-    [self handleMessage:event direction:MXEventDirectionForwards pagFrom:nil];
+    // Make sure we have not processed this event yet
+    MXEvent *storedEvent = [mxSession.store eventWithEventId:event.eventId inRoom:_state.room_id];
+    if (!storedEvent)
+    {
+        [self handleMessage:event direction:MXEventDirectionForwards pagFrom:nil];
 
-    // Store the event
-    [mxSession.store storeEventForRoom:_state.room_id event:event direction:MXEventDirectionForwards];
+        // Store the event
+        [mxSession.store storeEventForRoom:_state.room_id event:event direction:MXEventDirectionForwards];
+    }
 
     // And notify the listeners
     [self notifyListeners:event direction:MXEventDirectionForwards];

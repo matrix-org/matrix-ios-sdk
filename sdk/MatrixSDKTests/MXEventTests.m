@@ -71,7 +71,7 @@
             [room resetBackState];
             [room paginateBackMessages:100 complete:^() {
                 
-                XCTAssert(eventCount, "We should have received events in registerEventListenerForTypes");
+                XCTAssertGreaterThan(eventCount, 0, "We should have received events in registerEventListenerForTypes");
                 
                 [expectation fulfill];
                 

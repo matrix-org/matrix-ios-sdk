@@ -26,7 +26,7 @@
 #pragma mark - Room data
 
 /**
- Store room event received from the home server.
+ Store a room event received from the home server.
  
  Note: The `MXEvent` class implements the `NSCoding` protocol so their instances can
  be easily serialised/unserialised.
@@ -36,6 +36,16 @@
  @param direction the origin of the event. Live or past events.
  */
 - (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXEventDirection)direction;
+
+/**
+ Get an event in a room from the store.
+
+ @param eventId the id of the event to retrieve.
+ @param roomId the id of the room.
+
+ @return the MXEvent object or nil if not found.
+ */
+- (MXEvent*)eventWithEventId:(NSString*)eventId inRoom:(NSString*)roomId;
 
 /**
  Clean all data related to a room.

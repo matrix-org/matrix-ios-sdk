@@ -55,6 +55,20 @@
     }
 }
 
+- (MXEvent *)eventWithEventId:(NSString *)eventId
+{
+    MXEvent *theEvent;
+    for (MXEvent *event in messages)
+    {
+        if ([eventId isEqualToString:event.eventId])
+        {
+            theEvent = event;
+            break;
+        }
+    }
+    return theEvent;
+}
+
 - (void)resetPagination
 {
     paginationPosition = messages.count;
