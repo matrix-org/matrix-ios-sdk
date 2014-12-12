@@ -25,9 +25,6 @@
  The reason is that the simulator can access to the home server running on the Mac 
  via localhost. So everyone can use a localhost HS url that works everywhere.
  
- You are free to change this URL and you have to if you want to run tests on a true
- device.
- 
  Here, we use one of the home servers launched by the ./demo/start.sh script
  */
 NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
@@ -155,7 +152,7 @@ NSString * const kMXTestsAliceAvatarURL = @"http://matrix.org/matrix.png";
     [self doMXRestClientTestWithBob:testCase
                      readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
         // Create a random room to use
-        [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate room_alias_name:nil topic:nil success:^(MXCreateRoomResponse *response) {
+        [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
             
             readyToTest(bobRestClient, response.roomId, expectation);
             
@@ -171,7 +168,7 @@ NSString * const kMXTestsAliceAvatarURL = @"http://matrix.org/matrix.png";
     [self doMXRestClientTestWithBob:testCase
                         readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
                             // Create a random room to use
-                            [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPublic room_alias_name:nil topic:nil success:^(MXCreateRoomResponse *response) {
+                            [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPublic roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
                                 
                                 readyToTest(bobRestClient, response.roomId, expectation);
                                 
@@ -189,10 +186,10 @@ NSString * const kMXTestsAliceAvatarURL = @"http://matrix.org/matrix.png";
                          
         // Create THE allocated public room: #mxPublic
         [bobRestClient createRoom:@"MX Public Room test"
-                    visibility:kMXRoomVisibilityPublic
-               room_alias_name:@"mxPublic"
-                         topic:@"The public room used by SDK tests"
-                       success:^(MXCreateRoomResponse *response) {
+                       visibility:kMXRoomVisibilityPublic
+                        roomAlias:@"mxPublic"
+                            topic:@"The public room used by SDK tests"
+                          success:^(MXCreateRoomResponse *response) {
             
             readyToTest(bobRestClient, response.roomId, expectation);
             
@@ -234,7 +231,7 @@ NSString * const kMXTestsAliceAvatarURL = @"http://matrix.org/matrix.png";
     
     [sharedData getBobMXRestClient:^(MXRestClient *bobRestClient) {
         // Create a random room to use
-        [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate room_alias_name:nil topic:nil success:^(MXCreateRoomResponse *response) {
+        [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
             
             // Post the the message text in it
             [bobRestClient postTextMessageToRoom:response.roomId text:newTextMessage success:^(NSString *event_id) {
@@ -329,7 +326,7 @@ NSString * const kMXTestsAliceAvatarURL = @"http://matrix.org/matrix.png";
     else
     {
         // Create the room
-        [mxRestClient2 createRoom:nil visibility:kMXRoomVisibilityPrivate room_alias_name:nil topic:nil success:^(MXCreateRoomResponse *response) {
+        [mxRestClient2 createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
 
             // Fill it with messages
             [self for:mxRestClient2 andRoom:response.roomId postMessages:messagesCount success:^{
@@ -478,7 +475,7 @@ NSString * const kMXTestsAliceAvatarURL = @"http://matrix.org/matrix.png";
             
             [bobRestClient inviteUser:self.aliceCredentials.userId toRoom:room_id success:^{
                 
-                [aliceRestClient joinRoom:room_id success:^{
+                [aliceRestClient joinRoom:room_id success:^(NSString *theRoomId) {
                     
                     readyToTest(bobRestClient, aliceRestClient, room_id, expectation);
                     

@@ -122,11 +122,11 @@
     }];
 }
 
-- (void)testJoinRoom
+- (void)testJoinRoomWithRoomId
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
         
-        [bobRestClient joinRoom:room_id success:^{
+        [bobRestClient joinRoom:room_id success:^(NSString *theRoomId) {
             
             // No data to test. Just happy to go here.
             [expectation fulfill];
@@ -135,6 +135,25 @@
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
+    }];
+}
+
+- (void)testJoinRoomWithRoomAlias
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndThePublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+
+        NSString *mxPublicAlias = [NSString stringWithFormat:@"#mxPublic:%@", @"localhost:8480"];
+
+        [bobRestClient joinRoom:mxPublicAlias success:^(NSString *theRoomId) {
+
+            XCTAssertEqualObjects(room_id, theRoomId);
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
     }];
 }
 
@@ -290,7 +309,7 @@
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
         
         // Create a random room with no params
-        [bobRestClient createRoom:nil visibility:nil room_alias_name:nil topic:nil success:^(MXCreateRoomResponse *response) {
+        [bobRestClient createRoom:nil visibility:nil roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
             
             XCTAssertNotNil(response);
             XCTAssertNotNil(response.roomId, "The home server should have allocated a room id");
@@ -519,7 +538,7 @@
             [bobRestClient leaveRoom:room_id success:^{
                 [aliceRestClient postTextMessageToRoom:room_id text:@"Hi bob"  success:^(NSString *event_id) {
                     [aliceRestClient inviteUser:bobRestClient.credentials.userId toRoom:room_id success:^{
-                        [bobRestClient joinRoom:room_id success:^{
+                        [bobRestClient joinRoom:room_id success:^(NSString *theRoomId) {
 
                             [bobRestClient initialSyncWithLimit:10 success:^(NSDictionary *JSONData) {
 

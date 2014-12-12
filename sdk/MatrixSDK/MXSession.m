@@ -320,7 +320,7 @@ typedef void (^MXOnResumeDone)();
          failure:(void (^)(NSError *error))failure
 {
     
-    [matrixRestClient joinRoom:room_id success:^{
+    [matrixRestClient joinRoom:room_id success:^(NSString *theRoomId) {
         
         // Do an initial to get state and messages in the room
         [matrixRestClient initialSyncOfRoom:room_id withLimit:initialSyncMessagesLimit success:^(NSDictionary *JSONData) {

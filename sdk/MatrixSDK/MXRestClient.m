@@ -324,14 +324,23 @@ MXAuthAction;
      }];
 }
 
-- (void)joinRoom:(NSString*)room_id
-     success:(void (^)())success
+- (void)joinRoom:(NSString*)roomIdOrAlias
+     success:(void (^)(NSString *theRoomId))success
      failure:(void (^)(NSError *error))failure
 {
-    [self doMembershipRequest:room_id
-                   membership:@"join"
-                   parameters:nil
-                      success:success failure:failure];
+    // Characters in a room alias need to be escaped in the URL
+    NSString *path = [NSString stringWithFormat:@"join/%@", [roomIdOrAlias stringByAddingPercentEscapesUsingEncoding:NSASCIIStringEncoding]];
+    [httpClient requestWithMethod:@"POST"
+                             path:path
+                       parameters:nil
+                          success:^(NSDictionary *JSONResponse)
+     {
+         success(JSONResponse[@"room_id"]);
+     }
+                          failure:^(NSError *error)
+     {
+         failure(error);
+     }];
 }
 
 - (void)leaveRoom:(NSString*)room_id
@@ -417,7 +426,7 @@ MXAuthAction;
 
 - (void)createRoom:(NSString*)name
         visibility:(MXRoomVisibility)visibility
-   room_alias_name:(NSString*)room_alias_name
+         roomAlias:(NSString*)roomAlias
              topic:(NSString*)topic
            success:(void (^)(MXCreateRoomResponse *response))success
            failure:(void (^)(NSError *error))failure
@@ -433,9 +442,9 @@ MXAuthAction;
     {
         parameters[@"visibility"] = visibility;
     }
-    if (room_alias_name)
+    if (roomAlias)
     {
-        parameters[@"room_alias_name"] = room_alias_name;
+        parameters[@"room_alias_name"] = roomAlias;
     }
     if (topic)
     {

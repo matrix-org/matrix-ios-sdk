@@ -184,12 +184,12 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
 /**
  Join a room.
  
- @param room_id the id of the room to join.
- @param success A block object called when the operation succeeds.
+ @param roomIdOrAlias the id or an alias of the room to join.
+ @param success A block object called when the operation succeeds. It provides the room id.
  @param failure A block object called when the operation fails.
  */
-- (void)joinRoom:(NSString*)room_id
-         success:(void (^)())success
+- (void)joinRoom:(NSString*)roomIdOrAlias
+         success:(void (^)(NSString *theRoomId))success
          failure:(void (^)(NSError *error))failure;
 
 /**
@@ -262,7 +262,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
  
  @param name (optional) the room name.
  @param visibility (optional) the visibility of the room (kMXRoomVisibilityPublic or kMXRoomVisibilityPrivate).
- @param room_alias_name (optional) the room alias on the home server the room will be created.
+ @param roomAlias (optional) the room alias on the home server the room will be created.
  @param topic (optional) the room topic.
 
  @param success A block object called when the operation succeeds. It provides a MXCreateRoomResponse object.
@@ -270,7 +270,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
  */
 - (void)createRoom:(NSString*)name
         visibility:(MXRoomVisibility)visibility
-   room_alias_name:(NSString*)room_alias_name
+         roomAlias:(NSString*)roomAlias
              topic:(NSString*)topic
            success:(void (^)(MXCreateRoomResponse *response))success
            failure:(void (^)(NSError *error))failure;
