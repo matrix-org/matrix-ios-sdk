@@ -131,11 +131,12 @@
     return nil;
 }
 
-- (BOOL)canPaginateInRoom:(NSString*)roomId
+- (NSUInteger)remainingMessagesForPaginationInRoom:(NSString *)roomId
 {
     // There is nothing to paginate here
-    return NO;
+    return 0;
 }
+
 
 - (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types
 {

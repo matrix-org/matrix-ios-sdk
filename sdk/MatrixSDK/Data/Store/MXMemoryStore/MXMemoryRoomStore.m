@@ -97,9 +97,9 @@
     return paginatedMessages;
 }
 
-- (BOOL)canPaginate
+- (NSUInteger)remainingMessagesForPagination
 {
-    return (0 < paginationPosition);
+    return paginationPosition;
 }
 
 - (MXEvent*)lastMessageWithTypeIn:(NSArray*)types

@@ -61,10 +61,11 @@
 - (NSArray*)paginate:(NSUInteger)numMessages;
 
 /**
- Indicate if there are still events to paginate from the MXStore.
- */
-@property (nonatomic,readonly) BOOL canPaginate;
+ Get the number of events that still remain to paginate from the MXStore.
 
+ @return the count of stored events we can still paginate.
+ */
+- (NSUInteger)remainingMessagesForPagination;
 
 /**
  The last message.

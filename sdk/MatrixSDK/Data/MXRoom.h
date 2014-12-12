@@ -93,9 +93,16 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  @param failure A block object called when the operation fails.
  */
 - (void)paginateBackMessages:(NSUInteger)numItems
-                     complete:(void (^)())complete
+                    complete:(void (^)())complete
                      failure:(void (^)(NSError *error))failure;
 
+/**
+ Get the number of messages we can still paginate from the store.
+ It provides the count of events available without making a request to the home server.
+
+ @return the count of remaining messages in store.
+ */
+- (NSUInteger)remainingMessagesForPaginationInStore;
 
 #pragma mark - Room operations
 
