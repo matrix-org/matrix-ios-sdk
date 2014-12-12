@@ -466,12 +466,12 @@ MXAuthAction;
      }];
 }
 
-- (void)messagesForRoom:(NSString*)room_id
-                   from:(NSString*)from
-                     to:(NSString*)to
-                  limit:(NSUInteger)limit
-                success:(void (^)(MXPaginationResponse *paginatedResponse))success
-                failure:(void (^)(NSError *error))failure
+- (NSOperation*)messagesForRoom:(NSString*)room_id
+                           from:(NSString*)from
+                             to:(NSString*)to
+                          limit:(NSUInteger)limit
+                        success:(void (^)(MXPaginationResponse *paginatedResponse))success
+                        failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"rooms/%@/messages", room_id];
     
@@ -494,7 +494,7 @@ MXAuthAction;
     // List messages in backward order to make the API answer
     parameters[@"dir"] = @"b";
     
-    [httpClient requestWithMethod:@"GET"
+    return [httpClient requestWithMethod:@"GET"
                            path:path
                      parameters:parameters
                         success:^(NSDictionary *JSONResponse)

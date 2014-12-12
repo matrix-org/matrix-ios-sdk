@@ -206,5 +206,43 @@
     }];
 }
 
+- (void)testPaginateBackMessagesCancel
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+
+        [mxSession startWithMessagesLimit:0 initialSyncDone:^{
+            MXRoom *room = [mxSession roomWithRoomId:room_id];
+
+            __block NSUInteger eventCount = 0;
+            [room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+
+                eventCount++;
+                XCTFail(@"We should not receive events. Received: %@", event);
+
+            }];
+
+            [room resetBackState];
+            NSOperation *pagination = [room paginateBackMessages:100 complete:^() {
+
+                XCTFail(@"The cancelled operation must not complete");
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTAssertEqual(eventCount, 0, "We should have received events in registerEventListenerForTypes");
+                [expectation fulfill];
+            }];
+
+            XCTAssertNotNil(pagination);
+
+            [pagination cancel];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
 
 @end

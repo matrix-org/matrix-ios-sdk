@@ -285,13 +285,15 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
  
  @param success A block object called when the operation succeeds. It provides a `MXPaginationResponse` object.
  @param failure A block object called when the operation fails.
+ 
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)messagesForRoom:(NSString*)room_id
-                   from:(NSString*)from
-                     to:(NSString*)to
-                  limit:(NSUInteger)limit
-                success:(void (^)(MXPaginationResponse *paginatedResponse))success
-                failure:(void (^)(NSError *error))failure;
+- (NSOperation*)messagesForRoom:(NSString*)room_id
+                           from:(NSString*)from
+                             to:(NSString*)to
+                          limit:(NSUInteger)limit
+                        success:(void (^)(MXPaginationResponse *paginatedResponse))success
+                        failure:(void (^)(NSError *error))failure;
 
 /**
  Get a list of members for this room.

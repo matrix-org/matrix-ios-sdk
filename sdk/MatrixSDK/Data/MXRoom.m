@@ -243,10 +243,12 @@
     [mxSession.store resetPaginationOfRoom:_state.room_id];
 }
 
-- (void)paginateBackMessages:(NSUInteger)numItems
+- (NSOperation*)paginateBackMessages:(NSUInteger)numItems
                     complete:(void (^)())complete
                      failure:(void (^)(NSError *error))failure
 {
+    NSOperation *operation;
+
     NSAssert(nil != backState, @"resetBackState must be called before starting the back pagination");
 
     // Return messages in the store first
@@ -274,7 +276,7 @@
     {
         // Not enough messages: make a pagination request to the home server
         // from last known token
-        [mxSession.matrixRestClient messagesForRoom:_state.room_id
+        operation = [mxSession.matrixRestClient messagesForRoom:_state.room_id
                                                from:[mxSession.store paginationTokenOfRoom:_state.room_id]
                                                  to:nil
                                               limit:numItems
@@ -303,6 +305,8 @@
         // Nothing more to do
         complete();
     }
+
+    return operation;
 }
 
 - (NSUInteger)remainingMessagesForPaginationInStore

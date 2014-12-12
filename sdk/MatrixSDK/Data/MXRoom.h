@@ -91,10 +91,14 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  @param numItems the number of items to get.
  @param complete A block object called when the operation is complete.
  @param failure A block object called when the operation fails.
+ 
+ @return a NSOperation instance to use to cancel the request. This instance can be nil
+         if no request to the home server is required.
  */
-- (void)paginateBackMessages:(NSUInteger)numItems
+- (NSOperation*)paginateBackMessages:(NSUInteger)numItems
                     complete:(void (^)())complete
                      failure:(void (^)(NSError *error))failure;
+
 
 /**
  Get the number of messages we can still paginate from the store.
