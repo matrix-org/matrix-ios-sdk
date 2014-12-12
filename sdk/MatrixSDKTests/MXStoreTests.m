@@ -690,6 +690,8 @@
 }
 
 
+/* Disabled while SYN-162 is not fixed
+ 
 // Test for https://matrix.org/jira/browse/SYN-162
 - (void)checkPaginateWhenReachingTheExactBeginningOfTheRoom:(MXRoom*)room
 {
@@ -751,6 +753,7 @@
         [self checkPaginateWhenReachingTheExactBeginningOfTheRoom:room];
     }];
 }
+*/
 
 
 #pragma mark - MXMemoryStore specific tests
