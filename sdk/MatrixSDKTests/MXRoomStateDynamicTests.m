@@ -299,7 +299,7 @@
                 
                 [bobRestClient postTextMessageToRoom:room_id text:@"I wait for Alice" success:^(NSString *event_id) {
                     
-                    [aliceRestClient joinRoom:room_id success:^{
+                    [aliceRestClient joinRoom:room_id success:^(NSString *roomName){
                         
                         [aliceRestClient postTextMessageToRoom:room_id text:@"Hi" success:^(NSString *event_id) {
                             

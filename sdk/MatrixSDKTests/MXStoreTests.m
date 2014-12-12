@@ -635,7 +635,7 @@
 
                 // Make Alice post text message while Bob is not in the room.
                 // Then, invite him.
-                [aliceRestClient joinRoom:roomId success:^{
+                [aliceRestClient joinRoom:roomId success:^(NSString *roomName){
 
                     [aliceRestClient postTextMessageToRoom:roomId text:@"Hi bob"  success:^(NSString *event_id) {
 
