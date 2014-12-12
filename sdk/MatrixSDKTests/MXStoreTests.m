@@ -297,7 +297,7 @@
                                          kMXEventTypeStringRoomMessage
                                          ];
 
-    __block NSUInteger prev_ts = -1;
+    __block uint64_t prev_ts = -1;
     [room listenToEventsOfTypes:eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
 
         XCTAssert(event.originServerTs, @"The event should have an attempt: %@", event);
