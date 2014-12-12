@@ -414,7 +414,18 @@
 
         // The several paginations
         [room2 resetBackState];
+
+        if ([mxSession.store isKindOfClass:[MXMemoryStore class]])
+        {
+            XCTAssertGreaterThanOrEqual(room2.remainingMessagesForPaginationInStore, 7);
+        }
+
         [room2 paginateBackMessages:2 complete:^() {
+
+            if ([mxSession.store isKindOfClass:[MXMemoryStore class]])
+            {
+                XCTAssertGreaterThanOrEqual(room2.remainingMessagesForPaginationInStore, 5);
+            }
 
             [room2 paginateBackMessages:5 complete:^() {
 
