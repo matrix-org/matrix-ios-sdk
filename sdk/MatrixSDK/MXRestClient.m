@@ -17,6 +17,7 @@
 #import "MXRestClient.h"
 
 #import "MXHTTPClient.h"
+#import "MXJSONModel.h"
 #import "MXTools.h"
 
 #pragma mark - Constants definitions
@@ -613,7 +614,8 @@ MXAuthAction;
                      parameters:nil
                         success:^(NSDictionary *JSONResponse)
      {
-         success(JSONResponse[@"displayname"]);
+         NSDictionary *cleanedJSONResponse = [MXJSONModel removeNullValuesInJSON:JSONResponse];
+         success(cleanedJSONResponse[@"displayname"]);
      }
                         failure:^(NSError *error)
      {
@@ -656,7 +658,8 @@ MXAuthAction;
                      parameters:nil
                         success:^(NSDictionary *JSONResponse)
      {
-         success(JSONResponse[@"avatar_url"]);
+         NSDictionary *cleanedJSONResponse = [MXJSONModel removeNullValuesInJSON:JSONResponse];
+         success(cleanedJSONResponse[@"avatar_url"]);
      }
                         failure:^(NSError *error)
      {

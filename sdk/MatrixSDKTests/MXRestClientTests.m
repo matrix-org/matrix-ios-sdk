@@ -701,6 +701,24 @@
     }];
 }
 
+- (void)testUserNilDisplayName
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+
+        [bobRestClient displayNameForUser:nil success:^(NSString *displayname) {
+
+            XCTAssertNil(displayname, @"mxBob has no displayname defined");
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        
+    }];
+}
+
+
 - (void)testUserAvatarUrl
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
@@ -757,6 +775,23 @@
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
+    }];
+}
+
+- (void)testUserNilAvatarUrl
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+
+        [bobRestClient avatarUrlForUser:nil success:^(NSString *avatar_url) {
+
+            XCTAssertNil(avatar_url, @"mxBob has no avatar defined");
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
     }];
 }
 
