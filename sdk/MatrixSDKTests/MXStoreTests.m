@@ -648,9 +648,9 @@
                 // Then, invite him.
                 [aliceRestClient joinRoom:roomId success:^(NSString *roomName){
 
-                    [aliceRestClient postTextMessageToRoom:roomId text:@"Hi bob"  success:^(NSString *event_id) {
+                    [aliceRestClient postTextMessageToRoom:roomId text:@"Hi bob"  success:^(NSString *eventId) {
 
-                        aliceTextEventId = event_id;
+                        aliceTextEventId = eventId;
 
                         [aliceRestClient inviteUser:mxSession.matrixRestClient.credentials.userId toRoom:roomId success:^{
 

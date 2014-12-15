@@ -56,7 +56,7 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
 
 - (void)doMXRestClientTestInABobRoomAndANewTextMessage:(XCTestCase*)testCase
                                      newTextMessage:(NSString*)newTextMessage
-                                      onReadyToTest:(void (^)(MXRestClient *bobRestClient, NSString* roomId, NSString* new_text_message_event_id, XCTestExpectation *expectation))readyToTest;
+                                      onReadyToTest:(void (^)(MXRestClient *bobRestClient, NSString* roomId, NSString* new_text_message_eventId, XCTestExpectation *expectation))readyToTest;
 
 - (void)doMXRestClientTestWithBobAndARoomWithMessages:(XCTestCase*)testCase
                                        readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest;

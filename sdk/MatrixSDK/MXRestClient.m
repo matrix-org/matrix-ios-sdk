@@ -175,7 +175,7 @@ MXAuthAction;
 - (void)postEventToRoom:(NSString*)roomId
               eventType:(MXEventTypeString)eventTypeString
                 content:(NSDictionary*)content
-                success:(void (^)(NSString *event_id))success
+                success:(void (^)(NSString *eventId))success
                 failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"rooms/%@/send/%@", roomId, eventTypeString];
@@ -196,7 +196,7 @@ MXAuthAction;
 - (void)postMessageToRoom:(NSString*)roomId
                   msgType:(MXMessageType)msgType
                   content:(NSDictionary*)content
-                  success:(void (^)(NSString *event_id))success
+                  success:(void (^)(NSString *eventId))success
                   failure:(void (^)(NSError *error))failure
 {
     // Add the messsage type to the data to send
@@ -208,7 +208,7 @@ MXAuthAction;
 
 - (void)postTextMessageToRoom:(NSString*)roomId
                          text:(NSString*)text
-                      success:(void (^)(NSString *event_id))success
+                      success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure
 {
     [self postMessageToRoom:roomId msgType:kMXMessageTypeText

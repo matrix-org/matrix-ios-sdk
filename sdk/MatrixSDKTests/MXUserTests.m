@@ -49,9 +49,9 @@
     // Make sure Alice and Bob have activities
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
-        [bobRestClient postTextMessageToRoom:roomId text:@"Hi Alice!" success:^(NSString *event_id) {
+        [bobRestClient postTextMessageToRoom:roomId text:@"Hi Alice!" success:^(NSString *eventId) {
 
-            [aliceRestClient postTextMessageToRoom:roomId text:@"Hi Bob!" success:^(NSString *event_id) {
+            [aliceRestClient postTextMessageToRoom:roomId text:@"Hi Bob!" success:^(NSString *eventId) {
 
                 mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
@@ -129,7 +129,7 @@
 
         }];
 
-        [aliceRestClient postTextMessageToRoom:roomId text:@"A message to update my last active ago" success:^(NSString *event_id) {
+        [aliceRestClient postTextMessageToRoom:roomId text:@"A message to update my last active ago" success:^(NSString *eventId) {
 
         } failure:^(NSError *error) {
             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
@@ -225,7 +225,7 @@
 
         }];
 
-        [bobRestClient postTextMessageToRoom:roomId text:@"A message to update my last active ago" success:^(NSString *event_id) {
+        [bobRestClient postTextMessageToRoom:roomId text:@"A message to update my last active ago" success:^(NSString *eventId) {
 
         } failure:^(NSError *error) {
             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);

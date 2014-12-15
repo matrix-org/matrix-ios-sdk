@@ -100,7 +100,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
 - (void)postEventToRoom:(NSString*)roomId
               eventType:(MXEventTypeString)eventTypeString
                 content:(NSDictionary*)content
-                success:(void (^)(NSString *event_id))success
+                success:(void (^)(NSString *eventId))success
                 failure:(void (^)(NSError *error))failure;
 
 /**
@@ -116,7 +116,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
 - (void)postMessageToRoom:(NSString*)roomId
                   msgType:(MXMessageType)msgType
                   content:(NSDictionary*)content
-                  success:(void (^)(NSString *event_id))success
+                  success:(void (^)(NSString *eventId))success
                   failure:(void (^)(NSError *error))failure;
 
 /**
@@ -130,7 +130,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
  */
 - (void)postTextMessageToRoom:(NSString*)roomId
                          text:(NSString*)text
-                      success:(void (^)(NSString *event_id))success
+                      success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure;
 
 /**

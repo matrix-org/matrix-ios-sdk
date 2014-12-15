@@ -60,16 +60,16 @@
 {
     __block MXRestClient *bobRestClient2 = bobRestClient;
     
-    [bobRestClient postTextMessageToRoom:roomId text:@"Hello world" success:^(NSString *event_id) {
+    [bobRestClient postTextMessageToRoom:roomId text:@"Hello world" success:^(NSString *eventId) {
         
         [bobRestClient setRoomTopic:roomId topic:@"Topic #1" success:^{
             
-            [bobRestClient2 postTextMessageToRoom:roomId text:@"Hola" success:^(NSString *event_id) {
+            [bobRestClient2 postTextMessageToRoom:roomId text:@"Hola" success:^(NSString *eventId) {
                 
                 __block MXRestClient *bobRestClient3 = bobRestClient2;
                 [bobRestClient2 setRoomTopic:roomId topic:@"Topic #2" success:^{
                     
-                    [bobRestClient3 postTextMessageToRoom:roomId text:@"Bonjour" success:^(NSString *event_id) {
+                    [bobRestClient3 postTextMessageToRoom:roomId text:@"Bonjour" success:^(NSString *eventId) {
                         
                         onComplete();
                         
@@ -289,7 +289,7 @@
  */
 - (void)createScenario2:(MXRestClient*)bobRestClient inRoom:(NSString*)roomId onComplete:(void(^)(MXRestClient *aliceRestClient))onComplete
 {
-    [bobRestClient postTextMessageToRoom:roomId text:@"Hello world" success:^(NSString *event_id) {
+    [bobRestClient postTextMessageToRoom:roomId text:@"Hello world" success:^(NSString *eventId) {
         
         MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
         
@@ -297,19 +297,19 @@
             
             [bobRestClient inviteUser:sharedData.aliceCredentials.userId toRoom:roomId success:^{
                 
-                [bobRestClient postTextMessageToRoom:roomId text:@"I wait for Alice" success:^(NSString *event_id) {
+                [bobRestClient postTextMessageToRoom:roomId text:@"I wait for Alice" success:^(NSString *eventId) {
                     
                     [aliceRestClient joinRoom:roomId success:^(NSString *roomName){
                         
-                        [aliceRestClient postTextMessageToRoom:roomId text:@"Hi" success:^(NSString *event_id) {
+                        [aliceRestClient postTextMessageToRoom:roomId text:@"Hi" success:^(NSString *eventId) {
                             
                             [aliceRestClient setDisplayName:@"Alice in Wonderland" success:^{
                                 
-                                [aliceRestClient postTextMessageToRoom:roomId text:@"What's going on?" success:^(NSString *event_id) {
+                                [aliceRestClient postTextMessageToRoom:roomId text:@"What's going on?" success:^(NSString *eventId) {
                                     
                                     [aliceRestClient leaveRoom:roomId success:^{
                                         
-                                        [bobRestClient postTextMessageToRoom:roomId text:@"Good bye" success:^(NSString *event_id) {
+                                        [bobRestClient postTextMessageToRoom:roomId text:@"Good bye" success:^(NSString *eventId) {
                                             
                                             onComplete(aliceRestClient);
                                             

@@ -71,7 +71,7 @@
 
 - (void)testRoomTopicProvidedByInitialSync
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_event_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
         
         MXRestClient *bobRestClient2 = bobRestClient;
         
@@ -102,7 +102,7 @@
 
 - (void)testRoomTopicLive
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_event_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
         
         MXRestClient *bobRestClient2 = bobRestClient;
         
@@ -144,7 +144,7 @@
 
 - (void)testRoomNameProvidedByInitialSync
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_event_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
         
         MXRestClient *bobRestClient2 = bobRestClient;
         
@@ -175,7 +175,7 @@
 
 - (void)testRoomNameLive
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_event_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
         
         MXRestClient *bobRestClient2 = bobRestClient;
         
@@ -217,7 +217,7 @@
 
 - (void)testMembers
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_event_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         [mxSession start:^{
@@ -339,7 +339,7 @@
  */
 - (void)createInviteByUserScenario:(MXRestClient*)bobRestClient inRoom:(NSString*)roomId inviteAlice:(BOOL)inviteAlice onComplete:(void(^)())onComplete
 {
-    [bobRestClient postTextMessageToRoom:roomId text:@"Hello world" success:^(NSString *event_id) {
+    [bobRestClient postTextMessageToRoom:roomId text:@"Hello world" success:^(NSString *eventId) {
         
         [bobRestClient setRoomTopic:roomId topic:@"We test room invitation here" success:^{
             
@@ -351,7 +351,7 @@
                 {
                     [bobRestClient inviteUser:sharedData.aliceCredentials.userId toRoom:roomId success:^{
                         
-                        [bobRestClient postTextMessageToRoom:roomId text:@"I wait for Alice" success:^(NSString *event_id) {
+                        [bobRestClient postTextMessageToRoom:roomId text:@"I wait for Alice" success:^(NSString *eventId) {
                             
                             onComplete();
                             

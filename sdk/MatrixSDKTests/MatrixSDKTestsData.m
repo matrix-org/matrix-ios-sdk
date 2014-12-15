@@ -235,7 +235,7 @@ MXSession *mxSessionToClean;
 
 - (void)doMXRestClientTestInABobRoomAndANewTextMessage:(XCTestCase*)testCase
                                   newTextMessage:(NSString*)newTextMessage
-                                   onReadyToTest:(void (^)(MXRestClient *bobRestClient, NSString* roomId, NSString* new_text_message_event_id, XCTestExpectation *expectation))readyToTest
+                                   onReadyToTest:(void (^)(MXRestClient *bobRestClient, NSString* roomId, NSString* new_text_message_eventId, XCTestExpectation *expectation))readyToTest
 {
     XCTestExpectation *expectation;
     if (testCase)
@@ -250,9 +250,9 @@ MXSession *mxSessionToClean;
         [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
             
             // Post the the message text in it
-            [bobRestClient postTextMessageToRoom:response.roomId text:newTextMessage success:^(NSString *event_id) {
+            [bobRestClient postTextMessageToRoom:response.roomId text:newTextMessage success:^(NSString *eventId) {
                 
-                readyToTest(bobRestClient, response.roomId, event_id, expectation);
+                readyToTest(bobRestClient, response.roomId, eventId, expectation);
                 
             } failure:^(NSError *error) {
                 NSAssert(NO, @"Cannot set up intial test conditions");
@@ -320,7 +320,7 @@ MXSession *mxSessionToClean;
     else
     {
         [mxRestClient2 postTextMessageToRoom:roomId text:[NSString stringWithFormat:@"Fake message posted at %.0f ms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000]
-                           success:^(NSString *event_id) {
+                           success:^(NSString *eventId) {
 
             // Post the next message
             [self for:mxRestClient2 andRoom:roomId postMessages:messagesCount - 1 success:success];

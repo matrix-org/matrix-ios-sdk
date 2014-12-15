@@ -121,7 +121,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  */
 - (void)postEventOfType:(MXEventTypeString)eventTypeString
                 content:(NSDictionary*)content
-                success:(void (^)(NSString *event_id))success
+                success:(void (^)(NSString *eventId))success
                 failure:(void (^)(NSError *error))failure;
 
 /**
@@ -135,7 +135,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  */
 - (void)postMessageOfType:(MXMessageType)msgType
                   content:(NSDictionary*)content
-                  success:(void (^)(NSString *event_id))success
+                  success:(void (^)(NSString *eventId))success
                   failure:(void (^)(NSError *error))failure;
 
 /**
@@ -147,7 +147,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  @param failure A block object called when the operation fails.
  */
 - (void)postTextMessage:(NSString*)text
-                success:(void (^)(NSString *event_id))success
+                success:(void (^)(NSString *eventId))success
                 failure:(void (^)(NSError *error))failure;
 
 /**

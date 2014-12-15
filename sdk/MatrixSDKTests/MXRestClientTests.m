@@ -57,10 +57,10 @@
     // This test on postTextMessage validates postMessage and postEvent too
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [bobRestClient postTextMessageToRoom:roomId text:@"This is text message" success:^(NSString *event_id) {
+        [bobRestClient postTextMessageToRoom:roomId text:@"This is text message" success:^(NSString *eventId) {
             
-            XCTAssertNotNil(event_id);
-            XCTAssertGreaterThan(event_id.length, 0, @"The event_id string must not be empty");
+            XCTAssertNotNil(eventId);
+            XCTAssertGreaterThan(eventId.length, 0, @"The eventId string must not be empty");
             [expectation fulfill];
             
         } failure:^(NSError *error) {
@@ -536,7 +536,7 @@
 
         [sharedData for:bobRestClient andRoom:roomId postMessages:5 success:^{
             [bobRestClient leaveRoom:roomId success:^{
-                [aliceRestClient postTextMessageToRoom:roomId text:@"Hi bob"  success:^(NSString *event_id) {
+                [aliceRestClient postTextMessageToRoom:roomId text:@"Hi bob"  success:^(NSString *eventId) {
                     [aliceRestClient inviteUser:bobRestClient.credentials.userId toRoom:roomId success:^{
                         [bobRestClient joinRoom:roomId success:^(NSString *theRoomId) {
 

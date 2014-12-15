@@ -47,7 +47,7 @@
 
 - (void)testRecents
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_event_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         [mxSession start:^{
@@ -59,9 +59,9 @@
             MXEvent *myNewTextMessageEvent;
             for (MXEvent *event in recents)
             {
-                XCTAssertNotNil(event.eventId, @"The event must have an event_id to be valid");
+                XCTAssertNotNil(event.eventId, @"The event must have an eventId to be valid");
                 
-                if ([event.eventId isEqualToString:new_text_message_event_id])
+                if ([event.eventId isEqualToString:new_text_message_eventId])
                 {
                     myNewTextMessageEvent = event;
                 }
@@ -93,7 +93,7 @@
             uint64_t prev_ts = ULONG_LONG_MAX;
             for (MXEvent *event in recents)
             {
-                XCTAssertNotNil(event.eventId, @"The event must have an event_id to be valid");
+                XCTAssertNotNil(event.eventId, @"The event must have an eventId to be valid");
                 
                 if (event.originServerTs)
                 {
@@ -265,7 +265,7 @@
             // Wait a bit before making her active again
             [NSThread sleepForTimeInterval:1.0];
             
-            [aliceRestClient postTextMessageToRoom:roomId text:@"Hi Bob!" success:^(NSString *event_id) {
+            [aliceRestClient postTextMessageToRoom:roomId text:@"Hi Bob!" success:^(NSString *eventId) {
                 
             } failure:^(NSError *error) {
                 NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
@@ -315,7 +315,7 @@
             XCTAssertNil(mxSession.myUser);
 
             // Do some activity to check nothing comes through mxSession, room and bob
-            [bobRestClient postTextMessageToRoom:roomId text:@"A message" success:^(NSString *event_id) {
+            [bobRestClient postTextMessageToRoom:roomId text:@"A message" success:^(NSString *eventId) {
 
                 [expectation performSelector:@selector(fulfill) withObject:nil afterDelay:5];
 
@@ -369,7 +369,7 @@
 
                 // Do some activity while MXSession is paused
                 // We should not receive events while paused
-                [bobRestClient postTextMessageToRoom:roomId text:@"A message" success:^(NSString *event_id) {
+                [bobRestClient postTextMessageToRoom:roomId text:@"A message" success:^(NSString *eventId) {
 
                 } failure:^(NSError *error) {
                     NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
