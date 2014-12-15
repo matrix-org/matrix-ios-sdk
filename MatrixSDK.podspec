@@ -16,16 +16,13 @@ Pod::Spec.new do |s|
   #
 
   s.name         = "MatrixSDK"
-  s.version      = "0.0.1"
-  s.summary      = "A short description of MatrixSDK."
+  s.version      = "0.1.0"
+  s.summary      = "The iOS SDK to build apps compatible with Matrix (http://www.matrix.org)"
 
   s.description  = <<-DESC
-                   A longer description of MatrixSDK in Markdown format.
+				   Matrix is a new open standard for interoperable Instant Messaging and VoIP, providing pragmatic HTTP APIs and open source reference implementations for creating and running your own real-time communication infrastructure. 
 
-                   * Think: Why did you write this? What is the focus? What does it do?
-                   * CocoaPods will be using this to generate tags, and improve search results.
-                   * Try to keep it short, snappy and to the point.
-                   * Finally, don't worry about the indent, CocoaPods strips it!
+				   Our hope is to make VoIP/IM as universal and interoperable as email.
                    DESC
 
   s.homepage     = "http://www.matrix.org"
@@ -53,7 +50,7 @@ Pod::Spec.new do |s|
   #
 
   s.author             = { "matrix.org" => "support@matrix.org" }
-  # s.social_media_url   = "http://twitter.com/matrixdotorg"
+  s.social_media_url   = "http://twitter.com/matrixdotorg"
 
   # ――― Platform Specifics ――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
   #
@@ -75,7 +72,7 @@ Pod::Spec.new do |s|
   #  Supports git, hg, bzr, svn and HTTP.
   #
 
-  s.source       = { :git => "https://github.com/matrix-org/matrix-ios-sdk.git", :tag => "0.0.1" }
+  s.source       = { :git => "https://github.com/matrix-org/matrix-ios-sdk.git", :tag => "v0.1.0" }
 
 
   # ――― Source Code ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
