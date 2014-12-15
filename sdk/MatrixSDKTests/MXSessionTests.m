@@ -47,7 +47,7 @@
 
 - (void)testRecents
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *room_id, NSString *new_text_message_event_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_event_id, XCTestExpectation *expectation) {
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         [mxSession start:^{
@@ -155,7 +155,7 @@
         // Create a room with messages in parallel
         [mxSession start:^{
             
-            [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:nil readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+            [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:nil readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
             }];
             
         } failure:^(NSError *error) {
@@ -187,7 +187,7 @@
         // Create a room with messages in parallel
         [mxSession start:^{
             
-            [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:nil readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+            [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:nil readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
             }];
             
         } failure:^(NSError *error) {
@@ -229,7 +229,7 @@
 - (void)testListenerForPresence
 {
     // Make sure Alice and Bob have activities
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         
@@ -265,7 +265,7 @@
             // Wait a bit before making her active again
             [NSThread sleepForTimeInterval:1.0];
             
-            [aliceRestClient postTextMessageToRoom:room_id text:@"Hi Bob!" success:^(NSString *event_id) {
+            [aliceRestClient postTextMessageToRoom:roomId text:@"Hi Bob!" success:^(NSString *event_id) {
                 
             } failure:^(NSError *error) {
                 NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
@@ -280,7 +280,7 @@
 - (void)testClose
 {
     // Make sure Alice and Bob have activities
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
@@ -290,7 +290,7 @@
                 XCTFail(@"We should not receive events after closing the session. Received: %@", event);
             }];
 
-            MXRoom *room = [mxSession roomWithRoomId:room_id];
+            MXRoom *room = [mxSession roomWithRoomId:roomId];
             XCTAssert(room);
             [room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
                 XCTFail(@"We should not receive events after closing the session. Received: %@", event);
@@ -306,7 +306,7 @@
             // Now close the session
             [mxSession close];
 
-            MXRoom *room2 = [mxSession roomWithRoomId:room_id];
+            MXRoom *room2 = [mxSession roomWithRoomId:roomId];
             XCTAssertNil(room2);
 
             MXUser *bob2 = [mxSession userWithUserId:bobRestClient.credentials.userId];
@@ -315,7 +315,7 @@
             XCTAssertNil(mxSession.myUser);
 
             // Do some activity to check nothing comes through mxSession, room and bob
-            [bobRestClient postTextMessageToRoom:room_id text:@"A message" success:^(NSString *event_id) {
+            [bobRestClient postTextMessageToRoom:roomId text:@"A message" success:^(NSString *event_id) {
 
                 [expectation performSelector:@selector(fulfill) withObject:nil afterDelay:5];
 
@@ -333,7 +333,7 @@
 - (void)testPauseResume
 {
     // Make sure Alice and Bob have activities
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
@@ -350,7 +350,7 @@
                     XCTAssertFalse(paused, @"We should not receive events when paused. Received: %@", event);
                 }];
 
-                MXRoom *room = [mxSession roomWithRoomId:room_id];
+                MXRoom *room = [mxSession roomWithRoomId:roomId];
                 [room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
                     eventCount++;
                     XCTAssertFalse(paused, @"We should not receive events when paused. Received: %@", event);
@@ -369,7 +369,7 @@
 
                 // Do some activity while MXSession is paused
                 // We should not receive events while paused
-                [bobRestClient postTextMessageToRoom:room_id text:@"A message" success:^(NSString *event_id) {
+                [bobRestClient postTextMessageToRoom:roomId text:@"A message" success:^(NSString *event_id) {
 
                 } failure:^(NSError *error) {
                     NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
@@ -400,7 +400,7 @@
 - (void)testPauseResumeOnNothingNew
 {
     // Make sure Alice and Bob have activities
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
@@ -417,7 +417,7 @@
                     XCTAssertFalse(paused, @"We should not receive events when paused. Received: %@", event);
                 }];
 
-                MXRoom *room = [mxSession roomWithRoomId:room_id];
+                MXRoom *room = [mxSession roomWithRoomId:roomId];
                 [room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
                     eventCount++;
                     XCTAssertFalse(paused, @"We should not receive events when paused. Received: %@", event);

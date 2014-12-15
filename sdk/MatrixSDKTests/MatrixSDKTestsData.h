@@ -46,20 +46,20 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
 
 // Prepare a test with a a MXRestClient for mxBob so that we can make test on it
 - (void)doMXRestClientTestWithBobAndARoom:(XCTestCase*)testCase
-                              readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* room_id, XCTestExpectation *expectation))readyToTest;
+                              readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest;
 
 - (void)doMXRestClientTestWithBobAndAPublicRoom:(XCTestCase*)testCase
-                              readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* room_id, XCTestExpectation *expectation))readyToTest;
+                              readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest;
 
 - (void)doMXRestClientTestWithBobAndThePublicRoom:(XCTestCase*)testCase
-                           readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* room_id, XCTestExpectation *expectation))readyToTest;
+                           readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest;
 
 - (void)doMXRestClientTestInABobRoomAndANewTextMessage:(XCTestCase*)testCase
                                      newTextMessage:(NSString*)newTextMessage
-                                      onReadyToTest:(void (^)(MXRestClient *bobRestClient, NSString* room_id, NSString* new_text_message_event_id, XCTestExpectation *expectation))readyToTest;
+                                      onReadyToTest:(void (^)(MXRestClient *bobRestClient, NSString* roomId, NSString* new_text_message_event_id, XCTestExpectation *expectation))readyToTest;
 
 - (void)doMXRestClientTestWithBobAndARoomWithMessages:(XCTestCase*)testCase
-                                       readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* room_id, XCTestExpectation *expectation))readyToTest;
+                                       readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest;
 
 - (void)doMXRestClientTestWihBobAndSeveralRoomsAndMessages:(XCTestCase*)testCase
                                             readyToTest:(void (^)(MXRestClient *bobRestClient, XCTestExpectation *expectation))readyToTest;
@@ -82,11 +82,11 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
 
 #pragma mark - both
 - (void)doMXSessionTestWithBobAndAliceInARoom:(XCTestCase*)testCase
-                   readyToTest:(void (^)(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString* room_id, XCTestExpectation *expectation))readyToTest;
+                   readyToTest:(void (^)(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest;
 
 
 #pragma mark - tools
-- (void)for:(MXRestClient *)mxRestClient2 andRoom:(NSString*)room_id postMessages:(NSUInteger)messagesCount success:(void (^)())success;
+- (void)for:(MXRestClient *)mxRestClient2 andRoom:(NSString*)roomId postMessages:(NSUInteger)messagesCount success:(void (^)())success;
 
 // Close the session
 // Before closing, it checks if the session must be cleaning.

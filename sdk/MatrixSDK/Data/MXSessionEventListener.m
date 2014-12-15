@@ -23,7 +23,7 @@
 {
     // A global listener needs to listen to each MXRoom new events
     // roomEventListeners is the list of all MXRoom listener for this MXSessionEventListener
-    // The key is the room_id. The valuse, the registered MXEventListener of the MXRoom
+    // The key is the roomId. The valuse, the registered MXEventListener of the MXRoom
     NSMutableDictionary *roomEventListeners;
 }
 @end
@@ -42,9 +42,9 @@
 
 - (void)addRoomToSpy:(MXRoom*)room
 {
-    if (![roomEventListeners objectForKey:room.state.room_id])
+    if (![roomEventListeners objectForKey:room.state.roomId])
     {
-        roomEventListeners[room.state.room_id] =
+        roomEventListeners[room.state.roomId] =
         [room listenToEventsOfTypes:self.eventTypes onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
             self.listenerBlock(event, direction, roomState);
         }];
@@ -54,10 +54,10 @@
 
 - (void)removeSpiedRoom:(MXRoom*)room
 {
-    if ([roomEventListeners objectForKey:room.state.room_id])
+    if ([roomEventListeners objectForKey:room.state.roomId])
     {
-        [room removeListener:roomEventListeners[room.state.room_id]];
-        [roomEventListeners removeObjectForKey:room.state.room_id];
+        [room removeListener:roomEventListeners[room.state.roomId]];
+        [roomEventListeners removeObjectForKey:room.state.roomId];
     }
 }
 
@@ -66,10 +66,10 @@
     // Here sender is the MXSession instance. Cast it
     MXSession *mxSession = (MXSession *)self.sender;
     
-    for (NSString *room_id in roomEventListeners)
+    for (NSString *roomId in roomEventListeners)
     {
-        MXRoom *room = [mxSession roomWithRoomId:room_id];
-        [room removeListener:roomEventListeners[room.state.room_id]];
+        MXRoom *room = [mxSession roomWithRoomId:roomId];
+        [room removeListener:roomEventListeners[room.state.roomId]];
         
     }
     [roomEventListeners removeAllObjects];

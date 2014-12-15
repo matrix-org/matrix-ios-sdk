@@ -163,7 +163,7 @@ MXSession *mxSessionToClean;
 }
 
 - (void)doMXRestClientTestWithBobAndARoom:(XCTestCase*)testCase
-                           readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* room_id, XCTestExpectation *expectation))readyToTest
+                           readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest
 {
     [self doMXRestClientTestWithBob:testCase
                      readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
@@ -179,7 +179,7 @@ MXSession *mxSessionToClean;
 }
 
 - (void)doMXRestClientTestWithBobAndAPublicRoom:(XCTestCase*)testCase
-                                    readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* room_id, XCTestExpectation *expectation))readyToTest
+                                    readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest
 {
     [self doMXRestClientTestWithBob:testCase
                         readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
@@ -195,7 +195,7 @@ MXSession *mxSessionToClean;
 }
 
 - (void)doMXRestClientTestWithBobAndThePublicRoom:(XCTestCase*)testCase
-                                   readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* room_id, XCTestExpectation *expectation))readyToTest
+                                   readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest
 {
     [self doMXRestClientTestWithBob:testCase
                      readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
@@ -217,9 +217,9 @@ MXSession *mxSessionToClean;
                 NSString *mxPublicAlias = [NSString stringWithFormat:@"#mxPublic:%@", @"localhost:8480"];
                 
                 // The room may already exist, try to retrieve its room id
-                [bobRestClient roomIDForRoomAlias:mxPublicAlias success:^(NSString *room_id) {
+                [bobRestClient roomIDForRoomAlias:mxPublicAlias success:^(NSString *roomId) {
                     
-                    readyToTest(bobRestClient, room_id, expectation);
+                    readyToTest(bobRestClient, roomId, expectation);
                     
                 } failure:^(NSError *error) {
                     NSAssert(NO, @"Cannot retrieve mxPublic from its alias - error: %@", error);
@@ -235,7 +235,7 @@ MXSession *mxSessionToClean;
 
 - (void)doMXRestClientTestInABobRoomAndANewTextMessage:(XCTestCase*)testCase
                                   newTextMessage:(NSString*)newTextMessage
-                                   onReadyToTest:(void (^)(MXRestClient *bobRestClient, NSString* room_id, NSString* new_text_message_event_id, XCTestExpectation *expectation))readyToTest
+                                   onReadyToTest:(void (^)(MXRestClient *bobRestClient, NSString* roomId, NSString* new_text_message_event_id, XCTestExpectation *expectation))readyToTest
 {
     XCTestExpectation *expectation;
     if (testCase)
@@ -270,15 +270,15 @@ MXSession *mxSessionToClean;
 }
 
 - (void)doMXRestClientTestWithBobAndARoomWithMessages:(XCTestCase*)testCase
-                                       readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* room_id, XCTestExpectation *expectation))readyToTest
+                                       readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest
 {
     [self doMXRestClientTestWithBobAndARoom:testCase
-                             readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+                             readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         // Add 5 messages to the room
-        [self for:bobRestClient andRoom:room_id postMessages:5 success:^{
+        [self for:bobRestClient andRoom:roomId postMessages:5 success:^{
             
-            readyToTest(bobRestClient, room_id, expectation);
+            readyToTest(bobRestClient, roomId, expectation);
         }];
         
     }];
@@ -310,7 +310,7 @@ MXSession *mxSessionToClean;
 }
 
 
-- (void)for:(MXRestClient *)mxRestClient2 andRoom:(NSString*)room_id postMessages:(NSUInteger)messagesCount success:(void (^)())success
+- (void)for:(MXRestClient *)mxRestClient2 andRoom:(NSString*)roomId postMessages:(NSUInteger)messagesCount success:(void (^)())success
 {
     NSLog(@"postMessages :%ld", messagesCount);
     if (0 == messagesCount)
@@ -319,11 +319,11 @@ MXSession *mxSessionToClean;
     }
     else
     {
-        [mxRestClient2 postTextMessageToRoom:room_id text:[NSString stringWithFormat:@"Fake message posted at %.0f ms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000]
+        [mxRestClient2 postTextMessageToRoom:roomId text:[NSString stringWithFormat:@"Fake message posted at %.0f ms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000]
                            success:^(NSString *event_id) {
 
             // Post the next message
-            [self for:mxRestClient2 andRoom:room_id postMessages:messagesCount - 1 success:success];
+            [self for:mxRestClient2 andRoom:roomId postMessages:messagesCount - 1 success:success];
 
         } failure:^(NSError *error) {
             // If the error is M_LIMIT_EXCEEDED, make sure your home server rate limit is high
@@ -361,12 +361,12 @@ MXSession *mxSessionToClean;
 - (void)doMXSessionTestWithBobAndARoomWithMessages:(XCTestCase*)testCase
                                        readyToTest:(void (^)(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation))readyToTest
 {
-    [self doMXRestClientTestWithBobAndARoomWithMessages:testCase readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [self doMXRestClientTestWithBobAndARoomWithMessages:testCase readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         
         [mxSession start:^{
-            MXRoom *room = [mxSession roomWithRoomId:room_id];
+            MXRoom *room = [mxSession roomWithRoomId:roomId];
             
             readyToTest(mxSession, room, expectation);
             
@@ -379,12 +379,12 @@ MXSession *mxSessionToClean;
 - (void)doMXSessionTestWithBobAndThePublicRoom:(XCTestCase*)testCase
                                    readyToTest:(void (^)(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation))readyToTest
 {
-    [self doMXRestClientTestWithBobAndThePublicRoom:testCase readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [self doMXRestClientTestWithBobAndThePublicRoom:testCase readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         
         [mxSession start:^{
-            MXRoom *room = [mxSession roomWithRoomId:room_id];
+            MXRoom *room = [mxSession roomWithRoomId:roomId];
             
             readyToTest(mxSession, room, expectation);
             
@@ -483,17 +483,17 @@ MXSession *mxSessionToClean;
 
 #pragma mark - both
 - (void)doMXSessionTestWithBobAndAliceInARoom:(XCTestCase*)testCase
-                                  readyToTest:(void (^)(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString* room_id, XCTestExpectation *expectation))readyToTest
+                                  readyToTest:(void (^)(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest
 {
-    [self doMXRestClientTestWithBobAndARoom:testCase readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [self doMXRestClientTestWithBobAndARoom:testCase readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         [self doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
             
-            [bobRestClient inviteUser:self.aliceCredentials.userId toRoom:room_id success:^{
+            [bobRestClient inviteUser:self.aliceCredentials.userId toRoom:roomId success:^{
                 
-                [aliceRestClient joinRoom:room_id success:^(NSString *theRoomId) {
+                [aliceRestClient joinRoom:roomId success:^(NSString *theRoomId) {
                     
-                    readyToTest(bobRestClient, aliceRestClient, room_id, expectation);
+                    readyToTest(bobRestClient, aliceRestClient, roomId, expectation);
                     
                 } failure:^(NSError *error) {
                     NSAssert(NO, @"mxAlice cannot join room");
@@ -548,11 +548,11 @@ MXSession *mxSessionToClean;
     // And leave it
     if (theRoom)
     {
-        NSLog(@"Leaving %@...", theRoom.state.room_id);
+        NSLog(@"Leaving %@...", theRoom.state.roomId);
         [theRoom leave:^{
             [self leaveAllRoomsAsync:mxSession onComplete:onComplete];
         } failure:^(NSError *error) {
-            NSLog(@"Warning: Cannot leave room: %@. Error: %@", theRoom.state.room_id, error);
+            NSLog(@"Warning: Cannot leave room: %@. Error: %@", theRoom.state.roomId, error);
             [self leaveAllRoomsAsync:mxSession onComplete:onComplete];
         }];
     }

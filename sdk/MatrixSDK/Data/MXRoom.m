@@ -34,23 +34,23 @@
 
 @implementation MXRoom
 
-- (id)initWithRoomId:(NSString *)room_id andMatrixSession:(MXSession *)mxSession2
+- (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession2
 {
-    return [self initWithRoomId:room_id andMatrixSession:mxSession2 andJSONData:nil];
+    return [self initWithRoomId:roomId andMatrixSession:mxSession2 andJSONData:nil];
 }
 
-- (id)initWithRoomId:(NSString *)room_id andMatrixSession:(MXSession *)mxSession2 andJSONData:(NSDictionary*)JSONData
+- (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession2 andJSONData:(NSDictionary*)JSONData
 {
     self = [super init];
     if (self)
     {
         mxSession = mxSession2;
 
-        [mxSession.store storePaginationTokenOfRoom:room_id andToken:@"END"];
+        [mxSession.store storePaginationTokenOfRoom:roomId andToken:@"END"];
         
         eventListeners = [NSMutableArray array];
         
-        _state = [[MXRoomState alloc] initWithRoomId:room_id andMatrixSession:mxSession2 andJSONData:JSONData andDirection:YES];
+        _state = [[MXRoomState alloc] initWithRoomId:roomId andMatrixSession:mxSession2 andJSONData:JSONData andDirection:YES];
         
         if ([JSONData objectForKey:@"inviter"])
         {
@@ -63,7 +63,7 @@
             // will contain only one MXRoomMember who is the logged in user. MXRoomMember.originUserId is the inviter.
             MXEvent *fakeMembershipEvent = [MXEvent modelFromJSON:@{
                                                                     @"type": kMXEventTypeStringRoomMember,
-                                                                    @"room_id": room_id,
+                                                                    @"room_id": roomId,
                                                                     @"content": @{
                                                                             @"membership": kMXMembershipStringInvite
                                                                             },
@@ -74,7 +74,7 @@
             
             [self handleMessage:fakeMembershipEvent direction:MXEventDirectionSync pagFrom:@"END"];
 
-            [mxSession.store storeEventForRoom:room_id event:fakeMembershipEvent direction:MXEventDirectionSync];
+            [mxSession.store storeEventForRoom:roomId event:fakeMembershipEvent direction:MXEventDirectionSync];
         }
 
     }
@@ -85,7 +85,7 @@
 #pragma mark - Properties getters implementation
 - (MXEvent *)lastMessageWithTypeIn:(NSArray*)types
 {
-    return [mxSession.store lastMessageOfRoom:_state.room_id withTypeIn:types];
+    return [mxSession.store lastMessageOfRoom:_state.roomId withTypeIn:types];
 }
 
 - (BOOL)canPaginate
@@ -93,8 +93,8 @@
     // canPaginate depends on two things:
     //  - did we end to paginate from the local MXStore?
     //  - did we reach the top of the pagination in our requests to the home server
-    return (0 < [mxSession.store remainingMessagesForPaginationInRoom:_state.room_id])
-    || ![mxSession.store hasReachedHomeServerPaginationEndForRoom:_state.room_id];
+    return (0 < [mxSession.store remainingMessagesForPaginationInRoom:_state.roomId])
+    || ![mxSession.store hasReachedHomeServerPaginationEndForRoom:_state.roomId];
 }
 
 
@@ -112,18 +112,18 @@
         for (MXEvent *event in events) {
 
             // Make sure we have not processed this event yet
-            MXEvent *storedEvent = [mxSession.store eventWithEventId:event.eventId inRoom:_state.room_id];
+            MXEvent *storedEvent = [mxSession.store eventWithEventId:event.eventId inRoom:_state.roomId];
             if (!storedEvent)
             {
                 [self handleMessage:event direction:direction pagFrom:roomMessages.start];
 
                 // Store the event
-                [mxSession.store storeEventForRoom:_state.room_id event:event direction:MXEventDirectionBackwards];
+                [mxSession.store storeEventForRoom:_state.roomId event:event direction:MXEventDirectionBackwards];
             }
         }
         
         // Store how far back we've paginated
-        [mxSession.store storePaginationTokenOfRoom:_state.room_id andToken:roomMessages.end];
+        [mxSession.store storePaginationTokenOfRoom:_state.roomId andToken:roomMessages.end];
     }
     else {
         // InitialSync returns messages in chronological order
@@ -132,18 +132,18 @@
             MXEvent *event = events[i];
 
             // Make sure we have not processed this event yet
-            MXEvent *storedEvent = [mxSession.store eventWithEventId:event.eventId inRoom:_state.room_id];
+            MXEvent *storedEvent = [mxSession.store eventWithEventId:event.eventId inRoom:_state.roomId];
             if (!storedEvent)
             {
                 [self handleMessage:event direction:direction pagFrom:roomMessages.end];
 
                 // Store the event
-                [mxSession.store storeEventForRoom:_state.room_id event:event direction:direction];
+                [mxSession.store storeEventForRoom:_state.roomId event:event direction:direction];
             }
         }
 
         // Store where to start pagination
-        [mxSession.store storePaginationTokenOfRoom:_state.room_id andToken:roomMessages.start];
+        [mxSession.store storePaginationTokenOfRoom:_state.roomId andToken:roomMessages.start];
     }
 
     // Commit store changes
@@ -220,13 +220,13 @@
     }
 
     // Make sure we have not processed this event yet
-    MXEvent *storedEvent = [mxSession.store eventWithEventId:event.eventId inRoom:_state.room_id];
+    MXEvent *storedEvent = [mxSession.store eventWithEventId:event.eventId inRoom:_state.roomId];
     if (!storedEvent)
     {
         [self handleMessage:event direction:MXEventDirectionForwards pagFrom:nil];
 
         // Store the event
-        [mxSession.store storeEventForRoom:_state.room_id event:event direction:MXEventDirectionForwards];
+        [mxSession.store storeEventForRoom:_state.roomId event:event direction:MXEventDirectionForwards];
     }
 
     // And notify the listeners
@@ -240,7 +240,7 @@
     backState = [[MXRoomState alloc] initBackStateWith:_state];
 
     // Reset store pagination
-    [mxSession.store resetPaginationOfRoom:_state.room_id];
+    [mxSession.store resetPaginationOfRoom:_state.roomId];
 }
 
 - (NSOperation*)paginateBackMessages:(NSUInteger)numItems
@@ -253,7 +253,7 @@
 
     // Return messages in the store first
     NSUInteger messagesFromStoreCount = 0;
-    NSArray *messagesFromStore = [mxSession.store paginateRoom:_state.room_id numMessages:numItems];
+    NSArray *messagesFromStore = [mxSession.store paginateRoom:_state.roomId numMessages:numItems];
     if (messagesFromStore)
     {
         messagesFromStoreCount = messagesFromStore.count;
@@ -272,12 +272,12 @@
         numItems -= messagesFromStoreCount;
     }
 
-    if (0 < numItems && NO == [mxSession.store hasReachedHomeServerPaginationEndForRoom:_state.room_id])
+    if (0 < numItems && NO == [mxSession.store hasReachedHomeServerPaginationEndForRoom:_state.roomId])
     {
         // Not enough messages: make a pagination request to the home server
         // from last known token
-        operation = [mxSession.matrixRestClient messagesForRoom:_state.room_id
-                                               from:[mxSession.store paginationTokenOfRoom:_state.room_id]
+        operation = [mxSession.matrixRestClient messagesForRoom:_state.roomId
+                                               from:[mxSession.store paginationTokenOfRoom:_state.roomId]
                                                  to:nil
                                               limit:numItems
                                             success:^(MXPaginationResponse *paginatedResponse) {
@@ -286,7 +286,7 @@
                                                 if (paginatedResponse.chunk.count < numItems)
                                                 {
                                                     // We run out of items
-                                                    [mxSession.store storeHasReachedHomeServerPaginationEndForRoom:_state.room_id andValue:YES];
+                                                    [mxSession.store storeHasReachedHomeServerPaginationEndForRoom:_state.roomId andValue:YES];
                                                 }
 
                                                 // Process these new events
@@ -311,7 +311,7 @@
 
 - (NSUInteger)remainingMessagesForPaginationInStore
 {
-    return [mxSession.store remainingMessagesForPaginationInRoom:_state.room_id];
+    return [mxSession.store remainingMessagesForPaginationInRoom:_state.roomId];
 }
 
 
@@ -321,7 +321,7 @@
                 success:(void (^)(NSString *event_id))success
                 failure:(void (^)(NSError *error))failure
 {
-    [mxSession.matrixRestClient postEventToRoom:_state.room_id eventType:eventTypeString content:content success:success failure:failure];
+    [mxSession.matrixRestClient postEventToRoom:_state.roomId eventType:eventTypeString content:content success:success failure:failure];
 }
 
 - (void)postMessageOfType:(MXMessageType)msgType
@@ -329,34 +329,34 @@
                   success:(void (^)(NSString *event_id))success
                   failure:(void (^)(NSError *error))failure
 {
-    [mxSession.matrixRestClient postMessageToRoom:_state.room_id msgType:msgType content:content success:success failure:failure];
+    [mxSession.matrixRestClient postMessageToRoom:_state.roomId msgType:msgType content:content success:success failure:failure];
 }
 
 - (void)postTextMessage:(NSString*)text
                 success:(void (^)(NSString *event_id))success
                 failure:(void (^)(NSError *error))failure
 {
-    [mxSession.matrixRestClient postTextMessageToRoom:text text:_state.room_id success:success failure:failure];
+    [mxSession.matrixRestClient postTextMessageToRoom:text text:_state.roomId success:success failure:failure];
 }
 
 - (void)setTopic:(NSString*)topic
          success:(void (^)())success
          failure:(void (^)(NSError *error))failure
 {
-    [mxSession.matrixRestClient setRoomTopic:_state.room_id topic:topic success:success failure:failure];
+    [mxSession.matrixRestClient setRoomTopic:_state.roomId topic:topic success:success failure:failure];
 }
 
 - (void)setName:(NSString*)name
         success:(void (^)())success
         failure:(void (^)(NSError *error))failure
 {
-    [mxSession.matrixRestClient setRoomName:_state.room_id name:name success:success failure:failure];
+    [mxSession.matrixRestClient setRoomName:_state.roomId name:name success:success failure:failure];
 }
 
 - (void)join:(void (^)())success
      failure:(void (^)(NSError *error))failure
 {
-    [mxSession joinRoom:_state.room_id success:^(MXRoom *room) {
+    [mxSession joinRoom:_state.roomId success:^(MXRoom *room) {
         success();
     } failure:failure];
 }
@@ -364,14 +364,14 @@
 - (void)leave:(void (^)())success
       failure:(void (^)(NSError *error))failure
 {
-    [mxSession leaveRoom:_state.room_id success:success failure:failure];
+    [mxSession leaveRoom:_state.roomId success:success failure:failure];
 }
 
 - (void)inviteUser:(NSString*)user_id
            success:(void (^)())success
            failure:(void (^)(NSError *error))failure
 {
-    [mxSession.matrixRestClient inviteUser:user_id toRoom:_state.room_id success:success failure:failure];
+    [mxSession.matrixRestClient inviteUser:user_id toRoom:_state.roomId success:success failure:failure];
 }
 
 - (void)kickUser:(NSString*)user_id
@@ -379,7 +379,7 @@
          success:(void (^)())success
          failure:(void (^)(NSError *error))failure
 {
-    [mxSession.matrixRestClient kickUser:user_id fromRoom:_state.room_id reason:reason success:success failure:failure];
+    [mxSession.matrixRestClient kickUser:user_id fromRoom:_state.roomId reason:reason success:success failure:failure];
 }
 
 - (void)banUser:(NSString*)user_id
@@ -387,14 +387,14 @@
         success:(void (^)())success
         failure:(void (^)(NSError *error))failure
 {
-    [mxSession.matrixRestClient banUser:user_id inRoom:_state.room_id reason:reason success:success failure:failure];
+    [mxSession.matrixRestClient banUser:user_id inRoom:_state.roomId reason:reason success:success failure:failure];
 }
 
 - (void)unbanUser:(NSString*)user_id
           success:(void (^)())success
           failure:(void (^)(NSError *error))failure
 {
-    [mxSession.matrixRestClient unbanUser:user_id inRoom:_state.room_id success:success failure:failure];
+    [mxSession.matrixRestClient unbanUser:user_id inRoom:_state.roomId success:success failure:failure];
 }
 
 - (void)setPowerLevelOfUserWithUserID:(NSString *)userId powerLevel:(NSUInteger)powerLevel

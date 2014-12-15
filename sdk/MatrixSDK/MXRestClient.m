@@ -172,13 +172,13 @@ MXAuthAction;
 
 
 #pragma mark - Room operations
-- (void)postEventToRoom:(NSString*)room_id
+- (void)postEventToRoom:(NSString*)roomId
               eventType:(MXEventTypeString)eventTypeString
                 content:(NSDictionary*)content
                 success:(void (^)(NSString *event_id))success
                 failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"rooms/%@/send/%@", room_id, eventTypeString];
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/send/%@", roomId, eventTypeString];
     [httpClient requestWithMethod:@"POST"
                            path:path
                      parameters:content
@@ -193,7 +193,7 @@ MXAuthAction;
      }];
 }
 
-- (void)postMessageToRoom:(NSString*)room_id
+- (void)postMessageToRoom:(NSString*)roomId
                   msgType:(MXMessageType)msgType
                   content:(NSDictionary*)content
                   success:(void (^)(NSString *event_id))success
@@ -203,15 +203,15 @@ MXAuthAction;
     NSMutableDictionary *eventContent = [NSMutableDictionary dictionaryWithDictionary:content];
     eventContent[@"msgtype"] = msgType;
     
-    [self postEventToRoom:room_id eventType:kMXEventTypeStringRoomMessage content:eventContent success:success failure:failure];
+    [self postEventToRoom:roomId eventType:kMXEventTypeStringRoomMessage content:eventContent success:success failure:failure];
 }
 
-- (void)postTextMessageToRoom:(NSString*)room_id
+- (void)postTextMessageToRoom:(NSString*)roomId
                          text:(NSString*)text
                       success:(void (^)(NSString *event_id))success
                       failure:(void (^)(NSError *error))failure
 {
-    [self postMessageToRoom:room_id msgType:kMXMessageTypeText
+    [self postMessageToRoom:roomId msgType:kMXMessageTypeText
               content:@{
                         @"body": text
                         }
@@ -220,13 +220,13 @@ MXAuthAction;
 
 
 // Generic methods to change membership
-- (void)doMembershipRequest:(NSString*)room_id
+- (void)doMembershipRequest:(NSString*)roomId
                  membership:(NSString*)membership
                  parameters:(NSDictionary*)parameters
                     success:(void (^)())success
                     failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"rooms/%@/%@", room_id, membership];
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/%@", roomId, membership];
     
     // A body is required even if empty
     if (nil == parameters)
@@ -247,12 +247,12 @@ MXAuthAction;
      }];
 }
 
-- (void)setRoomTopic:(NSString*)room_id
+- (void)setRoomTopic:(NSString*)roomId
                topic:(NSString*)topic
              success:(void (^)())success
              failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"rooms/%@/state/m.room.topic", room_id];
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/state/m.room.topic", roomId];
     [httpClient requestWithMethod:@"PUT"
                              path:path
                        parameters:@{
@@ -268,11 +268,11 @@ MXAuthAction;
      }];
 }
 
-- (void)topicOfRoom:(NSString*)room_id
+- (void)topicOfRoom:(NSString*)roomId
             success:(void (^)(NSString *topic))success
             failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"rooms/%@/state/m.room.topic", room_id];
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/state/m.room.topic", roomId];
     [httpClient requestWithMethod:@"GET"
                              path:path
                        parameters:nil
@@ -286,12 +286,12 @@ MXAuthAction;
      }];
 }
 
-- (void)setRoomName:(NSString*)room_id
+- (void)setRoomName:(NSString*)roomId
                name:(NSString*)name
             success:(void (^)())success
             failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"rooms/%@/state/m.room.name", room_id];
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/state/m.room.name", roomId];
     [httpClient requestWithMethod:@"PUT"
                              path:path
                        parameters:@{
@@ -307,11 +307,11 @@ MXAuthAction;
      }];
 }
 
-- (void)nameOfRoom:(NSString*)room_id
+- (void)nameOfRoom:(NSString*)roomId
            success:(void (^)(NSString *name))success
            failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"rooms/%@/state/m.room.name", room_id];
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/state/m.room.name", roomId];
     [httpClient requestWithMethod:@"GET"
                              path:path
                        parameters:nil
@@ -344,22 +344,22 @@ MXAuthAction;
      }];
 }
 
-- (void)leaveRoom:(NSString*)room_id
+- (void)leaveRoom:(NSString*)roomId
       success:(void (^)())success
       failure:(void (^)(NSError *error))failure
 {
-    [self doMembershipRequest:room_id
+    [self doMembershipRequest:roomId
                    membership:@"leave"
                    parameters:nil
                       success:success failure:failure];
 }
 
 - (void)inviteUser:(NSString*)user_id
-            toRoom:(NSString*)room_id
+            toRoom:(NSString*)roomId
            success:(void (^)())success
            failure:(void (^)(NSError *error))failure
 {
-    [self doMembershipRequest:room_id
+    [self doMembershipRequest:roomId
                    membership:@"invite"
                    parameters:@{
                                 @"user_id": user_id
@@ -368,12 +368,12 @@ MXAuthAction;
 }
 
 - (void)kickUser:(NSString*)user_id
-        fromRoom:(NSString*)room_id
+        fromRoom:(NSString*)roomId
           reason:(NSString*)reason
          success:(void (^)())success
          failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"rooms/%@/state/m.room.member/%@", room_id, user_id];
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/state/m.room.member/%@", roomId, user_id];
     
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     parameters[@"membership"] = @"leave";
@@ -397,7 +397,7 @@ MXAuthAction;
 }
 
 - (void)banUser:(NSString*)user_id
-         inRoom:(NSString*)room_id
+         inRoom:(NSString*)roomId
          reason:(NSString*)reason
         success:(void (^)())success
         failure:(void (^)(NSError *error))failure
@@ -410,19 +410,19 @@ MXAuthAction;
         parameters[@"reason"] = reason;
     }
     
-    [self doMembershipRequest:room_id
+    [self doMembershipRequest:roomId
                    membership:@"ban"
                    parameters:parameters
                       success:success failure:failure];
 }
 
 - (void)unbanUser:(NSString*)user_id
-           inRoom:(NSString*)room_id
+           inRoom:(NSString*)roomId
           success:(void (^)())success
           failure:(void (^)(NSError *error))failure
 {
     // Do an unban by resetting the user membership to "leave"
-    [self kickUser:user_id fromRoom:room_id reason:nil success:success failure:failure];
+    [self kickUser:user_id fromRoom:roomId reason:nil success:success failure:failure];
 }
 
 - (void)createRoom:(NSString*)name
@@ -466,14 +466,14 @@ MXAuthAction;
      }];
 }
 
-- (NSOperation*)messagesForRoom:(NSString*)room_id
+- (NSOperation*)messagesForRoom:(NSString*)roomId
                            from:(NSString*)from
                              to:(NSString*)to
                           limit:(NSUInteger)limit
                         success:(void (^)(MXPaginationResponse *paginatedResponse))success
                         failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"rooms/%@/messages", room_id];
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/messages", roomId];
     
     // All query parameters are optional. Fill the request parameters on demand
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
@@ -508,11 +508,11 @@ MXAuthAction;
      }];
 }
 
-- (void)membersOfRoom:(NSString*)room_id
+- (void)membersOfRoom:(NSString*)roomId
               success:(void (^)(NSArray *roomMemberEvents))success
               failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"rooms/%@/members", room_id];
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/members", roomId];
 
     [httpClient requestWithMethod:@"GET"
                            path:path
@@ -535,11 +535,11 @@ MXAuthAction;
      }];
 }
 
-- (void)stateOfRoom:(NSString*)room_id
+- (void)stateOfRoom:(NSString*)roomId
             success:(void (^)(NSDictionary *JSONData))success
             failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"rooms/%@/state", room_id];
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/state", roomId];
     
     [httpClient requestWithMethod:@"GET"
                              path:path
@@ -554,12 +554,12 @@ MXAuthAction;
      }];
 }
 
-- (void)initialSyncOfRoom:(NSString*)room_id
+- (void)initialSyncOfRoom:(NSString*)roomId
                 withLimit:(NSInteger)limit
                   success:(void (^)(NSDictionary *JSONData))success
                   failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"rooms/%@/initialSync", room_id];
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/initialSync", roomId];
     
     [httpClient requestWithMethod:@"GET"
                              path:path
@@ -801,7 +801,7 @@ MXAuthAction;
 
 #pragma mark - Directory operations
 - (void)roomIDForRoomAlias:(NSString*)room_alias
-                   success:(void (^)(NSString *room_id))success
+                   success:(void (^)(NSString *roomId))success
                    failure:(void (^)(NSError *error))failure
 {
     // Note: characters in a room alias need to be escaped in the URL

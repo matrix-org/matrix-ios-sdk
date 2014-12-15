@@ -81,9 +81,9 @@
         
         
         // Populate a text message in parallel
-        [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndThePublicRoom:nil readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation2) {
+        [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndThePublicRoom:nil readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
             
-            [bobRestClient postTextMessageToRoom:room_id text:@"Hello listeners!" success:^(NSString *event_id) {
+            [bobRestClient postTextMessageToRoom:roomId text:@"Hello listeners!" success:^(NSString *event_id) {
                 
                 NSAssert(nil != event_id, @"Cannot set up intial test conditions");
                 
@@ -135,9 +135,9 @@
         }];
         
         // Populate a text message in parallel
-        [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndThePublicRoom:nil readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation2) {
+        [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndThePublicRoom:nil readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
             
-            [bobRestClient postTextMessageToRoom:room_id text:@"Hello listeners!" success:^(NSString *event_id) {
+            [bobRestClient postTextMessageToRoom:roomId text:@"Hello listeners!" success:^(NSString *event_id) {
                 
                 NSAssert(nil != event_id, @"Cannot set up intial test conditions");
                 
@@ -159,12 +159,12 @@
         
         mxSession = mxSession2;
         
-        NSString *room_id = room.state.room_id;
+        NSString *roomId = room.state.roomId;
         
         // This implicitly tests MXSession leaveRoom
         [room leave:^{
             
-            MXRoom *room2 = [mxSession roomWithRoomId:room_id];
+            MXRoom *room2 = [mxSession roomWithRoomId:roomId];
             
             XCTAssertNil(room2, @"The room must be no more part of the MXSession rooms");
             
@@ -179,12 +179,12 @@
 
 - (void)testSetPowerLevelOfUser
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         [mxSession start:^{
 
-            MXRoom *room = [mxSession roomWithRoomId:room_id];
+            MXRoom *room = [mxSession roomWithRoomId:roomId];
 
             [room listenToEventsOfTypes:@[kMXEventTypeStringRoomPowerLevels] onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
 
@@ -208,12 +208,12 @@
 
 - (void)testPaginateBackMessagesCancel
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
         [mxSession startWithMessagesLimit:0 initialSyncDone:^{
-            MXRoom *room = [mxSession roomWithRoomId:room_id];
+            MXRoom *room = [mxSession roomWithRoomId:roomId];
 
             __block NSUInteger eventCount = 0;
             [room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {

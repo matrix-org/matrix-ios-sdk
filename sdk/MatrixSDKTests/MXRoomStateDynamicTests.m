@@ -56,20 +56,20 @@
  5 - Bob changes the room topic to "Topic #2"
  6 - Bob: "Bonjour"
  */
--(void)createScenario1:(MXRestClient*)bobRestClient inRoom:(NSString*)room_id onComplete:(void(^)())onComplete
+-(void)createScenario1:(MXRestClient*)bobRestClient inRoom:(NSString*)roomId onComplete:(void(^)())onComplete
 {
     __block MXRestClient *bobRestClient2 = bobRestClient;
     
-    [bobRestClient postTextMessageToRoom:room_id text:@"Hello world" success:^(NSString *event_id) {
+    [bobRestClient postTextMessageToRoom:roomId text:@"Hello world" success:^(NSString *event_id) {
         
-        [bobRestClient setRoomTopic:room_id topic:@"Topic #1" success:^{
+        [bobRestClient setRoomTopic:roomId topic:@"Topic #1" success:^{
             
-            [bobRestClient2 postTextMessageToRoom:room_id text:@"Hola" success:^(NSString *event_id) {
+            [bobRestClient2 postTextMessageToRoom:roomId text:@"Hola" success:^(NSString *event_id) {
                 
                 __block MXRestClient *bobRestClient3 = bobRestClient2;
-                [bobRestClient2 setRoomTopic:room_id topic:@"Topic #2" success:^{
+                [bobRestClient2 setRoomTopic:roomId topic:@"Topic #2" success:^{
                     
-                    [bobRestClient3 postTextMessageToRoom:room_id text:@"Bonjour" success:^(NSString *event_id) {
+                    [bobRestClient3 postTextMessageToRoom:roomId text:@"Bonjour" success:^(NSString *event_id) {
                         
                         onComplete();
                         
@@ -96,15 +96,15 @@
 
 - (void)testBackPaginationForScenario1
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [self createScenario1:bobRestClient inRoom:room_id onComplete:^{
+        [self createScenario1:bobRestClient inRoom:roomId onComplete:^{
             
             mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
             
             [mxSession start:^{
                 
-                MXRoom *room = [mxSession roomWithRoomId:room_id];
+                MXRoom *room = [mxSession roomWithRoomId:roomId];
                 
                 __block NSUInteger eventCount = 0;
                 [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
@@ -182,13 +182,13 @@
 
 - (void)testLiveEventsForScenario1
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         
         [mxSession start:^{
             
-            MXRoom *room = [mxSession roomWithRoomId:room_id];
+            MXRoom *room = [mxSession roomWithRoomId:roomId];
             
             __block NSUInteger eventCount = 0;
             [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
@@ -258,7 +258,7 @@
             }];
             
             // Post events of the scenario
-            [self createScenario1:bobRestClient inRoom:room_id onComplete:^{
+            [self createScenario1:bobRestClient inRoom:roomId onComplete:^{
                 
             }];
             
@@ -287,29 +287,29 @@
  9 - Alice leaves the room
  10 - Bob: "Good bye"
  */
-- (void)createScenario2:(MXRestClient*)bobRestClient inRoom:(NSString*)room_id onComplete:(void(^)(MXRestClient *aliceRestClient))onComplete
+- (void)createScenario2:(MXRestClient*)bobRestClient inRoom:(NSString*)roomId onComplete:(void(^)(MXRestClient *aliceRestClient))onComplete
 {
-    [bobRestClient postTextMessageToRoom:room_id text:@"Hello world" success:^(NSString *event_id) {
+    [bobRestClient postTextMessageToRoom:roomId text:@"Hello world" success:^(NSString *event_id) {
         
         MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
         
         [sharedData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
             
-            [bobRestClient inviteUser:sharedData.aliceCredentials.userId toRoom:room_id success:^{
+            [bobRestClient inviteUser:sharedData.aliceCredentials.userId toRoom:roomId success:^{
                 
-                [bobRestClient postTextMessageToRoom:room_id text:@"I wait for Alice" success:^(NSString *event_id) {
+                [bobRestClient postTextMessageToRoom:roomId text:@"I wait for Alice" success:^(NSString *event_id) {
                     
-                    [aliceRestClient joinRoom:room_id success:^(NSString *roomName){
+                    [aliceRestClient joinRoom:roomId success:^(NSString *roomName){
                         
-                        [aliceRestClient postTextMessageToRoom:room_id text:@"Hi" success:^(NSString *event_id) {
+                        [aliceRestClient postTextMessageToRoom:roomId text:@"Hi" success:^(NSString *event_id) {
                             
                             [aliceRestClient setDisplayName:@"Alice in Wonderland" success:^{
                                 
-                                [aliceRestClient postTextMessageToRoom:room_id text:@"What's going on?" success:^(NSString *event_id) {
+                                [aliceRestClient postTextMessageToRoom:roomId text:@"What's going on?" success:^(NSString *event_id) {
                                     
-                                    [aliceRestClient leaveRoom:room_id success:^{
+                                    [aliceRestClient leaveRoom:roomId success:^{
                                         
-                                        [bobRestClient postTextMessageToRoom:room_id text:@"Good bye" success:^(NSString *event_id) {
+                                        [bobRestClient postTextMessageToRoom:roomId text:@"Good bye" success:^(NSString *event_id) {
                                             
                                             onComplete(aliceRestClient);
                                             
@@ -353,15 +353,15 @@
 
 - (void)testBackPaginationForScenario2
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [self createScenario2:bobRestClient inRoom:room_id onComplete:^(MXRestClient *aliceRestClient) {
+        [self createScenario2:bobRestClient inRoom:roomId onComplete:^(MXRestClient *aliceRestClient) {
             
             mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
             
             [mxSession start:^{
                 
-                MXRoom *room = [mxSession roomWithRoomId:room_id];
+                MXRoom *room = [mxSession roomWithRoomId:roomId];
                 
                 __block NSUInteger eventCount = 0;
                 [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
@@ -533,13 +533,13 @@
 {
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
     
-    [sharedData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [sharedData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         
         [mxSession start:^{
             
-            MXRoom *room = [mxSession roomWithRoomId:room_id];
+            MXRoom *room = [mxSession roomWithRoomId:roomId];
             
             __block NSUInteger eventCount = 0;
             [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
@@ -689,7 +689,7 @@
             }];
             
             // Post events of the scenario
-            [self createScenario2:bobRestClient inRoom:room_id onComplete:^(MXRestClient *aliceRestClient) {
+            [self createScenario2:bobRestClient inRoom:roomId onComplete:^(MXRestClient *aliceRestClient) {
                 
             }];
             

@@ -241,7 +241,7 @@
 #pragma mark - Event operations
 - (void)testPublicRooms
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndThePublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndThePublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         [mxRestClient publicRooms:^(NSArray *rooms) {
             
@@ -251,7 +251,7 @@
             for (MXPublicRoom *room in rooms)
             {
                 // Find the Matrix HQ room (#matrix:matrix.org) by its ID
-                if ([room.roomId isEqualToString:room_id])
+                if ([room.roomId isEqualToString:roomId])
                 {
                     theMXPublicRoom = room;
                 }

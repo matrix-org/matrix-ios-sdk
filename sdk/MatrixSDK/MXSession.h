@@ -127,12 +127,12 @@
 /**
  Join a room.
  
- @param room_id the id of the room to join.
+ @param roomId the id of the room to join.
  @param success A block object called when the operation succeeds. It provides the MXRoom 
         instance of the joined room.
  @param failure A block object called when the operation fails.
  */
-- (void)joinRoom:(NSString*)room_id
+- (void)joinRoom:(NSString*)roomId
          success:(void (^)(MXRoom *room))success
          failure:(void (^)(NSError *error))failure;
 
@@ -141,11 +141,11 @@
  
  The room will be removed from the rooms list.
  
- @param room_id the id of the room to join.
+ @param roomId the id of the room to join.
  @param success A block object called when the operation is complete.
  @param failure A block object called when the operation fails.
  */
-- (void)leaveRoom:(NSString*)room_id
+- (void)leaveRoom:(NSString*)roomId
           success:(void (^)())success
           failure:(void (^)(NSError *error))failure;
 
@@ -154,11 +154,11 @@
 /**
  Get the MXRoom instance of a room.
  
- @param room_id The room id to the room.
+ @param roomId The room id to the room.
 
  @return the MXRoom instance.
  */
-- (MXRoom *)roomWithRoomId:(NSString*)room_id;
+- (MXRoom *)roomWithRoomId:(NSString*)roomId;
 
 /**
  Get the list of all rooms data.

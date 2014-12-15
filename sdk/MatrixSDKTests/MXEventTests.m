@@ -47,12 +47,12 @@
 
 - (void)testIsState
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         
         [mxSession start:^{
-            MXRoom *room = [mxSession roomWithRoomId:room_id];
+            MXRoom *room = [mxSession roomWithRoomId:roomId];
             
             for (MXEvent *stateEvent in room.state.stateEvents)
             {
@@ -90,9 +90,9 @@
 // Make sure MXEvent is serialisable
 - (void)testNSCoding
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
-        [bobRestClient messagesForRoom:room_id from:nil to:nil limit:100 success:^(MXPaginationResponse *paginatedResponse) {
+        [bobRestClient messagesForRoom:roomId from:nil to:nil limit:100 success:^(MXPaginationResponse *paginatedResponse) {
 
             NSAssert(0 < paginatedResponse.chunk.count, @"Cannot set up intial test conditions");
 

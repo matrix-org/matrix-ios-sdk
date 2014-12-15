@@ -55,9 +55,9 @@
 - (void)testPostTextMessage
 {
     // This test on postTextMessage validates postMessage and postEvent too
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [bobRestClient postTextMessageToRoom:room_id text:@"This is text message" success:^(NSString *event_id) {
+        [bobRestClient postTextMessageToRoom:roomId text:@"This is text message" success:^(NSString *event_id) {
             
             XCTAssertNotNil(event_id);
             XCTAssertGreaterThan(event_id.length, 0, @"The event_id string must not be empty");
@@ -72,12 +72,12 @@
 
 - (void)testRoomTopic
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         __block MXRestClient *bobRestClient2 = bobRestClient;
-        [bobRestClient setRoomTopic:room_id topic:@"Topic setter and getter functions are tested here" success:^{
+        [bobRestClient setRoomTopic:roomId topic:@"Topic setter and getter functions are tested here" success:^{
             
-            [bobRestClient2 topicOfRoom:room_id success:^(NSString *topic) {
+            [bobRestClient2 topicOfRoom:roomId success:^(NSString *topic) {
                 
                 XCTAssertNotNil(topic);
                 XCTAssertNotEqual(topic.length, 0);
@@ -98,12 +98,12 @@
 
 - (void)testRoomName
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         __block MXRestClient *bobRestClient2 = bobRestClient;
-        [bobRestClient setRoomName:room_id name:@"My room name" success:^{
+        [bobRestClient setRoomName:roomId name:@"My room name" success:^{
             
-            [bobRestClient2 nameOfRoom:room_id success:^(NSString *name) {
+            [bobRestClient2 nameOfRoom:roomId success:^(NSString *name) {
                 
                 XCTAssertNotNil(name);
                 XCTAssertNotEqual(name.length, 0);
@@ -124,9 +124,9 @@
 
 - (void)testJoinRoomWithRoomId
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [bobRestClient joinRoom:room_id success:^(NSString *theRoomId) {
+        [bobRestClient joinRoom:roomId success:^(NSString *theRoomId) {
             
             // No data to test. Just happy to go here.
             [expectation fulfill];
@@ -140,13 +140,13 @@
 
 - (void)testJoinRoomWithRoomAlias
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndThePublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndThePublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         NSString *mxPublicAlias = [NSString stringWithFormat:@"#mxPublic:%@", @"localhost:8480"];
 
         [bobRestClient joinRoom:mxPublicAlias success:^(NSString *theRoomId) {
 
-            XCTAssertEqualObjects(room_id, theRoomId);
+            XCTAssertEqualObjects(roomId, theRoomId);
             [expectation fulfill];
 
         } failure:^(NSError *error) {
@@ -159,9 +159,9 @@
 
 - (void)testLeaveRoom
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [bobRestClient leaveRoom:room_id success:^{
+        [bobRestClient leaveRoom:roomId success:^{
             
             // No data to test. Just happy to go here.
             [expectation fulfill];
@@ -177,15 +177,15 @@
 {
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
     
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         [sharedData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
             
             // Do the test
-            [bobRestClient inviteUser:sharedData.aliceCredentials.userId toRoom:room_id success:^{
+            [bobRestClient inviteUser:sharedData.aliceCredentials.userId toRoom:roomId success:^{
                 
                 // Check room actual members
-                [bobRestClient membersOfRoom:room_id success:^(NSArray *roomMemberEvents) {
+                [bobRestClient membersOfRoom:roomId success:^(NSArray *roomMemberEvents) {
                     
                     XCTAssertEqual(2, roomMemberEvents.count, @"There must be 2 members");
                     
@@ -224,12 +224,12 @@
 {
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
     
-    [sharedData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [sharedData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [bobRestClient kickUser:sharedData.aliceCredentials.userId fromRoom:room_id reason:@"No particular reason" success:^{
+        [bobRestClient kickUser:sharedData.aliceCredentials.userId fromRoom:roomId reason:@"No particular reason" success:^{
             
             // Check room actual members
-            [bobRestClient membersOfRoom:room_id success:^(NSArray *roomMemberEvents) {
+            [bobRestClient membersOfRoom:roomId success:^(NSArray *roomMemberEvents) {
                 
                 XCTAssertEqual(2, roomMemberEvents.count, @"There must still be 2 members");
                 
@@ -266,12 +266,12 @@
 {
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
     
-    [sharedData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [sharedData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [bobRestClient banUser:sharedData.aliceCredentials.userId inRoom:room_id reason:@"No particular reason" success:^{
+        [bobRestClient banUser:sharedData.aliceCredentials.userId inRoom:roomId reason:@"No particular reason" success:^{
             
             // Check room actual members
-            [bobRestClient membersOfRoom:room_id success:^(NSArray *roomMemberEvents) {
+            [bobRestClient membersOfRoom:roomId success:^(NSArray *roomMemberEvents) {
                 
                 XCTAssertEqual(2, roomMemberEvents.count, @"There must still be 2 members");
                 
@@ -327,9 +327,9 @@
 
 - (void)testMessagesWithNoParams
 {
-    [[MatrixSDKTestsData sharedData]  doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData]  doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [bobRestClient messagesForRoom:room_id from:nil to:nil limit:-1 success:^(MXPaginationResponse *paginatedResponse) {
+        [bobRestClient messagesForRoom:roomId from:nil to:nil limit:-1 success:^(MXPaginationResponse *paginatedResponse) {
             
             XCTAssertNotNil(paginatedResponse);
             XCTAssertNotNil(paginatedResponse.start);
@@ -349,9 +349,9 @@
 
 - (void)testMessagesWithOneParam
 {
-    [[MatrixSDKTestsData sharedData]  doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData]  doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
-        [bobRestClient messagesForRoom:room_id from:nil to:nil limit:100 success:^(MXPaginationResponse *paginatedResponse) {
+        [bobRestClient messagesForRoom:roomId from:nil to:nil limit:100 success:^(MXPaginationResponse *paginatedResponse) {
 
             XCTAssertNotNil(paginatedResponse);
             XCTAssertNotNil(paginatedResponse.start);
@@ -371,9 +371,9 @@
 
 - (void)testMembers
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [bobRestClient membersOfRoom:room_id success:^(NSArray *roomMemberEvents) {
+        [bobRestClient membersOfRoom:roomId success:^(NSArray *roomMemberEvents) {
             
             XCTAssertEqual(roomMemberEvents.count, 1);
             
@@ -392,9 +392,9 @@
 
 - (void)testStateOfRoom
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [bobRestClient stateOfRoom:room_id success:^(NSDictionary *JSONData) {
+        [bobRestClient stateOfRoom:roomId success:^(NSDictionary *JSONData) {
             
             XCTAssertNotNil(JSONData);
             
@@ -422,9 +422,9 @@
 
 - (void)testInitialSyncOfRoom
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [bobRestClient initialSyncOfRoom:room_id withLimit:3 success:^(NSDictionary *JSONData) {
+        [bobRestClient initialSyncOfRoom:roomId withLimit:3 success:^(NSDictionary *JSONData) {
             
             XCTAssertNotNil(JSONData);
             XCTAssertNotNil(JSONData[@"room_id"]);
@@ -434,7 +434,7 @@
             XCTAssertNotNil(JSONData[@"state"]);
             XCTAssertNotNil(JSONData[@"presence"]);
             
-            XCTAssert([JSONData[@"room_id"] isEqualToString:room_id]);
+            XCTAssert([JSONData[@"room_id"] isEqualToString:roomId]);
             XCTAssert([JSONData[@"membership"] isEqualToString:@"join"]);
             
             XCTAssert([JSONData[@"messages"][@"chunk"] isKindOfClass:[NSArray class]]);
@@ -478,7 +478,7 @@
 // Compare the result of initialSyncOfRoom with the data retrieved from a global initialSync
 - (void)testInitialSyncOfRoomAndGlobalInitialSync
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         [bobRestClient initialSyncWithLimit:3 success:^(NSDictionary *JSONData) {
 
@@ -486,7 +486,7 @@
 
             for (NSDictionary *roomDict in JSONData[@"rooms"])
             {
-                if ([room_id isEqualToString:roomDict[@"room_id"]])
+                if ([roomId isEqualToString:roomDict[@"room_id"]])
                 {
                     JSONRoomDataInGlobal = roomDict;
                 }
@@ -494,7 +494,7 @@
 
             XCTAssertNotNil(JSONRoomDataInGlobal);
 
-            [bobRestClient initialSyncOfRoom:room_id withLimit:3 success:^(NSDictionary *JSONData) {
+            [bobRestClient initialSyncOfRoom:roomId withLimit:3 success:^(NSDictionary *JSONData) {
 
                 XCTAssertNotNil(JSONData);
 
@@ -532,13 +532,13 @@
 {
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
     [sharedData doMXSessionTestWithBobAndAliceInARoom:self
- readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
+ readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
-        [sharedData for:bobRestClient andRoom:room_id postMessages:5 success:^{
-            [bobRestClient leaveRoom:room_id success:^{
-                [aliceRestClient postTextMessageToRoom:room_id text:@"Hi bob"  success:^(NSString *event_id) {
-                    [aliceRestClient inviteUser:bobRestClient.credentials.userId toRoom:room_id success:^{
-                        [bobRestClient joinRoom:room_id success:^(NSString *theRoomId) {
+        [sharedData for:bobRestClient andRoom:roomId postMessages:5 success:^{
+            [bobRestClient leaveRoom:roomId success:^{
+                [aliceRestClient postTextMessageToRoom:roomId text:@"Hi bob"  success:^(NSString *event_id) {
+                    [aliceRestClient inviteUser:bobRestClient.credentials.userId toRoom:roomId success:^{
+                        [bobRestClient joinRoom:roomId success:^(NSString *theRoomId) {
 
                             [bobRestClient initialSyncWithLimit:10 success:^(NSDictionary *JSONData) {
 
@@ -546,7 +546,7 @@
 
                                 for (NSDictionary *roomDict in JSONData[@"rooms"])
                                 {
-                                    if ([room_id isEqualToString:roomDict[@"room_id"]])
+                                    if ([roomId isEqualToString:roomDict[@"room_id"]])
                                     {
                                         JSONRoomDataInGlobal = roomDict;
                                     }
@@ -554,7 +554,7 @@
 
                                 XCTAssertNotNil(JSONRoomDataInGlobal);
 
-                                [bobRestClient initialSyncOfRoom:room_id withLimit:10 success:^(NSDictionary *JSONData) {
+                                [bobRestClient initialSyncOfRoom:roomId withLimit:10 success:^(NSDictionary *JSONData) {
 
                                     XCTAssertNotNil(JSONData);
 
@@ -576,7 +576,7 @@
 
                                     //[expectation fulfill];
 
-                                    [bobRestClient messagesForRoom:room_id from:JSONRoomDataInGlobal[@"messages"][@"start"] to:nil limit:1 success:^(MXPaginationResponse *paginatedResponse) {
+                                    [bobRestClient messagesForRoom:roomId from:JSONRoomDataInGlobal[@"messages"][@"start"] to:nil limit:1 success:^(MXPaginationResponse *paginatedResponse) {
 
                                         //NSLog(@"%@", JSONData[@"messages"][@"chunk"]);
                                         NSLog(@"%@", JSONRoomDataInGlobal[@"messages"][@"chunk"]);
@@ -619,9 +619,9 @@
 
 - (void)testMXRoomMemberEventContent
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [bobRestClient membersOfRoom:room_id success:^(NSArray *roomMemberEvents) {
+        [bobRestClient membersOfRoom:roomId success:^(NSArray *roomMemberEvents) {
             for (MXEvent *roomMemberEvent in roomMemberEvents)
             {
                 MXRoomMemberEventContent *roomMemberEventContent = [MXRoomMemberEventContent modelFromJSON:roomMemberEvent.content];

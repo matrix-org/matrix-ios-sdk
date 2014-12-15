@@ -53,14 +53,14 @@
 - (void)doTestWithStore:(id<MXStore>)store
    readyToTest:(void (^)(MXRoom *room))readyToTest
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation2) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
 
         expectation = expectation2;
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient andStore:store];
 
         [mxSession start:^{
-            MXRoom *room = [mxSession roomWithRoomId:room_id];
+            MXRoom *room = [mxSession roomWithRoomId:roomId];
 
             readyToTest(room);
 
@@ -74,16 +74,16 @@
             readyToTest:(void (^)(MXRoom *room))readyToTest
 {
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-    [sharedData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation2) {
+    [sharedData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation2) {
 
-        [sharedData for:bobRestClient andRoom:room_id postMessages:5 success:^{
+        [sharedData for:bobRestClient andRoom:roomId postMessages:5 success:^{
 
             expectation = expectation2;
 
             mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient andStore:store];
 
             [mxSession start:^{
-                MXRoom *room = [mxSession roomWithRoomId:room_id];
+                MXRoom *room = [mxSession roomWithRoomId:roomId];
 
                 readyToTest(room);
 
@@ -123,14 +123,14 @@
        andMessagesLimit:(NSUInteger)messagesLimit
             readyToTest:(void (^)(MXRoom *room))readyToTest
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *room_id, XCTestExpectation *expectation2) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
 
         expectation = expectation2;
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient andStore:store];
 
         [mxSession startWithMessagesLimit:messagesLimit initialSyncDone:^{
-            MXRoom *room = [mxSession roomWithRoomId:room_id];
+            MXRoom *room = [mxSession roomWithRoomId:roomId];
 
             readyToTest(room);
 
@@ -404,7 +404,7 @@
     [room paginateBackMessages:100 complete:^() {
 
         // Use another MXRoom instance to do pagination in several times
-        MXRoom *room2 = [[MXRoom alloc] initWithRoomId:room.state.room_id andMatrixSession:mxSession];
+        MXRoom *room2 = [[MXRoom alloc] initWithRoomId:room.state.roomId andMatrixSession:mxSession];
 
         __block NSMutableArray *room2Events = [NSMutableArray array];
         [room2 listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
@@ -591,9 +591,9 @@
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
 
-        [mxSession.matrixRestClient inviteUser:aliceRestClient.credentials.userId toRoom:room.state.room_id success:^{
+        [mxSession.matrixRestClient inviteUser:aliceRestClient.credentials.userId toRoom:room.state.roomId success:^{
 
-            NSString *roomId = room.state.room_id;
+            NSString *roomId = room.state.roomId;
 
             // Leave the room
             [room leave:^{

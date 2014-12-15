@@ -136,7 +136,7 @@ typedef void (^MXOnResumeDone)();
                         // If the initialSync returns less messages than requested, we got all history from the home server
                         if (roomMessages.chunk.count < initialSyncMessagesLimit)
                         {
-                            [_store storeHasReachedHomeServerPaginationEndForRoom:room.state.room_id andValue:YES];
+                            [_store storeHasReachedHomeServerPaginationEndForRoom:room.state.roomId andValue:YES];
                         }
                     }
                     if ([roomDict objectForKey:@"state"])
@@ -315,15 +315,15 @@ typedef void (^MXOnResumeDone)();
 
 
 #pragma mark - Rooms operations
-- (void)joinRoom:(NSString*)room_id
+- (void)joinRoom:(NSString*)roomId
          success:(void (^)(MXRoom *room))success
          failure:(void (^)(NSError *error))failure
 {
     
-    [matrixRestClient joinRoom:room_id success:^(NSString *theRoomId) {
+    [matrixRestClient joinRoom:roomId success:^(NSString *theRoomId) {
         
         // Do an initial to get state and messages in the room
-        [matrixRestClient initialSyncOfRoom:room_id withLimit:initialSyncMessagesLimit success:^(NSDictionary *JSONData) {
+        [matrixRestClient initialSyncOfRoom:roomId withLimit:initialSyncMessagesLimit success:^(NSDictionary *JSONData) {
             
             MXRoom *room = [self getOrCreateRoom:JSONData[@"room_id"] withJSONData:JSONData];
             
@@ -337,7 +337,7 @@ typedef void (^MXOnResumeDone)();
                 // If the initialSync returns less messages than requested, we got all history from the home server
                 if (roomMessages.chunk.count < initialSyncMessagesLimit)
                 {
-                    [_store storeHasReachedHomeServerPaginationEndForRoom:room.state.room_id andValue:YES];
+                    [_store storeHasReachedHomeServerPaginationEndForRoom:room.state.roomId andValue:YES];
                 }
             }
 
@@ -371,13 +371,13 @@ typedef void (^MXOnResumeDone)();
     }];
 }
 
-- (void)leaveRoom:(NSString*)room_id
+- (void)leaveRoom:(NSString*)roomId
           success:(void (^)())success
           failure:(void (^)(NSError *error))failure
 {
-    [matrixRestClient leaveRoom:room_id success:^{
+    [matrixRestClient leaveRoom:roomId success:^{
         
-        [self removeRoom:room_id];
+        [self removeRoom:roomId];
         
         success();
         
@@ -388,9 +388,9 @@ typedef void (^MXOnResumeDone)();
 
 
 #pragma mark - The user's rooms
-- (MXRoom *)roomWithRoomId:(NSString *)room_id
+- (MXRoom *)roomWithRoomId:(NSString *)roomId
 {
-    return [rooms objectForKey:room_id];
+    return [rooms objectForKey:roomId];
 }
 
 - (NSArray *)rooms
@@ -398,19 +398,19 @@ typedef void (^MXOnResumeDone)();
     return [rooms allValues];
 }
 
-- (MXRoom *)getOrCreateRoom:(NSString *)room_id withJSONData:JSONData
+- (MXRoom *)getOrCreateRoom:(NSString *)roomId withJSONData:JSONData
 {
-    MXRoom *room = [self roomWithRoomId:room_id];
+    MXRoom *room = [self roomWithRoomId:roomId];
     if (nil == room)
     {
-        room = [self createRoom:room_id withJSONData:JSONData];
+        room = [self createRoom:roomId withJSONData:JSONData];
     }
     return room;
 }
 
-- (MXRoom *)createRoom:(NSString *)room_id withJSONData:(NSDictionary*)JSONData
+- (MXRoom *)createRoom:(NSString *)roomId withJSONData:(NSDictionary*)JSONData
 {
-    MXRoom *room = [[MXRoom alloc] initWithRoomId:room_id andMatrixSession:self andJSONData:JSONData];
+    MXRoom *room = [[MXRoom alloc] initWithRoomId:roomId andMatrixSession:self andJSONData:JSONData];
     
     // Register global listeners for this room
     for (MXSessionEventListener *listener in globalEventListeners)
@@ -418,13 +418,13 @@ typedef void (^MXOnResumeDone)();
         [listener addRoomToSpy:room];
     }
     
-    [rooms setObject:room forKey:room_id];
+    [rooms setObject:room forKey:roomId];
     return room;
 }
 
-- (void)removeRoom:(NSString *)room_id
+- (void)removeRoom:(NSString *)roomId
 {
-    MXRoom *room = [self roomWithRoomId:room_id];
+    MXRoom *room = [self roomWithRoomId:roomId];
 
     if (room)
     {
@@ -435,10 +435,10 @@ typedef void (^MXOnResumeDone)();
         }
 
         // Clean the store
-        [_store cleanDataOfRoom:room_id];
+        [_store cleanDataOfRoom:roomId];
 
         // And remove the room from the list
-        [rooms removeObjectForKey:room_id];
+        [rooms removeObjectForKey:roomId];
     }
 }
 

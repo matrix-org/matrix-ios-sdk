@@ -38,7 +38,7 @@
 
 @implementation MXRoomState
 
-- (id)initWithRoomId:(NSString*)room_id
+- (id)initWithRoomId:(NSString*)roomId
     andMatrixSession:(MXSession*)mxSession2
          andJSONData:(NSDictionary*)JSONData
         andDirection:(BOOL)isLive
@@ -47,7 +47,7 @@
     if (self)
     {
         mxSession = mxSession2;
-        _room_id = room_id;
+        _roomId = roomId;
         
         _isLive = isLive;
         
@@ -96,7 +96,7 @@
     MXRoomState *stateCopy = [[MXRoomState allocWithZone:zone] init];
     
     stateCopy->mxSession = mxSession;
-    stateCopy->_room_id = [_room_id copyWithZone:zone];
+    stateCopy->_roomId = [_roomId copyWithZone:zone];
     
     stateCopy->_isLive = _isLive;
     
@@ -296,7 +296,7 @@
     
     if (!displayname)
     {
-        displayname = [_room_id copy];
+        displayname = [_roomId copy];
     }
     
     return displayname;

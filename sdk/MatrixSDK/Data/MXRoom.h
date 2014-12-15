@@ -59,9 +59,9 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 @property (nonatomic, readonly) BOOL canPaginate;
 
 
-- (id)initWithRoomId:(NSString*)room_id andMatrixSession:(MXSession*)mxSession;
+- (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession;
 
-- (id)initWithRoomId:(NSString*)room_id andMatrixSession:(MXSession*)mxSession andJSONData:(NSDictionary*)JSONData;
+- (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession andJSONData:(NSDictionary*)JSONData;
 
 - (void)handleMessages:(MXPaginationResponse*)roomMessages
              direction:(MXEventDirection)direction

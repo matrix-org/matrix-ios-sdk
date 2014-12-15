@@ -44,21 +44,21 @@
     [super tearDown];
 }
 
-- (void)doTestWithBobAndAliceActiveInARoom:(void (^)(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString* room_id, XCTestExpectation *expectation))readyToTest
+- (void)doTestWithBobAndAliceActiveInARoom:(void (^)(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest
 {
     // Make sure Alice and Bob have activities
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
-        [bobRestClient postTextMessageToRoom:room_id text:@"Hi Alice!" success:^(NSString *event_id) {
+        [bobRestClient postTextMessageToRoom:roomId text:@"Hi Alice!" success:^(NSString *event_id) {
 
-            [aliceRestClient postTextMessageToRoom:room_id text:@"Hi Bob!" success:^(NSString *event_id) {
+            [aliceRestClient postTextMessageToRoom:roomId text:@"Hi Bob!" success:^(NSString *event_id) {
 
                 mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
                 // Start the session
                 [mxSession start:^{
 
-                    readyToTest(bobRestClient, aliceRestClient, room_id, expectation);
+                    readyToTest(bobRestClient, aliceRestClient, roomId, expectation);
 
                 } failure:^(NSError *error) {
                     NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
@@ -76,7 +76,7 @@
 
 - (void)testLastActiveAgo
 {
-    [self doTestWithBobAndAliceActiveInARoom:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [self doTestWithBobAndAliceActiveInARoom:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         NSArray *users = mxSession.users;
 
@@ -118,7 +118,7 @@
 
 - (void)testOtherUserLastActiveUpdate
 {
-    [self doTestWithBobAndAliceActiveInARoom:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [self doTestWithBobAndAliceActiveInARoom:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         MXUser *mxAlice = [mxSession userWithUserId:aliceRestClient.credentials.userId];
 
@@ -129,7 +129,7 @@
 
         }];
 
-        [aliceRestClient postTextMessageToRoom:room_id text:@"A message to update my last active ago" success:^(NSString *event_id) {
+        [aliceRestClient postTextMessageToRoom:roomId text:@"A message to update my last active ago" success:^(NSString *event_id) {
 
         } failure:^(NSError *error) {
             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
@@ -139,7 +139,7 @@
 
 - (void)testOtherUserProfileUpdate
 {
-    [self doTestWithBobAndAliceActiveInARoom:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [self doTestWithBobAndAliceActiveInARoom:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         MXUser *mxAlice = [mxSession userWithUserId:aliceRestClient.credentials.userId];
 
@@ -165,7 +165,7 @@
 
 - (void)testOtherUserPresenceUpdate
 {
-    [self doTestWithBobAndAliceActiveInARoom:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [self doTestWithBobAndAliceActiveInARoom:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         MXUser *mxAlice = [mxSession userWithUserId:aliceRestClient.credentials.userId];
 
@@ -216,7 +216,7 @@
 
 - (void)testMyUserLastActiveUpdate
 {
-    [self doTestWithBobAndAliceActiveInARoom:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [self doTestWithBobAndAliceActiveInARoom:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         [mxSession.myUser listenToUserUpdate:^(MXEvent *event) {
 
@@ -225,7 +225,7 @@
 
         }];
 
-        [bobRestClient postTextMessageToRoom:room_id text:@"A message to update my last active ago" success:^(NSString *event_id) {
+        [bobRestClient postTextMessageToRoom:roomId text:@"A message to update my last active ago" success:^(NSString *event_id) {
 
         } failure:^(NSError *error) {
             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
@@ -235,7 +235,7 @@
 
 - (void)testMyUserProfileUpdate
 {
-    [self doTestWithBobAndAliceActiveInARoom:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [self doTestWithBobAndAliceActiveInARoom:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         // Do tests with Alice since tests are not supposed to change Bob's profile
         [mxSession close];
@@ -269,7 +269,7 @@
 
 - (void)testMyUserPresenceUpdate
 {
-    [self doTestWithBobAndAliceActiveInARoom:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *room_id, XCTestExpectation *expectation) {
+    [self doTestWithBobAndAliceActiveInARoom:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         // Do tests with Alice since tests are not supposed to change Bob's profile
         [mxSession close];

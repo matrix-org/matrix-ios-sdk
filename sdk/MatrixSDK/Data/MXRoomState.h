@@ -36,7 +36,7 @@
 /**
  The room ID
  */
-@property (nonatomic, readonly) NSString *room_id;
+@property (nonatomic, readonly) NSString *roomId;
 
 /**
  Indicate if this instance is used to store the live state of the room or
@@ -97,7 +97,7 @@
 /**
  Create a `MXRoomState` instance.
  
- @param room_id the room id to the room.
+ @param roomId the room id to the room.
  @param mxSession the mxSession to the home server. It is used to get information about the user
                   currently connected to the home server.
  @param JSONData the JSON object obtained at the initialSync of the room. It is used to store 
@@ -106,7 +106,7 @@
  
  @return The newly-initialized MXRoomState.
  */
-- (id)initWithRoomId:(NSString*)room_id
+- (id)initWithRoomId:(NSString*)roomId
     andMatrixSession:(MXSession*)mxSession
          andJSONData:(NSDictionary*)JSONData
         andDirection:(BOOL)isLive;
