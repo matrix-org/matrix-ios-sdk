@@ -367,12 +367,12 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
 /**
  Set the logged-in user avatar url.
  
- @param avatar_url the new avatar url.
+ @param avatarUrl the new avatar url.
  
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)setAvatarUrl:(NSString*)avatar_url
+- (void)setAvatarUrl:(NSString*)avatarUrl
              success:(void (^)())success
              failure:(void (^)(NSError *error))failure;
 
@@ -384,7 +384,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
  @param failure A block object called when the operation fails.
  */
 - (void)avatarUrlForUser:(NSString*)user_id
-                 success:(void (^)(NSString *avatar_url))success
+                 success:(void (^)(NSString *avatarUrl))success
                  failure:(void (^)(NSError *error))failure;
 
 

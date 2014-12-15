@@ -623,15 +623,15 @@ MXAuthAction;
      }];
 }
 
-- (void)setAvatarUrl:(NSString*)avatar_url
+- (void)setAvatarUrl:(NSString*)avatarUrl
              success:(void (^)())success
              failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"profile/%@/avatar_url", credentials.userId];
+    NSString *path = [NSString stringWithFormat:@"profile/%@/avatarUrl", credentials.userId];
     [httpClient requestWithMethod:@"PUT"
                            path:path
                      parameters:@{
-                                  @"avatar_url": avatar_url
+                                  @"avatar_url": avatarUrl
                                   }
                         success:^(NSDictionary *JSONResponse)
      {
@@ -644,7 +644,7 @@ MXAuthAction;
 }
 
 - (void)avatarUrlForUser:(NSString*)user_id
-                 success:(void (^)(NSString *avatar_url))success
+                 success:(void (^)(NSString *avatarUrl))success
                  failure:(void (^)(NSError *error))failure
 {
     if (!user_id)
@@ -652,7 +652,7 @@ MXAuthAction;
         user_id = credentials.userId;
     }
 
-    NSString *path = [NSString stringWithFormat:@"profile/%@/avatar_url", user_id];
+    NSString *path = [NSString stringWithFormat:@"profile/%@/avatarUrl", user_id];
     [httpClient requestWithMethod:@"GET"
                            path:path
                      parameters:nil

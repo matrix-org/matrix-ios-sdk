@@ -730,9 +730,9 @@
         [aliceRestClient setAvatarUrl:newAvatarUrl success:^{
               
             // Then retrieve it
-            [aliceRestClient2 avatarUrlForUser:nil success:^(NSString *avatar_url) {
+            [aliceRestClient2 avatarUrlForUser:nil success:^(NSString *avatarUrl) {
                 
-                XCTAssertTrue([avatar_url isEqualToString:newAvatarUrl], @"Must retrieved the set string: %@ - %@", avatar_url, newAvatarUrl);
+                XCTAssertTrue([avatarUrl isEqualToString:newAvatarUrl], @"Must retrieved the set string: %@ - %@", avatarUrl, newAvatarUrl);
                 [expectation fulfill];
                 
             } failure:^(NSError *error) {
@@ -782,9 +782,9 @@
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
 
-        [bobRestClient avatarUrlForUser:nil success:^(NSString *avatar_url) {
+        [bobRestClient avatarUrlForUser:nil success:^(NSString *avatarUrl) {
 
-            XCTAssertNil(avatar_url, @"mxBob has no avatar defined");
+            XCTAssertNil(avatarUrl, @"mxBob has no avatar defined");
             [expectation fulfill];
 
         } failure:^(NSError *error) {

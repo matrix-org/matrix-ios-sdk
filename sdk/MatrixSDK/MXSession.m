@@ -112,10 +112,10 @@ typedef void (^MXOnResumeDone)();
     // First of all, retrieve the user's profile information
     [matrixRestClient displayNameForUser:matrixRestClient.credentials.userId success:^(NSString *displayname) {
 
-        [matrixRestClient avatarUrlForUser:matrixRestClient.credentials.userId success:^(NSString *avatar_url) {
+        [matrixRestClient avatarUrlForUser:matrixRestClient.credentials.userId success:^(NSString *avatarUrl) {
 
             // Create the user's profile
-            _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId andDisplayname:displayname andAvatarUrl:avatar_url andMatrixSession:self];
+            _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId andDisplayname:displayname andAvatarUrl:avatarUrl andMatrixSession:self];
 
             // And store him as a common MXUser
             users[matrixRestClient.credentials.userId] = _myUser;

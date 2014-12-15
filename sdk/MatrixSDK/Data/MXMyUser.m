@@ -51,12 +51,12 @@
     }];
 }
 
-- (void)setAvatarUrl:(NSString *)avatar_url success:(void (^)())success failure:(void (^)(NSError *))failure
+- (void)setAvatarUrl:(NSString *)avatarUrl success:(void (^)())success failure:(void (^)(NSError *))failure
 {
-    [mxSession.matrixRestClient setAvatarUrl:avatar_url success:^{
+    [mxSession.matrixRestClient setAvatarUrl:avatarUrl success:^{
 
         // Update the information right now
-        _avatarUrl = [avatar_url copy];
+        _avatarUrl = [avatarUrl copy];
         success();
 
     } failure:^(NSError *error) {

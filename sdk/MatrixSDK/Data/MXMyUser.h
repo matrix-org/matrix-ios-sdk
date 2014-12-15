@@ -51,12 +51,12 @@
 /**
  Set the avatar url.
 
- @param avatar_url the new avatar url.
+ @param avatarUrl the new avatar url.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)setAvatarUrl:(NSString*)avatar_url
+- (void)setAvatarUrl:(NSString*)avatarUrl
              success:(void (^)())success
              failure:(void (^)(NSError *error))failure;
 
