@@ -38,7 +38,7 @@
 {
     if (mxSession)
     {
-        [mxSession close];
+        [[MatrixSDKTestsData sharedData] closeMXSession:mxSession];
         mxSession = nil;
     }
     [super tearDown];
@@ -145,10 +145,6 @@
                 if (0 == expectedEvents.count)
                 {
                     XCTAssert(YES, @"All expected events must be catch");
-                    
-                    [mxSession close];
-                    mxSession = nil;
-                    
                     [expectation fulfill];
                 }
             }
@@ -182,10 +178,6 @@
             if (MXEventDirectionForwards == direction)
             {
                 XCTAssertEqual(event.eventType, MXEventTypeRoomMessage, @"We must receive only m.room.message event - Event: %@", event);
-                
-                [mxSession close];
-                mxSession = nil;
-                
                 [expectation fulfill];
             }
             

@@ -39,7 +39,7 @@
 {
     if (mxSession)
     {
-        [mxSession close];
+        [[MatrixSDKTestsData sharedData] closeMXSession:mxSession];
         mxSession = nil;
     }
     [super tearDown];

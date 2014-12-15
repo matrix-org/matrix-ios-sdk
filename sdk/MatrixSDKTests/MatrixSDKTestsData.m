@@ -47,6 +47,8 @@ NSString * const kMXTestsAliceAvatarURL = @"http://matrix.org/matrix.png";
 }
 @end
 
+MXSession *mxSessionToClean;
+
 @implementation MatrixSDKTestsData
 
 - (id)init
@@ -135,9 +137,23 @@ NSString * const kMXTestsAliceAvatarURL = @"http://matrix.org/matrix.png";
     [sharedData getBobCredentials:^{
         
         MXRestClient *restClient = [[MXRestClient alloc] initWithCredentials:self.bobCredentials];
-        
-        readyToTest(restClient, expectation);
-        
+
+        if (mxSessionToClean)
+        {
+            // Before giving the hand to the test, clean the rooms of the user.
+            // It is done now rather than at the end of each test because
+            // once [expectation fulfill] is called, the system allows no more HTTP requests.
+            [self leaveAllRoomsAsync:mxSessionToClean onComplete:^{
+                [mxSessionToClean close];
+                mxSessionToClean = nil;
+
+                readyToTest(restClient, expectation);
+            }];
+        }
+        else
+        {
+            readyToTest(restClient, expectation);
+        }
     }];
     
     if (testCase)
@@ -490,5 +506,60 @@ NSString * const kMXTestsAliceAvatarURL = @"http://matrix.org/matrix.png";
     }];
 }
 
+
+#pragma mark - tools
+
+- (void)closeMXSession:(MXSession*)mxSession
+{
+    // If the user has more than 5 rooms, it worths to leave all of them.
+    // While the db is not optimised (see SYN-164), an initialSync request
+    // on an account with 100 rooms takes 35s. With less than 5 rooms, it takes less than 0.5s.
+    
+    // Ideally, to correctly reset the initial conditions, we should erase the home server db
+    // between each test but, as a client, it is not possible.
+    if (nil == mxSessionToClean && mxSession.rooms.count >= 5)
+    {
+        [mxSession removeAllListeners];
+        [mxSession pause];
+
+        // Mark the session to clean
+        mxSessionToClean = mxSession;
+    }
+    else
+    {
+        [mxSession close];
+    }
+}
+
+- (void)leaveAllRoomsAsync:(MXSession*)mxSession onComplete:(void (^)())onComplete
+{
+    MXRoom *theRoom;
+
+    // Find a joined private room
+    for (MXRoom *room in mxSession.rooms)
+    {
+        if (NO == room.state.isPublic && MXMembershipJoin == room.state.membership)
+        {
+            theRoom = room;
+            break;
+        }
+    }
+
+    // And leave it
+    if (theRoom)
+    {
+        NSLog(@"Leaving %@...", theRoom.state.room_id);
+        [theRoom leave:^{
+            [self leaveAllRoomsAsync:mxSession onComplete:onComplete];
+        } failure:^(NSError *error) {
+            NSLog(@"Warning: Cannot leave room: %@. Error: %@", theRoom.state.room_id, error);
+            [self leaveAllRoomsAsync:mxSession onComplete:onComplete];
+        }];
+    }
+    else
+    {
+        onComplete();
+    }
+}
 
 @end

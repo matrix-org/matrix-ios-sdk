@@ -88,4 +88,10 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
 #pragma mark - tools
 - (void)for:(MXRestClient *)mxRestClient2 andRoom:(NSString*)room_id postMessages:(NSUInteger)messagesCount success:(void (^)())success;
 
+// Close the session
+// Before closing, it checks if the session must be cleaning.
+// Cleaning means making the user leave all private rooms so that requests to the
+// home server db require (much) less time
+- (void)closeMXSession:(MXSession*)mxSession;
+
 @end
