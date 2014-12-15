@@ -800,12 +800,12 @@ MXAuthAction;
 }
 
 #pragma mark - Directory operations
-- (void)roomIDForRoomAlias:(NSString*)room_alias
+- (void)roomIDForRoomAlias:(NSString*)roomAlias
                    success:(void (^)(NSString *roomId))success
                    failure:(void (^)(NSError *error))failure
 {
     // Note: characters in a room alias need to be escaped in the URL
-    NSString *path = [NSString stringWithFormat:@"directory/room/%@", [room_alias stringByAddingPercentEscapesUsingEncoding:NSASCIIStringEncoding]];
+    NSString *path = [NSString stringWithFormat:@"directory/room/%@", [roomAlias stringByAddingPercentEscapesUsingEncoding:NSASCIIStringEncoding]];
     
     [httpClient requestWithMethod:@"GET"
                            path:path
