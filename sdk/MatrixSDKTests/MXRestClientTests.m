@@ -44,7 +44,7 @@
         MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
         
         XCTAssertTrue([bobRestClient.homeserver isEqualToString:kMXTestsHomeServerURL], "bobRestClient.homeserver(%@) is wrong", bobRestClient.homeserver);
-        XCTAssertTrue([bobRestClient.credentials.userId isEqualToString:sharedData.bobCredentials.userId], "bobRestClient.user_id(%@) is wrong", bobRestClient.credentials.userId);
+        XCTAssertTrue([bobRestClient.credentials.userId isEqualToString:sharedData.bobCredentials.userId], "bobRestClient.userId(%@) is wrong", bobRestClient.credentials.userId);
         XCTAssertTrue([bobRestClient.credentials.accessToken isEqualToString:sharedData.bobCredentials.accessToken], "bobRestClient.access_token(%@) is wrong", bobRestClient.credentials.accessToken);
         
         [expectation fulfill];

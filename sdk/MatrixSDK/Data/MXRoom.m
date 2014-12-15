@@ -367,34 +367,34 @@
     [mxSession leaveRoom:_state.roomId success:success failure:failure];
 }
 
-- (void)inviteUser:(NSString*)user_id
+- (void)inviteUser:(NSString*)userId
            success:(void (^)())success
            failure:(void (^)(NSError *error))failure
 {
-    [mxSession.matrixRestClient inviteUser:user_id toRoom:_state.roomId success:success failure:failure];
+    [mxSession.matrixRestClient inviteUser:userId toRoom:_state.roomId success:success failure:failure];
 }
 
-- (void)kickUser:(NSString*)user_id
+- (void)kickUser:(NSString*)userId
           reason:(NSString*)reason
          success:(void (^)())success
          failure:(void (^)(NSError *error))failure
 {
-    [mxSession.matrixRestClient kickUser:user_id fromRoom:_state.roomId reason:reason success:success failure:failure];
+    [mxSession.matrixRestClient kickUser:userId fromRoom:_state.roomId reason:reason success:success failure:failure];
 }
 
-- (void)banUser:(NSString*)user_id
+- (void)banUser:(NSString*)userId
          reason:(NSString*)reason
         success:(void (^)())success
         failure:(void (^)(NSError *error))failure
 {
-    [mxSession.matrixRestClient banUser:user_id inRoom:_state.roomId reason:reason success:success failure:failure];
+    [mxSession.matrixRestClient banUser:userId inRoom:_state.roomId reason:reason success:success failure:failure];
 }
 
-- (void)unbanUser:(NSString*)user_id
+- (void)unbanUser:(NSString*)userId
           success:(void (^)())success
           failure:(void (^)(NSError *error))failure
 {
-    [mxSession.matrixRestClient unbanUser:user_id inRoom:_state.roomId success:success failure:failure];
+    [mxSession.matrixRestClient unbanUser:userId inRoom:_state.roomId success:success failure:failure];
 }
 
 - (void)setPowerLevelOfUserWithUserID:(NSString *)userId powerLevel:(NSUInteger)powerLevel

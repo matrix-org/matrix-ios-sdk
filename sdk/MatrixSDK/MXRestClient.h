@@ -206,12 +206,12 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
 /**
  Invite a user to a room.
  
- @param user_id the user id.
+ @param userId the user id.
  @param roomId the id of the room.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)inviteUser:(NSString*)user_id
+- (void)inviteUser:(NSString*)userId
             toRoom:(NSString*)roomId
            success:(void (^)())success
            failure:(void (^)(NSError *error))failure;
@@ -219,12 +219,12 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
 /**
  Kick a user from a room.
  
- @param user_id the user id.
+ @param userId the user id.
  @param roomId the id of the room.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)kickUser:(NSString*)user_id
+- (void)kickUser:(NSString*)userId
         fromRoom:(NSString*)roomId
           reason:(NSString*)reason
          success:(void (^)())success
@@ -233,12 +233,12 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
 /**
  Ban a user in a room.
  
- @param user_id the user id.
+ @param userId the user id.
  @param roomId the id of the room.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)banUser:(NSString*)user_id
+- (void)banUser:(NSString*)userId
          inRoom:(NSString*)roomId
          reason:(NSString*)reason
         success:(void (^)())success
@@ -247,12 +247,12 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
 /**
  Unban a user in a room.
  
- @param user_id the user id.
+ @param userId the user id.
  @param roomId the id of the room.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)unbanUser:(NSString*)user_id
+- (void)unbanUser:(NSString*)userId
            inRoom:(NSString*)roomId
           success:(void (^)())success
           failure:(void (^)(NSError *error))failure;
@@ -355,12 +355,12 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
 /**
  Get the display name of a user.
  
- @param user_id the user id.
+ @param userId the user id.
 
  @param success A block object called when the operation succeeds. It provides the user displayname.
  @param failure A block object called when the operation fails.
  */
-- (void)displayNameForUser:(NSString*)user_id
+- (void)displayNameForUser:(NSString*)userId
                    success:(void (^)(NSString *displayname))success
                    failure:(void (^)(NSError *error))failure;
 
@@ -379,11 +379,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
 /**
  Get the avatar url of a user.
  
- @param user_id the user id.
+ @param userId the user id.
  @param success A block object called when the operation succeeds. It provides the user avatar url.
  @param failure A block object called when the operation fails.
  */
-- (void)avatarUrlForUser:(NSString*)user_id
+- (void)avatarUrlForUser:(NSString*)userId
                  success:(void (^)(NSString *avatarUrl))success
                  failure:(void (^)(NSError *error))failure;
 
@@ -405,12 +405,12 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
 /**
  Get the presence status of a user.
  
- @param user_id the user id.
+ @param userId the user id.
  
  @param success A block object called when the operation succeeds. It provides a MXPresenceResponse object.
  @param failure A block object called when the operation fails.
  */
-- (void)presence:(NSString*)user_id
+- (void)presence:(NSString*)userId
          success:(void (^)(MXPresenceResponse *presence))success
          failure:(void (^)(NSError *error))failure;
 

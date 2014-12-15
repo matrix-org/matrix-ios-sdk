@@ -193,22 +193,22 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 /**
  Invite a user to this room.
 
- @param user_id the user id.
+ @param userId the user id.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)inviteUser:(NSString*)user_id
+- (void)inviteUser:(NSString*)userId
            success:(void (^)())success
            failure:(void (^)(NSError *error))failure;
 
 /**
  Kick a user from this room.
 
- @param user_id the user id.
+ @param userId the user id.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)kickUser:(NSString*)user_id
+- (void)kickUser:(NSString*)userId
           reason:(NSString*)reason
          success:(void (^)())success
          failure:(void (^)(NSError *error))failure;
@@ -216,11 +216,11 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 /**
  Ban a user in this room.
 
- @param user_id the user id.
+ @param userId the user id.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)banUser:(NSString*)user_id
+- (void)banUser:(NSString*)userId
          reason:(NSString*)reason
         success:(void (^)())success
         failure:(void (^)(NSError *error))failure;
@@ -228,11 +228,11 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 /**
  Unban a user in this room.
 
- @param user_id the user id.
+ @param userId the user id.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)unbanUser:(NSString*)user_id
+- (void)unbanUser:(NSString*)userId
           success:(void (^)())success
           failure:(void (^)(NSError *error))failure;
 

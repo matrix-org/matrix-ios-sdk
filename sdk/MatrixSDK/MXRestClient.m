@@ -354,7 +354,7 @@ MXAuthAction;
                       success:success failure:failure];
 }
 
-- (void)inviteUser:(NSString*)user_id
+- (void)inviteUser:(NSString*)userId
             toRoom:(NSString*)roomId
            success:(void (^)())success
            failure:(void (^)(NSError *error))failure
@@ -362,18 +362,18 @@ MXAuthAction;
     [self doMembershipRequest:roomId
                    membership:@"invite"
                    parameters:@{
-                                @"user_id": user_id
+                                @"user_id": userId
                                 }
                       success:success failure:failure];
 }
 
-- (void)kickUser:(NSString*)user_id
+- (void)kickUser:(NSString*)userId
         fromRoom:(NSString*)roomId
           reason:(NSString*)reason
          success:(void (^)())success
          failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"rooms/%@/state/m.room.member/%@", roomId, user_id];
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/state/m.room.member/%@", roomId, userId];
     
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     parameters[@"membership"] = @"leave";
@@ -396,14 +396,14 @@ MXAuthAction;
      }];
 }
 
-- (void)banUser:(NSString*)user_id
+- (void)banUser:(NSString*)userId
          inRoom:(NSString*)roomId
          reason:(NSString*)reason
         success:(void (^)())success
         failure:(void (^)(NSError *error))failure
 {
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
-    parameters[@"user_id"] = user_id;
+    parameters[@"user_id"] = userId;
     
     if (reason)
     {
@@ -416,13 +416,13 @@ MXAuthAction;
                       success:success failure:failure];
 }
 
-- (void)unbanUser:(NSString*)user_id
+- (void)unbanUser:(NSString*)userId
            inRoom:(NSString*)roomId
           success:(void (^)())success
           failure:(void (^)(NSError *error))failure
 {
     // Do an unban by resetting the user membership to "leave"
-    [self kickUser:user_id fromRoom:roomId reason:nil success:success failure:failure];
+    [self kickUser:userId fromRoom:roomId reason:nil success:success failure:failure];
 }
 
 - (void)createRoom:(NSString*)name
@@ -599,16 +599,16 @@ MXAuthAction;
      }];
 }
 
-- (void)displayNameForUser:(NSString*)user_id
+- (void)displayNameForUser:(NSString*)userId
                    success:(void (^)(NSString *displayname))success
                    failure:(void (^)(NSError *error))failure
 {
-    if (!user_id)
+    if (!userId)
     {
-        user_id = credentials.userId;
+        userId = credentials.userId;
     }
     
-    NSString *path = [NSString stringWithFormat:@"profile/%@/displayname", user_id];
+    NSString *path = [NSString stringWithFormat:@"profile/%@/displayname", userId];
     [httpClient requestWithMethod:@"GET"
                            path:path
                      parameters:nil
@@ -643,16 +643,16 @@ MXAuthAction;
      }];
 }
 
-- (void)avatarUrlForUser:(NSString*)user_id
+- (void)avatarUrlForUser:(NSString*)userId
                  success:(void (^)(NSString *avatarUrl))success
                  failure:(void (^)(NSError *error))failure
 {
-    if (!user_id)
+    if (!userId)
     {
-        user_id = credentials.userId;
+        userId = credentials.userId;
     }
 
-    NSString *path = [NSString stringWithFormat:@"profile/%@/avatarUrl", user_id];
+    NSString *path = [NSString stringWithFormat:@"profile/%@/avatarUrl", userId];
     [httpClient requestWithMethod:@"GET"
                            path:path
                      parameters:nil
@@ -695,16 +695,16 @@ MXAuthAction;
      }];
 }
 
-- (void)presence:(NSString*)user_id
+- (void)presence:(NSString*)userId
          success:(void (^)(MXPresenceResponse *presence))success
          failure:(void (^)(NSError *error))failure
 {
-    if (!user_id)
+    if (!userId)
     {
-        user_id = credentials.userId;
+        userId = credentials.userId;
     }
     
-    NSString *path = [NSString stringWithFormat:@"presence/%@/status", user_id];
+    NSString *path = [NSString stringWithFormat:@"presence/%@/status", userId];
     [httpClient requestWithMethod:@"GET"
                              path:path
                        parameters:nil

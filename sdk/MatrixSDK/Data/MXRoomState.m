@@ -349,15 +349,15 @@
 }
 
 
-- (MXRoomMember*)memberWithUserId:(NSString *)user_id
+- (MXRoomMember*)memberWithUserId:(NSString *)userId
 {
-    return members[user_id];
+    return members[userId];
 }
 
-- (NSString*)memberName:(NSString*)user_id
+- (NSString*)memberName:(NSString*)userId
 {
     NSString *memberName;
-    MXRoomMember *member = [self memberWithUserId:user_id];
+    MXRoomMember *member = [self memberWithUserId:userId];
     if (member)
     {
         if (member.displayname.length)
@@ -371,7 +371,7 @@
     }
     else
     {
-        memberName = user_id;
+        memberName = userId;
     }
     return memberName;
 }

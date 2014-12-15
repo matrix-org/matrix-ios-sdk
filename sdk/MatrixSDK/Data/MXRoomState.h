@@ -130,15 +130,15 @@
 /**
  Return the member with the given user id.
  
- @param user_id the id of the member to retrieve.
+ @param userId the id of the member to retrieve.
  @return the room member.
  */
-- (MXRoomMember*)memberWithUserId:(NSString*)user_id;
+- (MXRoomMember*)memberWithUserId:(NSString*)userId;
 
 /**
  Return a display name for a member.
- It is his displayname member or, if nil, his user_id
+ It is his displayname member or, if nil, his userId
  */
-- (NSString*)memberName:(NSString*)user_id;
+- (NSString*)memberName:(NSString*)userId;
 
 @end
