@@ -22,6 +22,15 @@
 #import "MXNoStore.h"
 #import "MXMemoryStore.h"
 
+
+/**
+ The Matrix iOS SDK version.
+ */
+const NSString *MatrixSDKVersion = @"0.1.0";
+
+/**
+ Default timeouts used by the events streams.
+ */
 #define SERVER_TIMEOUT_MS 30000
 #define CLIENT_TIMEOUT_MS 40000
 #define ERR_TIMEOUT_MS    5000
