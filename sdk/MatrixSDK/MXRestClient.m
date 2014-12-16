@@ -627,7 +627,7 @@ MXAuthAction;
              success:(void (^)())success
              failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"profile/%@/avatarUrl", credentials.userId];
+    NSString *path = [NSString stringWithFormat:@"profile/%@/avatar_url", credentials.userId];
     [httpClient requestWithMethod:@"PUT"
                            path:path
                      parameters:@{
