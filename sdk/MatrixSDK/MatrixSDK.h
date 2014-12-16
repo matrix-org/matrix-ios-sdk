@@ -16,11 +16,10 @@
 
 #import <UIKit/UIKit.h>
 
-//! Project version number for MatrixSDK.
-FOUNDATION_EXPORT double MatrixSDKVersionNumber;
-
-//! Project version string for MatrixSDK.
-FOUNDATION_EXPORT const unsigned char MatrixSDKVersionString[];
+/**
+ The Matrix iOS SDK version.
+ */
+FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 
 #import <MatrixSDK/MXRestClient.h>
 #import <MatrixSDK/MXSession.h>
