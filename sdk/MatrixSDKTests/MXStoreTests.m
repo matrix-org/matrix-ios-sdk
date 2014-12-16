@@ -19,6 +19,7 @@
 
 #import "MXNoStore.h"
 #import "MXMemoryStore.h"
+#import "MXFileStore.h"
 
 #import "MatrixSDKTestsData.h"
 
@@ -118,6 +119,22 @@
     [self doTestWithTwoUsersAndStore:store readyToTest:readyToTest];
 }
 
+- (void)doTestWithMXFileStore:(void (^)(MXRoom *room))readyToTest
+{
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+    MXFileStore *store = [[MXFileStore alloc] initWithCredentials:sharedData.bobCredentials];
+
+    [self doTestWithStore:store readyToTest:readyToTest];
+}
+
+- (void)doTestWithTwoUsersAndMXFileStore:(void (^)(MXRoom *room))readyToTest
+{
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+    MXFileStore *store = [[MXFileStore alloc] initWithCredentials:sharedData.bobCredentials];
+
+    [self doTestWithTwoUsersAndStore:store readyToTest:readyToTest];
+}
+
 
 - (void)doTestWithStore:(id<MXStore>)store
        andMessagesLimit:(NSUInteger)messagesLimit
@@ -149,6 +166,14 @@
 - (void)doTestWithMXMemoryStoreAndMessagesLimit:(NSUInteger)messagesLimit readyToTest:(void (^)(MXRoom *room))readyToTest
 {
     MXMemoryStore *store = [[MXMemoryStore alloc] init];
+    [self doTestWithStore:store andMessagesLimit:messagesLimit readyToTest:readyToTest];
+}
+
+- (void)doTestWithMXFileStoreAndMessagesLimit:(NSUInteger)messagesLimit readyToTest:(void (^)(MXRoom *room))readyToTest
+{
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+    MXFileStore *store = [[MXFileStore alloc] initWithCredentials:sharedData.bobCredentials];
+
     [self doTestWithStore:store andMessagesLimit:messagesLimit readyToTest:readyToTest];
 }
 
@@ -569,6 +594,7 @@
     }];
 }
 
+#if 0
 
 #pragma mark - MXNoStore tests
 /* This feature is not available with MXNoStore
@@ -947,4 +973,106 @@
 
 }
 
+#endif
+
+
+#pragma mark - MXFileStore
+- (void)testMXFileEventWithEventId
+{
+    MXFileStore *store = [[MXFileStore alloc] initWithCredentials:nil];
+    [self checkEventWithEventIdOfStore:store];
+}
+
+- (void)testMXFileStorePaginateBack
+{
+    [self doTestWithMXFileStore:^(MXRoom *room) {
+        [self checkPaginateBack:room];
+    }];
+}
+
+- (void)testMXFileStorePaginateBackFilter
+{
+    [self doTestWithMXFileStore:^(MXRoom *room) {
+        [self checkPaginateBackFilter:room];
+    }];
+}
+
+- (void)testMXFileStorePaginateBackOrder
+{
+    [self doTestWithMXFileStore:^(MXRoom *room) {
+        [self checkPaginateBackOrder:room];
+    }];
+}
+
+- (void)testMXFileStorePaginateBackDuplicates
+{
+    [self doTestWithMXFileStore:^(MXRoom *room) {
+        [self checkPaginateBackDuplicates:room];
+    }];
+}
+
+// This test illustrates bug SYIOS-9
+- (void)testMXFileStorePaginateBackDuplicatesInRoomWithTwoUsers
+{
+    [self doTestWithTwoUsersAndMXFileStore:^(MXRoom *room) {
+        [self checkPaginateBackDuplicates:room];
+    }];
+}
+
+- (void)testMXFileStoreSeveralPaginateBacks
+{
+    [self doTestWithMXFileStore:^(MXRoom *room) {
+        [self checkSeveralPaginateBacks:room];
+    }];
+}
+
+- (void)testMXFileStoreCanPaginateFromHomeServer
+{
+    // Preload less messages than the room history counts so that there are still requests to the HS to do
+    [self doTestWithMXFileStoreAndMessagesLimit:1 readyToTest:^(MXRoom *room) {
+        [self checkCanPaginateFromHomeServer:room];
+    }];
+}
+
+- (void)testMXFileStoreCanPaginateFromMXStore
+{
+    // Preload more messages than the room history counts so that all messages are already loaded
+    // room.canPaginate will use [MXStore canPaginateInRoom]
+    [self doTestWithMXFileStoreAndMessagesLimit:100 readyToTest:^(MXRoom *room) {
+        [self checkCanPaginateFromMXStore:room];
+    }];
+}
+
+- (void)testMXFileStoreLastMessageAfterPaginate
+{
+    [self doTestWithMXFileStore:^(MXRoom *room) {
+        [self checkLastMessageAfterPaginate:room];
+    }];
+}
+
+- (void)testMXFileStorePaginateWhenJoiningAgainAfterLeft
+{
+    [self doTestWithMXFileStoreAndMessagesLimit:100 readyToTest:^(MXRoom *room) {
+        [self checkPaginateWhenJoiningAgainAfterLeft:room];
+    }];
+}
+
+- (void)testMXFileStoreAndHomeServerPaginateWhenJoiningAgainAfterLeft
+{
+    // Not preloading all messages of the room causes a duplicated event issue with MXFileStore
+    // See `testMXFileStorePaginateBackDuplicatesInRoomWithTwoUsers`.
+    // Check here if MXFileStore is able to filter this duplicate
+    [self doTestWithMXFileStoreAndMessagesLimit:10 readyToTest:^(MXRoom *room) {
+        [self checkPaginateWhenJoiningAgainAfterLeft:room];
+    }];
+}
+
+/* Disabled while SYN-162 is not fixed
+ - (void)testMXFileStorePaginateWhenReachingTheExactBeginningOfTheRoom
+ {
+     [self doTestWithMXFileStore:^(MXRoom *room) {
+         [self checkPaginateWhenReachingTheExactBeginningOfTheRoom:room];
+     }];
+ }
+ */
 @end

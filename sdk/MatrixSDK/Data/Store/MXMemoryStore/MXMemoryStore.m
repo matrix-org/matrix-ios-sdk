@@ -20,12 +20,10 @@
 
 @interface MXMemoryStore()
 {
-    NSMutableDictionary *roomStores;
-
     NSString *eventStreamToken;
 }
-
 @end
+
 
 @implementation MXMemoryStore
 

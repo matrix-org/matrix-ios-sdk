@@ -18,7 +18,7 @@
 
 #import "MXEventListener.h"
 
-@interface MXMemoryRoomStore : NSObject
+@interface MXMemoryRoomStore : NSObject <NSCoding>
 
 /**
  Store room event received from the home server.

@@ -14,14 +14,10 @@
  limitations under the License.
  */
 
-#import "MXStore.h"
+#import "MXMemoryStore.h"
 
-/**
- `MXMemoryStore` is an implementation of the `MXStore` interface that stores events in memory.
- */
-@interface MXMemoryStore : NSObject <MXStore>
-{
-    @protected
-    NSMutableDictionary *roomStores;
-}
+@interface MXFileStore : MXMemoryStore
+
+- (instancetype)initWithCredentials:(MXCredentials*)credentials;
+
 @end

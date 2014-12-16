@@ -118,4 +118,53 @@
     return lastMessage;
 }
 
+
+#pragma mark - NSCoding
+- (id)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [self init];
+    if (self)
+    {
+        NSMutableArray *rawEventsArray = [aDecoder decodeObjectForKey:@"rawEventsArray"];
+        for (NSDictionary *rawEvent in rawEventsArray)
+        {
+            MXEvent *event = [MXEvent modelFromJSON:rawEvent];
+            [messages addObject:event];
+        }
+
+        _paginationToken = [aDecoder decodeObjectForKey:@"paginationToken"];
+
+        NSNumber *hasReachedHomeServerPaginationEndNumber = [aDecoder decodeObjectForKey:@"hasReachedHomeServerPaginationEnd"];
+        _hasReachedHomeServerPaginationEnd = [hasReachedHomeServerPaginationEndNumber boolValue];
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    // Serialiase only MXEvent.dictionaryValue as it contains all event data
+    NSMutableArray *rawEventsArray = [NSMutableArray array];
+
+    NSDictionary *JSONKeyPathsByPropertyKey = [MXEvent JSONKeyPathsByPropertyKey];
+
+    for (MXEvent *event in messages)
+    {
+        NSMutableDictionary *originalEventDict = [NSMutableDictionary dictionary];
+
+        for (NSString *key in event.dictionaryValue)
+        {
+            // Convert back camelCased property names (ex:roomId) to underscored names (ex:room_id)
+            // Thus, we store events as they come from the home server
+            originalEventDict[JSONKeyPathsByPropertyKey[key]] = event.dictionaryValue[key];
+        }
+
+        [rawEventsArray addObject:originalEventDict];
+    }
+
+    [aCoder encodeObject:rawEventsArray forKey:@"rawEventsArray"];
+
+    [aCoder encodeObject:_paginationToken forKey:@"paginationToken"];
+    [aCoder encodeObject:[NSNumber numberWithBool:_hasReachedHomeServerPaginationEnd ] forKey:@"hasReachedHomeServerPaginationEnd"];
+}
+
 @end
