@@ -127,12 +127,12 @@
 /**
  Join a room.
  
- @param roomId the id of the room to join.
+ @param roomIdOrAlias the id or an alias of the room to join.
  @param success A block object called when the operation succeeds. It provides the MXRoom 
         instance of the joined room.
  @param failure A block object called when the operation fails.
  */
-- (void)joinRoom:(NSString*)roomId
+- (void)joinRoom:(NSString*)roomIdOrAlias
          success:(void (^)(MXRoom *room))success
          failure:(void (^)(NSError *error))failure;
 

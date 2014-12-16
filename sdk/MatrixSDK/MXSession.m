@@ -324,15 +324,15 @@ typedef void (^MXOnResumeDone)();
 
 
 #pragma mark - Rooms operations
-- (void)joinRoom:(NSString*)roomId
+- (void)joinRoom:(NSString*)roomIdOrAlias
          success:(void (^)(MXRoom *room))success
          failure:(void (^)(NSError *error))failure
 {
     
-    [matrixRestClient joinRoom:roomId success:^(NSString *theRoomId) {
+    [matrixRestClient joinRoom:roomIdOrAlias success:^(NSString *theRoomId) {
         
         // Do an initial to get state and messages in the room
-        [matrixRestClient initialSyncOfRoom:roomId withLimit:initialSyncMessagesLimit success:^(NSDictionary *JSONData) {
+        [matrixRestClient initialSyncOfRoom:theRoomId withLimit:initialSyncMessagesLimit success:^(NSDictionary *JSONData) {
             
             MXRoom *room = [self getOrCreateRoom:JSONData[@"room_id"] withJSONData:JSONData];
             
