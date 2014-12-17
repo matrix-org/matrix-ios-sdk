@@ -150,20 +150,9 @@
     // Serialiase only MXEvent.dictionaryValue as it contains all event data
     NSMutableArray *rawEventsArray = [NSMutableArray array];
 
-    NSDictionary *JSONKeyPathsByPropertyKey = [MXEvent JSONKeyPathsByPropertyKey];
-
     for (MXEvent *event in messages)
     {
-        NSMutableDictionary *originalEventDict = [NSMutableDictionary dictionary];
-
-        for (NSString *key in event.dictionaryValue)
-        {
-            // Convert back camelCased property names (ex:roomId) to underscored names (ex:room_id)
-            // Thus, we store events as they come from the home server
-            originalEventDict[JSONKeyPathsByPropertyKey[key]] = event.dictionaryValue[key];
-        }
-
-        [rawEventsArray addObject:originalEventDict];
+        [rawEventsArray addObject:event.originalDictionary];
     }
 
     [aCoder encodeObject:rawEventsArray forKey:@"rawEventsArray"];
