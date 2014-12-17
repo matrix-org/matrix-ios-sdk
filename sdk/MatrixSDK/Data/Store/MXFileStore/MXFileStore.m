@@ -203,7 +203,12 @@ NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
 - (void)cleanDataOfRoom:(NSString *)roomId
 {
     [super cleanDataOfRoom:roomId];
-    //@TODO
+
+    // Remove the corresponding data from the file system
+    NSString *roomFile = [storePath stringByAppendingPathComponent:roomId];
+
+    NSError *error;
+    [[NSFileManager defaultManager] removeItemAtPath:roomFile error:&error];
 }
 
 @end
