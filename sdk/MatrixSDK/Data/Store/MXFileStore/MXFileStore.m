@@ -107,6 +107,29 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     return self;
 }
 
+
+#pragma mark - MXStore
+- (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXEventDirection)direction
+{
+    [super storeEventForRoom:roomId event:event direction:direction];
+
+    if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
+    {
+        [roomsToCommitForMessages addObject:roomId];
+    }
+}
+
+- (void)cleanDataOfRoom:(NSString *)roomId
+{
+    [super cleanDataOfRoom:roomId];
+
+    // Remove the corresponding data from the file system
+    NSString *roomFile = [storePath stringByAppendingPathComponent:roomId];
+
+    NSError *error;
+    [[NSFileManager defaultManager] removeItemAtPath:roomFile error:&error];
+}
+
 - (void)cleanAllData
 {
     [super cleanAllData];
@@ -126,6 +149,43 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     self.eventStreamToken = nil;
 }
 
+- (BOOL)isPermanent
+{
+    return YES;
+}
+
+- (NSArray *)rooms
+{
+    return roomStores.allKeys;
+}
+
+- (void)storeStateForRoom:(NSString*)roomId stateEvents:(NSArray*)stateEvents
+{
+    //
+    roomsToCommitForState[roomId] = stateEvents;
+}
+
+- (NSArray*)stateOfRoom:(NSString *)roomId
+{
+    NSString *roomFile = [storeRoomsStatePath stringByAppendingPathComponent:roomId];
+    NSArray *stateEvents =[NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+
+    return stateEvents;
+}
+
+- (void)save
+{
+    // Save data only if metaData exists
+    if (metaData)
+    {
+        [self saveRoomsMessages];
+        [self saveRoomsState];
+        [self saveMetaData];
+    }
+}
+
+
+#pragma mark - Rooms messages
 // Load the data store in files
 - (void)loadRoomsMessages
 {
@@ -143,6 +203,8 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
         {
             NSLog(@"   - %@: %@", roomId, roomStore);
             roomStores[roomId] = roomStore;
+
+            // @TODO: Check the state file  of this room exists
         }
         else
         {
@@ -171,6 +233,23 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     [roomsToCommitForMessages removeAllObjects];
 }
 
+
+#pragma mark - Rooms state
+- (void)saveRoomsState
+{
+    for (NSString *roomId in roomsToCommitForState)
+    {
+        NSArray *stateEvents = roomsToCommitForState[roomId];
+
+        NSString *roomFile = [storeRoomsStatePath stringByAppendingPathComponent:roomId];
+        [NSKeyedArchiver archiveRootObject:stateEvents toFile:roomFile];
+    }
+    
+    [roomsToCommitForState removeAllObjects];
+}
+
+
+#pragma mark - MXFileStore metadata
 - (void)loadMetaData
 {
     NSString *metaDataFile = [storePath stringByAppendingPathComponent:kMXFileStoreMedaDataFile];
@@ -192,76 +271,6 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
         NSString *metaDataFile = [storePath stringByAppendingPathComponent:kMXFileStoreMedaDataFile];
         [NSKeyedArchiver archiveRootObject:metaData toFile:metaDataFile];
     }
-}
-
-- (void)saveRoomsState
-{
-    for (NSString *roomId in roomsToCommitForState)
-    {
-        NSArray *stateEvents = roomsToCommitForState[roomId];
-
-        NSString *roomFile = [storeRoomsStatePath stringByAppendingPathComponent:roomId];
-        [NSKeyedArchiver archiveRootObject:stateEvents toFile:roomFile];
-    }
-
-    [roomsToCommitForState removeAllObjects];
-}
-
-- (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXEventDirection)direction
-{
-    [super storeEventForRoom:roomId event:event direction:direction];
-
-    if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
-    {
-        [roomsToCommitForMessages addObject:roomId];
-    }
-}
-
-- (BOOL)isPermanent
-{
-    return YES;
-}
-
-- (NSArray *)rooms
-{
-    return roomStores.allKeys;
-}
-
-- (void)storeStateForRoom:(NSString*)roomId stateEvents:(NSArray*)stateEvents
-{
-    //
-    roomsToCommitForState[roomId] = stateEvents;
-}
-
-- (NSArray*)stateOfRoom:(NSString *)roomId
-{
-    NSString *roomFile = [storeRoomsStatePath stringByAppendingPathComponent:roomId];
-    NSArray *stateEvents =[NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
-
-    return stateEvents;
-}
-
-
-- (void)save
-{
-    // Save data only if metaData exists
-    if (metaData)
-    {
-        [self saveRoomsMessages];
-        [self saveRoomsState];
-        [self saveMetaData];
-    }
-}
-
-- (void)cleanDataOfRoom:(NSString *)roomId
-{
-    [super cleanDataOfRoom:roomId];
-
-    // Remove the corresponding data from the file system
-    NSString *roomFile = [storePath stringByAppendingPathComponent:roomId];
-
-    NSError *error;
-    [[NSFileManager defaultManager] removeItemAtPath:roomFile error:&error];
 }
 
 @end
