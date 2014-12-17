@@ -39,4 +39,9 @@
  */
 @property (nonatomic) NSString *eventStreamToken;
 
+/**
+ The current version of the store.
+ */
+@property (nonatomic) NSUInteger version;
+
 @end

@@ -20,6 +20,8 @@
 
 #import "MXFileStoreMetaData.h"
 
+NSUInteger const kMXFileVersion = 1;
+
 NSString *const kMXFileStoreFolder = @"MXFileStore";
 NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
 
@@ -74,6 +76,11 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
         {
             [self cleanAllData];
         }
+        // Check store version
+        else if (kMXFileVersion != metaData.version)
+        {
+            [self cleanAllData];
+        }
         // Check credentials
         else if (nil == credentials)
         {
@@ -101,6 +108,7 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
             metaData.homeServer = [credentials.homeServer copy];
             metaData.userId = [credentials.userId copy];
             metaData.accessToken = [credentials.accessToken copy];
+            metaData.version = kMXFileVersion;
             [self saveMetaData];
         }
     }

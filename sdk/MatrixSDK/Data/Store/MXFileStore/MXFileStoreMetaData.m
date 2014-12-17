@@ -28,6 +28,9 @@
         _userId = dict[@"userId"];
         _accessToken = dict[@"accessToken"];
         _eventStreamToken = dict[@"eventStreamToken"];
+
+        NSNumber *version = dict[@"version"];
+        _version = [version unsignedIntegerValue];
     }
     return self;
 }
@@ -40,6 +43,7 @@
                                   @"homeServer": _homeServer,
                                   @"userId": _userId,
                                   @"accessToken": _accessToken,
+                                  @"version": [NSNumber numberWithUnsignedInteger:_version]
                                   }];
 
     if (_eventStreamToken)
