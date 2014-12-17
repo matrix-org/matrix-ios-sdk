@@ -76,7 +76,19 @@
 
             [mxSession.store storeEventForRoom:roomId event:fakeMembershipEvent direction:MXEventDirectionSync];
         }
+    }
+    return self;
+}
 
+- (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession2 andStateEvents:(NSArray *)stateEvents
+{
+    self = [self initWithRoomId:roomId andMatrixSession:mxSession2];
+    if (self)
+    {
+        for (MXEvent *event in stateEvents)
+        {
+            [_state handleStateEvent:event];
+        }
     }
     return self;
 }

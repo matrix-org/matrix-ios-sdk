@@ -198,8 +198,22 @@ typedef void (^MXOnResumeDone)();
             }
             else
             {
-                // The MXStore storage is permanent. Resume the stream from where we were
-                NSLog(@"[MXSession startWithMessagesLimit] Resume the events stream from %@", _store.eventStreamToken);
+                // Mount data from the permanent store
+                NSLog(@"[MXSession startWithMessagesLimit]: Load data from the store");
+
+                // Create MXRooms from their states stored in the store
+                NSDate *startDate = [NSDate date];
+                for (NSString *roomId in _store.rooms)
+                {
+                    NSArray *stateEvents = [_store stateOfRoom:roomId];
+                    [self createRoom:roomId withStateEvents:stateEvents];
+                }
+
+                NSLog(@"Created %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+
+                NSLog(@"Resume the events stream from %@", _store.eventStreamToken);
+
+                // And resume the stream from where we were
                 [self resume:initialSyncDone];
             }
 
@@ -445,14 +459,27 @@ typedef void (^MXOnResumeDone)();
 {
     MXRoom *room = [[MXRoom alloc] initWithRoomId:roomId andMatrixSession:self andJSONData:JSONData];
     
+    [self addRoom:room];
+    return room;
+}
+
+- (MXRoom *)createRoom:(NSString *)roomId withStateEvents:(NSArray*)stateEvents
+{
+    MXRoom *room = [[MXRoom alloc] initWithRoomId:roomId andMatrixSession:self andStateEvents:stateEvents];
+
+    [self addRoom:room];
+    return room;
+}
+
+- (void)addRoom:(MXRoom*)room
+{
     // Register global listeners for this room
     for (MXSessionEventListener *listener in globalEventListeners)
     {
         [listener addRoomToSpy:room];
     }
-    
-    [rooms setObject:room forKey:roomId];
-    return room;
+
+    [rooms setObject:room forKey:room.state.roomId];
 }
 
 - (void)removeRoom:(NSString *)roomId
