@@ -89,32 +89,6 @@
     return self;
 }
 
-
-#pragma mark - NSCopying
-- (id)copyWithZone:(NSZone *)zone
-{
-    MXRoomState *stateCopy = [[MXRoomState allocWithZone:zone] init];
-    
-    stateCopy->mxSession = mxSession;
-    stateCopy->_roomId = [_roomId copyWithZone:zone];
-    
-    stateCopy->_isLive = _isLive;
-    
-    // Use [NSMutableDictionary initWithDictionary:copyItems:] to deep copy NSDictionaries values
-    stateCopy->stateEvents = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:stateEvents copyItems:YES];
-    
-    stateCopy->members = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:members copyItems:YES];
-    
-    if (visibility)
-    {
-        stateCopy->visibility = [visibility copyWithZone:zone];
-    }
-    stateCopy->membership = membership;
-
-    return stateCopy;
-}
-
-
 // According to the direction of the instance, we are interested either by
 // the content of the event or its prev_content
 - (NSDictionary*)contentOfEvent:(MXEvent*)event
@@ -374,6 +348,31 @@
         memberName = userId;
     }
     return memberName;
+}
+
+
+#pragma mark - NSCopying
+- (id)copyWithZone:(NSZone *)zone
+{
+    MXRoomState *stateCopy = [[MXRoomState allocWithZone:zone] init];
+
+    stateCopy->mxSession = mxSession;
+    stateCopy->_roomId = [_roomId copyWithZone:zone];
+
+    stateCopy->_isLive = _isLive;
+
+    // Use [NSMutableDictionary initWithDictionary:copyItems:] to deep copy NSDictionaries values
+    stateCopy->stateEvents = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:stateEvents copyItems:YES];
+
+    stateCopy->members = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:members copyItems:YES];
+
+    if (visibility)
+    {
+        stateCopy->visibility = [visibility copyWithZone:zone];
+    }
+    stateCopy->membership = membership;
+
+    return stateCopy;
 }
 
 @end
