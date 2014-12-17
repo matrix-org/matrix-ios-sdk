@@ -34,12 +34,18 @@
 
 -(void)encodeWithCoder:(NSCoder *)aCoder
 {
-    NSDictionary *dict = @{
-                           @"homeServer": _homeServer,
-                           @"userId": _userId,
-                           @"accessToken": _accessToken,
-                           @"eventStreamToken": _eventStreamToken
-                           };
+    // All properties are mandatory except eventStreamToken
+    NSMutableDictionary *dict =[NSMutableDictionary dictionaryWithDictionary:
+                                @{
+                                  @"homeServer": _homeServer,
+                                  @"userId": _userId,
+                                  @"accessToken": _accessToken,
+                                  }];
+
+    if (_eventStreamToken)
+    {
+        dict[@"eventStreamToken"] = _eventStreamToken;
+    }
 
     [aCoder encodeObject:dict forKey:@"dict"];
 }

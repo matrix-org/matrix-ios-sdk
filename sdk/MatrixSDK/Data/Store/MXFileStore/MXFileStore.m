@@ -21,14 +21,19 @@
 #import "MXFileStoreMetaData.h"
 
 NSString *const kMXFileStoreFolder = @"MXFileStore";
+NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
 
 @interface MXFileStore ()
 {
+    // Meta data about the store. It is defined only if the passed MXCredentials contains all information.
+    // When nil, nothing is stored on the file system.
+    MXFileStoreMetaData *metaData;
+
+    // List of rooms to save on [MXStore save]
     NSMutableArray *roomsToCommit;
 
+    // The path of the MXFileStore folder
     NSString *storePath;
-
-    MXFileStoreMetaData *metaData;
 }
 @end
 
@@ -74,15 +79,21 @@ NSString *const kMXFileStoreFolder = @"MXFileStore";
             [self clean];
         }
 
-        if (nil == metaData)
+        // If metaData is still defined, we can load rooms data
+        if (metaData)
         {
-            metaData = [[MXFileStoreMetaData alloc] init];
+            [self loadRoomsData];
         }
 
-
-
-        [self loadRoomsData];
-
+        // Else, if credentials is valid, create and store it
+        if (nil == metaData && credentials.homeServer && credentials.userId && credentials.accessToken)
+        {
+            metaData = [[MXFileStoreMetaData alloc] init];
+            metaData.homeServer = [credentials.homeServer copy];
+            metaData.userId = [credentials.userId copy];
+            metaData.accessToken = [credentials.accessToken copy];
+            [self saveMetaData];
+        }
     }
     return self;
 }
@@ -96,6 +107,11 @@ NSString *const kMXFileStoreFolder = @"MXFileStore";
 
     // And create the folder back
     [[NSFileManager defaultManager] createDirectoryAtPath:storePath withIntermediateDirectories:NO attributes:nil error:nil];
+
+    // Reset data
+    metaData = nil;
+    [roomStores removeAllObjects];
+    self.eventStreamToken = nil;
 }
 
 // Load the data store in files
@@ -103,21 +119,31 @@ NSString *const kMXFileStoreFolder = @"MXFileStore";
 {
     NSArray *fileArray = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storePath error:nil];
 
-    for (NSString *roomId in fileArray)  {
+    // Remove the meta data from this list
+    NSMutableArray *roomIDArray = [NSMutableArray arrayWithArray:fileArray];
+    [roomIDArray removeObject:kMXFileStoreFolder];
+
+    NSLog(@"[MXFileStore loadRoomsData]:");
+
+    for (NSString *roomId in roomIDArray)  {
 
         NSString *roomFile = [storePath stringByAppendingPathComponent:roomId];
         MXMemoryRoomStore *roomStore =[NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
 
         if (roomStore)
         {
+            NSLog(@"   - %@: %@", roomId, roomStore);
             roomStores[roomId] = roomStore;
         }
         else
         {
             NSLog(@"Warning: MXFileStore has been reset due to room file corruption. Room id: %@", roomId);
             [self clean];
+            break;
         }
     }
+
+    NSLog(@"Loaded data for %lu rooms", (unsigned long)roomStores.allKeys.count);
 }
 
 - (void)saveRoomsData
@@ -138,7 +164,7 @@ NSString *const kMXFileStoreFolder = @"MXFileStore";
 
 - (void)loadMetaData
 {
-    NSString *metaDataFile = [storePath stringByAppendingPathComponent:kMXFileStoreFolder];
+    NSString *metaDataFile = [storePath stringByAppendingPathComponent:kMXFileStoreMedaDataFile];
     metaData = [NSKeyedUnarchiver unarchiveObjectWithFile:metaDataFile];
 }
 
@@ -149,12 +175,8 @@ NSString *const kMXFileStoreFolder = @"MXFileStore";
     {
         metaData.eventStreamToken = self.eventStreamToken;
 
-        NSString *metaDataFile = [storePath stringByAppendingPathComponent:kMXFileStoreFolder];
-        BOOL b = [NSKeyedArchiver archiveRootObject:metaData toFile:metaDataFile];
-
-        MXFileStoreMetaData *metaData2 = [NSKeyedUnarchiver unarchiveObjectWithFile:metaDataFile];
-
-        NSLog(@"%@", metaData2);
+        NSString *metaDataFile = [storePath stringByAppendingPathComponent:kMXFileStoreMedaDataFile];
+        [NSKeyedArchiver archiveRootObject:metaData toFile:metaDataFile];
     }
 }
 
@@ -170,8 +192,12 @@ NSString *const kMXFileStoreFolder = @"MXFileStore";
 
 - (void)save
 {
-    [self saveRoomsData];
-    [self saveMetaData];
+    // Save data only if metaData exists
+    if (metaData)
+    {
+        [self saveRoomsData];
+        [self saveMetaData];
+    }
 }
 
 - (void)cleanDataOfRoom:(NSString *)roomId

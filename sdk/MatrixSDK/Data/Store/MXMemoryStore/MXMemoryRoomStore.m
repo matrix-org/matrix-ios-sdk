@@ -118,6 +118,11 @@
     return lastMessage;
 }
 
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"%lu messages - paginationToken: %@ - hasReachedHomeServerPaginationEnd: %d", messages.count, _paginationToken, _hasReachedHomeServerPaginationEnd];
+}
+
 
 #pragma mark - NSCoding
 - (id)initWithCoder:(NSCoder *)aDecoder
