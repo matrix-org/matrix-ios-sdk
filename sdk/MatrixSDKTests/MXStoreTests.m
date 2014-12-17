@@ -594,7 +594,6 @@
     }];
 }
 
-#if 0
 
 #pragma mark - MXNoStore tests
 /* This feature is not available with MXNoStore
@@ -972,8 +971,6 @@
     }];
 
 }
-
-#endif
 
 
 #pragma mark - MXFileStore
