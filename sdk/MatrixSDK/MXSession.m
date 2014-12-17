@@ -21,6 +21,7 @@
 
 #import "MXNoStore.h"
 #import "MXMemoryStore.h"
+#import "MXFileStore.h"
 
 
 /**
@@ -93,6 +94,14 @@ typedef void (^MXOnResumeDone)();
         if (mxStore)
         {
             _store = mxStore;
+
+            // Validate the permanent implementation
+            if (mxStore.isPermanent)
+            {
+                NSAssert([_store respondsToSelector:@selector(rooms)], @"A permanent MXStore must implement this method");
+                NSAssert([_store respondsToSelector:@selector(storeStateForRoom:stateEvents:)], @"A permanent MXStore must implement this method");
+                NSAssert([_store respondsToSelector:@selector(stateOfRoom:)], @"A permanent MXStore must implement this method");
+            }
         }
         else
         {
@@ -100,6 +109,8 @@ typedef void (^MXOnResumeDone)();
             _store = [[MXMemoryStore alloc] init];
 
             //_store = [[MXNoStore alloc] init];  // For test
+
+            //_store = [[MXFileStore alloc] initWithCredentials:mxRestClient.credentials];  // For test
         }
     }
     return self;
@@ -130,7 +141,7 @@ typedef void (^MXOnResumeDone)();
             users[matrixRestClient.credentials.userId] = _myUser;
 
             // Do we start with a MXStore that have permanent data?
-            if (nil == _store.eventStreamToken)
+            if (_store.isPermanent && nil == _store.eventStreamToken)
             {
                 NSLog(@"[MXSession startWithMessagesLimit] Do a global initialSync");
 

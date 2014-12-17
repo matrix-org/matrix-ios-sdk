@@ -153,4 +153,9 @@
     return lastMessages[roomId];
 }
 
+- (BOOL)isPermanent
+{
+    return NO;
+}
+
 @end

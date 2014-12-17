@@ -23,6 +23,9 @@
 NSString *const kMXFileStoreFolder = @"MXFileStore";
 NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
 
+NSString *const kMXFileStoreRoomsMessagesFolder = @"messages";
+NSString *const kMXFileStoreRoomsStateFolder = @"state";
+
 @interface MXFileStore ()
 {
     // Meta data about the store. It is defined only if the passed MXCredentials contains all information.
@@ -30,10 +33,18 @@ NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
     MXFileStoreMetaData *metaData;
 
     // List of rooms to save on [MXStore save]
-    NSMutableArray *roomsToCommit;
+    NSMutableArray *roomsToCommitForMessages;
+
+    NSMutableDictionary *roomsToCommitForState;
 
     // The path of the MXFileStore folder
     NSString *storePath;
+
+    // The path of rooms messages folder
+    NSString *storeRoomsMessagesPath;
+
+    // The path of rooms states folder
+    NSString *storeRoomsStatePath;
 }
 @end
 
@@ -44,17 +55,15 @@ NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
     self = [super init];
     if (self)
     {
-        roomsToCommit = [NSMutableArray array];
+        roomsToCommitForMessages = [NSMutableArray array];
+        roomsToCommitForState = [NSMutableDictionary dictionary];
 
         NSArray *cacheDirList = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
         NSString *cachePath  = [cacheDirList objectAtIndex:0];
 
         storePath = [cachePath stringByAppendingPathComponent:kMXFileStoreFolder];
-
-        if (![[NSFileManager defaultManager] fileExistsAtPath:storePath])
-        {
-            [[NSFileManager defaultManager] createDirectoryAtPath:storePath withIntermediateDirectories:NO attributes:nil error:nil];
-        }
+        storeRoomsMessagesPath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsMessagesFolder];
+        storeRoomsStatePath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsStateFolder];
 
         [self loadMetaData];
 
@@ -82,7 +91,7 @@ NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
         // If metaData is still defined, we can load rooms data
         if (metaData)
         {
-            [self loadRoomsData];
+            [self loadRoomsMessages];
         }
 
         // Else, if credentials is valid, create and store it
@@ -106,8 +115,10 @@ NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
     NSError *error;
     [[NSFileManager defaultManager] removeItemAtPath:storePath error:&error];
 
-    // And create the folder back
+    // And create folders back
     [[NSFileManager defaultManager] createDirectoryAtPath:storePath withIntermediateDirectories:NO attributes:nil error:nil];
+    [[NSFileManager defaultManager] createDirectoryAtPath:storeRoomsMessagesPath withIntermediateDirectories:NO attributes:nil error:nil];
+    [[NSFileManager defaultManager] createDirectoryAtPath:storeRoomsStatePath withIntermediateDirectories:NO attributes:nil error:nil];
 
     // Reset data
     metaData = nil;
@@ -116,20 +127,16 @@ NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
 }
 
 // Load the data store in files
-- (void)loadRoomsData
+- (void)loadRoomsMessages
 {
-    NSArray *fileArray = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storePath error:nil];
-
-    // Remove the meta data from this list
-    NSMutableArray *roomIDArray = [NSMutableArray arrayWithArray:fileArray];
-    [roomIDArray removeObject:kMXFileStoreFolder];
+    NSArray *roomIDArray = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsMessagesPath error:nil];
 
     NSDate *startDate = [NSDate date];
     NSLog(@"[MXFileStore loadRoomsData]:");
 
     for (NSString *roomId in roomIDArray)  {
 
-        NSString *roomFile = [storePath stringByAppendingPathComponent:roomId];
+        NSString *roomFile = [storeRoomsMessagesPath stringByAppendingPathComponent:roomId];
         MXMemoryRoomStore *roomStore =[NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
 
         if (roomStore)
@@ -148,20 +155,20 @@ NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
     NSLog(@"Loaded data for %lu rooms in %.0fms", (unsigned long)roomStores.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
-- (void)saveRoomsData
+- (void)saveRoomsMessages
 {
     // Save rooms where there was changes
-    for (NSString *roomId in roomsToCommit)
+    for (NSString *roomId in roomsToCommitForMessages)
     {
         MXMemoryRoomStore *roomStore = roomStores[roomId];
         if (roomStore)
         {
-            NSString *roomFile = [storePath stringByAppendingPathComponent:roomId];
+            NSString *roomFile = [storeRoomsMessagesPath stringByAppendingPathComponent:roomId];
             [NSKeyedArchiver archiveRootObject:roomStore toFile:roomFile];
         }
     }
 
-    [roomsToCommit removeAllObjects];
+    [roomsToCommitForMessages removeAllObjects];
 }
 
 - (void)loadMetaData
@@ -187,22 +194,61 @@ NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
     }
 }
 
+- (void)saveRoomsState
+{
+    for (NSString *roomId in roomsToCommitForState)
+    {
+        NSArray *stateEvents = roomsToCommitForState[roomId];
+
+        NSString *roomFile = [storeRoomsStatePath stringByAppendingPathComponent:roomId];
+        [NSKeyedArchiver archiveRootObject:stateEvents toFile:roomFile];
+    }
+
+    [roomsToCommitForState removeAllObjects];
+}
+
 - (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXEventDirection)direction
 {
     [super storeEventForRoom:roomId event:event direction:direction];
 
-    if (NSNotFound == [roomsToCommit indexOfObject:roomId])
+    if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
     {
-        [roomsToCommit addObject:roomId];
+        [roomsToCommitForMessages addObject:roomId];
     }
 }
+
+- (BOOL)isPermanent
+{
+    return YES;
+}
+
+- (NSArray *)rooms
+{
+    return roomStores.allKeys;
+}
+
+- (void)storeStateForRoom:(NSString*)roomId stateEvents:(NSArray*)stateEvents
+{
+    //
+    roomsToCommitForState[roomId] = stateEvents;
+}
+
+- (NSArray*)stateOfRoom:(NSString *)roomId
+{
+    NSString *roomFile = [storeRoomsStatePath stringByAppendingPathComponent:roomId];
+    NSArray *stateEvents =[NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+
+    return stateEvents;
+}
+
 
 - (void)save
 {
     // Save data only if metaData exists
     if (metaData)
     {
-        [self saveRoomsData];
+        [self saveRoomsMessages];
+        [self saveRoomsState];
         [self saveMetaData];
     }
 }

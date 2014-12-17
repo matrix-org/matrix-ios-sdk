@@ -115,6 +115,11 @@
     return [roomStore lastMessageWithTypeIn:types];
 }
 
+- (BOOL)isPermanent
+{
+    return NO;
+}
+
 #pragma mark - Private operations
 - (MXMemoryRoomStore*)getOrCreateRoomStore:(NSString*)roomId
 {

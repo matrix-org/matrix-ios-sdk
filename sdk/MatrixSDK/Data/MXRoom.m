@@ -177,6 +177,12 @@
     for (MXEvent *event in events) {
         [self handleStateEvent:event direction:direction];
     }
+
+    // Update store with new room state only when all state event have been processed
+    if ([mxSession.store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
+    {
+        [mxSession.store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
+    }
 }
 
 - (void)handleStateEvent:(MXEvent*)event direction:(MXEventDirection)direction
@@ -217,6 +223,12 @@
     if (event.isState)
     {
         [self handleStateEvent:event direction:MXEventDirectionForwards];
+
+        // Update store with new room state once a live event has been processed
+        if ([mxSession.store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
+        {
+            [mxSession.store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
+        }
     }
 
     // Make sure we have not processed this event yet
