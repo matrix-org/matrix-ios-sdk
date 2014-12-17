@@ -16,8 +16,25 @@
 
 #import "MXMemoryStore.h"
 
+/**
+ `MXFileStore` extends MXMemoryStore by adding permanent storage.
+
+ The data are stored on [MXStore save] and reloaded on [MXFileStore initWithCredentials:].
+ Between them MXFileStore behaves as MXMemoryStore: the data is mounted in memory.
+ */
 @interface MXFileStore : MXMemoryStore
 
+/**
+ Initialize a MXFileStore with account credentials.
+ 
+ MXFileStore manages one account at a time (same home server, same user id and same access token).
+ If `credentials` is different from the previously used one, all the data will be erased
+ and the MXFileStore instance will start from a clean state.
+
+ @param credentials the credentials of the account.
+
+ @return the MXFileStore instance.
+ */
 - (instancetype)initWithCredentials:(MXCredentials*)credentials;
 
 @end

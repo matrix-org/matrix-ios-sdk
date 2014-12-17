@@ -63,12 +63,12 @@ NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
         // Check if
         if (nil == metaData)
         {
-            [self clean];
+            [self cleanAllData];
         }
         // Check credentials
         else if (nil == credentials)
         {
-            [self clean];
+            [self cleanAllData];
         }
         // Check credentials
         else if (NO == [metaData.homeServer isEqualToString:credentials.homeServer]
@@ -76,7 +76,7 @@ NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
                  || NO == [metaData.accessToken isEqualToString:credentials.accessToken])
 
         {
-            [self clean];
+            [self cleanAllData];
         }
 
         // If metaData is still defined, we can load rooms data
@@ -98,9 +98,10 @@ NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
     return self;
 }
 
-// Erase the store
-- (void)clean
+- (void)cleanAllData
 {
+    [super cleanAllData];
+
     // Remove the MXFileStore and all its content
     NSError *error;
     [[NSFileManager defaultManager] removeItemAtPath:storePath error:&error];
@@ -139,7 +140,7 @@ NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
         else
         {
             NSLog(@"Warning: MXFileStore has been reset due to room file corruption. Room id: %@", roomId);
-            [self clean];
+            [self cleanAllData];
             break;
         }
     }

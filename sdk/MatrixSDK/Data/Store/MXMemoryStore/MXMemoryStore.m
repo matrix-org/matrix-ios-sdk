@@ -59,6 +59,11 @@
     }
 }
 
+- (void)cleanAllData
+{
+    [roomStores removeAllObjects];
+}
+
 - (void)storePaginationTokenOfRoom:(NSString*)roomId andToken:(NSString*)token
 {
     MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];

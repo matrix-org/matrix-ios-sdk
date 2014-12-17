@@ -86,6 +86,13 @@
     }
 }
 
+- (void)cleanAllData
+{
+    [paginationTokens removeAllObjects];
+    [hasReachedHomeServerPaginations removeAllObjects];
+    [lastMessages removeAllObjects];
+}
+
 - (void)storePaginationTokenOfRoom:(NSString*)roomId andToken:(NSString*)token
 {
     paginationTokens[roomId] = token;

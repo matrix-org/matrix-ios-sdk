@@ -55,6 +55,11 @@
 - (void)cleanDataOfRoom:(NSString*)roomId;
 
 /**
+ Erase all data from the store.
+ */
+- (void)cleanAllData;
+
+/**
  Store/retrieve the current pagination token of a room.
  */
 - (void)storePaginationTokenOfRoom:(NSString*)roomId andToken:(NSString*)token;
