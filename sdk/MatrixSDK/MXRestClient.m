@@ -336,7 +336,11 @@ MXAuthAction;
                        parameters:nil
                           success:^(NSDictionary *JSONResponse)
      {
-         success(JSONResponse[@"room_id"]);
+         NSString *roomId = JSONResponse[@"room_id"];
+         if (!roomId.length) {
+             roomId = roomIdOrAlias;
+         }
+         success(roomId);
      }
                           failure:^(NSError *error)
      {

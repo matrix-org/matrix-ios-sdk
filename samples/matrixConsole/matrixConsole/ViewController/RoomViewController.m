@@ -59,7 +59,9 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     
     // Back pagination
     BOOL isBackPaginationInProgress;
+    BOOL isFirstPagination;
     NSUInteger backPaginationAddedMsgNb;
+    NSUInteger backPaginationHandledEventsNb;
     
     // Members list
     NSArray *members;
@@ -70,6 +72,10 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     NSString *AVAudioSessionCategory;
     MPMoviePlayerController *videoPlayer;
     MPMoviePlayerController *tmpVideoPlayer;
+    
+    // used to trap the slide to close the keyboard
+    UIView* inputAccessoryView;
+    BOOL isKeyboardObserver;
     
     // Date formatter (nil if dateTime info is hidden)
     NSDateFormatter *dateFormatter;
@@ -103,13 +109,6 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     // Hide messages table by default in order to hide initial scrolling to the bottom
     self.messagesTableView.hidden = YES;
     
-    UIButton *membersButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    [membersButton setImage:[UIImage imageNamed:@"icon_users"] forState:UIControlStateNormal];
-    [membersButton setImage:[UIImage imageNamed:@"icon_users"] forState:UIControlStateHighlighted];
-    membersButton.frame = CGRectMake(0, 0, 44, 44);
-    [membersButton addTarget:self action:@selector(showHideRoomMembers:) forControlEvents:UIControlEventTouchUpInside];
-    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:membersButton];
-    
     // Add tap detection on members view in order to hide members when the user taps outside members list
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(hideRoomMembers)];
     [tap setNumberOfTouchesRequired:1];
@@ -117,8 +116,15 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     [tap setDelegate:self];
     [self.membersView addGestureRecognizer:tap];
     
+    isKeyboardObserver = NO;
+    
     _sendBtn.enabled = NO;
     _sendBtn.alpha = 0.5;
+    
+    
+    // add an input to check if the keyboard is hiding with sliding it
+    inputAccessoryView = [[UIView alloc] initWithFrame:CGRectZero];
+    self.messageTextField.inputAccessoryView = inputAccessoryView;
 }
 
 - (void)dealloc {
@@ -157,6 +163,8 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     if (dateFormatter) {
         dateFormatter = nil;
     }
+    
+    self.messageTextField.inputAccessoryView = inputAccessoryView = nil;
 }
 
 - (void)didReceiveMemoryWarning {
@@ -189,6 +197,13 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     
     // Hide members by default
     [self hideRoomMembers];
+    
+    // slide to hide keyboard management
+    if (isKeyboardObserver) {
+        [inputAccessoryView.superview removeObserver:self forKeyPath:@"frame"];
+        [inputAccessoryView.superview removeObserver:self forKeyPath:@"center"];
+        isKeyboardObserver = NO;
+    }
     
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillShowNotification object:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillHideNotification object:nil];
@@ -325,14 +340,14 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
                             // Update message with the received event
                             isHandled = [message addEvent:event withRoomState:roomState];
                             if (!message.components.count) {
-                                [messages removeObjectAtIndex:index];
+                                [self removeMessageAtIndex:index];
                             }
                         } else {
                             // Create a new message to handle attachment
                             message = [[RoomMessage alloc] initWithEvent:event andRoomState:roomState];
                             if (!message) {
                                 // Ignore unsupported/unexpected events
-                                [messages removeObjectAtIndex:index];
+                                [self removeMessageAtIndex:index];
                             } else {
                                 [messages replaceObjectAtIndex:index withObject:message];
                             }
@@ -348,11 +363,11 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
                                     // Removing temporary event (local echo)
                                     [message removeEvent:event.eventId];
                                     if (!message.components.count) {
-                                        [messages removeObjectAtIndex:index];
+                                        [self removeMessageAtIndex:index];
                                     }
                                 } else {
                                     // Remove the local event (a new one will be added to messages)
-                                    [messages removeObjectAtIndex:index];
+                                    [self removeMessageAtIndex:index];
                                 }
                                 shouldBeHidden = NO;
                                 break;
@@ -410,10 +425,14 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
                     firstMessage = [[RoomMessage alloc] initWithEvent:event andRoomState:roomState];
                     if (firstMessage) {
                         [messages insertObject:firstMessage atIndex:0];
-                        backPaginationAddedMsgNb++;
+                        backPaginationAddedMsgNb ++;
+                        backPaginationHandledEventsNb ++;
                     }
                     // Ignore unsupported/unexpected events
+                } else {
+                    backPaginationHandledEventsNb ++;
                 }
+                
                 // Display is refreshed at the end of back pagination (see onComplete block)
             }
         }];
@@ -437,6 +456,19 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     }
 }
 
+- (void)removeMessageAtIndex:(NSUInteger)index {
+    [messages removeObjectAtIndex:index];
+    // Check whether the removed message was neither the first nor the last one
+    if (index && index < messages.count) {
+        RoomMessage *previousMessage = [messages objectAtIndex:index - 1];
+        RoomMessage *nextMessage = [messages objectAtIndex:index];
+        // Check whether both messages can merge
+        if ([previousMessage mergeWithRoomMessage:nextMessage]) {
+            [self removeMessageAtIndex:index];
+        }
+    }
+}
+
 - (void)triggerBackPagination {
     // Check whether a back pagination is already in progress
     if (isBackPaginationInProgress) {
@@ -444,33 +476,51 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     }
     
     if (self.mxRoom.canPaginate) {
+        NSUInteger requestedItemsNb = ROOMVIEWCONTROLLER_BACK_PAGINATION_SIZE;
+        // In case of first pagination, we will request only messages from the store to speed up the room display
+        if (!messages.count) {
+            isFirstPagination = YES;
+            requestedItemsNb = self.mxRoom.remainingMessagesForPaginationInStore;
+            if (!requestedItemsNb || ROOMVIEWCONTROLLER_BACK_PAGINATION_SIZE < requestedItemsNb) {
+                requestedItemsNb = ROOMVIEWCONTROLLER_BACK_PAGINATION_SIZE;
+            }
+        }
+        
         [self startActivityIndicator];
         isBackPaginationInProgress = YES;
         backPaginationAddedMsgNb = 0;
         
-        [self paginateBackMessages:ROOMVIEWCONTROLLER_BACK_PAGINATION_SIZE];
+        [self paginateBackMessages:requestedItemsNb];
     }
 }
 
 - (void)paginateBackMessages:(NSUInteger)requestedItemsNb {
+    backPaginationHandledEventsNb = 0;
     [self.mxRoom paginateBackMessages:requestedItemsNb complete:^{
         // Sanity check: check whether the view controller has not been released while back pagination was running
         if (self.roomId == nil) {
             return;
         }
-        // Compute number of received items
-        NSUInteger itemsCount = 0;
-        for (NSUInteger index = 0; index < backPaginationAddedMsgNb; index++) {
-            RoomMessage *message = [messages objectAtIndex:index];
-            itemsCount += message.components.count;
+        
+        // Check whether we received less items than expected, and check condition to be able to ask more
+        BOOL shouldLoop = ((backPaginationHandledEventsNb < requestedItemsNb) && self.mxRoom.canPaginate);
+        if (shouldLoop) {
+            NSUInteger missingItemsNb = requestedItemsNb - backPaginationHandledEventsNb;
+            // About first pagination, we will loop only if the store has more items (except if none item has been handled, in this case loop is required)
+            if (isFirstPagination && backPaginationHandledEventsNb) {
+                if (self.mxRoom.remainingMessagesForPaginationInStore < missingItemsNb) {
+                    missingItemsNb = self.mxRoom.remainingMessagesForPaginationInStore;
+                }
+            }
+            
+            if (missingItemsNb) {
+                // Ask more items
+                [self paginateBackMessages:missingItemsNb];
+                return;
+            }
         }
-        // Check whether we got enough items
-        if (itemsCount < requestedItemsNb && self.mxRoom.canPaginate) {
-            // Ask more items
-            [self paginateBackMessages:(requestedItemsNb - itemsCount)];
-        } else {
-            [self onBackPaginationComplete];
-        }
+        // Here we are done
+        [self onBackPaginationComplete];
     } failure:^(NSError *error) {
         [self onBackPaginationComplete];
         NSLog(@"Failed to paginate back: %@", error);
@@ -512,6 +562,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
             [self.messagesTableView setContentOffset:contentOffset animated:NO];
         }
     }
+    isFirstPagination = NO;
     isBackPaginationInProgress = NO;
     [self stopActivityIndicator];
 }
@@ -543,20 +594,57 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
         } else {
             [self startActivityIndicator];
         }
+    } else if ((object == inputAccessoryView.superview) && ([@"frame" isEqualToString:keyPath] || [@"center" isEqualToString:keyPath])) {
+        
+        // if the keyboard is displayed, check if the keyboard is hiding with a slide animation
+        if (inputAccessoryView && inputAccessoryView.superview) {
+            UIEdgeInsets insets = self.messagesTableView.contentInset;
+            
+            CGFloat screenHeight = 0;
+            CGSize screenSize = [[UIScreen mainScreen] bounds].size;
+
+            UIViewController* rootViewController = self;
+            
+            // get the root view controller to extract the application size
+            while (rootViewController.parentViewController && ![rootViewController isKindOfClass:[UISplitViewController class]]) {
+                rootViewController = rootViewController.parentViewController;
+            }
+            
+            // IOS 6 ?
+            // IOS 7 always gives the screen size in portrait
+            // IOS 8 takes care about the orientation
+            if (rootViewController.view.frame.size.width > rootViewController.view.frame.size.height) {
+                screenHeight = MIN(screenSize.width, screenSize.height);
+            }
+            else {
+                screenHeight = MAX(screenSize.width, screenSize.height);
+            }
+            
+            insets.bottom = screenHeight - inputAccessoryView.superview.frame.origin.y;
+            
+            // Move the control view
+            // Don't forget the offset related to tabBar
+            CGFloat newConstant = insets.bottom - [AppDelegate theDelegate].masterTabBarController.tabBar.frame.size.height;
+            
+            // draw over the bound
+            if ((_controlViewBottomConstraint.constant < 0) || (insets.bottom < self.controlView.frame.size.height)) {
+                
+                newConstant = 0;
+                insets.bottom = self.controlView.frame.size.height;
+            }
+            else {
+                // IOS 8 / landscape issue
+                // when the top of the keyboard reaches the top of the tabbar, it triggers UIKeyboardWillShowNotification events in loop
+                [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillShowNotification object:nil];
+            }
+            // update the table the tableview height
+            self.messagesTableView.contentInset = insets;
+            _controlViewBottomConstraint.constant = newConstant;
+        }
     }
 }
 
 # pragma mark - Room members
-
-- (void)showHideRoomMembers:(id)sender {
-    // Check whether the members list is displayed
-    if (members) {
-        [self hideRoomMembers];
-    } else {
-        [self hideAttachmentView];
-        [self showRoomMembers];
-    }
-}
 
 - (void)updateRoomMembers {
      members = [[self.mxRoom.state members] sortedArrayUsingComparator:^NSComparisonResult(MXRoomMember *member1, MXRoomMember *member2) {
@@ -896,10 +984,16 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
 }
 
 #pragma mark - Keyboard handling
+
 - (void)onKeyboardWillShow:(NSNotification *)notif {
     // get the keyboard size
     NSValue *rectVal = notif.userInfo[UIKeyboardFrameEndUserInfoKey];
     CGRect endRect = rectVal.CGRectValue;
+    
+    // IOS 8 triggers some unexpected keyboard events
+    if ((endRect.size.height == 0) || (endRect.size.width == 0)) {
+        return;
+    }
     
     UIEdgeInsets insets = self.messagesTableView.contentInset;
     // Handle portrait/landscape mode
@@ -932,11 +1026,43 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
         [self.view layoutIfNeeded];
         
     } completion:^(BOOL finished) {
+        // be warned when the keyboard frame is updated
+        [inputAccessoryView.superview addObserver:self forKeyPath:@"frame" options:0 context:nil];
+        [inputAccessoryView.superview addObserver:self forKeyPath:@"center" options:0 context:nil];
+        
+        isKeyboardObserver = YES;
     }];
 }
 
 - (void)onKeyboardWillHide:(NSNotification *)notif {
     
+    // onKeyboardWillHide seems being called several times by IOS
+    if (isKeyboardObserver) {
+        
+        // IOS 8 / landscape issue
+        // when the keyboard reaches the tabbar, it triggers UIKeyboardWillShowNotification events in loop
+        // ensure that there is only one evene registration
+        [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillShowNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onKeyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
+        
+        [inputAccessoryView.superview removeObserver:self forKeyPath:@"frame"];
+        [inputAccessoryView.superview removeObserver:self forKeyPath:@"center"];
+        isKeyboardObserver = NO;
+    }
+
+    // get the keyboard size
+    NSValue *rectVal = notif.userInfo[UIKeyboardFrameEndUserInfoKey];
+    CGRect endRect = rectVal.CGRectValue;
+    
+    rectVal = notif.userInfo[UIKeyboardFrameBeginUserInfoKey];
+    CGRect beginRect = rectVal.CGRectValue;
+    
+    // IOS 8 triggers some unexpected keyboard events
+    // it makes no sense if there is no update to animate
+    if (CGRectEqualToRect(endRect, beginRect)) {
+        return;
+    }
+
     // get the animation info
     NSNumber *curveValue = [[notif userInfo] objectForKey:UIKeyboardAnimationCurveUserInfoKey];
     UIViewAnimationCurve animationCurve = curveValue.intValue;
@@ -944,11 +1070,11 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     // the duration is ignored but it is better to define it
     double animationDuration = [[[notif userInfo] objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
     
-    // ani
+    UIEdgeInsets insets = self.messagesTableView.contentInset;
+    insets.bottom = self.controlView.frame.size.height;
+    
+    // animate the keyboard closing
     [UIView animateWithDuration:animationDuration delay:0 options:UIViewAnimationOptionBeginFromCurrentState | (animationCurve << 16) animations:^{
-        UIEdgeInsets insets = self.messagesTableView.contentInset;
-        insets.bottom = self.controlView.frame.size.height;
-
         self.messagesTableView.contentInset = insets;
     
         _controlViewBottomConstraint.constant = 0;
@@ -1014,11 +1140,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     BOOL shouldHideSenderInfo = NO;
     if (indexPath.row) {
         RoomMessage *previousMessage = [messages objectAtIndex:indexPath.row - 1];
-        if ([previousMessage.senderId isEqualToString:message.senderId]
-            && [previousMessage.senderName isEqualToString:message.senderName]
-            && [previousMessage.senderAvatarUrl isEqualToString:message.senderAvatarUrl]) {
-            shouldHideSenderInfo = YES;
-        }
+        shouldHideSenderInfo = [message hasSameSenderAsRoomMessage:previousMessage];
     }
     
     if (shouldHideSenderInfo) {
@@ -1046,8 +1168,13 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     }
     
     // Handle here room message cells
-    RoomMessageTableCell *cell;
     RoomMessage *message = [messages objectAtIndex:indexPath.row];
+    // Consider the specific case where the message is hidden (see outgoing messages temporarily hidden until our PUT is returned)
+    if (message.messageType == RoomMessageTypeText && !message.attributedTextMessage.length) {
+        return [[UITableViewCell alloc] initWithFrame:CGRectZero];
+    }
+    // Else prepare the message cell
+    RoomMessageTableCell *cell;
     BOOL isIncomingMsg = NO;
     
     if ([message.senderId isEqualToString:mxHandler.userId]) {
@@ -1085,11 +1212,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     BOOL shouldHideSenderInfo = NO;
     if (indexPath.row) {
         RoomMessage *previousMessage = [messages objectAtIndex:indexPath.row - 1];
-        if ([previousMessage.senderId isEqualToString:message.senderId]
-            && [previousMessage.senderName isEqualToString:message.senderName]
-            && [previousMessage.senderAvatarUrl isEqualToString:message.senderAvatarUrl]) {
-            shouldHideSenderInfo = YES;
-        }
+        shouldHideSenderInfo = [message hasSameSenderAsRoomMessage:previousMessage];
     }
     // Handle sender's picture and adjust view's constraints
     if (shouldHideSenderInfo) {
@@ -1665,6 +1788,16 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     [self.messagesTableView reloadData];
 }
 
+- (IBAction)showHideRoomMembers:(id)sender {
+    // Check whether the members list is displayed
+    if (members) {
+        [self hideRoomMembers];
+    } else {
+        [self hideAttachmentView];
+        [self showRoomMembers];
+    }
+}
+
 #pragma mark - Post messages
 
 - (void)postMessage:(NSDictionary*)msgContent withLocalEvent:(MXEvent*)localEvent {
@@ -1683,7 +1816,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
                         [message removeEvent:localEvent.eventId];
                         [message addEvent:localEvent withRoomState:self.mxRoom.state];
                         if (!message.components.count) {
-                            [messages removeObjectAtIndex:index];
+                            [self removeMessageAtIndex:index];
                         }
                     } else {
                         // Create a new message
@@ -1692,7 +1825,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
                             // Refresh table display
                             [messages replaceObjectAtIndex:index withObject:message];
                         } else {
-                            [messages removeObjectAtIndex:index];
+                            [self removeMessageAtIndex:index];
                         }
                     }
                     break;
@@ -1755,7 +1888,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
                             [message addEvent:localEvent withRoomState:self.mxRoom.state];
                         }
                         if (!message.components.count) {
-                            [messages removeObjectAtIndex:index];
+                            [self removeMessageAtIndex:index];
                         }
                     } else {
                         message = nil;
@@ -1768,7 +1901,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
                             // Refresh table display
                             [messages replaceObjectAtIndex:index withObject:message];
                         } else {
-                            [messages removeObjectAtIndex:index];
+                            [self removeMessageAtIndex:index];
                         }
                     }
                     break;
@@ -1868,7 +2001,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
                 localEvent.eventId = kFailedEventId;
                 [message addEvent:localEvent withRoomState:self.mxRoom.state];
                 if (!message.components.count) {
-                    [messages removeObjectAtIndex:index];
+                    [self removeMessageAtIndex:index];
                 }
             } else {
                 // Create a new message
@@ -1878,7 +2011,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
                     // Refresh table display
                     [messages replaceObjectAtIndex:index withObject:message];
                 } else {
-                    [messages removeObjectAtIndex:index];
+                    [self removeMessageAtIndex:index];
                 }
             }
             break;
@@ -1927,10 +2060,14 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
         
         // Check
         if (roomAlias.length) {
-            // FIXME
-            NSLog(@"Join Alias is not supported yet (%@)", text);
-            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"/join is not supported yet" message:nil delegate:nil cancelButtonTitle:@"OK" otherButtonTitles: nil];
-            [alert show];
+            [[MatrixHandler sharedHandler].mxSession joinRoom:roomAlias success:^(MXRoom *room) {
+                // Show the room
+                [[AppDelegate theDelegate].masterTabBarController showRoom:room.state.roomId];
+            } failure:^(NSError *error) {
+                NSLog(@"Join roomAlias (%@) failed: %@", roomAlias, error);
+                //Alert user
+                [[AppDelegate theDelegate] showErrorAsAlert:error];
+            }];
         } else {
             // Display cmd usage in text input as placeholder
             self.messageTextField.placeholder = @"Usage: /join <room_alias>";

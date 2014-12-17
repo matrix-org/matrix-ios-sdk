@@ -264,6 +264,8 @@ static MatrixHandler *sharedHandler = nil;
     // Reset access token (mxSession is closed by setter)
     self.accessToken = nil;
     self.userId = nil;
+    self.homeServer = nil;
+    // Keep userLogin, homeServerUrl
 }
 
 - (void)forceInitialSync {
@@ -284,8 +286,7 @@ static MatrixHandler *sharedHandler = nil;
             if (direction == MXEventDirectionForwards) {
                 MXRoomState* roomState = (MXRoomState*)customObject;
                 // If we are running on background, show a local notif
-                if (UIApplicationStateBackground == [UIApplication sharedApplication].applicationState)
-                {
+                if (UIApplicationStateBackground == [UIApplication sharedApplication].applicationState) {
                     UILocalNotification *localNotification = [[UILocalNotification alloc] init];
                     localNotification.fireDate = [NSDate dateWithTimeIntervalSinceNow:0];
                     localNotification.hasAction = YES;

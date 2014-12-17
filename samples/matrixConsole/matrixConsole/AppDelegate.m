@@ -48,12 +48,24 @@
         if ([recents isKindOfClass:[UISplitViewController class]]) {
             UISplitViewController *splitViewController = (UISplitViewController *)recents;
             UINavigationController *navigationController = [splitViewController.viewControllers lastObject];
-            navigationController.topViewController.navigationItem.leftBarButtonItem = splitViewController.displayModeButtonItem;
+            
+            // IOS >= 8
+            if ([splitViewController respondsToSelector:@selector(displayModeButtonItem)]) {
+                navigationController.topViewController.navigationItem.leftBarButtonItem = splitViewController.displayModeButtonItem;
+            }
+            
             splitViewController.delegate = self;
         } else {
             // Patch missing image in tabBarItem for iOS < 8.0
             recents.tabBarItem.image = [[UIImage imageNamed:@"tab_recents"] imageWithRenderingMode:UIImageRenderingModeAutomatic];
         }
+        
+        // Retrieve custom configuration
+        NSString* userDefaults = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"UserDefaults"];
+        NSString *defaultsPathFromApp = [[NSBundle mainBundle] pathForResource:userDefaults ofType:@"plist"];
+        NSDictionary *defaults = [NSDictionary dictionaryWithContentsOfFile:defaultsPathFromApp];
+        [[NSUserDefaults standardUserDefaults] registerDefaults:defaults];
+        [[NSUserDefaults standardUserDefaults] synchronize];
         
         if ([[MatrixHandler sharedHandler] isLogged]) {
             [self registerUserNotificationSettings];
