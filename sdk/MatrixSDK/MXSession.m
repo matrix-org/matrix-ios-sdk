@@ -141,7 +141,7 @@ typedef void (^MXOnResumeDone)();
             users[matrixRestClient.credentials.userId] = _myUser;
 
             // Do we start with a MXStore that have permanent data?
-            if (_store.isPermanent && nil == _store.eventStreamToken)
+            if (NO == _store.isPermanent || nil == _store.eventStreamToken)
             {
                 NSLog(@"[MXSession startWithMessagesLimit] Do a global initialSync");
 
