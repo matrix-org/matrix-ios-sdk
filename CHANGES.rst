@@ -1,3 +1,29 @@
+Changes in Matrix iOS SDK in 0.2.0 (2014-12-17)
+===============================================
+
+SDK:
+ * BugFix SYIOS-10 - mxSession: myUser lost his displayName after joining a public room.
+ * BugFix SYIOS-9 - SDK should ignore duplicated events sent by the home server.
+ * BugFix SYIOS-8 - Reliable SDK version
+ * Feature SYIOS-3 - Add API to set the power level of an user.
+ * Feature SYIOS-2 - MXRoom: add shortcut methods like inviteUser, postMessage…
+ * Feature SYIOS-7 - Add the ability to cancel [MXRoom paginateBackMessages].
+ * Updated [MXRestClient joinRoom] to support both room id and room alias.
+ * SDK tests: add/update tests, improve tests suite duration.
+
+Matrix Console:
+ * BugFix SYIOS-18 - displaying keyboard has nasty animation artefacts.
+ * BugFix SYIOS-17 - Fudge around flickering during echos.
+ * BugFix SYIOS-15 - Entering a room should show all cached history from global initialsync.
+ * BugFix - “Recents getting stuck after settings changes”.
+ * Post user’s presence (online, unavailable or offline).
+ * Fix scrolling issues in Room screen.
+ * Use MXMyUser object (defined by SDK) to manage user’s information.
+ * Enlarge text width in Room screen.
+ * Room screen: display and edit room topic.
+ * Room screen: support /join command (join room by its alias)
+ * Recents: improve last event description.
+
 Changes in Matrix iOS SDK in 0.1.0 (2014-12-09)
 ===============================================
 
