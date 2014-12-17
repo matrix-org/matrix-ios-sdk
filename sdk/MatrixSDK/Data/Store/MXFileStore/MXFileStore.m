@@ -167,6 +167,11 @@ NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
 {
     NSString *metaDataFile = [storePath stringByAppendingPathComponent:kMXFileStoreMedaDataFile];
     metaData = [NSKeyedUnarchiver unarchiveObjectWithFile:metaDataFile];
+
+    if (metaData)
+    {
+        self.eventStreamToken = metaData.eventStreamToken;
+    }
 }
 
 - (void)saveMetaData

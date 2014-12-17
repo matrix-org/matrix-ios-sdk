@@ -129,56 +129,69 @@ typedef void (^MXOnResumeDone)();
             // And store him as a common MXUser
             users[matrixRestClient.credentials.userId] = _myUser;
 
-            // Then, we can do the global sync
-            [matrixRestClient initialSyncWithLimit:initialSyncMessagesLimit success:^(NSDictionary *JSONData) {
-                for (NSDictionary *roomDict in JSONData[@"rooms"])
-                {
-                    MXRoom *room = [self getOrCreateRoom:roomDict[@"room_id"] withJSONData:roomDict];
+            // Do we start with a MXStore that have permanent data?
+            if (nil == _store.eventStreamToken)
+            {
+                NSLog(@"[MXSession startWithMessagesLimit] Do a global initialSync");
 
-                    if ([roomDict objectForKey:@"messages"])
+                // Then, we can do the global sync
+                [matrixRestClient initialSyncWithLimit:initialSyncMessagesLimit success:^(NSDictionary *JSONData) {
+                    for (NSDictionary *roomDict in JSONData[@"rooms"])
                     {
-                        MXPaginationResponse *roomMessages = [MXPaginationResponse modelFromJSON:[roomDict objectForKey:@"messages"]];
+                        MXRoom *room = [self getOrCreateRoom:roomDict[@"room_id"] withJSONData:roomDict];
 
-                        [room handleMessages:roomMessages
-                                   direction:MXEventDirectionSync isTimeOrdered:YES];
-
-                        // If the initialSync returns less messages than requested, we got all history from the home server
-                        if (roomMessages.chunk.count < initialSyncMessagesLimit)
+                        if ([roomDict objectForKey:@"messages"])
                         {
-                            [_store storeHasReachedHomeServerPaginationEndForRoom:room.state.roomId andValue:YES];
+                            MXPaginationResponse *roomMessages = [MXPaginationResponse modelFromJSON:[roomDict objectForKey:@"messages"]];
+
+                            [room handleMessages:roomMessages
+                                       direction:MXEventDirectionSync isTimeOrdered:YES];
+
+                            // If the initialSync returns less messages than requested, we got all history from the home server
+                            if (roomMessages.chunk.count < initialSyncMessagesLimit)
+                            {
+                                [_store storeHasReachedHomeServerPaginationEndForRoom:room.state.roomId andValue:YES];
+                            }
+                        }
+                        if ([roomDict objectForKey:@"state"])
+                        {
+                            [room handleStateEvents:roomDict[@"state"] direction:MXEventDirectionSync];
                         }
                     }
-                    if ([roomDict objectForKey:@"state"])
+
+                    // Manage presence
+                    for (NSDictionary *presenceDict in JSONData[@"presence"])
                     {
-                        [room handleStateEvents:roomDict[@"state"] direction:MXEventDirectionSync];
+                        MXEvent *presenceEvent = [MXEvent modelFromJSON:presenceDict];
+                        [self handlePresenceEvent:presenceEvent direction:MXEventDirectionSync];
                     }
+
+                    // We have data, the SDK user can start using it
+                    initialSyncDone();
+
+                    // Start listening to live events
+                    _store.eventStreamToken = JSONData[@"end"];
+
+                    // Commit store changes done in [room handleMessages]
+                    if ([_store respondsToSelector:@selector(save)])
+                    {
+                        [_store save];
+                    }
+                    
+                    // Resume from the last known token
+                    [self streamEventsFromToken:_store.eventStreamToken withLongPoll:YES];
                 }
-
-                // Manage presence
-                for (NSDictionary *presenceDict in JSONData[@"presence"])
-                {
-                    MXEvent *presenceEvent = [MXEvent modelFromJSON:presenceDict];
-                    [self handlePresenceEvent:presenceEvent direction:MXEventDirectionSync];
-                }
-
-                // We have data, the SDK user can start using it
-                initialSyncDone();
-
-                // Start listening to live events
-                _store.eventStreamToken = JSONData[@"end"];
-
-                // Commit store changes done in [room handleMessages]
-                if ([_store respondsToSelector:@selector(save)])
-                {
-                    [_store save];
-                }
-                
-                // Resume from the last known token
-                [self streamEventsFromToken:_store.eventStreamToken withLongPoll:YES];
+                                               failure:^(NSError *error) {
+                                                   failure(error);
+                                               }];
             }
-            failure:^(NSError *error) {
-                failure(error);
-            }];
+            else
+            {
+                // The MXStore storage is permanent. Resume the stream from where we were
+                NSLog(@"[MXSession startWithMessagesLimit] Resume the events stream from %@", _store.eventStreamToken);
+                [self resume:initialSyncDone];
+            }
+
         } failure:^(NSError *error) {
             failure(error);
         }];
