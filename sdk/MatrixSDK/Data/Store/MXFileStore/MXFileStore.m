@@ -123,6 +123,7 @@ NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
     NSMutableArray *roomIDArray = [NSMutableArray arrayWithArray:fileArray];
     [roomIDArray removeObject:kMXFileStoreFolder];
 
+    NSDate *startDate = [NSDate date];
     NSLog(@"[MXFileStore loadRoomsData]:");
 
     for (NSString *roomId in roomIDArray)  {
@@ -143,7 +144,7 @@ NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
         }
     }
 
-    NSLog(@"Loaded data for %lu rooms", (unsigned long)roomStores.allKeys.count);
+    NSLog(@"Loaded data for %lu rooms in %.0fms", (unsigned long)roomStores.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (void)saveRoomsData
