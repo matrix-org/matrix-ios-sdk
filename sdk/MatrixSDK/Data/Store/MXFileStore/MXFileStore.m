@@ -52,7 +52,7 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
 
 @implementation MXFileStore
 
-- (instancetype)initWithCredentials:(MXCredentials*)credentials;
+- (instancetype)init;
 {
     self = [super init];
     if (self)
@@ -66,6 +66,14 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
         storePath = [cachePath stringByAppendingPathComponent:kMXFileStoreFolder];
         storeRoomsMessagesPath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsMessagesFolder];
         storeRoomsStatePath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsStateFolder];
+    }
+    return self;
+}
+
+- (void)openWithCredentials:(MXCredentials*)credentials onComplete:(void (^)())onComplete
+{
+    // Load data from the file system on a separate thread
+    dispatch_async(dispatch_get_global_queue( DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void){
 
         [self loadMetaData];
 
@@ -111,8 +119,12 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
             metaData.version = kMXFileVersion;
             [self saveMetaData];
         }
-    }
-    return self;
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            onComplete();
+        });
+
+    });
 }
 
 

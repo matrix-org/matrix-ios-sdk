@@ -19,22 +19,36 @@
 /**
  `MXFileStore` extends MXMemoryStore by adding permanent storage.
 
- The data are stored on [MXStore commit] and reloaded on [MXFileStore initWithCredentials:].
+ The data are stored on [MXStore commit] and reloaded on [MXFileStore openWithCredentials:].
  Between them MXFileStore behaves as MXMemoryStore: the data is mounted in memory.
+ 
+ The files structure is the following:
+ + NSCachesDirectory
+    + MXFileStore
+        + messages : The messages. One file per room
+            L roomId1
+            L roomId2
+            L ...
+        + state : The state events. One file per room
+            L roomId1
+            L roomId2
+            L ...
+        L MXFileStore : Information about the stored data
  */
 @interface MXFileStore : MXMemoryStore
 
 /**
- Initialize a MXFileStore with account credentials.
+ Mount data corresponding to the account credentials.
  
+ The MXFileStore needs to prepopulate its MXMemoryStore parent data from the file system before being used.
+
  MXFileStore manages one account at a time (same home server, same user id and same access token).
  If `credentials` is different from the previously used one, all the data will be erased
  and the MXFileStore instance will start from a clean state.
 
  @param credentials the credentials of the account.
-
- @return the MXFileStore instance.
+ @param onComplete the callback called once the data has been loaded. It is called on the main thread.
  */
-- (instancetype)initWithCredentials:(MXCredentials*)credentials;
+- (void)openWithCredentials:(MXCredentials*)credentials onComplete:(void (^)())onComplete;
 
 @end

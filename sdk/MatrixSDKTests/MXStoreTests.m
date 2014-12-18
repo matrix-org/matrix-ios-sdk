@@ -54,9 +54,19 @@
 - (void)doTestWithStore:(id<MXStore>)store
    readyToTest:(void (^)(MXRoom *room))readyToTest
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
+    // Do not generate an expectation if we already have one
+    XCTestCase *testCase = self;
+    if (expectation)
+    {
+        testCase = nil;
+    }
 
-        expectation = expectation2;
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:testCase readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
+
+        if (!expectation)
+        {
+            expectation = expectation2;
+        }
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient andStore:store];
 
@@ -74,12 +84,22 @@
 - (void)doTestWithTwoUsersAndStore:(id<MXStore>)store
             readyToTest:(void (^)(MXRoom *room))readyToTest
 {
+    // Do not generate an expectation if we already have one
+    XCTestCase *testCase = self;
+    if (expectation)
+    {
+        testCase = nil;
+    }
+
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-    [sharedData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation2) {
+    [sharedData doMXSessionTestWithBobAndAliceInARoom:testCase readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation2) {
 
         [sharedData for:bobRestClient andRoom:roomId postMessages:5 success:^{
 
-            expectation = expectation2;
+            if (!expectation)
+            {
+                expectation = expectation2;
+            }
 
             mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient andStore:store];
 
@@ -122,17 +142,28 @@
 - (void)doTestWithMXFileStore:(void (^)(MXRoom *room))readyToTest
 {
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-    MXFileStore *store = [[MXFileStore alloc] initWithCredentials:sharedData.bobCredentials];
+    MXFileStore *store = [[MXFileStore alloc] init];
 
-    [self doTestWithStore:store readyToTest:readyToTest];
+    expectation = [self expectationWithDescription:@"asyncTest"];
+
+    [store openWithCredentials:sharedData.bobCredentials onComplete:^{
+        [self doTestWithStore:store readyToTest:readyToTest];
+    }];
+
+    [self waitForExpectationsWithTimeout:10000 handler:nil];
 }
 
 - (void)doTestWithTwoUsersAndMXFileStore:(void (^)(MXRoom *room))readyToTest
 {
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-    MXFileStore *store = [[MXFileStore alloc] initWithCredentials:sharedData.bobCredentials];
+    MXFileStore *store = [[MXFileStore alloc] init];
 
-    [self doTestWithTwoUsersAndStore:store readyToTest:readyToTest];
+    expectation = [self expectationWithDescription:@"asyncTest"];
+    [store openWithCredentials:sharedData.bobCredentials onComplete:^{
+        [self doTestWithTwoUsersAndStore:store readyToTest:readyToTest];
+    }];
+
+    [self waitForExpectationsWithTimeout:10000 handler:nil];
 }
 
 
@@ -140,9 +171,19 @@
        andMessagesLimit:(NSUInteger)messagesLimit
             readyToTest:(void (^)(MXRoom *room))readyToTest
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
+    // Do not generate an expectation if we already have one
+    XCTestCase *testCase = self;
+    if (expectation)
+    {
+        testCase = nil;
+    }
 
-        expectation = expectation2;
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:testCase readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
+
+        if (!expectation)
+        {
+            expectation = expectation2;
+        }
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient andStore:store];
 
@@ -172,9 +213,14 @@
 - (void)doTestWithMXFileStoreAndMessagesLimit:(NSUInteger)messagesLimit readyToTest:(void (^)(MXRoom *room))readyToTest
 {
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-    MXFileStore *store = [[MXFileStore alloc] initWithCredentials:sharedData.bobCredentials];
+    MXFileStore *store = [[MXFileStore alloc] init];
 
-    [self doTestWithStore:store andMessagesLimit:messagesLimit readyToTest:readyToTest];
+    expectation = [self expectationWithDescription:@"asyncTest"];
+    [store openWithCredentials:sharedData.bobCredentials onComplete:^{
+        [self doTestWithStore:store andMessagesLimit:messagesLimit readyToTest:readyToTest];
+    }];
+
+    [self waitForExpectationsWithTimeout:10000 handler:nil];
 }
 
 
@@ -976,7 +1022,7 @@
 #pragma mark - MXFileStore
 - (void)testMXFileEventWithEventId
 {
-    MXFileStore *store = [[MXFileStore alloc] initWithCredentials:nil];
+    MXFileStore *store = [[MXFileStore alloc] init];
     [self checkEventWithEventIdOfStore:store];
 }
 
