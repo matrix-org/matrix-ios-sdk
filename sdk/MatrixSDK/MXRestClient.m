@@ -104,6 +104,37 @@ MXAuthAction;
                           success:success failure:failure];
 }
 
+#pragma mark Push Notification Registration
+
+- (void)setPusherWithPushkey:(NSString *)pushkey
+                        kind:(NSString *)kind
+                       appId:(NSString *)appId
+              appDisplayName:(NSString *)appDisplayName
+           deviceDisplayName:(NSString *)deviceDisplayName
+                        data:(NSDictionary *)data
+                     success:(void (^)())success
+                     failure:(void (^)(NSError *))failure {
+    NSDictionary *parameters = @{
+                                 @"pushkey": pushkey,
+                                 @"kind": kind,
+                                 @"app_id": appId,
+                                 @"app_display_name": appDisplayName,
+                                 @"device_display_name": deviceDisplayName,
+                                 @"data": data
+                                };
+    
+    [httpClient requestWithMethod:@"POST"
+                             path:@"pushers/set"
+                       parameters:parameters
+                          success:^(NSDictionary *JSONResponse)
+     {
+         success();
+     }
+                          failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
 
 #pragma mark - Common operations for register and login
 /*

@@ -85,6 +85,16 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
               success:(void (^)(MXCredentials *credentials))success
               failure:(void (^)(NSError *error))failure;
 
+#pragma mark Push Notification Registration
+
+- (void)setPusherWithPushkey:(NSString *)pushkey
+                        kind:(NSString *)kind
+                       appId:(NSString *)appId
+              appDisplayName:(NSString *)appDisplayName
+           deviceDisplayName:(NSString *)deviceDisplayName
+                        data:(NSDictionary *)data
+                     success:(void (^)())success
+                     failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Room operations
 /**
