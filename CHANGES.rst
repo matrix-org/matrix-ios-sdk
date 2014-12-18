@@ -20,8 +20,9 @@ Matrix Console:
  * Fix scrolling issues in Room screen.
  * Use MXMyUser object (defined by SDK) to manage user’s information.
  * Enlarge text width in Room screen.
- * Room screen: display and edit room topic.
- * Room screen: support /join command (join room by its alias)
+ * Room view: display and edit room topic.
+ * Room view: support /join command (join room by its alias).
+ * Room view: support /op and /deop commands (power level handling).
  * Recents: improve last event description.
 
 Changes in Matrix iOS SDK in 0.1.0 (2014-12-09)
