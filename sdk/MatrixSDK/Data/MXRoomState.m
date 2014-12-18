@@ -110,7 +110,14 @@
 
 - (NSArray *)stateEvents
 {
-    return [stateEvents allValues];
+    NSMutableArray *state = [NSMutableArray arrayWithArray:[stateEvents allValues]];
+
+    // Members are also state events
+    for (MXRoomMember *roomMember in self.members)
+    {
+        [state addObject:roomMember.originalEvent];
+    }
+    return state;
 }
 
 - (NSArray *)members
