@@ -51,7 +51,7 @@
     return [roomStore eventWithEventId:eventId];
 }
 
-- (void)cleanDataOfRoom:(NSString *)roomId
+- (void)deleteDataOfRoom:(NSString *)roomId
 {
     if (roomStores[roomId])
     {
@@ -59,7 +59,7 @@
     }
 }
 
-- (void)cleanAllData
+- (void)deleteAllData
 {
     [roomStores removeAllObjects];
 }

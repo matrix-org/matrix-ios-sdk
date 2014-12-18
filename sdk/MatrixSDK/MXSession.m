@@ -184,9 +184,9 @@ typedef void (^MXOnResumeDone)();
                     _store.eventStreamToken = JSONData[@"end"];
 
                     // Commit store changes done in [room handleMessages]
-                    if ([_store respondsToSelector:@selector(save)])
+                    if ([_store respondsToSelector:@selector(commit)])
                     {
-                        [_store save];
+                        [_store commit];
                     }
                     
                     // Resume from the last known token
@@ -301,9 +301,9 @@ typedef void (^MXOnResumeDone)();
     }
 
     // Commit store changes done in [room handleLiveEvent]
-    if ([_store respondsToSelector:@selector(save)])
+    if ([_store respondsToSelector:@selector(commit)])
     {
-        [_store save];
+        [_store commit];
     }
 }
 
@@ -402,9 +402,9 @@ typedef void (^MXOnResumeDone)();
             }
 
             // Commit store changes done in [room handleMessages]
-            if ([_store respondsToSelector:@selector(save)])
+            if ([_store respondsToSelector:@selector(commit)])
             {
-                [_store save];
+                [_store commit];
             }
 
             success(room);
@@ -495,7 +495,7 @@ typedef void (^MXOnResumeDone)();
         }
 
         // Clean the store
-        [_store cleanDataOfRoom:roomId];
+        [_store deleteDataOfRoom:roomId];
 
         // And remove the room from the list
         [rooms removeObjectForKey:roomId];

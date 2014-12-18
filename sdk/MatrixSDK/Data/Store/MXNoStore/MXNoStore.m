@@ -70,7 +70,7 @@
     return nil;
 }
 
-- (void)cleanDataOfRoom:(NSString *)roomId
+- (void)deleteDataOfRoom:(NSString *)roomId
 {
     if (paginationTokens[roomId])
     {
@@ -86,7 +86,7 @@
     }
 }
 
-- (void)cleanAllData
+- (void)deleteAllData
 {
     [paginationTokens removeAllObjects];
     [hasReachedHomeServerPaginations removeAllObjects];

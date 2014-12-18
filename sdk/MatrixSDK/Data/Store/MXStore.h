@@ -48,16 +48,16 @@
 - (MXEvent*)eventWithEventId:(NSString*)eventId inRoom:(NSString*)roomId;
 
 /**
- Clean all data related to a room.
+ Erase all data related to a room.
  
  @param roomId the id of the room.
  */
-- (void)cleanDataOfRoom:(NSString*)roomId;
+- (void)deleteDataOfRoom:(NSString*)roomId;
 
 /**
  Erase all data from the store.
  */
-- (void)cleanAllData;
+- (void)deleteAllData;
 
 /**
  Store/retrieve the current pagination token of a room.
@@ -158,11 +158,11 @@
 - (NSArray*)stateOfRoom:(NSString*)roomId;
 
 /**
- Save/commit changes in the store.
+ Save changes in the store.
 
- If the store uses permanent storage like database or file. It is the optimised time
+ If the store uses permanent storage like database or file, it is the optimised time
  to commit the last changes.
  */
-- (void)save;
+- (void)commit;
 
 @end

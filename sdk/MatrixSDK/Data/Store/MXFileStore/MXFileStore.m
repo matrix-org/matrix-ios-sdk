@@ -34,7 +34,7 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     // When nil, nothing is stored on the file system.
     MXFileStoreMetaData *metaData;
 
-    // List of rooms to save on [MXStore save]
+    // List of rooms to save on [MXStore commit]
     NSMutableArray *roomsToCommitForMessages;
 
     NSMutableDictionary *roomsToCommitForState;
@@ -74,17 +74,17 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
         // Check if
         if (nil == metaData)
         {
-            [self cleanAllData];
+            [self deleteAllData];
         }
         // Check store version
         else if (kMXFileVersion != metaData.version)
         {
-            [self cleanAllData];
+            [self deleteAllData];
         }
         // Check credentials
         else if (nil == credentials)
         {
-            [self cleanAllData];
+            [self deleteAllData];
         }
         // Check credentials
         else if (NO == [metaData.homeServer isEqualToString:credentials.homeServer]
@@ -92,7 +92,7 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
                  || NO == [metaData.accessToken isEqualToString:credentials.accessToken])
 
         {
-            [self cleanAllData];
+            [self deleteAllData];
         }
 
         // If metaData is still defined, we can load rooms data
@@ -127,9 +127,9 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     }
 }
 
-- (void)cleanDataOfRoom:(NSString *)roomId
+- (void)deleteDataOfRoom:(NSString *)roomId
 {
-    [super cleanDataOfRoom:roomId];
+    [super deleteDataOfRoom:roomId];
 
     // Remove the corresponding data from the file system
     NSString *roomFile = [storePath stringByAppendingPathComponent:roomId];
@@ -138,9 +138,9 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     [[NSFileManager defaultManager] removeItemAtPath:roomFile error:&error];
 }
 
-- (void)cleanAllData
+- (void)deleteAllData
 {
-    [super cleanAllData];
+    [super deleteAllData];
 
     // Remove the MXFileStore and all its content
     NSError *error;
@@ -181,7 +181,7 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     return stateEvents;
 }
 
-- (void)save
+- (void)commit
 {
     // Save data only if metaData exists
     if (metaData)
@@ -217,7 +217,7 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
         else
         {
             NSLog(@"Warning: MXFileStore has been reset due to room file corruption. Room id: %@", roomId);
-            [self cleanAllData];
+            [self deleteAllData];
             break;
         }
     }

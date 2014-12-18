@@ -19,7 +19,7 @@
 /**
  `MXFileStore` extends MXMemoryStore by adding permanent storage.
 
- The data are stored on [MXStore save] and reloaded on [MXFileStore initWithCredentials:].
+ The data are stored on [MXStore commit] and reloaded on [MXFileStore initWithCredentials:].
  Between them MXFileStore behaves as MXMemoryStore: the data is mounted in memory.
  */
 @interface MXFileStore : MXMemoryStore

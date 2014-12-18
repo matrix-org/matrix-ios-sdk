@@ -159,9 +159,9 @@
     }
 
     // Commit store changes
-    if ([mxSession.store respondsToSelector:@selector(save)])
+    if ([mxSession.store respondsToSelector:@selector(commit)])
     {
-        [mxSession.store save];
+        [mxSession.store commit];
     }
 }
 
