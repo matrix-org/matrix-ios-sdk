@@ -21,6 +21,7 @@
 #import "MXTools.h"
 
 #pragma mark - Constants definitions
+NSString *const kMXMediaPathPrefix = @"/_matrix/media/v1";
 NSString *const kMXRoomVisibilityPublic = @"public";
 NSString *const kMXRoomVisibilityPrivate = @"private";
 
@@ -832,7 +833,7 @@ MXAuthAction;
               success:(void (^)(NSString *url))success
               failure:(void (^)(NSError *error))failure
 {
-    NSString* path = @"/_matrix/content";
+    NSString* path = [NSString stringWithFormat:@"%@/upload", kMXMediaPathPrefix];
     NSDictionary *headers = @{@"Content-Type": mimeType};
     
     [httpClient requestWithMethod:@"POST"
@@ -842,100 +843,11 @@ MXAuthAction;
                         headers:headers
                         timeout:timeoutInSeconds
                         success:^(NSDictionary *JSONResponse) {
-                            NSString *contentURL = JSONResponse[@"content_token"];
+                            NSString *contentURL = JSONResponse[@"content_uri"];
                             NSLog(@"uploadContent succeeded: %@",contentURL);
                             success(contentURL);
                         }
                         failure:failure];
 }
 
-- (void)uploadImage:(UIImage *)image
-      thumbnailSize:(NSUInteger)thumbnailSize
-            timeout:(NSTimeInterval)timeoutInSeconds
-            success:(void (^)(NSDictionary *imageMessage))success
-            failure:(void (^)(NSError *error))failure
-{
-    NSMutableDictionary *imageMessage = [[NSMutableDictionary alloc] init];
-    [imageMessage setValue:@"m.image" forKey:@"msgtype"];
-    UIImage *thumbnail = nil;
-    
-    // Check whether a thumbnail is required
-    if (thumbnailSize && (image.size.width > thumbnailSize || image.size.height > thumbnailSize)) {
-        CGFloat width, height;
-        if (image.size.width > image.size.height) {
-            height = (image.size.height * thumbnailSize) / image.size.width;
-            height = floorf(height / 2) * 2;
-            width = thumbnailSize;
-        } else {
-            width = (image.size.width * thumbnailSize) / image.size.height;
-            width = floorf(width / 2) * 2;
-            height = thumbnailSize;
-        }
-        
-        // Create the thumbnail
-        CGSize imageSize = CGSizeMake(width, height);
-        UIGraphicsBeginImageContext(imageSize);
-        
-        CGRect thumbnailRect = CGRectMake(0, 0, 0, 0);
-        thumbnailRect.origin = CGPointMake(0.0,0.0);
-        thumbnailRect.size.width  = imageSize.width;
-        thumbnailRect.size.height = imageSize.height;
-        
-        [image drawInRect:thumbnailRect];
-        thumbnail = UIGraphicsGetImageFromCurrentImageContext();
-        UIGraphicsEndImageContext();
-    }
-    
-    if (thumbnail) {
-        // Upload thumbnail
-        NSMutableDictionary *thumbnailInfo = [[NSMutableDictionary alloc] init];
-        [thumbnailInfo setValue:@"image/jpeg" forKey:@"mimetype"];
-        [thumbnailInfo setValue:[NSNumber numberWithUnsignedInteger:(NSUInteger)thumbnail.size.width] forKey:@"w"];
-        [thumbnailInfo setValue:[NSNumber numberWithUnsignedInteger:(NSUInteger)thumbnail.size.height] forKey:@"h"];
-        NSData *thumbnailData = UIImageJPEGRepresentation(thumbnail, 0.9);
-        [thumbnailInfo setValue:[NSNumber numberWithUnsignedInteger:thumbnailData.length] forKey:@"size"];
-        
-        [self uploadContent:thumbnailData mimeType:@"image/jpeg" timeout:timeoutInSeconds success:^(NSString *url) {
-            [imageMessage setValue:url forKey:@"thumbnail_url"];
-            [imageMessage setValue:thumbnailInfo forKey:@"thumbnail_info"];
-            
-            // Upload the original image
-            [self finalizeImageUpload:image thumbnailInfo:imageMessage timeout:timeoutInSeconds success:success failure:failure];
-        } failure:^(NSError *error) {
-            failure(error);
-        }];
-    } else {
-        // Upload the original image
-        [self finalizeImageUpload:image thumbnailInfo:imageMessage timeout:timeoutInSeconds success:success failure:failure];
-    }
-}
-
-- (void)finalizeImageUpload:(UIImage *)image
-              thumbnailInfo:(NSMutableDictionary *)imageMessage
-                    timeout:(NSTimeInterval)timeoutInSeconds
-                    success:(void (^)(NSDictionary *imageMessage))success
-                    failure:(void (^)(NSError *error))failure
-{
-    NSMutableDictionary *imageInfo = [[NSMutableDictionary alloc] init];
-    [imageInfo setValue:@"image/jpeg" forKey:@"mimetype"];
-    [imageInfo setValue:[NSNumber numberWithUnsignedInteger:(NSUInteger)image.size.width] forKey:@"w"];
-    [imageInfo setValue:[NSNumber numberWithUnsignedInteger:(NSUInteger)image.size.height] forKey:@"h"];
-    NSData *imageData = UIImageJPEGRepresentation(image, 0.8);
-    [imageInfo setValue:[NSNumber numberWithUnsignedInteger:imageData.length] forKey:@"size"];
-    
-    [self uploadContent:imageData mimeType:@"image/jpeg" timeout:timeoutInSeconds success:^(NSString *url) {
-        [imageMessage setValue:url forKey:@"url"];
-        [imageMessage setValue:imageInfo forKey:@"info"];
-        [imageMessage setValue:@"Image" forKey:@"body"];
-        // If there is no thumbnail (because the original image is smaller than thumbnailSize),
-        // reuse the original image info for thumbnail data
-        if (!imageMessage[@"thumbnail_url"]) {
-            [imageInfo setValue:imageInfo forKey:@"thumbnail_info"];
-            [imageInfo setValue:url forKey:@"thumbnail_url"];
-        }
-        success(imageMessage);
-    } failure:^(NSError *error) {
-        failure(error);
-    }];
-}
 @end
