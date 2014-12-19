@@ -258,8 +258,8 @@
             }
             
             XCTAssertNotNil(theMXPublicRoom);
-            XCTAssertTrue([theMXPublicRoom.name  isEqualToString:@"MX Public Room test"]);
-            XCTAssertTrue([theMXPublicRoom.topic isEqualToString:@"The public room used by SDK tests"]);
+            XCTAssertEqualObjects(theMXPublicRoom.name, @"MX Public Room test");
+            XCTAssertEqualObjects(theMXPublicRoom.topic, @"The public room used by SDK tests");
             XCTAssertGreaterThan(theMXPublicRoom.numJoinedMembers, 0, @"The is at least mxBob at #matrix:matrix.org");
             
             [expectation fulfill];
