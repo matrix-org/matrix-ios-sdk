@@ -302,16 +302,18 @@
                     [aliceRestClient joinRoom:roomId success:^(NSString *roomName){
                         
                         [aliceRestClient postTextMessageToRoom:roomId text:@"Hi" success:^(NSString *eventId) {
-                            
+
+                            MXRestClient *aliceRestClient2 = aliceRestClient;
+
                             [aliceRestClient setDisplayName:@"Alice in Wonderland" success:^{
                                 
-                                [aliceRestClient postTextMessageToRoom:roomId text:@"What's going on?" success:^(NSString *eventId) {
+                                [aliceRestClient2 postTextMessageToRoom:roomId text:@"What's going on?" success:^(NSString *eventId) {
                                     
-                                    [aliceRestClient leaveRoom:roomId success:^{
+                                    [aliceRestClient2 leaveRoom:roomId success:^{
                                         
-                                        [bobRestClient postTextMessageToRoom:roomId text:@"Good bye" success:^(NSString *eventId) {
+                                        [aliceRestClient2 postTextMessageToRoom:roomId text:@"Good bye" success:^(NSString *eventId) {
                                             
-                                            onComplete(aliceRestClient);
+                                            onComplete(aliceRestClient2);
                                             
                                         } failure:^(NSError *error) {
                                             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);

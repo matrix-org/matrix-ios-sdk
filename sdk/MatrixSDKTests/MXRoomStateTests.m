@@ -340,7 +340,9 @@
 - (void)createInviteByUserScenario:(MXRestClient*)bobRestClient inRoom:(NSString*)roomId inviteAlice:(BOOL)inviteAlice onComplete:(void(^)())onComplete
 {
     [bobRestClient postTextMessageToRoom:roomId text:@"Hello world" success:^(NSString *eventId) {
-        
+
+        MXRestClient *bobRestClient2 = bobRestClient;
+
         [bobRestClient setRoomTopic:roomId topic:@"We test room invitation here" success:^{
             
             MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
@@ -349,9 +351,9 @@
                 
                 if (inviteAlice)
                 {
-                    [bobRestClient inviteUser:sharedData.aliceCredentials.userId toRoom:roomId success:^{
+                    [bobRestClient2 inviteUser:sharedData.aliceCredentials.userId toRoom:roomId success:^{
                         
-                        [bobRestClient postTextMessageToRoom:roomId text:@"I wait for Alice" success:^(NSString *eventId) {
+                        [bobRestClient2 postTextMessageToRoom:roomId text:@"I wait for Alice" success:^(NSString *eventId) {
                             
                             onComplete();
                             
