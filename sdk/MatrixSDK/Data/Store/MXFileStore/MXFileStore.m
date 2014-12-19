@@ -75,6 +75,8 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     // Load data from the file system on a separate thread
     dispatch_async(dispatch_get_global_queue( DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void){
 
+        NSLog(@"MXFileStore.diskUsage: %@", [NSByteCountFormatter stringFromByteCount:self.diskUsage countStyle:NSByteCountFormatterCountStyleFile]);
+
         [self loadMetaData];
 
         // Do some validations
@@ -125,6 +127,22 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
         });
 
     });
+}
+
+- (NSUInteger)diskUsage
+{
+    NSArray *contents = [[NSFileManager defaultManager] subpathsOfDirectoryAtPath:storePath error:nil];
+    NSEnumerator *contentsEnumurator = [contents objectEnumerator];
+
+    NSString *file;
+    NSUInteger diskUsage = 0;
+
+    while (file = [contentsEnumurator nextObject]) {
+        NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:[storePath stringByAppendingPathComponent:file] error:nil];
+        diskUsage += [[fileAttributes objectForKey:NSFileSize] intValue];
+    }
+
+    return diskUsage;
 }
 
 
