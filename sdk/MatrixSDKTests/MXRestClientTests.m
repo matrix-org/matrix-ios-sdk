@@ -239,7 +239,7 @@
                     
                     if ([member.userId isEqualToString:sharedData.aliceCredentials.userId])
                     {
-                        XCTAssertEqual(member.membership, MXMembershipLeave, @"A kicked user membership is leave, not %lu", member.membership);
+                        XCTAssertEqual(member.membership, MXMembershipLeave, @"A kicked user membership is leave, not %tu", member.membership);
                     }
                     else
                     {
@@ -281,7 +281,7 @@
                     
                     if ([member.userId isEqualToString:sharedData.aliceCredentials.userId])
                     {
-                        XCTAssertEqual(member.membership, MXMembershipBan, @"A banned user membership is ban, not %lu", member.membership);
+                        XCTAssertEqual(member.membership, MXMembershipBan, @"A banned user membership is ban, not %tu", member.membership);
                     }
                     else
                     {
