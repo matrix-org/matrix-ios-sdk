@@ -56,8 +56,8 @@
                     
                     if ([member.userId isEqualToString:sharedData.aliceCredentials.userId])
                     {
-                        XCTAssertEqual(member.membership, MXMembershipLeave, @"A kicked user membership is leave, not %lu", member.membership);
-                        XCTAssertEqual(member.prevMembership, MXMembershipJoin, @"The previous membership of a kicked user must be join, not %lu", member.prevMembership);
+                        XCTAssertEqual(member.membership, MXMembershipLeave, @"A kicked user membership is leave, not %tu", member.membership);
+                        XCTAssertEqual(member.prevMembership, MXMembershipJoin, @"The previous membership of a kicked user must be join, not %tu", member.prevMembership);
                         
                         XCTAssert([member.originUserId isEqualToString:sharedData.bobCredentials.userId], @"This is Bob who kicked Alice, not %@", member.originUserId);
                     }
