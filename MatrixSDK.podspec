@@ -21,6 +21,8 @@ Pod::Spec.new do |s|
 
   s.source       = { :git => "https://github.com/matrix-org/matrix-ios-sdk.git", :tag => "v0.1.0" }
   s.source_files  = "MatrixSDK", "sdk/MatrixSDK/**/*.{h,m}"
+  
+  s.requires_arc  = true
 
   s.dependency 'AFNetworking', '~> 2.4.1'
   s.dependency 'Mantle', '~> 1.5'

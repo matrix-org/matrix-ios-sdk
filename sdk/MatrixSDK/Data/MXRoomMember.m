@@ -47,6 +47,7 @@
         _displayname = roomMemberContent.displayname;
         _avatarUrl = roomMemberContent.avatarUrl;
         _membership = [MXTools membership:roomMemberContent.membership];
+        _originalEvent = roomMemberEvent;
 
         // Set who is this member
         if (roomMemberEvent.stateKey)

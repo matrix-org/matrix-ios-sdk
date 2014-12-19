@@ -55,6 +55,12 @@
 @property (nonatomic, readonly) NSString *originUserId;
 
 /**
+ The event used to build the MXRoomMember.
+ // @TODO: Consider MXRoomMember as a child class of MXEvent to avoid such data duplication.
+ */
+@property (nonatomic, readonly) MXEvent *originalEvent;
+
+/**
  Create the room member from a Matrix room member event.
  
  @param roomMemberEvent The MXEvent room member event.

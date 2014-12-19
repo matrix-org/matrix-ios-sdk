@@ -76,7 +76,19 @@
 
             [mxSession.store storeEventForRoom:roomId event:fakeMembershipEvent direction:MXEventDirectionSync];
         }
+    }
+    return self;
+}
 
+- (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession2 andStateEvents:(NSArray *)stateEvents
+{
+    self = [self initWithRoomId:roomId andMatrixSession:mxSession2];
+    if (self)
+    {
+        for (MXEvent *event in stateEvents)
+        {
+            [_state handleStateEvent:event];
+        }
     }
     return self;
 }
@@ -147,9 +159,9 @@
     }
 
     // Commit store changes
-    if ([mxSession.store respondsToSelector:@selector(save)])
+    if ([mxSession.store respondsToSelector:@selector(commit)])
     {
-        [mxSession.store save];
+        [mxSession.store commit];
     }
 }
 
@@ -176,6 +188,12 @@
     
     for (MXEvent *event in events) {
         [self handleStateEvent:event direction:direction];
+    }
+
+    // Update store with new room state only when all state event have been processed
+    if ([mxSession.store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
+    {
+        [mxSession.store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
     }
 }
 
@@ -217,6 +235,12 @@
     if (event.isState)
     {
         [self handleStateEvent:event direction:MXEventDirectionForwards];
+
+        // Update store with new room state once a live event has been processed
+        if ([mxSession.store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
+        {
+            [mxSession.store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
+        }
     }
 
     // Make sure we have not processed this event yet

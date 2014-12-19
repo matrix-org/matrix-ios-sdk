@@ -48,11 +48,16 @@
 - (MXEvent*)eventWithEventId:(NSString*)eventId inRoom:(NSString*)roomId;
 
 /**
- Clean all data related to a room.
+ Erase all data related to a room.
  
  @param roomId the id of the room.
  */
-- (void)cleanDataOfRoom:(NSString*)roomId;
+- (void)deleteDataOfRoom:(NSString*)roomId;
+
+/**
+ Erase all data from the store.
+ */
+- (void)deleteAllData;
 
 /**
  Store/retrieve the current pagination token of a room.
@@ -108,6 +113,12 @@
 - (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types;
 
 /**
+ Indicate if the MXStore implementation stores data permanently.
+ Permanent storage allows the SDK to make less requests at the startup.
+ */
+@property (nonatomic, readonly) BOOL isPermanent;
+
+/**
  The token indicating from where to start listening event stream to get
  live events.
  */
@@ -117,11 +128,41 @@
 @optional
 
 /**
- Save/commit changes in the store.
+ Return the ids of the rooms currently stored.
 
- If the store uses permanent storage like database or file. It is the optimised time
+ Note: this method is required in permanent storage implementation.
+ 
+ @return the array of room ids.
+ */
+- (NSArray*)rooms;
+
+/**
+ Store the state of a room.
+
+ Note: this method is required in permanent storage implementation.
+
+ @param roomId the id of the room.
+ @param stateEvents the state events that define the room state.
+ */
+- (void)storeStateForRoom:(NSString*)roomId stateEvents:(NSArray*)stateEvents;
+
+/**
+ Get the state of a room.
+
+ Note: this method is required in permanent storage implementation.
+
+ @param roomId the id of the room.
+
+ @return the stored state events that define the room state.
+ */
+- (NSArray*)stateOfRoom:(NSString*)roomId;
+
+/**
+ Save changes in the store.
+
+ If the store uses permanent storage like database or file, it is the optimised time
  to commit the last changes.
  */
-- (void)save;
+- (void)commit;
 
 @end

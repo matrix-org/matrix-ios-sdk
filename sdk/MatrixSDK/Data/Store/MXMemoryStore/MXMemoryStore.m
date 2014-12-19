@@ -20,12 +20,10 @@
 
 @interface MXMemoryStore()
 {
-    NSMutableDictionary *roomStores;
-
     NSString *eventStreamToken;
 }
-
 @end
+
 
 @implementation MXMemoryStore
 
@@ -53,12 +51,17 @@
     return [roomStore eventWithEventId:eventId];
 }
 
-- (void)cleanDataOfRoom:(NSString *)roomId
+- (void)deleteDataOfRoom:(NSString *)roomId
 {
     if (roomStores[roomId])
     {
         [roomStores removeObjectForKey:roomId];
     }
+}
+
+- (void)deleteAllData
+{
+    [roomStores removeAllObjects];
 }
 
 - (void)storePaginationTokenOfRoom:(NSString*)roomId andToken:(NSString*)token
@@ -110,6 +113,11 @@
 {
     MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
     return [roomStore lastMessageWithTypeIn:types];
+}
+
+- (BOOL)isPermanent
+{
+    return NO;
 }
 
 #pragma mark - Private operations

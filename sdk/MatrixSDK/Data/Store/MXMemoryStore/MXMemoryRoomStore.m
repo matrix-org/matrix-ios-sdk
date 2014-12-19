@@ -118,4 +118,47 @@
     return lastMessage;
 }
 
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"%lu messages - paginationToken: %@ - hasReachedHomeServerPaginationEnd: %d", messages.count, _paginationToken, _hasReachedHomeServerPaginationEnd];
+}
+
+
+#pragma mark - NSCoding
+- (id)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [self init];
+    if (self)
+    {
+        NSMutableArray *rawEventsArray = [aDecoder decodeObjectForKey:@"rawEventsArray"];
+        for (NSDictionary *rawEvent in rawEventsArray)
+        {
+            MXEvent *event = [MXEvent modelFromJSON:rawEvent];
+            [messages addObject:event];
+        }
+
+        _paginationToken = [aDecoder decodeObjectForKey:@"paginationToken"];
+
+        NSNumber *hasReachedHomeServerPaginationEndNumber = [aDecoder decodeObjectForKey:@"hasReachedHomeServerPaginationEnd"];
+        _hasReachedHomeServerPaginationEnd = [hasReachedHomeServerPaginationEndNumber boolValue];
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    // Serialiase only MXEvent.dictionaryValue as it contains all event data
+    NSMutableArray *rawEventsArray = [NSMutableArray array];
+
+    for (MXEvent *event in messages)
+    {
+        [rawEventsArray addObject:event.originalDictionary];
+    }
+
+    [aCoder encodeObject:rawEventsArray forKey:@"rawEventsArray"];
+
+    [aCoder encodeObject:_paginationToken forKey:@"paginationToken"];
+    [aCoder encodeObject:[NSNumber numberWithBool:_hasReachedHomeServerPaginationEnd ] forKey:@"hasReachedHomeServerPaginationEnd"];
+}
+
 @end

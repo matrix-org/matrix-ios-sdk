@@ -12,7 +12,7 @@ Installation
 The SDK uses CocoaPods (http://cocoapods.org/) as library dependency manager.
 The best way to add the Matrix SDK to your application project is to add the MatrixSDK dependency to your Podfile::
     
-      pod 'MatrixSDK', :path => '../../MatrixSDK.podspec' // TODO: Register our podspec at cocoaPods
+      pod 'MatrixSDK', '~> 0.1.0'
 
 
 Overview

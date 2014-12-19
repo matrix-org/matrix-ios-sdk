@@ -21,6 +21,7 @@
 
 #import "MXNoStore.h"
 #import "MXMemoryStore.h"
+#import "MXFileStore.h"
 
 
 /**
@@ -93,6 +94,14 @@ typedef void (^MXOnResumeDone)();
         if (mxStore)
         {
             _store = mxStore;
+
+            // Validate the permanent implementation
+            if (mxStore.isPermanent)
+            {
+                NSAssert([_store respondsToSelector:@selector(rooms)], @"A permanent MXStore must implement this method");
+                NSAssert([_store respondsToSelector:@selector(storeStateForRoom:stateEvents:)], @"A permanent MXStore must implement this method");
+                NSAssert([_store respondsToSelector:@selector(stateOfRoom:)], @"A permanent MXStore must implement this method");
+            }
         }
         else
         {
@@ -100,6 +109,8 @@ typedef void (^MXOnResumeDone)();
             _store = [[MXMemoryStore alloc] init];
 
             //_store = [[MXNoStore alloc] init];  // For test
+
+            //_store = [[MXFileStore alloc] initWithCredentials:mxRestClient.credentials];  // For test
         }
     }
     return self;
@@ -129,56 +140,83 @@ typedef void (^MXOnResumeDone)();
             // And store him as a common MXUser
             users[matrixRestClient.credentials.userId] = _myUser;
 
-            // Then, we can do the global sync
-            [matrixRestClient initialSyncWithLimit:initialSyncMessagesLimit success:^(NSDictionary *JSONData) {
-                for (NSDictionary *roomDict in JSONData[@"rooms"])
-                {
-                    MXRoom *room = [self getOrCreateRoom:roomDict[@"room_id"] withJSONData:roomDict];
+            // Do we start with a MXStore that have permanent data?
+            if (NO == _store.isPermanent || nil == _store.eventStreamToken || 0 == _store.rooms.count)
+            {
+                NSLog(@"[MXSession startWithMessagesLimit] Do a global initialSync");
 
-                    if ([roomDict objectForKey:@"messages"])
+                // Then, we can do the global sync
+                [matrixRestClient initialSyncWithLimit:initialSyncMessagesLimit success:^(NSDictionary *JSONData) {
+                    for (NSDictionary *roomDict in JSONData[@"rooms"])
                     {
-                        MXPaginationResponse *roomMessages = [MXPaginationResponse modelFromJSON:[roomDict objectForKey:@"messages"]];
+                        MXRoom *room = [self getOrCreateRoom:roomDict[@"room_id"] withJSONData:roomDict];
 
-                        [room handleMessages:roomMessages
-                                   direction:MXEventDirectionSync isTimeOrdered:YES];
-
-                        // If the initialSync returns less messages than requested, we got all history from the home server
-                        if (roomMessages.chunk.count < initialSyncMessagesLimit)
+                        if ([roomDict objectForKey:@"messages"])
                         {
-                            [_store storeHasReachedHomeServerPaginationEndForRoom:room.state.roomId andValue:YES];
+                            MXPaginationResponse *roomMessages = [MXPaginationResponse modelFromJSON:[roomDict objectForKey:@"messages"]];
+
+                            [room handleMessages:roomMessages
+                                       direction:MXEventDirectionSync isTimeOrdered:YES];
+
+                            // If the initialSync returns less messages than requested, we got all history from the home server
+                            if (roomMessages.chunk.count < initialSyncMessagesLimit)
+                            {
+                                [_store storeHasReachedHomeServerPaginationEndForRoom:room.state.roomId andValue:YES];
+                            }
+                        }
+                        if ([roomDict objectForKey:@"state"])
+                        {
+                            [room handleStateEvents:roomDict[@"state"] direction:MXEventDirectionSync];
                         }
                     }
-                    if ([roomDict objectForKey:@"state"])
+
+                    // Manage presence
+                    for (NSDictionary *presenceDict in JSONData[@"presence"])
                     {
-                        [room handleStateEvents:roomDict[@"state"] direction:MXEventDirectionSync];
+                        MXEvent *presenceEvent = [MXEvent modelFromJSON:presenceDict];
+                        [self handlePresenceEvent:presenceEvent direction:MXEventDirectionSync];
                     }
+
+                    // We have data, the SDK user can start using it
+                    initialSyncDone();
+
+                    // Start listening to live events
+                    _store.eventStreamToken = JSONData[@"end"];
+
+                    // Commit store changes done in [room handleMessages]
+                    if ([_store respondsToSelector:@selector(commit)])
+                    {
+                        [_store commit];
+                    }
+                    
+                    // Resume from the last known token
+                    [self streamEventsFromToken:_store.eventStreamToken withLongPoll:YES];
                 }
-
-                // Manage presence
-                for (NSDictionary *presenceDict in JSONData[@"presence"])
-                {
-                    MXEvent *presenceEvent = [MXEvent modelFromJSON:presenceDict];
-                    [self handlePresenceEvent:presenceEvent direction:MXEventDirectionSync];
-                }
-
-                // We have data, the SDK user can start using it
-                initialSyncDone();
-
-                // Start listening to live events
-                _store.eventStreamToken = JSONData[@"end"];
-
-                // Commit store changes done in [room handleMessages]
-                if ([_store respondsToSelector:@selector(save)])
-                {
-                    [_store save];
-                }
-                
-                // Resume from the last known token
-                [self streamEventsFromToken:_store.eventStreamToken withLongPoll:YES];
+                                               failure:^(NSError *error) {
+                                                   failure(error);
+                                               }];
             }
-            failure:^(NSError *error) {
-                failure(error);
-            }];
+            else
+            {
+                // Mount data from the permanent store
+                NSLog(@"[MXSession startWithMessagesLimit]: Load data from the store");
+
+                // Create MXRooms from their states stored in the store
+                NSDate *startDate = [NSDate date];
+                for (NSString *roomId in _store.rooms)
+                {
+                    NSArray *stateEvents = [_store stateOfRoom:roomId];
+                    [self createRoom:roomId withStateEvents:stateEvents];
+                }
+
+                NSLog(@"Created %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+
+                NSLog(@"Resume the events stream from %@", _store.eventStreamToken);
+
+                // And resume the stream from where we were
+                [self resume:initialSyncDone];
+            }
+
         } failure:^(NSError *error) {
             failure(error);
         }];
@@ -263,9 +301,9 @@ typedef void (^MXOnResumeDone)();
     }
 
     // Commit store changes done in [room handleLiveEvent]
-    if ([_store respondsToSelector:@selector(save)])
+    if ([_store respondsToSelector:@selector(commit)])
     {
-        [_store save];
+        [_store commit];
     }
 }
 
@@ -364,9 +402,9 @@ typedef void (^MXOnResumeDone)();
             }
 
             // Commit store changes done in [room handleMessages]
-            if ([_store respondsToSelector:@selector(save)])
+            if ([_store respondsToSelector:@selector(commit)])
             {
-                [_store save];
+                [_store commit];
             }
 
             success(room);
@@ -421,14 +459,27 @@ typedef void (^MXOnResumeDone)();
 {
     MXRoom *room = [[MXRoom alloc] initWithRoomId:roomId andMatrixSession:self andJSONData:JSONData];
     
+    [self addRoom:room];
+    return room;
+}
+
+- (MXRoom *)createRoom:(NSString *)roomId withStateEvents:(NSArray*)stateEvents
+{
+    MXRoom *room = [[MXRoom alloc] initWithRoomId:roomId andMatrixSession:self andStateEvents:stateEvents];
+
+    [self addRoom:room];
+    return room;
+}
+
+- (void)addRoom:(MXRoom*)room
+{
     // Register global listeners for this room
     for (MXSessionEventListener *listener in globalEventListeners)
     {
         [listener addRoomToSpy:room];
     }
-    
-    [rooms setObject:room forKey:roomId];
-    return room;
+
+    [rooms setObject:room forKey:room.state.roomId];
 }
 
 - (void)removeRoom:(NSString *)roomId
@@ -444,7 +495,7 @@ typedef void (^MXOnResumeDone)();
         }
 
         // Clean the store
-        [_store cleanDataOfRoom:roomId];
+        [_store deleteDataOfRoom:roomId];
 
         // And remove the room from the list
         [rooms removeObjectForKey:roomId];

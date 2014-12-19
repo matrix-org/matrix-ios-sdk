@@ -14,14 +14,34 @@
  limitations under the License.
  */
 
-#import "MXStore.h"
+#import <Foundation/Foundation.h>
+
+@interface MXFileStoreMetaData : NSObject <NSCoding>
 
 /**
- `MXMemoryStore` is an implementation of the `MXStore` interface that stores events in memory.
+ The home server name.
  */
-@interface MXMemoryStore : NSObject <MXStore>
-{
-    @protected
-    NSMutableDictionary *roomStores;
-}
+@property (nonatomic) NSString *homeServer;
+
+/**
+ The obtained user id.
+ */
+@property (nonatomic) NSString *userId;
+
+/**
+ The access token to create a MXRestClient
+ */
+@property (nonatomic) NSString *accessToken;
+
+/**
+ The token indicating from where to start listening event stream to get
+ live events.
+ */
+@property (nonatomic) NSString *eventStreamToken;
+
+/**
+ The current version of the store.
+ */
+@property (nonatomic) NSUInteger version;
+
 @end

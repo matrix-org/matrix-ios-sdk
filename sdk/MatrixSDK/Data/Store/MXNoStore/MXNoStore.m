@@ -70,7 +70,7 @@
     return nil;
 }
 
-- (void)cleanDataOfRoom:(NSString *)roomId
+- (void)deleteDataOfRoom:(NSString *)roomId
 {
     if (paginationTokens[roomId])
     {
@@ -84,6 +84,13 @@
     {
         [lastMessages removeObjectForKey:roomId];
     }
+}
+
+- (void)deleteAllData
+{
+    [paginationTokens removeAllObjects];
+    [hasReachedHomeServerPaginations removeAllObjects];
+    [lastMessages removeAllObjects];
 }
 
 - (void)storePaginationTokenOfRoom:(NSString*)roomId andToken:(NSString*)token
@@ -144,6 +151,11 @@
     NSLog(@"Warning: MXNoStore implementation of lastMessageOfRoom is limited");
 
     return lastMessages[roomId];
+}
+
+- (BOOL)isPermanent
+{
+    return NO;
 }
 
 @end
