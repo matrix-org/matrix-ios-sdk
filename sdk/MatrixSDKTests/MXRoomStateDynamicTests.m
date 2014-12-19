@@ -309,7 +309,7 @@
                                 
                                 [aliceRestClient2 postTextMessageToRoom:roomId text:@"What's going on?" success:^(NSString *eventId) {
                                     
-                                    [aliceRestClient2 leaveRoom:roomId success:^{
+                                    [bobRestClient leaveRoom:roomId success:^{
                                         
                                         [aliceRestClient2 postTextMessageToRoom:roomId text:@"Good bye" success:^(NSString *eventId) {
                                             
