@@ -195,7 +195,7 @@
                         
                         if ([member.userId isEqualToString:sharedData.aliceCredentials.userId])
                         {
-                            XCTAssertEqual(member.membership, MXMembershipInvite, @"A invited user membership is invite, not %lu", member.membership);
+                            XCTAssertEqual(member.membership, MXMembershipInvite, @"A invited user membership is invite, not %tu", member.membership);
                         }
                         else
                         {

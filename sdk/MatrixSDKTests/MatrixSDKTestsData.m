@@ -312,7 +312,7 @@ MXSession *mxSessionToClean;
 
 - (void)for:(MXRestClient *)mxRestClient2 andRoom:(NSString*)roomId postMessages:(NSUInteger)messagesCount success:(void (^)())success
 {
-    NSLog(@"postMessages :%ld", messagesCount);
+    NSLog(@"postMessages :%tu", messagesCount);
     if (0 == messagesCount)
     {
         success();
