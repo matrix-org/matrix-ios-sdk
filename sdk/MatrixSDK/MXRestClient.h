@@ -106,6 +106,22 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
                 failure:(void (^)(NSError *error))failure;
 
 /**
+ Send a generic state event to a room.
+
+ @param roomId the id of the room.
+ @param eventType the type of the event. @see MXEventType.
+ @param content the content that will be sent to the server as a JSON object.
+ @param success A block object called when the operation succeeds. It returns
+ the event id of the event generated on the home server
+ @param failure A block object called when the operation fails.
+ */
+- (void)sendStateEventToRoom:(NSString*)roomId
+                   eventType:(MXEventTypeString)eventTypeString
+                     content:(NSDictionary*)content
+                     success:(void (^)(NSString *eventId))success
+                     failure:(void (^)(NSError *error))failure;
+
+/**
  Send a message to a room
  
  @param roomId the id of the room.
@@ -134,6 +150,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
                          text:(NSString*)text
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure;
+
 
 /**
  Set the topic of a room.

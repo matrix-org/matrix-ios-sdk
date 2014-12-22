@@ -194,6 +194,27 @@ MXAuthAction;
      }];
 }
 
+- (void)sendStateEventToRoom:(NSString*)roomId
+                   eventType:(MXEventTypeString)eventTypeString
+                     content:(NSDictionary*)content
+                     success:(void (^)(NSString *eventId))success
+                     failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/state/%@", roomId, eventTypeString];
+    [httpClient requestWithMethod:@"PUT"
+                             path:path
+                       parameters:content
+                          success:^(NSDictionary *JSONResponse)
+     {
+
+         success(JSONResponse[@"event_id"]);
+     }
+                          failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
 - (void)postMessageToRoom:(NSString*)roomId
                   msgType:(MXMessageType)msgType
                   content:(NSDictionary*)content

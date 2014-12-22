@@ -127,6 +127,20 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
                 failure:(void (^)(NSError *error))failure;
 
 /**
+ Send a generic state event to a room.
+
+ @param eventType the type of the event. @see MXEventType.
+ @param content the content that will be sent to the server as a JSON object.
+ @param success A block object called when the operation succeeds. It returns
+ the event id of the event generated on the home server
+ @param failure A block object called when the operation fails.
+ */
+- (void)sendStateEventOfType:(MXEventTypeString)eventTypeString
+                     content:(NSDictionary*)content
+                     success:(void (^)(NSString *eventId))success
+                     failure:(void (^)(NSError *error))failure;
+
+/**
  Send a room message to a room.
 
  @param msgType the type of the message. @see MXMessageType.
