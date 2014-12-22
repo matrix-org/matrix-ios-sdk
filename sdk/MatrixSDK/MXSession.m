@@ -147,7 +147,12 @@ typedef void (^MXOnResumeDone)();
 
                 // Then, we can do the global sync
                 [matrixRestClient initialSyncWithLimit:initialSyncMessagesLimit success:^(NSDictionary *JSONData) {
-                    for (NSDictionary *roomDict in JSONData[@"rooms"])
+
+                    NSArray *roomDicts = JSONData[@"rooms"];
+
+                    NSLog(@"Received %tu rooms", roomDicts.count);
+
+                    for (NSDictionary *roomDict in roomDicts)
                     {
                         MXRoom *room = [self getOrCreateRoom:roomDict[@"room_id"] withJSONData:roomDict];
 
