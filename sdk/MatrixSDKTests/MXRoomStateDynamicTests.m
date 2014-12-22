@@ -353,6 +353,7 @@
     }];
 }
 
+/*
 - (void)testBackPaginationForScenario2
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
@@ -706,4 +707,6 @@
         
     }];
 }
+*/ 
+
 @end
