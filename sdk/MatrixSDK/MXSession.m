@@ -284,7 +284,13 @@ typedef void (^MXOnResumeDone)();
                 [self handlePresenceEvent:event direction:MXEventDirectionForwards];
                 break;
             }
-                
+
+            case MXEventTypeTypingNotification:
+            {
+                // @TODO
+                break;
+            }
+
             default:
                 if (event.roomId)
                 {

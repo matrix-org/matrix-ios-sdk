@@ -38,7 +38,8 @@ typedef enum : NSUInteger
     MXEventTypeRoomMessage,
     MXEventTypeRoomMessageFeedback,
     MXEventTypePresence,
-    
+    MXEventTypeTypingNotification,
+
     // The event is a custom event. Refer to its `MXEventTypeString` version
     MXEventTypeCustom = 1000
 } MXEventType;
@@ -58,6 +59,7 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomAliases;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomMessage;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomMessageFeedback;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringPresence;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringTypingNotification;
 
 
 /**
