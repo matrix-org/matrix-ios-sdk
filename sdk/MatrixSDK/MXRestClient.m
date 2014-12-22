@@ -173,7 +173,7 @@ MXAuthAction;
 
 
 #pragma mark - Room operations
-- (void)postEventToRoom:(NSString*)roomId
+- (void)sendEventToRoom:(NSString*)roomId
               eventType:(MXEventTypeString)eventTypeString
                 content:(NSDictionary*)content
                 success:(void (^)(NSString *eventId))success
@@ -215,7 +215,7 @@ MXAuthAction;
      }];
 }
 
-- (void)postMessageToRoom:(NSString*)roomId
+- (void)sendMessageToRoom:(NSString*)roomId
                   msgType:(MXMessageType)msgType
                   content:(NSDictionary*)content
                   success:(void (^)(NSString *eventId))success
@@ -225,15 +225,15 @@ MXAuthAction;
     NSMutableDictionary *eventContent = [NSMutableDictionary dictionaryWithDictionary:content];
     eventContent[@"msgtype"] = msgType;
     
-    [self postEventToRoom:roomId eventType:kMXEventTypeStringRoomMessage content:eventContent success:success failure:failure];
+    [self sendEventToRoom:roomId eventType:kMXEventTypeStringRoomMessage content:eventContent success:success failure:failure];
 }
 
-- (void)postTextMessageToRoom:(NSString*)roomId
+- (void)sendTextMessageToRoom:(NSString*)roomId
                          text:(NSString*)text
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure
 {
-    [self postMessageToRoom:roomId msgType:kMXMessageTypeText
+    [self sendMessageToRoom:roomId msgType:kMXMessageTypeText
               content:@{
                         @"body": text
                         }

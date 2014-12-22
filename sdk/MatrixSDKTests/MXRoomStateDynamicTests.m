@@ -60,16 +60,16 @@
 {
     __block MXRestClient *bobRestClient2 = bobRestClient;
     
-    [bobRestClient postTextMessageToRoom:roomId text:@"Hello world" success:^(NSString *eventId) {
+    [bobRestClient sendTextMessageToRoom:roomId text:@"Hello world" success:^(NSString *eventId) {
         
         [bobRestClient setRoomTopic:roomId topic:@"Topic #1" success:^{
             
-            [bobRestClient2 postTextMessageToRoom:roomId text:@"Hola" success:^(NSString *eventId) {
+            [bobRestClient2 sendTextMessageToRoom:roomId text:@"Hola" success:^(NSString *eventId) {
                 
                 __block MXRestClient *bobRestClient3 = bobRestClient2;
                 [bobRestClient2 setRoomTopic:roomId topic:@"Topic #2" success:^{
                     
-                    [bobRestClient3 postTextMessageToRoom:roomId text:@"Bonjour" success:^(NSString *eventId) {
+                    [bobRestClient3 sendTextMessageToRoom:roomId text:@"Bonjour" success:^(NSString *eventId) {
                         
                         onComplete();
                         
@@ -257,7 +257,7 @@
                 
             }];
             
-            // Post events of the scenario
+            // Send events of the scenario
             [self createScenario1:bobRestClient inRoom:roomId onComplete:^{
                 
             }];
@@ -289,7 +289,7 @@
  */
 - (void)createScenario2:(MXRestClient*)bobRestClient inRoom:(NSString*)roomId onComplete:(void(^)(MXRestClient *aliceRestClient))onComplete
 {
-    [bobRestClient postTextMessageToRoom:roomId text:@"Hello world" success:^(NSString *eventId) {
+    [bobRestClient sendTextMessageToRoom:roomId text:@"Hello world" success:^(NSString *eventId) {
         
         MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
         
@@ -297,21 +297,21 @@
             
             [bobRestClient inviteUser:sharedData.aliceCredentials.userId toRoom:roomId success:^{
                 
-                [bobRestClient postTextMessageToRoom:roomId text:@"I wait for Alice" success:^(NSString *eventId) {
+                [bobRestClient sendTextMessageToRoom:roomId text:@"I wait for Alice" success:^(NSString *eventId) {
                     
                     [aliceRestClient joinRoom:roomId success:^(NSString *roomName){
                         
-                        [aliceRestClient postTextMessageToRoom:roomId text:@"Hi" success:^(NSString *eventId) {
+                        [aliceRestClient sendTextMessageToRoom:roomId text:@"Hi" success:^(NSString *eventId) {
 
                             MXRestClient *aliceRestClient2 = aliceRestClient;
 
                             [aliceRestClient setDisplayName:@"Alice in Wonderland" success:^{
                                 
-                                [aliceRestClient2 postTextMessageToRoom:roomId text:@"What's going on?" success:^(NSString *eventId) {
+                                [aliceRestClient2 sendTextMessageToRoom:roomId text:@"What's going on?" success:^(NSString *eventId) {
                                     
                                     [bobRestClient leaveRoom:roomId success:^{
                                         
-                                        [aliceRestClient2 postTextMessageToRoom:roomId text:@"Good bye" success:^(NSString *eventId) {
+                                        [aliceRestClient2 sendTextMessageToRoom:roomId text:@"Good bye" success:^(NSString *eventId) {
                                             
                                             onComplete(aliceRestClient2);
                                             
@@ -364,9 +364,13 @@
             [mxSession start:^{
                 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
-                
+
+                NSAssert(room, @"The room is required");
+
                 __block NSUInteger eventCount = 0;
                 [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+
+                    NSLog(@"eventCount: %tu - %@", eventCount, event);
                     
                     MXRoomMember *beforeEventAliceMember = [roomState memberWithUserId:aliceRestClient.credentials.userId];
                     MXRoomMember *aliceMember = [room.state memberWithUserId:aliceRestClient.credentials.userId];
@@ -690,7 +694,7 @@
                 
             }];
             
-            // Post events of the scenario
+            // Send events of the scenario
             [self createScenario2:bobRestClient inRoom:roomId onComplete:^(MXRestClient *aliceRestClient) {
                 
             }];
@@ -702,5 +706,4 @@
         
     }];
 }
-
 @end

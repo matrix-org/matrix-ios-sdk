@@ -23,7 +23,7 @@
 
  Such event provides information of the power levels attributed to the room members.
  It also defines minimum power level value a member must have to accomplish an action or 
- to post an event of a given type.
+ to send an event of a given type.
  */
 @interface MXRoomPowerLevels : MXJSONModel
 
@@ -70,7 +70,7 @@
 @property (nonatomic) NSUInteger invite;
 
 
-#pragma mark - minimum power level for posting events
+#pragma mark - minimum power level for sending events
 /**
  The event types for which a minimum power level has been defined.
  The dictionary keys are event type and the values, their minimum required power levels.
@@ -78,33 +78,33 @@
 @property (nonatomic) NSDictionary *events;
 
 /**
- The default minimum power level to post an event as a message when its event type is not
+ The default minimum power level to send an event as a message when its event type is not
  defined in `events`.
  */
 @property (nonatomic) NSUInteger eventsDefault;
 
 /**
- The default minimum power level to post an event as a state event when its event
+ The default minimum power level to send an event as a state event when its event
  type is not defined in `events`.
  */
 @property (nonatomic) NSUInteger stateDefault;
 
 /**
- Helper to get the minimum power level the user must have to post an event of the given type 
+ Helper to get the minimum power level the user must have to send an event of the given type 
  as a message.
 
  @param eventTypeString the type of event.
  @return the required minimum power level.
  */
-- (NSUInteger)minimumPowerLevelForPostingEventAsMessage:(MXEventTypeString)eventTypeString;
+- (NSUInteger)minimumPowerLevelForSendingEventAsMessage:(MXEventTypeString)eventTypeString;
 
 /**
- Helper to get the minimum power level the user must have to post an event of the given type
+ Helper to get the minimum power level the user must have to send an event of the given type
  as a state event.
 
  @param eventTypeString the type of event.
  @return the required minimum power level.
  */
-- (NSUInteger)minimumPowerLevelForPostingEventAsStateEvent:(MXEventTypeString)eventTypeString;
+- (NSUInteger)minimumPowerLevelForSendingEventAsStateEvent:(MXEventTypeString)eventTypeString;
 
 @end

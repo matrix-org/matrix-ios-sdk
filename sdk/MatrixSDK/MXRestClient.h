@@ -99,7 +99,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
                 the event id of the event generated on the home server
  @param failure A block object called when the operation fails.
  */
-- (void)postEventToRoom:(NSString*)roomId
+- (void)sendEventToRoom:(NSString*)roomId
               eventType:(MXEventTypeString)eventTypeString
                 content:(NSDictionary*)content
                 success:(void (^)(NSString *eventId))success
@@ -131,7 +131,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
                 the event id of the event generated on the home server
  @param failure A block object called when the operation fails.
  */
-- (void)postMessageToRoom:(NSString*)roomId
+- (void)sendMessageToRoom:(NSString*)roomId
                   msgType:(MXMessageType)msgType
                   content:(NSDictionary*)content
                   success:(void (^)(NSString *eventId))success
@@ -146,7 +146,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
                 the event id of the event generated on the home server
  @param failure A block object called when the operation fails.
  */
-- (void)postTextMessageToRoom:(NSString*)roomId
+- (void)sendTextMessageToRoom:(NSString*)roomId
                          text:(NSString*)text
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure;

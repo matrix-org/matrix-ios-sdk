@@ -83,7 +83,7 @@
         // Populate a text message in parallel
         [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndThePublicRoom:nil readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
             
-            [bobRestClient postTextMessageToRoom:roomId text:@"Hello listeners!" success:^(NSString *eventId) {
+            [bobRestClient sendTextMessageToRoom:roomId text:@"Hello listeners!" success:^(NSString *eventId) {
                 
                 NSAssert(nil != eventId, @"Cannot set up intial test conditions");
                 
@@ -137,7 +137,7 @@
         // Populate a text message in parallel
         [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndThePublicRoom:nil readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
             
-            [bobRestClient postTextMessageToRoom:roomId text:@"Hello listeners!" success:^(NSString *eventId) {
+            [bobRestClient sendTextMessageToRoom:roomId text:@"Hello listeners!" success:^(NSString *eventId) {
                 
                 NSAssert(nil != eventId, @"Cannot set up intial test conditions");
                 

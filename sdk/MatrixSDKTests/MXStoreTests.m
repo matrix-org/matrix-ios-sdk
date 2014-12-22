@@ -94,7 +94,7 @@
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
     [sharedData doMXSessionTestWithBobAndAliceInARoom:testCase readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation2) {
 
-        [sharedData for:bobRestClient andRoom:roomId postMessages:5 success:^{
+        [sharedData for:bobRestClient andRoom:roomId sendMessages:5 success:^{
 
             if (!expectation)
             {
@@ -560,11 +560,11 @@
                     }
                 }];
 
-                // Make Alice post text message while Bob is not in the room.
+                // Make Alice send text message while Bob is not in the room.
                 // Then, invite him.
                 [aliceRestClient joinRoom:roomId success:^(NSString *roomName){
 
-                    [aliceRestClient postTextMessageToRoom:roomId text:@"Hi bob"  success:^(NSString *eventId) {
+                    [aliceRestClient sendTextMessageToRoom:roomId text:@"Hi bob"  success:^(NSString *eventId) {
 
                         aliceTextEventId = eventId;
 

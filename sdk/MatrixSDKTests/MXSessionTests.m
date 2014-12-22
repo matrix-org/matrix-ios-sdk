@@ -265,7 +265,7 @@
             // Wait a bit before making her active again
             [NSThread sleepForTimeInterval:1.0];
             
-            [aliceRestClient postTextMessageToRoom:roomId text:@"Hi Bob!" success:^(NSString *eventId) {
+            [aliceRestClient sendTextMessageToRoom:roomId text:@"Hi Bob!" success:^(NSString *eventId) {
                 
             } failure:^(NSError *error) {
                 NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
@@ -315,7 +315,7 @@
             XCTAssertNil(mxSession.myUser);
 
             // Do some activity to check nothing comes through mxSession, room and bob
-            [bobRestClient postTextMessageToRoom:roomId text:@"A message" success:^(NSString *eventId) {
+            [bobRestClient sendTextMessageToRoom:roomId text:@"A message" success:^(NSString *eventId) {
 
                 [expectation performSelector:@selector(fulfill) withObject:nil afterDelay:5];
 
@@ -369,7 +369,7 @@
 
                 // Do some activity while MXSession is paused
                 // We should not receive events while paused
-                [bobRestClient postTextMessageToRoom:roomId text:@"A message" success:^(NSString *eventId) {
+                [bobRestClient sendTextMessageToRoom:roomId text:@"A message" success:^(NSString *eventId) {
 
                 } failure:^(NSError *error) {
                     NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);

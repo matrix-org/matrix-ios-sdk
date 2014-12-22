@@ -54,7 +54,7 @@
     return _ban;
 }
 
-- (NSUInteger)minimumPowerLevelForPostingEventAsMessage:(MXEventTypeString)eventTypeString
+- (NSUInteger)minimumPowerLevelForSendingEventAsMessage:(MXEventTypeString)eventTypeString
 {
     NSUInteger minimumPowerLevel;
 
@@ -64,7 +64,7 @@
         minimumPowerLevel = [powerLevel unsignedIntegerValue];
     }
 
-    // Use the default value for posting event as message
+    // Use the default value for sending event as message
     else
     {
         minimumPowerLevel = _eventsDefault;
@@ -74,7 +74,7 @@
 }
 
 
-- (NSUInteger)minimumPowerLevelForPostingEventAsStateEvent:(MXEventTypeString)eventTypeString
+- (NSUInteger)minimumPowerLevelForSendingEventAsStateEvent:(MXEventTypeString)eventTypeString
 {
     NSUInteger minimumPowerLevel;
 
@@ -85,7 +85,7 @@
     }
     else
     {
-        // Use the default value for posting event as state event
+        // Use the default value for sending event as state event
         minimumPowerLevel = _stateDefault;
     }
 

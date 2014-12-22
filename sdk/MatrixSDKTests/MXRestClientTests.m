@@ -52,12 +52,12 @@
 }
 
 #pragma mark - Room operations
-- (void)testPostTextMessage
+- (void)testSendTextMessage
 {
-    // This test on postTextMessage validates postMessage and postEvent too
+    // This test on sendTextMessage validates sendMessage and sendEvent too
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [bobRestClient postTextMessageToRoom:roomId text:@"This is text message" success:^(NSString *eventId) {
+        [bobRestClient sendTextMessageToRoom:roomId text:@"This is text message" success:^(NSString *eventId) {
             
             XCTAssertNotNil(eventId);
             XCTAssertGreaterThan(eventId.length, 0, @"The eventId string must not be empty");
@@ -534,9 +534,9 @@
     [sharedData doMXSessionTestWithBobAndAliceInARoom:self
  readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
-        [sharedData for:bobRestClient andRoom:roomId postMessages:5 success:^{
+        [sharedData for:bobRestClient andRoom:roomId sendMessages:5 success:^{
             [bobRestClient leaveRoom:roomId success:^{
-                [aliceRestClient postTextMessageToRoom:roomId text:@"Hi bob"  success:^(NSString *eventId) {
+                [aliceRestClient sendTextMessageToRoom:roomId text:@"Hi bob"  success:^(NSString *eventId) {
                     [aliceRestClient inviteUser:bobRestClient.credentials.userId toRoom:roomId success:^{
                         [bobRestClient joinRoom:roomId success:^(NSString *theRoomId) {
 

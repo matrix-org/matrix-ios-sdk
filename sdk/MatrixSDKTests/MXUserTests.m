@@ -49,9 +49,9 @@
     // Make sure Alice and Bob have activities
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
-        [bobRestClient postTextMessageToRoom:roomId text:@"Hi Alice!" success:^(NSString *eventId) {
+        [bobRestClient sendTextMessageToRoom:roomId text:@"Hi Alice!" success:^(NSString *eventId) {
 
-            [aliceRestClient postTextMessageToRoom:roomId text:@"Hi Bob!" success:^(NSString *eventId) {
+            [aliceRestClient sendTextMessageToRoom:roomId text:@"Hi Bob!" success:^(NSString *eventId) {
 
                 mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
@@ -90,14 +90,14 @@
             if ([user.userId isEqualToString:bobRestClient.credentials.userId])
             {
                 // @TODO: Decrease the 30s value when SYN-157 is fixed
-                XCTAssertLessThan(user.lastActiveAgo, 30000, @"mxBob has just posted a message. lastActiveAgo should not exceeds 5s. Found: %tu", user.lastActiveAgo);
+                XCTAssertLessThan(user.lastActiveAgo, 30000, @"mxBob has just sent a message. lastActiveAgo should not exceeds 5s. Found: %tu", user.lastActiveAgo);
             }
             if ([user.userId isEqualToString:aliceRestClient.credentials.userId])
             {
                 mxAlice = user;
                 lastAliceActivity = user.lastActiveAgo;
                 // @TODO: Decrease the 30s value when SYN-157 is fixed
-                XCTAssertLessThan(user.lastActiveAgo, 30000, @"mxAlice has just posted a message. lastActiveAgo should not exceeds 1s. Found: %tu", user.lastActiveAgo);
+                XCTAssertLessThan(user.lastActiveAgo, 30000, @"mxAlice has just sent a message. lastActiveAgo should not exceeds 1s. Found: %tu", user.lastActiveAgo);
 
                 // mxAlice has a displayname and avatar defined. They should be found in the presence event
                 XCTAssert([user.displayname isEqualToString:kMXTestsAliceDisplayName]);
@@ -129,7 +129,7 @@
 
         }];
 
-        [aliceRestClient postTextMessageToRoom:roomId text:@"A message to update my last active ago" success:^(NSString *eventId) {
+        [aliceRestClient sendTextMessageToRoom:roomId text:@"A message to update my last active ago" success:^(NSString *eventId) {
 
         } failure:^(NSError *error) {
             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
@@ -225,7 +225,7 @@
 
         }];
 
-        [bobRestClient postTextMessageToRoom:roomId text:@"A message to update my last active ago" success:^(NSString *eventId) {
+        [bobRestClient sendTextMessageToRoom:roomId text:@"A message to update my last active ago" success:^(NSString *eventId) {
 
         } failure:^(NSError *error) {
             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);

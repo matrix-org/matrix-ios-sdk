@@ -340,12 +340,12 @@
 
 
 #pragma mark - Room operations
-- (void)postEventOfType:(MXEventTypeString)eventTypeString
+- (void)sendEventOfType:(MXEventTypeString)eventTypeString
                 content:(NSDictionary*)content
                 success:(void (^)(NSString *eventId))success
                 failure:(void (^)(NSError *error))failure
 {
-    [mxSession.matrixRestClient postEventToRoom:_state.roomId eventType:eventTypeString content:content success:success failure:failure];
+    [mxSession.matrixRestClient sendEventToRoom:_state.roomId eventType:eventTypeString content:content success:success failure:failure];
 }
 
 - (void)sendStateEventOfType:(MXEventTypeString)eventTypeString
@@ -356,19 +356,19 @@
     [mxSession.matrixRestClient sendStateEventToRoom:_state.roomId eventType:eventTypeString content:content success:success failure:failure];
 }
 
-- (void)postMessageOfType:(MXMessageType)msgType
+- (void)sendMessageOfType:(MXMessageType)msgType
                   content:(NSDictionary*)content
                   success:(void (^)(NSString *eventId))success
                   failure:(void (^)(NSError *error))failure
 {
-    [mxSession.matrixRestClient postMessageToRoom:_state.roomId msgType:msgType content:content success:success failure:failure];
+    [mxSession.matrixRestClient sendMessageToRoom:_state.roomId msgType:msgType content:content success:success failure:failure];
 }
 
-- (void)postTextMessage:(NSString*)text
+- (void)sendTextMessage:(NSString*)text
                 success:(void (^)(NSString *eventId))success
                 failure:(void (^)(NSError *error))failure
 {
-    [mxSession.matrixRestClient postTextMessageToRoom:text text:_state.roomId success:success failure:failure];
+    [mxSession.matrixRestClient sendTextMessageToRoom:text text:_state.roomId success:success failure:failure];
 }
 
 - (void)setTopic:(NSString*)topic

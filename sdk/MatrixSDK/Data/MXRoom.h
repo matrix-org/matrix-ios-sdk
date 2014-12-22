@@ -121,7 +121,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
                 the event id of the event generated on the home server
  @param failure A block object called when the operation fails.
  */
-- (void)postEventOfType:(MXEventTypeString)eventTypeString
+- (void)sendEventOfType:(MXEventTypeString)eventTypeString
                 content:(NSDictionary*)content
                 success:(void (^)(NSString *eventId))success
                 failure:(void (^)(NSError *error))failure;
@@ -149,7 +149,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
                 the event id of the event generated on the home server
  @param failure A block object called when the operation fails.
  */
-- (void)postMessageOfType:(MXMessageType)msgType
+- (void)sendMessageOfType:(MXMessageType)msgType
                   content:(NSDictionary*)content
                   success:(void (^)(NSString *eventId))success
                   failure:(void (^)(NSError *error))failure;
@@ -162,7 +162,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
                 the event id of the event generated on the home server
  @param failure A block object called when the operation fails.
  */
-- (void)postTextMessage:(NSString*)text
+- (void)sendTextMessage:(NSString*)text
                 success:(void (^)(NSString *eventId))success
                 failure:(void (^)(NSError *error))failure;
 
