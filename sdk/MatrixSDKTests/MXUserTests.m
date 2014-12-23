@@ -247,8 +247,8 @@
 
                 XCTAssertEqual(event.eventType, MXEventTypePresence);
 
-                XCTAssert([mxSession.myUser.displayname isEqualToString:@"ALICE"]);
-                XCTAssert([mxSession.myUser.avatarUrl isEqualToString:kMXTestsAliceAvatarURL]);
+                XCTAssertEqualObjects(mxSession.myUser.displayname, @"ALICE");
+                XCTAssertEqualObjects(mxSession.myUser.avatarUrl, kMXTestsAliceAvatarURL);
 
                 [expectation fulfill];
 

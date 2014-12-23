@@ -30,6 +30,10 @@
     // The list of update listeners (`MXOnUserUpdate`) in this room
     NSMutableArray *updateListeners;
 }
+
+@property (nonatomic) NSString *displayname;
+@property (nonatomic) NSString *avatarUrl;
+
 @end
 
 @implementation MXUser
@@ -57,8 +61,8 @@
     if (NO == [_displayname isEqualToString:roomMemberContent.displayname]
         || NO == [_avatarUrl isEqualToString:roomMemberContent.avatarUrl])
     {
-        _displayname = [roomMemberContent.displayname copy];
-        _avatarUrl = [roomMemberContent.avatarUrl copy];
+        self.displayname = [roomMemberContent.displayname copy];
+        self.avatarUrl = [roomMemberContent.avatarUrl copy];
 
         [self notifyListeners:roomMemberEvent];
     }
@@ -77,11 +81,11 @@
     // Displayname and avatar updates will come only through m.room.member events
     if (presenceContent.displayname)
     {
-        _displayname = [presenceContent.displayname copy];
+        self.displayname = [presenceContent.displayname copy];
     }
     if (presenceContent.avatarUrl)
     {
-        _avatarUrl = [presenceContent.avatarUrl copy];
+        self.avatarUrl = [presenceContent.avatarUrl copy];
     }
 
     _statusMsg = [presenceContent.statusMsg copy];
@@ -137,6 +141,5 @@
         }
     }
 }
-
 
 @end

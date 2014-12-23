@@ -139,13 +139,6 @@ typedef void (^MXOnResumeDone)();
 
         [matrixRestClient avatarUrlForUser:matrixRestClient.credentials.userId success:^(NSString *avatarUrl) {
 
-            // Store user details in permanent cache
-            if (_store.isPermanent)
-            {
-                _store.userDisplayname = displayname;
-                _store.userAvatarUrl = avatarUrl;
-            }
-
             // Create the user's profile
             _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId andDisplayname:displayname andAvatarUrl:avatarUrl andMatrixSession:self];
 
