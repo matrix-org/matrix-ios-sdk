@@ -128,6 +128,16 @@
 @optional
 
 /**
+ Save changes in the store.
+
+ If the store uses permanent storage like database or file, it is the optimised time
+ to commit the last changes.
+ */
+- (void)commit;
+
+
+#pragma mark - Permanent storage
+/**
  Return the ids of the rooms currently stored.
 
  Note: this method is required in permanent storage implementation.
@@ -158,11 +168,13 @@
 - (NSArray*)stateOfRoom:(NSString*)roomId;
 
 /**
- Save changes in the store.
-
- If the store uses permanent storage like database or file, it is the optimised time
- to commit the last changes.
+ Store/retrieve the user display name.
  */
-- (void)commit;
+@property (nonatomic) NSString *userDisplayname;
+
+/**
+ Store/retrieve the user avartar URL.
+ */
+@property (nonatomic) NSString *userAvatarUrl;
 
 @end

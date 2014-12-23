@@ -102,12 +102,10 @@ typedef void (^MXOnResumeDone)();
                 NSParameterAssert([_store respondsToSelector:@selector(rooms)]);
                 NSParameterAssert([_store respondsToSelector:@selector(storeStateForRoom:stateEvents:)]);
                 NSParameterAssert([_store respondsToSelector:@selector(stateOfRoom:)]);
-                /*
-                NSParameterAssert([_store respondsToSelector:@selector(storeUserDisplayname:)]);
                 NSParameterAssert([_store respondsToSelector:@selector(userDisplayname)]);
-                NSParameterAssert([_store respondsToSelector:@selector(storeUserAvatarUrl:)]);
+                NSParameterAssert([_store respondsToSelector:@selector(setUserDisplayname:)]);
                 NSParameterAssert([_store respondsToSelector:@selector(userAvatarUrl)]);
-                 */
+                NSParameterAssert([_store respondsToSelector:@selector(setUserAvatarUrl:)]);
             }
         }
         else
@@ -140,6 +138,13 @@ typedef void (^MXOnResumeDone)();
     [matrixRestClient displayNameForUser:matrixRestClient.credentials.userId success:^(NSString *displayname) {
 
         [matrixRestClient avatarUrlForUser:matrixRestClient.credentials.userId success:^(NSString *avatarUrl) {
+
+            // Store user details in permanent cache
+            if (_store.isPermanent)
+            {
+                _store.userDisplayname = displayname;
+                _store.userAvatarUrl = avatarUrl;
+            }
 
             // Create the user's profile
             _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId andDisplayname:displayname andAvatarUrl:avatarUrl andMatrixSession:self];

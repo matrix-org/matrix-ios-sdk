@@ -1118,4 +1118,53 @@
      }];
  }
  */
+
+
+#pragma mark - MXMemoryStore specific tests
+
+- (void)testMXFileStoreUserDisplaynameAndAvatarUrl
+{
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+
+    [sharedData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+
+        expectation = expectation2;
+
+        MXFileStore *store = [[MXFileStore alloc] init];
+        [store openWithCredentials:sharedData.aliceCredentials onComplete:^{
+
+            [store deleteAllData];
+
+            XCTAssertNil(store.userDisplayname);
+            XCTAssertNil(store.userAvatarUrl);
+
+            [store openWithCredentials:sharedData.aliceCredentials onComplete:^{
+
+                XCTAssertNil(store.userDisplayname);
+                XCTAssertNil(store.userAvatarUrl);
+
+                // Let's (and verify) MXSession start update the store with user information
+                mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient andStore:store];
+                [mxSession start:^{
+
+                    // Check user information is permanent
+                    MXFileStore *store2 = [[MXFileStore alloc] init];
+                    [store2 openWithCredentials:sharedData.aliceCredentials onComplete:^{
+
+                        XCTAssertEqualObjects(store2.userDisplayname, kMXTestsAliceDisplayName);
+                        XCTAssertEqualObjects(store2.userAvatarUrl, kMXTestsAliceAvatarURL);
+
+                        [expectation fulfill];
+
+                    }];
+
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                }];
+            }];
+        }];
+    }];
+}
+
+
 @end
