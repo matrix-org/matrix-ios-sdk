@@ -98,9 +98,16 @@ typedef void (^MXOnResumeDone)();
             // Validate the permanent implementation
             if (mxStore.isPermanent)
             {
-                NSAssert([_store respondsToSelector:@selector(rooms)], @"A permanent MXStore must implement this method");
-                NSAssert([_store respondsToSelector:@selector(storeStateForRoom:stateEvents:)], @"A permanent MXStore must implement this method");
-                NSAssert([_store respondsToSelector:@selector(stateOfRoom:)], @"A permanent MXStore must implement this method");
+                // A permanent MXStore must implement these methods:
+                NSParameterAssert([_store respondsToSelector:@selector(rooms)]);
+                NSParameterAssert([_store respondsToSelector:@selector(storeStateForRoom:stateEvents:)]);
+                NSParameterAssert([_store respondsToSelector:@selector(stateOfRoom:)]);
+                /*
+                NSParameterAssert([_store respondsToSelector:@selector(storeUserDisplayname:)]);
+                NSParameterAssert([_store respondsToSelector:@selector(userDisplayname)]);
+                NSParameterAssert([_store respondsToSelector:@selector(storeUserAvatarUrl:)]);
+                NSParameterAssert([_store respondsToSelector:@selector(userAvatarUrl)]);
+                 */
             }
         }
         else
@@ -604,9 +611,17 @@ typedef void (^MXOnResumeDone)();
 - (void)notifyListeners:(MXEvent*)event direction:(MXEventDirection)direction
 {
     // Notify all listeners
-    for (MXEventListener *listener in globalEventListeners)
+    // The SDK client may remove a listener while calling them by enumeration
+    // So, use a copy of them
+    NSArray *listeners = [globalEventListeners copy];
+
+    for (MXEventListener *listener in listeners)
     {
-        [listener notify:event direction:direction andCustomObject:nil];
+        // And check the listener still exists before calling it
+        if (NSNotFound != [globalEventListeners indexOfObject:listener])
+        {
+            [listener notify:event direction:direction andCustomObject:nil];
+        }
     }
 }
 

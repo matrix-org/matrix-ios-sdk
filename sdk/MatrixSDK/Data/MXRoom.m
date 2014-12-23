@@ -493,11 +493,19 @@
             [stateBeforeThisEvent handleStateEvent:event];
         }
     }
-    
-    // notifify all listeners
-    for (MXEventListener *listener in eventListeners)
+
+    // Notify all listeners
+    // The SDK client may remove a listener while calling them by enumeration
+    // So, use a copy of them
+    NSArray *listeners = [eventListeners copy];
+
+    for (MXEventListener *listener in listeners)
     {
-        [listener notify:event direction:direction andCustomObject:stateBeforeThisEvent];
+        // And check the listener still exists before calling it
+        if (NSNotFound != [eventListeners indexOfObject:listener])
+        {
+            [listener notify:event direction:direction andCustomObject:stateBeforeThisEvent];
+        }
     }
 }
 

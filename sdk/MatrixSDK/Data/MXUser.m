@@ -123,10 +123,18 @@
 
 - (void)notifyListeners:(MXEvent*)event
 {
-    // Notifify all listeners
-    for (MXOnUserUpdate listener in updateListeners)
+    // Notify all listeners
+    // The SDK client may remove a listener while calling them by enumeration
+    // So, use a copy of them
+    NSArray *listeners = [updateListeners copy];
+
+    for (MXOnUserUpdate listener in listeners)
     {
-        listener(event);
+        // And check the listener still exists before calling it
+        if (NSNotFound != [updateListeners indexOfObject:listener])
+        {
+            listener(event);
+        }
     }
 }
 
