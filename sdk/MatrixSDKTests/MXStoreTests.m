@@ -1150,7 +1150,7 @@
                 // Let's (and verify) MXSession start update the store with user information
                 mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient andStore:store];
                 [mxSession start:^{
-        } onServerSyncDone:^{
+                } onServerSyncDone:^{
 
                     // Check user information is permanent
                     MXFileStore *store2 = [[MXFileStore alloc] init];
@@ -1171,5 +1171,97 @@
     }];
 }
 
+/*
+- (void)testMXFileStoreMXSessionOnStoreDataReady
+{
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+
+    [sharedData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
+
+        expectation = expectation2;
+
+
+        MXFileStore *store = [[MXFileStore alloc] init];
+        [store openWithCredentials:sharedData.bobCredentials onComplete:^{
+
+            // Make sure to start from an empty store
+            [store deleteAllData];
+
+            XCTAssertNil(store.userDisplayname);
+            XCTAssertNil(store.userAvatarUrl);
+            XCTAssertEqual(store.rooms.count, 0);
+
+            [store openWithCredentials:sharedData.bobCredentials onComplete:^{
+
+                // Do a 1st [mxSession start] to fill the store
+                mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient andStore:store];
+                [mxSession start:^{
+
+                } onServerSyncDone:^{
+
+                    [mxSession close];
+                    mxSession = nil;
+
+                    // Create another random room to create more data server side
+                    [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
+
+                        [bobRestClient sendTextMessageToRoom:response.roomId text:@"A Message" success:^(NSString *eventId) {
+
+                            // Do a 2nd [mxSession start] with the filled stored
+                            MXFileStore *store2 = [[MXFileStore alloc] init];
+                            [store2 openWithCredentials:sharedData.bobCredentials onComplete:^{
+
+                                __block BOOL onStoreDataReadyCalled;
+                                NSString *eventStreamToken = [store2.eventStreamToken copy];
+                                NSUInteger storeRoomsCount = store2.rooms.count;
+
+                                // @TODO: Why the new room is not returned in the event stream???
+                                [NSThread sleepForTimeInterval:1.0];
+
+                                MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient andStore:store];
+                                [mxSession2 start:^{
+
+                                    onStoreDataReadyCalled = YES;
+
+                                    XCTAssertEqual(mxSession2.rooms.count, storeRoomsCount, @"MXSessionOnStoreDataReady must have loaded as many MXRooms as room stored");
+                                    XCTAssertEqual(store2.rooms.count, storeRoomsCount, @"There must still the same number of stored rooms");
+                                    XCTAssertEqual(eventStreamToken, store2.eventStreamToken, @"The event stream token must not have changed yet");
+
+                                } onServerSyncDone:^{
+
+                                    XCTAssert(onStoreDataReadyCalled, @"onStoreDataReady must alway be called before onServerSyncDone");
+
+                                    XCTAssertEqual(mxSession2.rooms.count, storeRoomsCount + 1, @"MXSessionOnStoreDataReady must have loaded as many MXRooms as room stored");
+                                    XCTAssertEqual(store2.rooms.count, storeRoomsCount + 1, @"There must still the same number of stored rooms");
+                                    XCTAssertNotEqualObjects(eventStreamToken, store2.eventStreamToken, @"The event stream token must not have changed yet");
+
+                                    [mxSession2 close];
+                                    
+                                    [expectation fulfill];
+                                    
+                                } failure:^(NSError *error) {
+                                    XCTFail(@"The request should not fail - NSError: %@", error);
+                                    [expectation fulfill];
+                                }];
+                            }];
+
+                        } failure:^(NSError *error) {
+                            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                        }];
+
+                    } failure:^(NSError *error) {
+                        NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                    }];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            }];
+        }];
+
+    }];
+}
+*/
 
 @end
