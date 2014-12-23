@@ -121,14 +121,16 @@ typedef void (^MXOnResumeDone)();
     return self;
 }
 
-- (void)start:(void (^)())initialSyncDone
+- (void)start:(void (^)())onStoreDataReady
+onServerSyncDone:(void (^)())onServerSyncDone
       failure:(void (^)(NSError *error))failure
 {
-    [self startWithMessagesLimit:DEFAULT_INITIALSYNC_MESSAGES_NUMBER initialSyncDone:initialSyncDone failure:failure];
+    [self startWithMessagesLimit:DEFAULT_INITIALSYNC_MESSAGES_NUMBER onStoreDataReady:onStoreDataReady onServerSyncDone:onServerSyncDone failure:failure];
 }
 
 - (void)startWithMessagesLimit:(NSUInteger)messagesLimit
-               initialSyncDone:(void (^)())initialSyncDone
+              onStoreDataReady:(void (^)())onStoreDataReady
+              onServerSyncDone:(void (^)())onServerSyncDone
                        failure:(void (^)(NSError *error))failure
 {
     // Store the passed limit to reuse it when initialSyncing per room
@@ -188,7 +190,7 @@ typedef void (^MXOnResumeDone)();
                     }
 
                     // We have data, the SDK user can start using it
-                    initialSyncDone();
+                    onServerSyncDone();
 
                     // Start listening to live events
                     _store.eventStreamToken = JSONData[@"end"];
@@ -224,7 +226,7 @@ typedef void (^MXOnResumeDone)();
                 NSLog(@"Resume the events stream from %@", _store.eventStreamToken);
 
                 // And resume the stream from where we were
-                [self resume:initialSyncDone];
+                [self resume:onServerSyncDone];
             }
 
         } failure:^(NSError *error) {

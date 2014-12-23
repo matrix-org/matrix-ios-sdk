@@ -79,6 +79,7 @@
             
             mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
             [mxSession start:^{
+        } onServerSyncDone:^{
                 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
                 
@@ -108,6 +109,7 @@
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
         [mxSession start:^{
+        } onServerSyncDone:^{
             
             MXRoom *room = [mxSession roomWithRoomId:roomId];
             
@@ -152,6 +154,7 @@
             
             mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
             [mxSession start:^{
+        } onServerSyncDone:^{
                 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
                 
@@ -181,6 +184,7 @@
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
         [mxSession start:^{
+        } onServerSyncDone:^{
             
             MXRoom *room = [mxSession roomWithRoomId:roomId];
             
@@ -221,6 +225,7 @@
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         [mxSession start:^{
+        } onServerSyncDone:^{
             
             MXRoom *room = [mxSession roomWithRoomId:roomId];
             XCTAssertNotNil(room);
@@ -393,6 +398,7 @@
                 mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
                 
                 [mxSession start:^{
+        } onServerSyncDone:^{
                     
                     MXRoom *newRoom = [mxSession roomWithRoomId:roomId];
                     
@@ -439,6 +445,7 @@
             mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
             
             [mxSession start:^{
+        } onServerSyncDone:^{
                 
                 __block MXRoom *newRoom;
                 
@@ -496,6 +503,7 @@
                 mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
                 
                 [mxSession start:^{
+        } onServerSyncDone:^{
                     
                     MXRoom *newRoom = [mxSession roomWithRoomId:roomId];
                     
@@ -564,6 +572,7 @@
                 mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
                 
                 [mxSession start:^{
+        } onServerSyncDone:^{
                     
                     MXRoom *room = [mxSession roomWithRoomId:roomId];
                     
@@ -611,6 +620,7 @@
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
         [mxSession start:^{
+        } onServerSyncDone:^{
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 

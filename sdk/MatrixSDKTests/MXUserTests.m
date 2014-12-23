@@ -57,6 +57,7 @@
 
                 // Start the session
                 [mxSession start:^{
+        } onServerSyncDone:^{
 
                     readyToTest(bobRestClient, aliceRestClient, roomId, expectation);
 
@@ -200,6 +201,7 @@
         XCTAssertNil(mxSession.myUser);
 
         [mxSession start:^{
+        } onServerSyncDone:^{
 
             XCTAssertNotNil(mxSession.myUser);
 
@@ -242,6 +244,7 @@
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
         [mxSession start:^{
+        } onServerSyncDone:^{
 
             [mxSession.myUser listenToUserUpdate:^(MXEvent *event) {
 
@@ -276,6 +279,7 @@
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
         [mxSession start:^{
+        } onServerSyncDone:^{
 
             [mxSession.myUser listenToUserUpdate:^(MXEvent *event) {
 

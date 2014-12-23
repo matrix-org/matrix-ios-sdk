@@ -366,6 +366,7 @@ MXSession *mxSessionToClean;
         MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         
         [mxSession start:^{
+        } onServerSyncDone:^{
             MXRoom *room = [mxSession roomWithRoomId:roomId];
             
             readyToTest(mxSession, room, expectation);
@@ -384,6 +385,7 @@ MXSession *mxSessionToClean;
         MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         
         [mxSession start:^{
+        } onServerSyncDone:^{
             MXRoom *room = [mxSession roomWithRoomId:roomId];
             
             readyToTest(mxSession, room, expectation);

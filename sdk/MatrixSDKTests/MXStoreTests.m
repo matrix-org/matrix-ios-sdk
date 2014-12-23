@@ -71,6 +71,7 @@
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient andStore:store];
 
         [mxSession start:^{
+        } onServerSyncDone:^{
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
             readyToTest(room);
@@ -104,6 +105,7 @@
             mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient andStore:store];
 
             [mxSession start:^{
+        } onServerSyncDone:^{
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
 
                 readyToTest(room);
@@ -187,7 +189,9 @@
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient andStore:store];
 
-        [mxSession startWithMessagesLimit:messagesLimit initialSyncDone:^{
+        [mxSession startWithMessagesLimit:messagesLimit onStoreDataReady:^{
+
+        } onServerSyncDone:^{
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
             readyToTest(room);
@@ -1146,6 +1150,7 @@
                 // Let's (and verify) MXSession start update the store with user information
                 mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient andStore:store];
                 [mxSession start:^{
+        } onServerSyncDone:^{
 
                     // Check user information is permanent
                     MXFileStore *store2 = [[MXFileStore alloc] init];
