@@ -46,6 +46,12 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 @property (nonatomic, readonly) MXRoomState *state;
 
 /**
+ The list of ids of users currently typing in this room.
+ This array is updated on each received m.typing event (MXEventTypeTypingNotification).
+ */
+@property (nonatomic, readonly) NSArray *typingUsers;
+
+/**
  The last message of the requested types.
 
  @param types an array of event types strings (MXEventTypeString).

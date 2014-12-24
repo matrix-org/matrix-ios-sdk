@@ -306,7 +306,18 @@ onServerSyncDone:(void (^)())onServerSyncDone
 
             case MXEventTypeTypingNotification:
             {
-                // @TODO
+                if (event.roomId)
+                {
+                    MXRoom *room = [self roomWithRoomId:event.roomId];
+                    if (room)
+                    {
+                        [room handleLiveEvent:event];
+                    }
+                    else
+                    {
+                        NSLog(@"Warning: Received a typing notification for an unknown room: %@", event);
+                    }
+                }
                 break;
             }
 
