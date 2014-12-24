@@ -88,7 +88,7 @@
     {
         for (MXEvent *event in stateEvents)
         {
-            [_state handleStateEvent:event];
+            [self handleStateEvent:event direction:MXEventDirectionSync];
         }
     }
     return self;
@@ -200,24 +200,7 @@
 
 - (void)handleStateEvent:(MXEvent*)event direction:(MXEventDirection)direction
 {
-    if (MXEventDirectionForwards == direction)
-    {
-        switch (event.eventType)
-        {
-            case MXEventTypeRoomMember:
-            {
-                // Update MXUser data
-                MXUser *user = [mxSession getOrCreateUser:event.userId];
-                [user updateWithRoomMemberEvent:event];
-                break;
-            }
-                
-            default:
-                break;
-        }
-    }
-
-    // Update the room state
+   // Update the room state
     if (MXEventDirectionBackwards == direction)
     {
         [backState handleStateEvent:event];
@@ -225,6 +208,14 @@
     else
     {
         // Forwards and initialSync events update the current state of the room
+
+        // Special handling for presence
+        if (MXEventTypeRoomMember == event.eventType)
+        {
+            // Update MXUser data
+            MXUser *user = [mxSession getOrCreateUser:event.userId];
+            [user updateWithRoomMemberEvent:event];
+        }
         [_state handleStateEvent:event];
     }
 }
