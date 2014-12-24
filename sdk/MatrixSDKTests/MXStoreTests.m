@@ -1171,7 +1171,6 @@
     }];
 }
 
-/*
 - (void)testMXFileStoreMXSessionOnStoreDataReady
 {
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
@@ -1215,10 +1214,7 @@
                                 NSString *eventStreamToken = [store2.eventStreamToken copy];
                                 NSUInteger storeRoomsCount = store2.rooms.count;
 
-                                // @TODO: Why the new room is not returned in the event stream???
-                                [NSThread sleepForTimeInterval:1.0];
-
-                                MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient andStore:store];
+                                MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient andStore:store2];
                                 [mxSession2 start:^{
 
                                     onStoreDataReadyCalled = YES;
@@ -1262,6 +1258,6 @@
 
     }];
 }
-*/
+
 
 @end
