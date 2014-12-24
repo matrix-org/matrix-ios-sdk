@@ -580,6 +580,37 @@ MXAuthAction;
      }];
 }
 
+- (void)sendTypingNotificationInRoom:(NSString*)roomId
+                              typing:(BOOL)typing
+                             timeout:(NSUInteger)timeout
+                             success:(void (^)())success
+                             failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/typing/%@", roomId, self.credentials.userId];
+
+    // All query parameters are optional. Fill the request parameters on demand
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+
+    parameters[@"typing"] = [NSNumber numberWithBool:typing];
+
+    if (-1 != timeout)
+    {
+        parameters[@"timeout"] = [NSNumber numberWithUnsignedInteger:timeout];
+    }
+
+    [httpClient requestWithMethod:@"PUT"
+                             path:path
+                       parameters:parameters
+                          success:^(NSDictionary *JSONResponse)
+     {
+         success();
+     }
+                          failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
 - (void)initialSyncOfRoom:(NSString*)roomId
                 withLimit:(NSInteger)limit
                   success:(void (^)(NSDictionary *JSONData))success

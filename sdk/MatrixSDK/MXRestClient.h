@@ -343,6 +343,23 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
                   failure:(void (^)(NSError *error))failure;
 
 /**
+ Inform the home server that the user is typing (or not) in this room.
+
+ @param roomId the id of the room.
+ @param typing Use YES if the user is currently typing.
+ @param timeout the length of time until the user should be treated as no longer typing,
+                in milliseconds. Can be ommited (set to -1) if they are no longer typing.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)sendTypingNotificationInRoom:(NSString*)roomId
+                              typing:(BOOL)typing
+                             timeout:(NSUInteger)timeout
+                             success:(void (^)())success
+                             failure:(void (^)(NSError *error))failure;
+
+/**
  Get all the current information for this room, including messages and state events.
  
  @param roomId the id of the room.
