@@ -155,13 +155,13 @@ onServerSyncDone:(void (^)())onServerSyncDone
 
         NSLog(@"Created %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
-        // The SDK client can use this data
-        onStoreDataReady();
-
         NSLog(@"Resume the events stream from %@", _store.eventStreamToken);
 
         // And resume the stream from where we were
         [self resume:onServerSyncDone];
+
+        // The SDK client can use this data
+        onStoreDataReady();
     }
     else
     {
@@ -217,10 +217,6 @@ onServerSyncDone:(void (^)())onServerSyncDone
                         [self handlePresenceEvent:presenceEvent direction:MXEventDirectionSync];
                     }
 
-                    // We have up-to-date data, the SDK user can start using it
-                    onStoreDataReady();
-                    onServerSyncDone();
-
                     // Start listening to live events
                     _store.eventStreamToken = JSONData[@"end"];
 
@@ -232,6 +228,10 @@ onServerSyncDone:(void (^)())onServerSyncDone
                     
                     // Resume from the last known token
                     [self streamEventsFromToken:_store.eventStreamToken withLongPoll:YES];
+
+                    // We have up-to-date data, the SDK user can start using it
+                    onStoreDataReady();
+                    onServerSyncDone();
                 }
                 failure:^(NSError *error) {
                     failure(error);
@@ -255,23 +255,27 @@ onServerSyncDone:(void (^)())onServerSyncDone
     
     eventStreamRequest = [matrixRestClient eventsFromToken:token serverTimeout:serverTimeout clientTimeout:CLIENT_TIMEOUT_MS success:^(MXPaginationResponse *paginatedResponse) {
 
-        // Convert chunk array into an array of MXEvents
-        NSArray *events = paginatedResponse.chunk;
-
-        // And handle them
-        [self handleLiveEvents:events];
-
-        _store.eventStreamToken = paginatedResponse.end;
-
-        // If we are resuming inform the app that it received the last uptodate data
-        if (onResumeDone)
+        // eventStreamRequest is nil when the event stream has been paused
+        if (eventStreamRequest)
         {
-            onResumeDone();
-            onResumeDone = nil;
-        }
+            // Convert chunk array into an array of MXEvents
+            NSArray *events = paginatedResponse.chunk;
 
-        // Go streaming from the returned token
-        [self streamEventsFromToken:paginatedResponse.end withLongPoll:YES];
+            // And handle them
+            [self handleLiveEvents:events];
+
+            _store.eventStreamToken = paginatedResponse.end;
+
+            // If we are resuming inform the app that it received the last uptodate data
+            if (onResumeDone)
+            {
+                onResumeDone();
+                onResumeDone = nil;
+            }
+
+            // Go streaming from the returned token
+            [self streamEventsFromToken:paginatedResponse.end withLongPoll:YES];
+        }
 
     } failure:^(NSError *error) {
 

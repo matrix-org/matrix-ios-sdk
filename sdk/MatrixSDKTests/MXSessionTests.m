@@ -21,6 +21,8 @@
 
 #import "MXSession.h"
 
+#import "MXMemoryStore.h"
+
 @interface MXSessionTests : XCTestCase
 {
     MXSession *mxSession;
@@ -331,6 +333,46 @@
             }];
 
 
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
+- (void)testCloseWithMXMemoryStore
+{
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+
+    [sharedData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        MXMemoryStore *store = [[MXMemoryStore alloc] init];
+
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient andStore:store];
+        [mxSession start:^{
+
+        } onServerSyncDone:^{
+
+            NSUInteger storeRoomsCount = store.rooms.count;
+
+            XCTAssertGreaterThan(storeRoomsCount, 0);
+
+            [mxSession close];
+            mxSession = nil;
+
+            // Create another random room to create more data server side
+            [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
+
+                // Check the stream has been correctly shutdowned. Checking that the store has not changed is one way to verify it
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+
+                    XCTAssertEqual(store.rooms.count, storeRoomsCount, @"There must still the same number of stored rooms");
+                    [expectation fulfill];
+
+                });
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
         } failure:^(NSError *error) {
             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
         }];

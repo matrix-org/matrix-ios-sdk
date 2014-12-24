@@ -120,6 +120,11 @@
     return NO;
 }
 
+- (NSArray *)rooms
+{
+    return roomStores.allKeys;
+}
+
 #pragma mark - Private operations
 - (MXMemoryRoomStore*)getOrCreateRoomStore:(NSString*)roomId
 {
