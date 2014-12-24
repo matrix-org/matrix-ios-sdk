@@ -155,13 +155,29 @@ onServerSyncDone:(void (^)())onServerSyncDone
 
         NSLog(@"Created %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
-        NSLog(@"Resume the events stream from %@", _store.eventStreamToken);
-
-        // And resume the stream from where we were
-        [self resume:onServerSyncDone];
-
         // The SDK client can use this data
         onStoreDataReady();
+
+        // We need to get all users presence to start right
+        startDate = [NSDate date];
+        [matrixRestClient allUsersPresence:^(NSArray *userPresenceEvents) {
+
+            NSLog(@"Got presence of %lu users in %.0fms", userPresenceEvents.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+
+            for (MXEvent *userPresenceEvent in userPresenceEvents)
+            {
+                MXUser *user = [self getOrCreateUser:userPresenceEvent.content[@"user_id"]];
+                [user updateWithPresenceEvent:userPresenceEvent];
+            }
+
+            NSLog(@"Resume the events stream from %@", _store.eventStreamToken);
+
+            // And resume the stream from where we were
+            [self resume:onServerSyncDone];
+
+        } failure:^(NSError *error) {
+            failure(error);
+        }];
     }
     else
     {

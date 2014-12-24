@@ -450,6 +450,15 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
          success:(void (^)(MXPresenceResponse *presence))success
          failure:(void (^)(NSError *error))failure;
 
+/**
+ Get the presence for all of the user's friends.
+
+ @param success A block object called when the operation succeeds. It provides an array of presence events.
+ @param failure A block object called when the operation fails.
+ */
+- (void)allUsersPresence:(void (^)(NSArray *userPresenceEvents))success
+         failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - Event operations
 /**

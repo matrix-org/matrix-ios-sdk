@@ -776,6 +776,62 @@ MXAuthAction;
      }];
 }
 
+- (void)allUsersPresence:(void (^)(NSArray *userPresenceEvents))success
+                 failure:(void (^)(NSError *error))failure
+{
+    // In C-S API v1, the only way to get all user presence is to make
+    // a global initialSync
+    // @TODO: Change it with C-S API v2 new APIs
+    [self initialSyncWithLimit:0 success:^(NSDictionary *JSONData) {
+
+        success([MXEvent modelsFromJSON:JSONData[@"presence"]]);
+
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
+}
+
+- (void)presenceList:(void (^)(MXPresenceResponse *presence))success
+             failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"presence/list/%@", credentials.userId];
+    [httpClient requestWithMethod:@"GET"
+                             path:path
+                       parameters:nil
+                          success:^(NSDictionary *JSONResponse)
+     {
+         MXPresenceResponse *presence = [MXPresenceResponse modelFromJSON:JSONResponse];
+         success(presence);
+     }
+                          failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
+- (void)presenceListAddUsers:(NSArray*)users
+                     success:(void (^)())success
+                     failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"presence/list/%@", credentials.userId];
+
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+    parameters[@"invite"] = users;
+
+
+    [httpClient requestWithMethod:@"POST"
+                             path:path
+                       parameters:parameters
+                          success:^(NSDictionary *JSONResponse)
+     {
+         success();
+     }
+                          failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
 
 #pragma mark - Event operations
 - (void)initialSyncWithLimit:(NSInteger)limit
