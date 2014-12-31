@@ -9,9 +9,13 @@ This SDK implements an interface to communicate with the Matrix Home Server API 
 Installation
 ============
 
-The SDK uses CocoaPods (http://cocoapods.org/) as library dependency manager.
+The SDK uses CocoaPods (http://cocoapods.org/) as library dependency manager. In order to set this up::
+
+    sudo gem install cocoapods
+    pod setup
+
 The best way to add the Matrix SDK to your application project is to add the MatrixSDK dependency to your Podfile::
-    
+
       pod 'MatrixSDK'
 
 
