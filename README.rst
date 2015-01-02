@@ -16,7 +16,7 @@ The SDK uses CocoaPods (http://cocoapods.org/) as library dependency manager. In
 
 The best way to add the Matrix SDK to your application project is to add the MatrixSDK dependency to your Podfile::
 
-      pod 'MatrixSDK'
+    pod 'MatrixSDK'
 
 
 Overview
@@ -162,9 +162,11 @@ Out of the box, the tests use one of the home servers (located at http://localho
 
 Then, you can run the tests from the Xcode Test navigator tab or select the MatrixSDKTests scheme and click on the "Test" action.
 
-
 Known issues
 ============
+
+Cocoapods may fail to install on OSX 10.8.x with "i18n requires Ruby version >= 1.9.3.".  This is a known problem similar to
+https://github.com/CocoaPods/CocoaPods/issues/2458 that needs to be raised with the cocoapods team.
 
 Registration
 ------------
