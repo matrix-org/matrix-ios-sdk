@@ -38,7 +38,7 @@
 @property (nonatomic, readonly) MXRestClient *matrixRestClient;
 
 // The profile of the current user
-// It is available only after the `initialSyncDone` callback of `start` is called.
+// It is available only after the `onStoreDataReady` callback of `start` is called.
 @property (nonatomic, readonly) MXMyUser *myUser;
 
 // The store used to store user's Matrix data
