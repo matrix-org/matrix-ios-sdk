@@ -47,4 +47,15 @@
                 success:(void (^)(NSDictionary *JSONResponse))success
                 failure:(void (^)(NSError *error))failure;
 
+- (id)requestWithMethod:(NSString *)httpMethod
+                   path:(NSString *)path
+             parameters:(NSDictionary*)parameters
+                   data:(NSData *)data
+                headers:(NSDictionary*)headers
+                timeout:(NSTimeInterval)timeoutInSeconds
+                success:(void (^)(NSDictionary *JSONResponse))success
+                failure:(void (^)(NSError *error))failure
+         uploadProgress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))uploadProgress
+       downloadProgress:(void (^)(NSUInteger bytesRead, long long totalBytesRead, long long totalBytesExpectedToRead))downloadProgress;
+
 @end

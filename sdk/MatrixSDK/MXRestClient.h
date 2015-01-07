@@ -528,11 +528,12 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
  
  @param success A block object called when the operation succeeds. It provides the uploaded content url.
  @param failure A block object called when the operation fails.
+ @param uploadProgress A block object called when the upload progresses.
  */
 - (void)uploadContent:(NSData *)data
              mimeType:(NSString *)mimeType
               timeout:(NSTimeInterval)timeoutInSeconds
               success:(void (^)(NSString *url))success
-              failure:(void (^)(NSError *error))failure;
-
+              failure:(void (^)(NSError *error))failure
+       uploadProgress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))uploadProgress;
 @end

@@ -80,6 +80,20 @@
                 success:(void (^)(NSDictionary *JSONResponse))success
                 failure:(void (^)(NSError *error))failure
 {
+    return [self requestWithMethod:httpMethod path:path parameters:parameters data:nil headers:nil timeout:timeoutInSeconds success:success failure:failure uploadProgress:nil downloadProgress:nil];
+}
+
+- (id)requestWithMethod:(NSString *)httpMethod
+                   path:(NSString *)path
+             parameters:(NSDictionary*)parameters
+                   data:(NSData *)data
+                headers:(NSDictionary*)headers
+                timeout:(NSTimeInterval)timeoutInSeconds
+                success:(void (^)(NSDictionary *JSONResponse))success
+                failure:(void (^)(NSError *error))failure
+         uploadProgress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))uploadProgress
+       downloadProgress:(void (^)(NSUInteger bytesRead, long long totalBytesRead, long long totalBytesExpectedToRead))downloadProgress
+{
     // If an access token is set, use it
     if (access_token)
     {
@@ -129,6 +143,16 @@
                                                                                  }
                                                                                  failure(error);
                                                                              }];
+    
+    if (uploadProgress)
+    {
+        [operation setUploadProgressBlock:uploadProgress];
+    }
+    
+    if (downloadProgress)
+    {
+        [operation setDownloadProgressBlock:downloadProgress];
+    }
     
     [httpManager.operationQueue addOperation:operation];
     

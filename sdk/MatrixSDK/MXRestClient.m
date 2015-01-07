@@ -940,22 +940,25 @@ MXAuthAction;
               timeout:(NSTimeInterval)timeoutInSeconds
               success:(void (^)(NSString *url))success
               failure:(void (^)(NSError *error))failure
+       uploadProgress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))uploadProgress
 {
     NSString* path = [NSString stringWithFormat:@"%@/upload", kMXMediaPathPrefix];
     NSDictionary *headers = @{@"Content-Type": mimeType};
     
     [httpClient requestWithMethod:@"POST"
-                           path:path
-                     parameters:nil
-                           data:data
-                        headers:headers
-                        timeout:timeoutInSeconds
-                        success:^(NSDictionary *JSONResponse) {
-                            NSString *contentURL = JSONResponse[@"content_uri"];
-                            NSLog(@"uploadContent succeeded: %@",contentURL);
-                            success(contentURL);
-                        }
-                        failure:failure];
+                             path:path
+                       parameters:nil
+                             data:data
+                          headers:headers
+                          timeout:timeoutInSeconds
+                          success:^(NSDictionary *JSONResponse) {
+                              NSString *contentURL = JSONResponse[@"content_uri"];
+                              NSLog(@"uploadContent succeeded: %@",contentURL);
+                              success(contentURL);
+                          }
+                          failure:failure
+                   uploadProgress:uploadProgress
+                 downloadProgress:nil];
 }
 
 @end
