@@ -80,7 +80,7 @@
                 success:(void (^)(NSDictionary *JSONResponse))success
                 failure:(void (^)(NSError *error))failure
 {
-    return [self requestWithMethod:httpMethod path:path parameters:parameters data:nil headers:nil timeout:timeoutInSeconds success:success failure:failure uploadProgress:nil downloadProgress:nil];
+    return [self requestWithMethod:httpMethod path:path parameters:parameters data:data headers:headers timeout:timeoutInSeconds success:success failure:failure uploadProgress:nil downloadProgress:nil];
 }
 
 - (id)requestWithMethod:(NSString *)httpMethod
