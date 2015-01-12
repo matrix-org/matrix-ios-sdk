@@ -142,13 +142,13 @@
 
         __block NSString *theRoomId;
         __block NSString *eventsRoomId;
-        __block BOOL testDone;
+        __block BOOL testDone = NO;
 
         [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
 
             if (MXEventDirectionForwards == direction)
             {
-                if (event.roomId)
+                if (event.roomId && event.eventId)
                 {
                     // Make sure we test events coming from the same room
                     if (nil == eventsRoomId)
