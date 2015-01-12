@@ -235,7 +235,7 @@
     }
     
     // Try to rename 1:1 private rooms with the name of the its users
-    else if ( NO == self.isPublic)
+    else if (NO == self.isPublic)
     {
         if (2 == members.count)
         {
@@ -337,24 +337,43 @@
 
 - (NSString*)memberName:(NSString*)userId
 {
-    NSString *memberName;
+    NSString *displayName = nil;
+    
+     // Get the user display name from the member list of the room
     MXRoomMember *member = [self memberWithUserId:userId];
-    if (member)
+    
+    // Do not consider null displayname
+    if (member && member.displayname.length)
     {
-        if (member.displayname.length)
-        {
-            memberName = member.displayname;
-        }
-        else
-        {
-            memberName = member.userId;
+        displayName = member.displayname;
+        
+        // Disambiguate users who have the same displayname in the room
+        for(MXRoomMember* member in members.allValues) {
+            if (![member.userId isEqualToString:userId] && [member.displayname isEqualToString:displayName])
+            {
+                displayName = [NSString stringWithFormat:@"%@(%@)", displayName, userId];
+                break;
+            }
         }
     }
-    else
+    
+    // The user may not have joined the room yet. So try to resolve display name from presence data
+    // Note: This data may not be available
+    if (!displayName)
     {
-        memberName = userId;
+        MXUser* user = [mxSession userWithUserId:userId];
+        
+        if (user) {
+            displayName = user.displayname;
+        }
     }
-    return memberName;
+    
+    if (!displayName) {
+        // By default, use the user ID
+        displayName = userId;
+    }
+
+    return displayName;
 }
 
 
