@@ -140,12 +140,16 @@ MXSession *mxSessionToClean;
 
         if (mxSessionToClean)
         {
+            NSLog(@"Start cleaning user data from %@ ...", testCase.name);
+
             // Before giving the hand to the test, clean the rooms of the user.
             // It is done now rather than at the end of each test because
             // once [expectation fulfill] is called, the system allows no more HTTP requests.
             [self leaveAllRoomsAsync:mxSessionToClean onComplete:^{
                 [mxSessionToClean close];
                 mxSessionToClean = nil;
+
+                NSLog(@"End of cleaning user data");
 
                 readyToTest(restClient, expectation);
             }];
@@ -169,6 +173,8 @@ MXSession *mxSessionToClean;
                      readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
         // Create a random room to use
         [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
+
+            NSLog(@"Created room %@ for %@", response.roomId, testCase.name);
             
             readyToTest(bobRestClient, response.roomId, expectation);
             
@@ -185,7 +191,9 @@ MXSession *mxSessionToClean;
                         readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
                             // Create a random room to use
                             [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPublic roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
-                                
+
+                                NSLog(@"Created public room %@ for %@", response.roomId, testCase.name);
+
                                 readyToTest(bobRestClient, response.roomId, expectation);
                                 
                             } failure:^(NSError *error) {
@@ -242,13 +250,15 @@ MXSession *mxSessionToClean;
     {
         expectation = [testCase expectationWithDescription:@"asyncTest"];
     }
-    
+
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
     
     [sharedData getBobMXRestClient:^(MXRestClient *bobRestClient) {
         // Create a random room to use
         [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
-            
+
+            NSLog(@"Created room %@ for %@", response.roomId, testCase.name);
+
             // Send the the message text in it
             [bobRestClient sendTextMessageToRoom:response.roomId text:newTextMessage success:^(NSString *eventId) {
                 
@@ -312,7 +322,7 @@ MXSession *mxSessionToClean;
 
 - (void)for:(MXRestClient *)mxRestClient2 andRoom:(NSString*)roomId sendMessages:(NSUInteger)messagesCount success:(void (^)())success
 {
-    NSLog(@"sendMessages :%tu", messagesCount);
+    NSLog(@"sendMessages :%tu to %@", messagesCount, roomId);
     if (0 == messagesCount)
     {
         success();
@@ -343,6 +353,8 @@ MXSession *mxSessionToClean;
     {
         // Create the room
         [mxRestClient2 createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
+
+            NSLog(@"Created room %@ in createRooms", response.roomId);
 
             // Fill it with messages
             [self for:mxRestClient2 andRoom:response.roomId sendMessages:messagesCount success:^{
