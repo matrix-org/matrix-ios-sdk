@@ -162,7 +162,7 @@ onServerSyncDone:(void (^)())onServerSyncDone
         startDate = [NSDate date];
         [matrixRestClient allUsersPresence:^(NSArray *userPresenceEvents) {
 
-            NSLog(@"Got presence of %lu users in %.0fms", userPresenceEvents.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+            NSLog(@"Got presence of %tu users in %.0fms", userPresenceEvents.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
             for (MXEvent *userPresenceEvent in userPresenceEvents)
             {
