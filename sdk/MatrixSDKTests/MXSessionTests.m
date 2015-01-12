@@ -139,20 +139,35 @@
                                          kMXEventTypeStringRoomMessage,
                                          kMXEventTypeStringRoomMessage,
                                          ]];
-        
+
+        __block NSString *theRoomId;
+        __block NSString *eventsRoomId;
+        __block BOOL testDone;
+
         [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
-            
+
             if (MXEventDirectionForwards == direction)
             {
-                [expectedEvents removeObject:event.type];
-                
-                if (0 == expectedEvents.count)
+                if (event.roomId)
                 {
-                    XCTAssert(YES, @"All expected events must be catch");
+                    // Make sure we test events coming from the same room
+                    if (nil == eventsRoomId)
+                    {
+                        eventsRoomId = event.roomId;
+                    }
+                    XCTAssertEqualObjects(event.roomId, eventsRoomId, @"We should receive events from the current room only");
+
+                    [expectedEvents removeObject:event.type];
+                }
+
+                if (!testDone && 0 == expectedEvents.count && theRoomId)
+                {
+                    XCTAssertEqualObjects(theRoomId, eventsRoomId, @"We must have received live events from the expected room");
+
+                    testDone = YES;
                     [expectation fulfill];
                 }
             }
-            
         }];
         
         
@@ -160,7 +175,17 @@
         [mxSession start:^{
         } onServerSyncDone:^{
             
-            [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:nil readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+            [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:nil readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
+
+                theRoomId = roomId;
+
+                if (!testDone && 0 == expectedEvents.count)
+                {
+                    XCTAssertEqualObjects(theRoomId, eventsRoomId, @"We must have received live events from the expected room");
+
+                    testDone = YES;
+                    [expectation fulfill];
+                }
             }];
             
         } failure:^(NSError *error) {
