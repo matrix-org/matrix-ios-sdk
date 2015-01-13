@@ -951,14 +951,14 @@ MXAuthAction;
                              data:data
                           headers:headers
                           timeout:timeoutInSeconds
+                   uploadProgress:uploadProgress
+                 downloadProgress:nil
                           success:^(NSDictionary *JSONResponse) {
                               NSString *contentURL = JSONResponse[@"content_uri"];
                               NSLog(@"uploadContent succeeded: %@",contentURL);
                               success(contentURL);
                           }
-                          failure:failure
-                   uploadProgress:uploadProgress
-                 downloadProgress:nil];
+                          failure:failure];
 }
 
 @end
