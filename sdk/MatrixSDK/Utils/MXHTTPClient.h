@@ -87,7 +87,6 @@
  @param timeout (optional) the timeout allocated for the request.
  
  @param uploadProgress (optional) A block object called when the upload progresses.
- @param downloadProgress (optional) A block object called when the download progresses.
 
  @param success A block object called when the operation succeeds. It provides the JSON response object from the the server.
  @param failure A block object called when the operation fails.
@@ -95,14 +94,13 @@
  @return a NSOperation instance to use to cancel the request.
  */
 - (NSOperation*)requestWithMethod:(NSString *)httpMethod
-                   path:(NSString *)path
-             parameters:(NSDictionary*)parameters
-                   data:(NSData *)data
-                headers:(NSDictionary*)headers
-                timeout:(NSTimeInterval)timeoutInSeconds
-         uploadProgress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))uploadProgress
-       downloadProgress:(void (^)(NSUInteger bytesRead, long long totalBytesRead, long long totalBytesExpectedToRead))downloadProgress
-                success:(void (^)(NSDictionary *JSONResponse))success
-                failure:(void (^)(NSError *error))failure;
+                             path:(NSString *)path
+                       parameters:(NSDictionary*)parameters
+                             data:(NSData *)data
+                          headers:(NSDictionary*)headers
+                          timeout:(NSTimeInterval)timeoutInSeconds
+                   uploadProgress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))uploadProgress
+                          success:(void (^)(NSDictionary *JSONResponse))success
+                          failure:(void (^)(NSError *error))failure;
 
 @end

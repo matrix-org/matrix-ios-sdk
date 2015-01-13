@@ -68,7 +68,7 @@
                 success:(void (^)(NSDictionary *JSONResponse))success
                 failure:(void (^)(NSError *error))failure
 {
-    return [self requestWithMethod:httpMethod path:path parameters:parameters data:nil headers:nil timeout:timeoutInSeconds uploadProgress:nil downloadProgress:nil success:success failure:failure ];
+    return [self requestWithMethod:httpMethod path:path parameters:parameters data:nil headers:nil timeout:timeoutInSeconds uploadProgress:nil success:success failure:failure ];
 }
 
 - (NSOperation*)requestWithMethod:(NSString *)httpMethod
@@ -78,7 +78,6 @@
                 headers:(NSDictionary*)headers
                 timeout:(NSTimeInterval)timeoutInSeconds
          uploadProgress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))uploadProgress
-       downloadProgress:(void (^)(NSUInteger bytesRead, long long totalBytesRead, long long totalBytesExpectedToRead))downloadProgress
                 success:(void (^)(NSDictionary *JSONResponse))success
                 failure:(void (^)(NSError *error))failure
 {
@@ -136,11 +135,6 @@
     if (uploadProgress)
     {
         [operation setUploadProgressBlock:uploadProgress];
-    }
-    
-    if (downloadProgress)
-    {
-        [operation setDownloadProgressBlock:downloadProgress];
     }
     
     [httpManager.operationQueue addOperation:operation];
