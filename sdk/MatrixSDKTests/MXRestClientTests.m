@@ -906,4 +906,26 @@
     }];
 }
 
+
+#pragma mark - Content upload
+- (void)testUrlOfContent
+{
+    NSString *mxcURI = @"mxc://matrix.org/rQkrOoaFIRgiACATXUdQIuNJ";
+
+    MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:@"http://matrix.org"];
+
+    NSString *contentURL = [mxRestClient urlOfContent:mxcURI];
+    XCTAssertEqualObjects(contentURL, @"http://matrix.org/_matrix/media/v1/download/matrix.org/rQkrOoaFIRgiACATXUdQIuNJ");
+}
+
+- (void)testUrlOfContentThumbnail
+{
+    NSString *mxcURI = @"mxc://matrix.org/rQkrOoaFIRgiACATXUdQIuNJ";
+
+    MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:@"http://matrix.org"];
+
+    NSString *thumbnailURL = [mxRestClient urlOfContentThumbnail:mxcURI withSize:CGSizeMake(320, 320) andMethod:MXThumbnailingMethodScale];
+    XCTAssertEqualObjects(thumbnailURL, @"http://matrix.org/_matrix/media/v1/thumbnail/matrix.org/rQkrOoaFIRgiACATXUdQIuNJ?width=320&height=320&method=scale");
+}
+
 @end
