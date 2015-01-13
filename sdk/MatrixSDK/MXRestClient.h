@@ -25,6 +25,8 @@
  Room visibility
  */
 typedef NSString* MXRoomVisibility;
+
+FOUNDATION_EXPORT NSString *const kMXMediaPathPrefix;
 FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPublic;
 FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
 
@@ -107,11 +109,27 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
                 the event id of the event generated on the home server
  @param failure A block object called when the operation fails.
  */
-- (void)postEventToRoom:(NSString*)roomId
+- (void)sendEventToRoom:(NSString*)roomId
               eventType:(MXEventTypeString)eventTypeString
                 content:(NSDictionary*)content
                 success:(void (^)(NSString *eventId))success
                 failure:(void (^)(NSError *error))failure;
+
+/**
+ Send a generic state event to a room.
+
+ @param roomId the id of the room.
+ @param eventType the type of the event. @see MXEventType.
+ @param content the content that will be sent to the server as a JSON object.
+ @param success A block object called when the operation succeeds. It returns
+ the event id of the event generated on the home server
+ @param failure A block object called when the operation fails.
+ */
+- (void)sendStateEventToRoom:(NSString*)roomId
+                   eventType:(MXEventTypeString)eventTypeString
+                     content:(NSDictionary*)content
+                     success:(void (^)(NSString *eventId))success
+                     failure:(void (^)(NSError *error))failure;
 
 /**
  Send a message to a room
@@ -123,7 +141,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
                 the event id of the event generated on the home server
  @param failure A block object called when the operation fails.
  */
-- (void)postMessageToRoom:(NSString*)roomId
+- (void)sendMessageToRoom:(NSString*)roomId
                   msgType:(MXMessageType)msgType
                   content:(NSDictionary*)content
                   success:(void (^)(NSString *eventId))success
@@ -138,10 +156,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
                 the event id of the event generated on the home server
  @param failure A block object called when the operation fails.
  */
-- (void)postTextMessageToRoom:(NSString*)roomId
+- (void)sendTextMessageToRoom:(NSString*)roomId
                          text:(NSString*)text
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure;
+
 
 /**
  Set the topic of a room.
@@ -334,6 +353,23 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
                   failure:(void (^)(NSError *error))failure;
 
 /**
+ Inform the home server that the user is typing (or not) in this room.
+
+ @param roomId the id of the room.
+ @param typing Use YES if the user is currently typing.
+ @param timeout the length of time until the user should be treated as no longer typing,
+                in milliseconds. Can be ommited (set to -1) if they are no longer typing.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)sendTypingNotificationInRoom:(NSString*)roomId
+                              typing:(BOOL)typing
+                             timeout:(NSUInteger)timeout
+                             success:(void (^)())success
+                             failure:(void (^)(NSError *error))failure;
+
+/**
  Get all the current information for this room, including messages and state events.
  
  @param roomId the id of the room.
@@ -424,6 +460,15 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
          success:(void (^)(MXPresenceResponse *presence))success
          failure:(void (^)(NSError *error))failure;
 
+/**
+ Get the presence for all of the user's friends.
+
+ @param success A block object called when the operation succeeds. It provides an array of presence events.
+ @param failure A block object called when the operation fails.
+ */
+- (void)allUsersPresence:(void (^)(NSArray *userPresenceEvents))success
+         failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - Event operations
 /**
@@ -493,27 +538,12 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
  
  @param success A block object called when the operation succeeds. It provides the uploaded content url.
  @param failure A block object called when the operation fails.
+ @param uploadProgress A block object called when the upload progresses.
  */
 - (void)uploadContent:(NSData *)data
              mimeType:(NSString *)mimeType
               timeout:(NSTimeInterval)timeoutInSeconds
               success:(void (^)(NSString *url))success
-              failure:(void (^)(NSError *error))failure;
-
-/**
- Upload an image and its thumbnail to HomeServer
- 
- @param image the content to upload
- @param thumbnailSize the max size (width and height) of the thumbnail
- @param timeoutInSeconds the maximum time in ms the SDK must wait for the server response.
- 
- @param success A block object called when the operation succeeds. It provides the uploaded content url.
- @param failure A block object called when the operation fails.
- */
-- (void)uploadImage:(UIImage *)image
-      thumbnailSize:(NSUInteger)thumbnailSize
-            timeout:(NSTimeInterval)timeoutInSeconds
-            success:(void (^)(NSDictionary *imageMessage))success
-            failure:(void (^)(NSError *error))failure;
-
+              failure:(void (^)(NSError *error))failure
+       uploadProgress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))uploadProgress;
 @end

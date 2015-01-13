@@ -21,6 +21,7 @@
 #import "MXTools.h"
 
 #pragma mark - Constants definitions
+NSString *const kMXMediaPathPrefix = @"/_matrix/media/v1";
 NSString *const kMXRoomVisibilityPublic = @"public";
 NSString *const kMXRoomVisibilityPrivate = @"private";
 
@@ -203,7 +204,7 @@ MXAuthAction;
 
 
 #pragma mark - Room operations
-- (void)postEventToRoom:(NSString*)roomId
+- (void)sendEventToRoom:(NSString*)roomId
               eventType:(MXEventTypeString)eventTypeString
                 content:(NSDictionary*)content
                 success:(void (^)(NSString *eventId))success
@@ -224,7 +225,28 @@ MXAuthAction;
      }];
 }
 
-- (void)postMessageToRoom:(NSString*)roomId
+- (void)sendStateEventToRoom:(NSString*)roomId
+                   eventType:(MXEventTypeString)eventTypeString
+                     content:(NSDictionary*)content
+                     success:(void (^)(NSString *eventId))success
+                     failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/state/%@", roomId, eventTypeString];
+    [httpClient requestWithMethod:@"PUT"
+                             path:path
+                       parameters:content
+                          success:^(NSDictionary *JSONResponse)
+     {
+
+         success(JSONResponse[@"event_id"]);
+     }
+                          failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
+- (void)sendMessageToRoom:(NSString*)roomId
                   msgType:(MXMessageType)msgType
                   content:(NSDictionary*)content
                   success:(void (^)(NSString *eventId))success
@@ -234,15 +256,15 @@ MXAuthAction;
     NSMutableDictionary *eventContent = [NSMutableDictionary dictionaryWithDictionary:content];
     eventContent[@"msgtype"] = msgType;
     
-    [self postEventToRoom:roomId eventType:kMXEventTypeStringRoomMessage content:eventContent success:success failure:failure];
+    [self sendEventToRoom:roomId eventType:kMXEventTypeStringRoomMessage content:eventContent success:success failure:failure];
 }
 
-- (void)postTextMessageToRoom:(NSString*)roomId
+- (void)sendTextMessageToRoom:(NSString*)roomId
                          text:(NSString*)text
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure
 {
-    [self postMessageToRoom:roomId msgType:kMXMessageTypeText
+    [self sendMessageToRoom:roomId msgType:kMXMessageTypeText
               content:@{
                         @"body": text
                         }
@@ -589,6 +611,37 @@ MXAuthAction;
      }];
 }
 
+- (void)sendTypingNotificationInRoom:(NSString*)roomId
+                              typing:(BOOL)typing
+                             timeout:(NSUInteger)timeout
+                             success:(void (^)())success
+                             failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/typing/%@", roomId, self.credentials.userId];
+
+    // All query parameters are optional. Fill the request parameters on demand
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+
+    parameters[@"typing"] = [NSNumber numberWithBool:typing];
+
+    if (-1 != timeout)
+    {
+        parameters[@"timeout"] = [NSNumber numberWithUnsignedInteger:timeout];
+    }
+
+    [httpClient requestWithMethod:@"PUT"
+                             path:path
+                       parameters:parameters
+                          success:^(NSDictionary *JSONResponse)
+     {
+         success();
+     }
+                          failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
 - (void)initialSyncOfRoom:(NSString*)roomId
                 withLimit:(NSInteger)limit
                   success:(void (^)(NSDictionary *JSONData))success
@@ -754,6 +807,62 @@ MXAuthAction;
      }];
 }
 
+- (void)allUsersPresence:(void (^)(NSArray *userPresenceEvents))success
+                 failure:(void (^)(NSError *error))failure
+{
+    // In C-S API v1, the only way to get all user presence is to make
+    // a global initialSync
+    // @TODO: Change it with C-S API v2 new APIs
+    [self initialSyncWithLimit:0 success:^(NSDictionary *JSONData) {
+
+        success([MXEvent modelsFromJSON:JSONData[@"presence"]]);
+
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
+}
+
+- (void)presenceList:(void (^)(MXPresenceResponse *presence))success
+             failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"presence/list/%@", credentials.userId];
+    [httpClient requestWithMethod:@"GET"
+                             path:path
+                       parameters:nil
+                          success:^(NSDictionary *JSONResponse)
+     {
+         MXPresenceResponse *presence = [MXPresenceResponse modelFromJSON:JSONResponse];
+         success(presence);
+     }
+                          failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
+- (void)presenceListAddUsers:(NSArray*)users
+                     success:(void (^)())success
+                     failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"presence/list/%@", credentials.userId];
+
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+    parameters[@"invite"] = users;
+
+
+    [httpClient requestWithMethod:@"POST"
+                             path:path
+                       parameters:parameters
+                          success:^(NSDictionary *JSONResponse)
+     {
+         success();
+     }
+                          failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
 
 #pragma mark - Event operations
 - (void)initialSyncWithLimit:(NSInteger)limit
@@ -862,111 +971,24 @@ MXAuthAction;
               timeout:(NSTimeInterval)timeoutInSeconds
               success:(void (^)(NSString *url))success
               failure:(void (^)(NSError *error))failure
+       uploadProgress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))uploadProgress
 {
-    NSString* path = @"/_matrix/content";
+    NSString* path = [NSString stringWithFormat:@"%@/upload", kMXMediaPathPrefix];
     NSDictionary *headers = @{@"Content-Type": mimeType};
     
     [httpClient requestWithMethod:@"POST"
-                           path:path
-                     parameters:nil
-                           data:data
-                        headers:headers
-                        timeout:timeoutInSeconds
-                        success:^(NSDictionary *JSONResponse) {
-                            NSString *contentURL = JSONResponse[@"content_token"];
-                            NSLog(@"uploadContent succeeded: %@",contentURL);
-                            success(contentURL);
-                        }
-                        failure:failure];
+                             path:path
+                       parameters:nil
+                             data:data
+                          headers:headers
+                          timeout:timeoutInSeconds
+                   uploadProgress:uploadProgress
+                          success:^(NSDictionary *JSONResponse) {
+                              NSString *contentURL = JSONResponse[@"content_uri"];
+                              NSLog(@"uploadContent succeeded: %@",contentURL);
+                              success(contentURL);
+                          }
+                          failure:failure];
 }
 
-- (void)uploadImage:(UIImage *)image
-      thumbnailSize:(NSUInteger)thumbnailSize
-            timeout:(NSTimeInterval)timeoutInSeconds
-            success:(void (^)(NSDictionary *imageMessage))success
-            failure:(void (^)(NSError *error))failure
-{
-    NSMutableDictionary *imageMessage = [[NSMutableDictionary alloc] init];
-    [imageMessage setValue:@"m.image" forKey:@"msgtype"];
-    UIImage *thumbnail = nil;
-    
-    // Check whether a thumbnail is required
-    if (thumbnailSize && (image.size.width > thumbnailSize || image.size.height > thumbnailSize)) {
-        CGFloat width, height;
-        if (image.size.width > image.size.height) {
-            height = (image.size.height * thumbnailSize) / image.size.width;
-            height = floorf(height / 2) * 2;
-            width = thumbnailSize;
-        } else {
-            width = (image.size.width * thumbnailSize) / image.size.height;
-            width = floorf(width / 2) * 2;
-            height = thumbnailSize;
-        }
-        
-        // Create the thumbnail
-        CGSize imageSize = CGSizeMake(width, height);
-        UIGraphicsBeginImageContext(imageSize);
-        
-        CGRect thumbnailRect = CGRectMake(0, 0, 0, 0);
-        thumbnailRect.origin = CGPointMake(0.0,0.0);
-        thumbnailRect.size.width  = imageSize.width;
-        thumbnailRect.size.height = imageSize.height;
-        
-        [image drawInRect:thumbnailRect];
-        thumbnail = UIGraphicsGetImageFromCurrentImageContext();
-        UIGraphicsEndImageContext();
-    }
-    
-    if (thumbnail) {
-        // Upload thumbnail
-        NSMutableDictionary *thumbnailInfo = [[NSMutableDictionary alloc] init];
-        [thumbnailInfo setValue:@"image/jpeg" forKey:@"mimetype"];
-        [thumbnailInfo setValue:[NSNumber numberWithUnsignedInteger:(NSUInteger)thumbnail.size.width] forKey:@"w"];
-        [thumbnailInfo setValue:[NSNumber numberWithUnsignedInteger:(NSUInteger)thumbnail.size.height] forKey:@"h"];
-        NSData *thumbnailData = UIImageJPEGRepresentation(thumbnail, 0.9);
-        [thumbnailInfo setValue:[NSNumber numberWithUnsignedInteger:thumbnailData.length] forKey:@"size"];
-        
-        [self uploadContent:thumbnailData mimeType:@"image/jpeg" timeout:timeoutInSeconds success:^(NSString *url) {
-            [imageMessage setValue:url forKey:@"thumbnail_url"];
-            [imageMessage setValue:thumbnailInfo forKey:@"thumbnail_info"];
-            
-            // Upload the original image
-            [self finalizeImageUpload:image thumbnailInfo:imageMessage timeout:timeoutInSeconds success:success failure:failure];
-        } failure:^(NSError *error) {
-            failure(error);
-        }];
-    } else {
-        // Upload the original image
-        [self finalizeImageUpload:image thumbnailInfo:imageMessage timeout:timeoutInSeconds success:success failure:failure];
-    }
-}
-
-- (void)finalizeImageUpload:(UIImage *)image
-              thumbnailInfo:(NSMutableDictionary *)imageMessage
-                    timeout:(NSTimeInterval)timeoutInSeconds
-                    success:(void (^)(NSDictionary *imageMessage))success
-                    failure:(void (^)(NSError *error))failure
-{
-    NSMutableDictionary *imageInfo = [[NSMutableDictionary alloc] init];
-    [imageInfo setValue:@"image/jpeg" forKey:@"mimetype"];
-    [imageInfo setValue:[NSNumber numberWithUnsignedInteger:(NSUInteger)image.size.width] forKey:@"w"];
-    [imageInfo setValue:[NSNumber numberWithUnsignedInteger:(NSUInteger)image.size.height] forKey:@"h"];
-    NSData *imageData = UIImageJPEGRepresentation(image, 0.8);
-    [imageInfo setValue:[NSNumber numberWithUnsignedInteger:imageData.length] forKey:@"size"];
-    
-    [self uploadContent:imageData mimeType:@"image/jpeg" timeout:timeoutInSeconds success:^(NSString *url) {
-        [imageMessage setValue:url forKey:@"url"];
-        [imageMessage setValue:imageInfo forKey:@"info"];
-        [imageMessage setValue:@"Image" forKey:@"body"];
-        // If there is no thumbnail (because the original image is smaller than thumbnailSize),
-        // reuse the original image info for thumbnail data
-        if (!imageMessage[@"thumbnail_url"]) {
-            [imageInfo setValue:imageInfo forKey:@"thumbnail_info"];
-            [imageInfo setValue:url forKey:@"thumbnail_url"];
-        }
-        success(imageMessage);
-    } failure:^(NSError *error) {
-        failure(error);
-    }];
-}
 @end

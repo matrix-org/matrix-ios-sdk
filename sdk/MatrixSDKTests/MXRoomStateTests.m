@@ -79,6 +79,7 @@
             
             mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
             [mxSession start:^{
+        } onServerSyncDone:^{
                 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
                 
@@ -108,6 +109,7 @@
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
         [mxSession start:^{
+        } onServerSyncDone:^{
             
             MXRoom *room = [mxSession roomWithRoomId:roomId];
             
@@ -152,6 +154,7 @@
             
             mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
             [mxSession start:^{
+        } onServerSyncDone:^{
                 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
                 
@@ -181,6 +184,7 @@
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
         [mxSession start:^{
+        } onServerSyncDone:^{
             
             MXRoom *room = [mxSession roomWithRoomId:roomId];
             
@@ -221,6 +225,7 @@
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         [mxSession start:^{
+        } onServerSyncDone:^{
             
             MXRoom *room = [mxSession roomWithRoomId:roomId];
             XCTAssertNotNil(room);
@@ -339,8 +344,10 @@
  */
 - (void)createInviteByUserScenario:(MXRestClient*)bobRestClient inRoom:(NSString*)roomId inviteAlice:(BOOL)inviteAlice onComplete:(void(^)())onComplete
 {
-    [bobRestClient postTextMessageToRoom:roomId text:@"Hello world" success:^(NSString *eventId) {
-        
+    [bobRestClient sendTextMessageToRoom:roomId text:@"Hello world" success:^(NSString *eventId) {
+
+        MXRestClient *bobRestClient2 = bobRestClient;
+
         [bobRestClient setRoomTopic:roomId topic:@"We test room invitation here" success:^{
             
             MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
@@ -349,9 +356,9 @@
                 
                 if (inviteAlice)
                 {
-                    [bobRestClient inviteUser:sharedData.aliceCredentials.userId toRoom:roomId success:^{
+                    [bobRestClient2 inviteUser:sharedData.aliceCredentials.userId toRoom:roomId success:^{
                         
-                        [bobRestClient postTextMessageToRoom:roomId text:@"I wait for Alice" success:^(NSString *eventId) {
+                        [bobRestClient2 sendTextMessageToRoom:roomId text:@"I wait for Alice" success:^(NSString *eventId) {
                             
                             onComplete();
                             
@@ -391,6 +398,7 @@
                 mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
                 
                 [mxSession start:^{
+        } onServerSyncDone:^{
                     
                     MXRoom *newRoom = [mxSession roomWithRoomId:roomId];
                     
@@ -437,6 +445,7 @@
             mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
             
             [mxSession start:^{
+        } onServerSyncDone:^{
                 
                 __block MXRoom *newRoom;
                 
@@ -494,6 +503,7 @@
                 mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
                 
                 [mxSession start:^{
+        } onServerSyncDone:^{
                     
                     MXRoom *newRoom = [mxSession roomWithRoomId:roomId];
                     
@@ -562,6 +572,7 @@
                 mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
                 
                 [mxSession start:^{
+        } onServerSyncDone:^{
                     
                     MXRoom *room = [mxSession roomWithRoomId:roomId];
                     
@@ -609,6 +620,7 @@
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
         [mxSession start:^{
+        } onServerSyncDone:^{
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
@@ -633,23 +645,23 @@
             XCTAssertEqual(roomPowerLevels.kick, 50);
             XCTAssertEqual(roomPowerLevels.redact, 50);
 
-            // Check power level to post events
+            // Check power level to send events
             XCTAssertNotNil(roomPowerLevels.events);
             XCTAssertGreaterThan(roomPowerLevels.events.allKeys.count, 0);
 
             NSUInteger minimumPowerLevelForEvent;
             for (MXEventTypeString eventTypeString in roomPowerLevels.events.allKeys)
             {
-                minimumPowerLevelForEvent = [roomPowerLevels minimumPowerLevelForPostingEventAsStateEvent:eventTypeString];
+                minimumPowerLevelForEvent = [roomPowerLevels minimumPowerLevelForSendingEventAsStateEvent:eventTypeString];
 
                 XCTAssertEqualObjects(roomPowerLevels.events[eventTypeString], [NSNumber numberWithUnsignedInteger:minimumPowerLevelForEvent]);
             }
 
-            minimumPowerLevelForEvent = [roomPowerLevels minimumPowerLevelForPostingEventAsMessage:kMXEventTypeStringRoomMessage];
+            minimumPowerLevelForEvent = [roomPowerLevels minimumPowerLevelForSendingEventAsMessage:kMXEventTypeStringRoomMessage];
             XCTAssertEqual(minimumPowerLevelForEvent, roomPowerLevels.eventsDefault);
 
 
-            minimumPowerLevelForEvent = [roomPowerLevels minimumPowerLevelForPostingEventAsStateEvent:kMXEventTypeStringRoomTopic];
+            minimumPowerLevelForEvent = [roomPowerLevels minimumPowerLevelForSendingEventAsStateEvent:kMXEventTypeStringRoomTopic];
             XCTAssertEqual(minimumPowerLevelForEvent, roomPowerLevels.stateDefault);
 
             [expectation fulfill];

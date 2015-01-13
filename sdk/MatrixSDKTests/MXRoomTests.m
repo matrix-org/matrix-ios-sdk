@@ -83,7 +83,7 @@
         // Populate a text message in parallel
         [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndThePublicRoom:nil readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
             
-            [bobRestClient postTextMessageToRoom:roomId text:@"Hello listeners!" success:^(NSString *eventId) {
+            [bobRestClient sendTextMessageToRoom:roomId text:@"Hello listeners!" success:^(NSString *eventId) {
                 
                 NSAssert(nil != eventId, @"Cannot set up intial test conditions");
                 
@@ -137,7 +137,7 @@
         // Populate a text message in parallel
         [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndThePublicRoom:nil readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
             
-            [bobRestClient postTextMessageToRoom:roomId text:@"Hello listeners!" success:^(NSString *eventId) {
+            [bobRestClient sendTextMessageToRoom:roomId text:@"Hello listeners!" success:^(NSString *eventId) {
                 
                 NSAssert(nil != eventId, @"Cannot set up intial test conditions");
                 
@@ -183,6 +183,7 @@
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         [mxSession start:^{
+        } onServerSyncDone:^{
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
@@ -212,7 +213,9 @@
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
-        [mxSession startWithMessagesLimit:0 initialSyncDone:^{
+        [mxSession startWithMessagesLimit:0 onStoreDataReady:^{
+        } onServerSyncDone:^{
+            
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
             __block NSUInteger eventCount = 0;
@@ -241,6 +244,39 @@
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testTypingUsersNotifications
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [mxSession start:^{
+        } onServerSyncDone:^{
+
+            MXRoom *room = [mxSession roomWithRoomId:roomId];
+
+            XCTAssertEqual(room.typingUsers.count, 0);
+
+            [room listenToEventsOfTypes:@[kMXEventTypeStringTypingNotification] onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+
+                XCTAssertEqual(room.typingUsers.count, 1);
+                XCTAssertEqualObjects(room.typingUsers[0], bobRestClient.credentials.userId);
+
+                [expectation fulfill];
+            }];
+
+            [room sendTypingNotification:YES timeout:30000 success:^{
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
         }];
     }];
 }

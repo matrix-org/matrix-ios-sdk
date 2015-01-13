@@ -21,6 +21,8 @@
 
 #import "MXSession.h"
 
+#import "MXMemoryStore.h"
+
 @interface MXSessionTests : XCTestCase
 {
     MXSession *mxSession;
@@ -51,6 +53,7 @@
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         [mxSession start:^{
+        } onServerSyncDone:^{
             
             NSArray *recents = [mxSession recentsWithTypeIn:nil];
             
@@ -85,6 +88,7 @@
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         [mxSession start:^{
+        } onServerSyncDone:^{
             
             NSArray *recents = [mxSession recentsWithTypeIn:nil];
             
@@ -135,27 +139,53 @@
                                          kMXEventTypeStringRoomMessage,
                                          kMXEventTypeStringRoomMessage,
                                          ]];
-        
+
+        __block NSString *theRoomId;
+        __block NSString *eventsRoomId;
+        __block BOOL testDone = NO;
+
         [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
-            
+
             if (MXEventDirectionForwards == direction)
             {
-                [expectedEvents removeObject:event.type];
-                
-                if (0 == expectedEvents.count)
+                if (event.roomId && event.eventId)
                 {
-                    XCTAssert(YES, @"All expected events must be catch");
+                    // Make sure we test events coming from the same room
+                    if (nil == eventsRoomId)
+                    {
+                        eventsRoomId = event.roomId;
+                    }
+                    XCTAssertEqualObjects(event.roomId, eventsRoomId, @"We should receive events from the current room only");
+
+                    [expectedEvents removeObject:event.type];
+                }
+
+                if (!testDone && 0 == expectedEvents.count && theRoomId)
+                {
+                    XCTAssertEqualObjects(theRoomId, eventsRoomId, @"We must have received live events from the expected room");
+
+                    testDone = YES;
                     [expectation fulfill];
                 }
             }
-            
         }];
         
         
         // Create a room with messages in parallel
         [mxSession start:^{
+        } onServerSyncDone:^{
             
-            [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:nil readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+            [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:nil readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
+
+                theRoomId = roomId;
+
+                if (!testDone && 0 == expectedEvents.count)
+                {
+                    XCTAssertEqualObjects(theRoomId, eventsRoomId, @"We must have received live events from the expected room");
+
+                    testDone = YES;
+                    [expectation fulfill];
+                }
             }];
             
         } failure:^(NSError *error) {
@@ -186,6 +216,7 @@
         
         // Create a room with messages in parallel
         [mxSession start:^{
+        } onServerSyncDone:^{
             
             [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:nil readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
             }];
@@ -216,6 +247,7 @@
         
         // Create a room with messages in parallel
         [mxSession start:^{
+        } onServerSyncDone:^{
             
             XCTAssertGreaterThan(eventCount, 0);
             [expectation fulfill];
@@ -258,6 +290,7 @@
         
         // Start the session
         [mxSession start:^{
+        } onServerSyncDone:^{
             
             // Get the last Alice activity before making her active again
             lastAliceActivity = [mxSession2 userWithUserId:aliceRestClient.credentials.userId].lastActiveAgo;
@@ -265,7 +298,7 @@
             // Wait a bit before making her active again
             [NSThread sleepForTimeInterval:1.0];
             
-            [aliceRestClient postTextMessageToRoom:roomId text:@"Hi Bob!" success:^(NSString *eventId) {
+            [aliceRestClient sendTextMessageToRoom:roomId text:@"Hi Bob!" success:^(NSString *eventId) {
                 
             } failure:^(NSError *error) {
                 NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
@@ -285,6 +318,7 @@
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
         [mxSession start:^{
+        } onServerSyncDone:^{
 
             [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
                 XCTFail(@"We should not receive events after closing the session. Received: %@", event);
@@ -315,7 +349,7 @@
             XCTAssertNil(mxSession.myUser);
 
             // Do some activity to check nothing comes through mxSession, room and bob
-            [bobRestClient postTextMessageToRoom:roomId text:@"A message" success:^(NSString *eventId) {
+            [bobRestClient sendTextMessageToRoom:roomId text:@"A message" success:^(NSString *eventId) {
 
                 [expectation performSelector:@selector(fulfill) withObject:nil afterDelay:5];
 
@@ -330,6 +364,46 @@
     }];
 }
 
+- (void)testCloseWithMXMemoryStore
+{
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+
+    [sharedData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        MXMemoryStore *store = [[MXMemoryStore alloc] init];
+
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient andStore:store];
+        [mxSession start:^{
+
+        } onServerSyncDone:^{
+
+            NSUInteger storeRoomsCount = store.rooms.count;
+
+            XCTAssertGreaterThan(storeRoomsCount, 0);
+
+            [mxSession close];
+            mxSession = nil;
+
+            // Create another random room to create more data server side
+            [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
+
+                // Check the stream has been correctly shutdowned. Checking that the store has not changed is one way to verify it
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+
+                    XCTAssertEqual(store.rooms.count, storeRoomsCount, @"There must still the same number of stored rooms");
+                    [expectation fulfill];
+
+                });
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
 - (void)testPauseResume
 {
     // Make sure Alice and Bob have activities
@@ -338,6 +412,7 @@
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
         [mxSession start:^{
+        } onServerSyncDone:^{
 
             // Delay the test as the event stream is actually launched by the sdk after the call of the block passed in [MXSession start]
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
@@ -369,7 +444,7 @@
 
                 // Do some activity while MXSession is paused
                 // We should not receive events while paused
-                [bobRestClient postTextMessageToRoom:roomId text:@"A message" success:^(NSString *eventId) {
+                [bobRestClient sendTextMessageToRoom:roomId text:@"A message" success:^(NSString *eventId) {
 
                 } failure:^(NSError *error) {
                     NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
@@ -405,6 +480,7 @@
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
         [mxSession start:^{
+        } onServerSyncDone:^{
 
             // Delay the test as the event stream is actually launched by the sdk after the call of the block passed in [MXSession start]
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{

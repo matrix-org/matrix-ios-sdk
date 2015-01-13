@@ -51,4 +51,9 @@
  */
 - (void)openWithCredentials:(MXCredentials*)credentials onComplete:(void (^)())onComplete;
 
+/**
+ The disk space in bytes used by the store.
+ */
+@property (nonatomic, readonly) NSUInteger diskUsage;
+
 @end

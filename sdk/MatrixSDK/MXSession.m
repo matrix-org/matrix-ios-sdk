@@ -27,7 +27,7 @@
 /**
  The Matrix iOS SDK version.
  */
-const NSString *MatrixSDKVersion = @"0.1.0";
+const NSString *MatrixSDKVersion = @"0.2.0";
 
 /**
  Default timeouts used by the events streams.
@@ -98,9 +98,14 @@ typedef void (^MXOnResumeDone)();
             // Validate the permanent implementation
             if (mxStore.isPermanent)
             {
-                NSAssert([_store respondsToSelector:@selector(rooms)], @"A permanent MXStore must implement this method");
-                NSAssert([_store respondsToSelector:@selector(storeStateForRoom:stateEvents:)], @"A permanent MXStore must implement this method");
-                NSAssert([_store respondsToSelector:@selector(stateOfRoom:)], @"A permanent MXStore must implement this method");
+                // A permanent MXStore must implement these methods:
+                NSParameterAssert([_store respondsToSelector:@selector(rooms)]);
+                NSParameterAssert([_store respondsToSelector:@selector(storeStateForRoom:stateEvents:)]);
+                NSParameterAssert([_store respondsToSelector:@selector(stateOfRoom:)]);
+                NSParameterAssert([_store respondsToSelector:@selector(userDisplayname)]);
+                NSParameterAssert([_store respondsToSelector:@selector(setUserDisplayname:)]);
+                NSParameterAssert([_store respondsToSelector:@selector(userAvatarUrl)]);
+                NSParameterAssert([_store respondsToSelector:@selector(setUserAvatarUrl:)]);
             }
         }
         else
@@ -116,38 +121,89 @@ typedef void (^MXOnResumeDone)();
     return self;
 }
 
-- (void)start:(void (^)())initialSyncDone
+- (void)start:(void (^)())onStoreDataReady
+onServerSyncDone:(void (^)())onServerSyncDone
       failure:(void (^)(NSError *error))failure
 {
-    [self startWithMessagesLimit:DEFAULT_INITIALSYNC_MESSAGES_NUMBER initialSyncDone:initialSyncDone failure:failure];
+    [self startWithMessagesLimit:DEFAULT_INITIALSYNC_MESSAGES_NUMBER onStoreDataReady:onStoreDataReady onServerSyncDone:onServerSyncDone failure:failure];
 }
 
 - (void)startWithMessagesLimit:(NSUInteger)messagesLimit
-               initialSyncDone:(void (^)())initialSyncDone
+              onStoreDataReady:(void (^)())onStoreDataReady
+              onServerSyncDone:(void (^)())onServerSyncDone
                        failure:(void (^)(NSError *error))failure
 {
     // Store the passed limit to reuse it when initialSyncing per room
     initialSyncMessagesLimit = messagesLimit;
 
-    // First of all, retrieve the user's profile information
-    [matrixRestClient displayNameForUser:matrixRestClient.credentials.userId success:^(NSString *displayname) {
+    // Can we start on data from the MXStore?
+    if (_store.isPermanent && _store.eventStreamToken && 0 < _store.rooms.count)
+    {
+        // Mount data from the permanent store
+        NSLog(@"[MXSession startWithMessagesLimit]: Load data from the store");
 
-        [matrixRestClient avatarUrlForUser:matrixRestClient.credentials.userId success:^(NSString *avatarUrl) {
+        // Create the user's profile from the store
+        _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId andDisplayname:_store.userDisplayname andAvatarUrl:_store.userAvatarUrl andMatrixSession:self];
 
-            // Create the user's profile
-            _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId andDisplayname:displayname andAvatarUrl:avatarUrl andMatrixSession:self];
+        // Create MXRooms from their states stored in the store
+        NSDate *startDate = [NSDate date];
+        for (NSString *roomId in _store.rooms)
+        {
+            NSArray *stateEvents = [_store stateOfRoom:roomId];
+            [self createRoom:roomId withStateEvents:stateEvents];
+        }
 
-            // And store him as a common MXUser
-            users[matrixRestClient.credentials.userId] = _myUser;
+        NSLog(@"Created %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
-            // Do we start with a MXStore that have permanent data?
-            if (NO == _store.isPermanent || nil == _store.eventStreamToken || 0 == _store.rooms.count)
+        // The SDK client can use this data
+        onStoreDataReady();
+
+        // We need to get all users presence to start right
+        startDate = [NSDate date];
+        [matrixRestClient allUsersPresence:^(NSArray *userPresenceEvents) {
+
+            NSLog(@"Got presence of %tu users in %.0fms", userPresenceEvents.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+
+            for (MXEvent *userPresenceEvent in userPresenceEvents)
             {
+                MXUser *user = [self getOrCreateUser:userPresenceEvent.content[@"user_id"]];
+                [user updateWithPresenceEvent:userPresenceEvent];
+            }
+
+            NSLog(@"Resume the events stream from %@", _store.eventStreamToken);
+
+            // And resume the stream from where we were
+            [self resume:onServerSyncDone];
+
+        } failure:^(NSError *error) {
+            failure(error);
+        }];
+    }
+    else
+    {
+        // Get data from the home server
+        // First of all, retrieve the user's profile information
+        [matrixRestClient displayNameForUser:matrixRestClient.credentials.userId success:^(NSString *displayname) {
+
+            [matrixRestClient avatarUrlForUser:matrixRestClient.credentials.userId success:^(NSString *avatarUrl) {
+
+                // Create the user's profile
+                _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId andDisplayname:displayname andAvatarUrl:avatarUrl andMatrixSession:self];
+
+                // And store him as a common MXUser
+                users[matrixRestClient.credentials.userId] = _myUser;
+
+
                 NSLog(@"[MXSession startWithMessagesLimit] Do a global initialSync");
 
                 // Then, we can do the global sync
                 [matrixRestClient initialSyncWithLimit:initialSyncMessagesLimit success:^(NSDictionary *JSONData) {
-                    for (NSDictionary *roomDict in JSONData[@"rooms"])
+
+                    NSArray *roomDicts = JSONData[@"rooms"];
+
+                    NSLog(@"Received %tu rooms", roomDicts.count);
+
+                    for (NSDictionary *roomDict in roomDicts)
                     {
                         MXRoom *room = [self getOrCreateRoom:roomDict[@"room_id"] withJSONData:roomDict];
 
@@ -177,9 +233,6 @@ typedef void (^MXOnResumeDone)();
                         [self handlePresenceEvent:presenceEvent direction:MXEventDirectionSync];
                     }
 
-                    // We have data, the SDK user can start using it
-                    initialSyncDone();
-
                     // Start listening to live events
                     _store.eventStreamToken = JSONData[@"end"];
 
@@ -191,39 +244,21 @@ typedef void (^MXOnResumeDone)();
                     
                     // Resume from the last known token
                     [self streamEventsFromToken:_store.eventStreamToken withLongPoll:YES];
+
+                    // We have up-to-date data, the SDK user can start using it
+                    onStoreDataReady();
+                    onServerSyncDone();
                 }
-                                               failure:^(NSError *error) {
-                                                   failure(error);
-                                               }];
-            }
-            else
-            {
-                // Mount data from the permanent store
-                NSLog(@"[MXSession startWithMessagesLimit]: Load data from the store");
-
-                // Create MXRooms from their states stored in the store
-                NSDate *startDate = [NSDate date];
-                for (NSString *roomId in _store.rooms)
-                {
-                    NSArray *stateEvents = [_store stateOfRoom:roomId];
-                    [self createRoom:roomId withStateEvents:stateEvents];
-                }
-
-                NSLog(@"Created %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
-
-                NSLog(@"Resume the events stream from %@", _store.eventStreamToken);
-
-                // And resume the stream from where we were
-                [self resume:initialSyncDone];
-            }
-
+                failure:^(NSError *error) {
+                    failure(error);
+                }];
+            } failure:^(NSError *error) {
+                failure(error);
+            }];
         } failure:^(NSError *error) {
             failure(error);
         }];
-    } failure:^(NSError *error) {
-        failure(error);
-    }];
-
+    }
 }
 
 - (void)streamEventsFromToken:(NSString*)token withLongPoll:(BOOL)longPoll
@@ -236,22 +271,27 @@ typedef void (^MXOnResumeDone)();
     
     eventStreamRequest = [matrixRestClient eventsFromToken:token serverTimeout:serverTimeout clientTimeout:CLIENT_TIMEOUT_MS success:^(MXPaginationResponse *paginatedResponse) {
 
-        // Convert chunk array into an array of MXEvents
-        NSArray *events = paginatedResponse.chunk;
-
-        // And handle them
-        [self handleLiveEvents:events];
-
-        // If we are resuming inform the app that it received the last uptodate data
-        if (onResumeDone)
+        // eventStreamRequest is nil when the event stream has been paused
+        if (eventStreamRequest)
         {
-            onResumeDone();
-            onResumeDone = nil;
-        }
+            // Convert chunk array into an array of MXEvents
+            NSArray *events = paginatedResponse.chunk;
 
-        // Go streaming from the returned token
-        _store.eventStreamToken = paginatedResponse.end;
-        [self streamEventsFromToken:paginatedResponse.end withLongPoll:YES];
+            // And handle them
+            [self handleLiveEvents:events];
+
+            _store.eventStreamToken = paginatedResponse.end;
+
+            // If we are resuming inform the app that it received the last uptodate data
+            if (onResumeDone)
+            {
+                onResumeDone();
+                onResumeDone = nil;
+            }
+
+            // Go streaming from the returned token
+            [self streamEventsFromToken:paginatedResponse.end withLongPoll:YES];
+        }
 
     } failure:^(NSError *error) {
 
@@ -279,7 +319,24 @@ typedef void (^MXOnResumeDone)();
                 [self handlePresenceEvent:event direction:MXEventDirectionForwards];
                 break;
             }
-                
+
+            case MXEventTypeTypingNotification:
+            {
+                if (event.roomId)
+                {
+                    MXRoom *room = [self roomWithRoomId:event.roomId];
+                    if (room)
+                    {
+                        [room handleLiveEvent:event];
+                    }
+                    else
+                    {
+                        NSLog(@"Warning: Received a typing notification for an unknown room: %@", event);
+                    }
+                }
+                break;
+            }
+
             default:
                 if (event.roomId)
                 {
@@ -593,9 +650,17 @@ typedef void (^MXOnResumeDone)();
 - (void)notifyListeners:(MXEvent*)event direction:(MXEventDirection)direction
 {
     // Notify all listeners
-    for (MXEventListener *listener in globalEventListeners)
+    // The SDK client may remove a listener while calling them by enumeration
+    // So, use a copy of them
+    NSArray *listeners = [globalEventListeners copy];
+
+    for (MXEventListener *listener in listeners)
     {
-        [listener notify:event direction:direction andCustomObject:nil];
+        // And check the listener still exists before calling it
+        if (NSNotFound != [globalEventListeners indexOfObject:listener])
+        {
+            [listener notify:event direction:direction andCustomObject:nil];
+        }
     }
 }
 

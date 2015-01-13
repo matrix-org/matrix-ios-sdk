@@ -16,15 +16,14 @@
 
 #import <UIKit/UIKit.h>
 #import "CustomImageView.h"
+#import "PieChartView.h"
 
 @class MXRoomMember;
 @class MXRoom;
 
 // Room Member Table View Cell
-@interface RoomMemberTableCell : UITableViewCell
-{
-    //
-    CAShapeLayer* powerContainerLayer;
+@interface RoomMemberTableCell : UITableViewCell {
+    PieChartView* pieChartView;
 }
 @property (strong, nonatomic) IBOutlet CustomImageView *pictureView;
 @property (weak, nonatomic) IBOutlet UILabel *userLabel;

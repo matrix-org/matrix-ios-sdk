@@ -1,29 +1,52 @@
-Changes in Matrix iOS SDK in 0.2.0 (2014-12-17)
+Changes in Matrix iOS SDK in 0.2.0 (2014-12-19)
 ===============================================
 
-SDK:
- * BugFix SYIOS-10 - mxSession: myUser lost his displayName after joining a public room.
- * BugFix SYIOS-9 - SDK should ignore duplicated events sent by the home server.
- * BugFix SYIOS-8 - Reliable SDK version
- * Feature SYIOS-3 - Add API to set the power level of an user.
- * Feature SYIOS-2 - MXRoom: add shortcut methods like inviteUser, postMessage…
- * Feature SYIOS-7 - Add the ability to cancel [MXRoom paginateBackMessages].
+-----
+ SDK
+-----
+Improvements:
+ * The SDK is now available on CocoaPods ($ pod search MatrixSDK)
  * Updated [MXRestClient joinRoom] to support both room id and room alias.
- * SDK tests: add/update tests, improve tests suite duration.
+ * SDK tests: Improved tests suite duration.
+ * The SDK version is available with MatrixSDKVersion
+ 
+Features:
+ * Added MXFileStore, a MXStore implementation to store Matrix events permanently on the file system.
+ * SYIOS-2 - MXRoom: add shortcut methods like inviteUser, postMessage…
+ * SYIOS-3 - Add API to set the power level of an user.
+ * SYIOS-7 - Add the ability to cancel [MXRoom paginateBackMessages].
+ 
+Bug fixes:
+ * SYIOS-10 - mxSession: myUser lost his displayName after joining a public room.
+ * SYIOS-9 - SDK should ignore duplicated events sent by the home server.
+ * SYIOS-8 - Reliable SDK version
 
-Matrix Console:
- * BugFix SYIOS-18 - displaying keyboard has nasty animation artefacts.
- * BugFix SYIOS-17 - Fudge around flickering during echos.
- * BugFix SYIOS-15 - Entering a room should show all cached history from global initialsync.
- * BugFix - “Recents getting stuck after settings changes”.
- * Post user’s presence (online, unavailable or offline).
- * Fix scrolling issues in Room screen.
- * Use MXMyUser object (defined by SDK) to manage user’s information.
- * Enlarge text width in Room screen.
+-----------------
+ Matrix Console
+-----------------
+Improvements:
+ * UX improvements.
+ * Cold start is quicker thanks to the permanent cache managed by MXFileStore.
+ * Recents: improve last event description.
+
+Features:
+ * Use new Matrix content repository to generate thumbnails and store contents.
  * Room view: display and edit room topic.
  * Room view: support /join command (join room by its alias).
  * Room view: support /op and /deop commands (power level handling).
- * Recents: improve last event description.
+ * Post user’s presence (online, unavailable or offline).
+ * Use MXMyUser object (defined by SDK) to manage user’s information.
+ 
+Bug fixes:
+ * SYIOS-18 - displaying keyboard has nasty animation artefacts.
+ * SYIOS-17 - Fudge around flickering during echos.
+ * SYIOS-15 - Entering a room should show all cached history from global initialsync.
+ * SYIOS-21 - All login failures trigger 'Invalid username / password'
+ * SYIOS-22 - Invalid username / password dialog box disappears automatically about half a second after appearing
+ * SYIOS-23 - With multiple devices, a message sent from one device does not appear on another
+ * Recents getting stuck after settings changes.
+
+
 
 Changes in Matrix iOS SDK in 0.1.0 (2014-12-09)
 ===============================================

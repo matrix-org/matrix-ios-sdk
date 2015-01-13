@@ -140,12 +140,16 @@ MXSession *mxSessionToClean;
 
         if (mxSessionToClean)
         {
+            NSLog(@"Start cleaning user data from %@ ...", testCase.name);
+
             // Before giving the hand to the test, clean the rooms of the user.
             // It is done now rather than at the end of each test because
             // once [expectation fulfill] is called, the system allows no more HTTP requests.
             [self leaveAllRoomsAsync:mxSessionToClean onComplete:^{
                 [mxSessionToClean close];
                 mxSessionToClean = nil;
+
+                NSLog(@"End of cleaning user data");
 
                 readyToTest(restClient, expectation);
             }];
@@ -169,6 +173,8 @@ MXSession *mxSessionToClean;
                      readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
         // Create a random room to use
         [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
+
+            NSLog(@"Created room %@ for %@", response.roomId, testCase.name);
             
             readyToTest(bobRestClient, response.roomId, expectation);
             
@@ -185,7 +191,9 @@ MXSession *mxSessionToClean;
                         readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
                             // Create a random room to use
                             [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPublic roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
-                                
+
+                                NSLog(@"Created public room %@ for %@", response.roomId, testCase.name);
+
                                 readyToTest(bobRestClient, response.roomId, expectation);
                                 
                             } failure:^(NSError *error) {
@@ -242,15 +250,17 @@ MXSession *mxSessionToClean;
     {
         expectation = [testCase expectationWithDescription:@"asyncTest"];
     }
-    
+
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
     
     [sharedData getBobMXRestClient:^(MXRestClient *bobRestClient) {
         // Create a random room to use
         [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
-            
-            // Post the the message text in it
-            [bobRestClient postTextMessageToRoom:response.roomId text:newTextMessage success:^(NSString *eventId) {
+
+            NSLog(@"Created room %@ for %@", response.roomId, testCase.name);
+
+            // Send the the message text in it
+            [bobRestClient sendTextMessageToRoom:response.roomId text:newTextMessage success:^(NSString *eventId) {
                 
                 readyToTest(bobRestClient, response.roomId, eventId, expectation);
                 
@@ -276,7 +286,7 @@ MXSession *mxSessionToClean;
                              readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         // Add 5 messages to the room
-        [self for:bobRestClient andRoom:roomId postMessages:5 success:^{
+        [self for:bobRestClient andRoom:roomId sendMessages:5 success:^{
             
             readyToTest(bobRestClient, roomId, expectation);
         }];
@@ -310,20 +320,20 @@ MXSession *mxSessionToClean;
 }
 
 
-- (void)for:(MXRestClient *)mxRestClient2 andRoom:(NSString*)roomId postMessages:(NSUInteger)messagesCount success:(void (^)())success
+- (void)for:(MXRestClient *)mxRestClient2 andRoom:(NSString*)roomId sendMessages:(NSUInteger)messagesCount success:(void (^)())success
 {
-    NSLog(@"postMessages :%ld", messagesCount);
+    NSLog(@"sendMessages :%tu to %@", messagesCount, roomId);
     if (0 == messagesCount)
     {
         success();
     }
     else
     {
-        [mxRestClient2 postTextMessageToRoom:roomId text:[NSString stringWithFormat:@"Fake message posted at %.0f ms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000]
+        [mxRestClient2 sendTextMessageToRoom:roomId text:[NSString stringWithFormat:@"Fake message sent at %.0f ms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000]
                            success:^(NSString *eventId) {
 
-            // Post the next message
-            [self for:mxRestClient2 andRoom:roomId postMessages:messagesCount - 1 success:success];
+            // Send the next message
+            [self for:mxRestClient2 andRoom:roomId sendMessages:messagesCount - 1 success:success];
 
         } failure:^(NSError *error) {
             // If the error is M_LIMIT_EXCEEDED, make sure your home server rate limit is high
@@ -344,8 +354,10 @@ MXSession *mxSessionToClean;
         // Create the room
         [mxRestClient2 createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
 
+            NSLog(@"Created room %@ in createRooms", response.roomId);
+
             // Fill it with messages
-            [self for:mxRestClient2 andRoom:response.roomId postMessages:messagesCount success:^{
+            [self for:mxRestClient2 andRoom:response.roomId sendMessages:messagesCount success:^{
 
                 // Go to the next room
                 [self for:mxRestClient2 createRooms:roomsCount - 1 withMessages:messagesCount success:success];
@@ -366,6 +378,7 @@ MXSession *mxSessionToClean;
         MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         
         [mxSession start:^{
+        } onServerSyncDone:^{
             MXRoom *room = [mxSession roomWithRoomId:roomId];
             
             readyToTest(mxSession, room, expectation);
@@ -384,6 +397,7 @@ MXSession *mxSessionToClean;
         MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         
         [mxSession start:^{
+        } onServerSyncDone:^{
             MXRoom *room = [mxSession roomWithRoomId:roomId];
             
             readyToTest(mxSession, room, expectation);

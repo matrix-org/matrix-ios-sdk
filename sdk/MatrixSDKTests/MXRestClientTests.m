@@ -45,19 +45,19 @@
         
         XCTAssertTrue([bobRestClient.homeserver isEqualToString:kMXTestsHomeServerURL], "bobRestClient.homeserver(%@) is wrong", bobRestClient.homeserver);
         XCTAssertTrue([bobRestClient.credentials.userId isEqualToString:sharedData.bobCredentials.userId], "bobRestClient.userId(%@) is wrong", bobRestClient.credentials.userId);
-        XCTAssertTrue([bobRestClient.credentials.accessToken isEqualToString:sharedData.bobCredentials.accessToken], "bobRestClient.access_token(%@) is wrong", bobRestClient.credentials.accessToken);
+        XCTAssertTrue([bobRestClient.credentials.accessToken isEqualToString:sharedData.bobCredentials.accessToken], "bobRestClient.accessToken(%@) is wrong", bobRestClient.credentials.accessToken);
         
         [expectation fulfill];
     }];
 }
 
 #pragma mark - Room operations
-- (void)testPostTextMessage
+- (void)testSendTextMessage
 {
-    // This test on postTextMessage validates postMessage and postEvent too
+    // This test on sendTextMessage validates sendMessage and sendEvent too
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [bobRestClient postTextMessageToRoom:roomId text:@"This is text message" success:^(NSString *eventId) {
+        [bobRestClient sendTextMessageToRoom:roomId text:@"This is text message" success:^(NSString *eventId) {
             
             XCTAssertNotNil(eventId);
             XCTAssertGreaterThan(eventId.length, 0, @"The eventId string must not be empty");
@@ -195,7 +195,7 @@
                         
                         if ([member.userId isEqualToString:sharedData.aliceCredentials.userId])
                         {
-                            XCTAssertEqual(member.membership, MXMembershipInvite, @"A invited user membership is invite, not %lu", member.membership);
+                            XCTAssertEqual(member.membership, MXMembershipInvite, @"A invited user membership is invite, not %tu", member.membership);
                         }
                         else
                         {
@@ -239,7 +239,7 @@
                     
                     if ([member.userId isEqualToString:sharedData.aliceCredentials.userId])
                     {
-                        XCTAssertEqual(member.membership, MXMembershipLeave, @"A kicked user membership is leave, not %lu", member.membership);
+                        XCTAssertEqual(member.membership, MXMembershipLeave, @"A kicked user membership is leave, not %tu", member.membership);
                     }
                     else
                     {
@@ -281,7 +281,7 @@
                     
                     if ([member.userId isEqualToString:sharedData.aliceCredentials.userId])
                     {
-                        XCTAssertEqual(member.membership, MXMembershipBan, @"A banned user membership is ban, not %lu", member.membership);
+                        XCTAssertEqual(member.membership, MXMembershipBan, @"A banned user membership is ban, not %tu", member.membership);
                     }
                     else
                     {
@@ -420,6 +420,28 @@
     }];
 }
 
+- (void)testSendTypingNotification
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        [bobRestClient sendTypingNotificationInRoom:roomId typing:YES timeout:30000 success:^{
+
+            [bobRestClient sendTypingNotificationInRoom:roomId typing:NO timeout:-1 success:^{
+
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 - (void)testInitialSyncOfRoom
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
@@ -534,9 +556,9 @@
     [sharedData doMXSessionTestWithBobAndAliceInARoom:self
  readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
-        [sharedData for:bobRestClient andRoom:roomId postMessages:5 success:^{
+        [sharedData for:bobRestClient andRoom:roomId sendMessages:5 success:^{
             [bobRestClient leaveRoom:roomId success:^{
-                [aliceRestClient postTextMessageToRoom:roomId text:@"Hi bob"  success:^(NSString *eventId) {
+                [aliceRestClient sendTextMessageToRoom:roomId text:@"Hi bob"  success:^(NSString *eventId) {
                     [aliceRestClient inviteUser:bobRestClient.credentials.userId toRoom:roomId success:^{
                         [bobRestClient joinRoom:roomId success:^(NSString *theRoomId) {
 
