@@ -28,6 +28,14 @@ typedef NSString* MXRoomVisibility;
 FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPublic;
 FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
 
+/**
+ Scheme used in Matrix content URIs.
+ */
+FOUNDATION_EXPORT NSString *const kMXContentUriScheme;
+/**
+ Matrix content respository path.
+ */
+FOUNDATION_EXPORT NSString *const kMXContentPrefixPath;
 
 /**
  Methods of thumnailing supported by the Matrix content repository.

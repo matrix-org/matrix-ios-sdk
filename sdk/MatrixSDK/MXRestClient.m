@@ -21,14 +21,14 @@
 #import "MXTools.h"
 
 #pragma mark - Constants definitions
-NSString *const kMXRoomVisibilityPublic = @"public";
+NSString *const kMXRoomVisibilityPublic  = @"public";
 NSString *const kMXRoomVisibilityPrivate = @"private";
 
 /**
  Matrix content respository path
  */
-#define MX_CONTENT_URI_SCHEME   @"mxc://"
-#define MX_CONTENT_PREFIX_PATH  @"/_matrix/media/v1"
+NSString *const kMXContentUriScheme  = @"mxc://";
+NSString *const kMXContentPrefixPath = @"/_matrix/media/v1";
 
 
 /**
@@ -950,7 +950,7 @@ MXAuthAction;
               failure:(void (^)(NSError *error))failure
        uploadProgress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))uploadProgress
 {
-    NSString* path = [NSString stringWithFormat:@"%@/upload", MX_CONTENT_PREFIX_PATH];
+    NSString* path = [NSString stringWithFormat:@"%@/upload", kMXContentPrefixPath];
     NSDictionary *headers = @{@"Content-Type": mimeType};
     
     [httpClient requestWithMethod:@"POST"
@@ -973,10 +973,10 @@ MXAuthAction;
     NSString *contentURL;
 
     // Replace the "mxc://" scheme by the absolute http location of the content
-    if ([mxcContentURI hasPrefix:MX_CONTENT_URI_SCHEME])
+    if ([mxcContentURI hasPrefix:kMXContentUriScheme])
     {
-        NSString *mxMediaPrefix = [NSString stringWithFormat:@"%@%@/download/", homeserver, MX_CONTENT_PREFIX_PATH];
-        contentURL = [mxcContentURI stringByReplacingOccurrencesOfString:MX_CONTENT_URI_SCHEME withString:mxMediaPrefix];
+        NSString *mxMediaPrefix = [NSString stringWithFormat:@"%@%@/download/", homeserver, kMXContentPrefixPath];
+        contentURL = [mxcContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:mxMediaPrefix];
     }
 
     return contentURL;
@@ -986,11 +986,11 @@ MXAuthAction;
 {
     NSString *thumbnailURL;
 
-    if ([mxcContentURI hasPrefix:MX_CONTENT_URI_SCHEME])
+    if ([mxcContentURI hasPrefix:kMXContentUriScheme])
     {
         // Replace the "mxc://" scheme by the absolute http location for the content thumbnail
-        NSString *mxThumbnailPrefix = [NSString stringWithFormat:@"%@%@/thumbnail/", homeserver, MX_CONTENT_PREFIX_PATH];
-        thumbnailURL = [mxcContentURI stringByReplacingOccurrencesOfString:MX_CONTENT_URI_SCHEME withString:mxThumbnailPrefix];
+        NSString *mxThumbnailPrefix = [NSString stringWithFormat:@"%@%@/thumbnail/", homeserver, kMXContentPrefixPath];
+        thumbnailURL = [mxcContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:mxThumbnailPrefix];
 
         // Convert MXThumbnailingMethod to parameter string
         NSString *thumbnailingMethodString;
