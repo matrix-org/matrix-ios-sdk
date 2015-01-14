@@ -28,6 +28,8 @@
         _userId = dict[@"userId"];
         _accessToken = dict[@"accessToken"];
         _eventStreamToken = dict[@"eventStreamToken"];
+        _userDisplayName = dict[@"userDisplayName"];
+        _userAvatarUrl = dict[@"userAvatarUrl"];
 
         NSNumber *version = dict[@"version"];
         _version = [version unsignedIntegerValue];
@@ -50,7 +52,16 @@
     {
         dict[@"eventStreamToken"] = _eventStreamToken;
     }
+    if (_userDisplayName)
+    {
+        dict[@"userDisplayName"] = _userDisplayName;
+    }
+    if (_userAvatarUrl)
+    {
+        dict[@"userAvatarUrl"] = _userAvatarUrl;
+    }
 
     [aCoder encodeObject:dict forKey:@"dict"];
 }
+
 @end

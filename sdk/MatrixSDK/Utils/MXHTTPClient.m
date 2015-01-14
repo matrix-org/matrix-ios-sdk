@@ -26,7 +26,7 @@
     // Use AFNetworking as HTTP client
     AFHTTPRequestOperationManager *httpManager;
     
-    NSString *access_token;
+    NSString *accessToken;
 }
 @end
 
@@ -37,12 +37,12 @@
     return [self initWithHomeServer:homeserver andAccessToken:nil];
 }
 
--(id)initWithHomeServer:(NSString *)homeserver andAccessToken:(NSString *)accessToken
+-(id)initWithHomeServer:(NSString *)homeserver andAccessToken:(NSString *)access_token
 {
     self = [super init];
     if (self)
     {
-        access_token = accessToken;
+        accessToken = access_token;
         
         httpManager = [[AFHTTPRequestOperationManager alloc] initWithBaseURL:[NSURL URLWithString:[NSString stringWithFormat:@"%@%@", homeserver, MX_PREFIX_PATH]]];
         
@@ -52,7 +52,7 @@
     return self;
 }
 
-- (id)requestWithMethod:(NSString *)httpMethod
+- (NSOperation*)requestWithMethod:(NSString *)httpMethod
                    path:(NSString *)path
              parameters:(NSDictionary*)parameters
                 success:(void (^)(NSDictionary *JSONResponse))success
@@ -61,36 +61,38 @@
     return [self requestWithMethod:httpMethod path:path parameters:parameters timeout:-1 success:success failure:failure];
 }
 
-- (id)requestWithMethod:(NSString *)httpMethod
+- (NSOperation*)requestWithMethod:(NSString *)httpMethod
                    path:(NSString *)path
              parameters:(NSDictionary*)parameters
                 timeout:(NSTimeInterval)timeoutInSeconds
                 success:(void (^)(NSDictionary *JSONResponse))success
                 failure:(void (^)(NSError *error))failure
 {
-    return [self requestWithMethod:httpMethod path:path parameters:parameters data:nil headers:nil timeout:timeoutInSeconds success:success failure:failure];
+    return [self requestWithMethod:httpMethod path:path parameters:parameters data:nil headers:nil timeout:timeoutInSeconds uploadProgress:nil success:success failure:failure ];
 }
 
-- (id)requestWithMethod:(NSString *)httpMethod
+- (NSOperation*)requestWithMethod:(NSString *)httpMethod
                    path:(NSString *)path
              parameters:(NSDictionary*)parameters
                    data:(NSData *)data
                 headers:(NSDictionary*)headers
                 timeout:(NSTimeInterval)timeoutInSeconds
+         uploadProgress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))uploadProgress
                 success:(void (^)(NSDictionary *JSONResponse))success
                 failure:(void (^)(NSError *error))failure
 {
     // If an access token is set, use it
-    if (access_token)
+    if (accessToken)
     {
-        path = [path stringByAppendingString:[NSString stringWithFormat:@"?access_token=%@", access_token]];
+        path = [path stringByAppendingString:[NSString stringWithFormat:@"?access_token=%@", accessToken]];
     }
     
     NSString *URLString = [[NSURL URLWithString:path relativeToURL:httpManager.baseURL] absoluteString];
     
     NSMutableURLRequest *request;
     request = [httpManager.requestSerializer requestWithMethod:httpMethod URLString:URLString parameters:parameters error:nil];
-    if (data) {
+    if (data)
+    {
         NSParameterAssert(![httpMethod isEqualToString:@"GET"] && ![httpMethod isEqualToString:@"HEAD"]);
         request.HTTPBody = data;
         for (NSString *key in headers.allKeys)
@@ -129,6 +131,11 @@
                                                                                  }
                                                                                  failure(error);
                                                                              }];
+    
+    if (uploadProgress)
+    {
+        [operation setUploadProgressBlock:uploadProgress];
+    }
     
     [httpManager.operationQueue addOperation:operation];
     

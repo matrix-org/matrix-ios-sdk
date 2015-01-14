@@ -46,6 +46,12 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 @property (nonatomic, readonly) MXRoomState *state;
 
 /**
+ The list of ids of users currently typing in this room.
+ This array is updated on each received m.typing event (MXEventTypeTypingNotification).
+ */
+@property (nonatomic, readonly) NSArray *typingUsers;
+
+/**
  The last message of the requested types.
 
  @param types an array of event types strings (MXEventTypeString).
@@ -264,6 +270,21 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 - (void)setPowerLevelOfUserWithUserID:(NSString*)userId powerLevel:(NSUInteger)powerLevel
                               success:(void (^)())success
                               failure:(void (^)(NSError *error))failure;
+
+/**
+ Inform the home server that the user is typing (or not) in this room.
+
+ @param typing Use YES if the user is currently typing.
+ @param timeout the length of time until the user should be treated as no longer typing,
+ in milliseconds. Can be ommited (set to -1) if they are no longer typing.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)sendTypingNotification:(BOOL)typing
+                       timeout:(NSUInteger)timeout
+                       success:(void (^)())success
+                       failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Events listeners

@@ -57,6 +57,7 @@
 
                 // Start the session
                 [mxSession start:^{
+        } onServerSyncDone:^{
 
                     readyToTest(bobRestClient, aliceRestClient, roomId, expectation);
 
@@ -200,6 +201,7 @@
         XCTAssertNil(mxSession.myUser);
 
         [mxSession start:^{
+        } onServerSyncDone:^{
 
             XCTAssertNotNil(mxSession.myUser);
 
@@ -242,13 +244,14 @@
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
         [mxSession start:^{
+        } onServerSyncDone:^{
 
             [mxSession.myUser listenToUserUpdate:^(MXEvent *event) {
 
                 XCTAssertEqual(event.eventType, MXEventTypePresence);
 
-                XCTAssert([mxSession.myUser.displayname isEqualToString:@"ALICE"]);
-                XCTAssert([mxSession.myUser.avatarUrl isEqualToString:kMXTestsAliceAvatarURL]);
+                XCTAssertEqualObjects(mxSession.myUser.displayname, @"ALICE");
+                XCTAssertEqualObjects(mxSession.myUser.avatarUrl, kMXTestsAliceAvatarURL);
 
                 [expectation fulfill];
 
@@ -276,6 +279,7 @@
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
         [mxSession start:^{
+        } onServerSyncDone:^{
 
             [mxSession.myUser listenToUserUpdate:^(MXEvent *event) {
 

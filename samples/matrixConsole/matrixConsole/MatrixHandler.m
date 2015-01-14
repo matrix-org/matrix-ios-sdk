@@ -22,6 +22,8 @@
 #import "MXFileStore.h"
 #import "MXTools.h"
 
+#import "MediaManager.h"
+
 NSString *const kMatrixHandlerUnsupportedMessagePrefix = @"UNSUPPORTED MSG: ";
 
 static MatrixHandler *sharedHandler = nil;
@@ -37,7 +39,7 @@ static MatrixHandler *sharedHandler = nil;
 }
 
 @property (strong, nonatomic) MXFileStore *mxFileStore;
-@property (nonatomic,readwrite) BOOL isInitialSyncDone;
+@property (nonatomic,readwrite) MatrixHandlerStatus status;
 @property (nonatomic,readwrite) BOOL isResumeDone;
 @property (strong, nonatomic) CustomAlert *mxNotification;
 @property (nonatomic) UIBackgroundTaskIdentifier bgTask;
@@ -61,7 +63,7 @@ static MatrixHandler *sharedHandler = nil;
 
 -(MatrixHandler *)init {
     if (self = [super init]) {
-        _isInitialSyncDone = NO;
+        _status = (self.accessToken != nil) ? MatrixHandlerStatusLogged : MatrixHandlerStatusLoggedOut;
         _isResumeDone = NO;
         _userPresence = MXPresenceUnknown;
         notifyOpenSessionFailure = YES;
@@ -119,9 +121,11 @@ static MatrixHandler *sharedHandler = nil;
 
             // Launch mxSession
             [self.mxSession start:^{
-                self.isInitialSyncDone = YES;
-                [self setUserPresence:MXPresenceOnline andStatusMessage:nil completion:nil];
+                self.status = MatrixHandlerStatusStoreDataReady;
+            } onServerSyncDone:^{
                 _isResumeDone = YES;
+                self.status = MatrixHandlerStatusServerSyncDone;
+                [self setUserPresence:MXPresenceOnline andStatusMessage:nil completion:nil];
 
                 // Register listener to update user's information
                 userUpdateListener = [self.mxSession.myUser listenToUserUpdate:^(MXEvent *event) {
@@ -189,7 +193,6 @@ static MatrixHandler *sharedHandler = nil;
         self.mxRestClient = nil;
     }
     
-    self.isInitialSyncDone = NO;
     _isResumeDone = NO;
     notifyOpenSessionFailure = YES;
 }
@@ -216,12 +219,8 @@ static MatrixHandler *sharedHandler = nil;
 
 #pragma mark -
 
-- (BOOL)isLogged {
-    return (self.accessToken != nil);
-}
-
 - (void)pauseInBackgroundTask {
-    if (self.mxSession) {
+    if (self.mxSession && self.status == MatrixHandlerStatusServerSyncDone) {
         _bgTask = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
             [[UIApplication sharedApplication] endBackgroundTask:_bgTask];
             _bgTask = UIBackgroundTaskInvalid;
@@ -245,7 +244,7 @@ static MatrixHandler *sharedHandler = nil;
 }
 
 - (void)resume {
-    if (self.mxSession && self.isInitialSyncDone) {
+    if (self.mxSession && self.status == MatrixHandlerStatusServerSyncDone) {
         if (!self.isResumeDone) {
             // Resume SDK and update user presence
             [self.mxSession resume:^{
@@ -274,11 +273,18 @@ static MatrixHandler *sharedHandler = nil;
 }
 
 - (void)forceInitialSync:(BOOL)clearCache {
-    if (self.isInitialSyncDone) {
+    if (self.status == MatrixHandlerStatusServerSyncDone || self.status == MatrixHandlerStatusStoreDataReady) {
+        self.status = MatrixHandlerStatusLogged;
         [self closeSession];
         notifyOpenSessionFailure = NO;
         
+        // Force back to Recents list if room details is displayed (Room details are not available until the end of initial sync)
+        [[AppDelegate theDelegate].masterTabBarController popRoomViewControllerAnimated:NO];
+        
         if (clearCache) {
+            // clear the media cache
+            [MediaManager clearCache];
+            
             [_mxFileStore deleteAllData];
         }
         
@@ -303,30 +309,38 @@ static MatrixHandler *sharedHandler = nil;
                     [localNotification setAlertBody:[self displayTextForEvent:event withRoomState:roomState inSubtitleMode:YES]];
                     [[UIApplication sharedApplication] scheduleLocalNotification:localNotification];
                 } else if (![event.userId isEqualToString:self.userId]
-                           && ![[AppDelegate theDelegate].masterTabBarController.visibleRoomId isEqualToString:event.roomId]) {
-                    // The sender is not the user and the concerned room is not presently visible,
-                    // we display a notification by removing existing one (if any)
-                    if (self.mxNotification) {
-                        [self.mxNotification dismiss:NO];
+                           && ![[AppDelegate theDelegate].masterTabBarController.visibleRoomId isEqualToString:event.roomId]
+                           && ![[AppDelegate theDelegate].masterTabBarController isPresentingMediaPicker]) {
+                    
+                    
+                    NSString* messageText = [self displayTextForEvent:event withRoomState:roomState inSubtitleMode:YES];
+                    
+                    // display the alert only the text contains an expected word
+                    if ((0 == [AppSettings sharedSettings].specificWordsToAlertOn.count) ||[self containsBingWord:messageText]) {
+                        // The sender is not the user and the concerned room is not presently visible,
+                        // we display a notification by removing existing one (if any)
+                        if (self.mxNotification) {
+                            [self.mxNotification dismiss:NO];
+                        }
+                        
+                        self.mxNotification = [[CustomAlert alloc] initWithTitle:roomState.displayname
+                                                                         message:messageText
+                                                                           style:CustomAlertStyleAlert];
+                        self.mxNotification.cancelButtonIndex = [self.mxNotification addActionWithTitle:@"OK"
+                                                                                                  style:CustomAlertActionStyleDefault
+                                                                                                handler:^(CustomAlert *alert) {
+                                                                                                    [MatrixHandler sharedHandler].mxNotification = nil;
+                                                                                                }];
+                        [self.mxNotification addActionWithTitle:@"View"
+                                                          style:CustomAlertActionStyleDefault
+                                                        handler:^(CustomAlert *alert) {
+                                                            [MatrixHandler sharedHandler].mxNotification = nil;
+                                                            // Show the room
+                                                            [[AppDelegate theDelegate].masterTabBarController showRoom:event.roomId];
+                                                        }];
+                        
+                        [self.mxNotification showInViewController:[[AppDelegate theDelegate].masterTabBarController selectedViewController]];
                     }
-                    
-                    self.mxNotification = [[CustomAlert alloc] initWithTitle:roomState.displayname
-                                                                     message:[self displayTextForEvent:event withRoomState:roomState inSubtitleMode:YES]
-                                                                       style:CustomAlertStyleAlert];
-                    self.mxNotification.cancelButtonIndex = [self.mxNotification addActionWithTitle:@"OK"
-                                                                                              style:CustomAlertActionStyleDefault
-                                                                                            handler:^(CustomAlert *alert) {
-                                                                                                [MatrixHandler sharedHandler].mxNotification = nil;
-                                                                                            }];
-                    [self.mxNotification addActionWithTitle:@"View"
-                                                      style:CustomAlertActionStyleDefault
-                                                    handler:^(CustomAlert *alert) {
-                                                        [MatrixHandler sharedHandler].mxNotification = nil;
-                                                        // Show the room
-                                                        [[AppDelegate theDelegate].masterTabBarController showRoom:event.roomId];
-                                                    }];
-                    
-                    [self.mxNotification showInViewController:[[AppDelegate theDelegate].masterTabBarController selectedViewController]];
                 }
             }
         }];
@@ -423,9 +437,11 @@ static MatrixHandler *sharedHandler = nil;
     if (inAccessToken.length) {
         [[NSUserDefaults standardUserDefaults] setObject:inAccessToken forKey:@"accesstoken"];
         [[AppDelegate theDelegate] registerUserNotificationSettings];
+        self.status = MatrixHandlerStatusLogged;
         [self openSession];
     } else {
         [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"accesstoken"];
+        self.status = MatrixHandlerStatusLoggedOut;
         [self closeSession];
     }
     [[NSUserDefaults standardUserDefaults] synchronize];
@@ -776,13 +792,17 @@ static MatrixHandler *sharedHandler = nil;
     return nil;
 }
 
--(NSUInteger) MXCacheSize {
+- (NSUInteger) MXCacheSize {
     
     if (self.mxFileStore) {
         return self.mxFileStore.diskUsage;
     }
     
     return 0;
+}
+
+- (NSUInteger) cachesSize {
+    return self.MXCacheSize + [MediaManager cacheSize];
 }
 
 - (CGFloat)getPowerLevel:(MXRoomMember *)roomMember inRoom:(MXRoom *)room {
@@ -813,6 +833,48 @@ static MatrixHandler *sharedHandler = nil;
     }
 
     return powerLevel;
+}
+
+- (NSString*)getMXRoomMemberDisplayName:(MXRoomMember*)roomMember {
+    return roomMember.displayname.length == 0 ? roomMember.userId : roomMember.displayname;
+}
+
+// return YES if the text contains a bing word
+- (BOOL)containsBingWord:(NSString*)text {
+    MatrixHandler *mxHandler = [MatrixHandler sharedHandler];
+    
+    NSMutableArray* wordsList = [[AppSettings sharedSettings].specificWordsToAlertOn mutableCopy];
+    
+    // add the display name
+    if (mxHandler.mxSession.myUser.displayname.length) {
+        [wordsList addObject:mxHandler.mxSession.myUser.displayname];
+    }
+    
+    // and the user identifiers
+    if (mxHandler.localPartFromUserId.length) {
+        [wordsList addObject:mxHandler.localPartFromUserId];
+    }
+    
+    if (wordsList.count > 0) {
+        NSMutableString* pattern = [[NSMutableString alloc] init];
+        
+        [pattern appendString:@"("];
+        
+        for(NSString* word in wordsList) {
+            // check it is a regex
+            if ([pattern hasPrefix:@"\\b"] && [pattern hasSuffix:@"\\b"]) {
+                [pattern appendFormat:@"%@|", word];
+            } else {
+                [pattern appendFormat:@"\\b%@\\b|", word];
+            }
+        }
+        
+        NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"%@)", [pattern substringToIndex:pattern.length - 1]] options:NSRegularExpressionCaseInsensitive error:nil];
+        if ([regex numberOfMatchesInString:text options:0 range:NSMakeRange(0, [text length])]) {
+            return YES;
+        }
+    }
+    return NO;
 }
 
 @end

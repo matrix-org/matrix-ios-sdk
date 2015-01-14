@@ -25,10 +25,37 @@
  Room visibility
  */
 typedef NSString* MXRoomVisibility;
-
-FOUNDATION_EXPORT NSString *const kMXMediaPathPrefix;
 FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPublic;
 FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
+
+/**
+ Scheme used in Matrix content URIs.
+ */
+FOUNDATION_EXPORT NSString *const kMXContentUriScheme;
+/**
+ Matrix content respository path.
+ */
+FOUNDATION_EXPORT NSString *const kMXContentPrefixPath;
+
+/**
+ Methods of thumnailing supported by the Matrix content repository.
+ */
+typedef enum : NSUInteger
+{
+    /**
+     "scale" trys to return an image where either the width or the height is smaller than the
+     requested size. The client should then scale and letterbox the image if it needs to
+     fit within a given rectangle.
+     */
+    MXThumbnailingMethodScale,
+
+    /**
+     "crop" trys to return an image where the width and height are close to the requested size
+     and the aspect matches the requested size. The client should scale the image if it needs to
+     fit within a given rectangle.
+     */
+    MXThumbnailingMethodCrop
+} MXThumbnailingMethod;
 
 
 @interface MXRestClient : NSObject
@@ -343,6 +370,23 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
                   failure:(void (^)(NSError *error))failure;
 
 /**
+ Inform the home server that the user is typing (or not) in this room.
+
+ @param roomId the id of the room.
+ @param typing Use YES if the user is currently typing.
+ @param timeout the length of time until the user should be treated as no longer typing,
+                in milliseconds. Can be ommited (set to -1) if they are no longer typing.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)sendTypingNotificationInRoom:(NSString*)roomId
+                              typing:(BOOL)typing
+                             timeout:(NSUInteger)timeout
+                             success:(void (^)())success
+                             failure:(void (^)(NSError *error))failure;
+
+/**
  Get all the current information for this room, including messages and state events.
  
  @param roomId the id of the room.
@@ -433,6 +477,15 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
          success:(void (^)(MXPresenceResponse *presence))success
          failure:(void (^)(NSError *error))failure;
 
+/**
+ Get the presence for all of the user's friends.
+
+ @param success A block object called when the operation succeeds. It provides an array of presence events.
+ @param failure A block object called when the operation fails.
+ */
+- (void)allUsersPresence:(void (^)(NSArray *userPresenceEvents))success
+         failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - Event operations
 /**
@@ -496,17 +549,37 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
 /**
  Upload content to HomeServer
  
- @param data the content to upload
+ @param data the content to upload.
  @param mimetype the content type (image/jpeg, audio/aac...)
  @param timeoutInSeconds the maximum time in ms the SDK must wait for the server response.
  
  @param success A block object called when the operation succeeds. It provides the uploaded content url.
  @param failure A block object called when the operation fails.
+ @param uploadProgress A block object called when the upload progresses.
  */
 - (void)uploadContent:(NSData *)data
              mimeType:(NSString *)mimeType
               timeout:(NSTimeInterval)timeoutInSeconds
               success:(void (^)(NSString *url))success
-              failure:(void (^)(NSError *error))failure;
+              failure:(void (^)(NSError *error))failure
+       uploadProgress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))uploadProgress;
+
+/**
+ Resolve a Matrix media content URI (in the form of "mxc://...") into an HTTP URL.
+ 
+ @param mxcContentURI the Matrix content URI to resolve.
+ @return the Matrix content HTTP URL. nil if the Matrix content URI is invalid.
+ */
+- (NSString*)urlOfContent:(NSString*)mxcContentURI;
+
+/**
+ Get the HTTP URL of a thumbnail image for a Matrix media content.
+
+ @param mxcContentURI the Matrix content URI to resolve.
+ @param thumbnailSize the expected thumbnail image size.
+ @param thumbnailingMethod the method the Matrix content repository must use to generate the thumbnail.
+ @return the thumbnail HTTP URL. nil if the Matrix content URI is invalid.
+ */
+- (NSString*)urlOfContentThumbnail:(NSString*)mxcContentURI withSize:(CGSize)thumbnailSize andMethod:(MXThumbnailingMethod)thumbnailingMethod;
 
 @end

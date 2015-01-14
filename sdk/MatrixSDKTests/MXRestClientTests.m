@@ -45,7 +45,7 @@
         
         XCTAssertTrue([bobRestClient.homeserver isEqualToString:kMXTestsHomeServerURL], "bobRestClient.homeserver(%@) is wrong", bobRestClient.homeserver);
         XCTAssertTrue([bobRestClient.credentials.userId isEqualToString:sharedData.bobCredentials.userId], "bobRestClient.userId(%@) is wrong", bobRestClient.credentials.userId);
-        XCTAssertTrue([bobRestClient.credentials.accessToken isEqualToString:sharedData.bobCredentials.accessToken], "bobRestClient.access_token(%@) is wrong", bobRestClient.credentials.accessToken);
+        XCTAssertTrue([bobRestClient.credentials.accessToken isEqualToString:sharedData.bobCredentials.accessToken], "bobRestClient.accessToken(%@) is wrong", bobRestClient.credentials.accessToken);
         
         [expectation fulfill];
     }];
@@ -413,6 +413,28 @@
             
             [expectation fulfill];
             
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testSendTypingNotification
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        [bobRestClient sendTypingNotificationInRoom:roomId typing:YES timeout:30000 success:^{
+
+            [bobRestClient sendTypingNotificationInRoom:roomId typing:NO timeout:-1 success:^{
+
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
@@ -882,6 +904,28 @@
             [expectation fulfill];
         }];
     }];
+}
+
+
+#pragma mark - Content upload
+- (void)testUrlOfContent
+{
+    NSString *mxcURI = @"mxc://matrix.org/rQkrOoaFIRgiACATXUdQIuNJ";
+
+    MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:@"http://matrix.org"];
+
+    NSString *contentURL = [mxRestClient urlOfContent:mxcURI];
+    XCTAssertEqualObjects(contentURL, @"http://matrix.org/_matrix/media/v1/download/matrix.org/rQkrOoaFIRgiACATXUdQIuNJ");
+}
+
+- (void)testUrlOfContentThumbnail
+{
+    NSString *mxcURI = @"mxc://matrix.org/rQkrOoaFIRgiACATXUdQIuNJ";
+
+    MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:@"http://matrix.org"];
+
+    NSString *thumbnailURL = [mxRestClient urlOfContentThumbnail:mxcURI withSize:CGSizeMake(320, 320) andMethod:MXThumbnailingMethodScale];
+    XCTAssertEqualObjects(thumbnailURL, @"http://matrix.org/_matrix/media/v1/thumbnail/matrix.org/rQkrOoaFIRgiACATXUdQIuNJ?width=320&height=320&method=scale");
 }
 
 @end

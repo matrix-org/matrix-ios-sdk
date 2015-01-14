@@ -29,7 +29,6 @@
     // The historical state of the room when paginating back
     MXRoomState *backState;
 }
-
 @end
 
 @implementation MXRoom
@@ -51,6 +50,8 @@
         eventListeners = [NSMutableArray array];
         
         _state = [[MXRoomState alloc] initWithRoomId:roomId andMatrixSession:mxSession2 andJSONData:JSONData andDirection:YES];
+
+        _typingUsers = [NSArray array];
         
         if ([JSONData objectForKey:@"inviter"])
         {
@@ -87,7 +88,7 @@
     {
         for (MXEvent *event in stateEvents)
         {
-            [_state handleStateEvent:event];
+            [self handleStateEvent:event direction:MXEventDirectionSync];
         }
     }
     return self;
@@ -199,24 +200,7 @@
 
 - (void)handleStateEvent:(MXEvent*)event direction:(MXEventDirection)direction
 {
-    if (MXEventDirectionForwards == direction)
-    {
-        switch (event.eventType)
-        {
-            case MXEventTypeRoomMember:
-            {
-                // Update MXUser data
-                MXUser *user = [mxSession getOrCreateUser:event.userId];
-                [user updateWithRoomMemberEvent:event];
-                break;
-            }
-                
-            default:
-                break;
-        }
-    }
-
-    // Update the room state
+   // Update the room state
     if (MXEventDirectionBackwards == direction)
     {
         [backState handleStateEvent:event];
@@ -224,6 +208,14 @@
     else
     {
         // Forwards and initialSync events update the current state of the room
+
+        // Special handling for presence
+        if (MXEventTypeRoomMember == event.eventType)
+        {
+            // Update MXUser data
+            MXUser *user = [mxSession getOrCreateUser:event.userId];
+            [user updateWithRoomMemberEvent:event];
+        }
         [_state handleStateEvent:event];
     }
 }
@@ -232,25 +224,40 @@
 #pragma mark - Handle live event
 - (void)handleLiveEvent:(MXEvent*)event
 {
-    if (event.isState)
+    switch (event.eventType)
     {
-        [self handleStateEvent:event direction:MXEventDirectionForwards];
-
-        // Update store with new room state once a live event has been processed
-        if ([mxSession.store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
+        case MXEventTypeTypingNotification:
         {
-            [mxSession.store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
+            // Typing notifications events are not room messages nor room state events
+            // They are just volatile information
+            _typingUsers = event.content[@"user_ids"];
+            break;
         }
-    }
 
-    // Make sure we have not processed this event yet
-    MXEvent *storedEvent = [mxSession.store eventWithEventId:event.eventId inRoom:_state.roomId];
-    if (!storedEvent)
-    {
-        [self handleMessage:event direction:MXEventDirectionForwards pagFrom:nil];
+        default:
+        {
+            if (event.isState)
+            {
+                [self handleStateEvent:event direction:MXEventDirectionForwards];
 
-        // Store the event
-        [mxSession.store storeEventForRoom:_state.roomId event:event direction:MXEventDirectionForwards];
+                // Update store with new room state once a live event has been processed
+                if ([mxSession.store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
+                {
+                    [mxSession.store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
+                }
+            }
+
+            // Make sure we have not processed this event yet
+            MXEvent *storedEvent = [mxSession.store eventWithEventId:event.eventId inRoom:_state.roomId];
+            if (!storedEvent)
+            {
+                [self handleMessage:event direction:MXEventDirectionForwards pagFrom:nil];
+
+                // Store the event
+                [mxSession.store storeEventForRoom:_state.roomId event:event direction:MXEventDirectionForwards];
+            }
+            break;
+        }
     }
 
     // And notify the listeners
@@ -448,6 +455,14 @@
     } failure:failure];
 }
 
+- (void)sendTypingNotification:(BOOL)typing
+                       timeout:(NSUInteger)timeout
+                       success:(void (^)())success
+                       failure:(void (^)(NSError *error))failure
+{
+    [mxSession.matrixRestClient sendTypingNotificationInRoom:_state.roomId typing:typing timeout:timeout success:success failure:failure];
+}
+
 
 #pragma mark - Events listeners
 - (id)listenToEvents:(MXOnRoomEvent)onEvent
@@ -493,11 +508,19 @@
             [stateBeforeThisEvent handleStateEvent:event];
         }
     }
-    
-    // notifify all listeners
-    for (MXEventListener *listener in eventListeners)
+
+    // Notify all listeners
+    // The SDK client may remove a listener while calling them by enumeration
+    // So, use a copy of them
+    NSArray *listeners = [eventListeners copy];
+
+    for (MXEventListener *listener in listeners)
     {
-        [listener notify:event direction:direction andCustomObject:stateBeforeThisEvent];
+        // And check the listener still exists before calling it
+        if (NSNotFound != [eventListeners indexOfObject:listener])
+        {
+            [listener notify:event direction:direction andCustomObject:stateBeforeThisEvent];
+        }
     }
 }
 

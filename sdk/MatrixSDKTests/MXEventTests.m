@@ -50,8 +50,10 @@
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
-        
+
         [mxSession start:^{
+        } onServerSyncDone:^{
+
             MXRoom *room = [mxSession roomWithRoomId:roomId];
             
             for (MXEvent *stateEvent in room.state.stateEvents)

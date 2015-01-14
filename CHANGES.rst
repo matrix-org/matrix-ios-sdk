@@ -1,3 +1,46 @@
+Changes in Matrix iOS SDK in 0.2.1 (2015-01-14)
+===============================================
+
+-----
+ SDK
+-----
+Improvements:
+ * [MXSession startWithMessagesLimit] takes a new callback parameter to indicate when data has been loaded from the MXStore.
+ 
+Features:
+ * Added typing notification API.
+ * MXRESTClient provides helpers to resolve Matrix Content URI ("mxc://...") and their thumbnail.
+ 
+Bug fixes:
+ * Fixed 1:1 room renaming
+ * SYIOS-37 - When restarting Matrix Console from the cache, users presences are lost
+ 
+-----------------
+ Matrix Console
+-----------------
+Improvements:
+ * UX improvements.
+ * The app starts quicker thanks to data available in cache.
+ * Added a count of unread messages in the recents view.
+ * SYIOS-38 - UX improvement for updating avatar & display name in settings
+ * SYIOS-41 - File uploads (and downloads) should be able to happen in parallel, with basic progress meters
+ * SYIOS-25 - Console: display app version in settings
+ * Code improvement: Media Manager refactoring
+
+Features:
+ * Typing notifications.
+ * Show progress information for uploading and downloading media. There is a pie chart progress plus network stats.
+ * Added pitch to zoom gesture on images
+ * Added bing alert. Bing words can be defined in the settings screen.
+ * SYIOS-28 - There is no way to view a user's mxid (or other profile info) on iOS
+ 
+Bug fixes:
+ * SYIOS-33 - Current dev shows lots of rooms with blank recents entries which crash on entry
+ * SYIOS-42 - Avatar & displayname missing in the "More" tab
+ * SYIOS-43 - Recents tab on an iPad mini always shows a room view
+ * SYIOS-51 - spinner appears when backgrounding recents page
+ * SYIOS-50 - When you post a multiline message, the bubble vertical spacing gets confused.
+ 
 Changes in Matrix iOS SDK in 0.2.0 (2014-12-19)
 ===============================================
 

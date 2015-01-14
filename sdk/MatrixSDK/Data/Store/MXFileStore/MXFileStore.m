@@ -20,7 +20,7 @@
 
 #import "MXFileStoreMetaData.h"
 
-NSUInteger const kMXFileVersion = 1;
+NSUInteger const kMXFileVersion = 2;
 
 NSString *const kMXFileStoreFolder = @"MXFileStore";
 NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -47,6 +47,9 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
 
     // The path of rooms states folder
     NSString *storeRoomsStatePath;
+
+    // Flag to indicate metaData needs to be store
+    BOOL metaDataHasChanged;
 }
 @end
 
@@ -66,6 +69,8 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
         storePath = [cachePath stringByAppendingPathComponent:kMXFileStoreFolder];
         storeRoomsMessagesPath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsMessagesFolder];
         storeRoomsStatePath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsStateFolder];
+
+        metaDataHasChanged = NO;
     }
     return self;
 }
@@ -119,6 +124,7 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
             metaData.userId = [credentials.userId copy];
             metaData.accessToken = [credentials.accessToken copy];
             metaData.version = kMXFileVersion;
+            metaDataHasChanged = YES;
             [self saveMetaData];
         }
         
@@ -192,6 +198,15 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     return YES;
 }
 
+ -(void)setEventStreamToken:(NSString *)eventStreamToken
+{
+    [super setEventStreamToken:eventStreamToken];
+    if (metaData)
+    {
+        metaData.eventStreamToken = eventStreamToken;
+        metaDataHasChanged = YES;
+    }
+}
 - (NSArray *)rooms
 {
     return roomStores.allKeys;
@@ -209,6 +224,34 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     NSArray *stateEvents =[NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
 
     return stateEvents;
+}
+
+-(void)setUserDisplayname:(NSString *)userDisplayname
+{
+    if (metaData && NO == [metaData.userDisplayName isEqualToString:userDisplayname])
+    {
+        metaData.userDisplayName = userDisplayname;
+        metaDataHasChanged = YES;
+    }
+}
+
+-(NSString *)userDisplayname
+{
+    return metaData.userDisplayName;
+}
+
+-(void)setUserAvatarUrl:(NSString *)userAvatarUrl
+{
+    if (metaData && NO == [metaData.userAvatarUrl isEqualToString:userAvatarUrl])
+    {
+        metaData.userAvatarUrl = userAvatarUrl;
+        metaDataHasChanged = YES;
+    }
+}
+
+-(NSString *)userAvatarUrl
+{
+    return metaData.userAvatarUrl;
 }
 
 - (void)commit
@@ -302,12 +345,12 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
 - (void)saveMetaData
 {
     // Save only in case of change
-    if (NO == [metaData.eventStreamToken isEqualToString:self.eventStreamToken])
+    if (metaDataHasChanged)
     {
-        metaData.eventStreamToken = self.eventStreamToken;
-
         NSString *metaDataFile = [storePath stringByAppendingPathComponent:kMXFileStoreMedaDataFile];
         [NSKeyedArchiver archiveRootObject:metaData toFile:metaDataFile];
+
+        metaDataHasChanged = NO;
     }
 }
 

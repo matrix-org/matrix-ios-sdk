@@ -21,11 +21,19 @@
 #import "MXTools.h"
 
 #pragma mark - Constants definitions
-NSString *const kMXMediaPathPrefix = @"/_matrix/media/v1";
-NSString *const kMXRoomVisibilityPublic = @"public";
+NSString *const kMXRoomVisibilityPublic  = @"public";
 NSString *const kMXRoomVisibilityPrivate = @"private";
 
+/**
+ Matrix content respository path
+ */
+NSString *const kMXContentUriScheme  = @"mxc://";
+NSString *const kMXContentPrefixPath = @"/_matrix/media/v1";
 
+
+/**
+ Authentication flow: register or login
+ */
 typedef enum
 {
     MXAuthActionRegister,
@@ -580,6 +588,37 @@ MXAuthAction;
      }];
 }
 
+- (void)sendTypingNotificationInRoom:(NSString*)roomId
+                              typing:(BOOL)typing
+                             timeout:(NSUInteger)timeout
+                             success:(void (^)())success
+                             failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/typing/%@", roomId, self.credentials.userId];
+
+    // All query parameters are optional. Fill the request parameters on demand
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+
+    parameters[@"typing"] = [NSNumber numberWithBool:typing];
+
+    if (-1 != timeout)
+    {
+        parameters[@"timeout"] = [NSNumber numberWithUnsignedInteger:timeout];
+    }
+
+    [httpClient requestWithMethod:@"PUT"
+                             path:path
+                       parameters:parameters
+                          success:^(NSDictionary *JSONResponse)
+     {
+         success();
+     }
+                          failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
 - (void)initialSyncOfRoom:(NSString*)roomId
                 withLimit:(NSInteger)limit
                   success:(void (^)(NSDictionary *JSONData))success
@@ -745,6 +784,62 @@ MXAuthAction;
      }];
 }
 
+- (void)allUsersPresence:(void (^)(NSArray *userPresenceEvents))success
+                 failure:(void (^)(NSError *error))failure
+{
+    // In C-S API v1, the only way to get all user presence is to make
+    // a global initialSync
+    // @TODO: Change it with C-S API v2 new APIs
+    [self initialSyncWithLimit:0 success:^(NSDictionary *JSONData) {
+
+        success([MXEvent modelsFromJSON:JSONData[@"presence"]]);
+
+    } failure:^(NSError *error) {
+        failure(error);
+    }];
+}
+
+- (void)presenceList:(void (^)(MXPresenceResponse *presence))success
+             failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"presence/list/%@", credentials.userId];
+    [httpClient requestWithMethod:@"GET"
+                             path:path
+                       parameters:nil
+                          success:^(NSDictionary *JSONResponse)
+     {
+         MXPresenceResponse *presence = [MXPresenceResponse modelFromJSON:JSONResponse];
+         success(presence);
+     }
+                          failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
+- (void)presenceListAddUsers:(NSArray*)users
+                     success:(void (^)())success
+                     failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"presence/list/%@", credentials.userId];
+
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+    parameters[@"invite"] = users;
+
+
+    [httpClient requestWithMethod:@"POST"
+                             path:path
+                       parameters:parameters
+                          success:^(NSDictionary *JSONResponse)
+     {
+         success();
+     }
+                          failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
 
 #pragma mark - Event operations
 - (void)initialSyncWithLimit:(NSInteger)limit
@@ -853,22 +948,68 @@ MXAuthAction;
               timeout:(NSTimeInterval)timeoutInSeconds
               success:(void (^)(NSString *url))success
               failure:(void (^)(NSError *error))failure
+       uploadProgress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))uploadProgress
 {
-    NSString* path = [NSString stringWithFormat:@"%@/upload", kMXMediaPathPrefix];
+    NSString* path = [NSString stringWithFormat:@"%@/upload", kMXContentPrefixPath];
     NSDictionary *headers = @{@"Content-Type": mimeType};
     
     [httpClient requestWithMethod:@"POST"
-                           path:path
-                     parameters:nil
-                           data:data
-                        headers:headers
-                        timeout:timeoutInSeconds
-                        success:^(NSDictionary *JSONResponse) {
-                            NSString *contentURL = JSONResponse[@"content_uri"];
-                            NSLog(@"uploadContent succeeded: %@",contentURL);
-                            success(contentURL);
-                        }
-                        failure:failure];
+                             path:path
+                       parameters:nil
+                             data:data
+                          headers:headers
+                          timeout:timeoutInSeconds
+                   uploadProgress:uploadProgress
+                          success:^(NSDictionary *JSONResponse) {
+                              NSString *contentURL = JSONResponse[@"content_uri"];
+                              NSLog(@"uploadContent succeeded: %@",contentURL);
+                              success(contentURL);
+                          }
+                          failure:failure];
+}
+
+- (NSString*)urlOfContent:(NSString*)mxcContentURI
+{
+    NSString *contentURL;
+
+    // Replace the "mxc://" scheme by the absolute http location of the content
+    if ([mxcContentURI hasPrefix:kMXContentUriScheme])
+    {
+        NSString *mxMediaPrefix = [NSString stringWithFormat:@"%@%@/download/", homeserver, kMXContentPrefixPath];
+        contentURL = [mxcContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:mxMediaPrefix];
+    }
+
+    return contentURL;
+}
+
+- (NSString*)urlOfContentThumbnail:(NSString*)mxcContentURI withSize:(CGSize)thumbnailSize andMethod:(MXThumbnailingMethod)thumbnailingMethod
+{
+    NSString *thumbnailURL;
+
+    if ([mxcContentURI hasPrefix:kMXContentUriScheme])
+    {
+        // Replace the "mxc://" scheme by the absolute http location for the content thumbnail
+        NSString *mxThumbnailPrefix = [NSString stringWithFormat:@"%@%@/thumbnail/", homeserver, kMXContentPrefixPath];
+        thumbnailURL = [mxcContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:mxThumbnailPrefix];
+
+        // Convert MXThumbnailingMethod to parameter string
+        NSString *thumbnailingMethodString;
+        switch (thumbnailingMethod)
+        {
+            case MXThumbnailingMethodScale:
+                thumbnailingMethodString = @"scale";
+                break;
+
+            case MXThumbnailingMethodCrop:
+                thumbnailingMethodString = @"crop";
+                break;
+        }
+
+        // Add thumbnailing parameters to the URL
+        thumbnailURL = [NSString stringWithFormat:@"%@?width=%tu&height=%tu&method=%@", thumbnailURL, (NSUInteger)thumbnailSize.width, (NSUInteger)thumbnailSize.height, thumbnailingMethodString];
+    }
+
+    return thumbnailURL;
 }
 
 @end
