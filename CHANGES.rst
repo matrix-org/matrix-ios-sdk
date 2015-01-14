@@ -24,6 +24,7 @@ Improvements:
  * Added a count of unread messages in the recents view.
  * SYIOS-38 - UX improvement for updating avatar & display name in settings
  * SYIOS-41 - File uploads (and downloads) should be able to happen in parallel, with basic progress meters
+ * SYIOS-25 - Console: display app version in settings
  * Code improvement: Media Manager refactoring
 
 Features:
@@ -38,8 +39,7 @@ Bug fixes:
  * SYIOS-42 - Avatar & displayname missing in the "More" tab
  * SYIOS-43 - Recents tab on an iPad mini always shows a room view
  * SYIOS-51 - spinner appears when backgrounding recents page
- 
- 
+ * SYIOS-50 - When you post a multiline message, the bubble vertical spacing gets confused.
  
 Changes in Matrix iOS SDK in 0.2.0 (2014-12-19)
 ===============================================
