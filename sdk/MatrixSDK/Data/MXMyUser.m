@@ -83,7 +83,10 @@
     if (mxSession.store.isPermanent && NO == [_displayname isEqualToString:displayname])
     {
         mxSession.store.userDisplayname = displayname;
-        [mxSession.store commit];
+        if ([mxSession.store respondsToSelector:@selector(commit)])
+        {
+            [mxSession.store commit];
+        }
     }
     _displayname = displayname;
 }
@@ -93,7 +96,10 @@
     if (mxSession.store.isPermanent && NO == [_avatarUrl isEqualToString:avatarUrl])
     {
         mxSession.store.userAvatarUrl = avatarUrl;
-        [mxSession.store commit];
+        if ([mxSession.store respondsToSelector:@selector(commit)])
+        {
+            [mxSession.store commit];
+        }
     }
     _avatarUrl = avatarUrl;
 }
