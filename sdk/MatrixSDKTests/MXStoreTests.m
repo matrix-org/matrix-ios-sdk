@@ -1206,7 +1206,7 @@
 
                         [bobRestClient sendTextMessageToRoom:response.roomId text:@"A Message" success:^(NSString *eventId) {
 
-                            // Do a 2nd [mxSession start] with the filled stored
+                            // Do a 2nd [mxSession start] with the filled store
                             MXFileStore *store2 = [[MXFileStore alloc] init];
                             [store2 openWithCredentials:sharedData.bobCredentials onComplete:^{
 
