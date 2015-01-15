@@ -135,6 +135,12 @@
  */
 - (void)commit;
 
+/**
+ Close the store.
+ 
+ Any pending operation must be complete in this call.
+ */
+- (void)close;
 
 #pragma mark - Permanent storage
 /**

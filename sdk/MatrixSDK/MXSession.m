@@ -396,7 +396,11 @@ onServerSyncDone:(void (^)())onServerSyncDone
     // Stop streaming
     [self pause];
 
-    _store.eventStreamToken = nil;
+    // Flush the store
+    if ([_store respondsToSelector:@selector(close)])
+    {
+        [_store close];
+    }
     
     [self removeAllListeners];
 
