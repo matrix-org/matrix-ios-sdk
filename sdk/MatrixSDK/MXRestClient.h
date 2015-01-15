@@ -25,10 +25,37 @@
  Room visibility
  */
 typedef NSString* MXRoomVisibility;
-
-FOUNDATION_EXPORT NSString *const kMXMediaPathPrefix;
 FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPublic;
 FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
+
+/**
+ Scheme used in Matrix content URIs.
+ */
+FOUNDATION_EXPORT NSString *const kMXContentUriScheme;
+/**
+ Matrix content respository path.
+ */
+FOUNDATION_EXPORT NSString *const kMXContentPrefixPath;
+
+/**
+ Methods of thumnailing supported by the Matrix content repository.
+ */
+typedef enum : NSUInteger
+{
+    /**
+     "scale" trys to return an image where either the width or the height is smaller than the
+     requested size. The client should then scale and letterbox the image if it needs to
+     fit within a given rectangle.
+     */
+    MXThumbnailingMethodScale,
+
+    /**
+     "crop" trys to return an image where the width and height are close to the requested size
+     and the aspect matches the requested size. The client should scale the image if it needs to
+     fit within a given rectangle.
+     */
+    MXThumbnailingMethodCrop
+} MXThumbnailingMethod;
 
 
 @interface MXRestClient : NSObject
@@ -532,7 +559,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
 /**
  Upload content to HomeServer
  
- @param data the content to upload
+ @param data the content to upload.
  @param mimetype the content type (image/jpeg, audio/aac...)
  @param timeoutInSeconds the maximum time in ms the SDK must wait for the server response.
  
@@ -546,4 +573,23 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
               success:(void (^)(NSString *url))success
               failure:(void (^)(NSError *error))failure
        uploadProgress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))uploadProgress;
+
+/**
+ Resolve a Matrix media content URI (in the form of "mxc://...") into an HTTP URL.
+ 
+ @param mxcContentURI the Matrix content URI to resolve.
+ @return the Matrix content HTTP URL. nil if the Matrix content URI is invalid.
+ */
+- (NSString*)urlOfContent:(NSString*)mxcContentURI;
+
+/**
+ Get the HTTP URL of a thumbnail image for a Matrix media content.
+
+ @param mxcContentURI the Matrix content URI to resolve.
+ @param thumbnailSize the expected thumbnail image size.
+ @param thumbnailingMethod the method the Matrix content repository must use to generate the thumbnail.
+ @return the thumbnail HTTP URL. nil if the Matrix content URI is invalid.
+ */
+- (NSString*)urlOfContentThumbnail:(NSString*)mxcContentURI withSize:(CGSize)thumbnailSize andMethod:(MXThumbnailingMethod)thumbnailingMethod;
+
 @end
