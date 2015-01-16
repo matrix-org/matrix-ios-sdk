@@ -43,7 +43,11 @@
         [messages addObject:event];
 
         // The messages array end has changed, shift the current pagination position
-        paginationPosition -= 1;
+        // Do not update the position if the oldest message.
+        if (0 < paginationPosition)
+        {
+            paginationPosition -= 1;
+        }
     }
     else
     {
