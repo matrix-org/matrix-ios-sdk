@@ -14,26 +14,15 @@
  limitations under the License.
  */
 
-#import "MXStore.h"
-
 #import "MXMemoryRoomStore.h"
 
 /**
- `MXMemoryStore` is an implementation of the `MXStore` interface that stores events in memory.
- */
-@interface MXMemoryStore : NSObject <MXStore>
-{
-    @protected
-    NSMutableDictionary *roomStores;
-}
-
-#pragma mark - protected operations
-/**
- Interface to create or retrieve a MXMemoryRoomStore type object.
+ `MXFileRoomStore` extends MXMemoryRoomStore to be able to serialise it for storing
+ data into file system.
  
- @param roomId the id for the MXMemoryRoomStore object.
- @return the MXMemoryRoomStore instance.
+ This serialisation is done in the context of the multi-threading managed by [MXFileStore commit].
+ @see [MXFileRoomStore encodeWithCoder] for more details.
  */
-- (MXMemoryRoomStore*)getOrCreateRoomStore:(NSString*)roomId;
+@interface MXFileRoomStore : MXMemoryRoomStore <NSCoding>
 
 @end

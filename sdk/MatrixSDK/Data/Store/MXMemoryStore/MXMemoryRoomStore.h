@@ -18,7 +18,13 @@
 
 #import "MXEventListener.h"
 
-@interface MXMemoryRoomStore : NSObject <NSCoding>
+@interface MXMemoryRoomStore : NSObject
+{
+    @protected
+    // The events downloaded so far.
+    // The order is chronological: the first item is the oldest message.
+    NSMutableArray *messages;
+}
 
 /**
  Store room event received from the home server.

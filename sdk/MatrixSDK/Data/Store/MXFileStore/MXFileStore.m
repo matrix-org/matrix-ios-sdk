@@ -16,7 +16,7 @@
 
 #import "MXFileStore.h"
 
-#import "MXMemoryRoomStore.h"
+#import "MXFileRoomStore.h"
 
 #import "MXFileStoreMetaData.h"
 
@@ -287,6 +287,20 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
 }
 
 
+#pragma mark - protected operations
+- (MXMemoryRoomStore*)getOrCreateRoomStore:(NSString*)roomId
+{
+    MXFileRoomStore *roomStore = roomStores[roomId];
+    if (nil == roomStore)
+    {
+        // MXFileStore requires MXFileRoomStore objets
+        roomStore = [[MXFileRoomStore alloc] init];
+        roomStores[roomId] = roomStore;
+    }
+    return roomStore;
+}
+
+
 #pragma mark - Rooms messages
 // Load the data store in files
 - (void)loadRoomsMessages
@@ -299,7 +313,7 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     for (NSString *roomId in roomIDArray)  {
 
         NSString *roomFile = [storeRoomsMessagesPath stringByAppendingPathComponent:roomId];
-        MXMemoryRoomStore *roomStore =[NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+        MXFileRoomStore *roomStore =[NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
 
         if (roomStore)
         {
@@ -330,7 +344,7 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
             // Save rooms where there was changes
             for (NSString *roomId in roomsToCommit)
             {
-                MXMemoryRoomStore *roomStore = roomStores[roomId];
+                MXFileRoomStore *roomStore = roomStores[roomId];
                 if (roomStore)
                 {
                     NSString *roomFile = [storeRoomsMessagesPath stringByAppendingPathComponent:roomId];
