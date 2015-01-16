@@ -121,6 +121,7 @@ typedef enum : NSUInteger
                        appId:(NSString *)appId
               appDisplayName:(NSString *)appDisplayName
            deviceDisplayName:(NSString *)deviceDisplayName
+                        lang:(NSString *)lang
                         data:(NSDictionary *)data
                      success:(void (^)())success
                      failure:(void (^)(NSError *error))failure;

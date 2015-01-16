@@ -120,6 +120,7 @@ MXAuthAction;
                        appId:(NSString *)appId
               appDisplayName:(NSString *)appDisplayName
            deviceDisplayName:(NSString *)deviceDisplayName
+                        lang:(NSString *)lang
                         data:(NSDictionary *)data
                      success:(void (^)())success
                      failure:(void (^)(NSError *))failure {
@@ -129,6 +130,7 @@ MXAuthAction;
                                  @"app_id": appId,
                                  @"app_display_name": appDisplayName,
                                  @"device_display_name": deviceDisplayName,
+                                 @"lang": lang,
                                  @"data": data
                                 };
     
