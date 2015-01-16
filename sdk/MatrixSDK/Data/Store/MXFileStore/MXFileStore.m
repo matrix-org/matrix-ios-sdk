@@ -268,13 +268,9 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     // Save data only if metaData exists
     if (metaData)
     {
-        NSDate *startDate = [NSDate date];
-
         [self saveRoomsMessages];
         [self saveRoomsState];
         [self saveMetaData];
-
-        NSLog(@"[MXFileStore commit] lasted %.0fms - %@", [[NSDate date] timeIntervalSinceDate:startDate] * 1000, self);
     }
 }
 
@@ -350,6 +346,9 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
         [roomsToCommitForMessages removeAllObjects];
 
         dispatch_async(dispatchQueue, ^(void){
+
+            //NSDate *startDate = [NSDate date];
+
             // Save rooms where there was changes
             for (NSString *roomId in roomsToCommit)
             {
@@ -360,6 +359,8 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
                     [NSKeyedArchiver archiveRootObject:roomStore toFile:roomFile];
                 }
             }
+
+            //NSLog(@"[MXFileStore commit] lasted %.0fms for rooms:\n%@", [[NSDate date] timeIntervalSinceDate:startDate] * 1000, roomsToCommit);
         });
     }
 }
