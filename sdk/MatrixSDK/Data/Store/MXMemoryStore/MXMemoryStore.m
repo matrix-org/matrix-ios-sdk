@@ -125,7 +125,8 @@
     return roomStores.allKeys;
 }
 
-#pragma mark - Private operations
+
+#pragma mark - Protected operations
 - (MXMemoryRoomStore*)getOrCreateRoomStore:(NSString*)roomId
 {
     MXMemoryRoomStore *roomStore = roomStores[roomId];

@@ -16,7 +16,7 @@
 
 #import "MXFileStore.h"
 
-#import "MXMemoryRoomStore.h"
+#import "MXFileRoomStore.h"
 
 #import "MXFileStoreMetaData.h"
 
@@ -50,6 +50,12 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
 
     // Flag to indicate metaData needs to be store
     BOOL metaDataHasChanged;
+
+    // File reading and writing operations are dispatched to a separated thread.
+    // The queue invokes blocks serially in FIFO order.
+    // This ensures that data is stored in the expected order: MXFileStore metadata
+    // must be stored after messages and state events because of the event stream token it stores.
+    dispatch_queue_t dispatchQueue;
 }
 @end
 
@@ -71,6 +77,8 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
         storeRoomsStatePath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsStateFolder];
 
         metaDataHasChanged = NO;
+
+        dispatchQueue = dispatch_queue_create("MXFileStoreDispatchQueue", DISPATCH_QUEUE_SERIAL);
     }
     return self;
 }
@@ -78,7 +86,7 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
 - (void)openWithCredentials:(MXCredentials*)credentials onComplete:(void (^)())onComplete
 {
     // Load data from the file system on a separate thread
-    dispatch_async(dispatch_get_global_queue( DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void){
+    dispatch_async(dispatchQueue, ^(void){
 
         NSLog(@"MXFileStore.diskUsage: %@", [NSByteCountFormatter stringFromByteCount:self.diskUsage countStyle:NSByteCountFormatterCountStyleFile]);
 
@@ -143,7 +151,8 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     NSString *file;
     NSUInteger diskUsage = 0;
 
-    while (file = [contentsEnumurator nextObject]) {
+    while (file = [contentsEnumurator nextObject])
+    {
         NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:[storePath stringByAppendingPathComponent:file] error:nil];
         diskUsage += [[fileAttributes objectForKey:NSFileSize] intValue];
     }
@@ -259,10 +268,36 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     // Save data only if metaData exists
     if (metaData)
     {
+        NSDate *startDate = [NSDate date];
+
         [self saveRoomsMessages];
         [self saveRoomsState];
         [self saveMetaData];
+
+        NSLog(@"[MXFileStore commit] lasted %.0fms - %@", [[NSDate date] timeIntervalSinceDate:startDate] * 1000, self);
     }
+}
+
+- (void)close
+{
+    // Do a dummy sync dispatch on the queue
+    // Once done, we are sure pending operations blocks are complete
+    dispatch_sync(dispatchQueue, ^(void){
+    });
+}
+
+
+#pragma mark - protected operations
+- (MXMemoryRoomStore*)getOrCreateRoomStore:(NSString*)roomId
+{
+    MXFileRoomStore *roomStore = roomStores[roomId];
+    if (nil == roomStore)
+    {
+        // MXFileStore requires MXFileRoomStore objets
+        roomStore = [[MXFileRoomStore alloc] init];
+        roomStores[roomId] = roomStore;
+    }
+    return roomStore;
 }
 
 
@@ -278,7 +313,16 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     for (NSString *roomId in roomIDArray)  {
 
         NSString *roomFile = [storeRoomsMessagesPath stringByAppendingPathComponent:roomId];
-        MXMemoryRoomStore *roomStore =[NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+
+        MXFileRoomStore *roomStore;
+        @try
+        {
+            roomStore =[NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+        }
+        @catch (NSException *exception)
+        {
+            NSLog(@"Warning: MXFileRoomStore file for room %@ has been corrupted", roomId);
+        }
 
         if (roomStore)
         {
@@ -300,33 +344,46 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
 
 - (void)saveRoomsMessages
 {
-    // Save rooms where there was changes
-    for (NSString *roomId in roomsToCommitForMessages)
+    if (roomsToCommitForMessages.count)
     {
-        MXMemoryRoomStore *roomStore = roomStores[roomId];
-        if (roomStore)
-        {
-            NSString *roomFile = [storeRoomsMessagesPath stringByAppendingPathComponent:roomId];
-            [NSKeyedArchiver archiveRootObject:roomStore toFile:roomFile];
-        }
-    }
+        NSArray *roomsToCommit = [[NSArray alloc] initWithArray:roomsToCommitForMessages copyItems:YES];
+        [roomsToCommitForMessages removeAllObjects];
 
-    [roomsToCommitForMessages removeAllObjects];
+        dispatch_async(dispatchQueue, ^(void){
+            // Save rooms where there was changes
+            for (NSString *roomId in roomsToCommit)
+            {
+                MXFileRoomStore *roomStore = roomStores[roomId];
+                if (roomStore)
+                {
+                    NSString *roomFile = [storeRoomsMessagesPath stringByAppendingPathComponent:roomId];
+                    [NSKeyedArchiver archiveRootObject:roomStore toFile:roomFile];
+                }
+            }
+        });
+    }
 }
 
 
 #pragma mark - Rooms state
 - (void)saveRoomsState
 {
-    for (NSString *roomId in roomsToCommitForState)
+    if (roomsToCommitForState.count)
     {
-        NSArray *stateEvents = roomsToCommitForState[roomId];
+        // Take a snapshot of room ids to store to process them on the other thread
+        NSDictionary *roomsToCommit = [NSDictionary dictionaryWithDictionary:roomsToCommitForState];
+        [roomsToCommitForState removeAllObjects];
 
-        NSString *roomFile = [storeRoomsStatePath stringByAppendingPathComponent:roomId];
-        [NSKeyedArchiver archiveRootObject:stateEvents toFile:roomFile];
+        dispatch_async(dispatchQueue, ^(void){
+            for (NSString *roomId in roomsToCommit)
+            {
+                NSArray *stateEvents = roomsToCommit[roomId];
+
+                NSString *roomFile = [storeRoomsStatePath stringByAppendingPathComponent:roomId];
+                [NSKeyedArchiver archiveRootObject:stateEvents toFile:roomFile];
+            }
+        });
     }
-    
-    [roomsToCommitForState removeAllObjects];
 }
 
 
@@ -334,7 +391,15 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
 - (void)loadMetaData
 {
     NSString *metaDataFile = [storePath stringByAppendingPathComponent:kMXFileStoreMedaDataFile];
-    metaData = [NSKeyedUnarchiver unarchiveObjectWithFile:metaDataFile];
+
+    @try
+    {
+        metaData = [NSKeyedUnarchiver unarchiveObjectWithFile:metaDataFile];
+    }
+    @catch (NSException *exception)
+    {
+        NSLog(@"Warning: MXFileStore metadata has been corrupted");
+    }
 
     if (metaData)
     {
@@ -347,10 +412,15 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     // Save only in case of change
     if (metaDataHasChanged)
     {
-        NSString *metaDataFile = [storePath stringByAppendingPathComponent:kMXFileStoreMedaDataFile];
-        [NSKeyedArchiver archiveRootObject:metaData toFile:metaDataFile];
-
         metaDataHasChanged = NO;
+
+       // Take a snapshot of metadata to store it on the other thread
+         MXFileStoreMetaData *metaData2 = [metaData copy];
+
+        dispatch_async(dispatchQueue, ^(void){
+            NSString *metaDataFile = [storePath stringByAppendingPathComponent:kMXFileStoreMedaDataFile];
+            [NSKeyedArchiver archiveRootObject:metaData2 toFile:metaDataFile];
+        });
     }
 }
 

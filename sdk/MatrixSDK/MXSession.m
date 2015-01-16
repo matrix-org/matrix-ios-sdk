@@ -158,6 +158,12 @@ onServerSyncDone:(void (^)())onServerSyncDone
         // The SDK client can use this data
         onStoreDataReady();
 
+        // Check SDK user did not called [MXSession close] in onStoreDataReady
+        if (nil == _myUser)
+        {
+            return;
+        }
+
         // We need to get all users presence to start right
         startDate = [NSDate date];
         [matrixRestClient allUsersPresence:^(NSArray *userPresenceEvents) {
@@ -247,6 +253,13 @@ onServerSyncDone:(void (^)())onServerSyncDone
 
                     // We have up-to-date data, the SDK user can start using it
                     onStoreDataReady();
+                    
+                    // Check SDK user did not called [MXSession close] in onStoreDataReady
+                    if (nil == _myUser)
+                    {
+                        return;
+                    }
+
                     onServerSyncDone();
                 }
                 failure:^(NSError *error) {
@@ -287,6 +300,12 @@ onServerSyncDone:(void (^)())onServerSyncDone
             {
                 onResumeDone();
                 onResumeDone = nil;
+
+                // Check SDK user did not called [MXSession close] in onResumeDone
+                if (nil == _myUser)
+                {
+                    return;
+                }
             }
 
             // Go streaming from the returned token
@@ -396,7 +415,11 @@ onServerSyncDone:(void (^)())onServerSyncDone
     // Stop streaming
     [self pause];
 
-    _store.eventStreamToken = nil;
+    // Flush the store
+    if ([_store respondsToSelector:@selector(close)])
+    {
+        [_store close];
+    }
     
     [self removeAllListeners];
 

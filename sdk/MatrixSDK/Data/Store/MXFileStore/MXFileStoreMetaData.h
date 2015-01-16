@@ -16,7 +16,7 @@
 
 #import <Foundation/Foundation.h>
 
-@interface MXFileStoreMetaData : NSObject <NSCoding>
+@interface MXFileStoreMetaData : NSObject <NSCoding, NSCopying>
 
 /**
  The home server name.

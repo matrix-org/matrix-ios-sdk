@@ -47,7 +47,8 @@ NSString * const kMXTestsAliceAvatarURL = @"http://matrix.org/matrix.png";
 }
 @end
 
-MXSession *mxSessionToClean;
+MXRestClient *accountToClean;
+NSMutableArray *roomsToClean;
 
 @implementation MatrixSDKTestsData
 
@@ -138,16 +139,15 @@ MXSession *mxSessionToClean;
         
         MXRestClient *restClient = [[MXRestClient alloc] initWithCredentials:self.bobCredentials];
 
-        if (mxSessionToClean)
+        if (accountToClean)
         {
-            NSLog(@"Start cleaning user data from %@ ...", testCase.name);
+            NSLog(@"Start cleaning user data (%lu rooms) from %@ ...", roomsToClean.count, testCase.name);
 
             // Before giving the hand to the test, clean the rooms of the user.
             // It is done now rather than at the end of each test because
             // once [expectation fulfill] is called, the system allows no more HTTP requests.
-            [self leaveAllRoomsAsync:mxSessionToClean onComplete:^{
-                [mxSessionToClean close];
-                mxSessionToClean = nil;
+            [self leaveAllRoomsAsync:roomsToClean onComplete:^{
+                accountToClean = nil;
 
                 NSLog(@"End of cleaning user data");
 
@@ -531,43 +531,44 @@ MXSession *mxSessionToClean;
     
     // Ideally, to correctly reset the initial conditions, we should erase the home server db
     // between each test but, as a client, it is not possible.
-    if (nil == mxSessionToClean && mxSession.rooms.count >= 5)
+    if (nil == accountToClean && mxSession.rooms.count >= 5)
     {
-        [mxSession removeAllListeners];
-        [mxSession pause];
-
-        // Mark the session to clean
-        mxSessionToClean = mxSession;
-    }
-    else
-    {
-        [mxSession close];
-    }
-}
-
-- (void)leaveAllRoomsAsync:(MXSession*)mxSession onComplete:(void (^)())onComplete
-{
-    MXRoom *theRoom;
-
-    // Find a joined private room
-    for (MXRoom *room in mxSession.rooms)
-    {
-        if (NO == room.state.isPublic && MXMembershipJoin == room.state.membership)
+        roomsToClean = [NSMutableArray array];
+        for (MXRoom *room in mxSession.rooms)
         {
-            theRoom = room;
-            break;
+            if (NO == room.state.isPublic && MXMembershipJoin == room.state.membership)
+            {
+                [roomsToClean addObject:room.state.roomId];
+            }
+        }
+
+        if (roomsToClean.count)
+        {
+            // Mark the account to clean
+            accountToClean = mxSession.matrixRestClient;
         }
     }
 
-    // And leave it
-    if (theRoom)
+    [mxSession close];
+}
+
+- (void)leaveAllRoomsAsync:(NSMutableArray*)rooms onComplete:(void (^)())onComplete
+{
+    if (rooms.count)
     {
-        NSLog(@"Leaving %@...", theRoom.state.roomId);
-        [theRoom leave:^{
-            [self leaveAllRoomsAsync:mxSession onComplete:onComplete];
+        // Leave room one by one
+        NSString *roomId = [rooms lastObject];
+        [rooms removeLastObject];
+
+        NSLog(@"Leaving %@...", roomId);
+
+        [accountToClean leaveRoom:roomId success:^{
+
+            [self leaveAllRoomsAsync:rooms onComplete:onComplete];
+
         } failure:^(NSError *error) {
-            NSLog(@"Warning: Cannot leave room: %@. Error: %@", theRoom.state.roomId, error);
-            [self leaveAllRoomsAsync:mxSession onComplete:onComplete];
+            NSLog(@"Warning: Cannot leave room: %@. Error: %@", roomId, error);
+            [self leaveAllRoomsAsync:rooms onComplete:onComplete];
         }];
     }
     else
