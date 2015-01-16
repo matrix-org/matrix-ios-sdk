@@ -147,18 +147,29 @@
 
 - (void)encodeWithCoder:(NSCoder *)aCoder
 {
+    // The goal of the NSCoding implementation here is to store room data to the file system during a [MXFileStore commit].
+
     // Serialiase only MXEvent.dictionaryValue as it contains all event data
     NSMutableArray *rawEventsArray = [NSMutableArray array];
 
-    for (MXEvent *event in messages)
+    // Do not enumerate the messages array as the method is called from another thread.
+    // To avoid blocking the UI thread too much, there is no lock mechanism as it can be avoided.
+
+    // The messages array continously grows. If some messages come while looping, they will not
+    // be serialised this time but they will be on the next [MXFileStore commit] that will be called for them.
+    // If messages come between [MXFileStore commit] and this method, more messages will be serialised. This is
+    // not a problem.
+    NSUInteger messagesCount = messages.count;
+    for (NSUInteger i = 0; i < messagesCount; i++)
     {
+        MXEvent *event = messages[i];
         [rawEventsArray addObject:event.originalDictionary];
     }
 
     [aCoder encodeObject:rawEventsArray forKey:@"rawEventsArray"];
 
     [aCoder encodeObject:_paginationToken forKey:@"paginationToken"];
-    [aCoder encodeObject:[NSNumber numberWithBool:_hasReachedHomeServerPaginationEnd ] forKey:@"hasReachedHomeServerPaginationEnd"];
+    [aCoder encodeObject:[NSNumber numberWithBool:_hasReachedHomeServerPaginationEnd] forKey:@"hasReachedHomeServerPaginationEnd"];
 }
 
 @end
