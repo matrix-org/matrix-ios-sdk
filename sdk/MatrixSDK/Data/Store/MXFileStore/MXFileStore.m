@@ -172,9 +172,9 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     }
 }
 
-- (void)deleteDataOfRoom:(NSString *)roomId
+- (void)deleteRoom:(NSString *)roomId
 {
-    [super deleteDataOfRoom:roomId];
+    [super deleteRoom:roomId];
 
     // Remove the corresponding data from the file system
     NSString *roomFile = [storePath stringByAppendingPathComponent:roomId];

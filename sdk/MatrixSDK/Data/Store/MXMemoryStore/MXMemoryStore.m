@@ -51,7 +51,7 @@
     return [roomStore eventWithEventId:eventId];
 }
 
-- (void)deleteDataOfRoom:(NSString *)roomId
+- (void)deleteRoom:(NSString *)roomId
 {
     if (roomStores[roomId])
     {

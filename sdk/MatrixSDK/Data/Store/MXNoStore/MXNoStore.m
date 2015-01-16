@@ -70,7 +70,7 @@
     return nil;
 }
 
-- (void)deleteDataOfRoom:(NSString *)roomId
+- (void)deleteRoom:(NSString *)roomId
 {
     if (paginationTokens[roomId])
     {

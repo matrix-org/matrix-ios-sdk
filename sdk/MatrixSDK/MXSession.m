@@ -575,7 +575,7 @@ onServerSyncDone:(void (^)())onServerSyncDone
         }
 
         // Clean the store
-        [_store deleteDataOfRoom:roomId];
+        [_store deleteRoom:roomId];
 
         // And remove the room from the list
         [rooms removeObjectForKey:roomId];
