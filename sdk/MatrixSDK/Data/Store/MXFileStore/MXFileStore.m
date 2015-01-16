@@ -313,7 +313,16 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     for (NSString *roomId in roomIDArray)  {
 
         NSString *roomFile = [storeRoomsMessagesPath stringByAppendingPathComponent:roomId];
-        MXFileRoomStore *roomStore =[NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+
+        MXFileRoomStore *roomStore;
+        @try
+        {
+            roomStore =[NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+        }
+        @catch (NSException *exception)
+        {
+            NSLog(@"Warning: MXFileRoomStore file for room %@ has been corrupted", roomId);
+        }
 
         if (roomStore)
         {
@@ -382,7 +391,15 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
 - (void)loadMetaData
 {
     NSString *metaDataFile = [storePath stringByAppendingPathComponent:kMXFileStoreMedaDataFile];
-    metaData = [NSKeyedUnarchiver unarchiveObjectWithFile:metaDataFile];
+
+    @try
+    {
+        metaData = [NSKeyedUnarchiver unarchiveObjectWithFile:metaDataFile];
+    }
+    @catch (NSException *exception)
+    {
+        NSLog(@"Warning: MXFileStore metadata has been corrupted");
+    }
 
     if (metaData)
     {
