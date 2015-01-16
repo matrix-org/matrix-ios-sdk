@@ -20,7 +20,7 @@
 
 #import "MXFileStoreMetaData.h"
 
-NSUInteger const kMXFileVersion = 2;
+NSUInteger const kMXFileVersion = 3;
 
 NSString *const kMXFileStoreFolder = @"MXFileStore";
 NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -177,7 +177,7 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     [super deleteRoom:roomId];
 
     // Remove the corresponding data from the file system
-    NSString *roomFile = [storePath stringByAppendingPathComponent:roomId];
+    NSString *roomFile = [storeRoomsMessagesPath stringByAppendingPathComponent:roomId];
 
     NSError *error;
     [[NSFileManager defaultManager] removeItemAtPath:roomFile error:&error];
