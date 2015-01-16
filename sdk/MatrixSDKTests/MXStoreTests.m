@@ -1142,6 +1142,8 @@
             XCTAssertNil(store.userDisplayname);
             XCTAssertNil(store.userAvatarUrl);
 
+            [store close];
+
             [store openWithCredentials:sharedData.aliceCredentials onComplete:^{
 
                 XCTAssertNil(store.userDisplayname);
@@ -1152,6 +1154,9 @@
                 [mxSession start:^{
                 } onServerSyncDone:^{
 
+                    [mxSession close];
+                    mxSession = nil;
+
                     // Check user information is permanent
                     MXFileStore *store2 = [[MXFileStore alloc] init];
                     [store2 openWithCredentials:sharedData.aliceCredentials onComplete:^{
@@ -1159,6 +1164,7 @@
                         XCTAssertEqualObjects(store2.userDisplayname, kMXTestsAliceDisplayName);
                         XCTAssertEqualObjects(store2.userAvatarUrl, kMXTestsAliceAvatarURL);
 
+                        [store2 close];
                         [expectation fulfill];
 
                     }];
@@ -1189,6 +1195,8 @@
             XCTAssertNil(store.userDisplayname);
             XCTAssertNil(store.userAvatarUrl);
             XCTAssertEqual(store.rooms.count, 0);
+
+            [store close];
 
             [store openWithCredentials:sharedData.bobCredentials onComplete:^{
 
@@ -1258,6 +1266,5 @@
 
     }];
 }
-
 
 @end
