@@ -218,7 +218,7 @@ onServerSyncDone:(void (^)())onServerSyncDone
                             MXPaginationResponse *roomMessages = [MXPaginationResponse modelFromJSON:[roomDict objectForKey:@"messages"]];
 
                             [room handleMessages:roomMessages
-                                       direction:MXEventDirectionSync isTimeOrdered:YES];
+                                       direction:MXEventDirectionBackwards isTimeOrdered:YES];
 
                             // If the initialSync returns less messages than requested, we got all history from the home server
                             if (roomMessages.chunk.count < initialSyncMessagesLimit)

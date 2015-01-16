@@ -246,7 +246,7 @@
         
         
         // Create a room with messages in parallel
-        [mxSession start:^{
+        [mxSession startWithMessagesLimit:0 onStoreDataReady:^{
         } onServerSyncDone:^{
             
             XCTAssertGreaterThan(eventCount, 0);
