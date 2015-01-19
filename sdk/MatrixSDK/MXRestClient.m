@@ -943,7 +943,7 @@ MXAuthAction;
 
 
 #pragma mark - Content upload
-- (void)uploadContent:(NSData *)data
+- (NSOperation*) uploadContent:(NSData *)data
              mimeType:(NSString *)mimeType
               timeout:(NSTimeInterval)timeoutInSeconds
               success:(void (^)(NSString *url))success
@@ -953,7 +953,7 @@ MXAuthAction;
     NSString* path = [NSString stringWithFormat:@"%@/upload", kMXContentPrefixPath];
     NSDictionary *headers = @{@"Content-Type": mimeType};
     
-    [httpClient requestWithMethod:@"POST"
+    return [httpClient requestWithMethod:@"POST"
                              path:path
                        parameters:nil
                              data:data

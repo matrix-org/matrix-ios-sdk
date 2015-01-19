@@ -556,8 +556,9 @@ typedef enum : NSUInteger
  @param success A block object called when the operation succeeds. It provides the uploaded content url.
  @param failure A block object called when the operation fails.
  @param uploadProgress A block object called when the upload progresses.
+ @return the created NSOperation
  */
-- (void)uploadContent:(NSData *)data
+- (NSOperation*)uploadContent:(NSData *)data
              mimeType:(NSString *)mimeType
               timeout:(NSTimeInterval)timeoutInSeconds
               success:(void (^)(NSString *url))success
