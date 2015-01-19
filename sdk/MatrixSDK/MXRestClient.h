@@ -23,9 +23,14 @@
 
 #pragma mark - Constants definitions
 /**
- Prefix used in path of homeserver requests.
+ Prefix used in path of home server API requests.
  */
 FOUNDATION_EXPORT NSString *const kMXAPIPrefixPath;
+
+/**
+ Prefix used in path of identity server API requests.
+ */
+FOUNDATION_EXPORT NSString *const kMXIdentityAPIPrefixPath;
 
 /**
  Scheme used in Matrix content URIs.
@@ -34,7 +39,7 @@ FOUNDATION_EXPORT NSString *const kMXContentUriScheme;
 /**
  Matrix content respository path.
  */
-FOUNDATION_EXPORT NSString *const kMXContentAPIPrefixPath;
+FOUNDATION_EXPORT NSString *const kMXContentPrefixPath;
 
 /**
  Room visibility
@@ -65,10 +70,32 @@ typedef enum : NSUInteger
 } MXThumbnailingMethod;
 
 
+/**
+ `MXRestClient` makes requests to Matrix servers.
+ 
+ It is the single point to send requests to Matrix servers which are:
+    - the specified Matrix home server
+    - the Matrix content repository manage by this home server
+    - the specified Matrix identity server
+ */
 @interface MXRestClient : NSObject
 
+/**
+ The homeserver.
+ */
 @property (nonatomic, readonly) NSString *homeserver;
+
+/**
+ The user credentials on this home server.
+ */
 @property (nonatomic, readonly) MXCredentials *credentials;
+
+/**
+ The identity server.
+ It must be set before making requests to it.
+ */
+@property (nonatomic) NSString *identityServer;
+
 
 -(id)initWithHomeServer:(NSString *)homeserver;
 
@@ -589,5 +616,21 @@ typedef enum : NSUInteger
  @return the thumbnail HTTP URL. nil if the Matrix content URI is invalid.
  */
 - (NSString*)urlOfContentThumbnail:(NSString*)mxcContentURI withSize:(CGSize)thumbnailSize andMethod:(MXThumbnailingMethod)thumbnailingMethod;
+
+
+#pragma mark - Identity server API
+/**
+ Retrieve a user matrix id from a 3rd party id.
+
+ @param address the id of the user in the 3rd party system.
+ @param medium the 3rd party system (ex: "email")
+
+ @param success A block object called when the operation succeeds. It provides the user Matrix id.
+ @param failure A block object called when the operation fails.
+ */
+- (void)lookup3pid:(NSString*)address
+         forMedium:(NSString*)medium
+           success:(void (^)(NSString *userId))success
+           failure:(void (^)(NSError *error))failure;
 
 @end

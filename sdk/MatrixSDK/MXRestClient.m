@@ -22,15 +22,20 @@
 
 #pragma mark - Constants definitions
 /**
- Prefix used in path of homeserver requests.
+ Prefix used in path of home server API requests.
  */
 NSString *const kMXAPIPrefixPath = @"/_matrix/client/api/v1";
+
+/**
+ Prefix used in path of identity server API requests.
+ */
+NSString *const kMXIdentityAPIPrefixPath = @"/_matrix/identity/api/v1";
 
 /**
  Matrix content respository path
  */
 NSString *const kMXContentUriScheme  = @"mxc://";
-NSString *const kMXContentAPIPrefixPath = @"/_matrix/media/v1";
+NSString *const kMXContentPrefixPath = @"/_matrix/media/v1";
 
 /**
  Room visibility
@@ -966,7 +971,7 @@ MXAuthAction;
               failure:(void (^)(NSError *error))failure
        uploadProgress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))uploadProgress
 {
-    NSString* path = [NSString stringWithFormat:@"%@/upload", kMXContentAPIPrefixPath];
+    NSString* path = [NSString stringWithFormat:@"%@/upload", kMXContentPrefixPath];
     NSDictionary *headers = @{@"Content-Type": mimeType};
     
     return [httpClient requestWithMethod:@"POST"
@@ -991,7 +996,7 @@ MXAuthAction;
     // Replace the "mxc://" scheme by the absolute http location of the content
     if ([mxcContentURI hasPrefix:kMXContentUriScheme])
     {
-        NSString *mxMediaPrefix = [NSString stringWithFormat:@"%@%@/download/", homeserver, kMXContentAPIPrefixPath];
+        NSString *mxMediaPrefix = [NSString stringWithFormat:@"%@%@/download/", homeserver, kMXContentPrefixPath];
         contentURL = [mxcContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:mxMediaPrefix];
     }
 
@@ -1005,7 +1010,7 @@ MXAuthAction;
     if ([mxcContentURI hasPrefix:kMXContentUriScheme])
     {
         // Replace the "mxc://" scheme by the absolute http location for the content thumbnail
-        NSString *mxThumbnailPrefix = [NSString stringWithFormat:@"%@%@/thumbnail/", homeserver, kMXContentAPIPrefixPath];
+        NSString *mxThumbnailPrefix = [NSString stringWithFormat:@"%@%@/thumbnail/", homeserver, kMXContentPrefixPath];
         thumbnailURL = [mxcContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:mxThumbnailPrefix];
 
         // Convert MXThumbnailingMethod to parameter string
@@ -1026,6 +1031,35 @@ MXAuthAction;
     }
 
     return thumbnailURL;
+}
+
+
+#pragma mark - Identity server API
+- (void)setIdentityServer:(NSString *)identityServer
+{
+    _identityServer = [identityServer copy];
+    identityHttpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", identityServer, kMXIdentityAPIPrefixPath]];
+}
+
+- (void)lookup3pid:(NSString*)address
+         forMedium:(NSString*)medium
+           success:(void (^)(NSString *userId))success
+           failure:(void (^)(NSError *error))failure
+{
+    [identityHttpClient requestWithMethod:@"GET"
+                                     path:@"lookup"
+                               parameters:@{
+                                            @"medium": medium,
+                                            @"address": address
+                                            }
+                                  success:^(NSDictionary *JSONResponse)
+     {
+         success(JSONResponse[@"mxid"]);
+     }
+                          failure:^(NSError *error)
+     {
+         failure(error);
+     }];
 }
 
 @end
