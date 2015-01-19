@@ -19,32 +19,31 @@
 
 #import <AFNetworking.h>
 
-#define MX_PREFIX_PATH  @"/_matrix/client/api/v1"
-
 @interface MXHTTPClient ()
 {
     // Use AFNetworking as HTTP client
     AFHTTPRequestOperationManager *httpManager;
-    
+
+    // If defined, append it to the requested URL
     NSString *accessToken;
 }
 @end
 
 @implementation MXHTTPClient
 
--(id)initWithHomeServer:(NSString *)homeserver
+-(id)initWithBaseURL:(NSString *)baseURL
 {
-    return [self initWithHomeServer:homeserver andAccessToken:nil];
+    return [self initWithBaseURL:baseURL andAccessToken:nil];
 }
 
--(id)initWithHomeServer:(NSString *)homeserver andAccessToken:(NSString *)access_token
+-(id)initWithBaseURL:(NSString *)baseURL andAccessToken:(NSString *)access_token
 {
     self = [super init];
     if (self)
     {
         accessToken = access_token;
         
-        httpManager = [[AFHTTPRequestOperationManager alloc] initWithBaseURL:[NSURL URLWithString:[NSString stringWithFormat:@"%@%@", homeserver, MX_PREFIX_PATH]]];
+        httpManager = [[AFHTTPRequestOperationManager alloc] initWithBaseURL:[NSURL URLWithString:baseURL]];
         
         // Send requests parameters in JSON format 
         httpManager.requestSerializer = [AFJSONRequestSerializer serializer];
@@ -116,7 +115,7 @@
                                                                                  
                                                                                  if (operation.responseData)
                                                                                  {
-                                                                                     // If the home server sent data, it contains errcode and error
+                                                                                     // If the home server (or any other Matrix server) sent data, it contains errcode and error
                                                                                      // Try to send an NSError encapsulating MXError information
                                                                                      NSError *serializationError = nil;
                                                                                      NSDictionary *JSONResponse = [httpManager.responseSerializer responseObjectForResponse:operation.response

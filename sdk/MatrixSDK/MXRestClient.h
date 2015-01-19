@@ -21,12 +21,11 @@
 #import "MXJSONModels.h"
 
 
+#pragma mark - Constants definitions
 /**
- Room visibility
+ Prefix used in path of homeserver requests.
  */
-typedef NSString* MXRoomVisibility;
-FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPublic;
-FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
+FOUNDATION_EXPORT NSString *const kMXAPIPrefixPath;
 
 /**
  Scheme used in Matrix content URIs.
@@ -35,7 +34,15 @@ FOUNDATION_EXPORT NSString *const kMXContentUriScheme;
 /**
  Matrix content respository path.
  */
-FOUNDATION_EXPORT NSString *const kMXContentPrefixPath;
+FOUNDATION_EXPORT NSString *const kMXContentAPIPrefixPath;
+
+/**
+ Room visibility
+ */
+typedef NSString* MXRoomVisibility;
+FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPublic;
+FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
+
 
 /**
  Methods of thumnailing supported by the Matrix content repository.

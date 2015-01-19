@@ -21,14 +21,22 @@
 #import "MXTools.h"
 
 #pragma mark - Constants definitions
-NSString *const kMXRoomVisibilityPublic  = @"public";
-NSString *const kMXRoomVisibilityPrivate = @"private";
+/**
+ Prefix used in path of homeserver requests.
+ */
+NSString *const kMXAPIPrefixPath = @"/_matrix/client/api/v1";
 
 /**
  Matrix content respository path
  */
 NSString *const kMXContentUriScheme  = @"mxc://";
-NSString *const kMXContentPrefixPath = @"/_matrix/media/v1";
+NSString *const kMXContentAPIPrefixPath = @"/_matrix/media/v1";
+
+/**
+ Room visibility
+ */
+NSString *const kMXRoomVisibilityPublic  = @"public";
+NSString *const kMXRoomVisibilityPrivate = @"private";
 
 
 /**
@@ -45,7 +53,15 @@ MXAuthAction;
 #pragma mark - MXRestClient
 @interface MXRestClient ()
 {
+    /**
+     HTTP client to the home server.
+     */
     MXHTTPClient *httpClient;
+
+    /**
+     HTTP client to the identity server.
+     */
+    MXHTTPClient *identityHttpClient;
 }
 @end
 
@@ -59,7 +75,7 @@ MXAuthAction;
     {
         homeserver = homeserver2;
         
-        httpClient = [[MXHTTPClient alloc] initWithHomeServer:homeserver andAccessToken:nil];
+        httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", homeserver, kMXAPIPrefixPath] andAccessToken:nil];
     }
     return self;
 }
@@ -72,7 +88,7 @@ MXAuthAction;
         homeserver = credentials2.homeServer;
         credentials = credentials2;
         
-        httpClient = [[MXHTTPClient alloc] initWithHomeServer:homeserver andAccessToken:credentials.accessToken];
+        httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", homeserver, kMXAPIPrefixPath] andAccessToken:credentials.accessToken];
     }
     return self;
 }
@@ -950,7 +966,7 @@ MXAuthAction;
               failure:(void (^)(NSError *error))failure
        uploadProgress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))uploadProgress
 {
-    NSString* path = [NSString stringWithFormat:@"%@/upload", kMXContentPrefixPath];
+    NSString* path = [NSString stringWithFormat:@"%@/upload", kMXContentAPIPrefixPath];
     NSDictionary *headers = @{@"Content-Type": mimeType};
     
     return [httpClient requestWithMethod:@"POST"
@@ -975,7 +991,7 @@ MXAuthAction;
     // Replace the "mxc://" scheme by the absolute http location of the content
     if ([mxcContentURI hasPrefix:kMXContentUriScheme])
     {
-        NSString *mxMediaPrefix = [NSString stringWithFormat:@"%@%@/download/", homeserver, kMXContentPrefixPath];
+        NSString *mxMediaPrefix = [NSString stringWithFormat:@"%@%@/download/", homeserver, kMXContentAPIPrefixPath];
         contentURL = [mxcContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:mxMediaPrefix];
     }
 
@@ -989,7 +1005,7 @@ MXAuthAction;
     if ([mxcContentURI hasPrefix:kMXContentUriScheme])
     {
         // Replace the "mxc://" scheme by the absolute http location for the content thumbnail
-        NSString *mxThumbnailPrefix = [NSString stringWithFormat:@"%@%@/thumbnail/", homeserver, kMXContentPrefixPath];
+        NSString *mxThumbnailPrefix = [NSString stringWithFormat:@"%@%@/thumbnail/", homeserver, kMXContentAPIPrefixPath];
         thumbnailURL = [mxcContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:mxThumbnailPrefix];
 
         // Convert MXThumbnailingMethod to parameter string
