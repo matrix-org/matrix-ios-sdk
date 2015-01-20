@@ -81,6 +81,9 @@ MXAuthAction;
         homeserver = homeserver2;
         
         httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", homeserver, kMXAPIPrefixPath] andAccessToken:nil];
+
+        // By default, use the same address for the identity server
+        self.identityServer = homeserver;
     }
     return self;
 }
