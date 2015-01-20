@@ -92,7 +92,8 @@ typedef enum : NSUInteger
 
 /**
  The identity server.
- It must be set before making requests to it.
+ By default, it points to the defined home server. If needed, change it by setting
+ this property.
  */
 @property (nonatomic) NSString *identityServer;
 
