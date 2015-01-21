@@ -233,12 +233,53 @@
     {
         displayname = alias;
     }
-    
-    // Try to rename 1:1 private rooms with the name of the its users
-    else if (NO == self.isPublic)
+    // compute a name
+    else if (members.count > 0)
     {
-        if (2 == members.count)
+        if (members.count >= 3)
         {
+            // this is a group chat and should have the names of participants
+            // according to "(<num> <name1>, <name2>, <name3> ..."
+            NSMutableString* roomName = [[NSMutableString alloc] init];
+            int count = 0;
+            
+            for (NSString *memberUserId in members.allKeys)
+            {
+                if (NO == [memberUserId isEqualToString:mxSession.matrixRestClient.credentials.userId])
+                {
+                    MXRoomMember *member = [self memberWithUserId:memberUserId];
+                    
+                    // only manage the invited an joined users
+                    if ((member.membership == MXMembershipInvite) || (member.membership == MXMembershipJoin))
+                    {
+                        // some participants are already added
+                        if (roomName.length != 0)
+                        {
+                            // add a separator
+                            [roomName appendString:@", "];
+                        }
+                        
+                        NSString* username = [self memberName:memberUserId];
+                        
+                        if (username.length == 0)
+                        {
+                            [roomName appendString:memberUserId];
+                        }
+                        else
+                        {
+                            [roomName appendString:username];
+                        }
+                        count++;
+                    }
+                }
+            }
+            
+            displayname = [NSString stringWithFormat:@"(%d) %@",count, roomName];
+        }
+        else if (members.count == 2)
+        {
+            // this is a "one to one" room and should have the name of other user
+            
             for (NSString *memberUserId in members.allKeys)
             {
                 if (NO == [memberUserId isEqualToString:mxSession.matrixRestClient.credentials.userId])
@@ -248,8 +289,11 @@
                 }
             }
         }
-        else if (1 == members.count)
+        else if (members.count == 1)
         {
+            // this could be just us (self-chat) or could be the other person
+            // in a room if they have invited us to the room. Find out which
+            
             NSString *otherUserId;
             
             MXRoomMember *member = members.allValues[0];
