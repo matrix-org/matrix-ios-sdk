@@ -97,7 +97,7 @@ MXAuthAction;
         credentials = credentials2;
         
         httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", homeserver, kMXAPIPrefixPath] andAccessToken:credentials.accessToken];
-        
+
         // By default, use the same address for the identity server
         self.identityServer = homeserver;
     }
@@ -1063,6 +1063,71 @@ MXAuthAction;
          success(JSONResponse[@"mxid"]);
      }
                           failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
+- (void)requestEmailValidation:(NSString*)email
+                  clientSecret:(NSString*)clientSecret
+                   sendAttempt:(NSUInteger)sendAttempt
+                       success:(void (^)(NSString *sid))success
+                       failure:(void (^)(NSError *error))failure
+{
+    // The identity server expects params in the URL
+    NSString *path = [NSString stringWithFormat:@"validate/email/requestToken?clientSecret=%@&email=%@&sendAttempt=%tu", clientSecret, email, sendAttempt];
+    [identityHttpClient requestWithMethod:@"POST"
+                                     path:path
+                               parameters:nil
+                                  success:^(NSDictionary *JSONResponse)
+     {
+         success(JSONResponse[@"sid"]);
+     }
+                                  failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
+- (void)validateEmail:(NSString*)sid
+      validationToken:(NSString*)validationToken
+         clientSecret:(NSString*)clientSecret
+              success:(void (^)(BOOL success))success
+              failure:(void (^)(NSError *error))failure
+{
+    // The identity server expects params in the URL
+    NSString *path = [NSString stringWithFormat:@"validate/email/submitToken?token=%@&sid=%@&clientSecret=%@", validationToken, sid, clientSecret];
+    [identityHttpClient requestWithMethod:@"POST"
+                                     path:path
+                               parameters:nil
+                                  success:^(NSDictionary *JSONResponse)
+     {
+         NSNumber *successNumber = JSONResponse[@"success"];
+         success([successNumber boolValue]);
+     }
+                                  failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
+- (void)bind3PID:(NSString*)userId
+             sid:(NSString*)sid
+    clientSecret:(NSString*)clientSecret
+         success:(void (^)(NSDictionary *JSONResponse))success
+         failure:(void (^)(NSError *error))failure
+{
+    // The identity server expects params in the URL
+    NSString *path = [NSString stringWithFormat:@"3pid/bind?mxid=%@&sid=%@&clientSecret=%@", userId, sid, clientSecret];
+    [identityHttpClient requestWithMethod:@"POST"
+                                     path:path
+                               parameters:nil
+                                  success:^(NSDictionary *JSONResponse)
+     {
+         // For now, provide the JSON response as is
+         success(JSONResponse);
+     }
+                                  failure:^(NSError *error)
      {
          failure(error);
      }];
