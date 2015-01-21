@@ -190,12 +190,20 @@ MXAuthAction;
                        parameters:nil
                           success:^(NSDictionary *JSONResponse)
      {
-         NSArray *flows = [MXLoginFlow modelsFromJSON:JSONResponse[@"flows"]];
-         success(flows);
+         // sanity check
+         if (success)
+         {
+             NSArray *flows = [MXLoginFlow modelsFromJSON:JSONResponse[@"flows"]];
+             success(flows);
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         // sanity check
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -206,12 +214,18 @@ MXAuthAction;
                        parameters:parameters
                           success:^(NSDictionary *JSONResponse)
      {
-         success(JSONResponse);
+         if (success)
+         {
+             success(JSONResponse);
+         }
 
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -232,11 +246,19 @@ MXAuthAction;
          // Workaround: HS does not return the right URL. Use the one we used to make the request
          credentials.homeServer = homeserver;
          
-         success(credentials);
+         // sanity check
+         if (success)
+         {
+             success(credentials);
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         // sanity check
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -255,11 +277,17 @@ MXAuthAction;
                         success:^(NSDictionary *JSONResponse)
      {
          
-         success(JSONResponse[@"event_id"]);
+         if (success)
+         {
+             success(JSONResponse[@"event_id"]);
+         }
      }
                         failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -275,12 +303,17 @@ MXAuthAction;
                        parameters:content
                           success:^(NSDictionary *JSONResponse)
      {
-
-         success(JSONResponse[@"event_id"]);
+         if (success)
+         {
+             success(JSONResponse[@"event_id"]);
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -330,11 +363,17 @@ MXAuthAction;
                      parameters:parameters
                         success:^(NSDictionary *JSONResponse)
      {
-         success();
+         if (success)
+         {
+             success();
+         }
      }
                         failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -351,11 +390,17 @@ MXAuthAction;
                                     }
                           success:^(NSDictionary *JSONResponse)
      {
-         success();
+         if (success)
+         {
+             success();
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -369,11 +414,17 @@ MXAuthAction;
                        parameters:nil
                           success:^(NSDictionary *JSONResponse)
      {
-         success(JSONResponse[@"topic"]);
+         if (success)
+         {
+             success(JSONResponse[@"topic"]);
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -390,11 +441,17 @@ MXAuthAction;
                                     }
                           success:^(NSDictionary *JSONResponse)
      {
-         success();
+         if (success)
+         {
+             success();
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -408,11 +465,17 @@ MXAuthAction;
                        parameters:nil
                           success:^(NSDictionary *JSONResponse)
      {
-         success(JSONResponse[@"name"]);
+         if (success)
+         {
+             success(JSONResponse[@"name"]);
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -427,15 +490,21 @@ MXAuthAction;
                        parameters:nil
                           success:^(NSDictionary *JSONResponse)
      {
-         NSString *roomId = JSONResponse[@"room_id"];
-         if (!roomId.length) {
-             roomId = roomIdOrAlias;
+         if (success)
+         {
+             NSString *roomId = JSONResponse[@"room_id"];
+             if (!roomId.length) {
+                 roomId = roomIdOrAlias;
+             }
+             success(roomId);
          }
-         success(roomId);
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -483,11 +552,17 @@ MXAuthAction;
                      parameters:parameters
                         success:^(NSDictionary *JSONResponse)
      {
-         success();
+         if (success)
+         {
+             success();
+         }
      }
                         failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -552,12 +627,18 @@ MXAuthAction;
                      parameters:parameters
                         success:^(NSDictionary *JSONResponse)
      {
-         MXCreateRoomResponse *response = [MXCreateRoomResponse modelFromJSON:JSONResponse];
-         success(response);
+         if (success)
+         {
+             MXCreateRoomResponse *response = [MXCreateRoomResponse modelFromJSON:JSONResponse];
+             success(response);
+         }
      }
                         failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -594,12 +675,18 @@ MXAuthAction;
                      parameters:parameters
                         success:^(NSDictionary *JSONResponse)
      {
-         MXPaginationResponse *paginatedResponse = [MXPaginationResponse modelFromJSON:JSONResponse];
-         success(paginatedResponse);
+         if (success)
+         {
+             MXPaginationResponse *paginatedResponse = [MXPaginationResponse modelFromJSON:JSONResponse];
+             success(paginatedResponse);
+         }
      }
                         failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -614,19 +701,25 @@ MXAuthAction;
                      parameters:nil
                         success:^(NSDictionary *JSONResponse)
      {
-         NSMutableArray *roomMemberEvents = [NSMutableArray array];
-         
-         for (NSDictionary *event in JSONResponse[@"chunk"])
+         if (success)
          {
-             MXEvent *roomMemberEvent = [MXEvent modelFromJSON:event];
-            [roomMemberEvents addObject:roomMemberEvent];
+             NSMutableArray *roomMemberEvents = [NSMutableArray array];
+             
+             for (NSDictionary *event in JSONResponse[@"chunk"])
+             {
+                 MXEvent *roomMemberEvent = [MXEvent modelFromJSON:event];
+                [roomMemberEvents addObject:roomMemberEvent];
+             }
+             
+             success(roomMemberEvents);
          }
-         
-         success(roomMemberEvents);
      }
                         failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -641,11 +734,17 @@ MXAuthAction;
                        parameters:nil
                           success:^(NSDictionary *JSONResponse)
      {
-         success(JSONResponse);
+         if (success)
+         {
+             success(JSONResponse);
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -672,11 +771,17 @@ MXAuthAction;
                        parameters:parameters
                           success:^(NSDictionary *JSONResponse)
      {
-         success();
+         if (success)
+         {
+             success();
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -694,12 +799,17 @@ MXAuthAction;
                                     }
                           success:^(NSDictionary *JSONResponse)
      {
-         
-         success(JSONResponse);
+         if (success)
+         {
+             success(JSONResponse);
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -717,11 +827,17 @@ MXAuthAction;
                                   }
                         success:^(NSDictionary *JSONResponse)
      {
-         success();
+         if (success)
+         {
+             success();
+         }
      }
                         failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -740,12 +856,18 @@ MXAuthAction;
                      parameters:nil
                         success:^(NSDictionary *JSONResponse)
      {
-         NSDictionary *cleanedJSONResponse = [MXJSONModel removeNullValuesInJSON:JSONResponse];
-         success(cleanedJSONResponse[@"displayname"]);
+         if (success)
+         {
+             NSDictionary *cleanedJSONResponse = [MXJSONModel removeNullValuesInJSON:JSONResponse];
+             success(cleanedJSONResponse[@"displayname"]);
+         }
      }
                         failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -761,11 +883,17 @@ MXAuthAction;
                                   }
                         success:^(NSDictionary *JSONResponse)
      {
-         success();
+         if (success)
+         {
+             success();
+         }
      }
                         failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -784,12 +912,18 @@ MXAuthAction;
                      parameters:nil
                         success:^(NSDictionary *JSONResponse)
      {
-         NSDictionary *cleanedJSONResponse = [MXJSONModel removeNullValuesInJSON:JSONResponse];
-         success(cleanedJSONResponse[@"avatar_url"]);
+         if (success)
+         {
+             NSDictionary *cleanedJSONResponse = [MXJSONModel removeNullValuesInJSON:JSONResponse];
+             success(cleanedJSONResponse[@"avatar_url"]);
+         }
      }
                         failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -813,11 +947,17 @@ MXAuthAction;
                        parameters:parameters
                           success:^(NSDictionary *JSONResponse)
      {
-         success();
+         if (success)
+         {
+             success();
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -836,12 +976,18 @@ MXAuthAction;
                        parameters:nil
                           success:^(NSDictionary *JSONResponse)
      {
-         MXPresenceResponse *presence = [MXPresenceResponse modelFromJSON:JSONResponse];
-         success(presence);
+         if (success)
+         {
+             MXPresenceResponse *presence = [MXPresenceResponse modelFromJSON:JSONResponse];
+             success(presence);
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -853,10 +999,16 @@ MXAuthAction;
     // @TODO: Change it with C-S API v2 new APIs
     [self initialSyncWithLimit:0 success:^(NSDictionary *JSONData) {
 
-        success([MXEvent modelsFromJSON:JSONData[@"presence"]]);
+        if (success)
+        {
+            success([MXEvent modelsFromJSON:JSONData[@"presence"]]);
+        }
 
     } failure:^(NSError *error) {
-        failure(error);
+        if (failure)
+        {
+            failure(error);
+        }
     }];
 }
 
@@ -869,12 +1021,18 @@ MXAuthAction;
                        parameters:nil
                           success:^(NSDictionary *JSONResponse)
      {
-         MXPresenceResponse *presence = [MXPresenceResponse modelFromJSON:JSONResponse];
-         success(presence);
+         if (success)
+         {
+             MXPresenceResponse *presence = [MXPresenceResponse modelFromJSON:JSONResponse];
+             success(presence);
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -893,11 +1051,17 @@ MXAuthAction;
                        parameters:parameters
                           success:^(NSDictionary *JSONResponse)
      {
-         success();
+         if (success)
+         {
+             success();
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -914,12 +1078,17 @@ MXAuthAction;
                                   }
                         success:^(NSDictionary *JSONResponse)
      {
-         
-         success(JSONResponse);
+         if (success)
+         {
+             success(JSONResponse);
+         }
      }
                         failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -955,12 +1124,18 @@ MXAuthAction;
                      parameters:parameters timeout:clientTimeoutInSeconds
                         success:^(NSDictionary *JSONResponse)
      {
-         MXPaginationResponse *paginatedResponse = [MXPaginationResponse modelFromJSON:JSONResponse];
-         success(paginatedResponse);
+         if (success)
+         {
+             MXPaginationResponse *paginatedResponse = [MXPaginationResponse modelFromJSON:JSONResponse];
+             success(paginatedResponse);
+         }
      }
                         failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -972,12 +1147,18 @@ MXAuthAction;
                        parameters:nil
                           success:^(NSDictionary *JSONResponse)
      {
-         NSArray *publicRooms = [MXPublicRoom modelsFromJSON:JSONResponse[@"chunk"]];
-         success(publicRooms);
+         if (success)
+         {
+             NSArray *publicRooms = [MXPublicRoom modelsFromJSON:JSONResponse[@"chunk"]];
+             success(publicRooms);
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -994,11 +1175,17 @@ MXAuthAction;
                      parameters:nil
                         success:^(NSDictionary *JSONResponse)
      {
-         success(JSONResponse[@"room_id"]);
+         if (success)
+         {
+             success(JSONResponse[@"room_id"]);
+         }
      }
                         failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -1022,9 +1209,12 @@ MXAuthAction;
                           timeout:timeoutInSeconds
                    uploadProgress:uploadProgress
                           success:^(NSDictionary *JSONResponse) {
-                              NSString *contentURL = JSONResponse[@"content_uri"];
-                              NSLog(@"uploadContent succeeded: %@",contentURL);
-                              success(contentURL);
+                              if (success)
+                              {
+                                  NSString *contentURL = JSONResponse[@"content_uri"];
+                                  NSLog(@"uploadContent succeeded: %@",contentURL);
+                                  success(contentURL);
+                              }
                           }
                           failure:failure];
 }
@@ -1094,11 +1284,17 @@ MXAuthAction;
                                             }
                                   success:^(NSDictionary *JSONResponse)
      {
-         success(JSONResponse[@"mxid"]);
+         if (success)
+         {
+             success(JSONResponse[@"mxid"]);
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -1169,11 +1365,17 @@ MXAuthAction;
                                parameters:nil
                                   success:^(NSDictionary *JSONResponse)
      {
-         success(JSONResponse[@"sid"]);
+         if (success)
+         {
+             success(JSONResponse[@"sid"]);
+         }
      }
                                   failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -1190,12 +1392,18 @@ MXAuthAction;
                                parameters:nil
                                   success:^(NSDictionary *JSONResponse)
      {
-         NSNumber *successNumber = JSONResponse[@"success"];
-         success([successNumber boolValue]);
+         if (success)
+         {
+             NSNumber *successNumber = JSONResponse[@"success"];
+             success([successNumber boolValue]);
+         }
      }
                                   failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -1212,12 +1420,18 @@ MXAuthAction;
                                parameters:nil
                                   success:^(NSDictionary *JSONResponse)
      {
-         // For now, provide the JSON response as is
-         success(JSONResponse);
+         if (success)
+         {
+             // For now, provide the JSON response as is
+             success(JSONResponse);
+         }
      }
                                   failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
