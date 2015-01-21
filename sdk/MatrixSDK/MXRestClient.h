@@ -48,6 +48,14 @@ typedef NSString* MXRoomVisibility;
 FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPublic;
 FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
 
+/**
+ Types of third party media.
+ The list is not exhautive and depends on the Identity server capabilities.
+ */
+typedef NSString* MX3PIDMedium;
+FOUNDATION_EXPORT NSString *const kMX3PIDMediumEmail;
+FOUNDATION_EXPORT NSString *const kMX3PIDMediumMSISDN;
+
 
 /**
  Methods of thumnailing supported by the Matrix content repository.
@@ -626,13 +634,30 @@ typedef enum : NSUInteger
  @param address the id of the user in the 3rd party system.
  @param medium the 3rd party system (ex: "email").
 
- @param success A block object called when the operation succeeds. It provides the user Matrix id. 
+ @param success A block object called when the operation succeeds. It provides the Matrix user id.
                 It is nil if the user is not found.
  @param failure A block object called when the operation fails.
  */
 - (void)lookup3pid:(NSString*)address
-         forMedium:(NSString*)medium
+         forMedium:(MX3PIDMedium)medium
            success:(void (^)(NSString *userId))success
+           failure:(void (^)(NSError *error))failure;
+
+/**
+ Retrieve user matrix ids from a list of 3rd party ids.
+ 
+ `addresses` and `media` arrays must have the same count.
+
+ @param addresses the list of ids of the user in the 3rd party system.
+ @param media the list of 3rd party systems (MX3PIDMedium type).
+
+ @param success A block object called when the operation succeeds. It provides a list of Matrix user ids
+                in the same order as passed arrays. A not found Matrix user id is indicated by NSNull in this array
+ @param failure A block object called when the operation fails.
+ */
+- (void)lookup3pids:(NSArray*)addresses
+          forMedia:(NSArray*)media
+           success:(void (^)(NSArray *userIds))success
            failure:(void (^)(NSError *error))failure;
 
 /**

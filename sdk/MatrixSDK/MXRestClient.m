@@ -43,6 +43,13 @@ NSString *const kMXContentPrefixPath = @"/_matrix/media/v1";
 NSString *const kMXRoomVisibilityPublic  = @"public";
 NSString *const kMXRoomVisibilityPrivate = @"private";
 
+/**
+ Types of third party media.
+ The list is not exhautive and depends on the Identity server capabilities.
+ */
+NSString *const kMX3PIDMediumEmail  = @"email";
+NSString *const kMX3PIDMediumMSISDN = @"msisdn";
+
 
 /**
  Authentication flow: register or login
@@ -1048,7 +1055,7 @@ MXAuthAction;
 }
 
 - (void)lookup3pid:(NSString*)address
-         forMedium:(NSString*)medium
+         forMedium:(MX3PIDMedium)medium
            success:(void (^)(NSString *userId))success
            failure:(void (^)(NSError *error))failure
 {
@@ -1066,6 +1073,60 @@ MXAuthAction;
      {
          failure(error);
      }];
+}
+
+- (void)lookup3pids:(NSArray*)addresses
+           forMedia:(NSArray*)media
+            success:(void (^)(NSArray *userIds))success
+            failure:(void (^)(NSError *error))failure
+{
+    NSParameterAssert(addresses.count == media.count);
+
+    // The identity server does not expose this API yet (@see SYD-7)
+    // Do n calls to lookup3pid to implement it
+    NSMutableArray *userIds = [NSMutableArray arrayWithCapacity:addresses.count];
+
+    NSMutableArray *addresses2 = [NSMutableArray arrayWithArray:addresses];
+    NSMutableArray *media2 = [NSMutableArray arrayWithArray:media];
+
+    [self lookup3pidsNext:addresses2 forMedia:media2 resultBeingBuilt:userIds success:success failure:failure];
+}
+
+- (void)lookup3pidsNext:(NSMutableArray*)addresses
+               forMedia:(NSMutableArray*)media
+       resultBeingBuilt:(NSMutableArray*)userIds
+                success:(void (^)(NSArray *userIds))success
+                failure:(void (^)(NSError *error))failure
+{
+    if (addresses.count)
+    {
+        // Look up 3PID one by one
+        [self lookup3pid:[addresses lastObject] forMedium:[media lastObject] success:^(NSString *userId) {
+
+            if (userId)
+            {
+                [userIds addObject:userId];
+            }
+            else
+            {
+                // The user is not in Matrix. Mark it as NSNull in the result array
+                [userIds addObject:[NSNull null]];
+            }
+
+            // Go to the next 3PID
+            [addresses removeLastObject];
+            [media removeLastObject];
+            [self lookup3pidsNext:addresses forMedia:media resultBeingBuilt:userIds success:success failure:failure];
+
+        } failure:^(NSError *error) {
+            failure(error);
+        }];
+    }
+    else
+    {
+        // We are done
+        success(userIds);
+    }
 }
 
 - (void)requestEmailValidation:(NSString*)email
