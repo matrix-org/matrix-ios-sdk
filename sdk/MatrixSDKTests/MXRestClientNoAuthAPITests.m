@@ -105,6 +105,31 @@
     [self waitForExpectationsWithTimeout:10000 handler:nil];
 }
 
+- (void)testRegister
+{
+    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
+
+    // Test the password-based flow with the generic method
+    NSDictionary *parameters = @{
+                                 @"type": kMatrixLoginFlowTypePassword,
+                                 @"user": @"",
+                                 @"password": MXTESTS_PWD
+                                 };
+
+    [mxRestClient register:parameters success:^(NSDictionary *JSONResponse) {
+
+        XCTAssertNotNil(JSONResponse[@"access_token"], @"password-based registration flow is complete in one stage. We must get the access token.");
+
+        [expectation fulfill];
+
+    } failure:^(NSError *error) {
+        XCTFail(@"The request should not fail - NSError: %@", error);
+        [expectation fulfill];
+    }];
+
+    [self waitForExpectationsWithTimeout:10000 handler:nil];
+}
+
 - (void)testRegisterPasswordBased
 {
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
