@@ -124,6 +124,13 @@ MXAuthAction;
     [self getRegisterOrLoginFlow:MXAuthActionRegister success:success failure:failure];
 }
 
+- (void)register:(NSDictionary*)parameters
+         success:(void (^)(NSDictionary *JSONResponse))success
+         failure:(void (^)(NSError *error))failure
+{
+    [self registerOrLogin:MXAuthActionRegister parameters:parameters success:success failure:failure];
+}
+
 - (void)registerWithUser:(NSString*)user andPassword:(NSString*)password
                  success:(void (^)(MXCredentials *credentials))success
                  failure:(void (^)(NSError *error))failure
@@ -185,6 +192,22 @@ MXAuthAction;
      }];
 }
 
+- (void)registerOrLogin:(MXAuthAction)authAction parameters:(NSDictionary *)parameters success:(void (^)(NSDictionary *JSONResponse))success failure:(void (^)(NSError *))failure
+{
+    [httpClient requestWithMethod:@"POST"
+                             path:[self authActionPath:authAction]
+                       parameters:parameters
+                          success:^(NSDictionary *JSONResponse)
+     {
+         success(JSONResponse);
+
+     }
+                          failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
+
 - (void)registerOrLoginWithUser:(MXAuthAction)authAction user:(NSString *)user andPassword:(NSString *)password
                         success:(void (^)(MXCredentials *))success failure:(void (^)(NSError *))failure
 {
@@ -193,12 +216,9 @@ MXAuthAction;
                                  @"user": user,
                                  @"password": password
                                  };
-    
-    [httpClient requestWithMethod:@"POST"
-                             path:[self authActionPath:authAction]
-                       parameters:parameters
-                          success:^(NSDictionary *JSONResponse)
-     {
+
+    [self registerOrLogin:authAction parameters:parameters success:^(NSDictionary *JSONResponse) {
+
          // Update our credentials
          credentials = [MXCredentials modelFromJSON:JSONResponse];
          

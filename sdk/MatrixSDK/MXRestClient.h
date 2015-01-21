@@ -123,9 +123,32 @@ typedef enum : NSUInteger
                 failure:(void (^)(NSError *error))failure;
 
 /**
+ Generic registration action request.
+ 
+ As described in http://matrix.org/docs/spec/#registration-and-login some registration flows require to
+ complete several stages in order to complete user registration.
+ This can lead to make several requests to the home server with different kinds of parameters.
+ This generic method with open parameters and response exists to handle any kind of registration flow stage.
+
+ At the end of the registration process, the SDK user should be able to construct a MXCredentials object
+ from the response of the last registration action request.
+
+ @param parameters the parameters required for the current registration stage
+ @param success A block object called when the operation succeeds. It provides the raw JSON response
+                from the server.
+ @param failure A block object called when the operation fails.
+ */
+- (void)register:(NSDictionary*)parameters
+         success:(void (^)(NSDictionary *JSONResponse))success
+         failure:(void (^)(NSError *error))failure;
+
+/**
  Register a user with the password-based flow.
  
- @param user the user id (ex: "@bob:matrix.org") or the user localpart (ex: "bob") of the user to register.
+ It implements the password-based registration flow described at
+ http://matrix.org/docs/spec/#password-based
+ 
+ @param user the user id (ex: "@bob:matrix.org") or the user id localpart (ex: "bob") of the user to register.
  @param password his password.
  @param success A block object called when the operation succeeds. It provides credentials to use to create a MXRestClient.
  @param failure A block object called when the operation fails.
@@ -148,7 +171,10 @@ typedef enum : NSUInteger
 /**
  Log a user in with the password-based flow.
  
- @param user the user id (ex: "@bob:matrix.org") or the user localpart (ex: "bob") of the user to log in.
+ It implements the password-based registration flow described at
+ http://matrix.org/docs/spec/#password-based
+ 
+ @param user the user id (ex: "@bob:matrix.org") or the user id localpart (ex: "bob") of the user to log in.
  @param password his password.
  @param success A block object called when the operation succeeds. It provides credentials to use to create a MXRestClient.
  @param failure A block object called when the operation fails.
