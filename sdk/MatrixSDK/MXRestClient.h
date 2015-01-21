@@ -169,6 +169,21 @@ typedef enum : NSUInteger
              failure:(void (^)(NSError *error))failure;
 
 /**
+ Generic login action request.
+
+ @see the register method for explanation of flows that require to make several request to the
+ home server.
+
+ @param parameters the parameters required for the current login stage
+ @param success A block object called when the operation succeeds. It provides the raw JSON response
+                from the server.
+ @param failure A block object called when the operation fails.
+ */
+- (void)login:(NSDictionary*)parameters
+      success:(void (^)(NSDictionary *JSONResponse))success
+      failure:(void (^)(NSError *error))failure;
+
+/**
  Log a user in with the password-based flow.
  
  It implements the password-based registration flow described at

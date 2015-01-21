@@ -147,6 +147,13 @@ MXAuthAction;
     [self getRegisterOrLoginFlow:MXAuthActionLogin success:success failure:failure];
 }
 
+- (void)login:(NSDictionary*)parameters
+      success:(void (^)(NSDictionary *JSONResponse))success
+      failure:(void (^)(NSError *error))failure
+{
+    [self registerOrLogin:MXAuthActionLogin parameters:parameters success:success failure:failure];
+}
+
 - (void)loginWithUser:(NSString *)user andPassword:(NSString *)password
               success:(void (^)(MXCredentials *))success failure:(void (^)(NSError *))failure
 {
