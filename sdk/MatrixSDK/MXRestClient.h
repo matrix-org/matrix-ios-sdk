@@ -48,6 +48,14 @@ typedef NSString* MXRoomVisibility;
 FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPublic;
 FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
 
+/**
+ Types of third party media.
+ The list is not exhautive and depends on the Identity server capabilities.
+ */
+typedef NSString* MX3PIDMedium;
+FOUNDATION_EXPORT NSString *const kMX3PIDMediumEmail;
+FOUNDATION_EXPORT NSString *const kMX3PIDMediumMSISDN;
+
 
 /**
  Methods of thumnailing supported by the Matrix content repository.
@@ -115,9 +123,32 @@ typedef enum : NSUInteger
                 failure:(void (^)(NSError *error))failure;
 
 /**
+ Generic registration action request.
+ 
+ As described in http://matrix.org/docs/spec/#registration-and-login some registration flows require to
+ complete several stages in order to complete user registration.
+ This can lead to make several requests to the home server with different kinds of parameters.
+ This generic method with open parameters and response exists to handle any kind of registration flow stage.
+
+ At the end of the registration process, the SDK user should be able to construct a MXCredentials object
+ from the response of the last registration action request.
+
+ @param parameters the parameters required for the current registration stage
+ @param success A block object called when the operation succeeds. It provides the raw JSON response
+                from the server.
+ @param failure A block object called when the operation fails.
+ */
+- (void)register:(NSDictionary*)parameters
+         success:(void (^)(NSDictionary *JSONResponse))success
+         failure:(void (^)(NSError *error))failure;
+
+/**
  Register a user with the password-based flow.
  
- @param user the user id (ex: "@bob:matrix.org") or the user localpart (ex: "bob") of the user to register.
+ It implements the password-based registration flow described at
+ http://matrix.org/docs/spec/#password-based
+ 
+ @param user the user id (ex: "@bob:matrix.org") or the user id localpart (ex: "bob") of the user to register.
  @param password his password.
  @param success A block object called when the operation succeeds. It provides credentials to use to create a MXRestClient.
  @param failure A block object called when the operation fails.
@@ -138,9 +169,27 @@ typedef enum : NSUInteger
              failure:(void (^)(NSError *error))failure;
 
 /**
+ Generic login action request.
+
+ @see the register method for explanation of flows that require to make several request to the
+ home server.
+
+ @param parameters the parameters required for the current login stage
+ @param success A block object called when the operation succeeds. It provides the raw JSON response
+                from the server.
+ @param failure A block object called when the operation fails.
+ */
+- (void)login:(NSDictionary*)parameters
+      success:(void (^)(NSDictionary *JSONResponse))success
+      failure:(void (^)(NSError *error))failure;
+
+/**
  Log a user in with the password-based flow.
  
- @param user the user id (ex: "@bob:matrix.org") or the user localpart (ex: "bob") of the user to log in.
+ It implements the password-based registration flow described at
+ http://matrix.org/docs/spec/#password-based
+ 
+ @param user the user id (ex: "@bob:matrix.org") or the user id localpart (ex: "bob") of the user to log in.
  @param password his password.
  @param success A block object called when the operation succeeds. It provides credentials to use to create a MXRestClient.
  @param failure A block object called when the operation fails.
@@ -626,13 +675,30 @@ typedef enum : NSUInteger
  @param address the id of the user in the 3rd party system.
  @param medium the 3rd party system (ex: "email").
 
- @param success A block object called when the operation succeeds. It provides the user Matrix id. 
+ @param success A block object called when the operation succeeds. It provides the Matrix user id.
                 It is nil if the user is not found.
  @param failure A block object called when the operation fails.
  */
 - (void)lookup3pid:(NSString*)address
-         forMedium:(NSString*)medium
+         forMedium:(MX3PIDMedium)medium
            success:(void (^)(NSString *userId))success
+           failure:(void (^)(NSError *error))failure;
+
+/**
+ Retrieve user matrix ids from a list of 3rd party ids.
+ 
+ `addresses` and `media` arrays must have the same count.
+
+ @param addresses the list of ids of the user in the 3rd party system.
+ @param media the list of 3rd party systems (MX3PIDMedium type).
+
+ @param success A block object called when the operation succeeds. It provides a list of Matrix user ids
+                in the same order as passed arrays. A not found Matrix user id is indicated by NSNull in this array
+ @param failure A block object called when the operation fails.
+ */
+- (void)lookup3pids:(NSArray*)addresses
+          forMedia:(NSArray*)media
+           success:(void (^)(NSArray *userIds))success
            failure:(void (^)(NSError *error))failure;
 
 /**
