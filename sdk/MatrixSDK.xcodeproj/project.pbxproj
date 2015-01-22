@@ -30,6 +30,17 @@
 		3233606F1A403A0D0071A488 /* MXFileStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 3233606D1A403A0D0071A488 /* MXFileStore.h */; };
 		323360701A403A0D0071A488 /* MXFileStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 3233606E1A403A0D0071A488 /* MXFileStore.m */; };
 		323C5A081A70E53500FB0549 /* MXToolsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 323C5A071A70E53500FB0549 /* MXToolsTests.m */; };
+		323C5A101A714EE500FB0549 /* MXContactManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 323C5A0E1A714EE500FB0549 /* MXContactManager.h */; };
+		323C5A111A714EE500FB0549 /* MXContactManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 323C5A0F1A714EE500FB0549 /* MXContactManager.m */; };
+		323C5A141A714FC600FB0549 /* MX3PID.h in Headers */ = {isa = PBXBuildFile; fileRef = 323C5A121A714FC600FB0549 /* MX3PID.h */; };
+		323C5A151A714FC600FB0549 /* MX3PID.m in Sources */ = {isa = PBXBuildFile; fileRef = 323C5A131A714FC600FB0549 /* MX3PID.m */; };
+		323C5A181A71503B00FB0549 /* MXContact.h in Headers */ = {isa = PBXBuildFile; fileRef = 323C5A161A71503B00FB0549 /* MXContact.h */; };
+		323C5A191A71503B00FB0549 /* MXContact.m in Sources */ = {isa = PBXBuildFile; fileRef = 323C5A171A71503B00FB0549 /* MXContact.m */; };
+		323C5A1D1A71519200FB0549 /* MXContactSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 323C5A1C1A71519200FB0549 /* MXContactSource.h */; };
+		323C5A2C1A715F2C00FB0549 /* MXMatrixContactSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 323C5A271A715F2C00FB0549 /* MXMatrixContactSource.h */; };
+		323C5A2D1A715F2C00FB0549 /* MXMatrixContactSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 323C5A281A715F2C00FB0549 /* MXMatrixContactSource.m */; };
+		323C5A2E1A715F2C00FB0549 /* MXPhoneBookContactSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 323C5A2A1A715F2C00FB0549 /* MXPhoneBookContactSource.h */; };
+		323C5A2F1A715F2C00FB0549 /* MXPhoneBookContactSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 323C5A2B1A715F2C00FB0549 /* MXPhoneBookContactSource.m */; };
 		323E0C571A2F6E7D00A31D73 /* MXRoomPowerLevels.h in Headers */ = {isa = PBXBuildFile; fileRef = 323E0C551A2F6E7D00A31D73 /* MXRoomPowerLevels.h */; };
 		323E0C581A2F6E7D00A31D73 /* MXRoomPowerLevels.m in Sources */ = {isa = PBXBuildFile; fileRef = 323E0C561A2F6E7D00A31D73 /* MXRoomPowerLevels.m */; };
 		323E0C5B1A306D7A00A31D73 /* MXEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 323E0C591A306D7A00A31D73 /* MXEvent.h */; };
@@ -107,6 +118,17 @@
 		3233606D1A403A0D0071A488 /* MXFileStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXFileStore.h; sourceTree = "<group>"; };
 		3233606E1A403A0D0071A488 /* MXFileStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXFileStore.m; sourceTree = "<group>"; };
 		323C5A071A70E53500FB0549 /* MXToolsTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXToolsTests.m; sourceTree = "<group>"; };
+		323C5A0E1A714EE500FB0549 /* MXContactManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXContactManager.h; sourceTree = "<group>"; };
+		323C5A0F1A714EE500FB0549 /* MXContactManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXContactManager.m; sourceTree = "<group>"; };
+		323C5A121A714FC600FB0549 /* MX3PID.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MX3PID.h; sourceTree = "<group>"; };
+		323C5A131A714FC600FB0549 /* MX3PID.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MX3PID.m; sourceTree = "<group>"; };
+		323C5A161A71503B00FB0549 /* MXContact.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXContact.h; sourceTree = "<group>"; };
+		323C5A171A71503B00FB0549 /* MXContact.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXContact.m; sourceTree = "<group>"; };
+		323C5A1C1A71519200FB0549 /* MXContactSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXContactSource.h; sourceTree = "<group>"; };
+		323C5A271A715F2C00FB0549 /* MXMatrixContactSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXMatrixContactSource.h; sourceTree = "<group>"; };
+		323C5A281A715F2C00FB0549 /* MXMatrixContactSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXMatrixContactSource.m; sourceTree = "<group>"; };
+		323C5A2A1A715F2C00FB0549 /* MXPhoneBookContactSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXPhoneBookContactSource.h; sourceTree = "<group>"; };
+		323C5A2B1A715F2C00FB0549 /* MXPhoneBookContactSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXPhoneBookContactSource.m; sourceTree = "<group>"; };
 		323E0C551A2F6E7D00A31D73 /* MXRoomPowerLevels.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRoomPowerLevels.h; sourceTree = "<group>"; };
 		323E0C561A2F6E7D00A31D73 /* MXRoomPowerLevels.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRoomPowerLevels.m; sourceTree = "<group>"; };
 		323E0C591A306D7A00A31D73 /* MXEvent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXEvent.h; sourceTree = "<group>"; };
@@ -251,6 +273,48 @@
 			path = MXFileStore;
 			sourceTree = "<group>";
 		};
+		323C5A0D1A714EE500FB0549 /* Contacts */ = {
+			isa = PBXGroup;
+			children = (
+				323C5A1B1A71519200FB0549 /* ContactSource */,
+				323C5A121A714FC600FB0549 /* MX3PID.h */,
+				323C5A131A714FC600FB0549 /* MX3PID.m */,
+				323C5A161A71503B00FB0549 /* MXContact.h */,
+				323C5A171A71503B00FB0549 /* MXContact.m */,
+				323C5A0E1A714EE500FB0549 /* MXContactManager.h */,
+				323C5A0F1A714EE500FB0549 /* MXContactManager.m */,
+			);
+			path = Contacts;
+			sourceTree = "<group>";
+		};
+		323C5A1B1A71519200FB0549 /* ContactSource */ = {
+			isa = PBXGroup;
+			children = (
+				323C5A261A715F2C00FB0549 /* MXMatrixContactSource */,
+				323C5A291A715F2C00FB0549 /* MXPhoneBookContactSource */,
+				323C5A1C1A71519200FB0549 /* MXContactSource.h */,
+			);
+			path = ContactSource;
+			sourceTree = "<group>";
+		};
+		323C5A261A715F2C00FB0549 /* MXMatrixContactSource */ = {
+			isa = PBXGroup;
+			children = (
+				323C5A271A715F2C00FB0549 /* MXMatrixContactSource.h */,
+				323C5A281A715F2C00FB0549 /* MXMatrixContactSource.m */,
+			);
+			path = MXMatrixContactSource;
+			sourceTree = "<group>";
+		};
+		323C5A291A715F2C00FB0549 /* MXPhoneBookContactSource */ = {
+			isa = PBXGroup;
+			children = (
+				323C5A2A1A715F2C00FB0549 /* MXPhoneBookContactSource.h */,
+				323C5A2B1A715F2C00FB0549 /* MXPhoneBookContactSource.m */,
+			);
+			path = MXPhoneBookContactSource;
+			sourceTree = "<group>";
+		};
 		3281E8B219E42DFE00976E1A /* JSONModels */ = {
 			isa = PBXGroup;
 			children = (
@@ -292,6 +356,7 @@
 				320DFDC719DD99B60068622A /* Data */,
 				3281E8B219E42DFE00976E1A /* JSONModels */,
 				320DFDD619DD99B60068622A /* Utils */,
+				323C5A0D1A714EE500FB0549 /* Contacts */,
 				32C6F93219DD814400EA4E9C /* MatrixSDK.h */,
 				320DFDD419DD99B60068622A /* MXRestClient.h */,
 				320DFDD519DD99B60068622A /* MXRestClient.m */,
@@ -380,8 +445,12 @@
 				3291D4D41A68FFEB00C3BA41 /* MXFileRoomStore.h in Headers */,
 				32C6F93319DD814400EA4E9C /* MatrixSDK.h in Headers */,
 				323E0C571A2F6E7D00A31D73 /* MXRoomPowerLevels.h in Headers */,
+				323C5A2E1A715F2C00FB0549 /* MXPhoneBookContactSource.h in Headers */,
+				323C5A1D1A71519200FB0549 /* MXContactSource.h in Headers */,
+				323C5A141A714FC600FB0549 /* MX3PID.h in Headers */,
 				32114A851A262CE000FF2EC4 /* MXStore.h in Headers */,
 				329FB1791A0A74B100A5E88E /* MXTools.h in Headers */,
+				323C5A2C1A715F2C00FB0549 /* MXMatrixContactSource.h in Headers */,
 				3281E8B919E42DFE00976E1A /* MXJSONModels.h in Headers */,
 				320DFDE419DD99B60068622A /* MXRestClient.h in Headers */,
 				3265CB381A14C43E00E24B2F /* MXRoomState.h in Headers */,
@@ -395,6 +464,8 @@
 				320DFDE219DD99B60068622A /* MXError.h in Headers */,
 				320DFDE619DD99B60068622A /* MXHTTPClient.h in Headers */,
 				320DFDDB19DD99B60068622A /* MXRoom.h in Headers */,
+				323C5A101A714EE500FB0549 /* MXContactManager.h in Headers */,
+				323C5A181A71503B00FB0549 /* MXContact.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -532,6 +603,8 @@
 				323E0C581A2F6E7D00A31D73 /* MXRoomPowerLevels.m in Sources */,
 				329FB1761A0A3A1600A5E88E /* MXRoomMember.m in Sources */,
 				323360701A403A0D0071A488 /* MXFileStore.m in Sources */,
+				323C5A2D1A715F2C00FB0549 /* MXMatrixContactSource.m in Sources */,
+				323C5A2F1A715F2C00FB0549 /* MXPhoneBookContactSource.m in Sources */,
 				32D7767E1A27860600FC4AA2 /* MXMemoryStore.m in Sources */,
 				3265CB391A14C43E00E24B2F /* MXRoomState.m in Sources */,
 				3281E8B819E42DFE00976E1A /* MXJSONModel.m in Sources */,
@@ -539,15 +612,18 @@
 				320DFDE319DD99B60068622A /* MXError.m in Sources */,
 				327137281A24D50A00DB6757 /* MXMyUser.m in Sources */,
 				32114A901A262ECB00FF2EC4 /* MXNoStore.m in Sources */,
+				323C5A111A714EE500FB0549 /* MXContactManager.m in Sources */,
 				32CE6FB91A409B1F00317F1E /* MXFileStoreMetaData.m in Sources */,
 				323E0C5C1A306D7A00A31D73 /* MXEvent.m in Sources */,
 				3281E8BA19E42DFE00976E1A /* MXJSONModels.m in Sources */,
 				3220094619EFBF30008DE41D /* MXSessionEventListener.m in Sources */,
 				320DFDE719DD99B60068622A /* MXHTTPClient.m in Sources */,
+				323C5A151A714FC600FB0549 /* MX3PID.m in Sources */,
 				320DFDE119DD99B60068622A /* MXSession.m in Sources */,
 				320DFDDC19DD99B60068622A /* MXRoom.m in Sources */,
 				3291D4D51A68FFEB00C3BA41 /* MXFileRoomStore.m in Sources */,
 				329FB1801A0B665800A5E88E /* MXUser.m in Sources */,
+				323C5A191A71503B00FB0549 /* MXContact.m in Sources */,
 				3220093919EFA4C9008DE41D /* MXEventListener.m in Sources */,
 				329FB17A1A0A74B100A5E88E /* MXTools.m in Sources */,
 				320DFDE519DD99B60068622A /* MXRestClient.m in Sources */,
