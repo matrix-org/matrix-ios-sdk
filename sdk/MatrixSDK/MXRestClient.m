@@ -1328,12 +1328,12 @@ MXAuthAction;
 
             if (userId)
             {
-                [userIds addObject:userId];
+                [userIds insertObject:userId atIndex:0];
             }
             else
             {
                 // The user is not in Matrix. Mark it as NSNull in the result array
-                [userIds addObject:[NSNull null]];
+                [userIds insertObject:[NSNull null] atIndex:0];
             }
 
             // Go to the next 3PID
