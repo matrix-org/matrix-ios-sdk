@@ -1331,12 +1331,12 @@ MXAuthAction;
 
             if (userId)
             {
-                [userIds addObject:userId];
+                [userIds insertObject:userId atIndex:0];
             }
             else
             {
                 // The user is not in Matrix. Mark it as NSNull in the result array
-                [userIds addObject:[NSNull null]];
+                [userIds insertObject:[NSNull null] atIndex:0];
             }
 
             // Go to the next 3PID
@@ -1345,13 +1345,19 @@ MXAuthAction;
             [self lookup3pidsNext:addresses forMedia:media resultBeingBuilt:userIds success:success failure:failure];
 
         } failure:^(NSError *error) {
-            failure(error);
+            if (failure)
+            {
+                failure(error);
+            }
         }];
     }
     else
     {
-        // We are done
-        success(userIds);
+        if (success)
+        {
+            // We are done
+            success(userIds);
+        }
     }
 }
 
