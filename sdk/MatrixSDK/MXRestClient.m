@@ -113,7 +113,10 @@ MXAuthAction;
 
 - (void)close
 {
-    //@TODO
+    homeserver = nil;
+    credentials = nil;
+    httpClient = nil;
+    identityHttpClient = nil;
 }
 
 
@@ -1342,13 +1345,19 @@ MXAuthAction;
             [self lookup3pidsNext:addresses forMedia:media resultBeingBuilt:userIds success:success failure:failure];
 
         } failure:^(NSError *error) {
-            failure(error);
+            if (failure)
+            {
+                failure(error);
+            }
         }];
     }
     else
     {
-        // We are done
-        success(userIds);
+        if (success)
+        {
+            // We are done
+            success(userIds);
+        }
     }
 }
 

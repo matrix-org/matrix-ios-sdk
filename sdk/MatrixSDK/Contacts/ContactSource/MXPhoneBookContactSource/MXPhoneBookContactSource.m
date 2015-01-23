@@ -1,12 +1,12 @@
 /*
  Copyright 2014 OpenMarket Ltd
- 
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
- 
+
  http://www.apache.org/licenses/LICENSE-2.0
- 
+
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,26 +14,24 @@
  limitations under the License.
  */
 
-#import <Foundation/Foundation.h>
+#import "MXPhoneBookContactSource.h"
 
-#import "MXEvent.h"
-#import "MXJSONModels.h"
+@interface MXPhoneBookContactSource()
+{
+    MXContactsCallbackBlock onUpdateListener;
+}
+@end
 
-@interface MXTools : NSObject
+@implementation MXPhoneBookContactSource
+@synthesize onUpdateListener;
 
-+ (MXEventTypeString)eventTypeString:(MXEventType)eventType;
-+ (MXEventType)eventType:(MXEventTypeString)eventTypeString;
+- (NSString *)name
+{
+    return @"Phonebook";
+}
 
-+ (MXMembership)membership:(MXMembershipString)membershipString;
-
-+ (MXPresence)presence:(MXPresenceString)presenceString;
-+ (MXPresenceString)presenceString:(MXPresence)presence;
-
-/**
- Generate a random secret key.
- 
- @return the secret.
- */
-+ (NSString*)generateSecret;
+- (void)loadContacts:(void (^)(NSDictionary *contacts))success failure:(void (^)(NSError *error))failure;
+{
+}
 
 @end

@@ -35,7 +35,7 @@
 @property (nonatomic, readonly) NSString *displayname;
 
 /**
- The url of the user of the avatar.
+ The url of the avatar of the user.
   */
 @property (nonatomic, readonly) NSString *avatarUrl;
 
