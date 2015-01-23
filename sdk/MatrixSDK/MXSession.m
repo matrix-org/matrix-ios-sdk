@@ -438,6 +438,7 @@ onServerSyncDone:(void (^)())onServerSyncDone
     [users removeAllObjects];
 
     _myUser = nil;
+    matrixRestClient = nil;
 }
 
 

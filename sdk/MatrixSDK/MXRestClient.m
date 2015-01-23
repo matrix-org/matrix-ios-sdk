@@ -113,7 +113,10 @@ MXAuthAction;
 
 - (void)close
 {
-    //@TODO
+    homeserver = nil;
+    credentials = nil;
+    httpClient = nil;
+    identityHttpClient = nil;
 }
 
 
