@@ -174,6 +174,10 @@ onServerSyncDone:(void (^)())onServerSyncDone
             {
                 MXUser *user = [self getOrCreateUser:userPresenceEvent.content[@"user_id"]];
                 [user updateWithPresenceEvent:userPresenceEvent];
+                if ([user.userId isEqualToString:matrixRestClient.credentials.userId]) {
+                    // Update myUser instance too
+                    [_myUser updateWithPresenceEvent:userPresenceEvent];
+                }
             }
 
             NSLog(@"Resume the events stream from %@", _store.eventStreamToken);
@@ -383,7 +387,7 @@ onServerSyncDone:(void (^)())onServerSyncDone
     }
 }
 
-- (void) handlePresenceEvent:(MXEvent *)event direction:(MXEventDirection)direction
+- (void)handlePresenceEvent:(MXEvent *)event direction:(MXEventDirection)direction
 {
     // Update MXUser with presence data
     NSString *userId = event.userId;
@@ -391,6 +395,10 @@ onServerSyncDone:(void (^)())onServerSyncDone
     {
         MXUser *user = [self getOrCreateUser:userId];
         [user updateWithPresenceEvent:event];
+        if (_myUser && [userId isEqualToString:_myUser.userId]) {
+            // Update myUser instance too
+            [_myUser updateWithPresenceEvent:event];
+        }
     }
     
     [self notifyListeners:event direction:direction];
