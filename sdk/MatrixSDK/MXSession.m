@@ -144,6 +144,8 @@ onServerSyncDone:(void (^)())onServerSyncDone
 
         // Create the user's profile from the store
         _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId andDisplayname:_store.userDisplayname andAvatarUrl:_store.userAvatarUrl andMatrixSession:self];
+        // And store him as a common MXUser
+        users[matrixRestClient.credentials.userId] = _myUser;
 
         // Create MXRooms from their states stored in the store
         NSDate *startDate = [NSDate date];
@@ -383,7 +385,7 @@ onServerSyncDone:(void (^)())onServerSyncDone
     }
 }
 
-- (void) handlePresenceEvent:(MXEvent *)event direction:(MXEventDirection)direction
+- (void)handlePresenceEvent:(MXEvent *)event direction:(MXEventDirection)direction
 {
     // Update MXUser with presence data
     NSString *userId = event.userId;
