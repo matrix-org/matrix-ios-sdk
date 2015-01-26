@@ -29,4 +29,11 @@
 + (MXPresence)presence:(MXPresenceString)presenceString;
 + (MXPresenceString)presenceString:(MXPresence)presence;
 
+/**
+ Generate a random secret key.
+ 
+ @return the secret.
+ */
++ (NSString*)generateSecret;
+
 @end

@@ -80,7 +80,7 @@
 
 - (void)setDisplayname:(NSString *)displayname
 {
-    if (mxSession.store.isPermanent && (_displayname != displayname || NO == [_displayname isEqualToString:displayname]))
+    if (mxSession.store.isPermanent && _displayname != displayname && NO == [_displayname isEqualToString:displayname])
     {
         mxSession.store.userDisplayname = displayname;
         if ([mxSession.store respondsToSelector:@selector(commit)])
@@ -93,7 +93,7 @@
 
 -(void)setAvatarUrl:(NSString *)avatarUrl
 {
-    if (mxSession.store.isPermanent && (_avatarUrl != avatarUrl || NO == [_avatarUrl isEqualToString:avatarUrl]))
+    if (mxSession.store.isPermanent && _avatarUrl != avatarUrl && NO == [_avatarUrl isEqualToString:avatarUrl])
     {
         mxSession.store.userAvatarUrl = avatarUrl;
         if ([mxSession.store respondsToSelector:@selector(commit)])

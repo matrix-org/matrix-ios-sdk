@@ -16,25 +16,12 @@
 
 #import <UIKit/UIKit.h>
 
-#import "MasterTabBarController.h"
-#import "MXCAlert.h"
+@interface RoomMemberActionsCell : UITableViewCell
+@property (weak, nonatomic) IBOutlet UIButton *rightButton;
+@property (weak, nonatomic) IBOutlet UIButton *leftButton;
 
-@interface AppDelegate : UIResponder <UIApplicationDelegate, UITabBarControllerDelegate> {
-    BOOL isAPNSRegistered;
-}
 
-@property (strong, nonatomic) UIWindow *window;
-@property (strong, nonatomic) MasterTabBarController *masterTabBarController;
-
-@property (strong, nonatomic) MXCAlert *errorNotification;
-
-+ (AppDelegate*)theDelegate;
-
-- (void)registerUserNotificationSettings;
-
-- (void)logout;
-
-- (MXCAlert*)showErrorAsAlert:(NSError*)error;
-
+-(void) setLeftButtonText:(NSString*)text;
+-(void) setRightButtonText:(NSString*)text;
 @end
 

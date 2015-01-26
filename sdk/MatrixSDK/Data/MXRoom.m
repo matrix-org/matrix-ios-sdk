@@ -158,12 +158,6 @@
         // Store where to start pagination
         [mxSession.store storePaginationTokenOfRoom:_state.roomId andToken:roomMessages.start];
     }
-
-    // Commit store changes
-    if ([mxSession.store respondsToSelector:@selector(commit)])
-    {
-        [mxSession.store commit];
-    }
 }
 
 - (void)handleMessage:(MXEvent*)event direction:(MXEventDirection)direction pagFrom:(NSString*)pagFrom
@@ -322,6 +316,12 @@
 
                                                 // Process these new events
                                                 [self handleMessages:paginatedResponse direction:MXEventDirectionBackwards isTimeOrdered:NO];
+
+                                                // Commit store changes
+                                                if ([mxSession.store respondsToSelector:@selector(commit)])
+                                                {
+                                                    [mxSession.store commit];
+                                                }
                                                 
                                                 // Inform the method caller
                                                 complete();

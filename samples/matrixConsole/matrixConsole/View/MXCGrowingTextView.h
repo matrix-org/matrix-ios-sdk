@@ -13,28 +13,9 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  */
+#import <MatrixSDK/MatrixSDK.h>
 
-#import <UIKit/UIKit.h>
+#import "HPGrowingTextView.h"
 
-#import "MasterTabBarController.h"
-#import "MXCAlert.h"
-
-@interface AppDelegate : UIResponder <UIApplicationDelegate, UITabBarControllerDelegate> {
-    BOOL isAPNSRegistered;
-}
-
-@property (strong, nonatomic) UIWindow *window;
-@property (strong, nonatomic) MasterTabBarController *masterTabBarController;
-
-@property (strong, nonatomic) MXCAlert *errorNotification;
-
-+ (AppDelegate*)theDelegate;
-
-- (void)registerUserNotificationSettings;
-
-- (void)logout;
-
-- (MXCAlert*)showErrorAsAlert:(NSError*)error;
-
+@interface MXCGrowingTextView : HPGrowingTextView
 @end
-

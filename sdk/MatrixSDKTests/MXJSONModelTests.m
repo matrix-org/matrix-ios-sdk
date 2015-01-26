@@ -61,7 +61,7 @@
 {
     [super setUp];
 
-    httpClient = [[MXHTTPClient alloc] initWithHomeServer:kMXTestsHomeServerURL];
+    httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", kMXTestsHomeServerURL, kMXAPIPrefixPath]];
 }
 
 - (void)tearDown

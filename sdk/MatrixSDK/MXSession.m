@@ -144,6 +144,8 @@ onServerSyncDone:(void (^)())onServerSyncDone
 
         // Create the user's profile from the store
         _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId andDisplayname:_store.userDisplayname andAvatarUrl:_store.userAvatarUrl andMatrixSession:self];
+        // And store him as a common MXUser
+        users[matrixRestClient.credentials.userId] = _myUser;
 
         // Create MXRooms from their states stored in the store
         NSDate *startDate = [NSDate date];
@@ -218,7 +220,7 @@ onServerSyncDone:(void (^)())onServerSyncDone
                             MXPaginationResponse *roomMessages = [MXPaginationResponse modelFromJSON:[roomDict objectForKey:@"messages"]];
 
                             [room handleMessages:roomMessages
-                                       direction:MXEventDirectionSync isTimeOrdered:YES];
+                                       direction:MXEventDirectionBackwards isTimeOrdered:YES];
 
                             // If the initialSync returns less messages than requested, we got all history from the home server
                             if (roomMessages.chunk.count < initialSyncMessagesLimit)
@@ -383,7 +385,7 @@ onServerSyncDone:(void (^)())onServerSyncDone
     }
 }
 
-- (void) handlePresenceEvent:(MXEvent *)event direction:(MXEventDirection)direction
+- (void)handlePresenceEvent:(MXEvent *)event direction:(MXEventDirection)direction
 {
     // Update MXUser with presence data
     NSString *userId = event.userId;
@@ -438,6 +440,7 @@ onServerSyncDone:(void (^)())onServerSyncDone
     [users removeAllObjects];
 
     _myUser = nil;
+    matrixRestClient = nil;
 }
 
 
@@ -575,7 +578,7 @@ onServerSyncDone:(void (^)())onServerSyncDone
         }
 
         // Clean the store
-        [_store deleteDataOfRoom:roomId];
+        [_store deleteRoom:roomId];
 
         // And remove the room from the list
         [rooms removeObjectForKey:roomId];

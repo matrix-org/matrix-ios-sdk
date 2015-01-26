@@ -48,11 +48,11 @@
 - (MXEvent*)eventWithEventId:(NSString*)eventId inRoom:(NSString*)roomId;
 
 /**
- Erase all data related to a room.
+ Erase a room and all related data.
  
  @param roomId the id of the room.
  */
-- (void)deleteDataOfRoom:(NSString*)roomId;
+- (void)deleteRoom:(NSString*)roomId;
 
 /**
  Erase all data from the store.

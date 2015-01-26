@@ -21,12 +21,16 @@
 #import "MXJSONModels.h"
 
 
+#pragma mark - Constants definitions
 /**
- Room visibility
+ Prefix used in path of home server API requests.
  */
-typedef NSString* MXRoomVisibility;
-FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPublic;
-FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
+FOUNDATION_EXPORT NSString *const kMXAPIPrefixPath;
+
+/**
+ Prefix used in path of identity server API requests.
+ */
+FOUNDATION_EXPORT NSString *const kMXIdentityAPIPrefixPath;
 
 /**
  Scheme used in Matrix content URIs.
@@ -36,6 +40,22 @@ FOUNDATION_EXPORT NSString *const kMXContentUriScheme;
  Matrix content respository path.
  */
 FOUNDATION_EXPORT NSString *const kMXContentPrefixPath;
+
+/**
+ Room visibility
+ */
+typedef NSString* MXRoomVisibility;
+FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPublic;
+FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
+
+/**
+ Types of third party media.
+ The list is not exhautive and depends on the Identity server capabilities.
+ */
+typedef NSString* MX3PIDMedium;
+FOUNDATION_EXPORT NSString *const kMX3PIDMediumEmail;
+FOUNDATION_EXPORT NSString *const kMX3PIDMediumMSISDN;
+
 
 /**
  Methods of thumnailing supported by the Matrix content repository.
@@ -58,10 +78,33 @@ typedef enum : NSUInteger
 } MXThumbnailingMethod;
 
 
+/**
+ `MXRestClient` makes requests to Matrix servers.
+ 
+ It is the single point to send requests to Matrix servers which are:
+    - the specified Matrix home server
+    - the Matrix content repository manage by this home server
+    - the specified Matrix identity server
+ */
 @interface MXRestClient : NSObject
 
+/**
+ The homeserver.
+ */
 @property (nonatomic, readonly) NSString *homeserver;
+
+/**
+ The user credentials on this home server.
+ */
 @property (nonatomic, readonly) MXCredentials *credentials;
+
+/**
+ The identity server.
+ By default, it points to the defined home server. If needed, change it by setting
+ this property.
+ */
+@property (nonatomic) NSString *identityServer;
+
 
 -(id)initWithHomeServer:(NSString *)homeserver;
 
@@ -80,9 +123,32 @@ typedef enum : NSUInteger
                 failure:(void (^)(NSError *error))failure;
 
 /**
+ Generic registration action request.
+ 
+ As described in http://matrix.org/docs/spec/#registration-and-login some registration flows require to
+ complete several stages in order to complete user registration.
+ This can lead to make several requests to the home server with different kinds of parameters.
+ This generic method with open parameters and response exists to handle any kind of registration flow stage.
+
+ At the end of the registration process, the SDK user should be able to construct a MXCredentials object
+ from the response of the last registration action request.
+
+ @param parameters the parameters required for the current registration stage
+ @param success A block object called when the operation succeeds. It provides the raw JSON response
+                from the server.
+ @param failure A block object called when the operation fails.
+ */
+- (void)register:(NSDictionary*)parameters
+         success:(void (^)(NSDictionary *JSONResponse))success
+         failure:(void (^)(NSError *error))failure;
+
+/**
  Register a user with the password-based flow.
  
- @param user the user id (ex: "@bob:matrix.org") or the user localpart (ex: "bob") of the user to register.
+ It implements the password-based registration flow described at
+ http://matrix.org/docs/spec/#password-based
+ 
+ @param user the user id (ex: "@bob:matrix.org") or the user id localpart (ex: "bob") of the user to register.
  @param password his password.
  @param success A block object called when the operation succeeds. It provides credentials to use to create a MXRestClient.
  @param failure A block object called when the operation fails.
@@ -103,9 +169,27 @@ typedef enum : NSUInteger
              failure:(void (^)(NSError *error))failure;
 
 /**
+ Generic login action request.
+
+ @see the register method for explanation of flows that require to make several request to the
+ home server.
+
+ @param parameters the parameters required for the current login stage
+ @param success A block object called when the operation succeeds. It provides the raw JSON response
+                from the server.
+ @param failure A block object called when the operation fails.
+ */
+- (void)login:(NSDictionary*)parameters
+      success:(void (^)(NSDictionary *JSONResponse))success
+      failure:(void (^)(NSError *error))failure;
+
+/**
  Log a user in with the password-based flow.
  
- @param user the user id (ex: "@bob:matrix.org") or the user localpart (ex: "bob") of the user to log in.
+ It implements the password-based registration flow described at
+ http://matrix.org/docs/spec/#password-based
+ 
+ @param user the user id (ex: "@bob:matrix.org") or the user id localpart (ex: "bob") of the user to log in.
  @param password his password.
  @param success A block object called when the operation succeeds. It provides credentials to use to create a MXRestClient.
  @param failure A block object called when the operation fails.
@@ -568,8 +652,9 @@ typedef enum : NSUInteger
  @param success A block object called when the operation succeeds. It provides the uploaded content url.
  @param failure A block object called when the operation fails.
  @param uploadProgress A block object called when the upload progresses.
+ @return the created NSOperation
  */
-- (void)uploadContent:(NSData *)data
+- (NSOperation*)uploadContent:(NSData *)data
              mimeType:(NSString *)mimeType
               timeout:(NSTimeInterval)timeoutInSeconds
               success:(void (^)(NSString *url))success
@@ -593,5 +678,96 @@ typedef enum : NSUInteger
  @return the thumbnail HTTP URL. nil if the Matrix content URI is invalid.
  */
 - (NSString*)urlOfContentThumbnail:(NSString*)mxcContentURI withSize:(CGSize)thumbnailSize andMethod:(MXThumbnailingMethod)thumbnailingMethod;
+
+
+#pragma mark - Identity server API
+/**
+ Retrieve a user matrix id from a 3rd party id.
+
+ @param address the id of the user in the 3rd party system.
+ @param medium the 3rd party system (ex: "email").
+
+ @param success A block object called when the operation succeeds. It provides the Matrix user id.
+                It is nil if the user is not found.
+ @param failure A block object called when the operation fails.
+ */
+- (void)lookup3pid:(NSString*)address
+         forMedium:(MX3PIDMedium)medium
+           success:(void (^)(NSString *userId))success
+           failure:(void (^)(NSError *error))failure;
+
+/**
+ Retrieve user matrix ids from a list of 3rd party ids.
+ 
+ `addresses` and `media` arrays must have the same count.
+
+ @param addresses the list of ids of the user in the 3rd party system.
+ @param media the list of 3rd party systems (MX3PIDMedium type).
+
+ @param success A block object called when the operation succeeds. It provides a list of Matrix user ids
+                in the same order as passed arrays. A not found Matrix user id is indicated by NSNull in this array
+ @param failure A block object called when the operation fails.
+ */
+- (void)lookup3pids:(NSArray*)addresses
+          forMedia:(NSArray*)media
+           success:(void (^)(NSArray *userIds))success
+           failure:(void (^)(NSError *error))failure;
+
+/**
+ Start the validation process of an email address.
+
+ The identity server will send a validation token to this email.
+ This validation token must be then send back to the identity server with [MXRestClient validateEmail] 
+ in order to complete the email authentication.
+
+ @param email the email address to validate.
+ @param clientSecret a secret key generated by the client. ([MXTools generateSecret] creates such key)
+ @param sendAttempt the number of the attempt for the validation request. Increment this value to make the
+                    identity server resend the email. Keep it to retry the request in case the previous request
+                    failed.
+
+ @param success A block object called when the operation succeeds. It provides the id of the
+                email validation session. It must be then passed to [MXRestClient validateEmail].
+ @param failure A block object called when the operation fails.
+ */
+- (void)requestEmailValidation:(NSString*)email
+                  clientSecret:(NSString*)clientSecret
+                   sendAttempt:(NSUInteger)sendAttempt
+                       success:(void (^)(NSString *sid))success
+                       failure:(void (^)(NSError *error))failure;
+
+/**
+ Complete the email validation by sending the validation token the user received by email.
+
+ @param sid the id of the email validation session.
+ @param validationToken the validation token the user received by email.
+ @param clientSecret the same secret key used in [MXRestClient requestEmailValidation].
+
+ @param success A block object called when the operation succeeds. It indicates if the
+                validation has succeeded.
+ @param failure A block object called when the operation fails.
+ */
+- (void)validateEmail:(NSString*)sid
+      validationToken:(NSString*)validationToken
+         clientSecret:(NSString*)clientSecret
+              success:(void (^)(BOOL success))success
+              failure:(void (^)(NSError *error))failure;
+
+/**
+ Link an authenticated 3rd party id to a Matrix user id.
+
+ @param userId the Matrix user id to link the 3PID with.
+ @param sid the id provided during the 3PID validation session.
+ @param clientSecret the same secret key used in the validation session.
+
+ @param success A block object called when the operation succeeds. It provides the raw
+                server response.
+ @param failure A block object called when the operation fails.
+ */
+- (void)bind3PID:(NSString*)userId
+             sid:(NSString*)sid
+    clientSecret:(NSString*)clientSecret
+         success:(void (^)(NSDictionary *JSONResponse))success
+         failure:(void (^)(NSError *error))failure;
 
 @end

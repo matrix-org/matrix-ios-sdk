@@ -147,4 +147,9 @@
     return presenceString;
 }
 
++ (NSString *)generateSecret
+{
+    return [[NSProcessInfo processInfo] globallyUniqueString];
+}
+
 @end
