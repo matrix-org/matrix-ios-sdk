@@ -144,6 +144,8 @@ onServerSyncDone:(void (^)())onServerSyncDone
 
         // Create the user's profile from the store
         _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId andDisplayname:_store.userDisplayname andAvatarUrl:_store.userAvatarUrl andMatrixSession:self];
+        // And store him as a common MXUser
+        users[matrixRestClient.credentials.userId] = _myUser;
 
         // Create MXRooms from their states stored in the store
         NSDate *startDate = [NSDate date];
@@ -174,10 +176,6 @@ onServerSyncDone:(void (^)())onServerSyncDone
             {
                 MXUser *user = [self getOrCreateUser:userPresenceEvent.content[@"user_id"]];
                 [user updateWithPresenceEvent:userPresenceEvent];
-                if ([user.userId isEqualToString:matrixRestClient.credentials.userId]) {
-                    // Update myUser instance too
-                    [_myUser updateWithPresenceEvent:userPresenceEvent];
-                }
             }
 
             NSLog(@"Resume the events stream from %@", _store.eventStreamToken);
@@ -395,10 +393,6 @@ onServerSyncDone:(void (^)())onServerSyncDone
     {
         MXUser *user = [self getOrCreateUser:userId];
         [user updateWithPresenceEvent:event];
-        if (_myUser && [userId isEqualToString:_myUser.userId]) {
-            // Update myUser instance too
-            [_myUser updateWithPresenceEvent:event];
-        }
     }
     
     [self notifyListeners:event direction:direction];
