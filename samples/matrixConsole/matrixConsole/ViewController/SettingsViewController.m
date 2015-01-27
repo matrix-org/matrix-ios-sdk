@@ -26,10 +26,11 @@
 
 #define SETTINGS_SECTION_LINKED_EMAILS_INDEX 0
 #define SETTINGS_SECTION_NOTIFICATIONS_INDEX 1
-#define SETTINGS_SECTION_ROOMS_INDEX         2
-#define SETTINGS_SECTION_CONFIGURATION_INDEX 3
-#define SETTINGS_SECTION_COMMANDS_INDEX      4
-#define SETTINGS_SECTION_COUNT               5
+#define SETTINGS_SECTION_CONTACTS_INDEX      2
+#define SETTINGS_SECTION_ROOMS_INDEX         3
+#define SETTINGS_SECTION_CONFIGURATION_INDEX 4
+#define SETTINGS_SECTION_COMMANDS_INDEX      5
+#define SETTINGS_SECTION_COUNT               6
 
 #define SETTINGS_SECTION_ROOMS_DISPLAY_ALL_EVENTS_INDEX         0
 #define SETTINGS_SECTION_ROOMS_HIDE_UNSUPPORTED_MESSAGES_INDEX  1
@@ -67,6 +68,9 @@ NSString* const kCommandsDescriptionText = @"The following commands are availabl
     // Dynamic rows in the Linked emails section
     int submittedEmailRowIndex;
     int emailTokenRowIndex;
+    
+    // contacts
+    UISwitch *contactsSyncSwitch;
     
     // Notifications
     UISwitch *apnsNotificationsSwitch;
@@ -147,6 +151,7 @@ NSString* const kCommandsDescriptionText = @"The following commands are availabl
     unsupportedMsgSwitch = nil;
     sortMembersSwitch = nil;
     displayLeftMembersSwitch = nil;
+    contactsSyncSwitch = nil;
     
     inAppNotificationsRulesCell = nil;
     linkedEmailCell = nil;
@@ -630,6 +635,8 @@ NSString* const kCommandsDescriptionText = @"The following commands are availabl
         [AppSettings sharedSettings].sortMembersUsingLastSeenTime = sortMembersSwitch.on;
     } else if (sender == displayLeftMembersSwitch) {
         [AppSettings sharedSettings].displayLeftUsers = displayLeftMembersSwitch.on;
+    } else if (sender == contactsSyncSwitch) {
+    	[AppSettings sharedSettings].syncLocalContacts = contactsSyncSwitch.on;
     }
 }
 
@@ -710,6 +717,8 @@ NSString* const kCommandsDescriptionText = @"The following commands are availabl
         }
         
         return count;
+    } else if (section == SETTINGS_SECTION_CONTACTS_INDEX) {
+        return 1;
     } else if (section == SETTINGS_SECTION_ROOMS_INDEX) {
         return SETTINGS_SECTION_ROOMS_INDEX_COUNT;
     } else if (section == SETTINGS_SECTION_CONFIGURATION_INDEX) {
@@ -728,6 +737,8 @@ NSString* const kCommandsDescriptionText = @"The following commands are availabl
         if (indexPath.row == inAppNotifRulesRowIndex) {
             return 110;
         }
+        return 44;
+    } else if (indexPath.section == SETTINGS_SECTION_CONTACTS_INDEX) {
         return 44;
     } else if (indexPath.section == SETTINGS_SECTION_ROOMS_INDEX) {
         if (indexPath.row == SETTINGS_SECTION_ROOMS_SET_CACHE_SIZE_INDEX) {
@@ -769,6 +780,8 @@ NSString* const kCommandsDescriptionText = @"The following commands are availabl
         sectionHeader.text = @" Linked emails";
     } else if (section == SETTINGS_SECTION_NOTIFICATIONS_INDEX) {
         sectionHeader.text = @" Notifications";
+    } else if (section == SETTINGS_SECTION_CONTACTS_INDEX) {
+        sectionHeader.text = @" Contacts";
     } else if (section == SETTINGS_SECTION_ROOMS_INDEX) {
         sectionHeader.text = @" Rooms";
     } else if (section == SETTINGS_SECTION_CONFIGURATION_INDEX) {
@@ -782,6 +795,7 @@ NSString* const kCommandsDescriptionText = @"The following commands are availabl
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    MatrixSDKHandler *mxHandler = [MatrixSDKHandler sharedHandler];
     UITableViewCell *cell = nil;
     
     if (indexPath.section == SETTINGS_SECTION_LINKED_EMAILS_INDEX) {
@@ -826,6 +840,14 @@ NSString* const kCommandsDescriptionText = @"The following commands are availabl
             }
             cell = notificationsCell;
         }
+    } else if (indexPath.section == SETTINGS_SECTION_CONTACTS_INDEX) {
+         SettingsCellWithSwitch *contactsCell = [tableView dequeueReusableCellWithIdentifier:@"SettingsCellWithSwitch" forIndexPath:indexPath];
+        
+         contactsCell.settingLabel.text = @"Sync local contacts";
+         contactsCell.settingSwitch.on = [[AppSettings sharedSettings] syncLocalContacts];
+         contactsSyncSwitch = contactsCell.settingSwitch;
+         cell = contactsCell;
+        
     } else if (indexPath.section == SETTINGS_SECTION_ROOMS_INDEX) {
         if (indexPath.row == SETTINGS_SECTION_ROOMS_CLEAR_CACHE_INDEX) {
             cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"ClearCacheCell"];
@@ -833,7 +855,7 @@ NSString* const kCommandsDescriptionText = @"The following commands are availabl
                 cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"ClearCacheCell"];
             }
             
-            cell.textLabel.text = [NSString stringWithFormat:@"Clear cache (%@)", [NSByteCountFormatter stringFromByteCount:[MatrixSDKHandler sharedHandler].cachesSize countStyle:NSByteCountFormatterCountStyleFile]];
+            cell.textLabel.text = [NSString stringWithFormat:@"Clear cache (%@)", [NSByteCountFormatter stringFromByteCount:mxHandler.cachesSize countStyle:NSByteCountFormatterCountStyleFile]];
             cell.textLabel.textAlignment = NSTextAlignmentCenter;
             cell.textLabel.textColor =  [AppDelegate theDelegate].masterTabBarController.tabBar.tintColor;
         } else if (indexPath.row == SETTINGS_SECTION_ROOMS_SET_CACHE_SIZE_INDEX) {
@@ -842,7 +864,8 @@ NSString* const kCommandsDescriptionText = @"The following commands are availabl
             maxCacheSizeCell = (SettingsCellWithLabelAndSlider*)cell;
             
             maxCacheSizeCell.settingSlider.minimumValue = 0;
-            maxCacheSizeCell.settingSlider.value = [MatrixSDKHandler sharedHandler].currentMaxCachesSize;
+            maxCacheSizeCell.settingSlider.maximumValue = mxHandler.maxAllowedCachesSize;
+            maxCacheSizeCell.settingSlider.value = mxHandler.currentMaxCachesSize;
             
             [self onSliderValueChange:maxCacheSizeCell.settingSlider];
         
@@ -872,7 +895,6 @@ NSString* const kCommandsDescriptionText = @"The following commands are availabl
     } else if (indexPath.section == SETTINGS_SECTION_CONFIGURATION_INDEX) {
         SettingsCellWithTextView *configCell = [tableView dequeueReusableCellWithIdentifier:@"SettingsCellWithTextView" forIndexPath:indexPath];
         NSString* appVersion = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
-        MatrixSDKHandler *mxHandler = [MatrixSDKHandler sharedHandler];
         configCell.settingTextView.text = [NSString stringWithFormat:kConfigurationFormatText, appVersion, MatrixSDKVersion, mxHandler.homeServerURL, nil, mxHandler.userId, mxHandler.accessToken];
         cell = configCell;
     } else if (indexPath.section == SETTINGS_SECTION_COMMANDS_INDEX) {
