@@ -669,7 +669,7 @@ onServerSyncDone:(void (^)())onServerSyncDone
 {
     // must be done before deleted the listeners to avoid
     // ollection <__NSArrayM: ....> was mutated while being enumerated.'
-    NSArray* eventListeners = globalEventListeners;
+    NSArray* eventListeners = [globalEventListeners copy];
     
     for (MXSessionEventListener *listener in eventListeners)
     {
