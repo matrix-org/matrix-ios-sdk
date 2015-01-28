@@ -37,6 +37,7 @@ typedef enum : NSUInteger
     MXEventTypeRoomAliases,
     MXEventTypeRoomMessage,
     MXEventTypeRoomMessageFeedback,
+    MXEventTypeRoomRedaction,
     MXEventTypePresence,
     MXEventTypeTypingNotification,
 
@@ -58,6 +59,7 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomPowerLevels;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomAliases;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomMessage;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomMessageFeedback;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomRedaction;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringPresence;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringTypingNotification;
 
@@ -157,6 +159,9 @@ typedef enum : NSUInteger
 @property (nonatomic) NSUInteger requiredPowerLevel;
 @property (nonatomic) NSUInteger ageTs;
 @property (nonatomic) NSDictionary *prevContent;
+
+// In case of redaction, the event that has been redacted is specified in the redacts event level key
+@property (nonatomic) NSString *redacts;
 
 // @TODO: What are their types?
 @property (nonatomic) id prevState;
