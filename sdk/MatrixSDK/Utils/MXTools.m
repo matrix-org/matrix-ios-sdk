@@ -35,6 +35,7 @@
                  kMXEventTypeStringRoomAliases: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomAliases],
                  kMXEventTypeStringRoomMessage: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMessage],
                  kMXEventTypeStringRoomMessageFeedback: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMessageFeedback],
+                 kMXEventTypeStringRoomRedaction: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomRedaction],
                  kMXEventTypeStringPresence :[NSNumber numberWithUnsignedInteger:MXEventTypePresence],
                  kMXEventTypeStringTypingNotification :[NSNumber numberWithUnsignedInteger:MXEventTypeTypingNotification]
                  };
