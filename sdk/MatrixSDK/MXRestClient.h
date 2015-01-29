@@ -200,8 +200,22 @@ typedef enum : NSUInteger
 
 #pragma mark Push Notification Registration
 
+/**
+ Update the pusher for this device on the Home Server.
+ 
+ @param pushkey The pushkey for this pusher. This should be the APNS token formatted as required for your push gateway (base64 is the recommended formatting).
+ @param kind The kind of pusher your push gateway requires. Generally 'http', or an NSNull to disable the pusher.
+ @param appId The app ID of this application as required by your push gateway.
+ @param appDisplayName A human readable display name for this app.
+ @param deviceDisplayName A human readable display name for this device.
+ @param instanceHandle The instance handle for this device. Identifies this device in push rules.
+ @param lang The user's preferred language for push, eg. 'en' or 'en-US'
+ @param data Dictionary of data as required by your push gateway (generally the notification URI and aps-environment for APNS).
+ @param success A block object called when the operation succeeds. It provides credentials to use to create a MXRestClient.
+ @param failure A block object called when the operation fails.
+ */
 - (void)setPusherWithPushkey:(NSString *)pushkey
-                        kind:(NSString *)kind
+                        kind:(NSObject *)kind
                        appId:(NSString *)appId
               appDisplayName:(NSString *)appDisplayName
            deviceDisplayName:(NSString *)deviceDisplayName

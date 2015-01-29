@@ -167,7 +167,7 @@ MXAuthAction;
 #pragma mark Push Notification Registration
 
 - (void)setPusherWithPushkey:(NSString *)pushkey
-                        kind:(NSString *)kind
+                        kind:(NSObject *)kind
                        appId:(NSString *)appId
               appDisplayName:(NSString *)appDisplayName
            deviceDisplayName:(NSString *)deviceDisplayName
