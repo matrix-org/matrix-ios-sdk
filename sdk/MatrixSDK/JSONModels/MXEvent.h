@@ -179,4 +179,12 @@ typedef enum : NSUInteger
  */
 - (BOOL)isState;
 
+/**
+ Returns a pruned version of the event, which removes all keys we
+ don't know about or think could potentially be dodgy.
+ This is used when we "redact" an event. We want to remove all fields that the user has specified,
+ but we do want to keep necessary information like type, state_key etc.
+ */
+- (MXEvent*)prune;
+
 @end
