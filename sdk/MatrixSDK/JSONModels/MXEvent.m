@@ -172,7 +172,7 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     
     // Note: Contrary to server, we ignore here the "unsigned" event level key.
     
-    return [[MXEvent alloc] initWithDictionary:prunedEventDict error:nil];
+    return [MXEvent modelFromJSON:prunedEventDict];
 }
 
 #pragma mark - private
