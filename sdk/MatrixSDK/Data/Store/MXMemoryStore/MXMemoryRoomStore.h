@@ -35,6 +35,14 @@
 - (void)storeEvent:(MXEvent*)event direction:(MXEventDirection)direction;
 
 /**
+ Replace room event (used in case of redaction for example).
+ This action is ignored if no event was stored previously with the same event id.
+ 
+ @param event the MXEvent object to store.
+ */
+- (void)replaceEvent:(MXEvent*)event;
+
+/**
  Get an event from this room.
 
  @return the MXEvent object or nil if not found.

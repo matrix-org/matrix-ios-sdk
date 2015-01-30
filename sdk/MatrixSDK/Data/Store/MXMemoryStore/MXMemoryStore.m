@@ -45,6 +45,12 @@
     [roomStore storeEvent:event direction:direction];
 }
 
+- (void)replaceEvent:(MXEvent *)event inRoom:(NSString *)roomId
+{
+    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    [roomStore replaceEvent:event];
+}
+
 - (MXEvent *)eventWithEventId:(NSString *)eventId inRoom:(NSString *)roomId
 {
     MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];

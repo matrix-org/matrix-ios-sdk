@@ -194,6 +194,16 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     }
 }
 
+- (void)replaceEvent:(MXEvent*)event inRoom:(NSString*)roomId
+{
+    [super replaceEvent:event inRoom:roomId];
+    
+    if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
+    {
+        [roomsToCommitForMessages addObject:roomId];
+    }
+}
+
 - (void)deleteRoom:(NSString *)roomId
 {
     [super deleteRoom:roomId];

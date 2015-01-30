@@ -55,6 +55,20 @@
     }
 }
 
+- (void)replaceEvent:(MXEvent*)event
+{
+    NSUInteger index = messages.count;
+    while (index--)
+    {
+        MXEvent *anEvent = [messages objectAtIndex:index];
+        if ([anEvent.eventId isEqualToString:event.eventId])
+        {
+            [messages replaceObjectAtIndex:index withObject:event];
+            break;
+        }
+    }
+}
+
 - (MXEvent *)eventWithEventId:(NSString *)eventId
 {
     MXEvent *theEvent;
@@ -68,6 +82,7 @@
     }
     return theEvent;
 }
+
 
 - (void)resetPagination
 {

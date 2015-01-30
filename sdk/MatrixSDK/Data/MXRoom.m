@@ -162,7 +162,9 @@
 
 - (void)handleMessage:(MXEvent*)event direction:(MXEventDirection)direction pagFrom:(NSString*)pagFrom
 {
-    if (event.isState)
+    // Note: state event is already handled when direction is forward (see handleLiveEvent)
+    // Question: Can we remove the state event handling from handleLiveEvent, and handle them here in all directions?
+    if (event.isState && direction != MXEventDirectionForwards)
     {
         [self handleStateEvent:event direction:direction];
     }
@@ -214,6 +216,27 @@
     }
 }
 
+#pragma mark - Handle redaction
+
+- (void)handleRedaction:(MXEvent*)redactionEvent
+{
+    // Check whether the redacted event has been already processed
+    MXEvent *redactedEvent = [mxSession.store eventWithEventId:redactionEvent.redacts inRoom:_state.roomId];
+    if (redactedEvent)
+    {
+        // Redact the stored event
+        redactedEvent = [redactedEvent prune];
+        redactedEvent.redactedBecause = redactionEvent.originalDictionary;
+        
+        if (redactedEvent.isState) {
+            // FIXME: The room state must be refreshed here since this redacted event.
+        }
+        
+        // Store the event
+        [mxSession.store replaceEvent:redactedEvent inRoom:_state.roomId];
+    }
+}
+
 
 #pragma mark - Handle live event
 - (void)handleLiveEvent:(MXEvent*)event
@@ -240,7 +263,11 @@
                     [mxSession.store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
                 }
             }
-
+            else if (event.eventType == MXEventTypeRoomRedaction)
+            {
+                [self handleRedaction:event];
+            }
+            
             // Make sure we have not processed this event yet
             MXEvent *storedEvent = [mxSession.store eventWithEventId:event.eventId inRoom:_state.roomId];
             if (!storedEvent)
