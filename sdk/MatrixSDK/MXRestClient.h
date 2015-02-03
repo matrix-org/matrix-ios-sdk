@@ -497,6 +497,22 @@ typedef enum : NSUInteger
                              failure:(void (^)(NSError *error))failure;
 
 /**
+ Redact an event in a room.
+ 
+ @param eventId the id of the redacted event.
+ @param roomId the id of the room.
+ @param reason the redaction reason (optional).
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)redactEvent:(NSString*)eventId
+             inRoom:(NSString*)roomId
+             reason:(NSString*)reason
+            success:(void (^)())success
+            failure:(void (^)(NSError *error))failure;
+
+/**
  Get all the current information for this room, including messages and state events.
  
  @param roomId the id of the room.

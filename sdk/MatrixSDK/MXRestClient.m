@@ -823,6 +823,40 @@ MXAuthAction;
      }];
 }
 
+- (void)redactEvent:(NSString*)eventId
+             inRoom:(NSString*)roomId
+             reason:(NSString*)reason
+            success:(void (^)())success
+            failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"rooms/%@/redact/%@", roomId, eventId];
+    
+    // All query parameters are optional. Fill the request parameters on demand
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+    if (reason)
+    {
+        parameters[@"reason"] = reason;
+    }
+    
+    [httpClient requestWithMethod:@"POST"
+                             path:path
+                       parameters:parameters
+                          success:^(NSDictionary *JSONResponse)
+     {
+         if (success)
+         {
+             success();
+         }
+     }
+                          failure:^(NSError *error)
+     {
+         if (failure)
+         {
+             failure(error);
+         }
+     }];
+}
+
 - (void)initialSyncOfRoom:(NSString*)roomId
                 withLimit:(NSInteger)limit
                   success:(void (^)(NSDictionary *JSONData))success

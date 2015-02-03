@@ -484,6 +484,14 @@
     [mxSession.matrixRestClient sendTypingNotificationInRoom:_state.roomId typing:typing timeout:timeout success:success failure:failure];
 }
 
+- (void)redactEvent:(NSString*)eventId
+             reason:(NSString*)reason
+            success:(void (^)())success
+            failure:(void (^)(NSError *error))failure
+{
+    [mxSession.matrixRestClient redactEvent:eventId inRoom:_state.roomId reason:reason success:success failure:failure];
+}
+
 
 #pragma mark - Events listeners
 - (id)listenToEvents:(MXOnRoomEvent)onEvent

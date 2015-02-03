@@ -286,6 +286,19 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
                        success:(void (^)())success
                        failure:(void (^)(NSError *error))failure;
 
+/**
+ Redact an event in this room.
+ 
+ @param eventId the id of the redacted event.
+ @param reason the redaction reason (optional).
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)redactEvent:(NSString*)eventId
+             reason:(NSString*)reason
+            success:(void (^)())success
+            failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Events listeners
 /**
