@@ -70,9 +70,6 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 
     if (self)
     {
-        // Then, compute eventType
-        eventType = [MXTools eventType:_type];
-
         if (MXEventTypePresence == eventType)
         {
             // Workaround: Presence events provided by the home server do not contain userId
@@ -186,7 +183,15 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     return [MXEvent modelFromJSON:prunedEventDict];
 }
 
+
 #pragma mark - private
+- (void)setType:(MXEventTypeString)type
+{
+    _type = type;
+
+    // Compute eventType
+    eventType = [MXTools eventType:_type];
+}
 
 - (NSMutableDictionary*)filterInEventWithKeys:(NSArray*)keys
 {
