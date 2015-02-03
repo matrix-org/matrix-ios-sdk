@@ -162,11 +162,19 @@
 
 - (void)handleMessage:(MXEvent*)event direction:(MXEventDirection)direction pagFrom:(NSString*)pagFrom
 {
-    // Note: state event is already handled when direction is forward (see handleLiveEvent)
-    // Question: Can we remove the state event handling from handleLiveEvent, and handle them here in all directions?
-    if (event.isState && direction != MXEventDirectionForwards)
+    // Consider here state event
+    if (event.isState)
     {
         [self handleStateEvent:event direction:direction];
+        
+        // Update store with new room state once a live event has been processed
+        if (direction == MXEventDirectionForwards)
+        {
+            if ([mxSession.store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
+            {
+                [mxSession.store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
+            }
+        }
     }
 
     // Notify listener only for past events here
@@ -241,43 +249,29 @@
 #pragma mark - Handle live event
 - (void)handleLiveEvent:(MXEvent*)event
 {
-    switch (event.eventType)
+    // Handle first typing notifications
+    if (event.eventType == MXEventTypeTypingNotification)
     {
-        case MXEventTypeTypingNotification:
+        // Typing notifications events are not room messages nor room state events
+        // They are just volatile information
+        _typingUsers = event.content[@"user_ids"];
+    }
+    else
+    {
+        // Make sure we have not processed this event yet
+        MXEvent *storedEvent = [mxSession.store eventWithEventId:event.eventId inRoom:_state.roomId];
+        if (!storedEvent)
         {
-            // Typing notifications events are not room messages nor room state events
-            // They are just volatile information
-            _typingUsers = event.content[@"user_ids"];
-            break;
-        }
-
-        default:
-        {
-            if (event.isState)
-            {
-                [self handleStateEvent:event direction:MXEventDirectionForwards];
-
-                // Update store with new room state once a live event has been processed
-                if ([mxSession.store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
-                {
-                    [mxSession.store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
-                }
-            }
-            else if (event.eventType == MXEventTypeRoomRedaction)
+            // Handle here redaction event from live event stream
+            if (event.eventType == MXEventTypeRoomRedaction)
             {
                 [self handleRedaction:event];
             }
             
-            // Make sure we have not processed this event yet
-            MXEvent *storedEvent = [mxSession.store eventWithEventId:event.eventId inRoom:_state.roomId];
-            if (!storedEvent)
-            {
-                [self handleMessage:event direction:MXEventDirectionForwards pagFrom:nil];
-
-                // Store the event
-                [mxSession.store storeEventForRoom:_state.roomId event:event direction:MXEventDirectionForwards];
-            }
-            break;
+            [self handleMessage:event direction:MXEventDirectionForwards pagFrom:nil];
+            
+            // Store the event
+            [mxSession.store storeEventForRoom:_state.roomId event:event direction:MXEventDirectionForwards];
         }
     }
 
