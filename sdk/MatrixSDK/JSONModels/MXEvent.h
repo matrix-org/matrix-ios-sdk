@@ -157,7 +157,6 @@ typedef enum : NSUInteger
 @property (nonatomic) NSString *stateKey;
 
 @property (nonatomic) NSUInteger requiredPowerLevel;
-@property (nonatomic) NSUInteger ageTs;
 @property (nonatomic) NSDictionary *prevContent;
 
 // In case of redaction, the event that has been redacted is specified in the redacts event level key
