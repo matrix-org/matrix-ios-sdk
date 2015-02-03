@@ -134,13 +134,8 @@ typedef enum : NSUInteger
 @property (nonatomic) NSString *eventId;
 
 /**
- The enum version of the event type.
- */
-@property (nonatomic) MXEventType eventType;
-
-/**
  The string event type as provided by the home server.
- Unlike eventType, this field is always filled even for custom events.
+ Unlike [MXEvent eventType], this field is always filled even for custom events.
  */
 @property (nonatomic) MXEventTypeString type;
 
@@ -195,6 +190,12 @@ typedef enum : NSUInteger
  which may include a reason.
  */
 @property (nonatomic) NSDictionary *redactedBecause;
+
+
+/**
+ The enum version of the event type.
+ */
+- (MXEventType)eventType;
 
 /**
  Indicates if the event hosts state data

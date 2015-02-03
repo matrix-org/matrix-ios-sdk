@@ -50,6 +50,12 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 
 
 #pragma mark - MXEvent
+@interface MXEvent ()
+{
+    MXEventType eventType;
+}
+@end
+
 @implementation MXEvent
 
 - (NSString *)description
@@ -65,9 +71,9 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     if (self)
     {
         // Then, compute eventType
-        _eventType = [MXTools eventType:_type];
+        eventType = [MXTools eventType:_type];
 
-        if (MXEventTypePresence == self.eventType)
+        if (MXEventTypePresence == eventType)
         {
             // Workaround: Presence events provided by the home server do not contain userId
             // in the root of the JSON event object but under its content sub object.
@@ -85,6 +91,11 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     }
 
     return self;
+}
+
+- (MXEventType)eventType
+{
+    return eventType;
 }
 
 - (BOOL)isState
@@ -112,7 +123,7 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     NSMutableDictionary *prunedEventDict = [self filterInEventWithKeys:allowedKeys];
     
     // Add filtered content, allowed keys in content depends on the event type
-    switch (_eventType)
+    switch (eventType)
     {
         case MXEventTypeRoomMember:
         {
