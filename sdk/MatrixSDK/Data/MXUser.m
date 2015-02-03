@@ -58,8 +58,9 @@
     MXRoomMemberEventContent *roomMemberContent = [MXRoomMemberEventContent modelFromJSON:roomMemberEvent.content];
 
     // Update the MXUser only if there is change
-    if (NO == [_displayname isEqualToString:roomMemberContent.displayname]
-        || NO == [_avatarUrl isEqualToString:roomMemberContent.avatarUrl])
+    if ([roomMemberContent.membership isEqualToString:kMXMembershipStringJoin]
+        && (NO == [_displayname isEqualToString:roomMemberContent.displayname]
+            || NO == [_avatarUrl isEqualToString:roomMemberContent.avatarUrl]))
     {
         self.displayname = [roomMemberContent.displayname copy];
         self.avatarUrl = [roomMemberContent.avatarUrl copy];

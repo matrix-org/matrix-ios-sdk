@@ -38,6 +38,15 @@
 - (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXEventDirection)direction;
 
 /**
+ Replace a room event (in case of redaction for example).
+ This action is ignored if no event was stored previously with the same event id.
+ 
+ @param event the MXEvent object to store.
+ @param roomId the id of the room.
+ */
+- (void)replaceEvent:(MXEvent*)event inRoom:(NSString*)roomId;
+
+/**
  Get an event in a room from the store.
 
  @param eventId the id of the event to retrieve.
@@ -48,11 +57,11 @@
 - (MXEvent*)eventWithEventId:(NSString*)eventId inRoom:(NSString*)roomId;
 
 /**
- Erase all data related to a room.
+ Erase a room and all related data.
  
  @param roomId the id of the room.
  */
-- (void)deleteDataOfRoom:(NSString*)roomId;
+- (void)deleteRoom:(NSString*)roomId;
 
 /**
  Erase all data from the store.
@@ -135,6 +144,12 @@
  */
 - (void)commit;
 
+/**
+ Close the store.
+ 
+ Any pending operation must be complete in this call.
+ */
+- (void)close;
 
 #pragma mark - Permanent storage
 /**

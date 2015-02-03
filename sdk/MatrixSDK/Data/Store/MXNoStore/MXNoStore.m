@@ -62,6 +62,15 @@
     }
 }
 
+- (void)replaceEvent:(MXEvent *)event inRoom:(NSString *)roomId
+{
+    // Only the last message is stored
+    MXEvent *lastMessage = lastMessages[roomId];
+    if ([lastMessage.eventId isEqualToString:event.eventId]) {
+        lastMessages[roomId] = event;
+    }
+}
+
 - (MXEvent *)eventWithEventId:(NSString *)eventId inRoom:(NSString *)roomId
 {
     // Events are not stored. So, we cannot find it.
@@ -70,7 +79,7 @@
     return nil;
 }
 
-- (void)deleteDataOfRoom:(NSString *)roomId
+- (void)deleteRoom:(NSString *)roomId
 {
     if (paginationTokens[roomId])
     {

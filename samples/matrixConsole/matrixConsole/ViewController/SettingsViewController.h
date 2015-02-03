@@ -14,14 +14,14 @@
  limitations under the License.
  */
 
-#import <UIKit/UIKit.h>
+#import "RageShakableTableViewController.h"
 
-@interface SettingsViewController : UITableViewController <UITextFieldDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate>
+@interface SettingsViewController : RageShakableTableViewController <UITextFieldDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UIPickerViewDataSource, UIPickerViewDelegate>
+
+typedef void (^blockSettings_onReadyToLeave)();
 
 - (void)reset;
-
-typedef void (^blockSettings_onCheckSave)();
-- (BOOL)checkPendingSave:(blockSettings_onCheckSave)handler;
+- (BOOL)shouldLeave:(blockSettings_onReadyToLeave)handler;
 
 @end
 

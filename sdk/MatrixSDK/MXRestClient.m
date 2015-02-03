@@ -21,14 +21,34 @@
 #import "MXTools.h"
 
 #pragma mark - Constants definitions
-NSString *const kMXRoomVisibilityPublic  = @"public";
-NSString *const kMXRoomVisibilityPrivate = @"private";
+/**
+ Prefix used in path of home server API requests.
+ */
+NSString *const kMXAPIPrefixPath = @"/_matrix/client/api/v1";
+
+/**
+ Prefix used in path of identity server API requests.
+ */
+NSString *const kMXIdentityAPIPrefixPath = @"/_matrix/identity/api/v1";
 
 /**
  Matrix content respository path
  */
 NSString *const kMXContentUriScheme  = @"mxc://";
 NSString *const kMXContentPrefixPath = @"/_matrix/media/v1";
+
+/**
+ Room visibility
+ */
+NSString *const kMXRoomVisibilityPublic  = @"public";
+NSString *const kMXRoomVisibilityPrivate = @"private";
+
+/**
+ Types of third party media.
+ The list is not exhautive and depends on the Identity server capabilities.
+ */
+NSString *const kMX3PIDMediumEmail  = @"email";
+NSString *const kMX3PIDMediumMSISDN = @"msisdn";
 
 
 /**
@@ -45,7 +65,15 @@ MXAuthAction;
 #pragma mark - MXRestClient
 @interface MXRestClient ()
 {
+    /**
+     HTTP client to the home server.
+     */
     MXHTTPClient *httpClient;
+
+    /**
+     HTTP client to the identity server.
+     */
+    MXHTTPClient *identityHttpClient;
 }
 @end
 
@@ -59,7 +87,10 @@ MXAuthAction;
     {
         homeserver = homeserver2;
         
-        httpClient = [[MXHTTPClient alloc] initWithHomeServer:homeserver andAccessToken:nil];
+        httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", homeserver, kMXAPIPrefixPath] andAccessToken:nil];
+
+        // By default, use the same address for the identity server
+        self.identityServer = homeserver;
     }
     return self;
 }
@@ -72,14 +103,20 @@ MXAuthAction;
         homeserver = credentials2.homeServer;
         credentials = credentials2;
         
-        httpClient = [[MXHTTPClient alloc] initWithHomeServer:homeserver andAccessToken:credentials.accessToken];
+        httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", homeserver, kMXAPIPrefixPath] andAccessToken:credentials.accessToken];
+
+        // By default, use the same address for the identity server
+        self.identityServer = homeserver;
     }
     return self;
 }
 
 - (void)close
 {
-    //@TODO
+    homeserver = nil;
+    credentials = nil;
+    httpClient = nil;
+    identityHttpClient = nil;
 }
 
 
@@ -88,6 +125,13 @@ MXAuthAction;
                 failure:(void (^)(NSError *error))failure
 {
     [self getRegisterOrLoginFlow:MXAuthActionRegister success:success failure:failure];
+}
+
+- (void)register:(NSDictionary*)parameters
+         success:(void (^)(NSDictionary *JSONResponse))success
+         failure:(void (^)(NSError *error))failure
+{
+    [self registerOrLogin:MXAuthActionRegister parameters:parameters success:success failure:failure];
 }
 
 - (void)registerWithUser:(NSString*)user andPassword:(NSString*)password
@@ -106,6 +150,13 @@ MXAuthAction;
     [self getRegisterOrLoginFlow:MXAuthActionLogin success:success failure:failure];
 }
 
+- (void)login:(NSDictionary*)parameters
+      success:(void (^)(NSDictionary *JSONResponse))success
+      failure:(void (^)(NSError *error))failure
+{
+    [self registerOrLogin:MXAuthActionLogin parameters:parameters success:success failure:failure];
+}
+
 - (void)loginWithUser:(NSString *)user andPassword:(NSString *)password
               success:(void (^)(MXCredentials *))success failure:(void (^)(NSError *))failure
 {
@@ -113,6 +164,41 @@ MXAuthAction;
                           success:success failure:failure];
 }
 
+#pragma mark Push Notification Registration
+
+- (void)setPusherWithPushkey:(NSString *)pushkey
+                        kind:(NSObject *)kind
+                       appId:(NSString *)appId
+              appDisplayName:(NSString *)appDisplayName
+           deviceDisplayName:(NSString *)deviceDisplayName
+              instanceHandle:(NSString *)instanceHandle
+                        lang:(NSString *)lang
+                        data:(NSDictionary *)data
+                     success:(void (^)())success
+                     failure:(void (^)(NSError *))failure {
+    NSDictionary *parameters = @{
+                                 @"pushkey": pushkey,
+                                 @"kind": kind,
+                                 @"app_id": appId,
+                                 @"app_display_name": appDisplayName,
+                                 @"device_display_name": deviceDisplayName,
+                                 @"instance_handle": instanceHandle,
+                                 @"lang": lang,
+                                 @"data": data
+                                };
+    
+    [httpClient requestWithMethod:@"POST"
+                             path:@"pushers/set"
+                       parameters:parameters
+                          success:^(NSDictionary *JSONResponse)
+     {
+         success();
+     }
+                          failure:^(NSError *error)
+     {
+         failure(error);
+     }];
+}
 
 #pragma mark - Common operations for register and login
 /*
@@ -142,12 +228,42 @@ MXAuthAction;
                        parameters:nil
                           success:^(NSDictionary *JSONResponse)
      {
-         NSArray *flows = [MXLoginFlow modelsFromJSON:JSONResponse[@"flows"]];
-         success(flows);
+         // sanity check
+         if (success)
+         {
+             NSArray *flows = [MXLoginFlow modelsFromJSON:JSONResponse[@"flows"]];
+             success(flows);
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         // sanity check
+         if (failure)
+         {
+             failure(error);
+         }
+     }];
+}
+
+- (void)registerOrLogin:(MXAuthAction)authAction parameters:(NSDictionary *)parameters success:(void (^)(NSDictionary *JSONResponse))success failure:(void (^)(NSError *))failure
+{
+    [httpClient requestWithMethod:@"POST"
+                             path:[self authActionPath:authAction]
+                       parameters:parameters
+                          success:^(NSDictionary *JSONResponse)
+     {
+         if (success)
+         {
+             success(JSONResponse);
+         }
+
+     }
+                          failure:^(NSError *error)
+     {
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -159,23 +275,28 @@ MXAuthAction;
                                  @"user": user,
                                  @"password": password
                                  };
-    
-    [httpClient requestWithMethod:@"POST"
-                             path:[self authActionPath:authAction]
-                       parameters:parameters
-                          success:^(NSDictionary *JSONResponse)
-     {
+
+    [self registerOrLogin:authAction parameters:parameters success:^(NSDictionary *JSONResponse) {
+
          // Update our credentials
          credentials = [MXCredentials modelFromJSON:JSONResponse];
          
          // Workaround: HS does not return the right URL. Use the one we used to make the request
          credentials.homeServer = homeserver;
          
-         success(credentials);
+         // sanity check
+         if (success)
+         {
+             success(credentials);
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         // sanity check
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -194,11 +315,17 @@ MXAuthAction;
                         success:^(NSDictionary *JSONResponse)
      {
          
-         success(JSONResponse[@"event_id"]);
+         if (success)
+         {
+             success(JSONResponse[@"event_id"]);
+         }
      }
                         failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -214,12 +341,17 @@ MXAuthAction;
                        parameters:content
                           success:^(NSDictionary *JSONResponse)
      {
-
-         success(JSONResponse[@"event_id"]);
+         if (success)
+         {
+             success(JSONResponse[@"event_id"]);
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -269,11 +401,17 @@ MXAuthAction;
                      parameters:parameters
                         success:^(NSDictionary *JSONResponse)
      {
-         success();
+         if (success)
+         {
+             success();
+         }
      }
                         failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -290,11 +428,17 @@ MXAuthAction;
                                     }
                           success:^(NSDictionary *JSONResponse)
      {
-         success();
+         if (success)
+         {
+             success();
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -308,11 +452,17 @@ MXAuthAction;
                        parameters:nil
                           success:^(NSDictionary *JSONResponse)
      {
-         success(JSONResponse[@"topic"]);
+         if (success)
+         {
+             success(JSONResponse[@"topic"]);
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -329,11 +479,17 @@ MXAuthAction;
                                     }
                           success:^(NSDictionary *JSONResponse)
      {
-         success();
+         if (success)
+         {
+             success();
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -347,11 +503,17 @@ MXAuthAction;
                        parameters:nil
                           success:^(NSDictionary *JSONResponse)
      {
-         success(JSONResponse[@"name"]);
+         if (success)
+         {
+             success(JSONResponse[@"name"]);
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -366,15 +528,21 @@ MXAuthAction;
                        parameters:nil
                           success:^(NSDictionary *JSONResponse)
      {
-         NSString *roomId = JSONResponse[@"room_id"];
-         if (!roomId.length) {
-             roomId = roomIdOrAlias;
+         if (success)
+         {
+             NSString *roomId = JSONResponse[@"room_id"];
+             if (!roomId.length) {
+                 roomId = roomIdOrAlias;
+             }
+             success(roomId);
          }
-         success(roomId);
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -422,11 +590,17 @@ MXAuthAction;
                      parameters:parameters
                         success:^(NSDictionary *JSONResponse)
      {
-         success();
+         if (success)
+         {
+             success();
+         }
      }
                         failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -491,12 +665,18 @@ MXAuthAction;
                      parameters:parameters
                         success:^(NSDictionary *JSONResponse)
      {
-         MXCreateRoomResponse *response = [MXCreateRoomResponse modelFromJSON:JSONResponse];
-         success(response);
+         if (success)
+         {
+             MXCreateRoomResponse *response = [MXCreateRoomResponse modelFromJSON:JSONResponse];
+             success(response);
+         }
      }
                         failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -533,12 +713,18 @@ MXAuthAction;
                      parameters:parameters
                         success:^(NSDictionary *JSONResponse)
      {
-         MXPaginationResponse *paginatedResponse = [MXPaginationResponse modelFromJSON:JSONResponse];
-         success(paginatedResponse);
+         if (success)
+         {
+             MXPaginationResponse *paginatedResponse = [MXPaginationResponse modelFromJSON:JSONResponse];
+             success(paginatedResponse);
+         }
      }
                         failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -553,19 +739,25 @@ MXAuthAction;
                      parameters:nil
                         success:^(NSDictionary *JSONResponse)
      {
-         NSMutableArray *roomMemberEvents = [NSMutableArray array];
-         
-         for (NSDictionary *event in JSONResponse[@"chunk"])
+         if (success)
          {
-             MXEvent *roomMemberEvent = [MXEvent modelFromJSON:event];
-            [roomMemberEvents addObject:roomMemberEvent];
+             NSMutableArray *roomMemberEvents = [NSMutableArray array];
+             
+             for (NSDictionary *event in JSONResponse[@"chunk"])
+             {
+                 MXEvent *roomMemberEvent = [MXEvent modelFromJSON:event];
+                [roomMemberEvents addObject:roomMemberEvent];
+             }
+             
+             success(roomMemberEvents);
          }
-         
-         success(roomMemberEvents);
      }
                         failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -580,11 +772,17 @@ MXAuthAction;
                        parameters:nil
                           success:^(NSDictionary *JSONResponse)
      {
-         success(JSONResponse);
+         if (success)
+         {
+             success(JSONResponse);
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -611,11 +809,17 @@ MXAuthAction;
                        parameters:parameters
                           success:^(NSDictionary *JSONResponse)
      {
-         success();
+         if (success)
+         {
+             success();
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -633,12 +837,17 @@ MXAuthAction;
                                     }
                           success:^(NSDictionary *JSONResponse)
      {
-         
-         success(JSONResponse);
+         if (success)
+         {
+             success(JSONResponse);
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -656,11 +865,17 @@ MXAuthAction;
                                   }
                         success:^(NSDictionary *JSONResponse)
      {
-         success();
+         if (success)
+         {
+             success();
+         }
      }
                         failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -679,12 +894,18 @@ MXAuthAction;
                      parameters:nil
                         success:^(NSDictionary *JSONResponse)
      {
-         NSDictionary *cleanedJSONResponse = [MXJSONModel removeNullValuesInJSON:JSONResponse];
-         success(cleanedJSONResponse[@"displayname"]);
+         if (success)
+         {
+             NSDictionary *cleanedJSONResponse = [MXJSONModel removeNullValuesInJSON:JSONResponse];
+             success(cleanedJSONResponse[@"displayname"]);
+         }
      }
                         failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -700,11 +921,17 @@ MXAuthAction;
                                   }
                         success:^(NSDictionary *JSONResponse)
      {
-         success();
+         if (success)
+         {
+             success();
+         }
      }
                         failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -723,12 +950,18 @@ MXAuthAction;
                      parameters:nil
                         success:^(NSDictionary *JSONResponse)
      {
-         NSDictionary *cleanedJSONResponse = [MXJSONModel removeNullValuesInJSON:JSONResponse];
-         success(cleanedJSONResponse[@"avatar_url"]);
+         if (success)
+         {
+             NSDictionary *cleanedJSONResponse = [MXJSONModel removeNullValuesInJSON:JSONResponse];
+             success(cleanedJSONResponse[@"avatar_url"]);
+         }
      }
                         failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -752,11 +985,17 @@ MXAuthAction;
                        parameters:parameters
                           success:^(NSDictionary *JSONResponse)
      {
-         success();
+         if (success)
+         {
+             success();
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -775,12 +1014,18 @@ MXAuthAction;
                        parameters:nil
                           success:^(NSDictionary *JSONResponse)
      {
-         MXPresenceResponse *presence = [MXPresenceResponse modelFromJSON:JSONResponse];
-         success(presence);
+         if (success)
+         {
+             MXPresenceResponse *presence = [MXPresenceResponse modelFromJSON:JSONResponse];
+             success(presence);
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -792,10 +1037,16 @@ MXAuthAction;
     // @TODO: Change it with C-S API v2 new APIs
     [self initialSyncWithLimit:0 success:^(NSDictionary *JSONData) {
 
-        success([MXEvent modelsFromJSON:JSONData[@"presence"]]);
+        if (success)
+        {
+            success([MXEvent modelsFromJSON:JSONData[@"presence"]]);
+        }
 
     } failure:^(NSError *error) {
-        failure(error);
+        if (failure)
+        {
+            failure(error);
+        }
     }];
 }
 
@@ -808,12 +1059,18 @@ MXAuthAction;
                        parameters:nil
                           success:^(NSDictionary *JSONResponse)
      {
-         MXPresenceResponse *presence = [MXPresenceResponse modelFromJSON:JSONResponse];
-         success(presence);
+         if (success)
+         {
+             MXPresenceResponse *presence = [MXPresenceResponse modelFromJSON:JSONResponse];
+             success(presence);
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -832,11 +1089,17 @@ MXAuthAction;
                        parameters:parameters
                           success:^(NSDictionary *JSONResponse)
      {
-         success();
+         if (success)
+         {
+             success();
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -853,12 +1116,17 @@ MXAuthAction;
                                   }
                         success:^(NSDictionary *JSONResponse)
      {
-         
-         success(JSONResponse);
+         if (success)
+         {
+             success(JSONResponse);
+         }
      }
                         failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -894,12 +1162,18 @@ MXAuthAction;
                      parameters:parameters timeout:clientTimeoutInSeconds
                         success:^(NSDictionary *JSONResponse)
      {
-         MXPaginationResponse *paginatedResponse = [MXPaginationResponse modelFromJSON:JSONResponse];
-         success(paginatedResponse);
+         if (success)
+         {
+             MXPaginationResponse *paginatedResponse = [MXPaginationResponse modelFromJSON:JSONResponse];
+             success(paginatedResponse);
+         }
      }
                         failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -911,12 +1185,18 @@ MXAuthAction;
                        parameters:nil
                           success:^(NSDictionary *JSONResponse)
      {
-         NSArray *publicRooms = [MXPublicRoom modelsFromJSON:JSONResponse[@"chunk"]];
-         success(publicRooms);
+         if (success)
+         {
+             NSArray *publicRooms = [MXPublicRoom modelsFromJSON:JSONResponse[@"chunk"]];
+             success(publicRooms);
+         }
      }
                           failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
@@ -933,17 +1213,23 @@ MXAuthAction;
                      parameters:nil
                         success:^(NSDictionary *JSONResponse)
      {
-         success(JSONResponse[@"room_id"]);
+         if (success)
+         {
+             success(JSONResponse[@"room_id"]);
+         }
      }
                         failure:^(NSError *error)
      {
-         failure(error);
+         if (failure)
+         {
+             failure(error);
+         }
      }];
 }
 
 
 #pragma mark - Content upload
-- (void)uploadContent:(NSData *)data
+- (NSOperation*) uploadContent:(NSData *)data
              mimeType:(NSString *)mimeType
               timeout:(NSTimeInterval)timeoutInSeconds
               success:(void (^)(NSString *url))success
@@ -953,7 +1239,7 @@ MXAuthAction;
     NSString* path = [NSString stringWithFormat:@"%@/upload", kMXContentPrefixPath];
     NSDictionary *headers = @{@"Content-Type": mimeType};
     
-    [httpClient requestWithMethod:@"POST"
+    return [httpClient requestWithMethod:@"POST"
                              path:path
                        parameters:nil
                              data:data
@@ -961,9 +1247,12 @@ MXAuthAction;
                           timeout:timeoutInSeconds
                    uploadProgress:uploadProgress
                           success:^(NSDictionary *JSONResponse) {
-                              NSString *contentURL = JSONResponse[@"content_uri"];
-                              NSLog(@"uploadContent succeeded: %@",contentURL);
-                              success(contentURL);
+                              if (success)
+                              {
+                                  NSString *contentURL = JSONResponse[@"content_uri"];
+                                  NSLog(@"uploadContent succeeded: %@",contentURL);
+                                  success(contentURL);
+                              }
                           }
                           failure:failure];
 }
@@ -1010,6 +1299,184 @@ MXAuthAction;
     }
 
     return thumbnailURL;
+}
+
+
+#pragma mark - Identity server API
+- (void)setIdentityServer:(NSString *)identityServer
+{
+    _identityServer = [identityServer copy];
+    identityHttpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", identityServer, kMXIdentityAPIPrefixPath]];
+}
+
+- (void)lookup3pid:(NSString*)address
+         forMedium:(MX3PIDMedium)medium
+           success:(void (^)(NSString *userId))success
+           failure:(void (^)(NSError *error))failure
+{
+    [identityHttpClient requestWithMethod:@"GET"
+                                     path:@"lookup"
+                               parameters:@{
+                                            @"medium": medium,
+                                            @"address": address
+                                            }
+                                  success:^(NSDictionary *JSONResponse)
+     {
+         if (success)
+         {
+             success(JSONResponse[@"mxid"]);
+         }
+     }
+                          failure:^(NSError *error)
+     {
+         if (failure)
+         {
+             failure(error);
+         }
+     }];
+}
+
+- (void)lookup3pids:(NSArray*)addresses
+           forMedia:(NSArray*)media
+            success:(void (^)(NSArray *userIds))success
+            failure:(void (^)(NSError *error))failure
+{
+    NSParameterAssert(addresses.count == media.count);
+
+    // The identity server does not expose this API yet (@see SYD-7)
+    // Do n calls to lookup3pid to implement it
+    NSMutableArray *userIds = [NSMutableArray arrayWithCapacity:addresses.count];
+
+    NSMutableArray *addresses2 = [NSMutableArray arrayWithArray:addresses];
+    NSMutableArray *media2 = [NSMutableArray arrayWithArray:media];
+
+    [self lookup3pidsNext:addresses2 forMedia:media2 resultBeingBuilt:userIds success:success failure:failure];
+}
+
+- (void)lookup3pidsNext:(NSMutableArray*)addresses
+               forMedia:(NSMutableArray*)media
+       resultBeingBuilt:(NSMutableArray*)userIds
+                success:(void (^)(NSArray *userIds))success
+                failure:(void (^)(NSError *error))failure
+{
+    if (addresses.count)
+    {
+        // Look up 3PID one by one
+        [self lookup3pid:[addresses lastObject] forMedium:[media lastObject] success:^(NSString *userId) {
+
+            if (userId)
+            {
+                [userIds insertObject:userId atIndex:0];
+            }
+            else
+            {
+                // The user is not in Matrix. Mark it as NSNull in the result array
+                [userIds insertObject:[NSNull null] atIndex:0];
+            }
+
+            // Go to the next 3PID
+            [addresses removeLastObject];
+            [media removeLastObject];
+            [self lookup3pidsNext:addresses forMedia:media resultBeingBuilt:userIds success:success failure:failure];
+
+        } failure:^(NSError *error) {
+            if (failure)
+            {
+                failure(error);
+            }
+        }];
+    }
+    else
+    {
+        if (success)
+        {
+            // We are done
+            success(userIds);
+        }
+    }
+}
+
+- (void)requestEmailValidation:(NSString*)email
+                  clientSecret:(NSString*)clientSecret
+                   sendAttempt:(NSUInteger)sendAttempt
+                       success:(void (^)(NSString *sid))success
+                       failure:(void (^)(NSError *error))failure
+{
+    // The identity server expects params in the URL
+    NSString *path = [NSString stringWithFormat:@"validate/email/requestToken?clientSecret=%@&email=%@&sendAttempt=%tu", clientSecret, email, sendAttempt];
+    [identityHttpClient requestWithMethod:@"POST"
+                                     path:path
+                               parameters:nil
+                                  success:^(NSDictionary *JSONResponse)
+     {
+         if (success)
+         {
+             success(JSONResponse[@"sid"]);
+         }
+     }
+                                  failure:^(NSError *error)
+     {
+         if (failure)
+         {
+             failure(error);
+         }
+     }];
+}
+
+- (void)validateEmail:(NSString*)sid
+      validationToken:(NSString*)validationToken
+         clientSecret:(NSString*)clientSecret
+              success:(void (^)(BOOL success))success
+              failure:(void (^)(NSError *error))failure
+{
+    // The identity server expects params in the URL
+    NSString *path = [NSString stringWithFormat:@"validate/email/submitToken?token=%@&sid=%@&clientSecret=%@", validationToken, sid, clientSecret];
+    [identityHttpClient requestWithMethod:@"POST"
+                                     path:path
+                               parameters:nil
+                                  success:^(NSDictionary *JSONResponse)
+     {
+         if (success)
+         {
+             NSNumber *successNumber = JSONResponse[@"success"];
+             success([successNumber boolValue]);
+         }
+     }
+                                  failure:^(NSError *error)
+     {
+         if (failure)
+         {
+             failure(error);
+         }
+     }];
+}
+
+- (void)bind3PID:(NSString*)userId
+             sid:(NSString*)sid
+    clientSecret:(NSString*)clientSecret
+         success:(void (^)(NSDictionary *JSONResponse))success
+         failure:(void (^)(NSError *error))failure
+{
+    // The identity server expects params in the URL
+    NSString *path = [NSString stringWithFormat:@"3pid/bind?mxid=%@&sid=%@&clientSecret=%@", userId, sid, clientSecret];
+    [identityHttpClient requestWithMethod:@"POST"
+                                     path:path
+                               parameters:nil
+                                  success:^(NSDictionary *JSONResponse)
+     {
+         if (success)
+         {
+             // For now, provide the JSON response as is
+             success(JSONResponse);
+         }
+     }
+                                  failure:^(NSError *error)
+     {
+         if (failure)
+         {
+             failure(error);
+         }
+     }];
 }
 
 @end

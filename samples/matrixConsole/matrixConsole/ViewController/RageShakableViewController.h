@@ -16,12 +16,7 @@
 
 #import <UIKit/UIKit.h>
 
-@interface MemberActionsCell : UITableViewCell
-@property (weak, nonatomic) IBOutlet UIButton *rightButton;
-@property (weak, nonatomic) IBOutlet UIButton *leftButton;
+@interface RageShakableViewController : UIViewController
 
-
--(void) setLeftButtonText:(NSString*)text;
--(void) setRightButtonText:(NSString*)text;
 @end
 

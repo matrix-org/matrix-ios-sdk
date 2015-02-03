@@ -16,6 +16,8 @@
 
 #import "MXStore.h"
 
+#import "MXMemoryRoomStore.h"
+
 /**
  `MXMemoryStore` is an implementation of the `MXStore` interface that stores events in memory.
  */
@@ -24,4 +26,14 @@
     @protected
     NSMutableDictionary *roomStores;
 }
+
+#pragma mark - protected operations
+/**
+ Interface to create or retrieve a MXMemoryRoomStore type object.
+ 
+ @param roomId the id for the MXMemoryRoomStore object.
+ @return the MXMemoryRoomStore instance.
+ */
+- (MXMemoryRoomStore*)getOrCreateRoomStore:(NSString*)roomId;
+
 @end

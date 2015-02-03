@@ -16,16 +16,18 @@
 
 #import <MatrixSDK/MatrixSDK.h>
 
-extern NSString *const kMatrixHandlerUnsupportedMessagePrefix;
+extern NSString *const kMatrixSDKHandlerUnsupportedEventDescriptionPrefix;
 
 typedef enum : NSUInteger {
-    MatrixHandlerStatusLoggedOut = 0,
-    MatrixHandlerStatusLogged,
-    MatrixHandlerStatusStoreDataReady,
-    MatrixHandlerStatusServerSyncDone
-} MatrixHandlerStatus;
+    MatrixSDKHandlerStatusLoggedOut = 0,
+    MatrixSDKHandlerStatusLogged,
+    MatrixSDKHandlerStatusStoreDataReady,
+    MatrixSDKHandlerStatusServerSyncDone
+} MatrixSDKHandlerStatus;
 
-@interface MatrixHandler : NSObject
+@interface MatrixSDKHandler : NSObject
+
+@property (strong, nonatomic) dispatch_queue_t processingQueue;
 
 @property (strong, nonatomic) MXRestClient *mxRestClient;
 @property (strong, nonatomic) MXSession *mxSession;
@@ -43,14 +45,20 @@ typedef enum : NSUInteger {
 // Matrix user's settings
 @property (nonatomic) MXPresence userPresence;
 
-@property (nonatomic,readonly) MatrixHandlerStatus status;
+@property (nonatomic,readonly) MatrixSDKHandlerStatus status;
 @property (nonatomic,readonly) BOOL isResumeDone;
 // return the MX cache size in bytes
 @property (nonatomic,readonly) NSUInteger MXCacheSize;
-// return the sum of the caches (MX cache + media cache ...)
+// return the sum of the caches (MX cache + media cache ...) in bytes
 @property (nonatomic,readonly) NSUInteger cachesSize;
+// defines the min allow cache size in bytes
+@property (nonatomic,readonly) NSUInteger minCachesSize;
+// defines the current max caches size in bytes
+@property (nonatomic,readwrite) NSUInteger currentMaxCachesSize;
+// defines the max allowed caches size in bytes
+@property (nonatomic,readonly) NSUInteger maxAllowedCachesSize;
 
-+ (MatrixHandler *)sharedHandler;
++ (MatrixSDKHandler *)sharedHandler;
 
 - (void)pauseInBackgroundTask;
 - (void)resume;
@@ -64,18 +72,39 @@ typedef enum : NSUInteger {
 - (BOOL)isSupportedAttachment:(MXEvent*)event;
 - (BOOL)isEmote:(MXEvent*)event;
 
+// return a MatrixIDs list of 1:1 room members
+- (NSArray*)oneToOneRoomMemberMatrixIDs;
+
+// search if a private room has been started with this user
+// returns the room ID
+// nil if not found
+- (NSString*) privateRoomIdWith:(NSString*)otherMatrixID;
+    
+// check first if there no room between the both users
+// if there is one, open it
+// else create a new one
+// create a private one to one chat room
+- (void)startPrivateOneToOneRoomWith:(NSString*)otherMatrixID;
+
+// the pushes could have disabled for a dedicated room
+// reenable them
+- (void)allowRoomPushes:(NSString*)roomID;
+
+// Return the suitable url to display the content thumbnail into the provided view size
+// Note: the provided view size is supposed in points, this method will convert this size in pixels by considering screen scale
+- (NSString*)thumbnailURLForContent:(NSString*)contentURI inViewSize:(CGSize)viewSize withMethod:(MXThumbnailingMethod)thumbnailingMethod;
+
 // Note: the room state expected by the 3 following methods is the room state right before handling the event
 - (NSString*)senderDisplayNameForEvent:(MXEvent*)event withRoomState:(MXRoomState*)roomState;
 - (NSString*)senderAvatarUrlForEvent:(MXEvent*)event withRoomState:(MXRoomState*)roomState;
 - (NSString*)displayTextForEvent:(MXEvent*)event withRoomState:(MXRoomState*)roomState inSubtitleMode:(BOOL)isSubtitle;
 
-// search if a 1:1 conversation has been started with this member
-- (NSString*) getRoomStartedWithMember:(MXRoomMember*)roomMember;
-
+// user power level in a dedicated room
 - (CGFloat)getPowerLevel:(MXRoomMember *)roomMember inRoom:(MXRoom *)room;
 
-// provide a non empty display name
-- (NSString*) getMXRoomMemberDisplayName:(MXRoomMember*)roomMember;
+// return the presence ring color
+// nil means there is no ring to display
+- (UIColor*)getPresenceRingColor:(MXPresence)presence;
 
 // return YES if the text contains a bing word
 - (BOOL)containsBingWord:(NSString*)text;

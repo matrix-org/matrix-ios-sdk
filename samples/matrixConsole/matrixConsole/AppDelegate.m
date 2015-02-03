@@ -18,9 +18,10 @@
 #import "APNSHandler.h"
 #import "AppSettings.h"
 #import "RoomViewController.h"
-#import "MatrixHandler.h"
+#import "MatrixSDKHandler.h"
 #import "MediaManager.h"
 #import "SettingsViewController.h"
+#import "ContactManager.h"
 
 @interface AppDelegate () <UISplitViewControllerDelegate>
 
@@ -69,6 +70,8 @@
             recents.tabBarItem.image = [[UIImage imageNamed:@"tab_recents"] imageWithRenderingMode:UIImageRenderingModeAutomatic];
         }
         
+        _isAppForeground = NO;
+        
         // Retrieve custom configuration
         NSString* userDefaults = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"UserDefaults"];
         NSString *defaultsPathFromApp = [[NSBundle mainBundle] pathForResource:userDefaults ofType:@"plist"];
@@ -76,12 +79,16 @@
         [[NSUserDefaults standardUserDefaults] registerDefaults:defaults];
         [[NSUserDefaults standardUserDefaults] synchronize];
         
-        if ([MatrixHandler sharedHandler].status != MatrixHandlerStatusLoggedOut) {
+        if ([MatrixSDKHandler sharedHandler].status != MatrixSDKHandlerStatusLoggedOut) {
             [self registerUserNotificationSettings];
             // When user is already logged, we launch the app on Recents
             [self.masterTabBarController setSelectedIndex:TABBAR_RECENTS_INDEX];
         }
     }
+
+    // clear the notifications counter
+    [self clearNotifications];
+    
     return YES;
 }
 
@@ -98,18 +105,34 @@
     // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
     // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
     
+    // check if some media msut be released to reduce the cache size
+    [MediaManager reduceCacheSizeToInsert:0];
     // Suspend Matrix handler
-    [[MatrixHandler sharedHandler] pauseInBackgroundTask];
+    [[MatrixSDKHandler sharedHandler] pauseInBackgroundTask];
+    
+    // clear the notifications counter
+    [self clearNotifications];
+    
+    _isAppForeground = NO;
 }
 
 - (void)applicationWillEnterForeground:(UIApplication *)application {
     // Called as part of the transition from the background to the inactive state; here you can undo many of the changes made on entering the background.
+    // clear the notifications counter
+    [self clearNotifications];
+    
+    _isAppForeground = YES;
 }
 
 - (void)applicationDidBecomeActive:(UIApplication *)application {
     // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
     // Resume Matrix handler
-    [[MatrixHandler sharedHandler] resume];
+    [[MatrixSDKHandler sharedHandler] resume];
+    
+    // refresh the contacts list
+    [[ContactManager sharedManager] fullRefresh];
+    
+    _isAppForeground = YES;
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application {
@@ -119,20 +142,17 @@
 #pragma mark - APNS methods
 
 - (void)registerUserNotificationSettings {
-    
-    // FIXME: We will prompt user about notifications settings only when APNS will be actually available
-    
-//    if (!isAPNSRegistered) {
-//        if ([[UIApplication sharedApplication] respondsToSelector:@selector(registerUserNotificationSettings:)]) {
-//            // Registration on iOS 8 and later
-//            UIUserNotificationSettings *settings = [UIUserNotificationSettings settingsForTypes:(UIRemoteNotificationTypeBadge
-//                                                                                                 |UIRemoteNotificationTypeSound
-//                                                                                                 |UIRemoteNotificationTypeAlert) categories:nil];
-//            [[UIApplication sharedApplication] registerUserNotificationSettings:settings];
-//        } else {
-//            [[UIApplication sharedApplication] registerForRemoteNotificationTypes:(UIRemoteNotificationType)(UIRemoteNotificationTypeAlert | UIRemoteNotificationTypeSound | UIRemoteNotificationTypeBadge)];
-//        }
-//    }
+    if (!isAPNSRegistered) {
+        if ([[UIApplication sharedApplication] respondsToSelector:@selector(registerUserNotificationSettings:)]) {
+            // Registration on iOS 8 and later
+            UIUserNotificationSettings *settings = [UIUserNotificationSettings settingsForTypes:(UIRemoteNotificationTypeBadge
+                                                                                                 |UIRemoteNotificationTypeSound
+                                                                                                 |UIRemoteNotificationTypeAlert) categories:nil];
+            [[UIApplication sharedApplication] registerUserNotificationSettings:settings];
+        } else {
+            [[UIApplication sharedApplication] registerForRemoteNotificationTypes:(UIRemoteNotificationType)(UIRemoteNotificationTypeAlert | UIRemoteNotificationTypeSound | UIRemoteNotificationTypeBadge)];
+        }
+    }
 }
 
 - (void)application:(UIApplication *)application didRegisterUserNotificationSettings:(UIUserNotificationSettings *)notificationSettings
@@ -177,15 +197,17 @@
     // Clear cache
     [MediaManager clearCache];
     // Logout Matrix
-    [[MatrixHandler sharedHandler] logout];
+    [[MatrixSDKHandler sharedHandler] logout];
     [self.masterTabBarController showLoginScreen];
     // Reset App settings
     [[AppSettings sharedSettings] reset];
+    //  reset the contact manager
+    [[ContactManager sharedManager] reset];
     // By default the "Home" tab is focussed
     [self.masterTabBarController setSelectedIndex:TABBAR_HOME_INDEX];
 }
 
-- (CustomAlert*)showErrorAsAlert:(NSError*)error {
+- (MXCAlert*)showErrorAsAlert:(NSError*)error {
     if (self.errorNotification) {
         [self.errorNotification dismiss:NO];
     }
@@ -197,13 +219,24 @@
     }
     NSString *msg = [error.userInfo valueForKey:NSLocalizedDescriptionKey];
     
-    self.errorNotification = [[CustomAlert alloc] initWithTitle:title message:msg style:CustomAlertStyleAlert];
-    self.errorNotification.cancelButtonIndex = [self.errorNotification addActionWithTitle:@"OK" style:CustomAlertActionStyleDefault handler:^(CustomAlert *alert) {
+    self.errorNotification = [[MXCAlert alloc] initWithTitle:title message:msg style:MXCAlertStyleAlert];
+    self.errorNotification.cancelButtonIndex = [self.errorNotification addActionWithTitle:@"OK" style:MXCAlertActionStyleDefault handler:^(MXCAlert *alert) {
         [AppDelegate theDelegate].errorNotification = nil;
     }];
     [self.errorNotification showInViewController:[self.masterTabBarController selectedViewController]];
     
     return self.errorNotification;
+}
+
+- (void)clearNotifications
+{
+    // force to clear the notification center
+    // switching from 0 -> 1 -> 0 seems forcing the notifications center to refresh
+    // so resetting it does not clear the notifications center.
+    [UIApplication sharedApplication].applicationIconBadgeNumber = 1;
+    [UIApplication sharedApplication].applicationIconBadgeNumber = 0;
+    
+    [[UIApplication sharedApplication] cancelAllLocalNotifications];
 }
 
 #pragma mark - SplitViewController delegate
@@ -228,22 +261,21 @@
 
 - (BOOL)tabBarController:(UITabBarController *)tabBarController shouldSelectViewController:(UIViewController *)viewController {
     BOOL res = YES;
-    UIViewController* currentViewController = [tabBarController.viewControllers objectAtIndex:tabBarController.selectedIndex];
-
-    if ([currentViewController isKindOfClass:[UINavigationController class]]) {
-        UIViewController *topViewController = ((UINavigationController*)currentViewController).topViewController;
-
-        // ask to the user to save unsaved profile updates
-        // before switching to another tab
-        if ([topViewController isKindOfClass:[SettingsViewController class]]) {
-            __block NSUInteger nextSelectedViewController = [tabBarController.viewControllers indexOfObject:viewController];
-            
-            res = ![((SettingsViewController *)topViewController) checkPendingSave:^() {
-                tabBarController.selectedIndex = nextSelectedViewController;
-            }];
-        }
-    }
     
+    if (tabBarController.selectedIndex == TABBAR_SETTINGS_INDEX) {
+        // Prompt user to save unsaved profile changes before switching to another tab
+        UIViewController* selectedViewController = [tabBarController selectedViewController];
+        if ([selectedViewController isKindOfClass:[UINavigationController class]]) {
+            UIViewController *topViewController = ((UINavigationController*)selectedViewController).topViewController;
+            if ([topViewController isKindOfClass:[SettingsViewController class]]) {
+                res = [((SettingsViewController *)topViewController) shouldLeave:^() {
+                    // This block is called when tab change is delayed to prompt user about his profile changes
+                    NSUInteger nextSelectedViewController = [tabBarController.viewControllers indexOfObject:viewController];
+                    tabBarController.selectedIndex = nextSelectedViewController;
+                }];
+            }
+        }
+    }    
     return res;
 }
 

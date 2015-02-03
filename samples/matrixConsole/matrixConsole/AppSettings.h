@@ -19,10 +19,24 @@
 
 @property (nonatomic) BOOL enableInAppNotifications;
 @property (nonatomic) NSArray* specificWordsToAlertOn;
+
 @property (nonatomic) BOOL displayAllEvents;
-@property (nonatomic) BOOL hideUnsupportedMessages;
+@property (nonatomic) BOOL hideRedactedInformation;
+@property (nonatomic) BOOL hideUnsupportedEvents;
 @property (nonatomic) BOOL sortMembersUsingLastSeenTime;
 @property (nonatomic) BOOL displayLeftUsers;
+
+// return YES if the user got an alertView to allow or not the local contacts sync
+@property (nonatomic, readonly) BOOL requestedLocalContactsSync;
+// return YES if the user allows the local contacts sync
+@property (nonatomic) BOOL syncLocalContacts;
+// phonebook country code
+@property (nonatomic) NSString* countryCode;
+
+// cache sizes in bytes
+@property (nonatomic) NSInteger currentMaxMediaCacheSize;
+@property (nonatomic, readonly) NSInteger maxAllowedMediaCacheSize;
+
 
 + (AppSettings *)sharedSettings;
 

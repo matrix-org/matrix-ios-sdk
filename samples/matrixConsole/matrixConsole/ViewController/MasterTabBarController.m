@@ -15,7 +15,7 @@
  */
 
 #import "MasterTabBarController.h"
-#import "MatrixHandler.h"
+#import "MatrixSDKHandler.h"
 
 #import "RecentsViewController.h"
 
@@ -29,8 +29,6 @@
 @end
 
 @implementation MasterTabBarController
-
-@synthesize visibleRoomId;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -60,7 +58,7 @@
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
     
-    if ([MatrixHandler sharedHandler].status == MatrixHandlerStatusLoggedOut) {
+    if ([MatrixSDKHandler sharedHandler].status == MatrixSDKHandlerStatusLoggedOut) {
         [self showLoginScreen];
     }
 }
@@ -121,6 +119,8 @@
     // Force back to recents list if room details is displayed in Recents Tab
     if (recentsViewController) {
         [recentsNavigationController popToViewController:recentsViewController animated:animated];
+        // Release the current selected room
+        recentsViewController.preSelectedRoomId = nil;
     }
 }
 
@@ -140,6 +140,11 @@
         mediaPicker.delegate = nil;
         mediaPicker = nil;
     }
+}
+
+- (void)setVisibleRoomId:(NSString *)aVisibleRoomId {
+    [[MatrixSDKHandler sharedHandler] allowRoomPushes:aVisibleRoomId];
+    _visibleRoomId = aVisibleRoomId;
 }
 
 @end

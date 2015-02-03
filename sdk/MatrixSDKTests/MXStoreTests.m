@@ -1142,6 +1142,8 @@
             XCTAssertNil(store.userDisplayname);
             XCTAssertNil(store.userAvatarUrl);
 
+            [store close];
+
             [store openWithCredentials:sharedData.aliceCredentials onComplete:^{
 
                 XCTAssertNil(store.userDisplayname);
@@ -1152,6 +1154,9 @@
                 [mxSession start:^{
                 } onServerSyncDone:^{
 
+                    [mxSession close];
+                    mxSession = nil;
+
                     // Check user information is permanent
                     MXFileStore *store2 = [[MXFileStore alloc] init];
                     [store2 openWithCredentials:sharedData.aliceCredentials onComplete:^{
@@ -1159,6 +1164,7 @@
                         XCTAssertEqualObjects(store2.userDisplayname, kMXTestsAliceDisplayName);
                         XCTAssertEqualObjects(store2.userAvatarUrl, kMXTestsAliceAvatarURL);
 
+                        [store2 close];
                         [expectation fulfill];
 
                     }];
@@ -1190,6 +1196,8 @@
             XCTAssertNil(store.userAvatarUrl);
             XCTAssertEqual(store.rooms.count, 0);
 
+            [store close];
+
             [store openWithCredentials:sharedData.bobCredentials onComplete:^{
 
                 // Do a 1st [mxSession start] to fill the store
@@ -1206,7 +1214,7 @@
 
                         [bobRestClient sendTextMessageToRoom:response.roomId text:@"A Message" success:^(NSString *eventId) {
 
-                            // Do a 2nd [mxSession start] with the filled stored
+                            // Do a 2nd [mxSession start] with the filled store
                             MXFileStore *store2 = [[MXFileStore alloc] init];
                             [store2 openWithCredentials:sharedData.bobCredentials onComplete:^{
 
@@ -1259,5 +1267,53 @@
     }];
 }
 
+- (void)testMXFileStoreRoomDeletion
+{
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+
+    [sharedData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
+
+        expectation = expectation2;
+
+        MXFileStore *store = [[MXFileStore alloc] init];
+        [store openWithCredentials:sharedData.bobCredentials onComplete:^{
+
+            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient andStore:store];
+            [mxSession start:^{
+
+            } onServerSyncDone:^{
+
+                // Quit the newly created room
+                MXRoom *room = [mxSession roomWithRoomId:roomId];
+                [room leave:^{
+
+                    XCTAssertEqual(NSNotFound, [store.rooms indexOfObject:roomId], @"The room %@ must be no more in the store", roomId);
+
+                    [mxSession close];
+                    mxSession = nil;
+
+                    // Reload the store, to be sure the room is no more here
+                    MXFileStore *store2 = [[MXFileStore alloc] init];
+                    [store2 openWithCredentials:sharedData.bobCredentials onComplete:^{
+
+                        XCTAssertEqual(NSNotFound, [store2.rooms indexOfObject:roomId], @"The room %@ must be no more in the store", roomId);
+
+                        [store2 close];
+
+                        [expectation fulfill];
+
+                    }];
+
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                }];
+
+            } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+
+        }];
+    }];
+}
 
 @end

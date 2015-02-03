@@ -16,11 +16,11 @@
 
 #import "MXFileStore.h"
 
-#import "MXMemoryRoomStore.h"
+#import "MXFileRoomStore.h"
 
 #import "MXFileStoreMetaData.h"
 
-NSUInteger const kMXFileVersion = 2;
+NSUInteger const kMXFileVersion = 3;
 
 NSString *const kMXFileStoreFolder = @"MXFileStore";
 NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -50,6 +50,16 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
 
     // Flag to indicate metaData needs to be store
     BOOL metaDataHasChanged;
+
+    // File reading and writing operations are dispatched to a separated thread.
+    // The queue invokes blocks serially in FIFO order.
+    // This ensures that data is stored in the expected order: MXFileStore metadata
+    // must be stored after messages and state events because of the event stream token it stores.
+    dispatch_queue_t dispatchQueue;
+    
+    // avoid computing disk usage when it is not required
+    // it could required a long time with huge cache
+    NSUInteger cachedDiskUsage;
 }
 @end
 
@@ -71,6 +81,11 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
         storeRoomsStatePath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsStateFolder];
 
         metaDataHasChanged = NO;
+
+        // NSUIntegerMax means that it is not initialized
+        cachedDiskUsage = NSUIntegerMax;
+
+        dispatchQueue = dispatch_queue_create("MXFileStoreDispatchQueue", DISPATCH_QUEUE_SERIAL);
     }
     return self;
 }
@@ -78,7 +93,7 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
 - (void)openWithCredentials:(MXCredentials*)credentials onComplete:(void (^)())onComplete
 {
     // Load data from the file system on a separate thread
-    dispatch_async(dispatch_get_global_queue( DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void){
+    dispatch_async(dispatchQueue, ^(void){
 
         NSLog(@"MXFileStore.diskUsage: %@", [NSByteCountFormatter stringFromByteCount:self.diskUsage countStyle:NSByteCountFormatterCountStyleFile]);
 
@@ -137,15 +152,31 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
 
 - (NSUInteger)diskUsage
 {
-    NSArray *contents = [[NSFileManager defaultManager] subpathsOfDirectoryAtPath:storePath error:nil];
-    NSEnumerator *contentsEnumurator = [contents objectEnumerator];
-
-    NSString *file;
     NSUInteger diskUsage = 0;
+    
+    @synchronized(self)
+    {
+        diskUsage = cachedDiskUsage;
+    }
+    
+    // the disk usage must be recomputed
+    if (cachedDiskUsage == NSUIntegerMax)
+    {
+        NSArray *contents = [[NSFileManager defaultManager] subpathsOfDirectoryAtPath:storePath error:nil];
+        NSEnumerator *contentsEnumurator = [contents objectEnumerator];
 
-    while (file = [contentsEnumurator nextObject]) {
-        NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:[storePath stringByAppendingPathComponent:file] error:nil];
-        diskUsage += [[fileAttributes objectForKey:NSFileSize] intValue];
+        NSString *file;
+        
+        while (file = [contentsEnumurator nextObject])
+        {
+            NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:[storePath stringByAppendingPathComponent:file] error:nil];
+            diskUsage += [[fileAttributes objectForKey:NSFileSize] intValue];
+        }
+        
+        @synchronized(self)
+        {
+            cachedDiskUsage = diskUsage;
+        }
     }
 
     return diskUsage;
@@ -163,15 +194,36 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     }
 }
 
-- (void)deleteDataOfRoom:(NSString *)roomId
+- (void)replaceEvent:(MXEvent*)event inRoom:(NSString*)roomId
 {
-    [super deleteDataOfRoom:roomId];
+    [super replaceEvent:event inRoom:roomId];
+    
+    if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
+    {
+        [roomsToCommitForMessages addObject:roomId];
+    }
+}
+
+- (void)deleteRoom:(NSString *)roomId
+{
+    [super deleteRoom:roomId];
 
     // Remove the corresponding data from the file system
-    NSString *roomFile = [storePath stringByAppendingPathComponent:roomId];
-
+    NSString *roomFile = [storeRoomsMessagesPath stringByAppendingPathComponent:roomId];
+    NSUInteger fileSize = [[[[NSFileManager defaultManager] attributesOfItemAtPath:roomFile error:nil] objectForKey:NSFileSize] intValue];
+    
     NSError *error;
     [[NSFileManager defaultManager] removeItemAtPath:roomFile error:&error];
+    
+    @synchronized(self)
+    {
+        if ((cachedDiskUsage != NSUIntegerMax) && (!error))
+        {
+            // ignore the directory size update
+            // assume that it is small comparing to the file size
+            cachedDiskUsage -= fileSize;
+        }
+    }
 }
 
 - (void)deleteAllData
@@ -191,6 +243,12 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     metaData = nil;
     [roomStores removeAllObjects];
     self.eventStreamToken = nil;
+    
+    @synchronized(self)
+    {
+        // the diskUsage value must be recomputed
+        cachedDiskUsage = NSUIntegerMax;
+    }
 }
 
 - (BOOL)isPermanent
@@ -265,6 +323,28 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     }
 }
 
+- (void)close
+{
+    // Do a dummy sync dispatch on the queue
+    // Once done, we are sure pending operations blocks are complete
+    dispatch_sync(dispatchQueue, ^(void){
+    });
+}
+
+
+#pragma mark - protected operations
+- (MXMemoryRoomStore*)getOrCreateRoomStore:(NSString*)roomId
+{
+    MXFileRoomStore *roomStore = roomStores[roomId];
+    if (nil == roomStore)
+    {
+        // MXFileStore requires MXFileRoomStore objets
+        roomStore = [[MXFileRoomStore alloc] init];
+        roomStores[roomId] = roomStore;
+    }
+    return roomStore;
+}
+
 
 #pragma mark - Rooms messages
 // Load the data store in files
@@ -278,7 +358,16 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     for (NSString *roomId in roomIDArray)  {
 
         NSString *roomFile = [storeRoomsMessagesPath stringByAppendingPathComponent:roomId];
-        MXMemoryRoomStore *roomStore =[NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+
+        MXFileRoomStore *roomStore;
+        @try
+        {
+            roomStore =[NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+        }
+        @catch (NSException *exception)
+        {
+            NSLog(@"Warning: MXFileRoomStore file for room %@ has been corrupted", roomId);
+        }
 
         if (roomStore)
         {
@@ -300,41 +389,100 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
 
 - (void)saveRoomsMessages
 {
-    // Save rooms where there was changes
-    for (NSString *roomId in roomsToCommitForMessages)
+    if (roomsToCommitForMessages.count)
     {
-        MXMemoryRoomStore *roomStore = roomStores[roomId];
-        if (roomStore)
-        {
-            NSString *roomFile = [storeRoomsMessagesPath stringByAppendingPathComponent:roomId];
-            [NSKeyedArchiver archiveRootObject:roomStore toFile:roomFile];
-        }
-    }
+        NSArray *roomsToCommit = [[NSArray alloc] initWithArray:roomsToCommitForMessages copyItems:YES];
+        [roomsToCommitForMessages removeAllObjects];
 
-    [roomsToCommitForMessages removeAllObjects];
+        dispatch_async(dispatchQueue, ^(void){
+            
+            NSUInteger messageDirSize = [[[[NSFileManager defaultManager] attributesOfItemAtPath:storeRoomsMessagesPath error:nil] objectForKey:NSFileSize] intValue];
+            NSUInteger deltaCacheSize = 0;
+            //NSDate *startDate = [NSDate date];
+
+            // Save rooms where there was changes
+            for (NSString *roomId in roomsToCommit)
+            {
+                MXFileRoomStore *roomStore = roomStores[roomId];
+                if (roomStore)
+                {
+                    NSString *roomFile = [storeRoomsMessagesPath stringByAppendingPathComponent:roomId];
+                    NSUInteger filesize = [[[[NSFileManager defaultManager] attributesOfItemAtPath:roomFile error:nil] objectForKey:NSFileSize] intValue];
+                    [NSKeyedArchiver archiveRootObject:roomStore toFile:roomFile];
+                    deltaCacheSize += [[[[NSFileManager defaultManager] attributesOfItemAtPath:roomFile error:nil] objectForKey:NSFileSize] intValue] - filesize;
+                }
+            }
+            
+            // the message directory size is also updated
+            deltaCacheSize += [[[[NSFileManager defaultManager] attributesOfItemAtPath:storeRoomsMessagesPath error:nil] objectForKey:NSFileSize] intValue] - messageDirSize;
+            
+            @synchronized(self)
+            {
+                if (cachedDiskUsage != NSUIntegerMax)
+                {
+                    cachedDiskUsage += deltaCacheSize;
+                }
+            }
+
+            //NSLog(@"[MXFileStore commit] lasted %.0fms for rooms:\n%@", [[NSDate date] timeIntervalSinceDate:startDate] * 1000, roomsToCommit);
+        });
+    }
 }
 
 
 #pragma mark - Rooms state
 - (void)saveRoomsState
 {
-    for (NSString *roomId in roomsToCommitForState)
+    if (roomsToCommitForState.count)
     {
-        NSArray *stateEvents = roomsToCommitForState[roomId];
+        // Take a snapshot of room ids to store to process them on the other thread
+        NSDictionary *roomsToCommit = [NSDictionary dictionaryWithDictionary:roomsToCommitForState];
+        [roomsToCommitForState removeAllObjects];
 
-        NSString *roomFile = [storeRoomsStatePath stringByAppendingPathComponent:roomId];
-        [NSKeyedArchiver archiveRootObject:stateEvents toFile:roomFile];
+        dispatch_async(dispatchQueue, ^(void){
+            NSUInteger deltaCacheSize = 0;
+            
+            NSUInteger stateDirSize = [[[[NSFileManager defaultManager] attributesOfItemAtPath:storeRoomsStatePath error:nil] objectForKey:NSFileSize] intValue];
+            
+            for (NSString *roomId in roomsToCommit)
+            {
+                NSArray *stateEvents = roomsToCommit[roomId];
+
+                NSString *roomFile = [storeRoomsStatePath stringByAppendingPathComponent:roomId];
+                
+                NSUInteger sizeBeforeSaving = [[[[NSFileManager defaultManager] attributesOfItemAtPath:roomFile error:nil] objectForKey:NSFileSize] intValue];
+                [NSKeyedArchiver archiveRootObject:stateEvents toFile:roomFile];
+                deltaCacheSize += [[[[NSFileManager defaultManager] attributesOfItemAtPath:roomFile error:nil] objectForKey:NSFileSize] intValue] - sizeBeforeSaving;
+            }
+            
+            // apply the directory size update
+            deltaCacheSize += [[[[NSFileManager defaultManager] attributesOfItemAtPath:storeRoomsStatePath error:nil] objectForKey:NSFileSize] intValue] - stateDirSize;
+            
+            @synchronized(self)
+            {
+                // if the size is not marked as to be recomputed
+                if (cachedDiskUsage != NSUIntegerMax)
+                {
+                    cachedDiskUsage += deltaCacheSize;
+                }
+            }
+        });
     }
-    
-    [roomsToCommitForState removeAllObjects];
 }
-
 
 #pragma mark - MXFileStore metadata
 - (void)loadMetaData
 {
     NSString *metaDataFile = [storePath stringByAppendingPathComponent:kMXFileStoreMedaDataFile];
-    metaData = [NSKeyedUnarchiver unarchiveObjectWithFile:metaDataFile];
+
+    @try
+    {
+        metaData = [NSKeyedUnarchiver unarchiveObjectWithFile:metaDataFile];
+    }
+    @catch (NSException *exception)
+    {
+        NSLog(@"Warning: MXFileStore metadata has been corrupted");
+    }
 
     if (metaData)
     {
@@ -347,10 +495,28 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     // Save only in case of change
     if (metaDataHasChanged)
     {
-        NSString *metaDataFile = [storePath stringByAppendingPathComponent:kMXFileStoreMedaDataFile];
-        [NSKeyedArchiver archiveRootObject:metaData toFile:metaDataFile];
-
         metaDataHasChanged = NO;
+
+       // Take a snapshot of metadata to store it on the other thread
+         MXFileStoreMetaData *metaData2 = [metaData copy];
+
+        dispatch_async(dispatchQueue, ^(void){
+    
+            NSString *metaDataFile = [storePath stringByAppendingPathComponent:kMXFileStoreMedaDataFile];
+            NSUInteger fileSize = [[[[NSFileManager defaultManager] attributesOfItemAtPath:metaDataFile error:nil] objectForKey:NSFileSize] intValue];
+            
+            [NSKeyedArchiver archiveRootObject:metaData2 toFile:metaDataFile];
+            
+            NSUInteger deltaSize = [[[[NSFileManager defaultManager] attributesOfItemAtPath:metaDataFile error:nil] objectForKey:NSFileSize] intValue] - fileSize;
+            
+            @synchronized(self)
+            {
+                // if the size is not marked as to be recomputed
+                if (cachedDiskUsage != NSUIntegerMax) {
+                    cachedDiskUsage += deltaSize;
+                }
+            }
+        });
     }
 }
 

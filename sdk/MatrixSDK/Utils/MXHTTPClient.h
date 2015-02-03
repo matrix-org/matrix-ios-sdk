@@ -17,33 +17,34 @@
 #import <Foundation/Foundation.h>
 
 /**
- `MXHTTPClient` is an abstraction layer for making HTTP requests to the home server.
+ `MXHTTPClient` is an abstraction layer for making requests to a HTTP server.
+
 */
 @interface MXHTTPClient : NSObject
 
 /**
- Create an intance to make requests to an home server.
- Such created instance can only make requests that do not required to be authenticated.
+ Create an instance to make requests to the server.
 
- @param homeserver the home server URL.
+ @param baseURL the server URL from which requests will be done.
  @return a MXHTTPClient instance.
  */
-- (id)initWithHomeServer:(NSString*)homeserver;
+- (id)initWithBaseURL:(NSString*)baseURL;
 
 /**
- Create an intance to make all kind of requests to an home server.
+ Create an intance to make access-token-authenticated requests to the server.
+ MXHTTPClient will automatically add the access token to requested URLs
 
- @param homeserver the home server URL.
+ @param baseURL the server URL from which requests will be done.
  @param accessToken the access token to authenticate requests.
  @return a MXHTTPClient instance.
  */
-- (id)initWithHomeServer:(NSString*)homeserver andAccessToken:(NSString*)accessToken;
+- (id)initWithBaseURL:(NSString*)baseURL andAccessToken:(NSString*)accessToken;
 
 /**
- Make a HTTP request to the home server.
+ Make a HTTP request to the server.
 
  @param httpMethod the HTTP method (GET, PUT, ...)
- @param path the path of the Matrix Client-Server API to call.
+ @param path the relative path of the server API to call.
  @param parameters the parameters to be set as a query string for `GET` requests, or the request HTTP body.
 
  @param success A block object called when the operation succeeds. It provides the JSON response object from the the server.
@@ -58,10 +59,10 @@
                 failure:(void (^)(NSError *error))failure;
 
 /**
- Make a HTTP request to the home server with a timeout.
+ Make a HTTP request to the server with a timeout.
 
  @param httpMethod the HTTP method (GET, PUT, ...)
- @param path the path of the Matrix Client-Server API to call.
+ @param path the relative path of the server API to call.
  @param parameters the parameters to be set as a query string for `GET` requests, or the request HTTP body.
  @param timeout the timeout allocated for the request.
 
@@ -78,9 +79,9 @@
                 failure:(void (^)(NSError *error))failure;
 
 /**
- Make a HTTP request to the home server with all possible options.
+ Make a HTTP request to the server with all possible options.
 
- @param path the path of the Matrix Client-Server API to call.
+ @param path the relative path of the server API to call.
  @param parameters (optional) the parameters to be set as a query string for `GET` requests, or the request HTTP body.
  @param data (optional) the data to post.
  @param headers (optional) the HTTP headers to set.

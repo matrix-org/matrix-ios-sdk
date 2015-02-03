@@ -144,6 +144,8 @@ onServerSyncDone:(void (^)())onServerSyncDone
 
         // Create the user's profile from the store
         _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId andDisplayname:_store.userDisplayname andAvatarUrl:_store.userAvatarUrl andMatrixSession:self];
+        // And store him as a common MXUser
+        users[matrixRestClient.credentials.userId] = _myUser;
 
         // Create MXRooms from their states stored in the store
         NSDate *startDate = [NSDate date];
@@ -157,6 +159,12 @@ onServerSyncDone:(void (^)())onServerSyncDone
 
         // The SDK client can use this data
         onStoreDataReady();
+
+        // Check SDK user did not called [MXSession close] in onStoreDataReady
+        if (nil == _myUser)
+        {
+            return;
+        }
 
         // We need to get all users presence to start right
         startDate = [NSDate date];
@@ -212,7 +220,7 @@ onServerSyncDone:(void (^)())onServerSyncDone
                             MXPaginationResponse *roomMessages = [MXPaginationResponse modelFromJSON:[roomDict objectForKey:@"messages"]];
 
                             [room handleMessages:roomMessages
-                                       direction:MXEventDirectionSync isTimeOrdered:YES];
+                                       direction:MXEventDirectionBackwards isTimeOrdered:YES];
 
                             // If the initialSync returns less messages than requested, we got all history from the home server
                             if (roomMessages.chunk.count < initialSyncMessagesLimit)
@@ -247,6 +255,13 @@ onServerSyncDone:(void (^)())onServerSyncDone
 
                     // We have up-to-date data, the SDK user can start using it
                     onStoreDataReady();
+                    
+                    // Check SDK user did not called [MXSession close] in onStoreDataReady
+                    if (nil == _myUser)
+                    {
+                        return;
+                    }
+
                     onServerSyncDone();
                 }
                 failure:^(NSError *error) {
@@ -287,6 +302,12 @@ onServerSyncDone:(void (^)())onServerSyncDone
             {
                 onResumeDone();
                 onResumeDone = nil;
+
+                // Check SDK user did not called [MXSession close] in onResumeDone
+                if (nil == _myUser)
+                {
+                    return;
+                }
             }
 
             // Go streaming from the returned token
@@ -364,7 +385,7 @@ onServerSyncDone:(void (^)())onServerSyncDone
     }
 }
 
-- (void) handlePresenceEvent:(MXEvent *)event direction:(MXEventDirection)direction
+- (void)handlePresenceEvent:(MXEvent *)event direction:(MXEventDirection)direction
 {
     // Update MXUser with presence data
     NSString *userId = event.userId;
@@ -396,7 +417,11 @@ onServerSyncDone:(void (^)())onServerSyncDone
     // Stop streaming
     [self pause];
 
-    _store.eventStreamToken = nil;
+    // Flush the store
+    if ([_store respondsToSelector:@selector(close)])
+    {
+        [_store close];
+    }
     
     [self removeAllListeners];
 
@@ -415,6 +440,7 @@ onServerSyncDone:(void (^)())onServerSyncDone
     [users removeAllObjects];
 
     _myUser = nil;
+    matrixRestClient = nil;
 }
 
 
@@ -552,7 +578,7 @@ onServerSyncDone:(void (^)())onServerSyncDone
         }
 
         // Clean the store
-        [_store deleteDataOfRoom:roomId];
+        [_store deleteRoom:roomId];
 
         // And remove the room from the list
         [rooms removeObjectForKey:roomId];
@@ -641,7 +667,11 @@ onServerSyncDone:(void (^)())onServerSyncDone
 
 - (void)removeAllListeners
 {
-    for (MXSessionEventListener *listener in globalEventListeners)
+    // must be done before deleted the listeners to avoid
+    // ollection <__NSArrayM: ....> was mutated while being enumerated.'
+    NSArray* eventListeners = [globalEventListeners copy];
+    
+    for (MXSessionEventListener *listener in eventListeners)
     {
         [self removeListener:listener];
     }

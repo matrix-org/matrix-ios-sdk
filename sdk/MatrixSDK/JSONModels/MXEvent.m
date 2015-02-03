@@ -29,6 +29,7 @@ NSString *const kMXEventTypeStringRoomPowerLevels     = @"m.room.power_levels";
 NSString *const kMXEventTypeStringRoomAliases         = @"m.room.aliases";
 NSString *const kMXEventTypeStringRoomMessage         = @"m.room.message";
 NSString *const kMXEventTypeStringRoomMessageFeedback = @"m.room.message.feedback";
+NSString *const kMXEventTypeStringRoomRedaction       = @"m.room.redaction";
 NSString *const kMXEventTypeStringPresence            = @"m.presence";
 NSString *const kMXEventTypeStringTypingNotification  = @"m.typing";
 
@@ -90,6 +91,136 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 {
     // The event is a state event if has a state_key
     return (nil != self.stateKey);
+}
+
+- (MXEvent*)prune
+{
+    // Filter in event by keeping only the following keys
+    NSArray *allowedKeys = @[@"event_id",
+                             @"user_id",
+                             @"room_id",
+                             @"hashes",
+                             @"signatures",
+                             @"type",
+                             @"state_key",
+                             @"depth",
+                             @"prev_events",
+                             @"prev_state",
+                             @"auth_events",
+                             @"origin",
+                             @"origin_server_ts"];
+    NSMutableDictionary *prunedEventDict = [self filterInEventWithKeys:allowedKeys];
+    
+    // Add filtered content, allowed keys in content depends on the event type
+    switch (_eventType)
+    {
+        case MXEventTypeRoomMember:
+        {
+            allowedKeys = @[@"membership"];
+            break;
+        }
+            
+        case MXEventTypeRoomCreate:
+        {
+            allowedKeys = @[@"creator"];
+            break;
+        }
+            
+        case MXEventTypeRoomJoinRules:
+        {
+            allowedKeys = @[@"join_rule"];
+            break;
+        }
+            
+        case MXEventTypeRoomPowerLevels:
+        {
+            allowedKeys = @[@"users",
+                            @"users_default",
+                            @"events",
+                            @"events_default",
+                            @"state_default",
+                            @"ban",
+                            @"kick",
+                            @"redact",
+                            @"invite"];
+            break;
+        }
+            
+        case MXEventTypeRoomAliases:
+        {
+            allowedKeys = @[@"aliases"];
+            break;
+        }
+            
+        case MXEventTypeRoomMessageFeedback:
+        {
+            allowedKeys = @[@"type", @"target_event_id"];
+            break;
+        }
+            
+        default:
+            allowedKeys = nil;
+            break;
+    }
+    [prunedEventDict setObject:[self filterInContentWithKeys:allowedKeys] forKey:@"content"];
+    
+    // Add filtered prevContent (if any)
+    if (self.prevContent)
+    {
+        [prunedEventDict setObject:[self filterInPrevContentWithKeys:allowedKeys] forKey:@"prev_content"];
+    }
+    
+    // Note: Contrary to server, we ignore here the "unsigned" event level key.
+    
+    return [MXEvent modelFromJSON:prunedEventDict];
+}
+
+#pragma mark - private
+
+- (NSMutableDictionary*)filterInEventWithKeys:(NSArray*)keys
+{
+    NSDictionary *originalDict = self.originalDictionary;
+    NSMutableDictionary *filteredEvent = [NSMutableDictionary dictionary];
+    
+    for (NSString* key in keys)
+    {
+        if (originalDict[key])
+        {
+            [filteredEvent setObject:originalDict[key] forKey:key];
+        }
+    }
+    
+    return filteredEvent;
+}
+
+- (NSDictionary*)filterInContentWithKeys:(NSArray*)contentKeys
+{
+    NSMutableDictionary *filteredContent = [NSMutableDictionary dictionary];
+    
+    for (NSString* key in contentKeys)
+    {
+        if (self.content[key])
+        {
+            [filteredContent setObject:self.content[key] forKey:key];
+        }
+    }
+    
+    return filteredContent;
+}
+
+- (NSDictionary*)filterInPrevContentWithKeys:(NSArray*)contentKeys
+{
+    NSMutableDictionary *filteredPrevContent = [NSMutableDictionary dictionary];
+    
+    for (NSString* key in contentKeys)
+    {
+        if (self.prevContent[key])
+        {
+            [filteredPrevContent setObject:self.prevContent[key] forKey:key];
+        }
+    }
+    
+    return filteredPrevContent;
 }
 
 @end

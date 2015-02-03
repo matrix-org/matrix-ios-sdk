@@ -16,7 +16,7 @@
 
 #import "APNSHandler.h"
 #import "AppDelegate.h"
-#import "MatrixHandler.h"
+#import "MatrixSDKHandler.h"
 
 NSString *const kAPNSHandlerHasBeenUpdated = @"kAPNSHandlerHasBeenUpdated";
 
@@ -91,18 +91,50 @@ static APNSHandler *sharedHandler = nil;
 
 - (void)setIsActive:(BOOL)isActive {
     // Refuse to try & turn push on if we're not logged in, it's nonsensical.
-    if ([MatrixHandler sharedHandler].status == MatrixHandlerStatusLoggedOut) {
+    if ([MatrixSDKHandler sharedHandler].status == MatrixSDKHandlerStatusLoggedOut) {
         NSLog(@"Not logged in: not setting push token because we're not logged in");
         return;
     }
     
     transientActivity = isActive;
-    // FIXME send the device token to the server (in order to submit this token to the APS servers when the server sends a notification to the user)
-    // Write transientActivity in standardUserDefaults forKey:@"apnsIsActive" on success
-//    [[NSUserDefaults standardUserDefaults] setBool:transientActivity forKey:@"apnsIsActive"];
-//    [[NSUserDefaults standardUserDefaults] synchronize];
     
-    [[NSNotificationCenter defaultCenter] postNotificationName:kAPNSHandlerHasBeenUpdated object:nil];
+    NSString *b64Token = [self.deviceToken base64EncodedStringWithOptions:0];
+    NSDictionary *pushData = @{
+                               @"url": @"https://matrix.org/_matrix/push/v1/notify",
+#ifdef DEBUG
+                               @"platform": @"sandbox",
+#endif
+                              };
+    
+    NSString *deviceLang = [NSLocale preferredLanguages][0];
+    
+    NSString * instanceHandle = [[NSUserDefaults standardUserDefaults] valueForKey:@"pusherInstanceHandle"];
+    if (!instanceHandle) {
+        instanceHandle = @"";
+        NSString *alphabet = @"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        for (int i = 0; i < 16; ++i) {
+            unsigned char c = [alphabet characterAtIndex:arc4random() % alphabet.length];
+            instanceHandle = [instanceHandle stringByAppendingFormat:@"%c", c];
+        }
+        NSLog(@"Generated fresh instance handle: %@", instanceHandle);
+        [[NSUserDefaults standardUserDefaults] setValue:instanceHandle forKey:@"pusherInstanceHandle"];
+    } else {
+        NSLog(@"Using existing instance handle: %@", instanceHandle);
+    }
+    
+    NSObject *kind = isActive ? @"http" : [NSNull null];
+
+    MXRestClient *restCli = [MatrixSDKHandler sharedHandler].mxRestClient;
+    [restCli setPusherWithPushkey:b64Token kind:kind appId:@"org.matrix.matrixConsole.ios" appDisplayName:@"Matrix Console iOS" deviceDisplayName:[[UIDevice currentDevice] name] instanceHandle:instanceHandle lang:deviceLang data:pushData success:^{
+        [[NSUserDefaults standardUserDefaults] setBool:transientActivity forKey:@"apnsIsActive"];
+        [[NSUserDefaults standardUserDefaults] synchronize];
+        
+        [[NSNotificationCenter defaultCenter] postNotificationName:kAPNSHandlerHasBeenUpdated object:nil];
+    } failure:^(NSError *error) {
+        NSLog(@"Failed to send APNS token!");
+        
+        [[NSNotificationCenter defaultCenter] postNotificationName:kAPNSHandlerHasBeenUpdated object:nil];
+    }];
 }
 
 @end

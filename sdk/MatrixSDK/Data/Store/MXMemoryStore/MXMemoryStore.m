@@ -45,13 +45,19 @@
     [roomStore storeEvent:event direction:direction];
 }
 
+- (void)replaceEvent:(MXEvent *)event inRoom:(NSString *)roomId
+{
+    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    [roomStore replaceEvent:event];
+}
+
 - (MXEvent *)eventWithEventId:(NSString *)eventId inRoom:(NSString *)roomId
 {
     MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
     return [roomStore eventWithEventId:eventId];
 }
 
-- (void)deleteDataOfRoom:(NSString *)roomId
+- (void)deleteRoom:(NSString *)roomId
 {
     if (roomStores[roomId])
     {
@@ -125,7 +131,8 @@
     return roomStores.allKeys;
 }
 
-#pragma mark - Private operations
+
+#pragma mark - Protected operations
 - (MXMemoryRoomStore*)getOrCreateRoomStore:(NSString*)roomId
 {
     MXMemoryRoomStore *roomStore = roomStores[roomId];

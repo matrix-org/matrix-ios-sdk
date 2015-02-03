@@ -14,21 +14,21 @@
  limitations under the License.
  */
 
-#import "MatrixHandler.h"
+#import "MatrixSDKHandler.h"
 #import "AppDelegate.h"
 #import "AppSettings.h"
-#import "CustomAlert.h"
+#import "MXCAlert.h"
 
 #import "MXFileStore.h"
 #import "MXTools.h"
 
 #import "MediaManager.h"
 
-NSString *const kMatrixHandlerUnsupportedMessagePrefix = @"UNSUPPORTED MSG: ";
+NSString *const kMatrixSDKHandlerUnsupportedEventDescriptionPrefix = @"Unsupported event: ";
 
-static MatrixHandler *sharedHandler = nil;
+static MatrixSDKHandler *sharedHandler = nil;
 
-@interface MatrixHandler () {
+@interface MatrixSDKHandler () {
     // We will notify user only once on session failure
     BOOL notifyOpenSessionFailure;
     
@@ -39,17 +39,22 @@ static MatrixHandler *sharedHandler = nil;
 }
 
 @property (strong, nonatomic) MXFileStore *mxFileStore;
-@property (nonatomic,readwrite) MatrixHandlerStatus status;
+@property (nonatomic,readwrite) MatrixSDKHandlerStatus status;
 @property (nonatomic,readwrite) BOOL isResumeDone;
-@property (strong, nonatomic) CustomAlert *mxNotification;
+@property (strong, nonatomic) MXCAlert *mxNotification;
 @property (nonatomic) UIBackgroundTaskIdentifier bgTask;
+
+// when the user cancels a notification
+// assume that any messagge room will be ignored
+// until the next launch / debackground
+@property (nonatomic,readwrite) NSMutableArray* unnotifiedRooms;
 @end
 
-@implementation MatrixHandler
+@implementation MatrixSDKHandler
 
 @synthesize homeServerURL, homeServer, userLogin, userId, accessToken;
 
-+ (MatrixHandler *)sharedHandler {
++ (MatrixSDKHandler *)sharedHandler {
     @synchronized(self) {
         if(sharedHandler == nil)
         {
@@ -61,12 +66,15 @@ static MatrixHandler *sharedHandler = nil;
 
 #pragma  mark - 
 
--(MatrixHandler *)init {
+-(MatrixSDKHandler *)init {
     if (self = [super init]) {
-        _status = (self.accessToken != nil) ? MatrixHandlerStatusLogged : MatrixHandlerStatusLoggedOut;
+        _status = (self.accessToken != nil) ? MatrixSDKHandlerStatusLogged : MatrixSDKHandlerStatusLoggedOut;
         _isResumeDone = NO;
         _userPresence = MXPresenceUnknown;
         notifyOpenSessionFailure = YES;
+        
+        NSString *label = [NSString stringWithFormat:@"com.matrix.%@.MatrixSDKHandler", [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleName"]];
+        _processingQueue = dispatch_queue_create([label UTF8String], DISPATCH_QUEUE_SERIAL);
         
         // Read potential homeserver url in shared defaults object
         if (self.homeServerURL) {
@@ -76,6 +84,8 @@ static MatrixHandler *sharedHandler = nil;
                 [self openSession];
             }
         }
+        
+        _unnotifiedRooms = [[NSMutableArray alloc] init];
         
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onAppDidEnterBackground) name:UIApplicationDidEnterBackgroundNotification object:nil];
     }
@@ -106,7 +116,8 @@ static MatrixHandler *sharedHandler = nil;
                                                  kMXEventTypeStringRoomPowerLevels,
                                                  kMXEventTypeStringRoomAliases,
                                                  kMXEventTypeStringRoomMessage,
-                                                 kMXEventTypeStringRoomMessageFeedback
+                                                 kMXEventTypeStringRoomMessageFeedback,
+                                                 kMXEventTypeStringRoomRedaction
                                                  ];
             }
             else {
@@ -121,10 +132,10 @@ static MatrixHandler *sharedHandler = nil;
 
             // Launch mxSession
             [self.mxSession start:^{
-                self.status = MatrixHandlerStatusStoreDataReady;
+                self.status = MatrixSDKHandlerStatusStoreDataReady;
             } onServerSyncDone:^{
                 _isResumeDone = YES;
-                self.status = MatrixHandlerStatusServerSyncDone;
+                self.status = MatrixSDKHandlerStatusServerSyncDone;
                 [self setUserPresence:MXPresenceOnline andStatusMessage:nil completion:nil];
 
                 // Register listener to update user's information
@@ -200,6 +211,8 @@ static MatrixHandler *sharedHandler = nil;
 - (void)dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     
+    _processingQueue = nil;
+    
     [self closeSession];
     self.mxSession = nil;
     
@@ -215,12 +228,14 @@ static MatrixHandler *sharedHandler = nil;
         [self.mxNotification dismiss:NO];
         self.mxNotification = nil;
     }
+    
+    _unnotifiedRooms = [[NSMutableArray alloc] init];
 }
 
 #pragma mark -
 
 - (void)pauseInBackgroundTask {
-    if (self.mxSession && self.status == MatrixHandlerStatusServerSyncDone) {
+    if (self.mxSession && self.status == MatrixSDKHandlerStatusServerSyncDone) {
         _bgTask = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
             [[UIApplication sharedApplication] endBackgroundTask:_bgTask];
             _bgTask = UIBackgroundTaskInvalid;
@@ -244,7 +259,7 @@ static MatrixHandler *sharedHandler = nil;
 }
 
 - (void)resume {
-    if (self.mxSession && self.status == MatrixHandlerStatusServerSyncDone) {
+    if (self.mxSession && self.status == MatrixSDKHandlerStatusServerSyncDone) {
         if (!self.isResumeDone) {
             // Resume SDK and update user presence
             [self.mxSession resume:^{
@@ -269,12 +284,14 @@ static MatrixHandler *sharedHandler = nil;
     self.accessToken = nil;
     self.userId = nil;
     self.homeServer = nil;
+    
+    _unnotifiedRooms = [[NSMutableArray alloc] init];
     // Keep userLogin, homeServerUrl
 }
 
 - (void)forceInitialSync:(BOOL)clearCache {
-    if (self.status == MatrixHandlerStatusServerSyncDone || self.status == MatrixHandlerStatusStoreDataReady) {
-        self.status = MatrixHandlerStatusLogged;
+    if (self.status == MatrixSDKHandlerStatusServerSyncDone || self.status == MatrixSDKHandlerStatusStoreDataReady) {
+        self.status = MatrixSDKHandlerStatusLogged;
         [self closeSession];
         notifyOpenSessionFailure = NO;
         
@@ -310,8 +327,8 @@ static MatrixHandler *sharedHandler = nil;
                     [[UIApplication sharedApplication] scheduleLocalNotification:localNotification];
                 } else if (![event.userId isEqualToString:self.userId]
                            && ![[AppDelegate theDelegate].masterTabBarController.visibleRoomId isEqualToString:event.roomId]
-                           && ![[AppDelegate theDelegate].masterTabBarController isPresentingMediaPicker]) {
-                    
+                           && ![[AppDelegate theDelegate].masterTabBarController isPresentingMediaPicker]
+                           && ([self.unnotifiedRooms indexOfObject:event.roomId] == NSNotFound)) {
                     
                     NSString* messageText = [self displayTextForEvent:event withRoomState:roomState inSubtitleMode:YES];
                     
@@ -323,18 +340,21 @@ static MatrixHandler *sharedHandler = nil;
                             [self.mxNotification dismiss:NO];
                         }
                         
-                        self.mxNotification = [[CustomAlert alloc] initWithTitle:roomState.displayname
+                        __weak typeof(self) weakSelf = self;
+                        
+                        self.mxNotification = [[MXCAlert alloc] initWithTitle:roomState.displayname
                                                                          message:messageText
-                                                                           style:CustomAlertStyleAlert];
-                        self.mxNotification.cancelButtonIndex = [self.mxNotification addActionWithTitle:@"OK"
-                                                                                                  style:CustomAlertActionStyleDefault
-                                                                                                handler:^(CustomAlert *alert) {
-                                                                                                    [MatrixHandler sharedHandler].mxNotification = nil;
+                                                                           style:MXCAlertStyleAlert];
+                        self.mxNotification.cancelButtonIndex = [self.mxNotification addActionWithTitle:@"Cancel"
+                                                                                                  style:MXCAlertActionStyleDefault
+                                                                                                handler:^(MXCAlert *alert) {
+                                                                                                    weakSelf.mxNotification = nil;
+                                                                                                    [weakSelf.unnotifiedRooms addObject:event.roomId];
                                                                                                 }];
                         [self.mxNotification addActionWithTitle:@"View"
-                                                          style:CustomAlertActionStyleDefault
-                                                        handler:^(CustomAlert *alert) {
-                                                            [MatrixHandler sharedHandler].mxNotification = nil;
+                                                          style:MXCAlertActionStyleDefault
+                                                        handler:^(MXCAlert *alert) {
+                                                            weakSelf.mxNotification = nil;
                                                             // Show the room
                                                             [[AppDelegate theDelegate].masterTabBarController showRoom:event.roomId];
                                                         }];
@@ -437,11 +457,11 @@ static MatrixHandler *sharedHandler = nil;
     if (inAccessToken.length) {
         [[NSUserDefaults standardUserDefaults] setObject:inAccessToken forKey:@"accesstoken"];
         [[AppDelegate theDelegate] registerUserNotificationSettings];
-        self.status = MatrixHandlerStatusLogged;
+        self.status = MatrixSDKHandlerStatusLogged;
         [self openSession];
     } else {
         [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"accesstoken"];
-        self.status = MatrixHandlerStatusLoggedOut;
+        self.status = MatrixSDKHandlerStatusLoggedOut;
         [self closeSession];
     }
     [[NSUserDefaults standardUserDefaults] synchronize];
@@ -502,6 +522,139 @@ static MatrixHandler *sharedHandler = nil;
     return NO;
 }
 
+#pragma mark -
+
+// return a MatrixIDs list of 1:1 room members
+- (NSArray*)oneToOneRoomMemberMatrixIDs {
+    
+    NSMutableArray* matrixIDs = [[NSMutableArray alloc] init];
+    MatrixSDKHandler *mxHandler = [MatrixSDKHandler sharedHandler];
+    
+     if ((mxHandler.status == MatrixSDKHandlerStatusStoreDataReady) || (mxHandler.status == MatrixSDKHandlerStatusServerSyncDone)) {
+      
+         NSArray *recentEvents = [NSMutableArray arrayWithArray:[mxHandler.mxSession recentsWithTypeIn:mxHandler.eventsFilterForMessages]];
+         
+         for (MXEvent *mxEvent in recentEvents) {
+             MXRoom *mxRoom = [mxHandler.mxSession roomWithRoomId:mxEvent.roomId];
+             
+             NSArray* membersList = [mxRoom.state members];
+             
+             // keep only 1:1 chat
+             if ([mxRoom.state members].count <= 2) {
+                 
+                 for (MXRoomMember* member in membersList) {
+                     // not myself
+                     if (![member.userId isEqualToString:mxHandler.userId]) {
+                         if ([matrixIDs indexOfObject:member.userId] == NSNotFound) {
+                             [matrixIDs addObject:member.userId];
+                         }
+                     }
+                 }
+             }
+         }
+     }
+    
+    return matrixIDs;
+}
+
+// search if a private room has been started with this user
+// returns the room ID
+// nil if not found
+- (NSString*) privateRoomIdWith:(NSString*)otherMatrixID {
+    //
+    if (self.mxSession) {
+        // list the last messages of each room to get the rooms list
+        NSArray *recentEvents = [NSMutableArray arrayWithArray:[self.mxSession recentsWithTypeIn:self.eventsFilterForMessages]];
+        
+        // loops
+        for (MXEvent *mxEvent in recentEvents) {
+            // get the dedicated mxRooms
+            MXRoom *mxRoom = [self.mxSession roomWithRoomId:mxEvent.roomId];
+            
+            // accept only room with 2 users
+            if (mxRoom.state.members.count == 2) {
+                NSArray* roomMembers = mxRoom.state.members;
+                
+                MXRoomMember* member1 = [roomMembers objectAtIndex:0];
+                MXRoomMember* member2 = [roomMembers objectAtIndex:1];
+                
+                // check if they are the dedicated users
+                if (
+                    ([member1.userId isEqualToString:self.mxSession.myUser.userId] || [member1.userId isEqualToString:otherMatrixID]) &&
+                    ([member2.userId isEqualToString:self.mxSession.myUser.userId] || [member2.userId isEqualToString:otherMatrixID])) {
+                    return mxRoom.state.roomId;
+                }
+            }
+        }
+    }
+    
+    return nil;
+}
+
+// create a private one to one chat room
+- (void)startPrivateOneToOneRoomWith:(NSString*)otherMatrixID {
+    if (self.mxRestClient) {
+        NSString* roomId = [self privateRoomIdWith:otherMatrixID];
+        
+        // if the room exists
+        if (roomId) {
+            // open it
+            [[AppDelegate theDelegate].masterTabBarController showRoom:roomId];
+        } else {
+            // create a new room
+            [self.mxRestClient createRoom:nil
+                                    visibility:kMXRoomVisibilityPrivate
+                                     roomAlias:nil
+                                         topic:nil
+                                       success:^(MXCreateRoomResponse *response) {
+                                           
+                                           // invite the other user only if it is defined and not onself
+                                           if (otherMatrixID && ![self.userId isEqualToString:otherMatrixID]) {
+                                               // add the user
+                                               [self.mxRestClient inviteUser:otherMatrixID toRoom:response.roomId success:^{
+                                               } failure:^(NSError *error) {
+                                                   NSLog(@"%@ invitation failed (roomId: %@): %@", otherMatrixID, response.roomId, error);
+                                                   //Alert user
+                                                   [[AppDelegate theDelegate] showErrorAsAlert:error];
+                                               }];
+                                           }
+                                           
+                                           // Open created room
+                                           [[AppDelegate theDelegate].masterTabBarController showRoom:response.roomId];
+                                           
+                                       } failure:^(NSError *error) {
+                                           NSLog(@"Create room failed: %@", error);
+                                           //Alert user
+                                           [[AppDelegate theDelegate] showErrorAsAlert:error];
+                                       }];
+        }
+    }
+}
+
+// the pushes could have disabled for a dedicated room
+// reenable them
+- (void)allowRoomPushes:(NSString*)roomID {
+    if (roomID) {
+        [self.unnotifiedRooms removeObject:roomID];
+    }
+}
+
+// Return the suitable url to display the content thumbnail into the provided view size
+// Note: the provided view size is supposed in points, this method will convert this size in pixels by considering screen scale
+- (NSString*)thumbnailURLForContent:(NSString*)contentURI inViewSize:(CGSize)viewSize withMethod:(MXThumbnailingMethod)thumbnailingMethod {
+    // Suppose this url is a matrix content uri, we use SDK to get the well adapted thumbnail from server
+    // Convert first the provided size in pixels
+    CGFloat scale = [[UIScreen mainScreen] scale];
+    CGSize sizeInPixels = CGSizeMake(viewSize.width * scale, viewSize.height * scale);
+    NSString *thumbnailURL = [self.mxRestClient urlOfContentThumbnail:contentURI withSize:sizeInPixels andMethod:thumbnailingMethod];
+    if (nil == thumbnailURL) {
+        // Manage backward compatibility. The content URL used to be an absolute HTTP URL
+        thumbnailURL = contentURI;
+    }
+    return thumbnailURL;
+}
+
+#pragma mark -
 
 - (NSString*)senderDisplayNameForEvent:(MXEvent*)event withRoomState:(MXRoomState*)roomState {
     // Consider first the current display name defined in provided room state (Note: this room state is supposed to not take the new event into account)
@@ -526,21 +679,79 @@ static MatrixHandler *sharedHandler = nil;
 }
 
 - (NSString*)displayTextForEvent:(MXEvent*)event withRoomState:(MXRoomState*)roomState inSubtitleMode:(BOOL)isSubtitle {
+    // Check first whether the event has been redacted
+    NSString *redactedInfo = nil;
+    BOOL isRedacted = (event.redactedBecause != nil);
+    if (isRedacted) {
+        NSLog(@"Redacted event %@ (%@)", event.description, event.redactedBecause);
+        // Check whether redacted information is required
+        if (!isSubtitle && ![AppSettings sharedSettings].hideRedactedInformation) {
+            redactedInfo = @"<redacted>";
+            if ([event.redactedBecause isKindOfClass:[NSDictionary class]]) {
+                // Consider live room state to resolve redactor name if no roomState is provided
+                MXRoomState *aRoomState = roomState ? roomState : [self.mxSession roomWithRoomId:event.roomId].state;
+                NSString *redactedBy = [aRoomState memberName:event.redactedBecause[@"user_id"]];
+                NSString *redactedReason = event.redactedBecause[@"reason"];
+                if (redactedReason.length) {
+                    if (redactedBy.length) {
+                        redactedBy = [NSString stringWithFormat:@"by %@ (reason: %@)", redactedBy, redactedReason];
+                    } else {
+                        redactedBy = [NSString stringWithFormat:@"(reason: %@)", redactedReason];
+                    }
+                } else if (redactedBy.length) {
+                    redactedBy = [NSString stringWithFormat:@"by %@", redactedBy];
+                }
+                
+                if (redactedBy.length) {
+                    redactedInfo = [NSString stringWithFormat:@"<redacted %@>", redactedBy];
+                }
+            }
+        }
+    }
+    
+    // Prepare returned description
     NSString *displayText = nil;
     // Prepare display name for concerned users
-    NSString *senderDisplayName = [self senderDisplayNameForEvent:event withRoomState:roomState];
+    NSString *senderDisplayName = roomState ? [self senderDisplayNameForEvent:event withRoomState:roomState] : event.userId;
     NSString *targetDisplayName = nil;
     if (event.stateKey) {
-        targetDisplayName = [roomState memberName:event.stateKey];
+        targetDisplayName = roomState ? [roomState memberName:event.stateKey] : event.stateKey;
     }
     
     switch (event.eventType) {
         case MXEventTypeRoomName: {
-            displayText = [NSString stringWithFormat:@"%@ changed the room name to: %@", senderDisplayName, event.content[@"name"]];
+            NSString *roomName = event.content[@"name"];
+            if (isRedacted) {
+                if (!redactedInfo) {
+                    // Here the event is ignored (no display)
+                    return nil;
+                }
+                roomName = redactedInfo;
+            }
+            
+            if (roomName.length) {
+                displayText = [NSString stringWithFormat:@"%@ changed the room name to: %@", senderDisplayName, roomName];
+            } else {
+                displayText = [NSString stringWithFormat:@"%@ removed the room name", senderDisplayName];
+            }
             break;
         }
         case MXEventTypeRoomTopic: {
-            displayText = [NSString stringWithFormat:@"%@ changed the topic to: %@", senderDisplayName, event.content[@"topic"]];
+            NSString *roomTopic = event.content[@"topic"];
+            if (isRedacted) {
+                if (!redactedInfo) {
+                    // Here the event is ignored (no display)
+                    return nil;
+                }
+                roomTopic = redactedInfo;
+            }
+            
+            if (roomTopic.length) {
+                displayText = [NSString stringWithFormat:@"%@ changed the topic to: %@", senderDisplayName, roomTopic];
+            } else {
+                displayText = [NSString stringWithFormat:@"%@ removed the topic", senderDisplayName];
+            }
+            
             break;
         }
         case MXEventTypeRoomMember: {
@@ -553,41 +764,50 @@ static MatrixHandler *sharedHandler = nil;
                 prevMembership = event.prevContent[@"membership"];
             }
             
-            // Check whether the membership is unchanged
+            // Check whether the sender has updated his profile (the membership is then unchanged)
             if (prevMembership && membership && [membership isEqualToString:prevMembership]) {
-                // Check whether the display name has been changed
-                NSString *displayname = event.content[@"displayname"];
-                NSString *prevDisplayname =  event.prevContent[@"displayname"];
-                if (!displayname.length) {
-                    displayname = nil;
-                }
-                if (!prevDisplayname.length) {
-                    prevDisplayname = nil;
-                }
-                if ((displayname || prevDisplayname) && ([displayname isEqualToString:prevDisplayname] == NO)) {
-                    if (!prevDisplayname) {
-                        displayText = [NSString stringWithFormat:@"%@ set their display name to %@", event.userId, displayname];
-                    } else if (!displayname) {
-                        displayText = [NSString stringWithFormat:@"%@ removed their display name (previouly named %@)", event.userId, prevDisplayname];
-                    } else {
-                        displayText = [NSString stringWithFormat:@"%@ changed their display name from %@ to %@", event.userId, prevDisplayname, displayname];
+                // Is redacted event?
+                if (isRedacted) {
+                    if (!redactedInfo) {
+                        // Here the event is ignored (no display)
+                        return nil;
                     }
-                }
-                
-                // Check whether the avatar has been changed
-                NSString *avatar = event.content[@"avatar_url"];
-                NSString *prevAvatar = event.prevContent[@"avatar_url"];
-                if (!avatar.length) {
-                    avatar = nil;
-                }
-                if (!prevAvatar.length) {
-                    prevAvatar = nil;
-                }
-                if ((prevAvatar || avatar) && ([avatar isEqualToString:prevAvatar] == NO)) {
-                    if (displayText) {
-                        displayText = [NSString stringWithFormat:@"%@ (picture profile was changed too)", displayText];
-                    } else {
-                        displayText = [NSString stringWithFormat:@"%@ changed their picture profile", senderDisplayName];
+                    displayText = [NSString stringWithFormat:@"%@ updated their profile %@", senderDisplayName, redactedInfo];;
+                } else {
+                    // Check whether the display name has been changed
+                    NSString *displayname = event.content[@"displayname"];
+                    NSString *prevDisplayname =  event.prevContent[@"displayname"];
+                    if (!displayname.length) {
+                        displayname = nil;
+                    }
+                    if (!prevDisplayname.length) {
+                        prevDisplayname = nil;
+                    }
+                    if ((displayname || prevDisplayname) && ([displayname isEqualToString:prevDisplayname] == NO)) {
+                        if (!prevDisplayname) {
+                            displayText = [NSString stringWithFormat:@"%@ set their display name to %@", event.userId, displayname];
+                        } else if (!displayname) {
+                            displayText = [NSString stringWithFormat:@"%@ removed their display name (previouly named %@)", event.userId, prevDisplayname];
+                        } else {
+                            displayText = [NSString stringWithFormat:@"%@ changed their display name from %@ to %@", event.userId, prevDisplayname, displayname];
+                        }
+                    }
+                    
+                    // Check whether the avatar has been changed
+                    NSString *avatar = event.content[@"avatar_url"];
+                    NSString *prevAvatar = event.prevContent[@"avatar_url"];
+                    if (!avatar.length) {
+                        avatar = nil;
+                    }
+                    if (!prevAvatar.length) {
+                        prevAvatar = nil;
+                    }
+                    if ((prevAvatar || avatar) && ([avatar isEqualToString:prevAvatar] == NO)) {
+                        if (displayText) {
+                            displayText = [NSString stringWithFormat:@"%@ (picture profile was changed too)", displayText];
+                        } else {
+                            displayText = [NSString stringWithFormat:@"%@ changed their picture profile", senderDisplayName];
+                        }
                     }
                 }
             } else {
@@ -615,13 +835,22 @@ static MatrixHandler *sharedHandler = nil;
                         displayText = [NSString stringWithFormat:@"%@: %@", displayText, event.content[@"reason"]];
                     }
                 }
+                
+                // Append redacted info if any
+                if (redactedInfo) {
+                    displayText = [NSString stringWithFormat:@"%@ %@", displayText, redactedInfo];
+                }
             }
             break;
         }
         case MXEventTypeRoomCreate: {
             NSString *creatorId = event.content[@"creator"];
             if (creatorId) {
-                displayText = [NSString stringWithFormat:@"%@ created the room", [roomState memberName:creatorId]];
+                displayText = [NSString stringWithFormat:@"%@ created the room", (roomState ? [roomState memberName:creatorId] : creatorId)];
+                // Append redacted info if any
+                if (redactedInfo) {
+                    displayText = [NSString stringWithFormat:@"%@ %@", displayText, redactedInfo];
+                }
             }
             break;
         }
@@ -629,6 +858,10 @@ static MatrixHandler *sharedHandler = nil;
             NSString *joinRule = event.content[@"join_rule"];
             if (joinRule) {
                 displayText = [NSString stringWithFormat:@"The join rule is: %@", joinRule];
+                // Append redacted info if any
+                if (redactedInfo) {
+                    displayText = [NSString stringWithFormat:@"%@ %@", displayText, redactedInfo];
+                }
             }
             break;
         }
@@ -667,71 +900,88 @@ static MatrixHandler *sharedHandler = nil;
             if (event.content[@"state_default"]) {
                 displayText = [NSString stringWithFormat:@"%@\r\n\u2022 %@: %@", displayText, @"state_default", event.content[@"state_default"]];
             }
+            
+            // Append redacted info if any
+            if (redactedInfo) {
+                displayText = [NSString stringWithFormat:@"%@\r\n %@", displayText, redactedInfo];
+            }
             break;
         }
         case MXEventTypeRoomAliases: {
             NSArray *aliases = event.content[@"aliases"];
             if (aliases) {
                 displayText = [NSString stringWithFormat:@"The room aliases are: %@", aliases];
+                // Append redacted info if any
+                if (redactedInfo) {
+                    displayText = [NSString stringWithFormat:@"%@\r\n %@", displayText, redactedInfo];
+                }
             }
             break;
         }
         case MXEventTypeRoomMessage: {
-            NSString *msgtype = event.content[@"msgtype"];
-            displayText = [event.content[@"body"] isKindOfClass:[NSString class]] ? event.content[@"body"] : nil;
-            
-            if ([msgtype isEqualToString:kMXMessageTypeEmote]) {
-                displayText = [NSString stringWithFormat:@"* %@ %@", senderDisplayName, displayText];
-            } else if ([msgtype isEqualToString:kMXMessageTypeImage]) {
-                displayText = displayText? displayText : @"image attachment";
-                // Check attachment validity
-                if (![self isSupportedAttachment:event]) {
-                    NSLog(@"ERROR: Unsupported attachment %@", event.description);
-                    // Check whether unsupported/unexpected messages should be exposed
-                    if (isSubtitle || [AppSettings sharedSettings].hideUnsupportedMessages) {
-                        displayText = @"invalid image attachment";
-                    } else {
-                        // Display event content as unsupported message
-                        displayText = [NSString stringWithFormat:@"%@%@", kMatrixHandlerUnsupportedMessagePrefix, event.description];
+            // Is redacted?
+            if (isRedacted) {
+                if (!redactedInfo) {
+                    // Here the event is ignored (no display)
+                    return nil;
+                }
+                displayText = redactedInfo;
+            } else {
+                NSString *msgtype = event.content[@"msgtype"];
+                displayText = [event.content[@"body"] isKindOfClass:[NSString class]] ? event.content[@"body"] : nil;
+                
+                if ([msgtype isEqualToString:kMXMessageTypeEmote]) {
+                    displayText = [NSString stringWithFormat:@"* %@ %@", senderDisplayName, displayText];
+                } else if ([msgtype isEqualToString:kMXMessageTypeImage]) {
+                    displayText = displayText? displayText : @"image attachment";
+                    // Check attachment validity
+                    if (![self isSupportedAttachment:event]) {
+                        NSLog(@"ERROR: Unsupported attachment %@", event.description);
+                        // Check whether unsupported/unexpected messages should be exposed
+                        if (isSubtitle || [AppSettings sharedSettings].hideUnsupportedEvents) {
+                            displayText = @"invalid image attachment";
+                        } else {
+                            // Display event content as unsupported event
+                            displayText = [NSString stringWithFormat:@"%@%@", kMatrixSDKHandlerUnsupportedEventDescriptionPrefix, event.description];
+                        }
+                    }
+                } else if ([msgtype isEqualToString:kMXMessageTypeAudio]) {
+                    displayText = displayText? displayText : @"audio attachment";
+                    if (![self isSupportedAttachment:event]) {
+                        NSLog(@"ERROR: Unsupported attachment %@", event.description);
+                        if (isSubtitle || [AppSettings sharedSettings].hideUnsupportedEvents) {
+                            displayText = @"invalid audio attachment";
+                        } else {
+                            displayText = [NSString stringWithFormat:@"%@%@", kMatrixSDKHandlerUnsupportedEventDescriptionPrefix, event.description];
+                        }
+                    }
+                } else if ([msgtype isEqualToString:kMXMessageTypeVideo]) {
+                    displayText = displayText? displayText : @"video attachment";
+                    if (![self isSupportedAttachment:event]) {
+                        NSLog(@"ERROR: Unsupported attachment %@", event.description);
+                        if (isSubtitle || [AppSettings sharedSettings].hideUnsupportedEvents) {
+                            displayText = @"invalid video attachment";
+                        } else {
+                            displayText = [NSString stringWithFormat:@"%@%@", kMatrixSDKHandlerUnsupportedEventDescriptionPrefix, event.description];
+                        }
+                    }
+                } else if ([msgtype isEqualToString:kMXMessageTypeLocation]) {
+                    displayText = displayText? displayText : @"location attachment";
+                    if (![self isSupportedAttachment:event]) {
+                        NSLog(@"ERROR: Unsupported attachment %@", event.description);
+                        if (isSubtitle || [AppSettings sharedSettings].hideUnsupportedEvents) {
+                            displayText = @"invalid location attachment";
+                        } else {
+                            displayText = [NSString stringWithFormat:@"%@%@", kMatrixSDKHandlerUnsupportedEventDescriptionPrefix, event.description];
+                        }
                     }
                 }
-            } else if ([msgtype isEqualToString:kMXMessageTypeAudio]) {
-                displayText = displayText? displayText : @"audio attachment";
-                if (![self isSupportedAttachment:event]) {
-                    NSLog(@"ERROR: Unsupported attachment %@", event.description);
-                    if (isSubtitle || [AppSettings sharedSettings].hideUnsupportedMessages) {
-                        displayText = @"invalid audio attachment";
-                    } else {
-                        displayText = [NSString stringWithFormat:@"%@%@", kMatrixHandlerUnsupportedMessagePrefix, event.description];
-                    }
-                }
-            } else if ([msgtype isEqualToString:kMXMessageTypeVideo]) {
-                displayText = displayText? displayText : @"video attachment";
-                if (![self isSupportedAttachment:event]) {
-                    NSLog(@"ERROR: Unsupported attachment %@", event.description);
-                    if (isSubtitle || [AppSettings sharedSettings].hideUnsupportedMessages) {
-                        displayText = @"invalid video attachment";
-                    } else {
-                        displayText = [NSString stringWithFormat:@"%@%@", kMatrixHandlerUnsupportedMessagePrefix, event.description];
-                    }
-                }
-            } else if ([msgtype isEqualToString:kMXMessageTypeLocation]) {
-                displayText = displayText? displayText : @"location attachment";
-                if (![self isSupportedAttachment:event]) {
-                    NSLog(@"ERROR: Unsupported attachment %@", event.description);
-                    if (isSubtitle || [AppSettings sharedSettings].hideUnsupportedMessages) {
-                        displayText = @"invalid location attachment";
-                    } else {
-                        displayText = [NSString stringWithFormat:@"%@%@", kMatrixHandlerUnsupportedMessagePrefix, event.description];
-                    }
+                
+                // Check whether the sender name has to be added
+                if (displayText && isSubtitle && [msgtype isEqualToString:kMXMessageTypeEmote] == NO) {
+                    displayText = [NSString stringWithFormat:@"%@: %@", senderDisplayName, displayText];
                 }
             }
-            
-            // Check whether the sender name has to be added
-            if (isSubtitle && [msgtype isEqualToString:kMXMessageTypeEmote] == NO) {
-                displayText = [NSString stringWithFormat:@"%@: %@", senderDisplayName, displayText];
-            }
-            
             break;
         }
         case MXEventTypeRoomMessageFeedback: {
@@ -739,8 +989,21 @@ static MatrixHandler *sharedHandler = nil;
             NSString *eventId = event.content[@"target_event_id"];
             if (type && eventId) {
                 displayText = [NSString stringWithFormat:@"Feedback event (id: %@): %@", eventId, type];
+                // Append redacted info if any
+                if (redactedInfo) {
+                    displayText = [NSString stringWithFormat:@"%@ %@", displayText, redactedInfo];
+                }
             }
             break;
+        }
+        case MXEventTypeRoomRedaction: {
+            if ([self.eventsFilterForMessages indexOfObject:kMXEventTypeStringRoomRedaction] != NSNotFound) {
+                NSString *eventId = event.redacts;
+                displayText = [NSString stringWithFormat:@"%@ redacted an event (id: %@)", senderDisplayName, eventId];
+            } else {
+                // No description
+                return nil;
+            }
         }
         case MXEventTypeCustom:
             break;
@@ -750,46 +1013,13 @@ static MatrixHandler *sharedHandler = nil;
     
     if (!displayText) {
         NSLog(@"ERROR: Unsupported event %@)", event.description);
-        if (!isSubtitle && ![AppSettings sharedSettings].hideUnsupportedMessages) {
+        if (!isSubtitle && ![AppSettings sharedSettings].hideUnsupportedEvents) {
             // Return event content as unsupported event
-            displayText = [NSString stringWithFormat:@"%@%@", kMatrixHandlerUnsupportedMessagePrefix, event.description];
+            displayText = [NSString stringWithFormat:@"%@%@", kMatrixSDKHandlerUnsupportedEventDescriptionPrefix, event.description];
         }
     }
     
     return displayText;
-}
-
-
-// search if a conversation has been started with this user
-- (NSString*) getRoomStartedWithMember:(MXRoomMember*)roomMember {
-    //
-    if (self.mxSession) {
-        // list the last messages of each room to get the rooms list
-        NSArray *recentEvents = [NSMutableArray arrayWithArray:[self.mxSession recentsWithTypeIn:self.eventsFilterForMessages]];
-        
-        // loops
-        for (MXEvent *mxEvent in recentEvents) {
-            // get the dedicated mxRooms
-            MXRoom *mxRoom = [self.mxSession roomWithRoomId:mxEvent.roomId];
-            
-            // accept only room with 2 users
-            if (mxRoom.state.members.count == 2) {
-                NSArray* roomMembers = mxRoom.state.members;
-                
-                MXRoomMember* member1 = [roomMembers objectAtIndex:0];
-                MXRoomMember* member2 = [roomMembers objectAtIndex:1];
-                
-                // check if they are the dedicated users
-                if (
-                    ([member1.userId isEqualToString:self.mxSession.myUser.userId] || [member1.userId isEqualToString:roomMember.userId]) &&
-                    ([member2.userId isEqualToString:self.mxSession.myUser.userId] || [member2.userId isEqualToString:roomMember.userId])) {
-                    return mxRoom.state.roomId;
-                }
-            }
-        }
-    }
-    
-    return nil;
 }
 
 - (NSUInteger) MXCacheSize {
@@ -803,6 +1033,23 @@ static MatrixHandler *sharedHandler = nil;
 
 - (NSUInteger) cachesSize {
     return self.MXCacheSize + [MediaManager cacheSize];
+}
+
+- (NSUInteger) minCachesSize {
+    // add a 50MB margin to avoid cache file deletion
+    return self.MXCacheSize + [MediaManager minCacheSize] + 50 * 1024 * 1024;
+}
+
+- (NSUInteger) currentMaxCachesSize {
+    return self.MXCacheSize + [MediaManager currentMaxCacheSize];
+}
+
+- (void)setCurrentMaxCachesSize:(NSUInteger)maxCachesSize {
+    [MediaManager setCurrentMaxCacheSize:maxCachesSize - self.MXCacheSize];
+}
+
+- (NSUInteger) maxAllowedCachesSize {
+    return self.MXCacheSize + [MediaManager maxAllowedCacheSize];
 }
 
 - (CGFloat)getPowerLevel:(MXRoomMember *)roomMember inRoom:(MXRoom *)room {
@@ -835,13 +1082,28 @@ static MatrixHandler *sharedHandler = nil;
     return powerLevel;
 }
 
-- (NSString*)getMXRoomMemberDisplayName:(MXRoomMember*)roomMember {
-    return roomMember.displayname.length == 0 ? roomMember.userId : roomMember.displayname;
+
+// return the presence ring color
+// nil means there is no ring to display
+- (UIColor*)getPresenceRingColor:(MXPresence)presence {
+    switch (presence) {
+        case MXPresenceOnline:
+            return [UIColor colorWithRed:0.2 green:0.9 blue:0.2 alpha:1.0];
+        case MXPresenceUnavailable:
+            return [UIColor colorWithRed:0.9 green:0.9 blue:0.0 alpha:1.0];
+        case MXPresenceOffline:
+            return [UIColor colorWithRed:0.9 green:0.2 blue:0.2 alpha:1.0];
+        case MXPresenceUnknown:
+        case MXPresenceFreeForChat:
+        case MXPresenceHidden:
+        default:
+            return nil;
+    }
 }
 
 // return YES if the text contains a bing word
 - (BOOL)containsBingWord:(NSString*)text {
-    MatrixHandler *mxHandler = [MatrixHandler sharedHandler];
+    MatrixSDKHandler *mxHandler = [MatrixSDKHandler sharedHandler];
     
     NSMutableArray* wordsList = [[AppSettings sharedSettings].specificWordsToAlertOn mutableCopy];
     

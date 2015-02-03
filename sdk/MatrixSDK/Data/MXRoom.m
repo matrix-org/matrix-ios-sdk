@@ -158,19 +158,23 @@
         // Store where to start pagination
         [mxSession.store storePaginationTokenOfRoom:_state.roomId andToken:roomMessages.start];
     }
-
-    // Commit store changes
-    if ([mxSession.store respondsToSelector:@selector(commit)])
-    {
-        [mxSession.store commit];
-    }
 }
 
 - (void)handleMessage:(MXEvent*)event direction:(MXEventDirection)direction pagFrom:(NSString*)pagFrom
 {
+    // Consider here state event
     if (event.isState)
     {
         [self handleStateEvent:event direction:direction];
+        
+        // Update store with new room state once a live event has been processed
+        if (direction == MXEventDirectionForwards)
+        {
+            if ([mxSession.store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
+            {
+                [mxSession.store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
+            }
+        }
     }
 
     // Notify listener only for past events here
@@ -220,43 +224,54 @@
     }
 }
 
+#pragma mark - Handle redaction
+
+- (void)handleRedaction:(MXEvent*)redactionEvent
+{
+    // Check whether the redacted event has been already processed
+    MXEvent *redactedEvent = [mxSession.store eventWithEventId:redactionEvent.redacts inRoom:_state.roomId];
+    if (redactedEvent)
+    {
+        // Redact the stored event
+        redactedEvent = [redactedEvent prune];
+        redactedEvent.redactedBecause = redactionEvent.originalDictionary;
+        
+        if (redactedEvent.isState) {
+            // FIXME: The room state must be refreshed here since this redacted event.
+        }
+        
+        // Store the event
+        [mxSession.store replaceEvent:redactedEvent inRoom:_state.roomId];
+    }
+}
+
 
 #pragma mark - Handle live event
 - (void)handleLiveEvent:(MXEvent*)event
 {
-    switch (event.eventType)
+    // Handle first typing notifications
+    if (event.eventType == MXEventTypeTypingNotification)
     {
-        case MXEventTypeTypingNotification:
+        // Typing notifications events are not room messages nor room state events
+        // They are just volatile information
+        _typingUsers = event.content[@"user_ids"];
+    }
+    else
+    {
+        // Make sure we have not processed this event yet
+        MXEvent *storedEvent = [mxSession.store eventWithEventId:event.eventId inRoom:_state.roomId];
+        if (!storedEvent)
         {
-            // Typing notifications events are not room messages nor room state events
-            // They are just volatile information
-            _typingUsers = event.content[@"user_ids"];
-            break;
-        }
-
-        default:
-        {
-            if (event.isState)
+            // Handle here redaction event from live event stream
+            if (event.eventType == MXEventTypeRoomRedaction)
             {
-                [self handleStateEvent:event direction:MXEventDirectionForwards];
-
-                // Update store with new room state once a live event has been processed
-                if ([mxSession.store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
-                {
-                    [mxSession.store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
-                }
+                [self handleRedaction:event];
             }
-
-            // Make sure we have not processed this event yet
-            MXEvent *storedEvent = [mxSession.store eventWithEventId:event.eventId inRoom:_state.roomId];
-            if (!storedEvent)
-            {
-                [self handleMessage:event direction:MXEventDirectionForwards pagFrom:nil];
-
-                // Store the event
-                [mxSession.store storeEventForRoom:_state.roomId event:event direction:MXEventDirectionForwards];
-            }
-            break;
+            
+            [self handleMessage:event direction:MXEventDirectionForwards pagFrom:nil];
+            
+            // Store the event
+            [mxSession.store storeEventForRoom:_state.roomId event:event direction:MXEventDirectionForwards];
         }
     }
 
@@ -322,6 +337,12 @@
 
                                                 // Process these new events
                                                 [self handleMessages:paginatedResponse direction:MXEventDirectionBackwards isTimeOrdered:NO];
+
+                                                // Commit store changes
+                                                if ([mxSession.store respondsToSelector:@selector(commit)])
+                                                {
+                                                    [mxSession.store commit];
+                                                }
                                                 
                                                 // Inform the method caller
                                                 complete();
