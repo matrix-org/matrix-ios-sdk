@@ -208,7 +208,7 @@ typedef enum : NSUInteger
  @param appId The app ID of this application as required by your push gateway.
  @param appDisplayName A human readable display name for this app.
  @param deviceDisplayName A human readable display name for this device.
- @param instanceHandle The instance handle for this device. Identifies this device in push rules.
+ @param profileTag The profile tag for this device. Identifies this device in push rules.
  @param lang The user's preferred language for push, eg. 'en' or 'en-US'
  @param data Dictionary of data as required by your push gateway (generally the notification URI and aps-environment for APNS).
  @param success A block object called when the operation succeeds. It provides credentials to use to create a MXRestClient.
@@ -219,7 +219,7 @@ typedef enum : NSUInteger
                        appId:(NSString *)appId
               appDisplayName:(NSString *)appDisplayName
            deviceDisplayName:(NSString *)deviceDisplayName
-              instanceHandle:(NSString *)instanceHandle
+                  profileTag:(NSString *)profileTag
                         lang:(NSString *)lang
                         data:(NSDictionary *)data
                      success:(void (^)())success
