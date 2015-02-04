@@ -73,6 +73,8 @@
             uint64_t ageLocalTs = event.ageLocalTs;
             XCTAssertLessThan(ageLocalTs, [[NSDate date] timeIntervalSince1970] * 1000, @"The event must be older than the current Epoch time");
 
+            XCTAssertLessThan(ABS(event.ageLocalTs - event.originServerTs), 1000, @"MXEvent.ageLocalTs and MXEvent.originServerTs values should be very close");
+
             // Wait a bit before checking `age` again
             [NSThread sleepForTimeInterval:0.1];
 
