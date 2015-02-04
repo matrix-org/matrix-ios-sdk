@@ -57,7 +57,7 @@
     for (NSUInteger i = 0; i < messagesCount; i++)
     {
         MXEvent *event = messages[i];
-        [rawEventsArray addObject:event.originalDictionary];
+        [rawEventsArray addObject:event.dictionary];
     }
 
     [aCoder encodeObject:rawEventsArray forKey:@"rawEventsArray"];

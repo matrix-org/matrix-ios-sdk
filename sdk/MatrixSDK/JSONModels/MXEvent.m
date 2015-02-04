@@ -63,6 +63,17 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     return [NSString stringWithFormat:@"%@: %@ - %@: %@", self.eventId, self.type, [NSDate dateWithTimeIntervalSince1970:self.originServerTs/1000], self.content];
 }
 
+- (instancetype)init
+{
+    self = [super init];
+    if (self)
+    {
+        _ageLocalTs = -1;
+    }
+
+    return self;
+}
+
 - (instancetype)initWithDictionary:(NSDictionary *)dictionaryValue error:(NSError *__autoreleasing *)error
 {
     // Do the JSON -> class instance properties mapping
@@ -93,6 +104,49 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 - (MXEventType)eventType
 {
     return eventType;
+}
+
+- (void)setType:(MXEventTypeString)type
+{
+    _type = type;
+
+    // Compute eventType
+    eventType = [MXTools eventType:_type];
+}
+
+- (void)setAge:(NSUInteger)age
+{
+    // If the age has not been stored yet in local time stamp, do it now
+    if (-1 == _ageLocalTs)
+    {
+        _ageLocalTs = [[NSDate date] timeIntervalSince1970] * 1000 - age;
+    }
+}
+
+- (NSUInteger)age
+{
+    NSUInteger age = 0;
+    if (-1 != _ageLocalTs)
+    {
+        age = [[NSDate date] timeIntervalSince1970] * 1000 - _ageLocalTs;
+    }
+    return age;
+}
+
+- (NSDictionary *)originalDictionary
+{
+    NSMutableDictionary *originalDictionary = [NSMutableDictionary dictionaryWithDictionary:[super originalDictionary]];
+
+    // Remove properties that are created by the SDK
+    [originalDictionary removeObjectForKey:@"age_local_ts"];
+
+    return originalDictionary;
+}
+
+- (NSDictionary *)dictionary
+{
+    // Return originalDictionary as is. It will contain the useful age_local_ts info.
+    return [super originalDictionary];
 }
 
 - (BOOL)isState
@@ -185,14 +239,6 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 
 
 #pragma mark - private
-- (void)setType:(MXEventTypeString)type
-{
-    _type = type;
-
-    // Compute eventType
-    eventType = [MXTools eventType:_type];
-}
-
 - (NSMutableDictionary*)filterInEventWithKeys:(NSArray*)keys
 {
     NSDictionary *originalDict = self.originalDictionary;

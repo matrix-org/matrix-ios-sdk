@@ -44,6 +44,48 @@
     [super tearDown];
 }
 
+- (void)doTestWithMXEvents:(void (^)(MXRestClient *bobRestClient, NSString* roomId, NSArray *events, XCTestExpectation *expectation))readyToTest
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        [bobRestClient messagesForRoom:roomId from:nil to:nil limit:100 success:^(MXPaginationResponse *paginatedResponse) {
+
+            NSAssert(0 < paginatedResponse.chunk.count, @"Cannot set up intial test conditions");
+
+            readyToTest(bobRestClient, roomId, paginatedResponse.chunk, expectation);
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testAge
+{
+    [self doTestWithMXEvents:^(MXRestClient *bobRestClient, NSString *roomId, NSArray *events, XCTestExpectation *expectation) {
+
+        for (MXEvent *event in events)
+        {
+            NSUInteger age = event.age;
+            XCTAssertGreaterThan(age, 0);
+
+            uint64_t ageLocalTs = event.ageLocalTs;
+            XCTAssertLessThan(ageLocalTs, [[NSDate date] timeIntervalSince1970] * 1000, @"The event must be older than the current Epoch time");
+
+            // Wait a bit before checking `age` again
+            [NSThread sleepForTimeInterval:0.1];
+
+            NSUInteger newAge = event.age;
+            XCTAssertGreaterThanOrEqual(newAge, age + 100, @"MXEvent.age should auto increase");
+
+            uint64_t newAgeLocalTs = event.ageLocalTs;
+            XCTAssertEqual(newAgeLocalTs, ageLocalTs, @"MXEvent.ageLocalTs must still be the same");
+        }
+
+        [expectation fulfill];
+    }];
+}
 
 - (void)testIsState
 {
@@ -92,51 +134,34 @@
 // Make sure MXEvent is serialisable
 - (void)testNSCoding
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [self doTestWithMXEvents:^(MXRestClient *bobRestClient, NSString *roomId, NSArray *events, XCTestExpectation *expectation) {
 
-        [bobRestClient messagesForRoom:roomId from:nil to:nil limit:100 success:^(MXPaginationResponse *paginatedResponse) {
+        for (MXEvent *event in events)
+        {
+            // Check unserialisation of a serialised event
+            [NSKeyedArchiver archiveRootObject:event toFile:@"event"];
+            MXEvent *event2 = [NSKeyedUnarchiver unarchiveObjectWithFile:@"event"];
 
-            NSAssert(0 < paginatedResponse.chunk.count, @"Cannot set up intial test conditions");
+            // XCTAssertEqualObjects will compare MXEvent.descriptions which
+            // provide good enough object data signature
+            XCTAssertEqualObjects(event.description, event2.description);
+        }
 
-            for (MXEvent *event in paginatedResponse.chunk)
-            {
-                // Check unserialisation of a serialised event
-                [NSKeyedArchiver archiveRootObject:event toFile:@"event"];
-                MXEvent *event2 = [NSKeyedUnarchiver unarchiveObjectWithFile:@"event"];
-
-                // XCTAssertEqualObjects will compare MXEvent.descriptions which
-                // provide good enough object data signature
-                XCTAssertEqualObjects(event, event2);
-            }
-
-            [expectation fulfill];
-
-        } failure:^(NSError *error) {
-            XCTFail(@"The request should not fail - NSError: %@", error);
-            [expectation fulfill];
-        }];
+        [expectation fulfill];
     }];
 }
 
 - (void)testOriginalDictionary
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [self doTestWithMXEvents:^(MXRestClient *bobRestClient, NSString *roomId, NSArray *events, XCTestExpectation *expectation) {
 
-        [bobRestClient messagesForRoom:roomId from:nil to:nil limit:100 success:^(MXPaginationResponse *paginatedResponse) {
+        for (MXEvent *event in events)
+        {
+            XCTAssertNil([event.originalDictionary objectForKey:@"event_type"], @"eventType is an information added by the SDK not sent by the home server");
+            XCTAssertNil([event.originalDictionary objectForKey:@"age_local_ts"], @"ageLocalTs is an information added by the SDK not sent by the home server");
+        }
 
-            NSAssert(0 < paginatedResponse.chunk.count, @"Cannot set up intial test conditions");
-
-            for (MXEvent *event in paginatedResponse.chunk)
-            {
-                XCTAssertNil([event.originalDictionary objectForKey:@"event_type"], @"eventType is an information added by the SDK not sent by the home server");
-            }
-
-            [expectation fulfill];
-
-        } failure:^(NSError *error) {
-            XCTFail(@"The request should not fail - NSError: %@", error);
-            [expectation fulfill];
-        }];
+        [expectation fulfill];
     }];
 }
 

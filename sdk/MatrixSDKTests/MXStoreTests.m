@@ -1124,7 +1124,7 @@
  */
 
 
-#pragma mark - MXMemoryStore specific tests
+#pragma mark - MXFileStore specific tests
 
 - (void)testMXFileStoreUserDisplaynameAndAvatarUrl
 {
@@ -1313,6 +1313,56 @@
             }];
 
         }];
+    }];
+}
+
+// Check that MXEvent.age and MXEvent.ageLocalTs are consistent after being stored.
+- (void)testMXFileStoreAge
+{
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+
+    [sharedData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
+
+        expectation = expectation2;
+
+        MXFileStore *store = [[MXFileStore alloc] init];
+        [store openWithCredentials:sharedData.bobCredentials onComplete:^{
+
+            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient andStore:store];
+            [mxSession start:^{
+
+                MXRoom *room = [mxSession roomWithRoomId:roomId];
+
+                MXEvent *event = [room lastMessageWithTypeIn:nil];
+
+                NSUInteger age = event.age;
+                uint64_t ageLocalTs = event.ageLocalTs;
+
+                [store close];
+                [store openWithCredentials:sharedData.bobCredentials onComplete:^{
+
+                    MXEvent *sameEvent = [store eventWithEventId:event.eventId inRoom:roomId];
+
+                    NSUInteger sameEventAge = sameEvent.age;
+                    uint64_t sameEventAgeLocalTs = sameEvent.ageLocalTs;
+
+                    XCTAssertGreaterThan(sameEventAge, 0, @"MXEvent.age should strictly positive");
+                    XCTAssertLessThanOrEqual(age, sameEventAge, @"MXEvent.age should auto increase");
+                    XCTAssertLessThanOrEqual(sameEventAge - age, 1000, @"sameEventAge and age should be almost the same");
+
+                    XCTAssertEqual(ageLocalTs, sameEventAgeLocalTs, @"MXEvent.ageLocalTs must still be the same");
+
+                    [expectation fulfill];
+                }];
+
+
+            } onServerSyncDone:^{
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+
+        }];
+
     }];
 }
 
