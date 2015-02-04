@@ -118,4 +118,26 @@
     }];
 }
 
+- (void)testOriginalDictionary
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        [bobRestClient messagesForRoom:roomId from:nil to:nil limit:100 success:^(MXPaginationResponse *paginatedResponse) {
+
+            NSAssert(0 < paginatedResponse.chunk.count, @"Cannot set up intial test conditions");
+
+            for (MXEvent *event in paginatedResponse.chunk)
+            {
+                XCTAssertNil([event.originalDictionary objectForKey:@"event_type"], @"eventType is an information added by the SDK not sent by the home server");
+            }
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 @end
