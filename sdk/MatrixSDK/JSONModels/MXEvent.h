@@ -70,6 +70,7 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringTypingNotification;
 typedef NSString* MXMessageType;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeText;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeEmote;
+FOUNDATION_EXPORT NSString *const kMXMessageTypeNotice;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeImage;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeAudio;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeVideo;

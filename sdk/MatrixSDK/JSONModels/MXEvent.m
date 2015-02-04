@@ -35,6 +35,7 @@ NSString *const kMXEventTypeStringTypingNotification  = @"m.typing";
 
 NSString *const kMXMessageTypeText      = @"m.text";
 NSString *const kMXMessageTypeEmote     = @"m.emote";
+NSString *const kMXMessageTypeNotice    = @"m.notice";
 NSString *const kMXMessageTypeImage     = @"m.image";
 NSString *const kMXMessageTypeAudio     = @"m.audio";
 NSString *const kMXMessageTypeVideo     = @"m.video";
