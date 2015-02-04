@@ -396,7 +396,7 @@
                 success:(void (^)(NSString *eventId))success
                 failure:(void (^)(NSError *error))failure
 {
-    [mxSession.matrixRestClient sendTextMessageToRoom:text text:_state.roomId success:success failure:failure];
+    [mxSession.matrixRestClient sendTextMessageToRoom:_state.roomId text:text success:success failure:failure];
 }
 
 - (void)setTopic:(NSString*)topic
