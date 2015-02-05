@@ -88,7 +88,7 @@
         BOOL foundPasswordFlowType;
         for (MXLoginFlow *flow in flows)
         {
-            if ([flow.type isEqualToString:kMatrixLoginFlowTypePassword])
+            if ([flow.type isEqualToString:kMXLoginFlowTypePassword])
             {
                 foundPasswordFlowType = YES;
             }
@@ -111,7 +111,7 @@
 
     // Test the password-based flow with the generic register method
     NSDictionary *parameters = @{
-                                 @"type": kMatrixLoginFlowTypePassword,
+                                 @"type": kMXLoginFlowTypePassword,
                                  @"user": @"",
                                  @"password": MXTESTS_PWD
                                  };
@@ -194,7 +194,7 @@
         BOOL foundPasswordFlowType;
         for (MXLoginFlow *flow in flows)
         {
-            if ([flow.type isEqualToString:kMatrixLoginFlowTypePassword])
+            if ([flow.type isEqualToString:kMXLoginFlowTypePassword])
             {
                 foundPasswordFlowType = YES;
             }
@@ -219,7 +219,7 @@
 
         // Test the password-based flow with the generic login method
         NSDictionary *parameters = @{
-                                     @"type": kMatrixLoginFlowTypePassword,
+                                     @"type": kMXLoginFlowTypePassword,
                                      @"user": MXTESTS_USER,
                                      @"password": MXTESTS_PWD
                                      };

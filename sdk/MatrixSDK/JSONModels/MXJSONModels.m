@@ -39,11 +39,11 @@
 @end
 
 
-NSString *const kMatrixLoginFlowTypePassword = @"m.login.password";
-NSString *const kMatrixLoginFlowTypeOAuth2 = @"m.login.oauth2";
-NSString *const kMatrixLoginFlowTypeEmailCode = @"m.login.email.code";
-NSString *const kMatrixLoginFlowTypeEmailUrl = @"m.login.email.url";
-NSString *const kMatrixLoginFlowTypeEmailIdentity = @"m.login.email.identity";
+NSString *const kMXLoginFlowTypePassword = @"m.login.password";
+NSString *const kMXLoginFlowTypeOAuth2 = @"m.login.oauth2";
+NSString *const kMXLoginFlowTypeEmailCode = @"m.login.email.code";
+NSString *const kMXLoginFlowTypeEmailUrl = @"m.login.email.url";
+NSString *const kMXLoginFlowTypeEmailIdentity = @"m.login.email.identity";
 
 @implementation MXLoginFlow
 @end

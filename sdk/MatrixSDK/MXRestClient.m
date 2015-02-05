@@ -271,7 +271,7 @@ MXAuthAction;
                         success:(void (^)(MXCredentials *))success failure:(void (^)(NSError *))failure
 {
     NSDictionary *parameters = @{
-                                 @"type": kMatrixLoginFlowTypePassword,
+                                 @"type": kMXLoginFlowTypePassword,
                                  @"user": user,
                                  @"password": password
                                  };

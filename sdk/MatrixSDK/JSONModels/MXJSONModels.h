@@ -46,11 +46,11 @@
 /**
  Login flow types
  */
-FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypePassword;
-FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeOAuth2;
-FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeEmailCode;
-FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeEmailUrl;
-FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeEmailIdentity;
+FOUNDATION_EXPORT NSString *const kMXLoginFlowTypePassword;
+FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeOAuth2;
+FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeEmailCode;
+FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeEmailUrl;
+FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeEmailIdentity;
 
 /**
  `MXLoginFlow` represents a login or a register flow supported by the home server.
@@ -58,7 +58,7 @@ FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeEmailIdentity;
 @interface MXLoginFlow : MXJSONModel
 
     /**
-     The flow type among kMatrixLoginFlowType* types.
+     The flow type among kMXLoginFlowType* types.
      @see http://matrix.org/docs/spec/#password-based and below for the types descriptions
      */
     @property (nonatomic) NSString *type;
