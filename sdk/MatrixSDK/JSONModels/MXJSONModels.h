@@ -48,7 +48,7 @@
  */
 FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypePassword;
 FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeOAuth2;
-FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeTypeEmailCode;
+FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeEmailCode;
 FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeEmailUrl;
 FOUNDATION_EXPORT NSString *const kMatrixLoginFlowTypeEmailIdentity;
 
