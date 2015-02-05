@@ -644,6 +644,60 @@
     }];
 }
 
+- (void)checkRedactEvent:(MXRoom*)room
+{
+    __block NSString *messageEventId;
+
+    [room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+
+        if (MXEventTypeRoomMessage == event.eventType)
+        {
+            // Manage the case where message comes down the stream before the call of the success
+            // callback of [room sendTextMessage:...]
+            if (nil == messageEventId)
+            {
+                messageEventId = event.eventId;
+            }
+
+            MXEvent *notYetRedactedEvent = [mxSession.store eventWithEventId:messageEventId inRoom:room.state.roomId];
+
+            XCTAssertGreaterThan(notYetRedactedEvent.content.count, 0);
+            XCTAssertNil(notYetRedactedEvent.redacts);
+            XCTAssertNil(notYetRedactedEvent.redactedBecause);
+
+            // Redact this event
+            [room redactEvent:messageEventId reason:@"No reason" success:^{
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+        }
+        else if (MXEventTypeRoomRedaction == event.eventType)
+        {
+            MXEvent *redactedEvent = [mxSession.store eventWithEventId:messageEventId inRoom:room.state.roomId];
+
+            XCTAssertEqual(redactedEvent.content.count, 0, @"Redacted event content must be now empty");
+            XCTAssertEqualObjects(event.eventId, redactedEvent.redactedBecause[@"event_id"], @"It must contain the event that redacted it");
+
+            // Tests more related to redaction (could be moved to a dedicated section somewhere else)
+            XCTAssertEqualObjects(event.redacts, messageEventId, @"");
+
+            [expectation fulfill];
+        }
+
+    }];
+
+    [room sendTextMessage:@"This is text message" success:^(NSString *eventId) {
+
+        messageEventId = eventId;
+
+    } failure:^(NSError *error) {
+        NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        [expectation fulfill];
+    }];
+}
+
 
 #pragma mark - MXNoStore tests
 /* This feature is not available with MXNoStore
@@ -836,6 +890,13 @@
      }];
  }
  */
+
+- (void)testMXMemoryStoreRedactEvent
+{
+    [self doTestWithMXMemoryStoreAndMessagesLimit:100 readyToTest:^(MXRoom *room) {
+        [self checkRedactEvent:room];
+    }];
+}
 
 
 #pragma mark - MXMemoryStore specific tests
@@ -1122,6 +1183,13 @@
      }];
  }
  */
+
+- (void)testMXFileStoreRedactEvent
+{
+    [self doTestWithMXFileStoreAndMessagesLimit:100 readyToTest:^(MXRoom *room) {
+        [self checkRedactEvent:room];
+    }];
+}
 
 
 #pragma mark - MXFileStore specific tests
