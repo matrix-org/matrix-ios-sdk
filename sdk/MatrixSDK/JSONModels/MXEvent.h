@@ -191,7 +191,7 @@ typedef enum : NSUInteger
 @property (nonatomic) uint64_t ageLocalTs;
 
 /**
- In case of redaction, the event that has been redacted is specified in the redacts event level key.
+ In case of redaction event, this is the id of the event to redact.
  */
 @property (nonatomic) NSString *redacts;
 
