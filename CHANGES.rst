@@ -27,9 +27,10 @@ Bug fixes:
 -----------------
 Improvements:
  * When long pressing on a message, the app shows the JSON string of the Matrix event.
+ * On this screen, the user can redact the event - if he has enough power level.
  * Use home server media repository facilities to use lower image size for thumbnails and avatars
  * Settings screen: show build version with the app version.
- * Settings screen: added an option to hide redacted messages.
+ * Settings screen: added an option to hide information related to redacted event.
  * Settings screen: added an option to enable reading of local phonebook. The country is required to internationalise phone numbers.
 
 Features:
