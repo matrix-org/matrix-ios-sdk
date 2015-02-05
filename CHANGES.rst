@@ -1,3 +1,57 @@
+Changes in Matrix iOS SDK in 0.2.2 (2015-02-05)
+===============================================
+
+-----
+ SDK
+-----
+Improvements:
+ * MXFileStore stores data on a separated thread to avoid blocking the UI thread.
+ * MXRestClient: Callback blocks in all MXRestClient methods are now optional.
+ * MXEvent: Cleaned up exposed properties and added a description for each of them.
+ 
+Features:
+ * Added API for registering for push notifications.
+ * Added generic API methods to make any kind of registration or login flow.
+ * Added Identity server API: lookup3pid, requestEmailValidation, validateEmail and bind3PID.
+ * Management of event redaction: there is a new method in the SDK to redact an event and the SDK updates its data on redaction event.
+ 
+Bug fixes:
+ * SYIOS-5 - Expose registration API
+ * SYIOS-44 - Credentials persist across logout
+ * SYIOS-54 - Matrix Console app slightly freezes when receiving a message
+ * SYIOS-59 - Infinite loop in case of back pagination on new created room
+ * MXRoom: Fixed [MXRoom sendTextMessage]
+ 
+-----------------
+ Matrix Console
+-----------------
+Improvements:
+ * When long pressing on a message, the app shows the JSON string of the Matrix event.
+ * Use home server media repository facilities to use lower image size for thumbnails and avatars
+ * Settings screen: show build version with the app version.
+ * Settings screen: added an option to hide redacted messages.
+ * Settings screen: added an option to enable reading of local phonebook. The country is required to internationalise phone numbers.
+
+Features:
+ * Push notifications.
+ * Added a contacts screen that displays Matrix users the user had interactions with and contacts from the device phonebook.
+ * Contacts from the device phonebook who have an email linked to a Matrix user id are automatically recognised.
+
+Bug fixes:
+ * SYIOS-53 - multilines text input that expands as you type mutiplines would be nice
+ * SYIOS-45 - Need to check the thumbnail params requested by iOS
+ * SYIOS-55 - High resolution avatars create memory pressure
+ * SYIOS-57 - Back pagination does not work well for self chat
+ * SYIOS-56 - add cache size handling in settings
+ * SYIOS-60 - In a self chat, Console takes ages to paginate back even if messages are in cache
+ * SYIOS-61 - Chat room : cannot scroll to bottom when keyboard is opened whereas the growing textview contains multi-lines text.
+ * SYIOS-63 - calculate room names for 3+ memebers if no room name/alias
+ * SYIOS-44 - Credentials persist across logout
+ * SYIOS-64 - Chat room : unexpected blank lines are added into history when user types in growing textview
+ * SYIOS-65 - IOS8 : in case of search in recents, keyboard is not dismisssed when user selects a room.
+ * SYIOS-16 Add option in Console to join room thanks to its alias
+
+
 Changes in Matrix iOS SDK in 0.2.1 (2015-01-14)
 ===============================================
 
@@ -40,6 +94,8 @@ Bug fixes:
  * SYIOS-43 - Recents tab on an iPad mini always shows a room view
  * SYIOS-51 - spinner appears when backgrounding recents page
  * SYIOS-50 - When you post a multiline message, the bubble vertical spacing gets confused.
+ 
+ 
  
 Changes in Matrix iOS SDK in 0.2.0 (2014-12-19)
 ===============================================
