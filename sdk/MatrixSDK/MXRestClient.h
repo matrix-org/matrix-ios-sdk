@@ -118,9 +118,11 @@ typedef enum : NSUInteger
  
  @param success A block object called when the operation succeeds. flows is an array of MXLoginFlow objects
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)getRegisterFlow:(void (^)(NSArray *flows))success
-                failure:(void (^)(NSError *error))failure;
+- (NSOperation*)getRegisterFlow:(void (^)(NSArray *flows))success
+                        failure:(void (^)(NSError *error))failure;
 
 /**
  Generic registration action request.
@@ -137,10 +139,12 @@ typedef enum : NSUInteger
  @param success A block object called when the operation succeeds. It provides the raw JSON response
                 from the server.
  @param failure A block object called when the operation fails.
- */
-- (void)register:(NSDictionary*)parameters
-         success:(void (^)(NSDictionary *JSONResponse))success
-         failure:(void (^)(NSError *error))failure;
+
+ @return a NSOperation instance to use to cancel the request.
+*/
+- (NSOperation*)register:(NSDictionary*)parameters
+                 success:(void (^)(NSDictionary *JSONResponse))success
+                 failure:(void (^)(NSError *error))failure;
 
 /**
  Register a user with the password-based flow.
@@ -152,10 +156,12 @@ typedef enum : NSUInteger
  @param password his password.
  @param success A block object called when the operation succeeds. It provides credentials to use to create a MXRestClient.
  @param failure A block object called when the operation fails.
- */
-- (void)registerWithUser:(NSString*)user andPassword:(NSString*)password
-                 success:(void (^)(MXCredentials *credentials))success
-                 failure:(void (^)(NSError *error))failure;
+
+ @return a NSOperation instance to use to cancel the request.
+*/
+- (NSOperation*)registerWithUser:(NSString*)user andPassword:(NSString*)password
+                         success:(void (^)(MXCredentials *credentials))success
+                         failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Login operations
@@ -164,9 +170,11 @@ typedef enum : NSUInteger
  
  @param success A block object called when the operation succeeds. flows is an array of MXLoginFlow objects
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)getLoginFlow:(void (^)(NSArray *flows))success
-             failure:(void (^)(NSError *error))failure;
+- (NSOperation*)getLoginFlow:(void (^)(NSArray *flows))success
+                     failure:(void (^)(NSError *error))failure;
 
 /**
  Generic login action request.
@@ -178,10 +186,12 @@ typedef enum : NSUInteger
  @param success A block object called when the operation succeeds. It provides the raw JSON response
                 from the server.
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)login:(NSDictionary*)parameters
-      success:(void (^)(NSDictionary *JSONResponse))success
-      failure:(void (^)(NSError *error))failure;
+- (NSOperation*)login:(NSDictionary*)parameters
+              success:(void (^)(NSDictionary *JSONResponse))success
+              failure:(void (^)(NSError *error))failure;
 
 /**
  Log a user in with the password-based flow.
@@ -193,10 +203,12 @@ typedef enum : NSUInteger
  @param password his password.
  @param success A block object called when the operation succeeds. It provides credentials to use to create a MXRestClient.
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)loginWithUser:(NSString*)user andPassword:(NSString*)password
-              success:(void (^)(MXCredentials *credentials))success
-              failure:(void (^)(NSError *error))failure;
+- (NSOperation*)loginWithUser:(NSString*)user andPassword:(NSString*)password
+                      success:(void (^)(MXCredentials *credentials))success
+                      failure:(void (^)(NSError *error))failure;
 
 #pragma mark Push Notification Registration
 
@@ -213,17 +225,20 @@ typedef enum : NSUInteger
  @param data Dictionary of data as required by your push gateway (generally the notification URI and aps-environment for APNS).
  @param success A block object called when the operation succeeds. It provides credentials to use to create a MXRestClient.
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)setPusherWithPushkey:(NSString *)pushkey
-                        kind:(NSObject *)kind
-                       appId:(NSString *)appId
-              appDisplayName:(NSString *)appDisplayName
-           deviceDisplayName:(NSString *)deviceDisplayName
-                  profileTag:(NSString *)profileTag
-                        lang:(NSString *)lang
-                        data:(NSDictionary *)data
-                     success:(void (^)())success
-                     failure:(void (^)(NSError *error))failure;
+- (NSOperation*)setPusherWithPushkey:(NSString *)pushkey
+                                kind:(NSObject *)kind
+                               appId:(NSString *)appId
+                      appDisplayName:(NSString *)appDisplayName
+                   deviceDisplayName:(NSString *)deviceDisplayName
+                          profileTag:(NSString *)profileTag
+                                lang:(NSString *)lang
+                                data:(NSDictionary *)data
+                             success:(void (^)())success
+                             failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - Room operations
 /**
@@ -235,12 +250,14 @@ typedef enum : NSUInteger
  @param success A block object called when the operation succeeds. It returns 
                 the event id of the event generated on the home server
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)sendEventToRoom:(NSString*)roomId
-              eventType:(MXEventTypeString)eventTypeString
-                content:(NSDictionary*)content
-                success:(void (^)(NSString *eventId))success
-                failure:(void (^)(NSError *error))failure;
+- (NSOperation*)sendEventToRoom:(NSString*)roomId
+                      eventType:(MXEventTypeString)eventTypeString
+                        content:(NSDictionary*)content
+                        success:(void (^)(NSString *eventId))success
+                        failure:(void (^)(NSError *error))failure;
 
 /**
  Send a generic state event to a room.
@@ -251,12 +268,14 @@ typedef enum : NSUInteger
  @param success A block object called when the operation succeeds. It returns
  the event id of the event generated on the home server
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)sendStateEventToRoom:(NSString*)roomId
-                   eventType:(MXEventTypeString)eventTypeString
-                     content:(NSDictionary*)content
-                     success:(void (^)(NSString *eventId))success
-                     failure:(void (^)(NSError *error))failure;
+- (NSOperation*)sendStateEventToRoom:(NSString*)roomId
+                           eventType:(MXEventTypeString)eventTypeString
+                             content:(NSDictionary*)content
+                             success:(void (^)(NSString *eventId))success
+                             failure:(void (^)(NSError *error))failure;
 
 /**
  Send a message to a room
@@ -267,12 +286,14 @@ typedef enum : NSUInteger
  @param success A block object called when the operation succeeds. It returns
                 the event id of the event generated on the home server
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)sendMessageToRoom:(NSString*)roomId
-                  msgType:(MXMessageType)msgType
-                  content:(NSDictionary*)content
-                  success:(void (^)(NSString *eventId))success
-                  failure:(void (^)(NSError *error))failure;
+- (NSOperation*)sendMessageToRoom:(NSString*)roomId
+                          msgType:(MXMessageType)msgType
+                          content:(NSDictionary*)content
+                          success:(void (^)(NSString *eventId))success
+                          failure:(void (^)(NSError *error))failure;
 
 /**
  Send a text message to a room
@@ -282,11 +303,13 @@ typedef enum : NSUInteger
  @param success A block object called when the operation succeeds. It returns
                 the event id of the event generated on the home server
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)sendTextMessageToRoom:(NSString*)roomId
-                         text:(NSString*)text
-                      success:(void (^)(NSString *eventId))success
-                      failure:(void (^)(NSError *error))failure;
+- (NSOperation*)sendTextMessageToRoom:(NSString*)roomId
+                                 text:(NSString*)text
+                              success:(void (^)(NSString *eventId))success
+                              failure:(void (^)(NSError *error))failure;
 
 
 /**
@@ -296,11 +319,13 @@ typedef enum : NSUInteger
  @param topic the topic to set.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)setRoomTopic:(NSString*)roomId
-               topic:(NSString*)topic
-             success:(void (^)())success
-             failure:(void (^)(NSError *error))failure;
+- (NSOperation*)setRoomTopic:(NSString*)roomId
+                       topic:(NSString*)topic
+                     success:(void (^)())success
+                     failure:(void (^)(NSError *error))failure;
 
 /**
  Get the topic of a room.
@@ -308,10 +333,12 @@ typedef enum : NSUInteger
  @param roomId the id of the room.
  @param success A block object called when the operation succeeds. It provides the room topic.
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)topicOfRoom:(NSString*)roomId
-            success:(void (^)(NSString *topic))success
-            failure:(void (^)(NSError *error))failure;
+- (NSOperation*)topicOfRoom:(NSString*)roomId
+                    success:(void (^)(NSString *topic))success
+                    failure:(void (^)(NSError *error))failure;
 
 /**
  Set the name of a room.
@@ -320,11 +347,13 @@ typedef enum : NSUInteger
  @param name the name to set.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)setRoomName:(NSString*)roomId
-            name:(NSString*)name
-         success:(void (^)())success
-         failure:(void (^)(NSError *error))failure;
+- (NSOperation*)setRoomName:(NSString*)roomId
+                       name:(NSString*)name
+                    success:(void (^)())success
+                    failure:(void (^)(NSError *error))failure;
 
 /**
  Get the name of a room.
@@ -332,10 +361,12 @@ typedef enum : NSUInteger
  @param roomId the id of the room.
  @param success A block object called when the operation succeeds. It provides the room name.
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)nameOfRoom:(NSString*)roomId
-            success:(void (^)(NSString *name))success
-            failure:(void (^)(NSError *error))failure;
+- (NSOperation*)nameOfRoom:(NSString*)roomId
+                   success:(void (^)(NSString *name))success
+                   failure:(void (^)(NSError *error))failure;
 
 /**
  Join a room.
@@ -343,10 +374,12 @@ typedef enum : NSUInteger
  @param roomIdOrAlias the id or an alias of the room to join.
  @param success A block object called when the operation succeeds. It provides the room id.
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)joinRoom:(NSString*)roomIdOrAlias
-         success:(void (^)(NSString *theRoomId))success
-         failure:(void (^)(NSError *error))failure;
+- (NSOperation*)joinRoom:(NSString*)roomIdOrAlias
+                 success:(void (^)(NSString *theRoomId))success
+                 failure:(void (^)(NSError *error))failure;
 
 /**
  Leave a room.
@@ -354,10 +387,12 @@ typedef enum : NSUInteger
  @param roomId the id of the room to leave.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)leaveRoom:(NSString*)roomId
-          success:(void (^)())success
-          failure:(void (^)(NSError *error))failure;
+- (NSOperation*)leaveRoom:(NSString*)roomId
+                  success:(void (^)())success
+                  failure:(void (^)(NSError *error))failure;
 
 /**
  Invite a user to a room.
@@ -366,11 +401,13 @@ typedef enum : NSUInteger
  @param roomId the id of the room.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)inviteUser:(NSString*)userId
-            toRoom:(NSString*)roomId
-           success:(void (^)())success
-           failure:(void (^)(NSError *error))failure;
+- (NSOperation*)inviteUser:(NSString*)userId
+                    toRoom:(NSString*)roomId
+                   success:(void (^)())success
+                   failure:(void (^)(NSError *error))failure;
 
 /**
  Kick a user from a room.
@@ -379,12 +416,14 @@ typedef enum : NSUInteger
  @param roomId the id of the room.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)kickUser:(NSString*)userId
-        fromRoom:(NSString*)roomId
-          reason:(NSString*)reason
-         success:(void (^)())success
-         failure:(void (^)(NSError *error))failure;
+- (NSOperation*)kickUser:(NSString*)userId
+                fromRoom:(NSString*)roomId
+                  reason:(NSString*)reason
+                 success:(void (^)())success
+                 failure:(void (^)(NSError *error))failure;
 
 /**
  Ban a user in a room.
@@ -393,12 +432,14 @@ typedef enum : NSUInteger
  @param roomId the id of the room.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)banUser:(NSString*)userId
-         inRoom:(NSString*)roomId
-         reason:(NSString*)reason
-        success:(void (^)())success
-        failure:(void (^)(NSError *error))failure;
+- (NSOperation*)banUser:(NSString*)userId
+                 inRoom:(NSString*)roomId
+                 reason:(NSString*)reason
+                success:(void (^)())success
+                failure:(void (^)(NSError *error))failure;
 
 /**
  Unban a user in a room.
@@ -407,11 +448,13 @@ typedef enum : NSUInteger
  @param roomId the id of the room.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)unbanUser:(NSString*)userId
-           inRoom:(NSString*)roomId
-          success:(void (^)())success
-          failure:(void (^)(NSError *error))failure;
+- (NSOperation*)unbanUser:(NSString*)userId
+                   inRoom:(NSString*)roomId
+                  success:(void (^)())success
+                  failure:(void (^)(NSError *error))failure;
 
 /**
  Create a room.
@@ -423,13 +466,15 @@ typedef enum : NSUInteger
 
  @param success A block object called when the operation succeeds. It provides a MXCreateRoomResponse object.
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)createRoom:(NSString*)name
-        visibility:(MXRoomVisibility)visibility
-         roomAlias:(NSString*)roomAlias
-             topic:(NSString*)topic
-           success:(void (^)(MXCreateRoomResponse *response))success
-           failure:(void (^)(NSError *error))failure;
+- (NSOperation*)createRoom:(NSString*)name
+                visibility:(MXRoomVisibility)visibility
+                 roomAlias:(NSString*)roomAlias
+                     topic:(NSString*)topic
+                   success:(void (^)(MXCreateRoomResponse *response))success
+                   failure:(void (^)(NSError *error))failure;
 
 /**
  Get a list of messages for this room.
@@ -459,10 +504,12 @@ typedef enum : NSUInteger
  @param success A block object called when the operation succeeds. It provides an array of `MXEvent`
                 objects  which type is m.room.member.
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)membersOfRoom:(NSString*)roomId
-              success:(void (^)(NSArray *roomMemberEvents))success
-              failure:(void (^)(NSError *error))failure;
+- (NSOperation*)membersOfRoom:(NSString*)roomId
+                      success:(void (^)(NSArray *roomMemberEvents))success
+                      failure:(void (^)(NSError *error))failure;
 
 /**
  Get a list of all the current state events for this room.
@@ -474,10 +521,12 @@ typedef enum : NSUInteger
  @param success A block object called when the operation succeeds. It provides the raw
                 home server JSON response. @see http://matrix.org/docs/api/client-server/#!/-rooms/get_state_events
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)stateOfRoom:(NSString*)roomId
-                  success:(void (^)(NSDictionary *JSONData))success
-                  failure:(void (^)(NSError *error))failure;
+- (NSOperation*)stateOfRoom:(NSString*)roomId
+                    success:(void (^)(NSDictionary *JSONData))success
+                    failure:(void (^)(NSError *error))failure;
 
 /**
  Inform the home server that the user is typing (or not) in this room.
@@ -489,12 +538,14 @@ typedef enum : NSUInteger
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)sendTypingNotificationInRoom:(NSString*)roomId
-                              typing:(BOOL)typing
-                             timeout:(NSUInteger)timeout
-                             success:(void (^)())success
-                             failure:(void (^)(NSError *error))failure;
+- (NSOperation*)sendTypingNotificationInRoom:(NSString*)roomId
+                                      typing:(BOOL)typing
+                                     timeout:(NSUInteger)timeout
+                                     success:(void (^)())success
+                                     failure:(void (^)(NSError *error))failure;
 
 /**
  Redact an event in a room.
@@ -505,12 +556,14 @@ typedef enum : NSUInteger
  
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)redactEvent:(NSString*)eventId
-             inRoom:(NSString*)roomId
-             reason:(NSString*)reason
-            success:(void (^)())success
-            failure:(void (^)(NSError *error))failure;
+- (NSOperation*)redactEvent:(NSString*)eventId
+                     inRoom:(NSString*)roomId
+                     reason:(NSString*)reason
+                    success:(void (^)())success
+                    failure:(void (^)(NSError *error))failure;
 
 /**
  Get all the current information for this room, including messages and state events.
@@ -521,11 +574,13 @@ typedef enum : NSUInteger
  @param success A block object called when the operation succeeds. It provides the raw 
                 home server JSON response. @see http://matrix.org/docs/api/client-server/#!/-rooms/get_room_sync_data)
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)initialSyncOfRoom:(NSString*)roomId
-                withLimit:(NSInteger)limit
-                  success:(void (^)(NSDictionary *JSONData))success
-                  failure:(void (^)(NSError *error))failure;
+- (NSOperation*)initialSyncOfRoom:(NSString*)roomId
+                        withLimit:(NSInteger)limit
+                          success:(void (^)(NSDictionary *JSONData))success
+                          failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Profile operations
@@ -536,10 +591,12 @@ typedef enum : NSUInteger
  
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)setDisplayName:(NSString*)displayname
-               success:(void (^)())success
-               failure:(void (^)(NSError *error))failure;
+- (NSOperation*)setDisplayName:(NSString*)displayname
+                       success:(void (^)())success
+                       failure:(void (^)(NSError *error))failure;
 
 /**
  Get the display name of a user.
@@ -548,10 +605,12 @@ typedef enum : NSUInteger
 
  @param success A block object called when the operation succeeds. It provides the user displayname.
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)displayNameForUser:(NSString*)userId
-                   success:(void (^)(NSString *displayname))success
-                   failure:(void (^)(NSError *error))failure;
+- (NSOperation*)displayNameForUser:(NSString*)userId
+                           success:(void (^)(NSString *displayname))success
+                           failure:(void (^)(NSError *error))failure;
 
 /**
  Set the logged-in user avatar url.
@@ -560,10 +619,12 @@ typedef enum : NSUInteger
  
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)setAvatarUrl:(NSString*)avatarUrl
-             success:(void (^)())success
-             failure:(void (^)(NSError *error))failure;
+- (NSOperation*)setAvatarUrl:(NSString*)avatarUrl
+                     success:(void (^)())success
+                     failure:(void (^)(NSError *error))failure;
 
 /**
  Get the avatar url of a user.
@@ -571,10 +632,12 @@ typedef enum : NSUInteger
  @param userId the user id.
  @param success A block object called when the operation succeeds. It provides the user avatar url.
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)avatarUrlForUser:(NSString*)userId
-                 success:(void (^)(NSString *avatarUrl))success
-                 failure:(void (^)(NSError *error))failure;
+- (NSOperation*)avatarUrlForUser:(NSString*)userId
+                         success:(void (^)(NSString *avatarUrl))success
+                         failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Presence operations
@@ -586,10 +649,12 @@ typedef enum : NSUInteger
  
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)setPresence:(MXPresence)presence andStatusMessage:(NSString*)statusMessage
-            success:(void (^)())success
-            failure:(void (^)(NSError *error))failure;
+- (NSOperation*)setPresence:(MXPresence)presence andStatusMessage:(NSString*)statusMessage
+                    success:(void (^)())success
+                    failure:(void (^)(NSError *error))failure;
 
 /**
  Get the presence status of a user.
@@ -598,19 +663,23 @@ typedef enum : NSUInteger
  
  @param success A block object called when the operation succeeds. It provides a MXPresenceResponse object.
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)presence:(NSString*)userId
-         success:(void (^)(MXPresenceResponse *presence))success
-         failure:(void (^)(NSError *error))failure;
+- (NSOperation*)presence:(NSString*)userId
+                 success:(void (^)(MXPresenceResponse *presence))success
+                 failure:(void (^)(NSError *error))failure;
 
 /**
  Get the presence for all of the user's friends.
 
  @param success A block object called when the operation succeeds. It provides an array of presence events.
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)allUsersPresence:(void (^)(NSArray *userPresenceEvents))success
-         failure:(void (^)(NSError *error))failure;
+- (NSOperation*)allUsersPresence:(void (^)(NSArray *userPresenceEvents))success
+                         failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Event operations
@@ -624,19 +693,23 @@ typedef enum : NSUInteger
  @param success A block object called when the operation succeeds. It provides the raw
                 home server JSON response. @see http://matrix.org/docs/api/client-server/#!/-events/initial_sync
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)initialSyncWithLimit:(NSInteger)limit
-                     success:(void (^)(NSDictionary *JSONData))success
-                     failure:(void (^)(NSError *error))failure;
+- (NSOperation*)initialSyncWithLimit:(NSInteger)limit
+                             success:(void (^)(NSDictionary *JSONData))success
+                             failure:(void (^)(NSError *error))failure;
 
 /**
  Get the list of public rooms hosted by the home server.
  
  @param success A block object called when the operation succeeds. rooms is an array of MXPublicRoom objects
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)publicRooms:(void (^)(NSArray *rooms))success
-            failure:(void (^)(NSError *error))failure;
+- (NSOperation*)publicRooms:(void (^)(NSArray *rooms))success
+                    failure:(void (^)(NSError *error))failure;
 
 /**
  Get events from the given token.
@@ -649,12 +722,14 @@ typedef enum : NSUInteger
  @param failure A block object called when the operation fails.
  
  @return a NSOperation instance to use to cancel the request.
+
+ @return a NSOperation instance to use to cancel the request.
  */
 - (NSOperation *)eventsFromToken:(NSString*)token
-          serverTimeout:(NSUInteger)serverTimeout
-          clientTimeout:(NSUInteger)clientTimeout
-                success:(void (^)(MXPaginationResponse *paginatedResponse))success
-                failure:(void (^)(NSError *error))failure;
+                   serverTimeout:(NSUInteger)serverTimeout
+                   clientTimeout:(NSUInteger)clientTimeout
+                         success:(void (^)(MXPaginationResponse *paginatedResponse))success
+                         failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Directory operations
@@ -665,10 +740,12 @@ typedef enum : NSUInteger
  
  @param success A block object called when the operation succeeds. It provides an array of `MXRoomMember`.
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)roomIDForRoomAlias:(NSString*)roomAlias
-            success:(void (^)(NSString *roomId))success
-            failure:(void (^)(NSError *error))failure;
+- (NSOperation*)roomIDForRoomAlias:(NSString*)roomAlias
+                           success:(void (^)(NSString *roomId))success
+                           failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Content upload
@@ -682,14 +759,15 @@ typedef enum : NSUInteger
  @param success A block object called when the operation succeeds. It provides the uploaded content url.
  @param failure A block object called when the operation fails.
  @param uploadProgress A block object called when the upload progresses.
- @return the created NSOperation
+
+ @return a NSOperation instance to use to cancel the request.
  */
 - (NSOperation*)uploadContent:(NSData *)data
-             mimeType:(NSString *)mimeType
-              timeout:(NSTimeInterval)timeoutInSeconds
-              success:(void (^)(NSString *url))success
-              failure:(void (^)(NSError *error))failure
-       uploadProgress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))uploadProgress;
+                     mimeType:(NSString *)mimeType
+                      timeout:(NSTimeInterval)timeoutInSeconds
+                      success:(void (^)(NSString *url))success
+                      failure:(void (^)(NSError *error))failure
+               uploadProgress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))uploadProgress;
 
 /**
  Resolve a Matrix media content URI (in the form of "mxc://...") into an HTTP URL.
@@ -720,11 +798,13 @@ typedef enum : NSUInteger
  @param success A block object called when the operation succeeds. It provides the Matrix user id.
                 It is nil if the user is not found.
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)lookup3pid:(NSString*)address
-         forMedium:(MX3PIDMedium)medium
-           success:(void (^)(NSString *userId))success
-           failure:(void (^)(NSError *error))failure;
+- (NSOperation*)lookup3pid:(NSString*)address
+                 forMedium:(MX3PIDMedium)medium
+                   success:(void (^)(NSString *userId))success
+                   failure:(void (^)(NSError *error))failure;
 
 /**
  Retrieve user matrix ids from a list of 3rd party ids.
@@ -737,11 +817,13 @@ typedef enum : NSUInteger
  @param success A block object called when the operation succeeds. It provides a list of Matrix user ids
                 in the same order as passed arrays. A not found Matrix user id is indicated by NSNull in this array
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
 - (void)lookup3pids:(NSArray*)addresses
-          forMedia:(NSArray*)media
-           success:(void (^)(NSArray *userIds))success
-           failure:(void (^)(NSError *error))failure;
+           forMedia:(NSArray*)media
+            success:(void (^)(NSArray *userIds))success
+            failure:(void (^)(NSError *error))failure;
 
 /**
  Start the validation process of an email address.
@@ -759,12 +841,14 @@ typedef enum : NSUInteger
  @param success A block object called when the operation succeeds. It provides the id of the
                 email validation session. It must be then passed to [MXRestClient validateEmail].
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)requestEmailValidation:(NSString*)email
-                  clientSecret:(NSString*)clientSecret
-                   sendAttempt:(NSUInteger)sendAttempt
-                       success:(void (^)(NSString *sid))success
-                       failure:(void (^)(NSError *error))failure;
+- (NSOperation*)requestEmailValidation:(NSString*)email
+                          clientSecret:(NSString*)clientSecret
+                           sendAttempt:(NSUInteger)sendAttempt
+                               success:(void (^)(NSString *sid))success
+                               failure:(void (^)(NSError *error))failure;
 
 /**
  Complete the email validation by sending the validation token the user received by email.
@@ -776,12 +860,14 @@ typedef enum : NSUInteger
  @param success A block object called when the operation succeeds. It indicates if the
                 validation has succeeded.
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)validateEmail:(NSString*)sid
-      validationToken:(NSString*)validationToken
-         clientSecret:(NSString*)clientSecret
-              success:(void (^)(BOOL success))success
-              failure:(void (^)(NSError *error))failure;
+- (NSOperation*)validateEmail:(NSString*)sid
+              validationToken:(NSString*)validationToken
+                 clientSecret:(NSString*)clientSecret
+                      success:(void (^)(BOOL success))success
+                      failure:(void (^)(NSError *error))failure;
 
 /**
  Link an authenticated 3rd party id to a Matrix user id.
@@ -793,11 +879,13 @@ typedef enum : NSUInteger
  @param success A block object called when the operation succeeds. It provides the raw
                 server response.
  @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
  */
-- (void)bind3PID:(NSString*)userId
-             sid:(NSString*)sid
-    clientSecret:(NSString*)clientSecret
-         success:(void (^)(NSDictionary *JSONResponse))success
-         failure:(void (^)(NSError *error))failure;
+- (NSOperation*)bind3PID:(NSString*)userId
+                     sid:(NSString*)sid
+            clientSecret:(NSString*)clientSecret
+                 success:(void (^)(NSDictionary *JSONResponse))success
+                 failure:(void (^)(NSError *error))failure;
 
 @end
