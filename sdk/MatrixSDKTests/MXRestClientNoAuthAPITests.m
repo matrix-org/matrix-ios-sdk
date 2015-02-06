@@ -75,6 +75,25 @@
     XCTAssertTrue([mxRestClient.homeserver isEqualToString:kMXTestsHomeServerURL], @"Pass");
 }
 
+- (void)testCancel
+{
+    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
+
+    NSOperation *request = [mxRestClient getRegisterFlow:^(NSArray *flows) {
+
+        XCTFail(@"The request should not succeed");
+        [expectation fulfill];
+
+    } failure:^(NSError *error) {
+        XCTAssertEqual(error.code, NSURLErrorCancelled, @"The request must be flagged as cancelled");
+        [expectation fulfill];
+    }];
+
+    [request cancel];
+
+    [self waitForExpectationsWithTimeout:10000 handler:nil];
+}
+
 
 #pragma mark - Registration operations
 - (void)testRegisterFlow
