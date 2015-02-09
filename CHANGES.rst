@@ -1,3 +1,30 @@
+Changes in Matrix iOS SDK in 0.x.x (2015-XX-XX)
+===============================================
+
+-----
+ SDK
+-----
+Breaks:
+ * [MXSession initWithMatrixRestClient: andStore: ] and the onStoreDataReady argument in [MXSession start:] has been removed. The SDK client can now use the asynchronous [MXSession setStore:] method to define a store and getting notified when the SDK can read cached data from it.
+ * MXStore implementations must now implement [MXStore openWithCredentials].
+ 
+Improvements:
+ 
+Features:
+ 
+Bug fixes:
+ 
+-----------------
+ Matrix Console
+-----------------
+Improvements:
+
+Features:
+
+Bug fixes:
+
+
+
 Changes in Matrix iOS SDK in 0.2.2 (2015-02-05)
 ===============================================
 
