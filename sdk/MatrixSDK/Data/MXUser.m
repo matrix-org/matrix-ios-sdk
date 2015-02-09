@@ -16,6 +16,7 @@
 
 #import "MXUser.h"
 
+#import "MXSession.h"
 #import "MXEvent.h"
 #import "MXJSONModels.h"
 
@@ -38,12 +39,13 @@
 
 @implementation MXUser
 
-- (instancetype)initWithUserId:(NSString *)userId
+- (instancetype)initWithUserId:(NSString *)userId andMatrixSession:(MXSession*)mxSession2
 {
     self = [super init];
     if (self)
     {
         _userId = [userId copy];
+        mxSession = mxSession2;
         lastActiveLocalTS = -1;
 
         updateListeners = [NSMutableArray array];
@@ -106,6 +108,12 @@
     }
     return lastActiveAgo;
 }
+
+- (NSString *)identiconOfSize:(CGSize)size
+{
+    return [mxSession.matrixRestClient urlOfIdenticon:_userId withSize:size];
+}
+
 
 #pragma mark - Events listeners
 

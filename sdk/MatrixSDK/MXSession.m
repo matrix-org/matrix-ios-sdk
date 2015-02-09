@@ -597,7 +597,7 @@ typedef void (^MXOnResumeDone)();
     
     if (nil == user)
     {
-        user = [[MXUser alloc] initWithUserId:userId];
+        user = [[MXUser alloc] initWithUserId:userId andMatrixSession:self];
         [users setObject:user forKey:userId];
     }
     return user;

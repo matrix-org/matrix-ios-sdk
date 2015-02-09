@@ -1265,7 +1265,7 @@ MXAuthAction;
 }
 
 
-#pragma mark - Content upload
+#pragma mark - Media Repository API
 - (NSOperation*) uploadContent:(NSData *)data
                       mimeType:(NSString *)mimeType
                        timeout:(NSTimeInterval)timeoutInSeconds
@@ -1336,6 +1336,11 @@ MXAuthAction;
     }
 
     return thumbnailURL;
+}
+
+- (NSString *)urlOfIdenticon:(NSString *)identiconString withSize:(CGSize)size
+{
+    return [NSString stringWithFormat:@"%@%@/identicon/%@?width=%d&height=%d", homeserver, kMXContentPrefixPath, [identiconString stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]], (int)size.width, (int)size.height];
 }
 
 

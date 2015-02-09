@@ -748,7 +748,7 @@ typedef enum : NSUInteger
                            failure:(void (^)(NSError *error))failure;
 
 
-#pragma mark - Content upload
+#pragma mark - Media Repository API
 /**
  Upload content to HomeServer
  
@@ -786,6 +786,15 @@ typedef enum : NSUInteger
  @return the thumbnail HTTP URL. nil if the Matrix content URI is invalid.
  */
 - (NSString*)urlOfContentThumbnail:(NSString*)mxcContentURI withSize:(CGSize)thumbnailSize andMethod:(MXThumbnailingMethod)thumbnailingMethod;
+
+/**
+ Get the HTTP URL of an identicon served by the media repository.
+
+ @param identiconString the string to build an identicon from.
+ @param size the expected identicon image size.
+ @return the identicon HTTP URL.
+ */
+- (NSString*)urlOfIdenticon:(NSString*)identiconString withSize:(CGSize)size;
 
 
 #pragma mark - Identity server API

@@ -19,19 +19,15 @@
 #import "MXSession.h"
 
 @interface MXMyUser ()
-{
-    MXSession *mxSession;
-}
 @end
 
 @implementation MXMyUser
 
-- (instancetype)initWithUserId:(NSString *)userId andDisplayname:(NSString *)displayname andAvatarUrl:(NSString *)avatarUrl andMatrixSession:(MXSession *)mxSession2
+- (instancetype)initWithUserId:(NSString *)userId andDisplayname:(NSString *)displayname andAvatarUrl:(NSString *)avatarUrl andMatrixSession:(MXSession *)mxSession
 {
-    self = [super initWithUserId:userId];
+    self = [super initWithUserId:userId andMatrixSession:mxSession];
     if (self)
     {
-        mxSession = mxSession2;
         self.displayname = [displayname copy];
         self.avatarUrl = [avatarUrl copy];
     }

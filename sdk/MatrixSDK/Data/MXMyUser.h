@@ -16,8 +16,6 @@
 
 #import "MXUser.h"
 
-@class MXSession;
-
 /**
  `MXMyUser` is a MXUser derivated object that represents the profile of the currently logged in user.
  It brings helper methods to update the user profile
