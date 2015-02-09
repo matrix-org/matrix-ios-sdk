@@ -72,7 +72,7 @@
         [mxSession setStore:store success:^{
 
             [mxSession start:^{
-            } onServerSyncDone:^{
+
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
 
                 readyToTest(room);
@@ -111,7 +111,7 @@
 
             [mxSession setStore:store success:^{
                 [mxSession start:^{
-                } onServerSyncDone:^{
+
                     MXRoom *room = [mxSession roomWithRoomId:roomId];
 
                     readyToTest(room);
@@ -186,9 +186,7 @@
 
         [mxSession setStore:store success:^{
 
-            [mxSession startWithMessagesLimit:messagesLimit onStoreDataReady:^{
-
-            } onServerSyncDone:^{
+            [mxSession startWithMessagesLimit:messagesLimit onServerSyncDone:^{
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
 
                 readyToTest(room);
@@ -1219,7 +1217,6 @@
                 [mxSession setStore:store success:^{
 
                     [mxSession start:^{
-                    } onServerSyncDone:^{
 
                         [mxSession close];
                         mxSession = nil;
@@ -1285,8 +1282,6 @@
 
                     [mxSession start:^{
 
-                    } onServerSyncDone:^{
-
                         [mxSession close];
                         mxSession = nil;
 
@@ -1313,8 +1308,6 @@
                                         XCTAssertEqualObjects(eventStreamToken, store2.eventStreamToken, @"The event stream token must not have changed yet");
 
                                         [mxSession2 start:^{
-
-                                        } onServerSyncDone:^{
 
                                             XCTAssert(onStoreDataReadyCalled, @"onStoreDataReady must alway be called before onServerSyncDone");
 
@@ -1383,8 +1376,6 @@
 
                 [mxSession start:^{
 
-                } onServerSyncDone:^{
-
                     // Quit the newly created room
                     MXRoom *room = [mxSession roomWithRoomId:roomId];
                     [room leave:^{
@@ -1442,8 +1433,6 @@
 
             [mxSession setStore:store success:^{
                 [mxSession start:^{
-
-                } onServerSyncDone:^{
 
                     MXRoom *room = [mxSession roomWithRoomId:roomId];
 

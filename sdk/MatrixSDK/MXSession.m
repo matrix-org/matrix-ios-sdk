@@ -137,15 +137,13 @@ typedef void (^MXOnResumeDone)();
     } failure:failure];
 }
 
-- (void)start:(void (^)())onStoreDataReady
-onServerSyncDone:(void (^)())onServerSyncDone
+- (void)start:(void (^)())onServerSyncDone
       failure:(void (^)(NSError *error))failure
 {
-    [self startWithMessagesLimit:DEFAULT_INITIALSYNC_MESSAGES_NUMBER onStoreDataReady:onStoreDataReady onServerSyncDone:onServerSyncDone failure:failure];
+    [self startWithMessagesLimit:DEFAULT_INITIALSYNC_MESSAGES_NUMBER onServerSyncDone:onServerSyncDone failure:failure];
 }
 
 - (void)startWithMessagesLimit:(NSUInteger)messagesLimit
-              onStoreDataReady:(void (^)())onStoreDataReady
               onServerSyncDone:(void (^)())onServerSyncDone
                        failure:(void (^)(NSError *error))failure
 {
@@ -159,7 +157,7 @@ onServerSyncDone:(void (^)())onServerSyncDone
         [self setStore:store success:^{
 
             // Then, start again
-            [weakSelf startWithMessagesLimit:messagesLimit onStoreDataReady:onStoreDataReady onServerSyncDone:onServerSyncDone failure:failure];
+            [weakSelf startWithMessagesLimit:messagesLimit onServerSyncDone:onServerSyncDone failure:failure];
 
         } failure:failure];
         return;
@@ -257,15 +255,6 @@ onServerSyncDone:(void (^)())onServerSyncDone
 
                     // Resume from the last known token
                     [self streamEventsFromToken:_store.eventStreamToken withLongPoll:YES];
-
-                    // We have up-to-date data, the SDK user can start using it
-                    onStoreDataReady();
-
-                    // Check SDK user did not called [MXSession close] in onStoreDataReady
-                    if (nil == _myUser)
-                    {
-                        return;
-                    }
 
                     onServerSyncDone();
 

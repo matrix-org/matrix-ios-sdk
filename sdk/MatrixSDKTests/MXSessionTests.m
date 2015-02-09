@@ -53,7 +53,6 @@
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         [mxSession start:^{
-        } onServerSyncDone:^{
             
             NSArray *recents = [mxSession recentsWithTypeIn:nil];
             
@@ -88,7 +87,6 @@
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         [mxSession start:^{
-        } onServerSyncDone:^{
             
             NSArray *recents = [mxSession recentsWithTypeIn:nil];
             
@@ -173,7 +171,6 @@
         
         // Create a room with messages in parallel
         [mxSession start:^{
-        } onServerSyncDone:^{
             
             [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:nil readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
 
@@ -216,7 +213,6 @@
         
         // Create a room with messages in parallel
         [mxSession start:^{
-        } onServerSyncDone:^{
             
             [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:nil readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
             }];
@@ -246,8 +242,7 @@
         
         
         // Create a room with messages in parallel
-        [mxSession startWithMessagesLimit:0 onStoreDataReady:^{
-        } onServerSyncDone:^{
+        [mxSession startWithMessagesLimit:0 onServerSyncDone:^{
             
             XCTAssertGreaterThan(eventCount, 0);
             [expectation fulfill];
@@ -290,7 +285,6 @@
         
         // Start the session
         [mxSession start:^{
-        } onServerSyncDone:^{
             
             // Get the last Alice activity before making her active again
             lastAliceActivity = [mxSession2 userWithUserId:aliceRestClient.credentials.userId].lastActiveAgo;
@@ -318,7 +312,6 @@
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
         [mxSession start:^{
-        } onServerSyncDone:^{
 
             [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
                 XCTFail(@"We should not receive events after closing the session. Received: %@", event);
@@ -378,8 +371,6 @@
 
             [mxSession start:^{
 
-            } onServerSyncDone:^{
-
                 NSUInteger storeRoomsCount = store.rooms.count;
 
                 XCTAssertGreaterThan(storeRoomsCount, 0);
@@ -418,7 +409,6 @@
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
         [mxSession start:^{
-        } onServerSyncDone:^{
 
             // Delay the test as the event stream is actually launched by the sdk after the call of the block passed in [MXSession start]
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
@@ -486,7 +476,6 @@
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
         [mxSession start:^{
-        } onServerSyncDone:^{
 
             // Delay the test as the event stream is actually launched by the sdk after the call of the block passed in [MXSession start]
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
