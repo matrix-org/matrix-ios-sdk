@@ -70,7 +70,6 @@
         XCTAssertNil(mxSession.myUser, @"There should be no myUser while initialSync is not done");
 
         [mxSession start:^{
-        } onServerSyncDone:^{
 
             // Listen to my profile changes
             [mxSession.myUser listenToUserUpdate:^(MXEvent *event) {
@@ -105,7 +104,6 @@
         mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
 
         [mxSession start:^{
-        } onServerSyncDone:^{
 
             // Listen to my profile changes
             [mxSession.myUser listenToUserUpdate:^(MXEvent *event) {
@@ -141,7 +139,6 @@
         mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
 
         [mxSession start:^{
-        } onServerSyncDone:^{
 
             // Listen to my profile changes
             [mxSession.myUser listenToUserUpdate:^(MXEvent *event) {

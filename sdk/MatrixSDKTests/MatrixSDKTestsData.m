@@ -378,7 +378,6 @@ NSMutableArray *roomsToClean;
         MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         
         [mxSession start:^{
-        } onServerSyncDone:^{
             MXRoom *room = [mxSession roomWithRoomId:roomId];
             
             readyToTest(mxSession, room, expectation);
@@ -397,7 +396,6 @@ NSMutableArray *roomsToClean;
         MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         
         [mxSession start:^{
-        } onServerSyncDone:^{
             MXRoom *room = [mxSession roomWithRoomId:roomId];
             
             readyToTest(mxSession, room, expectation);

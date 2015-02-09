@@ -26,6 +26,18 @@
 #pragma mark - Room data
 
 /**
+ Open the store corresponding to the passed account.
+
+ The implementation can use a separated thread for processing but the callback blocks
+ must be called from the main thread.
+
+ @param credentials the credentials of the account.
+ @param onComplete the callback called once the data has been loaded
+ @param failure the callback called in case of error.
+ */
+- (void)openWithCredentials:(MXCredentials*)credentials onComplete:(void (^)())onComplete failure:(void (^)(NSError *error))failure;
+
+/**
  Store a room event received from the home server.
  
  Note: The `MXEvent` class implements the `NSCoding` protocol so their instances can
@@ -150,6 +162,7 @@
  Any pending operation must be complete in this call.
  */
 - (void)close;
+
 
 #pragma mark - Permanent storage
 /**

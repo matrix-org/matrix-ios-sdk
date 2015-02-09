@@ -23,6 +23,10 @@
 
 #import "MXMemoryStore.h"
 
+// Do not bother with retain cycles warnings in tests
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-retain-cycles"
+
 @interface MXSessionTests : XCTestCase
 {
     MXSession *mxSession;
@@ -53,7 +57,6 @@
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         [mxSession start:^{
-        } onServerSyncDone:^{
             
             NSArray *recents = [mxSession recentsWithTypeIn:nil];
             
@@ -88,7 +91,6 @@
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         [mxSession start:^{
-        } onServerSyncDone:^{
             
             NSArray *recents = [mxSession recentsWithTypeIn:nil];
             
@@ -173,7 +175,6 @@
         
         // Create a room with messages in parallel
         [mxSession start:^{
-        } onServerSyncDone:^{
             
             [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:nil readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
 
@@ -216,7 +217,6 @@
         
         // Create a room with messages in parallel
         [mxSession start:^{
-        } onServerSyncDone:^{
             
             [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:nil readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
             }];
@@ -246,8 +246,7 @@
         
         
         // Create a room with messages in parallel
-        [mxSession startWithMessagesLimit:0 onStoreDataReady:^{
-        } onServerSyncDone:^{
+        [mxSession startWithMessagesLimit:0 onServerSyncDone:^{
             
             XCTAssertGreaterThan(eventCount, 0);
             [expectation fulfill];
@@ -290,7 +289,6 @@
         
         // Start the session
         [mxSession start:^{
-        } onServerSyncDone:^{
             
             // Get the last Alice activity before making her active again
             lastAliceActivity = [mxSession2 userWithUserId:aliceRestClient.credentials.userId].lastActiveAgo;
@@ -318,7 +316,6 @@
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
         [mxSession start:^{
-        } onServerSyncDone:^{
 
             [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
                 XCTFail(@"We should not receive events after closing the session. Received: %@", event);
@@ -372,29 +369,33 @@
 
         MXMemoryStore *store = [[MXMemoryStore alloc] init];
 
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient andStore:store];
-        [mxSession start:^{
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
-        } onServerSyncDone:^{
+        [mxSession setStore:store success:^{
 
-            NSUInteger storeRoomsCount = store.rooms.count;
+            [mxSession start:^{
 
-            XCTAssertGreaterThan(storeRoomsCount, 0);
+                NSUInteger storeRoomsCount = store.rooms.count;
 
-            [mxSession close];
-            mxSession = nil;
+                XCTAssertGreaterThan(storeRoomsCount, 0);
 
-            // Create another random room to create more data server side
-            [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
+                [mxSession close];
+                mxSession = nil;
 
-                // Check the stream has been correctly shutdowned. Checking that the store has not changed is one way to verify it
-                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                // Create another random room to create more data server side
+                [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
 
-                    XCTAssertEqual(store.rooms.count, storeRoomsCount, @"There must still the same number of stored rooms");
-                    [expectation fulfill];
+                    // Check the stream has been correctly shutdowned. Checking that the store has not changed is one way to verify it
+                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
 
-                });
+                        XCTAssertEqual(store.rooms.count, storeRoomsCount, @"There must still the same number of stored rooms");
+                        [expectation fulfill];
 
+                    });
+
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                }];
             } failure:^(NSError *error) {
                 NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
             }];
@@ -412,7 +413,6 @@
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
         [mxSession start:^{
-        } onServerSyncDone:^{
 
             // Delay the test as the event stream is actually launched by the sdk after the call of the block passed in [MXSession start]
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
@@ -480,7 +480,6 @@
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
         [mxSession start:^{
-        } onServerSyncDone:^{
 
             // Delay the test as the event stream is actually launched by the sdk after the call of the block passed in [MXSession start]
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
@@ -537,3 +536,5 @@
 }
 
 @end
+
+#pragma clang diagnostic pop

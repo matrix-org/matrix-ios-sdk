@@ -183,7 +183,6 @@
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         [mxSession start:^{
-        } onServerSyncDone:^{
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
@@ -213,8 +212,7 @@
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
-        [mxSession startWithMessagesLimit:0 onStoreDataReady:^{
-        } onServerSyncDone:^{
+        [mxSession startWithMessagesLimit:0 onServerSyncDone:^{
             
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
@@ -254,7 +252,6 @@
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         [mxSession start:^{
-        } onServerSyncDone:^{
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 

@@ -76,98 +76,102 @@ typedef void (^MXOnResumeDone)();
 
 - (id)initWithMatrixRestClient:(MXRestClient*)mxRestClient
 {
-    return [self initWithMatrixRestClient:mxRestClient andStore:nil];
-}
-
-- (id)initWithMatrixRestClient:(MXRestClient *)mxRestClient andStore:(id<MXStore>)mxStore
-{
     self = [super init];
     if (self)
     {
         matrixRestClient = mxRestClient;
         rooms = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
-        
+
         globalEventListeners = [NSMutableArray array];
-
-        // Define the MXStore
-        if (mxStore)
-        {
-            _store = mxStore;
-
-            // Validate the permanent implementation
-            if (mxStore.isPermanent)
-            {
-                // A permanent MXStore must implement these methods:
-                NSParameterAssert([_store respondsToSelector:@selector(rooms)]);
-                NSParameterAssert([_store respondsToSelector:@selector(storeStateForRoom:stateEvents:)]);
-                NSParameterAssert([_store respondsToSelector:@selector(stateOfRoom:)]);
-                NSParameterAssert([_store respondsToSelector:@selector(userDisplayname)]);
-                NSParameterAssert([_store respondsToSelector:@selector(setUserDisplayname:)]);
-                NSParameterAssert([_store respondsToSelector:@selector(userAvatarUrl)]);
-                NSParameterAssert([_store respondsToSelector:@selector(setUserAvatarUrl:)]);
-            }
-        }
-        else
-        {
-            // Use MXMemoryStore as default
-            _store = [[MXMemoryStore alloc] init];
-
-            //_store = [[MXNoStore alloc] init];  // For test
-
-            //_store = [[MXFileStore alloc] initWithCredentials:mxRestClient.credentials];  // For test
-        }
     }
     return self;
 }
 
-- (void)start:(void (^)())onStoreDataReady
-onServerSyncDone:(void (^)())onServerSyncDone
-      failure:(void (^)(NSError *error))failure
+-(void)setStore:(id<MXStore>)store success:(void (^)())onStoreDataReady failure:(void (^)(NSError *))failure
 {
-    [self startWithMessagesLimit:DEFAULT_INITIALSYNC_MESSAGES_NUMBER onStoreDataReady:onStoreDataReady onServerSyncDone:onServerSyncDone failure:failure];
-}
+    NSParameterAssert(store);
 
-- (void)startWithMessagesLimit:(NSUInteger)messagesLimit
-              onStoreDataReady:(void (^)())onStoreDataReady
-              onServerSyncDone:(void (^)())onServerSyncDone
-                       failure:(void (^)(NSError *error))failure
-{
-    // Store the passed limit to reuse it when initialSyncing per room
-    initialSyncMessagesLimit = messagesLimit;
+    _store = store;
 
-    // Can we start on data from the MXStore?
-    if (_store.isPermanent && _store.eventStreamToken && 0 < _store.rooms.count)
+    // Validate the permanent implementation
+    if (_store.isPermanent)
     {
-        // Mount data from the permanent store
-        NSLog(@"[MXSession startWithMessagesLimit]: Load data from the store");
+        // A permanent MXStore must implement these methods:
+        NSParameterAssert([_store respondsToSelector:@selector(rooms)]);
+        NSParameterAssert([_store respondsToSelector:@selector(storeStateForRoom:stateEvents:)]);
+        NSParameterAssert([_store respondsToSelector:@selector(stateOfRoom:)]);
+        NSParameterAssert([_store respondsToSelector:@selector(userDisplayname)]);
+        NSParameterAssert([_store respondsToSelector:@selector(setUserDisplayname:)]);
+        NSParameterAssert([_store respondsToSelector:@selector(userAvatarUrl)]);
+        NSParameterAssert([_store respondsToSelector:@selector(setUserAvatarUrl:)]);
+    }
 
-        // Create the user's profile from the store
-        _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId andDisplayname:_store.userDisplayname andAvatarUrl:_store.userAvatarUrl andMatrixSession:self];
-        // And store him as a common MXUser
-        users[matrixRestClient.credentials.userId] = _myUser;
+    [_store openWithCredentials:matrixRestClient.credentials onComplete:^{
 
-        // Create MXRooms from their states stored in the store
-        NSDate *startDate = [NSDate date];
-        for (NSString *roomId in _store.rooms)
+        // Can we start on data from the MXStore?
+        if (_store.isPermanent && _store.eventStreamToken && 0 < _store.rooms.count)
         {
-            NSArray *stateEvents = [_store stateOfRoom:roomId];
-            [self createRoom:roomId withStateEvents:stateEvents];
-        }
+            // Mount data from the permanent store
+            NSLog(@"[MXSession startWithMessagesLimit]: Load data from the store");
 
-        NSLog(@"Created %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+            // Create the user's profile from the store
+            _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId andDisplayname:_store.userDisplayname andAvatarUrl:_store.userAvatarUrl andMatrixSession:self];
+            // And store him as a common MXUser
+            users[matrixRestClient.credentials.userId] = _myUser;
+
+            // Create MXRooms from their states stored in the store
+            NSDate *startDate = [NSDate date];
+            for (NSString *roomId in _store.rooms)
+            {
+                NSArray *stateEvents = [_store stateOfRoom:roomId];
+                [self createRoom:roomId withStateEvents:stateEvents];
+            }
+
+            NSLog(@"Loaded %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+        }
 
         // The SDK client can use this data
         onStoreDataReady();
 
-        // Check SDK user did not called [MXSession close] in onStoreDataReady
-        if (nil == _myUser)
-        {
-            return;
-        }
+    } failure:failure];
+}
 
+- (void)start:(void (^)())onServerSyncDone
+      failure:(void (^)(NSError *error))failure
+{
+    [self startWithMessagesLimit:DEFAULT_INITIALSYNC_MESSAGES_NUMBER onServerSyncDone:onServerSyncDone failure:failure];
+}
+
+- (void)startWithMessagesLimit:(NSUInteger)messagesLimit
+              onServerSyncDone:(void (^)())onServerSyncDone
+                       failure:(void (^)(NSError *error))failure
+{
+    if (nil == _store)
+    {
+        // The user did not set a MXStore, use MXNoStore as default
+        MXNoStore *store = [[MXNoStore alloc] init];
+
+        // Set the store before going further
+        __weak typeof(self) weakSelf = self;
+        [self setStore:store success:^{
+
+            // Then, start again
+            [weakSelf startWithMessagesLimit:messagesLimit onServerSyncDone:onServerSyncDone failure:failure];
+
+        } failure:failure];
+        return;
+    }
+
+    // Store the passed limit to reuse it when initialSyncing per room
+    initialSyncMessagesLimit = messagesLimit;
+
+
+    // Can we resume from data available in the cache
+    if (_store.isPermanent && _store.eventStreamToken && 0 < _store.rooms.count)
+    {
         // We need to get all users presence to start right
-        startDate = [NSDate date];
+        NSDate *startDate = [NSDate date];
         [matrixRestClient allUsersPresence:^(NSArray *userPresenceEvents) {
 
             NSLog(@"Got presence of %tu users in %.0fms", userPresenceEvents.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
@@ -200,7 +204,6 @@ onServerSyncDone:(void (^)())onServerSyncDone
 
                 // And store him as a common MXUser
                 users[matrixRestClient.credentials.userId] = _myUser;
-
 
                 NSLog(@"[MXSession startWithMessagesLimit] Do a global initialSync");
 
@@ -249,22 +252,13 @@ onServerSyncDone:(void (^)())onServerSyncDone
                     {
                         [_store commit];
                     }
-                    
+
                     // Resume from the last known token
                     [self streamEventsFromToken:_store.eventStreamToken withLongPoll:YES];
 
-                    // We have up-to-date data, the SDK user can start using it
-                    onStoreDataReady();
-                    
-                    // Check SDK user did not called [MXSession close] in onStoreDataReady
-                    if (nil == _myUser)
-                    {
-                        return;
-                    }
-
                     onServerSyncDone();
-                }
-                failure:^(NSError *error) {
+
+                } failure:^(NSError *error) {
                     failure(error);
                 }];
             } failure:^(NSError *error) {

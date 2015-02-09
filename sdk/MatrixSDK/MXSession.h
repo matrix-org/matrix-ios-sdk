@@ -54,17 +54,21 @@
  */
 - (id)initWithMatrixRestClient:(MXRestClient*)mxRestClient;
 
-/**
- Create a MXSession instance using a Matrix storage component.
- By default, initWithMatrixRestClient uses MXNoStore as memory storage
-
- @param mxRestClient The MXRestClient to the home server.
- @param mxStore The MXStore that will store matrix data. If nil, a MXNoStore will be used.
-
- @return The newly-initialized MXSession.
+/*
+ Define the Matrix storage component to use.
+ 
+ It must be set before calling [MXSession start].
+ Else, by default, the MXSession instance will use MXNoStore as storage.
+ 
+ @param store the store to use for the session.
+ @param onStoreDataReady A block object called when the SDK has loaded the data from the `MXStore`.
+                         The SDK is then able to serve this data to its client. Note the data may not
+                         be up-to-date. You need to call [MXSession start] to ensure the sync with
+                         the home server.
+ @param failure A block object called when the operation fails.
  */
-- (id)initWithMatrixRestClient:(MXRestClient*)mxRestClient andStore:(id<MXStore>)mxStore;
-
+- (void)setStore:(id<MXStore>)store success:(void (^)())onStoreDataReady
+                  failure:(void (^)(NSError *error))failure;
 
 /**
  Start fetching events from the home server.
@@ -78,18 +82,11 @@
  If the attached MXStore caches data permanently, the function will do an initialSync only at
  the first launch. Then, for next app launches, the SDK will load events from the MXStore and
  will resume the events streaming from where it had been stopped the time before.
- 
- The function takes two successful callbacks: `onStoreDataReady` & `onServerSyncDone`.
- In case of success, both are called. `onStoreDataReady` is always called first. It indicates
- the app can start to work with some data.
- 
- @param onStoreDataReady A block object called when the SDK can serve some data that is
-                         stored in the MXStore. Note the data may not be up-to-date.
+
  @param onServerSyncDone A block object called when the data is up-to-date with the server.
  @param failure A block object called when the operation fails.
  */
-- (void)start:(void (^)())onStoreDataReady
-onServerSyncDone:(void (^)())onServerSyncDone
+- (void)start:(void (^)())onServerSyncDone
       failure:(void (^)(NSError *error))failure;
 
 /**
@@ -99,13 +96,10 @@ onServerSyncDone:(void (^)())onServerSyncDone
  By default, [MXSession start] preloads 10 messages. Use this method to use a custom limit.
 
  @param messagesLimit the number of messages to retrieve in each room.
- @param onStoreDataReady A block object called when the SDK can serve some data that is
-                         stored in the MXStore. Note the data may not be up-to-date.
  @param onServerSyncDone A block object called when the data is up-to-date with the server.
  @param failure A block object called when the operation fails.
  */
 - (void)startWithMessagesLimit:(NSUInteger)messagesLimit
-              onStoreDataReady:(void (^)())onStoreDataReady
               onServerSyncDone:(void (^)())onServerSyncDone
                        failure:(void (^)(NSError *error))failure;
 
