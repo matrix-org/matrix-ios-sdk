@@ -23,6 +23,10 @@
 
 #import "MXMemoryStore.h"
 
+// Do not bother with retain cycles warnings in tests
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-retain-cycles"
+
 @interface MXSessionTests : XCTestCase
 {
     MXSession *mxSession;
@@ -532,3 +536,5 @@
 }
 
 @end
+
+#pragma clang diagnostic pop
