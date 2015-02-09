@@ -143,29 +143,14 @@
 
 - (void)doTestWithMXFileStore:(void (^)(MXRoom *room))readyToTest
 {
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
     MXFileStore *store = [[MXFileStore alloc] init];
-
-    expectation = [self expectationWithDescription:@"asyncTest"];
-
-    [store openWithCredentials:sharedData.bobCredentials onComplete:^{
-        [self doTestWithStore:store readyToTest:readyToTest];
-    }];
-
-    [self waitForExpectationsWithTimeout:10000 handler:nil];
+    [self doTestWithStore:store readyToTest:readyToTest];
 }
 
 - (void)doTestWithTwoUsersAndMXFileStore:(void (^)(MXRoom *room))readyToTest
 {
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
     MXFileStore *store = [[MXFileStore alloc] init];
-
-    expectation = [self expectationWithDescription:@"asyncTest"];
-    [store openWithCredentials:sharedData.bobCredentials onComplete:^{
-        [self doTestWithTwoUsersAndStore:store readyToTest:readyToTest];
-    }];
-
-    [self waitForExpectationsWithTimeout:10000 handler:nil];
+    [self doTestWithTwoUsersAndStore:store readyToTest:readyToTest];
 }
 
 
@@ -216,15 +201,8 @@
 
 - (void)doTestWithMXFileStoreAndMessagesLimit:(NSUInteger)messagesLimit readyToTest:(void (^)(MXRoom *room))readyToTest
 {
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
     MXFileStore *store = [[MXFileStore alloc] init];
-
-    expectation = [self expectationWithDescription:@"asyncTest"];
-    [store openWithCredentials:sharedData.bobCredentials onComplete:^{
-        [self doTestWithStore:store andMessagesLimit:messagesLimit readyToTest:readyToTest];
-    }];
-
-    [self waitForExpectationsWithTimeout:10000 handler:nil];
+    [self doTestWithStore:store andMessagesLimit:messagesLimit readyToTest:readyToTest];
 }
 
 
@@ -1235,12 +1213,18 @@
                         [store2 close];
                         [expectation fulfill];
 
+                    } failure:^(NSError *error) {
+                        NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
                     }];
 
                 } failure:^(NSError *error) {
                     NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
                 }];
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
             }];
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
         }];
     }];
 }
@@ -1297,7 +1281,7 @@
 
                                     XCTAssertEqual(mxSession2.rooms.count, storeRoomsCount, @"MXSessionOnStoreDataReady must have loaded as many MXRooms as room stored");
                                     XCTAssertEqual(store2.rooms.count, storeRoomsCount, @"There must still the same number of stored rooms");
-                                    XCTAssertEqual(eventStreamToken, store2.eventStreamToken, @"The event stream token must not have changed yet");
+                                    XCTAssertEqualObjects(eventStreamToken, store2.eventStreamToken, @"The event stream token must not have changed yet");
 
                                 } onServerSyncDone:^{
 
@@ -1315,6 +1299,8 @@
                                     XCTFail(@"The request should not fail - NSError: %@", error);
                                     [expectation fulfill];
                                 }];
+                            } failure:^(NSError *error) {
+                                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
                             }];
 
                         } failure:^(NSError *error) {
@@ -1329,7 +1315,11 @@
                     XCTFail(@"The request should not fail - NSError: %@", error);
                     [expectation fulfill];
                 }];
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
             }];
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
         }];
 
     }];
@@ -1370,6 +1360,8 @@
 
                         [expectation fulfill];
 
+                    } failure:^(NSError *error) {
+                        NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
                     }];
 
                 } failure:^(NSError *error) {
@@ -1379,7 +1371,8 @@
             } failure:^(NSError *error) {
                     NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
             }];
-
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
         }];
     }];
 }
@@ -1421,14 +1414,17 @@
                     XCTAssertEqual(ageLocalTs, sameEventAgeLocalTs, @"MXEvent.ageLocalTs must still be the same");
 
                     [expectation fulfill];
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
                 }];
-
 
             } onServerSyncDone:^{
             } failure:^(NSError *error) {
                 NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
             }];
 
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
         }];
 
     }];

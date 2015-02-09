@@ -47,6 +47,12 @@
     return self;
 }
 
+- (void)openWithCredentials:(MXCredentials *)credentials onComplete:(void (^)())onComplete failure:(void (^)(NSError *))failure
+{
+    // Nothing to do
+    onComplete();
+}
+
 - (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXEventDirection)direction
 {
     // Store nothing in the MXNoStore except the last message

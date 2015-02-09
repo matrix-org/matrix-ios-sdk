@@ -90,8 +90,18 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     return self;
 }
 
-- (void)openWithCredentials:(MXCredentials*)credentials onComplete:(void (^)())onComplete
+- (void)openWithCredentials:(MXCredentials*)credentials onComplete:(void (^)())onComplete failure:(void (^)(NSError *))failure
 {
+    /*
+    Mount data corresponding to the account credentials.
+
+    The MXFileStore needs to prepopulate its MXMemoryStore parent data from the file system before being used.
+
+    MXFileStore manages one account at a time (same home server, same user id and same access token).
+    If `credentials` is different from the previously used one, all the data will be erased
+    and the MXFileStore instance will start from a clean state.
+    */
+    
     // Load data from the file system on a separate thread
     dispatch_async(dispatchQueue, ^(void){
 
