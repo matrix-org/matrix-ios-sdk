@@ -372,29 +372,35 @@
 
         MXMemoryStore *store = [[MXMemoryStore alloc] init];
 
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient andStore:store];
-        [mxSession start:^{
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
-        } onServerSyncDone:^{
+        [mxSession setStore:store success:^{
 
-            NSUInteger storeRoomsCount = store.rooms.count;
+            [mxSession start:^{
 
-            XCTAssertGreaterThan(storeRoomsCount, 0);
+            } onServerSyncDone:^{
 
-            [mxSession close];
-            mxSession = nil;
+                NSUInteger storeRoomsCount = store.rooms.count;
 
-            // Create another random room to create more data server side
-            [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
+                XCTAssertGreaterThan(storeRoomsCount, 0);
 
-                // Check the stream has been correctly shutdowned. Checking that the store has not changed is one way to verify it
-                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                [mxSession close];
+                mxSession = nil;
 
-                    XCTAssertEqual(store.rooms.count, storeRoomsCount, @"There must still the same number of stored rooms");
-                    [expectation fulfill];
+                // Create another random room to create more data server side
+                [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
 
-                });
+                    // Check the stream has been correctly shutdowned. Checking that the store has not changed is one way to verify it
+                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
 
+                        XCTAssertEqual(store.rooms.count, storeRoomsCount, @"There must still the same number of stored rooms");
+                        [expectation fulfill];
+
+                    });
+
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                }];
             } failure:^(NSError *error) {
                 NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
             }];

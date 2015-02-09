@@ -54,17 +54,21 @@
  */
 - (id)initWithMatrixRestClient:(MXRestClient*)mxRestClient;
 
-/**
- Create a MXSession instance using a Matrix storage component.
- By default, initWithMatrixRestClient uses MXNoStore as memory storage
-
- @param mxRestClient The MXRestClient to the home server.
- @param mxStore The MXStore that will store matrix data. If nil, a MXNoStore will be used.
-
- @return The newly-initialized MXSession.
+/*
+ Define the Matrix storage component to use.
+ 
+ It must be set before calling [MXSession start].
+ Else, by default, the MXSession instance will use MXNoStore as storage.
+ 
+ @param store the store to use for the session.
+ @param onStoreDataReady A block object called when the SDK has loaded the data from the `MXStore`.
+                         The SDK is then able to serve this data to its client. Note the data may not
+                         be up-to-date. You need to call [MXSession start] to ensure the sync with
+                         the home server.
+ @param failure A block object called when the operation fails.
  */
-- (id)initWithMatrixRestClient:(MXRestClient*)mxRestClient andStore:(id<MXStore>)mxStore;
-
+- (void)setStore:(id<MXStore>)store success:(void (^)())onStoreDataReady
+                  failure:(void (^)(NSError *error))failure;
 
 /**
  Start fetching events from the home server.
