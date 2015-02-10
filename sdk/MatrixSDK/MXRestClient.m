@@ -164,42 +164,6 @@ MXAuthAction;
                                  success:success failure:failure];
 }
 
-#pragma mark Push Notification Registration
-
-- (NSOperation*)setPusherWithPushkey:(NSString *)pushkey
-                                kind:(NSObject *)kind
-                               appId:(NSString *)appId
-                      appDisplayName:(NSString *)appDisplayName
-                   deviceDisplayName:(NSString *)deviceDisplayName
-                          profileTag:(NSString *)profileTag
-                                lang:(NSString *)lang
-                                data:(NSDictionary *)data
-                             success:(void (^)())success
-                             failure:(void (^)(NSError *))failure {
-    NSDictionary *parameters = @{
-                                 @"pushkey": pushkey,
-                                 @"kind": kind,
-                                 @"app_id": appId,
-                                 @"app_display_name": appDisplayName,
-                                 @"device_display_name": deviceDisplayName,
-                                 @"profile_tag": profileTag,
-                                 @"lang": lang,
-                                 @"data": data
-                                };
-    
-    return [httpClient requestWithMethod:@"POST"
-                                    path:@"pushers/set"
-                              parameters:parameters
-                                 success:^(NSDictionary *JSONResponse)
-            {
-                success();
-            }
-                                 failure:^(NSError *error)
-            {
-                failure(error);
-            }];
-}
-
 
 #pragma mark - Common operations for register and login
 /*
@@ -300,6 +264,59 @@ MXAuthAction;
                 {
                     failure(error);
                 }
+            }];
+}
+
+
+#pragma mark - Push Notifications
+- (NSOperation*)setPusherWithPushkey:(NSString *)pushkey
+                                kind:(NSObject *)kind
+                               appId:(NSString *)appId
+                      appDisplayName:(NSString *)appDisplayName
+                   deviceDisplayName:(NSString *)deviceDisplayName
+                          profileTag:(NSString *)profileTag
+                                lang:(NSString *)lang
+                                data:(NSDictionary *)data
+                             success:(void (^)())success
+                             failure:(void (^)(NSError *))failure {
+    NSDictionary *parameters = @{
+                                 @"pushkey": pushkey,
+                                 @"kind": kind,
+                                 @"app_id": appId,
+                                 @"app_display_name": appDisplayName,
+                                 @"device_display_name": deviceDisplayName,
+                                 @"profile_tag": profileTag,
+                                 @"lang": lang,
+                                 @"data": data
+                                 };
+
+    return [httpClient requestWithMethod:@"POST"
+                                    path:@"pushers/set"
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse)
+            {
+                success();
+            }
+                                 failure:^(NSError *error)
+            {
+                failure(error);
+            }];
+}
+
+- (NSOperation *)pushRules:(void (^)(MXPushRulesResponse *pushRules))success failure:(void (^)(NSError *))failure
+{
+    return [httpClient requestWithMethod:@"GET"
+                                    path:@"pushrules/"
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse)
+            {
+                MXPushRulesResponse *pushRules = [MXPushRulesResponse modelFromJSON:JSONResponse];
+
+                success(pushRules);
+            }
+                                 failure:^(NSError *error)
+            {
+                failure(error);
             }];
 }
 

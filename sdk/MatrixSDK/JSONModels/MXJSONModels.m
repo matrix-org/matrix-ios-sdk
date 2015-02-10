@@ -119,3 +119,133 @@ NSString *const kMXPresenceHidden = @"hidden";
 }
 
 @end
+
+
+NSString *const kMXPushRuleActionStringNotify = @"notify";
+NSString *const kMXPushRuleActionStringDontNotify = @"dont_notify";
+NSString *const kMXPushRuleActionStringCoalesce = @"coalesce";
+NSString *const kMXPushRuleActionStringSetTweak = @"set_tweak";
+
+@implementation MXPushRule
+
++ (NSDictionary *)JSONKeyPathsByPropertyKey {
+
+    // The home server use "default" as key name but `default` is a reserved word
+    // in Objective C and cannot be used as a property name. So, it is replaced
+    // by `isDefault` in the SDK.
+
+    // Override the default JSON keys/ObjC properties mapping to match this change.
+    NSMutableDictionary *JSONKeyPathsByPropertyKey = [NSMutableDictionary dictionaryWithDictionary:[super JSONKeyPathsByPropertyKey]];
+    JSONKeyPathsByPropertyKey[@"isDefault"] = @"default";
+    return JSONKeyPathsByPropertyKey;
+}
+
+- (instancetype)initWithDictionary:(NSDictionary *)dictionaryValue error:(NSError *__autoreleasing *)error
+{
+    // Do the JSON -> class instance properties mapping
+    self = [super initWithDictionary:dictionaryValue error:error];
+    if (self)
+    {
+        NSMutableArray *actions = [NSMutableArray arrayWithCapacity:_actions.count];
+
+        for (NSUInteger i = 0; i < _actions.count; i++)
+        {
+            NSObject *rawAction = _actions[i];
+
+            // According to the push rules specification
+            // The action field can a string or dictionary, translate both into
+            // a MXPushRuleAction object
+            MXPushRuleAction *action = [[MXPushRuleAction alloc] init];
+
+            if ([rawAction isKindOfClass:[NSString class]])
+            {
+                action.action = [rawAction copy];
+
+                // If possible, map it to an action type
+                if ([action.action isEqualToString:kMXPushRuleActionStringNotify])
+                {
+                    action.actionType = MXPushRuleActionTypeNotify;
+                }
+                else if ([action.action isEqualToString:kMXPushRuleActionStringDontNotify])
+                {
+                    action.actionType = MXPushRuleActionTypeDontNotify;
+                }
+                else if ([action.action isEqualToString:kMXPushRuleActionStringCoalesce])
+                {
+                    action.actionType = MXPushRuleActionTypeCoalesce;
+                }
+            }
+            else if ([rawAction isKindOfClass:[NSDictionary class]])
+            {
+                action.parameters = (NSDictionary*)rawAction;
+
+                // The
+                if (NSNotFound != [action.parameters.allKeys indexOfObject:kMXPushRuleActionStringSetTweak])
+                {
+                    action.action = kMXPushRuleActionStringSetTweak;
+                    action.actionType = MXPushRuleActionTypeSetTweak;
+                }
+            }
+
+            [actions addObject:action];
+        }
+
+        _actions = actions;
+    }
+
+    return self;
+}
+
+@end
+
+@implementation MXPushRuleAction
+
+ - (instancetype)init
+{
+    self = [super init];
+    if (self)
+    {
+        _actionType = MXPushRuleActionTypeCustom;
+    }
+    return self;
+}
+
+@end
+
+@implementation MXPushRulesSet
+
++ (NSValueTransformer *)overrideJSONTransformer {
+    return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXPushRule.class];
+}
+
++ (NSValueTransformer *)contentJSONTransformer {
+    return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXPushRule.class];
+}
+
++ (NSValueTransformer *)roomJSONTransformer {
+    return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXPushRule.class];
+}
+
++ (NSValueTransformer *)senderJSONTransformer {
+    return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXPushRule.class];
+}
+
++ (NSValueTransformer *)underrideJSONTransformer {
+    return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXPushRule.class];
+}
+
+@end
+
+@implementation MXPushRulesResponse
+
+/*
++ (NSValueTransformer *)deviceJSONTransformer {
+    @TODO: This seems to be a dictionary where keys are profile_tag and values, MXPushRulesSet.
+}
+*/
+
++ (NSValueTransformer *)globalJSONTransformer {
+    return [NSValueTransformer mtl_JSONDictionaryTransformerWithModelClass:MXPushRulesSet.class];
+}
+
+@end

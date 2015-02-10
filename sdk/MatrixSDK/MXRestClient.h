@@ -210,8 +210,8 @@ typedef enum : NSUInteger
                       success:(void (^)(MXCredentials *credentials))success
                       failure:(void (^)(NSError *error))failure;
 
-#pragma mark Push Notification Registration
 
+#pragma mark - Push Notifications
 /**
  Update the pusher for this device on the Home Server.
  
@@ -238,6 +238,17 @@ typedef enum : NSUInteger
                                 data:(NSDictionary *)data
                              success:(void (^)())success
                              failure:(void (^)(NSError *error))failure;
+
+/**
+ Get all push notifications rules.
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a NSOperation instance to use to cancel the request.
+ */
+- (NSOperation*)pushRules:(void (^)(MXPushRulesResponse *pushRules))success
+                  failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Room operations

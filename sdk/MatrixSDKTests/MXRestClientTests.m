@@ -949,4 +949,37 @@
     XCTAssertEqualObjects(thumbnailURL, @"http://matrix.org/_matrix/media/v1/thumbnail/matrix.org/rQkrOoaFIRgiACATXUdQIuNJ?width=320&height=320&method=scale");
 }
 
+
+#pragma mark - Push rules
+- (void)testPushRules
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+
+        [bobRestClient pushRules:^(MXPushRulesResponse *pushRules) {
+
+            XCTAssertNotNil(pushRules.global, @"The demo home server defines some global default rules");
+
+            // Check data sent by the home server has been correcltly modelled
+            XCTAssertTrue([pushRules.global isKindOfClass:[MXPushRulesSet class]]);
+
+            XCTAssertNotNil(pushRules.global.content);
+            XCTAssertTrue([pushRules.global.content isKindOfClass:[NSArray class]]);
+
+            MXPushRule *pushRule = pushRules.global.content[0];
+            XCTAssertTrue([pushRule isKindOfClass:[MXPushRule class]]);
+
+            XCTAssertNotNil(pushRule.actions);
+
+            MXPushRuleAction *pushAction = pushRule.actions[0];
+            XCTAssertTrue([pushAction isKindOfClass:[MXPushRuleAction class]]);
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 @end

@@ -230,7 +230,7 @@ FOUNDATION_EXPORT NSString *const kMXPresenceHidden;
 @end
 
 /**
- `MXCreateRoomResponse` represents the response to presence request.
+ `MXPresenceResponse` represents the response to presence request.
  */
 @interface MXPresenceResponse : MXJSONModel
 
@@ -253,5 +253,147 @@ FOUNDATION_EXPORT NSString *const kMXPresenceHidden;
      The user status.
      */
     @property (nonatomic) NSString *statusMsg;
+
+@end
+
+
+/**
+ `MXPushRule` defines a push notification rule.
+ */
+@interface MXPushRule : MXJSONModel
+
+    /**
+     The identifier for the rule.
+     */
+    @property (nonatomic) NSString *ruleId;
+
+    /**
+     Actions (array of MXPushRuleAction objects) to realize if the rule matches.
+     */
+    @property (nonatomic) NSArray *actions;
+
+    /**
+     Override, Underride and Default rules have a list of 'conditions'. 
+     All conditions must hold true for an event in order for a rule to be applied to an event.
+     */
+    @property (nonatomic) NSArray *conditions;
+
+    /**
+     Indicate if it is a Home Server default push rule.
+     */
+    @property (nonatomic) BOOL isDefault;
+
+    /**
+     Only available for Content push rules, this gives the pattern to match against.
+     */
+    @property (nonatomic) NSString *pattern;
+
+@end
+
+/**
+ Push rules action type.
+
+ Actions names are exchanged as strings with the home server. The actions
+ specified by Matrix are listed here as NSUInteger enum in order to ease
+ their handling handling.
+
+ Custom actions, out of the specification, may exist. In this case,
+ `MXPushRuleActionString` must be checked.
+ */
+typedef enum : NSUInteger
+{
+    MXPushRuleActionTypeNotify,
+    MXPushRuleActionTypeDontNotify,
+    MXPushRuleActionTypeCoalesce,
+    MXPushRuleActionTypeSetTweak,
+
+    // The action is a custom action. Refer to its `MXPushRuleActionString` version
+    MXPushRuleActionTypeCustom = 1000
+} MXPushRuleActionType;
+
+/**
+ Push rule action definitions - String version
+ */
+typedef NSString* MXPushRuleActionString;
+FOUNDATION_EXPORT NSString *const kMXPushRuleActionStringNotify;
+FOUNDATION_EXPORT NSString *const kMXPushRuleActionStringDontNotify;
+FOUNDATION_EXPORT NSString *const kMXPushRuleActionStringCoalesce;
+FOUNDATION_EXPORT NSString *const kMXPushRuleActionStringSetTweak;
+
+/**
+ An action to accomplish when a push rule matches.
+ */
+@interface MXPushRuleAction : NSObject
+
+    /**
+     The action type.
+     */
+    @property (nonatomic) MXPushRuleActionType actionType;
+
+    /**
+     The action type (string version)
+     */
+    @property (nonatomic) MXPushRuleActionString action;
+
+    /**
+     Action parameters. Not all actions have parameters.
+     */
+    @property (nonatomic) NSDictionary *parameters;
+
+@end
+
+/**
+ `MXPushRulesSet` is the set of push rules to apply for a given context (global, per device, ...).
+ Properties in the `MXPushRulesSet` definitions are listed by descending priorities: push rules
+ stored in `override` have an higher priority that ones in `content` and so on.
+ Each property is an array of `MXPushRule` objects.
+ */
+@interface MXPushRulesSet : MXJSONModel
+
+    /**
+     The highest priority rules are user-configured overrides.
+     */
+    @property (nonatomic) NSArray *override;
+
+    /**
+     These configure behaviour for (unencrypted) messages that match certain patterns. 
+     Content rules take one parameter, 'pattern', that gives the pattern to match against. 
+     This is treated in the same way as pattern for event_match conditions, below.
+     */
+    @property (nonatomic) NSArray *content;
+
+    /**
+     These change the behaviour of all messages to a given room. 
+     The rule_id of a room rule is always the ID of the room that it affects.
+     */
+    @property (nonatomic) NSArray *room;
+
+    /**
+     These rules configure notification behaviour for messages from a specific, named Matrix user ID. 
+     The rule_id of Sender rules is always the Matrix user ID of the user whose messages theyt apply to.
+     */
+    @property (nonatomic) NSArray *sender;
+
+    /**
+     These are identical to override rules, but have a lower priority than content, room and sender rules.
+     */
+    @property (nonatomic) NSArray *underride;
+
+@end
+
+/**
+ `MXPushRulesResponse` represents the response to the /pushRules/ request.
+ */
+@interface MXPushRulesResponse : MXJSONModel
+
+    /**
+     Set of push rules specific per device.
+     */
+    // @property (nonatomic) NSDictionary *device;
+
+    /**
+     Set of global push rules.
+     */
+    @property (nonatomic) MXPushRulesSet *global;
 
 @end
