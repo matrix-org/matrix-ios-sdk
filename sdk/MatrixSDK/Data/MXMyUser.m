@@ -23,9 +23,9 @@
 
 @implementation MXMyUser
 
-- (instancetype)initWithUserId:(NSString *)userId andDisplayname:(NSString *)displayname andAvatarUrl:(NSString *)avatarUrl andMatrixSession:(MXSession *)mxSession
+- (instancetype)initWithUserId:(NSString *)userId andDisplayname:(NSString *)displayname andAvatarUrl:(NSString *)avatarUrl andMatrixSession:(MXSession *)mxSession2
 {
-    self = [super initWithUserId:userId andMatrixSession:mxSession];
+    self = [super initWithUserId:userId andMatrixSession:mxSession2];
     if (self)
     {
         self.displayname = [displayname copy];
