@@ -257,6 +257,8 @@ FOUNDATION_EXPORT NSString *const kMXPresenceHidden;
 @end
 
 
+@class MXPushRuleCondition;
+
 /**
  `MXPushRule` defines a push notification rule.
  */
@@ -287,6 +289,13 @@ FOUNDATION_EXPORT NSString *const kMXPresenceHidden;
      Only available for Content push rules, this gives the pattern to match against.
      */
     @property (nonatomic) NSString *pattern;
+
+    /**
+     Add an additional condition to the rule.
+     
+     @parameter condition the condition to add.
+     */
+    - (void)addCondition:(MXPushRuleCondition*)condition;
 
 @end
 

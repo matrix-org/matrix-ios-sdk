@@ -209,6 +209,13 @@ NSString *const kMXPushRuleConditionStringRoomMemberCount       = @"room_member_
     return self;
 }
 
+- (void)addCondition:(MXPushRuleCondition *)condition
+{
+    NSMutableArray *conditions = [NSMutableArray arrayWithArray:_conditions];
+    [conditions addObject:condition];
+    _conditions = conditions;
+}
+
 @end
 
 @implementation MXPushRuleAction
@@ -227,11 +234,16 @@ NSString *const kMXPushRuleConditionStringRoomMemberCount       = @"room_member_
 
 @implementation MXPushRuleCondition
 
-- (NSDictionary *)parameters
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    // Conditions parameters are all other JSON objects which keys is not `kind`
-    // MXJSONModel stores them in `others`.
-    return self.others;
+    MXPushRuleCondition *condition = [super modelFromJSON:JSONDictionary];
+    if (condition)
+    {
+        // MXPushRuleCondition.parameters are all other JSON objects which keys is not `kind`
+        // MXJSONModel stores them in `others`.
+        condition.parameters = condition.others;
+    }
+    return condition;
 }
 
 - (void)setKind:(MXPushRuleConditionString)kind
