@@ -227,40 +227,64 @@ NSString *const kMXPushRuleConditionStringRoomMemberCount       = @"room_member_
 
 @implementation MXPushRuleCondition
 
-- (instancetype)initWithDictionary:(NSDictionary *)dictionaryValue error:(NSError *__autoreleasing *)error
-{
-    self = [super initWithDictionary:dictionaryValue error:error];
-    if (self)
-    {
-        if ([self.kind isEqualToString:kMXPushRuleConditionStringEventMatch])
-        {
-            _kindType = MXPushRuleConditionTypeEventMatch;
-        }
-        else if ([self.kind isEqualToString:kMXPushRuleConditionStringProfileTag])
-        {
-            _kindType = MXPushRuleConditionTypeProfileTag;
-        }
-        else if ([self.kind isEqualToString:kMXPushRuleConditionStringContainsDisplayName])
-        {
-            _kindType = MXPushRuleConditionTypeContainsDisplayName;
-        }
-        else if ([self.kind isEqualToString:kMXPushRuleConditionStringRoomMemberCount])
-        {
-            _kindType = MXPushRuleConditionTypeRoomMemberCount;
-        }
-        else
-        {
-            _kindType = MXPushRuleConditionTypeCustom;
-        }
-    }
-    return self;
-}
-
 - (NSDictionary *)parameters
 {
     // Conditions parameters are all other JSON objects which keys is not `kind`
     // MXJSONModel stores them in `others`.
     return self.others;
+}
+
+- (void)setKind:(MXPushRuleConditionString)kind
+{
+    _kind = kind;
+
+    if ([_kind isEqualToString:kMXPushRuleConditionStringEventMatch])
+    {
+        _kindType = MXPushRuleConditionTypeEventMatch;
+    }
+    else if ([_kind isEqualToString:kMXPushRuleConditionStringProfileTag])
+    {
+        _kindType = MXPushRuleConditionTypeProfileTag;
+    }
+    else if ([_kind isEqualToString:kMXPushRuleConditionStringContainsDisplayName])
+    {
+        _kindType = MXPushRuleConditionTypeContainsDisplayName;
+    }
+    else if ([_kind isEqualToString:kMXPushRuleConditionStringRoomMemberCount])
+    {
+        _kindType = MXPushRuleConditionTypeRoomMemberCount;
+    }
+    else
+    {
+        _kindType = MXPushRuleConditionTypeCustom;
+    }
+}
+
+- (void)setKindType:(MXPushRuleConditionType)kindType
+{
+    _kindType = kindType;
+
+    switch (_kindType)
+    {
+        case MXPushRuleConditionTypeEventMatch:
+            _kind = kMXPushRuleConditionStringEventMatch;
+            break;
+
+        case MXPushRuleConditionTypeProfileTag:
+            _kind = kMXPushRuleConditionStringProfileTag;
+            break;
+
+        case MXPushRuleConditionTypeContainsDisplayName:
+            _kind = kMXPushRuleConditionStringContainsDisplayName;
+            break;
+
+        case MXPushRuleConditionTypeRoomMemberCount:
+            _kind = kMXPushRuleConditionStringRoomMemberCount;
+            break;
+
+        default:
+            break;
+    }
 }
 
 @end

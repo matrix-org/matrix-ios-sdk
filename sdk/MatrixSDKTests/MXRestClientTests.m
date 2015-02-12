@@ -981,6 +981,8 @@
 
             MXPushRuleCondition *condition = roomMemberCountRule.conditions[0];
             XCTAssertNotNil(condition);
+            XCTAssertEqualObjects(condition.kind,kMXPushRuleConditionStringRoomMemberCount);
+
             XCTAssertEqual(condition.kindType, MXPushRuleConditionTypeRoomMemberCount);
 
             XCTAssertNotNil(condition.parameters);
