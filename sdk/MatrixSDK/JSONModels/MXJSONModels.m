@@ -70,7 +70,8 @@ NSString *const kMXLoginFlowTypeEmailIdentity = @"m.login.email.identity";
 @implementation MXPaginationResponse
 
 // Automatically convert array in chunk to an array of MXEvents.
-+ (NSValueTransformer *)chunkJSONTransformer {
++ (NSValueTransformer *)chunkJSONTransformer
+{
     return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXEvent.class];
 }
 
@@ -121,10 +122,15 @@ NSString *const kMXPresenceHidden = @"hidden";
 @end
 
 
-NSString *const kMXPushRuleActionStringNotify = @"notify";
-NSString *const kMXPushRuleActionStringDontNotify = @"dont_notify";
-NSString *const kMXPushRuleActionStringCoalesce = @"coalesce";
-NSString *const kMXPushRuleActionStringSetTweak = @"set_tweak";
+NSString *const kMXPushRuleActionStringNotify       = @"notify";
+NSString *const kMXPushRuleActionStringDontNotify   = @"dont_notify";
+NSString *const kMXPushRuleActionStringCoalesce     = @"coalesce";
+NSString *const kMXPushRuleActionStringSetTweak     = @"set_tweak";
+
+NSString *const kMXPushRuleConditionStringEventMatch            = @"event_match";
+NSString *const kMXPushRuleConditionStringProfileTag            = @"profile_tag";
+NSString *const kMXPushRuleConditionStringContainsDisplayName   = @"contains_display_name";
+NSString *const kMXPushRuleConditionStringRoomMemberCount       = @"room_member_count";
 
 @implementation MXPushRule
 
@@ -146,8 +152,8 @@ NSString *const kMXPushRuleActionStringSetTweak = @"set_tweak";
     self = [super initWithDictionary:dictionaryValue error:error];
     if (self)
     {
+        // Decode actions
         NSMutableArray *actions = [NSMutableArray arrayWithCapacity:_actions.count];
-
         for (NSUInteger i = 0; i < _actions.count; i++)
         {
             NSObject *rawAction = _actions[i];
@@ -191,6 +197,13 @@ NSString *const kMXPushRuleActionStringSetTweak = @"set_tweak";
         }
 
         _actions = actions;
+
+        // Do not use the conditionsJSONTransformer Mantle method technique here
+        // because it flushes any JSON keys that are not declared as property.
+        // [MXJSONModel modelsFromJSON] will store them into its `others` dict property.
+        // And MXPushRuleCondition.parameters will redirect to its MXPushRuleCondition.others.
+        // This is how MXPushRuleCondition parameters are stored.
+        _conditions = [MXPushRuleCondition modelsFromJSON:dictionaryValue[@"conditions"]];
     }
 
     return self;
@@ -200,7 +213,7 @@ NSString *const kMXPushRuleActionStringSetTweak = @"set_tweak";
 
 @implementation MXPushRuleAction
 
- - (instancetype)init
+- (instancetype)init
 {
     self = [super init];
     if (self)
@@ -212,25 +225,70 @@ NSString *const kMXPushRuleActionStringSetTweak = @"set_tweak";
 
 @end
 
+@implementation MXPushRuleCondition
+
+- (instancetype)initWithDictionary:(NSDictionary *)dictionaryValue error:(NSError *__autoreleasing *)error
+{
+    self = [super initWithDictionary:dictionaryValue error:error];
+    if (self)
+    {
+        if ([self.kind isEqualToString:kMXPushRuleConditionStringEventMatch])
+        {
+            _kindType = MXPushRuleConditionTypeEventMatch;
+        }
+        else if ([self.kind isEqualToString:kMXPushRuleConditionStringProfileTag])
+        {
+            _kindType = MXPushRuleConditionTypeProfileTag;
+        }
+        else if ([self.kind isEqualToString:kMXPushRuleConditionStringContainsDisplayName])
+        {
+            _kindType = MXPushRuleConditionTypeContainsDisplayName;
+        }
+        else if ([self.kind isEqualToString:kMXPushRuleConditionStringRoomMemberCount])
+        {
+            _kindType = MXPushRuleConditionTypeRoomMemberCount;
+        }
+        else
+        {
+            _kindType = MXPushRuleConditionTypeCustom;
+        }
+    }
+    return self;
+}
+
+- (NSDictionary *)parameters
+{
+    // Conditions parameters are all other JSON objects which keys is not `kind`
+    // MXJSONModel stores them in `others`.
+    return self.others;
+}
+
+@end
+
 @implementation MXPushRulesSet
 
-+ (NSValueTransformer *)overrideJSONTransformer {
++ (NSValueTransformer *)overrideJSONTransformer
+{
     return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXPushRule.class];
 }
 
-+ (NSValueTransformer *)contentJSONTransformer {
++ (NSValueTransformer *)contentJSONTransformer
+{
     return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXPushRule.class];
 }
 
-+ (NSValueTransformer *)roomJSONTransformer {
++ (NSValueTransformer *)roomJSONTransformer
+{
     return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXPushRule.class];
 }
 
-+ (NSValueTransformer *)senderJSONTransformer {
++ (NSValueTransformer *)senderJSONTransformer
+{
     return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXPushRule.class];
 }
 
-+ (NSValueTransformer *)underrideJSONTransformer {
++ (NSValueTransformer *)underrideJSONTransformer
+{
     return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXPushRule.class];
 }
 
@@ -239,12 +297,14 @@ NSString *const kMXPushRuleActionStringSetTweak = @"set_tweak";
 @implementation MXPushRulesResponse
 
 /*
-+ (NSValueTransformer *)deviceJSONTransformer {
++ (NSValueTransformer *)deviceJSONTransformer 
+ {
     @TODO: This seems to be a dictionary where keys are profile_tag and values, MXPushRulesSet.
 }
 */
 
-+ (NSValueTransformer *)globalJSONTransformer {
++ (NSValueTransformer *)globalJSONTransformer
+{
     return [NSValueTransformer mtl_JSONDictionaryTransformerWithModelClass:MXPushRulesSet.class];
 }
 

@@ -343,6 +343,58 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleActionStringSetTweak;
 @end
 
 /**
+ Push rules conditions type.
+
+ Condition kinds are exchanged as strings with the home server. The kinds of conditions
+ specified by Matrix are listed here as NSUInteger enum in order to ease
+ their handling handling.
+
+ Custom condition kind, out of the specification, may exist. In this case,
+ `MXPushRuleConditionString` must be checked.
+ */
+typedef enum : NSUInteger
+{
+    MXPushRuleConditionTypeEventMatch,
+    MXPushRuleConditionTypeProfileTag,
+    MXPushRuleConditionTypeContainsDisplayName,
+    MXPushRuleConditionTypeRoomMemberCount,
+
+    // The condition is a custom condition. Refer to its `MXPushRuleConditionString` version
+    MXPushRuleConditionTypeCustom = 1000
+} MXPushRuleConditionType;
+
+/**
+ Push rule condition kind definitions - String version
+ */
+typedef NSString* MXPushRuleConditionString;
+FOUNDATION_EXPORT NSString *const kMXPushRuleConditionStringEventMatch;
+FOUNDATION_EXPORT NSString *const kMXPushRuleConditionStringProfileTag;
+FOUNDATION_EXPORT NSString *const kMXPushRuleConditionStringContainsDisplayName;
+FOUNDATION_EXPORT NSString *const kMXPushRuleConditionStringRoomMemberCount;
+
+/**
+ `MXPushRuleCondition` represents an additional condition into a rule.
+ */
+@interface MXPushRuleCondition : MXJSONModel
+
+    /**
+     The condition kind.
+     */
+    @property (nonatomic) MXPushRuleConditionType kindType;
+
+    /**
+     The condition kind (string version)
+     */
+    @property (nonatomic) MXPushRuleConditionString kind;
+
+    /**
+     Conditions parameters. Not all conditions have parameters.
+     */
+    @property (nonatomic) NSDictionary *parameters;
+
+@end
+
+/**
  `MXPushRulesSet` is the set of push rules to apply for a given context (global, per device, ...).
  Properties in the `MXPushRulesSet` definitions are listed by descending priorities: push rules
  stored in `override` have an higher priority that ones in `content` and so on.
