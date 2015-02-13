@@ -162,7 +162,7 @@ NSMutableArray *roomsToClean;
     
     if (testCase)
     {
-        [testCase waitForExpectationsWithTimeout:10000 handler:nil];
+        [testCase waitForExpectationsWithTimeout:10 handler:nil];
     }
 }
 
@@ -275,7 +275,7 @@ NSMutableArray *roomsToClean;
     
     if (testCase)
     {
-        [testCase waitForExpectationsWithTimeout:10000 handler:nil];
+        [testCase waitForExpectationsWithTimeout:10 handler:nil];
     }
 }
 
@@ -315,7 +315,7 @@ NSMutableArray *roomsToClean;
     
     if (testCase)
     {
-        [testCase waitForExpectationsWithTimeout:10000 handler:nil];
+        [testCase waitForExpectationsWithTimeout:10 handler:nil];
     }
 }
 
@@ -489,7 +489,7 @@ NSMutableArray *roomsToClean;
     
     if (testCase)
     {
-        [testCase waitForExpectationsWithTimeout:10000 handler:nil];
+        [testCase waitForExpectationsWithTimeout:10 handler:nil];
     }
 }
 

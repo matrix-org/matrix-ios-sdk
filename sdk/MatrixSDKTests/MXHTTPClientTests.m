@@ -61,7 +61,7 @@
          [expectation fulfill];
      }];
 
-    [self waitForExpectationsWithTimeout:10000 handler:nil];
+    [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
 
@@ -88,7 +88,7 @@
          [expectation fulfill];
      }];
     
-    [self waitForExpectationsWithTimeout:10000 handler:nil];
+    [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
 - (void)testNSError {
@@ -114,7 +114,7 @@
          [expectation fulfill];
      }];
     
-    [self waitForExpectationsWithTimeout:10000 handler:nil];
+    [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
 @end
