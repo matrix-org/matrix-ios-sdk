@@ -99,6 +99,36 @@
     }];
 }
 
+// The HS defines a default underride rule asking to notify for all messages of other users.
+// As per SYN-267, the HS does not list it when calling GET /pushRules/.
+// While this ticket is not fixed, make sure the SDK workrounds it
+- (void)testDefaultPushOnAllNonYouMessagesRule
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession2, MXSession *aliceSession2, NSString *roomId, XCTestExpectation *expectation) {
+
+        bobSession = bobSession2;
+        aliceSession = aliceSession2;
+
+        [bobSession.notificationCenter listenToNotifications:^(MXEvent *event, MXRoomState *roomState, MXPushRule *rule) {
+
+            // We must be alerted by the default content HS rule on "mxBob"
+            // XCTAssertEqualObjects(rule.kind, ...) @TODO
+            XCTAssert(rule.isDefault, @"The rule must be the server default rule. Rule: %@", rule);
+
+            [expectation fulfill];
+        }];
+
+        MXRoom *roomFromAliceSide = [aliceSession roomWithRoomId:roomId];
+
+        [roomFromAliceSide sendTextMessage:@"a message" success:^(NSString *eventId) {
+
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+
+    }];
+};
+
 - (void)testDefaultContentCondition
 {
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession2, MXSession *aliceSession2, NSString *roomId, XCTestExpectation *expectation) {
