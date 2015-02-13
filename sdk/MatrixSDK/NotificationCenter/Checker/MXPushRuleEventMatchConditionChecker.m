@@ -32,7 +32,8 @@
         // If it exists, compare it to the regular expression in condition.parameter.pattern
         NSString *stringValue = (NSString *)value;
 
-        NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:(NSString*)condition.parameters[@"pattern"] options:0 error:nil];
+        NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:[self globToRegex:(NSString*)condition.parameters[@"pattern"] ]
+                                                                               options:0 error:nil];
 
         if ([regex numberOfMatchesInString:stringValue options:0 range:NSMakeRange(0, stringValue.length)])
         {
@@ -41,6 +42,21 @@
     }
 
     return isSatisfied;
+}
+
+- (NSString*)globToRegex:(NSString*)glob
+{
+    NSString *res = [glob stringByReplacingOccurrencesOfString:@"*" withString:@".*"];
+    res = [res stringByReplacingOccurrencesOfString:@"?" withString:@"."];
+
+    if ([res isEqualToString:glob])
+    {
+        // If no special characters were found (detected here by no replacements having been made),
+        // add asterisks to both sides
+        res = [NSString stringWithFormat:@".*%@.*", glob];
+    }
+
+    return res;
 }
 
 @end
