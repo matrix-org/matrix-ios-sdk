@@ -212,7 +212,8 @@
         for (MXPushRule *rule in rules)
         {
             // Check all conditions of the rule
-            BOOL conditionsOk = NO;
+            // If there is no condition, the rule must be applied
+            BOOL conditionsOk = YES;
             for (MXPushRuleCondition *condition in rule.conditions)
             {
                 id<MXPushRuleConditionChecker> checker = [conditionCheckers valueForKey:condition.kind];
@@ -228,6 +229,7 @@
                 else
                 {
                     NSLog(@"Warning: MXNotificationCenter - There is no MXPushRuleConditionChecker to check condition of kind: %@", condition.kind);
+                    conditionsOk = NO;
                 }
             }
 
