@@ -83,7 +83,7 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
                                      readyToTest:(void (^)(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest;
 
 - (void)doMXSessionTestWithBobAndAliceInARoom:(XCTestCase*)testCase
-                                  readyToTest:(void (^)(MXSession *bobSession, MXSession *aliceSession, NSString* roomId, XCTestExpectation *expectation))readyToTest;
+                                  readyToTest:(void (^)(MXSession *bobSession,  MXRestClient *aliceRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest;
 
 #pragma mark - tools
 - (void)for:(MXRestClient *)mxRestClient2 andRoom:(NSString*)roomId sendMessages:(NSUInteger)messagesCount success:(void (^)())success;

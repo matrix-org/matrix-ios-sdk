@@ -519,21 +519,14 @@ NSMutableArray *roomsToClean;
 }
 
 - (void)doMXSessionTestWithBobAndAliceInARoom:(XCTestCase*)testCase
-                                  readyToTest:(void (^)(MXSession *bobSession, MXSession *aliceSession, NSString* roomId, XCTestExpectation *expectation))readyToTest
+                                  readyToTest:(void (^)(MXSession *bobSession, MXRestClient *aliceRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest
 {
     [self doMXRestClientTestWithBobAndAliceInARoom:testCase readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         MXSession *bobSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         [bobSession start:^{
 
-            MXSession *aliceSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
-            [aliceSession start:^{
-
-                readyToTest(bobSession, aliceSession, roomId, expectation);
-
-            } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot create aliceSession");
-            }];
+            readyToTest(bobSession, aliceRestClient, roomId, expectation);
 
         } failure:^(NSError *error) {
             NSAssert(NO, @"Cannot create bobSession");

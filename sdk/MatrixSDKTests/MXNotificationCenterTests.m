@@ -22,8 +22,7 @@
 
 @interface MXNotificationCenterTests : XCTestCase
 {
-    MXSession *bobSession;
-    MXSession *aliceSession;
+    MXSession *mxSession;
 }
 
 @end
@@ -36,15 +35,10 @@
 }
 
 - (void)tearDown {
-    if (bobSession)
+    if (mxSession)
     {
-        [[MatrixSDKTestsData sharedData] closeMXSession:bobSession];
-        bobSession = nil;
-    }
-    if (aliceSession)
-    {
-        [[MatrixSDKTestsData sharedData] closeMXSession:aliceSession];
-        aliceSession = nil;
+        [[MatrixSDKTestsData sharedData] closeMXSession:mxSession];
+        mxSession = nil;
     }
     [super tearDown];
 }
@@ -53,16 +47,16 @@
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
 
-        bobSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
-        XCTAssertNotNil(bobSession.notificationCenter);
-        XCTAssertNil(bobSession.notificationCenter.rules);
+        XCTAssertNotNil(mxSession.notificationCenter);
+        XCTAssertNil(mxSession.notificationCenter.rules);
 
-        [bobSession start:^{
+        [mxSession start:^{
 
-            XCTAssertNotNil(bobSession.notificationCenter.rules, @"Notification rules must be ready once MXSession is started");
+            XCTAssertNotNil(mxSession.notificationCenter.rules, @"Notification rules must be ready once MXSession is started");
 
-            XCTAssertGreaterThanOrEqual(bobSession.notificationCenter.rules.count, 3, @"Home server defines 3 default rules (at least)");
+            XCTAssertGreaterThanOrEqual(mxSession.notificationCenter.rules.count, 3, @"Home server defines 3 default rules (at least)");
 
             [expectation fulfill];
 
@@ -74,11 +68,11 @@
 
 - (void)testNoNotificationsOnUserEvents
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
 
-        bobSession = mxSession;
+        mxSession = mxSession2;
 
-        [bobSession.notificationCenter listenToNotifications:^(MXEvent *event, MXRoomState *roomState, MXPushRule *rule) {
+        [mxSession.notificationCenter listenToNotifications:^(MXEvent *event, MXRoomState *roomState, MXPushRule *rule) {
 
             XCTFail(@"Events from the user should be notified. event: %@\n rule: %@", event, rule);
 
@@ -104,10 +98,9 @@
 // While this ticket is not fixed, make sure the SDK workrounds it
 - (void)testDefaultPushOnAllNonYouMessagesRule
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession2, MXSession *aliceSession2, NSString *roomId, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
-        bobSession = bobSession2;
-        aliceSession = aliceSession2;
+        mxSession = bobSession;
 
         [bobSession.notificationCenter listenToNotifications:^(MXEvent *event, MXRoomState *roomState, MXPushRule *rule) {
 
@@ -118,9 +111,7 @@
             [expectation fulfill];
         }];
 
-        MXRoom *roomFromAliceSide = [aliceSession roomWithRoomId:roomId];
-
-        [roomFromAliceSide sendTextMessage:@"a message" success:^(NSString *eventId) {
+        [aliceRestClient sendTextMessageToRoom:roomId text:@"a message" success:^(NSString *eventId) {
 
         } failure:^(NSError *error) {
             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
@@ -131,10 +122,9 @@
 
 - (void)testDefaultContentCondition
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession2, MXSession *aliceSession2, NSString *roomId, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
-        bobSession = bobSession2;
-        aliceSession = aliceSession2;
+        mxSession = bobSession;
 
         NSString *messageFromAlice = @"mxBob: you should be notified for this message";
 
@@ -151,13 +141,13 @@
             [expectation fulfill];
         }];
 
-        MXRoom *roomFromAliceSide = [aliceSession roomWithRoomId:roomId];
 
-        [roomFromAliceSide sendTextMessage:messageFromAlice success:^(NSString *eventId) {
+        [aliceRestClient sendTextMessageToRoom:roomId text:messageFromAlice success:^(NSString *eventId) {
 
         } failure:^(NSError *error) {
             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
         }];
+        
     }];
 }
 
