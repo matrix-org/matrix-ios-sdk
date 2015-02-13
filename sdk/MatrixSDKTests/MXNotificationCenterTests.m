@@ -151,4 +151,47 @@
     }];
 }
 
+- (void)testDefaultDisplayNameCondition
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        mxSession = bobSession;
+
+        MXSession *aliceSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+        [aliceSession start:^{
+
+            // Change alice name
+            [aliceSession.myUser setDisplayName:@"AALLIICCEE" success:^{
+
+                NSString *messageFromBob = @"Aalliiccee: where are you?";
+
+                [aliceSession.notificationCenter listenToNotifications:^(MXEvent *event, MXRoomState *roomState, MXPushRule *rule) {
+
+                    MXPushRuleCondition *condition = rule.conditions[0];
+
+                    XCTAssertEqualObjects(condition.kind, kMXPushRuleConditionStringContainsDisplayName, @"The default content rule with contains_display_name condition must fire first");
+
+                    [aliceSession close];
+                    [expectation fulfill];
+
+                }];
+
+                MXRoom *roomBobSide = [mxSession roomWithRoomId:roomId];
+                [roomBobSide sendTextMessage:messageFromBob success:^(NSString *eventId) {
+
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                }];
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+
+    }];
+}
+
 @end
