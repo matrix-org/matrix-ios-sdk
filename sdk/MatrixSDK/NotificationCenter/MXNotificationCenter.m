@@ -63,10 +63,11 @@
         [self setChecker:eventMatchConditionChecker forConditionKind:kMXPushRuleConditionStringEventMatch];
 
 
-        // Catch all live events to check if we need to notify them
+        // Catch all live events sent from other users to check if we need to notify them
         [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
 
-            if (MXEventDirectionForwards == direction)
+            if (MXEventDirectionForwards == direction
+                && NO == [event.userId isEqualToString:mxSession.matrixRestClient.credentials.userId])
             {
                 [self shouldNotify:event roomState:customObject];
             }

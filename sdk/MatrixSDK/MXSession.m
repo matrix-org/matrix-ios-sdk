@@ -444,6 +444,10 @@ typedef void (^MXOnResumeDone)();
     }
     [users removeAllObjects];
 
+    // Clean notification center
+    [_notificationCenter removeAllListeners];
+    _notificationCenter = nil;
+
     _myUser = nil;
     matrixRestClient = nil;
 }
