@@ -82,8 +82,8 @@ typedef void (^MXOnResumeDone)();
         matrixRestClient = mxRestClient;
         rooms = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
-
         globalEventListeners = [NSMutableArray array];
+        _notificationCenter = [[MXNotificationCenter alloc] initWithMatrixSession:self];
     }
     return self;
 }
@@ -205,59 +205,65 @@ typedef void (^MXOnResumeDone)();
                 // And store him as a common MXUser
                 users[matrixRestClient.credentials.userId] = _myUser;
 
-                NSLog(@"[MXSession startWithMessagesLimit] Do a global initialSync");
+                // Additional step: load push rules from the home server
+                [_notificationCenter refreshRules:^{
 
-                // Then, we can do the global sync
-                [matrixRestClient initialSyncWithLimit:initialSyncMessagesLimit success:^(NSDictionary *JSONData) {
+                    NSLog(@"[MXSession startWithMessagesLimit] Do a global initialSync");
 
-                    NSArray *roomDicts = JSONData[@"rooms"];
+                    // Then, we can do the global sync
+                    [matrixRestClient initialSyncWithLimit:initialSyncMessagesLimit success:^(NSDictionary *JSONData) {
 
-                    NSLog(@"Received %tu rooms", roomDicts.count);
+                        NSArray *roomDicts = JSONData[@"rooms"];
 
-                    for (NSDictionary *roomDict in roomDicts)
-                    {
-                        MXRoom *room = [self getOrCreateRoom:roomDict[@"room_id"] withJSONData:roomDict];
+                        NSLog(@"Received %tu rooms", roomDicts.count);
 
-                        if ([roomDict objectForKey:@"messages"])
+                        for (NSDictionary *roomDict in roomDicts)
                         {
-                            MXPaginationResponse *roomMessages = [MXPaginationResponse modelFromJSON:[roomDict objectForKey:@"messages"]];
+                            MXRoom *room = [self getOrCreateRoom:roomDict[@"room_id"] withJSONData:roomDict];
 
-                            [room handleMessages:roomMessages
-                                       direction:MXEventDirectionBackwards isTimeOrdered:YES];
-
-                            // If the initialSync returns less messages than requested, we got all history from the home server
-                            if (roomMessages.chunk.count < initialSyncMessagesLimit)
+                            if ([roomDict objectForKey:@"messages"])
                             {
-                                [_store storeHasReachedHomeServerPaginationEndForRoom:room.state.roomId andValue:YES];
+                                MXPaginationResponse *roomMessages = [MXPaginationResponse modelFromJSON:[roomDict objectForKey:@"messages"]];
+
+                                [room handleMessages:roomMessages
+                                           direction:MXEventDirectionBackwards isTimeOrdered:YES];
+
+                                // If the initialSync returns less messages than requested, we got all history from the home server
+                                if (roomMessages.chunk.count < initialSyncMessagesLimit)
+                                {
+                                    [_store storeHasReachedHomeServerPaginationEndForRoom:room.state.roomId andValue:YES];
+                                }
+                            }
+                            if ([roomDict objectForKey:@"state"])
+                            {
+                                [room handleStateEvents:roomDict[@"state"] direction:MXEventDirectionSync];
                             }
                         }
-                        if ([roomDict objectForKey:@"state"])
+
+                        // Manage presence
+                        for (NSDictionary *presenceDict in JSONData[@"presence"])
                         {
-                            [room handleStateEvents:roomDict[@"state"] direction:MXEventDirectionSync];
+                            MXEvent *presenceEvent = [MXEvent modelFromJSON:presenceDict];
+                            [self handlePresenceEvent:presenceEvent direction:MXEventDirectionSync];
                         }
-                    }
 
-                    // Manage presence
-                    for (NSDictionary *presenceDict in JSONData[@"presence"])
-                    {
-                        MXEvent *presenceEvent = [MXEvent modelFromJSON:presenceDict];
-                        [self handlePresenceEvent:presenceEvent direction:MXEventDirectionSync];
-                    }
+                        // Start listening to live events
+                        _store.eventStreamToken = JSONData[@"end"];
 
-                    // Start listening to live events
-                    _store.eventStreamToken = JSONData[@"end"];
+                        // Commit store changes done in [room handleMessages]
+                        if ([_store respondsToSelector:@selector(commit)])
+                        {
+                            [_store commit];
+                        }
+                        
+                        // Resume from the last known token
+                        [self streamEventsFromToken:_store.eventStreamToken withLongPoll:YES];
+                        
+                        onServerSyncDone();
 
-                    // Commit store changes done in [room handleMessages]
-                    if ([_store respondsToSelector:@selector(commit)])
-                    {
-                        [_store commit];
-                    }
-
-                    // Resume from the last known token
-                    [self streamEventsFromToken:_store.eventStreamToken withLongPoll:YES];
-
-                    onServerSyncDone();
-
+                    } failure:^(NSError *error) {
+                        failure(error);
+                    }];
                 } failure:^(NSError *error) {
                     failure(error);
                 }];
@@ -401,6 +407,11 @@ typedef void (^MXOnResumeDone)();
 
 - (void)resume:(void (^)())resumeDone;
 {
+    // Force reload of push rules now.
+    // The spec, @see SPEC-106 ticket, does not allow to be notified when there was a change
+    // of push rules server side. Reload them when resuming the SDK is a good time
+    [_notificationCenter refreshRules:nil failure:nil];
+
     // Resume from the last known token
     onResumeDone = resumeDone;
     [self streamEventsFromToken:_store.eventStreamToken withLongPoll:NO];
