@@ -43,7 +43,7 @@
 {
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
     
-    [sharedData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [sharedData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         [bobRestClient kickUser:sharedData.aliceCredentials.userId fromRoom:roomId reason:@"No particular reason" success:^{
             

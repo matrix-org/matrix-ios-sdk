@@ -260,7 +260,7 @@
 - (void)testListenerForPresence
 {
     // Make sure Alice and Bob have activities
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         
@@ -311,7 +311,7 @@
 - (void)testClose
 {
     // Make sure Alice and Bob have activities
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
@@ -408,7 +408,7 @@
 - (void)testPauseResume
 {
     // Make sure Alice and Bob have activities
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
@@ -475,7 +475,7 @@
 - (void)testPauseResumeOnNothingNew
 {
     // Make sure Alice and Bob have activities
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 

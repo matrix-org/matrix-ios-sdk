@@ -47,7 +47,7 @@
 - (void)doTestWithBobAndAliceActiveInARoom:(void (^)(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest
 {
     // Make sure Alice and Bob have activities
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         [bobRestClient sendTextMessageToRoom:roomId text:@"Hi Alice!" success:^(NSString *eventId) {
 

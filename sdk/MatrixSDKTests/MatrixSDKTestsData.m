@@ -494,7 +494,7 @@ NSMutableArray *roomsToClean;
 }
 
 #pragma mark - both
-- (void)doMXSessionTestWithBobAndAliceInARoom:(XCTestCase*)testCase
+- (void)doMXRestClientTestWithBobAndAliceInARoom:(XCTestCase*)testCase
                                   readyToTest:(void (^)(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest
 {
     [self doMXRestClientTestWithBobAndARoom:testCase readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
