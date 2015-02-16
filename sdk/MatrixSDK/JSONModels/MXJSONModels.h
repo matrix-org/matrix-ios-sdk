@@ -311,13 +311,6 @@ typedef enum : NSUInteger
      */
     @property (nonatomic) MXPushRuleKind kind;
 
-    /**
-     Add an additional condition to the rule.
-     
-     @parameter condition the condition to add.
-     */
-    - (void)addCondition:(MXPushRuleCondition*)condition;
-
 @end
 
 /**

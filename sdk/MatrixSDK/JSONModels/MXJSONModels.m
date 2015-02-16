@@ -209,13 +209,6 @@ NSString *const kMXPushRuleConditionStringRoomMemberCount       = @"room_member_
     return self;
 }
 
-- (void)addCondition:(MXPushRuleCondition *)condition
-{
-    NSMutableArray *conditions = [NSMutableArray arrayWithArray:_conditions];
-    [conditions addObject:condition];
-    _conditions = conditions;
-}
-
 @end
 
 @implementation MXPushRuleAction

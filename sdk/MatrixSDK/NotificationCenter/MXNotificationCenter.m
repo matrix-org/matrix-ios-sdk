@@ -44,6 +44,11 @@
      to use to validate a condition.
      */
     NSMutableDictionary *conditionCheckers;
+
+    /**
+     Keep the reference on the event_match condition as it can reuse to check Content, Room and Sender rules.
+    */
+    MXPushRuleEventMatchConditionChecker *eventMatchConditionChecker;
 }
 @end
 
@@ -61,7 +66,7 @@
         conditionCheckers = [NSMutableDictionary dictionary];
 
         // Define condition checkers for default Matrix conditions
-        MXPushRuleEventMatchConditionChecker *eventMatchConditionChecker = [[MXPushRuleEventMatchConditionChecker alloc] init];
+        eventMatchConditionChecker = [[MXPushRuleEventMatchConditionChecker alloc] init];
         [self setChecker:eventMatchConditionChecker forConditionKind:kMXPushRuleConditionStringEventMatch];
 
         MXPushRuleDisplayNameCondtionChecker *displayNameCondtionChecker = [[MXPushRuleDisplayNameCondtionChecker alloc] initWithMatrixSession:mxSession];
@@ -96,9 +101,9 @@
 
         // Global rules
         [rules addObjectsFromArray:pushRules.global.override];
-        [self addContentRules:pushRules.global.content];
-        [self addRoomRules:pushRules.global.room];
-        [self addSenderRules:pushRules.global.sender];
+        [rules addObjectsFromArray:pushRules.global.content];
+        [rules addObjectsFromArray:pushRules.global.room];
+        [rules addObjectsFromArray:pushRules.global.sender];
         [rules addObjectsFromArray:pushRules.global.underride];
 
         if (success)
@@ -153,64 +158,8 @@
     }
 }
 
+
 #pragma mark - Private methods
-- (void)addContentRules:(NSArray*)contentRules
-{
-    for (MXPushRule *rule in contentRules)
-    {
-        // Content rules are rules on the "content.body" field
-        // Tranlate this into a condition
-        MXPushRuleCondition *condition = [[MXPushRuleCondition alloc] init];
-        condition.kindType = MXPushRuleConditionTypeEventMatch;
-        condition.parameters = @{
-                                 @"key": @"content.body",
-                                 @"pattern": rule.pattern
-                                 };
-
-        [rule addCondition:condition];
-
-        [rules addObject:rule];
-    }
-}
-
-- (void)addRoomRules:(NSArray*)roomRules
-{
-    for (MXPushRule *rule in roomRules)
-    {
-        // Room rules are rules on the "room_id" field
-        // Translate this into a condition
-        MXPushRuleCondition *condition = [[MXPushRuleCondition alloc] init];
-        condition.kindType = MXPushRuleConditionTypeEventMatch;
-        condition.parameters = @{
-                                 @"key": @"room_id",
-                                 @"pattern": rule.ruleId
-                                 };
-
-        [rule addCondition:condition];
-
-        [rules addObject:rule];
-    }
-}
-
-- (void)addSenderRules:(NSArray*)senderRules
-{
-    for (MXPushRule *rule in senderRules)
-    {
-        // Sender rules are rules on the "user_id" field
-        // Translate this into a condition
-        MXPushRuleCondition *condition = [[MXPushRuleCondition alloc] init];
-        condition.kindType = MXPushRuleConditionTypeEventMatch;
-        condition.parameters = @{
-                                 @"key": @"room_id",
-                                 @"pattern": rule.ruleId
-                                 };
-
-        [rule addCondition:condition];
-
-        [rules addObject:rule];
-    }
-}
-
 // Check if the event matches with defined push rules
 - (void)shouldNotify:(MXEvent*)event roomState:(MXRoomState*)roomState
 {
@@ -220,25 +169,82 @@
         // Check rules one by one according to their priorities
         for (MXPushRule *rule in rules)
         {
-            // Check all conditions of the rule
-            // If there is no condition, the rule must be applied
             BOOL conditionsOk = YES;
-            for (MXPushRuleCondition *condition in rule.conditions)
+
+            // The test depends of the kind of the rule
+            switch (rule.kind)
             {
-                id<MXPushRuleConditionChecker> checker = [conditionCheckers valueForKey:condition.kind];
-                if (checker)
+                case MXPushRuleKindOverride:
+                case MXPushRuleKindUnderride:
                 {
-                    conditionsOk = [checker isCondition:condition satisfiedBy:event];
-                    if (NO == conditionsOk)
+                    // Check all conditions described by the rule
+                    // If there is no condition, the rule must be applied
+                    conditionsOk = YES;
+
+                    for (MXPushRuleCondition *condition in rule.conditions)
                     {
-                        // Do not need to go further
-                        break;
+                        id<MXPushRuleConditionChecker> checker = [conditionCheckers valueForKey:condition.kind];
+                        if (checker)
+                        {
+                            conditionsOk = [checker isCondition:condition satisfiedBy:event];
+                            if (NO == conditionsOk)
+                            {
+                                // Do not need to go further
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            NSLog(@"Warning: MXNotificationCenter - There is no MXPushRuleConditionChecker to check condition of kind: %@", condition.kind);
+                            conditionsOk = NO;
+                        }
                     }
+                    break;
                 }
-                else
+
+                case MXPushRuleKindContent:
                 {
-                    NSLog(@"Warning: MXNotificationCenter - There is no MXPushRuleConditionChecker to check condition of kind: %@", condition.kind);
-                    conditionsOk = NO;
+                    // Content rules are rules on the "content.body" field
+                    // Tranlate this into a fake condition
+                    MXPushRuleCondition *equivalentCondition = [[MXPushRuleCondition alloc] init];
+                    equivalentCondition.kindType = MXPushRuleConditionTypeEventMatch;
+                    equivalentCondition.parameters = @{
+                                                       @"key": @"content.body",
+                                                       @"pattern": rule.pattern
+                                                       };
+
+                    conditionsOk = [eventMatchConditionChecker isCondition:equivalentCondition satisfiedBy:event];
+                    break;
+                }
+
+                case MXPushRuleKindRoom:
+                {
+                    // Room rules are rules on the "room_id" field
+                    // Translate this into a fake condition
+                    MXPushRuleCondition *equivalentCondition = [[MXPushRuleCondition alloc] init];
+                    equivalentCondition.kindType = MXPushRuleConditionTypeEventMatch;
+                    equivalentCondition.parameters = @{
+                                                       @"key": @"room_id",
+                                                       @"pattern": rule.ruleId
+                                                       };
+
+                    conditionsOk = [eventMatchConditionChecker isCondition:equivalentCondition satisfiedBy:event];
+                    break;
+                }
+
+                case MXPushRuleKindSender:
+                {
+                    // Sender rules are rules on the "user_id" field
+                    // Translate this into a fake condition
+                    MXPushRuleCondition *equivalentCondition = [[MXPushRuleCondition alloc] init];
+                    equivalentCondition.kindType = MXPushRuleConditionTypeEventMatch;
+                    equivalentCondition.parameters = @{
+                                                       @"key": @"room_id",
+                                                       @"pattern": rule.ruleId
+                                                       };
+
+                    conditionsOk = [eventMatchConditionChecker isCondition:equivalentCondition satisfiedBy:event];
+                    break;
                 }
             }
 
