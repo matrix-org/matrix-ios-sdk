@@ -162,7 +162,7 @@ NSMutableArray *roomsToClean;
     
     if (testCase)
     {
-        [testCase waitForExpectationsWithTimeout:10 handler:nil];
+        [testCase waitForExpectationsWithTimeout:60 handler:nil];
     }
 }
 
