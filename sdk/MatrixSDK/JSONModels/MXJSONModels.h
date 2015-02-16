@@ -327,7 +327,7 @@ typedef enum : NSUInteger
 {
     MXPushRuleActionTypeNotify,
     MXPushRuleActionTypeDontNotify,
-    MXPushRuleActionTypeCoalesce,
+    MXPushRuleActionTypeCoalesce,   // At a Matrix client level, coalesce action should be treated as a notify action
     MXPushRuleActionTypeSetTweak,
 
     // The action is a custom action. Refer to its `MXPushRuleActionString` version
