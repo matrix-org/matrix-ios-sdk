@@ -260,6 +260,22 @@ FOUNDATION_EXPORT NSString *const kMXPresenceHidden;
 @class MXPushRuleCondition;
 
 /**
+ Push rules kind.
+ 
+ Push rules are separated into different kinds of rules. These categories have a priority order: verride rules
+ have the highest priority.
+ Some category may define implicit conditions.
+ */
+typedef enum : NSUInteger
+{
+    MXPushRuleKindOverride,
+    MXPushRuleKindContent,
+    MXPushRuleKindRoom,
+    MXPushRuleKindSender,
+    MXPushRuleKindUnderride
+} MXPushRuleKind;
+
+/**
  `MXPushRule` defines a push notification rule.
  */
 @interface MXPushRule : MXJSONModel
@@ -289,6 +305,11 @@ FOUNDATION_EXPORT NSString *const kMXPresenceHidden;
      Only available for Content push rules, this gives the pattern to match against.
      */
     @property (nonatomic) NSString *pattern;
+
+    /**
+     The category the push rule belongs to.
+     */
+    @property (nonatomic) MXPushRuleKind kind;
 
     /**
      Add an additional condition to the rule.

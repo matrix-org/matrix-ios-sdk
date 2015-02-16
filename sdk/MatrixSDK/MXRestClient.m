@@ -325,6 +325,7 @@ MXAuthAction;
                                                                                       ],
                                                                        @"default": [NSNumber numberWithBool:YES]
                                                                        }];
+                implicitRule.kind = MXPushRuleKindUnderride;
 
                 NSMutableArray *underride = [NSMutableArray arrayWithArray:pushRules.global.underride];
                 [underride addObject:implicitRule];

@@ -104,8 +104,8 @@
 
         [bobSession.notificationCenter listenToNotifications:^(MXEvent *event, MXRoomState *roomState, MXPushRule *rule) {
 
-            // We must be alerted by the default content HS rule on "mxBob"
-            // XCTAssertEqualObjects(rule.kind, ...) @TODO
+            // We must be alerted by the default content HS rule on any message
+            XCTAssertEqual(rule.kind, MXPushRuleKindUnderride);
             XCTAssert(rule.isDefault, @"The rule must be the server default rule. Rule: %@", rule);
 
             [expectation fulfill];
@@ -131,7 +131,7 @@
         [bobSession.notificationCenter listenToNotifications:^(MXEvent *event, MXRoomState *roomState, MXPushRule *rule) {
 
             // We must be alerted by the default content HS rule on "mxBob"
-            // XCTAssertEqualObjects(rule.kind, ...) @TODO
+            XCTAssertEqual(rule.kind, MXPushRuleKindContent);
             XCTAssert(rule.isDefault, @"The rule must be the server default rule. Rule: %@", rule);
             XCTAssertEqualObjects(rule.pattern, @"mxBob", @"As content rule, the pattern must be define. Rule: %@", rule);
 
@@ -166,6 +166,8 @@
                 NSString *messageFromBob = @"Aalliiccee: where are you?";
 
                 [aliceSession.notificationCenter listenToNotifications:^(MXEvent *event, MXRoomState *roomState, MXPushRule *rule) {
+
+                    XCTAssertEqual(rule.kind, MXPushRuleKindOverride);
 
                     MXPushRuleCondition *condition = rule.conditions[0];
 
@@ -206,7 +208,7 @@
         [bobSession.notificationCenter listenToNotifications:^(MXEvent *event, MXRoomState *roomState, MXPushRule *rule) {
 
             // We must be alerted by the default content HS rule on room_member_count == 2
-            // XCTAssertEqualObjects(rule.kind, ...) @TODO
+            XCTAssertEqual(rule.kind, MXPushRuleKindOverride);
             XCTAssert(rule.isDefault, @"The rule must be the server default rule. Rule: %@", rule);
 
             MXPushRuleCondition *condition = rule.conditions[0];

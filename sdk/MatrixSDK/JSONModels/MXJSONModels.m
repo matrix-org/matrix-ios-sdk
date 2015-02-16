@@ -303,6 +303,38 @@ NSString *const kMXPushRuleConditionStringRoomMemberCount       = @"room_member_
 
 @implementation MXPushRulesSet
 
+- (instancetype)initWithDictionary:(NSDictionary *)dictionaryValue error:(NSError *__autoreleasing *)error
+{
+    // Do the JSON -> class instance properties mapping
+    self = [super initWithDictionary:dictionaryValue error:error];
+    if (self)
+    {
+        // Add the categories the rules belong to
+        for (MXPushRule *rule in _override)
+        {
+            rule.kind = MXPushRuleKindOverride;
+        }
+        for (MXPushRule *rule in _content)
+        {
+            rule.kind = MXPushRuleKindContent;
+        }
+        for (MXPushRule *rule in _room)
+        {
+            rule.kind = MXPushRuleKindRoom;
+        }
+        for (MXPushRule *rule in _sender)
+        {
+            rule.kind = MXPushRuleKindSender;
+        }
+        for (MXPushRule *rule in _underride)
+        {
+            rule.kind = MXPushRuleKindUnderride;
+        }
+    }
+
+    return self;
+}
+
 + (NSValueTransformer *)overrideJSONTransformer
 {
     return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXPushRule.class];
