@@ -251,8 +251,23 @@
 
             if (conditionsOk)
             {
-                // All conditions have been satisfied, notify listeners
-                [self notifyListeners:event roomState:roomState rule:rule];
+                // Make sure this is not a rule to prevent from generating a notification
+                BOOL actionNotify = YES;
+                if (1 == rule.actions.count)
+                {
+                    MXPushRuleAction *action = rule.actions[0];
+                    if ([action.action isEqualToString:kMXPushRuleActionStringDontNotify])
+                    {
+                        actionNotify = NO;
+                    }
+                }
+
+                if (actionNotify)
+                {
+                    // All conditions have been satisfied, notify listeners
+                    [self notifyListeners:event roomState:roomState rule:rule];
+                }
+
                 break;
             }
         }
