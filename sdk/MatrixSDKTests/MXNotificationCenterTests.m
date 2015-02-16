@@ -170,6 +170,7 @@
                     MXPushRuleCondition *condition = rule.conditions[0];
 
                     XCTAssertEqualObjects(condition.kind, kMXPushRuleConditionStringContainsDisplayName, @"The default content rule with contains_display_name condition must fire first");
+                    XCTAssertEqual(condition.kindType, MXPushRuleConditionTypeContainsDisplayName);
 
                     [aliceSession close];
                     [expectation fulfill];
@@ -191,6 +192,40 @@
             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
         }];
 
+    }];
+}
+
+- (void)testDefaultRoomMemberCountCondition
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        mxSession = bobSession;
+
+        NSString *messageFromAlice = @"We are two peoples in this room";
+
+        [bobSession.notificationCenter listenToNotifications:^(MXEvent *event, MXRoomState *roomState, MXPushRule *rule) {
+
+            // We must be alerted by the default content HS rule on room_member_count == 2
+            // XCTAssertEqualObjects(rule.kind, ...) @TODO
+            XCTAssert(rule.isDefault, @"The rule must be the server default rule. Rule: %@", rule);
+
+            MXPushRuleCondition *condition = rule.conditions[0];
+            XCTAssertEqualObjects(condition.kind, kMXPushRuleConditionStringRoomMemberCount, @"The default content rule with room_member_count condition must fire first");
+            XCTAssertEqual(condition.kindType, MXPushRuleConditionTypeRoomMemberCount);
+
+            // Check the right event has been notified
+            XCTAssertEqualObjects(event.content[@"body"], messageFromAlice, @"The wrong messsage has been caught. event: %@", event);
+
+            [expectation fulfill];
+        }];
+
+
+        [aliceRestClient sendTextMessageToRoom:roomId text:messageFromAlice success:^(NSString *eventId) {
+
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+        
     }];
 }
 

@@ -19,6 +19,7 @@
 #import "MXSession.h"
 #import "MXPushRuleEventMatchConditionChecker.h"
 #import "MXPushRuleDisplayNameCondtionChecker.h"
+#import "MXPushRuleRoomMemberCountConditionChecker.h"
 
 @interface MXNotificationCenter ()
 {
@@ -65,6 +66,10 @@
 
         MXPushRuleDisplayNameCondtionChecker *displayNameCondtionChecker = [[MXPushRuleDisplayNameCondtionChecker alloc] initWithMatrixSession:mxSession];
         [self setChecker:displayNameCondtionChecker forConditionKind:kMXPushRuleConditionStringContainsDisplayName];
+
+        MXPushRuleRoomMemberCountConditionChecker *roomMemberCountConditionChecker = [[MXPushRuleRoomMemberCountConditionChecker alloc] initWithMatrixSession:mxSession];
+        [self setChecker:roomMemberCountConditionChecker forConditionKind:kMXPushRuleConditionStringRoomMemberCount];
+
 
         // Catch all live events sent from other users to check if we need to notify them
         [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
