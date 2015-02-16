@@ -102,21 +102,33 @@
 
         mxSession = bobSession;
 
-        [bobSession.notificationCenter listenToNotifications:^(MXEvent *event, MXRoomState *roomState, MXPushRule *rule) {
+        MXRoom *room = [mxSession roomWithRoomId:roomId];
+        [room listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
 
-            // We must be alerted by the default content HS rule on any message
-            XCTAssertEqual(rule.kind, MXPushRuleKindUnderride);
-            XCTAssert(rule.isDefault, @"The rule must be the server default rule. Rule: %@", rule);
+            [bobSession.notificationCenter listenToNotifications:^(MXEvent *event, MXRoomState *roomState, MXPushRule *rule) {
 
-            [expectation fulfill];
+                // We must be alerted by the default content HS rule on any message
+                XCTAssertEqual(rule.kind, MXPushRuleKindUnderride);
+                XCTAssert(rule.isDefault, @"The rule must be the server default rule. Rule: %@", rule);
+
+                [expectation fulfill];
+            }];
+
+            [aliceRestClient sendTextMessageToRoom:roomId text:@"a message" success:^(NSString *eventId) {
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+
         }];
 
-        [aliceRestClient sendTextMessageToRoom:roomId text:@"a message" success:^(NSString *eventId) {
+        // Make sure there 3 are peoples in the room to avoid to fire the default "room_member_count == 2" rule
+        NSString *carolId = [aliceRestClient.credentials.userId stringByReplacingOccurrencesOfString:@"mxAlice" withString:@"@mxCarol"];
+        [room inviteUser:carolId success:^{
 
         } failure:^(NSError *error) {
             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
         }];
-
     }];
 };
 
@@ -126,23 +138,35 @@
 
         mxSession = bobSession;
 
-        NSString *messageFromAlice = @"mxBob: you should be notified for this message";
+        MXRoom *room = [mxSession roomWithRoomId:roomId];
+        [room listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
 
-        [bobSession.notificationCenter listenToNotifications:^(MXEvent *event, MXRoomState *roomState, MXPushRule *rule) {
+            NSString *messageFromAlice = @"mxBob: you should be notified for this message";
 
-            // We must be alerted by the default content HS rule on "mxBob"
-            XCTAssertEqual(rule.kind, MXPushRuleKindContent);
-            XCTAssert(rule.isDefault, @"The rule must be the server default rule. Rule: %@", rule);
-            XCTAssertEqualObjects(rule.pattern, @"mxBob", @"As content rule, the pattern must be define. Rule: %@", rule);
+            [bobSession.notificationCenter listenToNotifications:^(MXEvent *event, MXRoomState *roomState, MXPushRule *rule) {
 
-            // Check the right event has been notified
-            XCTAssertEqualObjects(event.content[@"body"], messageFromAlice, @"The wrong messsage has been caught. event: %@", event);
+                // We must be alerted by the default content HS rule on "mxBob"
+                XCTAssertEqual(rule.kind, MXPushRuleKindContent);
+                XCTAssert(rule.isDefault, @"The rule must be the server default rule. Rule: %@", rule);
+                XCTAssertEqualObjects(rule.pattern, @"mxBob", @"As content rule, the pattern must be define. Rule: %@", rule);
 
-            [expectation fulfill];
+                // Check the right event has been notified
+                XCTAssertEqualObjects(event.content[@"body"], messageFromAlice, @"The wrong messsage has been caught. event: %@", event);
+
+                [expectation fulfill];
+            }];
+
+
+            [aliceRestClient sendTextMessageToRoom:roomId text:messageFromAlice success:^(NSString *eventId) {
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
         }];
 
-
-        [aliceRestClient sendTextMessageToRoom:roomId text:messageFromAlice success:^(NSString *eventId) {
+        // Make sure there 3 are peoples in the room to avoid to fire the default "room_member_count == 2" rule
+        NSString *carolId = [aliceRestClient.credentials.userId stringByReplacingOccurrencesOfString:@"mxAlice" withString:@"@mxCarol"];
+        [room inviteUser:carolId success:^{
 
         } failure:^(NSError *error) {
             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
