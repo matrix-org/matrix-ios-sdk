@@ -42,7 +42,7 @@
     BOOL isSatisfied = NO;
 
     // If it exists, search for the current display name in the content body with case insensitive
-    if (event.content)
+    if (mxSession.myUser.displayname && event.content)
     {
         NSString *body = event.content[@"body"];
         if (body)
