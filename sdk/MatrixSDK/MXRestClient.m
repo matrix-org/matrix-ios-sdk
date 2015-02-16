@@ -312,6 +312,25 @@ MXAuthAction;
             {
                 MXPushRulesResponse *pushRules = [MXPushRulesResponse modelFromJSON:JSONResponse];
 
+                // Workaround for SYN-267, make the implicit "push you for all non-you events" rule explicit
+                // @TODO: to remove once SYN-267 is closed
+                MXPushRule *implicitRule = [MXPushRule modelFromJSON:@{
+                                                                       @"actions": @[@"notify"],
+                                                                       @"conditions": @[
+                                                                                      @{
+                                                                                          @"kind": @"event_match",
+                                                                                          @"key": @"content.body",
+                                                                                          @"pattern": @"*"
+                                                                                      }
+                                                                                      ],
+                                                                       @"default": [NSNumber numberWithBool:YES]
+                                                                       }];
+                implicitRule.kind = MXPushRuleKindUnderride;
+
+                NSMutableArray *underride = [NSMutableArray arrayWithArray:pushRules.global.underride];
+                [underride addObject:implicitRule];
+                pushRules.global.underride = underride;
+
                 success(pushRules);
             }
                                  failure:^(NSError *error)

@@ -162,7 +162,7 @@ NSMutableArray *roomsToClean;
     
     if (testCase)
     {
-        [testCase waitForExpectationsWithTimeout:10000 handler:nil];
+        [testCase waitForExpectationsWithTimeout:60 handler:nil];
     }
 }
 
@@ -275,7 +275,7 @@ NSMutableArray *roomsToClean;
     
     if (testCase)
     {
-        [testCase waitForExpectationsWithTimeout:10000 handler:nil];
+        [testCase waitForExpectationsWithTimeout:10 handler:nil];
     }
 }
 
@@ -315,7 +315,7 @@ NSMutableArray *roomsToClean;
     
     if (testCase)
     {
-        [testCase waitForExpectationsWithTimeout:10000 handler:nil];
+        [testCase waitForExpectationsWithTimeout:10 handler:nil];
     }
 }
 
@@ -489,13 +489,13 @@ NSMutableArray *roomsToClean;
     
     if (testCase)
     {
-        [testCase waitForExpectationsWithTimeout:10000 handler:nil];
+        [testCase waitForExpectationsWithTimeout:10 handler:nil];
     }
 }
 
 #pragma mark - both
-- (void)doMXSessionTestWithBobAndAliceInARoom:(XCTestCase*)testCase
-                                  readyToTest:(void (^)(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest
+- (void)doMXRestClientTestWithBobAndAliceInARoom:(XCTestCase*)testCase
+                                     readyToTest:(void (^)(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest
 {
     [self doMXRestClientTestWithBobAndARoom:testCase readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
@@ -515,6 +515,23 @@ NSMutableArray *roomsToClean;
                  NSAssert(NO, @"Cannot invite mxAlice");
             }];
         }];
+    }];
+}
+
+- (void)doMXSessionTestWithBobAndAliceInARoom:(XCTestCase*)testCase
+                                  readyToTest:(void (^)(MXSession *bobSession, MXRestClient *aliceRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest
+{
+    [self doMXRestClientTestWithBobAndAliceInARoom:testCase readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        MXSession *bobSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [bobSession start:^{
+
+            readyToTest(bobSession, aliceRestClient, roomId, expectation);
+
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot create bobSession");
+        }];
+
     }];
 }
 

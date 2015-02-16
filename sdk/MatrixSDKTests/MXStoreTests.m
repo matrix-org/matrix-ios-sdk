@@ -102,7 +102,7 @@
     }
 
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-    [sharedData doMXSessionTestWithBobAndAliceInARoom:testCase readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation2) {
+    [sharedData doMXRestClientTestWithBobAndAliceInARoom:testCase readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation2) {
 
         [sharedData for:bobRestClient andRoom:roomId sendMessages:5 success:^{
 

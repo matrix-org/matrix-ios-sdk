@@ -21,6 +21,7 @@
 #import "MXMyUser.h"
 #import "MXSessionEventListener.h"
 #import "MXStore.h"
+#import "MXNotificationCenter.h"
 
 /**
  `MXSession` manages data and events from the home server
@@ -34,15 +35,26 @@
  */
 @interface MXSession : NSObject
 
-// The matrix REST Client used to make Matrix API requests
+/**
+ The matrix REST Client used to make Matrix API requests.
+ */
 @property (nonatomic, readonly) MXRestClient *matrixRestClient;
 
-// The profile of the current user
-// It is available only after the `onStoreDataReady` callback of `start` is called.
+/**
+ The profile of the current user.
+ It is available only after the `onStoreDataReady` callback of `start` is called.
+ */
 @property (nonatomic, readonly) MXMyUser *myUser;
 
-// The store used to store user's Matrix data
+/**
+ The store used to store user's Matrix data.
+ */
 @property (nonatomic, readonly) id<MXStore> store;
+
+/**
+ The module that manages push notificiations.
+ */
+@property (nonatomic, readonly) MXNotificationCenter *notificationCenter;
 
 /**
  Create a MXSession instance.

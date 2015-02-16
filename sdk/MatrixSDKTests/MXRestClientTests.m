@@ -224,7 +224,7 @@
 {
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
     
-    [sharedData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [sharedData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         [bobRestClient kickUser:sharedData.aliceCredentials.userId fromRoom:roomId reason:@"No particular reason" success:^{
             
@@ -266,7 +266,7 @@
 {
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
     
-    [sharedData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [sharedData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         [bobRestClient banUser:sharedData.aliceCredentials.userId inRoom:roomId reason:@"No particular reason" success:^{
             
@@ -574,7 +574,7 @@
 - (void)testInitialSyncOfRoomAndGlobalInitialSyncOnRoomWithTwoUsers
 {
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-    [sharedData doMXSessionTestWithBobAndAliceInARoom:self
+    [sharedData doMXRestClientTestWithBobAndAliceInARoom:self
  readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         [sharedData for:bobRestClient andRoom:roomId sendMessages:5 success:^{
@@ -662,7 +662,7 @@
 
 - (void)testMXRoomMemberEventContent
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         [bobRestClient membersOfRoom:roomId success:^(NSArray *roomMemberEvents) {
             for (MXEvent *roomMemberEvent in roomMemberEvents)

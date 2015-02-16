@@ -91,7 +91,7 @@
 
     [request cancel];
 
-    [self waitForExpectationsWithTimeout:10000 handler:nil];
+    [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
 
@@ -121,7 +121,7 @@
         [expectation fulfill];
     }];
     
-    [self waitForExpectationsWithTimeout:10000 handler:nil];
+    [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
 - (void)testRegister
@@ -146,7 +146,7 @@
         [expectation fulfill];
     }];
 
-    [self waitForExpectationsWithTimeout:10000 handler:nil];
+    [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
 - (void)testRegisterPasswordBased
@@ -169,7 +169,7 @@
                              [expectation fulfill];
                          }];
 
-    [self waitForExpectationsWithTimeout:10000 handler:nil];
+    [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
 - (void)testRegisterPasswordBasedWithExistingUser
@@ -198,7 +198,7 @@
     }];
 
     
-    [self waitForExpectationsWithTimeout:10000 handler:nil];
+    [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
 #pragma mark - Login operations
@@ -227,7 +227,7 @@
         [expectation fulfill];
     }];
     
-    [self waitForExpectationsWithTimeout:10000 handler:nil];
+    [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
 - (void)testLogin
@@ -255,7 +255,7 @@
         }];
     }];
 
-    [self waitForExpectationsWithTimeout:10000 handler:nil];
+    [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
 - (void)testLoginPasswordBased
@@ -279,7 +279,7 @@
                           }];
     }];
     
-    [self waitForExpectationsWithTimeout:10000 handler:nil];
+    [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
 - (void)testLoginPasswordBasedWithWrongPassword
@@ -306,7 +306,7 @@
                           }];
     }];
     
-    [self waitForExpectationsWithTimeout:10000 handler:nil];
+    [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
 
