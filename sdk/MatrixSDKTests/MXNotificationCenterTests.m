@@ -51,12 +51,15 @@
 
         XCTAssertNotNil(mxSession.notificationCenter);
         XCTAssertNil(mxSession.notificationCenter.rules);
+        XCTAssertNil(mxSession.notificationCenter.flatRules);
 
         [mxSession start:^{
 
             XCTAssertNotNil(mxSession.notificationCenter.rules, @"Notification rules must be ready once MXSession is started");
 
-            XCTAssertGreaterThanOrEqual(mxSession.notificationCenter.rules.count, 3, @"Home server defines 3 default rules (at least)");
+            XCTAssertNotNil(mxSession.notificationCenter.flatRules, @"Notification rules must be ready once MXSession is started");
+
+            XCTAssertGreaterThanOrEqual(mxSession.notificationCenter.flatRules.count, 3, @"Home server defines 3 default rules (at least)");
 
             [expectation fulfill];
 

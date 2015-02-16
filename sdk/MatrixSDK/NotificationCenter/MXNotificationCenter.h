@@ -55,10 +55,16 @@ typedef void (^MXOnNotification)(MXEvent *event, MXRoomState *roomState, MXPushR
 @interface MXNotificationCenter : NSObject
 
 /**
+ Push notification rules.
+ There are organised by kind as stored by the Home Server.
+ */
+@property (nonatomic, readonly) MXPushRulesResponse *rules;
+
+/**
  All push notication rules (MXPushRule objects) flattened into a single array in
  priority order. The rule at index 0 has the highest priority.
  */
-@property (nonatomic, readonly) NSArray *rules;
+@property (nonatomic, readonly) NSArray *flatRules;
 
 /**
  Create the `MXNotification` instance.

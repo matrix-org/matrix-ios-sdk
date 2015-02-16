@@ -36,7 +36,7 @@
     /**
      The rules property.
      */
-    NSMutableArray *rules;
+    NSMutableArray *flatRules;
 
     /**
      The list of condition checkers.
@@ -53,7 +53,7 @@
 @end
 
 @implementation MXNotificationCenter
-@synthesize rules;
+@synthesize flatRules;
 
 - (instancetype)initWithMatrixSession:(MXSession *)mxSession2
 {
@@ -93,18 +93,19 @@
 {
     return [mxSession.matrixRestClient pushRules:^(MXPushRulesResponse *pushRules) {
 
-        rules = [NSMutableArray array];
+        _rules = pushRules;
+        flatRules = [NSMutableArray array];
 
         // Add rules by their priority
 
         // @TODO: manage device rules
 
         // Global rules
-        [rules addObjectsFromArray:pushRules.global.override];
-        [rules addObjectsFromArray:pushRules.global.content];
-        [rules addObjectsFromArray:pushRules.global.room];
-        [rules addObjectsFromArray:pushRules.global.sender];
-        [rules addObjectsFromArray:pushRules.global.underride];
+        [flatRules addObjectsFromArray:pushRules.global.override];
+        [flatRules addObjectsFromArray:pushRules.global.content];
+        [flatRules addObjectsFromArray:pushRules.global.room];
+        [flatRules addObjectsFromArray:pushRules.global.sender];
+        [flatRules addObjectsFromArray:pushRules.global.underride];
 
         if (success)
         {
@@ -167,7 +168,7 @@
     if (notificationListeners.count)
     {
         // Check rules one by one according to their priorities
-        for (MXPushRule *rule in rules)
+        for (MXPushRule *rule in flatRules)
         {
             BOOL conditionsOk = YES;
 
