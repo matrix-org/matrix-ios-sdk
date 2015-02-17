@@ -107,13 +107,15 @@ typedef void (^MXOnResumeDone)();
         NSParameterAssert([_store respondsToSelector:@selector(setUserAvatarUrl:)]);
     }
 
+    NSDate *startDate = [NSDate date];
+
     [_store openWithCredentials:matrixRestClient.credentials onComplete:^{
 
         // Can we start on data from the MXStore?
         if (_store.isPermanent && _store.eventStreamToken && 0 < _store.rooms.count)
         {
             // Mount data from the permanent store
-            NSLog(@"[MXSession startWithMessagesLimit]: Load data from the store");
+            NSLog(@"[MXSession] Loading room state events to build MXRoom objects...");
 
             // Create the user's profile from the store
             _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId andDisplayname:_store.userDisplayname andAvatarUrl:_store.userAvatarUrl andMatrixSession:self];
@@ -121,15 +123,17 @@ typedef void (^MXOnResumeDone)();
             users[matrixRestClient.credentials.userId] = _myUser;
 
             // Create MXRooms from their states stored in the store
-            NSDate *startDate = [NSDate date];
+            NSDate *startDate2 = [NSDate date];
             for (NSString *roomId in _store.rooms)
             {
                 NSArray *stateEvents = [_store stateOfRoom:roomId];
                 [self createRoom:roomId withStateEvents:stateEvents];
             }
 
-            NSLog(@"Loaded %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+            NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
         }
+
+        NSLog(@"[MXSession] Mounted SDK data from MXStore %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
         // The SDK client can use this data
         onStoreDataReady();
@@ -174,7 +178,7 @@ typedef void (^MXOnResumeDone)();
         NSDate *startDate = [NSDate date];
         [matrixRestClient allUsersPresence:^(NSArray *userPresenceEvents) {
 
-            NSLog(@"Got presence of %tu users in %.0fms", userPresenceEvents.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+            NSLog(@"[MXSession] Got presence of %tu users in %.0fms", userPresenceEvents.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
             for (MXEvent *userPresenceEvent in userPresenceEvents)
             {
@@ -182,7 +186,7 @@ typedef void (^MXOnResumeDone)();
                 [user updateWithPresenceEvent:userPresenceEvent];
             }
 
-            NSLog(@"Resume the events stream from %@", _store.eventStreamToken);
+            NSLog(@"[MXSession] Resume the events stream from %@", _store.eventStreamToken);
 
             // And resume the stream from where we were
             [self resume:onServerSyncDone];
@@ -208,14 +212,15 @@ typedef void (^MXOnResumeDone)();
                 // Additional step: load push rules from the home server
                 [_notificationCenter refreshRules:^{
 
-                    NSLog(@"[MXSession startWithMessagesLimit] Do a global initialSync");
+                    NSDate *startDate = [NSDate date];
+                    NSLog(@"[MXSession] startWithMessagesLimit: Do a global initialSync");
 
                     // Then, we can do the global sync
                     [matrixRestClient initialSyncWithLimit:initialSyncMessagesLimit success:^(NSDictionary *JSONData) {
 
                         NSArray *roomDicts = JSONData[@"rooms"];
 
-                        NSLog(@"Received %tu rooms", roomDicts.count);
+                        NSLog(@"[MXSession] Received %tu rooms in %.0fms", roomDicts.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
                         for (NSDictionary *roomDict in roomDicts)
                         {
@@ -352,7 +357,7 @@ typedef void (^MXOnResumeDone)();
                     }
                     else
                     {
-                        NSLog(@"Warning: Received a typing notification for an unknown room: %@", event);
+                        NSLog(@"[MXSession] Warning: Received a typing notification for an unknown room: %@", event);
                     }
                 }
                 break;

@@ -105,7 +105,7 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     // Load data from the file system on a separate thread
     dispatch_async(dispatchQueue, ^(void){
 
-        NSLog(@"MXFileStore.diskUsage: %@", [NSByteCountFormatter stringFromByteCount:self.diskUsage countStyle:NSByteCountFormatterCountStyleFile]);
+        NSLog(@"[MXFileStore] diskUsage: %@", [NSByteCountFormatter stringFromByteCount:self.diskUsage countStyle:NSByteCountFormatterCountStyleFile]);
 
         [self loadMetaData];
 
@@ -363,7 +363,7 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     NSArray *roomIDArray = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsMessagesPath error:nil];
 
     NSDate *startDate = [NSDate date];
-    NSLog(@"[MXFileStore loadRoomsData]:");
+    NSLog(@"[MXFileStore] loadRoomsData:");
 
     for (NSString *roomId in roomIDArray)  {
 
@@ -376,7 +376,7 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
         }
         @catch (NSException *exception)
         {
-            NSLog(@"Warning: MXFileRoomStore file for room %@ has been corrupted", roomId);
+            NSLog(@"[MXFileStore] Warning: MXFileRoomStore file for room %@ has been corrupted", roomId);
         }
 
         if (roomStore)
@@ -388,13 +388,13 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
         }
         else
         {
-            NSLog(@"Warning: MXFileStore has been reset due to room file corruption. Room id: %@", roomId);
+            NSLog(@"[MXFileStore] Warning: MXFileStore has been reset due to room file corruption. Room id: %@", roomId);
             [self deleteAllData];
             break;
         }
     }
 
-    NSLog(@"Loaded messages data for %lu rooms in %.0fms", (unsigned long)roomStores.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXFileStore] Loaded room messages of %lu rooms in %.0fms", (unsigned long)roomStores.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (void)saveRoomsMessages
@@ -491,7 +491,7 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     }
     @catch (NSException *exception)
     {
-        NSLog(@"Warning: MXFileStore metadata has been corrupted");
+        NSLog(@"[MXFileStore] Warning: MXFileStore metadata has been corrupted");
     }
 
     if (metaData)
