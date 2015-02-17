@@ -24,12 +24,7 @@
     self = [self init];
     if (self)
     {
-        NSMutableArray *rawEventsArray = [aDecoder decodeObjectForKey:@"rawEventsArray"];
-        for (NSDictionary *rawEvent in rawEventsArray)
-        {
-            MXEvent *event = [MXEvent modelFromJSON:rawEvent];
-            [messages addObject:event];
-        }
+        messages = [aDecoder decodeObjectForKey:@"messages"];
 
         self.paginationToken = [aDecoder decodeObjectForKey:@"paginationToken"];
 
@@ -43,24 +38,12 @@
 {
     // The goal of the NSCoding implementation here is to store room data to the file system during a [MXFileStore commit].
 
-    // Serialiase only MXEvent.dictionaryValue as it contains all event data
-    NSMutableArray *rawEventsArray = [NSMutableArray array];
-
-    // Do not enumerate the messages array as the method is called from another thread.
-    // To avoid blocking the UI thread too much, there is no lock mechanism as it can be avoided.
-
-    // The messages array continously grows. If some messages come while looping, they will not
+    // Note this operation is  called from another thread.
+    // As the messages array continously grows, if some messages come while looping, they will not
     // be serialised this time but they will be on the next [MXFileStore commit] that will be called for them.
     // If messages come between [MXFileStore commit] and this method, more messages will be serialised. This is
     // not a problem.
-    NSUInteger messagesCount = messages.count;
-    for (NSUInteger i = 0; i < messagesCount; i++)
-    {
-        MXEvent *event = messages[i];
-        [rawEventsArray addObject:event.dictionary];
-    }
-
-    [aCoder encodeObject:rawEventsArray forKey:@"rawEventsArray"];
+    [aCoder encodeObject:messages forKey:@"messages"];
 
     [aCoder encodeObject:self.paginationToken forKey:@"paginationToken"];
     [aCoder encodeObject:[NSNumber numberWithBool:self.hasReachedHomeServerPaginationEnd] forKey:@"hasReachedHomeServerPaginationEnd"];
