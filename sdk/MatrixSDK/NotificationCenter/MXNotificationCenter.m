@@ -89,7 +89,7 @@
     return self;
 }
 
-- (NSOperation *)refreshRules:(void (^)())success failure:(void (^)(NSError *))failure
+- (MXHTTPOperation *)refreshRules:(void (^)())success failure:(void (^)(NSError *))failure
 {
     return [mxSession.matrixRestClient pushRules:^(MXPushRulesResponse *pushRules) {
 

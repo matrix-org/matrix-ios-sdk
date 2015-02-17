@@ -21,6 +21,7 @@
 #import "MXRoomMember.h"
 #import "MXEventListener.h"
 #import "MXRoomState.h"
+#import "MXHTTPOperation.h"
 
 @class MXRoom;
 @class MXSession;
@@ -100,10 +101,10 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  @param complete A block object called when the operation is complete.
  @param failure A block object called when the operation fails.
  
- @return a NSOperation instance to use to cancel the request. This instance can be nil
+ @return a MXHTTPOperation instance. This instance can be nil
          if no request to the home server is required.
  */
-- (NSOperation*)paginateBackMessages:(NSUInteger)numItems
+- (MXHTTPOperation*)paginateBackMessages:(NSUInteger)numItems
                     complete:(void (^)())complete
                      failure:(void (^)(NSError *error))failure;
 

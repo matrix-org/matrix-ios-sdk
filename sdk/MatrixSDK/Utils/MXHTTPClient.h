@@ -16,6 +16,8 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MXHTTPOperation.h"
+
 /**
  `MXHTTPClient` is an abstraction layer for making requests to a HTTP server.
 
@@ -50,9 +52,9 @@
  @param success A block object called when the operation succeeds. It provides the JSON response object from the the server.
  @param failure A block object called when the operation fails.
  
- @return a NSOperation instance to use to cancel the request.
+ @return a MXHTTPOperation instance.
  */
-- (NSOperation*)requestWithMethod:(NSString *)httpMethod
+- (MXHTTPOperation*)requestWithMethod:(NSString *)httpMethod
                    path:(NSString *)path
              parameters:(NSDictionary*)parameters
                 success:(void (^)(NSDictionary *JSONResponse))success
@@ -69,9 +71,9 @@
  @param success A block object called when the operation succeeds. It provides the JSON response object from the the server.
  @param failure A block object called when the operation fails.
 
- @return a NSOperation instance to use to cancel the request.
+ @return a MXHTTPOperation instance.
  */
-- (NSOperation*)requestWithMethod:(NSString *)httpMethod
+- (MXHTTPOperation*)requestWithMethod:(NSString *)httpMethod
                    path:(NSString *)path
              parameters:(NSDictionary*)parameters
                 timeout:(NSTimeInterval)timeoutInSeconds
@@ -92,9 +94,9 @@
  @param success A block object called when the operation succeeds. It provides the JSON response object from the the server.
  @param failure A block object called when the operation fails.
  
- @return a NSOperation instance to use to cancel the request.
+ @return a MXHTTPOperation instance.
  */
-- (NSOperation*)requestWithMethod:(NSString *)httpMethod
+- (MXHTTPOperation*)requestWithMethod:(NSString *)httpMethod
                              path:(NSString *)path
                        parameters:(NSDictionary*)parameters
                              data:(NSData *)data

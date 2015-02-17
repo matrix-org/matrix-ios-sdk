@@ -58,7 +58,7 @@ typedef void (^MXOnResumeDone)();
     NSMutableDictionary *users;
 
     // The current request of the event stream
-    NSOperation *eventStreamRequest;
+    MXHTTPOperation *eventStreamRequest;
 
     // The list of global events listeners (`MXSessionEventListener`)
     NSMutableArray *globalEventListeners;

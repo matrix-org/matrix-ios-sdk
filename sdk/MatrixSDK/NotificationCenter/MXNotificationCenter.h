@@ -19,6 +19,7 @@
 #import "MXRoomState.h"
 #import "MXJSONModels.h"
 #import "MXPushRuleConditionChecker.h"
+#import "MXHTTPOperation.h"
 
 
 @class MXSession;
@@ -80,9 +81,9 @@ typedef void (^MXOnNotification)(MXEvent *event, MXRoomState *roomState, MXPushR
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
 
- @return a NSOperation instance to use to cancel the request.
+ @return a MXHTTPOperation instance.
  */
-- (NSOperation *)refreshRules:(void (^)())success
+- (MXHTTPOperation *)refreshRules:(void (^)())success
              failure:(void (^)(NSError *error))failure;
 
 /**

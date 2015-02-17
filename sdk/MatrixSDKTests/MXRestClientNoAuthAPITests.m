@@ -79,7 +79,7 @@
 {
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
 
-    NSOperation *request = [mxRestClient getRegisterFlow:^(NSArray *flows) {
+    MXHTTPOperation *request = [mxRestClient getRegisterFlow:^(NSArray *flows) {
 
         XCTFail(@"The request should not succeed");
         [expectation fulfill];

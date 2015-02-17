@@ -225,7 +225,7 @@
             }];
 
             [room resetBackState];
-            NSOperation *pagination = [room paginateBackMessages:100 complete:^() {
+            MXHTTPOperation *pagination = [room paginateBackMessages:100 complete:^() {
 
                 XCTFail(@"The cancelled operation must not complete");
                 [expectation fulfill];

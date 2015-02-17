@@ -51,7 +51,7 @@
     return self;
 }
 
-- (NSOperation*)requestWithMethod:(NSString *)httpMethod
+- (MXHTTPOperation*)requestWithMethod:(NSString *)httpMethod
                    path:(NSString *)path
              parameters:(NSDictionary*)parameters
                 success:(void (^)(NSDictionary *JSONResponse))success
@@ -60,7 +60,7 @@
     return [self requestWithMethod:httpMethod path:path parameters:parameters timeout:-1 success:success failure:failure];
 }
 
-- (NSOperation*)requestWithMethod:(NSString *)httpMethod
+- (MXHTTPOperation*)requestWithMethod:(NSString *)httpMethod
                    path:(NSString *)path
              parameters:(NSDictionary*)parameters
                 timeout:(NSTimeInterval)timeoutInSeconds
@@ -70,7 +70,7 @@
     return [self requestWithMethod:httpMethod path:path parameters:parameters data:nil headers:nil timeout:timeoutInSeconds uploadProgress:nil success:success failure:failure ];
 }
 
-- (NSOperation*)requestWithMethod:(NSString *)httpMethod
+- (MXHTTPOperation*)requestWithMethod:(NSString *)httpMethod
                    path:(NSString *)path
              parameters:(NSDictionary*)parameters
                    data:(NSData *)data
@@ -105,8 +105,10 @@
     {
         [request setTimeoutInterval:timeoutInSeconds];
     }
+
+    MXHTTPOperation *mxHTTPOperation = [[MXHTTPOperation alloc] init];
     
-    AFHTTPRequestOperation *operation = [httpManager HTTPRequestOperationWithRequest:request
+    mxHTTPOperation.operation = [httpManager HTTPRequestOperationWithRequest:request
                                                                              success:^(AFHTTPRequestOperation *operation, NSDictionary *JSONResponse) {
                                                                                  success(JSONResponse);
                                                                              }
@@ -133,12 +135,12 @@
     
     if (uploadProgress)
     {
-        [operation setUploadProgressBlock:uploadProgress];
+        [mxHTTPOperation.operation setUploadProgressBlock:uploadProgress];
     }
     
-    [httpManager.operationQueue addOperation:operation];
+    [httpManager.operationQueue addOperation:mxHTTPOperation.operation];
     
-    return operation;
+    return mxHTTPOperation;
 }
 
 @end

@@ -121,20 +121,20 @@ MXAuthAction;
 
 
 #pragma mark - Registration operations
-- (NSOperation*)getRegisterFlow:(void (^)(NSArray *flows))success
+- (MXHTTPOperation*)getRegisterFlow:(void (^)(NSArray *flows))success
                         failure:(void (^)(NSError *error))failure
 {
     return [self getRegisterOrLoginFlow:MXAuthActionRegister success:success failure:failure];
 }
 
-- (NSOperation*)register:(NSDictionary*)parameters
+- (MXHTTPOperation*)register:(NSDictionary*)parameters
                  success:(void (^)(NSDictionary *JSONResponse))success
                  failure:(void (^)(NSError *error))failure
 {
     return[self registerOrLogin:MXAuthActionRegister parameters:parameters success:success failure:failure];
 }
 
-- (NSOperation*)registerWithUser:(NSString*)user andPassword:(NSString*)password
+- (MXHTTPOperation*)registerWithUser:(NSString*)user andPassword:(NSString*)password
                          success:(void (^)(MXCredentials *credentials))success
                          failure:(void (^)(NSError *error))failure
 {
@@ -144,20 +144,20 @@ MXAuthAction;
 
 
 #pragma mark - Login operations
-- (NSOperation*)getLoginFlow:(void (^)(NSArray *flows))success
+- (MXHTTPOperation*)getLoginFlow:(void (^)(NSArray *flows))success
                      failure:(void (^)(NSError *error))failure
 {
     return [self getRegisterOrLoginFlow:MXAuthActionLogin success:success failure:failure];
 }
 
-- (NSOperation*)login:(NSDictionary*)parameters
+- (MXHTTPOperation*)login:(NSDictionary*)parameters
               success:(void (^)(NSDictionary *JSONResponse))success
               failure:(void (^)(NSError *error))failure
 {
     return [self registerOrLogin:MXAuthActionLogin parameters:parameters success:success failure:failure];
 }
 
-- (NSOperation*)loginWithUser:(NSString *)user andPassword:(NSString *)password
+- (MXHTTPOperation*)loginWithUser:(NSString *)user andPassword:(NSString *)password
                       success:(void (^)(MXCredentials *))success failure:(void (^)(NSError *))failure
 {
     return [self registerOrLoginWithUser:MXAuthActionLogin user:user andPassword:password
@@ -185,7 +185,7 @@ MXAuthAction;
     return authActionPath;
 }
 
-- (NSOperation*)getRegisterOrLoginFlow:(MXAuthAction)authAction
+- (MXHTTPOperation*)getRegisterOrLoginFlow:(MXAuthAction)authAction
                                success:(void (^)(NSArray *flows))success failure:(void (^)(NSError *error))failure
 {
     return [httpClient requestWithMethod:@"GET"
@@ -210,7 +210,7 @@ MXAuthAction;
             }];
 }
 
-- (NSOperation*)registerOrLogin:(MXAuthAction)authAction parameters:(NSDictionary *)parameters success:(void (^)(NSDictionary *JSONResponse))success failure:(void (^)(NSError *))failure
+- (MXHTTPOperation*)registerOrLogin:(MXAuthAction)authAction parameters:(NSDictionary *)parameters success:(void (^)(NSDictionary *JSONResponse))success failure:(void (^)(NSError *))failure
 {
     return [httpClient requestWithMethod:@"POST"
                                     path:[self authActionPath:authAction]
@@ -232,7 +232,7 @@ MXAuthAction;
             }];
 }
 
-- (NSOperation*)registerOrLoginWithUser:(MXAuthAction)authAction user:(NSString *)user andPassword:(NSString *)password
+- (MXHTTPOperation*)registerOrLoginWithUser:(MXAuthAction)authAction user:(NSString *)user andPassword:(NSString *)password
                                 success:(void (^)(MXCredentials *))success failure:(void (^)(NSError *))failure
 {
     NSDictionary *parameters = @{
@@ -269,7 +269,7 @@ MXAuthAction;
 
 
 #pragma mark - Push Notifications
-- (NSOperation*)setPusherWithPushkey:(NSString *)pushkey
+- (MXHTTPOperation*)setPusherWithPushkey:(NSString *)pushkey
                                 kind:(NSObject *)kind
                                appId:(NSString *)appId
                       appDisplayName:(NSString *)appDisplayName
@@ -303,7 +303,7 @@ MXAuthAction;
             }];
 }
 
-- (NSOperation *)pushRules:(void (^)(MXPushRulesResponse *pushRules))success failure:(void (^)(NSError *))failure
+- (MXHTTPOperation *)pushRules:(void (^)(MXPushRulesResponse *pushRules))success failure:(void (^)(NSError *))failure
 {
     return [httpClient requestWithMethod:@"GET"
                                     path:@"pushrules/"
@@ -341,7 +341,7 @@ MXAuthAction;
 
 
 #pragma mark - Room operations
-- (NSOperation*)sendEventToRoom:(NSString*)roomId
+- (MXHTTPOperation*)sendEventToRoom:(NSString*)roomId
                       eventType:(MXEventTypeString)eventTypeString
                         content:(NSDictionary*)content
                         success:(void (^)(NSString *eventId))success
@@ -368,7 +368,7 @@ MXAuthAction;
             }];
 }
 
-- (NSOperation*)sendStateEventToRoom:(NSString*)roomId
+- (MXHTTPOperation*)sendStateEventToRoom:(NSString*)roomId
                            eventType:(MXEventTypeString)eventTypeString
                              content:(NSDictionary*)content
                              success:(void (^)(NSString *eventId))success
@@ -394,7 +394,7 @@ MXAuthAction;
             }];
 }
 
-- (NSOperation*)sendMessageToRoom:(NSString*)roomId
+- (MXHTTPOperation*)sendMessageToRoom:(NSString*)roomId
                           msgType:(MXMessageType)msgType
                           content:(NSDictionary*)content
                           success:(void (^)(NSString *eventId))success
@@ -407,7 +407,7 @@ MXAuthAction;
     return [self sendEventToRoom:roomId eventType:kMXEventTypeStringRoomMessage content:eventContent success:success failure:failure];
 }
 
-- (NSOperation*)sendTextMessageToRoom:(NSString*)roomId
+- (MXHTTPOperation*)sendTextMessageToRoom:(NSString*)roomId
                          text:(NSString*)text
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure
@@ -421,7 +421,7 @@ MXAuthAction;
 
 
 // Generic methods to change membership
-- (NSOperation*)doMembershipRequest:(NSString*)roomId
+- (MXHTTPOperation*)doMembershipRequest:(NSString*)roomId
                          membership:(NSString*)membership
                          parameters:(NSDictionary*)parameters
                             success:(void (^)())success
@@ -454,7 +454,7 @@ MXAuthAction;
             }];
 }
 
-- (NSOperation*)setRoomTopic:(NSString*)roomId
+- (MXHTTPOperation*)setRoomTopic:(NSString*)roomId
                        topic:(NSString*)topic
                      success:(void (^)())success
                      failure:(void (^)(NSError *error))failure
@@ -481,7 +481,7 @@ MXAuthAction;
             }];
 }
 
-- (NSOperation*)topicOfRoom:(NSString*)roomId
+- (MXHTTPOperation*)topicOfRoom:(NSString*)roomId
                     success:(void (^)(NSString *topic))success
                     failure:(void (^)(NSError *error))failure
 {
@@ -505,7 +505,7 @@ MXAuthAction;
             }];
 }
 
-- (NSOperation*)setRoomName:(NSString*)roomId
+- (MXHTTPOperation*)setRoomName:(NSString*)roomId
                        name:(NSString*)name
                     success:(void (^)())success
                     failure:(void (^)(NSError *error))failure
@@ -532,7 +532,7 @@ MXAuthAction;
             }];
 }
 
-- (NSOperation*)nameOfRoom:(NSString*)roomId
+- (MXHTTPOperation*)nameOfRoom:(NSString*)roomId
                    success:(void (^)(NSString *name))success
                    failure:(void (^)(NSError *error))failure
 {
@@ -556,7 +556,7 @@ MXAuthAction;
             }];
 }
 
-- (NSOperation*)joinRoom:(NSString*)roomIdOrAlias
+- (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
                  success:(void (^)(NSString *theRoomId))success
                  failure:(void (^)(NSError *error))failure
 {
@@ -585,7 +585,7 @@ MXAuthAction;
             }];
 }
 
-- (NSOperation*)leaveRoom:(NSString*)roomId
+- (MXHTTPOperation*)leaveRoom:(NSString*)roomId
                   success:(void (^)())success
                   failure:(void (^)(NSError *error))failure
 {
@@ -595,7 +595,7 @@ MXAuthAction;
                              success:success failure:failure];
 }
 
-- (NSOperation*)inviteUser:(NSString*)userId
+- (MXHTTPOperation*)inviteUser:(NSString*)userId
             toRoom:(NSString*)roomId
            success:(void (^)())success
            failure:(void (^)(NSError *error))failure
@@ -608,7 +608,7 @@ MXAuthAction;
                              success:success failure:failure];
 }
 
-- (NSOperation*)kickUser:(NSString*)userId
+- (MXHTTPOperation*)kickUser:(NSString*)userId
                 fromRoom:(NSString*)roomId
                   reason:(NSString*)reason
                  success:(void (^)())success
@@ -643,7 +643,7 @@ MXAuthAction;
             }];
 }
 
-- (NSOperation*)banUser:(NSString*)userId
+- (MXHTTPOperation*)banUser:(NSString*)userId
                  inRoom:(NSString*)roomId
                  reason:(NSString*)reason
                 success:(void (^)())success
@@ -663,7 +663,7 @@ MXAuthAction;
                              success:success failure:failure];
 }
 
-- (NSOperation*)unbanUser:(NSString*)userId
+- (MXHTTPOperation*)unbanUser:(NSString*)userId
                    inRoom:(NSString*)roomId
                   success:(void (^)())success
                   failure:(void (^)(NSError *error))failure
@@ -672,7 +672,7 @@ MXAuthAction;
     return [self kickUser:userId fromRoom:roomId reason:nil success:success failure:failure];
 }
 
-- (NSOperation*)createRoom:(NSString*)name
+- (MXHTTPOperation*)createRoom:(NSString*)name
                 visibility:(MXRoomVisibility)visibility
                  roomAlias:(NSString*)roomAlias
                      topic:(NSString*)topic
@@ -719,7 +719,7 @@ MXAuthAction;
             }];
 }
 
-- (NSOperation*)messagesForRoom:(NSString*)roomId
+- (MXHTTPOperation*)messagesForRoom:(NSString*)roomId
                            from:(NSString*)from
                              to:(NSString*)to
                           limit:(NSUInteger)limit
@@ -767,7 +767,7 @@ MXAuthAction;
             }];
 }
 
-- (NSOperation*)membersOfRoom:(NSString*)roomId
+- (MXHTTPOperation*)membersOfRoom:(NSString*)roomId
                       success:(void (^)(NSArray *roomMemberEvents))success
                       failure:(void (^)(NSError *error))failure
 {
@@ -800,7 +800,7 @@ MXAuthAction;
             }];
 }
 
-- (NSOperation*)stateOfRoom:(NSString*)roomId
+- (MXHTTPOperation*)stateOfRoom:(NSString*)roomId
                     success:(void (^)(NSDictionary *JSONData))success
                     failure:(void (^)(NSError *error))failure
 {
@@ -825,7 +825,7 @@ MXAuthAction;
             }];
 }
 
-- (NSOperation*)sendTypingNotificationInRoom:(NSString*)roomId
+- (MXHTTPOperation*)sendTypingNotificationInRoom:(NSString*)roomId
                                       typing:(BOOL)typing
                                      timeout:(NSUInteger)timeout
                                      success:(void (^)())success
@@ -862,7 +862,7 @@ MXAuthAction;
             }];
 }
 
-- (NSOperation*)redactEvent:(NSString*)eventId
+- (MXHTTPOperation*)redactEvent:(NSString*)eventId
                      inRoom:(NSString*)roomId
                      reason:(NSString*)reason
                     success:(void (^)())success
@@ -896,7 +896,7 @@ MXAuthAction;
             }];
 }
 
-- (NSOperation*)initialSyncOfRoom:(NSString*)roomId
+- (MXHTTPOperation*)initialSyncOfRoom:(NSString*)roomId
                         withLimit:(NSInteger)limit
                           success:(void (^)(NSDictionary *JSONData))success
                           failure:(void (^)(NSError *error))failure
@@ -926,7 +926,7 @@ MXAuthAction;
 
 
 #pragma mark - Profile operations
-- (NSOperation*)setDisplayName:(NSString*)displayname
+- (MXHTTPOperation*)setDisplayName:(NSString*)displayname
                        success:(void (^)())success
                        failure:(void (^)(NSError *error))failure
 {
@@ -952,7 +952,7 @@ MXAuthAction;
             }];
 }
 
-- (NSOperation*)displayNameForUser:(NSString*)userId
+- (MXHTTPOperation*)displayNameForUser:(NSString*)userId
                            success:(void (^)(NSString *displayname))success
                            failure:(void (^)(NSError *error))failure
 {
@@ -982,7 +982,7 @@ MXAuthAction;
             }];
 }
 
-- (NSOperation*)setAvatarUrl:(NSString*)avatarUrl
+- (MXHTTPOperation*)setAvatarUrl:(NSString*)avatarUrl
                      success:(void (^)())success
                      failure:(void (^)(NSError *error))failure
 {
@@ -1008,7 +1008,7 @@ MXAuthAction;
             }];
 }
 
-- (NSOperation*)avatarUrlForUser:(NSString*)userId
+- (MXHTTPOperation*)avatarUrlForUser:(NSString*)userId
                          success:(void (^)(NSString *avatarUrl))success
                          failure:(void (^)(NSError *error))failure
 {
@@ -1040,7 +1040,7 @@ MXAuthAction;
 
 
 #pragma mark - Presence operations
-- (NSOperation*)setPresence:(MXPresence)presence andStatusMessage:(NSString*)statusMessage
+- (MXHTTPOperation*)setPresence:(MXPresence)presence andStatusMessage:(NSString*)statusMessage
                     success:(void (^)())success
                     failure:(void (^)(NSError *error))failure
 {
@@ -1072,7 +1072,7 @@ MXAuthAction;
             }];
 }
 
-- (NSOperation*)presence:(NSString*)userId
+- (MXHTTPOperation*)presence:(NSString*)userId
                  success:(void (^)(MXPresenceResponse *presence))success
                  failure:(void (^)(NSError *error))failure
 {
@@ -1102,7 +1102,7 @@ MXAuthAction;
             }];
 }
 
-- (NSOperation*)allUsersPresence:(void (^)(NSArray *userPresenceEvents))success
+- (MXHTTPOperation*)allUsersPresence:(void (^)(NSArray *userPresenceEvents))success
                          failure:(void (^)(NSError *error))failure
 {
     // In C-S API v1, the only way to get all user presence is to make
@@ -1123,7 +1123,7 @@ MXAuthAction;
             }];
 }
 
-- (NSOperation*)presenceList:(void (^)(MXPresenceResponse *presence))success
+- (MXHTTPOperation*)presenceList:(void (^)(MXPresenceResponse *presence))success
                      failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"presence/list/%@", credentials.userId];
@@ -1147,7 +1147,7 @@ MXAuthAction;
             }];
 }
 
-- (NSOperation*)presenceListAddUsers:(NSArray*)users
+- (MXHTTPOperation*)presenceListAddUsers:(NSArray*)users
                              success:(void (^)())success
                              failure:(void (^)(NSError *error))failure
 {
@@ -1177,7 +1177,7 @@ MXAuthAction;
 
 
 #pragma mark - Event operations
-- (NSOperation*)initialSyncWithLimit:(NSInteger)limit
+- (MXHTTPOperation*)initialSyncWithLimit:(NSInteger)limit
                              success:(void (^)(NSDictionary *))success
                              failure:(void (^)(NSError *))failure
 {
@@ -1202,7 +1202,7 @@ MXAuthAction;
             }];
 }
 
-- (NSOperation *)eventsFromToken:(NSString*)token
+- (MXHTTPOperation *)eventsFromToken:(NSString*)token
                    serverTimeout:(NSUInteger)serverTimeout
                    clientTimeout:(NSUInteger)clientTimeout
                          success:(void (^)(MXPaginationResponse *paginatedResponse))success
@@ -1249,7 +1249,7 @@ MXAuthAction;
             }];
 }
 
-- (NSOperation*)publicRooms:(void (^)(NSArray *rooms))success
+- (MXHTTPOperation*)publicRooms:(void (^)(NSArray *rooms))success
                     failure:(void (^)(NSError *error))failure
 {
     return [httpClient requestWithMethod:@"GET"
@@ -1274,7 +1274,7 @@ MXAuthAction;
 
 
 #pragma mark - Directory operations
-- (NSOperation*)roomIDForRoomAlias:(NSString*)roomAlias
+- (MXHTTPOperation*)roomIDForRoomAlias:(NSString*)roomAlias
                            success:(void (^)(NSString *roomId))success
                            failure:(void (^)(NSError *error))failure
 {
@@ -1302,7 +1302,7 @@ MXAuthAction;
 
 
 #pragma mark - Media Repository API
-- (NSOperation*) uploadContent:(NSData *)data
+- (MXHTTPOperation*) uploadContent:(NSData *)data
                       mimeType:(NSString *)mimeType
                        timeout:(NSTimeInterval)timeoutInSeconds
                        success:(void (^)(NSString *url))success
@@ -1387,7 +1387,7 @@ MXAuthAction;
     identityHttpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", identityServer, kMXIdentityAPIPrefixPath]];
 }
 
-- (NSOperation*)lookup3pid:(NSString*)address
+- (MXHTTPOperation*)lookup3pid:(NSString*)address
                  forMedium:(MX3PIDMedium)medium
                    success:(void (^)(NSString *userId))success
                    failure:(void (^)(NSError *error))failure
@@ -1474,7 +1474,7 @@ MXAuthAction;
     }
 }
 
-- (NSOperation*)requestEmailValidation:(NSString*)email
+- (MXHTTPOperation*)requestEmailValidation:(NSString*)email
                           clientSecret:(NSString*)clientSecret
                            sendAttempt:(NSUInteger)sendAttempt
                                success:(void (^)(NSString *sid))success
@@ -1501,7 +1501,7 @@ MXAuthAction;
             }];
 }
 
-- (NSOperation*)validateEmail:(NSString*)sid
+- (MXHTTPOperation*)validateEmail:(NSString*)sid
               validationToken:(NSString*)validationToken
                  clientSecret:(NSString*)clientSecret
                       success:(void (^)(BOOL success))success
@@ -1529,7 +1529,7 @@ MXAuthAction;
             }];
 }
 
-- (NSOperation*)bind3PID:(NSString*)userId
+- (MXHTTPOperation*)bind3PID:(NSString*)userId
                      sid:(NSString*)sid
             clientSecret:(NSString*)clientSecret
                  success:(void (^)(NSDictionary *JSONResponse))success

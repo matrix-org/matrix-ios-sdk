@@ -289,11 +289,11 @@
     [mxSession.store resetPaginationOfRoom:_state.roomId];
 }
 
-- (NSOperation*)paginateBackMessages:(NSUInteger)numItems
+- (MXHTTPOperation*)paginateBackMessages:(NSUInteger)numItems
                     complete:(void (^)())complete
                      failure:(void (^)(NSError *error))failure
 {
-    NSOperation *operation;
+    MXHTTPOperation *operation;
 
     NSAssert(nil != backState, @"resetBackState must be called before starting the back pagination");
 
