@@ -286,4 +286,42 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     return filteredPrevContent;
 }
 
+
+#pragma mark - NSCoding
+// Overriding MTLModel NSCoding operation makes serialisation going 20% faster
+- (id)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super init];
+    if (self)
+    {
+        _eventId = [aDecoder decodeObjectForKey:@"eventId"];
+        self.type = [aDecoder decodeObjectForKey:@"type"];
+        _roomId = [aDecoder decodeObjectForKey:@"roomId"];
+        _userId = [aDecoder decodeObjectForKey:@"userId"];
+        _content = [aDecoder decodeObjectForKey:@"content"];
+        _prevContent = [aDecoder decodeObjectForKey:@"prevContent"];
+        NSNumber *originServerTs = [aDecoder decodeObjectForKey:@"originServerTs"];
+        _originServerTs = [originServerTs unsignedLongLongValue];
+        NSNumber *ageLocalTs = [aDecoder decodeObjectForKey:@"ageLocalTs"];
+        _ageLocalTs = [ageLocalTs unsignedLongLongValue];
+        _redacts = [aDecoder decodeObjectForKey:@"redacts"];
+        _redactedBecause = [aDecoder decodeObjectForKey:@"redactedBecause"];
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    [aCoder encodeObject:_eventId forKey:@"eventId"];
+    [aCoder encodeObject:_type forKey:@"type"];
+    [aCoder encodeObject:_roomId forKey:@"roomId"];
+    [aCoder encodeObject:_userId forKey:@"userId"];
+    [aCoder encodeObject:_content forKey:@"content"];
+    [aCoder encodeObject:_prevContent forKey:@"prevContent"];
+    [aCoder encodeObject:@(_originServerTs) forKey:@"originServerTs"];
+    [aCoder encodeObject:@(_ageLocalTs) forKey:@"ageLocalTs"];
+    [aCoder encodeObject:_redacts forKey:@"redacts"];
+    [aCoder encodeObject:_redactedBecause forKey:@"redactedBecause"];
+}
+
 @end
