@@ -40,7 +40,7 @@
 /**
  Number of times the request has been issued.
  */
-@property (nonatomic, readonly) NSUInteger numberOfTries;
+@property (nonatomic) NSUInteger numberOfTries;
 
 /**
  Cancel the HTTP request.
