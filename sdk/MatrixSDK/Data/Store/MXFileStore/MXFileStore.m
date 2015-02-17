@@ -119,6 +119,7 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
         // Check store version
         else if (kMXFileVersion != metaData.version)
         {
+            NSLog(@"[MXFileStore] New MXFileStore version detected");
             [self deleteAllData];
         }
         // Check credentials
@@ -132,6 +133,7 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
                  || NO == [metaData.accessToken isEqualToString:credentials.accessToken])
 
         {
+            NSLog(@"[MXFileStore] Credentials do not match");
             [self deleteAllData];
         }
 
@@ -238,6 +240,8 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
 
 - (void)deleteAllData
 {
+    NSLog(@"[MXFileStore] Delete all data");
+
     [super deleteAllData];
 
     // Remove the MXFileStore and all its content
