@@ -53,23 +53,17 @@
     return self;
 }
 
-- (void)updateWithRoomMemberEvent:(MXEvent*)roomMemberEvent
+- (void)updateWithRoomMemberEvent:(MXEvent*)roomMemberEvent roomMember:(MXRoomMember *)roomMember
 {
-    NSParameterAssert(roomMemberEvent.eventType == MXEventTypeRoomMember);
-    
-    MXRoomMemberEventContent *roomMemberContent = [MXRoomMemberEventContent modelFromJSON:roomMemberEvent.content];
-
     // Update the MXUser only if there is change
-    if ([roomMemberContent.membership isEqualToString:kMXMembershipStringJoin]
-        && (NO == [_displayname isEqualToString:roomMemberContent.displayname]
-            || NO == [_avatarUrl isEqualToString:roomMemberContent.avatarUrl]))
+    if ((NO == [_displayname isEqualToString:roomMember.displayname]
+            || NO == [_avatarUrl isEqualToString:roomMember.avatarUrl]))
     {
-        self.displayname = [roomMemberContent.displayname copy];
-        self.avatarUrl = [roomMemberContent.avatarUrl copy];
+        self.displayname = [roomMember.displayname copy];
+        self.avatarUrl = [roomMember.avatarUrl copy];
 
         [self notifyListeners:roomMemberEvent];
     }
-
 }
 
 - (void)updateWithPresenceEvent:(MXEvent*)presenceEvent

@@ -21,6 +21,7 @@
 
 @class MXSession;
 @class MXEvent;
+@class MXRoomMember;
 
 /**
  `MXUser` represents a user in Matrix.
@@ -82,8 +83,9 @@
  Update the MXUser data with a m.room.member event.
  
  @param roomMemberEvent The event.
+ @param roomMember The already decoded room member.
  */
-- (void)updateWithRoomMemberEvent:(MXEvent*)roomMemberEvent;
+- (void)updateWithRoomMemberEvent:(MXEvent*)roomMemberEvent roomMember:(MXRoomMember *)roomMember;
 
 
 /**

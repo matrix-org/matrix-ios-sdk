@@ -213,14 +213,20 @@
     {
         // Forwards and initialSync events update the current state of the room
 
+        [_state handleStateEvent:event];
+
         // Special handling for presence
         if (MXEventTypeRoomMember == event.eventType)
         {
             // Update MXUser data
             MXUser *user = [mxSession getOrCreateUser:event.userId];
-            [user updateWithRoomMemberEvent:event];
+
+            MXRoomMember *roomMember = [_state memberWithUserId:event.userId];
+            if (roomMember && MXMembershipJoin == roomMember.membership)
+            {
+                [user updateWithRoomMemberEvent:event roomMember:roomMember];
+            }
         }
-        [_state handleStateEvent:event];
     }
 }
 
