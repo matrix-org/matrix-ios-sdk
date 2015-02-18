@@ -56,6 +56,21 @@
  */
 @property (nonatomic, readonly) MXNotificationCenter *notificationCenter;
 
+
+#pragma mark - options
+/**
+ When the SDK starts on data stored in MXStore, this option indicates if it must load
+ users presences information before calling the `onServerSyncDone` block of [MXSession start].
+
+ This requires to make a request to the home server which can be useless for some applications.
+
+ If `loadPresenceBeforeCompletingSessionStart` is set to NO, the request will be done but it parralel
+ with the call of the `onServerSyncDone` block.
+
+ Default is NO.
+ */
+@property (nonatomic) BOOL loadPresenceBeforeCompletingSessionStart;
+
 /**
  Create a MXSession instance.
  This instance will use the passed MXRestClient to make requests to the home server.

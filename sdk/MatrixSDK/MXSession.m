@@ -84,6 +84,9 @@ typedef void (^MXOnResumeDone)();
         users = [NSMutableDictionary dictionary];
         globalEventListeners = [NSMutableArray array];
         _notificationCenter = [[MXNotificationCenter alloc] initWithMatrixSession:self];
+
+        // By default, load presence data in parallel if a full initialSync is not required
+        _loadPresenceBeforeCompletingSessionStart = NO;
     }
     return self;
 }
@@ -174,30 +177,55 @@ typedef void (^MXOnResumeDone)();
     // Can we resume from data available in the cache
     if (_store.isPermanent && _store.eventStreamToken && 0 < _store.rooms.count)
     {
-        // We need to get all users presence to start right
-        NSDate *startDate = [NSDate date];
-        [matrixRestClient allUsersPresence:^(NSArray *userPresenceEvents) {
+        // MXSession.loadPresenceBeforeCompletingSessionStart leads to 2 scenarios
+        // Cut the actions into blocks to realize them
+        void (^loadPresence) (void (^onPresenceDone)(), void (^onPresenceError)(NSError *error)) = ^void(void (^onPresenceDone)(), void (^onPresenceError)(NSError *error)) {
+            NSDate *startDate = [NSDate date];
+            [matrixRestClient allUsersPresence:^(NSArray *userPresenceEvents) {
 
-            NSLog(@"[MXSession] Got presence of %tu users in %.0fms", userPresenceEvents.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                NSLog(@"[MXSession] Got presence of %tu users in %.0fms", userPresenceEvents.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
-            for (MXEvent *userPresenceEvent in userPresenceEvents)
-            {
-                MXUser *user = [self getOrCreateUser:userPresenceEvent.content[@"user_id"]];
-                [user updateWithPresenceEvent:userPresenceEvent];
-            }
+                for (MXEvent *userPresenceEvent in userPresenceEvents)
+                {
+                    MXUser *user = [self getOrCreateUser:userPresenceEvent.content[@"user_id"]];
+                    [user updateWithPresenceEvent:userPresenceEvent];
+                }
 
+                if (onPresenceDone)
+                {
+                    onPresenceDone();
+                }
+            } failure:^(NSError *error) {
+                if (onPresenceError)
+                {
+                    onPresenceError(error);
+                }
+            }];
+        };
+
+        void (^resumeEventsStream) () = ^void() {
             NSLog(@"[MXSession] Resuming the events stream from %@...", _store.eventStreamToken);
-
-            // And resume the stream from where we were
             NSDate *startDate2 = [NSDate date];
             [self resume:^{
                 NSLog(@"[MXSession] Events stream resumed in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
                 onServerSyncDone();
             }];
+        };
 
-        } failure:^(NSError *error) {
-            failure(error);
-        }];
+        // Then, apply
+        if (_loadPresenceBeforeCompletingSessionStart)
+        {
+            // Load presence before resuming the stream
+            loadPresence(^() {
+                resumeEventsStream();
+            }, failure);
+        }
+        else
+        {
+            // Resume the stream and load presence in parralel
+            resumeEventsStream();
+            loadPresence(nil, nil);
+        }
     }
     else
     {
