@@ -79,6 +79,22 @@ NSString *const kMXLoginFlowTypeEmailIdentity = @"m.login.email.identity";
 
 
 @implementation MXRoomMemberEventContent
+
+// Override the default Mantle modelFromJSON method
+// Decoding room member events is sensible when loading state events from cache as the SDK
+// needs to decode plenty of them.
+// A direct JSON decoding improves speed by 4x.
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXRoomMemberEventContent *roomMemberEventContent = [[MXRoomMemberEventContent alloc] init];
+
+    roomMemberEventContent.displayname = JSONDictionary[@"displayname"];
+    roomMemberEventContent.avatarUrl = JSONDictionary[@"avatar_url"];
+    roomMemberEventContent.membership = JSONDictionary[@"membership"];
+
+    return roomMemberEventContent;
+}
+
 @end
 
 
