@@ -202,6 +202,9 @@
         }
     }];
 
+    // Make the request continue in background
+    [mxHTTPOperation.operation setShouldExecuteAsBackgroundTaskWithExpirationHandler:nil];
+
     if (uploadProgress)
     {
         [mxHTTPOperation.operation setUploadProgressBlock:uploadProgress];
