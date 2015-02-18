@@ -133,7 +133,7 @@ typedef void (^MXOnResumeDone)();
             NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
         }
 
-        NSLog(@"[MXSession] Mounted SDK data from MXStore %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+        NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
         // The SDK client can use this data
         onStoreDataReady();
@@ -186,10 +186,14 @@ typedef void (^MXOnResumeDone)();
                 [user updateWithPresenceEvent:userPresenceEvent];
             }
 
-            NSLog(@"[MXSession] Resume the events stream from %@", _store.eventStreamToken);
+            NSLog(@"[MXSession] Resuming the events stream from %@...", _store.eventStreamToken);
 
             // And resume the stream from where we were
-            [self resume:onServerSyncDone];
+            NSDate *startDate2 = [NSDate date];
+            [self resume:^{
+                NSLog(@"[MXSession] Events stream resumed in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+                onServerSyncDone();
+            }];
 
         } failure:^(NSError *error) {
             failure(error);
