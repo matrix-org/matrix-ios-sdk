@@ -356,6 +356,12 @@
             if (roomMember)
             {
                 members[roomMember.userId] = roomMember;
+
+                // If the member has no defined, force to use an identicon
+                if (nil == roomMember.avatarUrl)
+                {
+                    roomMember.avatarUrl = [mxSession.matrixRestClient urlOfIdenticon:roomMember.userId];
+                }
             }
             else
             {

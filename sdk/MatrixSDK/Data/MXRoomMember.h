@@ -36,7 +36,7 @@
 /**
  The url of the avatar of the user.
   */
-@property (nonatomic, readonly) NSString *avatarUrl;
+@property (nonatomic) NSString *avatarUrl;
 
 /**
  The membership state.

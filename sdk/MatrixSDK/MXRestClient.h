@@ -803,10 +803,9 @@ typedef enum : NSUInteger
  Get the HTTP URL of an identicon served by the media repository.
 
  @param identiconString the string to build an identicon from.
- @param size the expected identicon image size.
  @return the identicon HTTP URL.
  */
-- (NSString*)urlOfIdenticon:(NSString*)identiconString withSize:(CGSize)size;
+- (NSString*)urlOfIdenticon:(NSString*)identiconString;
 
 
 #pragma mark - Identity server API

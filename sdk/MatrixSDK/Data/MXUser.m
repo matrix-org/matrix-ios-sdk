@@ -67,6 +67,12 @@
         self.displayname = [roomMember.displayname copy];
         self.avatarUrl = [roomMember.avatarUrl copy];
 
+        // If the member has no defined, force to use an identicon
+        if (nil == self.avatarUrl)
+        {
+            self.avatarUrl = [mxSession.matrixRestClient urlOfIdenticon:self.userId];
+        }
+
         [self notifyListeners:roomMemberEvent];
     }
 }
@@ -89,6 +95,11 @@
     {
         self.avatarUrl = [presenceContent.avatarUrl copy];
     }
+    // If the member has no defined, force to use an identicon
+    if (nil == self.avatarUrl)
+    {
+        self.avatarUrl = [mxSession.matrixRestClient urlOfIdenticon:self.userId];
+    }
 
     _statusMsg = [presenceContent.statusMsg copy];
     _presence = presenceContent.presenceStatus;
@@ -106,11 +117,6 @@
         lastActiveAgo = [[NSDate date] timeIntervalSince1970] * 1000 - lastActiveLocalTS;
     }
     return lastActiveAgo;
-}
-
-- (NSString *)identiconOfSize:(CGSize)size
-{
-    return [mxSession.matrixRestClient urlOfIdenticon:_userId withSize:size];
 }
 
 

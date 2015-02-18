@@ -95,14 +95,6 @@
  */
 - (void)updateWithPresenceEvent:(MXEvent*)presenceEvent;
 
-/**
- Get the url of an identicon for this user.
-
- @param size the expected size of the image
- @return the url of the identicon
- */
-- (NSString*)identiconOfSize:(CGSize)size;
-
 
 #pragma mark - Events listeners
 /**

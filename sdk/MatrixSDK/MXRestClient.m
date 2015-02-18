@@ -1380,9 +1380,9 @@ MXAuthAction;
     return thumbnailURL;
 }
 
-- (NSString *)urlOfIdenticon:(NSString *)identiconString withSize:(CGSize)size
+- (NSString *)urlOfIdenticon:(NSString *)identiconString
 {
-    return [NSString stringWithFormat:@"%@%@/identicon/%@?width=%d&height=%d", homeserver, kMXContentPrefixPath, [identiconString stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]], (int)size.width, (int)size.height];
+    return [NSString stringWithFormat:@"%@%@/identicon/%@", homeserver, kMXContentPrefixPath, [identiconString stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]]];
 }
 
 

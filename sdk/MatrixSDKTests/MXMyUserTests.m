@@ -176,8 +176,8 @@
 
         MXUser *myUser = [mxSession userWithUserId:mxSession.matrixRestClient.credentials.userId];
 
-        NSString *identiconURL = [myUser identiconOfSize:CGSizeMake(128, 128)];
-        XCTAssertEqualObjects(identiconURL, @"http://localhost:8080/_matrix/media/v1/identicon/%40mxBob%3Alocalhost%3A8480?width=128&height=128");
+        NSString *identiconURL = [mxSession.matrixRestClient urlOfIdenticon:myUser.userId];
+        XCTAssertEqualObjects(identiconURL, @"http://localhost:8080/_matrix/media/v1/identicon/%40mxBob%3Alocalhost%3A8480");
 
         [expectation fulfill];
     }];
