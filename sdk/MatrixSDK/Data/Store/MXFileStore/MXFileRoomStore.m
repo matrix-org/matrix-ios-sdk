@@ -43,7 +43,7 @@
     // be serialised this time but they will be on the next [MXFileStore commit] that will be called for them.
     // If messages come between [MXFileStore commit] and this method, more messages will be serialised. This is
     // not a problem.
-    [aCoder encodeObject:[messages copy] forKey:@"messages"];
+    [aCoder encodeObject:[messages mutableCopy] forKey:@"messages"];
 
     [aCoder encodeObject:self.paginationToken forKey:@"paginationToken"];
     [aCoder encodeObject:[NSNumber numberWithBool:self.hasReachedHomeServerPaginationEnd] forKey:@"hasReachedHomeServerPaginationEnd"];
