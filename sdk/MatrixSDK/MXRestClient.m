@@ -1339,6 +1339,9 @@ MXAuthAction;
     {
         NSString *mxMediaPrefix = [NSString stringWithFormat:@"%@%@/download/", homeserver, kMXContentPrefixPath];
         contentURL = [mxcContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:mxMediaPrefix];
+
+        // Remove the auto generated image tag from the URL
+        contentURL = [contentURL stringByReplacingOccurrencesOfString:@"#auto" withString:@""];
     }
 
     return contentURL;
@@ -1366,6 +1369,9 @@ MXAuthAction;
                 thumbnailingMethodString = @"crop";
                 break;
         }
+
+        // Remove the auto generated image tag from the URL
+        thumbnailURL = [thumbnailURL stringByReplacingOccurrencesOfString:@"#auto" withString:@""];
 
         // Add thumbnailing parameters to the URL
         thumbnailURL = [NSString stringWithFormat:@"%@?width=%tu&height=%tu&method=%@", thumbnailURL, (NSUInteger)thumbnailSize.width, (NSUInteger)thumbnailSize.height, thumbnailingMethodString];
