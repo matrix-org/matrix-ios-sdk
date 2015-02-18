@@ -511,8 +511,8 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     {
         metaDataHasChanged = NO;
 
-       // Take a snapshot of metadata to store it on the other thread
-         MXFileStoreMetaData *metaData2 = [metaData copy];
+        // Take a snapshot of metadata to store it on the other thread
+        MXFileStoreMetaData *metaData2 = [metaData copy];
 
         dispatch_async(dispatchQueue, ^(void){
     

@@ -174,7 +174,7 @@
 
                                 [self tryRequest:mxHTTPOperation method:httpMethod path:path parameters:parameters data:data headers:headers timeout:timeoutInSeconds uploadProgress:uploadProgress success:^(NSDictionary *JSONResponse) {
 
-                                    NSLog(@"[MXHTTPClient] Success of rate limited request (%p) after %lu tries", mxHTTPOperation, mxHTTPOperation.numberOfTries);
+                                    NSLog(@"[MXHTTPClient] Success of rate limited request (%p) after %tu tries", mxHTTPOperation, mxHTTPOperation.numberOfTries);
 
                                     success(JSONResponse);
 
