@@ -5,23 +5,44 @@ Changes in Matrix iOS SDK in 0.x.x (2015-XX-XX)
  SDK
 -----
 Breaks:
- * [MXSession initWithMatrixRestClient: andStore: ] and the onStoreDataReady argument in [MXSession start:] has been removed. The SDK client can now use the asynchronous [MXSession setStore:] method to define a store and getting notified when the SDK can read cached data from it.
+ * [MXSession initWithMatrixRestClient: andStore: ] and the onStoreDataReady argument in [MXSession start:] has been removed. The SDK client can now use the asynchronous [MXSession setStore:] method to define a store and getting notified when the SDK can read cached data from it. (SYIOS-62)
  * MXStore implementations must now implement [MXStore openWithCredentials].
+ * All MXRestClient methods now return MXHTTPOperation objects.
  
 Improvements:
+ * Created the MXSession.notificationCenter component: it indicates when an event must be notified to the user according to user's push rules settings.
+ * MXFileStore: Improved loading performance by 8x.
+ * Added an option (MXSession.loadPresenceBeforeCompletingSessionStart) to refresh presence data in background when starting a session.
  
 Features:
+ * SYIOS-40 - Any HTTP request can fail due to rate-limiting on the server, and need to be retried.
+ * SYIOS-81 - Ability to send messages in the background.
  
 Bug fixes:
+ * SYIOS-67 - We should synthesise identicons for users with no avatar.
  
 -----------------
  Matrix Console
 -----------------
 Improvements:
+ * Improve offline mode: remove loading wheel when network is unreachable and color in red the navigation bar when the app is offline.
+ * Settings: Add identity server url in Configuration section.
+ * Application starts quicker on cold start.
 
 Features:
+ * Prepare screens for registration flows. Actually, the user is still invited to create an account on https://matrix.org/beta/.
+ * SYIOS-75 - Tapping on APNS needs to take you to the right room.
+ * Manage local notifications with MXSession.notificationCenter.
 
 Bug fixes:
+ * On iPhone 6+ (landscape mode), keep open the selected room when user changes application tabs.
+ * Settings: Restore correctly user's display name after cache clearing.
+ * SYIOS-76 - The 'Send' button hit area is too small and easy to miss.
+ * SYIOS-73 - Text area input font should match that used in bubbles.
+ * SYIOS-71 - Current room should be highlighted in landscape mode
+ * SYIOS-79 - Partial text input should be remembered per-room.
+ * SYIOS-83 - When uploading an image, the bubble order jumps around.
+ * SYIOS-80 - Errors when internet connection unavailable are way too intrusive.
 
 
 
@@ -78,6 +99,7 @@ Bug fixes:
  * SYIOS-64 - Chat room : unexpected blank lines are added into history when user types in growing textview
  * SYIOS-65 - IOS8 : in case of search in recents, keyboard is not dismisssed when user selects a room.
  * SYIOS-16 Add option in Console to join room thanks to its alias
+
 
 
 Changes in Matrix iOS SDK in 0.2.1 (2015-01-14)
