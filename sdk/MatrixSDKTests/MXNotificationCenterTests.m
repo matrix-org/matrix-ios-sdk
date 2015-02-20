@@ -287,8 +287,39 @@
             [expectation fulfill];
         }];
 
+        [aliceRestClient sendTextMessageToRoom:roomId text:messageFromAlice success:^(NSString *eventId) {
+
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+        
+    }];
+}
+
+- (void)testRemoveListener
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        mxSession = bobSession;
+
+        NSString *messageFromAlice = @"We are two peoples in this room";
+
+        id listener = [bobSession.notificationCenter listenToNotifications:^(MXEvent *event, MXRoomState *roomState, MXPushRule *rule) {
+
+            XCTFail(@"Listener has been removed. event: %@\n rule: %@", event, rule);
+
+            [expectation fulfill];
+        }];
+
+        [bobSession.notificationCenter removeListener:listener];
+
 
         [aliceRestClient sendTextMessageToRoom:roomId text:messageFromAlice success:^(NSString *eventId) {
+
+            // Wait to check that no notification happens
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                [expectation fulfill];
+            });
 
         } failure:^(NSError *error) {
             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);

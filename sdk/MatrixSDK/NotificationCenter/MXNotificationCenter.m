@@ -131,8 +131,9 @@
 #pragma mark - Push notification listeners
 - (id)listenToNotifications:(MXOnNotification)onNotification
 {
-    [notificationListeners addObject:onNotification];
-    return onNotification;
+    MXOnNotification onNotificationCopy = onNotification;
+    [notificationListeners addObject:onNotificationCopy];
+    return onNotificationCopy;
 }
 
 - (void)removeListener:(id)listener
