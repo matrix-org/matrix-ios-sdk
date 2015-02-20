@@ -29,12 +29,15 @@ Improvements:
  * Settings: Add identity server url in Configuration section.
  * Application starts quicker on cold start.
  * Home - Improve text inputs completion.
+ * Settings - Rename “Hide redacted information” option to “Hide redactions”, and enable this option by default.
+ * Settings - Rename the tab as “Settings” rather than “More”.
 
 Features:
  * Prepare screens for registration flows. Actually, the user is still invited to create an account on https://matrix.org/beta/.
  * SYIOS-75 - Tapping on APNS needs to take you to the right room.
  * Manage local notifications with MXSession.notificationCenter.
  * Recents - Set blue the background cell for room with unread bing message(s).
+ * SYIOS-68 - Rageshake needs to include device info.
 
 Bug fixes:
  * On iPhone 6+ (landscape mode), keep open the selected room when user changes application tabs.
