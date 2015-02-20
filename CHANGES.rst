@@ -28,11 +28,13 @@ Improvements:
  * Improve offline mode: remove loading wheel when network is unreachable and color in red the navigation bar when the app is offline.
  * Settings: Add identity server url in Configuration section.
  * Application starts quicker on cold start.
+ * Home - Improve text inputs completion.
 
 Features:
  * Prepare screens for registration flows. Actually, the user is still invited to create an account on https://matrix.org/beta/.
  * SYIOS-75 - Tapping on APNS needs to take you to the right room.
  * Manage local notifications with MXSession.notificationCenter.
+ * Recents - Set blue the background cell for room with unread bing message(s).
 
 Bug fixes:
  * On iPhone 6+ (landscape mode), keep open the selected room when user changes application tabs.
@@ -43,7 +45,7 @@ Bug fixes:
  * SYIOS-79 - Partial text input should be remembered per-room.
  * SYIOS-83 - When uploading an image, the bubble order jumps around.
  * SYIOS-80 - Errors when internet connection unavailable are way too intrusive.
-
+ * SYIOS-88 - Rageshake needs to be less sensitive by x2 or so.
 
 
 Changes in Matrix iOS SDK in 0.2.2 (2015-02-05)
