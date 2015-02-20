@@ -49,8 +49,14 @@
 
 - (BOOL)isCondition:(MXPushRuleCondition *)condition satisfiedBy:(MXEvent *)event
 {
-    BOOL isSatisfied = NO;
+    if (event.eventType == MXEventTypeTypingNotification)
+    {
+        // Do not take into account typing notifications in room_member_count conditions
+        // as it may fire a lot of times
+        return NO;
+    }
 
+    BOOL isSatisfied = NO;
     NSString *is = condition.parameters[@"is"];
     if (is)
     {

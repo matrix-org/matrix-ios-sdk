@@ -20,6 +20,10 @@
 #import "MatrixSDKTestsData.h"
 #import "MXSession.h"
 
+// Do not bother with retain cycles warnings in tests
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-retain-cycles"
+
 @interface MXNotificationCenterTests : XCTestCase
 {
     MXSession *mxSession;
@@ -77,7 +81,7 @@
 
         [mxSession.notificationCenter listenToNotifications:^(MXEvent *event, MXRoomState *roomState, MXPushRule *rule) {
 
-            XCTFail(@"Events from the user should be notified. event: %@\n rule: %@", event, rule);
+            XCTFail(@"Events from the user should not be notified. event: %@\n rule: %@", event, rule);
 
         }];
 
@@ -93,6 +97,41 @@
         } failure:^(NSError *error) {
             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
         }];
+    }];
+}
+
+- (void)testNoNotificationsOnPresenceOrTypingEvents
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        mxSession = bobSession;
+
+        [bobSession.notificationCenter listenToNotifications:^(MXEvent *event, MXRoomState *roomState, MXPushRule *rule) {
+
+            XCTFail(@"Presence and typing events should not be notified with default push rules. event: %@\n rule: %@", event, rule);
+
+            [expectation fulfill];
+        }];
+
+        [aliceRestClient setPresence:MXPresenceOnline andStatusMessage:nil success:^{
+
+            [aliceRestClient sendTypingNotificationInRoom:roomId typing:YES timeout:30000 success:^{
+
+                // Wait to check that no notification happens
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+
+                    [expectation fulfill];
+                    
+                });
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+        
     }];
 }
 
@@ -259,3 +298,5 @@
 }
 
 @end
+
+#pragma clang diagnostic pop
