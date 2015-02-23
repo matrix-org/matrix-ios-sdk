@@ -161,8 +161,16 @@ typedef enum : NSUInteger
  @return a MXHTTPOperation instance.
 */
 - (MXHTTPOperation*)registerWithUser:(NSString*)user andPassword:(NSString*)password
-                         success:(void (^)(MXCredentials *credentials))success
-                         failure:(void (^)(NSError *error))failure;
+                             success:(void (^)(MXCredentials *credentials))success
+                             failure:(void (^)(NSError *error))failure;
+
+/**
+ Get a register fallback page to make regisrt
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)registerFallback:(void (^)(NSString *fallback))success
+                             failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Login operations

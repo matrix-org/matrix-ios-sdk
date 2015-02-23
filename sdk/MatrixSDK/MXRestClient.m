@@ -142,6 +142,28 @@ MXAuthAction;
                                  success:success failure:failure];
 }
 
+- (MXHTTPOperation*)registerFallback:(void (^)(NSString *fallback))success
+                             failure:(void (^)(NSError *error))failure
+{
+    return [httpClient requestWithMethod:@"GET"
+                                    path:@"register/fallback"
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse)
+            {
+                if (success)
+                {
+                    success(@"dd");
+                }
+
+            }
+                                 failure:^(NSError *error)
+            {
+                if (failure)
+                {
+                    failure(error);
+                }
+            }];
+}
 
 #pragma mark - Login operations
 - (MXHTTPOperation*)getLoginFlow:(void (^)(NSArray *flows))success
