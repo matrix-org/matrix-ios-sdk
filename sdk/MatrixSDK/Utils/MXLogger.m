@@ -119,7 +119,7 @@ int stderrSave = 0;
 // Exceptions uncaught by try catch block are handled here
 static void handleUncaughtException(NSException *exception)
 {
-    [MXLogger logExceptions:NO];
+    [MXLogger logCrashes:NO];
 
     // Extract running app information
     NSDictionary* infoDict = [[NSBundle mainBundle] infoDictionary];
@@ -152,7 +152,7 @@ static void handleUncaughtException(NSException *exception)
                              backtrace];
 
     // Write to the crash log file
-    [MXLogger deleteExceptionLog];
+    [MXLogger deleteCrashLog];
     NSString *crashLog = crashLogPath();
     [description writeToFile:crashLog
                   atomically:NO
@@ -170,9 +170,9 @@ static void handleSignal(int signalValue)
     [NSException raise:@"Signal detected" format:@"Signal detected: %d", signalValue];
 }
 
-+ (void)logExceptions:(BOOL)logExceptions
++ (void)logCrashes:(BOOL)logCrashes
 {
-    if (logExceptions)
+    if (logCrashes)
     {
         // Handle not managed exceptions by ourselves
         NSSetUncaughtExceptionHandler(&handleUncaughtException);
@@ -204,7 +204,7 @@ static NSString* crashLogPath(void)
     return [documentsDirectory stringByAppendingPathComponent:MXLOGGER_CRASH_LOG];
 }
 
-+ (NSString*)exceptionLog
++ (NSString*)crashLog
 {
     NSString *exceptionLog;
 
@@ -217,7 +217,7 @@ static NSString* crashLogPath(void)
     return exceptionLog;
 }
 
-+ (void)deleteExceptionLog
++ (void)deleteCrashLog
 {
     NSString *crashLog = crashLogPath();
     NSFileManager *fileManager = [NSFileManager defaultManager];

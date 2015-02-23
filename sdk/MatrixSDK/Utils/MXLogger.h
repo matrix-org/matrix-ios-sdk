@@ -51,11 +51,11 @@
  Make `MXLogger` catch and log unmanaged exceptions or application crashes.
 
  When such error happens, `MXLogger` stores the application stack trace into a file
- just before the application leaves. The path of this file is provided by [MXLogger exceptionLog].
+ just before the application leaves. The path of this file is provided by [MXLogger crashLog].
  
- @param logExceptions YES to enable the catch.
+ @param logCrashes YES to enable the catch.
  */
-+ (void)logExceptions:(BOOL)logExceptions;
++ (void)logCrashes:(BOOL)logCrashes;
 
 /**
  If any, get the file containing the last application crash log.
@@ -65,11 +65,11 @@
  
  @return the crash log file. nil if there is none.
  */
-+ (NSString*)exceptionLog;
++ (NSString*)crashLog;
 
 /**
  Delete the crash log file.
  */
-+ (void)deleteExceptionLog;
++ (void)deleteCrashLog;
 
 @end
