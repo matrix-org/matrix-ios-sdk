@@ -44,6 +44,7 @@ NSString *const kMXLoginFlowTypeOAuth2 = @"m.login.oauth2";
 NSString *const kMXLoginFlowTypeEmailCode = @"m.login.email.code";
 NSString *const kMXLoginFlowTypeEmailUrl = @"m.login.email.url";
 NSString *const kMXLoginFlowTypeEmailIdentity = @"m.login.email.identity";
+NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
 
 @implementation MXLoginFlow
 @end

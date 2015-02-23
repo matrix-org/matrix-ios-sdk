@@ -51,6 +51,7 @@ FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeOAuth2;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeEmailCode;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeEmailUrl;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeEmailIdentity;
+FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeRecaptcha;
 
 /**
  `MXLoginFlow` represents a login or a register flow supported by the home server.
