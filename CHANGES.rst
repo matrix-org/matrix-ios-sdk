@@ -1,4 +1,4 @@
-Changes in Matrix iOS SDK in 0.x.x (2015-XX-XX)
+Changes in Matrix iOS SDK in 0.3.0 (2015-02-23)
 ===============================================
 
 -----
@@ -13,6 +13,8 @@ Improvements:
  * Created the MXSession.notificationCenter component: it indicates when an event must be notified to the user according to user's push rules settings.
  * MXFileStore: Improved loading performance by 8x.
  * Added an option (MXSession.loadPresenceBeforeCompletingSessionStart) to refresh presence data in background when starting a session.
+ * Created MXLogger to redirect NSLog to file and to log crashes or uncaught exception.
+ * MXRestClient: Added [MXRestClient registerFallback]
  
 Features:
  * SYIOS-40 - Any HTTP request can fail due to rate-limiting on the server, and need to be retried.
@@ -33,11 +35,13 @@ Improvements:
  * Settings - Rename the tab as “Settings” rather than “More”.
 
 Features:
- * Prepare screens for registration flows. Actually, the user is still invited to create an account on https://matrix.org/beta/.
+ * Added registration. It is implemented by a webview that opens the registration fallback page.
  * SYIOS-75 - Tapping on APNS needs to take you to the right room.
  * Manage local notifications with MXSession.notificationCenter.
  * Recents - Set blue the background cell for room with unread bing message(s).
  * SYIOS-68 - Rageshake needs to include device info.
+ * SYIOS-87 - Rageshake needs to report logs as well as screenshot 
+ * When the app crashes, the user is invited to send the crash log at the next app startup.
 
 Bug fixes:
  * On iPhone 6+ (landscape mode), keep open the selected room when user changes application tabs.
