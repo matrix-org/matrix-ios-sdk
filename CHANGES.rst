@@ -14,7 +14,8 @@ Improvements:
  * MXFileStore: Improved loading performance by 8x.
  * Added an option (MXSession.loadPresenceBeforeCompletingSessionStart) to refresh presence data in background when starting a session.
  * Created MXLogger to redirect NSLog to file and to log crashes or uncaught exception.
- * MXRestClient: Added [MXRestClient registerFallback]
+ * MXRestClient: Added [MXRestClient registerFallback].
+ * Logs: Make all NSLog calls follows the same format.
  
 Features:
  * SYIOS-40 - Any HTTP request can fail due to rate-limiting on the server, and need to be retried.
@@ -22,6 +23,7 @@ Features:
  
 Bug fixes:
  * SYIOS-67 - We should synthesise identicons for users with no avatar.
+ * MXSession: Fixed crash when closing the MXSession before the end of initial Sync.
  
 -----------------
  Matrix Console
@@ -42,6 +44,7 @@ Features:
  * SYIOS-68 - Rageshake needs to include device info.
  * SYIOS-87 - Rageshake needs to report logs as well as screenshot 
  * When the app crashes, the user is invited to send the crash log at the next app startup.
+ * Logs: Make all NSLog calls follows the same format.
 
 Bug fixes:
  * On iPhone 6+ (landscape mode), keep open the selected room when user changes application tabs.
@@ -53,6 +56,7 @@ Bug fixes:
  * SYIOS-83 - When uploading an image, the bubble order jumps around.
  * SYIOS-80 - Errors when internet connection unavailable are way too intrusive.
  * SYIOS-88 - Rageshake needs to be less sensitive by x2 or so.
+ * Room History - App freezes on members display for room with a high number of members (> 500).
 
 
 Changes in Matrix iOS SDK in 0.2.2 (2015-02-05)
