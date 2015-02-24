@@ -30,7 +30,7 @@
     }
     else
     {
-        NSLog(@"Warning: room id leak for %@", self.roomId);
+        NSLog(@"[MXPublicRoom] Warning: room id leak for %@", self.roomId);
         displayname = self.roomId;
     }
     

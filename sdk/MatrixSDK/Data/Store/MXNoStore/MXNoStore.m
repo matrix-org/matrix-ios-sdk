@@ -163,7 +163,7 @@
 - (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types
 {
     // MXNoStore stores only the last event whatever its type
-    NSLog(@"Warning: MXNoStore implementation of lastMessageOfRoom is limited");
+    NSLog(@"[MXNoStore] Warning: MXNoStore implementation of lastMessageOfRoom is limited");
 
     return lastMessages[roomId];
 }

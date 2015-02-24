@@ -354,7 +354,7 @@
                                                 complete();
                                                 
                                             } failure:^(NSError *error) {
-                                                NSLog(@"paginateBackMessages error: %@", error);
+                                                NSLog(@"[MXRoom] paginateBackMessages error: %@", error);
                                                 failure(error);
                                             }];
     }

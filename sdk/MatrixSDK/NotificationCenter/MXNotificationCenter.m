@@ -113,7 +113,7 @@
         }
         
     } failure:^(NSError *error) {
-        NSLog(@"MXNotificationCenter: Cannot retrieve push rules from the home server");
+        NSLog(@"[MXNotificationCenter] Cannot retrieve push rules from the home server");
 
         if (failure)
         {
@@ -197,7 +197,7 @@
                         }
                         else
                         {
-                            NSLog(@"Warning: MXNotificationCenter - There is no MXPushRuleConditionChecker to check condition of kind: %@", condition.kind);
+                            NSLog(@"[MXNotificationCenter] Warning: There is no MXPushRuleConditionChecker to check condition of kind: %@", condition.kind);
                             conditionsOk = NO;
                         }
                     }

@@ -1345,7 +1345,7 @@ MXAuthAction;
                                      if (success)
                                      {
                                          NSString *contentURL = JSONResponse[@"content_uri"];
-                                         NSLog(@"uploadContent succeeded: %@",contentURL);
+                                         NSLog(@"[MXRestClient] uploadContent succeeded: %@",contentURL);
                                          success(contentURL);
                                      }
                                  }
