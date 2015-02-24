@@ -142,27 +142,9 @@ MXAuthAction;
                                  success:success failure:failure];
 }
 
-- (MXHTTPOperation*)registerFallback:(void (^)(NSString *fallback))success
-                             failure:(void (^)(NSError *error))failure
+- (NSString*)registerFallback;
 {
-    return [httpClient requestWithMethod:@"GET"
-                                    path:@"register/fallback"
-                              parameters:nil
-                                 success:^(NSDictionary *JSONResponse)
-            {
-                if (success)
-                {
-                    success(@"dd");
-                }
-
-            }
-                                 failure:^(NSError *error)
-            {
-                if (failure)
-                {
-                    failure(error);
-                }
-            }];
+    return [[NSURL URLWithString:@"_matrix/static/client/register" relativeToURL:[NSURL URLWithString:homeserver]] absoluteString];;
 }
 
 #pragma mark - Login operations

@@ -201,6 +201,20 @@
     [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
+- (void)testRegisterFallback
+{
+    NSString *registerFallback = [mxRestClient registerFallback];
+
+    // Try to download it
+    NSURL  *url = [NSURL URLWithString:registerFallback];
+    NSData *urlData = [NSData dataWithContentsOfURL:url];
+
+    XCTAssertNotNil(urlData);
+    XCTAssertGreaterThan(urlData.length, 0);
+
+}
+
+
 #pragma mark - Login operations
 - (void)testLoginFlow
 {

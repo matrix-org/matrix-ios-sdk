@@ -165,12 +165,11 @@ typedef enum : NSUInteger
                              failure:(void (^)(NSError *error))failure;
 
 /**
- Get a register fallback page to make regisrt
+ Get the register fallback page to make registration via a web browser or a web view.
 
- @return a MXHTTPOperation instance.
+ @return the fallback page URL.
  */
-- (MXHTTPOperation*)registerFallback:(void (^)(NSString *fallback))success
-                             failure:(void (^)(NSError *error))failure;
+- (NSString*)registerFallback;
 
 
 #pragma mark - Login operations
