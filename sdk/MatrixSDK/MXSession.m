@@ -183,6 +183,12 @@ typedef void (^MXOnResumeDone)();
             NSDate *startDate = [NSDate date];
             [matrixRestClient allUsersPresence:^(NSArray *userPresenceEvents) {
 
+                // Make sure [MXSession close] has not been called before the server response
+                if (nil == _myUser)
+                {
+                    return;
+                }
+
                 NSLog(@"[MXSession] Got presence of %tu users in %.0fms", userPresenceEvents.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
                 for (MXEvent *userPresenceEvent in userPresenceEvents)
@@ -249,6 +255,12 @@ typedef void (^MXOnResumeDone)();
 
                     // Then, we can do the global sync
                     [matrixRestClient initialSyncWithLimit:initialSyncMessagesLimit success:^(NSDictionary *JSONData) {
+
+                        // Make sure [MXSession close] has not been called before the server response
+                        if (nil == _myUser)
+                        {
+                            return;
+                        }
 
                         NSArray *roomDicts = JSONData[@"rooms"];
 
