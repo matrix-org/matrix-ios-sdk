@@ -141,4 +141,9 @@
  */
 - (NSString*)memberName:(NSString*)userId;
 
+/**
+ Return a display name for a member suitable to compare and sort members list
+ */
+- (NSString*)memberSortedName:(NSString*)userId;
+
 @end
