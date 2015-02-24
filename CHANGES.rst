@@ -32,15 +32,16 @@ Improvements:
  * Improve offline mode: remove loading wheel when network is unreachable and color in red the navigation bar when the app is offline.
  * Settings: Add identity server url in Configuration section.
  * Application starts quicker on cold start.
- * Home - Improve text inputs completion.
- * Settings - Rename “Hide redacted information” option to “Hide redactions”, and enable this option by default.
- * Settings - Rename the tab as “Settings” rather than “More”.
+ * Home: Improve text inputs completion.
+ * Settings: Rename “Hide redacted information” option to “Hide redactions”, and enable this option by default.
+ * Settings: Rename the tab as “Settings” rather than “More”.
+ * Recents: Adjust fonts size for Room name and last messages.
 
 Features:
  * Added registration. It is implemented by a webview that opens the registration fallback page.
  * SYIOS-75 - Tapping on APNS needs to take you to the right room.
  * Manage local notifications with MXSession.notificationCenter.
- * Recents - Set blue the background cell for room with unread bing message(s).
+ * Recents: Set blue the background cell for room with unread bing message(s).
  * SYIOS-68 - Rageshake needs to include device info.
  * SYIOS-87 - Rageshake needs to report logs as well as screenshot 
  * When the app crashes, the user is invited to send the crash log at the next app startup.
@@ -56,7 +57,8 @@ Bug fixes:
  * SYIOS-83 - When uploading an image, the bubble order jumps around.
  * SYIOS-80 - Errors when internet connection unavailable are way too intrusive.
  * SYIOS-88 - Rageshake needs to be less sensitive by x2 or so.
- * Room History - App freezes on members display for room with a high number of members (> 500).
+ * Room History: App freezes on members display for room with a high number of members (> 500).
+ * Settings: Store the minimum cache size to prevent application freeze when user scrolls settings table.
 
 
 Changes in Matrix iOS SDK in 0.2.2 (2015-02-05)
