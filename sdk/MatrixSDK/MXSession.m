@@ -349,6 +349,8 @@ typedef void (^MXOnResumeDone)();
             // If we are resuming inform the app that it received the last uptodate data
             if (onResumeDone)
             {
+                NSLog(@"[MXSession] Events stream resumed with %tu new events", events.count);
+
                 onResumeDone();
                 onResumeDone = nil;
 
