@@ -261,6 +261,9 @@
         // Typing notifications events are not room messages nor room state events
         // They are just volatile information
         _typingUsers = event.content[@"user_ids"];
+
+        // Notify listeners
+        [self notifyListeners:event direction:MXEventDirectionForwards];
     }
     else
     {
@@ -278,11 +281,11 @@
             
             // Store the event
             [mxSession.store storeEventForRoom:_state.roomId event:event direction:MXEventDirectionForwards];
+
+            // And notify listeners
+            [self notifyListeners:event direction:MXEventDirectionForwards];
         }
     }
-
-    // And notify the listeners
-    [self notifyListeners:event direction:MXEventDirectionForwards];
 }
 
 #pragma mark - Back pagination
@@ -301,7 +304,7 @@
 {
     MXHTTPOperation *operation;
 
-    NSAssert(nil != backState, @"resetBackState must be called before starting the back pagination");
+    NSAssert(nil != backState, @"[MXRoom] paginateBackMessages: resetBackState must be called before starting the back pagination");
 
     // Return messages in the store first
     NSUInteger messagesFromStoreCount = 0;
