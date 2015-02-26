@@ -42,13 +42,13 @@ These classes does logic to maintain consistent chat rooms data.
      This class provides methods to get room data and to interact with the room (join, leave...).
 
 :``MXRoomState``:
-	 This is the state of room at a certain point in time: its name, topic, visibility (public/private), members, etc.
-	 
+     This is the state of room at a certain point in time: its name, topic, visibility (public/private), members, etc.
+     
 :``MXRoomMember``:
-	 This is a member of a room.
-	 
+     This is a member of a room.
+     
 :``MXUser``:
-	 This is a user known by the current user. MXSession exposes and maintains the list of MXUsers. It provides the user id, displayname and the current presence state
+     This is a user known by the current user. MXSession exposes and maintains the list of MXUsers. It provides the user id, displayname and the current presence state
 
 Usage
 =====
@@ -95,38 +95,38 @@ The set up of these two objects is usually done once in the app for the user log
     [mxSession start:^{
         
         // mxSession is ready to be used
-		// Now we can get all rooms with:
-		mxSession.rooms;
+        // Now we can get all rooms with:
+        mxSession.rooms;
         
     } failure:^(NSError *error) {
     }];
 
-	
-	
+    
+    
 Use case #3: Get messages of a room
 -----------------------------------
 We reuse the mxSession instance created before::
 
     // Retrieve the room from its room id
     MXRoom *room = [mxSession room:@"!room_id:matrix.org"];
-	
-	// Add a listener on events related to this room
-	[room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
-	
-		if (direction == MXEventDirectionForwards) {
-			// Live/New events come here
-		}
-		else if (direction == MXEventDirectionBackwards) {
-			// Events that occured in the past will come here when requesting pagination.
-			// roomState contains the state of the room just before this event occured.
-		}
-	}];
+    
+    // Add a listener on events related to this room
+    [room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+    
+        if (direction == MXEventDirectionForwards) {
+            // Live/New events come here
+        }
+        else if (direction == MXEventDirectionBackwards) {
+            // Events that occured in the past will come here when requesting pagination.
+            // roomState contains the state of the room just before this event occured.
+        }
+    }];
 
-	
+    
 Let's load a bit of room history using paginateBackMessages::
 
-	// Reset the pagination start point to now
-	[room resetBackState];
+    // Reset the pagination start point to now
+    [room resetBackState];
 
     [room paginateBackMessages:10 complete:^{
         
@@ -134,7 +134,7 @@ Let's load a bit of room history using paginateBackMessages::
         
     } failure:^(NSError *error) {
     }];
-	
+    
 
 
 Use case #4: Post a text message to a room
@@ -150,8 +150,8 @@ This action does not require any business logic from MXSession. MXRestClient is 
         
     } failure:^(NSError *error) {
     }];
-	
-	
+    
+    
 Tests
 =====
 The tests in the SDK Xcode project are both unit and integration tests.
