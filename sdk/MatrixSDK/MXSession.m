@@ -23,6 +23,7 @@
 #import "MXMemoryStore.h"
 #import "MXFileStore.h"
 
+#import <stdlib.h>
 
 /**
  The Matrix iOS SDK version.
@@ -371,7 +372,11 @@ typedef void (^MXOnResumeDone)();
         if (eventStreamRequest)
         {
             // Relaunch the request later
-            dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, ERR_TIMEOUT_MS * NSEC_PER_MSEC);
+            // Add up to 3s jittering to avoid all Matrix clients to retry all in the same time
+            // if there is server side issue like server restart
+            int jitter = arc4random_uniform(3000);
+
+            dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, ERR_TIMEOUT_MS * NSEC_PER_MSEC + jitter);
             dispatch_after(delayTime, dispatch_get_main_queue(), ^(void) {
 
                 [self streamEventsFromToken:token withLongPoll:longPoll];
