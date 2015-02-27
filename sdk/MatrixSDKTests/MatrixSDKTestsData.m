@@ -141,7 +141,7 @@ NSMutableArray *roomsToClean;
 
         if (accountToClean)
         {
-            NSLog(@"Start cleaning user data (%lu rooms) from %@ ...", roomsToClean.count, testCase.name);
+            NSLog(@"Start cleaning user data (%tu rooms) from %@ ...", roomsToClean.count, testCase.name);
 
             // Before giving the hand to the test, clean the rooms of the user.
             // It is done now rather than at the end of each test because
