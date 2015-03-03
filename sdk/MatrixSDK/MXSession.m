@@ -28,7 +28,7 @@
 /**
  The Matrix iOS SDK version.
  */
-const NSString *MatrixSDKVersion = @"0.3.0";
+const NSString *MatrixSDKVersion = @"0.3.1";
 
 /**
  Default timeouts used by the events streams.

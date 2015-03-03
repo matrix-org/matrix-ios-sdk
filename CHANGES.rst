@@ -1,3 +1,31 @@
+Changes in Matrix iOS SDK in 0.3.1 (2015-03-03)
+===============================================
+
+-----
+ SDK
+-----
+Improvements:
+ * Improved push notifications documentation.
+ * MXSession: Slightly randomise reconnection times by up to 3s to prevent all Matrix clients from retrying requests to the homeserver at the same time.
+ * Improved logs
+ 
+Bug fixes:
+ * SYIOS-90 - iOS can receive & display messages multiple times when on bad connections
+ 
+-----------------
+ Matrix Console
+-----------------
+Improvements:
+ * Fixed warnings with 64bits builds.
+ * Room history: Improve scrolling handling when keyboard appears.
+ * Contacts: Prompt user when local contacts tab is selected if constact sync is disabled.
+ 
+Bug fixes:
+ * Fix crash when switching rooms while the event stream is resuming.
+ * SYIOS-69 - On Screen Keyboard can end up hiding the most recent messages in a room.
+ * SYIOS-98 - Crash when attempting to attach image on iPad
+ 
+
 Changes in Matrix iOS SDK in 0.3.0 (2015-02-23)
 ===============================================
 
