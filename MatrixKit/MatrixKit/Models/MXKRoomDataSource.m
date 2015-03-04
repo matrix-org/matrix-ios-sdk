@@ -15,18 +15,155 @@
  */
 
 #import "MXKRoomDataSource.h"
+#import "MXKQueuedEvent.h"
+
+@interface MXKRoomDataSource ()
+
+@end
 
 @implementation MXKRoomDataSource
 
+- (instancetype)initWithRoom:(MXRoom *)aRoom {
+    self = [super init];
+    if (self) {
 
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return 10;
+        room = aRoom;
+        processingQueue = dispatch_queue_create("MXKRoomDataSource", DISPATCH_QUEUE_SERIAL);
+        bubbles = [NSMutableArray array];
+        eventsToProcess = [NSMutableArray array];
+
+        // @TODO: SDK we need a reference when paginating back.
+        // Else, how to not conflict with other view controller?
+        [room resetBackState];
+
+        // Listen to live events in the room
+        // @TODO: How to set events filter?
+        [room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+
+            if (MXEventDirectionForwards == direction) {
+                // Post incoming events for later processing
+                [self queueEventForProcessing:event withRoomState:roomState direction:MXEventDirectionForwards];
+                [self processQueuedEvents];
+            }
+        }];
+    }
+    return self;
+}
+
+- (void)paginateBackMessages:(NSUInteger)numItems {
+
+    // Keep events from the past to later processing
+    id backPaginateListener = [room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+        if (MXEventDirectionBackwards == direction) {
+            [self queueEventForProcessing:event withRoomState:roomState direction:MXEventDirectionBackwards];
+        }
+    }];
+
+    // Launch the pagination
+    [room paginateBackMessages:numItems complete:^{
+
+        // Once done, process retrieved events
+        [room removeListener:backPaginateListener];
+        [self processQueuedEvents];
+
+    } failure:^(NSError *error) {
+        NSAssert(false, @"@TODO: to manage");
+    }];
+};
+
+
+#pragma mark - Events processing
+/**
+ Queue an event in order to process its display later.
+
+ @param event the event to process.
+ @param roomState the state of the room when the event fired.
+ @param direction the order of the events in the arrays
+ */
+- (void)queueEventForProcessing:(MXEvent*)event withRoomState:(MXRoomState*)roomState direction:(MXEventDirection)direction {
+
+    MXKQueuedEvent *queuedEvent = [[MXKQueuedEvent alloc] initWithEvent:event andRoomState:roomState direction:direction];
+
+    @synchronized(eventsToProcess) {
+        [eventsToProcess addObject:queuedEvent];
+    }
+    
+}
+
+/**
+ Start processing prending events.
+ */
+- (void)processQueuedEvents {
+
+    // Do the processing on the processing queue
+    dispatch_async(processingQueue, ^{
+
+        // Note: As this block is always called from the same processing queue,
+        // only one batch process is done at a time. Thus, an event cannot be
+        // processed twice
+
+        // Make a quick copy of changing data to avoid to lock it too long time
+        NSMutableArray *eventsToProcessSnapshot;
+        @synchronized(eventsToProcess) {
+            eventsToProcessSnapshot = [eventsToProcess copy];
+        }
+        NSMutableArray *bubblesSnapshot;
+        @synchronized(bubbles) {
+            bubblesSnapshot = [bubbles mutableCopy];
+        }
+
+        for (MXKQueuedEvent *queuedEvent in eventsToProcessSnapshot) {
+
+            MXKRoomBubble *bubble = [[MXKRoomBubble alloc] initWithEvent:queuedEvent.event andRoomState:queuedEvent.state];
+
+            // @TODO: Group messages in bubbles
+            if (queuedEvent.direction == MXEventDirectionForwards) {
+                [bubblesSnapshot insertObject:bubble atIndex:0];
+            }
+            else {
+                [bubblesSnapshot addObject:bubble];
+            }
+
+            // The event can be now unqueued
+            @synchronized(eventsToProcess) {
+                [eventsToProcess removeObject:queuedEvent];
+            }
+        }
+
+        // Updated data can be displayed now
+        dispatch_async(dispatch_get_main_queue(), ^{
+            bubbles = bubblesSnapshot;
+            [tableView reloadData];
+        });
+    });
+}
+
+
+#pragma mark - UITableViewDataSource
+- (NSInteger)tableView:(UITableView *)tableView2 numberOfRowsInSection:(NSInteger)section {
+
+    // Keep the tableView ref to automatically call reloadData on it
+    // @TODO: Smart or not? Seems not.
+    tableView = tableView2;
+
+    NSInteger count;
+    @synchronized(bubbles) {
+        count = bubbles.count;
+    }
+    return count;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 
+    MXKRoomBubble *bubble;
+    @synchronized(bubbles) {
+        bubble = bubbles[indexPath.row];
+    }
+
     UITableViewCell *cell  = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
-    cell.textLabel.text = @"q";
+    if (bubble) {
+        cell.textLabel.text = bubble.attributedTextMessage;
+    }
     return cell;
 }
 

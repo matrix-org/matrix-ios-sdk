@@ -24,7 +24,32 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    // Do any additional setup after loading the view, typically from a nib.
+
+    // We need a room
+    // So, initialise a Matrix session on matrix.org to display #test:matrix.org
+    MXCredentials *credentials = [[MXCredentials alloc] initWithHomeServer:@"https://matrix.org"
+                                                                    userId:@"@your_matrix_id"
+                                                               accessToken:@"your_access_token"];
+
+    MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:[[MXRestClient alloc] initWithCredentials:credentials]];
+    [mxSession start:^{
+
+        // Resolve #test:matrix.org to room id in order to make tests there
+        [mxSession.matrixRestClient roomIDForRoomAlias:@"#test:matrix.org" success:^(NSString *roomId) {
+
+            MXRoom *room = [mxSession roomWithRoomId:roomId];
+            NSAssert(room, @"The user must be in the the room");
+
+            // Let's start the display of this room
+            [self displayRoom:room withMXSession:mxSession];
+
+        } failure:^(NSError *error) {
+            NSAssert(false, @"roomIDForRoomAlias should not fail. Error: %@", error);
+        }];
+
+    } failure:^(NSError *error) {
+        NSAssert(false, @"%@", error);
+    }];
 }
 
 - (void)didReceiveMemoryWarning {

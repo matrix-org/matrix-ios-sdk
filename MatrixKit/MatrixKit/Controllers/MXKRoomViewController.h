@@ -23,4 +23,12 @@ limitations under the License.
  */
 @interface MXKRoomViewController : UIViewController
 
+@property (nonatomic, readonly) UITableView *tableView;
+@property (nonatomic) MXKRoomDataSource *dataSource;
+
+/**
+ Make the view controller display a room con
+ */
+- (void)displayRoom:(MXRoom*)room withMXSession:(MXSession*)mxSession;
+
 @end

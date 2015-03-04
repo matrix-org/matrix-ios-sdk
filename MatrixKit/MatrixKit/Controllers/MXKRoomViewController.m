@@ -18,8 +18,8 @@
 
 @interface MXKRoomViewController () {
 
-    UITableView *tableView;
-    MXKRoomDataSource *dataSource;
+    MXSession *mxSession;
+    MXRoom *room;
 }
 @end
 
@@ -29,19 +29,33 @@
     [super viewDidLoad];
 
     // Do any additional setup after loading the view.
-    dataSource = [[MXKRoomDataSource alloc] init];
+    _tableView = [[UITableView alloc] initWithFrame:self.view.bounds];
+    [self.view addSubview:_tableView];
+}
 
-    tableView = [[UITableView alloc] initWithFrame:self.view.bounds];
-
-    tableView.dataSource = dataSource;
-    tableView.backgroundColor = [UIColor redColor];
-    [self.view addSubview:tableView];
+- (void)dealloc {
+    _tableView = nil;
+    _dataSource = nil;
 }
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
 
     // Dispose of any resources that can be recreated.
+}
+
+- (void)displayRoom:(MXRoom *)aRoom withMXSession:(MXSession *)session {
+
+    room = aRoom;
+    mxSession = session;
+
+    // Set up the room data source and attach it to the table view
+    _dataSource = [[MXKRoomDataSource alloc] initWithRoom:room];
+    _tableView.dataSource = _dataSource;
+    [_tableView reloadData];
+
+    // Start showing history right now
+    [_dataSource paginateBackMessages:10];
 }
 
 @end
