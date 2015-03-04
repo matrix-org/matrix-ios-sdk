@@ -22,6 +22,7 @@
     self = [self init];
     if (self) {
         // @TODO
+        _senderId = event.userId;
         _attributedTextMessage = event.eventId;
     }
     return self;

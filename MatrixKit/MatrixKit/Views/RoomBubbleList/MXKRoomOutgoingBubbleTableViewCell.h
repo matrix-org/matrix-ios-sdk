@@ -14,22 +14,11 @@
  limitations under the License.
  */
 
-#import <Foundation/Foundation.h>
-#import <MatrixSDK/MatrixSDK.h>
+#import "MXKRoomBubbleTableViewCell.h"
 
 /**
- `MXKRoomBubble` modelised the data for a cell displayed by the `MXKRoomViewController`.
+ `MXKRoomOutgoingBubbleTableViewCell` displays incoming room bubble.
  */
-@interface MXKRoomBubble : NSObject
-
-@property (nonatomic) NSString *senderId;
-
-// The body of the message, or kind of content description in case of attachment (e.g. "image attachment")
-@property (nonatomic) /*NSAttributedString @TODO*/ NSString *attributedTextMessage;
-
-- (instancetype)initWithEvent:(MXEvent*)event andRoomState:(MXRoomState*)roomState;
-
-// @TODO
-//- (BOOL)addEvent:(MXEvent*)event;
+@interface MXKRoomOutgoingBubbleTableViewCell : MXKRoomBubbleTableViewCell
 
 @end

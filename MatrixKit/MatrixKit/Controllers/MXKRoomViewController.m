@@ -16,6 +16,9 @@
 
 #import "MXKRoomViewController.h"
 
+#import "MXKRoomIncomingBubbleTableViewCell.h"
+#import "MXKRoomOutgoingBubbleTableViewCell.h"
+
 @interface MXKRoomViewController () {
 
     MXSession *mxSession;
@@ -49,12 +52,15 @@
     room = aRoom;
     mxSession = session;
 
-    // Set up the room data source and attach it to the table view
-    _dataSource = [[MXKRoomDataSource alloc] initWithRoom:room];
+    // Set up data source and cell classes to use
+    _dataSource = [[MXKRoomDataSource alloc] initWithRoom:room andMatrixSession:mxSession];
     _tableView.dataSource = _dataSource;
-    [_tableView reloadData];
+
+    [_tableView registerClass:MXKRoomIncomingBubbleTableViewCell.class forCellReuseIdentifier:kMXKIncomingRoomBubbleCellIdentifier];
+    [_tableView registerClass:MXKRoomOutgoingBubbleTableViewCell.class forCellReuseIdentifier:kMXKOutgoingRoomBubbleCellIdentifier];
 
     // Start showing history right now
+    [_tableView reloadData];
     [_dataSource paginateBackMessages:10];
 }
 

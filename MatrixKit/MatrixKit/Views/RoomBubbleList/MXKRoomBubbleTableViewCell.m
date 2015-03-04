@@ -14,22 +14,27 @@
  limitations under the License.
  */
 
-#import <Foundation/Foundation.h>
-#import <MatrixSDK/MatrixSDK.h>
 
-/**
- `MXKRoomBubble` modelised the data for a cell displayed by the `MXKRoomViewController`.
- */
-@interface MXKRoomBubble : NSObject
+#import "MXKRoomBubbleTableViewCell.h"
 
-@property (nonatomic) NSString *senderId;
+@implementation MXKRoomBubbleTableViewCell
 
-// The body of the message, or kind of content description in case of attachment (e.g. "image attachment")
-@property (nonatomic) /*NSAttributedString @TODO*/ NSString *attributedTextMessage;
+- (void)awakeFromNib {
+    // Initialization code
+}
 
-- (instancetype)initWithEvent:(MXEvent*)event andRoomState:(MXRoomState*)roomState;
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated {
+    [super setSelected:selected animated:animated];
 
-// @TODO
-//- (BOOL)addEvent:(MXEvent*)event;
+    // Configure the view for the selected state
+}
 
+- (void)displayBubble:(MXKRoomBubble *)bubble {
+    if (bubble) {
+        self.textLabel.text = bubble.attributedTextMessage;
+    }
+    else {
+        self.textLabel.text = @"";
+    }
+}
 @end

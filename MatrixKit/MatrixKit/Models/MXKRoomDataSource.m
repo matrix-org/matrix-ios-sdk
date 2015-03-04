@@ -15,7 +15,15 @@
  */
 
 #import "MXKRoomDataSource.h"
+
 #import "MXKQueuedEvent.h"
+#import "MXKRoomBubbleTableViewCell.h"
+
+
+#pragma mark - Constant definitions
+NSString *const kMXKIncomingRoomBubbleCellIdentifier = @"kMXKIncomingRoomBubbleCellIdentifier";
+NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleCellIdentifier";;
+
 
 @interface MXKRoomDataSource ()
 
@@ -23,16 +31,17 @@
 
 @implementation MXKRoomDataSource
 
-- (instancetype)initWithRoom:(MXRoom *)aRoom {
+- (instancetype)initWithRoom:(MXRoom *)aRoom andMatrixSession:(MXSession *)session {
     self = [super init];
     if (self) {
 
         room = aRoom;
+        mxSession = session;
         processingQueue = dispatch_queue_create("MXKRoomDataSource", DISPATCH_QUEUE_SERIAL);
         bubbles = [NSMutableArray array];
         eventsToProcess = [NSMutableArray array];
 
-        // @TODO: SDK we need a reference when paginating back.
+        // @TODO: SDK: we need a reference when paginating back.
         // Else, how to not conflict with other view controller?
         [room resetBackState];
 
@@ -117,7 +126,7 @@
             MXKRoomBubble *bubble = [[MXKRoomBubble alloc] initWithEvent:queuedEvent.event andRoomState:queuedEvent.state];
 
             // @TODO: Group messages in bubbles
-            if (queuedEvent.direction == MXEventDirectionForwards) {
+            if (queuedEvent.direction == MXEventDirectionBackwards) {
                 [bubblesSnapshot insertObject:bubble atIndex:0];
             }
             else {
@@ -153,17 +162,26 @@
     return count;
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (UITableViewCell *)tableView:(UITableView *)tableView2 cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 
     MXKRoomBubble *bubble;
     @synchronized(bubbles) {
         bubble = bubbles[indexPath.row];
     }
 
-    UITableViewCell *cell  = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
-    if (bubble) {
-        cell.textLabel.text = bubble.attributedTextMessage;
+    // The cell to use depends if this is a message from the user or not
+    // Then use the cell class defined by the table view
+    MXKRoomBubbleTableViewCell *cell;
+    if ([bubble.senderId isEqualToString:mxSession.matrixRestClient.credentials.userId]) {
+        cell = [tableView dequeueReusableCellWithIdentifier:kMXKOutgoingRoomBubbleCellIdentifier];
     }
+    else {
+        cell = [tableView dequeueReusableCellWithIdentifier:kMXKIncomingRoomBubbleCellIdentifier];
+    }
+
+    // Make the bubble display the data
+    [cell displayBubble:bubble];
+
     return cell;
 }
 

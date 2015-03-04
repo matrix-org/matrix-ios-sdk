@@ -15,10 +15,22 @@
  */
 
 #import <UIKit/UIKit.h>
-
-#import <MatrixSDK.h>
+#import <MatrixSDK/MatrixSDK.h>
 
 #import "MXKRoomBubble.h"
+
+/**
+ Identifier to use for cells that display incoming room events, ie events
+ that have not been sent by the user.
+ */
+extern NSString *const kMXKIncomingRoomBubbleCellIdentifier;
+
+/**
+ Identifier to use for cells that display outgoing room events, ie events
+ that have been sent by the user.
+ */
+extern NSString *const kMXKOutgoingRoomBubbleCellIdentifier;
+
 
 /**
  The data source for `MXKRoomViewController`.
@@ -30,6 +42,12 @@
      The room the data comes from.
      */
     MXRoom *room;
+
+    /**
+     The matrix session.
+     @TODO: Try to remove this unhappy dependency.
+     */
+    MXSession *mxSession;
 
     /**
      The data for the cells served by `MXKRoomDataSource`.
@@ -61,7 +79,7 @@
  @param room the room to get data from.
  @return the newly created instance. 
  */
-- (instancetype)initWithRoom:(MXRoom *)aRoom;
+- (instancetype)initWithRoom:(MXRoom *)aRoom andMatrixSession:(MXSession*)mxSession;
 
 /**
  Load more messages from the history.
