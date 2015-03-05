@@ -59,6 +59,11 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
     return self;
 }
 
+- (void)dealloc {
+    // @TODO: In the future, we should release the delegate hete
+    // Check it works
+}
+
 - (void)paginateBackMessages:(NSUInteger)numItems {
 
     // Keep events from the past to later processing
@@ -79,6 +84,11 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
         NSAssert(false, @"@TODO: to manage");
     }];
 };
+
+- (void)paginateBackMessagesToFillRect:(CGRect)rect {
+    // @TODO
+    [self paginateBackMessages:10];
+}
 
 
 #pragma mark - Events processing

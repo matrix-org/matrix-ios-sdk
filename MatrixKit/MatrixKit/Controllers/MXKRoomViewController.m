@@ -37,6 +37,8 @@
 }
 
 - (void)dealloc {
+    _tableView.dataSource = nil;
+    _tableView.delegate = nil;
     _tableView = nil;
     _dataSource = nil;
 }
@@ -61,7 +63,7 @@
 
     // Start showing history right now
     [_tableView reloadData];
-    [_dataSource paginateBackMessages:10];
+    [_dataSource paginateBackMessagesToFillRect:self.view.frame];
 }
 
 @end

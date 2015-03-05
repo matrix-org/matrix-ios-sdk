@@ -88,4 +88,11 @@ extern NSString *const kMXKOutgoingRoomBubbleCellIdentifier;
  */
 - (void)paginateBackMessages:(NSUInteger)numItems;
 
+/**
+ Load enough messages to fill the rect.
+ 
+ @param the rect to fill.
+ */
+- (void)paginateBackMessagesToFillRect:(CGRect)rect;
+
 @end
