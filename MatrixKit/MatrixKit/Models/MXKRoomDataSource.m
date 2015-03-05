@@ -52,7 +52,7 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
             if (MXEventDirectionForwards == direction) {
                 // Post incoming events for later processing
                 [self queueEventForProcessing:event withRoomState:roomState direction:MXEventDirectionForwards];
-                [self processQueuedEvents];
+                [self processQueuedEvents:nil];
             }
         }];
     }
@@ -64,7 +64,7 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
     // Check it works
 }
 
-- (void)paginateBackMessages:(NSUInteger)numItems {
+- (void)paginateBackMessages:(NSUInteger)numItems success:(void (^)())success failure:(void (^)(NSError *error))failure {
 
     // Keep events from the past to later processing
     id backPaginateListener = [room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
@@ -78,16 +78,20 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
 
         // Once done, process retrieved events
         [room removeListener:backPaginateListener];
-        [self processQueuedEvents];
+        [self processQueuedEvents:success];
 
     } failure:^(NSError *error) {
-        NSAssert(false, @"@TODO: to manage");
+        NSLog(@"[MXKRoomDataSource] paginateBackMessages fails. Error: %@", error);
+
+        if (failure) {
+            failure(error);
+        }
     }];
 };
 
-- (void)paginateBackMessagesToFillRect:(CGRect)rect {
+- (void)paginateBackMessagesToFillRect:(CGRect)rect success:(void (^)())success failure:(void (^)(NSError *error))failure {
     // @TODO
-    [self paginateBackMessages:10];
+    [self paginateBackMessages:10 success:success failure:failure];
 }
 
 
@@ -106,13 +110,14 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
     @synchronized(eventsToProcess) {
         [eventsToProcess addObject:queuedEvent];
     }
-    
 }
 
 /**
  Start processing prending events.
+ 
+ @param onComplete a block called (on the main thread) when the processing has been done. Can be nil.
  */
-- (void)processQueuedEvents {
+- (void)processQueuedEvents:(void (^)())onComplete {
 
     // Do the processing on the processing queue
     dispatch_async(processingQueue, ^{
@@ -153,6 +158,11 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
         dispatch_async(dispatch_get_main_queue(), ^{
             bubbles = bubblesSnapshot;
             [tableView reloadData];
+
+            // Inform about the end if requested
+            if (onComplete) {
+                onComplete();
+            }
         });
     });
 }

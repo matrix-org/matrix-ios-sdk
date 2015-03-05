@@ -63,7 +63,11 @@
 
     // Start showing history right now
     [_tableView reloadData];
-    [_dataSource paginateBackMessagesToFillRect:self.view.frame];
+    [_dataSource paginateBackMessagesToFillRect:self.view.frame success:^{
+        // @TODO
+    } failure:^(NSError *error) {
+        // @TODO
+    }];
 }
 
 @end

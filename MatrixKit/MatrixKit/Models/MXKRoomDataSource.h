@@ -85,14 +85,18 @@ extern NSString *const kMXKOutgoingRoomBubbleCellIdentifier;
  Load more messages from the history.
  
  @param numItems the number of items to get.
+ @param success a block called when the operation succeeds.
+ @param failure a block called when the operation fails.
  */
-- (void)paginateBackMessages:(NSUInteger)numItems;
+- (void)paginateBackMessages:(NSUInteger)numItems success:(void (^)())success failure:(void (^)(NSError *error))failure;
 
 /**
  Load enough messages to fill the rect.
  
  @param the rect to fill.
+ @param success a block called when the operation succeeds.
+ @param failure a block called when the operation fails.
  */
-- (void)paginateBackMessagesToFillRect:(CGRect)rect;
+- (void)paginateBackMessagesToFillRect:(CGRect)rect success:(void (^)())success failure:(void (^)(NSError *error))failure;
 
 @end
