@@ -192,10 +192,10 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
     // Then use the cell class defined by the table view
     MXKRoomBubbleTableViewCell *cell;
     if ([bubble.senderId isEqualToString:mxSession.matrixRestClient.credentials.userId]) {
-        cell = [tableView dequeueReusableCellWithIdentifier:kMXKOutgoingRoomBubbleCellIdentifier];
+        cell = [tableView dequeueReusableCellWithIdentifier:kMXKOutgoingRoomBubbleCellIdentifier forIndexPath:indexPath];
     }
     else {
-        cell = [tableView dequeueReusableCellWithIdentifier:kMXKIncomingRoomBubbleCellIdentifier];
+        cell = [tableView dequeueReusableCellWithIdentifier:kMXKIncomingRoomBubbleCellIdentifier forIndexPath:indexPath];
     }
 
     // Make the bubble display the data
