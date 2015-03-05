@@ -138,7 +138,7 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
 
         for (MXKQueuedEvent *queuedEvent in eventsToProcessSnapshot) {
 
-            MXKRoomBubble *bubble = [[MXKRoomBubble alloc] initWithEvent:queuedEvent.event andRoomState:queuedEvent.state];
+            MXKRoomBubbleCellData *bubble = [[MXKRoomBubbleCellData alloc] initWithEvent:queuedEvent.event andRoomState:queuedEvent.state];
 
             // @TODO: Group messages in bubbles
             if (queuedEvent.direction == MXEventDirectionBackwards) {
@@ -183,7 +183,7 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 
-    MXKRoomBubble *bubble;
+    MXKRoomBubbleCellData *bubble;
     @synchronized(bubbles) {
         bubble = bubbles[indexPath.row];
     }
@@ -199,7 +199,7 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
     }
 
     // Make the bubble display the data
-    [cell displayBubble:bubble];
+    [cell render:bubble];
 
     return cell;
 }

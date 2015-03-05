@@ -20,8 +20,9 @@
 		328AC4891AA75EDD0044A6FB /* MXKRoomIncomingBubbleTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 328AC4881AA75EDD0044A6FB /* MXKRoomIncomingBubbleTableViewCell.m */; };
 		328AC48C1AA760520044A6FB /* MXKRoomOutgoingBubbleTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 328AC48B1AA760520044A6FB /* MXKRoomOutgoingBubbleTableViewCell.m */; };
 		328AC48F1AA86E110044A6FB /* MXKDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 328AC48E1AA86E110044A6FB /* MXKDataSource.m */; };
+		328AC4931AA8B05C0044A6FB /* MXKCellData.m in Sources */ = {isa = PBXBuildFile; fileRef = 328AC4921AA8B05C0044A6FB /* MXKCellData.m */; };
 		32CE6EE01AA737F300C71389 /* MXKQueuedEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 32CE6EDF1AA737F300C71389 /* MXKQueuedEvent.m */; };
-		32CE6EE31AA744AE00C71389 /* MXKRoomBubble.m in Sources */ = {isa = PBXBuildFile; fileRef = 32CE6EE21AA744AE00C71389 /* MXKRoomBubble.m */; };
+		32CE6EE31AA744AE00C71389 /* MXKRoomBubbleCellData.m in Sources */ = {isa = PBXBuildFile; fileRef = 32CE6EE21AA744AE00C71389 /* MXKRoomBubbleCellData.m */; };
 		DCA1844D18A75FDEAC153B9E /* libPods-MatrixKit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 36209DA7732B7B4511C8821C /* libPods-MatrixKit.a */; };
 /* End PBXBuildFile section */
 
@@ -64,10 +65,13 @@
 		328AC48B1AA760520044A6FB /* MXKRoomOutgoingBubbleTableViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKRoomOutgoingBubbleTableViewCell.m; sourceTree = "<group>"; };
 		328AC48D1AA86E110044A6FB /* MXKDataSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKDataSource.h; sourceTree = "<group>"; };
 		328AC48E1AA86E110044A6FB /* MXKDataSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKDataSource.m; sourceTree = "<group>"; };
+		328AC4901AA8AF5B0044A6FB /* MXKCellRendering.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKCellRendering.h; sourceTree = "<group>"; };
+		328AC4911AA8B05C0044A6FB /* MXKCellData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKCellData.h; sourceTree = "<group>"; };
+		328AC4921AA8B05C0044A6FB /* MXKCellData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKCellData.m; sourceTree = "<group>"; };
 		32CE6EDE1AA737F300C71389 /* MXKQueuedEvent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKQueuedEvent.h; sourceTree = "<group>"; };
 		32CE6EDF1AA737F300C71389 /* MXKQueuedEvent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKQueuedEvent.m; sourceTree = "<group>"; };
-		32CE6EE11AA744AE00C71389 /* MXKRoomBubble.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKRoomBubble.h; sourceTree = "<group>"; };
-		32CE6EE21AA744AE00C71389 /* MXKRoomBubble.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKRoomBubble.m; sourceTree = "<group>"; };
+		32CE6EE11AA744AE00C71389 /* MXKRoomBubbleCellData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKRoomBubbleCellData.h; sourceTree = "<group>"; };
+		32CE6EE21AA744AE00C71389 /* MXKRoomBubbleCellData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKRoomBubbleCellData.m; sourceTree = "<group>"; };
 		36209DA7732B7B4511C8821C /* libPods-MatrixKit.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MatrixKit.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -188,10 +192,12 @@
 				328AC48E1AA86E110044A6FB /* MXKDataSource.m */,
 				3219CBC21AA6FF490027D7E2 /* MXKRoomDataSource.h */,
 				3219CBC31AA6FF490027D7E2 /* MXKRoomDataSource.m */,
+				328AC4911AA8B05C0044A6FB /* MXKCellData.h */,
+				328AC4921AA8B05C0044A6FB /* MXKCellData.m */,
+				32CE6EE11AA744AE00C71389 /* MXKRoomBubbleCellData.h */,
+				32CE6EE21AA744AE00C71389 /* MXKRoomBubbleCellData.m */,
 				32CE6EDE1AA737F300C71389 /* MXKQueuedEvent.h */,
 				32CE6EDF1AA737F300C71389 /* MXKQueuedEvent.m */,
-				32CE6EE11AA744AE00C71389 /* MXKRoomBubble.h */,
-				32CE6EE21AA744AE00C71389 /* MXKRoomBubble.m */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -200,6 +206,7 @@
 			isa = PBXGroup;
 			children = (
 				328AC47A1AA75D140044A6FB /* RoomBubbleList */,
+				328AC4901AA8AF5B0044A6FB /* MXKCellRendering.h */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -366,11 +373,12 @@
 				32CE6EE01AA737F300C71389 /* MXKQueuedEvent.m in Sources */,
 				328AC48F1AA86E110044A6FB /* MXKDataSource.m in Sources */,
 				328AC4861AA75E000044A6FB /* MXKRoomBubbleTableViewCell.m in Sources */,
+				328AC4931AA8B05C0044A6FB /* MXKCellData.m in Sources */,
 				328AC48C1AA760520044A6FB /* MXKRoomOutgoingBubbleTableViewCell.m in Sources */,
 				3219CBB91AA6FA7A0027D7E2 /* main.m in Sources */,
 				3219CBC01AA6FB470027D7E2 /* MXKRoomViewController.m in Sources */,
 				3219CBB41AA6FA7A0027D7E2 /* AppDelegate.m in Sources */,
-				32CE6EE31AA744AE00C71389 /* MXKRoomBubble.m in Sources */,
+				32CE6EE31AA744AE00C71389 /* MXKRoomBubbleCellData.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

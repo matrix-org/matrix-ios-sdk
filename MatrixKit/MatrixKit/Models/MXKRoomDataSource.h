@@ -18,7 +18,7 @@
 #import <MatrixSDK/MatrixSDK.h>
 
 #import "MXKDataSource.h"
-#import "MXKRoomBubble.h"
+#import "MXKRoomBubbleCellData.h"
 
 /**
  Identifier to use for cells that display incoming room events, ie events

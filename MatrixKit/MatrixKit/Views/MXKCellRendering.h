@@ -14,18 +14,20 @@
  limitations under the License.
  */
 
-#import "MXKRoomBubble.h"
+#import <Foundation/Foundation.h>
 
-@implementation MXKRoomBubble
+#import "MXKCellData.h"
 
-- (instancetype)initWithEvent:(MXEvent *)event andRoomState:(MXRoomState *)roomState {
-    self = [self init];
-    if (self) {
-        // @TODO
-        _senderId = event.userId;
-        _attributedTextMessage = event.eventId;
-    }
-    return self;
-}
+/**
+
+ */
+@protocol MXKCellRendering <NSObject>
+
+/**
+ Configure the cell in order to display the passed data.
+ 
+ @param cellData
+ */
+- (void)render:(MXKCellData*)cellData;
 
 @end

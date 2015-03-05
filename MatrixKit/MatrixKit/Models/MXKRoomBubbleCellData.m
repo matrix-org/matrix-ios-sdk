@@ -14,31 +14,18 @@
  limitations under the License.
  */
 
-#import "MXKRoomBubbleTableViewCell.h"
-
 #import "MXKRoomBubbleCellData.h"
 
-@implementation MXKRoomBubbleTableViewCell
+@implementation MXKRoomBubbleCellData
 
-- (void)awakeFromNib {
-    // Initialization code
-}
-
-- (void)setSelected:(BOOL)selected animated:(BOOL)animated {
-    [super setSelected:selected animated:animated];
-
-    // Configure the view for the selected state
-}
-
-- (void)render:(MXKCellData *)cellData {
-
-    MXKRoomBubbleCellData *bubble = (MXKRoomBubbleCellData*)cellData;
-    if (bubble) {
-        self.textLabel.text = bubble.attributedTextMessage;
+- (instancetype)initWithEvent:(MXEvent *)event andRoomState:(MXRoomState *)roomState {
+    self = [self init];
+    if (self) {
+        // @TODO
+        _senderId = event.userId;
+        _attributedTextMessage = event.eventId;
     }
-    else {
-        self.textLabel.text = @"";
-    }
+    return self;
 }
 
 @end

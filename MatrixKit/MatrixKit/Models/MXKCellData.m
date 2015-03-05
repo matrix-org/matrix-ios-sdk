@@ -14,15 +14,8 @@
  limitations under the License.
  */
 
-#import "MXKRoomOutgoingBubbleTableViewCell.h"
+#import "MXKCellData.h"
 
-@implementation MXKRoomOutgoingBubbleTableViewCell
-
-- (void)render:(MXKCellData *)cellData {
-    [super render:cellData];
-
-    // Light custo for now...
-    self.backgroundColor = [UIColor greenColor];
-}
+@implementation MXKCellData
 
 @end

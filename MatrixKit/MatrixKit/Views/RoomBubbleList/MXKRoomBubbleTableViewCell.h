@@ -16,18 +16,11 @@
 
 #import <UIKit/UIKit.h>
 
-#import "MXKRoomBubble.h"
+#import "MXKCellRendering.h"
 
 /**
  `MXKRoomBubbleTableViewCell` is a base class for displaying a room bubble.
  */
-@interface MXKRoomBubbleTableViewCell : UITableViewCell
-
-/**
- Update cell to display the passed room bubble.
-
- @param bubble the bubble data.
- */
-- (void)displayBubble:(MXKRoomBubble*)bubble;
+@interface MXKRoomBubbleTableViewCell : UITableViewCell <MXKCellRendering>
 
 @end

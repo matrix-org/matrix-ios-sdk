@@ -15,21 +15,11 @@
  */
 
 #import <Foundation/Foundation.h>
-#import <MatrixSDK/MatrixSDK.h>
 
 /**
- `MXKRoomBubble` modelised the data for a cell displayed by the `MXKRoomViewController`.
+ `MXKCellData` objects contain data that is displayed by objects implementing
+ `MXKCellRendering`.
  */
-@interface MXKRoomBubble : NSObject
-
-@property (nonatomic) NSString *senderId;
-
-// The body of the message, or kind of content description in case of attachment (e.g. "image attachment")
-@property (nonatomic) /*NSAttributedString @TODO*/ NSString *attributedTextMessage;
-
-- (instancetype)initWithEvent:(MXEvent*)event andRoomState:(MXRoomState*)roomState;
-
-// @TODO
-//- (BOOL)addEvent:(MXEvent*)event;
+@interface MXKCellData : NSObject
 
 @end
