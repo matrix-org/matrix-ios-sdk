@@ -17,6 +17,7 @@
 #import <UIKit/UIKit.h>
 #import <MatrixSDK/MatrixSDK.h>
 
+#import "MXKDataSource.h"
 #import "MXKRoomBubble.h"
 
 /**
@@ -35,7 +36,7 @@ extern NSString *const kMXKOutgoingRoomBubbleCellIdentifier;
 /**
  The data source for `MXKRoomViewController`.
  */
-@interface MXKRoomDataSource : NSObject <UITableViewDataSource> {
+@interface MXKRoomDataSource : MXKDataSource <UITableViewDataSource> {
 
 @protected
     /**
@@ -64,13 +65,6 @@ extern NSString *const kMXKOutgoingRoomBubbleCellIdentifier;
      The queue of events that need to be processed in order to compute their display.
      */
     NSMutableArray *eventsToProcess;
-
-    /**
-     The target for this data source.
-     When the room data is updated, `MXKRoomDataSource` automatically updates it.
-     @TODO: Not convinced by that.
-     */
-    UITableView *tableView;
 }
 
 /**

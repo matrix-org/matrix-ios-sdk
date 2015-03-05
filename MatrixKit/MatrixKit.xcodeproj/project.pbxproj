@@ -19,6 +19,7 @@
 		328AC4861AA75E000044A6FB /* MXKRoomBubbleTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 328AC4851AA75E000044A6FB /* MXKRoomBubbleTableViewCell.m */; };
 		328AC4891AA75EDD0044A6FB /* MXKRoomIncomingBubbleTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 328AC4881AA75EDD0044A6FB /* MXKRoomIncomingBubbleTableViewCell.m */; };
 		328AC48C1AA760520044A6FB /* MXKRoomOutgoingBubbleTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 328AC48B1AA760520044A6FB /* MXKRoomOutgoingBubbleTableViewCell.m */; };
+		328AC48F1AA86E110044A6FB /* MXKDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 328AC48E1AA86E110044A6FB /* MXKDataSource.m */; };
 		32CE6EE01AA737F300C71389 /* MXKQueuedEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 32CE6EDF1AA737F300C71389 /* MXKQueuedEvent.m */; };
 		32CE6EE31AA744AE00C71389 /* MXKRoomBubble.m in Sources */ = {isa = PBXBuildFile; fileRef = 32CE6EE21AA744AE00C71389 /* MXKRoomBubble.m */; };
 		DCA1844D18A75FDEAC153B9E /* libPods-MatrixKit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 36209DA7732B7B4511C8821C /* libPods-MatrixKit.a */; };
@@ -61,6 +62,8 @@
 		328AC4881AA75EDD0044A6FB /* MXKRoomIncomingBubbleTableViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKRoomIncomingBubbleTableViewCell.m; sourceTree = "<group>"; };
 		328AC48A1AA760520044A6FB /* MXKRoomOutgoingBubbleTableViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKRoomOutgoingBubbleTableViewCell.h; sourceTree = "<group>"; };
 		328AC48B1AA760520044A6FB /* MXKRoomOutgoingBubbleTableViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKRoomOutgoingBubbleTableViewCell.m; sourceTree = "<group>"; };
+		328AC48D1AA86E110044A6FB /* MXKDataSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKDataSource.h; sourceTree = "<group>"; };
+		328AC48E1AA86E110044A6FB /* MXKDataSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKDataSource.m; sourceTree = "<group>"; };
 		32CE6EDE1AA737F300C71389 /* MXKQueuedEvent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKQueuedEvent.h; sourceTree = "<group>"; };
 		32CE6EDF1AA737F300C71389 /* MXKQueuedEvent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKQueuedEvent.m; sourceTree = "<group>"; };
 		32CE6EE11AA744AE00C71389 /* MXKRoomBubble.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKRoomBubble.h; sourceTree = "<group>"; };
@@ -181,6 +184,8 @@
 		3219CBBC1AA6FB1C0027D7E2 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				328AC48D1AA86E110044A6FB /* MXKDataSource.h */,
+				328AC48E1AA86E110044A6FB /* MXKDataSource.m */,
 				3219CBC21AA6FF490027D7E2 /* MXKRoomDataSource.h */,
 				3219CBC31AA6FF490027D7E2 /* MXKRoomDataSource.m */,
 				32CE6EDE1AA737F300C71389 /* MXKQueuedEvent.h */,
@@ -359,6 +364,7 @@
 				3219CBBA1AA6FA7A0027D7E2 /* MXKSampleRoomViewController.m in Sources */,
 				328AC4891AA75EDD0044A6FB /* MXKRoomIncomingBubbleTableViewCell.m in Sources */,
 				32CE6EE01AA737F300C71389 /* MXKQueuedEvent.m in Sources */,
+				328AC48F1AA86E110044A6FB /* MXKDataSource.m in Sources */,
 				328AC4861AA75E000044A6FB /* MXKRoomBubbleTableViewCell.m in Sources */,
 				328AC48C1AA760520044A6FB /* MXKRoomOutgoingBubbleTableViewCell.m in Sources */,
 				3219CBB91AA6FA7A0027D7E2 /* main.m in Sources */,

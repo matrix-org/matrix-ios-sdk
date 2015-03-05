@@ -21,13 +21,16 @@ limitations under the License.
 /**
  This view controller displays messages of a room.
  */
-@interface MXKRoomViewController : UIViewController
+@interface MXKRoomViewController : UIViewController <MXKDataSourceDelegate>
 
 @property (nonatomic, readonly) UITableView *tableView;
 @property (nonatomic) MXKRoomDataSource *dataSource;
 
 /**
- Make the view controller display a room con
+ Make the view controller display a room.
+ 
+ @param room the room.
+ @param mxSession the Matrix session.
  */
 - (void)displayRoom:(MXRoom*)room withMXSession:(MXSession*)mxSession;
 

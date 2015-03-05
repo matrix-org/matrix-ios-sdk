@@ -54,20 +54,29 @@
     room = aRoom;
     mxSession = session;
 
-    // Set up data source and cell classes to use
+    // Set up table data source
     _dataSource = [[MXKRoomDataSource alloc] initWithRoom:room andMatrixSession:mxSession];
     _tableView.dataSource = _dataSource;
 
+    // Listen to data source changes
+    _dataSource.delegate = self;
+
+    // Set up classes to use for cells
     [_tableView registerClass:MXKRoomIncomingBubbleTableViewCell.class forCellReuseIdentifier:kMXKIncomingRoomBubbleCellIdentifier];
     [_tableView registerClass:MXKRoomOutgoingBubbleTableViewCell.class forCellReuseIdentifier:kMXKOutgoingRoomBubbleCellIdentifier];
 
     // Start showing history right now
-    [_tableView reloadData];
     [_dataSource paginateBackMessagesToFillRect:self.view.frame success:^{
-        // @TODO
+        // @TODO (hide loading wheel)
     } failure:^(NSError *error) {
         // @TODO
     }];
+}
+
+#pragma mark - MXKDataSourceDelegate
+- (void)dataSource:(MXKDataSource *)dataSource didChange:(id)changes {
+    // For now, do a simple full reload
+    [_tableView reloadData];
 }
 
 @end

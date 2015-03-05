@@ -157,7 +157,10 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
         // Updated data can be displayed now
         dispatch_async(dispatch_get_main_queue(), ^{
             bubbles = bubblesSnapshot;
-            [tableView reloadData];
+
+            if (self.delegate) {
+                [self.delegate dataSource:self didChange:nil];
+            }
 
             // Inform about the end if requested
             if (onComplete) {
@@ -169,11 +172,7 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
 
 
 #pragma mark - UITableViewDataSource
-- (NSInteger)tableView:(UITableView *)tableView2 numberOfRowsInSection:(NSInteger)section {
-
-    // Keep the tableView ref to automatically call reloadData on it
-    // @TODO: Smart or not? Seems not.
-    tableView = tableView2;
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
 
     NSInteger count;
     @synchronized(bubbles) {
@@ -182,7 +181,7 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
     return count;
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView2 cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 
     MXKRoomBubble *bubble;
     @synchronized(bubbles) {
