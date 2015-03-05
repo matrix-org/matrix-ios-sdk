@@ -16,6 +16,33 @@
 
 #import "MXKDataSource.h"
 
+@interface MXKDataSource () {
+    /**
+     The mapping between cell identifiers and MXKCellData classes.
+     */
+    NSMutableDictionary *map;
+}
+@end
+
 @implementation MXKDataSource
+
+- (instancetype)init {
+
+    self = [super init];
+    if (self) {
+        map = [NSMutableDictionary dictionary];
+    }
+    return self;
+}
+
+- (void)registerCellDataClass:(Class)cellDataClass forCellIdentifier:(NSString *)identifier {
+
+    map[identifier] = cellDataClass;
+}
+
+- (Class)cellDataClassForCellIdentifier:(NSString *)identifier {
+
+    return map[identifier];
+}
 
 @end

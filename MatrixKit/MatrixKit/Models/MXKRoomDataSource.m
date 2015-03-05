@@ -138,7 +138,11 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
 
         for (MXKQueuedEvent *queuedEvent in eventsToProcessSnapshot) {
 
-            MXKRoomBubbleCellData *bubble = [[MXKRoomBubbleCellData alloc] initWithEvent:queuedEvent.event andRoomState:queuedEvent.state];
+            // Retrieve the MXKCellData class to manage the data
+            Class class = [self cellDataClassForCellIdentifier:kMXKIncomingRoomBubbleCellIdentifier];
+            NSAssert([class isSubclassOfClass:MXKRoomBubbleCellData.class], @"MXKRoomDataSource only manages MXKCellData class that inherits from MXKRoomBubbleCellData");
+
+            MXKRoomBubbleCellData *bubble = [[class alloc] initWithEvent:queuedEvent.event andRoomState:queuedEvent.state];
 
             // @TODO: Group messages in bubbles
             if (queuedEvent.direction == MXEventDirectionBackwards) {

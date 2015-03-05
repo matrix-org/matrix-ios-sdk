@@ -16,6 +16,7 @@
 
 #import "MXKRoomViewController.h"
 
+#import "MXKRoomBubbleCellData.h"
 #import "MXKRoomIncomingBubbleTableViewCell.h"
 #import "MXKRoomOutgoingBubbleTableViewCell.h"
 
@@ -63,7 +64,10 @@
 
     // Set up classes to use for cells
     [_tableView registerClass:MXKRoomIncomingBubbleTableViewCell.class forCellReuseIdentifier:kMXKIncomingRoomBubbleCellIdentifier];
+    [_dataSource registerCellDataClass:MXKRoomBubbleCellData.class forCellIdentifier:kMXKIncomingRoomBubbleCellIdentifier];
+
     [_tableView registerClass:MXKRoomOutgoingBubbleTableViewCell.class forCellReuseIdentifier:kMXKOutgoingRoomBubbleCellIdentifier];
+    [_dataSource registerCellDataClass:MXKRoomBubbleCellData.class forCellIdentifier:kMXKOutgoingRoomBubbleCellIdentifier];
 
     // Start showing history right now
     [_dataSource paginateBackMessagesToFillRect:self.view.frame success:^{
