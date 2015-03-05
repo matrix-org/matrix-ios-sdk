@@ -183,15 +183,15 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 
-    MXKRoomBubbleCellData *bubble;
+    MXKRoomBubbleCellData *bubbleData;
     @synchronized(bubbles) {
-        bubble = bubbles[indexPath.row];
+        bubbleData = bubbles[indexPath.row];
     }
 
     // The cell to use depends if this is a message from the user or not
     // Then use the cell class defined by the table view
     MXKRoomBubbleTableViewCell *cell;
-    if ([bubble.senderId isEqualToString:mxSession.matrixRestClient.credentials.userId]) {
+    if ([bubbleData.senderId isEqualToString:mxSession.matrixRestClient.credentials.userId]) {
         cell = [tableView dequeueReusableCellWithIdentifier:kMXKOutgoingRoomBubbleCellIdentifier forIndexPath:indexPath];
     }
     else {
@@ -199,7 +199,7 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
     }
 
     // Make the bubble display the data
-    [cell render:bubble];
+    [cell render:bubbleData];
 
     return cell;
 }

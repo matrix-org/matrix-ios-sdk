@@ -32,9 +32,9 @@
 
 - (void)render:(MXKCellData *)cellData {
 
-    MXKRoomBubbleCellData *bubble = (MXKRoomBubbleCellData*)cellData;
-    if (bubble) {
-        self.textLabel.text = bubble.attributedTextMessage;
+    MXKRoomBubbleCellData *bubbleData = (MXKRoomBubbleCellData*)cellData;
+    if (bubbleData) {
+        self.textLabel.text = bubbleData.attributedTextMessage;
     }
     else {
         self.textLabel.text = @"";

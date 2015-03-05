@@ -19,15 +19,32 @@
 #import "MXKCellData.h"
 
 /**
+ `MXKCellRendering` defines a protocol a view must conform to display a cell.
 
+ A cell is a generic term. It can be a UITableViewCell or a UICollectionViewCell or any object
+ expected by the end view controller.
  */
 @protocol MXKCellRendering <NSObject>
 
 /**
  Configure the cell in order to display the passed data.
  
- @param cellData
+ The object implementing the `MXKCellRendering` protocol should be able to cast the past object
+ into its original class.
+ 
+ @param cellData the data object to render.
  */
 - (void)render:(MXKCellData*)cellData;
+
+@optional
+
+/**
+ Reset the cell.
+
+ The cell is no more displayed. This is time to release resources and removing listeners.
+ In case of UITableViewCell or UIContentViewCell object, the cell must reset in a state
+ that it can be reusable.
+ */
+- (void)didEndDisplay;
 
 @end
