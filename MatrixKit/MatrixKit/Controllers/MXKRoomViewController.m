@@ -131,6 +131,8 @@
     [_dataSource registerCellDataClass:cellDataClass forCellIdentifier:identifier];
 
     // Force refresh the table
+    // @TODO: This does not work at runtime. The table view continues to use the class
+    // previously registered
     [_tableView reloadData];
 }
 
