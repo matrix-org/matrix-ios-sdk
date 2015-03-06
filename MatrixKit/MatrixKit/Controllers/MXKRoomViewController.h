@@ -27,12 +27,12 @@ limitations under the License.
 @property (nonatomic) MXKRoomDataSource *dataSource;
 
 /**
- Make the view controller display a room.
+ Initialise the view controller to display a room.
  
  @param room the room.
  @param mxSession the Matrix session.
  */
-- (void)displayRoom:(MXRoom*)room withMXSession:(MXSession*)mxSession;
+- (instancetype)initWithRoom:(MXRoom*)room withMXSession:(MXSession*)mxSession;
 
 /**
  Override the default class used for cells in the table view the default class

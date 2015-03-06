@@ -29,6 +29,19 @@
 
 @implementation MXKRoomViewController
 
+- (instancetype)initWithRoom:(MXRoom *)aRoom withMXSession:(MXSession *)session {
+    self = [super init];
+    if (self) {
+        room = aRoom;
+        mxSession = session;
+
+        // Set up table data source and listen to its changes
+        _dataSource = [[MXKRoomDataSource alloc] initWithRoom:room andMatrixSession:mxSession];
+        _dataSource.delegate = self;
+    }
+    return self;
+}
+
 - (void)viewDidLoad {
     [super viewDidLoad];
 
@@ -72,9 +85,7 @@
                                                            constant:0]];
     
     // Check whether a room has been defined
-    if (room) {
-        [self setUpTableView];
-    }
+    [self setUpTableView];
 }
 
 - (void)dealloc {
@@ -90,26 +101,11 @@
     // Dispose of any resources that can be recreated.
 }
 
-- (void)displayRoom:(MXRoom *)aRoom withMXSession:(MXSession *)session {
-
-    room = aRoom;
-    mxSession = session;
-    
-    // Check whether the view controller is already loaded
-    if (_tableView) {
-        [self setUpTableView];
-    }
-}
-
 - (void)setUpTableView {
 
     // Set up table data source
-    _dataSource = [[MXKRoomDataSource alloc] initWithRoom:room andMatrixSession:mxSession];
     _tableView.dataSource = _dataSource;
-
-    // Listen to data source changes
-    _dataSource.delegate = self;
-
+    
     // Set up classes to use for cells
     [_tableView registerClass:MXKRoomIncomingBubbleTableViewCell.class forCellReuseIdentifier:kMXKIncomingRoomBubbleCellIdentifier];
     [_dataSource registerCellDataClass:MXKRoomBubbleCellData.class forCellIdentifier:kMXKIncomingRoomBubbleCellIdentifier];
@@ -126,6 +122,10 @@
 }
 
 - (void)registerCellDataClass:(Class)cellDataClass andCellViewClass:(Class)cellViewClass forCellIdentifier:(NSString *)identifier {
+
+    // @TODO: Fix this assert
+    NSAssert(_tableView, @"This operation must be called only when _tableView is available");
+
     // Configure the classes to use for the given cell type
     [_tableView registerClass:cellViewClass forCellReuseIdentifier:identifier];
     [_dataSource registerCellDataClass:cellDataClass forCellIdentifier:identifier];

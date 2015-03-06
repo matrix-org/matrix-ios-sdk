@@ -92,8 +92,7 @@
 
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    MXKSampleRoomViewController *roomViewController = [[MXKSampleRoomViewController alloc] init];
-    [roomViewController displayRoom:room withMXSession:mxSession];
+    MXKSampleRoomViewController *roomViewController = [[MXKSampleRoomViewController alloc] initWithRoom:room withMXSession:mxSession];
     [self.navigationController pushViewController:roomViewController animated:YES];
 }
 
