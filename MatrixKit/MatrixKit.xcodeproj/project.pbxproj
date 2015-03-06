@@ -8,12 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		3219CB8B1AA6F2780027D7E2 /* MatrixKitTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3219CB8A1AA6F2780027D7E2 /* MatrixKitTests.m */; };
-		3219CBB41AA6FA7A0027D7E2 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3219CBAA1AA6FA7A0027D7E2 /* AppDelegate.m */; };
-		3219CBB51AA6FA7A0027D7E2 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3219CBAB1AA6FA7A0027D7E2 /* LaunchScreen.xib */; };
-		3219CBB61AA6FA7A0027D7E2 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3219CBAD1AA6FA7A0027D7E2 /* Main.storyboard */; };
-		3219CBB71AA6FA7A0027D7E2 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3219CBAF1AA6FA7A0027D7E2 /* Images.xcassets */; };
-		3219CBB91AA6FA7A0027D7E2 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 3219CBB11AA6FA7A0027D7E2 /* main.m */; };
-		3219CBBA1AA6FA7A0027D7E2 /* MXKSampleRoomViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3219CBB31AA6FA7A0027D7E2 /* MXKSampleRoomViewController.m */; };
 		3219CBC01AA6FB470027D7E2 /* MXKRoomViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3219CBBF1AA6FB470027D7E2 /* MXKRoomViewController.m */; };
 		3219CBC41AA6FF490027D7E2 /* MXKRoomDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = 3219CBC31AA6FF490027D7E2 /* MXKRoomDataSource.m */; };
 		328AC4861AA75E000044A6FB /* MXKRoomBubbleTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 328AC4851AA75E000044A6FB /* MXKRoomBubbleTableViewCell.m */; };
@@ -24,6 +18,15 @@
 		32CE6EE01AA737F300C71389 /* MXKQueuedEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 32CE6EDF1AA737F300C71389 /* MXKQueuedEvent.m */; };
 		32CE6EE31AA744AE00C71389 /* MXKRoomBubbleCellData.m in Sources */ = {isa = PBXBuildFile; fileRef = 32CE6EE21AA744AE00C71389 /* MXKRoomBubbleCellData.m */; };
 		DCA1844D18A75FDEAC153B9E /* libPods-MatrixKit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 36209DA7732B7B4511C8821C /* libPods-MatrixKit.a */; };
+		F0CE56E51AA8BB5E003BE77A /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = F0CE56D91AA8BB5E003BE77A /* AppDelegate.m */; };
+		F0CE56E61AA8BB5E003BE77A /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = F0CE56DA1AA8BB5E003BE77A /* LaunchScreen.xib */; };
+		F0CE56E71AA8BB5E003BE77A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F0CE56DC1AA8BB5E003BE77A /* Main.storyboard */; };
+		F0CE56E81AA8BB5E003BE77A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F0CE56DE1AA8BB5E003BE77A /* Images.xcassets */; };
+		F0CE56E91AA8BB5E003BE77A /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = F0CE56DF1AA8BB5E003BE77A /* Info.plist */; };
+		F0CE56EA1AA8BB5E003BE77A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = F0CE56E01AA8BB5E003BE77A /* main.m */; };
+		F0CE56EB1AA8BB5E003BE77A /* MXKSampleMainTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = F0CE56E21AA8BB5E003BE77A /* MXKSampleMainTableViewController.m */; };
+		F0CE56EC1AA8BB5E003BE77A /* MXKSampleRoomViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = F0CE56E41AA8BB5E003BE77A /* MXKSampleRoomViewController.m */; };
+		F0ED5E471AA9D2C30053D9F9 /* MXKSampleRoomViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = F0ED5E461AA9D2C30053D9F9 /* MXKSampleRoomViewController.xib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -39,19 +42,10 @@
 /* Begin PBXFileReference section */
 		250379BB09138CD37E02157B /* Pods-MatrixKit.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixKit.debug.xcconfig"; path = "Pods/Target Support Files/Pods-MatrixKit/Pods-MatrixKit.debug.xcconfig"; sourceTree = "<group>"; };
 		2CBF0F2A1E68D6AE74D84C27 /* Pods-MatrixKit.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixKit.release.xcconfig"; path = "Pods/Target Support Files/Pods-MatrixKit/Pods-MatrixKit.release.xcconfig"; sourceTree = "<group>"; };
-		3219CB681AA6F2780027D7E2 /* MatrixKit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MatrixKit.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3219CB681AA6F2780027D7E2 /* MatrixKitSample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MatrixKitSample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3219CB841AA6F2780027D7E2 /* MatrixKitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MatrixKitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3219CB891AA6F2780027D7E2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3219CB8A1AA6F2780027D7E2 /* MatrixKitTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MatrixKitTests.m; sourceTree = "<group>"; };
-		3219CBA91AA6FA7A0027D7E2 /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
-		3219CBAA1AA6FA7A0027D7E2 /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
-		3219CBAC1AA6FA7A0027D7E2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
-		3219CBAE1AA6FA7A0027D7E2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
-		3219CBAF1AA6FA7A0027D7E2 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
-		3219CBB01AA6FA7A0027D7E2 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		3219CBB11AA6FA7A0027D7E2 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		3219CBB21AA6FA7A0027D7E2 /* MXKSampleRoomViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKSampleRoomViewController.h; sourceTree = "<group>"; };
-		3219CBB31AA6FA7A0027D7E2 /* MXKSampleRoomViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKSampleRoomViewController.m; sourceTree = "<group>"; };
 		3219CBBE1AA6FB470027D7E2 /* MXKRoomViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKRoomViewController.h; sourceTree = "<group>"; };
 		3219CBBF1AA6FB470027D7E2 /* MXKRoomViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKRoomViewController.m; sourceTree = "<group>"; };
 		3219CBC11AA6FB6B0027D7E2 /* MatrixKit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MatrixKit.h; sourceTree = "<group>"; };
@@ -74,6 +68,18 @@
 		32CE6EE11AA744AE00C71389 /* MXKRoomBubbleCellData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKRoomBubbleCellData.h; sourceTree = "<group>"; };
 		32CE6EE21AA744AE00C71389 /* MXKRoomBubbleCellData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKRoomBubbleCellData.m; sourceTree = "<group>"; };
 		36209DA7732B7B4511C8821C /* libPods-MatrixKit.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MatrixKit.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F0CE56D81AA8BB5E003BE77A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		F0CE56D91AA8BB5E003BE77A /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		F0CE56DB1AA8BB5E003BE77A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
+		F0CE56DD1AA8BB5E003BE77A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		F0CE56DE1AA8BB5E003BE77A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
+		F0CE56DF1AA8BB5E003BE77A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F0CE56E01AA8BB5E003BE77A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		F0CE56E11AA8BB5E003BE77A /* MXKSampleMainTableViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKSampleMainTableViewController.h; sourceTree = "<group>"; };
+		F0CE56E21AA8BB5E003BE77A /* MXKSampleMainTableViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKSampleMainTableViewController.m; sourceTree = "<group>"; };
+		F0CE56E31AA8BB5E003BE77A /* MXKSampleRoomViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKSampleRoomViewController.h; sourceTree = "<group>"; };
+		F0CE56E41AA8BB5E003BE77A /* MXKSampleRoomViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKSampleRoomViewController.m; sourceTree = "<group>"; };
+		F0ED5E461AA9D2C30053D9F9 /* MXKSampleRoomViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MXKSampleRoomViewController.xib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -119,7 +125,7 @@
 		3219CB691AA6F2780027D7E2 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				3219CB681AA6F2780027D7E2 /* MatrixKit.app */,
+				3219CB681AA6F2780027D7E2 /* MatrixKitSample.app */,
 				3219CB841AA6F2780027D7E2 /* MatrixKitTests.xctest */,
 			);
 			name = Products;
@@ -156,25 +162,9 @@
 		3219CB941AA6F5ED0027D7E2 /* Samples */ = {
 			isa = PBXGroup;
 			children = (
-				3219CBA81AA6FA7A0027D7E2 /* MatrixKit */,
+				F0CE56D71AA8BB5E003BE77A /* MatrixKitSample */,
 			);
 			path = Samples;
-			sourceTree = "<group>";
-		};
-		3219CBA81AA6FA7A0027D7E2 /* MatrixKit */ = {
-			isa = PBXGroup;
-			children = (
-				3219CBA91AA6FA7A0027D7E2 /* AppDelegate.h */,
-				3219CBAA1AA6FA7A0027D7E2 /* AppDelegate.m */,
-				3219CBAB1AA6FA7A0027D7E2 /* LaunchScreen.xib */,
-				3219CBAD1AA6FA7A0027D7E2 /* Main.storyboard */,
-				3219CBAF1AA6FA7A0027D7E2 /* Images.xcassets */,
-				3219CBB01AA6FA7A0027D7E2 /* Info.plist */,
-				3219CBB11AA6FA7A0027D7E2 /* main.m */,
-				3219CBB21AA6FA7A0027D7E2 /* MXKSampleRoomViewController.h */,
-				3219CBB31AA6FA7A0027D7E2 /* MXKSampleRoomViewController.m */,
-			);
-			path = MatrixKit;
 			sourceTree = "<group>";
 		};
 		3219CBBB1AA6FB1C0027D7E2 /* Controllers */ = {
@@ -234,12 +224,31 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		F0CE56D71AA8BB5E003BE77A /* MatrixKitSample */ = {
+			isa = PBXGroup;
+			children = (
+				F0CE56D81AA8BB5E003BE77A /* AppDelegate.h */,
+				F0CE56D91AA8BB5E003BE77A /* AppDelegate.m */,
+				F0CE56DA1AA8BB5E003BE77A /* LaunchScreen.xib */,
+				F0CE56DC1AA8BB5E003BE77A /* Main.storyboard */,
+				F0CE56DE1AA8BB5E003BE77A /* Images.xcassets */,
+				F0CE56DF1AA8BB5E003BE77A /* Info.plist */,
+				F0CE56E01AA8BB5E003BE77A /* main.m */,
+				F0CE56E11AA8BB5E003BE77A /* MXKSampleMainTableViewController.h */,
+				F0CE56E21AA8BB5E003BE77A /* MXKSampleMainTableViewController.m */,
+				F0CE56E31AA8BB5E003BE77A /* MXKSampleRoomViewController.h */,
+				F0CE56E41AA8BB5E003BE77A /* MXKSampleRoomViewController.m */,
+				F0ED5E461AA9D2C30053D9F9 /* MXKSampleRoomViewController.xib */,
+			);
+			path = MatrixKitSample;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		3219CB671AA6F2780027D7E2 /* MatrixKit */ = {
+		3219CB671AA6F2780027D7E2 /* MatrixKitSample */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 3219CB8E1AA6F2790027D7E2 /* Build configuration list for PBXNativeTarget "MatrixKit" */;
+			buildConfigurationList = 3219CB8E1AA6F2790027D7E2 /* Build configuration list for PBXNativeTarget "MatrixKitSample" */;
 			buildPhases = (
 				C4EF25314B5653164693070B /* Check Pods Manifest.lock */,
 				3219CB641AA6F2780027D7E2 /* Sources */,
@@ -251,9 +260,9 @@
 			);
 			dependencies = (
 			);
-			name = MatrixKit;
+			name = MatrixKitSample;
 			productName = MatrixKit;
-			productReference = 3219CB681AA6F2780027D7E2 /* MatrixKit.app */;
+			productReference = 3219CB681AA6F2780027D7E2 /* MatrixKitSample.app */;
 			productType = "com.apple.product-type.application";
 		};
 		3219CB831AA6F2780027D7E2 /* MatrixKitTests */ = {
@@ -305,7 +314,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				3219CB671AA6F2780027D7E2 /* MatrixKit */,
+				3219CB671AA6F2780027D7E2 /* MatrixKitSample */,
 				3219CB831AA6F2780027D7E2 /* MatrixKitTests */,
 			);
 		};
@@ -316,9 +325,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3219CBB71AA6FA7A0027D7E2 /* Images.xcassets in Resources */,
-				3219CBB51AA6FA7A0027D7E2 /* LaunchScreen.xib in Resources */,
-				3219CBB61AA6FA7A0027D7E2 /* Main.storyboard in Resources */,
+				F0ED5E471AA9D2C30053D9F9 /* MXKSampleRoomViewController.xib in Resources */,
+				F0CE56E91AA8BB5E003BE77A /* Info.plist in Resources */,
+				F0CE56E81AA8BB5E003BE77A /* Images.xcassets in Resources */,
+				F0CE56E61AA8BB5E003BE77A /* LaunchScreen.xib in Resources */,
+				F0CE56E71AA8BB5E003BE77A /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -370,16 +381,17 @@
 			buildActionMask = 2147483647;
 			files = (
 				3219CBC41AA6FF490027D7E2 /* MXKRoomDataSource.m in Sources */,
-				3219CBBA1AA6FA7A0027D7E2 /* MXKSampleRoomViewController.m in Sources */,
 				328AC4891AA75EDD0044A6FB /* MXKRoomIncomingBubbleTableViewCell.m in Sources */,
+				F0CE56EC1AA8BB5E003BE77A /* MXKSampleRoomViewController.m in Sources */,
 				32CE6EE01AA737F300C71389 /* MXKQueuedEvent.m in Sources */,
+				F0CE56EB1AA8BB5E003BE77A /* MXKSampleMainTableViewController.m in Sources */,
 				328AC48F1AA86E110044A6FB /* MXKDataSource.m in Sources */,
+				F0CE56E51AA8BB5E003BE77A /* AppDelegate.m in Sources */,
 				328AC4861AA75E000044A6FB /* MXKRoomBubbleTableViewCell.m in Sources */,
 				328AC4931AA8B05C0044A6FB /* MXKCellData.m in Sources */,
 				328AC48C1AA760520044A6FB /* MXKRoomOutgoingBubbleTableViewCell.m in Sources */,
-				3219CBB91AA6FA7A0027D7E2 /* main.m in Sources */,
 				3219CBC01AA6FB470027D7E2 /* MXKRoomViewController.m in Sources */,
-				3219CBB41AA6FA7A0027D7E2 /* AppDelegate.m in Sources */,
+				F0CE56EA1AA8BB5E003BE77A /* main.m in Sources */,
 				32CE6EE31AA744AE00C71389 /* MXKRoomBubbleCellData.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -397,24 +409,24 @@
 /* Begin PBXTargetDependency section */
 		3219CB861AA6F2780027D7E2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 3219CB671AA6F2780027D7E2 /* MatrixKit */;
+			target = 3219CB671AA6F2780027D7E2 /* MatrixKitSample */;
 			targetProxy = 3219CB851AA6F2780027D7E2 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		3219CBAB1AA6FA7A0027D7E2 /* LaunchScreen.xib */ = {
+		F0CE56DA1AA8BB5E003BE77A /* LaunchScreen.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				3219CBAC1AA6FA7A0027D7E2 /* Base */,
+				F0CE56DB1AA8BB5E003BE77A /* Base */,
 			);
 			name = LaunchScreen.xib;
 			sourceTree = "<group>";
 		};
-		3219CBAD1AA6FA7A0027D7E2 /* Main.storyboard */ = {
+		F0CE56DC1AA8BB5E003BE77A /* Main.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
-				3219CBAE1AA6FA7A0027D7E2 /* Base */,
+				F0CE56DD1AA8BB5E003BE77A /* Base */,
 			);
 			name = Main.storyboard;
 			sourceTree = "<group>";
@@ -505,7 +517,7 @@
 			baseConfigurationReference = 250379BB09138CD37E02157B /* Pods-MatrixKit.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				INFOPLIST_FILE = "$(SRCROOT)/Samples/MatrixKit/Info.plist";
+				INFOPLIST_FILE = "$(SRCROOT)/Samples/MatrixKitSample/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -517,7 +529,7 @@
 			baseConfigurationReference = 2CBF0F2A1E68D6AE74D84C27 /* Pods-MatrixKit.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				INFOPLIST_FILE = "$(SRCROOT)/Samples/MatrixKit/Info.plist";
+				INFOPLIST_FILE = "$(SRCROOT)/Samples/MatrixKitSample/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -570,7 +582,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		3219CB8E1AA6F2790027D7E2 /* Build configuration list for PBXNativeTarget "MatrixKit" */ = {
+		3219CB8E1AA6F2790027D7E2 /* Build configuration list for PBXNativeTarget "MatrixKitSample" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				3219CB8F1AA6F2790027D7E2 /* Debug */,

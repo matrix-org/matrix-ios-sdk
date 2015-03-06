@@ -33,8 +33,14 @@
     [super viewDidLoad];
 
     // Do any additional setup after loading the view.
-    _tableView = [[UITableView alloc] initWithFrame:self.view.bounds];
+    _tableView = [[UITableView alloc] initWithFrame:self.view.frame];
+//    _tableView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     [self.view addSubview:_tableView];
+    
+    // Check whether a room has been defined
+    if (room) {
+        [self setUpTableView];
+    }
 }
 
 - (void)dealloc {
@@ -54,6 +60,14 @@
 
     room = aRoom;
     mxSession = session;
+    
+    // Check whether the view controller is already loaded
+    if (_tableView) {
+        [self setUpTableView];
+    }
+}
+
+- (void)setUpTableView {
 
     // Set up table data source
     _dataSource = [[MXKRoomDataSource alloc] initWithRoom:room andMatrixSession:mxSession];

@@ -14,13 +14,18 @@
  limitations under the License.
  */
 
+#import "MXKSampleMainTableViewController.h"
 #import "MXKSampleRoomViewController.h"
 
-@interface MXKSampleRoomViewController ()
+@interface MXKSampleMainTableViewController () {
+    
+    MXSession *mxSession;
+    MXRoom *room;
+}
 
 @end
 
-@implementation MXKSampleRoomViewController
+@implementation MXKSampleMainTableViewController
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -31,18 +36,16 @@
                                                                     userId:@"@your_matrix_id"
                                                                accessToken:@"your_access_token"];
 
-    MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:[[MXRestClient alloc] initWithCredentials:credentials]];
+    mxSession = [[MXSession alloc] initWithMatrixRestClient:[[MXRestClient alloc] initWithCredentials:credentials]];
     [mxSession start:^{
 
         // Resolve #test:matrix.org to room id in order to make tests there
         [mxSession.matrixRestClient roomIDForRoomAlias:@"#test:matrix.org" success:^(NSString *roomId) {
 
-            MXRoom *room = [mxSession roomWithRoomId:roomId];
+            room = [mxSession roomWithRoomId:roomId];
             NSAssert(room, @"The user must be in the the room");
-
-            // Let's start the display of this room
-            [self displayRoom:room withMXSession:mxSession];
-
+            
+            [self.tableView reloadData];
         } failure:^(NSError *error) {
             NSAssert(false, @"roomIDForRoomAlias should not fail. Error: %@", error);
         }];
@@ -55,6 +58,34 @@
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
+}
+
+#pragma mark - Table View Data Source
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+    if (!room) {
+        return 0;
+    }
+    return 1;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    return 1;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"SampleMainTableViewCell" forIndexPath:indexPath];
+    cell.textLabel.text = @"Room view controller sample";
+    return cell;
+}
+
+#pragma mark - Table view delegate
+
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    MXKSampleRoomViewController *roomViewController = [[MXKSampleRoomViewController alloc] init];
+    [roomViewController displayRoom:room withMXSession:mxSession];
+    [self.navigationController pushViewController:roomViewController animated:YES];
 }
 
 @end
