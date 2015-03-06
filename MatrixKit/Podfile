@@ -3,14 +3,14 @@
 
 source 'https://github.com/CocoaPods/Specs.git'
 
-target "MatrixKit" do
+target "MatrixKitSample" do
 
 # Points to SDK local sources file
 pod 'MatrixSDK', :path => '../MatrixSDK.podspec'
 pod 'HPGrowingTextView', '~> 1.1'
 end
 
-target "MatrixKit" do
+target "MatrixKitSample" do
 
 end
 
