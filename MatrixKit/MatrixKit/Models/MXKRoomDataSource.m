@@ -25,7 +25,11 @@ NSString *const kMXKIncomingRoomBubbleCellIdentifier = @"kMXKIncomingRoomBubbleC
 NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleCellIdentifier";;
 
 
-@interface MXKRoomDataSource ()
+@interface MXKRoomDataSource () {
+
+    // The listener to incoming events in the room
+    id liveEventsListener;
+}
 
 @end
 
@@ -45,29 +49,48 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
         // Else, how to not conflict with other view controller?
         [room resetBackState];
 
-        // Listen to live events in the room
-        // @TODO: How to set events filter?
-        [room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
-
-            if (MXEventDirectionForwards == direction) {
-                // Post incoming events for later processing
-                [self queueEventForProcessing:event withRoomState:roomState direction:MXEventDirectionForwards];
-                [self processQueuedEvents:nil];
-            }
-        }];
+        // Display only a subset of events
+        self.eventsFilterForMessages = @[
+                                         kMXEventTypeStringRoomName,
+                                         kMXEventTypeStringRoomTopic,
+                                         kMXEventTypeStringRoomMember,
+                                         kMXEventTypeStringRoomMessage
+                                         ];;
     }
     return self;
 }
 
 - (void)dealloc {
-    // @TODO: In the future, we should release the delegate hete
-    // Check it works
+    self.delegate = nil;
+
+    if (liveEventsListener) {
+        [room removeListener:liveEventsListener];
+        liveEventsListener = nil;
+    }
+}
+
+- (void)setEventsFilterForMessages:(NSArray *)eventsFilterForMessages {
+
+    // Remove the previous live listener
+    if (liveEventsListener) {
+        [room removeListener:liveEventsListener];
+    }
+
+    // And register a new one with the requested filter
+    _eventsFilterForMessages = [eventsFilterForMessages copy];
+    liveEventsListener = [room listenToEventsOfTypes:_eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+        if (MXEventDirectionForwards == direction) {
+            // Post incoming events for later processing
+            [self queueEventForProcessing:event withRoomState:roomState direction:MXEventDirectionForwards];
+            [self processQueuedEvents:nil];
+        }
+    }];
 }
 
 - (void)paginateBackMessages:(NSUInteger)numItems success:(void (^)())success failure:(void (^)(NSError *error))failure {
 
     // Keep events from the past to later processing
-    id backPaginateListener = [room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+    id backPaginateListener = [room listenToEventsOfTypes:_eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
         if (MXEventDirectionBackwards == direction) {
             [self queueEventForProcessing:event withRoomState:roomState direction:MXEventDirectionBackwards];
         }

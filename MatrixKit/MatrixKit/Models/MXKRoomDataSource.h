@@ -68,6 +68,11 @@ extern NSString *const kMXKOutgoingRoomBubbleCellIdentifier;
 }
 
 /**
+ The type of events to display as messages.
+ */
+@property (nonatomic) NSArray *eventsFilterForMessages;
+
+/**
  Initialise the data source to serve data corresponding to the passed room.
  
  @param room the room to get data from.
