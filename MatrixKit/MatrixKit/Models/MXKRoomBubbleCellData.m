@@ -24,9 +24,22 @@
     if (self) {
         // @TODO
         senderId = event.userId;
-        attributedTextMessage = event.eventId;
+        attributedTextMessage = [event.eventId substringToIndex:5];
     }
     return self;
+}
+
+- (BOOL)addEvent:(MXEvent *)event andRoomState:(MXRoomState *)roomState {
+    BOOL contatenated = NO;
+
+    // Group events only if they come from the same sender
+    if ([event.userId isEqualToString:senderId]) {
+
+        attributedTextMessage = [NSString stringWithFormat:@"%@, %@", attributedTextMessage, [event.eventId substringToIndex:5]];
+        [attributedTextMessage stringByAppendingString:event.eventId];
+        contatenated = YES;
+    }
+    return contatenated;
 }
 
 @end

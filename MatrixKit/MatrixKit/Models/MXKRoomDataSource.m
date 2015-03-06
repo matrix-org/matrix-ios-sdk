@@ -142,14 +142,30 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
             Class class = [self cellDataClassForCellIdentifier:kMXKIncomingRoomBubbleCellIdentifier];
             NSAssert([class conformsToProtocol:@protocol(MXKRoomBubbleCellDataStoring)], @"MXKRoomDataSource only manages MXKCellData that conforms to MXKRoomBubbleCellDataStoring protocol");
 
-            id<MXKRoomBubbleCellDataStoring> bubble = [[class alloc] initWithEvent:queuedEvent.event andRoomState:queuedEvent.state];
+            BOOL eventManaged = NO;
+            if ([class instancesRespondToSelector:@selector(addEvent:andRoomState:)] && 0 < bubblesSnapshot.count) {
 
-            // @TODO: Group messages in bubbles
-            if (queuedEvent.direction == MXEventDirectionBackwards) {
-                [bubblesSnapshot insertObject:bubble atIndex:0];
+                // Try to concatenate the event to the last or the oldest bubble?
+                id<MXKRoomBubbleCellDataStoring> bubbleData;
+                if (queuedEvent.direction == MXEventDirectionBackwards) {
+                    bubbleData = bubblesSnapshot.firstObject;
+                }
+                else {
+                    bubbleData = bubblesSnapshot.lastObject;
+                }
+
+                eventManaged = [bubbleData addEvent:queuedEvent.event andRoomState:queuedEvent.state];
             }
-            else {
-                [bubblesSnapshot addObject:bubble];
+
+            if (NO == eventManaged) {
+                // The event has not been concatenated to an existing cell, create a new bubble for this event
+                id<MXKRoomBubbleCellDataStoring> bubble = [[class alloc] initWithEvent:queuedEvent.event andRoomState:queuedEvent.state];
+                if (queuedEvent.direction == MXEventDirectionBackwards) {
+                    [bubblesSnapshot insertObject:bubble atIndex:0];
+                }
+                else {
+                    [bubblesSnapshot addObject:bubble];
+                }
             }
 
             // The event can be now unqueued
