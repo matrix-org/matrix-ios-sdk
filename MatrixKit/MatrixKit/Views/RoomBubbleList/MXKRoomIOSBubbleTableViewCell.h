@@ -14,15 +14,13 @@
  limitations under the License.
  */
 
-#import <Foundation/Foundation.h>
-#import <MatrixSDK/MatrixSDK.h>
+#import <UIKit/UIKit.h>
 
-#import "MXKRoomBubbleCellDataStoring.h"
+#import "MXKCellRendering.h"
 
 /**
- `MXKRoomBubbleCellData` modelised the data for a `MXKRoomBubbleTableViewCell` cell.
+ `MXKRoomIOSBubbleTableViewCell` instances mimic bubbles in the stock iOS messages application.
  */
-@interface MXKRoomBubbleCellData : MXKCellData <MXKRoomBubbleCellDataStoring>
-
+@interface MXKRoomIOSBubbleTableViewCell : UITableViewCell <MXKCellRendering>
 
 @end

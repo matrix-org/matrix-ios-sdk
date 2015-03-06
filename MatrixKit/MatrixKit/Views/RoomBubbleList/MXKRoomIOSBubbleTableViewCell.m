@@ -14,15 +14,25 @@
  limitations under the License.
  */
 
-#import <Foundation/Foundation.h>
-#import <MatrixSDK/MatrixSDK.h>
+#import "MXKRoomIOSBubbleTableViewCell.h"
 
 #import "MXKRoomBubbleCellDataStoring.h"
 
-/**
- `MXKRoomBubbleCellData` modelised the data for a `MXKRoomBubbleTableViewCell` cell.
- */
-@interface MXKRoomBubbleCellData : MXKCellData <MXKRoomBubbleCellDataStoring>
+@implementation MXKRoomIOSBubbleTableViewCell
 
+- (void)render:(MXKCellData *)cellData {
+
+    id<MXKRoomBubbleCellDataStoring> bubbleData = (id<MXKRoomBubbleCellDataStoring>)cellData;
+    if (bubbleData) {
+        self.textLabel.text = bubbleData.attributedTextMessage;
+    }
+    else {
+        self.textLabel.text = @"";
+    }
+
+    // Light custo for now... @TODO
+    self.layer.cornerRadius = 20;
+    self.backgroundColor = [UIColor blueColor];
+}
 
 @end
