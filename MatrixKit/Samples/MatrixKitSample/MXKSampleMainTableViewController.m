@@ -16,6 +16,7 @@
 
 #import "MXKSampleMainTableViewController.h"
 #import "MXKSampleRoomViewController.h"
+#import <MatrixSDK/MXFileStore.h>
 
 @interface MXKSampleMainTableViewController () {
     
@@ -37,21 +38,29 @@
                                                                accessToken:@"your_access_token"];
 
     mxSession = [[MXSession alloc] initWithMatrixRestClient:[[MXRestClient alloc] initWithCredentials:credentials]];
-    [mxSession start:^{
 
-        // Resolve #test:matrix.org to room id in order to make tests there
-        [mxSession.matrixRestClient roomIDForRoomAlias:@"#test:matrix.org" success:^(NSString *roomId) {
+    // As there is no mock for MatrixSDK yet, use a cache for Matrix data to boost init
+    MXFileStore *mxFileStore = [[MXFileStore alloc] init];
+    __weak typeof(self) weakSelf = self;
+    [mxSession setStore:mxFileStore success:^{
+        typeof(self) self = weakSelf;
+        [self->mxSession start:^{
 
-            room = [mxSession roomWithRoomId:roomId];
-            NSAssert(room, @"The user must be in the the room");
-            
-            [self.tableView reloadData];
+            // Resolve #test:matrix.org to room id in order to make tests there
+            [self->mxSession.matrixRestClient roomIDForRoomAlias:@"#test:matrix.org" success:^(NSString *roomId) {
+
+                self->room = [self->mxSession roomWithRoomId:roomId];
+                NSAssert(self->room, @"The user must be in the the room");
+
+                [self.tableView reloadData];
+            } failure:^(NSError *error) {
+                NSAssert(false, @"roomIDForRoomAlias should not fail. Error: %@", error);
+            }];
+
         } failure:^(NSError *error) {
-            NSAssert(false, @"roomIDForRoomAlias should not fail. Error: %@", error);
+            NSAssert(false, @"%@", error);
         }];
-
     } failure:^(NSError *error) {
-        NSAssert(false, @"%@", error);
     }];
 }
 
