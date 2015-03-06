@@ -7,7 +7,7 @@
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="MXKSampleRoomViewController">
             <connections>
-                <outlet property="view" destination="1UR-YA-Z3Y" id="bAh-zY-ROT"/>
+                <outlet property="view" destination="iN0-l3-epB" id="4SC-y2-abL"/>
             </connections>
         </placeholder>
         <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
@@ -21,18 +21,8 @@
                         <navigationItem title="Room View Controller" id="Ekg-2e-64W"/>
                     </items>
                 </navigationBar>
-                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="1UR-YA-Z3Y" userLabel="ContainerView">
-                    <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
-                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                </view>
             </subviews>
             <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
-            <constraints>
-                <constraint firstItem="1UR-YA-Z3Y" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="LXF-t2-Bhv"/>
-                <constraint firstAttribute="bottom" secondItem="1UR-YA-Z3Y" secondAttribute="bottom" id="b4J-EO-ywF"/>
-                <constraint firstItem="1UR-YA-Z3Y" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="fTT-VG-5bi"/>
-                <constraint firstAttribute="trailing" secondItem="1UR-YA-Z3Y" secondAttribute="trailing" id="yFH-aJ-u7A"/>
-            </constraints>
         </view>
     </objects>
 </document>
