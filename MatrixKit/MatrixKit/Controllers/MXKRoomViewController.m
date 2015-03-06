@@ -125,6 +125,15 @@
     }];
 }
 
+- (void)registerCellDataClass:(Class)cellDataClass andCellViewClass:(Class)cellViewClass forCellIdentifier:(NSString *)identifier {
+    // Configure the classes to use for the given cell type
+    [_tableView registerClass:cellViewClass forCellReuseIdentifier:identifier];
+    [_dataSource registerCellDataClass:cellDataClass forCellIdentifier:identifier];
+
+    // Force refresh the table
+    [_tableView reloadData];
+}
+
 #pragma mark - MXKDataSourceDelegate
 - (void)dataSource:(MXKDataSource *)dataSource didChange:(id)changes {
     // For now, do a simple full reload

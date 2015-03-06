@@ -34,4 +34,14 @@ limitations under the License.
  */
 - (void)displayRoom:(MXRoom*)room withMXSession:(MXSession*)mxSession;
 
+/**
+ Override the default class used for cells in the table view the default class
+ used for computing the cells data.
+
+ @param cellDataClass a MXKRoomBubbleCellDataStoring-compliant class that will handle data for cells.
+ @param cellViewClass a MXKRoomBubbleTableViewCell-inherited class.
+ @param identifier the identifier of targeted cell (kMXKIncomingRoomBubbleCellIdentifier or kMXKOutgoingRoomBubbleCellIdentifier).
+ */
+- (void)registerCellDataClass:(Class)cellDataClass andCellViewClass:(Class)cellViewClass forCellIdentifier:(NSString *)identifier;
+
 @end
