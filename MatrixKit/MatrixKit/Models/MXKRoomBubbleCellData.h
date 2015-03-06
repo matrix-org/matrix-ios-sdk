@@ -17,21 +17,12 @@
 #import <Foundation/Foundation.h>
 #import <MatrixSDK/MatrixSDK.h>
 
-#import "MXKCellData.h"
+#import "MXKRoomBubbleCellDataStoring.h"
 
 /**
  `MXKRoomBubbleCellData` modelised the data for a `MXKRoomBubbleTableViewCell` cell.
  */
-@interface MXKRoomBubbleCellData : MXKCellData
+@interface MXKRoomBubbleCellData:MXKCellData <MXKRoomBubbleCellDataStoring>
 
-@property (nonatomic) NSString *senderId;
-
-// The body of the message, or kind of content description in case of attachment (e.g. "image attachment")
-@property (nonatomic) /*NSAttributedString @TODO*/ NSString *attributedTextMessage;
-
-- (instancetype)initWithEvent:(MXEvent*)event andRoomState:(MXRoomState*)roomState;
-
-// @TODO
-//- (BOOL)addEvent:(MXEvent*)event;
 
 @end

@@ -16,7 +16,7 @@
 
 #import "MXKRoomBubbleTableViewCell.h"
 
-#import "MXKRoomBubbleCellData.h"
+#import "MXKRoomBubbleCellDataStoring.h"
 
 @implementation MXKRoomBubbleTableViewCell
 
@@ -32,7 +32,7 @@
 
 - (void)render:(MXKCellData *)cellData {
 
-    MXKRoomBubbleCellData *bubbleData = (MXKRoomBubbleCellData*)cellData;
+    id<MXKRoomBubbleCellDataStoring> bubbleData = (id<MXKRoomBubbleCellDataStoring>)cellData;
     if (bubbleData) {
         self.textLabel.text = bubbleData.attributedTextMessage;
     }

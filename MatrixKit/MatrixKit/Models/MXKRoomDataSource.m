@@ -140,9 +140,9 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
 
             // Retrieve the MXKCellData class to manage the data
             Class class = [self cellDataClassForCellIdentifier:kMXKIncomingRoomBubbleCellIdentifier];
-            NSAssert([class isSubclassOfClass:MXKRoomBubbleCellData.class], @"MXKRoomDataSource only manages MXKCellData class that inherits from MXKRoomBubbleCellData");
+            NSAssert([class conformsToProtocol:@protocol(MXKRoomBubbleCellDataStoring)], @"MXKRoomDataSource only manages MXKCellData that conforms to MXKRoomBubbleCellDataStoring protocol");
 
-            MXKRoomBubbleCellData *bubble = [[class alloc] initWithEvent:queuedEvent.event andRoomState:queuedEvent.state];
+            id<MXKRoomBubbleCellDataStoring> bubble = [[class alloc] initWithEvent:queuedEvent.event andRoomState:queuedEvent.state];
 
             // @TODO: Group messages in bubbles
             if (queuedEvent.direction == MXEventDirectionBackwards) {
@@ -187,7 +187,7 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 
-    MXKRoomBubbleCellData *bubbleData;
+    id<MXKRoomBubbleCellDataStoring> bubbleData;
     @synchronized(bubbles) {
         bubbleData = bubbles[indexPath.row];
     }

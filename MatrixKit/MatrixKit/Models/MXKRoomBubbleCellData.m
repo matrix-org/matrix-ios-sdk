@@ -17,13 +17,14 @@
 #import "MXKRoomBubbleCellData.h"
 
 @implementation MXKRoomBubbleCellData
+@synthesize senderId, attributedTextMessage;
 
 - (instancetype)initWithEvent:(MXEvent *)event andRoomState:(MXRoomState *)roomState {
     self = [self init];
     if (self) {
         // @TODO
-        _senderId = event.userId;
-        _attributedTextMessage = event.eventId;
+        senderId = event.userId;
+        attributedTextMessage = event.eventId;
     }
     return self;
 }
