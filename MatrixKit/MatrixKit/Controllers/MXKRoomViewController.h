@@ -23,16 +23,13 @@ limitations under the License.
  */
 @interface MXKRoomViewController : UIViewController <MXKDataSourceDelegate>
 
-@property (nonatomic, readonly) UITableView *tableView;
-@property (nonatomic) MXKRoomDataSource *dataSource;
-
 /**
- Initialise the view controller to display a room.
+ Configure the view controller to display a room.
  
  @param room the room.
  @param mxSession the Matrix session.
  */
-- (instancetype)initWithRoom:(MXRoom*)room withMXSession:(MXSession*)mxSession;
+- (void)displayRoom:(MXRoom*)room withMXSession:(MXSession*)mxSession;
 
 /**
  Override the default class used for cells in the table view the default class

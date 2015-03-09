@@ -35,10 +35,32 @@
                         </connections>
                     </tableView>
                     <navigationItem key="navigationItem" title="MatrixKit Samples" id="OG5-0R-UvP"/>
+                    <connections>
+                        <segue destination="XgL-bX-RPC" kind="show" identifier="showSampleRoomViewController" id="P46-7R-64s"/>
+                    </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="IgL-ML-7AF" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="-713" y="-660"/>
+        </scene>
+        <!--SampleRoomViewController-->
+        <scene sceneID="Thv-pf-Y4Q">
+            <objects>
+                <viewController id="XgL-bX-RPC" userLabel="SampleRoomViewController" customClass="MXKSampleRoomViewController" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="ljq-dh-3mb"/>
+                        <viewControllerLayoutGuide type="bottom" id="2Xp-md-gUg"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="CD9-X6-iOe">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    </view>
+                    <navigationItem key="navigationItem" title="Room Title" id="5SM-AZ-XDY"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Igb-wz-h0F" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-46" y="-1196"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="N67-EG-zBw">

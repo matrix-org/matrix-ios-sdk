@@ -22,15 +22,6 @@
 
 @implementation MXKSampleRoomViewController
 
-- (instancetype)init
-{
-    if ((self = [super initWithNibName:@"MXKSampleRoomViewController" bundle:nil]))
-    {
-        // @TODO Init view controller
-    }
-    return self;
-}
-
 - (void)viewDidLoad {
     [super viewDidLoad];
 }

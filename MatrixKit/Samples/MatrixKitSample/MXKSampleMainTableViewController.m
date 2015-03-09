@@ -90,10 +90,17 @@
 
 #pragma mark - Table view delegate
 
-
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    MXKSampleRoomViewController *roomViewController = [[MXKSampleRoomViewController alloc] initWithRoom:room withMXSession:mxSession];
-    [self.navigationController pushViewController:roomViewController animated:YES];
+    [self performSegueWithIdentifier:@"showSampleRoomViewController" sender:self];
+}
+
+#pragma mark - Segues
+
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    if ([segue.identifier isEqualToString:@"showSampleRoomViewController"]) {
+        MXKSampleRoomViewController *sampleRoomViewController = (MXKSampleRoomViewController *)segue.destinationViewController;
+        [sampleRoomViewController displayRoom:room withMXSession:mxSession];
+    }
 }
 
 @end

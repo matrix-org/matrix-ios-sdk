@@ -25,64 +25,35 @@
     MXSession *mxSession;
     MXRoom *room;
 }
+
+@property (nonatomic) IBOutlet UITableView *tableView;
+
+@property (nonatomic) MXKRoomDataSource *dataSource;
+
 @end
 
 @implementation MXKRoomViewController
 
-- (instancetype)initWithRoom:(MXRoom *)aRoom withMXSession:(MXSession *)session {
-    self = [super init];
-    if (self) {
-        room = aRoom;
-        mxSession = session;
+#pragma mark - Class methods
 
-        // Set up table data source and listen to its changes
-        _dataSource = [[MXKRoomDataSource alloc] initWithRoom:room andMatrixSession:mxSession];
-        _dataSource.delegate = self;
-    }
-    return self;
++ (UINib *)nib
+{
+    return [UINib nibWithNibName:NSStringFromClass([MXKRoomViewController class])
+                          bundle:[NSBundle bundleForClass:[MXKRoomViewController class]]];
 }
+
++ (instancetype)roomViewController
+{
+    return [[[self class] alloc] initWithNibName:NSStringFromClass([MXKRoomViewController class])
+                                          bundle:[NSBundle bundleForClass:[MXKRoomViewController class]]];
+}
+
+#pragma mark -
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-
-    // Add table view after loading the view.
-    _tableView = [[UITableView alloc] initWithFrame:self.view.frame];
-    [self.view addSubview:_tableView];
     
-    // Add constraints to force tableView in full width and full height
-    _tableView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    
-    [self.view addConstraint:[NSLayoutConstraint constraintWithItem:_tableView
-                                                          attribute:NSLayoutAttributeLeading
-                                                          relatedBy:0
-                                                             toItem:self.view
-                                                          attribute:NSLayoutAttributeLeading
-                                                         multiplier:1.0
-                                                           constant:0]];
-    
-    [self.view addConstraint:[NSLayoutConstraint constraintWithItem:_tableView
-                                                          attribute:NSLayoutAttributeTrailing
-                                                          relatedBy:0
-                                                             toItem:self.view
-                                                          attribute:NSLayoutAttributeTrailing
-                                                         multiplier:1.0
-                                                           constant:0]];
-    
-    [self.view addConstraint:[NSLayoutConstraint constraintWithItem:_tableView
-                                                          attribute:NSLayoutAttributeTop
-                                                          relatedBy:0
-                                                             toItem:self.view
-                                                          attribute:NSLayoutAttributeTop
-                                                         multiplier:1.0
-                                                           constant:0]];
-    
-    [self.view addConstraint:[NSLayoutConstraint constraintWithItem:_tableView
-                                                          attribute:NSLayoutAttributeBottom
-                                                          relatedBy:0
-                                                             toItem:self.view
-                                                          attribute:NSLayoutAttributeBottom
-                                                         multiplier:1.0
-                                                           constant:0]];
+    [[[self class] nib] instantiateWithOwner:self options:nil];
     
     // Check whether a room has been defined
     [self setUpTableView];
@@ -119,6 +90,21 @@
     } failure:^(NSError *error) {
         // @TODO
     }];
+}
+
+#pragma mark -
+
+- (void)displayRoom:(MXRoom *)aRoom withMXSession:(MXSession *)session {
+    room = aRoom;
+    mxSession = session;
+    
+    // Set up table data source and listen to its changes
+    _dataSource = [[MXKRoomDataSource alloc] initWithRoom:room andMatrixSession:mxSession];
+    _dataSource.delegate = self;
+    
+    if (_tableView) {
+        [self setUpTableView];
+    }
 }
 
 - (void)registerCellDataClass:(Class)cellDataClass andCellViewClass:(Class)cellViewClass forCellIdentifier:(NSString *)identifier {
