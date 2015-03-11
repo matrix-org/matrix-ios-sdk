@@ -56,7 +56,9 @@
     [[[self class] nib] instantiateWithOwner:self options:nil];
     
     // Check whether a room has been defined
-    [self configureView];
+    if (dataSource) {
+        [self configureView];
+    }
 }
 
 - (void)dealloc {
@@ -92,6 +94,7 @@
 #pragma mark -
 
 - (void)displayRoom:(MXKRoomDataSource *)roomDataSource {
+
     dataSource = roomDataSource;
 
     // Set default data and view classes if they are not yet defined in the data source
