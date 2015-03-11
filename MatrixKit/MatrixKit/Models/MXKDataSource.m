@@ -16,6 +16,9 @@
 
 #import "MXKDataSource.h"
 
+#import "MXKCellData.h"
+#import "MXKCellRendering.h"
+
 @interface MXKDataSource () {
     /**
      The mapping between cell identifiers and MXKCellData classes.
@@ -44,6 +47,9 @@
 #pragma mark - MXKCellData classes
 - (void)registerCellDataClass:(Class)cellDataClass forCellIdentifier:(NSString *)identifier {
 
+    // Sanity check: accept only MXKCellData classes or sub-classes
+    NSParameterAssert([cellDataClass isSubclassOfClass:MXKCellData.class]);
+
     cellDataMap[identifier] = cellDataClass;
 }
 
@@ -54,6 +60,9 @@
 
 #pragma mark - MXKCellRendering classes
 - (void)registerCellViewClass:(Class)cellViewClass forCellIdentifier:(NSString *)identifier {
+
+    // Sanity check: accept only classes implementing MXKCellRendering
+    NSParameterAssert([cellViewClass conformsToProtocol:@protocol(MXKCellRendering)]);
 
     cellViewMap[identifier] = cellViewClass;
 }
