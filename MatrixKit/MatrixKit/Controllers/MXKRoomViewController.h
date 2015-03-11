@@ -24,21 +24,10 @@ limitations under the License.
 @interface MXKRoomViewController : UIViewController <MXKDataSourceDelegate>
 
 /**
- Configure the view controller to display a room.
+ Display a room.
  
- @param room the room.
- @param mxSession the Matrix session.
+ @param roomDataSource the data source .
  */
-- (void)displayRoom:(MXRoom*)room withMXSession:(MXSession*)mxSession;
-
-/**
- Override the default class used for cells in the table view the default class
- used for computing the cells data.
-
- @param cellDataClass a MXKRoomBubbleCellDataStoring-compliant class that will handle data for cells.
- @param cellViewClass a MXKRoomBubbleTableViewCell-inherited class.
- @param identifier the identifier of targeted cell (kMXKIncomingRoomBubbleCellIdentifier or kMXKOutgoingRoomBubbleCellIdentifier).
- */
-- (void)registerCellDataClass:(Class)cellDataClass andCellViewClass:(Class)cellViewClass forCellIdentifier:(NSString *)identifier;
+- (void)displayRoom:(MXKRoomDataSource*)roomDataSource;
 
 @end

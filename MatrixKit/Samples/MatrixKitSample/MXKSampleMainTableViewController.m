@@ -99,7 +99,9 @@
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
     if ([segue.identifier isEqualToString:@"showSampleRoomViewController"]) {
         MXKSampleRoomViewController *sampleRoomViewController = (MXKSampleRoomViewController *)segue.destinationViewController;
-        [sampleRoomViewController displayRoom:room withMXSession:mxSession];
+
+        MXKRoomDataSource *roomDataSource = [[MXKRoomDataSource alloc] initWithRoom:room andMatrixSession:mxSession];
+       [sampleRoomViewController displayRoom:roomDataSource];
     }
 }
 

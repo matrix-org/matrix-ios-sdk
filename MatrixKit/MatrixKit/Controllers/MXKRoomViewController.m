@@ -22,13 +22,13 @@
 
 @interface MXKRoomViewController () {
 
-    MXSession *mxSession;
-    MXRoom *room;
+    /**
+     The data source providing UITableViewCells for the current room.
+     */
+    MXKRoomDataSource *dataSource;
 }
 
 @property (nonatomic) IBOutlet UITableView *tableView;
-
-@property (nonatomic) MXKRoomDataSource *dataSource;
 
 @end
 
@@ -63,7 +63,7 @@
     _tableView.dataSource = nil;
     _tableView.delegate = nil;
     _tableView = nil;
-    _dataSource = nil;
+    dataSource = nil;
 }
 
 - (void)didReceiveMemoryWarning {
@@ -75,17 +75,14 @@
 - (void)setUpTableView {
 
     // Set up table data source
-    _tableView.dataSource = _dataSource;
+    _tableView.dataSource = dataSource;
     
     // Set up classes to use for cells
-    [_tableView registerClass:MXKRoomIncomingBubbleTableViewCell.class forCellReuseIdentifier:kMXKIncomingRoomBubbleCellIdentifier];
-    [_dataSource registerCellDataClass:MXKRoomBubbleCellData.class forCellIdentifier:kMXKIncomingRoomBubbleCellIdentifier];
-
-    [_tableView registerClass:MXKRoomOutgoingBubbleTableViewCell.class forCellReuseIdentifier:kMXKOutgoingRoomBubbleCellIdentifier];
-    [_dataSource registerCellDataClass:MXKRoomBubbleCellData.class forCellIdentifier:kMXKOutgoingRoomBubbleCellIdentifier];
+    [_tableView registerClass:[dataSource cellViewClassForCellIdentifier:kMXKIncomingRoomBubbleCellIdentifier] forCellReuseIdentifier:kMXKIncomingRoomBubbleCellIdentifier];
+    [_tableView registerClass:[dataSource cellViewClassForCellIdentifier:kMXKOutgoingRoomBubbleCellIdentifier] forCellReuseIdentifier:kMXKOutgoingRoomBubbleCellIdentifier];
 
     // Start showing history right now
-    [_dataSource paginateBackMessagesToFillRect:self.view.frame success:^{
+    [dataSource paginateBackMessagesToFillRect:self.view.frame success:^{
         // @TODO (hide loading wheel)
     } failure:^(NSError *error) {
         // @TODO
@@ -94,32 +91,31 @@
 
 #pragma mark -
 
-- (void)displayRoom:(MXRoom *)aRoom withMXSession:(MXSession *)session {
-    room = aRoom;
-    mxSession = session;
-    
-    // Set up table data source and listen to its changes
-    _dataSource = [[MXKRoomDataSource alloc] initWithRoom:room andMatrixSession:mxSession];
-    _dataSource.delegate = self;
+- (void)displayRoom:(MXKRoomDataSource *)roomDataSource {
+    dataSource = roomDataSource;
+
+    // Set default data and view classes if they are not yet defined in the data source
+    // For incoming messages
+    if (nil == [dataSource cellDataClassForCellIdentifier:kMXKIncomingRoomBubbleCellIdentifier]) {
+        [dataSource registerCellDataClass:MXKRoomBubbleCellData.class forCellIdentifier:kMXKIncomingRoomBubbleCellIdentifier];
+    }
+    if (nil == [dataSource cellViewClassForCellIdentifier:kMXKIncomingRoomBubbleCellIdentifier]) {
+        [dataSource registerCellViewClass:MXKRoomIncomingBubbleTableViewCell.class forCellIdentifier:kMXKIncomingRoomBubbleCellIdentifier];
+    }
+
+    // And outgoing messages
+    if (nil == [dataSource cellDataClassForCellIdentifier:kMXKOutgoingRoomBubbleCellIdentifier]) {
+        [dataSource registerCellDataClass:MXKRoomBubbleCellData.class forCellIdentifier:kMXKOutgoingRoomBubbleCellIdentifier];
+    }
+    if (nil == [dataSource cellViewClassForCellIdentifier:kMXKOutgoingRoomBubbleCellIdentifier]) {
+        [dataSource registerCellViewClass:MXKRoomOutgoingBubbleTableViewCell.class forCellIdentifier:kMXKOutgoingRoomBubbleCellIdentifier];
+    }
+
+    dataSource.delegate = self;
     
     if (_tableView) {
         [self setUpTableView];
     }
-}
-
-- (void)registerCellDataClass:(Class)cellDataClass andCellViewClass:(Class)cellViewClass forCellIdentifier:(NSString *)identifier {
-
-    // @TODO: Fix this assert
-    NSAssert(_tableView, @"This operation must be called only when _tableView is available");
-
-    // Configure the classes to use for the given cell type
-    [_tableView registerClass:cellViewClass forCellReuseIdentifier:identifier];
-    [_dataSource registerCellDataClass:cellDataClass forCellIdentifier:identifier];
-
-    // Force refresh the table
-    // @TODO: This does not work at runtime. The table view continues to use the class
-    // previously registered
-    [_tableView reloadData];
 }
 
 #pragma mark - MXKDataSourceDelegate

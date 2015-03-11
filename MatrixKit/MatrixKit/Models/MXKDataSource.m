@@ -20,7 +20,12 @@
     /**
      The mapping between cell identifiers and MXKCellData classes.
      */
-    NSMutableDictionary *map;
+    NSMutableDictionary *cellDataMap;
+
+    /**
+     The mapping between cell identifiers and MXKCellRendering classes.
+     */
+    NSMutableDictionary *cellViewMap;
 }
 @end
 
@@ -30,19 +35,32 @@
 
     self = [super init];
     if (self) {
-        map = [NSMutableDictionary dictionary];
+        cellDataMap = [NSMutableDictionary dictionary];
+        cellViewMap = [NSMutableDictionary dictionary];
     }
     return self;
 }
 
+#pragma mark - MXKCellData classes
 - (void)registerCellDataClass:(Class)cellDataClass forCellIdentifier:(NSString *)identifier {
 
-    map[identifier] = cellDataClass;
+    cellDataMap[identifier] = cellDataClass;
 }
 
 - (Class)cellDataClassForCellIdentifier:(NSString *)identifier {
 
-    return map[identifier];
+    return cellDataMap[identifier];
+}
+
+#pragma mark - MXKCellRendering classes
+- (void)registerCellViewClass:(Class)cellViewClass forCellIdentifier:(NSString *)identifier {
+
+    cellViewMap[identifier] = cellViewClass;
+}
+
+- (Class)cellViewClassForCellIdentifier:(NSString *)identifier {
+
+    return cellViewMap[identifier];
 }
 
 @end

@@ -39,10 +39,12 @@
  */
 @property (nonatomic) id<MXKDataSourceDelegate> delegate;
 
+
+#pragma mark - MXKCellData classes
 /**
- Register the MXKCellData class that will be used to process and store data for cells 
+ Register the MXKCellData class that will be used to process and store data for cells
  with the designated identifier.
- 
+
  @param cellDataClass a MXKCellData-inherited class that will handle data for cells.
  @param identifier the identifier of targeted cell.
  */
@@ -56,5 +58,23 @@
  */
 - (Class)cellDataClassForCellIdentifier:(NSString *)identifier;
 
+
+#pragma mark - MXKCellRendering classes
+/**
+ Register the MXKCellRendering-compliant class and that will be used to display cells
+ with the designated identifier.
+
+ @param cellViewClass a class implementing the `MXKCellRendering` protocol.
+ @param identifier the identifier of targeted cell.
+ */
+- (void)registerCellViewClass:(Class)cellViewClass forCellIdentifier:(NSString *)identifier;
+
+/**
+ Return the MXKCellRendering-compliant class that manages the display of cells with the designated identifier.
+
+ @param identifier the cell identifier.
+ @return the associated MXKCellData-inherited class.
+ */
+- (Class)cellViewClassForCellIdentifier:(NSString *)identifier;
 
 @end
