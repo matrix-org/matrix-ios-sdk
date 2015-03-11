@@ -56,7 +56,7 @@
     [[[self class] nib] instantiateWithOwner:self options:nil];
     
     // Check whether a room has been defined
-    [self setUpTableView];
+    [self configureView];
 }
 
 - (void)dealloc {
@@ -72,7 +72,7 @@
     // Dispose of any resources that can be recreated.
 }
 
-- (void)setUpTableView {
+- (void)configureView {
 
     // Set up table data source
     _tableView.dataSource = dataSource;
@@ -114,7 +114,7 @@
     dataSource.delegate = self;
     
     if (_tableView) {
-        [self setUpTableView];
+        [self configureView];
     }
 }
 
