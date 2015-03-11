@@ -39,15 +39,15 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
     self = [super init];
     if (self) {
 
-        room = aRoom;
-        mxSession = session;
+        _room = aRoom;
+        _mxSession = session;
         processingQueue = dispatch_queue_create("MXKRoomDataSource", DISPATCH_QUEUE_SERIAL);
         bubbles = [NSMutableArray array];
         eventsToProcess = [NSMutableArray array];
 
         // @TODO: SDK: we need a reference when paginating back.
         // Else, how to not conflict with other view controller?
-        [room resetBackState];
+        [_room resetBackState];
 
         // Display only a subset of events
         self.eventsFilterForMessages = @[
@@ -64,7 +64,7 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
     self.delegate = nil;
 
     if (liveEventsListener) {
-        [room removeListener:liveEventsListener];
+        [_room removeListener:liveEventsListener];
         liveEventsListener = nil;
     }
 }
@@ -73,12 +73,12 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
 
     // Remove the previous live listener
     if (liveEventsListener) {
-        [room removeListener:liveEventsListener];
+        [_room removeListener:liveEventsListener];
     }
 
     // And register a new one with the requested filter
     _eventsFilterForMessages = [eventsFilterForMessages copy];
-    liveEventsListener = [room listenToEventsOfTypes:_eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+    liveEventsListener = [_room listenToEventsOfTypes:_eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
         if (MXEventDirectionForwards == direction) {
             // Post incoming events for later processing
             [self queueEventForProcessing:event withRoomState:roomState direction:MXEventDirectionForwards];
@@ -90,17 +90,17 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
 - (void)paginateBackMessages:(NSUInteger)numItems success:(void (^)())success failure:(void (^)(NSError *error))failure {
 
     // Keep events from the past to later processing
-    id backPaginateListener = [room listenToEventsOfTypes:_eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+    id backPaginateListener = [_room listenToEventsOfTypes:_eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
         if (MXEventDirectionBackwards == direction) {
             [self queueEventForProcessing:event withRoomState:roomState direction:MXEventDirectionBackwards];
         }
     }];
 
     // Launch the pagination
-    [room paginateBackMessages:numItems complete:^{
+    [_room paginateBackMessages:numItems complete:^{
 
         // Once done, process retrieved events
-        [room removeListener:backPaginateListener];
+        [_room removeListener:backPaginateListener];
         [self processQueuedEvents:success];
 
     } failure:^(NSError *error) {
@@ -234,7 +234,7 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
     // The cell to use depends if this is a message from the user or not
     // Then use the cell class defined by the table view
     MXKRoomBubbleTableViewCell *cell;
-    if ([bubbleData.senderId isEqualToString:mxSession.matrixRestClient.credentials.userId]) {
+    if ([bubbleData.senderId isEqualToString:_mxSession.matrixRestClient.credentials.userId]) {
         cell = [tableView dequeueReusableCellWithIdentifier:kMXKOutgoingRoomBubbleCellIdentifier forIndexPath:indexPath];
     }
     else {

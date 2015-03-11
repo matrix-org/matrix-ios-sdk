@@ -39,16 +39,6 @@ extern NSString *const kMXKOutgoingRoomBubbleCellIdentifier;
 @interface MXKRoomDataSource : MXKDataSource <UITableViewDataSource> {
 
 @protected
-    /**
-     The room the data comes from.
-     */
-    MXRoom *room;
-
-    /**
-     The matrix session.
-     @TODO: Try to remove this unhappy dependency.
-     */
-    MXSession *mxSession;
 
     /**
      The data for the cells served by `MXKRoomDataSource`.
@@ -66,6 +56,16 @@ extern NSString *const kMXKOutgoingRoomBubbleCellIdentifier;
      */
     NSMutableArray *eventsToProcess;
 }
+
+/**
+ The room the data comes from.
+ */
+@property (nonatomic, readonly) MXRoom *room;
+
+/**
+ The matrix session.
+ */
+@property (nonatomic, readonly) MXSession *mxSession;
 
 /**
  The type of events to display as messages.
