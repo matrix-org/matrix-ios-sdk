@@ -16,6 +16,7 @@
 
 #import "MXKSampleMainTableViewController.h"
 #import "MXKSampleRoomViewController.h"
+#import "MXKSampleJSQMessagesViewController.h"
 #import <MatrixSDK/MXFileStore.h>
 
 @interface MXKSampleMainTableViewController () {
@@ -79,19 +80,29 @@
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return 1;
+    return 2;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"SampleMainTableViewCell" forIndexPath:indexPath];
-    cell.textLabel.text = @"Room view controller sample";
+    
+    if (indexPath.row == 0) {
+        cell.textLabel.text = @"Room view controller sample";
+    } else {
+        cell.textLabel.text = @"JSQMessages view controller sample";
+    }
+    
     return cell;
 }
 
 #pragma mark - Table view delegate
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    [self performSegueWithIdentifier:@"showSampleRoomViewController" sender:self];
+    if (indexPath.row == 0) {
+        [self performSegueWithIdentifier:@"showSampleRoomViewController" sender:self];
+    } else {
+        [self performSegueWithIdentifier:@"showSampleJSQMessagesViewController" sender:self];
+    }
 }
 
 #pragma mark - Segues
@@ -102,6 +113,11 @@
 
         MXKRoomDataSource *roomDataSource = [[MXKRoomDataSource alloc] initWithRoom:room andMatrixSession:mxSession];
        [sampleRoomViewController displayRoom:roomDataSource];
+    } else if ([segue.identifier isEqualToString:@"showSampleJSQMessagesViewController"]) {
+        MXKSampleJSQMessagesViewController *sampleRoomViewController = (MXKSampleJSQMessagesViewController *)segue.destinationViewController;
+        
+        MXKSampleJSQRoomDataSource *roomDataSource = [[MXKSampleJSQRoomDataSource alloc] initWithRoom:room andMatrixSession:mxSession];
+        [sampleRoomViewController displayRoom:roomDataSource];
     }
 }
 

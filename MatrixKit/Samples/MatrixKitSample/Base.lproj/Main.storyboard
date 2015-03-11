@@ -37,6 +37,7 @@
                     <navigationItem key="navigationItem" title="MatrixKit Samples" id="OG5-0R-UvP"/>
                     <connections>
                         <segue destination="XgL-bX-RPC" kind="show" identifier="showSampleRoomViewController" id="P46-7R-64s"/>
+                        <segue destination="aaK-R6-eRn" kind="show" identifier="showSampleJSQMessagesViewController" id="wJ9-Ru-LLf"/>
                     </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="IgL-ML-7AF" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -60,7 +61,25 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Igb-wz-h0F" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-46" y="-1196"/>
+            <point key="canvasLocation" x="102" y="-1206"/>
+        </scene>
+        <!--SampleJSQ Messages View Controller-->
+        <scene sceneID="dfP-KJ-iYB">
+            <objects>
+                <viewController id="aaK-R6-eRn" customClass="MXKSampleJSQMessagesViewController" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="4xm-tN-Oyk"/>
+                        <viewControllerLayoutGuide type="bottom" id="XBe-E1-8Jd"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="nQ6-BN-sUc">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="1Re-v2-3pC" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="102" y="-492"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="N67-EG-zBw">
