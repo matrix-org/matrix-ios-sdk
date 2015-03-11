@@ -19,6 +19,9 @@
 #import "MXKQueuedEvent.h"
 #import "MXKRoomBubbleTableViewCell.h"
 
+#import "MXKRoomBubbleCellData.h"
+#import "MXKRoomIncomingBubbleTableViewCell.h"
+#import "MXKRoomOutgoingBubbleTableViewCell.h"
 
 #pragma mark - Constant definitions
 NSString *const kMXKIncomingRoomBubbleCellIdentifier = @"kMXKIncomingRoomBubbleCellIdentifier";
@@ -44,7 +47,15 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
         processingQueue = dispatch_queue_create("MXKRoomDataSource", DISPATCH_QUEUE_SERIAL);
         bubbles = [NSMutableArray array];
         eventsToProcess = [NSMutableArray array];
-
+        
+        // Set default data and view classes
+        // For incoming messages
+        [self registerCellDataClass:MXKRoomBubbleCellData.class forCellIdentifier:kMXKIncomingRoomBubbleCellIdentifier];
+        [self registerCellViewClass:MXKRoomIncomingBubbleTableViewCell.class forCellIdentifier:kMXKIncomingRoomBubbleCellIdentifier];
+        // And outgoing messages
+        [self registerCellDataClass:MXKRoomBubbleCellData.class forCellIdentifier:kMXKOutgoingRoomBubbleCellIdentifier];
+        [self registerCellViewClass:MXKRoomOutgoingBubbleTableViewCell.class forCellIdentifier:kMXKOutgoingRoomBubbleCellIdentifier];
+        
         // @TODO: SDK: we need a reference when paginating back.
         // Else, how to not conflict with other view controller?
         [_room resetBackState];

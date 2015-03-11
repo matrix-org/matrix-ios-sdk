@@ -16,10 +16,6 @@
 
 #import "MXKRoomViewController.h"
 
-#import "MXKRoomBubbleCellData.h"
-#import "MXKRoomIncomingBubbleTableViewCell.h"
-#import "MXKRoomOutgoingBubbleTableViewCell.h"
-
 @interface MXKRoomViewController () {
 
     /**
@@ -96,24 +92,6 @@
 - (void)displayRoom:(MXKRoomDataSource *)roomDataSource {
 
     dataSource = roomDataSource;
-
-    // Set default data and view classes if they are not yet defined in the data source
-    // For incoming messages
-    if (nil == [dataSource cellDataClassForCellIdentifier:kMXKIncomingRoomBubbleCellIdentifier]) {
-        [dataSource registerCellDataClass:MXKRoomBubbleCellData.class forCellIdentifier:kMXKIncomingRoomBubbleCellIdentifier];
-    }
-    if (nil == [dataSource cellViewClassForCellIdentifier:kMXKIncomingRoomBubbleCellIdentifier]) {
-        [dataSource registerCellViewClass:MXKRoomIncomingBubbleTableViewCell.class forCellIdentifier:kMXKIncomingRoomBubbleCellIdentifier];
-    }
-
-    // And outgoing messages
-    if (nil == [dataSource cellDataClassForCellIdentifier:kMXKOutgoingRoomBubbleCellIdentifier]) {
-        [dataSource registerCellDataClass:MXKRoomBubbleCellData.class forCellIdentifier:kMXKOutgoingRoomBubbleCellIdentifier];
-    }
-    if (nil == [dataSource cellViewClassForCellIdentifier:kMXKOutgoingRoomBubbleCellIdentifier]) {
-        [dataSource registerCellViewClass:MXKRoomOutgoingBubbleTableViewCell.class forCellIdentifier:kMXKOutgoingRoomBubbleCellIdentifier];
-    }
-
     dataSource.delegate = self;
     
     if (_tableView) {
