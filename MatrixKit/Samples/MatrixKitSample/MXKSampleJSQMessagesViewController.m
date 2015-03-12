@@ -26,6 +26,8 @@
     JSQMessagesBubbleImage *incomingBubbleImageData;
     
     NSMutableDictionary *membersAvatar;
+    
+    UIImagePickerController *mediaPicker;
 }
 
 @end
@@ -78,6 +80,14 @@
     }];
 }
 
+- (void)dismissMediaPicker {
+    if (mediaPicker) {
+        [self dismissViewControllerAnimated:NO completion:nil];
+        mediaPicker.delegate = nil;
+        mediaPicker = nil;
+    }
+}
+
 #pragma mark -
 
 - (void)displayRoom:(MXKSampleJSQRoomDataSource *)inRoomDataSource {
@@ -87,6 +97,43 @@
     if (self.collectionView) {
         [self configureView];
     }
+}
+
+#pragma mark - JSQMessages view controller
+
+- (void)didPressSendButton:(UIButton *)button
+           withMessageText:(NSString *)text
+                  senderId:(NSString *)senderId
+         senderDisplayName:(NSString *)senderDisplayName
+                      date:(NSDate *)date
+{
+    if (!text.length) {
+        return;
+    }
+    
+    // Prevent multiple send requests
+    button.enabled = NO;
+    
+    // Send message to the room
+    [roomDataSource.room sendMessageOfType:kMXMessageTypeText content:@{@"body":text} success:^(NSString *eventId) {
+        NSLog(@"Succeed to send text message");
+        [self finishSendingMessage];
+        button.enabled = YES;
+    } failure:^(NSError *error) {
+        NSLog(@"Failed to send text message (%@)", error);
+        button.enabled = YES;
+    }];
+}
+
+- (void)didPressAccessoryButton:(UIButton *)sender
+{
+    UIActionSheet *sheet = [[UIActionSheet alloc] initWithTitle:@"Media messages"
+                                                       delegate:self
+                                              cancelButtonTitle:@"Cancel"
+                                         destructiveButtonTitle:nil
+                                              otherButtonTitles:@"Photo Library", @"Take Photo/Video", nil];
+    
+    [sheet showFromToolbar:self.inputToolbar];
 }
 
 #pragma mark - MXKDataSourceDelegate
@@ -297,6 +344,75 @@
 - (void)collectionView:(JSQMessagesCollectionView *)collectionView didTapCellAtIndexPath:(NSIndexPath *)indexPath touchLocation:(CGPoint)touchLocation
 {
     NSLog(@"Tapped cell at %@!", NSStringFromCGPoint(touchLocation));
+}
+
+#pragma mark - UIActionSheetDelegate
+
+- (void)actionSheet:(UIActionSheet *)actionSheet didDismissWithButtonIndex:(NSInteger)buttonIndex
+{
+    if (buttonIndex == actionSheet.cancelButtonIndex) {
+        return;
+    }
+    
+    switch (buttonIndex) {
+        case 0: {
+            // Open media gallery
+            mediaPicker = [[UIImagePickerController alloc] init];
+            mediaPicker.delegate = self;
+            mediaPicker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
+            mediaPicker.allowsEditing = NO;
+            mediaPicker.mediaTypes = [NSArray arrayWithObjects:(NSString *)kUTTypeImage, (NSString *)kUTTypeMovie, nil];
+            [self presentViewController:mediaPicker animated:YES completion:^{}];
+            break;
+        }
+        case 1: {
+            // Open Camera
+            mediaPicker = [[UIImagePickerController alloc] init];
+            mediaPicker.delegate = self;
+            mediaPicker.sourceType = UIImagePickerControllerSourceTypeCamera;
+            mediaPicker.allowsEditing = NO;
+            mediaPicker.mediaTypes = [NSArray arrayWithObjects:(NSString *)kUTTypeImage, (NSString *)kUTTypeMovie, nil];
+            mediaPicker.mediaTypes = [NSArray arrayWithObjects:(NSString *)kUTTypeImage, (NSString *)kUTTypeMovie, nil];
+            [self presentViewController:mediaPicker animated:YES completion:^{}];
+            break;
+        }
+    }
+}
+
+#pragma mark - UIImagePickerControllerDelegate
+
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info {
+    
+    NSString *tmpMessage = nil;
+    
+    NSString *mediaType = [info objectForKey:UIImagePickerControllerMediaType];
+    if ([mediaType isEqualToString:(NSString *)kUTTypeImage]) {
+        UIImage *selectedImage = [info objectForKey:UIImagePickerControllerOriginalImage];
+        if (selectedImage) {
+            NSLog(@"An Image has been selected");
+            // TODO
+//            [roomDataSource.room sendImage:selectedImage];
+            tmpMessage = @"attached Image";
+        }
+    } else if ([mediaType isEqualToString:(NSString *)kUTTypeMovie]) {
+        NSURL* selectedVideo = [info objectForKey:UIImagePickerControllerMediaURL];
+        // Check the selected video, and ignore multiple calls (observed when user pressed several time Choose button)
+        if (selectedVideo) {
+            NSLog(@"A video has been selected");
+            // TODO
+//            [roomDataSource.room sendVideo:selectedVideo];
+            tmpMessage = @"attached Video";
+        }
+    }
+    
+    // Post a temporary message until attachments are supported
+    if (tmpMessage) {
+        [roomDataSource.room sendMessageOfType:kMXMessageTypeText content:@{@"body":tmpMessage} success:^(NSString *eventId) {
+        } failure:^(NSError *error) {
+        }];
+    }
+    
+    [self dismissMediaPicker];
 }
 
 @end

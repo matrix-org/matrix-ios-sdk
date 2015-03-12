@@ -22,7 +22,7 @@ limitations under the License.
 /**
  This view controller displays messages of a room by using JSQMessagesViewController lib
  */
-@interface MXKSampleJSQMessagesViewController : JSQMessagesViewController <MXKDataSourceDelegate>
+@interface MXKSampleJSQMessagesViewController : JSQMessagesViewController <MXKDataSourceDelegate, UIActionSheetDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate>
 
 /**
  Display a room.
