@@ -99,7 +99,13 @@ NSString *const kMXKEventFormatterUnsupportedEventDescriptionPrefix = @"Unsuppor
     return senderAvatarUrl;
 }
 
-- (NSString*)stringFromEvent:(MXEvent*)event withRoomState:(MXRoomState*)roomState {
+- (NSString*)stringFromEvent:(MXEvent*)event withRoomState:(MXRoomState*)roomState error:(MXKEventFormatterError*)error {
+
+    // Check we can output the error
+    NSParameterAssert(error);
+
+    *error = MXKEventFormatterErrorNone;
+
     // Check first whether the event has been redacted
     NSString *redactedInfo = nil;
     BOOL isRedacted = (event.redactedBecause != nil);
@@ -259,6 +265,10 @@ NSString *const kMXKEventFormatterUnsupportedEventDescriptionPrefix = @"Unsuppor
                 if (redactedInfo) {
                     displayText = [NSString stringWithFormat:@"%@ %@", displayText, redactedInfo];
                 }
+
+                if (!displayText) {
+                    *error = MXKEventFormatterErrorUnexpected;
+                }
             }
             break;
         }
@@ -356,43 +366,29 @@ NSString *const kMXKEventFormatterUnsupportedEventDescriptionPrefix = @"Unsuppor
                     // Check attachment validity
                     if (![self isSupportedAttachment:event]) {
                         NSLog(@"[MXKRoomBubbleCellData] Warning: Unsupported attachment %@", event.description);
-                        // Check whether unsupported/unexpected messages should be exposed
-                        if (_isForSubtitle || _hideUnsupportedEvents) {
-                            displayText = @"invalid image attachment";
-                        } else {
-                            // Display event content as unsupported event
-                            displayText = [NSString stringWithFormat:@"%@%@", kMXKEventFormatterUnsupportedEventDescriptionPrefix, event.description];
-                        }
+                        displayText = @"invalid image attachment";
+                        *error = MXKEventFormatterErrorUnsupported;
                     }
                 } else if ([msgtype isEqualToString:kMXMessageTypeAudio]) {
                     displayText = displayText? displayText : @"audio attachment";
                     if (![self isSupportedAttachment:event]) {
                         NSLog(@"[MXKRoomBubbleCellData] Warning: Unsupported attachment %@", event.description);
-                        if (_isForSubtitle || _hideUnsupportedEvents) {
-                            displayText = @"invalid audio attachment";
-                        } else {
-                            displayText = [NSString stringWithFormat:@"%@%@", kMXKEventFormatterUnsupportedEventDescriptionPrefix, event.description];
-                        }
+                        displayText = [NSString stringWithFormat:@"%@%@", kMXKEventFormatterUnsupportedEventDescriptionPrefix, event.description];
+                        *error = MXKEventFormatterErrorUnsupported;
                     }
                 } else if ([msgtype isEqualToString:kMXMessageTypeVideo]) {
                     displayText = displayText? displayText : @"video attachment";
                     if (![self isSupportedAttachment:event]) {
                         NSLog(@"[MXKRoomBubbleCellData] Warning: Unsupported attachment %@", event.description);
-                        if (_isForSubtitle || _hideUnsupportedEvents) {
-                            displayText = @"invalid video attachment";
-                        } else {
-                            displayText = [NSString stringWithFormat:@"%@%@", kMXKEventFormatterUnsupportedEventDescriptionPrefix, event.description];
-                        }
+                        displayText = [NSString stringWithFormat:@"%@%@", kMXKEventFormatterUnsupportedEventDescriptionPrefix, event.description];
+                        *error = MXKEventFormatterErrorUnsupported;
                     }
                 } else if ([msgtype isEqualToString:kMXMessageTypeLocation]) {
                     displayText = displayText? displayText : @"location attachment";
                     if (![self isSupportedAttachment:event]) {
                         NSLog(@"[MXKRoomBubbleCellData] Warning: Unsupported attachment %@", event.description);
-                        if (_isForSubtitle || _hideUnsupportedEvents) {
-                            displayText = @"invalid location attachment";
-                        } else {
-                            displayText = [NSString stringWithFormat:@"%@%@", kMXKEventFormatterUnsupportedEventDescriptionPrefix, event.description];
-                        }
+                        displayText = [NSString stringWithFormat:@"%@%@", kMXKEventFormatterUnsupportedEventDescriptionPrefix, event.description];
+                        *error = MXKEventFormatterErrorUnsupported;
                     }
                 }
 
@@ -416,18 +412,12 @@ NSString *const kMXKEventFormatterUnsupportedEventDescriptionPrefix = @"Unsuppor
             break;
         }
         case MXEventTypeRoomRedaction: {
-            // @TODO: The caller must not call this method if it does not manage this type of event
-            //if ([_eventsFilterForMessages indexOfObject:kMXEventTypeStringRoomRedaction] != NSNotFound) {
-                NSString *eventId = event.redacts;
-                displayText = [NSString stringWithFormat:@"%@ redacted an event (id: %@)", senderDisplayName, eventId];
-            /*} else {
-                // No description
-                return nil;
-            }*/
+            NSString *eventId = event.redacts;
+            displayText = [NSString stringWithFormat:@"%@ redacted an event (id: %@)", senderDisplayName, eventId];
         }
-        case MXEventTypeCustom:
-            break;
+
         default:
+            *error = MXKEventFormatterErrorUnknownEventType;
             break;
     }
 
@@ -436,6 +426,10 @@ NSString *const kMXKEventFormatterUnsupportedEventDescriptionPrefix = @"Unsuppor
         if (!_isForSubtitle && !_hideUnsupportedEvents) {
             // Return event content as unsupported event
             displayText = [NSString stringWithFormat:@"%@%@", kMXKEventFormatterUnsupportedEventDescriptionPrefix, event.description];
+
+            if (MXKEventFormatterErrorNone == *error) {
+                *error = MXKEventFormatterErrorUnsupported;
+            }
         }
     }
     

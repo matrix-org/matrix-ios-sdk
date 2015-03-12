@@ -43,7 +43,11 @@ NSString *const kMXKRoomBubbleCellDataUnsupportedEventDescriptionPrefix = @"Unsu
         
         // @TODO
         senderId = event.userId;
-        attributedTextMessage = [roomDataSource.eventFormatter stringFromEvent:event withRoomState:roomState];
+        MXKEventFormatterError error;
+        NSString *eventString = [roomDataSource.eventFormatter stringFromEvent:event withRoomState:roomState error:&error];
+
+        // @TODO: Manage error
+        attributedTextMessage = eventString;
     }
     return self;
 }
@@ -54,8 +58,12 @@ NSString *const kMXKRoomBubbleCellDataUnsupportedEventDescriptionPrefix = @"Unsu
     // Group events only if they come from the same sender
     if ([event.userId isEqualToString:senderId]) {
 
-        attributedTextMessage = [NSString stringWithFormat:@"%@\n%@", attributedTextMessage, [roomDataSource.eventFormatter stringFromEvent:event withRoomState:roomState]];
-        [attributedTextMessage stringByAppendingString:event.eventId];
+        MXKEventFormatterError error;
+        NSString *eventString = [roomDataSource.eventFormatter stringFromEvent:event withRoomState:roomState error:&error];
+
+        // @TODO: Manage error
+        attributedTextMessage = [NSString stringWithFormat:@"%@\n%@", attributedTextMessage, eventString];
+
         contatenated = YES;
     }
     return contatenated;

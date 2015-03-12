@@ -19,6 +19,33 @@
 #import <MatrixSDK/MatrixSDK.h>
 
 /**
+ Formatting result codes.
+ */
+typedef enum : NSUInteger {
+
+    /**
+     The formatting was successful.
+     */
+    MXKEventFormatterErrorNone,
+
+    /**
+     The formatter knows the event type but it encountered data that it does not support.
+     */
+    MXKEventFormatterErrorUnsupported,
+
+    /**
+     The formatter encountered unexpected data in the event.
+     */
+    MXKEventFormatterErrorUnexpected,
+
+    /**
+     The formatter does not support the type of the passed event.
+     */
+    MXKEventFormatterErrorUnknownEventType
+
+} MXKEventFormatterError;
+
+/**
  `MXKEventFormatter` is an utility class for formating Matrix events into strings which
  will be displayed to the end user.
  */
@@ -55,8 +82,9 @@
  
  @param event the event to format.
  @param roomState the room state right before the event.
+ @param error the error code. In case of formatting error, the formatter may return non nil string as a proposal.
  @return the display text for the event.
  */
-- (NSString*)stringFromEvent:(MXEvent*)event withRoomState:(MXRoomState*)roomState;
+- (NSString*)stringFromEvent:(MXEvent*)event withRoomState:(MXRoomState*)roomState error:(MXKEventFormatterError*)error;
 
 @end
