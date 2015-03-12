@@ -19,6 +19,7 @@
 
 #import "MXKDataSource.h"
 #import "MXKRoomBubbleCellData.h"
+#import "MXKEventFormatter.h"
 
 /**
  Identifier to use for cells that display incoming room events, ie events
@@ -73,6 +74,12 @@ extern NSString *const kMXKOutgoingRoomBubbleCellIdentifier;
  The type of events to display as messages.
  */
 @property (nonatomic) NSArray *eventsFilterForMessages;
+
+/**
+ The events to display texts formatter.
+ `MXKRoomBubbleCellDataStoring` instances can use it to format text.
+ */
+@property (nonatomic) MXKEventFormatter *eventFormatter;
 
 /**
  Flag to not list redacted events in the messages list.

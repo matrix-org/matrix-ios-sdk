@@ -38,12 +38,12 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
 
 @implementation MXKRoomDataSource
 
-- (instancetype)initWithRoom:(MXRoom *)aRoom andMatrixSession:(MXSession *)session {
+- (instancetype)initWithRoom:(MXRoom *)aRoom andMatrixSession:(MXSession *)matrixSession {
     self = [super init];
     if (self) {
 
         _room = aRoom;
-        _mxSession = session;
+        _mxSession = matrixSession;
         processingQueue = dispatch_queue_create("MXKRoomDataSource", DISPATCH_QUEUE_SERIAL);
         bubbles = [NSMutableArray array];
         eventsToProcess = [NSMutableArray array];
@@ -55,6 +55,9 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
         // And outgoing messages
         [self registerCellDataClass:MXKRoomBubbleCellData.class forCellIdentifier:kMXKOutgoingRoomBubbleCellIdentifier];
         [self registerCellViewClass:MXKRoomOutgoingBubbleTableViewCell.class forCellIdentifier:kMXKOutgoingRoomBubbleCellIdentifier];
+
+        // Set default MXEvent -> NSString formatter
+        _eventFormatter = [[MXKEventFormatter alloc] initWithMatrixSession:_mxSession];
         
         // @TODO: SDK: we need a reference when paginating back.
         // Else, how to not conflict with other view controller?
