@@ -67,11 +67,25 @@ extern NSString *const kMXKOutgoingRoomBubbleCellIdentifier;
  */
 @property (nonatomic, readonly) MXSession *mxSession;
 
+
+#pragma mark - Configuration
 /**
  The type of events to display as messages.
  */
 @property (nonatomic) NSArray *eventsFilterForMessages;
 
+/**
+ Flag to not list redacted events in the messages list.
+ */
+@property (nonatomic) BOOL hideRedactions;
+
+/**
+ Flag to not list unsupported events in the messages list.
+ */
+@property (nonatomic) BOOL hideUnsupportedEvents;
+
+
+#pragma mark - Life cycle
 /**
  Initialise the data source to serve data corresponding to the passed room.
  
