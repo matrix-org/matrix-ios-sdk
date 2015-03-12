@@ -19,6 +19,8 @@
 
 #import "MXKCellData.h"
 
+@class MXKRoomDataSource;
+
 /**
  `MXKRoomBubbleCellDataStoring` defines a class must conform in order to store MXKRoomBubble cell data
  managed by `MXKRoomDataSource`.
@@ -61,9 +63,10 @@
  
  @param event the event to be displayed in the cell.
  @param roomState the room state when the event occured.
- @return the newly created instance. 
+ @param roomDataSource the `MXKRoomDataSource` object that will use this instance.
+ @return the newly created instance.
  */
-- (instancetype)initWithEvent:(MXEvent*)event andRoomState:(MXRoomState*)roomState;
+- (instancetype)initWithEvent:(MXEvent*)event andRoomState:(MXRoomState*)roomState andRoomDataSource:(MXKRoomDataSource*)roomDataSource;
 
 @optional
 /**

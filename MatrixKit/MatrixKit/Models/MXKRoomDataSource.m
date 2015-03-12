@@ -193,7 +193,7 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
 
             if (NO == eventManaged) {
                 // The event has not been concatenated to an existing cell, create a new bubble for this event
-                id<MXKRoomBubbleCellDataStoring> bubble = [[class alloc] initWithEvent:queuedEvent.event andRoomState:queuedEvent.state];
+                id<MXKRoomBubbleCellDataStoring> bubble = [[class alloc] initWithEvent:queuedEvent.event andRoomState:queuedEvent.state andRoomDataSource:self];
                 if (queuedEvent.direction == MXEventDirectionBackwards) {
                     [bubblesSnapshot insertObject:bubble atIndex:0];
                 }

@@ -16,12 +16,24 @@
 
 #import "MXKRoomBubbleCellData.h"
 
+@interface MXKRoomBubbleCellData () {
+
+    /**
+     The data source owner of this `MXKRoomBubbleCellData` instance.
+     */
+    MXKRoomDataSource *roomDataSource;
+}
+
+@end
+
 @implementation MXKRoomBubbleCellData
 @synthesize senderId, attributedTextMessage;
 
-- (instancetype)initWithEvent:(MXEvent *)event andRoomState:(MXRoomState *)roomState {
+- (instancetype)initWithEvent:(MXEvent *)event andRoomState:(MXRoomState *)roomState andRoomDataSource:(MXKRoomDataSource *)roomDataSource2 {
     self = [self init];
     if (self) {
+        roomDataSource = roomDataSource2;
+        
         // @TODO
         senderId = event.userId;
         attributedTextMessage = [event.eventId substringToIndex:5];
