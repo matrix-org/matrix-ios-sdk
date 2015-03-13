@@ -3,7 +3,7 @@ Matrix iOS SDK
 
 This open-source library allows you to build iOS apps compatible with Matrix (http://www.matrix.org), an open standard for interoperable Instant Messaging and VoIP.
 
-This SDK implements an interface to communicate with the Matrix Home Server API which is defined at http://matrix.org/docs/api/client-server/.
+This SDK implements an interface to communicate with the Matrix Client/Server API which is defined at http://matrix.org/docs/api/client-server/.
 
 
 Installation
@@ -27,16 +27,15 @@ As a quick overview, there are the classes to know to use the SDK.
 Matrix API level
 ----------------
 :``MXRestClient``:
-    It exposes the Matrix Client-Server API as specified by the Matrix standard to make requests to a Home Server. 
+    Exposes the Matrix Client-Server API as specified by the Matrix standard to make requests to a Home Server. 
 
 
 Business logic and data model
 -----------------------------
-At an upper level, you will find helper to handle data coming from the Home Server.
-These classes does logic to maintain consistent chat rooms data.
+These classes are higher level tools to handle responses from a Home Server. They contain logic to maintain consistent chat room data.
 
 :``MXSession``:
-    This is the main point to handle all data: it uses a MXRestClient instance to loads and maintains data from the home server. The collected data is then dispatched into MXRoom, MXRoomState, MXRoomMember and MXUser objects.
+    This class handles all data arriving from the Home Server. It uses a MXRestClient instance to fetch data from the home server, forwarding it to MXRoom, MXRoomState, MXRoomMember and MXUser objects.
 
 :``MXRoom``:
      This class provides methods to get room data and to interact with the room (join, leave...).
@@ -45,10 +44,10 @@ These classes does logic to maintain consistent chat rooms data.
      This is the state of room at a certain point in time: its name, topic, visibility (public/private), members, etc.
      
 :``MXRoomMember``:
-     This is a member of a room.
+     Represents a member of a room.
      
 :``MXUser``:
-     This is a user known by the current user. MXSession exposes and maintains the list of MXUsers. It provides the user id, displayname and the current presence state
+     This is a user known by the current user, outside of the context of a room. MXSession exposes and maintains the list of MXUsers. It provides the user id, displayname and the current presence state
 
 Usage
 =====
@@ -74,11 +73,10 @@ This API does not require the user to be authenticated. So, MXRestClient instant
     }];
 
 
-Use case #2: Get the rooms user has interaction with
-----------------------------------------------------
-Here the user needs to be authenticated. We will use [MXRestClient initWithCredentials] combined with MXSession that will help us to get organised data.
-The set up of these two objects is usually done once in the app for the user login life::
-
+Use case #2: Get the rooms the user has interacted with
+-------------------------------------------------------
+Here the user needs to be authenticated. We will use [MXRestClient initWithCredentials].
+You'll normally create and initialise these two objects once the user has logged in, then keep them throughout the app's lifetime or until the user logs out::
 
     MXCredentials *credentials = [[MXCredentials alloc] initWithHomeServer:@"http://matrix.org"
                                                                     userId:@"@your_user_id:matrix.org"
@@ -101,7 +99,6 @@ The set up of these two objects is usually done once in the app for the user log
     } failure:^(NSError *error) {
     }];
 
-    
     
 Use case #3: Get messages of a room
 -----------------------------------
@@ -139,7 +136,7 @@ Let's load a bit of room history using paginateBackMessages::
 
 Use case #4: Post a text message to a room
 ------------------------------------------
-This action does not require any business logic from MXSession. MXRestClient is directly used::
+This action does not require any business logic from MXSession: We can use MXRestClient directly::
 
     [MXRestClient postTextMessage:@"the_room_id" text:@"Hello world!" success:^(NSString *event_id) {
         
