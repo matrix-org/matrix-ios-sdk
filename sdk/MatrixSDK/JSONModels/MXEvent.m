@@ -33,6 +33,11 @@ NSString *const kMXEventTypeStringRoomRedaction       = @"m.room.redaction";
 NSString *const kMXEventTypeStringPresence            = @"m.presence";
 NSString *const kMXEventTypeStringTypingNotification  = @"m.typing";
 
+NSString *const kMXEventTypeStringCallInvite          = @"m.call.invite";
+NSString *const kMXEventTypeStringCallCandidates      = @"m.call.candidates";
+NSString *const kMXEventTypeStringCallAnswer          = @"m.call.answer";
+NSString *const kMXEventTypeStringCallHangup          = @"m.call.hangup";
+
 NSString *const kMXMessageTypeText      = @"m.text";
 NSString *const kMXMessageTypeEmote     = @"m.emote";
 NSString *const kMXMessageTypeNotice    = @"m.notice";
