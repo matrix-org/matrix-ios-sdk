@@ -23,5 +23,11 @@ limitations under the License.
  */
 @interface MXKRecentListViewController : UIViewController <MXKDataSourceDelegate>
 
+/**
+ Display the recent list.
+
+ @param listDataSource the data source providing the recents list.
+ */
+- (void)displayList:(MXKRecentListDataSource*)listDataSource;
 
 @end

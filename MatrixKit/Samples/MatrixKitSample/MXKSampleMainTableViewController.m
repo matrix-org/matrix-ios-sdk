@@ -15,6 +15,7 @@
  */
 
 #import "MXKSampleMainTableViewController.h"
+#import "MXKSampleRecentsViewController.h"
 #import "MXKSampleRoomViewController.h"
 #import "MXKSampleJSQMessagesViewController.h"
 #import <MatrixSDK/MXFileStore.h>
@@ -124,7 +125,12 @@
 #pragma mark - Segues
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    if ([segue.identifier isEqualToString:@"showSampleRoomViewController"]) {
+    if ([segue.identifier isEqualToString:@"showSampleRecentsViewController"]) {
+        MXKSampleRecentsViewController *sampleRecentListViewController = (MXKSampleRecentsViewController *)segue.destinationViewController;
+
+        MXKRecentListDataSource *listDataSource = [[MXKRecentListDataSource alloc] initWithMatrixSession:mxSession];
+        [sampleRecentListViewController displayList:listDataSource];
+    } else if ([segue.identifier isEqualToString:@"showSampleRoomViewController"]) {
         MXKSampleRoomViewController *sampleRoomViewController = (MXKSampleRoomViewController *)segue.destinationViewController;
 
         MXKRoomDataSource *roomDataSource = [[MXKRoomDataSource alloc] initWithRoom:room andMatrixSession:mxSession];

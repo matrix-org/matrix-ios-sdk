@@ -78,7 +78,15 @@
 }
 
 #pragma mark -
+- (void)displayList:(MXKRecentListDataSource *)listDataSource {
 
+    dataSource = listDataSource;
+    dataSource.delegate = self;
+
+    if (_tableView) {
+        [self configureView];
+    }
+}
 
 #pragma mark - MXKDataSourceDelegate
 - (void)dataSource:(MXKDataSource *)dataSource didChange:(id)changes {
