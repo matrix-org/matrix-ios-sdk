@@ -38,6 +38,9 @@
 		F0F1489B1AB059AC005F5D4A /* MXKSampleJSQMessagesViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = F0F1489A1AB059AC005F5D4A /* MXKSampleJSQMessagesViewController.m */; };
 		F0F148A51AB08F48005F5D4A /* MXKSampleJSQRoomBubbleCellData.m in Sources */ = {isa = PBXBuildFile; fileRef = F0F148A21AB08F48005F5D4A /* MXKSampleJSQRoomBubbleCellData.m */; };
 		F0F148A61AB08F48005F5D4A /* MXKSampleJSQRoomDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = F0F148A41AB08F48005F5D4A /* MXKSampleJSQRoomDataSource.m */; };
+		F0F148C21AB31237005F5D4A /* MXKMediaLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = F0F148BF1AB31237005F5D4A /* MXKMediaLoader.m */; };
+		F0F148C31AB31237005F5D4A /* MXKMediaManager.m in Sources */ = {isa = PBXBuildFile; fileRef = F0F148C11AB31237005F5D4A /* MXKMediaManager.m */; };
+		F0F148C61AB31240005F5D4A /* MXKTools.m in Sources */ = {isa = PBXBuildFile; fileRef = F0F148C51AB31240005F5D4A /* MXKTools.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -113,6 +116,12 @@
 		F0F148A21AB08F48005F5D4A /* MXKSampleJSQRoomBubbleCellData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKSampleJSQRoomBubbleCellData.m; sourceTree = "<group>"; };
 		F0F148A31AB08F48005F5D4A /* MXKSampleJSQRoomDataSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKSampleJSQRoomDataSource.h; sourceTree = "<group>"; };
 		F0F148A41AB08F48005F5D4A /* MXKSampleJSQRoomDataSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKSampleJSQRoomDataSource.m; sourceTree = "<group>"; };
+		F0F148BE1AB31237005F5D4A /* MXKMediaLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKMediaLoader.h; sourceTree = "<group>"; };
+		F0F148BF1AB31237005F5D4A /* MXKMediaLoader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKMediaLoader.m; sourceTree = "<group>"; };
+		F0F148C01AB31237005F5D4A /* MXKMediaManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKMediaManager.h; sourceTree = "<group>"; };
+		F0F148C11AB31237005F5D4A /* MXKMediaManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKMediaManager.m; sourceTree = "<group>"; };
+		F0F148C41AB31240005F5D4A /* MXKTools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKTools.h; sourceTree = "<group>"; };
+		F0F148C51AB31240005F5D4A /* MXKTools.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKTools.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -260,8 +269,11 @@
 		32CEE21C1AB1A57E00F7C74D /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				F0F148BD1AB31237005F5D4A /* Media */,
 				32CEE21D1AB1A57E00F7C74D /* MXKEventFormatter.h */,
 				32CEE21E1AB1A57E00F7C74D /* MXKEventFormatter.m */,
+				F0F148C41AB31240005F5D4A /* MXKTools.h */,
+				F0F148C51AB31240005F5D4A /* MXKTools.m */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -328,6 +340,17 @@
 				F0F148A41AB08F48005F5D4A /* MXKSampleJSQRoomDataSource.m */,
 			);
 			path = Models;
+			sourceTree = "<group>";
+		};
+		F0F148BD1AB31237005F5D4A /* Media */ = {
+			isa = PBXGroup;
+			children = (
+				F0F148BE1AB31237005F5D4A /* MXKMediaLoader.h */,
+				F0F148BF1AB31237005F5D4A /* MXKMediaLoader.m */,
+				F0F148C01AB31237005F5D4A /* MXKMediaManager.h */,
+				F0F148C11AB31237005F5D4A /* MXKMediaManager.m */,
+			);
+			path = Media;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -468,16 +491,19 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F0F148C61AB31240005F5D4A /* MXKTools.m in Sources */,
 				32CEE2331AB1F5CB00F7C74D /* MXKSampleRecentsViewController.m in Sources */,
 				3219CBC41AA6FF490027D7E2 /* MXKRoomDataSource.m in Sources */,
 				F0F1489B1AB059AC005F5D4A /* MXKSampleJSQMessagesViewController.m in Sources */,
 				328AC4891AA75EDD0044A6FB /* MXKRoomIncomingBubbleTableViewCell.m in Sources */,
 				F0CE56EC1AA8BB5E003BE77A /* MXKSampleRoomViewController.m in Sources */,
+				F0F148C31AB31237005F5D4A /* MXKMediaManager.m in Sources */,
 				329CF77B1AA9FDE000A4753F /* MXKRoomIOSBubbleTableViewCell.m in Sources */,
 				32CEE2301AB1EE0900F7C74D /* MXKRecentTableViewCell.m in Sources */,
 				32CEE2231AB1E37600F7C74D /* MXKRecentListViewController.m in Sources */,
 				32CEE22C1AB1EC9B00F7C74D /* MXKRecentCellData.m in Sources */,
 				32CE6EE01AA737F300C71389 /* MXKQueuedEvent.m in Sources */,
+				F0F148C21AB31237005F5D4A /* MXKMediaLoader.m in Sources */,
 				F0CE56EB1AA8BB5E003BE77A /* MXKSampleMainTableViewController.m in Sources */,
 				328AC48F1AA86E110044A6FB /* MXKDataSource.m in Sources */,
 				F0CE56E51AA8BB5E003BE77A /* AppDelegate.m in Sources */,
