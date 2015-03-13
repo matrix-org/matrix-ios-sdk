@@ -171,6 +171,12 @@
         // Check rules one by one according to their priorities
         for (MXPushRule *rule in flatRules)
         {
+            // Skip disabled rules
+            if (!rule.enabled)
+            {
+                continue;
+            }
+
             BOOL conditionsOk = YES;
 
             // The test depends of the kind of the rule

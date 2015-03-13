@@ -303,6 +303,11 @@ typedef enum : NSUInteger
     @property (nonatomic) BOOL isDefault;
 
     /**
+     Indicate if the rule is enabled.
+     */
+    @property (nonatomic) BOOL enabled;
+
+    /**
      Only available for Content push rules, this gives the pattern to match against.
      */
     @property (nonatomic) NSString *pattern;
