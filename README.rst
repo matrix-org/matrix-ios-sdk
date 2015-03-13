@@ -165,7 +165,7 @@ You will need to set up a push gateway at a publicly accessible URL. This push
 gateway will be the server that has the private key you used to request your
 APNS certificate. Your push gateway needs to expose a path that accept a POST
 request to send notifications: see the HTTP Push Notification Protocol section
-the Matrix Spercification for more details. As per the specification, Matrix
+the Matrix Specification for more details. As per the specification, Matrix
 strongly recommends that the path of this URL be '/_matrix/push/v1/notify'. The
 URL of this endpoint is the URL your client should put into the 'url' value of
 the 'data' dictionary.
