@@ -42,7 +42,7 @@
  @param recentListDataSource the `MXKRecentListDataSource` object that will use this instance.
  @return the newly created instance.
  */
-- (instancetype)initWithRecentListDataSource:(MXKRecentListDataSource*)recentListDataSource;
+- (instancetype)initWithLastEvent:(MXEvent*)event andRoomState:(MXRoomState*)roomState markAsUnread:(BOOL)isUnread andRecentListDataSource:(MXKRecentListDataSource*)recentListDataSource;
 
 // Update the current last event description with the provided event, except if this description is empty (see unsupported/unexpected events).
 // Return true when the provided event is considered as new last event

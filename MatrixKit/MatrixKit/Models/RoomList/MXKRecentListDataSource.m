@@ -20,7 +20,7 @@
 #import "MXKRecentTableViewCell.h"
 
 #pragma mark - Constant definitions
-NSString *const kMXKRoomCellIdentifier = @"kMXKRoomCellIdentifier";
+NSString *const kMXKRecentCellIdentifier = @"kMXKRecentCellIdentifier";
 
 
 @interface MXKRecentListDataSource () {
@@ -38,10 +38,11 @@ NSString *const kMXKRoomCellIdentifier = @"kMXKRoomCellIdentifier";
     if (self) {
 
         _mxSession = matrixSession;
+        cellDataArray = [NSMutableArray array];
 
         // Set default data and view classes
-        [self registerCellDataClass:MXKRecentCellData.class forCellIdentifier:kMXKRoomCellIdentifier];
-        [self registerCellViewClass:MXKRecentTableViewCell.class forCellIdentifier:kMXKRoomCellIdentifier];
+        [self registerCellDataClass:MXKRecentCellData.class forCellIdentifier:kMXKRecentCellIdentifier];
+        [self registerCellViewClass:MXKRecentTableViewCell.class forCellIdentifier:kMXKRecentCellIdentifier];
 
         // Set default MXEvent -> NSString formatter
         _eventFormatter = [[MXKEventFormatter alloc] initWithMatrixSession:_mxSession];
@@ -53,18 +54,25 @@ NSString *const kMXKRoomCellIdentifier = @"kMXKRoomCellIdentifier";
                                          kMXEventTypeStringRoomTopic,
                                          kMXEventTypeStringRoomMember,
                                          kMXEventTypeStringRoomMessage
-                                         ];;
+                                         ];
     }
     return self;
 }
 
 - (void)dealloc {
     self.delegate = nil;
+    cellDataArray = nil;
 
     if (liveEventsListener) {
         liveEventsListener = nil;
     }
 }
+
+- (void)didCellDataChange:(id<MXKRecentCellDataStoring>)cellData {
+
+    if (self.delegate) {
+        [self.delegate dataSource:self didChange:nil];
+    }}
 
 - (void)setEventsFilterForMessages:(NSArray *)eventsFilterForMessages {
 
@@ -77,108 +85,120 @@ NSString *const kMXKRoomCellIdentifier = @"kMXKRoomCellIdentifier";
     _eventsFilterForMessages = [eventsFilterForMessages copy];
     liveEventsListener = [_mxSession listenToEventsOfTypes:_eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
         if (MXEventDirectionForwards == direction) {
-            // Post incoming events for later processing
-            //[self queueEventForProcessing:event withRoomState:roomState direction:MXEventDirectionForwards];
-            //[self processQueuedEvents:nil];
+
+            // Check user's membership in live room state (We will remove left rooms from recents)
+            MXRoom *mxRoom = [_mxSession roomWithRoomId:event.roomId];
+            BOOL isLeft = (mxRoom == nil || mxRoom.state.membership == MXMembershipLeave || mxRoom.state.membership == MXMembershipBan);
+
+            // Consider this new event as unread only if the sender is not the user and if the room is not visible
+            BOOL isUnread = (![event.userId isEqualToString:_mxSession.matrixRestClient.credentials.userId]
+                             /* @TODO: Applicable at this low level? && ![[AppDelegate theDelegate].masterTabBarController.visibleRoomId isEqualToString:event.roomId]*/);
+
+            // Look for the room
+            BOOL isFound = NO;
+            for (NSUInteger index = 0; index < cellDataArray.count; index++) {
+                id<MXKRecentCellDataStoring> cellData = cellDataArray[index];
+                if ([event.roomId isEqualToString:cellData.roomId]) {
+                    isFound = YES;
+                    // Decrement here unreads count for this recent (we will add later the refreshed count)
+                    // @TODO unreadCount -= recentRoom.unreadCount;
+
+                    if (isLeft) {
+                        // Remove left room
+                        [cellDataArray removeObjectAtIndex:index];
+
+                        /* @TODO
+                        if (filteredRecents) {
+                            NSUInteger filteredIndex = [filteredRecents indexOfObject:recentRoom];
+                            if (filteredIndex != NSNotFound) {
+                                [filteredRecents removeObjectAtIndex:filteredIndex];
+                            }
+                        }
+                         */
+                    } else {
+                        if ([cellData updateWithLastEvent:event andRoomState:roomState markAsUnread:isUnread]) {
+                            if (index) {
+                                // Move this room at first position
+                                [cellDataArray removeObjectAtIndex:index];
+                                [cellDataArray insertObject:cellData atIndex:0];
+                            }
+                            // Update filtered recents (if any)
+                            /* @TODO: Do it at this level?
+                            if (filteredRecents) {
+                                NSUInteger filteredIndex = [filteredRecents indexOfObject:recentRoom];
+                                if (filteredIndex && filteredIndex != NSNotFound) {
+                                    [filteredRecents removeObjectAtIndex:filteredIndex];
+                                    [filteredRecents insertObject:recentRoom atIndex:0];
+                                }
+                            }
+                             */
+                        }
+                        // Refresh global unreads count
+                        // @TODO unreadCount += recentRoom.unreadCount;
+                    }
+
+                    // Signal change
+                    if (self.delegate) {
+                        [self.delegate dataSource:self didChange:nil];
+                    }
+                    break;
+                }
+            }
+
+            if (!isFound && !isLeft) {
+                // Insert in first position this new room
+                Class class = [self cellDataClassForCellIdentifier:kMXKRecentCellIdentifier];
+                id<MXKRecentCellDataStoring> cellData = [[class alloc] initWithLastEvent:event andRoomState:mxRoom.state markAsUnread:isUnread andRecentListDataSource:self];
+                if (cellData) {
+
+                    [cellDataArray insertObject:cellData atIndex:0];
+
+                    // Signal change
+                    if (self.delegate) {
+                        [self.delegate dataSource:self didChange:nil];
+                    }
+                }
+            }
         }
     }];
+
+    [self loadData];
 }
 
 
 #pragma mark - Events processing
 
-/**
- Start processing prending events.
- 
- @param onComplete a block called (on the main thread) when the processing has been done. Can be nil.
- */
-- (void)processQueuedEvents:(void (^)())onComplete {
+- (void)loadData {
+    NSArray *recentEvents = [_mxSession recentsWithTypeIn:_eventsFilterForMessages];
 
-    /*
-    // Do the processing on the processing queue
-    dispatch_async(processingQueue, ^{
+    // Retrieve the MXKCellData class to manage the data
+    Class class = [self cellDataClassForCellIdentifier:kMXKRecentCellIdentifier];
+    NSAssert([class conformsToProtocol:@protocol(MXKRecentCellDataStoring)], @"MXKRecentListDataSource only manages MXKCellData that conforms to MXKRecentCellDataStoring protocol");
 
-        // Note: As this block is always called from the same processing queue,
-        // only one batch process is done at a time. Thus, an event cannot be
-        // processed twice
+    for (MXEvent *recentEvent in recentEvents) {
 
-        // Make a quick copy of changing data to avoid to lock it too long time
-        NSMutableArray *eventsToProcessSnapshot;
-        @synchronized(eventsToProcess) {
-            eventsToProcessSnapshot = [eventsToProcess copy];
+        MXRoom *mxRoom = [_mxSession roomWithRoomId:recentEvent.roomId];
+        id<MXKRecentCellDataStoring> cellData = [[class alloc] initWithLastEvent:recentEvent andRoomState:mxRoom.state markAsUnread:NO andRecentListDataSource:self];
+        if (cellData) {
+            [cellDataArray addObject:cellData];
         }
-        NSMutableArray *bubblesSnapshot;
-        @synchronized(bubbles) {
-            bubblesSnapshot = [bubbles mutableCopy];
-        }
+    }
 
-        for (MXKQueuedEvent *queuedEvent in eventsToProcessSnapshot) {
-
-            // Retrieve the MXKCellData class to manage the data
-            Class class = [self cellDataClassForCellIdentifier:kMXKIncomingRoomBubbleCellIdentifier];
-            NSAssert([class conformsToProtocol:@protocol(MXKRoomBubbleCellDataStoring)], @"MXKRoomDataSource only manages MXKCellData that conforms to MXKRoomBubbleCellDataStoring protocol");
-
-            BOOL eventManaged = NO;
-            if ([class instancesRespondToSelector:@selector(addEvent:andRoomState:)] && 0 < bubblesSnapshot.count) {
-
-                // Try to concatenate the event to the last or the oldest bubble?
-                id<MXKRoomBubbleCellDataStoring> bubbleData;
-                if (queuedEvent.direction == MXEventDirectionBackwards) {
-                    bubbleData = bubblesSnapshot.firstObject;
-                }
-                else {
-                    bubbleData = bubblesSnapshot.lastObject;
-                }
-
-                eventManaged = [bubbleData addEvent:queuedEvent.event andRoomState:queuedEvent.state];
-            }
-
-            if (NO == eventManaged) {
-                // The event has not been concatenated to an existing cell, create a new bubble for this event
-                id<MXKRoomBubbleCellDataStoring> bubble = [[class alloc] initWithEvent:queuedEvent.event andRoomState:queuedEvent.state andRoomDataSource:self];
-                if (queuedEvent.direction == MXEventDirectionBackwards) {
-                    [bubblesSnapshot insertObject:bubble atIndex:0];
-                }
-                else {
-                    [bubblesSnapshot addObject:bubble];
-                }
-            }
-
-            // The event can be now unqueued
-            @synchronized(eventsToProcess) {
-                [eventsToProcess removeObject:queuedEvent];
-            }
-        }
-
-        // Updated data can be displayed now
-        dispatch_async(dispatch_get_main_queue(), ^{
-            bubbles = bubblesSnapshot;
-
-            if (self.delegate) {
-                [self.delegate dataSource:self didChange:nil];
-            }
-
-            // Inform about the end if requested
-            if (onComplete) {
-                onComplete();
-            }
-        });
-    });
-     */
+    [self.delegate dataSource:self didChange:nil];
 }
 
 
 #pragma mark - UITableViewDataSource
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
 
-    return rooms.count;
+    return cellDataArray.count;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 
-    id<MXKRecentCellDataStoring> roomData = rooms[indexPath.row];
+    id<MXKRecentCellDataStoring> roomData = cellDataArray[indexPath.row];
 
-    MXKRecentTableViewCell *cell  = [tableView dequeueReusableCellWithIdentifier:kMXKRoomCellIdentifier forIndexPath:indexPath];
+    MXKRecentTableViewCell *cell  = [tableView dequeueReusableCellWithIdentifier:kMXKRecentCellIdentifier forIndexPath:indexPath];
 
     // Make the bubble display the data
     [cell render:roomData];

@@ -74,7 +74,7 @@
     _tableView.dataSource = dataSource;
     
     // Set up classes to use for cells
-    [_tableView registerClass:[dataSource cellViewClassForCellIdentifier:kMXKRoomCellIdentifier] forCellReuseIdentifier:kMXKRoomCellIdentifier];
+    [_tableView registerClass:[dataSource cellViewClassForCellIdentifier:kMXKRecentCellIdentifier] forCellReuseIdentifier:kMXKRecentCellIdentifier];
 }
 
 #pragma mark -

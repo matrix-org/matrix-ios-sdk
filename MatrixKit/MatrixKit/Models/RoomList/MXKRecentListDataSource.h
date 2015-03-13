@@ -22,9 +22,9 @@
 #import "MXKEventFormatter.h"
 
 /**
- Identifier to use for cells that display a room is the rooms list.
+ Identifier to use for cells that display a room is the recents list.
  */
-extern NSString *const kMXKRoomCellIdentifier;
+extern NSString *const kMXKRecentCellIdentifier;
 
 /**
  The data source for `MXKRecentsViewController`.
@@ -36,13 +36,19 @@ extern NSString *const kMXKRoomCellIdentifier;
     /**
      The data for the cells served by `MXKRecentsDataSource`.
      */
-    NSMutableArray *rooms;
+    NSMutableArray *cellDataArray;
 }
 
 /**
  The matrix session.
  */
 @property (nonatomic, readonly) MXSession *mxSession;
+
+/**
+ The total count of unread messages.
+ @TODO
+ */
+@property (nonatomic, readonly) NSUInteger unreadCount;
 
 
 #pragma mark - Configuration
@@ -57,16 +63,6 @@ extern NSString *const kMXKRoomCellIdentifier;
  */
 @property (nonatomic) MXKEventFormatter *eventFormatter;
 
-/**
- Flag to not list redacted events in the messages list.
- */
-@property (nonatomic) BOOL hideRedactions;
-
-/**
- Flag to not list unsupported events in the messages list.
- */
-@property (nonatomic) BOOL hideUnsupportedEvents;
-
 
 #pragma mark - Life cycle
 /**
@@ -76,5 +72,12 @@ extern NSString *const kMXKRoomCellIdentifier;
  @return the newly created instance.
  */
 - (instancetype)initWithMatrixSession:(MXSession*)mxSession;
+
+/**
+ Inform the data source that one of its cells data has changed.
+ 
+ @param cellData the cell that has changed.
+ */
+- (void)didCellDataChange:(id<MXKRecentCellDataStoring>)cellData;
 
 @end
