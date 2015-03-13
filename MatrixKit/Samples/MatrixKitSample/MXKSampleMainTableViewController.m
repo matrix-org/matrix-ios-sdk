@@ -80,16 +80,24 @@
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return 2;
+    return 3;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"SampleMainTableViewCell" forIndexPath:indexPath];
-    
-    if (indexPath.row == 0) {
-        cell.textLabel.text = @"Room view controller sample";
-    } else {
-        cell.textLabel.text = @"JSQMessages view controller sample";
+
+    switch (indexPath.row) {
+        case 0:
+            cell.textLabel.text = @"Recents view controller sample";
+            break;
+
+        case 1:
+            cell.textLabel.text = @"Room view controller sample";
+            break;
+
+        case 2:
+            cell.textLabel.text = @"JSQMessages view controller sample";
+            break;
     }
     
     return cell;
@@ -98,10 +106,18 @@
 #pragma mark - Table view delegate
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (indexPath.row == 0) {
-        [self performSegueWithIdentifier:@"showSampleRoomViewController" sender:self];
-    } else {
-        [self performSegueWithIdentifier:@"showSampleJSQMessagesViewController" sender:self];
+    switch (indexPath.row) {
+        case 0:
+            [self performSegueWithIdentifier:@"showSampleRecentsViewController" sender:self];
+            break;
+
+        case 1:
+            [self performSegueWithIdentifier:@"showSampleRoomViewController" sender:self];
+            break;
+
+        case 2:
+            [self performSegueWithIdentifier:@"showSampleJSQMessagesViewController" sender:self];
+            break;
     }
 }
 
@@ -112,7 +128,7 @@
         MXKSampleRoomViewController *sampleRoomViewController = (MXKSampleRoomViewController *)segue.destinationViewController;
 
         MXKRoomDataSource *roomDataSource = [[MXKRoomDataSource alloc] initWithRoom:room andMatrixSession:mxSession];
-       [sampleRoomViewController displayRoom:roomDataSource];
+        [sampleRoomViewController displayRoom:roomDataSource];
     } else if ([segue.identifier isEqualToString:@"showSampleJSQMessagesViewController"]) {
         MXKSampleJSQMessagesViewController *sampleRoomViewController = (MXKSampleJSQMessagesViewController *)segue.destinationViewController;
         

@@ -16,10 +16,10 @@
 
 #import <UIKit/UIKit.h>
 
-#import "MXKRoomViewController.h"
-#import "MXKRecentListViewController.h"
+#import "MatrixKit.h"
 
-/**
- The Matrix iOS Kit version.
- */
-FOUNDATION_EXPORT NSString *MatrixKitVersion;
+@interface MXKSampleRecentsViewController : MXKRecentListViewController
+
+
+@end
+

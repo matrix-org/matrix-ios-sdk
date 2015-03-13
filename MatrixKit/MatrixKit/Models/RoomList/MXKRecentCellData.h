@@ -14,12 +14,15 @@
  limitations under the License.
  */
 
-#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
+#import <MatrixSDK/MatrixSDK.h>
 
-#import "MXKRoomViewController.h"
-#import "MXKRecentListViewController.h"
+#import "MXKRecentCellDataStoring.h"
 
 /**
- The Matrix iOS Kit version.
+ `MXKRoomCellData` modelised the data for a `MXKRoomTableViewCell` cell.
  */
-FOUNDATION_EXPORT NSString *MatrixKitVersion;
+@interface MXKRecentCellData : MXKCellData <MXKRecentCellDataStoring>
+
+
+@end

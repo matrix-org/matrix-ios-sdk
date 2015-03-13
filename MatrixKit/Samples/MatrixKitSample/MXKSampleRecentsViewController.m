@@ -14,12 +14,21 @@
  limitations under the License.
  */
 
-#import <UIKit/UIKit.h>
+#import "MXKSampleRecentsViewController.h"
 
-#import "MXKRoomViewController.h"
-#import "MXKRecentListViewController.h"
+@interface MXKSampleRecentsViewController ()
 
-/**
- The Matrix iOS Kit version.
- */
-FOUNDATION_EXPORT NSString *MatrixKitVersion;
+@end
+
+@implementation MXKSampleRecentsViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+@end

@@ -16,10 +16,11 @@
 
 #import <UIKit/UIKit.h>
 
-#import "MXKRoomViewController.h"
-#import "MXKRecentListViewController.h"
+#import "MXKCellRendering.h"
 
 /**
- The Matrix iOS Kit version.
+ `MXKRecentTableViewCell` instances display a room in the context of the recents list.
  */
-FOUNDATION_EXPORT NSString *MatrixKitVersion;
+@interface MXKRecentTableViewCell : UITableViewCell <MXKCellRendering>
+
+@end
