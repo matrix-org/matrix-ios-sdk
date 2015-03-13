@@ -201,7 +201,7 @@ encoding for APNS tokens (as this is what sygnal uses)::
       didRegisterForRemoteNotificationsWithDeviceToken:(NSData*)deviceToken {
         NSString *b64Token = [self.deviceToken base64EncodedStringWithOptions:0];
         NSDictionary *pushData = @{
-            @"url": @"https://matrix.org/_matrix/push/v1/notify" // your push gateway URL
+            @"url": @"https://example.com/_matrix/push/v1/notify" // your push gateway URL
         };
         NSString *deviceLang = [NSLocale preferredLanguages][0];
         NSString *profileTag = makeProfileTag(); // more about this later
