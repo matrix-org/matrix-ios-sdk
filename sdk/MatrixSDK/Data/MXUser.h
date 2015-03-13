@@ -17,8 +17,11 @@
 #import <Foundation/Foundation.h>
 
 #import "MXJSONModels.h"
+#import <UIKit/UIKit.h>
 
+@class MXSession;
 @class MXEvent;
+@class MXRoomMember;
 
 /**
  `MXUser` represents a user in Matrix.
@@ -30,6 +33,9 @@
     NSString *_avatarUrl;
     MXPresence _presence;
     NSString *_statusMsg;
+
+    // MXSession is required to make direct API request
+    MXSession *mxSession;
 }
 
 /**
@@ -67,17 +73,19 @@
  Create an instance for an user ID.
  
  @param userId The id to the user.
+ @param mxSession the mxSession to the home server.
  
  @return the newly created MXUser instance.
  */
-- (instancetype)initWithUserId:(NSString*)userId;
+- (instancetype)initWithUserId:(NSString*)userId andMatrixSession:(MXSession*)mxSession;
 
 /**
  Update the MXUser data with a m.room.member event.
  
  @param roomMemberEvent The event.
+ @param roomMember The already decoded room member.
  */
-- (void)updateWithRoomMemberEvent:(MXEvent*)roomMemberEvent;
+- (void)updateWithRoomMemberEvent:(MXEvent*)roomMemberEvent roomMember:(MXRoomMember *)roomMember;
 
 
 /**

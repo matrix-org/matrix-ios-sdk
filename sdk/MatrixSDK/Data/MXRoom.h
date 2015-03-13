@@ -21,6 +21,7 @@
 #import "MXRoomMember.h"
 #import "MXEventListener.h"
 #import "MXRoomState.h"
+#import "MXHTTPOperation.h"
 
 @class MXRoom;
 @class MXSession;
@@ -44,6 +45,12 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  The uptodate state of the room.
  */
 @property (nonatomic, readonly) MXRoomState *state;
+
+/**
+ The list of ids of users currently typing in this room.
+ This array is updated on each received m.typing event (MXEventTypeTypingNotification).
+ */
+@property (nonatomic, readonly) NSArray *typingUsers;
 
 /**
  The last message of the requested types.
@@ -94,10 +101,10 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  @param complete A block object called when the operation is complete.
  @param failure A block object called when the operation fails.
  
- @return a NSOperation instance to use to cancel the request. This instance can be nil
+ @return a MXHTTPOperation instance. This instance can be nil
          if no request to the home server is required.
  */
-- (NSOperation*)paginateBackMessages:(NSUInteger)numItems
+- (MXHTTPOperation*)paginateBackMessages:(NSUInteger)numItems
                     complete:(void (^)())complete
                      failure:(void (^)(NSError *error))failure;
 
@@ -265,6 +272,34 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
                               success:(void (^)())success
                               failure:(void (^)(NSError *error))failure;
 
+/**
+ Inform the home server that the user is typing (or not) in this room.
+
+ @param typing Use YES if the user is currently typing.
+ @param timeout the length of time until the user should be treated as no longer typing,
+ in milliseconds. Can be ommited (set to -1) if they are no longer typing.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)sendTypingNotification:(BOOL)typing
+                       timeout:(NSUInteger)timeout
+                       success:(void (^)())success
+                       failure:(void (^)(NSError *error))failure;
+
+/**
+ Redact an event in this room.
+ 
+ @param eventId the id of the redacted event.
+ @param reason the redaction reason (optional).
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)redactEvent:(NSString*)eventId
+             reason:(NSString*)reason
+            success:(void (^)())success
+            failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Events listeners
 /**

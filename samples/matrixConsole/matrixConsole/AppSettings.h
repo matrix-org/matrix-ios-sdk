@@ -18,10 +18,22 @@
 @interface AppSettings : NSObject
 
 @property (nonatomic) BOOL enableInAppNotifications;
+
 @property (nonatomic) BOOL displayAllEvents;
-@property (nonatomic) BOOL hideUnsupportedMessages;
+@property (nonatomic) BOOL hideRedactions;
+@property (nonatomic) BOOL hideUnsupportedEvents;
 @property (nonatomic) BOOL sortMembersUsingLastSeenTime;
-@property (nonatomic) BOOL displayLeftUsers;    
+@property (nonatomic) BOOL displayLeftUsers;
+
+// return YES if the user allows the local contacts sync
+@property (nonatomic) BOOL syncLocalContacts;
+// phonebook country code
+@property (nonatomic) NSString* countryCode;
+
+// cache sizes in bytes
+@property (nonatomic) NSInteger currentMaxMediaCacheSize;
+@property (nonatomic, readonly) NSInteger maxAllowedMediaCacheSize;
+
 
 + (AppSettings *)sharedSettings;
 

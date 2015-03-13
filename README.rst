@@ -3,16 +3,20 @@ Matrix iOS SDK
 
 This open-source library allows you to build iOS apps compatible with Matrix (http://www.matrix.org), an open standard for interoperable Instant Messaging and VoIP.
 
-This SDK implements an interface to communicate with the Matrix Home Server API which is defined at http://matrix.org/docs/api/client-server/.
+This SDK implements an interface to communicate with the Matrix Client/Server API which is defined at http://matrix.org/docs/api/client-server/.
 
 
 Installation
 ============
 
-The SDK uses CocoaPods (http://cocoapods.org/) as library dependency manager.
+The SDK uses CocoaPods (http://cocoapods.org/) as library dependency manager. In order to set this up::
+
+    sudo gem install cocoapods
+    pod setup
+
 The best way to add the Matrix SDK to your application project is to add the MatrixSDK dependency to your Podfile::
-    
-      pod 'MatrixSDK'
+
+    pod 'MatrixSDK'
 
 
 Overview
@@ -23,28 +27,27 @@ As a quick overview, there are the classes to know to use the SDK.
 Matrix API level
 ----------------
 :``MXRestClient``:
-    It exposes the Matrix Client-Server API as specified by the Matrix standard to make requests to a Home Server. 
+    Exposes the Matrix Client-Server API as specified by the Matrix standard to make requests to a Home Server. 
 
 
 Business logic and data model
 -----------------------------
-At an upper level, you will find helper to handle data coming from the Home Server.
-These classes does logic to maintain consistent chat rooms data.
+These classes are higher level tools to handle responses from a Home Server. They contain logic to maintain consistent chat room data.
 
 :``MXSession``:
-    This is the main point to handle all data: it uses a MXRestClient instance to loads and maintains data from the home server. The collected data is then dispatched into MXRoom, MXRoomState, MXRoomMember and MXUser objects.
+    This class handles all data arriving from the Home Server. It uses a MXRestClient instance to fetch data from the home server, forwarding it to MXRoom, MXRoomState, MXRoomMember and MXUser objects.
 
 :``MXRoom``:
      This class provides methods to get room data and to interact with the room (join, leave...).
 
 :``MXRoomState``:
-	 This is the state of room at a certain point in time: its name, topic, visibility (public/private), members, etc.
-	 
+     This is the state of room at a certain point in time: its name, topic, visibility (public/private), members, etc.
+     
 :``MXRoomMember``:
-	 This is a member of a room.
-	 
+     Represents a member of a room.
+     
 :``MXUser``:
-	 This is a user known by the current user. MXSession exposes and maintains the list of MXUsers. It provides the user id, displayname and the current presence state
+     This is a user known by the current user, outside of the context of a room. MXSession exposes and maintains the list of MXUsers. It provides the user id, displayname and the current presence state
 
 Usage
 =====
@@ -70,11 +73,10 @@ This API does not require the user to be authenticated. So, MXRestClient instant
     }];
 
 
-Use case #2: Get the rooms user has interaction with
-----------------------------------------------------
-Here the user needs to be authenticated. We will use [MXRestClient initWithCredentials] combined with MXSession that will help us to get organised data.
-The set up of these two objects is usually done once in the app for the user login life::
-
+Use case #2: Get the rooms the user has interacted with
+-------------------------------------------------------
+Here the user needs to be authenticated. We will use [MXRestClient initWithCredentials].
+You'll normally create and initialise these two objects once the user has logged in, then keep them throughout the app's lifetime or until the user logs out::
 
     MXCredentials *credentials = [[MXCredentials alloc] initWithHomeServer:@"http://matrix.org"
                                                                     userId:@"@your_user_id:matrix.org"
@@ -91,38 +93,37 @@ The set up of these two objects is usually done once in the app for the user log
     [mxSession start:^{
         
         // mxSession is ready to be used
-		// Now we can get all rooms with:
-		mxSession.rooms;
+        // Now we can get all rooms with:
+        mxSession.rooms;
         
     } failure:^(NSError *error) {
     }];
 
-	
-	
+    
 Use case #3: Get messages of a room
 -----------------------------------
 We reuse the mxSession instance created before::
 
     // Retrieve the room from its room id
     MXRoom *room = [mxSession room:@"!room_id:matrix.org"];
-	
-	// Add a listener on events related to this room
-	[room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
-	
-		if (direction == MXEventDirectionForwards) {
-			// Live/New events come here
-		}
-		else if (direction == MXEventDirectionBackwards) {
-			// Events that occured in the past will come here when requesting pagination.
-			// roomState contains the state of the room just before this event occured.
-		}
-	}];
+    
+    // Add a listener on events related to this room
+    [room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+    
+        if (direction == MXEventDirectionForwards) {
+            // Live/New events come here
+        }
+        else if (direction == MXEventDirectionBackwards) {
+            // Events that occured in the past will come here when requesting pagination.
+            // roomState contains the state of the room just before this event occured.
+        }
+    }];
 
-	
+    
 Let's load a bit of room history using paginateBackMessages::
 
-	// Reset the pagination start point to now
-	[room resetBackState];
+    // Reset the pagination start point to now
+    [room resetBackState];
 
     [room paginateBackMessages:10 complete:^{
         
@@ -130,12 +131,12 @@ Let's load a bit of room history using paginateBackMessages::
         
     } failure:^(NSError *error) {
     }];
-	
+    
 
 
 Use case #4: Post a text message to a room
 ------------------------------------------
-This action does not require any business logic from MXSession. MXRestClient is directly used::
+This action does not require any business logic from MXSession: We can use MXRestClient directly::
 
     [MXRestClient postTextMessage:@"the_room_id" text:@"Hello world!" success:^(NSString *event_id) {
         
@@ -146,8 +147,105 @@ This action does not require any business logic from MXSession. MXRestClient is 
         
     } failure:^(NSError *error) {
     }];
-	
-	
+    
+
+Use case #5: Push Notifications
+-------------------------------
+In Matrix, a Home Server can send notifications out to a user when events
+arrive for them. However in APNS, only you, the app developer, can send APNS
+notifications because doing so requires your APNS private key. Matrix theefore
+requires an intermediate server to send Push Notifications. This is called the
+'Push Gateway'. More about how notifications work in Matrix can be found at
+https://github.com/matrix-org/matrix-doc/blob/master/drafts/push_overview.rst
+
+In simple terms, for your application to receive push notifications,  you will
+need to set up a push gateway. This is a pubicly acessible server that receives
+HTTP POST requests from Matrix Home Servers and sends APNS. Matrix provides a
+reference push gateway, 'sygnal', which can be found at
+https://github.com/matrix-org/sygnal along with instructions on how to set it
+up.
+
+You can also write your own Push Gateway. See
+https://github.com/matrix-org/matrix-doc/blob/master/drafts/push_pgwapi.rst for
+the specification on the HTTP Push Notification protocol. Your push gateway can
+listen for notifications on any path (as long as your app has the same path) but
+Matrix strongly recommends that the path of this URL be '/_matrix/push/v1/notify'.
+
+In your application, you will first register for APNS in the normal way
+(assuming iOS 8 or above)::
+
+    UIUserNotificationSettings *settings = [UIUserNotificationSettings settingsForTypes:(UIRemoteNotificationTypeBadge
+                                                                                         |UIRemoteNotificationTypeSound
+                                                                                         |UIRemoteNotificationTypeAlert)
+                                                                                         categories:nil];
+    [...]
+
+    - (void)application:(UIApplication *)application
+            didRegisterUserNotificationSettings:(UIUserNotificationSettings *)notificationSettings
+    {
+        [application registerForRemoteNotifications];
+    }
+
+When you receive the APNS token, you then encode this into text and use it as
+they 'pushkey' to call setPusherWithPushkey, along with the URL to your Push
+gateway. Matrix recommends base 64 encoding for APNS tokens (this is what sygnal
+uses)::
+
+    - (void)application:(UIApplication*)app
+      didRegisterForRemoteNotificationsWithDeviceToken:(NSData*)deviceToken {
+        NSString *b64Token = [self.deviceToken base64EncodedStringWithOptions:0];
+        NSDictionary *pushData = @{
+            @"url": @"https://matrix.org/_matrix/push/v1/notify"
+        };
+        NSString *deviceLang = [NSLocale preferredLanguages][0];
+        NSString *profileTag = makeProfileTag(); // more about this later
+        MXRestClient *restCli = [MatrixSDKHandler sharedHandler].mxRestClient;
+        [restCli
+            setPusherWithPushkey:b64Token
+            kind:@"http"
+            appId:@"com.example.supercoolmatrixapp.prod"
+            appDisplayName:@"My Super Cool Matrix iOS App"
+            deviceDisplayName:[[UIDevice currentDevice] name]
+            profileTag:profileTag
+            lang:deviceLang
+            data:pushData
+            success:^{
+                // Hooray!
+            } failure:^(NSError *error) {
+                // Some super awesome error handling goes here
+            }
+        ];
+    }
+
+When you call setPusherWithPushkey, this creates a pusher on the Home Server
+that your session is logged in to. This will send HTTP notifications to a URL
+you supply as the 'url' key in the 'data' argument to setPusherWithPushkey.
+
+You can read more about these parameters in the Client / Server specification
+(https://github.com/matrix-org/matrix-doc/blob/master/drafts/push_csapi.rst). A
+little more information about some of these parameters is included below:
+
+appId
+  This has two purposes: firstly to form the namespace in which your pushkeys
+  exist on a Home Server, which means you should use something unique to your
+  application: a reverse-DNS style identifier is strongly recommended. It's
+  second purpose is to identify your application to your Push Gateway, such that
+  your Push Gateway knows which private key and certificate to use when talking
+  to the APNS gateway. You should therefore use different app IDs depending on
+  whether your application is in production or sandbox push mode so that your
+  Push Gateway can send the APNS accordingly. Matrix recommends suffixing your
+  appId with '.dev' or '.prod' accordingly.
+
+profileTag
+  This identifies which set of push rules this device should obey. For more
+  information about push rules, see the Client / Server push specification:
+  https://github.com/matrix-org/matrix-doc/blob/master/drafts/push_csapi.rst
+  This is an identifier for the set of device-specific push rules that this
+  device will obey. The recommendation is to auto-generate a 16 character
+  alphanumeric string and use this string for the lifetime of the application
+  data. More advanced usage of this will allow for several devices sharing a set
+  of push rules.
+
 Tests
 =====
 The tests in the SDK Xcode project are both unit and integration tests.
@@ -158,9 +256,11 @@ Out of the box, the tests use one of the home servers (located at http://localho
 
 Then, you can run the tests from the Xcode Test navigator tab or select the MatrixSDKTests scheme and click on the "Test" action.
 
-
 Known issues
 ============
+
+Cocoapods may fail to install on OSX 10.8.x with "i18n requires Ruby version >= 1.9.3.".  This is a known problem similar to
+https://github.com/CocoaPods/CocoaPods/issues/2458 that needs to be raised with the cocoapods team.
 
 Registration
 ------------

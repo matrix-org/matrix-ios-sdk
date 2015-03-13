@@ -35,7 +35,9 @@
                  kMXEventTypeStringRoomAliases: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomAliases],
                  kMXEventTypeStringRoomMessage: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMessage],
                  kMXEventTypeStringRoomMessageFeedback: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMessageFeedback],
-                 kMXEventTypeStringPresence :[NSNumber numberWithUnsignedInteger:MXEventTypePresence]
+                 kMXEventTypeStringRoomRedaction: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomRedaction],
+                 kMXEventTypeStringPresence :[NSNumber numberWithUnsignedInteger:MXEventTypePresence],
+                 kMXEventTypeStringTypingNotification :[NSNumber numberWithUnsignedInteger:MXEventTypeTypingNotification]
                  };
     });
     return inst;
@@ -144,6 +146,11 @@
     }
     
     return presenceString;
+}
+
++ (NSString *)generateSecret
+{
+    return [[NSProcessInfo processInfo] globallyUniqueString];
 }
 
 @end

@@ -14,11 +14,14 @@
  limitations under the License.
  */
 
-#import <UIKit/UIKit.h>
+#import "MXCTableViewController.h"
 
-@interface SettingsViewController : UITableViewController <UITextFieldDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate>
+@interface SettingsViewController : MXCTableViewController <UITextFieldDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UIPickerViewDataSource, UIPickerViewDelegate>
+
+typedef void (^blockSettings_onReadyToLeave)();
 
 - (void)reset;
+- (BOOL)shouldLeave:(blockSettings_onReadyToLeave)handler;
 
 @end
 

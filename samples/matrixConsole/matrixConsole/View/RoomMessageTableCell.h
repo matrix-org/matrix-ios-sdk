@@ -15,16 +15,22 @@
  */
 
 #import <UIKit/UIKit.h>
-#import "CustomImageView.h"
+#import "MXCImageView.h"
 #import "RoomMessage.h"
+#import "PieChartView.h"
 
 // Room Message Table View Cell
 @interface RoomMessageTableCell : UITableViewCell
-@property (strong, nonatomic) IBOutlet CustomImageView *pictureView;
+@property (strong, nonatomic) IBOutlet MXCImageView *pictureView;
 @property (weak, nonatomic) IBOutlet UITextView  *messageTextView;
-@property (strong, nonatomic) IBOutlet CustomImageView *attachmentView;
+@property (strong, nonatomic) IBOutlet MXCImageView *attachmentView;
 @property (strong, nonatomic) IBOutlet UIImageView *playIconView;
 @property (weak, nonatomic) IBOutlet UIView *dateTimeLabelContainer;
+
+@property (weak, nonatomic) IBOutlet UIView *progressView;
+@property (weak, nonatomic) IBOutlet UILabel *statsLabel;
+@property (weak, nonatomic) IBOutlet PieChartView *progressChartView;
+
 @property (weak, nonatomic) IBOutlet NSLayoutConstraint *msgTextViewTopConstraint;
 @property (weak, nonatomic) IBOutlet NSLayoutConstraint *attachViewWidthConstraint;
 @property (weak, nonatomic) IBOutlet NSLayoutConstraint *attachViewTopConstraint;
@@ -32,13 +38,21 @@
 
 // reference to the linked message
 @property (strong, nonatomic) RoomMessage *message;
+
+- (void)startProgressUI;
+- (void)stopProgressUI;
+
+- (void)cancelDownload;
 @end
 
 @interface IncomingMessageTableCell : RoomMessageTableCell
+@property (weak, nonatomic) IBOutlet UIImageView *typingBadge;
 @property (weak, nonatomic) IBOutlet UILabel *userNameLabel;
 @end
 
 @interface OutgoingMessageTableCell : RoomMessageTableCell
-@property (weak, nonatomic) IBOutlet UIActivityIndicatorView *activityIndicator;
+
+-(void)startUploadAnimating;
+-(void)stopAnimating;
 @end
 

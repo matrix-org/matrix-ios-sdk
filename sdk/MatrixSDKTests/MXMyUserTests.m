@@ -168,5 +168,20 @@
     }];
 }
 
+- (void)testIdenticon
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+
+        mxSession = mxSession2;
+
+        MXUser *myUser = [mxSession userWithUserId:mxSession.matrixRestClient.credentials.userId];
+
+        NSString *identiconURL = [mxSession.matrixRestClient urlOfIdenticon:myUser.userId];
+        XCTAssertEqualObjects(identiconURL, @"http://localhost:8080/_matrix/media/v1/identicon/%40mxBob%3Alocalhost%3A8480");
+
+        [expectation fulfill];
+    }];
+}
+
 
 @end

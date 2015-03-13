@@ -19,21 +19,17 @@
 #import "MXSession.h"
 
 @interface MXMyUser ()
-{
-    MXSession *mxSession;
-}
 @end
 
 @implementation MXMyUser
 
 - (instancetype)initWithUserId:(NSString *)userId andDisplayname:(NSString *)displayname andAvatarUrl:(NSString *)avatarUrl andMatrixSession:(MXSession *)mxSession2
 {
-    self = [super initWithUserId:userId];
+    self = [super initWithUserId:userId andMatrixSession:mxSession2];
     if (self)
     {
-        _displayname = [displayname copy];
-        _avatarUrl = [avatarUrl copy];
-        mxSession = mxSession2;
+        self.displayname = [displayname copy];
+        self.avatarUrl = [avatarUrl copy];
     }
     return self;
 }
@@ -43,7 +39,7 @@
     [mxSession.matrixRestClient setDisplayName:displayname success:^{
 
         // Update the information right now
-        _displayname = [displayname copy];
+        self.displayname = [displayname copy];
         success();
 
     } failure:^(NSError *error) {
@@ -56,7 +52,7 @@
     [mxSession.matrixRestClient setAvatarUrl:avatarUrl success:^{
 
         // Update the information right now
-        _avatarUrl = [avatarUrl copy];
+        self.avatarUrl = [avatarUrl copy];
         success();
 
     } failure:^(NSError *error) {
@@ -76,6 +72,32 @@
     } failure:^(NSError *error) {
         failure(error);
     }];
+}
+
+- (void)setDisplayname:(NSString *)displayname
+{
+    if (mxSession.store.isPermanent && _displayname != displayname && NO == [_displayname isEqualToString:displayname])
+    {
+        mxSession.store.userDisplayname = displayname;
+        if ([mxSession.store respondsToSelector:@selector(commit)])
+        {
+            [mxSession.store commit];
+        }
+    }
+    _displayname = displayname;
+}
+
+-(void)setAvatarUrl:(NSString *)avatarUrl
+{
+    if (mxSession.store.isPermanent && _avatarUrl != avatarUrl && NO == [_avatarUrl isEqualToString:avatarUrl])
+    {
+        mxSession.store.userAvatarUrl = avatarUrl;
+        if ([mxSession.store respondsToSelector:@selector(commit)])
+        {
+            [mxSession.store commit];
+        }
+    }
+    _avatarUrl = avatarUrl;
 }
 
 @end

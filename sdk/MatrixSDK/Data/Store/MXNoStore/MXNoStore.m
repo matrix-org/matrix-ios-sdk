@@ -47,6 +47,12 @@
     return self;
 }
 
+- (void)openWithCredentials:(MXCredentials *)credentials onComplete:(void (^)())onComplete failure:(void (^)(NSError *))failure
+{
+    // Nothing to do
+    onComplete();
+}
+
 - (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXEventDirection)direction
 {
     // Store nothing in the MXNoStore except the last message
@@ -62,6 +68,15 @@
     }
 }
 
+- (void)replaceEvent:(MXEvent *)event inRoom:(NSString *)roomId
+{
+    // Only the last message is stored
+    MXEvent *lastMessage = lastMessages[roomId];
+    if ([lastMessage.eventId isEqualToString:event.eventId]) {
+        lastMessages[roomId] = event;
+    }
+}
+
 - (MXEvent *)eventWithEventId:(NSString *)eventId inRoom:(NSString *)roomId
 {
     // Events are not stored. So, we cannot find it.
@@ -70,7 +85,7 @@
     return nil;
 }
 
-- (void)deleteDataOfRoom:(NSString *)roomId
+- (void)deleteRoom:(NSString *)roomId
 {
     if (paginationTokens[roomId])
     {
@@ -148,7 +163,7 @@
 - (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types
 {
     // MXNoStore stores only the last event whatever its type
-    NSLog(@"Warning: MXNoStore implementation of lastMessageOfRoom is limited");
+    NSLog(@"[MXNoStore] Warning: MXNoStore implementation of lastMessageOfRoom is limited");
 
     return lastMessages[roomId];
 }

@@ -23,12 +23,13 @@
 
 @interface MasterTabBarController : UITabBarController
 
-- (void)showLoginScreen;
+- (void)showAuthenticationScreen;
 - (void)showRoomCreationForm;
 - (void)showRoom:(NSString*)roomId;
 
 - (void)popRoomViewControllerAnimated:(BOOL)animated;
 
+- (BOOL)isPresentingMediaPicker;
 - (void)presentMediaPicker:(UIImagePickerController*)mediaPicker;
 - (void)dismissMediaPicker;
 

@@ -179,7 +179,7 @@
 
 - (void)testSetPowerLevelOfUser
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         [mxSession start:^{
@@ -212,7 +212,8 @@
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
-        [mxSession startWithMessagesLimit:0 initialSyncDone:^{
+        [mxSession startWithMessagesLimit:0 onServerSyncDone:^{
+            
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
             __block NSUInteger eventCount = 0;
@@ -224,7 +225,7 @@
             }];
 
             [room resetBackState];
-            NSOperation *pagination = [room paginateBackMessages:100 complete:^() {
+            MXHTTPOperation *pagination = [room paginateBackMessages:100 complete:^() {
 
                 XCTFail(@"The cancelled operation must not complete");
                 [expectation fulfill];
@@ -241,6 +242,38 @@
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testTypingUsersNotifications
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [mxSession start:^{
+
+            MXRoom *room = [mxSession roomWithRoomId:roomId];
+
+            XCTAssertEqual(room.typingUsers.count, 0);
+
+            [room listenToEventsOfTypes:@[kMXEventTypeStringTypingNotification] onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+
+                XCTAssertEqual(room.typingUsers.count, 1);
+                XCTAssertEqualObjects(room.typingUsers[0], bobRestClient.credentials.userId);
+
+                [expectation fulfill];
+            }];
+
+            [room sendTypingNotification:YES timeout:30000 success:^{
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
         }];
     }];
 }

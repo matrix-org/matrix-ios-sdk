@@ -26,6 +26,18 @@
 #pragma mark - Room data
 
 /**
+ Open the store corresponding to the passed account.
+
+ The implementation can use a separated thread for processing but the callback blocks
+ must be called from the main thread.
+
+ @param credentials the credentials of the account.
+ @param onComplete the callback called once the data has been loaded
+ @param failure the callback called in case of error.
+ */
+- (void)openWithCredentials:(MXCredentials*)credentials onComplete:(void (^)())onComplete failure:(void (^)(NSError *error))failure;
+
+/**
  Store a room event received from the home server.
  
  Note: The `MXEvent` class implements the `NSCoding` protocol so their instances can
@@ -38,6 +50,15 @@
 - (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXEventDirection)direction;
 
 /**
+ Replace a room event (in case of redaction for example).
+ This action is ignored if no event was stored previously with the same event id.
+ 
+ @param event the MXEvent object to store.
+ @param roomId the id of the room.
+ */
+- (void)replaceEvent:(MXEvent*)event inRoom:(NSString*)roomId;
+
+/**
  Get an event in a room from the store.
 
  @param eventId the id of the event to retrieve.
@@ -48,11 +69,11 @@
 - (MXEvent*)eventWithEventId:(NSString*)eventId inRoom:(NSString*)roomId;
 
 /**
- Erase all data related to a room.
+ Erase a room and all related data.
  
  @param roomId the id of the room.
  */
-- (void)deleteDataOfRoom:(NSString*)roomId;
+- (void)deleteRoom:(NSString*)roomId;
 
 /**
  Erase all data from the store.
@@ -128,6 +149,23 @@
 @optional
 
 /**
+ Save changes in the store.
+
+ If the store uses permanent storage like database or file, it is the optimised time
+ to commit the last changes.
+ */
+- (void)commit;
+
+/**
+ Close the store.
+ 
+ Any pending operation must be complete in this call.
+ */
+- (void)close;
+
+
+#pragma mark - Permanent storage
+/**
  Return the ids of the rooms currently stored.
 
  Note: this method is required in permanent storage implementation.
@@ -158,11 +196,13 @@
 - (NSArray*)stateOfRoom:(NSString*)roomId;
 
 /**
- Save changes in the store.
-
- If the store uses permanent storage like database or file, it is the optimised time
- to commit the last changes.
+ Store/retrieve the user display name.
  */
-- (void)commit;
+@property (nonatomic) NSString *userDisplayname;
+
+/**
+ Store/retrieve the user avartar URL.
+ */
+@property (nonatomic) NSString *userAvatarUrl;
 
 @end

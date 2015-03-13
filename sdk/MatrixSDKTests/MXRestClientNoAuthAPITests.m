@@ -75,6 +75,25 @@
     XCTAssertTrue([mxRestClient.homeserver isEqualToString:kMXTestsHomeServerURL], @"Pass");
 }
 
+- (void)testCancel
+{
+    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
+
+    MXHTTPOperation *request = [mxRestClient getRegisterFlow:^(NSArray *flows) {
+
+        XCTFail(@"The request should not succeed");
+        [expectation fulfill];
+
+    } failure:^(NSError *error) {
+        XCTAssertEqual(error.code, NSURLErrorCancelled, @"The request must be flagged as cancelled");
+        [expectation fulfill];
+    }];
+
+    [request cancel];
+
+    [self waitForExpectationsWithTimeout:10 handler:nil];
+}
+
 
 #pragma mark - Registration operations
 - (void)testRegisterFlow
@@ -88,7 +107,7 @@
         BOOL foundPasswordFlowType;
         for (MXLoginFlow *flow in flows)
         {
-            if ([flow.type isEqualToString:kMatrixLoginFlowTypePassword])
+            if ([flow.type isEqualToString:kMXLoginFlowTypePassword])
             {
                 foundPasswordFlowType = YES;
             }
@@ -102,7 +121,32 @@
         [expectation fulfill];
     }];
     
-    [self waitForExpectationsWithTimeout:10000 handler:nil];
+    [self waitForExpectationsWithTimeout:10 handler:nil];
+}
+
+- (void)testRegister
+{
+    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
+
+    // Test the password-based flow with the generic register method
+    NSDictionary *parameters = @{
+                                 @"type": kMXLoginFlowTypePassword,
+                                 @"user": @"",
+                                 @"password": MXTESTS_PWD
+                                 };
+
+    [mxRestClient register:parameters success:^(NSDictionary *JSONResponse) {
+
+        XCTAssertNotNil(JSONResponse[@"access_token"], @"password-based registration flow is complete in one stage. We must get the access token.");
+
+        [expectation fulfill];
+
+    } failure:^(NSError *error) {
+        XCTFail(@"The request should not fail - NSError: %@", error);
+        [expectation fulfill];
+    }];
+
+    [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
 - (void)testRegisterPasswordBased
@@ -125,7 +169,7 @@
                              [expectation fulfill];
                          }];
 
-    [self waitForExpectationsWithTimeout:10000 handler:nil];
+    [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
 - (void)testRegisterPasswordBasedWithExistingUser
@@ -154,8 +198,17 @@
     }];
 
     
-    [self waitForExpectationsWithTimeout:10000 handler:nil];
+    [self waitForExpectationsWithTimeout:10 handler:nil];
 }
+
+- (void)testRegisterFallback
+{
+    NSString *registerFallback = [mxRestClient registerFallback];
+
+    XCTAssertNotNil(registerFallback);
+    XCTAssertGreaterThan(registerFallback.length, 0);
+}
+
 
 #pragma mark - Login operations
 - (void)testLoginFlow
@@ -169,7 +222,7 @@
         BOOL foundPasswordFlowType;
         for (MXLoginFlow *flow in flows)
         {
-            if ([flow.type isEqualToString:kMatrixLoginFlowTypePassword])
+            if ([flow.type isEqualToString:kMXLoginFlowTypePassword])
             {
                 foundPasswordFlowType = YES;
             }
@@ -183,7 +236,35 @@
         [expectation fulfill];
     }];
     
-    [self waitForExpectationsWithTimeout:10000 handler:nil];
+    [self waitForExpectationsWithTimeout:10 handler:nil];
+}
+
+- (void)testLogin
+{
+    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
+
+    [self createTestAccount:^{
+
+        // Test the password-based flow with the generic login method
+        NSDictionary *parameters = @{
+                                     @"type": kMXLoginFlowTypePassword,
+                                     @"user": MXTESTS_USER,
+                                     @"password": MXTESTS_PWD
+                                     };
+
+        [mxRestClient login:parameters success:^(NSDictionary *JSONResponse) {
+
+            XCTAssertNotNil(JSONResponse[@"access_token"], @"password-based login flow is complete in one stage. We must get the access token.");
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+
+    [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
 - (void)testLoginPasswordBased
@@ -207,7 +288,7 @@
                           }];
     }];
     
-    [self waitForExpectationsWithTimeout:10000 handler:nil];
+    [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
 - (void)testLoginPasswordBasedWithWrongPassword
@@ -234,7 +315,7 @@
                           }];
     }];
     
-    [self waitForExpectationsWithTimeout:10000 handler:nil];
+    [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
 

@@ -16,7 +16,7 @@
 
 #import <Foundation/Foundation.h>
 
-@interface MXFileStoreMetaData : NSObject <NSCoding>
+@interface MXFileStoreMetaData : NSObject <NSCoding, NSCopying>
 
 /**
  The home server name.
@@ -29,7 +29,7 @@
 @property (nonatomic) NSString *userId;
 
 /**
- The access token to create a MXRestClient
+ The access token to create a MXRestClient.
  */
 @property (nonatomic) NSString *accessToken;
 
@@ -43,5 +43,11 @@
  The current version of the store.
  */
 @property (nonatomic) NSUInteger version;
+
+/**
+ User information
+ */
+@property (nonatomic) NSString *userDisplayName;
+@property (nonatomic) NSString *userAvatarUrl;
 
 @end

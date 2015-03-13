@@ -15,7 +15,12 @@
  */
 
 #import "AppSettings.h"
-#import "MatrixHandler.h"
+#import "MatrixSDKHandler.h"
+
+
+// get ISO country name
+#import <CoreTelephony/CTCarrier.h>
+#import <CoreTelephony/CTTelephonyNetworkInfo.h>
 
 static AppSettings *sharedSettings = nil;
 
@@ -45,9 +50,12 @@ static AppSettings *sharedSettings = nil;
 - (void)reset {
     [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"enableInAppNotifications"];
     [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"displayAllEvents"];
-    [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"hideUnsupportedMessages"];
+    [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"hideRedactions"];
+    [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"hideUnsupportedEvents"];
     [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"sortMembersUsingLastSeenTime"];
     [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"displayLeftUsers"];
+    [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"maxMediaCacheSize"];
+    [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"syncLocalContacts"];
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
@@ -58,7 +66,7 @@ static AppSettings *sharedSettings = nil;
 }
 
 - (void)setEnableInAppNotifications:(BOOL)notifications {
-    [[MatrixHandler sharedHandler] enableInAppNotifications:notifications];
+    [[MatrixSDKHandler sharedHandler] enableInAppNotifications:notifications];
     [[NSUserDefaults standardUserDefaults] setBool:notifications forKey:@"enableInAppNotifications"];
 }
 
@@ -69,15 +77,23 @@ static AppSettings *sharedSettings = nil;
 - (void)setDisplayAllEvents:(BOOL)displayAllEvents {
     [[NSUserDefaults standardUserDefaults] setBool:displayAllEvents forKey:@"displayAllEvents"];
     // Flush and restore Matrix data
-    [[MatrixHandler sharedHandler] forceInitialSync:NO];
+    [[MatrixSDKHandler sharedHandler] reload:NO];
 }
 
-- (BOOL)hideUnsupportedMessages {
-    return [[NSUserDefaults standardUserDefaults] boolForKey:@"hideUnsupportedMessages"];
+- (BOOL)hideRedactions {
+    return [[NSUserDefaults standardUserDefaults] boolForKey:@"hideRedactions"];
 }
 
-- (void)setHideUnsupportedMessages:(BOOL)hideUnsupportedMessages {
-    [[NSUserDefaults standardUserDefaults] setBool:hideUnsupportedMessages forKey:@"hideUnsupportedMessages"];
+- (void)setHideRedactions:(BOOL)hideRedactions {
+    [[NSUserDefaults standardUserDefaults] setBool:hideRedactions forKey:@"hideRedactions"];
+}
+
+- (BOOL)hideUnsupportedEvents {
+    return [[NSUserDefaults standardUserDefaults] boolForKey:@"hideUnsupportedEvents"];
+}
+
+- (void)setHideUnsupportedEvents:(BOOL)hideUnsupportedEvents {
+    [[NSUserDefaults standardUserDefaults] setBool:hideUnsupportedEvents forKey:@"hideUnsupportedEvents"];
 }
 
 - (BOOL)sortMembersUsingLastSeenTime {
@@ -94,6 +110,63 @@ static AppSettings *sharedSettings = nil;
 
 - (void)setDisplayLeftUsers:(BOOL)displayLeftUsers {
     [[NSUserDefaults standardUserDefaults] setBool:displayLeftUsers forKey:@"displayLeftUsers"];
+}
+
+- (BOOL)syncLocalContacts {
+    return [[NSUserDefaults standardUserDefaults] boolForKey:@"syncLocalContacts"];
+}
+
+- (void)setSyncLocalContacts:(BOOL)syncLocalContacts {
+    [[NSUserDefaults standardUserDefaults] setBool:syncLocalContacts forKey:@"syncLocalContacts"];
+}
+
+- (NSString*)countryCode {
+    NSString* res = [[NSUserDefaults standardUserDefaults] stringForKey:@"countryCode"];
+    
+    // does not exist : try to get the SIM card information
+    if (!res) {
+        // get the current MCC
+        CTTelephonyNetworkInfo *netInfo = [[CTTelephonyNetworkInfo alloc] init];
+        CTCarrier *carrier = [netInfo subscriberCellularProvider];
+        
+        if (carrier) {
+            res = [[carrier isoCountryCode] uppercaseString];
+            
+            if (res) {
+                [self setCountryCode:res];
+            }
+        }
+    }
+    
+    return res;
+}
+
+- (void)setCountryCode:(NSString *)countryCode{
+    [[NSUserDefaults standardUserDefaults] setObject:countryCode forKey:@"countryCode"];
+}
+
+- (NSInteger)maxAllowedMediaCacheSize {
+    return 1024 * 1024 * 1024;
+}
+
+- (NSInteger)currentMaxMediaCacheSize {
+    
+    NSInteger res = [[NSUserDefaults standardUserDefaults] integerForKey:@"maxMediaCacheSize"];
+    
+    // no default value, assume that 1 GB is enough
+    if (res == 0) {
+        res = [AppSettings sharedSettings].maxAllowedMediaCacheSize;
+    }
+    
+    return res;
+}
+
+- (void)setCurrentMaxMediaCacheSize:(NSInteger)aMaxCacheSize {
+    if ((aMaxCacheSize == 0) && (aMaxCacheSize > [AppSettings sharedSettings].maxAllowedMediaCacheSize)) {
+        aMaxCacheSize = [AppSettings sharedSettings].maxAllowedMediaCacheSize;
+    }
+    
+    [[NSUserDefaults standardUserDefaults] setInteger:aMaxCacheSize forKey:@"maxMediaCacheSize"];
 }
 
 @end

@@ -28,6 +28,8 @@
         _userId = dict[@"userId"];
         _accessToken = dict[@"accessToken"];
         _eventStreamToken = dict[@"eventStreamToken"];
+        _userDisplayName = dict[@"userDisplayName"];
+        _userAvatarUrl = dict[@"userAvatarUrl"];
 
         NSNumber *version = dict[@"version"];
         _version = [version unsignedIntegerValue];
@@ -50,7 +52,31 @@
     {
         dict[@"eventStreamToken"] = _eventStreamToken;
     }
+    if (_userDisplayName)
+    {
+        dict[@"userDisplayName"] = _userDisplayName;
+    }
+    if (_userAvatarUrl)
+    {
+        dict[@"userAvatarUrl"] = _userAvatarUrl;
+    }
 
     [aCoder encodeObject:dict forKey:@"dict"];
 }
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MXFileStoreMetaData *metaData = [[MXFileStoreMetaData allocWithZone:zone] init];
+
+    metaData->_homeServer = [_homeServer copyWithZone:zone];
+    metaData->_userId = [_userId copyWithZone:zone];
+    metaData->_accessToken = [_accessToken copyWithZone:zone];
+    metaData->_version = _version;
+    metaData->_eventStreamToken = [_eventStreamToken copyWithZone:zone];
+    metaData->_userDisplayName = [_userDisplayName copyWithZone:zone];
+    metaData->_userAvatarUrl = [_userAvatarUrl copyWithZone:zone];
+
+    return metaData;
+}
+
 @end

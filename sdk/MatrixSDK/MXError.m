@@ -18,7 +18,7 @@
 
 #pragma mark - Constants definitions
 
-NSString *const kMatrixNSErrorDomain = @"org.matrix.sdk";
+NSString *const kMXNSErrorDomain = @"org.matrix.sdk";
 
 NSString *const kMXErrCodeStringForbidden       = @"M_FORBIDDEN";
 NSString *const kMXErrCodeStringUnknown         = @"M_UNKNOWN";
@@ -34,7 +34,7 @@ NSString *const kMXErrCodeStringBadPagination   = @"M_BAD_PAGINATION";
 
 // Random NSError code
 // Matrix does not use integer but string for error code
-NSInteger const kMatrixNSErrorCode = 6;
+NSInteger const kMXNSErrorCode = 6;
 
 @implementation MXError
 
@@ -85,14 +85,14 @@ NSInteger const kMatrixNSErrorCode = 6;
         userInfo[NSLocalizedDescriptionKey] = self.errcode;
     }
     
-    return [NSError errorWithDomain:kMatrixNSErrorDomain
-                               code:kMatrixNSErrorCode
+    return [NSError errorWithDomain:kMXNSErrorDomain
+                               code:kMXNSErrorCode
                            userInfo:userInfo];
 }
 
 + (BOOL)isMXError:(NSError *)nsError
 {
-    if (nsError && [nsError.domain isEqualToString:kMatrixNSErrorDomain])
+    if (nsError && [nsError.domain isEqualToString:kMXNSErrorDomain])
     {
         return YES;
     }

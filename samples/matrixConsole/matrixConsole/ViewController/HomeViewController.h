@@ -14,9 +14,9 @@
  limitations under the License.
  */
 
-#import <UIKit/UIKit.h>
+#import "MXCTableViewController.h"
 
-@interface HomeViewController : UITableViewController <UITextFieldDelegate, UISearchBarDelegate>
+@interface HomeViewController : MXCTableViewController <UITextFieldDelegate, UISearchBarDelegate>
 
 @end
 

@@ -17,7 +17,6 @@
 #import <Foundation/Foundation.h>
 
 #import "MXEvent.h"
-#import "MXUser.h"
 
 /**
  `MXRoomMember` is the information about a user in a room.
@@ -35,9 +34,9 @@
 @property (nonatomic, readonly) NSString *displayname;
 
 /**
- The url of the user of the avatar.
+ The url of the avatar of the user.
   */
-@property (nonatomic, readonly) NSString *avatarUrl;
+@property (nonatomic) NSString *avatarUrl;
 
 /**
  The membership state.

@@ -39,10 +39,22 @@
     return self;
 }
 
+- (void)openWithCredentials:(MXCredentials *)credentials onComplete:(void (^)())onComplete failure:(void (^)(NSError *))failure
+{
+    // Nothing to do
+    onComplete();
+}
+
 - (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXEventDirection)direction
 {
     MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
     [roomStore storeEvent:event direction:direction];
+}
+
+- (void)replaceEvent:(MXEvent *)event inRoom:(NSString *)roomId
+{
+    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    [roomStore replaceEvent:event];
 }
 
 - (MXEvent *)eventWithEventId:(NSString *)eventId inRoom:(NSString *)roomId
@@ -51,7 +63,7 @@
     return [roomStore eventWithEventId:eventId];
 }
 
-- (void)deleteDataOfRoom:(NSString *)roomId
+- (void)deleteRoom:(NSString *)roomId
 {
     if (roomStores[roomId])
     {
@@ -120,7 +132,13 @@
     return NO;
 }
 
-#pragma mark - Private operations
+- (NSArray *)rooms
+{
+    return roomStores.allKeys;
+}
+
+
+#pragma mark - Protected operations
 - (MXMemoryRoomStore*)getOrCreateRoomStore:(NSString*)roomId
 {
     MXMemoryRoomStore *roomStore = roomStores[roomId];

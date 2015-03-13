@@ -47,7 +47,7 @@
 - (void)doTestWithBobAndAliceActiveInARoom:(void (^)(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest
 {
     // Make sure Alice and Bob have activities
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         [bobRestClient sendTextMessageToRoom:roomId text:@"Hi Alice!" success:^(NSString *eventId) {
 
@@ -247,8 +247,8 @@
 
                 XCTAssertEqual(event.eventType, MXEventTypePresence);
 
-                XCTAssert([mxSession.myUser.displayname isEqualToString:@"ALICE"]);
-                XCTAssert([mxSession.myUser.avatarUrl isEqualToString:kMXTestsAliceAvatarURL]);
+                XCTAssertEqualObjects(mxSession.myUser.displayname, @"ALICE");
+                XCTAssertEqualObjects(mxSession.myUser.avatarUrl, kMXTestsAliceAvatarURL);
 
                 [expectation fulfill];
 

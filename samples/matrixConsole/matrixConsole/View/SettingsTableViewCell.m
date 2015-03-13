@@ -19,8 +19,27 @@
 @implementation SettingsTableViewCell
 @end
 
-@implementation SettingsTableCellWithSwitch
+@implementation SettingsCellWithSwitch
 @end
 
-@implementation SettingsTableCellWithTextView
+@implementation SettingsCellWithTextView
 @end
+
+@implementation SettingsCellWithLabelAndTextField
+@end
+
+@implementation SettingsCellWithLabelAndSlider
+@end
+
+@implementation SettingsCellWithTextFieldAndButton
+@end
+
+@implementation SettingsCellWithLabelTextFieldAndButton
+@end
+
+@implementation SettingsCellWithPicker
+@end
+
+@implementation SettingsCellWithLabelAndSubLabel
+@end
+

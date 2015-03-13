@@ -18,7 +18,13 @@
 
 #import "MXEventListener.h"
 
-@interface MXMemoryRoomStore : NSObject <NSCoding>
+@interface MXMemoryRoomStore : NSObject
+{
+    @protected
+    // The events downloaded so far.
+    // The order is chronological: the first item is the oldest message.
+    NSMutableArray *messages;
+}
 
 /**
  Store room event received from the home server.
@@ -27,6 +33,14 @@
  @param direction the origin of the event. Live or past events.
  */
 - (void)storeEvent:(MXEvent*)event direction:(MXEventDirection)direction;
+
+/**
+ Replace room event (used in case of redaction for example).
+ This action is ignored if no event was stored previously with the same event id.
+ 
+ @param event the MXEvent object to store.
+ */
+- (void)replaceEvent:(MXEvent*)event;
 
 /**
  Get an event from this room.

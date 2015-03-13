@@ -55,7 +55,7 @@ NSString *const myError = @"This is detailed information about this fake error";
 {
     NSError *nsError = [mxError createNSError];
     XCTAssertNotNil(nsError, @"Valid nsError");
-    XCTAssertTrue([nsError.domain isEqualToString:kMatrixNSErrorDomain], @"Valid nsError domain");
+    XCTAssertTrue([nsError.domain isEqualToString:kMXNSErrorDomain], @"Valid nsError domain");
     
     XCTAssertTrue([MXError isMXError:nsError], @"This NSError must be in MXError domain");
 

@@ -16,6 +16,7 @@
 
 #import "MXUser.h"
 
+#import "MXSession.h"
 #import "MXEvent.h"
 #import "MXJSONModels.h"
 
@@ -30,16 +31,21 @@
     // The list of update listeners (`MXOnUserUpdate`) in this room
     NSMutableArray *updateListeners;
 }
+
+@property (nonatomic) NSString *displayname;
+@property (nonatomic) NSString *avatarUrl;
+
 @end
 
 @implementation MXUser
 
-- (instancetype)initWithUserId:(NSString *)userId
+- (instancetype)initWithUserId:(NSString *)userId andMatrixSession:(MXSession*)mxSession2
 {
     self = [super init];
     if (self)
     {
         _userId = [userId copy];
+        mxSession = mxSession2;
         lastActiveLocalTS = -1;
 
         updateListeners = [NSMutableArray array];
@@ -47,22 +53,28 @@
     return self;
 }
 
-- (void)updateWithRoomMemberEvent:(MXEvent*)roomMemberEvent
+- (NSString *)description
 {
-    NSParameterAssert(roomMemberEvent.eventType == MXEventTypeRoomMember);
-    
-    MXRoomMemberEventContent *roomMemberContent = [MXRoomMemberEventContent modelFromJSON:roomMemberEvent.content];
+    return [NSString stringWithFormat:@"%@: %@ (%@) - Presence: %tu", _userId, _displayname, _avatarUrl, _presence];
+}
 
+- (void)updateWithRoomMemberEvent:(MXEvent*)roomMemberEvent roomMember:(MXRoomMember *)roomMember
+{
     // Update the MXUser only if there is change
-    if (NO == [_displayname isEqualToString:roomMemberContent.displayname]
-        || NO == [_avatarUrl isEqualToString:roomMemberContent.avatarUrl])
+    if ((NO == [_displayname isEqualToString:roomMember.displayname]
+            || NO == [_avatarUrl isEqualToString:roomMember.avatarUrl]))
     {
-        _displayname = [roomMemberContent.displayname copy];
-        _avatarUrl = [roomMemberContent.avatarUrl copy];
+        self.displayname = [roomMember.displayname copy];
+        self.avatarUrl = [roomMember.avatarUrl copy];
+
+        // If the member has no defined, force to use an identicon
+        if (nil == self.avatarUrl)
+        {
+            self.avatarUrl = [mxSession.matrixRestClient urlOfIdenticon:self.userId];
+        }
 
         [self notifyListeners:roomMemberEvent];
     }
-
 }
 
 - (void)updateWithPresenceEvent:(MXEvent*)presenceEvent
@@ -77,11 +89,16 @@
     // Displayname and avatar updates will come only through m.room.member events
     if (presenceContent.displayname)
     {
-        _displayname = [presenceContent.displayname copy];
+        self.displayname = [presenceContent.displayname copy];
     }
     if (presenceContent.avatarUrl)
     {
-        _avatarUrl = [presenceContent.avatarUrl copy];
+        self.avatarUrl = [presenceContent.avatarUrl copy];
+    }
+    // If the member has no defined, force to use an identicon
+    if (nil == self.avatarUrl)
+    {
+        self.avatarUrl = [mxSession.matrixRestClient urlOfIdenticon:self.userId];
     }
 
     _statusMsg = [presenceContent.statusMsg copy];
@@ -101,6 +118,7 @@
     }
     return lastActiveAgo;
 }
+
 
 #pragma mark - Events listeners
 
@@ -123,12 +141,19 @@
 
 - (void)notifyListeners:(MXEvent*)event
 {
-    // Notifify all listeners
-    for (MXOnUserUpdate listener in updateListeners)
+    // Notify all listeners
+    // The SDK client may remove a listener while calling them by enumeration
+    // So, use a copy of them
+    NSArray *listeners = [updateListeners copy];
+
+    for (MXOnUserUpdate listener in listeners)
     {
-        listener(event);
+        // And check the listener still exists before calling it
+        if (NSNotFound != [updateListeners indexOfObject:listener])
+        {
+            listener(event);
+        }
     }
 }
-
 
 @end

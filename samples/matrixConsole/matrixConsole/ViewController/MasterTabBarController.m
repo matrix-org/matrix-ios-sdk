@@ -15,7 +15,7 @@
  */
 
 #import "MasterTabBarController.h"
-#import "MatrixHandler.h"
+#import "MatrixSDKHandler.h"
 
 #import "RecentsViewController.h"
 
@@ -29,8 +29,6 @@
 @end
 
 @implementation MasterTabBarController
-
-@synthesize visibleRoomId;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -60,8 +58,8 @@
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
     
-    if (! [[MatrixHandler sharedHandler] isLogged]) {
-        [self showLoginScreen];
+    if ([MatrixSDKHandler sharedHandler].status == MatrixSDKHandlerStatusLoggedOut) {
+        [self showAuthenticationScreen];
     }
 }
 
@@ -94,10 +92,10 @@
 
 #pragma mark -
 
-- (void)showLoginScreen {
+- (void)showAuthenticationScreen {
     [self restoreInitialDisplay];
     
-    [self performSegueWithIdentifier:@"showLogin" sender:self];
+    [self performSegueWithIdentifier:@"showAuth" sender:self];
 }
 
 - (void)showRoomCreationForm {
@@ -121,7 +119,13 @@
     // Force back to recents list if room details is displayed in Recents Tab
     if (recentsViewController) {
         [recentsNavigationController popToViewController:recentsViewController animated:animated];
+        // Release the current selected room
+        recentsViewController.preSelectedRoomId = nil;
     }
+}
+
+- (BOOL)isPresentingMediaPicker {
+    return nil != mediaPicker;
 }
 
 - (void)presentMediaPicker:(UIImagePickerController*)aMediaPicker {
@@ -136,6 +140,11 @@
         mediaPicker.delegate = nil;
         mediaPicker = nil;
     }
+}
+
+- (void)setVisibleRoomId:(NSString *)aVisibleRoomId {
+    [[MatrixSDKHandler sharedHandler] restoreInAppNotificationsForRoomId:aVisibleRoomId];
+    _visibleRoomId = aVisibleRoomId;
 }
 
 @end

@@ -38,20 +38,6 @@
 @interface MXFileStore : MXMemoryStore
 
 /**
- Mount data corresponding to the account credentials.
- 
- The MXFileStore needs to prepopulate its MXMemoryStore parent data from the file system before being used.
-
- MXFileStore manages one account at a time (same home server, same user id and same access token).
- If `credentials` is different from the previously used one, all the data will be erased
- and the MXFileStore instance will start from a clean state.
-
- @param credentials the credentials of the account.
- @param onComplete the callback called once the data has been loaded. It is called on the main thread.
- */
-- (void)openWithCredentials:(MXCredentials*)credentials onComplete:(void (^)())onComplete;
-
-/**
  The disk space in bytes used by the store.
  */
 @property (nonatomic, readonly) NSUInteger diskUsage;

@@ -21,6 +21,12 @@
 
 #import "MXSession.h"
 
+#import "MXMemoryStore.h"
+
+// Do not bother with retain cycles warnings in tests
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-retain-cycles"
+
 @interface MXSessionTests : XCTestCase
 {
     MXSession *mxSession;
@@ -135,27 +141,52 @@
                                          kMXEventTypeStringRoomMessage,
                                          kMXEventTypeStringRoomMessage,
                                          ]];
-        
+
+        __block NSString *theRoomId;
+        __block NSString *eventsRoomId;
+        __block BOOL testDone = NO;
+
         [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
-            
+
             if (MXEventDirectionForwards == direction)
             {
-                [expectedEvents removeObject:event.type];
-                
-                if (0 == expectedEvents.count)
+                if (event.roomId && event.eventId)
                 {
-                    XCTAssert(YES, @"All expected events must be catch");
+                    // Make sure we test events coming from the same room
+                    if (nil == eventsRoomId)
+                    {
+                        eventsRoomId = event.roomId;
+                    }
+                    XCTAssertEqualObjects(event.roomId, eventsRoomId, @"We should receive events from the current room only");
+
+                    [expectedEvents removeObject:event.type];
+                }
+
+                if (!testDone && 0 == expectedEvents.count && theRoomId)
+                {
+                    XCTAssertEqualObjects(theRoomId, eventsRoomId, @"We must have received live events from the expected room");
+
+                    testDone = YES;
                     [expectation fulfill];
                 }
             }
-            
         }];
         
         
         // Create a room with messages in parallel
         [mxSession start:^{
             
-            [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:nil readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+            [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:nil readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
+
+                theRoomId = roomId;
+
+                if (!testDone && 0 == expectedEvents.count)
+                {
+                    XCTAssertEqualObjects(theRoomId, eventsRoomId, @"We must have received live events from the expected room");
+
+                    testDone = YES;
+                    [expectation fulfill];
+                }
             }];
             
         } failure:^(NSError *error) {
@@ -215,7 +246,7 @@
         
         
         // Create a room with messages in parallel
-        [mxSession start:^{
+        [mxSession startWithMessagesLimit:0 onServerSyncDone:^{
             
             XCTAssertGreaterThan(eventCount, 0);
             [expectation fulfill];
@@ -229,7 +260,7 @@
 - (void)testListenerForPresence
 {
     // Make sure Alice and Bob have activities
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         
@@ -280,7 +311,7 @@
 - (void)testClose
 {
     // Make sure Alice and Bob have activities
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
@@ -330,10 +361,54 @@
     }];
 }
 
+- (void)testCloseWithMXMemoryStore
+{
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+
+    [sharedData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        MXMemoryStore *store = [[MXMemoryStore alloc] init];
+
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+
+        [mxSession setStore:store success:^{
+
+            [mxSession start:^{
+
+                NSUInteger storeRoomsCount = store.rooms.count;
+
+                XCTAssertGreaterThan(storeRoomsCount, 0);
+
+                [mxSession close];
+                mxSession = nil;
+
+                // Create another random room to create more data server side
+                [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
+
+                    // Check the stream has been correctly shutdowned. Checking that the store has not changed is one way to verify it
+                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+
+                        XCTAssertEqual(store.rooms.count, storeRoomsCount, @"There must still the same number of stored rooms");
+                        [expectation fulfill];
+
+                    });
+
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                }];
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
 - (void)testPauseResume
 {
     // Make sure Alice and Bob have activities
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
@@ -400,7 +475,7 @@
 - (void)testPauseResumeOnNothingNew
 {
     // Make sure Alice and Bob have activities
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
@@ -461,3 +536,5 @@
 }
 
 @end
+
+#pragma clang diagnostic pop

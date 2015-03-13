@@ -233,12 +233,53 @@
     {
         displayname = alias;
     }
-    
-    // Try to rename 1:1 private rooms with the name of the its users
-    else if ( NO == self.isPublic)
+    // compute a name
+    else if (members.count > 0)
     {
-        if (2 == members.count)
+        if (members.count >= 3)
         {
+            // this is a group chat and should have the names of participants
+            // according to "(<num> <name1>, <name2>, <name3> ..."
+            NSMutableString* roomName = [[NSMutableString alloc] init];
+            int count = 0;
+            
+            for (NSString *memberUserId in members.allKeys)
+            {
+                if (NO == [memberUserId isEqualToString:mxSession.matrixRestClient.credentials.userId])
+                {
+                    MXRoomMember *member = [self memberWithUserId:memberUserId];
+                    
+                    // only manage the invited an joined users
+                    if ((member.membership == MXMembershipInvite) || (member.membership == MXMembershipJoin))
+                    {
+                        // some participants are already added
+                        if (roomName.length != 0)
+                        {
+                            // add a separator
+                            [roomName appendString:@", "];
+                        }
+                        
+                        NSString* username = [self memberSortedName:memberUserId];
+                        
+                        if (username.length == 0)
+                        {
+                            [roomName appendString:memberUserId];
+                        }
+                        else
+                        {
+                            [roomName appendString:username];
+                        }
+                        count++;
+                    }
+                }
+            }
+            
+            displayname = [NSString stringWithFormat:@"(%d) %@",count, roomName];
+        }
+        else if (members.count == 2)
+        {
+            // this is a "one to one" room and should have the name of other user
+            
             for (NSString *memberUserId in members.allKeys)
             {
                 if (NO == [memberUserId isEqualToString:mxSession.matrixRestClient.credentials.userId])
@@ -248,8 +289,11 @@
                 }
             }
         }
-        else if (1 == members.count)
+        else if (members.count == 1)
         {
+            // this could be just us (self-chat) or could be the other person
+            // in a room if they have invited us to the room. Find out which
+            
             NSString *otherUserId;
             
             MXRoomMember *member = members.allValues[0];
@@ -312,6 +356,12 @@
             if (roomMember)
             {
                 members[roomMember.userId] = roomMember;
+
+                // If the member has no defined, force to use an identicon
+                if (nil == roomMember.avatarUrl)
+                {
+                    roomMember.avatarUrl = [mxSession.matrixRestClient urlOfIdenticon:roomMember.userId];
+                }
             }
             else
             {
@@ -337,26 +387,70 @@
 
 - (NSString*)memberName:(NSString*)userId
 {
-    NSString *memberName;
+    NSString *displayName = nil;
+    
+     // Get the user display name from the member list of the room
     MXRoomMember *member = [self memberWithUserId:userId];
-    if (member)
+    
+    // Do not consider null displayname
+    if (member && member.displayname.length)
     {
-        if (member.displayname.length)
-        {
-            memberName = member.displayname;
-        }
-        else
-        {
-            memberName = member.userId;
+        displayName = member.displayname;
+        
+        // Disambiguate users who have the same displayname in the room
+        for(MXRoomMember* member in members.allValues) {
+            if (![member.userId isEqualToString:userId] && [member.displayname isEqualToString:displayName])
+            {
+                displayName = [NSString stringWithFormat:@"%@(%@)", displayName, userId];
+                break;
+            }
         }
     }
-    else
+    
+    // The user may not have joined the room yet. So try to resolve display name from presence data
+    // Note: This data may not be available
+    if (!displayName)
     {
-        memberName = userId;
+        MXUser* user = [mxSession userWithUserId:userId];
+        
+        if (user) {
+            displayName = user.displayname;
+        }
     }
-    return memberName;
+    
+    if (!displayName) {
+        // By default, use the user ID
+        displayName = userId;
+    }
+
+    return displayName;
 }
 
+- (NSString*)memberSortedName:(NSString*)userId
+{
+    // Get the user display name from the member list of the room
+    MXRoomMember *member = [self memberWithUserId:userId];
+    NSString *displayName = member.displayname;
+    
+    // Do not disambiguate here members who have the same displayname in the room (see memberName:).
+    
+    // The user may not have joined the room yet. So try to resolve display name from presence data
+    // Note: This data may not be available
+    if (!displayName)
+    {
+        MXUser* user = [mxSession userWithUserId:userId];
+        if (user) {
+            displayName = user.displayname;
+        }
+    }
+    
+    if (!displayName) {
+        // By default, use the user ID
+        displayName = userId;
+    }
+    
+    return displayName;
+}
 
 #pragma mark - NSCopying
 - (id)copyWithZone:(NSZone *)zone
