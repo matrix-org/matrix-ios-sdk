@@ -149,27 +149,32 @@ This action does not require any business logic from MXSession: We can use MXRes
     }];
     
 
-Use case #5: Push Notifications
--------------------------------
+Push Notifications
+==================
+
 In Matrix, a Home Server can send notifications out to a user when events
 arrive for them. However in APNS, only you, the app developer, can send APNS
-notifications because doing so requires your APNS private key. Matrix theefore
-requires an intermediate server to send Push Notifications. This is called the
-'Push Gateway'. More about how notifications work in Matrix can be found at
+notifications because doing so requires your APNS private key. Matrix
+therefore requires a seperate server decoupled from the homeserver to send
+Push Notifications, as you cannot trust arbitrary homeservers with your
+application's APNS private key. This is called the 'Push Gateway'. More about
+how notifications work in Matrix can be found at
 https://github.com/matrix-org/matrix-doc/blob/master/drafts/push_overview.rst
 
-In simple terms, for your application to receive push notifications,  you will
-need to set up a push gateway. This is a pubicly acessible server that receives
-HTTP POST requests from Matrix Home Servers and sends APNS. Matrix provides a
-reference push gateway, 'sygnal', which can be found at
-https://github.com/matrix-org/sygnal along with instructions on how to set it
-up.
+In simple terms, for your application to receive push notifications, you will
+need to set up a push gateway. This is a publicly accessible server specific
+to your particular iOS app that receives HTTP POST requests from Matrix Home
+Servers and sends APNS. Matrix provides a reference push gateway, 'sygnal',
+which can be found at https://github.com/matrix-org/sygnal along with
+instructions on how to set it up.
 
 You can also write your own Push Gateway. See
-https://github.com/matrix-org/matrix-doc/blob/master/drafts/push_pgwapi.rst for
-the specification on the HTTP Push Notification protocol. Your push gateway can
-listen for notifications on any path (as long as your app has the same path) but
-Matrix strongly recommends that the path of this URL be '/_matrix/push/v1/notify'.
+https://github.com/matrix-org/matrix-doc/blob/master/drafts/push_pgwapi.rst
+for the specification on the HTTP Push Notification protocol. Your push
+gateway can listen for notifications on any path (as long as your app knows
+that path in order to inform the homeserver) but Matrix strongly recommends
+that the path of this URL be
+'/_matrix/push/v1/notify'.
 
 In your application, you will first register for APNS in the normal way
 (assuming iOS 8 or above)::
@@ -186,16 +191,17 @@ In your application, you will first register for APNS in the normal way
         [application registerForRemoteNotifications];
     }
 
-When you receive the APNS token, you then encode this into text and use it as
-they 'pushkey' to call setPusherWithPushkey, along with the URL to your Push
-gateway. Matrix recommends base 64 encoding for APNS tokens (this is what sygnal
-uses)::
+When you receive the APNS token for this particular application instance, you
+then encode this into text and use it as the 'pushkey' to call
+setPusherWithPushkey in order to tell the homeserver to send pushes to this
+device via your push gateway's URL. Matrix recommends base 64
+encoding for APNS tokens (as this is what sygnal uses)::
 
     - (void)application:(UIApplication*)app
       didRegisterForRemoteNotificationsWithDeviceToken:(NSData*)deviceToken {
         NSString *b64Token = [self.deviceToken base64EncodedStringWithOptions:0];
         NSDictionary *pushData = @{
-            @"url": @"https://matrix.org/_matrix/push/v1/notify"
+            @"url": @"https://matrix.org/_matrix/push/v1/notify" // your push gateway URL
         };
         NSString *deviceLang = [NSLocale preferredLanguages][0];
         NSString *profileTag = makeProfileTag(); // more about this later
@@ -228,7 +234,7 @@ little more information about some of these parameters is included below:
 appId
   This has two purposes: firstly to form the namespace in which your pushkeys
   exist on a Home Server, which means you should use something unique to your
-  application: a reverse-DNS style identifier is strongly recommended. It's
+  application: a reverse-DNS style identifier is strongly recommended. Its
   second purpose is to identify your application to your Push Gateway, such that
   your Push Gateway knows which private key and certificate to use when talking
   to the APNS gateway. You should therefore use different app IDs depending on
@@ -250,7 +256,7 @@ Tests
 =====
 The tests in the SDK Xcode project are both unit and integration tests.
 
-Out of the box, the tests use one of the home servers (located at http://localhost:8080 )of the "Demo Federation of Homeservers" (https://github.com/matrix-org/synapse#running-a-demo-federation-of-homeservers). You have to start them from your local Synapse folder::
+Out of the box, the tests use one of the home servers (located at http://localhost:8080) of the "Demo Federation of Homeservers" (https://github.com/matrix-org/synapse#running-a-demo-federation-of-homeservers). You have to start them from your local Synapse folder::
 
       $ demo/start.sh --no-rate-limit
 
