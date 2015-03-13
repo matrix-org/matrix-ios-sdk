@@ -107,7 +107,7 @@ NSString *const kMXKEventFormatterUnsupportedEventDescriptionPrefix = @"Unsuppor
     NSString *redactedInfo = nil;
     BOOL isRedacted = (event.redactedBecause != nil);
     if (isRedacted) {
-        NSLog(@"[MXKRoomBubbleCellData] Redacted event %@ (%@)", event.description, event.redactedBecause);
+        NSLog(@"[MXKEventFormatter] Redacted event %@ (%@)", event.description, event.redactedBecause);
         // Check whether redacted information is required
         if (!_isForSubtitle && !_hideRedactions) {
             redactedInfo = @"<redacted>";
@@ -362,28 +362,28 @@ NSString *const kMXKEventFormatterUnsupportedEventDescriptionPrefix = @"Unsuppor
                     displayText = displayText? displayText : @"image attachment";
                     // Check attachment validity
                     if (![self isSupportedAttachment:event]) {
-                        NSLog(@"[MXKRoomBubbleCellData] Warning: Unsupported attachment %@", event.description);
+                        NSLog(@"[MXKEventFormatter] Warning: Unsupported attachment %@", event.description);
                         displayText = @"invalid image attachment";
                         *error = MXKEventFormatterErrorUnsupported;
                     }
                 } else if ([msgtype isEqualToString:kMXMessageTypeAudio]) {
                     displayText = displayText? displayText : @"audio attachment";
                     if (![self isSupportedAttachment:event]) {
-                        NSLog(@"[MXKRoomBubbleCellData] Warning: Unsupported attachment %@", event.description);
+                        NSLog(@"[MXKEventFormatter] Warning: Unsupported attachment %@", event.description);
                         displayText = [NSString stringWithFormat:@"%@%@", kMXKEventFormatterUnsupportedEventDescriptionPrefix, event.description];
                         *error = MXKEventFormatterErrorUnsupported;
                     }
                 } else if ([msgtype isEqualToString:kMXMessageTypeVideo]) {
                     displayText = displayText? displayText : @"video attachment";
                     if (![self isSupportedAttachment:event]) {
-                        NSLog(@"[MXKRoomBubbleCellData] Warning: Unsupported attachment %@", event.description);
+                        NSLog(@"[MXKEventFormatter] Warning: Unsupported attachment %@", event.description);
                         displayText = [NSString stringWithFormat:@"%@%@", kMXKEventFormatterUnsupportedEventDescriptionPrefix, event.description];
                         *error = MXKEventFormatterErrorUnsupported;
                     }
                 } else if ([msgtype isEqualToString:kMXMessageTypeLocation]) {
                     displayText = displayText? displayText : @"location attachment";
                     if (![self isSupportedAttachment:event]) {
-                        NSLog(@"[MXKRoomBubbleCellData] Warning: Unsupported attachment %@", event.description);
+                        NSLog(@"[MXKEventFormatter] Warning: Unsupported attachment %@", event.description);
                         displayText = [NSString stringWithFormat:@"%@%@", kMXKEventFormatterUnsupportedEventDescriptionPrefix, event.description];
                         *error = MXKEventFormatterErrorUnsupported;
                     }
@@ -419,7 +419,7 @@ NSString *const kMXKEventFormatterUnsupportedEventDescriptionPrefix = @"Unsuppor
     }
 
     if (!displayText) {
-        NSLog(@"[MXKRoomBubbleCellData] Warning: Unsupported event %@)", event.description);
+        NSLog(@"[MXKEventFormatter] Warning: Unsupported event %@)", event.description);
         if (!_isForSubtitle && !_hideUnsupportedEvents) {
             // Return event content as unsupported event
             displayText = [NSString stringWithFormat:@"%@%@", kMXKEventFormatterUnsupportedEventDescriptionPrefix, event.description];
