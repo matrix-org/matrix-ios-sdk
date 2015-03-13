@@ -151,22 +151,101 @@ This action does not require any business logic from MXSession: We can use MXRes
 
 Use case #5: Push Notifications
 -------------------------------
-To use push notifications, you will need to set up a push gateway. When you
-call setPusherWithPushkey, this creates a pusher on the Home Server that your
-session is logged in to. This will send HTTP notifications to a URL you supply
-as the 'url' key in the 'data' argument to setPusherWithPushkey. Matrix
-provides a reference push gateway, 'sygnal', which can be found at
-https://github.com/matrix-org/sygnal
+In Matrix, a Home Server can send notifications out to a user when events
+arrive for them. However in APNS, only you, the app developer, can send APNS
+notifications because doing so requires your APNS private key. Matrix theefore
+requires an intermediate server to send Push Notifications. This is called the
+'Push Gateway'. More about how notifications work in Matrix can be found at
+https://github.com/matrix-org/matrix-doc/blob/master/drafts/push_overview.rst
 
-You will need to set up a push gateway at a publicly accessible URL. This push
-gateway will be the server that has the private key you used to request your
-APNS certificate. Your push gateway needs to expose a path that accept a POST
-request to send notifications: see the HTTP Push Notification Protocol section
-the Matrix Specification for more details. As per the specification, Matrix
-strongly recommends that the path of this URL be '/_matrix/push/v1/notify'. The
-URL of this endpoint is the URL your client should put into the 'url' value of
-the 'data' dictionary.
-    
+In simple terms, for your application to receive push notifications,  you will
+need to set up a push gateway. This is a pubicly acessible server that receives
+HTTP POST requests from Matrix Home Servers and sends APNS. Matrix provides a
+reference push gateway, 'sygnal', which can be found at
+https://github.com/matrix-org/sygnal along with instructions on how to set it
+up.
+
+You can also write your own Push Gateway. See
+https://github.com/matrix-org/matrix-doc/blob/master/drafts/push_pgwapi.rst for
+the specification on the HTTP Push Notification protocol. Your push gateway can
+listen for notifications on any path (as long as your app has the same path) but
+Matrix strongly recommends that the path of this URL be '/_matrix/push/v1/notify'.
+
+In your application, you will first register for APNS in the normal way
+(assuming iOS 8 or above)::
+
+    UIUserNotificationSettings *settings = [UIUserNotificationSettings settingsForTypes:(UIRemoteNotificationTypeBadge
+                                                                                         |UIRemoteNotificationTypeSound
+                                                                                         |UIRemoteNotificationTypeAlert)
+                                                                                         categories:nil];
+    [...]
+
+    - (void)application:(UIApplication *)application
+            didRegisterUserNotificationSettings:(UIUserNotificationSettings *)notificationSettings
+    {
+        [application registerForRemoteNotifications];
+    }
+
+When you receive the APNS token, you then encode this into text and use it as
+they 'pushkey' to call setPusherWithPushkey, along with the URL to your Push
+gateway. Matrix recommends base 64 encoding for APNS tokens (this is what sygnal
+uses)::
+
+    - (void)application:(UIApplication*)app
+      didRegisterForRemoteNotificationsWithDeviceToken:(NSData*)deviceToken {
+        NSString *b64Token = [self.deviceToken base64EncodedStringWithOptions:0];
+        NSDictionary *pushData = @{
+            @"url": @"https://matrix.org/_matrix/push/v1/notify"
+        };
+        NSString *deviceLang = [NSLocale preferredLanguages][0];
+        NSString *profileTag = makeProfileTag(); // more about this later
+        MXRestClient *restCli = [MatrixSDKHandler sharedHandler].mxRestClient;
+        [restCli
+            setPusherWithPushkey:b64Token
+            kind:@"http"
+            appId:@"com.example.supercoolmatrixapp.prod"
+            appDisplayName:@"My Super Cool Matrix iOS App"
+            deviceDisplayName:[[UIDevice currentDevice] name]
+            profileTag:profileTag
+            lang:deviceLang
+            data:pushData
+            success:^{
+                // Hooray!
+            } failure:^(NSError *error) {
+                // Some super awesome error handling goes here
+            }
+        ];
+    }
+
+When you call setPusherWithPushkey, this creates a pusher on the Home Server
+that your session is logged in to. This will send HTTP notifications to a URL
+you supply as the 'url' key in the 'data' argument to setPusherWithPushkey.
+
+You can read more about these parameters in the Client / Server specification
+(https://github.com/matrix-org/matrix-doc/blob/master/drafts/push_csapi.rst). A
+little more information about some of these parameters is included below:
+
+appId
+  This has two purposes: firstly to form the namespace in which your pushkeys
+  exist on a Home Server, which means you should use something unique to your
+  application: a reverse-DNS style identifier is strongly recommended. It's
+  second purpose is to identify your application to your Push Gateway, such that
+  your Push Gateway knows which private key and certificate to use when talking
+  to the APNS gateway. You should therefore use different app IDs depending on
+  whether your application is in production or sandbox push mode so that your
+  Push Gateway can send the APNS accordingly. Matrix recommends suffixing your
+  appId with '.dev' or '.prod' accordingly.
+
+profileTag
+  This identifies which set of push rules this device should obey. For more
+  information about push rules, see the Client / Server push specification:
+  https://github.com/matrix-org/matrix-doc/blob/master/drafts/push_csapi.rst
+  This is an identifier for the set of device-specific push rules that this
+  device will obey. The recommendation is to auto-generate a 16 character
+  alphanumeric string and use this string for the lifetime of the application
+  data. More advanced usage of this will allow for several devices sharing a set
+  of push rules.
+
 Tests
 =====
 The tests in the SDK Xcode project are both unit and integration tests.
