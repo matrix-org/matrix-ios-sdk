@@ -22,9 +22,15 @@
      The data source providing UITableViewCells for the current room.
      */
     MXKRoomDataSource *dataSource;
+    
+    /**
+     The input toolbar view
+     */
+    MXKRoomInputToolbarView *inputToolbarView;
 }
 
 @property (nonatomic) IBOutlet UITableView *tableView;
+@property (nonatomic) IBOutlet UIView *roomInputToolbarContainer;
 
 @end
 
@@ -49,9 +55,16 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    [[[self class] nib] instantiateWithOwner:self options:nil];
+    // Check whether the view controller has been pushed via storyboard
+    if (!_tableView) {
+        // Instantiate view controller objects
+        [[[self class] nib] instantiateWithOwner:self options:nil];
+    }
     
-    // Check whether a room has been defined
+    // Set default input toolbar view
+    [self setRoomInputToolbarViewClass:MXKRoomInputToolbarView.class];
+    
+    // Check whether a room source has been defined
     if (dataSource) {
         [self configureView];
     }
@@ -97,6 +110,53 @@
     if (_tableView) {
         [self configureView];
     }
+}
+
+- (void)setRoomInputToolbarViewClass:(Class)roomInputToolbarViewClass {
+    // Sanity check: accept only MXKRoomInputToolbarView classes or sub-classes
+    NSParameterAssert([roomInputToolbarViewClass isSubclassOfClass:MXKRoomInputToolbarView.class]);
+    
+    // Remove potential toolbar
+    if (inputToolbarView) {
+        [inputToolbarView removeFromSuperview];
+    }
+    inputToolbarView = [[roomInputToolbarViewClass alloc] init];
+    
+    // Add the input toolbar view and define edge constraints
+    CGRect frame = _roomInputToolbarContainer.frame;
+    frame.origin.x = 0;
+    frame.origin.y = 0;
+    inputToolbarView.frame = frame;
+    [_roomInputToolbarContainer addSubview:inputToolbarView];
+    [_roomInputToolbarContainer addConstraint:[NSLayoutConstraint constraintWithItem:_roomInputToolbarContainer
+                                                     attribute:NSLayoutAttributeBottom
+                                                     relatedBy:NSLayoutRelationEqual
+                                                        toItem:inputToolbarView
+                                                     attribute:NSLayoutAttributeBottom
+                                                    multiplier:1.0f
+                                                      constant:0.0f]];
+    [_roomInputToolbarContainer addConstraint:[NSLayoutConstraint constraintWithItem:_roomInputToolbarContainer
+                                                     attribute:NSLayoutAttributeTop
+                                                     relatedBy:NSLayoutRelationEqual
+                                                        toItem:inputToolbarView
+                                                     attribute:NSLayoutAttributeTop
+                                                    multiplier:1.0f
+                                                      constant:0.0f]];
+    [_roomInputToolbarContainer addConstraint:[NSLayoutConstraint constraintWithItem:_roomInputToolbarContainer
+                                                     attribute:NSLayoutAttributeLeading
+                                                     relatedBy:NSLayoutRelationEqual
+                                                        toItem:inputToolbarView
+                                                     attribute:NSLayoutAttributeLeading
+                                                    multiplier:1.0f
+                                                      constant:0.0f]];
+    [_roomInputToolbarContainer addConstraint:[NSLayoutConstraint constraintWithItem:_roomInputToolbarContainer
+                                                     attribute:NSLayoutAttributeTrailing
+                                                     relatedBy:NSLayoutRelationEqual
+                                                        toItem:inputToolbarView
+                                                     attribute:NSLayoutAttributeTrailing
+                                                    multiplier:1.0f
+                                                      constant:0.0f]];
+    [_roomInputToolbarContainer setNeedsUpdateConstraints];
 }
 
 #pragma mark - MXKDataSourceDelegate

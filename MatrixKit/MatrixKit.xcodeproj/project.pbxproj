@@ -27,6 +27,8 @@
 		32CEE2331AB1F5CB00F7C74D /* MXKSampleRecentsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 32CEE2321AB1F5CB00F7C74D /* MXKSampleRecentsViewController.m */; };
 		8B9E9737BF25A512725372BE /* libPods-MatrixKitSample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C994EE81FBAC79EE746DF4E5 /* libPods-MatrixKitSample.a */; };
 		F03A00241AAA19F30070A7D8 /* MXKRoomViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = F03A00231AAA19F30070A7D8 /* MXKRoomViewController.xib */; };
+		F0CD668B1AB715A6006B92D6 /* MXKRoomInputToolbarView.m in Sources */ = {isa = PBXBuildFile; fileRef = F0CD668A1AB715A6006B92D6 /* MXKRoomInputToolbarView.m */; };
+		F0CD668D1AB715B4006B92D6 /* MXKRoomInputToolbarView.xib in Resources */ = {isa = PBXBuildFile; fileRef = F0CD668C1AB715B4006B92D6 /* MXKRoomInputToolbarView.xib */; };
 		F0CE56E51AA8BB5E003BE77A /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = F0CE56D91AA8BB5E003BE77A /* AppDelegate.m */; };
 		F0CE56E61AA8BB5E003BE77A /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = F0CE56DA1AA8BB5E003BE77A /* LaunchScreen.xib */; };
 		F0CE56E71AA8BB5E003BE77A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F0CE56DC1AA8BB5E003BE77A /* Main.storyboard */; };
@@ -99,6 +101,9 @@
 		C994EE81FBAC79EE746DF4E5 /* libPods-MatrixKitSample.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MatrixKitSample.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D473CAF02D2D0996B98A23E8 /* Pods-MatrixKitSample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixKitSample.debug.xcconfig"; path = "Pods/Target Support Files/Pods-MatrixKitSample/Pods-MatrixKitSample.debug.xcconfig"; sourceTree = "<group>"; };
 		F03A00231AAA19F30070A7D8 /* MXKRoomViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MXKRoomViewController.xib; sourceTree = "<group>"; };
+		F0CD66891AB715A6006B92D6 /* MXKRoomInputToolbarView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKRoomInputToolbarView.h; sourceTree = "<group>"; };
+		F0CD668A1AB715A6006B92D6 /* MXKRoomInputToolbarView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKRoomInputToolbarView.m; sourceTree = "<group>"; };
+		F0CD668C1AB715B4006B92D6 /* MXKRoomInputToolbarView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MXKRoomInputToolbarView.xib; sourceTree = "<group>"; };
 		F0CE56D81AA8BB5E003BE77A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		F0CE56D91AA8BB5E003BE77A /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		F0CE56DB1AA8BB5E003BE77A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
@@ -247,6 +252,9 @@
 				32CEE22D1AB1EE0900F7C74D /* RoomList */,
 				328AC47A1AA75D140044A6FB /* RoomBubbleList */,
 				328AC4901AA8AF5B0044A6FB /* MXKCellRendering.h */,
+				F0CD66891AB715A6006B92D6 /* MXKRoomInputToolbarView.h */,
+				F0CD668A1AB715A6006B92D6 /* MXKRoomInputToolbarView.m */,
+				F0CD668C1AB715B4006B92D6 /* MXKRoomInputToolbarView.xib */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -436,6 +444,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				32CEE2241AB1E37600F7C74D /* MXKRecentListViewController.xib in Resources */,
+				F0CD668D1AB715B4006B92D6 /* MXKRoomInputToolbarView.xib in Resources */,
 				F0CE56E91AA8BB5E003BE77A /* Info.plist in Resources */,
 				F03A00241AAA19F30070A7D8 /* MXKRoomViewController.xib in Resources */,
 				F0CE56E81AA8BB5E003BE77A /* Images.xcassets in Resources */,
@@ -512,6 +521,7 @@
 				32CEE22B1AB1EC9B00F7C74D /* MXKRecentListDataSource.m in Sources */,
 				328AC48C1AA760520044A6FB /* MXKRoomOutgoingBubbleTableViewCell.m in Sources */,
 				32CEE21F1AB1A57E00F7C74D /* MXKEventFormatter.m in Sources */,
+				F0CD668B1AB715A6006B92D6 /* MXKRoomInputToolbarView.m in Sources */,
 				F0F148A61AB08F48005F5D4A /* MXKSampleJSQRoomDataSource.m in Sources */,
 				F0F148A51AB08F48005F5D4A /* MXKSampleJSQRoomBubbleCellData.m in Sources */,
 				3219CBC01AA6FB470027D7E2 /* MXKRoomViewController.m in Sources */,

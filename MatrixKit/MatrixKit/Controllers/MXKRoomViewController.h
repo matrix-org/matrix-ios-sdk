@@ -17,6 +17,7 @@ limitations under the License.
 #import <UIKit/UIKit.h>
 
 #import "MXKRoomDataSource.h"
+#import "MXKRoomInputToolbarView.h"
 
 /**
  This view controller displays messages of a room.
@@ -29,5 +30,13 @@ limitations under the License.
  @param roomDataSource the data source .
  */
 - (void)displayRoom:(MXKRoomDataSource*)roomDataSource;
+
+/**
+ Register the MXKRoomInputToolbarView class used to instantiate the input toolbar view
+ which will handle message composer and attachments selection for the room.
+ 
+ @param roomInputToolbarViewClass a MXKRoomInputToolbarView-inherited class.
+ */
+- (void)setRoomInputToolbarViewClass:(Class)roomInputToolbarViewClass;
 
 @end
