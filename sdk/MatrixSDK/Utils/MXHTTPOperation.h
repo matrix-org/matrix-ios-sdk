@@ -43,6 +43,18 @@
 @property (nonatomic) NSUInteger numberOfTries;
 
 /**
+ Max number of times the request can be retried.
+ Default is 3.
+ */
+@property (nonatomic) NSUInteger maxNumberOfTries;
+
+/**
+ Time is milliseconds while a request can be retried.
+ Default is 3 minutes.
+ */
+@property (nonatomic) NSUInteger maxRetriesTime;
+
+/**
  Cancel the HTTP request.
  */
 - (void)cancel;

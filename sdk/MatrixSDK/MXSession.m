@@ -20,6 +20,7 @@
 #import "MXSessionEventListener.h"
 
 #import "MXTools.h"
+#import "MXHTTPClient.h"
 
 #import "MXNoStore.h"
 #import "MXMemoryStore.h"
@@ -37,7 +38,7 @@ const NSString *MatrixSDKVersion = @"0.3.1";
  */
 #define SERVER_TIMEOUT_MS 30000
 #define CLIENT_TIMEOUT_MS 40000
-#define ERR_TIMEOUT_MS    5000
+
 
 /**
  The number of messages to get at the initialSync.
@@ -391,12 +392,10 @@ typedef void (^MXOnResumeDone)();
         // eventStreamRequest is nil when the request has been canceled
         if (eventStreamRequest)
         {
-            // Relaunch the request later
-            // Add up to 3s jittering to avoid all Matrix clients to retry all in the same time
+            // Relaunch the request in a random near futur.
+            // Random time it used to avoid all Matrix clients to retry all in the same time
             // if there is server side issue like server restart
-            int jitter = arc4random_uniform(3000);
-
-            dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, ERR_TIMEOUT_MS * NSEC_PER_MSEC + jitter);
+            dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, [MXHTTPClient jitterTimeForRetry] * NSEC_PER_MSEC);
             dispatch_after(delayTime, dispatch_get_main_queue(), ^(void) {
 
                 [self streamEventsFromToken:token withLongPoll:longPoll];

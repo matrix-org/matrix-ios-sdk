@@ -19,10 +19,21 @@
 
 #import <AFNetworking.h>
 
+#pragma mark - Constants definitions
 /**
- The max time a request can be retried in the case of rate limiting errors.
+ The max time in milliseconds a request can be retried in the case of rate limiting errors.
  */
 #define MXHTTPCLIENT_RATE_LIMIT_MAX_MS 20000
+
+/**
+ The base time in milliseconds between 2 retries.
+ */
+#define MXHTTPCLIENT_RETRY_AFTER_MS 5000
+
+/**
+ The jitter value to apply to compute a random retry time.
+ */
+#define MXHTTPCLIENT_RETRY_JITTER_MS 3000
 
 
 @interface MXHTTPClient ()
@@ -136,7 +147,7 @@
         success(JSONResponse);
         
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-        NSLog(@"[MXHTTPClient] Request (%p) failed for path: %@ - HTTP code: %ld", mxHTTPOperation, path, (long)operation.response.statusCode);
+        NSLog(@"[MXHTTPClient] Request %p failed for path: %@ - HTTP code: %ld", mxHTTPOperation, path, (long)operation.response.statusCode);
 
         if (operation.responseData)
         {
@@ -165,16 +176,16 @@
                         {
                             error = nil;
 
-                            NSLog(@"[MXHTTPClient] Request (%p) reached rate limiting. Wait for %@ms", mxHTTPOperation, retryAfterMsString);
+                            NSLog(@"[MXHTTPClient] Request %p reached rate limiting. Wait for %@ms", mxHTTPOperation, retryAfterMsString);
 
                             // Wait for the time provided by the server before retrying
                             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, [retryAfterMsString intValue] * USEC_PER_SEC), dispatch_get_main_queue(), ^{
 
-                                NSLog(@"[MXHTTPClient] Retry rate limited request (%p)", mxHTTPOperation);
+                                NSLog(@"[MXHTTPClient] Retry rate limited request %p", mxHTTPOperation);
 
                                 [self tryRequest:mxHTTPOperation method:httpMethod path:path parameters:parameters data:data headers:headers timeout:timeoutInSeconds uploadProgress:uploadProgress success:^(NSDictionary *JSONResponse) {
 
-                                    NSLog(@"[MXHTTPClient] Success of rate limited request (%p) after %tu tries", mxHTTPOperation, mxHTTPOperation.numberOfTries);
+                                    NSLog(@"[MXHTTPClient] Success of rate limited request %p after %tu tries", mxHTTPOperation, mxHTTPOperation.numberOfTries);
 
                                     success(JSONResponse);
 
@@ -186,7 +197,7 @@
                     }
                     else
                     {
-                        NSLog(@"[MXHTTPClient] Giving up rate limited request (%p): spent too long retrying.", mxHTTPOperation);
+                        NSLog(@"[MXHTTPClient] Giving up rate limited request %p: spent too long retrying.", mxHTTPOperation);
                     }
                 }
                 else
@@ -195,7 +206,62 @@
                 }
             }
         }
-        
+        else if (mxHTTPOperation.numberOfTries < mxHTTPOperation.maxNumberOfTries && mxHTTPOperation.age < mxHTTPOperation.maxRetriesTime)
+        {
+            // Common block code to retry the request
+            void (^retryRequest)() = ^() {
+                NSLog(@"[MXHTTPClient] Retry request %p. Try #%tu/%tu. Age: %tums. Max retries time: %tums", mxHTTPOperation, mxHTTPOperation.numberOfTries + 1, mxHTTPOperation.maxNumberOfTries, mxHTTPOperation.age, mxHTTPOperation.maxRetriesTime);
+
+                [self tryRequest:mxHTTPOperation method:httpMethod path:path parameters:parameters data:data headers:headers timeout:timeoutInSeconds uploadProgress:uploadProgress success:^(NSDictionary *JSONResponse) {
+
+                    NSLog(@"[MXHTTPClient] Request finally succeeded (%p) after %tu tries and %tums", mxHTTPOperation, mxHTTPOperation.numberOfTries, mxHTTPOperation.age);
+
+                    success(JSONResponse);
+
+                } failure:^(NSError *error) {
+                    failure(error);
+                }];
+            };
+
+            // Check if it is a network connectivity issue
+            AFNetworkReachabilityManager *networkReachabilityManager = [AFNetworkReachabilityManager sharedManager];
+            NSLog(@"[MXHTTPClient] request %p. Network reachability: %d", mxHTTPOperation, networkReachabilityManager.isReachable);
+
+            if (networkReachabilityManager.isReachable)
+            {
+                // The problem is not the network, do simple retry later
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, [MXHTTPClient jitterTimeForRetry] * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
+
+                    retryRequest();
+                });
+            }
+            else
+            {
+                // The device is not connected to the internet, wait for the connection to be up again before retrying
+                id reachabilityObserver;
+                reachabilityObserver = [[NSNotificationCenter defaultCenter] addObserverForName:AFNetworkingReachabilityDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                    if (networkReachabilityManager.isReachable)
+                    {
+                        [[NSNotificationCenter defaultCenter] removeObserver:reachabilityObserver];
+
+                        NSLog(@"[MXHTTPClient]  Network is back for request %p", mxHTTPOperation);
+
+                        retryRequest();
+                    }
+                }];
+
+                // Wait for a limit of time. After that the request is considered expired
+                NSError *lastError = error;
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (mxHTTPOperation.maxRetriesTime - mxHTTPOperation.age) * USEC_PER_SEC), dispatch_get_main_queue(), ^{
+                    [[NSNotificationCenter defaultCenter] removeObserver:reachabilityObserver];
+
+                    failure(lastError);
+                });
+            }
+            error = nil;
+        }
+
         if (error)
         {
             failure(error);
@@ -211,6 +277,12 @@
     }
 
     [httpManager.operationQueue addOperation:mxHTTPOperation.operation];
+}
+
++ (NSUInteger)jitterTimeForRetry
+{
+    NSUInteger jitter = arc4random_uniform(MXHTTPCLIENT_RETRY_JITTER_MS);
+    return  (MXHTTPCLIENT_RETRY_AFTER_MS + jitter);
 }
 
 @end

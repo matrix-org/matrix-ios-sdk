@@ -106,4 +106,14 @@
                           success:(void (^)(NSDictionary *JSONResponse))success
                           failure:(void (^)(NSError *error))failure;
 
+/**
+ Return a random time to retry a request.
+ 
+ a jitter is used to prevent all Matrix clients from retrying all in the same time
+ if there is server side issue like server restart.
+ 
+ @return a random time in milliseconds between 5s and 8s.
+ */
++ (NSUInteger)jitterTimeForRetry;
+
 @end
