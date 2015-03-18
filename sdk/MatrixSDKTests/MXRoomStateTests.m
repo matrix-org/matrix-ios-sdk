@@ -664,5 +664,56 @@
     }];
 }
 
+// Test for https://matrix.org/jira/browse/SYIOS-105
+- (void)testRoomStateWhenARoomHasBeenJoinedOnAnotherMatrixClient
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
+
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+        [mxSession start:^{
+
+            __block NSString *newRoomId;
+            NSMutableArray *receivedMessages = [NSMutableArray array];
+            [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
+
+                if (MXEventDirectionForwards == direction && [event.roomId isEqualToString:newRoomId])
+                {
+                    MXRoom *room = [mxSession roomWithRoomId:event.roomId];
+
+                    XCTAssert(room);
+                    XCTAssertEqual(room.state.members.count, 2, @"If this count is wrong, the room state is invalid");
+
+                    [receivedMessages addObject:event];
+                }
+
+                // We expect receiving 2 text messages
+                if (2 <= receivedMessages.count)
+                {
+                    [expectation fulfill];
+                }
+            }];
+
+            // Create a conversation on another MXRestClient. For the current `mxSession`, this other MXRestClient behaves like another device.
+            [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndAliceInARoom:nil readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+                newRoomId = roomId;
+
+                [bobRestClient sendTextMessageToRoom:roomId text:@"Hi Alice!" success:^(NSString *eventId) {
+
+                    [bobRestClient sendTextMessageToRoom:roomId text:@"Hi Alice 2!" success:^(NSString *eventId) {
+
+                    } failure:^(NSError *error) {
+                        NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                    }];
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                }];
+            }];
+            
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
 
 @end
