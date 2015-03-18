@@ -315,26 +315,6 @@ MXAuthAction;
                                  success:^(NSDictionary *JSONResponse)
             {
                 MXPushRulesResponse *pushRules = [MXPushRulesResponse modelFromJSON:JSONResponse];
-
-                // Workaround for SYN-267, make the implicit "push you for all non-you events" rule explicit
-                // @TODO: to remove once SYN-267 is closed
-                MXPushRule *implicitRule = [MXPushRule modelFromJSON:@{
-                                                                       @"actions": @[@"notify"],
-                                                                       @"conditions": @[
-                                                                                      @{
-                                                                                          @"kind": @"event_match",
-                                                                                          @"key": @"content.body",
-                                                                                          @"pattern": @"*"
-                                                                                      }
-                                                                                      ],
-                                                                       @"default": [NSNumber numberWithBool:YES]
-                                                                       }];
-                implicitRule.kind = MXPushRuleKindUnderride;
-
-                NSMutableArray *underride = [NSMutableArray arrayWithArray:pushRules.global.underride];
-                [underride addObject:implicitRule];
-                pushRules.global.underride = underride;
-
                 success(pushRules);
             }
                                  failure:^(NSError *error)
@@ -847,23 +827,28 @@ MXAuthAction;
         parameters[@"timeout"] = [NSNumber numberWithUnsignedInteger:timeout];
     }
 
-    return [httpClient requestWithMethod:@"PUT"
-                                    path:path
-                              parameters:parameters
-                                 success:^(NSDictionary *JSONResponse)
-            {
-                if (success)
-                {
-                    success();
-                }
-            }
-                                 failure:^(NSError *error)
-            {
-                if (failure)
-                {
-                    failure(error);
-                }
-            }];
+    MXHTTPOperation *operation = [httpClient requestWithMethod:@"PUT"
+                                                          path:path
+                                                    parameters:parameters
+                                                       success:^(NSDictionary *JSONResponse)
+                                  {
+                                      if (success)
+                                      {
+                                          success();
+                                      }
+                                  }
+                                                       failure:^(NSError *error)
+                                  {
+                                      if (failure)
+                                      {
+                                          failure(error);
+                                      }
+                                  }];
+
+    // Disable retry for typing notification as it is a very ephemeral piece of information
+    operation.maxNumberOfTries = 1;
+
+    return operation;
 }
 
 - (MXHTTPOperation*)redactEvent:(NSString*)eventId
@@ -1232,25 +1217,31 @@ MXAuthAction;
         // cancel the current request and notify the client so that it can retry with a new request.
         clientTimeoutInSeconds = clientTimeoutInSeconds / 1000;
     }
-    
-    return [httpClient requestWithMethod:@"GET"
-                                    path:@"events"
-                              parameters:parameters timeout:clientTimeoutInSeconds
-                                 success:^(NSDictionary *JSONResponse)
-            {
-                if (success)
-                {
-                    MXPaginationResponse *paginatedResponse = [MXPaginationResponse modelFromJSON:JSONResponse];
-                    success(paginatedResponse);
-                }
-            }
-                                 failure:^(NSError *error)
-            {
-                if (failure)
-                {
-                    failure(error);
-                }
-            }];
+
+    MXHTTPOperation *operation = [httpClient requestWithMethod:@"GET"
+                                                          path:@"events"
+                                                    parameters:parameters timeout:clientTimeoutInSeconds
+                                                       success:^(NSDictionary *JSONResponse)
+                                  {
+                                      if (success)
+                                      {
+                                          MXPaginationResponse *paginatedResponse = [MXPaginationResponse modelFromJSON:JSONResponse];
+                                          success(paginatedResponse);
+                                      }
+                                  }
+                                                       failure:^(NSError *error)
+                                  {
+                                      if (failure)
+                                      {
+                                          failure(error);
+                                      }
+                                  }];
+
+    // Disable retry because it interferes with clientTimeout
+    // Let the client manage retries on events streams
+    operation.maxNumberOfTries = 1;
+
+    return operation;
 }
 
 - (MXHTTPOperation*)publicRooms:(void (^)(NSArray *rooms))success

@@ -16,6 +16,20 @@
 
 #import "MXHTTPOperation.h"
 
+
+#pragma mark - Constants definitions
+
+/**
+ The default max attempts.
+ */
+#define MXHTTPOPERATION_DEFAULT_MAX_RETRIES 3
+
+/**
+ The default max time a request can be retried.
+ */
+#define MXHTTPOPERATION_DEFAULT_MAX_TIME_MS 180000
+
+
 @interface MXHTTPOperation ()
 {
     NSDate *creationDate;
@@ -31,12 +45,19 @@
     if (self)
     {
         creationDate = [NSDate date];
+        _numberOfTries = 0;
+        _maxNumberOfTries = MXHTTPOPERATION_DEFAULT_MAX_RETRIES;
+        _maxRetriesTime = MXHTTPOPERATION_DEFAULT_MAX_TIME_MS;
     }
     return self;
 }
 
 - (void)cancel
 {
+    // Prevent further retry on this operation
+    _maxNumberOfTries = 0;
+    _maxRetriesTime = 0;
+
     [_operation cancel];
 }
 

@@ -177,6 +177,47 @@
     }];
 }
 
+- (void)testJoin
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+
+            mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+
+            [bobRestClient inviteUser:aliceRestClient.credentials.userId toRoom:roomId success:^{
+
+                [mxSession startWithMessagesLimit:0 onServerSyncDone:^{
+
+                    MXRoom *room = [mxSession roomWithRoomId:roomId];
+
+                    XCTAssertEqual(room.state.membership, MXMembershipInvite);
+                    XCTAssertEqual(room.state.members.count, 1, @"The room state information is limited while the room is joined");
+
+                    [room join:^{
+
+                        XCTAssertEqual(room.state.membership, MXMembershipJoin);
+                        XCTAssertEqual(room.state.members.count, 2, @"The room state must be fully known (after an initialSync on the room");
+
+                        [expectation fulfill];
+
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The request should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+
+
+                } failure:^(NSError *error) {;
+                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                }];
+
+            } failure:^(NSError *error) {
+               NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+        }];
+    }];
+}
+
 - (void)testSetPowerLevelOfUser
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {

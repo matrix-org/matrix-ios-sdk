@@ -117,4 +117,9 @@
     [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
+- (void)testJitterTimeForRetry
+{
+    XCTAssertNotEqual([MXHTTPClient jitterTimeForRetry], [MXHTTPClient jitterTimeForRetry], @"[MXHTTPClient jitterTimeForRetry] cannot return the same value twice");
+}
+
 @end

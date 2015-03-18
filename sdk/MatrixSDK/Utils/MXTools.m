@@ -36,8 +36,12 @@
                  kMXEventTypeStringRoomMessage: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMessage],
                  kMXEventTypeStringRoomMessageFeedback: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMessageFeedback],
                  kMXEventTypeStringRoomRedaction: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomRedaction],
-                 kMXEventTypeStringPresence :[NSNumber numberWithUnsignedInteger:MXEventTypePresence],
-                 kMXEventTypeStringTypingNotification :[NSNumber numberWithUnsignedInteger:MXEventTypeTypingNotification]
+                 kMXEventTypeStringPresence: [NSNumber numberWithUnsignedInteger:MXEventTypePresence],
+                 kMXEventTypeStringTypingNotification: [NSNumber numberWithUnsignedInteger:MXEventTypeTypingNotification],
+                 kMXEventTypeStringCallInvite: [NSNumber numberWithUnsignedInteger:MXEventTypeCallInvite],
+                 kMXEventTypeStringCallCandidates: [NSNumber numberWithUnsignedInteger:MXEventTypeCallCandidates],
+                 kMXEventTypeStringCallAnswer: [NSNumber numberWithUnsignedInteger:MXEventTypeCallAnswer],
+                 kMXEventTypeStringCallHangup: [NSNumber numberWithUnsignedInteger:MXEventTypeCallHangup]
                  };
     });
     return inst;

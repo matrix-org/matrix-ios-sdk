@@ -952,7 +952,7 @@
 
 #pragma mark - Push rules
 // This test is based on default notification rules of a local home server.
-// The test must be updates if those HS default rules change.
+// The test must be updated if those HS default rules change.
 - (void)testPushRules
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
@@ -976,12 +976,12 @@
             XCTAssertTrue([pushAction isKindOfClass:[MXPushRuleAction class]]);
 
             // Test a rule with room_member_count condition
-            MXPushRule *roomMemberCountRule = pushRules.global.override[1];
+            MXPushRule *roomMemberCountRule = pushRules.global.override.lastObject;
             XCTAssertNotNil(roomMemberCountRule);
 
             MXPushRuleCondition *condition = roomMemberCountRule.conditions[0];
             XCTAssertNotNil(condition);
-            XCTAssertEqualObjects(condition.kind,kMXPushRuleConditionStringRoomMemberCount);
+            XCTAssertEqualObjects(condition.kind, kMXPushRuleConditionStringRoomMemberCount);
 
             XCTAssertEqual(condition.kindType, MXPushRuleConditionTypeRoomMemberCount);
 
