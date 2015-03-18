@@ -38,11 +38,25 @@
 
 @interface MXHTTPClient ()
 {
-    // Use AFNetworking as HTTP client
+    /**
+     Use AFNetworking as HTTP client.
+     */
     AFHTTPRequestOperationManager *httpManager;
 
-    // If defined, append it to the requested URL
+    /**
+     If defined, append it to the requested URL.
+     */
     NSString *accessToken;
+
+    /**
+     The main observer to AFNetworking reachability.
+     */
+    id reachabilityObserver;
+
+    /**
+     The list of blocks managing request retries once network is back
+     */
+    NSMutableArray *reachabilityObservers;
 }
 @end
 
@@ -64,6 +78,8 @@
         
         // Send requests parameters in JSON format 
         httpManager.requestSerializer = [AFJSONRequestSerializer serializer];
+
+        [self setUpNetworkReachibility];
     }
     return self;
 }
@@ -208,21 +224,6 @@
         }
         else if (mxHTTPOperation.numberOfTries < mxHTTPOperation.maxNumberOfTries && mxHTTPOperation.age < mxHTTPOperation.maxRetriesTime)
         {
-            // Common block code to retry the request
-            void (^retryRequest)() = ^() {
-                NSLog(@"[MXHTTPClient] Retry request %p. Try #%tu/%tu. Age: %tums. Max retries time: %tums", mxHTTPOperation, mxHTTPOperation.numberOfTries + 1, mxHTTPOperation.maxNumberOfTries, mxHTTPOperation.age, mxHTTPOperation.maxRetriesTime);
-
-                [self tryRequest:mxHTTPOperation method:httpMethod path:path parameters:parameters data:data headers:headers timeout:timeoutInSeconds uploadProgress:uploadProgress success:^(NSDictionary *JSONResponse) {
-
-                    NSLog(@"[MXHTTPClient] Request finally succeeded (%p) after %tu tries and %tums", mxHTTPOperation, mxHTTPOperation.numberOfTries, mxHTTPOperation.age);
-
-                    success(JSONResponse);
-
-                } failure:^(NSError *error) {
-                    failure(error);
-                }];
-            };
-
             // Check if it is a network connectivity issue
             AFNetworkReachabilityManager *networkReachabilityManager = [AFNetworkReachabilityManager sharedManager];
             NSLog(@"[MXHTTPClient] request %p. Network reachability: %d", mxHTTPOperation, networkReachabilityManager.isReachable);
@@ -232,31 +233,65 @@
                 // The problem is not the network, do simple retry later
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, [MXHTTPClient jitterTimeForRetry] * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
 
-                    retryRequest();
+                    NSLog(@"[MXHTTPClient] Retry request %p. Try #%tu/%tu. Age: %tums. Max retries time: %tums", mxHTTPOperation, mxHTTPOperation.numberOfTries + 1, mxHTTPOperation.maxNumberOfTries, mxHTTPOperation.age, mxHTTPOperation.maxRetriesTime);
+
+                    [self tryRequest:mxHTTPOperation method:httpMethod path:path parameters:parameters data:data headers:headers timeout:timeoutInSeconds uploadProgress:uploadProgress success:^(NSDictionary *JSONResponse) {
+
+                        NSLog(@"[MXHTTPClient] Request %p finally succeeded after %tu tries and %tums", mxHTTPOperation, mxHTTPOperation.numberOfTries, mxHTTPOperation.age);
+
+                        success(JSONResponse);
+
+                    } failure:^(NSError *error) {
+                        failure(error);
+                    }];
+
                 });
             }
             else
             {
+                __block NSError *lastError = error;
+
                 // The device is not connected to the internet, wait for the connection to be up again before retrying
-                id reachabilityObserver;
-                reachabilityObserver = [[NSNotificationCenter defaultCenter] addObserverForName:AFNetworkingReachabilityDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+                __weak __typeof(self)weakSelf = self;
+                id networkComeBackObserver = [self addObserverForNetworkComeBack:^{
+                    __strong __typeof(weakSelf)strongSelf = weakSelf;
 
-                    if (networkReachabilityManager.isReachable)
-                    {
-                        [[NSNotificationCenter defaultCenter] removeObserver:reachabilityObserver];
+                    NSLog(@"[MXHTTPClient] Network is back for request %p", mxHTTPOperation);
 
-                        NSLog(@"[MXHTTPClient]  Network is back for request %p", mxHTTPOperation);
+                    // Flag this request as retried
+                    lastError = nil;
 
-                        retryRequest();
-                    }
+                    NSLog(@"[MXHTTPClient] Retry request %p. Try #%tu/%tu. Age: %tums. Max retries time: %tums", mxHTTPOperation, mxHTTPOperation.numberOfTries + 1, mxHTTPOperation.maxNumberOfTries, mxHTTPOperation.age, mxHTTPOperation.maxRetriesTime);
+
+                    [strongSelf tryRequest:mxHTTPOperation method:httpMethod path:path parameters:parameters data:data headers:headers timeout:timeoutInSeconds uploadProgress:uploadProgress success:^(NSDictionary *JSONResponse) {
+
+                        NSLog(@"[MXHTTPClient] Request %p finally succeeded after %tu tries and %tums", mxHTTPOperation, mxHTTPOperation.numberOfTries, mxHTTPOperation.age);
+
+                        success(JSONResponse);
+
+                        // The request is complete, managed the next one
+                        [strongSelf wakeUpNextReachabilityServer];
+
+                    } failure:^(NSError *error) {
+                        failure(error);
+
+                        // The request is complete, managed the next one
+                        [strongSelf wakeUpNextReachabilityServer];
+                    }];
                 }];
 
                 // Wait for a limit of time. After that the request is considered expired
-                NSError *lastError = error;
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (mxHTTPOperation.maxRetriesTime - mxHTTPOperation.age) * USEC_PER_SEC), dispatch_get_main_queue(), ^{
-                    [[NSNotificationCenter defaultCenter] removeObserver:reachabilityObserver];
+                    __strong __typeof(weakSelf)strongSelf = weakSelf;
 
-                    failure(lastError);
+                    // If the request has not been retried yet, consider we are in error
+                    if (lastError)
+                    {
+                        NSLog(@"[MXHTTPClient] Give up retry for request %p. Time expired.", mxHTTPOperation);
+
+                        [strongSelf removeObserverForNetworkComeBack:networkComeBackObserver];
+                        failure(lastError);
+                    }
                 });
             }
             error = nil;
@@ -283,6 +318,55 @@
 {
     NSUInteger jitter = arc4random_uniform(MXHTTPCLIENT_RETRY_JITTER_MS);
     return  (MXHTTPCLIENT_RETRY_AFTER_MS + jitter);
+}
+
+
+#pragma mark - Private methods
+- (void)setUpNetworkReachibility
+{
+    // Start monitoring reachibility to get its status and change notifications
+    [[AFNetworkReachabilityManager sharedManager] startMonitoring];
+
+    reachabilityObservers = [NSMutableArray array];
+
+    AFNetworkReachabilityManager *networkReachabilityManager = [AFNetworkReachabilityManager sharedManager];
+
+    reachabilityObserver = [[NSNotificationCenter defaultCenter] addObserverForName:AFNetworkingReachabilityDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+        if (networkReachabilityManager.isReachable && reachabilityObservers.count)
+        {
+            // Start retrying request one by one to keep messages order
+            NSLog(@"[MXHTTPClient] Network is back. Wake up %tu observers.", reachabilityObservers.count);
+            [self wakeUpNextReachabilityServer];
+        }
+    }];
+}
+
+- (void)wakeUpNextReachabilityServer
+{
+    AFNetworkReachabilityManager *networkReachabilityManager = [AFNetworkReachabilityManager sharedManager];
+    if (networkReachabilityManager.isReachable)
+    {
+        void(^onNetworkComeBackBlock)(void) = [reachabilityObservers firstObject];
+        if (onNetworkComeBackBlock)
+        {
+            [reachabilityObservers removeObject:onNetworkComeBackBlock];
+            onNetworkComeBackBlock();
+        }
+    }
+}
+
+- (id)addObserverForNetworkComeBack:(void (^)(void))onNetworkComeBackBlock
+{
+    id block = [onNetworkComeBackBlock copy];
+    [reachabilityObservers addObject:block];
+
+    return block;
+}
+
+- (void)removeObserverForNetworkComeBack:(id)observer
+{
+    [reachabilityObservers removeObject:observer];
 }
 
 @end
