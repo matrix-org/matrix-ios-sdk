@@ -26,12 +26,11 @@
 #import "MXMemoryStore.h"
 #import "MXFileStore.h"
 
-#import <stdlib.h>
 
-/**
- The Matrix iOS SDK version.
- */
+#pragma mark - Constants definitions
+
 const NSString *MatrixSDKVersion = @"0.3.1";
+NSString *const MXSessionStateDidChangeNotification = @"MXSessionStateDidChangeNotification";
 
 /**
  Default timeouts used by the events streams.
@@ -101,6 +100,7 @@ typedef void (^MXOnResumeDone)();
     if (self)
     {
         matrixRestClient = mxRestClient;
+        [self setState:MXSessionStateInitialised];
         rooms = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
         globalEventListeners = [NSMutableArray array];
@@ -113,8 +113,17 @@ typedef void (^MXOnResumeDone)();
     return self;
 }
 
+- (void)setState:(MXSessionState)state
+{
+    _state = state;
+
+    NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
+    [notificationCenter postNotificationName:MXSessionStateDidChangeNotification object:self userInfo:nil];
+}
+
 -(void)setStore:(id<MXStore>)store success:(void (^)())onStoreDataReady failure:(void (^)(NSError *))failure
 {
+    NSAssert(MXSessionStateInitialised == _state, @"Store can be set only just after initialisation");
     NSParameterAssert(store);
 
     _store = store;
@@ -160,10 +169,19 @@ typedef void (^MXOnResumeDone)();
 
         NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
+        [self setState:MXSessionStateStoreDataReady];
+
         // The SDK client can use this data
         onStoreDataReady();
 
-    } failure:failure];
+    } failure:^(NSError *error) {
+        [self setState:MXSessionStateInitialised];
+
+        if (failure)
+        {
+            failure(error);
+        }
+    }];
 }
 
 - (void)start:(void (^)())onServerSyncDone
@@ -191,6 +209,8 @@ typedef void (^MXOnResumeDone)();
         } failure:failure];
         return;
     }
+
+    [self setState:MXSessionStateSyncInProgress];
 
     // Store the passed limit to reuse it when initialSyncing per room
     initialSyncMessagesLimit = messagesLimit;
@@ -236,6 +256,8 @@ typedef void (^MXOnResumeDone)();
             NSDate *startDate2 = [NSDate date];
             [self resume:^{
                 NSLog(@"[MXSession] Events stream resumed in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+
+                [self setState:MXSessionStateRunning];
                 onServerSyncDone();
             }];
         };
@@ -329,19 +351,24 @@ typedef void (^MXOnResumeDone)();
                         
                         // Resume from the last known token
                         [self streamEventsFromToken:_store.eventStreamToken withLongPoll:YES];
-                        
+
+                        [self setState:MXSessionStateRunning];
                         onServerSyncDone();
 
                     } failure:^(NSError *error) {
+                        [self setState:MXSessionStateStoreDataReady];
                         failure(error);
                     }];
                 } failure:^(NSError *error) {
+                    [self setState:MXSessionStateStoreDataReady];
                     failure(error);
                 }];
             } failure:^(NSError *error) {
+                [self setState:MXSessionStateStoreDataReady];
                 failure(error);
             }];
         } failure:^(NSError *error) {
+            [self setState:MXSessionStateStoreDataReady];
             failure(error);
         }];
     }
@@ -508,6 +535,8 @@ typedef void (^MXOnResumeDone)();
     // Cancel the current request managing the event stream
     [eventStreamRequest cancel];
     eventStreamRequest = nil;
+
+    [self setState:MXSessionStatePaused];
 }
 
 - (void)resume:(void (^)())resumeDone;
@@ -520,6 +549,8 @@ typedef void (^MXOnResumeDone)();
     // Resume from the last known token
     onResumeDone = resumeDone;
     [self streamEventsFromToken:_store.eventStreamToken withLongPoll:NO];
+
+    [self setState:MXSessionStateRunning];
 }
 
 - (void)close
@@ -559,6 +590,8 @@ typedef void (^MXOnResumeDone)();
 
     _myUser = nil;
     matrixRestClient = nil;
+
+    [self setState:MXSessionStateClosed];
 }
 
 

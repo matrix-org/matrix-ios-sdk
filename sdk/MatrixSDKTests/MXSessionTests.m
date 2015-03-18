@@ -535,6 +535,42 @@
     }];
 }
 
+- (void)testState
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
+
+        __block MXSessionState previousSessionState = MXSessionStateInitialised;
+        [[NSNotificationCenter defaultCenter] addObserverForName:MXSessionStateDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+            if (mxSession)
+            {
+                XCTAssertEqual(note.object, mxSession, @"The notification must embed the MXSession sender");
+                XCTAssertNotEqual(mxSession.state, previousSessionState, @"The state must have changed");
+                previousSessionState = mxSession.state;
+            }
+        }];
+
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        XCTAssertEqual(MXSessionStateInitialised, mxSession.state);
+
+        [mxSession start:^{
+
+            XCTAssertEqual(MXSessionStateRunning, mxSession.state);
+
+            [mxSession close];
+            XCTAssertEqual(MXSessionStateClosed, mxSession.state);
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+        XCTAssertEqual(MXSessionStateSyncInProgress, mxSession.state);
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop

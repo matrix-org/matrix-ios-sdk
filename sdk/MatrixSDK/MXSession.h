@@ -24,6 +24,51 @@
 #import "MXNotificationCenter.h"
 
 /**
+ `MXSessionState` represents the states in the life cycle of a MXSession instance.
+ */
+typedef enum : NSUInteger {
+    /**
+     The session has just been created.
+     */
+    MXSessionStateInitialised,
+
+    /**
+     Data from the MXStore has been loaded.
+     */
+    MXSessionStateStoreDataReady,
+
+    /**
+     The session is syncing with the server.
+     It is either doing a global initialSync or restarting the events stream from the position
+     stored in the store.
+     */
+    MXSessionStateSyncInProgress,
+
+    /**
+     The session data is synchronised with the server and session keeps it synchronised
+     thanks to the events stream, which is now running.
+     */
+    MXSessionStateRunning,
+
+    /**
+     The session has been paused.
+     */
+    MXSessionStatePaused,
+
+    /**
+     The session has been closed and cannot be reused.
+     */
+    MXSessionStateClosed
+} MXSessionState;
+
+
+/**
+ Posted when the state of the MXSession instance changes.
+ */
+FOUNDATION_EXPORT NSString *const MXSessionStateDidChangeNotification;
+
+
+/**
  `MXSession` manages data and events from the home server
  It is responsible for:
     - retrieving events from the home server
@@ -39,6 +84,11 @@
  The matrix REST Client used to make Matrix API requests.
  */
 @property (nonatomic, readonly) MXRestClient *matrixRestClient;
+
+/**
+ The current state of the session.
+ */
+@property (nonatomic, readonly) MXSessionState state;
 
 /**
  The profile of the current user.
