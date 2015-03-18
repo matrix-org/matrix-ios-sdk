@@ -11,9 +11,12 @@
             <rect key="frame" x="0.0" y="0.0" width="600" height="44"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
-                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Hga-l8-Wua" userLabel="left Button">
-                    <rect key="frame" x="8" y="0.0" width="46" height="44"/>
-                    <state key="normal" title="Button">
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="contactAdd" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Hga-l8-Wua" userLabel="left Button">
+                    <rect key="frame" x="8" y="0.0" width="35" height="44"/>
+                    <constraints>
+                        <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="35" id="ptO-BQ-NhS"/>
+                    </constraints>
+                    <state key="normal">
                         <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                     </state>
                     <connections>
@@ -21,17 +24,20 @@
                     </connections>
                 </button>
                 <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Owf-M8-qJi" userLabel="right Button">
-                    <rect key="frame" x="546" y="0.0" width="46" height="44"/>
-                    <state key="normal" title="Button">
+                    <rect key="frame" x="556" y="0.0" width="36" height="44"/>
+                    <constraints>
+                        <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="35" id="9FZ-CI-diT"/>
+                    </constraints>
+                    <state key="normal" title="Send">
                         <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                     </state>
                     <connections>
                         <action selector="onTouchUpInside:" destination="iN0-l3-epB" eventType="touchUpInside" id="NBz-Y3-Fnd"/>
                     </connections>
                 </button>
-                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="QWp-NV-uh5" userLabel="textComposer View">
-                    <rect key="frame" x="62" y="4" width="476" height="36"/>
-                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="QWp-NV-uh5" userLabel="Message Composer Container">
+                    <rect key="frame" x="51" y="4" width="497" height="36"/>
+                    <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
                 </view>
             </subviews>
             <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
@@ -53,8 +59,10 @@
             <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
             <connections>
                 <outlet property="leftInputToolbarButton" destination="Hga-l8-Wua" id="KSc-TM-g5i"/>
+                <outlet property="messageComposerContainer" destination="QWp-NV-uh5" id="7BM-Ni-5BB"/>
+                <outlet property="messageComposerContainerBottomConstraint" destination="9Ya-0H-03W" id="67R-BO-8aU"/>
+                <outlet property="messageComposerContainerTopConstraint" destination="570-8j-VYY" id="vbj-Ud-SLi"/>
                 <outlet property="rightInputToolbarButton" destination="Owf-M8-qJi" id="nvK-y3-iE5"/>
-                <outlet property="textComposerView" destination="QWp-NV-uh5" id="hBC-C0-9ej"/>
             </connections>
         </view>
     </objects>

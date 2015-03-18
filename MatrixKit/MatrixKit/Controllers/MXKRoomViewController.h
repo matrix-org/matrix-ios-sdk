@@ -22,7 +22,7 @@ limitations under the License.
 /**
  This view controller displays messages of a room.
  */
-@interface MXKRoomViewController : UIViewController <MXKDataSourceDelegate>
+@interface MXKRoomViewController : UIViewController <MXKDataSourceDelegate, MXKRoomInputToolbarViewDelegate>
 
 /**
  Display a room.

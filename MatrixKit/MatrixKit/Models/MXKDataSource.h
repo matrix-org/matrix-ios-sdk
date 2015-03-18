@@ -16,6 +16,8 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MXKCellRendering.h"
+
 @class MXKDataSource;
 @protocol MXKDataSourceDelegate <NSObject>
 

@@ -26,6 +26,8 @@
 		32CEE2301AB1EE0900F7C74D /* MXKRecentTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 32CEE22F1AB1EE0900F7C74D /* MXKRecentTableViewCell.m */; };
 		32CEE2331AB1F5CB00F7C74D /* MXKSampleRecentsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 32CEE2321AB1F5CB00F7C74D /* MXKSampleRecentsViewController.m */; };
 		8B9E9737BF25A512725372BE /* libPods-MatrixKitSample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C994EE81FBAC79EE746DF4E5 /* libPods-MatrixKitSample.a */; };
+		F00BB44A1AB840B300AE388E /* MXKRoomInputToolbarViewWithHPGrowingText.m in Sources */ = {isa = PBXBuildFile; fileRef = F00BB4491AB840B300AE388E /* MXKRoomInputToolbarViewWithHPGrowingText.m */; };
+		F00BB44D1AB88DCC00AE388E /* MXKAlert.m in Sources */ = {isa = PBXBuildFile; fileRef = F00BB44C1AB88DCC00AE388E /* MXKAlert.m */; };
 		F03A00241AAA19F30070A7D8 /* MXKRoomViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = F03A00231AAA19F30070A7D8 /* MXKRoomViewController.xib */; };
 		F0CD668B1AB715A6006B92D6 /* MXKRoomInputToolbarView.m in Sources */ = {isa = PBXBuildFile; fileRef = F0CD668A1AB715A6006B92D6 /* MXKRoomInputToolbarView.m */; };
 		F0CD668D1AB715B4006B92D6 /* MXKRoomInputToolbarView.xib in Resources */ = {isa = PBXBuildFile; fileRef = F0CD668C1AB715B4006B92D6 /* MXKRoomInputToolbarView.xib */; };
@@ -100,6 +102,10 @@
 		32CEE2321AB1F5CB00F7C74D /* MXKSampleRecentsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKSampleRecentsViewController.m; sourceTree = "<group>"; };
 		C994EE81FBAC79EE746DF4E5 /* libPods-MatrixKitSample.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MatrixKitSample.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D473CAF02D2D0996B98A23E8 /* Pods-MatrixKitSample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixKitSample.debug.xcconfig"; path = "Pods/Target Support Files/Pods-MatrixKitSample/Pods-MatrixKitSample.debug.xcconfig"; sourceTree = "<group>"; };
+		F00BB4481AB840B300AE388E /* MXKRoomInputToolbarViewWithHPGrowingText.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKRoomInputToolbarViewWithHPGrowingText.h; sourceTree = "<group>"; };
+		F00BB4491AB840B300AE388E /* MXKRoomInputToolbarViewWithHPGrowingText.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKRoomInputToolbarViewWithHPGrowingText.m; sourceTree = "<group>"; };
+		F00BB44B1AB88DCC00AE388E /* MXKAlert.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKAlert.h; sourceTree = "<group>"; };
+		F00BB44C1AB88DCC00AE388E /* MXKAlert.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKAlert.m; sourceTree = "<group>"; };
 		F03A00231AAA19F30070A7D8 /* MXKRoomViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MXKRoomViewController.xib; sourceTree = "<group>"; };
 		F0CD66891AB715A6006B92D6 /* MXKRoomInputToolbarView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKRoomInputToolbarView.h; sourceTree = "<group>"; };
 		F0CD668A1AB715A6006B92D6 /* MXKRoomInputToolbarView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKRoomInputToolbarView.m; sourceTree = "<group>"; };
@@ -231,6 +237,8 @@
 			isa = PBXGroup;
 			children = (
 				32CEE2251AB1EC9B00F7C74D /* RoomList */,
+				F00BB44B1AB88DCC00AE388E /* MXKAlert.h */,
+				F00BB44C1AB88DCC00AE388E /* MXKAlert.m */,
 				328AC48D1AA86E110044A6FB /* MXKDataSource.h */,
 				328AC48E1AA86E110044A6FB /* MXKDataSource.m */,
 				3219CBC21AA6FF490027D7E2 /* MXKRoomDataSource.h */,
@@ -249,6 +257,7 @@
 		3219CBBD1AA6FB1C0027D7E2 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				F00BB4471AB840B300AE388E /* RoomInputToolbar */,
 				32CEE22D1AB1EE0900F7C74D /* RoomList */,
 				328AC47A1AA75D140044A6FB /* RoomBubbleList */,
 				328AC4901AA8AF5B0044A6FB /* MXKCellRendering.h */,
@@ -314,6 +323,15 @@
 				0606B0702D98FE702AAED75B /* Pods-MatrixKitSample.release.xcconfig */,
 			);
 			name = Pods;
+			sourceTree = "<group>";
+		};
+		F00BB4471AB840B300AE388E /* RoomInputToolbar */ = {
+			isa = PBXGroup;
+			children = (
+				F00BB4481AB840B300AE388E /* MXKRoomInputToolbarViewWithHPGrowingText.h */,
+				F00BB4491AB840B300AE388E /* MXKRoomInputToolbarViewWithHPGrowingText.m */,
+			);
+			path = RoomInputToolbar;
 			sourceTree = "<group>";
 		};
 		F0CE56D71AA8BB5E003BE77A /* MatrixKitSample */ = {
@@ -517,7 +535,9 @@
 				328AC48F1AA86E110044A6FB /* MXKDataSource.m in Sources */,
 				F0CE56E51AA8BB5E003BE77A /* AppDelegate.m in Sources */,
 				328AC4861AA75E000044A6FB /* MXKRoomBubbleTableViewCell.m in Sources */,
+				F00BB44D1AB88DCC00AE388E /* MXKAlert.m in Sources */,
 				328AC4931AA8B05C0044A6FB /* MXKCellData.m in Sources */,
+				F00BB44A1AB840B300AE388E /* MXKRoomInputToolbarViewWithHPGrowingText.m in Sources */,
 				32CEE22B1AB1EC9B00F7C74D /* MXKRecentListDataSource.m in Sources */,
 				328AC48C1AA760520044A6FB /* MXKRoomOutgoingBubbleTableViewCell.m in Sources */,
 				32CEE21F1AB1A57E00F7C74D /* MXKEventFormatter.m in Sources */,
