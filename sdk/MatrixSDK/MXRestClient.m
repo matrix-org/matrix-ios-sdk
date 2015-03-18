@@ -827,23 +827,28 @@ MXAuthAction;
         parameters[@"timeout"] = [NSNumber numberWithUnsignedInteger:timeout];
     }
 
-    return [httpClient requestWithMethod:@"PUT"
-                                    path:path
-                              parameters:parameters
-                                 success:^(NSDictionary *JSONResponse)
-            {
-                if (success)
-                {
-                    success();
-                }
-            }
-                                 failure:^(NSError *error)
-            {
-                if (failure)
-                {
-                    failure(error);
-                }
-            }];
+    MXHTTPOperation *operation = [httpClient requestWithMethod:@"PUT"
+                                                          path:path
+                                                    parameters:parameters
+                                                       success:^(NSDictionary *JSONResponse)
+                                  {
+                                      if (success)
+                                      {
+                                          success();
+                                      }
+                                  }
+                                                       failure:^(NSError *error)
+                                  {
+                                      if (failure)
+                                      {
+                                          failure(error);
+                                      }
+                                  }];
+
+    // Disable retry for typing notification as it is a very ephemeral piece of information
+    operation.maxNumberOfTries = 1;
+
+    return operation;
 }
 
 - (MXHTTPOperation*)redactEvent:(NSString*)eventId
@@ -1212,25 +1217,31 @@ MXAuthAction;
         // cancel the current request and notify the client so that it can retry with a new request.
         clientTimeoutInSeconds = clientTimeoutInSeconds / 1000;
     }
-    
-    return [httpClient requestWithMethod:@"GET"
-                                    path:@"events"
-                              parameters:parameters timeout:clientTimeoutInSeconds
-                                 success:^(NSDictionary *JSONResponse)
-            {
-                if (success)
-                {
-                    MXPaginationResponse *paginatedResponse = [MXPaginationResponse modelFromJSON:JSONResponse];
-                    success(paginatedResponse);
-                }
-            }
-                                 failure:^(NSError *error)
-            {
-                if (failure)
-                {
-                    failure(error);
-                }
-            }];
+
+    MXHTTPOperation *operation = [httpClient requestWithMethod:@"GET"
+                                                          path:@"events"
+                                                    parameters:parameters timeout:clientTimeoutInSeconds
+                                                       success:^(NSDictionary *JSONResponse)
+                                  {
+                                      if (success)
+                                      {
+                                          MXPaginationResponse *paginatedResponse = [MXPaginationResponse modelFromJSON:JSONResponse];
+                                          success(paginatedResponse);
+                                      }
+                                  }
+                                                       failure:^(NSError *error)
+                                  {
+                                      if (failure)
+                                      {
+                                          failure(error);
+                                      }
+                                  }];
+
+    // Disable retry because it interferes with clientTimeout
+    // Let the client manage retries on events streams
+    operation.maxNumberOfTries = 1;
+
+    return operation;
 }
 
 - (MXHTTPOperation*)publicRooms:(void (^)(NSArray *rooms))success
