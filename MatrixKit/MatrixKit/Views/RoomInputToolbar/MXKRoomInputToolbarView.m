@@ -51,6 +51,10 @@
     if (self) {
         // Reset default container background color
         self.messageComposerContainer.backgroundColor = [UIColor clearColor];
+        // Set default message composer background color
+        self.defaultMessageComposerTextView.backgroundColor = [UIColor whiteColor];
+        // Set default toolbar background color
+        self.backgroundColor = [UIColor colorWithRed:0.9 green:0.9 blue:0.9 alpha:1.0];
         
         // Disable send button
         self.rightInputToolbarButton.enabled = NO;
@@ -160,10 +164,64 @@
         if (self.textMessage.length && [self.delegate respondsToSelector:@selector(roomInputToolbarView:sendTextMessage:)]) {
             [self.delegate roomInputToolbarView:self sendTextMessage:self.textMessage];
         }
+        
+        // Reset message
+        self.textMessage = nil;
     }
 }
 
+- (NSString*)textMessage {
+    return _defaultMessageComposerTextView.text;
+}
+
+- (void)setTextMessage:(NSString *)textMessage {
+    
+    _defaultMessageComposerTextView.text = textMessage;
+    self.rightInputToolbarButton.enabled = textMessage.length;
+}
+
 - (void)dismissKeyboard {
+    
+    if (_defaultMessageComposerTextView) {
+        [_defaultMessageComposerTextView resignFirstResponder];
+    }
+}
+
+#pragma mark - UITextViewDelegate
+
+- (void)textViewDidEndEditing:(UITextView *)textView {
+    
+    if ([self.delegate respondsToSelector:@selector(roomInputToolbarView:isTyping:)]) {
+        [self.delegate roomInputToolbarView:self isTyping:NO];
+    }
+}
+
+- (void)textViewDidChange:(UITextView *)textView {
+    
+    NSString *msg = textView.text;
+    
+    if (msg.length) {
+        if ([self.delegate respondsToSelector:@selector(roomInputToolbarView:isTyping:)]) {
+            [self.delegate roomInputToolbarView:self isTyping:YES];
+        }
+        self.rightInputToolbarButton.enabled = YES;
+    } else {
+        if ([self.delegate respondsToSelector:@selector(roomInputToolbarView:isTyping:)]) {
+            [self.delegate roomInputToolbarView:self isTyping:NO];
+        }
+        self.rightInputToolbarButton.enabled = NO;
+    }
+}
+
+- (BOOL)textView:(UITextView *)textView shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text {
+    
+    // Hanlde here `Done` key pressed
+    if([text isEqualToString:@"\n"]) {
+        [textView resignFirstResponder];
+        return NO;
+    }
+    
+    return YES;
 }
 
 #pragma mark - UIImagePickerControllerDelegate

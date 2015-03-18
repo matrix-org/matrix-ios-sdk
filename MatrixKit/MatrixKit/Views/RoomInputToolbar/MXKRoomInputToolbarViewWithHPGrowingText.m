@@ -32,9 +32,14 @@
 - (instancetype) init {
     self = [super init];
     if (self) {
-        // Customize toolbar button
+        // Customize here toolbar buttons
         
-        // Customize message composer: use HPGrowingTextView
+        // Remove default composer
+        self.defaultMessageComposerTextView.delegate = nil;
+        [self.defaultMessageComposerTextView removeFromSuperview];
+        self.defaultMessageComposerTextView  = nil;
+        
+        // Add customized message composer based on HPGrowingTextView use
         CGRect frame = messageComposerContainer.frame;
         frame.origin.x = frame.origin.y = 0;
         growingTextView = [[HPGrowingTextView alloc] initWithFrame:frame];
@@ -110,6 +115,7 @@
 
 - (void)setTextMessage:(NSString *)textMessage {
     growingTextView.text = textMessage;
+    self.rightInputToolbarButton.enabled = textMessage.length;
 }
 
 - (void)dismissKeyboard {
@@ -119,12 +125,14 @@
 #pragma mark - HPGrowingTextView delegate
 
 - (void)growingTextViewDidEndEditing:(HPGrowingTextView *)sender {
+    
     if ([self.delegate respondsToSelector:@selector(roomInputToolbarView:isTyping:)]) {
         [self.delegate roomInputToolbarView:self isTyping:NO];
     }
 }
 
 - (void)growingTextViewDidChange:(HPGrowingTextView *)sender {
+    
     NSString *msg = growingTextView.text;
     
     // HPGrowingTextView triggers growingTextViewDidChange event when it recomposes itself.

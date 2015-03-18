@@ -107,7 +107,7 @@
  */
 @interface MXKRoomInputToolbarView : UIView <UITextViewDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate> {
     /**
-     The message composer container view
+     The message composer container view. Your own message composer may be added inside this container (after removing the default composer: `defaultMessageComposerTextView`).
      */
     UIView *messageComposerContainer;
 }
@@ -126,6 +126,11 @@
  A custom button displayed on the right of the toolbar view.
  */
 @property (weak, nonatomic) IBOutlet UIButton *rightInputToolbarButton;
+
+/**
+ Default message composer defined in `messageComposerContainer`. You must remove it before adding your own message composer.
+ */
+@property (weak, nonatomic) IBOutlet UITextView *defaultMessageComposerTextView;
 
 /**
  Layout constraint between the top of the message composer container and the top of its superview.

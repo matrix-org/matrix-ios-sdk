@@ -37,7 +37,24 @@
                 </button>
                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="QWp-NV-uh5" userLabel="Message Composer Container">
                     <rect key="frame" x="51" y="4" width="497" height="36"/>
+                    <subviews>
+                        <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="24Y-ae-xvw" userLabel="Default Message Composer Text View">
+                            <rect key="frame" x="0.0" y="0.0" width="497" height="36"/>
+                            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                            <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                            <textInputTraits key="textInputTraits" autocapitalizationType="sentences" returnKeyType="done"/>
+                            <connections>
+                                <outlet property="delegate" destination="iN0-l3-epB" id="I7b-D4-kmi"/>
+                            </connections>
+                        </textView>
+                    </subviews>
                     <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
+                    <constraints>
+                        <constraint firstAttribute="bottom" secondItem="24Y-ae-xvw" secondAttribute="bottom" id="Orh-Lx-4pU"/>
+                        <constraint firstItem="24Y-ae-xvw" firstAttribute="leading" secondItem="QWp-NV-uh5" secondAttribute="leading" id="e9C-Ki-9vO"/>
+                        <constraint firstAttribute="trailing" secondItem="24Y-ae-xvw" secondAttribute="trailing" id="flk-jG-qWQ"/>
+                        <constraint firstItem="24Y-ae-xvw" firstAttribute="top" secondItem="QWp-NV-uh5" secondAttribute="top" id="urH-zt-PuK"/>
+                    </constraints>
                 </view>
             </subviews>
             <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
@@ -58,6 +75,7 @@
             <nil key="simulatedBottomBarMetrics"/>
             <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
             <connections>
+                <outlet property="defaultMessageComposerTextView" destination="24Y-ae-xvw" id="PPp-9f-XSQ"/>
                 <outlet property="leftInputToolbarButton" destination="Hga-l8-Wua" id="KSc-TM-g5i"/>
                 <outlet property="messageComposerContainer" destination="QWp-NV-uh5" id="7BM-Ni-5BB"/>
                 <outlet property="messageComposerContainerBottomConstraint" destination="9Ya-0H-03W" id="67R-BO-8aU"/>
