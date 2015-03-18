@@ -54,7 +54,6 @@
                 self->room = [self->mxSession roomWithRoomId:roomId];
                 NSAssert(self->room, @"The user must be in the the room");
 
-                [self.tableView reloadData];
             } failure:^(NSError *error) {
                 NSAssert(false, @"roomIDForRoomAlias should not fail. Error: %@", error);
             }];
@@ -64,6 +63,8 @@
         }];
     } failure:^(NSError *error) {
     }];
+
+    [self configureView];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -71,12 +72,38 @@
     // Dispose of any resources that can be recreated.
 }
 
+- (void)configureView {
+    [self.tableView reloadData];
+
+    // Show a spinner and disable tableView selection while MXSession is not synced and running
+    __block UIActivityIndicatorView *spinner;
+    if (MXSessionStateRunning != mxSession.state)
+    {
+        self.tableView.allowsSelection = NO;
+
+        spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
+        spinner.center = self.view.center;
+        [self.view addSubview:spinner];
+        [spinner startAnimating];
+    }
+
+    // Listen to the MXSession state changes
+    [[NSNotificationCenter defaultCenter] addObserverForName:MXSessionStateDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        if (MXSessionStateRunning == mxSession.state) {
+            // MXSession is now up
+            [spinner stopAnimating];
+            [spinner removeFromSuperview];
+            spinner = nil;
+
+            self.tableView.allowsSelection = YES;
+        }
+    }];
+}
+
+
 #pragma mark - Table View Data Source
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-    if (!room) {
-        return 0;
-    }
     return 1;
 }
 
