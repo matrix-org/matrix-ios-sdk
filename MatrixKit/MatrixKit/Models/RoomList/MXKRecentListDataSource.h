@@ -74,6 +74,15 @@ extern NSString *const kMXKRecentCellIdentifier;
 - (instancetype)initWithMatrixSession:(MXSession*)mxSession;
 
 /**
+ Get the data for the cell at the given index.
+
+ @param index the index of the cell in the array
+ @return the cell data
+ */
+- (id<MXKRecentCellDataStoring>)cellDataAtIndex:(NSInteger)index;
+
+
+/**
  Inform the data source that one of its cells data has changed.
  
  @param cellData the cell that has changed.

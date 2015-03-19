@@ -52,9 +52,9 @@
         typeof(self) self = weakSelf;
         [self.mxSession start:^{
             // Resolve #test:matrix.org to room id in order to make tests there
-            [self.mxSession.matrixRestClient roomIDForRoomAlias:@"#test:matrix.org" success:^(NSString *roomId) {
+            [self.mxSession.matrixRestClient roomIDForRoomAlias:@"#test:matrix.org" success:^(NSString *aRoomId) {
 
-                self->roomId = roomId;
+                self->roomId = aRoomId;
 
             } failure:^(NSError *error) {
                 NSAssert(false, @"roomIDForRoomAlias should not fail. Error: %@", error);
@@ -147,6 +147,7 @@
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
     if ([segue.identifier isEqualToString:@"showSampleRecentsViewController"]) {
         MXKSampleRecentsViewController *sampleRecentListViewController = (MXKSampleRecentsViewController *)segue.destinationViewController;
+        sampleRecentListViewController.delegate = self;
 
         MXKRecentListDataSource *listDataSource = [[MXKRecentListDataSource alloc] initWithMatrixSession:self.mxSession];
         [sampleRecentListViewController displayList:listDataSource];
@@ -161,6 +162,14 @@
         MXKSampleJSQRoomDataSource *roomDataSource = [[MXKSampleJSQRoomDataSource alloc] initWithRoomId:roomId andMatrixSession:self.mxSession];
         [sampleRoomViewController displayRoom:roomDataSource];
     }
+}
+
+#pragma mark - MXKRecentListViewControllerDelegate
+- (void)recentListViewController:(MXKRecentListViewController *)recentListViewController didSelectRoom:(NSString *)aRoomId {
+
+    // Change the current room id and come back to the main page
+    roomId = aRoomId;
+    [self.navigationController popToRootViewControllerAnimated:YES];
 }
 
 @end

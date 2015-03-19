@@ -19,10 +19,33 @@ limitations under the License.
 #import "MXKViewController.h"
 #import "MXKRecentListDataSource.h"
 
+@class MXKRecentListViewController;
+
+/**
+ `MXKRecentListViewController` delegate.
+ */
+@protocol MXKRecentListViewControllerDelegate <NSObject>
+
+/**
+ Tells the delegate that the user selected a room.
+
+ @param recentListViewController the `MXKRecentListViewController` instance.
+ @param roomId the id of the selected room.
+ */
+- (void)recentListViewController:(MXKRecentListViewController *)recentListViewController didSelectRoom:(NSString*)roomId;
+
+@end
+
+
 /**
  This view controller displays messages of a room.
  */
-@interface MXKRecentListViewController : MXKViewController <MXKDataSourceDelegate>
+@interface MXKRecentListViewController : MXKViewController <MXKDataSourceDelegate, UITableViewDelegate>
+
+/**
+ The delegate for the view controller.
+ */
+@property (nonatomic) id<MXKRecentListViewControllerDelegate> delegate;
 
 /**
  Display the recent list.

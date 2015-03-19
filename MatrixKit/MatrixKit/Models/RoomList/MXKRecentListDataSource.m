@@ -67,6 +67,17 @@ NSString *const kMXKRecentCellIdentifier = @"kMXKRecentCellIdentifier";
     }
 }
 
+- (void)didMXSessionStateChange {
+    if (MXSessionStateStoreDataReady < self.mxSession.state) {
+        [self loadData];
+    }
+}
+
+- (id<MXKRecentCellDataStoring>)cellDataAtIndex:(NSInteger)index {
+
+    return cellDataArray[index];
+}
+
 - (void)didCellDataChange:(id<MXKRecentCellDataStoring>)cellData {
 
     if (self.delegate) {
@@ -166,7 +177,6 @@ NSString *const kMXKRecentCellIdentifier = @"kMXKRecentCellIdentifier";
 
 
 #pragma mark - Events processing
-
 - (void)loadData {
     NSArray *recentEvents = [self.mxSession recentsWithTypeIn:_eventsFilterForMessages];
 
@@ -195,7 +205,7 @@ NSString *const kMXKRecentCellIdentifier = @"kMXKRecentCellIdentifier";
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 
-    id<MXKRecentCellDataStoring> roomData = cellDataArray[indexPath.row];
+    id<MXKRecentCellDataStoring> roomData = [self cellDataAtIndex:indexPath.row];
 
     MXKRecentTableViewCell *cell  = [tableView dequeueReusableCellWithIdentifier:kMXKRecentCellIdentifier forIndexPath:indexPath];
 

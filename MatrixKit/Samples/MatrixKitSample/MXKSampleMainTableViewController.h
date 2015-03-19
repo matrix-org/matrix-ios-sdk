@@ -18,7 +18,7 @@
 
 #import "MatrixKit.h"
 
-@interface MXKSampleMainTableViewController : MXKViewController <UITableViewDataSource, UITableViewDelegate>
+@interface MXKSampleMainTableViewController : MXKViewController <UITableViewDataSource, UITableViewDelegate, MXKRecentListViewControllerDelegate>
 
 @property (nonatomic) IBOutlet UITableView *tableView;
 

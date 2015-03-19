@@ -70,6 +70,8 @@
 
 - (void)configureView {
 
+    _tableView.delegate = self;
+
     // Set up table data source
     _tableView.dataSource = dataSource;
     
@@ -92,6 +94,17 @@
 - (void)dataSource:(MXKDataSource *)dataSource didChange:(id)changes {
     // For now, do a simple full reload
     [_tableView reloadData];
+}
+
+
+#pragma mark - UITableView delegate
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+
+    if (_delegate) {
+        id<MXKRecentCellDataStoring> cellData = [dataSource cellDataAtIndex:indexPath.row];
+
+        [_delegate recentListViewController:self didSelectRoom:cellData.roomId];
+    }
 }
 
 @end
