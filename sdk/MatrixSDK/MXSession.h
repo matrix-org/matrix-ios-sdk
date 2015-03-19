@@ -39,8 +39,11 @@ typedef enum : NSUInteger {
 
     /**
      The session is syncing with the server.
-     It is either doing a global initialSync or restarting the events stream from the position
-     stored in the store.
+     
+     @discussion
+     It is either doing a global initialSync or restarting the events stream from the previous
+     known position. This position is provided by the store for a cold start or by the `MXSession`
+     itself when [MXSession resume] is called.
      */
     MXSessionStateSyncInProgress,
 

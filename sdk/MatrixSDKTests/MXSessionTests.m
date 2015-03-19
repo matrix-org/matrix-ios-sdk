@@ -557,10 +557,20 @@
 
             XCTAssertEqual(MXSessionStateRunning, mxSession.state);
 
-            [mxSession close];
-            XCTAssertEqual(MXSessionStateClosed, mxSession.state);
+            [mxSession pause];
+            XCTAssertEqual(MXSessionStatePaused, mxSession.state);
 
-            [expectation fulfill];
+            [mxSession resume:^{
+                XCTAssertEqual(MXSessionStateRunning, mxSession.state);
+
+                [mxSession close];
+                XCTAssertEqual(MXSessionStateClosed, mxSession.state);
+
+                mxSession = nil;
+                [expectation fulfill];
+            }];
+
+            XCTAssertEqual(MXSessionStateSyncInProgress, mxSession.state);
 
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);

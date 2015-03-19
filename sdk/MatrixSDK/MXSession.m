@@ -400,6 +400,8 @@ typedef void (^MXOnResumeDone)();
             {
                 NSLog(@"[MXSession] Events stream resumed with %tu new events", events.count);
 
+                [self setState:MXSessionStateRunning];
+
                 onResumeDone();
                 onResumeDone = nil;
 
@@ -546,11 +548,11 @@ typedef void (^MXOnResumeDone)();
     // of push rules server side. Reload them when resuming the SDK is a good time
     [_notificationCenter refreshRules:nil failure:nil];
 
+    [self setState:MXSessionStateSyncInProgress];
+
     // Resume from the last known token
     onResumeDone = resumeDone;
     [self streamEventsFromToken:_store.eventStreamToken withLongPoll:NO];
-
-    [self setState:MXSessionStateRunning];
 }
 
 - (void)close
