@@ -39,11 +39,10 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
 @implementation MXKRoomDataSource
 
 - (instancetype)initWithRoom:(MXRoom *)aRoom andMatrixSession:(MXSession *)matrixSession {
-    self = [super init];
+    self = [super initWithMatrixSession:matrixSession];
     if (self) {
 
         _room = aRoom;
-        _mxSession = matrixSession;
         processingQueue = dispatch_queue_create("MXKRoomDataSource", DISPATCH_QUEUE_SERIAL);
         bubbles = [NSMutableArray array];
         eventsToProcess = [NSMutableArray array];
@@ -57,7 +56,7 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
         [self registerCellViewClass:MXKRoomOutgoingBubbleTableViewCell.class forCellIdentifier:kMXKOutgoingRoomBubbleCellIdentifier];
 
         // Set default MXEvent -> NSString formatter
-        _eventFormatter = [[MXKEventFormatter alloc] initWithMatrixSession:_mxSession];
+        _eventFormatter = [[MXKEventFormatter alloc] initWithMatrixSession:self.mxSession];
         
         // @TODO: SDK: we need a reference when paginating back.
         // Else, how to not conflict with other view controller?
@@ -248,7 +247,7 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
     // The cell to use depends if this is a message from the user or not
     // Then use the cell class defined by the table view
     MXKRoomBubbleTableViewCell *cell;
-    if ([bubbleData.senderId isEqualToString:_mxSession.matrixRestClient.credentials.userId]) {
+    if ([bubbleData.senderId isEqualToString:self.mxSession.matrixRestClient.credentials.userId]) {
         cell = [tableView dequeueReusableCellWithIdentifier:kMXKOutgoingRoomBubbleCellIdentifier forIndexPath:indexPath];
     }
     else {

@@ -34,10 +34,9 @@ NSString *const kMXKRecentCellIdentifier = @"kMXKRecentCellIdentifier";
 @implementation MXKRecentListDataSource
 
 - (instancetype)initWithMatrixSession:(MXSession *)matrixSession {
-    self = [super init];
+    self = [super initWithMatrixSession:matrixSession];
     if (self) {
 
-        _mxSession = matrixSession;
         cellDataArray = [NSMutableArray array];
 
         // Set default data and view classes
@@ -45,7 +44,7 @@ NSString *const kMXKRecentCellIdentifier = @"kMXKRecentCellIdentifier";
         [self registerCellViewClass:MXKRecentTableViewCell.class forCellIdentifier:kMXKRecentCellIdentifier];
 
         // Set default MXEvent -> NSString formatter
-        _eventFormatter = [[MXKEventFormatter alloc] initWithMatrixSession:_mxSession];
+        _eventFormatter = [[MXKEventFormatter alloc] initWithMatrixSession:self.mxSession];
         _eventFormatter.isForSubtitle = YES;
 
         // Display only a subset of events
@@ -78,20 +77,20 @@ NSString *const kMXKRecentCellIdentifier = @"kMXKRecentCellIdentifier";
 
     // Remove the previous live listener
     if (liveEventsListener) {
-        [_mxSession removeListener:liveEventsListener];
+        [self.mxSession removeListener:liveEventsListener];
     }
 
     // And register a new one with the requested filter
     _eventsFilterForMessages = [eventsFilterForMessages copy];
-    liveEventsListener = [_mxSession listenToEventsOfTypes:_eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+    liveEventsListener = [self.mxSession listenToEventsOfTypes:_eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
         if (MXEventDirectionForwards == direction) {
 
             // Check user's membership in live room state (We will remove left rooms from recents)
-            MXRoom *mxRoom = [_mxSession roomWithRoomId:event.roomId];
+            MXRoom *mxRoom = [self.mxSession roomWithRoomId:event.roomId];
             BOOL isLeft = (mxRoom == nil || mxRoom.state.membership == MXMembershipLeave || mxRoom.state.membership == MXMembershipBan);
 
             // Consider this new event as unread only if the sender is not the user and if the room is not visible
-            BOOL isUnread = (![event.userId isEqualToString:_mxSession.matrixRestClient.credentials.userId]
+            BOOL isUnread = (![event.userId isEqualToString:self.mxSession.matrixRestClient.credentials.userId]
                              /* @TODO: Applicable at this low level? && ![[AppDelegate theDelegate].masterTabBarController.visibleRoomId isEqualToString:event.roomId]*/);
 
             // Look for the room
@@ -169,7 +168,7 @@ NSString *const kMXKRecentCellIdentifier = @"kMXKRecentCellIdentifier";
 #pragma mark - Events processing
 
 - (void)loadData {
-    NSArray *recentEvents = [_mxSession recentsWithTypeIn:_eventsFilterForMessages];
+    NSArray *recentEvents = [self.mxSession recentsWithTypeIn:_eventsFilterForMessages];
 
     // Retrieve the MXKCellData class to manage the data
     Class class = [self cellDataClassForCellIdentifier:kMXKRecentCellIdentifier];
@@ -177,7 +176,7 @@ NSString *const kMXKRecentCellIdentifier = @"kMXKRecentCellIdentifier";
 
     for (MXEvent *recentEvent in recentEvents) {
 
-        MXRoom *mxRoom = [_mxSession roomWithRoomId:recentEvent.roomId];
+        MXRoom *mxRoom = [self.mxSession roomWithRoomId:recentEvent.roomId];
         id<MXKRecentCellDataStoring> cellData = [[class alloc] initWithLastEvent:recentEvent andRoomState:mxRoom.state markAsUnread:NO andRecentListDataSource:self];
         if (cellData) {
             [cellDataArray addObject:cellData];

@@ -16,6 +16,7 @@
 
 #import <Foundation/Foundation.h>
 
+#import <MatrixSDK/MatrixSDK.h>
 #import "MXKCellRendering.h"
 
 @class MXKDataSource;
@@ -37,9 +38,29 @@
 @interface MXKDataSource : NSObject
 
 /**
+ The matrix session.
+ */
+@property (nonatomic, readonly) MXSession *mxSession;
+
+/**
  The delegate notified when the data has been updated.
  */
 @property (nonatomic) id<MXKDataSourceDelegate> delegate;
+
+
+#pragma mark - Life cycle
+/**
+ Base constructor of data source.
+
+ @param mxSession the Matrix session to get data from.
+ @return the newly created instance.
+ */
+- (instancetype)initWithMatrixSession:(MXSession*)mxSession;
+
+/**
+ This method is called when the state of the attached Matrix session has changed.
+ */
+- (void)didMXSessionStateChange;
 
 
 #pragma mark - MXKCellData classes

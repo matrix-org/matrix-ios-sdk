@@ -15,7 +15,6 @@
  */
 
 #import <UIKit/UIKit.h>
-#import <MatrixSDK/MatrixSDK.h>
 
 #import "MXKDataSource.h"
 #import "MXKRoomBubbleCellData.h"
@@ -63,11 +62,6 @@ extern NSString *const kMXKOutgoingRoomBubbleCellIdentifier;
  */
 @property (nonatomic, readonly) MXRoom *room;
 
-/**
- The matrix session.
- */
-@property (nonatomic, readonly) MXSession *mxSession;
-
 
 #pragma mark - Configuration
 /**
@@ -97,7 +91,8 @@ extern NSString *const kMXKOutgoingRoomBubbleCellIdentifier;
  Initialise the data source to serve data corresponding to the passed room.
  
  @param room the room to get data from.
- @return the newly created instance. 
+ @param mxSession the Matrix session to get data from.
+ @return the newly created instance.
  */
 - (instancetype)initWithRoom:(MXRoom *)aRoom andMatrixSession:(MXSession*)mxSession;
 

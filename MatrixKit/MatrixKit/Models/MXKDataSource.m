@@ -34,15 +34,40 @@
 
 @implementation MXKDataSource
 
-- (instancetype)init {
+#pragma mark - Life cycle
+- (instancetype)initWithMatrixSession:(MXSession *)matrixSession {
 
     self = [super init];
     if (self) {
+        _mxSession = matrixSession;
         cellDataMap = [NSMutableDictionary dictionary];
         cellViewMap = [NSMutableDictionary dictionary];
+
+        // Listen to MXSession state changes
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didMXSessionStateChange:) name:MXSessionStateDidChangeNotification object:nil];
     }
     return self;
 }
+
+- (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:MXSessionStateDidChangeNotification object:nil];
+}
+
+
+#pragma mark - MXSessionStateDidChangeNotification
+- (void)didMXSessionStateChange:(NSNotification *)notif {
+
+    // Check this is our Matrix session that has changed
+    if (notif.object == _mxSession) {
+        [self didMXSessionStateChange];
+    }
+}
+
+- (void)didMXSessionStateChange {
+
+    // The inherited is highly invited to override this method for its business logic
+}
+
 
 #pragma mark - MXKCellData classes
 - (void)registerCellDataClass:(Class)cellDataClass forCellIdentifier:(NSString *)identifier {
@@ -57,6 +82,7 @@
 
     return cellDataMap[identifier];
 }
+
 
 #pragma mark - MXKCellRendering classes
 - (void)registerCellViewClass:(Class)cellViewClass forCellIdentifier:(NSString *)identifier {
