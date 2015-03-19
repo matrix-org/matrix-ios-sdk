@@ -30,19 +30,28 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
 
 @interface MXKRoomDataSource () {
 
-    // The listener to incoming events in the room
+    /**
+     The listener to incoming events in the room.
+     */
     id liveEventsListener;
+
+    /**
+     [MXKRoomDataSource paginateBackMessages] or [MXKRoomDataSource paginateBackMessagesToFillRect]
+     can be called where as the MXRoom object is not ready.
+     `pendingPaginationRequestBlock` stores the request to execute it once MXRoom is ready.
+     */
+    void (^pendingPaginationRequestBlock)(void);
 }
 
 @end
 
 @implementation MXKRoomDataSource
 
-- (instancetype)initWithRoom:(MXRoom *)aRoom andMatrixSession:(MXSession *)matrixSession {
+- (instancetype)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)matrixSession {
     self = [super initWithMatrixSession:matrixSession];
     if (self) {
 
-        _room = aRoom;
+        _roomId = roomId;
         processingQueue = dispatch_queue_create("MXKRoomDataSource", DISPATCH_QUEUE_SERIAL);
         bubbles = [NSMutableArray array];
         eventsToProcess = [NSMutableArray array];
@@ -57,18 +66,16 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
 
         // Set default MXEvent -> NSString formatter
         _eventFormatter = [[MXKEventFormatter alloc] initWithMatrixSession:self.mxSession];
-        
-        // @TODO: SDK: we need a reference when paginating back.
-        // Else, how to not conflict with other view controller?
-        [_room resetBackState];
 
         // Display only a subset of events
-        self.eventsFilterForMessages = @[
-                                         kMXEventTypeStringRoomName,
-                                         kMXEventTypeStringRoomTopic,
-                                         kMXEventTypeStringRoomMember,
-                                         kMXEventTypeStringRoomMessage
-                                         ];;
+        _eventsFilterForMessages = @[
+                                     kMXEventTypeStringRoomName,
+                                     kMXEventTypeStringRoomTopic,
+                                     kMXEventTypeStringRoomMember,
+                                     kMXEventTypeStringRoomMessage
+                                     ];
+
+        [self didMXSessionStateChange];
     }
     return self;
 }
@@ -76,9 +83,39 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
 - (void)dealloc {
     self.delegate = nil;
 
-    if (liveEventsListener) {
+    if (_room && liveEventsListener) {
         [_room removeListener:liveEventsListener];
         liveEventsListener = nil;
+    }
+}
+
+- (void)didMXSessionStateChange {
+
+    if (MXSessionStateStoreDataReady < self.mxSession.state) {
+
+        if (!_room) {
+
+            _room = [self.mxSession roomWithRoomId:_roomId];
+            if (_room) {
+                // @TODO: SDK: we need a reference when paginating back.
+                // Else, how to not conflict with other view controller?
+                [_room resetBackState];
+
+                // Force to set the filter at the MXRoom level
+                self.eventsFilterForMessages = _eventsFilterForMessages;
+
+                // If the view controller requests pagination before _room was ready, it is
+                // the right time to do it
+                if (pendingPaginationRequestBlock) {
+                    pendingPaginationRequestBlock();
+                }
+            }
+            else {
+                NSLog(@"[MXKRoomDataSource] The user does not know the room %@", _roomId);
+            }
+
+            pendingPaginationRequestBlock = nil;
+        }
     }
 }
 
@@ -102,31 +139,49 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
 
 - (void)paginateBackMessages:(NSUInteger)numItems success:(void (^)())success failure:(void (^)(NSError *error))failure {
 
-    // Keep events from the past to later processing
-    id backPaginateListener = [_room listenToEventsOfTypes:_eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
-        if (MXEventDirectionBackwards == direction) {
-            [self queueEventForProcessing:event withRoomState:roomState direction:MXEventDirectionBackwards];
-        }
-    }];
+    NSAssert(nil == pendingPaginationRequestBlock, @"paginateBackMessages cannot be called while a paginate request is pending");
 
-    // Launch the pagination
-    [_room paginateBackMessages:numItems complete:^{
+    void (^paginate)(void) = ^(void) {
 
-        // Once done, process retrieved events
-        [_room removeListener:backPaginateListener];
-        [self processQueuedEvents:success];
+        // Keep events from the past to later processing
+        id backPaginateListener = [_room listenToEventsOfTypes:_eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+            if (MXEventDirectionBackwards == direction) {
+                [self queueEventForProcessing:event withRoomState:roomState direction:MXEventDirectionBackwards];
+            }
+        }];
 
-    } failure:^(NSError *error) {
-        NSLog(@"[MXKRoomDataSource] paginateBackMessages fails. Error: %@", error);
+        // Launch the pagination
+        [_room paginateBackMessages:numItems complete:^{
 
-        if (failure) {
-            failure(error);
-        }
-    }];
+            // Once done, process retrieved events
+            [_room removeListener:backPaginateListener];
+            [self processQueuedEvents:success];
+
+        } failure:^(NSError *error) {
+            NSLog(@"[MXKRoomDataSource] paginateBackMessages fails. Error: %@", error);
+
+            if (failure) {
+                failure(error);
+            }
+        }];
+    };
+
+    // Check MXSession is ready to serve data for the room
+    if (MXSessionStateStoreDataReady < self.mxSession.state) {
+
+        // Yes, do it right now
+        paginate();
+    }
+    else {
+        // Else postpone the request until MXSession is ready
+        pendingPaginationRequestBlock = paginate;
+    }
 };
 
 - (void)paginateBackMessagesToFillRect:(CGRect)rect success:(void (^)())success failure:(void (^)(NSError *error))failure {
-    // @TODO
+
+    NSAssert(nil == pendingPaginationRequestBlock, @"paginateBackMessages cannot be called while a paginate request is pending");
+
     [self paginateBackMessages:10 success:success failure:failure];
 }
 

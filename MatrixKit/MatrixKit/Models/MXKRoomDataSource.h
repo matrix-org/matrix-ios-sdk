@@ -58,7 +58,14 @@ extern NSString *const kMXKOutgoingRoomBubbleCellIdentifier;
 }
 
 /**
+ The id of the room managed by the data source.
+
+ */
+@property (nonatomic, readonly) NSString *roomId;
+
+/**
  The room the data comes from.
+ The object is defined when the MXSession has data for the room
  */
 @property (nonatomic, readonly) MXRoom *room;
 
@@ -90,11 +97,11 @@ extern NSString *const kMXKOutgoingRoomBubbleCellIdentifier;
 /**
  Initialise the data source to serve data corresponding to the passed room.
  
- @param room the room to get data from.
+ @param roomId the id of the room to get data from.
  @param mxSession the Matrix session to get data from.
  @return the newly created instance.
  */
-- (instancetype)initWithRoom:(MXRoom *)aRoom andMatrixSession:(MXSession*)mxSession;
+- (instancetype)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession;
 
 /**
  Load more messages from the history.

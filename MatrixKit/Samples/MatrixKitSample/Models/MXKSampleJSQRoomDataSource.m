@@ -20,9 +20,9 @@
 
 @implementation MXKSampleJSQRoomDataSource
 
-- (instancetype)initWithRoom:(MXRoom *)aRoom andMatrixSession:(MXSession *)session {
-    
-    self = [super initWithRoom:aRoom andMatrixSession:session];
+- (instancetype)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)session {
+
+    self = [super initWithRoomId:roomId andMatrixSession:session];
     if (self) {
         // Change data classes
         [self registerCellDataClass:MXKSampleJSQRoomBubbleCellData.class forCellIdentifier:kMXKIncomingRoomBubbleCellIdentifier];
