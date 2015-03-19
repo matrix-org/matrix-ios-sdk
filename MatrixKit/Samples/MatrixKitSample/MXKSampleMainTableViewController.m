@@ -23,7 +23,7 @@
 @interface MXKSampleMainTableViewController () {
     
     MXSession *mxSession;
-    MXRoom *room;
+    NSString *roomId;
 
     /**
      The spinner displayed when MXSession is not synced and running
@@ -61,8 +61,7 @@
             // Resolve #test:matrix.org to room id in order to make tests there
             [self->mxSession.matrixRestClient roomIDForRoomAlias:@"#test:matrix.org" success:^(NSString *roomId) {
 
-                self->room = [self->mxSession roomWithRoomId:roomId];
-                NSAssert(self->room, @"The user must be in the the room");
+                self->roomId = roomId;;
 
             } failure:^(NSError *error) {
                 NSAssert(false, @"roomIDForRoomAlias should not fail. Error: %@", error);
@@ -73,6 +72,10 @@
         }];
     } failure:^(NSError *error) {
     }];
+
+    // Test code for directly opening a VC
+    //roomId = @"!vfFxDRtZSSdspfTSEr:matrix.org";
+    //[self performSegueWithIdentifier:@"showSampleRoomViewController" sender:self];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -164,12 +167,12 @@
     } else if ([segue.identifier isEqualToString:@"showSampleRoomViewController"]) {
         MXKSampleRoomViewController *sampleRoomViewController = (MXKSampleRoomViewController *)segue.destinationViewController;
 
-        MXKRoomDataSource *roomDataSource = [[MXKRoomDataSource alloc] initWithRoom:room andMatrixSession:mxSession];
+        MXKRoomDataSource *roomDataSource = [[MXKRoomDataSource alloc] initWithRoomId:roomId andMatrixSession:mxSession];
         [sampleRoomViewController displayRoom:roomDataSource];
     } else if ([segue.identifier isEqualToString:@"showSampleJSQMessagesViewController"]) {
         MXKSampleJSQMessagesViewController *sampleRoomViewController = (MXKSampleJSQMessagesViewController *)segue.destinationViewController;
         
-        MXKSampleJSQRoomDataSource *roomDataSource = [[MXKSampleJSQRoomDataSource alloc] initWithRoom:room andMatrixSession:mxSession];
+        MXKSampleJSQRoomDataSource *roomDataSource = [[MXKSampleJSQRoomDataSource alloc] initWithRoomId:roomId andMatrixSession:mxSession];
         [sampleRoomViewController displayRoom:roomDataSource];
     }
 }
