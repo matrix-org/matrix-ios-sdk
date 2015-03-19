@@ -65,7 +65,7 @@
 
 - (void)didMXSessionStateChange {
 
-    // The inherited is highly invited to override this method for its business logic
+    // The inherited class is highly invited to override this method for its business logic
 }
 
 
