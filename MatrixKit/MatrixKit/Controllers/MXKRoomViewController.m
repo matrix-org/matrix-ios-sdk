@@ -101,7 +101,8 @@
 
 - (void)configureView {
 
-    // Set up table data source
+    // Set up table delegates
+    _tableView.delegate = self;
     _tableView.dataSource = dataSource;
     
     // Set up classes to use for cells
@@ -216,6 +217,7 @@
 
 - (void)triggerBackPagination {
     // TODO: implement back pagination
+    [dataSource paginateBackMessages:10 success:nil failure:nil];
 }
 
 #pragma mark - Post messages
@@ -317,7 +319,7 @@
 - (void)tableView:(UITableView *)tableView didEndDisplayingCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath*)indexPath {
     
     // Release here resources, and restore reusable cells
-    if ([cell conformsToProtocol:@protocol(MXKCellRendering)]) {
+    if ([cell respondsToSelector:@selector(didEndDisplay)]) {
         [(id<MXKCellRendering>)cell didEndDisplay];
     }
 }
