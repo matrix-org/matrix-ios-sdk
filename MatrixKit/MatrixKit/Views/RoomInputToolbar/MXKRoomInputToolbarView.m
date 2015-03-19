@@ -58,6 +58,10 @@
         
         // Disable send button
         self.rightInputToolbarButton.enabled = NO;
+        
+        // Add an accessory view to the text view in order to retrieve keyboard view.
+        _inputAccessoryView = [[UIView alloc] initWithFrame:CGRectZero];
+        self.defaultMessageComposerTextView.inputAccessoryView = _inputAccessoryView;
     }
     
     return self;

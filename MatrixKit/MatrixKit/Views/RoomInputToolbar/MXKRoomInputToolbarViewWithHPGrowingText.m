@@ -45,6 +45,9 @@
         growingTextView = [[HPGrowingTextView alloc] initWithFrame:frame];
         growingTextView.delegate = self;
         
+        // Report the input accessory view
+        growingTextView.internalTextView.inputAccessoryView = self.inputAccessoryView;
+        
         // set text input font
         growingTextView.font = [UIFont systemFontOfSize:14];
         

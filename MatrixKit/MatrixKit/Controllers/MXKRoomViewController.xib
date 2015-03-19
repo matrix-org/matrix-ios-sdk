@@ -8,6 +8,7 @@
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="MXKRoomViewController">
             <connections>
                 <outlet property="roomInputToolbarContainer" destination="nLd-BP-JAE" id="1dp-P1-0js"/>
+                <outlet property="roomInputToolbarContainerBottomConstraint" destination="kQ6-Cg-FMi" id="nHr-fR-XnV"/>
                 <outlet property="roomInputToolbarContainerHeightConstraint" destination="5eD-Fm-RDb" id="6ny-5w-1UA"/>
                 <outlet property="tableView" destination="BGD-sd-SQR" id="lG8-7D-XVu"/>
                 <outlet property="view" destination="iN0-l3-epB" id="ieV-u7-rXU"/>
