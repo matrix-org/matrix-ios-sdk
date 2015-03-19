@@ -24,6 +24,11 @@
     
     MXSession *mxSession;
     MXRoom *room;
+
+    /**
+     The spinner displayed when MXSession is not synced and running
+     */
+    UIActivityIndicatorView *activityIndicator;
 }
 
 @end
@@ -33,6 +38,8 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
+    [self configureView];
+
     // We need a room
     // So, initialise a Matrix session on matrix.org to display #test:matrix.org
     MXCredentials *credentials = [[MXCredentials alloc] initWithHomeServer:@"https://matrix.org"
@@ -40,6 +47,9 @@
                                                                accessToken:@"your_access_token"];
 
     mxSession = [[MXSession alloc] initWithMatrixRestClient:[[MXRestClient alloc] initWithCredentials:credentials]];
+
+    // Listen to MXSession state changes
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didMXSessionStateChange:) name:MXSessionStateDidChangeNotification object:nil];
 
     // As there is no mock for MatrixSDK yet, use a cache for Matrix data to boost init
     MXFileStore *mxFileStore = [[MXFileStore alloc] init];
@@ -63,8 +73,6 @@
         }];
     } failure:^(NSError *error) {
     }];
-
-    [self configureView];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -75,31 +83,27 @@
 - (void)configureView {
     [self.tableView reloadData];
 
-    // Show a spinner and disable tableView selection while MXSession is not synced and running
-    __block UIActivityIndicatorView *spinner;
-    if (MXSessionStateRunning != mxSession.state)
-    {
-        self.tableView.allowsSelection = NO;
-
-        spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
-        spinner.center = self.view.center;
-        [self.view addSubview:spinner];
-        [spinner startAnimating];
-    }
-
-    // Listen to the MXSession state changes
-    [[NSNotificationCenter defaultCenter] addObserverForName:MXSessionStateDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
-        if (MXSessionStateRunning == mxSession.state) {
-            // MXSession is now up
-            [spinner stopAnimating];
-            [spinner removeFromSuperview];
-            spinner = nil;
-
-            self.tableView.allowsSelection = YES;
-        }
-    }];
+    // Set up spinner
+    activityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
+    activityIndicator.center = self.view.center;
+    [self.view addSubview:activityIndicator];
 }
 
+
+#pragma mark - MXSessionStateDidChangeNotification
+- (void)didMXSessionStateChange:(NSNotification *)notif {
+    // Show the spinner and enable selection in the table only if the MXSession is not up and running
+    if (MXSessionStateRunning == mxSession.state)
+    {
+        [activityIndicator stopAnimating];
+        self.tableView.allowsSelection = YES;
+    }
+    else
+    {
+        self.tableView.allowsSelection = NO;
+        [activityIndicator startAnimating];
+    }
+}
 
 #pragma mark - Table View Data Source
 
