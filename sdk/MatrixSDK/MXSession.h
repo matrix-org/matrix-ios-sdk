@@ -54,6 +54,15 @@ typedef enum : NSUInteger {
     MXSessionStateRunning,
 
     /**
+     The connection to the homeserver is temporary lost.
+     
+     @discussion
+     The Matrix session will automatically establish it again. Once back, the state will move to
+     MXSessionStateRunning.
+     */
+    MXSessionStateHomeserverNotReachable,
+
+    /**
      The session has been paused.
      */
     MXSessionStatePaused,

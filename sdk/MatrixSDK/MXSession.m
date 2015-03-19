@@ -356,19 +356,19 @@ typedef void (^MXOnResumeDone)();
                         onServerSyncDone();
 
                     } failure:^(NSError *error) {
-                        [self setState:MXSessionStateStoreDataReady];
+                        [self setState:MXSessionStateHomeserverNotReachable];
                         failure(error);
                     }];
                 } failure:^(NSError *error) {
-                    [self setState:MXSessionStateStoreDataReady];
+                    [self setState:MXSessionStateHomeserverNotReachable];
                     failure(error);
                 }];
             } failure:^(NSError *error) {
-                [self setState:MXSessionStateStoreDataReady];
+                [self setState:MXSessionStateHomeserverNotReachable];
                 failure(error);
             }];
         } failure:^(NSError *error) {
-            [self setState:MXSessionStateStoreDataReady];
+            [self setState:MXSessionStateHomeserverNotReachable];
             failure(error);
         }];
     }
@@ -412,6 +412,12 @@ typedef void (^MXOnResumeDone)();
                 }
             }
 
+            if (MXSessionStateHomeserverNotReachable == _state)
+            {
+                // The connection to the homeserver is now back
+                [self setState:MXSessionStateRunning];
+            }
+
             // Go streaming from the returned token
             [self streamEventsFromToken:paginatedResponse.end withLongPoll:YES];
         }
@@ -421,6 +427,9 @@ typedef void (^MXOnResumeDone)();
         // eventStreamRequest is nil when the request has been canceled
         if (eventStreamRequest)
         {
+            // Inform the app there is a problem with the connection to the homeserver
+            [self setState:MXSessionStateHomeserverNotReachable];
+
             // Relaunch the request in a random near futur.
             // Random time it used to avoid all Matrix clients to retry all in the same time
             // if there is server side issue like server restart
