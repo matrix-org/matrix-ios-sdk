@@ -16,6 +16,7 @@
 
 #import <UIKit/UIKit.h>
 
+#import "MXKViewController.h"
 #import "MXKRoomViewController.h"
 #import "MXKRecentListViewController.h"
 

@@ -16,12 +16,13 @@ limitations under the License.
 
 #import <UIKit/UIKit.h>
 
+#import "MXKViewController.h"
 #import "MXKRecentListDataSource.h"
 
 /**
  This view controller displays messages of a room.
  */
-@interface MXKRecentListViewController : UIViewController <MXKDataSourceDelegate>
+@interface MXKRecentListViewController : MXKViewController <MXKDataSourceDelegate>
 
 /**
  Display the recent list.

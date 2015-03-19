@@ -22,13 +22,7 @@
 
 @interface MXKSampleMainTableViewController () {
     
-    MXSession *mxSession;
     NSString *roomId;
-
-    /**
-     The spinner displayed when MXSession is not synced and running
-     */
-    UIActivityIndicatorView *activityIndicator;
 }
 
 @end
@@ -46,7 +40,7 @@
                                                                     userId:@"@your_matrix_id"
                                                                accessToken:@"your_access_token"];
 
-    mxSession = [[MXSession alloc] initWithMatrixRestClient:[[MXRestClient alloc] initWithCredentials:credentials]];
+    self.mxSession = [[MXSession alloc] initWithMatrixRestClient:[[MXRestClient alloc] initWithCredentials:credentials]];
 
     // Listen to MXSession state changes
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didMXSessionStateChange:) name:MXSessionStateDidChangeNotification object:nil];
@@ -54,14 +48,13 @@
     // As there is no mock for MatrixSDK yet, use a cache for Matrix data to boost init
     MXFileStore *mxFileStore = [[MXFileStore alloc] init];
     __weak typeof(self) weakSelf = self;
-    [mxSession setStore:mxFileStore success:^{
+    [self.mxSession setStore:mxFileStore success:^{
         typeof(self) self = weakSelf;
-        [self->mxSession start:^{
-
+        [self.mxSession start:^{
             // Resolve #test:matrix.org to room id in order to make tests there
-            [self->mxSession.matrixRestClient roomIDForRoomAlias:@"#test:matrix.org" success:^(NSString *roomId) {
+            [self.mxSession.matrixRestClient roomIDForRoomAlias:@"#test:matrix.org" success:^(NSString *roomId) {
 
-                self->roomId = roomId;;
+                self->roomId = roomId;
 
             } failure:^(NSError *error) {
                 NSAssert(false, @"roomIDForRoomAlias should not fail. Error: %@", error);
@@ -85,26 +78,19 @@
 
 - (void)configureView {
     [self.tableView reloadData];
-
-    // Set up spinner
-    activityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
-    activityIndicator.center = self.view.center;
-    [self.view addSubview:activityIndicator];
 }
 
 
 #pragma mark - MXSessionStateDidChangeNotification
 - (void)didMXSessionStateChange:(NSNotification *)notif {
     // Show the spinner and enable selection in the table only if the MXSession is not up and running
-    if (MXSessionStateRunning == mxSession.state)
+    if (MXSessionStateRunning == self.mxSession.state)
     {
-        [activityIndicator stopAnimating];
         self.tableView.allowsSelection = YES;
     }
     else
     {
         self.tableView.allowsSelection = NO;
-        [activityIndicator startAnimating];
     }
 }
 
@@ -162,17 +148,17 @@
     if ([segue.identifier isEqualToString:@"showSampleRecentsViewController"]) {
         MXKSampleRecentsViewController *sampleRecentListViewController = (MXKSampleRecentsViewController *)segue.destinationViewController;
 
-        MXKRecentListDataSource *listDataSource = [[MXKRecentListDataSource alloc] initWithMatrixSession:mxSession];
+        MXKRecentListDataSource *listDataSource = [[MXKRecentListDataSource alloc] initWithMatrixSession:self.mxSession];
         [sampleRecentListViewController displayList:listDataSource];
     } else if ([segue.identifier isEqualToString:@"showSampleRoomViewController"]) {
         MXKSampleRoomViewController *sampleRoomViewController = (MXKSampleRoomViewController *)segue.destinationViewController;
 
-        MXKRoomDataSource *roomDataSource = [[MXKRoomDataSource alloc] initWithRoomId:roomId andMatrixSession:mxSession];
+        MXKRoomDataSource *roomDataSource = [[MXKRoomDataSource alloc] initWithRoomId:roomId andMatrixSession:self.mxSession];
         [sampleRoomViewController displayRoom:roomDataSource];
     } else if ([segue.identifier isEqualToString:@"showSampleJSQMessagesViewController"]) {
         MXKSampleJSQMessagesViewController *sampleRoomViewController = (MXKSampleJSQMessagesViewController *)segue.destinationViewController;
         
-        MXKSampleJSQRoomDataSource *roomDataSource = [[MXKSampleJSQRoomDataSource alloc] initWithRoomId:roomId andMatrixSession:mxSession];
+        MXKSampleJSQRoomDataSource *roomDataSource = [[MXKSampleJSQRoomDataSource alloc] initWithRoomId:roomId andMatrixSession:self.mxSession];
         [sampleRoomViewController displayRoom:roomDataSource];
     }
 }

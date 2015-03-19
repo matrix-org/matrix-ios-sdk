@@ -16,13 +16,14 @@ limitations under the License.
 
 #import <UIKit/UIKit.h>
 
+#import "MXKViewController.h"
 #import "MXKRoomDataSource.h"
 #import "MXKRoomInputToolbarView.h"
 
 /**
  This view controller displays messages of a room.
  */
-@interface MXKRoomViewController : UIViewController <MXKDataSourceDelegate, MXKRoomInputToolbarViewDelegate>
+@interface MXKRoomViewController : MXKViewController <MXKDataSourceDelegate, MXKRoomInputToolbarViewDelegate, UITableViewDelegate>
 
 /**
  Display a room.

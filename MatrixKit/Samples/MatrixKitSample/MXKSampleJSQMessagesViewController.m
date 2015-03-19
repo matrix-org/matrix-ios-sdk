@@ -372,7 +372,6 @@
             mediaPicker.sourceType = UIImagePickerControllerSourceTypeCamera;
             mediaPicker.allowsEditing = NO;
             mediaPicker.mediaTypes = [NSArray arrayWithObjects:(NSString *)kUTTypeImage, (NSString *)kUTTypeMovie, nil];
-            mediaPicker.mediaTypes = [NSArray arrayWithObjects:(NSString *)kUTTypeImage, (NSString *)kUTTypeMovie, nil];
             [self presentViewController:mediaPicker animated:YES completion:^{}];
             break;
         }
