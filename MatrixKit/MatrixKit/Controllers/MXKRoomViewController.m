@@ -36,11 +36,6 @@
     UIView *keyboardView;
     
     /**
-     YES if keyboard is displayed, or display animation is in progress.
-     */
-    BOOL isKeyboardDisplayed;
-    
-    /**
      YES if scrolling to bottom is in progress
      */
     BOOL isScrollingToBottom;
@@ -269,15 +264,6 @@
     // The duration is ignored but it is better to define it
     double animationDuration = [[[notif userInfo] objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
     
-    // `onKeyboardWillShow` could be called several times before `onKeyboardWillHide`,
-    // because the keyboard height is updated (switch to a Chinese keyboard for example).
-    // Remove current keyboard view observer to avoid duplicates
-    if (keyboardView) {
-        [keyboardView removeObserver:self forKeyPath:NSStringFromSelector(@selector(frame))];
-        keyboardView = nil;
-    }
-    isKeyboardDisplayed = YES;
-    
     [UIView animateWithDuration:animationDuration delay:0 options:UIViewAnimationOptionBeginFromCurrentState | (animationCurve << 16) animations:^{
         
         // Apply new constant
@@ -295,25 +281,30 @@
         // Check whether the keyboard is still visible at the end of animation
         keyboardView = inputToolbarView.inputAccessoryView.superview;
         if (keyboardView) {
-            // Add observer to detect keyboard drag down
+            // Add observers to detect keyboard drag down
             [keyboardView addObserver:self forKeyPath:NSStringFromSelector(@selector(frame)) options:0 context:nil];
+            [keyboardView addObserver:self forKeyPath:NSStringFromSelector(@selector(center)) options:0 context:nil];
+            
+            // Remove UIKeyboardWillShowNotification observer to ignore this notification until keyboard is dismissed.
+            // Note: UIKeyboardWillShowNotification may be triggered several times before keyboard is dismissed,
+            // because the keyboard height is updated (switch to a Chinese keyboard for example).
+            [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillShowNotification object:nil];
         }
     }];
 }
 
 - (void)onKeyboardWillHide:(NSNotification *)notif {
     
-    // Remove keyboard view observer
+    // Update keyboard view observer
     if (keyboardView) {
+        // Restore UIKeyboardWillShowNotification observer
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onKeyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
+        
+        // Remove keyboard view observers
         [keyboardView removeObserver:self forKeyPath:NSStringFromSelector(@selector(frame))];
+        [keyboardView removeObserver:self forKeyPath:NSStringFromSelector(@selector(center))];
         keyboardView = nil;
     }
-    
-    // IOS 7/8 triggers some unexpected keyboard events
-    if (!isKeyboardDisplayed) {
-        return;
-    }
-    isKeyboardDisplayed = NO;
     
     // Get the animation info
     NSNumber *curveValue = [[notif userInfo] objectForKey:UIKeyboardAnimationCurveUserInfoKey];
@@ -337,25 +328,27 @@
 #pragma mark - KVO
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-    if ((object == keyboardView) && [keyPath isEqualToString:NSStringFromSelector(@selector(frame))]) {
-        // If the keyboard is displayed, check if the keyboard is dragging down
+    if ((object == keyboardView) && ([keyPath isEqualToString:NSStringFromSelector(@selector(frame))] || [keyPath isEqualToString:NSStringFromSelector(@selector(center))])) {
+        // Check whether the keyboard is still visible
         if (inputToolbarView.inputAccessoryView.superview) {
+            // The keyboard view has been modified (Maybe the user drag it down), we update the input toolbar bottom constraint to adjust layout.
+            
+            // Compute keyboard height
             CGSize screenSize = [[UIScreen mainScreen] bounds].size;
             // on IOS 8, the screen size is oriented
             if ((NSFoundationVersionNumber <= NSFoundationVersionNumber_iOS_7_1) && UIInterfaceOrientationIsLandscape([UIApplication sharedApplication].statusBarOrientation)) {
                 screenSize = CGSizeMake(screenSize.height, screenSize.width);
             }
-            
             CGFloat keyboardHeight = screenSize.height - keyboardView.frame.origin.y;
             
-            // Compute the bottom constraint for the control view (Don't forget the potential tabBar)
+            // Deduce the bottom constraint for the input toolbar view (Don't forget the potential tabBar)
             CGFloat inputToolbarViewBottomConst = keyboardHeight - _tableView.contentInset.bottom;
             // Check whether the keyboard is over the tabBar
             if (inputToolbarViewBottomConst < 0) {
                 inputToolbarViewBottomConst = 0;
             }
             
-            // Adjust layout constraints
+            // Update toolbar constraint
             _roomInputToolbarContainerBottomConstraint.constant = inputToolbarViewBottomConst;
             [_roomInputToolbarContainer setNeedsUpdateConstraints];
         }
