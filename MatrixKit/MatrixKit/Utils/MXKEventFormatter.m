@@ -16,6 +16,8 @@
 
 #import "MXKEventFormatter.h"
 
+#import "MXEvent+MatrixKit.h"
+
 NSString *const kMXKEventFormatterUnsupportedEventDescriptionPrefix = @"Unsupported event: ";
 
 @interface MXKEventFormatter () {
@@ -431,6 +433,44 @@ NSString *const kMXKEventFormatterUnsupportedEventDescriptionPrefix = @"Unsuppor
     }
     
     return displayText;
+}
+
+- (NSDictionary*)stringAttributesForEvent:(MXEvent*)event {
+
+    UIColor *textColor;
+    UIFont *font;
+    
+    switch (event.mxkState) {
+        case MXKEventStateDefault:
+            textColor = [UIColor blackColor];
+            break;
+        case MXKEventStateBing:
+            textColor = [UIColor blueColor];
+            break;
+        case MXKEventStateSending:
+            textColor = [UIColor lightGrayColor];
+            break;
+        case MXKEventStateSendingFailed:
+        case MXKEventStateUnsupported:
+        case MXKEventStateUnexpected:
+        case MXKEventStateUnknownType:
+            textColor = [UIColor redColor];
+            break;
+        default:
+            textColor = [UIColor blackColor];
+            break;
+    }
+    
+    if (event.isState) {
+        font = [UIFont italicSystemFontOfSize:14];
+    } else {
+        font = [UIFont systemFontOfSize:14];
+    }
+    
+    return @{
+             NSForegroundColorAttributeName : textColor,
+             NSFontAttributeName: font
+             };
 }
 
 @end

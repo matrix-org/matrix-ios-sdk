@@ -19,6 +19,8 @@
 
 #import "MXKRoomDataSource.h"
 
+#import "MXEvent+MatrixKit.h"
+
 @class MXKRoomDataSource;
 /**
  `MXKRoomBubbleCellDataStoring` defines a class must conform in order to store MXKRoomBubble cell data

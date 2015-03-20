@@ -32,6 +32,7 @@
 		F07E180E1ABC2EDA00DE3766 /* MXKRoomBubbleCellData.m in Sources */ = {isa = PBXBuildFile; fileRef = F07E18071ABC2EDA00DE3766 /* MXKRoomBubbleCellData.m */; };
 		F07E180F1ABC2EDA00DE3766 /* MXKRoomBubbleMergingMessagesCellData.m in Sources */ = {isa = PBXBuildFile; fileRef = F07E180A1ABC2EDA00DE3766 /* MXKRoomBubbleMergingMessagesCellData.m */; };
 		F07E18101ABC2EDA00DE3766 /* MXKRoomDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = F07E180C1ABC2EDA00DE3766 /* MXKRoomDataSource.m */; };
+		F07E18141ABC563900DE3766 /* MXEvent+MatrixKit.m in Sources */ = {isa = PBXBuildFile; fileRef = F07E18131ABC563900DE3766 /* MXEvent+MatrixKit.m */; };
 		F094EC671ABAC380006B8CE3 /* MXKViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = F094EC661ABAC380006B8CE3 /* MXKViewController.m */; };
 		F0CE56E51AA8BB5E003BE77A /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = F0CE56D91AA8BB5E003BE77A /* AppDelegate.m */; };
 		F0CE56E61AA8BB5E003BE77A /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = F0CE56DA1AA8BB5E003BE77A /* LaunchScreen.xib */; };
@@ -114,6 +115,8 @@
 		F07E180A1ABC2EDA00DE3766 /* MXKRoomBubbleMergingMessagesCellData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKRoomBubbleMergingMessagesCellData.m; sourceTree = "<group>"; };
 		F07E180B1ABC2EDA00DE3766 /* MXKRoomDataSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKRoomDataSource.h; sourceTree = "<group>"; };
 		F07E180C1ABC2EDA00DE3766 /* MXKRoomDataSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKRoomDataSource.m; sourceTree = "<group>"; };
+		F07E18121ABC563900DE3766 /* MXEvent+MatrixKit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MXEvent+MatrixKit.h"; sourceTree = "<group>"; };
+		F07E18131ABC563900DE3766 /* MXEvent+MatrixKit.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "MXEvent+MatrixKit.m"; sourceTree = "<group>"; };
 		F094EC651ABAC380006B8CE3 /* MXKViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKViewController.h; sourceTree = "<group>"; };
 		F094EC661ABAC380006B8CE3 /* MXKViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKViewController.m; sourceTree = "<group>"; };
 		F0CE56D81AA8BB5E003BE77A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -192,6 +195,7 @@
 		3219CB6A1AA6F2780027D7E2 /* MatrixKit */ = {
 			isa = PBXGroup;
 			children = (
+				F07E18111ABC563900DE3766 /* Categories */,
 				3219CBBB1AA6FB1C0027D7E2 /* Controllers */,
 				3219CBBC1AA6FB1C0027D7E2 /* Models */,
 				32CEE21C1AB1A57E00F7C74D /* Utils */,
@@ -350,6 +354,15 @@
 				F07E180C1ABC2EDA00DE3766 /* MXKRoomDataSource.m */,
 			);
 			path = Room;
+			sourceTree = "<group>";
+		};
+		F07E18111ABC563900DE3766 /* Categories */ = {
+			isa = PBXGroup;
+			children = (
+				F07E18121ABC563900DE3766 /* MXEvent+MatrixKit.h */,
+				F07E18131ABC563900DE3766 /* MXEvent+MatrixKit.m */,
+			);
+			path = Categories;
 			sourceTree = "<group>";
 		};
 		F0CE56D71AA8BB5E003BE77A /* MatrixKitSample */ = {
@@ -565,6 +578,7 @@
 				32CEE21F1AB1A57E00F7C74D /* MXKEventFormatter.m in Sources */,
 				F0F148A61AB08F48005F5D4A /* MXKSampleJSQRoomDataSource.m in Sources */,
 				F0F148A51AB08F48005F5D4A /* MXKSampleJSQRoomBubbleCellData.m in Sources */,
+				F07E18141ABC563900DE3766 /* MXEvent+MatrixKit.m in Sources */,
 				3219CBC01AA6FB470027D7E2 /* MXKRoomViewController.m in Sources */,
 				F0CE56EA1AA8BB5E003BE77A /* main.m in Sources */,
 			);

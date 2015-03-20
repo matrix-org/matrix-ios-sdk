@@ -19,7 +19,10 @@
 #import "MatrixSDK.h"
 
 /**
- MXKViewController extends UIViewController for the following points:
+ MXKViewController extends UIViewController to handle requirements for
+ any matrixKit view controllers.
+ 
+ It manages the following points:
  - stop/start activity indicator according to associated matrix session state.
  - update view appearance on matrix session state change.
  */

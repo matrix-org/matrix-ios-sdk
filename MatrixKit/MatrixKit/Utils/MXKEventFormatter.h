@@ -87,4 +87,12 @@ typedef enum : NSUInteger {
  */
 - (NSString*)stringFromEvent:(MXEvent*)event withRoomState:(MXRoomState*)roomState error:(MXKEventFormatterError*)error;
 
+/**
+ Return sets of attributes for the displayable string representing the event.
+ 
+ @param event the event.
+ @return sets of attributes to apply on event description.
+ */
+- (NSDictionary*)stringAttributesForEvent:(MXEvent*)event;
+
 @end

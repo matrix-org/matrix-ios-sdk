@@ -29,8 +29,32 @@
         MXKEventFormatterError error;
         NSString *eventString = [roomDataSource.eventFormatter stringFromEvent:event withRoomState:roomState error:&error];
 
-        // @TODO: Manage error
-        attributedTextMessage = [[NSAttributedString alloc] initWithString:eventString];
+        // Manage error
+        if (error != MXKEventFormatterErrorNone) {
+            switch (error) {
+                case MXKEventFormatterErrorUnsupported:
+                    event.mxkState = MXKEventStateUnsupported;
+                    break;
+                case MXKEventFormatterErrorUnexpected:
+                    event.mxkState = MXKEventStateUnexpected;
+                    break;
+                case MXKEventFormatterErrorUnknownEventType:
+                    event.mxkState = MXKEventStateUnknownType;
+                    break;
+                    
+                default:
+                    break;
+            }
+        }
+        
+        // Retrieve string attributes from formatter
+        NSDictionary *attributes = [roomDataSource.eventFormatter stringAttributesForEvent:event];
+        if (attributes) {
+            attributedTextMessage = [[NSAttributedString alloc] initWithString:eventString attributes:attributes];
+        } else {
+            attributedTextMessage = [[NSAttributedString alloc] initWithString:eventString];
+        }
+        
     }
     return self;
 }
