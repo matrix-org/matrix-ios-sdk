@@ -19,7 +19,7 @@
 #import "MXKQueuedEvent.h"
 #import "MXKRoomBubbleTableViewCell.h"
 
-#import "MXKRoomBubbleCellData.h"
+#import "MXKRoomBubbleMergingMessagesCellData.h"
 #import "MXKRoomIncomingBubbleTableViewCell.h"
 #import "MXKRoomOutgoingBubbleTableViewCell.h"
 
@@ -58,10 +58,10 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
         
         // Set default data and view classes
         // For incoming messages
-        [self registerCellDataClass:MXKRoomBubbleCellData.class forCellIdentifier:kMXKIncomingRoomBubbleCellIdentifier];
+        [self registerCellDataClass:MXKRoomBubbleMergingMessagesCellData.class forCellIdentifier:kMXKIncomingRoomBubbleCellIdentifier];
         [self registerCellViewClass:MXKRoomIncomingBubbleTableViewCell.class forCellIdentifier:kMXKIncomingRoomBubbleCellIdentifier];
         // And outgoing messages
-        [self registerCellDataClass:MXKRoomBubbleCellData.class forCellIdentifier:kMXKOutgoingRoomBubbleCellIdentifier];
+        [self registerCellDataClass:MXKRoomBubbleMergingMessagesCellData.class forCellIdentifier:kMXKOutgoingRoomBubbleCellIdentifier];
         [self registerCellViewClass:MXKRoomOutgoingBubbleTableViewCell.class forCellIdentifier:kMXKOutgoingRoomBubbleCellIdentifier];
 
         // Set default MXEvent -> NSString formatter

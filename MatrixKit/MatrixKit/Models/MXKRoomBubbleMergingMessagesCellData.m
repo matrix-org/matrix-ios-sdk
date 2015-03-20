@@ -14,7 +14,7 @@
  limitations under the License.
  */
 
-#import "MXKRoomBubbleCellData.h"
+#import "MXKRoomBubbleMergingMessagesCellData.h"
 
 #import "MXKRoomDataSource.h"
 
@@ -23,17 +23,17 @@
 // since it needs to be internationalised.
 NSString *const kMXKRoomBubbleCellDataUnsupportedEventDescriptionPrefix = @"Unsupported event: ";
 
-@interface MXKRoomBubbleCellData () {
+@interface MXKRoomBubbleMergingMessagesCellData () {
 
     /**
-     The data source owner of this `MXKRoomBubbleCellData` instance.
+     The data source owner of this instance.
      */
     MXKRoomDataSource *roomDataSource;
 }
 
 @end
 
-@implementation MXKRoomBubbleCellData
+@implementation MXKRoomBubbleMergingMessagesCellData
 @synthesize senderId, attributedTextMessage;
 
 - (instancetype)initWithEvent:(MXEvent *)event andRoomState:(MXRoomState *)roomState andRoomDataSource:(MXKRoomDataSource *)roomDataSource2 {
@@ -55,14 +55,20 @@ NSString *const kMXKRoomBubbleCellDataUnsupportedEventDescriptionPrefix = @"Unsu
 - (BOOL)addEvent:(MXEvent *)event andRoomState:(MXRoomState *)roomState {
     BOOL contatenated = NO;
 
+    NSLog(@"addEvent: %@", event);
+
     // Group events only if they come from the same sender
     if ([event.userId isEqualToString:senderId]) {
+
+        NSLog(@"---\n%@", attributedTextMessage);
 
         MXKEventFormatterError error;
         NSString *eventString = [roomDataSource.eventFormatter stringFromEvent:event withRoomState:roomState error:&error];
 
         // @TODO: Manage error
-        attributedTextMessage = [NSString stringWithFormat:@"%@\n%@", attributedTextMessage, eventString];
+        attributedTextMessage = [NSString stringWithFormat:@"%@\n%@", eventString, attributedTextMessage];
+
+        NSLog(@"+++\n%@", attributedTextMessage);
 
         contatenated = YES;
     }

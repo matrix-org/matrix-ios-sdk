@@ -20,9 +20,10 @@
 #import "MXKRoomBubbleCellDataStoring.h"
 
 /**
- `MXKRoomBubbleCellData` modelised the data for a `MXKRoomBubbleTableViewCell` cell.
- */
-@interface MXKRoomBubbleCellData : MXKCellData <MXKRoomBubbleCellDataStoring>
+ `MXKRoomBubbleMergingMessagesCellData` instances compose data for `MXKRoomBubbleTableViewCell` cells.
 
+  It merges consecutive messages into one bubble.
+ */
+@interface MXKRoomBubbleMergingMessagesCellData : MXKCellData <MXKRoomBubbleCellDataStoring>
 
 @end
