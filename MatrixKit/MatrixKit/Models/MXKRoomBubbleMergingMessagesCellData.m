@@ -16,8 +16,6 @@
 
 #import "MXKRoomBubbleMergingMessagesCellData.h"
 
-#import "MXKRoomDataSource.h"
-
 // @TODO: This string was exposed on Console for latter processing.
 // Not sure it is the right way to do. Moreover, this can be a constant in future
 // since it needs to be internationalised.

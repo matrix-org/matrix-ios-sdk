@@ -17,7 +17,7 @@
 #import <UIKit/UIKit.h>
 
 #import "MXKDataSource.h"
-#import "MXKRoomBubbleMergingMessagesCellData.h"
+#import "MXKRoomBubbleCellDataStoring.h"
 #import "MXKEventFormatter.h"
 
 /**

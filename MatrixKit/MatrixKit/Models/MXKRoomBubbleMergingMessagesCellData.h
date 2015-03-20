@@ -22,7 +22,7 @@
 /**
  `MXKRoomBubbleMergingMessagesCellData` instances compose data for `MXKRoomBubbleTableViewCell` cells.
 
-  It merges consecutive messages into one bubble.
+  A `MXKRoomBubbleMergingMessagesCellData` instance merges consecutive messages into one bubble.
  */
 @interface MXKRoomBubbleMergingMessagesCellData : MXKCellData <MXKRoomBubbleCellDataStoring>
 

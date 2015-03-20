@@ -17,10 +17,9 @@
 #import <Foundation/Foundation.h>
 #import <MatrixSDK/MatrixSDK.h>
 
-#import "MXKCellData.h"
+#import "MXKRoomDataSource.h"
 
 @class MXKRoomDataSource;
-
 /**
  `MXKRoomBubbleCellDataStoring` defines a class must conform in order to store MXKRoomBubble cell data
  managed by `MXKRoomDataSource`.

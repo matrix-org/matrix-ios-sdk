@@ -14,16 +14,20 @@
  limitations under the License.
  */
 
-#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
 
-#import "MXKViewController.h"
-#import "MXKRoomViewController.h"
-#import "MXKRecentListViewController.h"
-
-#import "MXKRoomBubbleCellData.h"
-#import "MXKRoomBubbleMergingMessagesCellData.h"
+#import "MXKRoomBubbleCellDataStoring.h"
 
 /**
- The Matrix iOS Kit version.
+ `MXKRoomBubbleCellData` instances compose data for `MXKRoomBubbleTableViewCell` cells.
+
+ A `MXKRoomBubbleCellData` instance contains a single message.
  */
-FOUNDATION_EXPORT NSString *MatrixKitVersion;
+@interface MXKRoomBubbleCellData : MXKCellData <MXKRoomBubbleCellDataStoring>
+
+/**
+ The event represented in this cell data
+ */
+@property (nonatomic, readonly) MXEvent *event;
+
+@end

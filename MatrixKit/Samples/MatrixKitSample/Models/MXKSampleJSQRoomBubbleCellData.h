@@ -20,6 +20,6 @@
 /**
  The `MXKSampleJSQRoomBubbleCellData` class extends `MXKRoomBubbleCellData` to implement `JSQMessageData` protocol.
  */
-@interface MXKSampleJSQRoomBubbleCellData : MXKRoomBubbleMergingMessagesCellData <JSQMessageData>
+@interface MXKSampleJSQRoomBubbleCellData : MXKRoomBubbleCellData <JSQMessageData>
 
 @end
