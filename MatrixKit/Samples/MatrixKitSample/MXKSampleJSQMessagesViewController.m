@@ -139,7 +139,7 @@
 #pragma mark - MXKDataSourceDelegate
 - (void)dataSource:(MXKDataSource *)dataSource didChange:(id)changes {
     // For now, do a simple full reload
-    [self.collectionView reloadData];
+    [self finishReceivingMessage];
 }
 
 #pragma mark - JSQMessages CollectionView DataSource
