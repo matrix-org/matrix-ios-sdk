@@ -65,17 +65,6 @@ NSString *const kMXKEventFormatterUnsupportedEventDescriptionPrefix = @"Unsuppor
     return isSupportedAttachment;
 }
 
-// Check whether the event is emote event
-- (BOOL)isEmote:(MXEvent*)event {
-    if (event.eventType == MXEventTypeRoomMessage) {
-        NSString *msgtype = event.content[@"msgtype"];
-        if ([msgtype isEqualToString:kMXMessageTypeEmote]) {
-            return YES;
-        }
-    }
-    return NO;
-}
-
 - (NSString*)senderDisplayNameForEvent:(MXEvent*)event withRoomState:(MXRoomState*)roomState {
     // Consider first the current display name defined in provided room state (Note: this room state is supposed to not take the new event into account)
     NSString *senderDisplayName = [roomState memberName:event.userId];

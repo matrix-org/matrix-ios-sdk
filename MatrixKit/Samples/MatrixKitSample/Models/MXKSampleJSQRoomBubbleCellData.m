@@ -20,15 +20,6 @@
 
 #pragma mark - JSQMessageData
 
-- (NSString *)senderDisplayName {
-    // TODO
-    return self.senderId;
-}
-
-- (NSDate *)date {
-    return [NSDate dateWithTimeIntervalSince1970:self.event.originServerTs/1000];
-}
-
 - (BOOL)isMediaMessage {
     // TODO
     return NO;

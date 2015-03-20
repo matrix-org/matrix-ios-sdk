@@ -16,47 +16,44 @@
 
 #import "MXKRoomBubbleCellData.h"
 
+#import "MXKRoomBubbleComponent.h"
+
+@interface MXKRoomBubbleCellData (){
+    /**
+     For this model, each bubble is composed by only one component (based on one event)
+     */
+    MXKRoomBubbleComponent *component;
+}
+
+@end
+
 @implementation MXKRoomBubbleCellData
-@synthesize senderId, attributedTextMessage;
+@synthesize senderId, senderDisplayName, attributedTextMessage, startsWithSenderName, isIncoming, date;
 
 - (instancetype)initWithEvent:(MXEvent *)event andRoomState:(MXRoomState *)roomState andRoomDataSource:(MXKRoomDataSource *)roomDataSource {
     self = [self init];
     if (self) {
-
-        // @TODO
-        _event = event;
-        senderId = event.userId;
-        MXKEventFormatterError error;
-        NSString *eventString = [roomDataSource.eventFormatter stringFromEvent:event withRoomState:roomState error:&error];
-
-        // Manage error
-        if (error != MXKEventFormatterErrorNone) {
-            switch (error) {
-                case MXKEventFormatterErrorUnsupported:
-                    event.mxkState = MXKEventStateUnsupported;
-                    break;
-                case MXKEventFormatterErrorUnexpected:
-                    event.mxkState = MXKEventStateUnexpected;
-                    break;
-                case MXKEventFormatterErrorUnknownEventType:
-                    event.mxkState = MXKEventStateUnknownType;
-                    break;
-                    
-                default:
-                    break;
-            }
-        }
-        
-        // Retrieve string attributes from formatter
-        NSDictionary *attributes = [roomDataSource.eventFormatter stringAttributesForEvent:event];
-        if (attributes) {
-            attributedTextMessage = [[NSAttributedString alloc] initWithString:eventString attributes:attributes];
+        // Create the bubble component
+        component = [[MXKRoomBubbleComponent alloc] initWithEvent:event andRoomState:roomState andEventFormatter:roomDataSource.eventFormatter];
+        if (component) {
+            senderId = event.userId;
+            senderDisplayName = [roomDataSource.eventFormatter senderDisplayNameForEvent:event withRoomState:roomState];
+            isIncoming = ([event.userId isEqualToString:roomDataSource.mxSession.myUser.userId] == NO);
+            
+            // Deduce other properties from its component
+            attributedTextMessage = component.attributedTextMessage;
+            startsWithSenderName = (event.isEmote || [component.textMessage hasPrefix:senderDisplayName]);
+            date = component.date;
         } else {
-            attributedTextMessage = [[NSAttributedString alloc] initWithString:eventString];
+            // Ignore this event
+            self = nil;
         }
-        
     }
     return self;
+}
+
+- (void)dealloc {
+    component = nil;
 }
 
 @end

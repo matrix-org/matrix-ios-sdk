@@ -32,7 +32,7 @@ NSString *const kMXKRoomBubbleCellDataUnsupportedEventDescriptionPrefix = @"Unsu
 @end
 
 @implementation MXKRoomBubbleMergingMessagesCellData
-@synthesize senderId, attributedTextMessage;
+@synthesize senderId, senderDisplayName, attributedTextMessage, startsWithSenderName, isIncoming, date;
 
 - (instancetype)initWithEvent:(MXEvent *)event andRoomState:(MXRoomState *)roomState andRoomDataSource:(MXKRoomDataSource *)roomDataSource2 {
     self = [self init];

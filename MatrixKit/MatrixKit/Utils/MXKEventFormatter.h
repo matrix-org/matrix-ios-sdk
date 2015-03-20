@@ -78,6 +78,15 @@ typedef enum : NSUInteger {
 - (instancetype)initWithMatrixSession:(MXSession*)mxSession;
 
 /**
+ Compose the event sender display name according to the current room state.
+ 
+ @param event the event to format.
+ @param roomState the room state right before the event.
+ @return the sender display name
+ */
+- (NSString*)senderDisplayNameForEvent:(MXEvent*)event withRoomState:(MXRoomState*)roomState;
+
+/**
  Generate a displayable string representating the event.
  
  @param event the event to format.

@@ -31,4 +31,18 @@
     objc_setAssociatedObject(self, @selector(state), [NSNumber numberWithUnsignedInteger:state], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
+- (BOOL)isRedactedEvent {
+    return (self.redactedBecause != nil);
+}
+
+- (BOOL)isEmote {
+    if (self.eventType == MXEventTypeRoomMessage) {
+        NSString *msgtype = self.content[@"msgtype"];
+        if ([msgtype isEqualToString:kMXMessageTypeEmote]) {
+            return YES;
+        }
+    }
+    return NO;
+}
+
 @end

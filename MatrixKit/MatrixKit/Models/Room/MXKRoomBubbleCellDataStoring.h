@@ -52,10 +52,35 @@
 
 #pragma mark - Data displayed by a room bubble cell
 
+/**
+ The sender Id
+ */
 @property (nonatomic) NSString *senderId;
 
-// The body of the message, or kind of content description in case of attachment (e.g. "image attachment")
+/**
+ The sender display name composed when event occured
+ */
+@property (nonatomic) NSString *senderDisplayName;
+
+/**
+ The body of the message with sets of attributes, or kind of content description in case of attachment (e.g. "image attachment")
+ */
 @property (nonatomic) NSAttributedString *attributedTextMessage;
+
+/**
+ YES if the sender name appears at the beginning of the message text
+ */
+@property (nonatomic) BOOL startsWithSenderName;
+
+/**
+ YES when the bubble is composed by incoming event(s).
+ */
+@property (nonatomic) BOOL isIncoming;
+
+/**
+ The bubble date
+ */
+@property (nonatomic) NSDate *date;
 
 
 #pragma mark - Public methods

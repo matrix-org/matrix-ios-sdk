@@ -25,9 +25,4 @@
  */
 @interface MXKRoomBubbleCellData : MXKCellData <MXKRoomBubbleCellDataStoring>
 
-/**
- The event represented in this cell data
- */
-@property (nonatomic, readonly) MXEvent *event;
-
 @end
