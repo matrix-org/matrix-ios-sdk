@@ -33,6 +33,8 @@ extern NSString *const kMXKIncomingRoomBubbleCellIdentifier;
 extern NSString *const kMXKOutgoingRoomBubbleCellIdentifier;
 
 
+@protocol MXKRoomBubbleCellDataStoring;
+
 /**
  The data source for `MXKRoomViewController`.
  */
@@ -102,6 +104,16 @@ extern NSString *const kMXKOutgoingRoomBubbleCellIdentifier;
  @return the newly created instance.
  */
 - (instancetype)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession;
+
+
+#pragma mark - Public methods
+/**
+ Get the data for the cell at the given index.
+
+ @param index the index of the cell in the array
+ @return the cell data
+ */
+- (id<MXKRoomBubbleCellDataStoring>)cellDataAtIndex:(NSInteger)index;
 
 /**
  Load more messages from the history.

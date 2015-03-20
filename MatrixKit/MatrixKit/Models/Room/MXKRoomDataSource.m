@@ -137,6 +137,16 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
     }];
 }
 
+
+#pragma mark - Public methods
+- (id<MXKRoomBubbleCellDataStoring>)cellDataAtIndex:(NSInteger)index {
+    id<MXKRoomBubbleCellDataStoring> bubbleData;
+    @synchronized(bubbles) {
+        bubbleData = bubbles[index];
+    }
+    return bubbleData;
+}
+
 - (void)paginateBackMessages:(NSUInteger)numItems success:(void (^)())success failure:(void (^)(NSError *error))failure {
 
     NSAssert(nil == pendingPaginationRequestBlock, @"paginateBackMessages cannot be called while a paginate request is pending");
@@ -294,10 +304,7 @@ NSString *const kMXKOutgoingRoomBubbleCellIdentifier = @"kMXKOutgoingRoomBubbleC
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 
-    id<MXKRoomBubbleCellDataStoring> bubbleData;
-    @synchronized(bubbles) {
-        bubbleData = bubbles[indexPath.row];
-    }
+    id<MXKRoomBubbleCellDataStoring> bubbleData = [self cellDataAtIndex:indexPath.row];
 
     // The cell to use depends if this is a message from the user or not
     // Then use the cell class defined by the table view
