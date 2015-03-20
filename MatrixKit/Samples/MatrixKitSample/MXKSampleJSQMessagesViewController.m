@@ -230,7 +230,16 @@
     if ([messageData.senderId isEqualToString:self.senderId]) {
         return nil;
     }
-    
+
+    if (indexPath.item - 1 > 0) {
+        NSIndexPath *previousIndexPath = [NSIndexPath  indexPathForItem:indexPath.item - 1 inSection:indexPath.section];
+        id<JSQMessageData> previousMessageData = [self collectionView:collectionView messageDataForItemAtIndexPath:previousIndexPath];
+
+        if ([previousMessageData.senderId isEqualToString:messageData.senderId]) {
+            return nil;
+        }
+    }
+
     /**
      *  Don't specify attributes to use the defaults.
      */
@@ -295,17 +304,8 @@
 - (CGFloat)collectionView:(JSQMessagesCollectionView *)collectionView
                    layout:(JSQMessagesCollectionViewFlowLayout *)collectionViewLayout heightForCellTopLabelAtIndexPath:(NSIndexPath *)indexPath
 {
-    /**
-     *  Each label in a cell has a `height` delegate method that corresponds to its text dataSource method
-     */
-    
-    /**
-     *  This logic should be consistent with what you return from `attributedTextForCellTopLabelAtIndexPath:`
-     *  The other label height delegate methods should follow similarly
-     *
-     *  Show a timestamp for every 3rd message
-     */
-    if (indexPath.item % 3 == 0) {
+    // Reuse the algo defined in the paired method
+    if ([self collectionView:collectionView attributedTextForCellTopLabelAtIndexPath:indexPath]) {
         return kJSQMessagesCollectionViewCellLabelHeightDefault;
     }
 
@@ -315,15 +315,12 @@
 - (CGFloat)collectionView:(JSQMessagesCollectionView *)collectionView
                    layout:(JSQMessagesCollectionViewFlowLayout *)collectionViewLayout heightForMessageBubbleTopLabelAtIndexPath:(NSIndexPath *)indexPath
 {
-    /**
-     *  iOS7-style sender name labels
-     */
-    id<JSQMessageData> messageData = [self collectionView:collectionView messageDataForItemAtIndexPath:indexPath];
-    if ([messageData.senderId isEqualToString:self.senderId]) {
-        return 0.0f;
+    // Reuse the algo defined in the paired method
+    if ([self collectionView:collectionView attributedTextForMessageBubbleTopLabelAtIndexPath:indexPath]) {
+        return kJSQMessagesCollectionViewCellLabelHeightDefault;
     }
-    
-    return kJSQMessagesCollectionViewCellLabelHeightDefault;
+
+    return 0.0f;
 }
 
 - (CGFloat)collectionView:(JSQMessagesCollectionView *)collectionView
