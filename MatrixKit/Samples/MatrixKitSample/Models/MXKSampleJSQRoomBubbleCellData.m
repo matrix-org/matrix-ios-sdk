@@ -36,7 +36,7 @@
 }
 
 - (NSString *)text {
-    return self.attributedTextMessage;
+    return self.attributedTextMessage.string;
 }
 
 @end

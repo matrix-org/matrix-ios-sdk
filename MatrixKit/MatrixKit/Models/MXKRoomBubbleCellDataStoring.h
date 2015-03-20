@@ -53,7 +53,7 @@
 @property (nonatomic) NSString *senderId;
 
 // The body of the message, or kind of content description in case of attachment (e.g. "image attachment")
-@property (nonatomic) /*NSAttributedString @TODO*/ NSString *attributedTextMessage;
+@property (nonatomic) NSAttributedString *attributedTextMessage;
 
 
 #pragma mark - Public methods

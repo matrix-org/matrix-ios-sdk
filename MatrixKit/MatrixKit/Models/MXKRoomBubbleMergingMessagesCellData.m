@@ -45,7 +45,7 @@ NSString *const kMXKRoomBubbleCellDataUnsupportedEventDescriptionPrefix = @"Unsu
         NSString *eventString = [roomDataSource.eventFormatter stringFromEvent:event withRoomState:roomState error:&error];
 
         // @TODO: Manage error
-        attributedTextMessage = eventString;
+        attributedTextMessage = [[NSAttributedString alloc] initWithString:eventString];
     }
     return self;
 }
@@ -64,7 +64,7 @@ NSString *const kMXKRoomBubbleCellDataUnsupportedEventDescriptionPrefix = @"Unsu
         NSString *eventString = [roomDataSource.eventFormatter stringFromEvent:event withRoomState:roomState error:&error];
 
         // @TODO: Manage error
-        attributedTextMessage = [NSString stringWithFormat:@"%@\n%@", eventString, attributedTextMessage];
+        attributedTextMessage = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%@\n%@", eventString, attributedTextMessage]];
 
         NSLog(@"+++\n%@", attributedTextMessage);
 

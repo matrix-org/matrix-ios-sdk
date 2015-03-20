@@ -29,7 +29,7 @@
         NSString *eventString = [roomDataSource.eventFormatter stringFromEvent:event withRoomState:roomState error:&error];
 
         // @TODO: Manage error
-        attributedTextMessage = eventString;
+        attributedTextMessage = [[NSAttributedString alloc] initWithString:eventString];
     }
     return self;
 }

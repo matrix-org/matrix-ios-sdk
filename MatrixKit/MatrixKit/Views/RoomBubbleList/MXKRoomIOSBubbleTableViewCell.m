@@ -24,7 +24,7 @@
 
     id<MXKRoomBubbleCellDataStoring> bubbleData = (id<MXKRoomBubbleCellDataStoring>)cellData;
     if (bubbleData) {
-        self.textLabel.text = bubbleData.attributedTextMessage;
+        self.textLabel.attributedText = bubbleData.attributedTextMessage;
     }
     else {
         self.textLabel.text = @"";
