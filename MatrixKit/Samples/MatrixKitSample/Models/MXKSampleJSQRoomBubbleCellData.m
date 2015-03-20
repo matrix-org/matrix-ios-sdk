@@ -26,8 +26,7 @@
 }
 
 - (NSDate *)date {
-    // TODO
-    return [NSDate date];
+    return [NSDate dateWithTimeIntervalSince1970:self.event.originServerTs/1000];
 }
 
 - (BOOL)isMediaMessage {

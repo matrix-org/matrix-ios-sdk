@@ -209,9 +209,14 @@
     /**
      *  This logic should be consistent with what you return from `heightForCellTopLabelAtIndexPath:`
      *  The other label text delegate methods should follow a similar pattern.
+     *
+     *  Show a timestamp for every 3rd message
      */
-    
-    // TODO: display date
+    if (indexPath.item % 3 == 0) {
+        id<JSQMessageData> messageData = [self collectionView:collectionView messageDataForItemAtIndexPath:indexPath];
+        return [[JSQMessagesTimestampFormatter sharedFormatter] attributedTimestampForDate:messageData.date];
+    }
+
     return nil;
 }
 
@@ -297,9 +302,13 @@
     /**
      *  This logic should be consistent with what you return from `attributedTextForCellTopLabelAtIndexPath:`
      *  The other label height delegate methods should follow similarly
+     *
+     *  Show a timestamp for every 3rd message
      */
-    
-    // TODO: display date
+    if (indexPath.item % 3 == 0) {
+        return kJSQMessagesCollectionViewCellLabelHeightDefault;
+    }
+
     return 0.0f;
 }
 

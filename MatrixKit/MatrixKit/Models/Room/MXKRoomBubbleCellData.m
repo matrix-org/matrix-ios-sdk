@@ -24,6 +24,7 @@
     if (self) {
 
         // @TODO
+        _event = event;
         senderId = event.userId;
         MXKEventFormatterError error;
         NSString *eventString = [roomDataSource.eventFormatter stringFromEvent:event withRoomState:roomState error:&error];
