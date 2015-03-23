@@ -25,6 +25,10 @@
     return NO;
 }
 
+- (NSUInteger)messageHash {
+    return self.hash;
+}
+
 - (NSString *)text {
     return self.attributedTextMessage.string;
 }

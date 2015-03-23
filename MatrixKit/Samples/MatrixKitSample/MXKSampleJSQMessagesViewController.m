@@ -52,6 +52,8 @@
     incomingBubbleImageData = nil;
     
     membersAvatar = nil;
+
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:MXSessionStateDidChangeNotification object:nil];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -61,8 +63,6 @@
 }
 
 - (void)configureView {
-    self.senderId = roomDataSource.mxSession.myUser.userId;
-    self.senderDisplayName = roomDataSource. mxSession.myUser.displayname;
     
     // Create message bubble images objects.
     JSQMessagesBubbleImageFactory *bubbleFactory = [[JSQMessagesBubbleImageFactory alloc] init];
@@ -93,9 +93,41 @@
 - (void)displayRoom:(MXKSampleJSQRoomDataSource *)inRoomDataSource {
     roomDataSource = inRoomDataSource;
     roomDataSource.delegate = self;
-    
+
+    self.senderId = roomDataSource.mxSession.matrixRestClient.credentials.userId;
+    if (roomDataSource.mxSession.myUser) {
+        self.senderDisplayName = roomDataSource.mxSession.myUser.displayname;
+    }
+    else {
+        // MXSession is not yet ready. Use sender id for now. It will be updated on didMXSessionStateChange:
+        self.senderDisplayName = self.senderId;
+    }
+
     if (self.collectionView) {
         [self configureView];
+    }
+
+    // Listen to MXSession state changes
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didMXSessionStateChange:) name:MXSessionStateDidChangeNotification object:nil];
+}
+
+#pragma mark - MXKDataSourceDelegate
+- (void)dataSource:(MXKDataSource *)dataSource didChange:(id)changes {
+    // For now, do a simple full reload
+    [self finishReceivingMessage];
+}
+
+#pragma mark - MXSessionStateDidChangeNotification
+- (void)didMXSessionStateChange:(NSNotification *)notif {
+
+    // Check this is our Matrix session that has changed
+    if (notif.object == roomDataSource.mxSession) {
+
+        // Display name is now available
+        if (NO == [self.senderId isEqualToString:roomDataSource.mxSession.myUser.displayname]) {
+            self.senderDisplayName = roomDataSource.mxSession.myUser.displayname;
+            [self finishReceivingMessage];
+        }
     }
 }
 
@@ -134,12 +166,6 @@
                                               otherButtonTitles:@"Photo Library", @"Take Photo/Video", nil];
     
     [sheet showFromToolbar:self.inputToolbar];
-}
-
-#pragma mark - MXKDataSourceDelegate
-- (void)dataSource:(MXKDataSource *)dataSource didChange:(id)changes {
-    // For now, do a simple full reload
-    [self finishReceivingMessage];
 }
 
 #pragma mark - JSQMessages CollectionView DataSource

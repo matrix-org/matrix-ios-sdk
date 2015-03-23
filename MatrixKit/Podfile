@@ -8,7 +8,7 @@ target "MatrixKitSample" do
 # Points to SDK local sources file
 pod 'MatrixSDK', :path => '../MatrixSDK.podspec'
 pod 'HPGrowingTextView', '~> 1.1'
-pod 'JSQMessagesViewController', '~> 6.1.3'
+pod 'JSQMessagesViewController', '~> 7.0.0'
 end
 
 target "MatrixKitSample" do
