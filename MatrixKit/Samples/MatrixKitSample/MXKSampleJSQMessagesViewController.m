@@ -38,7 +38,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    
+
     // Check whether a source has been defined
     if (roomDataSource) {
         [self configureView];
@@ -114,7 +114,14 @@
 #pragma mark - MXKDataSourceDelegate
 - (void)dataSource:(MXKDataSource *)dataSource didChange:(id)changes {
     // For now, do a simple full reload
-    [self finishReceivingMessage];
+    [self.collectionView reloadData];
+    [self.collectionView.collectionViewLayout invalidateLayout];
+
+    // @TODO: Use this method only when receiving a message and the bottom of messages list is displayed
+    //[self finishReceivingMessage];
+
+    // Show "Load Earlier Messages" only if there are messages in the room
+    self.showLoadEarlierMessagesHeader = YES;
 }
 
 #pragma mark - MXSessionStateDidChangeNotification
@@ -360,7 +367,17 @@
 - (void)collectionView:(JSQMessagesCollectionView *)collectionView
                 header:(JSQMessagesLoadEarlierHeaderView *)headerView didTapLoadEarlierMessagesButton:(UIButton *)sender
 {
-    NSLog(@"Load earlier messages!");
+    // Disable the button while requesting
+    sender.enabled = NO;
+    [roomDataSource paginateBackMessages:30 success:^{
+
+        // Pagingate messages have been received by the didChange protocol
+        // Just need  to reenable the button
+        sender.enabled = YES;
+
+    } failure:^(NSError *error) {
+        sender.enabled= YES;
+    }];
 }
 
 - (void)collectionView:(JSQMessagesCollectionView *)collectionView didTapAvatarImageView:(UIImageView *)avatarImageView atIndexPath:(NSIndexPath *)indexPath
