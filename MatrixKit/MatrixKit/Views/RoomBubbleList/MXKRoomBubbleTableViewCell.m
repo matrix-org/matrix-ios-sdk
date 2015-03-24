@@ -41,4 +41,8 @@
     }
 }
 
++ (CGFloat)heightForCellData:(MXKCellData *)cellData withMaximumWidth:(CGFloat)maxWidth {
+    return 44;
+}
+
 @end
