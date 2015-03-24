@@ -34,6 +34,13 @@ NSString *const kMXKEventFormatterUnsupportedEventDescriptionPrefix = @"Unsuppor
     self = [super init];
     if (self) {
         mxSession = matrixSession;
+
+        NSString *dateFormat = @"MMM dd HH:mm";
+        _dateFormatter = [[NSDateFormatter alloc] init];
+        [_dateFormatter setLocale:[[NSLocale alloc] initWithLocaleIdentifier:[[[NSBundle mainBundle] preferredLocalizations] objectAtIndex:0]]];
+        [_dateFormatter setFormatterBehavior:NSDateFormatterBehavior10_4];
+        [_dateFormatter setTimeStyle:NSDateFormatterNoStyle];
+        [_dateFormatter setDateFormat:dateFormat];
     }
     return self;
 }
@@ -460,6 +467,17 @@ NSString *const kMXKEventFormatterUnsupportedEventDescriptionPrefix = @"Unsuppor
              NSForegroundColorAttributeName : textColor,
              NSFontAttributeName: font
              };
+}
+
+- (NSString*)dateStringForTimestamp:(uint64_t)timestamp {
+
+    NSDate *date = [NSDate dateWithTimeIntervalSince1970:timestamp/1000];
+    return [_dateFormatter stringFromDate:date];
+}
+
+- (NSString*)dateStringForEvent:(MXEvent *)event {
+
+    return [self dateStringForTimestamp:event.originServerTs];
 }
 
 @end

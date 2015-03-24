@@ -70,6 +70,11 @@ typedef enum : NSUInteger {
 @property (nonatomic) BOOL isForSubtitle;
 
 /**
+ The date formatter
+ */
+@property (nonatomic, readonly) NSDateFormatter *dateFormatter;
+
+/**
  Initialise the event formatter.
 
  @param mxSession the Matrix to retrieve contextual data.
@@ -103,5 +108,23 @@ typedef enum : NSUInteger {
  @return sets of attributes to apply on event description.
  */
 - (NSDictionary*)stringAttributesForEvent:(MXEvent*)event;
+
+/**
+ Generate the date in string format corresponding to the timestamp.
+ The returned string is localised according to the current device settings.
+
+ @param timestamp the timestamp in milliseconds since Epoch.
+ @return the string representation of the event data.
+ */
+- (NSString*)dateStringForTimestamp:(uint64_t)timestamp;
+
+/**
+ Generate the date in string format corresponding to the event.
+ The returned string is localised according to the current device settings.
+ 
+ @param event the event to format.
+ @return the string representation of the event data.
+ */
+- (NSString*)dateStringForEvent:(MXEvent*)event;
 
 @end
