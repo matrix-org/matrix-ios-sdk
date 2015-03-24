@@ -16,6 +16,8 @@
 
 #import "MXKSampleJSQMessagesViewController.h"
 
+#import "UIImageView+AFNetworking.h"
+
 @interface MXKSampleJSQMessagesViewController () {
     /**
      The data source providing messages for the current room.
@@ -24,8 +26,11 @@
     
     JSQMessagesBubbleImage *outgoingBubbleImageData;
     JSQMessagesBubbleImage *incomingBubbleImageData;
-    
-    NSMutableDictionary *membersAvatar;
+
+    /**
+     The cache for initials avatars placeholders
+     */
+    NSMutableDictionary *membersPlaceHolderAvatar;
     
     UIImagePickerController *mediaPicker;
 }
@@ -51,7 +56,7 @@
     outgoingBubbleImageData = nil;
     incomingBubbleImageData = nil;
     
-    membersAvatar = nil;
+    membersPlaceHolderAvatar = nil;
 
     [[NSNotificationCenter defaultCenter] removeObserver:self name:MXSessionStateDidChangeNotification object:nil];
 }
@@ -70,7 +75,7 @@
     incomingBubbleImageData = [bubbleFactory incomingMessagesBubbleImageWithColor:[UIColor jsq_messageBubbleGreenColor]];
     
     // Prepare avatars storage
-    membersAvatar = [NSMutableDictionary dictionary];
+    membersPlaceHolderAvatar = [NSMutableDictionary dictionary];
     
     // Start showing history right now
     [roomDataSource paginateBackMessagesToFillRect:self.view.frame success:^{
@@ -134,6 +139,24 @@
         if (NO == [self.senderId isEqualToString:roomDataSource.mxSession.myUser.displayname]) {
             self.senderDisplayName = roomDataSource.mxSession.myUser.displayname;
             [self finishReceivingMessage];
+        }
+    }
+}
+
+#pragma mark - KVO
+- (void) observeValueForKeyPath:(NSString *)path ofObject:(id) object change:(NSDictionary *) change context:(void *)context {
+
+    // Check changes on cell.avatarImageView.image (registered by [self cellForItemAtIndexPath:])
+    if ([path isEqualToString:@"image"]) {
+
+        UIImageView *avatarImageView = (UIImageView*)object;
+        if (avatarImageView.image) {
+
+            // Avoid infinite loop
+            [avatarImageView removeObserver:self forKeyPath:@"image"];
+
+            // Make the image circular
+            avatarImageView.image = [JSQMessagesAvatarImageFactory circularAvatarImage:avatarImageView.image withDiameter:kJSQMessagesCollectionViewAvatarSizeDefault];
         }
     }
 }
@@ -222,19 +245,23 @@
      */
     
     id<JSQMessageData> messageData = [self collectionView:collectionView messageDataForItemAtIndexPath:indexPath];
-    
-    JSQMessagesAvatarImage *avatar = [membersAvatar objectForKey:messageData.senderId];
-    if (!avatar) {
-        avatar = [JSQMessagesAvatarImageFactory avatarImageWithUserInitials:[messageData.senderId substringWithRange:NSMakeRange(1,2)]
+
+    // Return a placeholder UIImage for the avatar here
+    // The true avatar will be set during the call of [self cellForItemAtIndexPath:]
+    // In this last method, the avatarImageView is created and we need it to set the avatar URL asynchronously.
+    // Once the avatar image is loaded, the avatarImageView will automatically refresh.
+    JSQMessagesAvatarImage *placeHolderAvatar = [membersPlaceHolderAvatar objectForKey:messageData.senderId];
+    if (!placeHolderAvatar) {
+        placeHolderAvatar = [JSQMessagesAvatarImageFactory avatarImageWithUserInitials:[messageData.senderId substringWithRange:NSMakeRange(1,2)]
                                                             backgroundColor:[UIColor colorWithWhite:0.85f alpha:1.0f]
                                                                   textColor:[UIColor colorWithWhite:0.60f alpha:1.0f]
                                                                        font:[UIFont systemFontOfSize:14.0f]
                                                                    diameter:kJSQMessagesCollectionViewAvatarSizeDefault];
         
-        [membersAvatar setObject:avatar forKey:messageData.senderId];
+        [membersPlaceHolderAvatar setObject:placeHolderAvatar forKey:messageData.senderId];
     }
     
-    return avatar;
+    return placeHolderAvatar;
 }
 
 - (NSAttributedString *)collectionView:(JSQMessagesCollectionView *)collectionView attributedTextForCellTopLabelAtIndexPath:(NSIndexPath *)indexPath {
@@ -326,7 +353,26 @@
         cell.textView.linkTextAttributes = @{ NSForegroundColorAttributeName : cell.textView.textColor,
                                               NSUnderlineStyleAttributeName : @(NSUnderlineStyleSingle | NSUnderlinePatternSolid) };
     }
-    
+
+    // Compute the member avatar URL
+    MXRoomMember *roomMember = [roomDataSource.room.state memberWithUserId:messageData.senderId];
+
+    NSString *avatarUrl = [roomDataSource.mxSession.matrixRestClient urlOfContentThumbnail:roomMember.avatarUrl withSize:CGSizeMake(kJSQMessagesCollectionViewAvatarSizeDefault, kJSQMessagesCollectionViewAvatarSizeDefault) andMethod:MXThumbnailingMethodCrop];
+    if (!avatarUrl) {
+        avatarUrl = roomMember.avatarUrl ;
+    }
+
+    // As the "square" image will be set asynchronously, register an observer on it in order to make it circular at runtime
+    [cell.avatarImageView addObserver:self
+                           forKeyPath:@"image"
+                              options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld
+                              context:NULL];
+
+    // Use the AFNetworking category to asynchronously load the image into the read-only avatarImageView
+    // @TODO: Use the MXCMediaManager permanent cache. AFNetworking cache is just memory.
+    // @TODO: This AFNetworking category does not detect multiple requests on the same URL.
+    [cell.avatarImageView setImageWithURL:[NSURL URLWithString:avatarUrl]];
+
     return cell;
 }
 
