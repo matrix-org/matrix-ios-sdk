@@ -23,7 +23,7 @@
 
 @class MXKRoomDataSource;
 /**
- `MXKRoomBubbleCellDataStoring` defines a class must conform in order to store MXKRoomBubble cell data
+ `MXKRoomBubbleCellDataStoring` defines a protocol a class must conform in order to store MXKRoomBubble cell data
  managed by `MXKRoomDataSource`.
  
  @discussion

@@ -22,7 +22,7 @@
 @class MXKRecentListDataSource;
 
 /**
- `MXKRoomCellDataStoring` defines a class must conform in order to store MXKRoom cell data
+ `MXKRoomCellDataStoring` defines a protocol a class must conform in order to store MXKRoom cell data
  managed by `MXKRecentListDataSource`.
  */
 @protocol MXKRecentCellDataStoring <NSObject>

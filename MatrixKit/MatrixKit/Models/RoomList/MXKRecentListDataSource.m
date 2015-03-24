@@ -82,7 +82,8 @@ NSString *const kMXKRecentCellIdentifier = @"kMXKRecentCellIdentifier";
 
     if (self.delegate) {
         [self.delegate dataSource:self didChange:nil];
-    }}
+    }
+}
 
 - (void)setEventsFilterForMessages:(NSArray *)eventsFilterForMessages {
 
