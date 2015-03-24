@@ -76,7 +76,9 @@
     _tableView.dataSource = dataSource;
     
     // Set up classes to use for cells
-    [_tableView registerClass:[dataSource cellViewClassForCellIdentifier:kMXKRecentCellIdentifier] forCellReuseIdentifier:kMXKRecentCellIdentifier];
+    // @TODO: Be smart when registering class or nib
+    //[_tableView registerClass:[dataSource cellViewClassForCellIdentifier:kMXKRecentCellIdentifier] forCellReuseIdentifier:kMXKRecentCellIdentifier];
+    [_tableView registerNib:[[dataSource cellViewClassForCellIdentifier:kMXKRecentCellIdentifier] nib] forCellReuseIdentifier:kMXKRecentCellIdentifier];
 }
 
 #pragma mark -
@@ -98,12 +100,17 @@
 
 
 #pragma mark - UITableView delegate
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+
+    return [dataSource cellHeightAtIndex:indexPath.row];
+}
+
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 
     if (_delegate) {
         id<MXKRecentCellDataStoring> cellData = [dataSource cellDataAtIndex:indexPath.row];
 
-        [_delegate recentListViewController:self didSelectRoom:cellData.roomId];
+        [_delegate recentListViewController:self didSelectRoom:cellData.room.state.roomId];
     }
 }
 

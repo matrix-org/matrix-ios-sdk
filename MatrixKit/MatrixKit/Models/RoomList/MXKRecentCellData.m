@@ -33,15 +33,18 @@
 @end
 
 @implementation MXKRecentCellData
-@synthesize roomId, lastEventDescription, lastEventOriginServerTs, unreadCount, containsBingUnread;
+@synthesize room, lastEvent, roomDisplayname, lastEventDescription, lastEventDate, unreadCount, containsBingUnread;
 
 - (instancetype)initWithLastEvent:(MXEvent*)event andRoomState:(MXRoomState*)roomState markAsUnread:(BOOL)isUnread andRecentListDataSource:(MXKRecentListDataSource*)recentListDataSource2 {
 
     self = [self init];
     if (self) {
         recentListDataSource = recentListDataSource2;
-        roomId = event.roomId;
-        lastEventOriginServerTs = event.originServerTs;
+        room = [recentListDataSource.mxSession roomWithRoomId:event.roomId];
+
+        [self updateWithLastEvent:event andRoomState:roomState markAsUnread:isUnread];
+
+        // @TODO: Do some cleaning: following code seems duplicating what updateWithLastEvent: does
         unreadCount = isUnread ? 1 : 0;
 
         MXKEventFormatterError error;
@@ -63,6 +66,9 @@
 
 - (BOOL)updateWithLastEvent:(MXEvent*)event andRoomState:(MXRoomState*)roomState markAsUnread:(BOOL)isUnread {
 
+    lastEvent = event;
+    roomDisplayname = room.state.displayname;
+
     // Check whether the description of the provided event is not empty
     MXKEventFormatterError error;
     NSString *description = [recentListDataSource.eventFormatter stringFromEvent:event withRoomState:roomState error:&error];
@@ -72,7 +78,7 @@
         // Update current last event
         lastEvent = event;
         lastEventDescription = description;
-        lastEventOriginServerTs = event.originServerTs;
+        lastEventDate = [recentListDataSource.eventFormatter dateStringForEvent:event];
         if (isUnread) {
             unreadCount ++;
             containsBingUnread = (containsBingUnread || (!event.isState && !event.redactedBecause && NO /*[mxHandler containsBingWord:_lastEventDescription] @TODO*/));
@@ -124,26 +130,21 @@
     // Add listener if it is not already done
     if (!backPaginationListener) {
 
-        mxRoom = [recentListDataSource.mxSession roomWithRoomId:roomId];
-        if (mxRoom) {
-            backPaginationListener = [mxRoom listenToEventsOfTypes:recentListDataSource.eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
-                // Handle only backward events (Sanity check: be sure that the description has not been set by an other way)
-                if (direction == MXEventDirectionBackwards && !lastEventDescription.length) {
-                    if ([self updateWithLastEvent:event andRoomState:roomState markAsUnread:NO]) {
-                        // Indicate the change to the data source
-                        [recentListDataSource didCellDataChange:self];
-                    }
+        backPaginationListener = [mxRoom listenToEventsOfTypes:recentListDataSource.eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+            // Handle only backward events (Sanity check: be sure that the description has not been set by an other way)
+            if (direction == MXEventDirectionBackwards && !lastEventDescription.length) {
+                if ([self updateWithLastEvent:event andRoomState:roomState markAsUnread:NO]) {
+                    // Indicate the change to the data source
+                    [recentListDataSource didCellDataChange:self];
                 }
-            }];
+            }
+        }];
 
-            // Trigger a back pagination by reseting first backState to get room history from live
-            [mxRoom resetBackState];
-        } else {
-            return;
-        }
+        // Trigger a back pagination by reseting first backState to get room history from live
+        [mxRoom resetBackState];
     }
 
-    if (mxRoom.canPaginate) {
+    if (room.canPaginate) {
         backPaginationOperation = [mxRoom paginateBackMessages:10 complete:^{
             backPaginationOperation = nil;
             // Check whether another back pagination is required

@@ -23,4 +23,8 @@
  */
 @interface MXKRecentTableViewCell : UITableViewCell <MXKCellRendering>
 
+@property (weak, nonatomic) IBOutlet UILabel *roomTitle;
+@property (weak, nonatomic) IBOutlet UILabel *lastEventDescription;
+@property (weak, nonatomic) IBOutlet UILabel *lastEventDate;
+
 @end

@@ -18,27 +18,35 @@
 
 #import "MXKRecentCellDataStoring.h"
 
+#import "MXKRecentListDataSource.h"
+
 @implementation MXKRecentTableViewCell
 
-- (void)awakeFromNib {
-    // Initialization code
+#pragma mark - Class methods
++ (UINib *)nib {
+    return [UINib nibWithNibName:NSStringFromClass([MXKRecentTableViewCell class])
+                          bundle:[NSBundle bundleForClass:[MXKRecentTableViewCell class]]];
 }
 
-- (void)setSelected:(BOOL)selected animated:(BOOL)animated {
-    [super setSelected:selected animated:animated];
-
-    // Configure the view for the selected state
+- (NSString *) reuseIdentifier {
+    return kMXKRecentCellIdentifier;
 }
 
 - (void)render:(MXKCellData *)cellData {
 
-    id<MXKRecentCellDataStoring> roomData = (id<MXKRecentCellDataStoring>)cellData;
-    if (roomData) {
-        self.textLabel.text = roomData.lastEventDescription;
+    id<MXKRecentCellDataStoring> roomCellData = (id<MXKRecentCellDataStoring>)cellData;
+    if (roomCellData) {
+        _roomTitle.text = roomCellData.roomDisplayname;
+        _lastEventDescription.text = roomCellData.lastEventDescription;
+        _lastEventDate.text = roomCellData.lastEventDate;
     }
     else {
-        self.textLabel.text = @"";
+         _lastEventDescription.text = @"";
     }
+}
+
++ (CGFloat)heightForCellData:(MXKCellData *)cellData withMaximumWidth:(CGFloat)maxWidth {
+    return 70;
 }
 
 @end

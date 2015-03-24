@@ -29,11 +29,22 @@
 
 #pragma mark - Data displayed by a room recent cell
 
-@property (nonatomic, readonly) NSString *roomId;
+/**
+ The room displayed by the cell.
+ */
+@property (nonatomic, readonly) MXRoom *room;
+
+/**
+ The last event to display.
+ */
+@property (nonatomic, readonly) MXEvent *lastEvent;
+
+@property (nonatomic, readonly) NSString *roomDisplayname;
 @property (nonatomic, readonly) NSString *lastEventDescription;
-@property (nonatomic, readonly) uint64_t lastEventOriginServerTs;
-@property (nonatomic, readonly) NSUInteger unreadCount;
-@property (nonatomic, readonly) BOOL containsBingUnread;
+@property (nonatomic, readonly) NSString *lastEventDate;
+
+@property (nonatomic) NSUInteger unreadCount;
+@property (nonatomic) BOOL containsBingUnread;
 
 #pragma mark - Public methods
 /**

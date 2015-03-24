@@ -78,6 +78,14 @@ NSString *const kMXKRecentCellIdentifier = @"kMXKRecentCellIdentifier";
     return cellDataArray[index];
 }
 
+- (CGFloat)cellHeightAtIndex:(NSInteger)index {
+
+    id<MXKRecentCellDataStoring> cellData = [self cellDataAtIndex:index];
+
+    Class<MXKCellRendering> class = [self cellViewClassForCellIdentifier:kMXKRecentCellIdentifier];
+    return [class heightForCellData:cellData withMaximumWidth:0];
+}
+
 - (void)didCellDataChange:(id<MXKRecentCellDataStoring>)cellData {
 
     if (self.delegate) {
@@ -109,7 +117,7 @@ NSString *const kMXKRecentCellIdentifier = @"kMXKRecentCellIdentifier";
             BOOL isFound = NO;
             for (NSUInteger index = 0; index < cellDataArray.count; index++) {
                 id<MXKRecentCellDataStoring> cellData = cellDataArray[index];
-                if ([event.roomId isEqualToString:cellData.roomId]) {
+                if ([event.roomId isEqualToString:cellData.room.state.roomId]) {
                     isFound = YES;
                     // Decrement here unreads count for this recent (we will add later the refreshed count)
                     // @TODO unreadCount -= recentRoom.unreadCount;
