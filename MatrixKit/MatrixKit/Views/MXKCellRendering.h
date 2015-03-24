@@ -36,6 +36,15 @@
  */
 - (void)render:(MXKCellData*)cellData;
 
+/**
+ Compute the height of the cell to display the passed data.
+ 
+ @param cellData the data object to render.
+ @param maxWidth the maximum available width.
+ @return the cell height
+ */
++ (CGFloat)heightForCellData:(MXKCellData*)cellData withMaximumWidth:(CGFloat)maxWidth;
+
 @optional
 
 /**
