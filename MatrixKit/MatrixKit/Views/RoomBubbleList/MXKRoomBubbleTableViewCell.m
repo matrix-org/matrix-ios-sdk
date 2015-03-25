@@ -16,6 +16,13 @@
 
 #import "MXKRoomBubbleTableViewCell.h"
 
+#pragma mark - Constant definitions
+NSString *const kMXKRoomBubbleCellTapLocationAvatar = @"kMXKRoomBubbleCellTapLocationAvatar";
+NSString *const kMXKRoomBubbleCellTapLocationDate = @"kMXKRoomBubbleCellTapLocationDate";
+NSString *const kMXKRoomBubbleCellTapLocationAttachment = @"kMXKRoomBubbleCellTapLocationAttachment";
+
+
+#pragma mark - UI Constant definitions
 #define MXKROOMBUBBLETABLEVIEWCELL_TEXTVIEW_LEADING_AND_TRAILING_CONSTRAINT_TO_SUPERVIEW 120 // (51 + 69)
 
 #define MXKROOMBUBBLETABLEVIEWCELL_DEFAULT_HEIGHT 50
@@ -24,7 +31,7 @@
 #define MXKROOMBUBBLETABLEVIEWCELL_HEIGHT_REDUCTION_WHEN_SENDER_INFO_IS_HIDDEN -10
 
 @implementation MXKRoomBubbleTableViewCell
-@synthesize bubbleData;
+@synthesize delegate, bubbleData;
 
 - (void)awakeFromNib {
     // Initialization code
@@ -74,9 +81,15 @@
             self.pictureView.clipsToBounds = YES;
             self.pictureView.backgroundColor = [UIColor redColor];
         }
-        
-//        [self addPictureViewTapGesture];
-        
+
+        // Listen to avatar tap
+        UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(onAvatarTap:)];
+        [tapGesture setNumberOfTouchesRequired:1];
+        [tapGesture setNumberOfTapsRequired:1];
+        [tapGesture setDelegate:self];
+        [self.pictureView addGestureRecognizer:tapGesture];
+        self.pictureView.userInteractionEnabled = YES;
+
         // Adjust top constraint constant for dateTime labels container, and hide it by default
         if (bubbleData.dataType == MXKRoomBubbleCellDataTypeText) {
             self.dateTimeLabelContainerTopConstraint.constant = self.msgTextViewTopConstraint.constant;
@@ -385,6 +398,15 @@
     
     // ensure there is no more progress bar
     [self stopProgressUI];
+}
+
+#pragma mark - User actions
+- (IBAction)onAvatarTap:(UITapGestureRecognizer*)sender {
+    if (delegate) {
+        [delegate cell:self didTapCellAt:kMXKRoomBubbleCellTapLocationAvatar userInfo:@{
+                                                                                        @"userId": bubbleData.senderId
+                                                                                        }];
+    }
 }
 
 

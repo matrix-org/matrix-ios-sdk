@@ -19,6 +19,8 @@
 
 #import "MXKRoomViewController.h"
 
+#import "MXKRoomBubbleTableViewCell.h"
+
 @interface MXKRoomViewController () {
     /**
      The data source providing UITableViewCells for the current room.
@@ -450,6 +452,16 @@
     
     // For now, do a simple full reload
     [_tableView reloadData];
+}
+
+- (void)dataSource:(MXKDataSource *)dataSource didTapCell:(id<MXKCellRendering>)cell at:(NSString *)cellTapLocationIdentifier userInfo:(NSDictionary *)userInfo {
+
+    NSLog(@"Cell %@ has been tapped at %@. UserInfo: %@", cell, cellTapLocationIdentifier, userInfo);
+
+    if ([cellTapLocationIdentifier isEqualToString:kMXKRoomBubbleCellTapLocationAvatar]) {
+        NSLog(@"Avatar of %@ has been tapped", userInfo[@"userId"]);
+    }
+
 }
 
 #pragma mark - UITableView delegate

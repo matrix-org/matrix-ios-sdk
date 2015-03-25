@@ -24,6 +24,27 @@
 #import "MXKImageView.h"
 #import "MXKPieChartView.h"
 
+#pragma mark - MXKCellRenderingDelegate cell tap locations
+/**
+ Location identifier used when the user tapped the avar.
+ 
+ The `userInfo` dictionary contains:
+    - userId: the user id of the tapped avatar
+ */
+extern NSString *const kMXKRoomBubbleCellTapLocationAvatar;
+
+/**
+ Location identifier used when the user tapped the date placeholder.
+ */
+extern NSString *const kMXKRoomBubbleCellTapLocationDate;
+
+/**
+ Location identifier used when the user tapped an attachment.
+ */
+extern NSString *const kMXKRoomBubbleCellTapLocationAttachment;
+
+
+#pragma mark - MXKRoomBubbleTableViewCell
 /**
  `MXKRoomBubbleTableViewCell` is a base class for displaying a room bubble.
  */
