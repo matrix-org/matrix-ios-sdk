@@ -459,9 +459,25 @@
     NSLog(@"Cell %@ has been tapped at %@. UserInfo: %@", cell, cellTapLocationIdentifier, userInfo);
 
     if ([cellTapLocationIdentifier isEqualToString:kMXKRoomBubbleCellTapLocationAvatar]) {
-        NSLog(@"Avatar of %@ has been tapped", userInfo[@"userId"]);
-    }
 
+        NSLog(@"    -> Avatar of %@ has been tapped", userInfo[@"userId"]);
+    }
+    else if ([cellTapLocationIdentifier isEqualToString:kMXKRoomBubbleCellTapLocationDate]) {
+
+        if ([cell isKindOfClass:MXKRoomBubbleTableViewCell.class]) {
+
+            MXKRoomBubbleTableViewCell *roomBubbleTableViewCell = (MXKRoomBubbleTableViewCell *)cell;
+            BOOL newDateTimeLabelContainerHidden = !roomBubbleTableViewCell.dateTimeLabelContainer.hidden;
+
+            NSLog(@"    -> Turn %@ cells date", newDateTimeLabelContainerHidden ? @"OFF" : @"ON");
+
+            // @TODO: How to indicate MXKRoomBubbleTableViewCell cells they must not show date anymore
+            // The only global object we pass to them is the event formatter but its jobs is converting MXEvents into texts.
+            // It cannot be used to pass cells config.
+            // If this VC implements its tableview datasource, it will be far easier. We could customise cells
+            // just before providing them to the tableview.
+        }
+    }
 }
 
 #pragma mark - UITableView delegate

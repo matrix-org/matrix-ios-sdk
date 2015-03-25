@@ -409,5 +409,10 @@ NSString *const kMXKRoomBubbleCellTapLocationAttachment = @"kMXKRoomBubbleCellTa
     }
 }
 
+- (IBAction)showHideDateTime:(id)sender {
+    if (delegate) {
+        [delegate cell:self didTapCellAt:kMXKRoomBubbleCellTapLocationDate userInfo:nil];
+    }
+}
 
 @end
