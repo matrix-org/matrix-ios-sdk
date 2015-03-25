@@ -18,20 +18,13 @@
 
 @implementation MXKRoomIncomingBubbleTableViewCell
 
-
 - (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
-    self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
-    if (self) {
-        NSArray *nibViews = [[NSBundle bundleForClass:[MXKRoomIncomingBubbleTableViewCell class]] loadNibNamed:NSStringFromClass([MXKRoomIncomingBubbleTableViewCell class])
-                                                                                                         owner:self
-                                                                                                       options:nil];
-        UIView *nibContentView = nibViews.firstObject;
-        nibContentView.frame = self.contentView.frame;
-        [self.contentView addSubview:nibContentView];
-    }
+    NSArray *nibViews = [[NSBundle bundleForClass:[MXKRoomIncomingBubbleTableViewCell class]] loadNibNamed:NSStringFromClass([MXKRoomIncomingBubbleTableViewCell class])
+                                                                                                     owner:nil
+                                                                                                   options:nil];
+    self = nibViews.firstObject;
     return self;
 }
-
 
 - (void)render:(MXKCellData *)cellData {
     [super render:cellData];

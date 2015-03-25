@@ -1,30 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="6254" systemVersion="13F34" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="6751" systemVersion="13F34" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6247"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6736"/>
     </dependencies>
     <objects>
-        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="MXKRoomIncomingBubbleTableViewCell">
-            <connections>
-                <outlet property="attachViewTopConstraint" destination="aEP-KR-m6S" id="JX2-cL-bKm"/>
-                <outlet property="attachViewWidthConstraint" destination="omE-ab-qaj" id="fnv-wz-PEQ"/>
-                <outlet property="attachmentView" destination="bMV-mh-qDe" id="Evh-XT-oqE"/>
-                <outlet property="dateTimeLabelContainer" destination="9Eh-eP-42y" id="koZ-ca-Ikk"/>
-                <outlet property="dateTimeLabelContainerTopConstraint" destination="VnP-Mj-vex" id="tNL-LG-wNk"/>
-                <outlet property="messageTextView" destination="Z6n-PQ-bgY" id="pfe-bh-ik9"/>
-                <outlet property="msgTextViewTopConstraint" destination="oT3-ar-D3y" id="cjs-FP-JzH"/>
-                <outlet property="pictureView" destination="o3k-Sa-3ok" id="FEV-uJ-EXM"/>
-                <outlet property="playIconView" destination="aqZ-jf-rIN" id="FPc-rw-75h"/>
-                <outlet property="progressChartView" destination="l9R-PS-aBg" id="kHg-yK-DcP"/>
-                <outlet property="progressView" destination="Yma-eG-AnB" id="ReK-qS-7Kh"/>
-                <outlet property="statsLabel" destination="SvQ-4g-eU6" id="0OZ-7l-KOm"/>
-                <outlet property="typingBadge" destination="ugC-vt-lwq" id="Fb0-de-Ua9"/>
-                <outlet property="userNameLabel" destination="wTa-gT-1gr" id="5po-uX-1zT"/>
-            </connections>
-        </placeholder>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
         <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
-        <view contentMode="scaleToFill" id="iN0-l3-epB" userLabel="Content View">
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="MXKRoomIncomingBubbleTableViewCell">
             <rect key="frame" x="0.0" y="0.0" width="600" height="50"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
@@ -80,7 +63,7 @@
                         <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                     </state>
                     <connections>
-                        <action selector="showHideDateTime:" destination="-1" eventType="touchUpInside" id="Jhn-QX-7dI"/>
+                        <action selector="showHideDateTime:" destination="iN0-l3-epB" eventType="touchUpInside" id="BGA-Kc-5Pf"/>
                     </connections>
                 </button>
                 <view hidden="YES" userInteractionEnabled="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="9Eh-eP-42y" userLabel="DateTimeLabelContainer">
@@ -150,6 +133,22 @@
             <nil key="simulatedTopBarMetrics"/>
             <nil key="simulatedBottomBarMetrics"/>
             <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <connections>
+                <outlet property="attachViewTopConstraint" destination="aEP-KR-m6S" id="EdM-aY-9dQ"/>
+                <outlet property="attachViewWidthConstraint" destination="omE-ab-qaj" id="w2g-ba-POK"/>
+                <outlet property="attachmentView" destination="bMV-mh-qDe" id="ilo-y6-TeD"/>
+                <outlet property="dateTimeLabelContainer" destination="9Eh-eP-42y" id="fFg-s4-RJN"/>
+                <outlet property="dateTimeLabelContainerTopConstraint" destination="VnP-Mj-vex" id="aS9-Lk-6Xq"/>
+                <outlet property="messageTextView" destination="Z6n-PQ-bgY" id="3WX-hH-YDg"/>
+                <outlet property="msgTextViewTopConstraint" destination="oT3-ar-D3y" id="BSc-H4-pTG"/>
+                <outlet property="pictureView" destination="o3k-Sa-3ok" id="cmn-1j-WPG"/>
+                <outlet property="playIconView" destination="aqZ-jf-rIN" id="ekB-Ov-A6W"/>
+                <outlet property="progressChartView" destination="l9R-PS-aBg" id="yAB-Hm-fRC"/>
+                <outlet property="progressView" destination="Yma-eG-AnB" id="dCO-Uv-wcd"/>
+                <outlet property="statsLabel" destination="SvQ-4g-eU6" id="iwm-DL-4ur"/>
+                <outlet property="typingBadge" destination="ugC-vt-lwq" id="hVL-fh-v2d"/>
+                <outlet property="userNameLabel" destination="wTa-gT-1gr" id="Xhc-XL-e8x"/>
+            </connections>
         </view>
     </objects>
     <resources>

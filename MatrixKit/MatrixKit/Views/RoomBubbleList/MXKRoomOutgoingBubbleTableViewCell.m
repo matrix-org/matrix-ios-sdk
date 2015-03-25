@@ -20,18 +20,11 @@
 
 @implementation MXKRoomOutgoingBubbleTableViewCell
 
-
 - (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
-    self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
-    if (self) {
-        NSArray *nibViews = [[NSBundle bundleForClass:[MXKRoomOutgoingBubbleTableViewCell class]] loadNibNamed:NSStringFromClass([MXKRoomOutgoingBubbleTableViewCell class])
-                                                                                                         owner:self
-                                                                                                       options:nil];
-        
-        UIView *nibContentView = nibViews.firstObject;
-        nibContentView.frame = self.contentView.frame;
-        [self.contentView addSubview:nibContentView];
-    }
+    NSArray *nibViews = [[NSBundle bundleForClass:[MXKRoomOutgoingBubbleTableViewCell class]] loadNibNamed:NSStringFromClass([MXKRoomOutgoingBubbleTableViewCell class])
+                                                                                                     owner:nil
+                                                                                                   options:nil];
+    self = nibViews.firstObject;
     return self;
 }
 
