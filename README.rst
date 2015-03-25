@@ -159,7 +159,7 @@ therefore requires a seperate server decoupled from the homeserver to send
 Push Notifications, as you cannot trust arbitrary homeservers with your
 application's APNS private key. This is called the 'Push Gateway'. More about
 how notifications work in Matrix can be found at
-https://github.com/matrix-org/matrix-doc/blob/master/drafts/push_overview.rst
+https://github.com/matrix-org/matrix-doc/blob/master/specification/42_push_overview.rst
 
 In simple terms, for your application to receive push notifications, you will
 need to set up a push gateway. This is a publicly accessible server specific
@@ -169,7 +169,7 @@ which can be found at https://github.com/matrix-org/sygnal along with
 instructions on how to set it up.
 
 You can also write your own Push Gateway. See
-https://github.com/matrix-org/matrix-doc/blob/master/drafts/push_pgwapi.rst
+https://github.com/matrix-org/matrix-doc/blob/master/specification/44_push_push_gw_api.rst
 for the specification on the HTTP Push Notification protocol. Your push
 gateway can listen for notifications on any path (as long as your app knows
 that path in order to inform the homeserver) but Matrix strongly recommends
@@ -228,7 +228,7 @@ that your session is logged in to. This will send HTTP notifications to a URL
 you supply as the 'url' key in the 'data' argument to setPusherWithPushkey.
 
 You can read more about these parameters in the Client / Server specification
-(https://github.com/matrix-org/matrix-doc/blob/master/drafts/push_csapi.rst). A
+(https://github.com/matrix-org/matrix-doc/blob/master/specification/43_push_cs_api.rst). A
 little more information about some of these parameters is included below:
 
 appId
@@ -245,7 +245,7 @@ appId
 profileTag
   This identifies which set of push rules this device should obey. For more
   information about push rules, see the Client / Server push specification:
-  https://github.com/matrix-org/matrix-doc/blob/master/drafts/push_csapi.rst
+  https://github.com/matrix-org/matrix-doc/blob/master/specification/43_push_cs_api.rst
   This is an identifier for the set of device-specific push rules that this
   device will obey. The recommendation is to auto-generate a 16 character
   alphanumeric string and use this string for the lifetime of the application
