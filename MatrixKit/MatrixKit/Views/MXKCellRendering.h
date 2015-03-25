@@ -18,6 +18,8 @@
 
 #import "MXKCellData.h"
 
+@protocol MXKCellRenderingDelegate;
+
 /**
  `MXKCellRendering` defines a protocol a view must conform to display a cell.
 
@@ -48,6 +50,11 @@
 @optional
 
 /**
+ User's actions delegate.
+ */
+@property (nonatomic, weak) id<MXKCellRenderingDelegate> delegate;
+
+/**
  Reset the cell.
 
  The cell is no more displayed. This is time to release resources and removing listeners.
@@ -57,3 +64,25 @@
 - (void)didEndDisplay;
 
 @end
+
+
+/**
+`MXKCellRenderingDelegate` defines a protocol used when the user has interactions with
+ the cell view.
+ */
+@protocol MXKCellRenderingDelegate <NSObject>
+
+/**
+ Tells the delegate that the user tapped on something in the cell.
+
+ The "something" is an abstract term identified by the `cellLocationIdentifier` param.
+ This identifier is specific and depends to the cell view class implementing MXKCellRendering.
+ 
+ @param cell the cell that has been tapped.
+ @param cellTapLocationIdentifier an identifier indicating which part of the cell has been tapped.
+ @param userInfo a dict containing additional information. It depends on cellTapLocationIdentifiers. May be nil.
+ */
+- (void)cell:(id<MXKCellRendering>)cell didTapCellAt:(NSString*)cellTapLocationIdentifier userInfo:(NSDictionary *)userInfo;
+
+@end
+

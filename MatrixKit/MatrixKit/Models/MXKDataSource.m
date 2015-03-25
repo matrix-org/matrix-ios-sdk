@@ -98,4 +98,16 @@
     return cellViewMap[identifier];
 }
 
+
+#pragma mark - MXKCellRenderingDelegate
+- (void)cell:(id<MXKCellRendering>)cell didTapCellAt:(NSString *)cellTapLocationIdentifier userInfo:(NSDictionary *)userInfo {
+
+    // The data source simply relays the information to its delegate
+    if (_delegate && [_delegate respondsToSelector:@selector(dataSource:didTapCell:at:userInfo:)]) {
+
+        [_delegate dataSource:self didTapCell:cell at:cellTapLocationIdentifier userInfo:userInfo];
+    }
+}
+
+
 @end

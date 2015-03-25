@@ -19,23 +19,12 @@
 #import <MatrixSDK/MatrixSDK.h>
 #import "MXKCellRendering.h"
 
-@class MXKDataSource;
-@protocol MXKDataSourceDelegate <NSObject>
-
-/**
- Tells the delegate that the data source has changed.
- 
- @param changes contains the index paths of objects that changed.
- */
-- (void)dataSource:(MXKDataSource*)dataSource didChange:(id /* @TODO*/)changes;
-
-@end
-
+@protocol MXKDataSourceDelegate;
 
 /**
  `MXKDataSource` is the base class for data sources managed by MatrixKit.
  */
-@interface MXKDataSource : NSObject
+@interface MXKDataSource : NSObject <MXKCellRenderingDelegate>
 
 /**
  The matrix session.
@@ -99,5 +88,32 @@
  @return the associated MXKCellData-inherited class.
  */
 - (Class)cellViewClassForCellIdentifier:(NSString *)identifier;
+
+@end
+
+
+@protocol MXKDataSourceDelegate <NSObject>
+
+/**
+ Tells the delegate that the data source has changed.
+
+ @param dataSource the involved data source.
+ @param changes contains the index paths of objects that changed.
+ */
+- (void)dataSource:(MXKDataSource*)dataSource didChange:(id /* @TODO*/)changes;
+
+@optional
+
+/**
+ Tells the delegate when a managed cell has been tapped by the user.
+ 
+ @see `MXKCellRenderingDelegate` for more details.
+ 
+ @param dataSource the involved data source.
+ @param cell the cell that has been tapped.
+ @param cellLocationIdentifier an identifier indicating which part of the cell has been tapped.
+ @param userInfo a dict containing additional information. It depends on cellTapLocationIdentifiers. May be nil.
+ */
+- (void)dataSource:(MXKDataSource*)dataSource didTapCell:(id<MXKCellRendering>)cell at:(NSString*)cellTapLocationIdentifier userInfo:(NSDictionary*)userInfo;
 
 @end
