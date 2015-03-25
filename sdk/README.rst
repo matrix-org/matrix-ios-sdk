@@ -21,3 +21,7 @@ Out of the box, the tests use one of the home servers (located at http://localho
       $ demo/start.sh --no-rate-limit
 
 Then, you can run the tests from the Xcode Test navigator tab or select the MatrixSDKTests scheme and click on the "Test" action.
+<<<<<<< HEAD
+
+=======
+>>>>>>> fdf14ad86699b23048162bc2537bc3a33d8455a3
