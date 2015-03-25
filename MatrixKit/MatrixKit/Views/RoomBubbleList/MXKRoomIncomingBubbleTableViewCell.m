@@ -18,4 +18,34 @@
 
 @implementation MXKRoomIncomingBubbleTableViewCell
 
+
+- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
+    self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
+    if (self) {
+        NSArray *nibViews = [[NSBundle bundleForClass:[MXKRoomIncomingBubbleTableViewCell class]] loadNibNamed:NSStringFromClass([MXKRoomIncomingBubbleTableViewCell class])
+                                                                                                         owner:self
+                                                                                                       options:nil];
+        UIView *nibContentView = nibViews.firstObject;
+        nibContentView.frame = self.contentView.frame;
+        [self.contentView addSubview:nibContentView];
+    }
+    return self;
+}
+
+
+- (void)render:(MXKCellData *)cellData {
+    [super render:cellData];
+    
+    if (self.bubbleData) {
+        // Display user's display name except if the name appears in the displayed text (see emote and membership event)
+        self.userNameLabel.hidden = (self.bubbleData.isSameSenderAsPreviousBubble || self.bubbleData.startsWithSenderName);
+        self.userNameLabel.text = self.bubbleData.senderDisplayName;
+        // Set typing badge visibility
+        self.typingBadge.hidden = YES; // TODO GFO (self.pictureView.hidden || ([currentTypingUsers indexOfObject:message.senderId] == NSNotFound));
+        if (!self.typingBadge.hidden) {
+            [self.typingBadge.superview bringSubviewToFront:self.typingBadge];
+        }
+    }
+}
+
 @end

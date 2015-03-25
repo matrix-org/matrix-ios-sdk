@@ -14,16 +14,13 @@
  limitations under the License.
  */
 
-#import <Foundation/Foundation.h>
-#import <MatrixSDK/MatrixSDK.h>
-
-#import "MXKRoomBubbleCellDataStoring.h"
+#import "MXKRoomBubbleCellData.h"
 
 /**
- `MXKRoomBubbleMergingMessagesCellData` instances compose data for `MXKRoomBubbleTableViewCell` cells.
-
-  A `MXKRoomBubbleMergingMessagesCellData` instance merges consecutive messages into one bubble.
+ `MXKRoomBubbleMergingMessagesCellData` class inherits from `MXKRoomBubbleCellData`, it merges
+ consecutive events from the same sender into one bubble.
+ Each concatenated event is represented by a bubble component.
  */
-@interface MXKRoomBubbleMergingMessagesCellData : MXKCellData <MXKRoomBubbleCellDataStoring>
+@interface MXKRoomBubbleMergingMessagesCellData : MXKRoomBubbleCellData
 
 @end

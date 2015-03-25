@@ -18,9 +18,38 @@
 
 #import "MXKCellRendering.h"
 
+#import "MXKRoomBubbleCellData.h"
+#import "MXKMediaManager.h"
+
+#import "MXKImageView.h"
+#import "MXKPieChartView.h"
+
 /**
  `MXKRoomBubbleTableViewCell` is a base class for displaying a room bubble.
  */
 @interface MXKRoomBubbleTableViewCell : UITableViewCell <MXKCellRendering>
+
+/**
+ The current bubble data displayed by the table view cell
+ */
+@property (strong, nonatomic) MXKRoomBubbleCellData *bubbleData;
+
+
+@property (strong, nonatomic) IBOutlet MXKImageView *pictureView;
+@property (weak, nonatomic) IBOutlet UITextView  *messageTextView;
+@property (strong, nonatomic) IBOutlet MXKImageView *attachmentView;
+@property (strong, nonatomic) IBOutlet UIImageView *playIconView;
+@property (weak, nonatomic) IBOutlet UIView *dateTimeLabelContainer;
+
+@property (weak, nonatomic) IBOutlet UIView *progressView;
+@property (weak, nonatomic) IBOutlet UILabel *statsLabel;
+@property (weak, nonatomic) IBOutlet MXKPieChartView *progressChartView;
+
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *msgTextViewTopConstraint;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *attachViewWidthConstraint;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *attachViewTopConstraint;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *dateTimeLabelContainerTopConstraint;
+
+- (void)updateProgressUI:(NSDictionary*)statisticsDict;
 
 @end

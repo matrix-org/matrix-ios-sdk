@@ -25,8 +25,7 @@
     self = [super initWithRoomId:roomId andMatrixSession:session];
     if (self) {
         // Change data classes
-        [self registerCellDataClass:MXKSampleJSQRoomBubbleCellData.class forCellIdentifier:kMXKIncomingRoomBubbleCellIdentifier];
-        [self registerCellDataClass:MXKSampleJSQRoomBubbleCellData.class forCellIdentifier:kMXKOutgoingRoomBubbleCellIdentifier];
+        [self registerCellDataClass:MXKSampleJSQRoomBubbleCellData.class forCellIdentifier:kMXKRoomBubbleCellDataIdentifier];
     }
     return self;
 }

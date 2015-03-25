@@ -130,8 +130,10 @@
     _tableView.dataSource = dataSource;
     
     // Set up classes to use for cells
-    [_tableView registerClass:[dataSource cellViewClassForCellIdentifier:kMXKIncomingRoomBubbleCellIdentifier] forCellReuseIdentifier:kMXKIncomingRoomBubbleCellIdentifier];
-    [_tableView registerClass:[dataSource cellViewClassForCellIdentifier:kMXKOutgoingRoomBubbleCellIdentifier] forCellReuseIdentifier:kMXKOutgoingRoomBubbleCellIdentifier];
+    [_tableView registerClass:[dataSource cellViewClassForCellIdentifier:kMXKRoomIncomingTextMsgBubbleTableViewCellIdentifier] forCellReuseIdentifier:kMXKRoomIncomingTextMsgBubbleTableViewCellIdentifier];
+    [_tableView registerClass:[dataSource cellViewClassForCellIdentifier:kMXKRoomOutgoingTextMsgBubbleTableViewCellIdentifier] forCellReuseIdentifier:kMXKRoomOutgoingTextMsgBubbleTableViewCellIdentifier];
+    [_tableView registerClass:[dataSource cellViewClassForCellIdentifier:kMXKRoomIncomingAttachmentBubbleTableViewCellIdentifier] forCellReuseIdentifier:kMXKRoomIncomingAttachmentBubbleTableViewCellIdentifier];
+    [_tableView registerClass:[dataSource cellViewClassForCellIdentifier:kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier] forCellReuseIdentifier:kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier];
 
     // Start showing history right now
     [dataSource paginateBackMessagesToFillRect:self.view.frame success:^{
@@ -174,7 +176,7 @@
 - (void)displayRoom:(MXKRoomDataSource *)roomDataSource {
     
     dataSource = roomDataSource;
-    dataSource.delegate = self;
+    dataSource.delegate = self; // TODO GFO use unsafe_unretained to prevent memory leaks 
     
     // Report the matrix session at view controller level to update UI according to session state
     self.mxSession = dataSource.mxSession;
@@ -451,6 +453,34 @@
 }
 
 #pragma mark - UITableView delegate
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    // Compute here height of bubble cell
+    CGFloat rowHeight;
+    
+    id<MXKRoomBubbleCellDataStoring> bubbleData = [dataSource cellDataAtIndex:indexPath.row];
+    
+    // Sanity check
+    if (!bubbleData) {
+        return 0;
+    }
+    
+    Class cellViewClass;
+    if (bubbleData.isIncoming) {
+        if (bubbleData.isAttachment) {
+            cellViewClass = [dataSource cellViewClassForCellIdentifier:kMXKRoomIncomingAttachmentBubbleTableViewCellIdentifier];
+        } else {
+            cellViewClass = [dataSource cellViewClassForCellIdentifier:kMXKRoomIncomingTextMsgBubbleTableViewCellIdentifier];
+        }
+    } else if (bubbleData.isAttachment) {
+        cellViewClass = [dataSource cellViewClassForCellIdentifier:kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier];
+    } else {
+        cellViewClass = [dataSource cellViewClassForCellIdentifier:kMXKRoomOutgoingTextMsgBubbleTableViewCellIdentifier];
+    }
+    
+    rowHeight = [cellViewClass heightForCellData:bubbleData withMaximumWidth:tableView.frame.size.width];
+    return rowHeight;
+}
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     

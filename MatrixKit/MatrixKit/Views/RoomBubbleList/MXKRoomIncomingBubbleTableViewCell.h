@@ -17,8 +17,11 @@
 #import "MXKRoomBubbleTableViewCell.h"
 
 /**
- `MXKRoomIncomingBubbleTableViewCell` displays outgoing room bubble.
+ `MXKRoomIncomingBubbleTableViewCell` displays incoming message bubbles.
  */
 @interface MXKRoomIncomingBubbleTableViewCell : MXKRoomBubbleTableViewCell
+
+@property (weak, nonatomic) IBOutlet UIImageView *typingBadge;
+@property (weak, nonatomic) IBOutlet UILabel *userNameLabel;
 
 @end

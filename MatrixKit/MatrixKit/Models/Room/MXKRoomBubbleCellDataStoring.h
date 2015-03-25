@@ -58,9 +58,39 @@
 @property (nonatomic) NSString *senderId;
 
 /**
+ The room id
+ */
+@property (nonatomic) NSString *roomId;
+
+/**
  The sender display name composed when event occured
  */
 @property (nonatomic) NSString *senderDisplayName;
+
+/**
+ The sender avatar url retrieved when event occured
+ */
+@property (nonatomic) NSString *senderAvatarUrl;
+
+/**
+ YES if the previous bubble sender is the same as the previous stored bubble.
+ */
+@property (nonatomic) BOOL isSameSenderAsPreviousBubble;
+
+/**
+ The bubble date
+ */
+@property (nonatomic) NSDate *date;
+
+/**
+ YES when the bubble is composed by incoming event(s).
+ */
+@property (nonatomic) BOOL isIncoming;
+
+/**
+ YES when the bubble correspond to an attachment (image, audio, video, location...).
+ */
+@property (nonatomic) BOOL isAttachment;
 
 /**
  The body of the message with sets of attributes, or kind of content description in case of attachment (e.g. "image attachment")
@@ -72,15 +102,7 @@
  */
 @property (nonatomic) BOOL startsWithSenderName;
 
-/**
- YES when the bubble is composed by incoming event(s).
- */
-@property (nonatomic) BOOL isIncoming;
 
-/**
- The bubble date
- */
-@property (nonatomic) NSDate *date;
 
 
 #pragma mark - Public methods

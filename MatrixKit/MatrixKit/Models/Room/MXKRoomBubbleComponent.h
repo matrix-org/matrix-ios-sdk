@@ -39,14 +39,19 @@
 @property (nonatomic) NSDate *date;
 
 /**
+ Event formatter
+ */
+@property (nonatomic) MXKEventFormatter *eventFormatter;
+
+/**
  The event on which the composent is based (used in case of redaction)
  */
 @property (nonatomic, readonly) MXEvent *event;
 
 // The following properties are defined to store information on component.
 // They must be handled by the object which creates the MXKRoomBubbleComponent instance.
-@property (nonatomic) CGFloat height;
-@property (nonatomic) NSRange range;
+//@property (nonatomic) CGFloat height;
+@property (nonatomic) CGPoint position;
 
 /**
  Create a new `MXKRoomBubbleComponent` object based on a `MXEvent` instance.

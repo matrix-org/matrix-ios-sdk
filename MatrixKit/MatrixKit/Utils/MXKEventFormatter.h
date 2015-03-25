@@ -83,6 +83,24 @@ typedef enum : NSUInteger {
 - (instancetype)initWithMatrixSession:(MXSession*)mxSession;
 
 /**
+ Checks whether the event is related to an attachment and if it is supported.
+
+ @param event
+ @return YES if the provided event is related to a supported attachment type.
+ */
+- (BOOL)isSupportedAttachment:(MXEvent*)event;
+
+/**
+ Return the suitable url to display the content thumbnail into the provided view size.
+ 
+ @param contentURI
+ @param viewSize in points, this method will convert this size in pixels by considering screen scale
+ @param thumbnailingMethod method of thumbnailing supported by the matrix content repository
+ @return the thumbnail url
+ */
+- (NSString*)thumbnailURLForContent:(NSString*)contentURI inViewSize:(CGSize)viewSize withMethod:(MXThumbnailingMethod)thumbnailingMethod;
+
+/**
  Compose the event sender display name according to the current room state.
  
  @param event the event to format.
@@ -90,6 +108,15 @@ typedef enum : NSUInteger {
  @return the sender display name
  */
 - (NSString*)senderDisplayNameForEvent:(MXEvent*)event withRoomState:(MXRoomState*)roomState;
+
+/**
+ Retrieve the avatar url of the event sender from the current room state.
+ 
+ @param event the event to format.
+ @param roomState the room state right before the event.
+ @return the sender avatar url
+ */
+- (NSString*)senderAvatarUrlForEvent:(MXEvent*)event withRoomState:(MXRoomState*)roomState;
 
 /**
  Generate a displayable string representating the event.

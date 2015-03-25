@@ -21,16 +21,29 @@
 #import "MXKEventFormatter.h"
 
 /**
- Identifier to use for cells that display incoming room events, ie events
- that have not been sent by the user.
+ String identifying the object used to store and prepare room bubble data.
  */
-extern NSString *const kMXKIncomingRoomBubbleCellIdentifier;
+extern NSString *const kMXKRoomBubbleCellDataIdentifier;
 
 /**
- Identifier to use for cells that display outgoing room events, ie events
- that have been sent by the user.
+ String identifying the cell object to be reused to display incoming room events as text messages.
  */
-extern NSString *const kMXKOutgoingRoomBubbleCellIdentifier;
+extern NSString *const kMXKRoomIncomingTextMsgBubbleTableViewCellIdentifier;
+
+/**
+ String identifying the cell object to be reused to display incoming attachments.
+ */
+extern NSString *const kMXKRoomIncomingAttachmentBubbleTableViewCellIdentifier;
+
+/**
+ String identifying the cell object to be reused to display outgoing room events as text messages.
+ */
+extern NSString *const kMXKRoomOutgoingTextMsgBubbleTableViewCellIdentifier;
+
+/**
+ String identifying the cell object to be reused to display outgoing attachments.
+ */
+extern NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier;
 
 
 @protocol MXKRoomBubbleCellDataStoring;

@@ -18,20 +18,14 @@
 
 #import "MXEvent+MatrixKit.h"
 
-@interface MXKRoomBubbleComponent () {
-    MXKEventFormatter *eventFormatter;
-}
-
-@end
-
 @implementation MXKRoomBubbleComponent
 
 - (instancetype)initWithEvent:(MXEvent*)event andRoomState:(MXRoomState*)roomState andEventFormatter:(MXKEventFormatter*)formatter {
     if (self = [super init]) {
         // Build text component related to this event
-        eventFormatter = formatter;
+        _eventFormatter = formatter;
         MXKEventFormatterError error;
-        NSString *eventString = [eventFormatter stringFromEvent:event withRoomState:roomState error:&error];
+        NSString *eventString = [_eventFormatter stringFromEvent:event withRoomState:roomState error:&error];
         if (eventString.length) {
             // Manage error
             if (error != MXKEventFormatterErrorNone) {
@@ -72,21 +66,20 @@
 }
 
 - (void)dealloc {
-    eventFormatter = nil;
 }
 
 - (void)updateWithRedactedEvent:(MXEvent*)redactedEvent {
     
     // Build text component related to this event (Note: we don't have valid room state here, userId will be used as display name)
     MXKEventFormatterError error;
-    _textMessage = [eventFormatter stringFromEvent:redactedEvent withRoomState:nil error:&error];
+    _textMessage = [_eventFormatter stringFromEvent:redactedEvent withRoomState:nil error:&error];
     _event = redactedEvent;
 }
 
 - (NSAttributedString*)attributedTextMessage {
     if (!_attributedTextMessage) {
         // Retrieve string attributes from formatter
-        NSDictionary *attributes = [eventFormatter stringAttributesForEvent:_event];
+        NSDictionary *attributes = [_eventFormatter stringAttributesForEvent:_event];
         if (attributes) {
             _attributedTextMessage = [[NSAttributedString alloc] initWithString:_textMessage attributes:attributes];
         } else {
