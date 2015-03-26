@@ -23,6 +23,11 @@ typedef void (^blockMXKImageView_onClick)(MXKImageView *imageView, NSString* tit
 
 - (void)setImageURL:(NSString *)imageURL withImageOrientation:(UIImageOrientation)orientation andPreviewImage:(UIImage*)previewImage;
 
+/**
+ Toggle display to fullscreen.
+ */
+- (void)showFullScreen;
+
 // Use this boolean to hide activity indicator during image downloading
 @property (nonatomic) BOOL hideActivityIndicator;
 
@@ -32,7 +37,7 @@ typedef void (^blockMXKImageView_onClick)(MXKImageView *imageView, NSString* tit
 @property (strong, nonatomic) UIImage *image;
 
 @property (nonatomic) BOOL stretchable;
-@property (nonatomic) BOOL fullScreen;
+@property (nonatomic, readonly) BOOL fullScreen;
 
 // mediaManager folder where the image is stored
 @property (nonatomic, readwrite) NSString* mediaFolder;

@@ -47,8 +47,6 @@
     // Subviews
     UIScrollView *scrollView;
     UIImageView *imageView;
-
-    BOOL useFullScreen;
 }
 @end
 
@@ -122,7 +120,7 @@
     }
     
     // display the download statistics
-    if (useFullScreen && !progressInfoLabel) {
+    if (_fullScreen && !progressInfoLabel) {
         progressInfoLabel = [[UILabel alloc] init];
         progressInfoLabel.backgroundColor = [UIColor whiteColor];
         progressInfoLabel.textColor = [UIColor blackColor];
@@ -187,26 +185,21 @@
     return currentImage;
 }
 
-- (void)setFullScreen:(BOOL)fullScreen {
+- (void)showFullScreen {
     
-    NSAssert(fullScreen, @"fullScreen option is not implemented yet");
-    
-    useFullScreen = fullScreen;
+    _fullScreen = YES;
     
     [self initLayout];
 
-// TODO
-//    if (useFullScreen) {
-//        [self removeFromSuperview];
-//        [UIApplication sharedApplication].statusBarHidden = YES;
-//                
-//        self.frame = [AppDelegate theDelegate].window.rootViewController.view.bounds;
-//        [[AppDelegate theDelegate].window.rootViewController.view addSubview:self];
-//    }
-}
+    if (_fullScreen) {
+        [self removeFromSuperview];
+        [UIApplication sharedApplication].statusBarHidden = YES;
 
-- (BOOL)fullScreen {
-    return useFullScreen;
+        UIWindow *window = [[UIApplication sharedApplication] keyWindow];
+                
+        self.frame = window.rootViewController.view.bounds;
+        [window.rootViewController.view addSubview:self];
+    }
 }
 
 #pragma mark -
@@ -230,7 +223,7 @@
     [button setTitle:title forState:UIControlStateNormal];
     [button setTitle:title forState:UIControlStateHighlighted];
     
-    if (useFullScreen) {
+    if (_fullScreen) {
         // use the same text color as the tabbar
         [button setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
         [button setTitleColor:[UIColor whiteColor] forState:UIControlStateHighlighted];
@@ -288,7 +281,7 @@
     
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     
-    if (useFullScreen) {
+    if (_fullScreen) {
         [UIApplication sharedApplication].statusBarHidden = NO;
     }
     
@@ -360,7 +353,7 @@
             }
 
             // in fullscreen, display both buttons above the view
-            if (useFullScreen) {
+            if (_fullScreen) {
                 bottomBarView.backgroundColor = [UIColor blackColor];
                 [self addSubview:bottomBarView];
             }
@@ -375,7 +368,7 @@
             }
         }
         
-        if (useFullScreen) {
+        if (_fullScreen) {
             tabBarFrame.origin.y = self.frame.size.height - tabBarFrame.size.height;
         }
         else {
@@ -574,7 +567,7 @@
         bottomBarView = nil;
     }
     
-    if (useFullScreen) {
+    if (_fullScreen) {
         [UIApplication sharedApplication].statusBarHidden = NO;
     }
 }
