@@ -377,98 +377,98 @@
 
 
 #pragma mark - Room operations
-- (void)sendEventOfType:(MXEventTypeString)eventTypeString
-                content:(NSDictionary*)content
-                success:(void (^)(NSString *eventId))success
-                failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)sendEventOfType:(MXEventTypeString)eventTypeString
+                            content:(NSDictionary*)content
+                            success:(void (^)(NSString *eventId))success
+                            failure:(void (^)(NSError *error))failure
 {
-    [mxSession.matrixRestClient sendEventToRoom:_state.roomId eventType:eventTypeString content:content success:success failure:failure];
+    return [mxSession.matrixRestClient sendEventToRoom:_state.roomId eventType:eventTypeString content:content success:success failure:failure];
 }
 
-- (void)sendStateEventOfType:(MXEventTypeString)eventTypeString
-                     content:(NSDictionary*)content
-                     success:(void (^)(NSString *eventId))success
+- (MXHTTPOperation*)sendStateEventOfType:(MXEventTypeString)eventTypeString
+                                 content:(NSDictionary*)content
+                                 success:(void (^)(NSString *eventId))success
+                                 failure:(void (^)(NSError *error))failure
+{
+    return [mxSession.matrixRestClient sendStateEventToRoom:_state.roomId eventType:eventTypeString content:content success:success failure:failure];
+}
+
+- (MXHTTPOperation*)sendMessageOfType:(MXMessageType)msgType
+                              content:(NSDictionary*)content
+                              success:(void (^)(NSString *eventId))success
+                              failure:(void (^)(NSError *error))failure
+{
+    return [mxSession.matrixRestClient sendMessageToRoom:_state.roomId msgType:msgType content:content success:success failure:failure];
+}
+
+- (MXHTTPOperation*)sendTextMessage:(NSString*)text
+                            success:(void (^)(NSString *eventId))success
+                            failure:(void (^)(NSError *error))failure
+{
+    return [mxSession.matrixRestClient sendTextMessageToRoom:_state.roomId text:text success:success failure:failure];
+}
+
+- (MXHTTPOperation*)setTopic:(NSString*)topic
+                     success:(void (^)())success
                      failure:(void (^)(NSError *error))failure
 {
-    [mxSession.matrixRestClient sendStateEventToRoom:_state.roomId eventType:eventTypeString content:content success:success failure:failure];
+    return [mxSession.matrixRestClient setRoomTopic:_state.roomId topic:topic success:success failure:failure];
 }
 
-- (void)sendMessageOfType:(MXMessageType)msgType
-                  content:(NSDictionary*)content
-                  success:(void (^)(NSString *eventId))success
-                  failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)setName:(NSString*)name
+                    success:(void (^)())success
+                    failure:(void (^)(NSError *error))failure
 {
-    [mxSession.matrixRestClient sendMessageToRoom:_state.roomId msgType:msgType content:content success:success failure:failure];
+    return [mxSession.matrixRestClient setRoomName:_state.roomId name:name success:success failure:failure];
 }
 
-- (void)sendTextMessage:(NSString*)text
-                success:(void (^)(NSString *eventId))success
-                failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)join:(void (^)())success
+                 failure:(void (^)(NSError *error))failure
 {
-    [mxSession.matrixRestClient sendTextMessageToRoom:_state.roomId text:text success:success failure:failure];
-}
-
-- (void)setTopic:(NSString*)topic
-         success:(void (^)())success
-         failure:(void (^)(NSError *error))failure
-{
-    [mxSession.matrixRestClient setRoomTopic:_state.roomId topic:topic success:success failure:failure];
-}
-
-- (void)setName:(NSString*)name
-        success:(void (^)())success
-        failure:(void (^)(NSError *error))failure
-{
-    [mxSession.matrixRestClient setRoomName:_state.roomId name:name success:success failure:failure];
-}
-
-- (void)join:(void (^)())success
-     failure:(void (^)(NSError *error))failure
-{
-    [mxSession joinRoom:_state.roomId success:^(MXRoom *room) {
+    return [mxSession joinRoom:_state.roomId success:^(MXRoom *room) {
         success();
     } failure:failure];
 }
 
-- (void)leave:(void (^)())success
-      failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)leave:(void (^)())success
+                  failure:(void (^)(NSError *error))failure
 {
-    [mxSession leaveRoom:_state.roomId success:success failure:failure];
+    return [mxSession leaveRoom:_state.roomId success:success failure:failure];
 }
 
-- (void)inviteUser:(NSString*)userId
-           success:(void (^)())success
-           failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)inviteUser:(NSString*)userId
+                       success:(void (^)())success
+                       failure:(void (^)(NSError *error))failure
 {
-    [mxSession.matrixRestClient inviteUser:userId toRoom:_state.roomId success:success failure:failure];
+    return [mxSession.matrixRestClient inviteUser:userId toRoom:_state.roomId success:success failure:failure];
 }
 
-- (void)kickUser:(NSString*)userId
-          reason:(NSString*)reason
-         success:(void (^)())success
-         failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)kickUser:(NSString*)userId
+                      reason:(NSString*)reason
+                     success:(void (^)())success
+                     failure:(void (^)(NSError *error))failure
 {
-    [mxSession.matrixRestClient kickUser:userId fromRoom:_state.roomId reason:reason success:success failure:failure];
+    return [mxSession.matrixRestClient kickUser:userId fromRoom:_state.roomId reason:reason success:success failure:failure];
 }
 
-- (void)banUser:(NSString*)userId
-         reason:(NSString*)reason
-        success:(void (^)())success
-        failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)banUser:(NSString*)userId
+                     reason:(NSString*)reason
+                    success:(void (^)())success
+                    failure:(void (^)(NSError *error))failure
 {
-    [mxSession.matrixRestClient banUser:userId inRoom:_state.roomId reason:reason success:success failure:failure];
+    return [mxSession.matrixRestClient banUser:userId inRoom:_state.roomId reason:reason success:success failure:failure];
 }
 
-- (void)unbanUser:(NSString*)userId
-          success:(void (^)())success
-          failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)unbanUser:(NSString*)userId
+                      success:(void (^)())success
+                      failure:(void (^)(NSError *error))failure
 {
-    [mxSession.matrixRestClient unbanUser:userId inRoom:_state.roomId success:success failure:failure];
+    return [mxSession.matrixRestClient unbanUser:userId inRoom:_state.roomId success:success failure:failure];
 }
 
-- (void)setPowerLevelOfUserWithUserID:(NSString *)userId powerLevel:(NSUInteger)powerLevel
-                              success:(void (^)())success
-                              failure:(void (^)(NSError *))failure
+- (MXHTTPOperation*)setPowerLevelOfUserWithUserID:(NSString *)userId powerLevel:(NSUInteger)powerLevel
+                                          success:(void (^)())success
+                                          failure:(void (^)(NSError *))failure
 {
     // To set this new value, we have to take the current powerLevels content,
     // Update it with expected values and send it to the home server.
@@ -480,25 +480,25 @@
     newPowerLevelsEventContent[@"users"] = newPowerLevelsEventContentUsers;
 
     // Make the request to the HS
-    [self sendStateEventOfType:kMXEventTypeStringRoomPowerLevels content:newPowerLevelsEventContent success:^(NSString *eventId) {
+    return [self sendStateEventOfType:kMXEventTypeStringRoomPowerLevels content:newPowerLevelsEventContent success:^(NSString *eventId) {
         success();
     } failure:failure];
 }
 
-- (void)sendTypingNotification:(BOOL)typing
-                       timeout:(NSUInteger)timeout
-                       success:(void (^)())success
-                       failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)sendTypingNotification:(BOOL)typing
+                                   timeout:(NSUInteger)timeout
+                                   success:(void (^)())success
+                                   failure:(void (^)(NSError *error))failure
 {
-    [mxSession.matrixRestClient sendTypingNotificationInRoom:_state.roomId typing:typing timeout:timeout success:success failure:failure];
+    return [mxSession.matrixRestClient sendTypingNotificationInRoom:_state.roomId typing:typing timeout:timeout success:success failure:failure];
 }
 
-- (void)redactEvent:(NSString*)eventId
-             reason:(NSString*)reason
-            success:(void (^)())success
-            failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)redactEvent:(NSString*)eventId
+                         reason:(NSString*)reason
+                        success:(void (^)())success
+                        failure:(void (^)(NSError *error))failure
 {
-    [mxSession.matrixRestClient redactEvent:eventId inRoom:_state.roomId reason:reason success:success failure:failure];
+    return [mxSession.matrixRestClient redactEvent:eventId inRoom:_state.roomId reason:reason success:success failure:failure];
 }
 
 

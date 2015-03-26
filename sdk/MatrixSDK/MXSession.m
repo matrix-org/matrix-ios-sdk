@@ -607,45 +607,41 @@ typedef void (^MXOnResumeDone)();
 
 
 #pragma mark - Rooms operations
-- (void)joinRoom:(NSString*)roomIdOrAlias
-         success:(void (^)(MXRoom *room))success
-         failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
+                     success:(void (^)(MXRoom *room))success
+                     failure:(void (^)(NSError *error))failure
 {
-    [matrixRestClient joinRoom:roomIdOrAlias success:^(NSString *theRoomId) {
+    return [matrixRestClient joinRoom:roomIdOrAlias success:^(NSString *theRoomId) {
 
         [self initialSyncOfRoom:theRoomId withLimit:initialSyncMessagesLimit success:success failure:failure];
 
-    } failure:^(NSError *error) {
-        failure(error);
-    }];
+    } failure:failure];
 }
 
-- (void)leaveRoom:(NSString*)roomId
-          success:(void (^)())success
-          failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)leaveRoom:(NSString*)roomId
+                      success:(void (^)())success
+                      failure:(void (^)(NSError *error))failure
 {
-    [matrixRestClient leaveRoom:roomId success:^{
+    return [matrixRestClient leaveRoom:roomId success:^{
         
         [self removeRoom:roomId];
         
         success();
         
-    } failure:^(NSError *error) {
-        failure(error);
-    }];
+    } failure:failure];
 }
 
 
 #pragma mark - Initial sync per room
-- (void)initialSyncOfRoom:(NSString*)roomId
-                withLimit:(NSInteger)limit
-                  success:(void (^)(MXRoom *room))success
-                  failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)initialSyncOfRoom:(NSString*)roomId
+                            withLimit:(NSInteger)limit
+                              success:(void (^)(MXRoom *room))success
+                              failure:(void (^)(NSError *error))failure
 {
     [roomsInInitialSyncing addObject:roomId];
 
     // Do an initial to get state and messages in the room
-    [matrixRestClient initialSyncOfRoom:roomId withLimit:limit success:^(NSDictionary *JSONData) {
+    return [matrixRestClient initialSyncOfRoom:roomId withLimit:limit success:^(NSDictionary *JSONData) {
 
         MXRoom *room = [self getOrCreateRoom:JSONData[@"room_id"] withJSONData:JSONData];
 

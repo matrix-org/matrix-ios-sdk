@@ -224,10 +224,12 @@ FOUNDATION_EXPORT NSString *const MXSessionStateDidChangeNotification;
  @param success A block object called when the operation succeeds. It provides the MXRoom 
         instance of the joined room.
  @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
  */
-- (void)joinRoom:(NSString*)roomIdOrAlias
-         success:(void (^)(MXRoom *room))success
-         failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
+                     success:(void (^)(MXRoom *room))success
+                     failure:(void (^)(NSError *error))failure;
 
 /**
  Leave a room.
@@ -237,10 +239,12 @@ FOUNDATION_EXPORT NSString *const MXSessionStateDidChangeNotification;
  @param roomId the id of the room to join.
  @param success A block object called when the operation is complete.
  @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
  */
-- (void)leaveRoom:(NSString*)roomId
-          success:(void (^)())success
-          failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)leaveRoom:(NSString*)roomId
+                      success:(void (^)())success
+                      failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - The user's rooms
