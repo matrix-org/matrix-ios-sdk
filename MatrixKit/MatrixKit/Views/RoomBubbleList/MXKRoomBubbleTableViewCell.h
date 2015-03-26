@@ -35,11 +35,15 @@ extern NSString *const kMXKRoomBubbleCellTapLocationAvatar;
 
 /**
  Location identifier used when the user tapped the date placeholder.
+ 
+ The `userInfo` is nil.
  */
 extern NSString *const kMXKRoomBubbleCellTapLocationDate;
 
 /**
  Location identifier used when the user tapped an attachment.
+ 
+ The `userInfo` is nil. The attachment can be retrieve via MXKRoomBubbleTableViewCell.attachmentView.
  */
 extern NSString *const kMXKRoomBubbleCellTapLocationAttachment;
 

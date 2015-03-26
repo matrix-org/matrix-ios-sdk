@@ -20,6 +20,7 @@
 #import "MXKRoomViewController.h"
 
 #import "MXKRoomBubbleTableViewCell.h"
+#import "MXKImageView.h"
 
 @interface MXKRoomViewController () {
     /**
@@ -51,6 +52,11 @@
      Local typing timout
      */
     NSTimer* typingTimer;
+
+    /**
+     Fullscreen view of attachment image
+     */
+    MXKImageView* highResImageView;
 }
 
 @property (nonatomic) IBOutlet UITableView *tableView;
@@ -136,13 +142,6 @@
     [_tableView registerClass:[dataSource cellViewClassForCellIdentifier:kMXKRoomOutgoingTextMsgBubbleTableViewCellIdentifier] forCellReuseIdentifier:kMXKRoomOutgoingTextMsgBubbleTableViewCellIdentifier];
     [_tableView registerClass:[dataSource cellViewClassForCellIdentifier:kMXKRoomIncomingAttachmentBubbleTableViewCellIdentifier] forCellReuseIdentifier:kMXKRoomIncomingAttachmentBubbleTableViewCellIdentifier];
     [_tableView registerClass:[dataSource cellViewClassForCellIdentifier:kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier] forCellReuseIdentifier:kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier];
-
-    // Start showing history right now
-    [dataSource paginateBackMessagesToFillRect:self.view.frame success:^{
-        // @TODO (hide loading wheel)
-    } failure:^(NSError *error) {
-        // @TODO
-    }];
 }
 
 - (BOOL)isMessagesTableScrollViewAtTheBottom {
@@ -186,6 +185,13 @@
     if (_tableView) {
         [self configureView];
     }
+
+    // Start showing history right now
+    [dataSource paginateBackMessagesToFillRect:self.view.frame success:^{
+        // @TODO (hide loading wheel)
+    } failure:^(NSError *error) {
+        // @TODO
+    }];
 }
 
 - (void)setRoomInputToolbarViewClass:(Class)roomInputToolbarViewClass {
@@ -464,19 +470,21 @@
     }
     else if ([cellTapLocationIdentifier isEqualToString:kMXKRoomBubbleCellTapLocationDate]) {
 
-        if ([cell isKindOfClass:MXKRoomBubbleTableViewCell.class]) {
+        MXKRoomBubbleTableViewCell *roomBubbleTableViewCell = (MXKRoomBubbleTableViewCell *)cell;
+        BOOL newDateTimeLabelContainerHidden = !roomBubbleTableViewCell.dateTimeLabelContainer.hidden;
 
-            MXKRoomBubbleTableViewCell *roomBubbleTableViewCell = (MXKRoomBubbleTableViewCell *)cell;
-            BOOL newDateTimeLabelContainerHidden = !roomBubbleTableViewCell.dateTimeLabelContainer.hidden;
+        NSLog(@"    -> Turn %@ cells date", newDateTimeLabelContainerHidden ? @"OFF" : @"ON");
 
-            NSLog(@"    -> Turn %@ cells date", newDateTimeLabelContainerHidden ? @"OFF" : @"ON");
+        // @TODO: How to indicate MXKRoomBubbleTableViewCell cells they must not show date anymore
+        // The only global object we pass to them is the event formatter but its jobs is converting MXEvents into texts.
+        // It cannot be used to pass cells config.
+        // If this VC implements its tableview datasource, it will be far easier. We could customise cells
+        // just before providing them to the tableview.
+    }
+    else if ([cellTapLocationIdentifier isEqualToString:kMXKRoomBubbleCellTapLocationAttachment]) {
 
-            // @TODO: How to indicate MXKRoomBubbleTableViewCell cells they must not show date anymore
-            // The only global object we pass to them is the event formatter but its jobs is converting MXEvents into texts.
-            // It cannot be used to pass cells config.
-            // If this VC implements its tableview datasource, it will be far easier. We could customise cells
-            // just before providing them to the tableview.
-        }
+        MXKRoomBubbleTableViewCell *roomBubbleTableViewCell = (MXKRoomBubbleTableViewCell *)cell;
+        [self showAttachmentView:roomBubbleTableViewCell.attachmentView];
     }
 }
 
@@ -662,4 +670,165 @@
     [self handleTypingNotification:typing];
 }
 
+
+# pragma mark - Attachment handling
+
+- (void)showAttachmentView:(MXKImageView *)attachment {
+
+    [self dismissKeyboard];
+
+    // Retrieve attachment information
+    NSDictionary *content = attachment.mediaInfo;
+    NSUInteger msgtype = ((NSNumber*)content[@"msgtype"]).unsignedIntValue;
+    if (msgtype == MXKRoomBubbleCellDataTypeImage) {
+        NSString *url = content[@"url"];
+        if (url.length) {
+
+           // Use another MXKImageView that will show the fullscreen image URL in fullscreen
+            highResImageView = [[MXKImageView alloc] initWithFrame:self.view.frame];
+            highResImageView.stretchable = YES;
+            highResImageView.mediaFolder = dataSource.roomId;
+            [highResImageView setImageURL:url withImageOrientation:UIImageOrientationUp andPreviewImage:attachment.image];
+            [highResImageView showFullScreen];
+
+            // Add tap recognizer to hide attachment
+            UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(hideAttachmentView)];
+            [tap setNumberOfTouchesRequired:1];
+            [tap setNumberOfTapsRequired:1];
+            [highResImageView addGestureRecognizer:tap];
+            highResImageView.userInteractionEnabled = YES;
+        }
+    } /*else if (msgtype == RoomMessageTypeVideo) {
+        NSString *url =content[@"url"];
+        if (url.length) {
+            NSString *mimetype = nil;
+            if (content[@"info"]) {
+                mimetype = content[@"info"][@"mimetype"];
+            }
+            AVAudioSessionCategory = [[AVAudioSession sharedInstance] category];
+            [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
+            videoPlayer = [[MPMoviePlayerController alloc] init];
+            if (videoPlayer != nil) {
+                videoPlayer.scalingMode = MPMovieScalingModeAspectFit;
+                [self.view addSubview:videoPlayer.view];
+                [videoPlayer setFullscreen:YES animated:NO];
+                [[NSNotificationCenter defaultCenter] addObserver:self
+                                                         selector:@selector(moviePlayerPlaybackDidFinishNotification:)
+                                                             name:MPMoviePlayerPlaybackDidFinishNotification
+                                                           object:nil];
+                [[NSNotificationCenter defaultCenter] addObserver:self
+                                                         selector:@selector(moviePlayerWillExitFullscreen:)
+                                                             name:MPMoviePlayerWillExitFullscreenNotification
+                                                           object:videoPlayer];
+                selectedVideoURL = url;
+
+                // check if the file is a local one
+                // could happen because a media upload has failed
+                if ([[NSFileManager defaultManager] fileExistsAtPath:selectedVideoURL]) {
+                    selectedVideoCachePath = selectedVideoURL;
+                } else {
+                    selectedVideoCachePath = [MediaManager cachePathForMediaURL:selectedVideoURL andType:mimetype inFolder:self.roomId];
+                }
+
+                if ([[NSFileManager defaultManager] fileExistsAtPath:selectedVideoCachePath]) {
+                    videoPlayer.contentURL = [NSURL fileURLWithPath:selectedVideoCachePath];
+                    [videoPlayer play];
+                } else {
+                    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onMediaDownloadEnd:) name:kMediaDownloadDidFinishNotification object:nil];
+                    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onMediaDownloadEnd:) name:kMediaDownloadDidFailNotification object:nil];
+                    [MediaManager downloadMediaFromURL:selectedVideoURL withType:mimetype inFolder:self.roomId];
+                }
+            }
+        }
+    } else if (msgtype == RoomMessageTypeAudio) {
+    } else if (msgtype == RoomMessageTypeLocation) {
+    }
+       */
+}
+
+/*
+- (void)onMediaDownloadEnd:(NSNotification *)notif {
+    if ([notif.object isKindOfClass:[NSString class]]) {
+        NSString* url = notif.object;
+        if ([url isEqualToString:selectedVideoURL]) {
+            // remove the observers
+            [[NSNotificationCenter defaultCenter] removeObserver:self name:kMediaDownloadDidFinishNotification object:nil];
+            [[NSNotificationCenter defaultCenter] removeObserver:self name:kMediaDownloadDidFailNotification object:nil];
+
+            if ([[NSFileManager defaultManager] fileExistsAtPath:selectedVideoCachePath]) {
+                videoPlayer.contentURL = [NSURL fileURLWithPath:selectedVideoCachePath];
+                [videoPlayer play];
+            } else {
+                NSLog(@"[RoomVC] Video Download failed"); // TODO we should notify user
+                [self hideAttachmentView];
+            }
+        }
+    }
+}
+*/
+- (void)hideAttachmentView {
+    /*
+    selectedVideoURL = nil;
+    selectedVideoCachePath = nil;
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:MPMoviePlayerPlaybackDidFinishNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:MPMoviePlayerWillExitFullscreenNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:kMediaDownloadDidFinishNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:kMediaDownloadDidFailNotification object:nil];
+     */
+
+    [self dismissAttachmentImageViews];
+
+    /*
+    // Restore audio category
+    if (AVAudioSessionCategory) {
+        [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategory error:nil];
+    }
+    if (videoPlayer) {
+        [videoPlayer stop];
+        [videoPlayer setFullscreen:NO];
+        [videoPlayer.view removeFromSuperview];
+        videoPlayer = nil;
+    }
+     */
+}
+/*
+- (void)moviePlayerWillExitFullscreen:(NSNotification*)notification {
+    if (notification.object == videoPlayer) {
+        [self hideAttachmentView];
+    }
+}
+
+- (void)moviePlayerPlaybackDidFinishNotification:(NSNotification *)notification {
+    NSDictionary *notificationUserInfo = [notification userInfo];
+    NSNumber *resultValue = [notificationUserInfo objectForKey:MPMoviePlayerPlaybackDidFinishReasonUserInfoKey];
+    MPMovieFinishReason reason = [resultValue intValue];
+
+    // error cases
+    if (reason == MPMovieFinishReasonPlaybackError) {
+        NSError *mediaPlayerError = [notificationUserInfo objectForKey:@"error"];
+        if (mediaPlayerError) {
+            NSLog(@"[RoomVC] Playback failed with error description: %@", [mediaPlayerError localizedDescription]);
+            [self hideAttachmentView];
+            //Alert user
+            [[AppDelegate theDelegate] showErrorAsAlert:mediaPlayerError];
+        }
+    }
+}
+ */
+
+
+- (void)dismissAttachmentImageViews {
+    /* @TODO
+    if (self.imageValidationView) {
+        [self.imageValidationView dismissSelection];
+        [self.imageValidationView removeFromSuperview];
+        self.imageValidationView = nil;
+    }
+    */
+
+    if (highResImageView) {
+        [highResImageView removeFromSuperview];
+        highResImageView = nil;
+    }
+}
 @end

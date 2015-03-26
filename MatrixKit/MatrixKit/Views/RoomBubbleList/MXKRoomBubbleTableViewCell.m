@@ -127,21 +127,24 @@ NSString *const kMXKRoomBubbleCellTapLocationAttachment = @"kMXKRoomBubbleCellTa
             [self.attachmentView setImageURL:url withImageOrientation:bubbleData.thumbnailOrientation andPreviewImage:preview];
             
             if (url && bubbleData.attachmentURL && bubbleData.attachmentInfo) {
-                // TODO GFO
-//                // Add tap recognizer to open attachment
-//                UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(showAttachmentView:)];
-//                [tap setNumberOfTouchesRequired:1];
-//                [tap setNumberOfTapsRequired:1];
-//                [tap setDelegate:self];
-//                [self.attachmentView addGestureRecognizer:tap];
-//                // Store attachment content description used in showAttachmentView:
-//                self.attachmentView.mediaInfo = @{@"msgtype" : [NSNumber numberWithUnsignedInt:message.messageType],
-//                                                  @"url" : message.attachmentURL,
-//                                                  @"info" : message.attachmentInfo};
+
+                // Add tap recognizer to open attachment
+                UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(onAttachmentTap:)];
+                [tap setNumberOfTouchesRequired:1];
+                [tap setNumberOfTapsRequired:1];
+                [tap setDelegate:self];
+                [self.attachmentView addGestureRecognizer:tap];
+
+                // Store attachment content description used in showAttachmentView:
+                self.attachmentView.mediaInfo = @{
+                                                  @"msgtype" : [NSNumber numberWithUnsignedInt:bubbleData.dataType],
+                                                  @"url" : bubbleData.attachmentURL,
+                                                  @"info" : bubbleData.attachmentInfo
+                                                  };
             }
-            
+
             [self startProgressUI];
-            
+
             // Adjust Attachment width constant
             self.attachViewWidthConstraint.constant = contentSize.width;
             
@@ -406,6 +409,13 @@ NSString *const kMXKRoomBubbleCellTapLocationAttachment = @"kMXKRoomBubbleCellTa
         [delegate cell:self didTapCellAt:kMXKRoomBubbleCellTapLocationAvatar userInfo:@{
                                                                                         @"userId": bubbleData.senderId
                                                                                         }];
+    }
+}
+
+- (IBAction)onAttachmentTap:(UITapGestureRecognizer*)sender {
+    if (delegate) {
+        [delegate cell:self
+          didTapCellAt:kMXKRoomBubbleCellTapLocationAttachment userInfo:nil];
     }
 }
 
