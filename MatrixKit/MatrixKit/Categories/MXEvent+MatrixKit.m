@@ -45,4 +45,15 @@
     return NO;
 }
 
+
+#pragma mark - NSCopying
+- (id)copyWithZone:(NSZone *)zone {
+
+    // Make mxkState survive after a copy
+    MXEvent *eventCopy = [super copyWithZone:zone];
+    [eventCopy setMxkState:self.mxkState];
+
+    return eventCopy;
+}
+
 @end
