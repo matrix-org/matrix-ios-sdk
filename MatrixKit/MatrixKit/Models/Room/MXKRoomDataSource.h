@@ -58,7 +58,7 @@ extern NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier;
     /**
      The data for the cells served by `MXKRoomDataSource`.
      */
-    NSMutableArray *bubbles;    // roomItems??
+    NSMutableArray *bubbles;
 
     /**
      The queue to process room messages.
@@ -129,6 +129,16 @@ extern NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier;
 - (id<MXKRoomBubbleCellDataStoring>)cellDataAtIndex:(NSInteger)index;
 
 /**
+ Get the data for the cell at the given index.
+
+ @param index the index of the cell in the array
+ @return the cell data
+ */
+- (id<MXKRoomBubbleCellDataStoring>)cellDataOfEventWithEventId:(NSString*)eventId;
+
+
+#pragma mark - Pagination
+/**
  Load more messages from the history.
  
  @param numItems the number of items to get.
@@ -146,4 +156,20 @@ extern NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier;
  */
 - (void)paginateBackMessagesToFillRect:(CGRect)rect success:(void (^)())success failure:(void (^)(NSError *error))failure;
 
+
+#pragma mark - Sending
+/**
+ Send a text message to the room.
+ 
+ While sending, a fake event will be echoed in the messages list.
+ Once complete, this local echo will be replaced by the event saved by the homeserver.
+
+ @param text the text to send.
+ @param success A block object called when the operation succeeds. It returns
+                the event id of the event generated on the home server
+ @param failure A block object called when the operation fails.
+ */
+- (void)sendTextMessage:(NSString*)text
+                success:(void (^)(NSString *eventId))success
+                failure:(void (^)(NSError *error))failure;
 @end

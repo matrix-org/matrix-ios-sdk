@@ -113,6 +113,8 @@ NSString *const kMXKEventFormatterUnsupportedEventDescriptionPrefix = @"Unsuppor
     return senderAvatarUrl;
 }
 
+
+#pragma mark - Events to strings conversion methods
 - (NSString*)stringFromEvent:(MXEvent*)event withRoomState:(MXRoomState*)roomState error:(MXKEventFormatterError*)error {
 
     // Check we can output the error
@@ -488,9 +490,30 @@ NSString *const kMXKEventFormatterUnsupportedEventDescriptionPrefix = @"Unsuppor
              };
 }
 
+
+#pragma mark - Fake event objects creation
+- (MXEvent*)fakeRoomMessageEventForRoomId:(NSString*)roomId withEventId:(NSString*)eventId andContent:(NSDictionary*)content {
+
+    if (!eventId) {
+        eventId = [[NSProcessInfo processInfo] globallyUniqueString];
+    }
+
+    MXEvent *event = [[MXEvent alloc] init];
+    event.roomId = roomId;
+    event.eventId = eventId;
+    event.type = kMXEventTypeStringRoomMessage;
+    event.originServerTs = (uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000);
+    event.userId = mxSession.matrixRestClient.credentials.userId;
+    event.content = content;
+
+    return event;
+}
+
+
+#pragma mark - Timestamp formatting
 - (NSString*)dateStringForTimestamp:(uint64_t)timestamp {
 
-    NSDate *date = [NSDate dateWithTimeIntervalSince1970:timestamp/1000];
+    NSDate *date = [NSDate dateWithTimeIntervalSince1970:timestamp / 1000];
     return [_dateFormatter stringFromDate:date];
 }
 

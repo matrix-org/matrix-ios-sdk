@@ -107,7 +107,7 @@
 
 #pragma mark - Public methods
 /**
- Create a new `MXKCellData` object for a new bubble cell.
+ Create a new `MXKRoomBubbleCellDataStoring` object for a new bubble cell.
  
  @param event the event to be displayed in the cell.
  @param roomState the room state when the event occured.
@@ -115,6 +115,22 @@
  @return the newly created instance.
  */
 - (instancetype)initWithEvent:(MXEvent*)event andRoomState:(MXRoomState*)roomState andRoomDataSource:(MXKRoomDataSource*)roomDataSource;
+
+/**
+Update the event because its mxkState changed or it is has been redacted.
+ 
+ @param eventId the id of the event to change.
+ @param the new event data
+ */
+- (void)updateEvent:(NSString*)eventId withEvent:(MXEvent*)event;
+
+/**
+ Reomve the event from the `MXKRoomBubbleCellDataStoring` object.
+
+ @param eventId the id of the event to remove.
+ @return the number of events still hosting by the object after the removal
+ */
+- (NSUInteger)removeEvent:(NSString*)eventId;
 
 @optional
 /**

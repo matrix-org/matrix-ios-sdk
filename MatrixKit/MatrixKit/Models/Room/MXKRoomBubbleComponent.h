@@ -63,6 +63,13 @@
  */
 - (instancetype)initWithEvent:(MXEvent*)event andRoomState:(MXRoomState*)roomState andEventFormatter:(MXKEventFormatter*)eventFormatter;
 
-- (void)updateWithRedactedEvent:(MXEvent*)redactedEvent;
+/**
+ Update the event because its mxkState changed or it is has been redacted.
+
+ @see [MXKRoomBubbleCellDataStoring updateWithEvent:].
+
+ @param event the new event data.
+ */
+- (void)updateWithEvent:(MXEvent*)event;
 
 @end

@@ -100,6 +100,8 @@ typedef enum : NSUInteger {
  */
 - (NSString*)thumbnailURLForContent:(NSString*)contentURI inViewSize:(CGSize)viewSize withMethod:(MXThumbnailingMethod)thumbnailingMethod;
 
+
+#pragma mark - Events to strings conversion methods
 /**
  Compose the event sender display name according to the current room state.
  
@@ -136,6 +138,12 @@ typedef enum : NSUInteger {
  */
 - (NSDictionary*)stringAttributesForEvent:(MXEvent*)event;
 
+
+#pragma mark - Fake event objects creation
+- (MXEvent*)fakeRoomMessageEventForRoomId:(NSString*)roomId withEventId:(NSString*)eventId andContent:(NSDictionary*)content;
+
+
+#pragma mark - Timestamp formatting
 /**
  Generate the date in string format corresponding to the timestamp.
  The returned string is localised according to the current device settings.

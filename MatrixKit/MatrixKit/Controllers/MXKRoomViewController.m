@@ -434,15 +434,9 @@
 }
 
 - (void)sendTextMessage:(NSString*)msgTxt {
-    MXMessageType msgType = kMXMessageTypeText;
-    // Check whether the message is an emote
-    if ([msgTxt hasPrefix:@"/me "]) {
-        msgType = kMXMessageTypeEmote;
-        // Remove "/me " string
-        msgTxt = [msgTxt substringFromIndex:4];
-    }
-    
-    [self sendMessage:@{@"msgtype":msgType, @"body":msgTxt} withLocalEvent:nil];
+
+    // Let the datasource send it and manage the local echo
+    [dataSource sendTextMessage:msgTxt success:nil failure:nil];
 }
 
 - (MXEvent*)createLocalEchoEventWithoutContent {

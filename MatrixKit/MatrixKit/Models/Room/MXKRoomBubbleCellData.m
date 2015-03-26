@@ -132,6 +132,32 @@
     bubbleComponents = nil;
 }
 
+- (void)updateEvent:(NSString *)eventId withEvent:(MXEvent *)event {
+
+    // Retrieve the component storing the event and update it
+    for (MXKRoomBubbleComponent *roomBubbleComponent in bubbleComponents) {
+
+        if ([roomBubbleComponent.event.eventId isEqualToString:eventId]) {
+
+            [roomBubbleComponent updateWithEvent:event];
+            break;
+        }
+    }
+}
+
+- (NSUInteger)removeEvent:(NSString *)eventId {
+
+    for (MXKRoomBubbleComponent *roomBubbleComponent in bubbleComponents) {
+        
+        if ([roomBubbleComponent.event.eventId isEqualToString:eventId]) {
+
+            [bubbleComponents removeObject:roomBubbleComponent];
+            break;
+        }
+    }
+    return bubbleComponents.count;
+}
+
 - (void)prepareBubbleComponentsPosition {
     // Consider here only the first component if any
     if (bubbleComponents.count) {

@@ -68,12 +68,23 @@
 - (void)dealloc {
 }
 
-- (void)updateWithRedactedEvent:(MXEvent*)redactedEvent {
-    
-    // Build text component related to this event (Note: we don't have valid room state here, userId will be used as display name)
-    MXKEventFormatterError error;
-    _textMessage = [_eventFormatter stringFromEvent:redactedEvent withRoomState:nil error:&error];
-    _event = redactedEvent;
+- (void)updateWithEvent:(MXEvent*)event {
+
+    // Report the new event
+    _event = event;
+
+    // Reseting `attributedTextMessage` is enough to take into account the new event state
+    // as it is only a font color change, there is no need to update `textMessage`
+    // (Actually, we are unable to recompute `textMessage` as we do not have the room state)
+    _attributedTextMessage = nil;
+
+    // Do more thing to manage redaction case
+    if (_event.isRedactedEvent) {
+
+        // Build text component related to this event (Note: we don't have valid room state here, userId will be used as display name)
+        MXKEventFormatterError error;
+        _textMessage = [_eventFormatter stringFromEvent:event withRoomState:nil error:&error];
+    }
 }
 
 - (NSAttributedString*)attributedTextMessage {

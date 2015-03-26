@@ -45,6 +45,11 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
      `pendingPaginationRequestBlock` stores the request to execute it once MXRoom is ready.
      */
     void (^pendingPaginationRequestBlock)(void);
+
+    /**
+     Mapping between events ids and bubbles.
+     */
+    NSMutableDictionary *eventIdToBubbleMap;
 }
 
 @end
@@ -59,6 +64,7 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
         processingQueue = dispatch_queue_create("MXKRoomDataSource", DISPATCH_QUEUE_SERIAL);
         bubbles = [NSMutableArray array];
         eventsToProcess = [NSMutableArray array];
+        eventIdToBubbleMap = [NSMutableDictionary dictionary];
         
         // Set default data and view classes
         // Cell data
@@ -146,6 +152,7 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
 
 #pragma mark - Public methods
 - (id<MXKRoomBubbleCellDataStoring>)cellDataAtIndex:(NSInteger)index {
+
     id<MXKRoomBubbleCellDataStoring> bubbleData;
     @synchronized(bubbles) {
         bubbleData = bubbles[index];
@@ -153,6 +160,17 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
     return bubbleData;
 }
 
+-(id<MXKRoomBubbleCellDataStoring>)cellDataOfEventWithEventId:(NSString *)eventId {
+
+    id<MXKRoomBubbleCellDataStoring> bubbleData;
+    @synchronized(eventIdToBubbleMap) {
+        bubbleData = eventIdToBubbleMap[eventId];
+    }
+    return bubbleData;
+}
+
+
+#pragma mark - Pagination
 - (void)paginateBackMessages:(NSUInteger)numItems success:(void (^)())success failure:(void (^)(NSError *error))failure {
 
     NSAssert(nil == pendingPaginationRequestBlock, @"paginateBackMessages cannot be called while a paginate request is pending");
@@ -196,13 +214,91 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
 
 - (void)paginateBackMessagesToFillRect:(CGRect)rect success:(void (^)())success failure:(void (^)(NSError *error))failure {
 
-    NSAssert(nil == pendingPaginationRequestBlock, @"paginateBackMessages cannot be called while a paginate request is pending");
+    NSAssert(nil == pendingPaginationRequestBlock, @"paginateBackMessages cannot be called while a paginate request is processing");
 
     [self paginateBackMessages:10 success:success failure:failure];
 }
 
 
-#pragma mark - Events processing
+#pragma mark - Sending
+- (void)sendTextMessage:(NSString *)text success:(void (^)(NSString *))success failure:(void (^)(NSError *))failure {
+
+    MXMessageType msgType = kMXMessageTypeText;
+
+    // Check whether the message is an emote
+    if ([text hasPrefix:@"/me "]) {
+        msgType = kMXMessageTypeEmote;
+
+        // Remove "/me " string
+        text = [text substringFromIndex:4];
+    }
+
+    // Prepare the message content
+    NSDictionary *msgContent = @{
+                                 @"msgtype": msgType,
+                                 @"body": text
+                                 };
+
+    MXEvent *localEcho = [_eventFormatter fakeRoomMessageEventForRoomId:_roomId withEventId:nil andContent:msgContent];
+    localEcho.mxkState = MXKEventStateSending;
+
+    [self queueEventForProcessing:localEcho withRoomState:_room.state direction:MXEventDirectionForwards];
+    [self processQueuedEvents:nil];
+
+    // And send it
+    [_room sendMessageOfType:msgType content:msgContent success:^(NSString *eventId) {
+
+        // @TODO: Remove the echo here
+        // Must be removed once the event comes from the event stream
+
+        // Update the cell data
+        id<MXKRoomBubbleCellDataStoring> bubbleData = [self cellDataOfEventWithEventId:localEcho.eventId];
+        NSUInteger remainingEvents = [bubbleData removeEvent:localEcho.eventId];
+
+        // Remove the broken link from the map
+        @synchronized (eventIdToBubbleMap) {
+            [eventIdToBubbleMap removeObjectForKey:localEcho.eventId];
+        }
+
+        // If there is no more events, kill the bubble
+        if (0 == remainingEvents) {
+            [self removeCellData:bubbleData];
+        }
+
+        // Update the delegate
+        if (self.delegate) {
+            [self.delegate dataSource:self didChange:nil];
+        }
+
+    } failure:^(NSError *error) {
+
+        // Update the event with the error state
+        localEcho.mxkState = MXKEventStateSendingFailed;
+
+        id<MXKRoomBubbleCellDataStoring> bubbleData = [self cellDataOfEventWithEventId:localEcho.eventId];
+
+        // Update the cell data
+        [bubbleData updateEvent:localEcho.eventId withEvent:localEcho];
+
+        // and the delegate
+        if (self.delegate) {
+            [self.delegate dataSource:self didChange:nil];
+        }
+    }];
+}
+
+
+#pragma mark - Private methods
+- (void)removeCellData:(id<MXKRoomBubbleCellDataStoring>)cellData {
+
+    @synchronized(bubbles) {
+        [bubbles removeObject:cellData];
+    }
+}
+
+
+
+#pragma mark - Asynchronous events processing
 /**
  Queue an event in order to process its display later.
 
@@ -250,10 +346,10 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
             NSAssert([class conformsToProtocol:@protocol(MXKRoomBubbleCellDataStoring)], @"MXKRoomDataSource only manages MXKCellData that conforms to MXKRoomBubbleCellDataStoring protocol");
 
             BOOL eventManaged = NO;
+            id<MXKRoomBubbleCellDataStoring> bubbleData;
             if ([class instancesRespondToSelector:@selector(addEvent:andRoomState:)] && 0 < bubblesSnapshot.count) {
 
                 // Try to concatenate the event to the last or the oldest bubble?
-                id<MXKRoomBubbleCellDataStoring> bubbleData;
                 if (queuedEvent.direction == MXEventDirectionBackwards) {
                     bubbleData = bubblesSnapshot.firstObject;
                 }
@@ -265,18 +361,24 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
             }
 
             if (NO == eventManaged) {
+
                 // The event has not been concatenated to an existing cell, create a new bubble for this event
-                id<MXKRoomBubbleCellDataStoring> bubble = [[class alloc] initWithEvent:queuedEvent.event andRoomState:queuedEvent.state andRoomDataSource:self];
+                bubbleData = [[class alloc] initWithEvent:queuedEvent.event andRoomState:queuedEvent.state andRoomDataSource:self];
                 if (queuedEvent.direction == MXEventDirectionBackwards) {
-                    [bubblesSnapshot insertObject:bubble atIndex:0];
+                    [bubblesSnapshot insertObject:bubbleData atIndex:0];
                 }
                 else {
-                    [bubblesSnapshot addObject:bubble];
+                    [bubblesSnapshot addObject:bubbleData];
                 }
             }
 
+            // Store event-bubble link to the map
+            @synchronized (eventIdToBubbleMap) {
+                eventIdToBubbleMap[queuedEvent.event.eventId] = bubbleData;
+            }
+
             // The event can be now unqueued
-            @synchronized(eventsToProcess) {
+            @synchronized (eventsToProcess) {
                 [eventsToProcess removeObject:queuedEvent];
             }
         }
