@@ -16,7 +16,6 @@
 
 #import "MXKImageView.h"
 #import "MXKMediaManager.h"
-#import "AppDelegate.h"
 #import "MXKPieChartView.h"
 
 @interface MXKImageView () {
