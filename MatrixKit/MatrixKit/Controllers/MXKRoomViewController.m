@@ -19,6 +19,8 @@
 
 #import "MXKRoomViewController.h"
 
+#import <MediaPlayer/MediaPlayer.h>
+
 #import "MXKRoomBubbleTableViewCell.h"
 #import "MXKImageView.h"
 
@@ -53,10 +55,13 @@
      */
     NSTimer* typingTimer;
 
-    /**
-     Fullscreen view of attachment image
-     */
-    MXKImageView* highResImageView;
+    // Attachment handling
+    MXKImageView *highResImageView;
+    NSString *AVAudioSessionCategory;
+    MPMoviePlayerController *videoPlayer;
+    MPMoviePlayerController *tmpVideoPlayer;
+    NSString *selectedVideoURL;
+    NSString *selectedVideoCachePath;
 }
 
 @property (nonatomic) IBOutlet UITableView *tableView;
@@ -698,7 +703,7 @@
             [highResImageView addGestureRecognizer:tap];
             highResImageView.userInteractionEnabled = YES;
         }
-    } /*else if (msgtype == RoomMessageTypeVideo) {
+    } else if (msgtype == MXKRoomBubbleCellDataTypeVideo) {
         NSString *url =content[@"url"];
         if (url.length) {
             NSString *mimetype = nil;
@@ -727,33 +732,33 @@
                 if ([[NSFileManager defaultManager] fileExistsAtPath:selectedVideoURL]) {
                     selectedVideoCachePath = selectedVideoURL;
                 } else {
-                    selectedVideoCachePath = [MediaManager cachePathForMediaURL:selectedVideoURL andType:mimetype inFolder:self.roomId];
+                    selectedVideoCachePath = [MXKMediaManager cachePathForMediaWithURL:selectedVideoURL andType:mimetype inFolder:dataSource.roomId];
                 }
 
                 if ([[NSFileManager defaultManager] fileExistsAtPath:selectedVideoCachePath]) {
                     videoPlayer.contentURL = [NSURL fileURLWithPath:selectedVideoCachePath];
                     [videoPlayer play];
                 } else {
-                    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onMediaDownloadEnd:) name:kMediaDownloadDidFinishNotification object:nil];
-                    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onMediaDownloadEnd:) name:kMediaDownloadDidFailNotification object:nil];
-                    [MediaManager downloadMediaFromURL:selectedVideoURL withType:mimetype inFolder:self.roomId];
+                    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onMediaDownloadEnd:) name:kMXKMediaDownloadDidFinishNotification object:nil];
+                    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onMediaDownloadEnd:) name:kMXKMediaDownloadDidFailNotification object:nil];
+
+                    NSString *localFilePath = [MXKMediaManager cachePathForMediaWithURL:selectedVideoURL andType:mimetype inFolder:dataSource.roomId];
+                    [MXKMediaManager downloadMediaFromURL:selectedVideoURL andSaveAtFilePath:localFilePath];
                 }
             }
         }
-    } else if (msgtype == RoomMessageTypeAudio) {
-    } else if (msgtype == RoomMessageTypeLocation) {
+    } else if (msgtype == MXKRoomBubbleCellDataTypeAudio) {
+    } else if (msgtype == MXKRoomBubbleCellDataTypeLocation) {
     }
-       */
 }
 
-/*
 - (void)onMediaDownloadEnd:(NSNotification *)notif {
     if ([notif.object isKindOfClass:[NSString class]]) {
         NSString* url = notif.object;
         if ([url isEqualToString:selectedVideoURL]) {
             // remove the observers
-            [[NSNotificationCenter defaultCenter] removeObserver:self name:kMediaDownloadDidFinishNotification object:nil];
-            [[NSNotificationCenter defaultCenter] removeObserver:self name:kMediaDownloadDidFailNotification object:nil];
+            [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXKMediaDownloadDidFinishNotification object:nil];
+            [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXKMediaDownloadDidFailNotification object:nil];
 
             if ([[NSFileManager defaultManager] fileExistsAtPath:selectedVideoCachePath]) {
                 videoPlayer.contentURL = [NSURL fileURLWithPath:selectedVideoCachePath];
@@ -765,20 +770,18 @@
         }
     }
 }
-*/
+
 - (void)hideAttachmentView {
-    /*
+
     selectedVideoURL = nil;
     selectedVideoCachePath = nil;
     [[NSNotificationCenter defaultCenter] removeObserver:self name:MPMoviePlayerPlaybackDidFinishNotification object:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:MPMoviePlayerWillExitFullscreenNotification object:nil];
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:kMediaDownloadDidFinishNotification object:nil];
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:kMediaDownloadDidFailNotification object:nil];
-     */
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXKMediaDownloadDidFinishNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXKMediaDownloadDidFailNotification object:nil];
 
     [self dismissAttachmentImageViews];
 
-    /*
     // Restore audio category
     if (AVAudioSessionCategory) {
         [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategory error:nil];
@@ -789,9 +792,8 @@
         [videoPlayer.view removeFromSuperview];
         videoPlayer = nil;
     }
-     */
 }
-/*
+
 - (void)moviePlayerWillExitFullscreen:(NSNotification*)notification {
     if (notification.object == videoPlayer) {
         [self hideAttachmentView];
@@ -810,11 +812,10 @@
             NSLog(@"[RoomVC] Playback failed with error description: %@", [mediaPlayerError localizedDescription]);
             [self hideAttachmentView];
             //Alert user
-            [[AppDelegate theDelegate] showErrorAsAlert:mediaPlayerError];
+            // @TODO [[AppDelegate theDelegate] showErrorAsAlert:mediaPlayerError];
         }
     }
 }
- */
 
 
 - (void)dismissAttachmentImageViews {
