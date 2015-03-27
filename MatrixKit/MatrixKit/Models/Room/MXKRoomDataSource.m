@@ -289,7 +289,9 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
         localEcho.mxkState = MXKEventStateSendingFailed;
 
         id<MXKRoomBubbleCellDataStoring> bubbleData = [self cellDataOfEventWithEventId:localEcho.eventId];
-        [bubbleData updateEvent:localEcho.eventId withEvent:localEcho];
+        @synchronized (bubbleData) {
+            [bubbleData updateEvent:localEcho.eventId withEvent:localEcho];
+        }
 
         // Inform the delegate
         if (self.delegate) {
@@ -304,7 +306,11 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
 
     // Remove the event from the cell data
     id<MXKRoomBubbleCellDataStoring> bubbleData = [self cellDataOfEventWithEventId:localEchoEvent.eventId];
-    NSUInteger remainingEvents = [bubbleData removeEvent:localEchoEvent.eventId];
+
+    NSUInteger remainingEvents;
+    @synchronized (bubbleData) {
+        remainingEvents = [bubbleData removeEvent:localEchoEvent.eventId];
+    }
 
     // Remove the broken link from the map
     @synchronized (eventIdToBubbleMap) {
@@ -389,7 +395,9 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
                     bubbleData = bubblesSnapshot.lastObject;
                 }
 
-                eventManaged = [bubbleData addEvent:queuedEvent.event andRoomState:queuedEvent.state];
+                @synchronized (bubbleData) {
+                    eventManaged = [bubbleData addEvent:queuedEvent.event andRoomState:queuedEvent.state];
+                }
             }
 
             if (NO == eventManaged) {
