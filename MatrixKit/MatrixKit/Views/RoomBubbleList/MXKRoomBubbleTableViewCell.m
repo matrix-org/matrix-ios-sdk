@@ -21,6 +21,12 @@ NSString *const kMXKRoomBubbleCellTapLocationAvatar = @"kMXKRoomBubbleCellTapLoc
 NSString *const kMXKRoomBubbleCellTapLocationDate = @"kMXKRoomBubbleCellTapLocationDate";
 NSString *const kMXKRoomBubbleCellTapLocationAttachment = @"kMXKRoomBubbleCellTapLocationAttachment";
 
+NSString *const kMXKRoomBubbleCellLongPressOnEvent = @"kMXKRoomBubbleCellLongPressOnEvent";
+NSString *const kMXKRoomBubbleCellLongPressOnProgressView = @"kMXKRoomBubbleCellLongPressOnProgressView";
+
+NSString *const kMXKRoomBubbleCellUserIdKey = @"kMXKRoomBubbleCellUserIdKey";
+NSString *const kMXKRoomBubbleCellEventKey = @"kMXKRoomBubbleCellEventKey";
+
 
 #pragma mark - UI Constant definitions
 #define MXKROOMBUBBLETABLEVIEWCELL_TEXTVIEW_LEADING_AND_TRAILING_CONSTRAINT_TO_SUPERVIEW 120 // (51 + 69)
@@ -148,15 +154,12 @@ NSString *const kMXKRoomBubbleCellTapLocationAttachment = @"kMXKRoomBubbleCellTa
             // Adjust Attachment width constant
             self.attachViewWidthConstraint.constant = contentSize.width;
             
-//            // Add a long gesture recognizer on attachment view in order to display event details
-//            UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(onLongPressGesture:)];
-//            self.attachmentView.tag = 2;// TODO GFO ROOM_MESSAGE_CELL_ATTACHMENTVIEW_TAG;
-//            [self.attachmentView addGestureRecognizer:longPress];
-//            // Add another long gesture recognizer on progressView to cancel the current operation (Note: only the download can be cancelled).
-//            // Note2: It is not possible to manage this gesture recognizer from the storyboard -> The gesture view is always the same i.e. the latest composed one.
-//            longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(onLongPressGesture:)];
-//            self.progressView.tag = 3;// TODO GFO ROOM_MESSAGE_CELL_PROGRESSVIEW_TAG;
-//            [self.progressView addGestureRecognizer:longPress];
+            // Add a long gesture recognizer on attachment view in order to display event details
+            UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(onLongPressGesture:)];
+            [self.attachmentView addGestureRecognizer:longPress];
+            // Add another long gesture recognizer on progressView to cancel the current operation (Note: only the download can be cancelled).
+            longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(onLongPressGesture:)];
+            [self.progressView addGestureRecognizer:longPress];
         } else {
             self.attachmentView.hidden = YES;
             self.playIconView.hidden = YES;
@@ -168,10 +171,9 @@ NSString *const kMXKRoomBubbleCellTapLocationAttachment = @"kMXKRoomBubbleCellTa
             }
             self.messageTextView.attributedText = bubbleData.attributedTextMessage;
             
-//            // Add a long gesture recognizer on text view in order to display event details
-//            UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(onLongPressGesture:)];
-//            self.messageTextView.tag = 1;// TODO GFO ROOM_MESSAGE_CELL_TEXTVIEW_TAG;
-//            [self.messageTextView addGestureRecognizer:longPress];
+            // Add a long gesture recognizer on text view in order to display event details
+            UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(onLongPressGesture:)];
+            [self.messageTextView addGestureRecognizer:longPress];
         }
         
         // Handle timestamp display
@@ -406,9 +408,7 @@ NSString *const kMXKRoomBubbleCellTapLocationAttachment = @"kMXKRoomBubbleCellTa
 #pragma mark - User actions
 - (IBAction)onAvatarTap:(UITapGestureRecognizer*)sender {
     if (delegate) {
-        [delegate cell:self didTapCellAt:kMXKRoomBubbleCellTapLocationAvatar userInfo:@{
-                                                                                        @"userId": bubbleData.senderId
-                                                                                        }];
+        [delegate cell:self didTapCellAt:kMXKRoomBubbleCellTapLocationAvatar userInfo:@{kMXKRoomBubbleCellUserIdKey: bubbleData.senderId}];
     }
 }
 
@@ -422,6 +422,40 @@ NSString *const kMXKRoomBubbleCellTapLocationAttachment = @"kMXKRoomBubbleCellTa
 - (IBAction)showHideDateTime:(id)sender {
     if (delegate) {
         [delegate cell:self didTapCellAt:kMXKRoomBubbleCellTapLocationDate userInfo:nil];
+    }
+}
+
+- (IBAction)onLongPressGesture:(UILongPressGestureRecognizer*)longPressGestureRecognizer {
+    if (longPressGestureRecognizer.state == UIGestureRecognizerStateBegan && delegate) {
+        UIView* view = longPressGestureRecognizer.view;
+        
+        // Check the view on which long press has been detected
+        if (view == self.progressView) {
+            [delegate cell:self didTapCellAt:kMXKRoomBubbleCellLongPressOnProgressView userInfo:nil];
+        }
+        else if (view == self.messageTextView || view == self.attachmentView) {
+            MXEvent *selectedEvent = nil;
+            if (bubbleData.bubbleComponents.count == 1) {
+                MXKRoomBubbleComponent *component = [bubbleData.bubbleComponents firstObject];
+                selectedEvent = component.event;
+            } else if (bubbleData.bubbleComponents.count) {
+                // Here the selected view is a textView (attachment has no more than one component)
+                
+                // Look for the selected component
+                CGPoint longPressPoint = [longPressGestureRecognizer locationInView:view];
+                [bubbleData prepareBubbleComponentsPosition];
+                for (MXKRoomBubbleComponent *component in bubbleData.bubbleComponents) {
+                    if (longPressPoint.y < component.position.y) {
+                        break;
+                    }
+                    selectedEvent = component.event;
+                }
+            }
+            
+            if (selectedEvent) {
+                [delegate cell:self didTapCellAt:kMXKRoomBubbleCellLongPressOnEvent userInfo:@{kMXKRoomBubbleCellEventKey:selectedEvent}];
+            }
+        }
     }
 }
 

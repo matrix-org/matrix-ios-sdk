@@ -184,6 +184,11 @@
     self.rightInputToolbarButton.enabled = textMessage.length;
 }
 
+- (void)setPlaceholder:(NSString *)inPlaceholder {
+
+    _placeholder = inPlaceholder;
+}
+
 - (void)dismissKeyboard {
     
     if (_defaultMessageComposerTextView) {

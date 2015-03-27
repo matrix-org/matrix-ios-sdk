@@ -164,6 +164,12 @@
 @property NSString *textMessage;
 
 /**
+ The string that should be displayed when there is no other text in message composer.
+ This property may be ignored when message composer does not support placeholder display.
+ */
+@property (nonatomic) NSString *placeholder;
+
+/**
  The custom accessory view associated with the message composer. This view is
  actually used to retrieve the keyboard view. Indeed the keyboard view is the superview of
  the accessory view when the message composer become the first responder.

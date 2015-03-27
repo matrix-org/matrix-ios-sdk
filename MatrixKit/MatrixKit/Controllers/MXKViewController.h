@@ -16,7 +16,7 @@
 
 #import <UIKit/UIKit.h>
 
-#import "MatrixSDK.h"
+#import <MatrixSDK/MatrixSDK.h>
 
 /**
  Posted when the user starts shaking the device on this view controller.

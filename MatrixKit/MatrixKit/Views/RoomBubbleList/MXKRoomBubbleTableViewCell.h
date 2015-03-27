@@ -26,10 +26,9 @@
 
 #pragma mark - MXKCellRenderingDelegate cell tap locations
 /**
- Location identifier used when the user tapped the avar.
+ Location identifier used when the user tapped the avatar.
  
- The `userInfo` dictionary contains:
-    - userId: the user id of the tapped avatar
+ The `userInfo` dictionary contains an `NSString` object under the `kMXKRoomBubbleCellUserIdKey` key, representing the user id of the tapped avatar.
  */
 extern NSString *const kMXKRoomBubbleCellTapLocationAvatar;
 
@@ -47,6 +46,25 @@ extern NSString *const kMXKRoomBubbleCellTapLocationDate;
  */
 extern NSString *const kMXKRoomBubbleCellTapLocationAttachment;
 
+/**
+ Location identifier used when the user long pressed on a displayed event.
+ 
+ The `userInfo` dictionary contains an `MXEvent` object under the `kMXKRoomBubbleCellEventKey` key, representing the selected event.
+ */
+extern NSString *const kMXKRoomBubbleCellLongPressOnEvent;
+
+/**
+ Location identifier used when the user long pressed on progress view.
+ 
+ The `userInfo` is nil. The progress view can be retrieve via MXKRoomBubbleTableViewCell.progressView.
+ */
+extern NSString *const kMXKRoomBubbleCellLongPressOnProgressView;
+
+/**
+ Notifications `userInfo` keys
+ */
+extern NSString *const kMXKRoomBubbleCellUserIdKey;
+extern NSString *const kMXKRoomBubbleCellEventKey;
 
 #pragma mark - MXKRoomBubbleTableViewCell
 /**

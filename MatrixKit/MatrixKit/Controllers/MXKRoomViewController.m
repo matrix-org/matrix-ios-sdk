@@ -23,6 +23,16 @@
 
 #import "MXKRoomBubbleTableViewCell.h"
 #import "MXKImageView.h"
+#import "MXKEventDetailsView.h"
+
+NSString *const kCmdChangeDisplayName = @"/nick";
+NSString *const kCmdEmote = @"/me";
+NSString *const kCmdJoinRoom = @"/join";
+NSString *const kCmdKickUser = @"/kick";
+NSString *const kCmdBanUser = @"/ban";
+NSString *const kCmdUnbanUser = @"/unban";
+NSString *const kCmdSetUserPowerLevel = @"/op";
+NSString *const kCmdResetUserPowerLevel = @"/deop";
 
 @interface MXKRoomViewController () {
     /**
@@ -31,9 +41,19 @@
     MXKRoomDataSource *dataSource;
     
     /**
-     The input toolbar view
+     The input toolbar view.
      */
     MXKRoomInputToolbarView *inputToolbarView;
+    
+    /**
+     Potential event details view.
+     */
+    MXKEventDetailsView *eventDetailsView;
+    
+    /**
+     Current alert (if any).
+     */
+    MXKAlert *currentAlert;
     
     /**
      The keyboard view set when keyboard display animation is complete. This field is nil when keyboard is dismissed.
@@ -72,6 +92,7 @@
 @end
 
 @implementation MXKRoomViewController
+@synthesize dataSource, inputToolbarView;
 
 #pragma mark - Class methods
 
@@ -128,6 +149,16 @@
     _tableView.delegate = nil;
     _tableView = nil;
     dataSource = nil;
+    
+    if (currentAlert) {
+        [currentAlert dismiss:NO];
+        currentAlert = nil;
+    }
+    
+    if (eventDetailsView) {
+        [eventDetailsView removeFromSuperview];
+        eventDetailsView = nil;
+    }
 }
 
 - (void)didReceiveMemoryWarning {
@@ -433,6 +464,173 @@
     }
 }
 
+- (BOOL)isIRCStyleCommand:(NSString*)string {
+    
+    // Check whether the provided text may be an IRC-style command
+    if ([string hasPrefix:@"/"] == NO || [string hasPrefix:@"//"] == YES) {
+        return NO;
+    }
+    
+    // Parse command line
+    NSArray *components = [string componentsSeparatedByString:@" "];
+    NSString *cmd = [components objectAtIndex:0];
+    NSUInteger index = 1;
+    
+    if ([cmd isEqualToString:kCmdEmote]) {
+        // send message as an emote
+        [self sendTextMessage:string];
+    } else if ([string hasPrefix:kCmdChangeDisplayName]) {
+        // Change display name
+        NSString *displayName = [string substringFromIndex:kCmdChangeDisplayName.length + 1];
+        // Remove white space from both ends
+        displayName = [displayName stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+        
+        if (displayName.length) {
+            [dataSource.mxSession.matrixRestClient setDisplayName:displayName success:^{
+            } failure:^(NSError *error) {
+                NSLog(@"[MXKRoomVC] Set displayName failed: %@", error);
+                // TODO Alert user
+//                [[AppDelegate theDelegate] showErrorAsAlert:error];
+            }];
+        } else {
+            // Display cmd usage in text input as placeholder
+            inputToolbarView.placeholder = @"Usage: /nick <display_name>";
+        }
+    } else if ([string hasPrefix:kCmdJoinRoom]) {
+        // Join a room
+        NSString *roomAlias = [string substringFromIndex:kCmdJoinRoom.length + 1];
+        // Remove white space from both ends
+        roomAlias = [roomAlias stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+        
+        // Check
+        if (roomAlias.length) {
+            [dataSource.mxSession joinRoom:roomAlias success:^(MXRoom *room) {
+                // Do nothing by default when we succeed to join the room
+            } failure:^(NSError *error) {
+                NSLog(@"[MXKRoomVC] Join roomAlias (%@) failed: %@", roomAlias, error);
+                // TODO Alert user
+//                [[AppDelegate theDelegate] showErrorAsAlert:error];
+            }];
+        } else {
+            // Display cmd usage in text input as placeholder
+            inputToolbarView.placeholder = @"Usage: /join <room_alias>";
+        }
+    } else {
+        // Retrieve userId
+        NSString *userId = nil;
+        while (index < components.count) {
+            userId = [components objectAtIndex:index++];
+            if (userId.length) {
+                // done
+                break;
+            }
+            // reset
+            userId = nil;
+        }
+        
+        if ([cmd isEqualToString:kCmdKickUser]) {
+            if (userId) {
+                // Retrieve potential reason
+                NSString *reason = nil;
+                while (index < components.count) {
+                    if (reason) {
+                        reason = [NSString stringWithFormat:@"%@ %@", reason, [components objectAtIndex:index++]];
+                    } else {
+                        reason = [components objectAtIndex:index++];
+                    }
+                }
+                // Kick the user
+                [dataSource.room kickUser:userId reason:reason success:^{
+                } failure:^(NSError *error) {
+                    NSLog(@"[MXKRoomVC] Kick user (%@) failed: %@", userId, error);
+                    // TODO Alert user
+//                    [[AppDelegate theDelegate] showErrorAsAlert:error];
+                }];
+            } else {
+                // Display cmd usage in text input as placeholder
+                inputToolbarView.placeholder = @"Usage: /kick <userId> [<reason>]";
+            }
+        } else if ([cmd isEqualToString:kCmdBanUser]) {
+            if (userId) {
+                // Retrieve potential reason
+                NSString *reason = nil;
+                while (index < components.count) {
+                    if (reason) {
+                        reason = [NSString stringWithFormat:@"%@ %@", reason, [components objectAtIndex:index++]];
+                    } else {
+                        reason = [components objectAtIndex:index++];
+                    }
+                }
+                // Ban the user
+                [dataSource.room banUser:userId reason:reason success:^{
+                } failure:^(NSError *error) {
+                    NSLog(@"[MXKRoomVC] Ban user (%@) failed: %@", userId, error);
+                    // TODO Alert user
+//                    [[AppDelegate theDelegate] showErrorAsAlert:error];
+                }];
+            } else {
+                // Display cmd usage in text input as placeholder
+                inputToolbarView.placeholder = @"Usage: /ban <userId> [<reason>]";
+            }
+        } else if ([cmd isEqualToString:kCmdUnbanUser]) {
+            if (userId) {
+                // Unban the user
+                [dataSource.room unbanUser:userId success:^{
+                } failure:^(NSError *error) {
+                    NSLog(@"[MXKRoomVC] Unban user (%@) failed: %@", userId, error);
+                    // TODO Alert user
+//                    [[AppDelegate theDelegate] showErrorAsAlert:error];
+                }];
+            } else {
+                // Display cmd usage in text input as placeholder
+                inputToolbarView.placeholder = @"Usage: /unban <userId>";
+            }
+        } else if ([cmd isEqualToString:kCmdSetUserPowerLevel]) {
+            // Retrieve power level
+            NSString *powerLevel = nil;
+            while (index < components.count) {
+                powerLevel = [components objectAtIndex:index++];
+                if (powerLevel.length) {
+                    // done
+                    break;
+                }
+                // reset
+                powerLevel = nil;
+            }
+            // Set power level
+            if (userId && powerLevel) {
+                // Set user power level
+                [dataSource.room setPowerLevelOfUserWithUserID:userId powerLevel:[powerLevel integerValue] success:^{
+                } failure:^(NSError *error) {
+                    NSLog(@"[MXKRoomVC] Set user power (%@) failed: %@", userId, error);
+                    // TODO Alert user
+//                    [[AppDelegate theDelegate] showErrorAsAlert:error];
+                }];
+            } else {
+                // Display cmd usage in text input as placeholder
+                inputToolbarView.placeholder = @"Usage: /op <userId> <power level>";
+            }
+        } else if ([cmd isEqualToString:kCmdResetUserPowerLevel]) {
+            if (userId) {
+                // Reset user power level
+                [dataSource.room setPowerLevelOfUserWithUserID:userId powerLevel:0 success:^{
+                } failure:^(NSError *error) {
+                    NSLog(@"[MXKRoomVC] Reset user power (%@) failed: %@", userId, error);
+                    // TODO Alert user
+//                    [[AppDelegate theDelegate] showErrorAsAlert:error];
+                }];
+            } else {
+                // Display cmd usage in text input as placeholder
+                inputToolbarView.placeholder = @"Usage: /deop <userId>";
+            }
+        } else {
+            NSLog(@"[MXKRoomVC] Unrecognised IRC-style command: %@", string);
+            inputToolbarView.placeholder = [NSString stringWithFormat:@"Unrecognised IRC-style command: %@", cmd];
+        }
+    }
+    return YES;
+}
+
 - (void)sendTextMessage:(NSString*)msgTxt {
 
     // Let the datasource send it and manage the local echo
@@ -452,6 +650,63 @@
     return localEvent;
 }
 
+# pragma mark - Event handling
+
+- (void)showEventDetails:(MXEvent *)event {
+    [self dismissKeyboard];
+    
+    // Remove potential existing view
+    if (eventDetailsView) {
+        [eventDetailsView removeFromSuperview];
+    }
+    eventDetailsView = [[MXKEventDetailsView alloc] initWithEvent:event andMatrixSession:dataSource.mxSession];
+    
+    // Add shadow on event details view
+    eventDetailsView.layer.cornerRadius = 5;
+    eventDetailsView.layer.shadowOffset = CGSizeMake(0, 1);
+    eventDetailsView.layer.shadowOpacity = 0.5f;
+    
+    // Add the view and define edge constraints
+    [self.view addSubview:eventDetailsView];
+    
+    [self.view addConstraint:[NSLayoutConstraint constraintWithItem:eventDetailsView
+                                                          attribute:NSLayoutAttributeTop
+                                                          relatedBy:NSLayoutRelationEqual
+                                                             toItem:self.topLayoutGuide
+                                                          attribute:NSLayoutAttributeBottom
+                                                         multiplier:1.0f
+                                                           constant:10.0f]];
+    
+    [self.view addConstraint:[NSLayoutConstraint constraintWithItem:eventDetailsView
+                                                          attribute:NSLayoutAttributeBottom
+                                                          relatedBy:NSLayoutRelationEqual
+                                                             toItem:self.bottomLayoutGuide
+                                                          attribute:NSLayoutAttributeTop
+                                                         multiplier:1.0f
+                                                           constant:-10.0f]];
+    
+    [self.view addConstraint:[NSLayoutConstraint constraintWithItem:self.view
+                                                          attribute:NSLayoutAttributeLeading
+                                                          relatedBy:NSLayoutRelationEqual
+                                                             toItem:eventDetailsView
+                                                          attribute:NSLayoutAttributeLeading
+                                                         multiplier:1.0f
+                                                           constant:-10.0f]];
+    
+    [self.view addConstraint:[NSLayoutConstraint constraintWithItem:self.view
+                                                          attribute:NSLayoutAttributeTrailing
+                                                          relatedBy:NSLayoutRelationEqual
+                                                             toItem:eventDetailsView
+                                                          attribute:NSLayoutAttributeTrailing
+                                                         multiplier:1.0f
+                                                           constant:10.0f]];
+    [self.view setNeedsUpdateConstraints];    
+}
+
+- (void)promptUserToResendEvent:(NSString *)eventId {
+    // TODO prompt User To Resend Event
+}
+
 #pragma mark - MXKDataSourceDelegate
 - (void)dataSource:(MXKDataSource *)dataSource didChange:(id)changes {
     
@@ -464,11 +719,9 @@
     NSLog(@"Cell %@ has been tapped at %@. UserInfo: %@", cell, cellTapLocationIdentifier, userInfo);
 
     if ([cellTapLocationIdentifier isEqualToString:kMXKRoomBubbleCellTapLocationAvatar]) {
-
-        NSLog(@"    -> Avatar of %@ has been tapped", userInfo[@"userId"]);
+        NSLog(@"    -> Avatar of %@ has been tapped", userInfo[kMXKRoomBubbleCellUserIdKey]);
     }
     else if ([cellTapLocationIdentifier isEqualToString:kMXKRoomBubbleCellTapLocationDate]) {
-
         MXKRoomBubbleTableViewCell *roomBubbleTableViewCell = (MXKRoomBubbleTableViewCell *)cell;
         BOOL newDateTimeLabelContainerHidden = !roomBubbleTableViewCell.dateTimeLabelContainer.hidden;
 
@@ -481,9 +734,46 @@
         // just before providing them to the tableview.
     }
     else if ([cellTapLocationIdentifier isEqualToString:kMXKRoomBubbleCellTapLocationAttachment]) {
-
         MXKRoomBubbleTableViewCell *roomBubbleTableViewCell = (MXKRoomBubbleTableViewCell *)cell;
         [self showAttachmentView:roomBubbleTableViewCell.attachmentView];
+    }
+    else if ([cellTapLocationIdentifier isEqualToString:kMXKRoomBubbleCellLongPressOnProgressView]) {
+        MXKRoomBubbleTableViewCell *roomBubbleTableViewCell = (MXKRoomBubbleTableViewCell *)cell;
+        
+        // Check if there is a download in progress, then offer to cancel it
+        NSString *cacheFilePath = roomBubbleTableViewCell.bubbleData.attachmentCacheFilePath;
+        if ([MXKMediaManager existingDownloaderWithOutputFilePath:cacheFilePath]) {
+            __weak typeof(self) weakSelf = self;
+            currentAlert = [[MXKAlert alloc] initWithTitle:nil message:@"Cancel the download ?" style:MXKAlertStyleAlert];
+            currentAlert.cancelButtonIndex = [currentAlert addActionWithTitle:@"Cancel" style:MXKAlertActionStyleDefault handler:^(MXKAlert *alert) {
+                typeof(self) self = weakSelf;
+                self->currentAlert = nil;
+            }];
+            currentAlert.cancelButtonIndex = [currentAlert addActionWithTitle:@"OK" style:MXKAlertActionStyleDefault handler:^(MXKAlert *alert) {
+                typeof(self) self = weakSelf;
+                // Get again the loader
+                MXKMediaLoader *loader = [MXKMediaManager existingDownloaderWithOutputFilePath:cacheFilePath];
+                if (loader) {
+                    [loader cancel];
+                }
+                self->currentAlert = nil;
+            }];
+            
+            [currentAlert showInViewController:self];
+        }
+    }
+    else if ([cellTapLocationIdentifier isEqualToString:kMXKRoomBubbleCellLongPressOnEvent]) {
+        MXEvent *selectedEvent = userInfo[kMXKRoomBubbleCellEventKey];
+        if (selectedEvent) {
+            // Check status of the selected event
+            if (selectedEvent.mxkState == MXKEventStateSendingFailed) {
+                // The user may want to resend it
+                [self promptUserToResendEvent:selectedEvent.eventId];
+            } else if (selectedEvent.mxkState != MXKEventStateSending) {
+                // Display event details
+                [self showEventDetails:selectedEvent];
+            }
+        }
     }
 }
 
@@ -551,6 +841,11 @@
 #pragma mark - MXKRoomInputToolbarViewDelegate
 
 - (void)roomInputToolbarView:(MXKRoomInputToolbarView*)toolbarView isTyping:(BOOL)typing {
+    
+    if (typing) {
+        // Reset potential placeholder (used in case of wrong command usage)
+        inputToolbarView.placeholder = nil;
+    }
     [self handleTypingNotification:typing];
 }
 
@@ -567,7 +862,12 @@
 }
 
 - (void)roomInputToolbarView:(MXKRoomInputToolbarView*)toolbarView sendTextMessage:(NSString*)textMessage {
-    [self sendTextMessage:textMessage];
+    
+    // Handle potential IRC commands in typed string
+    if ([self isIRCStyleCommand:textMessage] == NO) {
+        // Send text message in the current room
+        [self sendTextMessage:textMessage];
+    }
 }
 
 - (void)roomInputToolbarView:(MXKRoomInputToolbarView*)toolbarView sendImage:(UIImage*)image{

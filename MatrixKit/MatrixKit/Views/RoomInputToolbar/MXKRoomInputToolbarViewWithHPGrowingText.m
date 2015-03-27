@@ -121,6 +121,11 @@
     self.rightInputToolbarButton.enabled = textMessage.length;
 }
 
+- (void)setPlaceholder:(NSString *)inPlaceholder {
+    [super setPlaceholder:inPlaceholder];
+    growingTextView.placeholder = inPlaceholder;
+}
+
 - (void)dismissKeyboard {
     [growingTextView resignFirstResponder];
 }
