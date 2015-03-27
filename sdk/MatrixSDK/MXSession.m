@@ -29,10 +29,9 @@
 
 #pragma mark - Constants definitions
 
-/**
- The Matrix iOS SDK version.
- */
 const NSString *MatrixSDKVersion = @"0.3.2";
+NSString *const MXSessionStateDidChangeNotification = @"MXSessionStateDidChangeNotification";
+
 
 /**
  Default timeouts used by the events streams.
