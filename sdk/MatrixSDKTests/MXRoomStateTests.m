@@ -678,17 +678,17 @@
 
                 if (MXEventDirectionForwards == direction && [event.roomId isEqualToString:newRoomId])
                 {
-                    MXRoom *room = [mxSession roomWithRoomId:event.roomId];
-
-                    XCTAssert(room);
-                    XCTAssertEqual(room.state.members.count, 2, @"If this count is wrong, the room state is invalid");
-
                     [receivedMessages addObject:event];
                 }
 
                 // We expect receiving 2 text messages
                 if (2 <= receivedMessages.count)
                 {
+                    MXRoom *room = [mxSession roomWithRoomId:event.roomId];
+
+                    XCTAssert(room);
+                    XCTAssertEqual(room.state.members.count, 2, @"If this count is wrong, the room state is invalid");
+
                     [expectation fulfill];
                 }
             }];
