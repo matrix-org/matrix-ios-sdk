@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "MatrixSDK"
-  s.version      = "0.3.1"
+  s.version      = "0.3.2"
   s.summary      = "The iOS SDK to build apps compatible with Matrix (http://www.matrix.org)"
 
   s.description  = <<-DESC
@@ -19,7 +19,7 @@ Pod::Spec.new do |s|
 
   s.platform     = :ios, "6.0"
 
-  s.source       = { :git => "https://github.com/matrix-org/matrix-ios-sdk.git", :tag => "v0.3.1" }
+  s.source       = { :git => "https://github.com/matrix-org/matrix-ios-sdk.git", :tag => "v0.3.2" }
   s.source_files  = "MatrixSDK", "sdk/MatrixSDK/**/*.{h,m}"
   
   s.requires_arc  = true
