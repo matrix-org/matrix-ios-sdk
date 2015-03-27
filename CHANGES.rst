@@ -16,7 +16,7 @@ Bug fixes:
  Matrix Console
 -----------------
 Improvements:
- * Settings - Invite user to find a webclient and hit Settings to configure global notification rules.
+ * Settings - Invite user to use a webclient and hit Settings to configure global notification rules.
  * InApp notifications - Support tweak action for InApp notification.
  * Improved image rotation support over different Matrix clients.
  
