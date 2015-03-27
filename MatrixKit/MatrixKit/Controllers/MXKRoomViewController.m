@@ -714,14 +714,14 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     [_tableView reloadData];
 }
 
-- (void)dataSource:(MXKDataSource *)dataSource didTapCell:(id<MXKCellRendering>)cell at:(NSString *)cellTapLocationIdentifier userInfo:(NSDictionary *)userInfo {
+- (void)dataSource:(MXKDataSource *)dataSource didRecognizeGesture:(NSString *)gestureIdentifier inCell:(id<MXKCellRendering>)cell userInfo:(NSDictionary *)userInfo {
 
-    NSLog(@"Cell %@ has been tapped at %@. UserInfo: %@", cell, cellTapLocationIdentifier, userInfo);
+    NSLog(@"Gesture %@ has been recognized in %@. UserInfo: %@", gestureIdentifier, cell, userInfo);
 
-    if ([cellTapLocationIdentifier isEqualToString:kMXKRoomBubbleCellTapLocationAvatar]) {
+    if ([gestureIdentifier isEqualToString:kMXKRoomBubbleCellTapOnAvatarView]) {
         NSLog(@"    -> Avatar of %@ has been tapped", userInfo[kMXKRoomBubbleCellUserIdKey]);
     }
-    else if ([cellTapLocationIdentifier isEqualToString:kMXKRoomBubbleCellTapLocationDate]) {
+    else if ([gestureIdentifier isEqualToString:kMXKRoomBubbleCellTapOnDateTimeContainer]) {
         MXKRoomBubbleTableViewCell *roomBubbleTableViewCell = (MXKRoomBubbleTableViewCell *)cell;
         BOOL newDateTimeLabelContainerHidden = !roomBubbleTableViewCell.dateTimeLabelContainer.hidden;
 
@@ -733,11 +733,11 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
         // If this VC implements its tableview datasource, it will be far easier. We could customise cells
         // just before providing them to the tableview.
     }
-    else if ([cellTapLocationIdentifier isEqualToString:kMXKRoomBubbleCellTapLocationAttachment]) {
+    else if ([gestureIdentifier isEqualToString:kMXKRoomBubbleCellTapOnAttachmentView]) {
         MXKRoomBubbleTableViewCell *roomBubbleTableViewCell = (MXKRoomBubbleTableViewCell *)cell;
         [self showAttachmentView:roomBubbleTableViewCell.attachmentView];
     }
-    else if ([cellTapLocationIdentifier isEqualToString:kMXKRoomBubbleCellLongPressOnProgressView]) {
+    else if ([gestureIdentifier isEqualToString:kMXKRoomBubbleCellLongPressOnProgressView]) {
         MXKRoomBubbleTableViewCell *roomBubbleTableViewCell = (MXKRoomBubbleTableViewCell *)cell;
         
         // Check if there is a download in progress, then offer to cancel it
@@ -762,7 +762,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
             [currentAlert showInViewController:self];
         }
     }
-    else if ([cellTapLocationIdentifier isEqualToString:kMXKRoomBubbleCellLongPressOnEvent]) {
+    else if ([gestureIdentifier isEqualToString:kMXKRoomBubbleCellLongPressOnEvent]) {
         MXEvent *selectedEvent = userInfo[kMXKRoomBubbleCellEventKey];
         if (selectedEvent) {
             // Check status of the selected event

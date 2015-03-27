@@ -26,37 +26,37 @@
 
 #pragma mark - MXKCellRenderingDelegate cell tap locations
 /**
- Location identifier used when the user tapped the avatar.
+ Gesture identifier used when the user tapped on avatar view.
  
  The `userInfo` dictionary contains an `NSString` object under the `kMXKRoomBubbleCellUserIdKey` key, representing the user id of the tapped avatar.
  */
-extern NSString *const kMXKRoomBubbleCellTapLocationAvatar;
+extern NSString *const kMXKRoomBubbleCellTapOnAvatarView;
 
 /**
- Location identifier used when the user tapped the date placeholder.
+ Gesture identifier used when the user tapped on date/time container.
  
  The `userInfo` is nil.
  */
-extern NSString *const kMXKRoomBubbleCellTapLocationDate;
+extern NSString *const kMXKRoomBubbleCellTapOnDateTimeContainer;
 
 /**
- Location identifier used when the user tapped an attachment.
+ Gesture identifier used when the user tapped on attachment view.
  
- The `userInfo` is nil. The attachment can be retrieve via MXKRoomBubbleTableViewCell.attachmentView.
+ The `userInfo` is nil. The attachment can be retrieved via MXKRoomBubbleTableViewCell.attachmentView.
  */
-extern NSString *const kMXKRoomBubbleCellTapLocationAttachment;
+extern NSString *const kMXKRoomBubbleCellTapOnAttachmentView;
 
 /**
- Location identifier used when the user long pressed on a displayed event.
+ Gesture identifier used when the user long pressed on a displayed event.
  
  The `userInfo` dictionary contains an `MXEvent` object under the `kMXKRoomBubbleCellEventKey` key, representing the selected event.
  */
 extern NSString *const kMXKRoomBubbleCellLongPressOnEvent;
 
 /**
- Location identifier used when the user long pressed on progress view.
+ Gesture identifier used when the user long pressed on progress view.
  
- The `userInfo` is nil. The progress view can be retrieve via MXKRoomBubbleTableViewCell.progressView.
+ The `userInfo` is nil. The progress view can be retrieved via MXKRoomBubbleTableViewCell.progressView.
  */
 extern NSString *const kMXKRoomBubbleCellLongPressOnProgressView;
 

@@ -73,16 +73,16 @@
 @protocol MXKCellRenderingDelegate <NSObject>
 
 /**
- Tells the delegate that the user tapped on something in the cell.
+ Tells the delegate that a gesture (tap, long press...) has been observed in the cell.
 
- The "something" is an abstract term identified by the `cellLocationIdentifier` param.
+ The gesture is described by the `gestureIdentifier` param.
  This identifier is specific and depends to the cell view class implementing MXKCellRendering.
  
- @param cell the cell that has been tapped.
- @param cellTapLocationIdentifier an identifier indicating which part of the cell has been tapped.
- @param userInfo a dict containing additional information. It depends on cellTapLocationIdentifiers. May be nil.
+ @param cell the cell in which gesture has been observed.
+ @param gestureIdentifier an identifier indicating the gesture type (tap, long press...) and which part of the cell is concerned.
+ @param userInfo a dict containing additional information. It depends on gestureIdentifier. May be nil.
  */
-- (void)cell:(id<MXKCellRendering>)cell didTapCellAt:(NSString*)cellTapLocationIdentifier userInfo:(NSDictionary *)userInfo;
+- (void)cell:(id<MXKCellRendering>)cell didRecognizeGesture:(NSString*)gestureIdentifier userInfo:(NSDictionary *)userInfo;
 
 @end
 

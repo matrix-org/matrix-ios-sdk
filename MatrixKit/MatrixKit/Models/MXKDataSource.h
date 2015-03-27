@@ -105,15 +105,15 @@
 @optional
 
 /**
- Tells the delegate when a managed cell has been tapped by the user.
+ Tells the delegate when a gesture is observed inside a cell.
  
  @see `MXKCellRenderingDelegate` for more details.
  
  @param dataSource the involved data source.
- @param cell the cell that has been tapped.
- @param cellLocationIdentifier an identifier indicating which part of the cell has been tapped.
- @param userInfo a dict containing additional information. It depends on cellTapLocationIdentifiers. May be nil.
+ @param gestureIdentifier an identifier indicating the gesture type (tap, long press...) and which part of the cell is concerned.
+ @param cell the cell in which gesture has been observed.
+ @param userInfo a dict containing additional information. It depends on gestureIdentifier. May be nil.
  */
-- (void)dataSource:(MXKDataSource*)dataSource didTapCell:(id<MXKCellRendering>)cell at:(NSString*)cellTapLocationIdentifier userInfo:(NSDictionary*)userInfo;
+- (void)dataSource:(MXKDataSource*)dataSource didRecognizeGesture:(NSString*)gestureIdentifier inCell:(id<MXKCellRendering>)cell userInfo:(NSDictionary*)userInfo;
 
 @end
