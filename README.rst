@@ -14,9 +14,13 @@ The SDK uses CocoaPods (http://cocoapods.org/) as library dependency manager. In
     sudo gem install cocoapods
     pod setup
 
-The best way to add the Matrix SDK to your application project is to add the MatrixSDK dependency to your Podfile::
+The best way to add the last release of the Matrix SDK to your application project is to add the MatrixSDK dependency to your Podfile::
 
     pod 'MatrixSDK'
+
+If you want to use the develop version of the SDK, use instead:
+
+    pod 'MatrixSDK', :git => 'https://github.com/matrix-org/matrix-ios-sdk.git', :branch => 'develop'
 
 
 Overview
