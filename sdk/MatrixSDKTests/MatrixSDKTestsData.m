@@ -107,7 +107,7 @@ NSMutableArray *roomsToClean;
             }
             else
             {
-                NSAssert(NO, @"Cannot create mxBOB account");
+                NSAssert(NO, @"Cannot create mxBOB account. Make sure the homeserver at %@ is running", mxRestClient.homeserver);
             }
         }];
     }
