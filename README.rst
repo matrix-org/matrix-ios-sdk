@@ -14,9 +14,13 @@ The SDK uses CocoaPods (http://cocoapods.org/) as library dependency manager. In
     sudo gem install cocoapods
     pod setup
 
-The best way to add the Matrix SDK to your application project is to add the MatrixSDK dependency to your Podfile::
+The best way to add the last release of the Matrix SDK to your application project is to add the MatrixSDK dependency to your Podfile::
 
     pod 'MatrixSDK'
+
+If you want to use the develop version of the SDK, use instead:
+
+    pod 'MatrixSDK', :git => 'https://github.com/matrix-org/matrix-ios-sdk.git', :branch => 'develop'
 
 
 Overview
@@ -258,6 +262,8 @@ The tests in the SDK Xcode project are both unit and integration tests.
 
 Out of the box, the tests use one of the home servers (located at http://localhost:8080) of the "Demo Federation of Homeservers" (https://github.com/matrix-org/synapse#running-a-demo-federation-of-homeservers). You have to start them from your local Synapse folder::
 
+      $ virtualenv env
+      $ source env/bin/activate
       $ demo/start.sh --no-rate-limit
 
 Then, you can run the tests from the Xcode Test navigator tab or select the MatrixSDKTests scheme and click on the "Test" action.

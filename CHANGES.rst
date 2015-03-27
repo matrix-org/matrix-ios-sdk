@@ -1,3 +1,32 @@
+Changes in Matrix iOS SDK in 0.3.2 (2015-03-27)
+===============================================
+
+-----
+ SDK
+-----
+Improvements:
+ * All requests (except typing notifications) are retried (SYIOS-32).
+ * Added definitions for VOIP event types.
+ * Updated AFNetworking version: 2.4.1 -> 2.5.2.
+ 
+Bug fixes:
+ * SYIOS-105 - Public rooms sometimes appear as 2-member rooms for some reason.
+ 
+-----------------
+ Matrix Console
+-----------------
+Improvements:
+ * Settings - Invite user to use a webclient and hit Settings to configure global notification rules.
+ * InApp notifications - Support tweak action for InApp notification.
+ * Improved image rotation support over different Matrix clients.
+ 
+Bug fixes:
+ * SYIOS-107 - In-App notifications does not work since changes in push rules spec.
+ * SYIOS-108 - I can't re-enter existing chats when tapping through contact details.
+ * On iOS 8, the app does not prompt user to upload logs after app crash. Rage shake is not working too.
+ * Typing notification - Do not loop anymore to send typing notif in case of failure.
+ 
+
 Changes in Matrix iOS SDK in 0.3.1 (2015-03-03)
 ===============================================
 
