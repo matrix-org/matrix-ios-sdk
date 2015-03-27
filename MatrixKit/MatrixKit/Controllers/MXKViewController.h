@@ -19,6 +19,18 @@
 #import "MatrixSDK.h"
 
 /**
+ Posted when the user starts shaking the device on this view controller.
+ The notification object is the view controller itself. The `userInfo` dictionary is nil.
+ */
+extern NSString *const kMXKViewControllerStartShakingNotification;
+
+/**
+ Posted when the user stops shaking the device on this view controller.
+ The notification object is the view controller itself. The `userInfo` dictionary is nil.
+ */
+extern NSString *const kMXKViewControllerStopShakingNotification;
+
+/**
  MXKViewController extends UIViewController to handle requirements for
  any matrixKit view controllers.
  
@@ -34,6 +46,14 @@
  This property is used to update view appearance according to the session state.
  */
 @property (nonatomic) MXSession *mxSession;
+
+/**
+ NO by default.
+ When this property value is YES, the view controller posts a notification when the user starts or stops
+ shaking the device while the view controller is displayed (see kMXKViewControllerStartShakingNotification/
+ kMXKViewControllerStopShakingNotification notifications).
+ */
+@property (nonatomic) BOOL postShakeNotification;
 
 /**
  Activity indicator view.

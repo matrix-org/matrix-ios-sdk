@@ -16,6 +16,9 @@
 
 #import "MXKViewController.h"
 
+NSString *const kMXKViewControllerStartShakingNotification = @"kMXKViewControllerStartShakingNotification";
+NSString *const kMXKViewControllerStopShakingNotification = @"kMXKViewControllerStopShakingNotification";
+
 @interface MXKViewController () {
     id mxkViewControllerSessionStateObserver;
 }
@@ -143,5 +146,32 @@
         }
     }
 }
+
+#pragma mark - Shake handling
+
+- (void)motionBegan:(UIEventSubtype)motion withEvent:(UIEvent *)event {
+    if (motion == UIEventSubtypeMotionShake) {
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXKViewControllerStartShakingNotification
+                                                            object:self
+                                                          userInfo:nil];
+    }
+}
+
+- (void)motionCancelled:(UIEventSubtype)motion withEvent:(UIEvent *)event {
+    [self motionEnded:motion withEvent:event];
+}
+
+- (void)motionEnded:(UIEventSubtype)motion withEvent:(UIEvent *)event {
+    if (motion == UIEventSubtypeMotionShake) {
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXKViewControllerStopShakingNotification
+                                                            object:self
+                                                          userInfo:nil];
+    }
+}
+
+- (BOOL)canBecomeFirstResponder {
+    return _postShakeNotification;
+}
+
 
 @end
