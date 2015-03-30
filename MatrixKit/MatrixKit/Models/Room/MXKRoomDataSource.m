@@ -45,6 +45,11 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
      The listener to incoming events in the room.
      */
     id liveEventsListener;
+    
+    /**
+     The listener to redaction events in the room.
+     */
+    id redactionListener;
 
     /**
      [MXKRoomDataSource paginateBackMessages] or [MXKRoomDataSource paginateBackMessagesToFillRect]
@@ -122,6 +127,9 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
     if (_room && liveEventsListener) {
         [_room removeListener:liveEventsListener];
         liveEventsListener = nil;
+        
+        [_room removeListener:redactionListener];
+        redactionListener = nil;
     }
     
     if (_room && typingNotifListener) {
@@ -144,7 +152,7 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
                 [_room resetBackState];
 
                 // Force to set the filter at the MXRoom level
-                self.eventsFilterForMessages = _eventsFilterForMessages;\
+                self.eventsFilterForMessages = _eventsFilterForMessages;
                 
                 // Register on typing notif
                 [self listenTypingNotifications];
@@ -169,6 +177,7 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
     // Remove the previous live listener
     if (liveEventsListener) {
         [_room removeListener:liveEventsListener];
+        [_room removeListener:redactionListener];
     }
 
     // And register a new one with the requested filter
@@ -194,6 +203,65 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
             // Post incoming events for later processing
             [self queueEventForProcessing:event withRoomState:roomState direction:MXEventDirectionForwards];
             [self processQueuedEvents:nil];
+        }
+    }];
+    
+    // Register a listener to handle redaction in live stream
+    redactionListener = [_room listenToEventsOfTypes:@[kMXEventTypeStringRoomRedaction] onEvent:^(MXEvent *redactionEvent, MXEventDirection direction, MXRoomState *roomState) {
+        
+        // Consider only live redaction events
+        if (direction == MXEventDirectionForwards) {
+            
+            // Do the processing on the processing queue
+            dispatch_async(processingQueue, ^{
+                
+                // Check whether a message contains the redacted event
+                id<MXKRoomBubbleCellDataStoring> bubbleData = [self cellDataOfEventWithEventId:redactionEvent.redacts];
+                if (bubbleData) {
+                    NSUInteger remainingEvents = 0;
+
+                    @synchronized (bubbleData) {
+                        // Retrieve the original event to redact it
+                        NSArray *events = bubbleData.events;
+                        MXEvent *redactedEvent = nil;
+                        for (MXEvent *event in events) {
+                            if ([event.eventId isEqualToString:redactionEvent.redacts]) {
+                                redactedEvent = [event prune];
+                                redactedEvent.redactedBecause = redactionEvent.originalDictionary;
+                                break;
+                            }
+                        }
+                        
+                        if (redactedEvent.isState) {
+                            // FIXME: The room state must be refreshed here since this redacted event.
+                            NSLog(@"[MXKRoomVC] Warning: A state event has been redacted, room state may not be up to date");
+                        }
+                        
+                        if (redactedEvent) {
+                            remainingEvents = [bubbleData updateEvent:redactionEvent.redacts withEvent:redactedEvent];
+                        }
+                    }
+                    
+                    // If there is no more events, remove the bubble
+                    if (0 == remainingEvents) {
+                        // Remove the broken link from the map
+                        @synchronized (eventIdToBubbleMap) {
+                            [eventIdToBubbleMap removeObjectForKey:redactionEvent.redacts];
+                        }
+                        
+                        [self removeCellData:bubbleData];
+                        
+                        // TODO GFO: check whether the adjacent bubbles can merge together
+                    }
+                    
+                    // Update the delegate on main thread
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        if (self.delegate) {
+                            [self.delegate dataSource:self didChange:nil];
+                        }
+                    });
+                }
+            });
         }
     }];
 }

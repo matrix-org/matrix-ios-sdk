@@ -78,6 +78,11 @@
 @property (nonatomic) BOOL isSameSenderAsPreviousBubble;
 
 /**
+ The list of events (`MXEvent` instances) handled by this bubble.
+ */
+@property (nonatomic, readonly) NSArray *events;
+
+/**
  The bubble date
  */
 @property (nonatomic) NSDate *date;
@@ -124,11 +129,12 @@ Update the event because its mxkState changed or it is has been redacted.
  
  @param eventId the id of the event to change.
  @param the new event data
+ @return the number of events hosting by the object after the update.
  */
-- (void)updateEvent:(NSString*)eventId withEvent:(MXEvent*)event;
+- (NSUInteger)updateEvent:(NSString*)eventId withEvent:(MXEvent*)event;
 
 /**
- Reomve the event from the `MXKRoomBubbleCellDataStoring` object.
+ Remove the event from the `MXKRoomBubbleCellDataStoring` object.
 
  @param eventId the id of the event to remove.
  @return the number of events still hosting by the object after the removal

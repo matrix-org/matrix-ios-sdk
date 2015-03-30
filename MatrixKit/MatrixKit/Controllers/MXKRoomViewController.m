@@ -167,6 +167,46 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     // Dispose of any resources that can be recreated.
 }
 
+- (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id <UIViewControllerTransitionCoordinator>)coordinator {
+    [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(coordinator.transitionDuration * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        if (!keyboardView) {
+            [self updateMessageTextViewFrame];
+        }
+        // Cell width will be updated, force table refresh to take into account changes of message components
+        [self.tableView reloadData];
+    });
+}
+
+// The 2 following methods are deprecated since iOS 8
+- (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
+    [super willRotateToInterfaceOrientation:toInterfaceOrientation duration:duration];
+    
+    // Cell width will be updated, force table refresh to take into account changes of message components
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.tableView reloadData];
+    });
+}
+- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
+    [super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
+    
+    if (!keyboardView) {
+        [self updateMessageTextViewFrame];
+    }
+}
+
+- (void)updateMessageTextViewFrame {
+    if (!keyboardView) {
+        // Compute the visible area (tableview + toolbar)
+        CGFloat visibleArea = self.view.frame.size.height - _tableView.contentInset.top - keyboardView.frame.size.height;
+        // Deduce max height of the message text input by considering the minimum height of the table view.
+        inputToolbarView.maxHeight = visibleArea - MXKROOMVIEWCONTROLLER_MESSAGES_TABLE_MINIMUM_HEIGHT;
+    }
+}
+
+#pragma mark -
+
 - (void)configureView {
 
     // Set up table delegates

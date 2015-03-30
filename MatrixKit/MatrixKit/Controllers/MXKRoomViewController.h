@@ -67,4 +67,9 @@ extern NSString *const kCmdResetUserPowerLevel;
  */
 - (BOOL)isIRCStyleCommand:(NSString*)string;
 
+/**
+ Force to dismiss keyboard if any
+ */
+- (void)dismissKeyboard;
+
 @end

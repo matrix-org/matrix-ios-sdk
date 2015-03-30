@@ -70,7 +70,7 @@
                     _thumbnailInfo = event.content[@"thumbnail_info"];
                     if (!_thumbnailURL) {
                         // Suppose contentURL is a matrix content uri, we use SDK to get the well adapted thumbnail from server
-                        _thumbnailURL = [roomDataSource.eventFormatter thumbnailURLForContent:contentURL inViewSize:_contentSize withMethod:MXThumbnailingMethodScale];
+                        _thumbnailURL = [roomDataSource.eventFormatter thumbnailURLForContent:contentURL inViewSize:self.contentSize withMethod:MXThumbnailingMethodScale];
                         
                         // Check whether the image has been uploaded with an orientation
                         if (_attachmentInfo[@"rotation"]) {
@@ -132,17 +132,23 @@
     bubbleComponents = nil;
 }
 
-- (void)updateEvent:(NSString *)eventId withEvent:(MXEvent *)event {
+- (NSUInteger)updateEvent:(NSString *)eventId withEvent:(MXEvent *)event {
 
     // Retrieve the component storing the event and update it
-    for (MXKRoomBubbleComponent *roomBubbleComponent in bubbleComponents) {
-
+    for (NSUInteger index = 0; index < bubbleComponents.count; index++) {
+        MXKRoomBubbleComponent *roomBubbleComponent = [bubbleComponents objectAtIndex:index];
         if ([roomBubbleComponent.event.eventId isEqualToString:eventId]) {
-
             [roomBubbleComponent updateWithEvent:event];
+            if (!roomBubbleComponent.textMessage.length) {
+                [bubbleComponents removeObjectAtIndex:index];
+            }
+            // flush the current attributed string to force refresh
+            self.attributedTextMessage = nil;
             break;
         }
     }
+    
+    return bubbleComponents.count;
 }
 
 - (NSUInteger)removeEvent:(NSString *)eventId {
@@ -214,6 +220,15 @@
     _contentSize = CGSizeZero;
 }
 
+- (NSAttributedString*)attributedTextMessage {
+    if (!attributedTextMessage.length && bubbleComponents.count) {
+        // By default only one component is supported, consider here the first component
+        MXKRoomBubbleComponent *firstComponent = [bubbleComponents firstObject];
+        attributedTextMessage = firstComponent.attributedTextMessage;
+    }
+    
+    return attributedTextMessage;
+}
 
 - (BOOL)startsWithSenderName {
     if (bubbleComponents.count) {
@@ -222,6 +237,16 @@
         return (firstComponent.event.isEmote || [firstComponent.textMessage hasPrefix:senderDisplayName]);
     }
     return NO;
+}
+
+- (NSArray*)events {
+    NSMutableArray* eventsArray = [NSMutableArray arrayWithCapacity:bubbleComponents.count];
+    for (MXKRoomBubbleComponent *roomBubbleComponent in bubbleComponents) {
+        if (roomBubbleComponent.event) {
+            [eventsArray addObject:roomBubbleComponent.event];
+        }
+    }
+    return eventsArray;
 }
 
 - (NSDate*)date {
