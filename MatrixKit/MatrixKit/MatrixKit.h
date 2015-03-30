@@ -22,6 +22,9 @@
 #import "MXKRoomViewController.h"
 #import "MXKRecentListViewController.h"
 
+#import "MXKRoomInputToolbarView.h"
+#import "MXKRoomInputToolbarViewWithHPGrowingText.h"
+
 #import "MXKRoomBubbleCellData.h"
 #import "MXKRoomBubbleMergingMessagesCellData.h"
 
