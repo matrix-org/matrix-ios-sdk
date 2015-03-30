@@ -345,10 +345,12 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
     NSString *mimetype = @"image/jpeg";
     NSData *imageData = UIImageJPEGRepresentation(image, 0.8);
 
-    // Create a fake URL that we use for this image data
+    // Use the uploader id as fake URL for this image data
     // The URL does not need to be valid as the MediaManager will get the data
     // directly from its cache
-    NSString *fakeMediaManagerURL = [[NSProcessInfo processInfo] globallyUniqueString];
+    // Pass this id in the URL is a nasty trick to retrieve it later
+    MXKMediaLoader *uploader = [MXKMediaManager prepareUploaderWithMatrixSession:mxSession initialRange:0 andRange:1];
+    NSString *fakeMediaManagerURL = uploader.uploadId;
 
     NSString *cacheFilePath = [MXKMediaManager cachePathForMediaWithURL:fakeMediaManagerURL inFolder:self.roomId];
     [MXKMediaManager writeMediaData:imageData toFilePath:cacheFilePath];
@@ -368,7 +370,6 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
     MXEvent *localEcho = [self addLocalEchoForMessageContent:msgContent withState:MXKEventStateUploading];
 
     // Launch the upload to the Matrix Content repository
-    MXKMediaLoader *uploader = [MXKMediaManager prepareUploaderWithMatrixSession:mxSession initialRange:0 andRange:1];
     [uploader uploadData:imageData mimeType:mimetype success:^(NSString *url) {
 
         // Update the local echo state: move from content uploading to event sending

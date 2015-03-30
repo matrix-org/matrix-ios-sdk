@@ -82,7 +82,6 @@ typedef enum : NSUInteger {
 
 
 // Attachment info (nil when messageType is RoomMessageTypeText)
-@property (nonatomic) BOOL isUploadInProgress;
 @property (nonatomic) NSString *attachmentURL;
 @property (nonatomic) NSString *attachmentCacheFilePath;
 @property (nonatomic) NSDictionary *attachmentInfo;

@@ -61,13 +61,24 @@
                 [self.dateTimeLabelContainer.superview bringSubviewToFront:self.dateTimeLabelContainer];
             }
         }
-        
-        // wait after upload info
-        if (self.bubbleData.isUploadInProgress) {
-            [self startUploadAnimating];
-            self.attachmentView.hideActivityIndicator = YES;
-        } else {
-            self.attachmentView.hideActivityIndicator = NO;
+
+        if (self.attachmentView) {
+
+            // Check if the image is uploading
+            MXKRoomBubbleComponent *component = self.bubbleData.bubbleComponents.firstObject;
+            if (MXKEventStateUploading == component.event.mxkState) {
+
+                // Retrieve the uploadId embedded in the fake url
+                self.bubbleData.uploadId = component.event.content[@"url"];
+
+                // And start showing upload progress
+                [self startUploadAnimating];
+                self.attachmentView.hideActivityIndicator = YES;
+            }
+            else {
+
+                self.attachmentView.hideActivityIndicator = NO;
+            }
         }
     }
 }
