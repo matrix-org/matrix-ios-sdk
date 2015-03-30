@@ -24,14 +24,22 @@
 #import "MXKTools.h"
 #import "MXKMediaManager.h"
 
+@interface MXKRoomBubbleCellData () {
+
+    MXKRoomDataSource *roomDataSource;
+}
+@end
+
 @implementation MXKRoomBubbleCellData
 @synthesize senderId, roomId, senderDisplayName, senderAvatarUrl, isSameSenderAsPreviousBubble, date, isIncoming, isAttachment;
 @synthesize attributedTextMessage, startsWithSenderName, isTyping;
 
 
-- (instancetype)initWithEvent:(MXEvent *)event andRoomState:(MXRoomState *)roomState andRoomDataSource:(MXKRoomDataSource *)roomDataSource {
+- (instancetype)initWithEvent:(MXEvent *)event andRoomState:(MXRoomState *)roomState andRoomDataSource:(MXKRoomDataSource *)roomDataSource2 {
     self = [self init];
     if (self) {
+        roomDataSource = roomDataSource2;
+
         // Create the bubble component based on matrix event
         MXKRoomBubbleComponent *firstComponent = [[MXKRoomBubbleComponent alloc] initWithEvent:event andRoomState:roomState andEventFormatter:roomDataSource.eventFormatter];
         if (firstComponent) {
@@ -54,36 +62,7 @@
                 
                 NSString *msgtype =  event.content[@"msgtype"];
                 if ([msgtype isEqualToString:kMXMessageTypeImage]) {
-                    _dataType = MXKRoomBubbleCellDataTypeImage;
-                    // Retrieve content url/info
-                    NSString *contentURL = event.content[@"url"];
-                    // Check provided url (it may be a matrix content uri, we use SDK to build absoluteURL)
-                    _attachmentURL = [roomDataSource.mxSession.matrixRestClient urlOfContent:contentURL];
-                    if (nil == _attachmentURL) {
-                        // It was not a matrix content uri, we keep the provided url
-                        _attachmentURL = contentURL;
-                    }
-                    _attachmentCacheFilePath = [MXKMediaManager cachePathForMediaWithURL:_attachmentURL inFolder:event.roomId];
-                    _attachmentInfo = event.content[@"info"];
-                    // Handle legacy thumbnail url/info (Not defined anymore in recent attachments)
-                    _thumbnailURL = event.content[@"thumbnail_url"];
-                    _thumbnailInfo = event.content[@"thumbnail_info"];
-                    if (!_thumbnailURL) {
-                        // Suppose contentURL is a matrix content uri, we use SDK to get the well adapted thumbnail from server
-                        _thumbnailURL = [roomDataSource.eventFormatter thumbnailURLForContent:contentURL inViewSize:self.contentSize withMethod:MXThumbnailingMethodScale];
-                        
-                        // Check whether the image has been uploaded with an orientation
-                        if (_attachmentInfo[@"rotation"]) {
-                            // Currently the matrix content server provides thumbnails by ignoring the original image orientation.
-                            // We store here the actual orientation to apply it on downloaded thumbnail.
-                            _thumbnailOrientation = [MXKTools imageOrientationForRotationAngleInDegree:[_attachmentInfo[@"rotation"] integerValue]];
-                            
-                            // Rotate the current content size (if need)
-                            if (_thumbnailOrientation == UIImageOrientationLeft || _thumbnailOrientation == UIImageOrientationRight) {
-                                _contentSize = CGSizeMake(_contentSize.height, _contentSize.width);
-                            }
-                        }
-                    }
+                    [self handleImageMessage:event];
                 } else if ([msgtype isEqualToString:kMXMessageTypeAudio]) {
                     // Not supported yet
                     //_dataType = MXKRoomBubbleCellDataTypeAudio;
@@ -108,11 +87,6 @@
                     // Not supported yet
                     // _dataType = MXKRoomBubbleCellDataTypeLocation;
                 }
-                // TODO GFO
-//                // Retrieve local preview url (if any)
-//                previewURL = event.content[kRoomMessageLocalPreviewKey];
-//                // Retrieve upload id (if any)
-//                uploadId = event.content[kRoomMessageUploadIdKey];
             }
             
             // Report the attributed string (This will initialize _contentSize attribute)
@@ -147,14 +121,68 @@
             break;
         }
     }
-    
+
+    // The case of update of image event happens when an image echo is replaced by its true event
+    // received back by the events stream
+    if (MXKRoomBubbleCellDataTypeImage == _dataType) {
+
+        NSString *msgtype =  event.content[@"msgtype"];
+        if ([msgtype isEqualToString:kMXMessageTypeImage]) {
+
+            if (NO == [_attachmentURL isEqualToString:event.content[@"url"]]) {
+
+                // Store the echo image as preview to prevent the cell from flashing
+                _previewURL = _attachmentURL;
+
+                // Update the data with new image event
+                [self handleImageMessage:event];
+            }
+        }
+        else {
+            NSLog(@"[MXKRoomBubbleCellData] updateEvent: Warning: Does not support change of event type");
+        }
+    }
+
     return bubbleComponents.count;
+}
+
+- (void)handleImageMessage:(MXEvent*)event {
+    _dataType = MXKRoomBubbleCellDataTypeImage;
+    // Retrieve content url/info
+    NSString *contentURL = event.content[@"url"];
+    // Check provided url (it may be a matrix content uri, we use SDK to build absoluteURL)
+    _attachmentURL = [roomDataSource.mxSession.matrixRestClient urlOfContent:contentURL];
+    if (nil == _attachmentURL) {
+        // It was not a matrix content uri, we keep the provided url
+        _attachmentURL = contentURL;
+    }
+    _attachmentCacheFilePath = [MXKMediaManager cachePathForMediaWithURL:_attachmentURL inFolder:event.roomId];
+    _attachmentInfo = event.content[@"info"];
+    // Handle legacy thumbnail url/info (Not defined anymore in recent attachments)
+    _thumbnailURL = event.content[@"thumbnail_url"];
+    _thumbnailInfo = event.content[@"thumbnail_info"];
+    if (!_thumbnailURL) {
+        // Suppose contentURL is a matrix content uri, we use SDK to get the well adapted thumbnail from server
+        _thumbnailURL = [roomDataSource.eventFormatter thumbnailURLForContent:contentURL inViewSize:self.contentSize withMethod:MXThumbnailingMethodScale];
+
+        // Check whether the image has been uploaded with an orientation
+        if (_attachmentInfo[@"rotation"]) {
+            // Currently the matrix content server provides thumbnails by ignoring the original image orientation.
+            // We store here the actual orientation to apply it on downloaded thumbnail.
+            _thumbnailOrientation = [MXKTools imageOrientationForRotationAngleInDegree:[_attachmentInfo[@"rotation"] integerValue]];
+
+            // Rotate the current content size (if need)
+            if (_thumbnailOrientation == UIImageOrientationLeft || _thumbnailOrientation == UIImageOrientationRight) {
+                _contentSize = CGSizeMake(_contentSize.height, _contentSize.width);
+            }
+        }
+    }
 }
 
 - (NSUInteger)removeEvent:(NSString *)eventId {
 
     for (MXKRoomBubbleComponent *roomBubbleComponent in bubbleComponents) {
-        
+
         if ([roomBubbleComponent.event.eventId isEqualToString:eventId]) {
 
             [bubbleComponents removeObject:roomBubbleComponent];

@@ -187,22 +187,22 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
         if (MXEventDirectionForwards == direction) {
 
             // Check for local echo suppression
+            MXEvent *localEcho;
             if (pendingLocalEchoes.count && [event.userId isEqualToString:mxSession.myUser.userId]) {
 
-                MXEvent *localEcho = [self pendingLocalEchoRelatedToEvent:event];
+                localEcho = [self pendingLocalEchoRelatedToEvent:event];
                 if (localEcho) {
 
-                    // Remove the event from the pending local echo list
-                    [self removePendingLocalEcho:localEcho];
-
-                    // Remove the local echo from its bubble data
-                    [self removeLocalEcho:localEcho];
+                    // Replace the local echo by the true event sent by the homeserver
+                    [self replaceLocalEcho:localEcho withEvent:event];
                 }
             }
 
-            // Post incoming events for later processing
-            [self queueEventForProcessing:event withRoomState:roomState direction:MXEventDirectionForwards];
-            [self processQueuedEvents:nil];
+            if (nil == localEcho) {
+                // Post incoming events for later processing
+                [self queueEventForProcessing:event withRoomState:roomState direction:MXEventDirectionForwards];
+                [self processQueuedEvents:nil];
+            }
         }
     }];
     
@@ -517,14 +517,17 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
     }
 }
 
-- (void)removeLocalEcho:(MXEvent*)localEcho {
+- (void)replaceLocalEcho:(MXEvent*)localEcho withEvent:(MXEvent*)event {
+
+    // Remove the event from the pending local echo list
+    [self removePendingLocalEcho:localEcho];
 
     // Remove the event from its cell data
     id<MXKRoomBubbleCellDataStoring> bubbleData = [self cellDataOfEventWithEventId:localEcho.eventId];
 
     NSUInteger remainingEvents;
     @synchronized (bubbleData) {
-        remainingEvents = [bubbleData removeEvent:localEcho.eventId];
+       remainingEvents = [bubbleData updateEvent:localEcho.eventId withEvent:event];
     }
 
     // Remove the broken link from the map
