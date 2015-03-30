@@ -209,11 +209,12 @@ NSString *const kUploadIdPrefix = @"upload-";
 
 #pragma mark - Upload
 
-- (id)initForUploadWithMatrixSession:(MXSession*)mxSession initialRange:(CGFloat)anInitialRange andRange:(CGFloat)aRange {
+- (id)initForUploadWithMatrixSession:(MXSession*)matrixSession initialRange:(CGFloat)anInitialRange andRange:(CGFloat)aRange {
     if (self = [super init]) {
         // Create a unique upload Id
         _uploadId = [NSString stringWithFormat:@"%@%@", kUploadIdPrefix, [[NSProcessInfo processInfo] globallyUniqueString]];
-        
+
+        mxSession = matrixSession;
         initialRange = anInitialRange;
         range = aRange;
     }

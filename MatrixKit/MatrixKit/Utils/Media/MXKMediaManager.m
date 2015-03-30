@@ -24,6 +24,8 @@ NSString *const kMXKMediaManagerDefaultCacheFolder = @"kMXKMediaManagerDefaultCa
 static NSString* mediaCachePath  = nil;
 static NSString *mediaDir        = @"mediacache";
 
+static MXKMediaManager *sharedMediaManager = nil;
+
 // store the current cache size
 // avoid listing files because it is useless
 static NSUInteger storageCacheSize = 0;
@@ -39,6 +41,15 @@ static NSMutableDictionary* downloadTable = nil;
  Table of uploads in progress
  */
 static NSMutableDictionary* uploadTableById = nil;
+
++ (MXKMediaManager *)sharedManager {
+    @synchronized(self) {
+        if(sharedMediaManager == nil) {
+            sharedMediaManager = [[super allocWithZone:NULL] init];
+        }
+    }
+    return sharedMediaManager;
+}
 
 #pragma mark - File handling
 
@@ -151,9 +162,13 @@ static NSMutableDictionary* uploadTableById = nil;
         if (!uploadTableById) {
             uploadTableById =  [[NSMutableDictionary alloc] init];
             
-            MXKMediaManager *uploadObserver = [[super allocWithZone:NULL] init];
-            [[NSNotificationCenter defaultCenter] addObserver:uploadObserver selector:@selector(onMediaUploadEnd:) name:kMXKMediaUploadDidFinishNotification object:nil];
-            [[NSNotificationCenter defaultCenter] addObserver:uploadObserver selector:@selector(onMediaUploadEnd:) name:kMXKMediaUploadDidFailNotification object:nil];
+            // Need to listen to kMXKMediaUploadDid* notifications to automatically release allocated upload ids
+            if (0 == uploadTableById.count) {
+
+                MXKMediaManager *sharedManager = [MXKMediaManager sharedManager];
+                [[NSNotificationCenter defaultCenter] addObserver:sharedManager selector:@selector(onMediaUploadEnd:) name:kMXKMediaUploadDidFinishNotification object:nil];
+                [[NSNotificationCenter defaultCenter] addObserver:sharedManager selector:@selector(onMediaUploadEnd:) name:kMXKMediaUploadDidFailNotification object:nil];
+            }
         }
         [uploadTableById setValue:mediaLoader forKey:mediaLoader.uploadId];
         return mediaLoader;
@@ -170,6 +185,13 @@ static NSMutableDictionary* uploadTableById = nil;
 
 - (void)onMediaUploadEnd:(NSNotification *)notif {
     [MXKMediaManager removeUploaderWithId:notif.object];
+
+    // If there is no more upload in progress, stop observing upload notifications
+    if (0 == uploadTableById.count) {
+
+        [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXKMediaUploadDidFinishNotification object:nil];
+        [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXKMediaUploadDidFailNotification object:nil];
+    }
 }
 
 + (void)removeUploaderWithId:(NSString*)uploadId {
