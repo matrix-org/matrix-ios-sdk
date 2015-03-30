@@ -172,4 +172,20 @@ extern NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier;
 - (void)sendTextMessage:(NSString*)text
                 success:(void (^)(NSString *eventId))success
                 failure:(void (^)(NSError *error))failure;
+
+/**
+ Send an image to the room.
+
+ While sending, a fake event will be echoed in the messages list.
+ Once complete, this local echo will be replaced by the event saved by the homeserver.
+
+ @param text the text to send.
+ @param success A block object called when the operation succeeds. It returns
+ the event id of the event generated on the home server
+ @param failure A block object called when the operation fails.
+ */
+- (void)sendImage:(UIImage*)image
+          success:(void (^)(NSString *eventId))success
+          failure:(void (^)(NSError *error))failure;
+
 @end

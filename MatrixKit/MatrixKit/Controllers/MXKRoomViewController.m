@@ -634,7 +634,11 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
 - (void)sendTextMessage:(NSString*)msgTxt {
 
     // Let the datasource send it and manage the local echo
-    [dataSource sendTextMessage:msgTxt success:nil failure:nil];
+    [dataSource sendTextMessage:msgTxt success:nil failure:^(NSError *error) {
+
+        // @TODO
+        NSLog(@"[MXKRoomViewController] sendTextMessage failed. Error:%@", error);
+    }];
 }
 
 - (MXEvent*)createLocalEchoEventWithoutContent {
@@ -870,8 +874,13 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     }
 }
 
-- (void)roomInputToolbarView:(MXKRoomInputToolbarView*)toolbarView sendImage:(UIImage*)image{
-    // TODO
+- (void)roomInputToolbarView:(MXKRoomInputToolbarView*)toolbarView sendImage:(UIImage*)image {
+    // Let the datasource send it and manage the local echo
+    [dataSource sendImage:image success:nil failure:^(NSError *error) {
+        // @TODO
+        NSLog(@"[MXKRoomViewController] sendImage failed. Error:%@", error);
+    }];
+
 }
 
 - (void)roomInputToolbarView:(MXKRoomInputToolbarView*)toolbarView sendVideo:(NSURL*)videoURL withThumbnail:(UIImage*)videoThumbnail {

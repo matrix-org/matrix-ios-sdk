@@ -300,6 +300,10 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
     }];
 }
 
+- (void)sendImage:(UIImage *)image success:(void (^)(NSString *))success failure:(void (^)(NSError *))failure {
+
+    // @TODO
+}
 
 #pragma mark - Private methods
 - (void)removeLocalEchoFromCellData:(MXEvent*)localEchoEvent {
