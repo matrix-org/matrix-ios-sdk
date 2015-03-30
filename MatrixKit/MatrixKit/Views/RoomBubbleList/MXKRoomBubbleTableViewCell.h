@@ -26,35 +26,42 @@
 
 #pragma mark - MXKCellRenderingDelegate cell tap locations
 /**
- Gesture identifier used when the user tapped on avatar view.
+ Action identifier used when the user tapped on avatar view.
  
  The `userInfo` dictionary contains an `NSString` object under the `kMXKRoomBubbleCellUserIdKey` key, representing the user id of the tapped avatar.
  */
 extern NSString *const kMXKRoomBubbleCellTapOnAvatarView;
 
 /**
- Gesture identifier used when the user tapped on date/time container.
+ Action identifier used when the user tapped on date/time container.
  
  The `userInfo` is nil.
  */
 extern NSString *const kMXKRoomBubbleCellTapOnDateTimeContainer;
 
 /**
- Gesture identifier used when the user tapped on attachment view.
+ Action identifier used when the user tapped on attachment view.
  
  The `userInfo` is nil. The attachment can be retrieved via MXKRoomBubbleTableViewCell.attachmentView.
  */
 extern NSString *const kMXKRoomBubbleCellTapOnAttachmentView;
 
 /**
- Gesture identifier used when the user long pressed on a displayed event.
+ Action identifier used when the user pressed unsent button displayed in front of an unsent event.
+ 
+ The `userInfo` dictionary contains an `MXEvent` object under the `kMXKRoomBubbleCellEventKey` key, representing the unsent event.
+ */
+extern NSString *const kMXKRoomBubbleCellUnsentButtonPressed;
+
+/**
+ Action identifier used when the user long pressed on a displayed event.
  
  The `userInfo` dictionary contains an `MXEvent` object under the `kMXKRoomBubbleCellEventKey` key, representing the selected event.
  */
 extern NSString *const kMXKRoomBubbleCellLongPressOnEvent;
 
 /**
- Gesture identifier used when the user long pressed on progress view.
+ Action identifier used when the user long pressed on progress view.
  
  The `userInfo` is nil. The progress view can be retrieved via MXKRoomBubbleTableViewCell.progressView.
  */

@@ -102,7 +102,10 @@
  */
 @property (nonatomic) BOOL startsWithSenderName;
 
-
+/**
+ YES if the sender is currently typing in the current room
+ */
+@property (nonatomic) BOOL isTyping;
 
 
 #pragma mark - Public methods

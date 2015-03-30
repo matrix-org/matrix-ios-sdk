@@ -51,23 +51,13 @@
                 unsentButton.backgroundColor = [UIColor whiteColor];
                 unsentButton.titleLabel.font =  [UIFont systemFontOfSize:14];
                 
-                // add a dummy label to store the event ID
-                // so the message will be easily found when the button will be tapped
-                UILabel* hiddenLabel = [[UILabel alloc] init];
-                hiddenLabel.tag = 4; // TODO GFO ROOM_MESSAGE_CELL_HIDDEN_UNSENT_MSG_LABEL_TAG;
-                hiddenLabel.text = component.event.eventId;
-                hiddenLabel.hidden = YES;
-                hiddenLabel.frame = CGRectZero;
-                hiddenLabel.userInteractionEnabled = YES;
-                [unsentButton addSubview:hiddenLabel];
-                
-                // TODO GFO [unsentButton addTarget:self action:@selector(onResendToggle:) forControlEvents:UIControlEventTouchUpInside];
+                [unsentButton addTarget:self action:@selector(onResendToggle:) forControlEvents:UIControlEventTouchUpInside];
                 
                 [self.dateTimeLabelContainer addSubview:unsentButton];
                 self.dateTimeLabelContainer.hidden = NO;
                 self.dateTimeLabelContainer.userInteractionEnabled = YES;
                 
-                // ensure that dateTimeLabelContainer is at front to catch the the tap event
+                // ensure that dateTimeLabelContainer is at front to catch the tap event
                 [self.dateTimeLabelContainer.superview bringSubviewToFront:self.dateTimeLabelContainer];
             }
         }
@@ -139,6 +129,35 @@
     // even during animation while enlarging/reducing the viewcontroller (with UISplitViewController)
     CGFloat leftInset = self.bubbleData.maxTextViewWidth -  self.bubbleData.contentSize.width;
     self.messageTextView.contentInset = UIEdgeInsetsMake(0, leftInset, 0, -leftInset);
+}
+
+#pragma mark - User actions
+
+- (IBAction)onResendToggle:(id)sender {
+    
+    if ([sender isKindOfClass:[UIButton class]] && self.delegate) {
+        
+        MXEvent *selectedEvent = nil;
+        if (self.bubbleData.bubbleComponents.count == 1) {
+            MXKRoomBubbleComponent *component = [self.bubbleData.bubbleComponents firstObject];
+            selectedEvent = component.event;
+        } else if (self.bubbleData.bubbleComponents.count) {
+            // Here the selected view is a textView (attachment has no more than one component)
+            
+            // Look for the selected component
+            UIButton *unsentButton = (UIButton *)sender;
+            for (MXKRoomBubbleComponent *component in self.bubbleData.bubbleComponents) {
+                if (unsentButton.frame.origin.y == component.position.y) {
+                    selectedEvent = component.event;
+                    break;
+                }
+            }
+        }
+        
+        if (selectedEvent) {
+            [self.delegate cell:self didRecognizeAction:kMXKRoomBubbleCellUnsentButtonPressed userInfo:@{kMXKRoomBubbleCellEventKey:selectedEvent}];
+        }
+    }
 }
 
 @end

@@ -34,7 +34,7 @@
         self.userNameLabel.hidden = (self.bubbleData.isSameSenderAsPreviousBubble || self.bubbleData.startsWithSenderName);
         self.userNameLabel.text = self.bubbleData.senderDisplayName;
         // Set typing badge visibility
-        self.typingBadge.hidden = YES; // TODO GFO (self.pictureView.hidden || ([currentTypingUsers indexOfObject:message.senderId] == NSNotFound));
+        self.typingBadge.hidden = (self.pictureView.hidden || !self.bubbleData.isTyping);
         if (!self.typingBadge.hidden) {
             [self.typingBadge.superview bringSubviewToFront:self.typingBadge];
         }

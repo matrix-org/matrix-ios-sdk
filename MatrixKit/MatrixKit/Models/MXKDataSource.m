@@ -100,12 +100,12 @@
 
 
 #pragma mark - MXKCellRenderingDelegate
-- (void)cell:(id<MXKCellRendering>)cell didRecognizeGesture:(NSString*)gestureIdentifier userInfo:(NSDictionary *)userInfo {
+- (void)cell:(id<MXKCellRendering>)cell didRecognizeAction:(NSString*)actionIdentifier userInfo:(NSDictionary *)userInfo {
 
     // The data source simply relays the information to its delegate
-    if (_delegate && [_delegate respondsToSelector:@selector(dataSource:didRecognizeGesture:inCell:userInfo:)]) {
+    if (_delegate && [_delegate respondsToSelector:@selector(dataSource:didRecognizeAction:inCell:userInfo:)]) {
 
-        [_delegate dataSource:self didRecognizeGesture:gestureIdentifier inCell:cell userInfo:userInfo];
+        [_delegate dataSource:self didRecognizeAction:actionIdentifier inCell:cell userInfo:userInfo];
     }
 }
 

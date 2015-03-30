@@ -26,7 +26,7 @@
 
 @implementation MXKRoomBubbleCellData
 @synthesize senderId, roomId, senderDisplayName, senderAvatarUrl, isSameSenderAsPreviousBubble, date, isIncoming, isAttachment;
-@synthesize attributedTextMessage, startsWithSenderName;
+@synthesize attributedTextMessage, startsWithSenderName, isTyping;
 
 
 - (instancetype)initWithEvent:(MXEvent *)event andRoomState:(MXRoomState *)roomState andRoomDataSource:(MXKRoomDataSource *)roomDataSource {

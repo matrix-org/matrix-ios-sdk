@@ -20,6 +20,7 @@
 NSString *const kMXKRoomBubbleCellTapOnAvatarView = @"kMXKRoomBubbleCellTapOnAvatarView";
 NSString *const kMXKRoomBubbleCellTapOnDateTimeContainer = @"kMXKRoomBubbleCellTapOnDateTimeContainer";
 NSString *const kMXKRoomBubbleCellTapOnAttachmentView = @"kMXKRoomBubbleCellTapOnAttachmentView";
+NSString *const kMXKRoomBubbleCellUnsentButtonPressed = @"kMXKRoomBubbleCellUnsentButtonPressed";
 
 NSString *const kMXKRoomBubbleCellLongPressOnEvent = @"kMXKRoomBubbleCellLongPressOnEvent";
 NSString *const kMXKRoomBubbleCellLongPressOnProgressView = @"kMXKRoomBubbleCellLongPressOnProgressView";
@@ -408,19 +409,19 @@ NSString *const kMXKRoomBubbleCellEventKey = @"kMXKRoomBubbleCellEventKey";
 #pragma mark - User actions
 - (IBAction)onAvatarTap:(UITapGestureRecognizer*)sender {
     if (delegate) {
-        [delegate cell:self didRecognizeGesture:kMXKRoomBubbleCellTapOnAvatarView userInfo:@{kMXKRoomBubbleCellUserIdKey: bubbleData.senderId}];
+        [delegate cell:self didRecognizeAction:kMXKRoomBubbleCellTapOnAvatarView userInfo:@{kMXKRoomBubbleCellUserIdKey: bubbleData.senderId}];
     }
 }
 
 - (IBAction)onAttachmentTap:(UITapGestureRecognizer*)sender {
     if (delegate) {
-        [delegate cell:self didRecognizeGesture:kMXKRoomBubbleCellTapOnAttachmentView userInfo:nil];
+        [delegate cell:self didRecognizeAction:kMXKRoomBubbleCellTapOnAttachmentView userInfo:nil];
     }
 }
 
 - (IBAction)showHideDateTime:(id)sender {
     if (delegate) {
-        [delegate cell:self didRecognizeGesture:kMXKRoomBubbleCellTapOnDateTimeContainer userInfo:nil];
+        [delegate cell:self didRecognizeAction:kMXKRoomBubbleCellTapOnDateTimeContainer userInfo:nil];
     }
 }
 
@@ -430,7 +431,7 @@ NSString *const kMXKRoomBubbleCellEventKey = @"kMXKRoomBubbleCellEventKey";
         
         // Check the view on which long press has been detected
         if (view == self.progressView) {
-            [delegate cell:self didRecognizeGesture:kMXKRoomBubbleCellLongPressOnProgressView userInfo:nil];
+            [delegate cell:self didRecognizeAction:kMXKRoomBubbleCellLongPressOnProgressView userInfo:nil];
         }
         else if (view == self.messageTextView || view == self.attachmentView) {
             MXEvent *selectedEvent = nil;
@@ -442,7 +443,6 @@ NSString *const kMXKRoomBubbleCellEventKey = @"kMXKRoomBubbleCellEventKey";
                 
                 // Look for the selected component
                 CGPoint longPressPoint = [longPressGestureRecognizer locationInView:view];
-                [bubbleData prepareBubbleComponentsPosition];
                 for (MXKRoomBubbleComponent *component in bubbleData.bubbleComponents) {
                     if (longPressPoint.y < component.position.y) {
                         break;
@@ -452,7 +452,7 @@ NSString *const kMXKRoomBubbleCellEventKey = @"kMXKRoomBubbleCellEventKey";
             }
             
             if (selectedEvent) {
-                [delegate cell:self didRecognizeGesture:kMXKRoomBubbleCellLongPressOnEvent userInfo:@{kMXKRoomBubbleCellEventKey:selectedEvent}];
+                [delegate cell:self didRecognizeAction:kMXKRoomBubbleCellLongPressOnEvent userInfo:@{kMXKRoomBubbleCellEventKey:selectedEvent}];
             }
         }
     }

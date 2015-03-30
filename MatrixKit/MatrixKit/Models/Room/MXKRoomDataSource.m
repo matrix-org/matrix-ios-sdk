@@ -60,6 +60,16 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
      Local echo events which requests are pending.
      */
     NSMutableArray *pendingLocalEchoes;
+    
+    /**
+     Typing notifications listener.
+     */
+    id typingNotifListener;
+    
+    /**
+     List of members who are typing in the room.
+     */
+    NSArray *currentTypingUsers;
 }
 
 @end
@@ -111,6 +121,12 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
         [_room removeListener:liveEventsListener];
         liveEventsListener = nil;
     }
+    
+    if (_room && typingNotifListener) {
+        [_room removeListener:typingNotifListener];
+        typingNotifListener = nil;
+    }
+    currentTypingUsers = nil;
 }
 
 - (void)didMXSessionStateChange {
@@ -126,7 +142,10 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
                 [_room resetBackState];
 
                 // Force to set the filter at the MXRoom level
-                self.eventsFilterForMessages = _eventsFilterForMessages;
+                self.eventsFilterForMessages = _eventsFilterForMessages;\
+                
+                // Register on typing notif
+                [self listenTypingNotifications];
 
                 // If the view controller requests pagination before _room was ready, it is
                 // the right time to do it
@@ -175,6 +194,39 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
             [self processQueuedEvents:nil];
         }
     }];
+}
+
+- (void)listenTypingNotifications {
+    
+    // Remove the previous live listener
+    if (typingNotifListener) {
+        [_room removeListener:typingNotifListener];
+        currentTypingUsers = nil;
+    }
+    
+    // Add typing notification listener
+    typingNotifListener = [_room listenToEventsOfTypes:@[kMXEventTypeStringTypingNotification] onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+        
+        // Handle only live events
+        if (direction == MXEventDirectionForwards) {
+            // Retrieve typing users list
+            NSMutableArray *typingUsers = [NSMutableArray arrayWithArray:_room.typingUsers];
+            // Remove typing info for the current user
+            NSUInteger index = [typingUsers indexOfObject:mxSession.myUser.userId];
+            if (index != NSNotFound) {
+                [typingUsers removeObjectAtIndex:index];
+            }
+            // Ignore this notification if both arrays are empty
+            if (currentTypingUsers.count || typingUsers.count) {
+                currentTypingUsers = typingUsers;
+                
+                if (self.delegate) {
+                    [self.delegate dataSource:self didChange:nil];
+                }
+            }
+        }
+    }];
+    currentTypingUsers = _room.typingUsers;
 }
 
 
@@ -478,6 +530,9 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
     if (!cell.delegate) {
         cell.delegate = self;
     }
+    
+    // Update typing flag before rendering
+    bubbleData.isTyping = ([currentTypingUsers indexOfObject:bubbleData.senderId] != NSNotFound);
 
     // Make the bubble display the data
     [cell render:bubbleData];
