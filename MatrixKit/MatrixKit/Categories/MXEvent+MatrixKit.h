@@ -30,6 +30,10 @@ typedef enum : NSUInteger {
      */
     MXKEventStateBing,
     /**
+     The data for the outgoing event is uploading. Once complete, the state will move to `MXKEventStateSending`.
+     */
+    MXKEventStateUploading,
+    /**
      The event is an outgoing event in progress (used for local echo).
      */
     MXKEventStateSending,

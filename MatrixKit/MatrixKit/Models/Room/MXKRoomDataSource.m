@@ -23,6 +23,8 @@
 #import "MXKRoomIncomingBubbleTableViewCell.h"
 #import "MXKRoomOutgoingBubbleTableViewCell.h"
 
+#import "MXKTools.h"
+
 #pragma mark - Constant definitions
 NSString *const kMXKRoomBubbleCellDataIdentifier = @"kMXKRoomBubbleCellDataIdentifier";
 
@@ -178,14 +180,14 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
             // Check for local echo suppression
             if (pendingLocalEchoes.count && [event.userId isEqualToString:mxSession.myUser.userId]) {
 
-                MXEvent *localEchoEvent = [self pendingLocalEchoRelatedToEvent:event];
-                if (localEchoEvent) {
+                MXEvent *localEcho = [self pendingLocalEchoRelatedToEvent:event];
+                if (localEcho) {
 
                     // Remove the event from the pending local echo list
-                    [self removePendingLocalEcho:localEchoEvent];
+                    [self removePendingLocalEcho:localEcho];
 
                     // Remove the local echo from its bubble data
-                    [self removeLocalEchoFromCellData:localEchoEvent];
+                    [self removeLocalEcho:localEcho];
                 }
             }
 
@@ -318,22 +320,80 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
                                  @"msgtype": msgType,
                                  @"body": text
                                  };
-
-    // Make the data source digest this fake local echo message
-    MXEvent *localEcho = [_eventFormatter fakeRoomMessageEventForRoomId:_roomId withEventId:nil andContent:msgContent];
-    localEcho.mxkState = MXKEventStateSending;
-
-    [self queueEventForProcessing:localEcho withRoomState:_room.state direction:MXEventDirectionForwards];
-    [self processQueuedEvents:nil];
-
-    // Register the echo as pending for its future deletion
-    [self addPendingLocalEcho:localEcho];
+    MXEvent *localEcho = [self addLocalEchoForMessageContent:msgContent];
 
     // Make the request to the homeserver
     [_room sendMessageOfType:msgType content:msgContent success:^(NSString *eventId) {
 
         // Nothing to do here
-        // The local echo will be removed when the corresponding event will comes through the events stream
+        // The local echo will be removed when the corresponding event will come through the events stream
+
+    } failure:^(NSError *error) {
+
+        // Update the local echo with the error state
+        localEcho.mxkState = MXKEventStateSendingFailed;
+        [self updateLocalEcho:localEcho];
+    }];
+}
+
+- (void)sendImage:(UIImage *)image success:(void (^)(NSString *))success failure:(void (^)(NSError *))failure {
+
+    // Make sure the uploaded image orientation is up
+    image = [MXKTools forceImageOrientationUp:image];
+
+    // @TODO: Does not limit images to jpeg
+    NSString *mimetype = @"image/jpeg";
+    NSData *imageData = UIImageJPEGRepresentation(image, 0.8);
+
+    // Create a fake URL that we use for this image data
+    // The URL does not need to be valid as the MediaManager will get the data
+    // directly from its cache
+    NSString *fakeMediaManagerURL = [[NSProcessInfo processInfo] globallyUniqueString];
+
+    NSString *cacheFilePath = [MXKMediaManager cachePathForMediaWithURL:fakeMediaManagerURL inFolder:self.roomId];
+    [MXKMediaManager writeMediaData:imageData toFilePath:cacheFilePath];
+
+    // Prepare the message content for building an echo message
+    NSDictionary *msgContent = @{
+                                     @"msgtype": kMXMessageTypeImage,
+                                     @"body": @"Image",
+                                     @"url": fakeMediaManagerURL,
+                                     @"info": @{
+                                             @"mimetype": mimetype,
+                                             @"w": @(image.size.width),
+                                             @"h": @(image.size.height),
+                                             @"size": @(imageData.length)
+                                             }
+                                 };
+    MXEvent *localEcho = [self addLocalEchoForMessageContent:msgContent withState:MXKEventStateUploading];
+
+    // Launch the upload to the Matrix Content repository
+    MXKMediaLoader *uploader = [MXKMediaManager prepareUploaderWithMatrixSession:mxSession initialRange:0 andRange:1];
+    [uploader uploadData:imageData mimeType:mimetype success:^(NSString *url) {
+
+        // Update the local echo state: move from content uploading to event sending
+        localEcho.mxkState = MXKEventStateSending;
+        [self updateLocalEcho:localEcho];
+
+        // Update the message content with the mxc:// of the media on the homeserver
+        NSMutableDictionary *msgContent2 = [NSMutableDictionary dictionaryWithDictionary:msgContent];
+        msgContent2[@"url"] = url;
+
+        // Update the local echo event too. It will be used to suppress this echo in [self pendingLocalEchoRelatedToEvent];
+        localEcho.content = msgContent2;
+
+        // Make the final request that posts the image event
+        [_room sendMessageOfType:kMXMessageTypeImage content:msgContent2 success:^(NSString *eventId) {
+
+            // Nothing to do here
+            // The local echo will be removed when the corresponding event will come through the events stream
+
+        } failure:^(NSError *error) {
+
+            // Update the local echo with the error state
+            localEcho.mxkState = MXKEventStateSendingFailed;
+            [self updateLocalEcho:localEcho];
+        }];
 
     } failure:^(NSError *error) {
 
@@ -352,28 +412,58 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
     }];
 }
 
-- (void)sendImage:(UIImage *)image success:(void (^)(NSString *))success failure:(void (^)(NSError *))failure {
-
-    // @TODO
-}
 
 #pragma mark - Private methods
-- (void)removeLocalEchoFromCellData:(MXEvent*)localEchoEvent {
+- (MXEvent*)addLocalEchoForMessageContent:(NSDictionary*)msgContent {
 
-    // Remove the event from the cell data
-    id<MXKRoomBubbleCellDataStoring> bubbleData = [self cellDataOfEventWithEventId:localEchoEvent.eventId];
+    return [self addLocalEchoForMessageContent:msgContent withState:MXKEventStateSending];
+}
+
+- (MXEvent*)addLocalEchoForMessageContent:(NSDictionary*)msgContent withState:(MXKEventState)eventState {
+
+    // Make the data source digest this fake local echo message
+    MXEvent *localEcho = [_eventFormatter fakeRoomMessageEventForRoomId:_roomId withEventId:nil andContent:msgContent];
+    localEcho.mxkState = eventState;
+
+    [self queueEventForProcessing:localEcho withRoomState:_room.state direction:MXEventDirectionForwards];
+    [self processQueuedEvents:nil];
+
+    // Register the echo as pending for its future deletion
+    [self addPendingLocalEcho:localEcho];
+
+    return localEcho;
+}
+
+- (void)updateLocalEcho:(MXEvent*)localEcho {
+
+    // Retrieve the cell data hosting the local echo
+    id<MXKRoomBubbleCellDataStoring> bubbleData = [self cellDataOfEventWithEventId:localEcho.eventId];
+    @synchronized (bubbleData) {
+        [bubbleData updateEvent:localEcho.eventId withEvent:localEcho];
+    }
+
+    // Inform the delegate
+    if (self.delegate) {
+        [self.delegate dataSource:self didChange:nil];
+    }
+}
+
+- (void)removeLocalEcho:(MXEvent*)localEcho {
+
+    // Remove the event from its cell data
+    id<MXKRoomBubbleCellDataStoring> bubbleData = [self cellDataOfEventWithEventId:localEcho.eventId];
 
     NSUInteger remainingEvents;
     @synchronized (bubbleData) {
-        remainingEvents = [bubbleData removeEvent:localEchoEvent.eventId];
+        remainingEvents = [bubbleData removeEvent:localEcho.eventId];
     }
 
     // Remove the broken link from the map
     @synchronized (eventIdToBubbleMap) {
-        [eventIdToBubbleMap removeObjectForKey:localEchoEvent.eventId];
+        [eventIdToBubbleMap removeObjectForKey:localEcho.eventId];
     }
 
-    // If there is no more events, kill the bubble
+    // If there is no more events in the bubble, kill it
     if (0 == remainingEvents) {
         [self removeCellData:bubbleData];
     }
@@ -547,11 +637,11 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
 /**
  Add a local echo event waiting for the true event coming down from the event stream.
  
- @param localEchoEvent the local echo.
+ @param localEcho the local echo.
  */
-- (void)addPendingLocalEcho:(MXEvent*)localEchoEvent {
+- (void)addPendingLocalEcho:(MXEvent*)localEcho {
 
-    [pendingLocalEchoes addObject:localEchoEvent];
+    [pendingLocalEchoes addObject:localEcho];
 }
 
 /**
@@ -561,9 +651,9 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
  It can be removed from the list because we received the true event from the event stream
  or the corresponding request has failed.
  */
-- (void)removePendingLocalEcho:(MXEvent*)localEchoEvent {
+- (void)removePendingLocalEcho:(MXEvent*)localEcho {
 
-    [pendingLocalEchoes removeObject:localEchoEvent];
+    [pendingLocalEchoes removeObject:localEcho];
 }
 
 /**
@@ -578,33 +668,33 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
     // This method returns a pending event (if any) whose content matches with received event content.
     NSString *msgtype = event.content[@"msgtype"];
 
-    MXEvent *localEchoEvent = nil;
+    MXEvent *localEcho = nil;
     for (NSInteger index = 0; index < pendingLocalEchoes.count; index++) {
-        localEchoEvent = [pendingLocalEchoes objectAtIndex:index];
-        NSString *pendingEventType = localEchoEvent.content[@"msgtype"];
+        localEcho = [pendingLocalEchoes objectAtIndex:index];
+        NSString *pendingEventType = localEcho.content[@"msgtype"];
 
         if ([msgtype isEqualToString:pendingEventType]) {
             if ([msgtype isEqualToString:kMXMessageTypeText] || [msgtype isEqualToString:kMXMessageTypeEmote]) {
                 // Compare content body
-                if ([event.content[@"body"] isEqualToString:localEchoEvent.content[@"body"]]) {
+                if ([event.content[@"body"] isEqualToString:localEcho.content[@"body"]]) {
                     break;
                 }
             } else if ([msgtype isEqualToString:kMXMessageTypeLocation]) {
                 // Compare geo uri
-                if ([event.content[@"geo_uri"] isEqualToString:localEchoEvent.content[@"geo_uri"]]) {
+                if ([event.content[@"geo_uri"] isEqualToString:localEcho.content[@"geo_uri"]]) {
                     break;
                 }
             } else {
                 // Here the type is kMXMessageTypeImage, kMXMessageTypeAudio or kMXMessageTypeVideo
-                if ([event.content[@"url"] isEqualToString:localEchoEvent.content[@"url"]]) {
+                if ([event.content[@"url"] isEqualToString:localEcho.content[@"url"]]) {
                     break;
                 }
             }
         }
-        localEchoEvent = nil;
+        localEcho = nil;
     }
 
-    return localEchoEvent;
+    return localEcho;
 }
 
 @end
