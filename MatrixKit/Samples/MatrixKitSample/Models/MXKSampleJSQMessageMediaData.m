@@ -18,6 +18,8 @@
 
 #import "MXKImageView.h"
 
+#import "JSQMessagesMediaViewBubbleImageMasker.h"
+
 @interface MXKSampleJSQMessageMediaData () {
 
     MXKRoomBubbleCellData *cellData;
@@ -40,11 +42,16 @@
 - (UIView *)mediaView {
 
     // MXKImageView will automatically download and cache the media thumbnail
-    MXKImageView *imageView = [[MXKImageView alloc] init];
+    MXKImageView *imageView = [[MXKImageView alloc] initWithFrame:CGRectMake(0, 0, cellData.contentSize.width, cellData.contentSize.height)];
     [imageView setImageURL:cellData.thumbnailURL withImageOrientation:cellData.thumbnailOrientation andPreviewImage:nil];
 
     // Use transparent color while downloading the media
     imageView.backgroundColor = [UIColor clearColor];
+
+    // Put the image view into a JSQMessages bubble
+    imageView.contentMode = UIViewContentModeScaleAspectFill;
+    imageView.clipsToBounds = YES;
+    [JSQMessagesMediaViewBubbleImageMasker applyBubbleImageMaskToMediaView:imageView isOutgoing:!cellData.isIncoming];
 
     return imageView;
 }
