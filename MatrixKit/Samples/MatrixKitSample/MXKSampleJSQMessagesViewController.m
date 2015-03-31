@@ -476,17 +476,15 @@
 #pragma mark - UIImagePickerControllerDelegate
 
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info {
-    
-    NSString *tmpMessage = nil;
-    
+
     NSString *mediaType = [info objectForKey:UIImagePickerControllerMediaType];
     if ([mediaType isEqualToString:(NSString *)kUTTypeImage]) {
         UIImage *selectedImage = [info objectForKey:UIImagePickerControllerOriginalImage];
         if (selectedImage) {
             NSLog(@"An Image has been selected");
-            // TODO
-//            [roomDataSource.room sendImage:selectedImage];
-            tmpMessage = @"attached Image";
+            [roomDataSource sendImage:selectedImage success:nil failure:^(NSError *error) {
+                // @TODO
+            }];
         }
     } else if ([mediaType isEqualToString:(NSString *)kUTTypeMovie]) {
         NSURL* selectedVideo = [info objectForKey:UIImagePickerControllerMediaURL];
@@ -495,15 +493,7 @@
             NSLog(@"A video has been selected");
             // TODO
 //            [roomDataSource.room sendVideo:selectedVideo];
-            tmpMessage = @"attached Video";
         }
-    }
-    
-    // Post a temporary message until attachments are supported
-    if (tmpMessage) {
-        [roomDataSource.room sendMessageOfType:kMXMessageTypeText content:@{@"body":tmpMessage} success:^(NSString *eventId) {
-        } failure:^(NSError *error) {
-        }];
     }
     
     [self dismissMediaPicker];
