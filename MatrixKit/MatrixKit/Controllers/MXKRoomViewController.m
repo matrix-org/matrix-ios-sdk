@@ -776,7 +776,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
 }
 
 #pragma mark - MXKDataSourceDelegate
-- (void)dataSource:(MXKDataSource *)dataSource didChange:(id)changes {
+- (void)dataSource:(MXKDataSource *)dataSource didCellChange:(id)changes {
     
     // For now, do a simple full reload
     [_tableView reloadData];

@@ -19,17 +19,47 @@
 #import <MatrixSDK/MatrixSDK.h>
 #import "MXKCellRendering.h"
 
+/**
+ List data source states
+ */
+typedef enum : NSUInteger {
+    /**
+     Initialisation is in progress.
+     */
+    MXKDataSourceStatePreparing,
+    
+    /**
+     Something wrong happens during initialisation.
+     */
+    MXKDataSourceStateFailed,
+    
+    /**
+     Data source is ready to be used.
+     */
+    MXKDataSourceStateReady
+    
+} MXKDataSourceState;
+
 @protocol MXKDataSourceDelegate;
 
 /**
  `MXKDataSource` is the base class for data sources managed by MatrixKit.
  */
-@interface MXKDataSource : NSObject <MXKCellRenderingDelegate>
+@interface MXKDataSource : NSObject <MXKCellRenderingDelegate> {
+    
+@protected
+    MXKDataSourceState state;
+}
 
 /**
  The matrix session.
  */
 @property (nonatomic, readonly) MXSession *mxSession;
+
+/**
+ The data source state
+ */
+@property (nonatomic, readonly) MXKDataSourceState state;
 
 /**
  The delegate notified when the data has been updated.
@@ -95,14 +125,22 @@
 @protocol MXKDataSourceDelegate <NSObject>
 
 /**
- Tells the delegate that the data source has changed.
+ Tells the delegate that some cell data/views have been changed.
 
  @param dataSource the involved data source.
  @param changes contains the index paths of objects that changed.
  */
-- (void)dataSource:(MXKDataSource*)dataSource didChange:(id /* @TODO*/)changes;
+- (void)dataSource:(MXKDataSource*)dataSource didCellChange:(id /* @TODO*/)changes;
 
 @optional
+
+/**
+ Tells the delegate that data source state changed
+ 
+ @param dataSource the involved data source.
+ @param state the new data source state.
+ */
+- (void)dataSource:(MXKDataSource*)dataSource didStateChange:(MXKDataSourceState)state;
 
 /**
  Tells the delegate when a user action is observed inside a cell.

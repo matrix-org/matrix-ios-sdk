@@ -183,6 +183,9 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
                 
                 // Register on typing notif
                 [self listenTypingNotifications];
+                
+                // Update here data source state if it is not already ready
+                state = MXKDataSourceStateReady;
 
                 // If the view controller requests pagination before _room was ready, it is
                 // the right time to do it
@@ -194,6 +197,13 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
             else {
                 NSLog(@"[MXKRoomDataSource] The user does not know the room %@", _roomId);
                 pendingPaginationRequestBlock = nil;
+                
+                // Update here data source state if it is not already ready
+                state = MXKDataSourceStateFailed;
+            }
+            
+            if (self.delegate && [self.delegate respondsToSelector:@selector(dataSource:didStateChange:)]) {
+                [self.delegate dataSource:self didStateChange:state];
             }
         }
     }
@@ -284,7 +294,7 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
                     // Update the delegate on main thread
                     dispatch_async(dispatch_get_main_queue(), ^{
                         if (self.delegate) {
-                            [self.delegate dataSource:self didChange:nil];
+                            [self.delegate dataSource:self didCellChange:nil];
                         }
                     });
                 }
@@ -318,7 +328,7 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
                 currentTypingUsers = typingUsers;
                 
                 if (self.delegate) {
-                    [self.delegate dataSource:self didChange:nil];
+                    [self.delegate dataSource:self didCellChange:nil];
                 }
             }
         }
@@ -502,7 +512,7 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
 
         // Inform the delegate
         if (self.delegate) {
-            [self.delegate dataSource:self didChange:nil];
+            [self.delegate dataSource:self didCellChange:nil];
         }
     }];
 }
@@ -539,7 +549,7 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
 
     // Inform the delegate
     if (self.delegate) {
-        [self.delegate dataSource:self didChange:nil];
+        [self.delegate dataSource:self didCellChange:nil];
     }
 }
 
@@ -568,7 +578,7 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
 
     // Update the delegate
     if (self.delegate) {
-        [self.delegate dataSource:self didChange:nil];
+        [self.delegate dataSource:self didCellChange:nil];
     }
 }
 
@@ -672,7 +682,7 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
             bubbles = bubblesSnapshot;
 
             if (self.delegate) {
-                [self.delegate dataSource:self didChange:nil];
+                [self.delegate dataSource:self didCellChange:nil];
             }
 
             // Inform about the end if requested

@@ -89,7 +89,7 @@ NSString *const kMXKRecentCellIdentifier = @"kMXKRecentCellIdentifier";
 - (void)didCellDataChange:(id<MXKRecentCellDataStoring>)cellData {
 
     if (self.delegate) {
-        [self.delegate dataSource:self didChange:nil];
+        [self.delegate dataSource:self didCellChange:nil];
     }
 }
 
@@ -158,7 +158,7 @@ NSString *const kMXKRecentCellIdentifier = @"kMXKRecentCellIdentifier";
 
                     // Signal change
                     if (self.delegate) {
-                        [self.delegate dataSource:self didChange:nil];
+                        [self.delegate dataSource:self didCellChange:nil];
                     }
                     break;
                 }
@@ -174,7 +174,7 @@ NSString *const kMXKRecentCellIdentifier = @"kMXKRecentCellIdentifier";
 
                     // Signal change
                     if (self.delegate) {
-                        [self.delegate dataSource:self didChange:nil];
+                        [self.delegate dataSource:self didCellChange:nil];
                     }
                 }
             }
@@ -201,8 +201,16 @@ NSString *const kMXKRecentCellIdentifier = @"kMXKRecentCellIdentifier";
             [cellDataArray addObject:cellData];
         }
     }
+    
+    // Update here data source state if it is not already ready
+    if (state != MXKDataSourceStateReady) {
+        state = MXKDataSourceStateReady;
+        if (self.delegate && [self.delegate respondsToSelector:@selector(dataSource:didStateChange:)]) {
+            [self.delegate dataSource:self didStateChange:state];
+        }
+    }
 
-    [self.delegate dataSource:self didChange:nil];
+    [self.delegate dataSource:self didCellChange:nil];
 }
 
 

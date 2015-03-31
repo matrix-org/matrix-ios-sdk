@@ -33,6 +33,7 @@
 @end
 
 @implementation MXKDataSource
+@synthesize state;
 
 #pragma mark - Life cycle
 - (instancetype)initWithMatrixSession:(MXSession *)matrixSession {
@@ -40,6 +41,7 @@
     self = [super init];
     if (self) {
         _mxSession = matrixSession;
+        state = MXKDataSourceStatePreparing;
         cellDataMap = [NSMutableDictionary dictionary];
         cellViewMap = [NSMutableDictionary dictionary];
 
