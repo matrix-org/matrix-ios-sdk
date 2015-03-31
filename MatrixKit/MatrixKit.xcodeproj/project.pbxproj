@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		3219CB8B1AA6F2780027D7E2 /* MatrixKitTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3219CB8A1AA6F2780027D7E2 /* MatrixKitTests.m */; };
 		3219CBC01AA6FB470027D7E2 /* MXKRoomViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3219CBBF1AA6FB470027D7E2 /* MXKRoomViewController.m */; };
+		3230A3721ACA835400CC57F5 /* MXKSampleJSQMessageMediaData.m in Sources */ = {isa = PBXBuildFile; fileRef = 3230A3711ACA835400CC57F5 /* MXKSampleJSQMessageMediaData.m */; };
 		327DCDC71AC1774000397E5E /* MXKRecentTableViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 327DCDC61AC1774000397E5E /* MXKRecentTableViewCell.xib */; };
 		328AC4861AA75E000044A6FB /* MXKRoomBubbleTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 328AC4851AA75E000044A6FB /* MXKRoomBubbleTableViewCell.m */; };
 		328AC4891AA75EDD0044A6FB /* MXKRoomIncomingBubbleTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 328AC4881AA75EDD0044A6FB /* MXKRoomIncomingBubbleTableViewCell.m */; };
@@ -85,6 +86,8 @@
 		3219CBBE1AA6FB470027D7E2 /* MXKRoomViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKRoomViewController.h; sourceTree = "<group>"; };
 		3219CBBF1AA6FB470027D7E2 /* MXKRoomViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKRoomViewController.m; sourceTree = "<group>"; };
 		3219CBC11AA6FB6B0027D7E2 /* MatrixKit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MatrixKit.h; sourceTree = "<group>"; };
+		3230A3701ACA835400CC57F5 /* MXKSampleJSQMessageMediaData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKSampleJSQMessageMediaData.h; sourceTree = "<group>"; };
+		3230A3711ACA835400CC57F5 /* MXKSampleJSQMessageMediaData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKSampleJSQMessageMediaData.m; sourceTree = "<group>"; };
 		327DCDC61AC1774000397E5E /* MXKRecentTableViewCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MXKRecentTableViewCell.xib; sourceTree = "<group>"; };
 		328AC4841AA75E000044A6FB /* MXKRoomBubbleTableViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKRoomBubbleTableViewCell.h; sourceTree = "<group>"; };
 		328AC4851AA75E000044A6FB /* MXKRoomBubbleTableViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKRoomBubbleTableViewCell.m; sourceTree = "<group>"; };
@@ -459,6 +462,8 @@
 				F0F148A21AB08F48005F5D4A /* MXKSampleJSQRoomBubbleCellData.m */,
 				F0F148A31AB08F48005F5D4A /* MXKSampleJSQRoomDataSource.h */,
 				F0F148A41AB08F48005F5D4A /* MXKSampleJSQRoomDataSource.m */,
+				3230A3701ACA835400CC57F5 /* MXKSampleJSQMessageMediaData.h */,
+				3230A3711ACA835400CC57F5 /* MXKSampleJSQMessageMediaData.m */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -627,6 +632,7 @@
 			files = (
 				F07E180E1ABC2EDA00DE3766 /* MXKRoomBubbleCellData.m in Sources */,
 				F0F148C61AB31240005F5D4A /* MXKTools.m in Sources */,
+				3230A3721ACA835400CC57F5 /* MXKSampleJSQMessageMediaData.m in Sources */,
 				32CEE2331AB1F5CB00F7C74D /* MXKSampleRecentsViewController.m in Sources */,
 				F07E180F1ABC2EDA00DE3766 /* MXKRoomBubbleMergingMessagesCellData.m in Sources */,
 				F0F1489B1AB059AC005F5D4A /* MXKSampleJSQMessagesViewController.m in Sources */,

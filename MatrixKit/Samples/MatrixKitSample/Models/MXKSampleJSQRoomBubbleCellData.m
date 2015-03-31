@@ -16,13 +16,16 @@
 
 #import "MXKSampleJSQRoomBubbleCellData.h"
 
+#import "MXKSampleJSQMessageMediaData.h"
+
 @implementation MXKSampleJSQRoomBubbleCellData
 
 #pragma mark - JSQMessageData
 
 - (BOOL)isMediaMessage {
-    // TODO
-    return NO;
+
+    // For now, support only image as media
+    return (MXKRoomBubbleCellDataTypeImage == self.dataType);
 }
 
 - (NSUInteger)messageHash {
@@ -31,6 +34,10 @@
 
 - (NSString *)text {
     return self.attributedTextMessage.string;
+}
+
+- (id<JSQMessageMediaData>)media {
+    return [[MXKSampleJSQMessageMediaData alloc] initWithCellData:self];
 }
 
 @end
