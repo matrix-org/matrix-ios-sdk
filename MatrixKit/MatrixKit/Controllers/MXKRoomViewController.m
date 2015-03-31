@@ -166,20 +166,9 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
 }
 
 - (void)dealloc {
-    _tableView.dataSource = nil;
-    _tableView.delegate = nil;
+    [self close];
+    
     _tableView = nil;
-    dataSource = nil;
-    
-    if (currentAlert) {
-        [currentAlert dismiss:NO];
-        currentAlert = nil;
-    }
-    
-    if (eventDetailsView) {
-        [eventDetailsView removeFromSuperview];
-        eventDetailsView = nil;
-    }
 }
 
 - (void)didReceiveMemoryWarning {
@@ -297,6 +286,26 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
         dataSource.delegate = nil;
         dataSource = nil;
         self.mxSession = nil;
+    }
+}
+
+- (void)close {
+    _tableView.dataSource = nil;
+    _tableView.delegate = nil;
+
+    [dataSource close];
+    dataSource = nil;
+    
+    self.mxSession = nil;
+    
+    if (currentAlert) {
+        [currentAlert dismiss:NO];
+        currentAlert = nil;
+    }
+    
+    if (eventDetailsView) {
+        [eventDetailsView removeFromSuperview];
+        eventDetailsView = nil;
     }
 }
 

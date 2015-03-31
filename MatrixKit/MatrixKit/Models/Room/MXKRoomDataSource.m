@@ -35,11 +35,6 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
 
 
 @interface MXKRoomDataSource () {
-
-    /**
-     The matrix session.
-     */
-    MXSession *mxSession;
     
     /**
      Potential request in progress to join the selected room
@@ -86,7 +81,6 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
     if (self) {
 
         _roomId = roomId;
-        mxSession = matrixSession;
         processingQueue = dispatch_queue_create("MXKRoomDataSource", DISPATCH_QUEUE_SERIAL);
         bubbles = [NSMutableArray array];
         eventsToProcess = [NSMutableArray array];
@@ -119,14 +113,12 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
     return self;
 }
 
-- (void)dealloc {
-    self.delegate = nil;
-    
+- (void)close {
     if (joinRequestInProgress) {
         [joinRequestInProgress cancel];
         joinRequestInProgress = nil;
     }
-
+    
     if (_room && liveEventsListener) {
         [_room removeListener:liveEventsListener];
         liveEventsListener = nil;
@@ -140,6 +132,11 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
         typingNotifListener = nil;
     }
     currentTypingUsers = nil;
+    
+    eventIdToBubbleMap = nil;
+    pendingLocalEchoes = nil;
+    
+    [super close];
 }
 
 - (void)didMXSessionStateChange {
@@ -210,7 +207,7 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
 
             // Check for local echo suppression
             MXEvent *localEcho;
-            if (pendingLocalEchoes.count && [event.userId isEqualToString:mxSession.myUser.userId]) {
+            if (pendingLocalEchoes.count && [event.userId isEqualToString:self.mxSession.myUser.userId]) {
 
                 localEcho = [self pendingLocalEchoRelatedToEvent:event];
                 if (localEcho) {
@@ -304,7 +301,7 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
             // Retrieve typing users list
             NSMutableArray *typingUsers = [NSMutableArray arrayWithArray:_room.typingUsers];
             // Remove typing info for the current user
-            NSUInteger index = [typingUsers indexOfObject:mxSession.myUser.userId];
+            NSUInteger index = [typingUsers indexOfObject:self.mxSession.myUser.userId];
             if (index != NSNotFound) {
                 [typingUsers removeObjectAtIndex:index];
             }
@@ -429,7 +426,7 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
     // The URL does not need to be valid as the MediaManager will get the data
     // directly from its cache
     // Pass this id in the URL is a nasty trick to retrieve it later
-    MXKMediaLoader *uploader = [MXKMediaManager prepareUploaderWithMatrixSession:mxSession initialRange:0 andRange:1];
+    MXKMediaLoader *uploader = [MXKMediaManager prepareUploaderWithMatrixSession:self.mxSession initialRange:0 andRange:1];
     NSString *fakeMediaManagerURL = uploader.uploadId;
 
     NSString *cacheFilePath = [MXKMediaManager cachePathForMediaWithURL:fakeMediaManagerURL inFolder:self.roomId];

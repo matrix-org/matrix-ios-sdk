@@ -52,6 +52,11 @@ extern NSString *const kCmdResetUserPowerLevel;
 - (void)displayRoom:(MXKRoomDataSource*)roomDataSource;
 
 /**
+ Release properly any resources.
+ */
+- (void)close;
+
+/**
  Register the MXKRoomInputToolbarView class used to instantiate the input toolbar view
  which will handle message composer and attachments selection for the room.
  

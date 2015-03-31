@@ -51,8 +51,20 @@
     return self;
 }
 
-- (void)dealloc {
+- (void)close {
+    
+    _mxSession = nil;
+    _delegate = nil;
+    
     [[NSNotificationCenter defaultCenter] removeObserver:self name:MXSessionStateDidChangeNotification object:nil];
+    cellDataMap = nil;
+    cellViewMap = nil;
+    state = MXKDataSourceStateClosed;
+}
+
+- (void)dealloc {
+    
+    [self close];
 }
 
 

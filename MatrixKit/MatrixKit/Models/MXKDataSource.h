@@ -36,7 +36,12 @@ typedef enum : NSUInteger {
     /**
      Data source is ready to be used.
      */
-    MXKDataSourceStateReady
+    MXKDataSourceStateReady,
+    
+    /**
+     Data source has been closed.
+     */
+    MXKDataSourceStateClosed
     
 } MXKDataSourceState;
 
@@ -75,6 +80,11 @@ typedef enum : NSUInteger {
  @return the newly created instance.
  */
 - (instancetype)initWithMatrixSession:(MXSession*)mxSession;
+
+/**
+ Release properly all data source resources
+ */
+- (void)close;
 
 /**
  This method is called when the state of the attached Matrix session has changed.

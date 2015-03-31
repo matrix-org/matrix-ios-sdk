@@ -58,13 +58,15 @@ NSString *const kMXKRecentCellIdentifier = @"kMXKRecentCellIdentifier";
     return self;
 }
 
-- (void)dealloc {
-    self.delegate = nil;
+- (void)close {
     cellDataArray = nil;
-
+    _eventFormatter = nil;
     if (liveEventsListener) {
+        [self.mxSession removeListener:liveEventsListener];
         liveEventsListener = nil;
     }
+    
+    [super close];
 }
 
 - (void)didMXSessionStateChange {
