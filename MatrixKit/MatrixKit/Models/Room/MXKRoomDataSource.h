@@ -140,6 +140,7 @@ extern NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier;
 #pragma mark - Pagination
 /**
  Load more messages from the history.
+ This method fails (with nil error) if the data source is not ready (see `MXKDataSourceStateReady`).
  
  @param numItems the number of items to get.
  @param success a block called when the operation succeeds.
@@ -149,6 +150,7 @@ extern NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier;
 
 /**
  Load enough messages to fill the rect.
+ This method fails (with nil error) if the data source is not ready (see `MXKDataSourceStateReady`).
  
  @param the rect to fill.
  @param success a block called when the operation succeeds.

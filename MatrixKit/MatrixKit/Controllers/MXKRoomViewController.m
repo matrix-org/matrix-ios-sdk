@@ -284,12 +284,15 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
             [self configureView];
         }
         
-        // Start showing history right now
-        [dataSource paginateBackMessagesToFillRect:self.view.frame success:^{
-            // @TODO (hide loading wheel)
-        } failure:^(NSError *error) {
-            // @TODO
-        }];
+        // Check data source state
+        if (dataSource.state == MXKDataSourceStateReady) {
+            // Start retrieving history right now
+            [self.dataSource paginateBackMessagesToFillRect:self.view.frame success:^{
+                // @TODO (hide loading wheel)
+            } failure:^(NSError *error) {
+                // @TODO
+            }];
+        }
     } else {
         dataSource.delegate = nil;
         dataSource = nil;
@@ -780,6 +783,18 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     
     // For now, do a simple full reload
     [_tableView reloadData];
+}
+
+- (void)dataSource:(MXKDataSource *)dataSource didStateChange:(MXKDataSourceState)state {
+    
+    if (state == MXKDataSourceStateReady) {
+        // Start retrieving history now
+        [self.dataSource paginateBackMessagesToFillRect:self.view.frame success:^{
+            // @TODO (hide loading wheel)
+        } failure:^(NSError *error) {
+            // @TODO
+        }];
+    }
 }
 
 - (void)dataSource:(MXKDataSource *)dataSource didRecognizeAction:(NSString *)actionIdentifier inCell:(id<MXKCellRendering>)cell userInfo:(NSDictionary *)userInfo {
