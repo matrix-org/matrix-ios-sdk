@@ -49,6 +49,8 @@
                                                                                         options:nil];
     self = nibViews.firstObject;
     if (self) {
+        [self setTranslatesAutoresizingMaskIntoConstraints: NO];
+        
         // Reset default container background color
         self.messageComposerContainer.backgroundColor = [UIColor clearColor];
         // Set default message composer background color

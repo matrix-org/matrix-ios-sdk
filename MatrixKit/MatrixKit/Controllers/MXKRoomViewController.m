@@ -117,6 +117,27 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     if (!_tableView) {
         // Instantiate view controller objects
         [[[self class] nib] instantiateWithOwner:self options:nil];
+        
+        // Adjust bottom constraint of the input toolbar container in order to take into account potential tabBar
+        if ([NSLayoutConstraint respondsToSelector:@selector(deactivateConstraints:)]) {
+            [NSLayoutConstraint deactivateConstraints:@[_roomInputToolbarContainerBottomConstraint]];
+        } else {
+            [self.view removeConstraint:_roomInputToolbarContainerBottomConstraint];
+        }
+        
+        _roomInputToolbarContainerBottomConstraint = [NSLayoutConstraint constraintWithItem:self.bottomLayoutGuide
+                                                                                  attribute:NSLayoutAttributeTop
+                                                                                  relatedBy:NSLayoutRelationEqual
+                                                                                     toItem:self.roomInputToolbarContainer
+                                                                                  attribute:NSLayoutAttributeBottom
+                                                                                 multiplier:1.0f
+                                                                                   constant:0.0f];
+        if ([NSLayoutConstraint respondsToSelector:@selector(activateConstraints:)]) {
+            [NSLayoutConstraint activateConstraints:@[_roomInputToolbarContainerBottomConstraint]];
+        } else {
+            [self.view addConstraint:_roomInputToolbarContainerBottomConstraint];
+        }
+        [self.view setNeedsUpdateConstraints];
     }
     
     // Set default input toolbar view
@@ -252,22 +273,28 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
 
 - (void)displayRoom:(MXKRoomDataSource *)roomDataSource {
     
-    dataSource = roomDataSource;
-    dataSource.delegate = self; // TODO GFO use unsafe_unretained to prevent memory leaks 
-    
-    // Report the matrix session at view controller level to update UI according to session state
-    self.mxSession = dataSource.mxSession;
-    
-    if (_tableView) {
-        [self configureView];
+    if (roomDataSource) {
+        dataSource = roomDataSource;
+        dataSource.delegate = self; // TODO GFO use unsafe_unretained to prevent memory leaks
+        
+        // Report the matrix session at view controller level to update UI according to session state
+        self.mxSession = dataSource.mxSession;
+        
+        if (_tableView) {
+            [self configureView];
+        }
+        
+        // Start showing history right now
+        [dataSource paginateBackMessagesToFillRect:self.view.frame success:^{
+            // @TODO (hide loading wheel)
+        } failure:^(NSError *error) {
+            // @TODO
+        }];
+    } else {
+        dataSource.delegate = nil;
+        dataSource = nil;
+        self.mxSession = nil;
     }
-
-    // Start showing history right now
-    [dataSource paginateBackMessagesToFillRect:self.view.frame success:^{
-        // @TODO (hide loading wheel)
-    } failure:^(NSError *error) {
-        // @TODO
-    }];
 }
 
 - (void)setRoomInputToolbarViewClass:(Class)roomInputToolbarViewClass {
@@ -283,10 +310,6 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     inputToolbarView.delegate = self;
     
     // Add the input toolbar view and define edge constraints
-    CGRect frame = _roomInputToolbarContainer.frame;
-    frame.origin.x = 0;
-    frame.origin.y = 0;
-    inputToolbarView.frame = frame;
     [_roomInputToolbarContainer addSubview:inputToolbarView];
     [_roomInputToolbarContainer addConstraint:[NSLayoutConstraint constraintWithItem:_roomInputToolbarContainer
                                                                            attribute:NSLayoutAttributeBottom
@@ -336,7 +359,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     CGFloat keyboardHeight = (endRect.origin.y == 0) ? endRect.size.width : endRect.size.height;
     
     // Compute the new bottom constraint for the input toolbar view (Don't forget potential tabBar)
-    CGFloat inputToolbarViewBottomConst = keyboardHeight - _tableView.contentInset.bottom;
+    CGFloat inputToolbarViewBottomConst = keyboardHeight - self.bottomLayoutGuide.length;
     
     // Compute the visible area (tableview + toolbar) at the end of animation
     CGFloat visibleArea = self.view.frame.size.height - _tableView.contentInset.top - keyboardHeight;
@@ -428,7 +451,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
             CGFloat keyboardHeight = screenSize.height - keyboardView.frame.origin.y;
             
             // Deduce the bottom constraint for the input toolbar view (Don't forget the potential tabBar)
-            CGFloat inputToolbarViewBottomConst = keyboardHeight - _tableView.contentInset.bottom;
+            CGFloat inputToolbarViewBottomConst = keyboardHeight - self.bottomLayoutGuide.length;
             // Check whether the keyboard is over the tabBar
             if (inputToolbarViewBottomConst < 0) {
                 inputToolbarViewBottomConst = 0;
