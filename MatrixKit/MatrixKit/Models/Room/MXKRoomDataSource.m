@@ -40,6 +40,11 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
      The matrix session.
      */
     MXSession *mxSession;
+    
+    /**
+     Potential request in progress to join the selected room
+     */
+    MXHTTPOperation *joinRequestInProgress;
 
     /**
      The listener to incoming events in the room.
@@ -123,6 +128,11 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
 
 - (void)dealloc {
     self.delegate = nil;
+    
+    if (joinRequestInProgress) {
+        [joinRequestInProgress cancel];
+        joinRequestInProgress = nil;
+    }
 
     if (_room && liveEventsListener) {
         [_room removeListener:liveEventsListener];
@@ -143,10 +153,27 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
 
     if (MXSessionStateStoreDataReady < self.mxSession.state) {
 
-        if (!_room) {
+        // Check whether the room is not already set (and if no request is in progress to join the room)
+        if (!_room && !joinRequestInProgress) {
 
-            _room = [self.mxSession roomWithRoomId:_roomId];
-            if (_room) {
+            MXRoom *selectedRoom = [self.mxSession roomWithRoomId:_roomId];
+            if (selectedRoom) {
+                // Check first whether we have to join the room
+                if (selectedRoom.state.membership == MXMembershipInvite) {
+                    joinRequestInProgress = [selectedRoom join:^{
+                        joinRequestInProgress = nil;
+                        [self didMXSessionStateChange];
+                    } failure:^(NSError *error) {
+                        joinRequestInProgress = nil;
+                        NSLog(@"[MXKRoomDataSource] Failed to join room (%@): %@", selectedRoom.state.displayname, error);
+                        // TODO Alert user
+                        //                        [[AppDelegate theDelegate] showErrorAsAlert:error];
+                    }];
+                    return;
+                }
+                
+                _room = selectedRoom;
+                
                 // @TODO: SDK: we need a reference when paginating back.
                 // Else, how to not conflict with other view controller?
                 [_room resetBackState];
@@ -161,13 +188,13 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
                 // the right time to do it
                 if (pendingPaginationRequestBlock) {
                     pendingPaginationRequestBlock();
+                    pendingPaginationRequestBlock = nil;
                 }
             }
             else {
                 NSLog(@"[MXKRoomDataSource] The user does not know the room %@", _roomId);
+                pendingPaginationRequestBlock = nil;
             }
-
-            pendingPaginationRequestBlock = nil;
         }
     }
 }
@@ -350,9 +377,8 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
         }];
     };
 
-    // Check MXSession is ready to serve data for the room
-    if (MXSessionStateStoreDataReady < self.mxSession.state) {
-
+    // Check whether the associated room is ready
+    if (_room) {
         // Yes, do it right now
         paginate();
     }
