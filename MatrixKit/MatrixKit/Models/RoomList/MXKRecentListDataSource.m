@@ -58,7 +58,7 @@ NSString *const kMXKRecentCellIdentifier = @"kMXKRecentCellIdentifier";
     return self;
 }
 
-- (void)close {
+- (void)destroy {
     cellDataArray = nil;
     _eventFormatter = nil;
     if (liveEventsListener) {
@@ -66,7 +66,7 @@ NSString *const kMXKRecentCellIdentifier = @"kMXKRecentCellIdentifier";
         liveEventsListener = nil;
     }
     
-    [super close];
+    [super destroy];
 }
 
 - (void)didMXSessionStateChange {

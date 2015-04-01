@@ -52,9 +52,9 @@ extern NSString *const kCmdResetUserPowerLevel;
 - (void)displayRoom:(MXKRoomDataSource*)roomDataSource;
 
 /**
- Release properly any resources.
+ Dispose of any resources.
  */
-- (void)close;
+- (void)destroy;
 
 /**
  Register the MXKRoomInputToolbarView class used to instantiate the input toolbar view

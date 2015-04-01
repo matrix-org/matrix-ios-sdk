@@ -24,6 +24,11 @@
  */
 typedef enum : NSUInteger {
     /**
+     Default value (used when all resources have been disposed).
+     */
+    MXKDataSourceStateUnknown,
+    
+    /**
      Initialisation is in progress.
      */
     MXKDataSourceStatePreparing,
@@ -36,12 +41,7 @@ typedef enum : NSUInteger {
     /**
      Data source is ready to be used.
      */
-    MXKDataSourceStateReady,
-    
-    /**
-     Data source has been closed.
-     */
-    MXKDataSourceStateClosed
+    MXKDataSourceStateReady
     
 } MXKDataSourceState;
 
@@ -82,9 +82,9 @@ typedef enum : NSUInteger {
 - (instancetype)initWithMatrixSession:(MXSession*)mxSession;
 
 /**
- Release properly all data source resources
+ Dispose all resources
  */
-- (void)close;
+- (void)destroy;
 
 /**
  This method is called when the state of the attached Matrix session has changed.

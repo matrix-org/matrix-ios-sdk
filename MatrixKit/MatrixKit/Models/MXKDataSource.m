@@ -51,22 +51,16 @@
     return self;
 }
 
-- (void)close {
+- (void)destroy {
     
     _mxSession = nil;
     _delegate = nil;
     
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:MXSessionStateDidChangeNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
     cellDataMap = nil;
     cellViewMap = nil;
-    state = MXKDataSourceStateClosed;
+    state = MXKDataSourceStateUnknown;
 }
-
-- (void)dealloc {
-    
-    [self close];
-}
-
 
 #pragma mark - MXSessionStateDidChangeNotification
 - (void)didMXSessionStateChange:(NSNotification *)notif {

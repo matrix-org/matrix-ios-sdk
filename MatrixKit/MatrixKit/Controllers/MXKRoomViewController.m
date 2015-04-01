@@ -166,9 +166,6 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
 }
 
 - (void)dealloc {
-    [self close];
-    
-    _tableView = nil;
 }
 
 - (void)didReceiveMemoryWarning {
@@ -258,13 +255,13 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     }
 }
 
-#pragma mark -
+#pragma mark - Public API
 
 - (void)displayRoom:(MXKRoomDataSource *)roomDataSource {
     
     if (roomDataSource) {
         dataSource = roomDataSource;
-        dataSource.delegate = self; // TODO GFO use unsafe_unretained to prevent memory leaks
+        dataSource.delegate = self;
         
         // Report the matrix session at view controller level to update UI according to session state
         self.mxSession = dataSource.mxSession;
@@ -283,17 +280,30 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
             }];
         }
     } else {
-        dataSource.delegate = nil;
+        [dataSource destroy];
         dataSource = nil;
         self.mxSession = nil;
     }
 }
 
-- (void)close {
+- (void)destroy {
+    
+    [self hideAttachmentView];
+    
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    
+    if (keyboardView) {
+        // Remove keyboard view observers
+        [keyboardView removeObserver:self forKeyPath:NSStringFromSelector(@selector(frame))];
+        [keyboardView removeObserver:self forKeyPath:NSStringFromSelector(@selector(center))];
+        keyboardView = nil;
+    }
+    
     _tableView.dataSource = nil;
     _tableView.delegate = nil;
+    _tableView = nil;
 
-    [dataSource close];
+    [dataSource destroy];
     dataSource = nil;
     
     self.mxSession = nil;
@@ -307,6 +317,14 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
         [eventDetailsView removeFromSuperview];
         eventDetailsView = nil;
     }
+    
+    if (inputToolbarView) {
+        inputToolbarView.delegate = nil;
+        [inputToolbarView removeFromSuperview];
+    }
+    
+    [typingTimer invalidate];
+    typingTimer = nil;
 }
 
 - (void)setRoomInputToolbarViewClass:(Class)roomInputToolbarViewClass {

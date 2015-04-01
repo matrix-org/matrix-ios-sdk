@@ -297,6 +297,8 @@ NSString *const kMXKRoomBubbleCellEventKey = @"kMXKRoomBubbleCellEventKey";
     while (self.progressView.gestureRecognizers.count) {
         [self.progressView removeGestureRecognizer:self.progressView.gestureRecognizers[0]];
     }
+    
+    delegate = nil;
 }
 
 - (void)updateProgressUI:(NSDictionary*)statisticsDict {

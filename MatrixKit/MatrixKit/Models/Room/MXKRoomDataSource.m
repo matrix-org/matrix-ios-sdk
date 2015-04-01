@@ -113,7 +113,10 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
     return self;
 }
 
-- (void)close {
+- (void)destroy {
+    
+    processingQueue = nil;
+    
     if (joinRequestInProgress) {
         [joinRequestInProgress cancel];
         joinRequestInProgress = nil;
@@ -133,10 +136,12 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
     }
     currentTypingUsers = nil;
     
+    bubbles = nil;
+    eventsToProcess = nil;
     eventIdToBubbleMap = nil;
     pendingLocalEchoes = nil;
     
-    [super close];
+    [super destroy];
 }
 
 - (void)didMXSessionStateChange {
