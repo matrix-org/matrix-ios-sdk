@@ -39,6 +39,8 @@
 		F07E18101ABC2EDA00DE3766 /* MXKRoomDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = F07E180C1ABC2EDA00DE3766 /* MXKRoomDataSource.m */; };
 		F07E18141ABC563900DE3766 /* MXEvent+MatrixKit.m in Sources */ = {isa = PBXBuildFile; fileRef = F07E18131ABC563900DE3766 /* MXEvent+MatrixKit.m */; };
 		F07E18171ABC8B8B00DE3766 /* MXKRoomBubbleComponent.m in Sources */ = {isa = PBXBuildFile; fileRef = F07E18161ABC8B8B00DE3766 /* MXKRoomBubbleComponent.m */; };
+		F094D15E1ACC8B9300994F67 /* MXKRoomInputToolbarViewWithSimpleTextView.m in Sources */ = {isa = PBXBuildFile; fileRef = F094D15C1ACC8B9300994F67 /* MXKRoomInputToolbarViewWithSimpleTextView.m */; };
+		F094D15F1ACC8B9300994F67 /* MXKRoomInputToolbarViewWithSimpleTextView.xib in Resources */ = {isa = PBXBuildFile; fileRef = F094D15D1ACC8B9300994F67 /* MXKRoomInputToolbarViewWithSimpleTextView.xib */; };
 		F094EC671ABAC380006B8CE3 /* MXKViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = F094EC661ABAC380006B8CE3 /* MXKViewController.m */; };
 		F09E28891AC1FE8F00C51E44 /* MXKRoomIncomingBubbleTableViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = F09E28881AC1FE8F00C51E44 /* MXKRoomIncomingBubbleTableViewCell.xib */; };
 		F09E288E1AC1FEDA00C51E44 /* MXKImageView.m in Sources */ = {isa = PBXBuildFile; fileRef = F09E288B1AC1FEDA00C51E44 /* MXKImageView.m */; };
@@ -145,6 +147,9 @@
 		F07E18131ABC563900DE3766 /* MXEvent+MatrixKit.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "MXEvent+MatrixKit.m"; sourceTree = "<group>"; };
 		F07E18151ABC8B8B00DE3766 /* MXKRoomBubbleComponent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKRoomBubbleComponent.h; sourceTree = "<group>"; };
 		F07E18161ABC8B8B00DE3766 /* MXKRoomBubbleComponent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKRoomBubbleComponent.m; sourceTree = "<group>"; };
+		F094D15B1ACC8B9300994F67 /* MXKRoomInputToolbarViewWithSimpleTextView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKRoomInputToolbarViewWithSimpleTextView.h; sourceTree = "<group>"; };
+		F094D15C1ACC8B9300994F67 /* MXKRoomInputToolbarViewWithSimpleTextView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKRoomInputToolbarViewWithSimpleTextView.m; sourceTree = "<group>"; };
+		F094D15D1ACC8B9300994F67 /* MXKRoomInputToolbarViewWithSimpleTextView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MXKRoomInputToolbarViewWithSimpleTextView.xib; sourceTree = "<group>"; };
 		F094EC651ABAC380006B8CE3 /* MXKViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKViewController.h; sourceTree = "<group>"; };
 		F094EC661ABAC380006B8CE3 /* MXKViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXKViewController.m; sourceTree = "<group>"; };
 		F09E28881AC1FE8F00C51E44 /* MXKRoomIncomingBubbleTableViewCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MXKRoomIncomingBubbleTableViewCell.xib; sourceTree = "<group>"; };
@@ -389,6 +394,9 @@
 				F0036EEE1AB98DC40008E432 /* MXKRoomInputToolbarView.xib */,
 				F00BB4481AB840B300AE388E /* MXKRoomInputToolbarViewWithHPGrowingText.h */,
 				F00BB4491AB840B300AE388E /* MXKRoomInputToolbarViewWithHPGrowingText.m */,
+				F094D15B1ACC8B9300994F67 /* MXKRoomInputToolbarViewWithSimpleTextView.h */,
+				F094D15C1ACC8B9300994F67 /* MXKRoomInputToolbarViewWithSimpleTextView.m */,
+				F094D15D1ACC8B9300994F67 /* MXKRoomInputToolbarViewWithSimpleTextView.xib */,
 			);
 			path = RoomInputToolbar;
 			sourceTree = "<group>";
@@ -569,6 +577,7 @@
 				F07D74AE1AC5A36B00D83B98 /* MXKEventDetailsView.xib in Resources */,
 				F09E28A11AC2007000C51E44 /* icon_users@2x.png in Resources */,
 				F09E289E1AC2007000C51E44 /* icon_search.png in Resources */,
+				F094D15F1ACC8B9300994F67 /* MXKRoomInputToolbarViewWithSimpleTextView.xib in Resources */,
 				32CEE2241AB1E37600F7C74D /* MXKRecentListViewController.xib in Resources */,
 				F0CE56E91AA8BB5E003BE77A /* Info.plist in Resources */,
 				F03A00241AAA19F30070A7D8 /* MXKRoomViewController.xib in Resources */,
@@ -657,6 +666,7 @@
 				F0CE56EB1AA8BB5E003BE77A /* MXKSampleMainTableViewController.m in Sources */,
 				328AC48F1AA86E110044A6FB /* MXKDataSource.m in Sources */,
 				F0CE56E51AA8BB5E003BE77A /* AppDelegate.m in Sources */,
+				F094D15E1ACC8B9300994F67 /* MXKRoomInputToolbarViewWithSimpleTextView.m in Sources */,
 				328AC4861AA75E000044A6FB /* MXKRoomBubbleTableViewCell.m in Sources */,
 				F00BB44D1AB88DCC00AE388E /* MXKAlert.m in Sources */,
 				F09E288F1AC1FEDA00C51E44 /* MXKPieChartView.m in Sources */,

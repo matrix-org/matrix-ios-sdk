@@ -105,9 +105,9 @@
  By default the right button of the toolbar offers the following options: attach media, invite new members.
  By default the left button is used to send the content of the message composer.
  */
-@interface MXKRoomInputToolbarView : UIView <UITextViewDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate> {
+@interface MXKRoomInputToolbarView : UIView <UIImagePickerControllerDelegate, UINavigationControllerDelegate> {
     /**
-     The message composer container view. Your own message composer may be added inside this container (after removing the default composer: `defaultMessageComposerTextView`).
+     The message composer container view. Your own message composer may be added inside this container.
      */
     UIView *messageComposerContainer;
 }
@@ -118,6 +118,11 @@
 @property (nonatomic) id<MXKRoomInputToolbarViewDelegate> delegate;
 
 /**
+ Background view which contains all view items.
+ */
+@property (weak, nonatomic) IBOutlet UIView *backgroundView;
+
+/**
   A custom button displayed on the left of the toolbar view.
  */
 @property (weak, nonatomic) IBOutlet UIButton *leftInputToolbarButton;
@@ -126,11 +131,6 @@
  A custom button displayed on the right of the toolbar view.
  */
 @property (weak, nonatomic) IBOutlet UIButton *rightInputToolbarButton;
-
-/**
- Default message composer defined in `messageComposerContainer`. You must remove it before adding your own message composer.
- */
-@property (weak, nonatomic) IBOutlet UITextView *defaultMessageComposerTextView;
 
 /**
  Layout constraint between the top of the message composer container and the top of its superview.

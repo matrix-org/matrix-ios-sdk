@@ -29,23 +29,19 @@
 
 @implementation MXKRoomInputToolbarViewWithHPGrowingText
 
-- (instancetype) init {
-    self = [super init];
+- (instancetype)initWithFrame:(CGRect)frame {
+    self = [super initWithFrame:frame];
     if (self) {
         // Customize here toolbar buttons
         
-        // Remove default composer
-        self.defaultMessageComposerTextView.delegate = nil;
-        [self.defaultMessageComposerTextView removeFromSuperview];
-        self.defaultMessageComposerTextView  = nil;
-        
         // Add customized message composer based on HPGrowingTextView use
-        CGRect frame = messageComposerContainer.frame;
-        frame.origin.x = frame.origin.y = 0;
-        growingTextView = [[HPGrowingTextView alloc] initWithFrame:frame];
+        growingTextView = [[HPGrowingTextView alloc] init];
         growingTextView.delegate = self;
         
-        // Report the input accessory view
+        [growingTextView setTranslatesAutoresizingMaskIntoConstraints: NO];
+        
+        // Add an accessory view to the text view in order to retrieve keyboard view.
+        self.inputAccessoryView = [[UIView alloc] initWithFrame:CGRectZero];
         growingTextView.internalTextView.inputAccessoryView = self.inputAccessoryView;
         
         // set text input font
@@ -57,6 +53,7 @@
         growingTextView.layer.borderColor = [UIColor lightGrayColor].CGColor;
         growingTextView.clipsToBounds = YES;
         growingTextView.backgroundColor = [UIColor whiteColor];
+        
         // on IOS 8, the growing textview animation could trigger weird UI animations
         // indeed, the messages tableView can be refreshed while its height is updated (e.g. when setting a message)
         growingTextView.animateHeightChange = NO;
@@ -64,33 +61,33 @@
         // Add the text composer by setting its edge constraints compare to the container.
         [messageComposerContainer addSubview:growingTextView];
         [messageComposerContainer addConstraint:[NSLayoutConstraint constraintWithItem:messageComposerContainer
-                                                                               attribute:NSLayoutAttributeBottom
-                                                                               relatedBy:NSLayoutRelationEqual
-                                                                                  toItem:growingTextView
-                                                                               attribute:NSLayoutAttributeBottom
-                                                                              multiplier:1.0f
-                                                                                constant:0.0f]];
+                                                                             attribute:NSLayoutAttributeBottom
+                                                                             relatedBy:NSLayoutRelationEqual
+                                                                                toItem:growingTextView
+                                                                             attribute:NSLayoutAttributeBottom
+                                                                            multiplier:1.0f
+                                                                              constant:0.0f]];
         [messageComposerContainer addConstraint:[NSLayoutConstraint constraintWithItem:messageComposerContainer
-                                                                               attribute:NSLayoutAttributeTop
-                                                                               relatedBy:NSLayoutRelationEqual
-                                                                                  toItem:growingTextView
-                                                                               attribute:NSLayoutAttributeTop
-                                                                              multiplier:1.0f
-                                                                                constant:0.0f]];
+                                                                             attribute:NSLayoutAttributeTop
+                                                                             relatedBy:NSLayoutRelationEqual
+                                                                                toItem:growingTextView
+                                                                             attribute:NSLayoutAttributeTop
+                                                                            multiplier:1.0f
+                                                                              constant:0.0f]];
         [messageComposerContainer addConstraint:[NSLayoutConstraint constraintWithItem:messageComposerContainer
-                                                                               attribute:NSLayoutAttributeLeading
-                                                                               relatedBy:NSLayoutRelationEqual
-                                                                                  toItem:growingTextView
-                                                                               attribute:NSLayoutAttributeLeading
-                                                                              multiplier:1.0f
-                                                                                constant:0.0f]];
+                                                                             attribute:NSLayoutAttributeLeading
+                                                                             relatedBy:NSLayoutRelationEqual
+                                                                                toItem:growingTextView
+                                                                             attribute:NSLayoutAttributeLeading
+                                                                            multiplier:1.0f
+                                                                              constant:0.0f]];
         [messageComposerContainer addConstraint:[NSLayoutConstraint constraintWithItem:messageComposerContainer
-                                                                               attribute:NSLayoutAttributeTrailing
-                                                                               relatedBy:NSLayoutRelationEqual
-                                                                                  toItem:growingTextView
-                                                                               attribute:NSLayoutAttributeTrailing
-                                                                              multiplier:1.0f
-                                                                                constant:0.0f]];
+                                                                             attribute:NSLayoutAttributeTrailing
+                                                                             relatedBy:NSLayoutRelationEqual
+                                                                                toItem:growingTextView
+                                                                             attribute:NSLayoutAttributeTrailing
+                                                                            multiplier:1.0f
+                                                                              constant:0.0f]];
         [messageComposerContainer setNeedsUpdateConstraints];
         
         lastEditedText = nil;

@@ -25,6 +25,8 @@
 #import "MXKImageView.h"
 #import "MXKEventDetailsView.h"
 
+#import "MXKRoomInputToolbarViewWithSimpleTextView.h"
+
 NSString *const kCmdChangeDisplayName = @"/nick";
 NSString *const kCmdEmote = @"/me";
 NSString *const kCmdJoinRoom = @"/join";
@@ -142,7 +144,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     }
     
     // Set default input toolbar view
-    [self setRoomInputToolbarViewClass:MXKRoomInputToolbarView.class];
+    [self setRoomInputToolbarViewClass:MXKRoomInputToolbarViewWithSimpleTextView.class];
     
     // Check whether a room source has been defined
     if (dataSource) {
@@ -335,9 +337,22 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     // Remove potential toolbar
     if (inputToolbarView) {
         inputToolbarView.delegate = nil;
+        
+        if ([NSLayoutConstraint respondsToSelector:@selector(deactivateConstraints:)]) {
+            [NSLayoutConstraint deactivateConstraints:inputToolbarView.constraints];
+        } else {
+            [_roomInputToolbarContainer removeConstraints:inputToolbarView.constraints];
+        }
         [inputToolbarView removeFromSuperview];
     }
-    inputToolbarView = [[roomInputToolbarViewClass alloc] init];
+
+    if ([roomInputToolbarViewClass nib]) {
+        inputToolbarView = [[roomInputToolbarViewClass nib] instantiateWithOwner:nil options:nil].firstObject;
+    } else
+    {
+        inputToolbarView = [[roomInputToolbarViewClass alloc] init];
+    }
+    
     inputToolbarView.delegate = self;
     
     // Add the input toolbar view and define edge constraints
