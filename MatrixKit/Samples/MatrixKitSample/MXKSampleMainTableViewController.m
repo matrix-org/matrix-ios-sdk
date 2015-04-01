@@ -52,9 +52,6 @@
 
     roomDataSourceManager = [MXKRoomDataSourceManager sharedManagerForMatrixSession:self.mxSession];
 
-    // Listen to MXSession state changes
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didMXSessionStateChange:) name:MXSessionStateDidChangeNotification object:nil];
-
     // As there is no mock for MatrixSDK yet, use a cache for Matrix data to boost init
     MXFileStore *mxFileStore = [[MXFileStore alloc] init];
     __weak typeof(self) weakSelf = self;
@@ -98,21 +95,9 @@
 
 - (void)configureView {
     [self.tableView reloadData];
+    self.tableView.allowsSelection = YES;
 }
 
-
-#pragma mark - MXSessionStateDidChangeNotification
-- (void)didMXSessionStateChange:(NSNotification *)notif {
-    // Show the spinner and enable selection in the table only if the MXSession is not up and running
-    if (MXSessionStateRunning == self.mxSession.state)
-    {
-        self.tableView.allowsSelection = YES;
-    }
-    else
-    {
-        self.tableView.allowsSelection = NO;
-    }
-}
 
 #pragma mark - Table View Data Source
 
