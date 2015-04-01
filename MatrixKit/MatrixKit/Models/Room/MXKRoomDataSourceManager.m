@@ -63,6 +63,7 @@
     if (self) {
         mxSession = matrixSession;
         roomDataSources = [NSMutableDictionary dictionary];
+        _releasePolicy = MXKRoomDataSourceManagerReleasePolicyNeverRelease;
     }
     return self;
 }
@@ -82,14 +83,36 @@
     roomDataSources[roomDataSource.roomId] = roomDataSource;
 }
 
-- (void)closeRoomDataSource:(MXKRoomDataSource *)roomDataSource {
+- (void)closeRoomDataSource:(MXKRoomDataSource *)roomDataSource forceClose:(BOOL)forceRelease {
 
-    // @TODO: cancel/close roomDataSource according to the close policy
-    // Currently it works as is the policy is MXKRoomDataSourceManagerReleasePolicyNeverRelease
-    //[roomDataSource removeAllListeners];
-    //[roomDataSource cancelAllRequests];
+    // The close consists in no more sending actions to the currrent view controller, the room data source delegate
+    // According to the policy, it is interesting to keep the room data source in life: it can keep managing echo messages
+    // in background for instance
+    roomDataSource.delegate = nil;
 
-    [roomDataSources removeObjectForKey:roomDataSource.roomId];
+    MXKRoomDataSourceManagerReleasePolicy releasePolicy = _releasePolicy;
+    if (forceRelease) {
+        // Act as ReleaseOnClose policy
+        releasePolicy = MXKRoomDataSourceManagerReleasePolicyReleaseOnClose;
+    }
+
+    switch (releasePolicy) {
+
+        case MXKRoomDataSourceManagerReleasePolicyReleaseOnClose:
+
+            // Destroy and forget the instance
+            [roomDataSource destroy];
+            [roomDataSources removeObjectForKey:roomDataSource.roomId];
+            break;
+
+        case MXKRoomDataSourceManagerReleasePolicyNeverRelease:
+
+            // Keep the instance for life. Do nothing
+            break;
+
+        default:
+            break;
+    }
 }
 
 @end

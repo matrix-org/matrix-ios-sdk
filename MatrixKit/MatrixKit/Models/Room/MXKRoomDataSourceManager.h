@@ -33,12 +33,9 @@ typedef enum : NSUInteger {
     MXKRoomDataSourceManagerReleasePolicyNeverRelease,
 
     /**
-     cceeds.
+     Created `MXKRoomDataSource` instances are once released when they are closed.
      */
     MXKRoomDataSourceManagerReleasePolicyReleaseOnClose,
-
-    MXKRoomDataSourceManagerReleasePolicyReleaseWhenRequestsComplete,
-
 
 } MXKRoomDataSourceManagerReleasePolicy;
 
@@ -72,9 +69,9 @@ typedef enum : NSUInteger {
 - (MXKRoomDataSource*)roomDataSourceForRoom:(NSString*)roomId create:(BOOL)create;
 
 /**
- Make a room data source be managed the manager.
+ Make a room data source be managed by the manager.
 
- Use this method to add MXKRoomDataSource-inherited instance that cannot be automatically created by 
+ Use this method to add a MXKRoomDataSource-inherited instance that cannot be automatically created by
  [MXKRoomDataSourceManager roomDataSourceForRoom::].
  
  @param the MXKRoomDataSource-inherited object to the manager scope.
@@ -84,9 +81,12 @@ typedef enum : NSUInteger {
 /**
  Close the roomDataSource.
  
- Listeners to Matrix live events will be stopped
+ The roomDataSource instance will be actually destroyed according to the current release policy.
+
+ @param roomDataSource the data source to release.
+ @param forceClose if yes the roomDataSource instance will be destroyed whatever the policy is.
  */
-- (void)closeRoomDataSource:(MXKRoomDataSource*)roomDataSource;
+- (void)closeRoomDataSource:(MXKRoomDataSource*)roomDataSource forceClose:(BOOL)forceRelease;
 
 /**
  The release policy to apply when `MXKRoomDataSource` instances are closed.

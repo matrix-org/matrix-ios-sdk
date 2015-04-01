@@ -21,8 +21,16 @@
 #import <MatrixSDK/MXFileStore.h>
 
 @interface MXKSampleMainTableViewController () {
-    
+
+    /**
+     The id of the current room.
+     */
     NSString *roomId;
+
+    /**
+     The room data source manager for the current Matrix sesion
+     */
+    MXKRoomDataSourceManager *roomDataSourceManager;
 }
 
 @end
@@ -41,6 +49,8 @@
                                                                accessToken:@"your_access_token"];
 
     self.mxSession = [[MXSession alloc] initWithMatrixRestClient:[[MXRestClient alloc] initWithCredentials:credentials]];
+
+    roomDataSourceManager = [MXKRoomDataSourceManager sharedManagerForMatrixSession:self.mxSession];
 
     // Listen to MXSession state changes
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didMXSessionStateChange:) name:MXSessionStateDidChangeNotification object:nil];
@@ -69,6 +79,16 @@
     // Test code for directly opening a VC
     //roomId = @"!vfFxDRtZSSdspfTSEr:matrix.org";
     //[self performSegueWithIdentifier:@"showSampleRoomViewController" sender:self];
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+
+    // Let the manager release the previous room data source
+     MXKRoomDataSource *roomDataSource = [roomDataSourceManager roomDataSourceForRoom:roomId create:NO];
+    if (roomDataSource) {
+        [roomDataSourceManager closeRoomDataSource:roomDataSource forceClose:NO];
+    }
 }
 
 - (void)didReceiveMemoryWarning {
@@ -146,23 +166,37 @@
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
 
-    MXKRoomDataSourceManager *roomDataSourceManager = [MXKRoomDataSourceManager sharedManagerForMatrixSession:self.mxSession];
-
     if ([segue.identifier isEqualToString:@"showSampleRecentsViewController"]) {
         MXKSampleRecentsViewController *sampleRecentListViewController = (MXKSampleRecentsViewController *)segue.destinationViewController;
         sampleRecentListViewController.delegate = self;
 
         MXKRecentListDataSource *listDataSource = [[MXKRecentListDataSource alloc] initWithMatrixSession:self.mxSession];
         [sampleRecentListViewController displayList:listDataSource];
-    } else if ([segue.identifier isEqualToString:@"showSampleRoomViewController"]) {
+    }
+    else if ([segue.identifier isEqualToString:@"showSampleRoomViewController"]) {
         MXKSampleRoomViewController *sampleRoomViewController = (MXKSampleRoomViewController *)segue.destinationViewController;
 
         MXKRoomDataSource *roomDataSource = [roomDataSourceManager roomDataSourceForRoom:roomId create:YES];
+
+        // As the sample plays with several kinds of room data source, make sure we reuse one with the right type
+        if (roomDataSource && NO == [roomDataSource isMemberOfClass:MXKRoomDataSource.class]) {
+            [roomDataSourceManager closeRoomDataSource:roomDataSource forceClose:YES];
+             roomDataSource = [roomDataSourceManager roomDataSourceForRoom:roomId create:YES];
+        }
+
         [sampleRoomViewController displayRoom:roomDataSource];
-    } else if ([segue.identifier isEqualToString:@"showSampleJSQMessagesViewController"]) {
+    }
+    else if ([segue.identifier isEqualToString:@"showSampleJSQMessagesViewController"]) {
         MXKSampleJSQMessagesViewController *sampleRoomViewController = (MXKSampleJSQMessagesViewController *)segue.destinationViewController;
 
         MXKSampleJSQRoomDataSource *roomDataSource = (MXKSampleJSQRoomDataSource *)[roomDataSourceManager roomDataSourceForRoom:roomId create:NO];
+
+        // As the sample plays with several kind of room data source, make sure we reuse one with the right type
+        if (roomDataSource && NO == [roomDataSource isMemberOfClass:MXKSampleJSQRoomDataSource.class]) {
+            [roomDataSourceManager closeRoomDataSource:roomDataSource forceClose:YES];
+            roomDataSource = nil;
+        }
+
         if (!roomDataSource) {
             roomDataSource = [[MXKSampleJSQRoomDataSource alloc] initWithRoomId:roomId andMatrixSession:self.mxSession];
             [roomDataSourceManager addRoomDataSource:roomDataSource];

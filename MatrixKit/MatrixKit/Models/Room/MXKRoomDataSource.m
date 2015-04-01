@@ -80,6 +80,8 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
     self = [super initWithMatrixSession:matrixSession];
     if (self) {
 
+        NSLog(@"[MXKRoomDataSource] initWithRoomId %p - room id: %@", self, _roomId);
+
         _roomId = roomId;
         processingQueue = dispatch_queue_create("MXKRoomDataSource", DISPATCH_QUEUE_SERIAL);
         bubbles = [NSMutableArray array];
@@ -114,7 +116,9 @@ NSString *const kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier = @"kMXK
 }
 
 - (void)destroy {
-    
+
+    NSLog(@"[MXKRoomDataSource] Destroy %p - room id: %@", self, _roomId);
+        
     processingQueue = nil;
     
     if (joinRequestInProgress) {
