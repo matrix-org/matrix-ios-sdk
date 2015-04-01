@@ -84,8 +84,9 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     NSString *selectedVideoCachePath;
 }
 
-@property (nonatomic) IBOutlet UITableView *tableView;
+@property (nonatomic) IBOutlet UITableView *bubblesTableView;
 @property (nonatomic) IBOutlet UIView *roomInputToolbarContainer;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *bubblesTableViewBottomConstraint;
 @property (weak, nonatomic) IBOutlet NSLayoutConstraint *roomInputToolbarContainerHeightConstraint;
 @property (weak, nonatomic) IBOutlet NSLayoutConstraint *roomInputToolbarContainerBottomConstraint;
 
@@ -114,7 +115,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     [super viewDidLoad];
     
     // Check whether the view controller has been pushed via storyboard
-    if (!_tableView) {
+    if (!_bubblesTableView) {
         // Instantiate view controller objects
         [[[self class] nib] instantiateWithOwner:self options:nil];
         
@@ -182,7 +183,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
             [self updateMessageTextViewFrame];
         }
         // Cell width will be updated, force table refresh to take into account changes of message components
-        [self.tableView reloadData];
+        [self.bubblesTableView reloadData];
     });
 }
 
@@ -192,7 +193,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     
     // Cell width will be updated, force table refresh to take into account changes of message components
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self.tableView reloadData];
+        [self.bubblesTableView reloadData];
     });
 }
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
@@ -206,7 +207,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
 - (void)updateMessageTextViewFrame {
     if (!keyboardView) {
         // Compute the visible area (tableview + toolbar)
-        CGFloat visibleArea = self.view.frame.size.height - _tableView.contentInset.top - keyboardView.frame.size.height;
+        CGFloat visibleArea = self.view.frame.size.height - _bubblesTableView.contentInset.top - keyboardView.frame.size.height;
         // Deduce max height of the message text input by considering the minimum height of the table view.
         inputToolbarView.maxHeight = visibleArea - MXKROOMVIEWCONTROLLER_MESSAGES_TABLE_MINIMUM_HEIGHT;
     }
@@ -217,24 +218,24 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
 - (void)configureView {
 
     // Set up table delegates
-    _tableView.delegate = self;
-    _tableView.dataSource = dataSource;
+    _bubblesTableView.delegate = self;
+    _bubblesTableView.dataSource = dataSource;
     
     // Set up classes to use for cells
-    [_tableView registerClass:[dataSource cellViewClassForCellIdentifier:kMXKRoomIncomingTextMsgBubbleTableViewCellIdentifier] forCellReuseIdentifier:kMXKRoomIncomingTextMsgBubbleTableViewCellIdentifier];
-    [_tableView registerClass:[dataSource cellViewClassForCellIdentifier:kMXKRoomOutgoingTextMsgBubbleTableViewCellIdentifier] forCellReuseIdentifier:kMXKRoomOutgoingTextMsgBubbleTableViewCellIdentifier];
-    [_tableView registerClass:[dataSource cellViewClassForCellIdentifier:kMXKRoomIncomingAttachmentBubbleTableViewCellIdentifier] forCellReuseIdentifier:kMXKRoomIncomingAttachmentBubbleTableViewCellIdentifier];
-    [_tableView registerClass:[dataSource cellViewClassForCellIdentifier:kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier] forCellReuseIdentifier:kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier];
+    [_bubblesTableView registerClass:[dataSource cellViewClassForCellIdentifier:kMXKRoomIncomingTextMsgBubbleTableViewCellIdentifier] forCellReuseIdentifier:kMXKRoomIncomingTextMsgBubbleTableViewCellIdentifier];
+    [_bubblesTableView registerClass:[dataSource cellViewClassForCellIdentifier:kMXKRoomOutgoingTextMsgBubbleTableViewCellIdentifier] forCellReuseIdentifier:kMXKRoomOutgoingTextMsgBubbleTableViewCellIdentifier];
+    [_bubblesTableView registerClass:[dataSource cellViewClassForCellIdentifier:kMXKRoomIncomingAttachmentBubbleTableViewCellIdentifier] forCellReuseIdentifier:kMXKRoomIncomingAttachmentBubbleTableViewCellIdentifier];
+    [_bubblesTableView registerClass:[dataSource cellViewClassForCellIdentifier:kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier] forCellReuseIdentifier:kMXKRoomOutgoingAttachmentBubbleTableViewCellIdentifier];
 }
 
 - (BOOL)isMessagesTableScrollViewAtTheBottom {
     
     // Check whether the most recent message is visible.
     // Compute the max vertical position visible according to contentOffset
-    CGFloat maxPositionY = _tableView.contentOffset.y + (_tableView.frame.size.height - _tableView.contentInset.bottom);
+    CGFloat maxPositionY = _bubblesTableView.contentOffset.y + (_bubblesTableView.frame.size.height - _bubblesTableView.contentInset.bottom);
     // Be a bit less retrictive, consider the table view at the bottom even if the most recent message is partially hidden
     maxPositionY += 30;
-    BOOL isScrolledToBottom = (maxPositionY >= _tableView.contentSize.height);
+    BOOL isScrolledToBottom = (maxPositionY >= _bubblesTableView.contentSize.height);
     
     // Consider the table view at the bottom if a scrolling to bottom is in progress too
     return (isScrolledToBottom || isScrollingToBottom);
@@ -242,14 +243,14 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
 
 - (void)scrollMessagesTableViewToBottomAnimated:(BOOL)animated {
     
-    if (_tableView.contentSize.height) {
-        CGFloat visibleHeight = _tableView.frame.size.height - _tableView.contentInset.top - _tableView.contentInset.bottom;
-        if (visibleHeight < _tableView.contentSize.height) {
-            CGFloat wantedOffsetY = _tableView.contentSize.height - visibleHeight - _tableView.contentInset.top;
-            CGFloat currentOffsetY = _tableView.contentOffset.y;
+    if (_bubblesTableView.contentSize.height) {
+        CGFloat visibleHeight = _bubblesTableView.frame.size.height - _bubblesTableView.contentInset.top - _bubblesTableView.contentInset.bottom;
+        if (visibleHeight < _bubblesTableView.contentSize.height) {
+            CGFloat wantedOffsetY = _bubblesTableView.contentSize.height - visibleHeight - _bubblesTableView.contentInset.top;
+            CGFloat currentOffsetY = _bubblesTableView.contentOffset.y;
             if (wantedOffsetY != currentOffsetY) {
                 isScrollingToBottom = YES;
-                [_tableView setContentOffset:CGPointMake(0, wantedOffsetY) animated:animated];
+                [_bubblesTableView setContentOffset:CGPointMake(0, wantedOffsetY) animated:animated];
             }
         }
     }
@@ -266,7 +267,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
         // Report the matrix session at view controller level to update UI according to session state
         self.mxSession = dataSource.mxSession;
         
-        if (_tableView) {
+        if (_bubblesTableView) {
             [self configureView];
         }
         
@@ -299,9 +300,9 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
         keyboardView = nil;
     }
     
-    _tableView.dataSource = nil;
-    _tableView.delegate = nil;
-    _tableView = nil;
+    _bubblesTableView.dataSource = nil;
+    _bubblesTableView.delegate = nil;
+    _bubblesTableView = nil;
 
     [dataSource destroy];
     dataSource = nil;
@@ -392,7 +393,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     CGFloat inputToolbarViewBottomConst = keyboardHeight - self.bottomLayoutGuide.length;
     
     // Compute the visible area (tableview + toolbar) at the end of animation
-    CGFloat visibleArea = self.view.frame.size.height - _tableView.contentInset.top - keyboardHeight;
+    CGFloat visibleArea = self.view.frame.size.height - _bubblesTableView.contentInset.top - keyboardHeight;
     // Deduce max height of the message text input by considering the minimum height of the table view.
     CGFloat maxTextHeight = visibleArea - MXKROOMVIEWCONTROLLER_MESSAGES_TABLE_MINIMUM_HEIGHT;
     
@@ -407,6 +408,8 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
         
         // Apply new constant
         _roomInputToolbarContainerBottomConstraint.constant = inputToolbarViewBottomConst;
+        _bubblesTableViewBottomConstraint.constant = inputToolbarViewBottomConst + _roomInputToolbarContainerHeightConstraint.constant;
+        
         // Force layout immediately to take into account new constraint
         [self.view layoutIfNeeded];
         
@@ -455,6 +458,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     // animate the keyboard closing
     [UIView animateWithDuration:animationDuration delay:0 options:UIViewAnimationOptionBeginFromCurrentState | (animationCurve << 16) animations:^{
         _roomInputToolbarContainerBottomConstraint.constant = 0;
+        _bubblesTableViewBottomConstraint.constant = _roomInputToolbarContainerHeightConstraint.constant;
         [_roomInputToolbarContainer setNeedsUpdateConstraints];
     } completion:^(BOOL finished) {
     }];
@@ -489,6 +493,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
             
             // Update toolbar constraint
             _roomInputToolbarContainerBottomConstraint.constant = inputToolbarViewBottomConst;
+            _bubblesTableViewBottomConstraint.constant = inputToolbarViewBottomConst + _roomInputToolbarContainerHeightConstraint.constant;
             [_roomInputToolbarContainer setNeedsUpdateConstraints];
         }
     }
@@ -809,7 +814,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
 - (void)dataSource:(MXKDataSource *)dataSource didCellChange:(id)changes {
     
     // For now, do a simple full reload
-    [_tableView reloadData];
+    [_bubblesTableView reloadData];
 }
 
 - (void)dataSource:(MXKDataSource *)dataSource didStateChange:(MXKDataSourceState)state {
@@ -940,7 +945,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
 - (void)scrollViewWillEndDragging:(UIScrollView *)scrollView withVelocity:(CGPoint)velocity targetContentOffset:(inout CGPoint *)targetContentOffset {
     
     // Detect vertical bounce at the top of the tableview to trigger pagination
-    if (scrollView == _tableView) {
+    if (scrollView == _bubblesTableView) {
         // paginate ?
         if (scrollView.contentOffset.y < -64) {
             [self triggerBackPagination];
@@ -971,9 +976,14 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     // Lays out the subviews immediately
     // We will scroll to bottom if the bottom of the table is currently visible
     BOOL shouldScrollToBottom = [self isMessagesTableScrollViewAtTheBottom];
-    [self.view layoutIfNeeded];
-    if (shouldScrollToBottom) {
-        [self scrollMessagesTableViewToBottomAnimated:NO];
+    CGFloat bubblesTableViewBottomConst = _roomInputToolbarContainerBottomConstraint.constant + _roomInputToolbarContainerHeightConstraint.constant;
+    if (_bubblesTableViewBottomConstraint.constant != bubblesTableViewBottomConst) {
+        _bubblesTableViewBottomConstraint.constant = bubblesTableViewBottomConst;
+        // Force to render the view
+        [self.view layoutIfNeeded];
+        if (shouldScrollToBottom) {
+            [self scrollMessagesTableViewToBottomAnimated:NO];
+        }
     }
 }
 
