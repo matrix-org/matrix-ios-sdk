@@ -24,6 +24,7 @@
 @property (nonatomic) BOOL hideUnsupportedEvents;
 @property (nonatomic) BOOL sortMembersUsingLastSeenTime;
 @property (nonatomic) BOOL displayLeftUsers;
+@property (nonatomic) BOOL supportWebRTC;
 
 // return YES if the user allows the local contacts sync
 @property (nonatomic) BOOL syncLocalContacts;

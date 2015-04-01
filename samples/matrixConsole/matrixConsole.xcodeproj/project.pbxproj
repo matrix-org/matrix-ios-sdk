@@ -81,6 +81,9 @@
 		F0F148A81AB1BF01005F5D4A /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F0F148A71AB1BF01005F5D4A /* AudioToolbox.framework */; };
 		F0F90C691A32596700455977 /* icon_search.png in Resources */ = {isa = PBXBuildFile; fileRef = F0F90C681A32596700455977 /* icon_search.png */; };
 		F0F90C6B1A325ABF00455977 /* icon_search@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = F0F90C6A1A325ABF00455977 /* icon_search@2x.png */; };
+		F8A0D75A1ACC62910023613A /* libresolv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F8A0D7581ACC62910023613A /* libresolv.dylib */; };
+		F8A0D75B1ACC62910023613A /* libc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F8A0D7591ACC62910023613A /* libc++.dylib */; };
+		F8A474C21AC19FE200927070 /* CallViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = F8A474C11AC19FE200927070 /* CallViewController.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -219,6 +222,10 @@
 		F0F148A71AB1BF01005F5D4A /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		F0F90C681A32596700455977 /* icon_search.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = icon_search.png; sourceTree = "<group>"; };
 		F0F90C6A1A325ABF00455977 /* icon_search@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon_search@2x.png"; sourceTree = "<group>"; };
+		F8A0D7581ACC62910023613A /* libresolv.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libresolv.dylib; path = usr/lib/libresolv.dylib; sourceTree = SDKROOT; };
+		F8A0D7591ACC62910023613A /* libc++.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libc++.dylib"; path = "usr/lib/libc++.dylib"; sourceTree = SDKROOT; };
+		F8A474C01AC19FE200927070 /* CallViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CallViewController.h; sourceTree = "<group>"; };
+		F8A474C11AC19FE200927070 /* CallViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CallViewController.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -230,6 +237,8 @@
 				71193D241A6D64F900E59A9E /* AddressBook.framework in Frameworks */,
 				F08DCBDB1A093BFA008C65B6 /* MobileCoreServices.framework in Frameworks */,
 				D648B86A591308736E2D4078 /* libPods-matrixConsole.a in Frameworks */,
+				F8A0D75B1ACC62910023613A /* libc++.dylib in Frameworks */,
+				F8A0D75A1ACC62910023613A /* libresolv.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -263,6 +272,8 @@
 		EAA71E3C2B16D1D86B3F5100 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				F8A0D7581ACC62910023613A /* libresolv.dylib */,
+				F8A0D7591ACC62910023613A /* libc++.dylib */,
 				F0F148A71AB1BF01005F5D4A /* AudioToolbox.framework */,
 				71193D231A6D64F900E59A9E /* AddressBook.framework */,
 				F08DCBDA1A093BFA008C65B6 /* MobileCoreServices.framework */,
@@ -433,6 +444,7 @@
 		F07A80D419DD9DE700B621A1 /* matrixConsole */ = {
 			isa = PBXGroup;
 			children = (
+				F8A474BF1AC19FAD00927070 /* OpenWebRTC */,
 				717629501A7A681B00927125 /* Resources */,
 				F021FBEC1A5EF57300EA3AE6 /* API */,
 				F0465AF71A251F85003639F9 /* Model */,
@@ -476,6 +488,15 @@
 				F07A80F319DD9DE700B621A1 /* Info.plist */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		F8A474BF1AC19FAD00927070 /* OpenWebRTC */ = {
+			isa = PBXGroup;
+			children = (
+				F8A474C01AC19FE200927070 /* CallViewController.h */,
+				F8A474C11AC19FE200927070 /* CallViewController.m */,
+			);
+			name = OpenWebRTC;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -643,6 +664,7 @@
 				F03EF5FF19F1762000A0EE52 /* RoomMessageTableCell.m in Sources */,
 				F07A80D819DD9DE700B621A1 /* main.m in Sources */,
 				71193D371A6E49F000E59A9E /* MXCEmail.m in Sources */,
+				F8A474C21AC19FE200927070 /* CallViewController.m in Sources */,
 				F077E6491A72966F008D5AD5 /* MatrixSDKHandler.m in Sources */,
 				71193D3E1A6E61AD00E59A9E /* SectionedContacts.m in Sources */,
 				F021FBEF1A5EF57300EA3AE6 /* MediaLoader.m in Sources */,
@@ -817,6 +839,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"\"${PODS_ROOT}/OpenWebRTC/OpenWebRTC.framework/Headers\"/**",
+				);
 				INFOPLIST_FILE = matrixConsole/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -830,6 +857,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"\"${PODS_ROOT}/OpenWebRTC/OpenWebRTC.framework/Headers\"/**",
+				);
 				INFOPLIST_FILE = matrixConsole/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";

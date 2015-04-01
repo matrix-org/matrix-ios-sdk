@@ -56,6 +56,7 @@ static AppSettings *sharedSettings = nil;
     [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"displayLeftUsers"];
     [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"maxMediaCacheSize"];
     [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"syncLocalContacts"];
+    [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"supportWebRTC"];
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
@@ -118,6 +119,16 @@ static AppSettings *sharedSettings = nil;
 
 - (void)setSyncLocalContacts:(BOOL)syncLocalContacts {
     [[NSUserDefaults standardUserDefaults] setBool:syncLocalContacts forKey:@"syncLocalContacts"];
+}
+
+- (BOOL)supportWebRTC {
+    // TODO: Temporary always enabled
+    return YES;
+    //return [[NSUserDefaults standardUserDefaults] boolForKey:@"supportWebRTC"];
+}
+
+- (void)setSupportWebRTC:(BOOL)supportWebRTC {
+    [[NSUserDefaults standardUserDefaults] setBool:supportWebRTC forKey:@"supportWebRTC"];
 }
 
 - (NSString*)countryCode {

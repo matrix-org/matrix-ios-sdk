@@ -25,6 +25,7 @@
 #import "RageShakableUIResponder.h"
 
 #import "AFNetworkReachabilityManager.h"
+#import <OpenWebRTC-SDK/OpenWebRTC.h>
 
 #define MAKE_STRING(x) #x
 #define MAKE_NS_STRING(x) @MAKE_STRING(x)
@@ -42,6 +43,13 @@
 
 + (AppDelegate*)theDelegate {
     return (AppDelegate*)[[UIApplication sharedApplication] delegate];
+}
+
++ (void)initialize
+{
+    if (self == [AppDelegate class]) {
+        [OpenWebRTC initialize];
+    }
 }
 
 #pragma mark -

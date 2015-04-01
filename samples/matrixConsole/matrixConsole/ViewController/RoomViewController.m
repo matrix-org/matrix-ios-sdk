@@ -14,7 +14,6 @@
  limitations under the License.
  */
 #import <MobileCoreServices/MobileCoreServices.h>
-
 #import <MediaPlayer/MediaPlayer.h>
 
 #import "RoomViewController.h"
@@ -34,6 +33,9 @@
 #import "MXCGrowingTextView.h"
 
 #import "EventDetailsView.h"
+
+#import <OpenWebRTC-SDK/OpenWebRTC.h>
+#import "CallViewController.h"
 
 #define ROOMVIEWCONTROLLER_TYPING_TIMEOUT_SEC 10
 
@@ -66,7 +68,7 @@ NSString *const kCmdSetUserPowerLevel = @"/op";
 NSString *const kCmdResetUserPowerLevel = @"/deop";
 
 
-@interface RoomViewController () {
+@interface RoomViewController () <OpenWebRTCNativeHandlerDelegate> {
     BOOL forceScrollToBottomOnViewDidAppear;
     BOOL isJoinRequestInProgress;
     BOOL isScrollingToBottom;
@@ -117,6 +119,11 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     
     // the user taps on a member thumbnail
     MXRoomMember *selectedRoomMember;
+
+    // Call specifics
+    MXEvent *inviteEvent;
+    NSDictionary *receivedOffer;
+    NSDictionary *generatedOffer;
 }
 
 @property (weak, nonatomic) IBOutlet UINavigationItem *roomNavItem;
@@ -146,6 +153,12 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
 @property (strong, nonatomic)NSMutableArray *messages;
 @property (strong, nonatomic)id messagesListener;
 @property (strong, nonatomic)id redactionListener;
+
+// WebRTC support
+@property (nonatomic, strong) OpenWebRTCNativeHandler *openWebRTCHandler;
+@property (nonatomic, weak) CallViewController *callViewController;
+@property (weak) id callMessagesListener;
+
 @end
 
 @implementation RoomViewController
@@ -199,6 +212,29 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     // indeed, the messages tableView can be refreshed while its height is updated (e.g. when setting a message)
     self.messageTextView.animateHeightChange = NO;
     lastEditedText = self.messageTextView.text;
+
+    self.openWebRTCHandler = [[OpenWebRTCNativeHandler alloc] initWithDelegate:self];
+    /*
+     TODO: Configure with helper servers provided by HS.
+
+    [self.openWebRTCHandler addSTUNServerWithAddress:@"mmt-stun.verkstad.net"
+                                                port:3478];
+    [self.openWebRTCHandler addTURNServerWithAddress:@"mmt-turn.verkstad.net"
+                                                port:443
+                                            username:@"webrtc"
+                                            password:@"secret"
+                                               isTCP:NO];
+     */
+
+    UIBarButtonItem *callButton = [[UIBarButtonItem alloc] initWithTitle:@"Call"
+                                                                   style:UIBarButtonItemStylePlain
+                                                                  target:self
+                                                                  action:@selector(callButtonTapped:)];
+    UIBarButtonItem *detailsButton = [[UIBarButtonItem alloc] initWithTitle:@"Details"
+                                                                      style:UIBarButtonItemStylePlain
+                                                                     target:self
+                                                                     action:@selector(showRoomMembers:)];
+    self.navigationItem.rightBarButtonItems = @[detailsButton, callButton];
 }
 
 - (void)dealloc {
@@ -317,6 +353,16 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onKeyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onAppDidEnterBackground) name:UIApplicationDidEnterBackgroundNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onAppWillEnterForeground) name:UIApplicationWillEnterForegroundNotification object:nil];
+
+    // Listen for user events posted by CallViewController
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(onHangupOrDeclineNotificationReceived)
+                                                 name:kMXEventTypeStringCallHangup
+                                               object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(onAnswerNotificationReceived)
+                                                 name:kMXEventTypeStringCallAnswer
+                                               object:nil];
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
@@ -698,6 +744,49 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
         [[AppSettings sharedSettings] addObserver:self forKeyPath:@"hideRedactions" options:0 context:nil];
         [[AppSettings sharedSettings] addObserver:self forKeyPath:@"hideUnsupportedEvents" options:0 context:nil];
         [mxHandler addObserver:self forKeyPath:@"isActivityInProgress" options:0 context:nil];
+
+        // Handle Call (WebRTC) events
+        if ([[AppSettings sharedSettings] supportWebRTC]) {
+            NSArray *callEventsFilter = @[
+                                          kMXEventTypeStringCallInvite,
+                                          kMXEventTypeStringCallCandidates,
+                                          kMXEventTypeStringCallAnswer,
+                                          kMXEventTypeStringCallHangup
+                                          ];
+
+            @synchronized (self.mxRoom) {
+                self.callMessagesListener = [self.mxRoom listenToEventsOfTypes:callEventsFilter onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+
+                    if (direction != MXEventDirectionForwards) {
+                        return;
+                    }
+
+                    MatrixSDKHandler *mxHandler = [MatrixSDKHandler sharedHandler];
+                    if ([event.userId isEqualToString:mxHandler.userId]) {
+                        return;
+                    }
+
+                    NSDictionary *content = [event content];
+                    NSLog(@"CALL content: \n%@", content);
+
+                    NSString *type = event.type;
+                    if ([kMXEventTypeStringCallInvite isEqualToString:type]) {
+                        inviteEvent = event;
+                        [self startCallWithOffer:content[@"offer"]];
+                    } else if ([kMXEventTypeStringCallAnswer isEqualToString:type]) {
+                        [self.openWebRTCHandler handleAnswerReceived:content[@"answer"][@"sdp"]];
+                    } else if ([kMXEventTypeStringCallCandidates isEqualToString:type]) {
+                        for (NSDictionary *candidate in content[@"candidates"]) {
+                            [self.openWebRTCHandler handleRemoteCandidateReceived:candidate];
+                        }
+                    } else if ([kMXEventTypeStringCallHangup isEqualToString:type]) {
+                        [self.openWebRTCHandler terminateCall];
+                        [self resetCallState];
+                    }
+                }];
+            }
+        }
+
         // Register a listener to handle messages
         _messagesListener = [self.mxRoom listenToEventsOfTypes:mxHandler.eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
             // Handle first live events
@@ -707,7 +796,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
                     [[AppDelegate theDelegate].masterTabBarController popRoomViewControllerAnimated:NO];
                     return;
                 }
-                
+
                 // Update Table on processing queue
                 MXRoomState *roomStateCpy = [roomState copy];
                 dispatch_async(mxHandler.processingQueue, ^{
@@ -1454,6 +1543,10 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     // Update navigation bar items
     self.navigationItem.hidesBackButton = YES;
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(hideRoomMembers:)];
+}
+
+- (IBAction)callButtonTapped:(id)sender {
+    [self startCallWithOffer:nil];
 }
 
 - (IBAction)hideRoomMembers:(id)sender {
@@ -3312,6 +3405,194 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     }
 }
 
+#pragma mark - OpenWebRTC handling
+
+- (CallViewController *)callViewController
+{
+    if (!_callViewController) {
+        _callViewController = [self.storyboard instantiateViewControllerWithIdentifier:@"CallViewID"];
+    }
+    return _callViewController;
+}
+
+- (void)resetCallState
+{
+    inviteEvent = nil;
+    receivedOffer = nil;
+}
+
+- (void)startCallWithOffer:(NSDictionary *)offer
+{
+    receivedOffer = offer;
+
+    self.callViewController.isAnswering = offer != nil;
+
+    [self presentViewController:self.callViewController animated:YES completion:^{
+        [self.openWebRTCHandler setSelfView:self.callViewController.selfView];
+        [self.openWebRTCHandler setRemoteView:self.callViewController.remoteView];
+
+        [self.openWebRTCHandler startGetCaptureSourcesForAudio:YES video:YES];
+    }];
+}
+
+- (void)sendHangUpEvent
+{
+    NSString *callID;
+    if (inviteEvent) {
+        callID = [inviteEvent content][@"call_id"];
+    } else if (generatedOffer) {
+        callID = generatedOffer[@"call_id"];
+    } else {
+        NSLog(@"[RoomViewController>OpenWebRTC] WARNING! invalid state in sendHangUpEvent");
+        return;
+    }
+
+    /*
+     m.call.hangup
+
+     Required keys:
+     call_id : "string" - The ID of the call this event relates to
+     version : "integer" - The version of the VoIP specification this messages
+     */
+    NSDictionary *content = @{@"call_id": callID,
+                              @"version": [NSNumber numberWithInt:0]};
+
+    [self.mxRoom sendEventOfType:kMXEventTypeStringCallHangup content:content success:^(NSString *eventId) {
+        NSLog(@"[RoomViewController>OpenWebRTC] SENT answer!");
+    } failure:^(NSError *error) {
+        NSLog(@"[RoomViewController>OpenWebRTC] ERROR SENDING answer: %@", error);
+    }];
+
+    [self resetCallState];
+}
+
+#pragma mark - OpenWebRTCNativeHandlerDelegate
+
+- (void)answerGenerated:(NSDictionary *)answer
+{
+    NSLog(@"[RoomViewController>OpenWebRTC] answerGenerated: %@", answer);
+
+    /*
+     m.call.answer
+
+     Required keys:
+     call_id : "string" - The ID of the call this event relates to
+     version : "integer" - The version of the VoIP specification this messages
+     answer : "answer object" - Object giving the SDK answer
+
+     Answer Object
+     Required keys:
+     type : "string" - The type of session description. 'answer' in this case.
+     sdp : "string" - The SDP text of the session description
+     */
+    NSDictionary *content = @{@"call_id": [inviteEvent content][@"call_id"],
+                              @"answer": answer,
+                              @"version": [NSNumber numberWithInt:0]};
+
+    [self.mxRoom sendEventOfType:kMXEventTypeStringCallAnswer content:content success:^(NSString *eventId) {
+        NSLog(@"[RoomViewController>OpenWebRTC] SENT answer!");
+    } failure:^(NSError *error) {
+        NSLog(@"[RoomViewController>OpenWebRTC] ERROR SENDING answer: %@", error);
+    }];
+}
+
+- (void)offerGenerated:(NSDictionary *)offer
+{
+    NSLog(@"[RoomViewController>OpenWebRTC] offerGenerated: %@", offer);
+
+    /*
+     m.call.invite
+
+     Required keys:
+     call_id     : "string" - A unique identifier for the call
+     offer       : "offer object" - The session description
+     version     : "integer" - The version of the VoIP specification this message adheres to. This specification is version 0.
+     lifetime    : "integer" - The time in milliseconds that the invite is valid for. Once the invite age exceeds this value, clients should discard it. They should also no longer show the call as awaiting an answer in the UI.
+
+     Offer Object
+     Required keys:
+     type : "string" - The type of session description, in this case 'offer'
+     sdp : "string" - The SDP text of the session description
+     */
+
+    // TODO: sdp type?
+    NSDictionary *content = @{@"call_id": [[NSUUID UUID] UUIDString],
+                              @"offer": offer[@"sdp"],
+                              @"version": [NSNumber numberWithInt:0],
+                              @"lifetime": [NSNumber numberWithInt:1000 * 30]};
+    generatedOffer = content;
+
+    [self.mxRoom sendEventOfType:kMXEventTypeStringCallInvite content:content success:^(NSString *eventId) {
+        NSLog(@"[RoomViewController>OpenWebRTC] SENT invite!");
+    } failure:^(NSError *error) {
+        NSLog(@"[RoomViewController>OpenWebRTC] ERROR SENDING invite: %@", error);
+    }];
+}
+
+- (void)candidateGenerate:(NSString *)candidate
+{
+    NSLog(@"[RoomViewController>OpenWebRTC] candidateGenerate: %@", candidate);
+
+    /*
+     m.call.candidates
+
+     Required keys:
+     call_id : "string" - The ID of the call this event relates to
+     version : "integer" - The version of the VoIP specification this messages adheres to. his specification is version 0.
+     candidates : "array of candidate objects" - Array of object describing the candidates.
+     
+     Candidate Object
+     Required Keys:
+     sdpMid : "string" - The SDP media type this candidate is intended for.
+     sdpMLineIndex : "integer" - The index of the SDP 'm' line this candidate is intended for
+     candidate : "string" - The SDP 'a' line of the candidate
+     */
+
+    /*
+     TODO
+    NSDictionary *content = @{@"call_id": [[NSUUID UUID] UUIDString],
+                              @"offer": offer,
+                              @"version": [NSNumber numberWithInt:0],
+                              @"lifetime": [NSNumber numberWithInt:1000 * 30]};
+
+    [self.mxRoom sendEventOfType:kMXEventTypeStringCallInvite content:content success:^(NSString *eventId) {
+        NSLog(@"[RoomViewController>OpenWebRTC] SENT invite!");
+    } failure:^(NSError *error) {
+        NSLog(@"[RoomViewController>OpenWebRTC] ERROR SENDING invite: %@", error);
+    }];
+     */
+}
+
+- (void)gotLocalSourcesWithNames:(NSArray *)names
+{
+    NSLog(@"[RoomViewController>OpenWebRTC] gotLocalSourcesWithNames");
+
+    if (receivedOffer) {
+        // Do nothing, wait for the user to accept/decline
+    } else {
+        [self.openWebRTCHandler initiateCall];
+    }
+}
+
+- (void)gotRemoteSourceWithName:(NSString *)name
+{
+    NSLog(@"[RoomViewController>OpenWebRTC] Call starting, gotRemoteSourceWithName: %@", name);
+}
+
+#pragma mark - Handle CallViewController notification
+
+- (void)onHangupOrDeclineNotificationReceived
+{
+    [self.openWebRTCHandler terminateCall];
+
+    if (receivedOffer) {
+        [self sendHangUpEvent];
+    }
+}
+
+- (void)onAnswerNotificationReceived
+{
+    [self.openWebRTCHandler handleOfferReceived:receivedOffer[@"sdp"]];
+}
+
 @end
-
-
