@@ -19,6 +19,9 @@
 #import <MediaPlayer/MediaPlayer.h>
 #import <MobileCoreServices/MobileCoreServices.h>
 
+#import <AssetsLibrary/ALAsset.h>
+#import <AssetsLibrary/ALAssetRepresentation.h>
+
 @interface MXKRoomInputToolbarView() {
     /**
      Alert used to list options.
@@ -240,6 +243,33 @@
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info {
     NSString *mediaType = [info objectForKey:UIImagePickerControllerMediaType];
     if ([mediaType isEqualToString:(NSString *)kUTTypeImage]) {
+
+
+
+        /*
+        NSData *dataOfGif = [NSData dataWithContentsOfFile: [info objectForKey:UIImagePickerControllerReferenceURL]];
+
+        NSLog(@"%d", dataOfGif.length);
+
+        ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
+        [library assetForURL:[info objectForKey:UIImagePickerControllerReferenceURL] resultBlock:^(ALAsset *asset) {
+
+            NSLog(@"%@", asset.defaultRepresentation.metadata);
+
+
+            NSLog(@"%@", asset.defaultRepresentation.url);
+
+            NSData *dataOfGif = [NSData dataWithContentsOfURL: asset.defaultRepresentation.url];
+
+            NSLog(@"%d", dataOfGif.length);
+            ;
+
+                 } failureBlock:^(NSError *error) {
+
+                 }];
+         
+         */
+
         UIImage *selectedImage = [info objectForKey:UIImagePickerControllerOriginalImage];
         if (selectedImage) {
             if ([self.delegate respondsToSelector:@selector(roomInputToolbarView:sendImage:)]) {

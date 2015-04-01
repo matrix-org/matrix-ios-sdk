@@ -145,6 +145,9 @@
 #pragma mark - Segues
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+
+    MXKRoomDataSourceManager *roomDataSourceManager = [MXKRoomDataSourceManager sharedManagerForMatrixSession:self.mxSession];
+
     if ([segue.identifier isEqualToString:@"showSampleRecentsViewController"]) {
         MXKSampleRecentsViewController *sampleRecentListViewController = (MXKSampleRecentsViewController *)segue.destinationViewController;
         sampleRecentListViewController.delegate = self;
@@ -154,12 +157,17 @@
     } else if ([segue.identifier isEqualToString:@"showSampleRoomViewController"]) {
         MXKSampleRoomViewController *sampleRoomViewController = (MXKSampleRoomViewController *)segue.destinationViewController;
 
-        MXKRoomDataSource *roomDataSource = [[MXKRoomDataSource alloc] initWithRoomId:roomId andMatrixSession:self.mxSession];
+        MXKRoomDataSource *roomDataSource = [roomDataSourceManager roomDataSourceForRoom:roomId create:YES];
         [sampleRoomViewController displayRoom:roomDataSource];
     } else if ([segue.identifier isEqualToString:@"showSampleJSQMessagesViewController"]) {
         MXKSampleJSQMessagesViewController *sampleRoomViewController = (MXKSampleJSQMessagesViewController *)segue.destinationViewController;
-        
-        MXKSampleJSQRoomDataSource *roomDataSource = [[MXKSampleJSQRoomDataSource alloc] initWithRoomId:roomId andMatrixSession:self.mxSession];
+
+        MXKSampleJSQRoomDataSource *roomDataSource = (MXKSampleJSQRoomDataSource *)[roomDataSourceManager roomDataSourceForRoom:roomId create:NO];
+        if (!roomDataSource) {
+            roomDataSource = [[MXKSampleJSQRoomDataSource alloc] initWithRoomId:roomId andMatrixSession:self.mxSession];
+            [roomDataSourceManager addRoomDataSource:roomDataSource];
+        }
+
         [sampleRoomViewController displayRoom:roomDataSource];
     }
 }

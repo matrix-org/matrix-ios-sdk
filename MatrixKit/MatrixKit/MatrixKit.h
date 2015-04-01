@@ -25,6 +25,8 @@
 #import "MXKRoomInputToolbarView.h"
 #import "MXKRoomInputToolbarViewWithHPGrowingText.h"
 
+#import "MXKRoomDataSourceManager.h"
+
 #import "MXKRoomBubbleCellData.h"
 #import "MXKRoomBubbleMergingMessagesCellData.h"
 
