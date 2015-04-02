@@ -3514,10 +3514,8 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
      type : "string" - The type of session description, in this case 'offer'
      sdp : "string" - The SDP text of the session description
      */
-
-    // TODO: sdp type?
     NSDictionary *content = @{@"call_id": [[NSUUID UUID] UUIDString],
-                              @"offer": offer[@"sdp"],
+                              @"offer": offer,
                               @"version": [NSNumber numberWithInt:0],
                               @"lifetime": [NSNumber numberWithInt:1000 * 30]};
     generatedOffer = content;
