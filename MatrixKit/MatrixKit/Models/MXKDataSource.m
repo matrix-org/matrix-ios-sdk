@@ -55,6 +55,8 @@
     
     _mxSession = nil;
     _delegate = nil;
+
+    [self cancelAllRequests];
     
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     cellDataMap = nil;
@@ -117,5 +119,14 @@
     }
 }
 
+
+#pragma mark - Pending HTTP requests
+/**
+ Cancel all registered requests.
+ */
+- (void)cancelAllRequests {
+
+    NSLog(@"[MXKDataSource] cancelAllRequests: TODO");
+}
 
 @end

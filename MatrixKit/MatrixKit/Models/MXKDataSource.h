@@ -20,11 +20,12 @@
 #import "MXKCellRendering.h"
 
 /**
- List data source states
+ List data source states.
  */
 typedef enum : NSUInteger {
     /**
      Default value (used when all resources have been disposed).
+     The instance cannot be used anymore.
      */
     MXKDataSourceStateUnknown,
     
@@ -82,7 +83,7 @@ typedef enum : NSUInteger {
 - (instancetype)initWithMatrixSession:(MXSession*)mxSession;
 
 /**
- Dispose all resources
+ Dispose all resources.
  */
 - (void)destroy;
 
@@ -128,6 +129,13 @@ typedef enum : NSUInteger {
  @return the associated MXKCellData-inherited class.
  */
 - (Class)cellViewClassForCellIdentifier:(NSString *)identifier;
+
+
+#pragma mark - Pending HTTP requests 
+/**
+ Cancel all registered requests.
+ */
+- (void)cancelAllRequests;
 
 @end
 
