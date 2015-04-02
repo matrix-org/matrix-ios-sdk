@@ -2225,10 +2225,9 @@
                                         </connections>
                                     </button>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="3EG-bj-HsU">
-                                        <rect key="frame" x="238" y="562" width="124" height="30"/>
+                                        <rect key="frame" x="237" y="561" width="124" height="30"/>
                                         <constraints>
-                                            <constraint firstAttribute="width" constant="124" id="Lip-zE-ER8"/>
-                                            <constraint firstAttribute="height" constant="30" id="ZI0-9W-Glg"/>
+                                            <constraint firstAttribute="width" constant="124" id="w4d-N2-5IV"/>
                                         </constraints>
                                         <state key="normal" title="HANG UP">
                                             <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
@@ -2256,10 +2255,9 @@
                                     <constraint firstItem="RVT-wE-lgE" firstAttribute="leading" secondItem="rqC-TC-I7G" secondAttribute="leading" constant="8" id="1ZL-Fd-s8E"/>
                                     <constraint firstAttribute="bottom" secondItem="sQb-Q2-zA9" secondAttribute="bottom" constant="8" id="8bY-cm-Lo4"/>
                                     <constraint firstAttribute="trailing" secondItem="sQb-Q2-zA9" secondAttribute="trailing" constant="8" id="Rsh-dC-icW"/>
-                                    <constraint firstItem="sQb-Q2-zA9" firstAttribute="leading" secondItem="3EG-bj-HsU" secondAttribute="trailing" constant="140" id="U6R-iZ-03o"/>
                                     <constraint firstAttribute="bottom" secondItem="RVT-wE-lgE" secondAttribute="bottom" constant="8" id="hdV-N2-2Rr"/>
-                                    <constraint firstAttribute="bottom" secondItem="3EG-bj-HsU" secondAttribute="bottom" constant="8" id="ivg-D0-mkH"/>
-                                    <constraint firstItem="3EG-bj-HsU" firstAttribute="leading" secondItem="RVT-wE-lgE" secondAttribute="trailing" constant="140" id="ms6-Us-8h3"/>
+                                    <constraint firstAttribute="centerY" secondItem="3EG-bj-HsU" secondAttribute="centerY" constant="-276" id="kVP-PC-Zh9"/>
+                                    <constraint firstItem="3EG-bj-HsU" firstAttribute="centerX" secondItem="rqC-TC-I7G" secondAttribute="centerX" constant="-1" id="wiH-MY-lnY"/>
                                 </constraints>
                             </view>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="9xc-Ag-phY" customClass="OpenWebRTCVideoView">

@@ -3584,9 +3584,8 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
 {
     NSLog(@"[RoomViewController>OpenWebRTC] gotLocalSourcesWithNames");
 
+    // If not, wait for the user to accept/decline
     if (!receivedOffer) {
-        // Do nothing, wait for the user to accept/decline
-    } else {
         [self.openWebRTCHandler initiateCall];
     }
 }
