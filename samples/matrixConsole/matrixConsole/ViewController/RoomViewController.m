@@ -121,9 +121,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     MXRoomMember *selectedRoomMember;
 
     // Call specifics
-    MXEvent *inviteEvent;
     NSDictionary *receivedOffer;
-    NSDictionary *generatedOffer;
 }
 
 @property (weak, nonatomic) IBOutlet UINavigationItem *roomNavItem;
@@ -158,6 +156,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
 @property (nonatomic, strong) OpenWebRTCNativeHandler *openWebRTCHandler;
 @property (nonatomic, weak) CallViewController *callViewController;
 @property (weak) id callMessagesListener;
+@property (nonatomic, strong) NSString *ongoingCallID;
 
 @end
 
@@ -214,6 +213,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     lastEditedText = self.messageTextView.text;
 
     self.openWebRTCHandler = [[OpenWebRTCNativeHandler alloc] initWithDelegate:self];
+    self.ongoingCallID = nil;
     /*
      TODO: Configure with helper servers provided by HS.
 
@@ -771,8 +771,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
 
                     NSString *type = event.type;
                     if ([kMXEventTypeStringCallInvite isEqualToString:type]) {
-                        inviteEvent = event;
-                        [self startCallWithOffer:content[@"offer"]];
+                        [self startCallWithOffer:content];
                     } else if ([kMXEventTypeStringCallAnswer isEqualToString:type]) {
                         [self.openWebRTCHandler handleAnswerReceived:content[@"answer"][@"sdp"]];
                     } else if ([kMXEventTypeStringCallCandidates isEqualToString:type]) {
@@ -780,8 +779,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
                             [self.openWebRTCHandler handleRemoteCandidateReceived:candidate];
                         }
                     } else if ([kMXEventTypeStringCallHangup isEqualToString:type]) {
-                        [self.openWebRTCHandler terminateCall];
-                        [self resetCallState];
+                        [self hangUpCallReceived:content];
                     }
                 }];
             }
@@ -3417,15 +3415,18 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
 
 - (void)resetCallState
 {
-    inviteEvent = nil;
     receivedOffer = nil;
+    self.ongoingCallID = nil;
 }
 
-- (void)startCallWithOffer:(NSDictionary *)offer
+- (void)startCallWithOffer:(NSDictionary *)content
 {
-    receivedOffer = offer;
+    if (content) {
+        receivedOffer = content[@"offer"];
+        self.ongoingCallID = content[@"call_id"];
+    }
 
-    self.callViewController.isAnswering = offer != nil;
+    self.callViewController.isAnswering = content != nil;
 
     [self presentViewController:self.callViewController animated:YES completion:^{
         [self.openWebRTCHandler setSelfView:self.callViewController.selfView];
@@ -3435,15 +3436,26 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
     }];
 }
 
+- (void)hangUpCallReceived:(NSDictionary *)content
+{
+    NSString *callID = content[@"call_id"];
+    NSLog(@"[RoomViewController>OpenWebRTC] hangUpCallReceived for: %@", callID);
+
+    if (![callID isEqualToString:self.ongoingCallID]) {
+        NSLog(@"[RoomViewController>OpenWebRTC] WARNING! Received incorrect hangup for call: %@", callID);
+        return;
+    }
+
+    [self.openWebRTCHandler terminateCall];
+    [self resetCallState];
+
+    [self dismissViewControllerAnimated:YES completion:nil];
+}
+
 - (void)sendHangUpEvent
 {
-    NSString *callID;
-    if (inviteEvent) {
-        callID = [inviteEvent content][@"call_id"];
-    } else if (generatedOffer) {
-        callID = generatedOffer[@"call_id"];
-    } else {
-        NSLog(@"[RoomViewController>OpenWebRTC] WARNING! invalid state in sendHangUpEvent");
+    if (!self.ongoingCallID) {
+        NSLog(@"[RoomViewController>OpenWebRTC] WARNING! Cannot send HANGUP, no call_id on record");
         return;
     }
 
@@ -3454,7 +3466,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
      call_id : "string" - The ID of the call this event relates to
      version : "integer" - The version of the VoIP specification this messages
      */
-    NSDictionary *content = @{@"call_id": callID,
+    NSDictionary *content = @{@"call_id": self.ongoingCallID,
                               @"version": [NSNumber numberWithInt:0]};
 
     [self.mxRoom sendEventOfType:kMXEventTypeStringCallHangup content:content success:^(NSString *eventId) {
@@ -3472,6 +3484,11 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
 {
     NSLog(@"[RoomViewController>OpenWebRTC] answerGenerated: %@", answer);
 
+    if (!self.ongoingCallID) {
+        NSLog(@"[RoomViewController>OpenWebRTC] WARNING! Cannot send ANSWER, no call_id on record");
+        return;
+    }
+
     /*
      m.call.answer
 
@@ -3485,7 +3502,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
      type : "string" - The type of session description. 'answer' in this case.
      sdp : "string" - The SDP text of the session description
      */
-    NSDictionary *content = @{@"call_id": [inviteEvent content][@"call_id"],
+    NSDictionary *content = @{@"call_id": self.ongoingCallID,
                               @"answer": answer,
                               @"version": [NSNumber numberWithInt:0]};
 
@@ -3499,6 +3516,9 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
 - (void)offerGenerated:(NSDictionary *)offer
 {
     NSLog(@"[RoomViewController>OpenWebRTC] offerGenerated: %@", offer);
+
+    // Generate a new call_id.
+    self.ongoingCallID = [[NSUUID UUID] UUIDString];
 
     /*
      m.call.invite
@@ -3514,11 +3534,10 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
      type : "string" - The type of session description, in this case 'offer'
      sdp : "string" - The SDP text of the session description
      */
-    NSDictionary *content = @{@"call_id": [[NSUUID UUID] UUIDString],
+    NSDictionary *content = @{@"call_id": self.ongoingCallID,
                               @"offer": offer,
                               @"version": [NSNumber numberWithInt:0],
                               @"lifetime": [NSNumber numberWithInt:1000 * 30]};
-    generatedOffer = content;
 
     [self.mxRoom sendEventOfType:kMXEventTypeStringCallInvite content:content success:^(NSString *eventId) {
         NSLog(@"[RoomViewController>OpenWebRTC] SENT invite!");
@@ -3565,7 +3584,7 @@ NSString *const kCmdResetUserPowerLevel = @"/deop";
 {
     NSLog(@"[RoomViewController>OpenWebRTC] gotLocalSourcesWithNames");
 
-    if (receivedOffer) {
+    if (!receivedOffer) {
         // Do nothing, wait for the user to accept/decline
     } else {
         [self.openWebRTCHandler initiateCall];

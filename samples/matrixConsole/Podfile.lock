@@ -29,9 +29,9 @@ PODS:
   - MatrixSDK (0.3.1):
     - AFNetworking (~> 2.4.1)
     - Mantle (~> 1.5)
-  - OpenWebRTC (0.1.1)
+  - OpenWebRTC (0.1.2)
   - OpenWebRTC-SDK (0.1):
-    - OpenWebRTC (~> 0.1.1)
+    - OpenWebRTC
 
 DEPENDENCIES:
   - GBDeviceInfo (~> 2.2.9)
@@ -53,7 +53,7 @@ SPEC CHECKSUMS:
   libPhoneNumber-iOS: fb90c5e0d100923b61f0db81de56daefbb67b103
   Mantle: 60acd0cd363e27d945bda0a6b8e90577112d28f3
   MatrixSDK: 93f79be16bdfcdd6e47749d791d1a6064da4e9dc
-  OpenWebRTC: b93ab762f648d496f40dc42069b08de4308e6e2d
-  OpenWebRTC-SDK: 184b79eafae67fbb23de19630aa1ebb1d9e122ee
+  OpenWebRTC: 80fb2bd923b6436f37b5419d7bd9db38f9e4d22d
+  OpenWebRTC-SDK: 54b8da211bd59f4b607c4e29070aa70d2e2a8add
 
 COCOAPODS: 0.36.1
