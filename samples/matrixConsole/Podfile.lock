@@ -30,7 +30,7 @@ PODS:
     - AFNetworking (~> 2.4.1)
     - Mantle (~> 1.5)
   - OpenWebRTC (0.1.2)
-  - OpenWebRTC-SDK (0.1):
+  - OpenWebRTC-SDK (0.1.1):
     - OpenWebRTC
 
 DEPENDENCIES:
@@ -54,6 +54,6 @@ SPEC CHECKSUMS:
   Mantle: 60acd0cd363e27d945bda0a6b8e90577112d28f3
   MatrixSDK: 93f79be16bdfcdd6e47749d791d1a6064da4e9dc
   OpenWebRTC: 80fb2bd923b6436f37b5419d7bd9db38f9e4d22d
-  OpenWebRTC-SDK: 54b8da211bd59f4b607c4e29070aa70d2e2a8add
+  OpenWebRTC-SDK: fd66e49ab80e88ed1e55231ac875a4976dc3ba74
 
 COCOAPODS: 0.36.1
