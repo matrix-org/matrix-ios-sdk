@@ -994,7 +994,7 @@ static MatrixSDKHandler *sharedHandler = nil;
                         if (!prevDisplayname) {
                             displayText = [NSString stringWithFormat:@"%@ set their display name to %@", event.userId, displayname];
                         } else if (!displayname) {
-                            displayText = [NSString stringWithFormat:@"%@ removed their display name (previouly named %@)", event.userId, prevDisplayname];
+                            displayText = [NSString stringWithFormat:@"%@ removed their display name (previously named %@)", event.userId, prevDisplayname];
                         } else {
                             displayText = [NSString stringWithFormat:@"%@ changed their display name from %@ to %@", event.userId, prevDisplayname, displayname];
                         }
