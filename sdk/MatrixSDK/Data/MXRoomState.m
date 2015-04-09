@@ -379,7 +379,7 @@
     }
 }
 
-
+#pragma mark -
 - (MXRoomMember*)memberWithUserId:(NSString *)userId
 {
     return members[userId];
@@ -450,6 +450,33 @@
     }
     
     return displayName;
+}
+
+- (float)memberNormalizedPowerLevel:(NSString*)userId {
+    float powerLevel = 0;
+    
+    // Get the user display name from the member list of the room
+    MXRoomMember *member = [self memberWithUserId:userId];
+    
+    // Ignore banned and left (kicked) members
+    if (member.membership != MXMembershipLeave && member.membership != MXMembershipBan) {
+        int maxLevel = 0;
+        for (NSString *powerLevel in self.powerLevels.users.allValues) {
+            int level = [powerLevel intValue];
+            if (level > maxLevel) {
+                maxLevel = level;
+            }
+        }
+        NSUInteger userPowerLevel = [self.powerLevels powerLevelOfUserWithUserID:userId];
+        float userPowerLevelFloat = 0.0;
+        if (userPowerLevel) {
+            userPowerLevelFloat = userPowerLevel;
+        }
+        
+        powerLevel = maxLevel ? userPowerLevelFloat / maxLevel : 1;
+    }
+    
+    return powerLevel;
 }
 
 #pragma mark - NSCopying

@@ -146,4 +146,12 @@
  */
 - (NSString*)memberSortedName:(NSString*)userId;
 
+/**
+ Normalize (between 0 and 1) the power level of a member compared to other members.
+ 
+ @param userId the id of the member to consider.
+ @return power level in [0, 1] interval.
+ */
+- (float)memberNormalizedPowerLevel:(NSString*)userId;
+
 @end
