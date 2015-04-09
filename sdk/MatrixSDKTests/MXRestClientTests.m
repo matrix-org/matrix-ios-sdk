@@ -944,9 +944,13 @@
     NSString *mxcURI = @"mxc://matrix.org/rQkrOoaFIRgiACATXUdQIuNJ";
 
     MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:@"http://matrix.org"];
+    
+    CGFloat scale = [[UIScreen mainScreen] scale];
+    CGSize viewSize = CGSizeMake(320, 320);
 
-    NSString *thumbnailURL = [mxRestClient urlOfContentThumbnail:mxcURI withSize:CGSizeMake(320, 320) andMethod:MXThumbnailingMethodScale];
-    XCTAssertEqualObjects(thumbnailURL, @"http://matrix.org/_matrix/media/v1/thumbnail/matrix.org/rQkrOoaFIRgiACATXUdQIuNJ?width=320&height=320&method=scale");
+    NSString *thumbnailURL = [mxRestClient urlOfContentThumbnail:mxcURI toFitViewSize:viewSize withMethod:MXThumbnailingMethodScale];
+    NSString *expected = [NSString stringWithFormat:@"http://matrix.org/_matrix/media/v1/thumbnail/matrix.org/rQkrOoaFIRgiACATXUdQIuNJ?width=%tu&height=%tu&method=scale", (NSUInteger)(viewSize.width * scale), (NSUInteger)(viewSize.height * scale)];
+    XCTAssertEqualObjects(thumbnailURL, expected);
 }
 
 
