@@ -31,6 +31,8 @@
 
 const NSString *MatrixSDKVersion = @"0.3.2";
 NSString *const MXSessionStateDidChangeNotification = @"MXSessionStateDidChangeNotification";
+NSString *const MXSessionNewRoomNotification = @"MXSessionNewRoomNotification";
+NSString *const MXSessionLeftRoomNotification = @"MXSessionLeftRoomNotification";
 
 
 /**
@@ -495,12 +497,9 @@ typedef void (^MXOnResumeDone)();
                                 // to get a valid room state.
                                 // For info, a user can get the full state of the room only when he has joined the room. So it is
                                 // the right timing to do it.
+                                // SDK client will be notified of the new room by MXSessionNewRoomNotification event
                                 NSLog(@"[MXSession] Make a initialSyncOfRoom as the room seems to be joined from another devive or MXSession. Room: %@", event.roomId);
-                                [self initialSyncOfRoom:event.roomId withLimit:0 success:^(MXRoom *room) {
-
-                                    // @TODO: Find a way to notify the app that the room state is ready
-
-                                } failure:nil];
+                                [self initialSyncOfRoom:event.roomId withLimit:0 success:nil failure:nil];
                             }
                         }
                     }
@@ -687,6 +686,12 @@ typedef void (^MXOnResumeDone)();
             success(room);
         }
 
+        // Broadcast the new room available in the MXSession.rooms array
+        [[NSNotificationCenter defaultCenter] postNotificationName:MXSessionNewRoomNotification
+                                                            object:self
+                                                          userInfo:@{
+                                                                     @"roomId": room.state.roomId
+                                                                     }];
     } failure:^(NSError *error) {
         NSLog(@"[MXSession] initialSyncOfRoom failed for room %@. Error: %@", roomId, error);
 
@@ -768,6 +773,13 @@ typedef void (^MXOnResumeDone)();
 
         // And remove the room from the list
         [rooms removeObjectForKey:roomId];
+
+        // Broadcast the left room
+        [[NSNotificationCenter defaultCenter] postNotificationName:MXSessionLeftRoomNotification
+                                                            object:self
+                                                          userInfo:@{
+                                                                     @"roomId": roomId
+                                                                     }];
     }
 }
 

@@ -74,10 +74,24 @@ typedef enum : NSUInteger {
 } MXSessionState;
 
 
+#pragma mark - Notifications
 /**
  Posted when the state of the MXSession instance changes.
  */
 FOUNDATION_EXPORT NSString *const MXSessionStateDidChangeNotification;
+
+/**
+ Posted when MXSession has detected a new room coming from the event stream.
+ The notification is posted after the initialSync of the room is done.
+ The roomId of the room is passed in the userInfo dictionary.
+ */
+FOUNDATION_EXPORT NSString *const MXSessionNewRoomNotification;
+
+/**
+ Posted when MXSession has detected a room has been left.
+ The roomId of the room is passed in the userInfo dictionary.
+ */
+FOUNDATION_EXPORT NSString *const MXSessionLeftRoomNotification;
 
 
 /**
