@@ -622,13 +622,7 @@ typedef void (^MXOnResumeDone)();
                       success:(void (^)())success
                       failure:(void (^)(NSError *error))failure
 {
-    return [matrixRestClient leaveRoom:roomId success:^{
-        
-        [self removeRoom:roomId];
-        
-        success();
-        
-    } failure:failure];
+    return [matrixRestClient leaveRoom:roomId success:success failure:failure];
 }
 
 
