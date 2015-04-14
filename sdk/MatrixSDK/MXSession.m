@@ -164,7 +164,7 @@ typedef void (^MXOnResumeDone)();
             for (NSString *roomId in _store.rooms)
             {
                 NSArray *stateEvents = [_store stateOfRoom:roomId];
-                [self createRoom:roomId withStateEvents:stateEvents];
+                [self createRoom:roomId withStateEvents:stateEvents notify:NO];
             }
 
             NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
@@ -315,7 +315,7 @@ typedef void (^MXOnResumeDone)();
 
                         for (NSDictionary *roomDict in roomDicts)
                         {
-                            MXRoom *room = [self getOrCreateRoom:roomDict[@"room_id"] withJSONData:roomDict];
+                            MXRoom *room = [self getOrCreateRoom:roomDict[@"room_id"] withJSONData:roomDict notify:NO];
 
                             if ([roomDict objectForKey:@"messages"])
                             {
@@ -505,7 +505,7 @@ typedef void (^MXOnResumeDone)();
                     }
 
                     // Make room data digest the event
-                    MXRoom *room = [self getOrCreateRoom:event.roomId withJSONData:nil];
+                    MXRoom *room = [self getOrCreateRoom:event.roomId withJSONData:nil notify:YES];
                     [room handleLiveEvent:event];
 
                     // Remove the room from the rooms list if the user has been kicked or banned 
@@ -643,7 +643,7 @@ typedef void (^MXOnResumeDone)();
     // Do an initial to get state and messages in the room
     return [matrixRestClient initialSyncOfRoom:roomId withLimit:limit success:^(NSDictionary *JSONData) {
 
-        MXRoom *room = [self getOrCreateRoom:JSONData[@"room_id"] withJSONData:JSONData];
+        MXRoom *room = [self getOrCreateRoom:JSONData[@"room_id"] withJSONData:JSONData notify:YES];
 
         // Manage room messages
         if ([JSONData objectForKey:@"messages"])
@@ -713,33 +713,33 @@ typedef void (^MXOnResumeDone)();
     return [rooms allValues];
 }
 
-- (MXRoom *)getOrCreateRoom:(NSString *)roomId withJSONData:JSONData
+- (MXRoom *)getOrCreateRoom:(NSString *)roomId withJSONData:JSONData notify:(BOOL)notify
 {
     MXRoom *room = [self roomWithRoomId:roomId];
     if (nil == room)
     {
-        room = [self createRoom:roomId withJSONData:JSONData];
+        room = [self createRoom:roomId withJSONData:JSONData notify:notify];
     }
     return room;
 }
 
-- (MXRoom *)createRoom:(NSString *)roomId withJSONData:(NSDictionary*)JSONData
+- (MXRoom *)createRoom:(NSString *)roomId withJSONData:(NSDictionary*)JSONData notify:(BOOL)notify
 {
     MXRoom *room = [[MXRoom alloc] initWithRoomId:roomId andMatrixSession:self andJSONData:JSONData];
     
-    [self addRoom:room];
+    [self addRoom:room notify:notify];
     return room;
 }
 
-- (MXRoom *)createRoom:(NSString *)roomId withStateEvents:(NSArray*)stateEvents
+- (MXRoom *)createRoom:(NSString *)roomId withStateEvents:(NSArray*)stateEvents notify:(BOOL)notify
 {
     MXRoom *room = [[MXRoom alloc] initWithRoomId:roomId andMatrixSession:self andStateEvents:stateEvents];
 
-    [self addRoom:room];
+    [self addRoom:room notify:notify];
     return room;
 }
 
-- (void)addRoom:(MXRoom*)room
+- (void)addRoom:(MXRoom*)room notify:(BOOL)notify
 {
     // Register global listeners for this room
     for (MXSessionEventListener *listener in globalEventListeners)
@@ -749,12 +749,15 @@ typedef void (^MXOnResumeDone)();
 
     [rooms setObject:room forKey:room.state.roomId];
 
-    // Broadcast the new room available in the MXSession.rooms array
-    [[NSNotificationCenter defaultCenter] postNotificationName:MXSessionNewRoomNotification
-                                                        object:self
-                                                      userInfo:@{
-                                                                 @"roomId": room.state.roomId
-                                                                 }];
+    if (notify)
+    {
+        // Broadcast the new room available in the MXSession.rooms array
+        [[NSNotificationCenter defaultCenter] postNotificationName:MXSessionNewRoomNotification
+                                                            object:self
+                                                          userInfo:@{
+                                                                     @"roomId": room.state.roomId
+                                                                     }];
+    }
 }
 
 - (void)removeRoom:(NSString *)roomId
