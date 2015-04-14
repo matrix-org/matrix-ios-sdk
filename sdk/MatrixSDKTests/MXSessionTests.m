@@ -614,6 +614,72 @@
     }];
 }
 
+- (void)testNewRoomNotificationOnCreatingPublicRoom
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [mxSession start:^{
+
+            id observer = [[NSNotificationCenter defaultCenter] addObserverForName:MXSessionNewRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                XCTAssertEqual(mxSession, note.object, @"The MXSessionNewRoomNotification sender must be the current MXSession");
+
+                MXRoom *publicRoom = [mxSession roomWithRoomId:note.userInfo[@"roomId"]];
+                XCTAssertNotNil(publicRoom);
+
+                [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                [expectation fulfill];
+            }];
+
+            [mxSession.matrixRestClient createRoom:nil visibility:kMXRoomVisibilityPublic roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
+
+            } failure:^(NSError *error) {
+                 NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+
+
+        } failure:^(NSError *error) {
+             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+
+    }];
+}
+
+- (void)testNewRoomNotificationOnJoiningPublicRoom
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndAPublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+
+            mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+            [mxSession start:^{
+
+                // Listen to Alice's MXSessionNewRoomNotification event
+                id observer = [[NSNotificationCenter defaultCenter] addObserverForName:MXSessionNewRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                    XCTAssertEqual(mxSession, note.object, @"The MXSessionNewRoomNotification sender must be the current MXSession");
+
+                    MXRoom *publicRoom = [mxSession roomWithRoomId:note.userInfo[@"roomId"]];
+                    XCTAssertNotNil(publicRoom);
+
+                    [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                    [expectation fulfill];
+                }];
+
+                [mxSession joinRoom:roomId success:nil failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+        }];
+        
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop
