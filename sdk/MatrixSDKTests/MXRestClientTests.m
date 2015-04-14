@@ -879,28 +879,35 @@
 - (void)testEventsFromTokenServerTimeout
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
-        
-        NSDate *refDate = [NSDate date];
-        
-        [bobRestClient eventsFromToken:@"END" serverTimeout:1000 clientTimeout:40000 success:^(MXPaginationResponse *paginatedResponse) {
-            
-            XCTAssertNotNil(paginatedResponse);
-            
-            // Check expected response params
-            XCTAssertNotNil(paginatedResponse.start);
-            XCTAssertNotNil(paginatedResponse.end);
-            XCTAssertNotNil(paginatedResponse.chunk);
-            XCTAssertEqual(paginatedResponse.chunk.count, 0, @"Events should not come in this short stream time (1s)");
-            
-            NSDate *now  = [NSDate date];
-            XCTAssertLessThanOrEqual([now timeIntervalSinceDate:refDate], 2, @"The HS did not timeout as expected");    // Give 2s for the HS to timeout
- 
-            [expectation fulfill];
-            
-        } failure:^(NSError *error) {
-            XCTFail(@"The request should not fail - NSError: %@", error);
-            [expectation fulfill];
-        }];
+
+        // Delay the test to filter out Bob presence events the HS can send due to requests made in doMXRestClientTestWithBob
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+
+            NSDate *refDate = [NSDate date];
+            [bobRestClient eventsFromToken:@"END" serverTimeout:1000 clientTimeout:40000 success:^(MXPaginationResponse *paginatedResponse) {
+
+                XCTAssertNotNil(paginatedResponse);
+
+                // Check expected response params
+                XCTAssertNotNil(paginatedResponse.start);
+                XCTAssertNotNil(paginatedResponse.end);
+                XCTAssertNotNil(paginatedResponse.chunk);
+                XCTAssertEqual(paginatedResponse.chunk.count, 0, @"Events should not come in this short stream time (1s)");
+
+                if (paginatedResponse.chunk.count) {
+                    NSLog(@"####");
+                }
+
+                NSDate *now  = [NSDate date];
+                XCTAssertLessThanOrEqual([now timeIntervalSinceDate:refDate], 2, @"The HS did not timeout as expected");    // Give 2s for the HS to timeout
+
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        });
     }];
 }
 

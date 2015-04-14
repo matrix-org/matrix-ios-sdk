@@ -268,36 +268,40 @@
         __block NSUInteger lastAliceActivity = -1;
         
         // Listen to m.presence only
-        [mxSession listenToEventsOfTypes:@[kMXEventTypeStringPresence]
-                                           onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
-                                               
-                                               if (MXEventDirectionForwards == direction)
-                                               {
-                                                   XCTAssertEqual(event.eventType, MXEventTypePresence, @"We must receive only m.presence - Event: %@", event);
-                                                   
-                                                   MXPresenceEventContent *eventContent = [MXPresenceEventContent modelFromJSON:event.content];
-                                                   XCTAssert([eventContent.userId isEqualToString:aliceRestClient.credentials.userId]);
-                                                   
-                                                   MXUser *mxAlice = [mxSession2 userWithUserId:eventContent.userId];
-                                                   
-                                                   NSUInteger newLastAliceActivity = mxAlice.lastActiveAgo;
-                                                   XCTAssertLessThan(newLastAliceActivity, lastAliceActivity, @"alice activity must be updated");
-                                                   
-                                                   [expectation fulfill];
-                                               }
-                                           }];
-        
+        [mxSession listenToEventsOfTypes:@[kMXEventTypeStringPresence] onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
+
+            if (MXEventDirectionForwards == direction)
+            {
+                XCTAssertEqual(event.eventType, MXEventTypePresence, @"We must receive only m.presence - Event: %@", event);
+
+                MXPresenceEventContent *eventContent = [MXPresenceEventContent modelFromJSON:event.content];
+
+                // Filter out Bob own presence events
+                if (NO == [eventContent.userId isEqualToString:mxSession.matrixRestClient.credentials.userId])
+                {
+                    XCTAssertEqualObjects(eventContent.userId, aliceRestClient.credentials.userId);
+
+                    MXUser *mxAlice = [mxSession2 userWithUserId:eventContent.userId];
+
+                    NSUInteger newLastAliceActivity = mxAlice.lastActiveAgo;
+                    XCTAssertLessThan(newLastAliceActivity, lastAliceActivity, @"alice activity must be updated");
+                    
+                    [expectation fulfill];
+                }
+            }
+        }];
+
         // Start the session
         [mxSession start:^{
-            
+
             // Get the last Alice activity before making her active again
             lastAliceActivity = [mxSession2 userWithUserId:aliceRestClient.credentials.userId].lastActiveAgo;
-            
+
             // Wait a bit before making her active again
             [NSThread sleepForTimeInterval:1.0];
-            
+
             [aliceRestClient sendTextMessageToRoom:roomId text:@"Hi Bob!" success:^(NSString *eventId) {
-                
+
             } failure:^(NSError *error) {
                 NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
             }];
