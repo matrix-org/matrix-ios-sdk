@@ -497,7 +497,7 @@ typedef void (^MXOnResumeDone)();
                                 // to get a valid room state.
                                 // For info, a user can get the full state of the room only when he has joined the room. So it is
                                 // the right timing to do it.
-                                // SDK client will be notified of the new room by MXSessionNewRoomNotification event
+                                // @TODO: How to notify client when the initialSync is done?
                                 NSLog(@"[MXSession] Make a initialSyncOfRoom as the room seems to be joined from another devive or MXSession. Room: %@", event.roomId);
                                 [self initialSyncOfRoom:event.roomId withLimit:0 success:nil failure:nil];
                             }
@@ -686,12 +686,6 @@ typedef void (^MXOnResumeDone)();
             success(room);
         }
 
-        // Broadcast the new room available in the MXSession.rooms array
-        [[NSNotificationCenter defaultCenter] postNotificationName:MXSessionNewRoomNotification
-                                                            object:self
-                                                          userInfo:@{
-                                                                     @"roomId": room.state.roomId
-                                                                     }];
     } failure:^(NSError *error) {
         NSLog(@"[MXSession] initialSyncOfRoom failed for room %@. Error: %@", roomId, error);
 
@@ -754,6 +748,13 @@ typedef void (^MXOnResumeDone)();
     }
 
     [rooms setObject:room forKey:room.state.roomId];
+
+    // Broadcast the new room available in the MXSession.rooms array
+    [[NSNotificationCenter defaultCenter] postNotificationName:MXSessionNewRoomNotification
+                                                        object:self
+                                                      userInfo:@{
+                                                                 @"roomId": room.state.roomId
+                                                                 }];
 }
 
 - (void)removeRoom:(NSString *)roomId

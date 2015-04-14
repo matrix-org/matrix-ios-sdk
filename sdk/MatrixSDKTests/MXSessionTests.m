@@ -585,6 +585,35 @@
     }];
 }
 
+- (void)testNewRoomNotificationOnInvite
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+
+            mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+            [mxSession start:^{
+
+                // Listen to Alice's MXSessionNewRoomNotification event
+                id observer = [[NSNotificationCenter defaultCenter] addObserverForName:MXSessionNewRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                    XCTAssertEqual(mxSession, note.object, @"The MXSessionNewRoomNotification sender must be the current MXSession");
+
+                    [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                    [expectation fulfill];
+                }];
+
+                [bobRestClient inviteUser:aliceRestClient.credentials.userId toRoom:roomId success:nil failure:nil];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        }];
+
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop
