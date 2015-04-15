@@ -623,7 +623,28 @@ typedef void (^MXOnResumeDone)();
                       success:(void (^)())success
                       failure:(void (^)(NSError *error))failure
 {
-    return [matrixRestClient leaveRoom:roomId success:success failure:failure];
+    return [matrixRestClient leaveRoom:roomId success:^{
+
+        // Check the room has been removed before calling the success callback
+        // This is automatically done when the homeserver sends the MXMembershipLeave event.
+        if ([self roomWithRoomId:roomId])
+        {
+            // The room is stil here, wait for the MXMembershipLeave event
+            __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:MXSessionLeftRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                if ([roomId isEqualToString:note.userInfo[@"roomId"]])
+                {
+                    [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                    success();
+                }
+            }];
+        }
+        else
+        {
+            success();
+        }
+
+    } failure:failure];
 }
 
 

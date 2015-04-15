@@ -161,22 +161,23 @@
         
         NSString *roomId = room.state.roomId;
 
+        __block MXMembership lastKnownMembership = MXMembershipUnknown;
         [room listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
 
-            XCTAssertEqual(room.state.membership, MXMembershipLeave);
-
-            // After this event the room should no more be available
-            dispatch_async(dispatch_get_main_queue(), ^{
-
-                MXRoom *room2 = [mxSession roomWithRoomId:roomId];
-                XCTAssertNil(room2, @"The room must be no more part of the MXSession rooms");
-
-                [expectation fulfill];
-            });
+            lastKnownMembership = room.state.membership;
         }];
         
         // This implicitly tests MXSession leaveRoom
-        [room leave:nil failure:^(NSError *error) {
+        [room leave:^{
+
+            XCTAssertEqual(lastKnownMembership, MXMembershipLeave, @"MXMembershipLeave must have been received before killing the MXRoom object");
+
+            MXRoom *room2 = [mxSession roomWithRoomId:roomId];
+            XCTAssertNil(room2, @"The room must be no more part of the MXSession rooms");
+
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
