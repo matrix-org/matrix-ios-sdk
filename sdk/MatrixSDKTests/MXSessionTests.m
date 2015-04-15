@@ -585,6 +585,8 @@
     }];
 }
 
+
+#pragma mark MXSessionNewRoomNotification tests
 - (void)testNewRoomNotificationOnInvite
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
@@ -662,6 +664,43 @@
 
                     MXRoom *publicRoom = [mxSession roomWithRoomId:note.userInfo[@"roomId"]];
                     XCTAssertNotNil(publicRoom);
+
+                    [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                    [expectation fulfill];
+                }];
+
+                [mxSession joinRoom:roomId success:nil failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+        }];
+        
+    }];
+}
+
+
+#pragma mark MXSessionInitialSyncedRoomNotification tests
+- (void)testMXSessionInitialSyncedRoomNotificationOnJoiningPublicRoom
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndAPublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+
+            mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+            [mxSession start:^{
+
+                // Listen to Alice's MXSessionInitialSyncedRoomNotification event
+                __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:MXSessionInitialSyncedRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                    XCTAssertEqual(mxSession, note.object, @"The MXSessionInitialSyncedRoomNotification sender must be the current MXSession");
+
+                    MXRoom *publicRoom = [mxSession roomWithRoomId:note.userInfo[@"roomId"]];
+                    XCTAssertNotNil(publicRoom);
+                    XCTAssert(publicRoom.isSync, @"MXSessionInitialSyncedRoomNotification must inform when the room state is fully known");
 
                     [[NSNotificationCenter defaultCenter] removeObserver:observer];
                     [expectation fulfill];
