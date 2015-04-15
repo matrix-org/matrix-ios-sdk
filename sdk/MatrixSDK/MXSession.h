@@ -78,25 +78,25 @@ typedef enum : NSUInteger {
 /**
  Posted when the state of the MXSession instance changes.
  */
-FOUNDATION_EXPORT NSString *const MXSessionStateDidChangeNotification;
+FOUNDATION_EXPORT NSString *const kMXSessionStateDidChangeNotification;
 
 /**
  Posted when MXSession has detected a new room coming from the event stream.
  The roomId of the room is passed in the userInfo dictionary.
  */
-FOUNDATION_EXPORT NSString *const MXSessionNewRoomNotification;
+FOUNDATION_EXPORT NSString *const kMXSessionNewRoomNotification;
 
 /**
  Posted when MXSession has complete an initialSync on a new room.
  The roomId of the room is passed in the userInfo dictionary.
  */
-FOUNDATION_EXPORT NSString *const MXSessionInitialSyncedRoomNotification;
+FOUNDATION_EXPORT NSString *const kMXSessionInitialSyncedRoomNotification;
 
 /**
  Posted when MXSession has detected a room has been left.
  The roomId of the room is passed in the userInfo dictionary.
  */
-FOUNDATION_EXPORT NSString *const MXSessionLeftRoomNotification;
+FOUNDATION_EXPORT NSString *const kMXSessionLeftRoomNotification;
 
 
 /**

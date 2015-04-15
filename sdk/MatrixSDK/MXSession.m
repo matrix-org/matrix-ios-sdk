@@ -30,10 +30,10 @@
 #pragma mark - Constants definitions
 
 const NSString *MatrixSDKVersion = @"0.3.2";
-NSString *const MXSessionStateDidChangeNotification = @"MXSessionStateDidChangeNotification";
-NSString *const MXSessionNewRoomNotification = @"MXSessionNewRoomNotification";
-NSString *const MXSessionInitialSyncedRoomNotification = @"MXSessionInitialSyncedRoomNotification";
-NSString *const MXSessionLeftRoomNotification = @"MXSessionLeftRoomNotification";
+NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
+NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
+NSString *const kMXSessionInitialSyncedRoomNotification = @"kMXSessionInitialSyncedRoomNotification";
+NSString *const kMXSessionLeftRoomNotification = @"kMXSessionLeftRoomNotification";
 
 
 /**
@@ -122,7 +122,7 @@ typedef void (^MXOnResumeDone)();
     _state = state;
 
     NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
-    [notificationCenter postNotificationName:MXSessionStateDidChangeNotification object:self userInfo:nil];
+    [notificationCenter postNotificationName:kMXSessionStateDidChangeNotification object:self userInfo:nil];
 }
 
 -(void)setStore:(id<MXStore>)store success:(void (^)())onStoreDataReady failure:(void (^)(NSError *))failure
@@ -630,7 +630,7 @@ typedef void (^MXOnResumeDone)();
         if ([self roomWithRoomId:roomId])
         {
             // The room is stil here, wait for the MXMembershipLeave event
-            __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:MXSessionLeftRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+            __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionLeftRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
                 if ([roomId isEqualToString:note.userInfo[@"roomId"]])
                 {
@@ -698,7 +698,7 @@ typedef void (^MXOnResumeDone)();
 
         // Notify that room has been sync'ed
         room.isSync = YES;
-        [[NSNotificationCenter defaultCenter] postNotificationName:MXSessionInitialSyncedRoomNotification
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionInitialSyncedRoomNotification
                                                             object:self
                                                           userInfo:@{
                                                                      @"roomId": roomId
@@ -775,7 +775,7 @@ typedef void (^MXOnResumeDone)();
     if (notify)
     {
         // Broadcast the new room available in the MXSession.rooms array
-        [[NSNotificationCenter defaultCenter] postNotificationName:MXSessionNewRoomNotification
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionNewRoomNotification
                                                             object:self
                                                           userInfo:@{
                                                                      @"roomId": room.state.roomId
@@ -802,7 +802,7 @@ typedef void (^MXOnResumeDone)();
         [rooms removeObjectForKey:roomId];
 
         // Broadcast the left room
-        [[NSNotificationCenter defaultCenter] postNotificationName:MXSessionLeftRoomNotification
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionLeftRoomNotification
                                                             object:self
                                                           userInfo:@{
                                                                      @"roomId": roomId
