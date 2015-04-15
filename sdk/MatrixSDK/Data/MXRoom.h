@@ -67,8 +67,14 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 
 /**
  Flag indicating that the room has been initialSynced with the homeserver.
- If NO, the SDK is doing an initialSync on it. Check the MXSessionInitialSyncedRoomNotification
- to know when it is complete.
+ 
+ @discussion
+ The room is marked as not sync'ed when its room state is not fully known. This happens in
+ two situations:
+     - the user is invited to a room (the membership is `MXMembershipInvite`). To get 
+       the full room state, he has to join the room.
+     - the membership is currently MXMembershipUnknown. The room came down the events stream
+       and the SDK is doing an initialSync on it. When complete, it will send the `MXSessionInitialSyncedRoomNotification`.
  */
 @property (nonatomic) BOOL isSync;
 
