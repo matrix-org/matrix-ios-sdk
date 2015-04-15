@@ -728,7 +728,7 @@
             __block NSString *newRoomId;
 
             // Check MXSessionNewRoomNotification reception
-            id newRoomObserver = [[NSNotificationCenter defaultCenter] addObserverForName:MXSessionNewRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+            __block __weak id newRoomObserver = [[NSNotificationCenter defaultCenter] addObserverForName:MXSessionNewRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
                 newRoomId = note.userInfo[@"roomId"];
 
@@ -740,7 +740,7 @@
             }];
 
             // Check MXSessionInitialSyncedRoomNotification that must be then received
-            id initialSyncObserver = [[NSNotificationCenter defaultCenter] addObserverForName:MXSessionInitialSyncedRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+            __block __weak id initialSyncObserver = [[NSNotificationCenter defaultCenter] addObserverForName:MXSessionInitialSyncedRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
                 XCTAssertNotNil(newRoomId);
                 XCTAssertEqualObjects(newRoomId, note.userInfo[@"roomId"]);
