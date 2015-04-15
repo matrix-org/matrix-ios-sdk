@@ -450,7 +450,8 @@
                         
                         XCTAssertNotNil(newRoom);
                         
-                        XCTAssertEqual(newRoom.state.membership, MXMembershipInvite);
+                        XCTAssertEqual(newRoom.state.membership, MXMembershipInvite);;
+                        XCTAssertFalse(newRoom.isSync, @"The initialSync can be done only on joined room");
                         
                         // The room must have only one member: Alice who has been invited by Bob.
                         // While Alice does not join the room, we cannot get more information
@@ -525,6 +526,7 @@
                         
                         // Now, we must have more information about the room
                         // Check its new state
+                        XCTAssert(newRoom.isSync, @"The room must be advertised as synced");
                         XCTAssertEqual(newRoom.state.members.count, 2);
                         XCTAssert([newRoom.state.topic isEqualToString:@"We test room invitation here"], @"Wrong topic. Found: %@", newRoom.state.topic);
                         
