@@ -32,6 +32,7 @@
 const NSString *MatrixSDKVersion = @"0.3.2";
 NSString *const MXSessionStateDidChangeNotification = @"MXSessionStateDidChangeNotification";
 NSString *const MXSessionNewRoomNotification = @"MXSessionNewRoomNotification";
+NSString *const MXSessionInitialSyncedRoomNotification = @"MXSessionInitialSyncedRoomNotification";
 NSString *const MXSessionLeftRoomNotification = @"MXSessionLeftRoomNotification";
 
 
@@ -497,7 +498,7 @@ typedef void (^MXOnResumeDone)();
                                 // to get a valid room state.
                                 // For info, a user can get the full state of the room only when he has joined the room. So it is
                                 // the right timing to do it.
-                                // @TODO: How to notify client when the initialSync is done?
+                                // SDK client will be notified when the full state is available thanks to `MXSessionInitialSyncedRoomNotification`.
                                 NSLog(@"[MXSession] Make a initialSyncOfRoom as the room seems to be joined from another device or MXSession. This also happens when creating a room: the HS autojoins the creator. Room: %@", event.roomId);
                                 [self initialSyncOfRoom:event.roomId withLimit:0 success:nil failure:nil];
                             }
@@ -672,8 +673,15 @@ typedef void (^MXOnResumeDone)();
             [_store commit];
         }
 
-
         [roomsInInitialSyncing removeObject:roomId];
+
+        // Notify that room has been sync'ed
+        room.isSync = YES;
+        [[NSNotificationCenter defaultCenter] postNotificationName:MXSessionInitialSyncedRoomNotification
+                                                            object:self
+                                                          userInfo:@{
+                                                                     @"roomId": roomId
+                                                                     }];
 
         if (success)
         {

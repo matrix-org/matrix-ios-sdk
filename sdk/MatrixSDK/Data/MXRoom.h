@@ -65,6 +65,13 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  */
 @property (nonatomic, readonly) BOOL canPaginate;
 
+/**
+ Flag indicating that the room has been initialSynced with the homeserver.
+ If NO, the SDK is doing an initialSync on it. Check the MXSessionInitialSyncedRoomNotification
+ to know when it is complete.
+ */
+@property (nonatomic) BOOL isSync;
+
 
 - (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession;
 

@@ -716,4 +716,49 @@
     }];
 }
 
+// Test for https://matrix.org/jira/browse/SYIOS-105 using notifications
+- (void)testRoomStateWhenARoomHasBeenJoinedOnAnotherMatrixClientAndNotifications {
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
+
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+        [mxSession start:^{
+
+            __block NSString *newRoomId;
+
+            // Check MXSessionNewRoomNotification reception
+            id newRoomObserver = [[NSNotificationCenter defaultCenter] addObserverForName:MXSessionNewRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                newRoomId = note.userInfo[@"roomId"];
+
+                MXRoom *room = [mxSession roomWithRoomId:newRoomId];
+                XCTAssertNotNil(room);
+                XCTAssertFalse(room.isSync, @"The room is not yet sync'ed");
+
+                [[NSNotificationCenter defaultCenter] removeObserver:newRoomObserver];
+            }];
+
+            // Check MXSessionInitialSyncedRoomNotification that must be then received
+            id initialSyncObserver = [[NSNotificationCenter defaultCenter] addObserverForName:MXSessionInitialSyncedRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                XCTAssertNotNil(newRoomId);
+                XCTAssertEqualObjects(newRoomId, note.userInfo[@"roomId"]);
+
+                MXRoom *room = [mxSession roomWithRoomId:newRoomId];
+                XCTAssertNotNil(room);
+                XCTAssert(room.isSync, @"The room must be sync'ed now");
+
+                [[NSNotificationCenter defaultCenter] removeObserver:initialSyncObserver];
+                [expectation fulfill];
+            }];
+
+            // Create a conversation on another MXRestClient. For the current `mxSession`, this other MXRestClient behaves like another device.
+            [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndAliceInARoom:nil readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+            }];
+            
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
 @end

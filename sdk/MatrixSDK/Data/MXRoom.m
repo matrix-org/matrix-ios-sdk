@@ -77,6 +77,11 @@
 
             [mxSession.store storeEventForRoom:roomId event:fakeMembershipEvent direction:MXEventDirectionSync];
         }
+
+        if (JSONData)
+        {
+            _isSync = YES;
+        }
     }
     return self;
 }
@@ -89,6 +94,10 @@
         for (MXEvent *event in stateEvents)
         {
             [self handleStateEvent:event direction:MXEventDirectionSync];
+        }
+
+        if (stateEvents) {
+            _isSync = YES;
         }
     }
     return self;

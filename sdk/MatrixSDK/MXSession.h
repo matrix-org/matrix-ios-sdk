@@ -87,6 +87,12 @@ FOUNDATION_EXPORT NSString *const MXSessionStateDidChangeNotification;
 FOUNDATION_EXPORT NSString *const MXSessionNewRoomNotification;
 
 /**
+ Posted when MXSession has complete an initialSync on a new room.
+ The roomId of the room is passed in the userInfo dictionary.
+ */
+FOUNDATION_EXPORT NSString *const MXSessionInitialSyncedRoomNotification;
+
+/**
  Posted when MXSession has detected a room has been left.
  The roomId of the room is passed in the userInfo dictionary.
  */
