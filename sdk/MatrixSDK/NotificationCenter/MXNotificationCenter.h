@@ -96,6 +96,14 @@ typedef void (^MXOnNotification)(MXEvent *event, MXRoomState *roomState, MXPushR
  */
 - (void)setChecker:(id<MXPushRuleConditionChecker>)checker forConditionKind:(MXPushRuleConditionString)conditionKind;
 
+/**
+ Find a push rule that is satisfied by an event.
+ 
+ @param event the event to test
+ @return the push rule that matches the event. Nil if no match.
+ */
+- (MXPushRule*)ruleMatchingEvent:(MXEvent*)event;
+
 
 #pragma mark - Push notification listeners
 /**

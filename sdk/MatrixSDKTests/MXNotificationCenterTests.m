@@ -328,6 +328,63 @@
     }];
 }
 
+- (void)testRuleMatchingEvent
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        mxSession = bobSession;
+
+        MXSession *aliceSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+        [aliceSession start:^{
+
+            // Change alice name
+            [aliceSession.myUser setDisplayName:@"AALLIICCEE" success:^{
+
+                NSString *messageFromBob = @"Aalliiccee: where are you?";
+
+                [aliceSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
+
+                    if (MXEventDirectionForwards == direction)
+                    {
+                        MXPushRule *rule = [aliceSession.notificationCenter ruleMatchingEvent:event];
+
+                        XCTAssert(rule, @"A push rule must be found for this event: %@", event);
+
+                        // Do the same test as in testDefaultDisplayNameCondition
+                        XCTAssertEqual(rule.kind, MXPushRuleKindOverride);
+
+                        MXPushRuleCondition *condition = rule.conditions[0];
+
+                        XCTAssertEqualObjects(condition.kind, kMXPushRuleConditionStringContainsDisplayName, @"The default content rule with contains_display_name condition must fire first");
+                        XCTAssertEqual(condition.kindType, MXPushRuleConditionTypeContainsDisplayName);
+                        
+                        [aliceSession close];
+                        [expectation fulfill];
+                    }
+
+                }];
+
+
+
+                MXRoom *roomBobSide = [mxSession roomWithRoomId:roomId];
+                [roomBobSide sendTextMessage:messageFromBob success:^(NSString *eventId) {
+
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                }];
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+            
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+        
+    }];
+}
+
+
 @end
 
 #pragma clang diagnostic pop
