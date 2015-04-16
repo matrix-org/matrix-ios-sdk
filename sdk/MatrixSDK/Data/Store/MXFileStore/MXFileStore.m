@@ -265,6 +265,26 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     }
 }
 
+- (void)storePaginationTokenOfRoom:(NSString *)roomId andToken:(NSString *)token
+{
+    [super storePaginationTokenOfRoom:roomId andToken:token];
+
+    if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
+    {
+        [roomsToCommitForMessages addObject:roomId];
+    }
+}
+
+- (void)storeHasReachedHomeServerPaginationEndForRoom:(NSString *)roomId andValue:(BOOL)value
+{
+    [super storeHasReachedHomeServerPaginationEndForRoom:roomId andValue:value];
+
+    if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
+    {
+        [roomsToCommitForMessages addObject:roomId];
+    }
+}
+
 - (BOOL)isPermanent
 {
     return YES;
