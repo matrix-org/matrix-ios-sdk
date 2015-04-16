@@ -33,6 +33,7 @@ const NSString *MatrixSDKVersion = @"0.3.2";
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
 NSString *const kMXSessionInitialSyncedRoomNotification = @"kMXSessionInitialSyncedRoomNotification";
+NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
 NSString *const kMXSessionLeftRoomNotification = @"kMXSessionLeftRoomNotification";
 
 
@@ -514,6 +515,13 @@ typedef void (^MXOnResumeDone)();
                     {
                         if (MXMembershipLeave == room.state.membership || MXMembershipBan == room.state.membership)
                         {
+                            // Notify the room is going to disappear
+                            [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionWillLeaveRoomNotification
+                                                                                object:self
+                                                                              userInfo:@{
+                                                                                         @"roomId": event.roomId,
+                                                                                         @"event": event
+                                                                                         }];
                             [self removeRoom:event.roomId];
                         }
                     }

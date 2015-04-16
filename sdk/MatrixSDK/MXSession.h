@@ -82,19 +82,34 @@ FOUNDATION_EXPORT NSString *const kMXSessionStateDidChangeNotification;
 
 /**
  Posted when MXSession has detected a new room coming from the event stream.
- The roomId of the room is passed in the userInfo dictionary.
+
+ The passed userInfo dictionary contains:
+     - roomId the roomId of the room is passed in the userInfo dictionary.
  */
 FOUNDATION_EXPORT NSString *const kMXSessionNewRoomNotification;
 
 /**
  Posted when MXSession has complete an initialSync on a new room.
- The roomId of the room is passed in the userInfo dictionary.
+
+ The passed userInfo dictionary contains:
+     - roomId the roomId of the room is passed in the userInfo dictionary.
  */
 FOUNDATION_EXPORT NSString *const kMXSessionInitialSyncedRoomNotification;
 
 /**
+ Posted when MXSession has detected a room is going to be left.
+
+ The passed userInfo dictionary contains:
+     - roomId the roomId of the room is passed in the userInfo dictionary.
+     - event the MXEvent responsible for the leaving.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionWillLeaveRoomNotification;
+
+/**
  Posted when MXSession has detected a room has been left.
- The roomId of the room is passed in the userInfo dictionary.
+
+ The passed userInfo dictionary contains:
+     - roomId the roomId of the room is passed in the userInfo dictionary.
  */
 FOUNDATION_EXPORT NSString *const kMXSessionLeftRoomNotification;
 
