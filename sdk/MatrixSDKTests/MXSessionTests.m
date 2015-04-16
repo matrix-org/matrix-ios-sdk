@@ -544,7 +544,7 @@
     [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
 
         __block MXSessionState previousSessionState = MXSessionStateInitialised;
-        [[NSNotificationCenter defaultCenter] addObserverForName:MXSessionStateDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionStateDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
             if (mxSession)
             {
@@ -597,7 +597,7 @@
             [mxSession start:^{
 
                 // Listen to Alice's MXSessionNewRoomNotification event
-                __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:MXSessionNewRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+                __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
                     XCTAssertEqual(mxSession, note.object, @"The MXSessionNewRoomNotification sender must be the current MXSession");
 
@@ -623,7 +623,7 @@
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         [mxSession start:^{
 
-            __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:MXSessionNewRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+            __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
                 XCTAssertEqual(mxSession, note.object, @"The MXSessionNewRoomNotification sender must be the current MXSession");
 
@@ -658,7 +658,7 @@
             [mxSession start:^{
 
                 // Listen to Alice's MXSessionNewRoomNotification event
-                __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:MXSessionNewRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+                __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
                     XCTAssertEqual(mxSession, note.object, @"The MXSessionNewRoomNotification sender must be the current MXSession");
 
@@ -694,7 +694,7 @@
             [mxSession start:^{
 
                 // Listen to Alice's MXSessionInitialSyncedRoomNotification event
-                __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:MXSessionInitialSyncedRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+                __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionInitialSyncedRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
                     XCTAssertEqual(mxSession, note.object, @"The MXSessionInitialSyncedRoomNotification sender must be the current MXSession");
 
