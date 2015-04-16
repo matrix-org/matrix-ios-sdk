@@ -131,100 +131,105 @@
 {
     MXPushRule *theRule;
 
-    // Check rules one by one according to their priorities
-    for (MXPushRule *rule in flatRules)
+    // Consider only events from other users
+    if (NO == [event.userId isEqualToString:mxSession.matrixRestClient.credentials.userId])
     {
-        // Skip disabled rules
-        if (!rule.enabled)
+        // Check rules one by one according to their priorities
+        for (MXPushRule *rule in flatRules)
         {
-            continue;
-        }
-
-        BOOL conditionsOk = YES;
-
-        // The test depends of the kind of the rule
-        switch (rule.kind)
-        {
-            case MXPushRuleKindOverride:
-            case MXPushRuleKindUnderride:
+            // Skip disabled rules
+            if (!rule.enabled)
             {
-                // Check all conditions described by the rule
-                // If there is no condition, the rule must be applied
-                conditionsOk = YES;
+                continue;
+            }
 
-                for (MXPushRuleCondition *condition in rule.conditions)
+            BOOL conditionsOk = YES;
+
+            // The test depends of the kind of the rule
+            switch (rule.kind)
+            {
+                case MXPushRuleKindOverride:
+                case MXPushRuleKindUnderride:
                 {
-                    id<MXPushRuleConditionChecker> checker = [conditionCheckers valueForKey:condition.kind];
-                    if (checker)
+                    // Check all conditions described by the rule
+                    // If there is no condition, the rule must be applied
+                    conditionsOk = YES;
+
+                    for (MXPushRuleCondition *condition in rule.conditions)
                     {
-                        conditionsOk = [checker isCondition:condition satisfiedBy:event];
-                        if (NO == conditionsOk)
+                        id<MXPushRuleConditionChecker> checker = [conditionCheckers valueForKey:condition.kind];
+                        if (checker)
                         {
-                            // Do not need to go further
-                            break;
+                            conditionsOk = [checker isCondition:condition satisfiedBy:event];
+                            if (NO == conditionsOk)
+                            {
+                                // Do not need to go further
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            NSLog(@"[MXNotificationCenter] Warning: There is no MXPushRuleConditionChecker to check condition of kind: %@", condition.kind);
+                            conditionsOk = NO;
                         }
                     }
-                    else
-                    {
-                        NSLog(@"[MXNotificationCenter] Warning: There is no MXPushRuleConditionChecker to check condition of kind: %@", condition.kind);
-                        conditionsOk = NO;
-                    }
+                    break;
                 }
-                break;
-            }
 
-            case MXPushRuleKindContent:
+                case MXPushRuleKindContent:
+                {
+                    // Content rules are rules on the "content.body" field
+                    // Tranlate this into a fake condition
+                    MXPushRuleCondition *equivalentCondition = [[MXPushRuleCondition alloc] init];
+                    equivalentCondition.kindType = MXPushRuleConditionTypeEventMatch;
+                    equivalentCondition.parameters = @{
+                                                       @"key": @"content.body",
+                                                       @"pattern": rule.pattern
+                                                       };
+
+                    conditionsOk = [eventMatchConditionChecker isCondition:equivalentCondition satisfiedBy:event];
+                    break;
+                }
+
+                case MXPushRuleKindRoom:
+                {
+                    // Room rules are rules on the "room_id" field
+                    // Translate this into a fake condition
+                    MXPushRuleCondition *equivalentCondition = [[MXPushRuleCondition alloc] init];
+                    equivalentCondition.kindType = MXPushRuleConditionTypeEventMatch;
+                    equivalentCondition.parameters = @{
+                                                       @"key": @"room_id",
+                                                       @"pattern": rule.ruleId
+                                                       };
+
+                    conditionsOk = [eventMatchConditionChecker isCondition:equivalentCondition satisfiedBy:event];
+                    break;
+                }
+
+                case MXPushRuleKindSender:
+                {
+                    // Sender rules are rules on the "user_id" field
+                    // Translate this into a fake condition
+                    MXPushRuleCondition *equivalentCondition = [[MXPushRuleCondition alloc] init];
+                    equivalentCondition.kindType = MXPushRuleConditionTypeEventMatch;
+                    equivalentCondition.parameters = @{
+                                                       @"key": @"room_id",
+                                                       @"pattern": rule.ruleId
+                                                       };
+                    
+                    conditionsOk = [eventMatchConditionChecker isCondition:equivalentCondition satisfiedBy:event];
+                    break;
+                }
+            }
+            
+            if (conditionsOk)
             {
-                // Content rules are rules on the "content.body" field
-                // Tranlate this into a fake condition
-                MXPushRuleCondition *equivalentCondition = [[MXPushRuleCondition alloc] init];
-                equivalentCondition.kindType = MXPushRuleConditionTypeEventMatch;
-                equivalentCondition.parameters = @{
-                                                   @"key": @"content.body",
-                                                   @"pattern": rule.pattern
-                                                   };
-
-                conditionsOk = [eventMatchConditionChecker isCondition:equivalentCondition satisfiedBy:event];
+                theRule = rule;
                 break;
             }
-
-            case MXPushRuleKindRoom:
-            {
-                // Room rules are rules on the "room_id" field
-                // Translate this into a fake condition
-                MXPushRuleCondition *equivalentCondition = [[MXPushRuleCondition alloc] init];
-                equivalentCondition.kindType = MXPushRuleConditionTypeEventMatch;
-                equivalentCondition.parameters = @{
-                                                   @"key": @"room_id",
-                                                   @"pattern": rule.ruleId
-                                                   };
-
-                conditionsOk = [eventMatchConditionChecker isCondition:equivalentCondition satisfiedBy:event];
-                break;
-            }
-
-            case MXPushRuleKindSender:
-            {
-                // Sender rules are rules on the "user_id" field
-                // Translate this into a fake condition
-                MXPushRuleCondition *equivalentCondition = [[MXPushRuleCondition alloc] init];
-                equivalentCondition.kindType = MXPushRuleConditionTypeEventMatch;
-                equivalentCondition.parameters = @{
-                                                   @"key": @"room_id",
-                                                   @"pattern": rule.ruleId
-                                                   };
-
-                conditionsOk = [eventMatchConditionChecker isCondition:equivalentCondition satisfiedBy:event];
-                break;
-            }
-        }
-
-        if (conditionsOk)
-        {
-            theRule = rule;
-            break;
         }
     }
+
     return theRule;
 }
 

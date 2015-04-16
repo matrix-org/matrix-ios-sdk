@@ -364,8 +364,6 @@
 
                 }];
 
-
-
                 MXRoom *roomBobSide = [mxSession roomWithRoomId:roomId];
                 [roomBobSide sendTextMessage:messageFromBob success:^(NSString *eventId) {
 
