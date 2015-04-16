@@ -114,12 +114,7 @@
 }
 - (NSString*)paginationTokenOfRoom:(NSString*)roomId
 {
-    NSString *token = paginationTokens[roomId];
-    if (nil == token)
-    {
-        token = @"END";
-    }
-    return token;
+    return paginationTokens[roomId];
 }
 
 

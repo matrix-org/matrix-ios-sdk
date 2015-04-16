@@ -44,8 +44,6 @@
     if (self)
     {
         mxSession = mxSession2;
-
-        [mxSession.store storePaginationTokenOfRoom:roomId andToken:@"END"];
         
         eventListeners = [NSMutableArray array];
         
@@ -340,8 +338,13 @@
     {
         // Not enough messages: make a pagination request to the home server
         // from last known token
+        NSString *paginationToken = [mxSession.store paginationTokenOfRoom:_state.roomId];
+        if (nil == paginationToken) {
+            paginationToken = @"END";
+        }
+
         operation = [mxSession.matrixRestClient messagesForRoom:_state.roomId
-                                               from:[mxSession.store paginationTokenOfRoom:_state.roomId]
+                                               from:paginationToken
                                                  to:nil
                                               limit:numItems
                                             success:^(MXPaginationResponse *paginatedResponse) {

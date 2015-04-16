@@ -1592,6 +1592,71 @@
     }];
 }
 
+// Check the pagination token is valid after reloading the store
+- (void)testMXFileStoreMXSessionPaginationToken
+{
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+
+    [sharedData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
+
+        expectation = expectation2;
+
+        MXFileStore *store = [[MXFileStore alloc] init];
+        [store openWithCredentials:sharedData.bobCredentials onComplete:^{
+
+            // Do a 1st [mxSession start] to fill the store
+            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+            [mxSession setStore:store success:^{
+                [mxSession start:^{
+
+                    MXRoom *room = [mxSession roomWithRoomId:roomId];
+                    [room resetBackState];
+                    [room paginateBackMessages:10 complete:^{
+
+                        NSString *roomPaginationToken = [store paginationTokenOfRoom:roomId];
+                        XCTAssert(roomPaginationToken, @"The room must have a pagination after a pagination");
+
+                        [mxSession close];
+                        mxSession = nil;
+
+                        // Reopen a session and check roomPaginationToken
+                        MXFileStore *store2 = [[MXFileStore alloc] init];
+                        [store2 openWithCredentials:sharedData.bobCredentials onComplete:^{
+
+                            XCTAssertEqualObjects(roomPaginationToken, [store2 paginationTokenOfRoom:roomId], @"The store must keep the pagination token");
+
+                            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                            [mxSession setStore:store2 success:^{
+                                [mxSession start:^{
+
+                                    XCTAssertEqualObjects(roomPaginationToken, [store2 paginationTokenOfRoom:roomId], @"The store must keep the pagination token even after [MXSession start]");
+
+                                    [expectation fulfill];
+
+                                } failure:^(NSError *error) {
+                                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                                }];
+                            } failure:^(NSError *error) {
+                                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                            }];
+                        } failure:^(NSError *error) {
+                            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                        }];
+                    } failure:^(NSError *error) {
+                        NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                    }];
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                }];
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop
