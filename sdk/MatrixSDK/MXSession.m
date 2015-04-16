@@ -667,6 +667,12 @@ typedef void (^MXOnResumeDone)();
     // Do an initial to get state and messages in the room
     return [matrixRestClient initialSyncOfRoom:roomId withLimit:limit success:^(NSDictionary *JSONData) {
 
+        if (MXSessionStateClosed == _state)
+        {
+            // Do not go further if the session is closed
+            return;
+        }
+
         MXRoom *room = [self getOrCreateRoom:JSONData[@"room_id"] withJSONData:JSONData notify:YES];
 
         // Manage room messages
