@@ -34,7 +34,7 @@ NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChang
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
 NSString *const kMXSessionInitialSyncedRoomNotification = @"kMXSessionInitialSyncedRoomNotification";
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
-NSString *const kMXSessionLeftRoomNotification = @"kMXSessionLeftRoomNotification";
+NSString *const kMXSessionDidLeaveRoomNotification = @"kMXSessionDidLeaveRoomNotification";
 
 
 /**
@@ -638,7 +638,7 @@ typedef void (^MXOnResumeDone)();
         if ([self roomWithRoomId:roomId])
         {
             // The room is stil here, wait for the MXMembershipLeave event
-            __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionLeftRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+            __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionDidLeaveRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
                 if ([roomId isEqualToString:note.userInfo[@"roomId"]])
                 {
@@ -816,7 +816,7 @@ typedef void (^MXOnResumeDone)();
         [rooms removeObjectForKey:roomId];
 
         // Broadcast the left room
-        [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionLeftRoomNotification
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidLeaveRoomNotification
                                                             object:self
                                                           userInfo:@{
                                                                      @"roomId": roomId

@@ -111,7 +111,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionWillLeaveRoomNotification;
  The passed userInfo dictionary contains:
      - roomId the roomId of the room is passed in the userInfo dictionary.
  */
-FOUNDATION_EXPORT NSString *const kMXSessionLeftRoomNotification;
+FOUNDATION_EXPORT NSString *const kMXSessionDidLeaveRoomNotification;
 
 
 /**
