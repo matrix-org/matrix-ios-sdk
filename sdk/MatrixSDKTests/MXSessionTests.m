@@ -257,6 +257,7 @@
     }];
 }
 
+/* Disabled as lastActiveAgo events sent by the HS are less accurate than before
 - (void)testListenerForPresence
 {
     // Make sure Alice and Bob have activities
@@ -298,7 +299,7 @@
             lastAliceActivity = [mxSession2 userWithUserId:aliceRestClient.credentials.userId].lastActiveAgo;
 
             // Wait a bit before making her active again
-            [NSThread sleepForTimeInterval:1.0];
+            [NSThread sleepForTimeInterval:5.0];
 
             [aliceRestClient sendTextMessageToRoom:roomId text:@"Hi Bob!" success:^(NSString *eventId) {
 
@@ -311,6 +312,7 @@
          }];
     }];
 }
+*/
 
 - (void)testClose
 {

@@ -74,6 +74,7 @@
     }];
 }
 
+/* Disabled as lastActiveAgo events sent by the HS are less accurate than before
 - (void)testLastActiveAgo
 {
     [self doTestWithBobAndAliceActiveInARoom:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
@@ -115,6 +116,7 @@
 
     }];
 }
+*/
 
 - (void)testOtherUserLastActiveUpdate
 {
@@ -214,6 +216,7 @@
     }];
 }
 
+/* Disabled as lastActiveAgo events sent by the HS are less accurate than before
 - (void)testMyUserLastActiveUpdate
 {
     [self doTestWithBobAndAliceActiveInARoom:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
@@ -232,6 +235,7 @@
         }];
     }];
 }
+ */
 
 - (void)testMyUserProfileUpdate
 {
@@ -279,16 +283,19 @@
 
             [mxSession.myUser listenToUserUpdate:^(MXEvent *event) {
 
-                XCTAssertEqual(event.eventType, MXEventTypePresence);
+                // Filter first presence events for online
+                if (MXPresenceOnline != mxSession.myUser.presence)
+                {
+                    XCTAssertEqual(event.eventType, MXEventTypePresence);
 
-                XCTAssert([mxSession.myUser.displayname isEqualToString:kMXTestsAliceDisplayName]);
-                XCTAssert([mxSession.myUser.avatarUrl isEqualToString:kMXTestsAliceAvatarURL]);
+                    XCTAssert([mxSession.myUser.displayname isEqualToString:kMXTestsAliceDisplayName]);
+                    XCTAssert([mxSession.myUser.avatarUrl isEqualToString:kMXTestsAliceAvatarURL]);
 
-                XCTAssertEqual(mxSession.myUser.presence, MXPresenceUnavailable);
-                XCTAssert([mxSession.myUser.statusMsg isEqualToString:@"in Wonderland"]);
-
-                [expectation fulfill];
-
+                    XCTAssertEqual(mxSession.myUser.presence, MXPresenceUnavailable);
+                    XCTAssertEqualObjects(mxSession.myUser.statusMsg, @"in Wonderland");
+                    
+                    [expectation fulfill];
+                }
             }];
 
             [aliceRestClient setPresence:MXPresenceUnavailable andStatusMessage:@"in Wonderland" success:^{
