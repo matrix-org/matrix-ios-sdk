@@ -627,7 +627,7 @@
 
                 XCTAssertEqual(mxSession, note.object, @"The MXSessionNewRoomNotification sender must be the current MXSession");
 
-                MXRoom *publicRoom = [mxSession roomWithRoomId:note.userInfo[@"roomId"]];
+                MXRoom *publicRoom = [mxSession roomWithRoomId:note.userInfo[kMXSessionNotificationRoomIdKey]];
                 XCTAssertNotNil(publicRoom);
 
                 [[NSNotificationCenter defaultCenter] removeObserver:observer];
@@ -662,7 +662,7 @@
 
                     XCTAssertEqual(mxSession, note.object, @"The MXSessionNewRoomNotification sender must be the current MXSession");
 
-                    MXRoom *publicRoom = [mxSession roomWithRoomId:note.userInfo[@"roomId"]];
+                    MXRoom *publicRoom = [mxSession roomWithRoomId:note.userInfo[kMXSessionNotificationRoomIdKey]];
                     XCTAssertNotNil(publicRoom);
 
                     [[NSNotificationCenter defaultCenter] removeObserver:observer];
@@ -698,7 +698,7 @@
 
                     XCTAssertEqual(mxSession, note.object, @"The MXSessionInitialSyncedRoomNotification sender must be the current MXSession");
 
-                    MXRoom *publicRoom = [mxSession roomWithRoomId:note.userInfo[@"roomId"]];
+                    MXRoom *publicRoom = [mxSession roomWithRoomId:note.userInfo[kMXSessionNotificationRoomIdKey]];
                     XCTAssertNotNil(publicRoom);
                     XCTAssert(publicRoom.isSync, @"MXSessionInitialSyncedRoomNotification must inform when the room state is fully known");
 

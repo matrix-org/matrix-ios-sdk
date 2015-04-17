@@ -84,7 +84,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionStateDidChangeNotification;
  Posted when MXSession has detected a new room coming from the event stream.
 
  The passed userInfo dictionary contains:
-     - roomId the roomId of the room is passed in the userInfo dictionary.
+     - `kMXSessionNotificationRoomIdKey` the roomId of the room is passed in the userInfo dictionary.
  */
 FOUNDATION_EXPORT NSString *const kMXSessionNewRoomNotification;
 
@@ -92,7 +92,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNewRoomNotification;
  Posted when MXSession has complete an initialSync on a new room.
 
  The passed userInfo dictionary contains:
-     - roomId the roomId of the room is passed in the userInfo dictionary.
+     - `kMXSessionNotificationRoomIdKey` the roomId of the room is passed in the userInfo dictionary.
  */
 FOUNDATION_EXPORT NSString *const kMXSessionInitialSyncedRoomNotification;
 
@@ -100,8 +100,8 @@ FOUNDATION_EXPORT NSString *const kMXSessionInitialSyncedRoomNotification;
  Posted when MXSession has detected a room is going to be left.
 
  The passed userInfo dictionary contains:
-     - roomId the roomId of the room is passed in the userInfo dictionary.
-     - event the MXEvent responsible for the leaving.
+     - `kMXSessionNotificationRoomIdKey` the roomId of the room is passed in the userInfo dictionary.
+     - `kMXSessionNotificationEventKey` the MXEvent responsible for the leaving.
  */
 FOUNDATION_EXPORT NSString *const kMXSessionWillLeaveRoomNotification;
 
@@ -109,9 +109,21 @@ FOUNDATION_EXPORT NSString *const kMXSessionWillLeaveRoomNotification;
  Posted when MXSession has detected a room has been left.
 
  The passed userInfo dictionary contains:
-     - roomId the roomId of the room is passed in the userInfo dictionary.
+     - `kMXSessionNotificationRoomIdKey` the roomId of the room is passed in the userInfo dictionary.
  */
 FOUNDATION_EXPORT NSString *const kMXSessionDidLeaveRoomNotification;
+
+
+#pragma mark - Notifications keys
+/**
+ The key in notification userInfo dictionary representating the roomId.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionNotificationRoomIdKey;
+
+/**
+ The key in notification userInfo dictionary representating the event.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
 
 
 /**

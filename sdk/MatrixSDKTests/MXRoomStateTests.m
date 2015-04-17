@@ -730,7 +730,7 @@
             // Check MXSessionNewRoomNotification reception
             __block __weak id newRoomObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-                newRoomId = note.userInfo[@"roomId"];
+                newRoomId = note.userInfo[kMXSessionNotificationRoomIdKey];
 
                 MXRoom *room = [mxSession roomWithRoomId:newRoomId];
                 XCTAssertNotNil(room);

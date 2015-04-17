@@ -35,6 +35,8 @@ NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification"
 NSString *const kMXSessionInitialSyncedRoomNotification = @"kMXSessionInitialSyncedRoomNotification";
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
 NSString *const kMXSessionDidLeaveRoomNotification = @"kMXSessionDidLeaveRoomNotification";
+NSString *const kMXSessionNotificationRoomIdKey = @"roomId";
+NSString *const kMXSessionNotificationEventKey = @"event";
 
 
 /**
@@ -519,8 +521,8 @@ typedef void (^MXOnResumeDone)();
                             [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionWillLeaveRoomNotification
                                                                                 object:self
                                                                               userInfo:@{
-                                                                                         @"roomId": event.roomId,
-                                                                                         @"event": event
+                                                                                         kMXSessionNotificationRoomIdKey: event.roomId,
+                                                                                         kMXSessionNotificationEventKey: event
                                                                                          }];
                             [self removeRoom:event.roomId];
                         }
@@ -640,7 +642,7 @@ typedef void (^MXOnResumeDone)();
             // The room is stil here, wait for the MXMembershipLeave event
             __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionDidLeaveRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-                if ([roomId isEqualToString:note.userInfo[@"roomId"]])
+                if ([roomId isEqualToString:note.userInfo[kMXSessionNotificationRoomIdKey]])
                 {
                     [[NSNotificationCenter defaultCenter] removeObserver:observer];
                     success();
@@ -715,7 +717,7 @@ typedef void (^MXOnResumeDone)();
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionInitialSyncedRoomNotification
                                                             object:self
                                                           userInfo:@{
-                                                                     @"roomId": roomId
+                                                                     kMXSessionNotificationRoomIdKey: roomId
                                                                      }];
 
         if (success)
@@ -792,7 +794,7 @@ typedef void (^MXOnResumeDone)();
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionNewRoomNotification
                                                             object:self
                                                           userInfo:@{
-                                                                     @"roomId": room.state.roomId
+                                                                     kMXSessionNotificationRoomIdKey: room.state.roomId
                                                                      }];
     }
 }
@@ -819,7 +821,7 @@ typedef void (^MXOnResumeDone)();
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidLeaveRoomNotification
                                                             object:self
                                                           userInfo:@{
-                                                                     @"roomId": roomId
+                                                                     kMXSessionNotificationRoomIdKey: roomId
                                                                      }];
     }
 }
