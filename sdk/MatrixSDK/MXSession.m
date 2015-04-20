@@ -437,14 +437,41 @@ typedef void (^MXOnResumeDone)();
             // Inform the app there is a problem with the connection to the homeserver
             [self setState:MXSessionStateHomeserverNotReachable];
 
-            // Relaunch the request in a random near futur.
-            // Random time it used to avoid all Matrix clients to retry all in the same time
-            // if there is server side issue like server restart
-            dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, [MXHTTPClient jitterTimeForRetry] * NSEC_PER_MSEC);
-            dispatch_after(delayTime, dispatch_get_main_queue(), ^(void) {
+            // Check if it is a network connectivity issue
+            AFNetworkReachabilityManager *networkReachabilityManager = [AFNetworkReachabilityManager sharedManager];
+            NSLog(@"[MXSession] events stream broken. Network reachability: %d", networkReachabilityManager.isReachable);
 
-                [self streamEventsFromToken:token withLongPoll:longPoll];
-            });
+            if (networkReachabilityManager.isReachable)
+            {
+                // The problem is not the network
+                // Relaunch the request in a random near futur.
+                // Random time it used to avoid all Matrix clients to retry all in the same time
+                // if there is server side issue like server restart
+                 dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, [MXHTTPClient jitterTimeForRetry] * NSEC_PER_MSEC);
+                 dispatch_after(delayTime, dispatch_get_main_queue(), ^(void) {
+
+                     if (eventStreamRequest)
+                     {
+                         NSLog(@"[MXSession] Retry resuming events stream");
+                         [self streamEventsFromToken:token withLongPoll:longPoll];
+                     }
+                 });
+            }
+            else
+            {
+                // The device is not connected to the internet, wait for the connection to be up again before retrying
+                __block __weak id reachabilityObserver =
+                [[NSNotificationCenter defaultCenter] addObserverForName:AFNetworkingReachabilityDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                    if (networkReachabilityManager.isReachable && eventStreamRequest)
+                    {
+                        [[NSNotificationCenter defaultCenter] removeObserver:reachabilityObserver];
+
+                        NSLog(@"[MXSession] Retry resuming events stream");
+                        [self streamEventsFromToken:token withLongPoll:longPoll];
+                    }
+                }];
+            }
         }
     }];
 }
