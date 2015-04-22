@@ -1,3 +1,30 @@
+Changes in Matrix iOS SDK in 0.4.0 (2015-04-23)
+===============================================
+
+-----
+ SDK
+-----
+Improvements:
+ * MXSession: Define a life cycle. The current value is stored in the `state` property. Its changes are notified via NSNotificationCenter (kMXSessionStateDidChangeNotification).
+ * MXSession/MXRoom: return a MXHTTPOperation for all requests so that the SDK client can cancel them.
+ * MXSession: Added notifications to indicate changes on room:
+     - kMXSessionNewRoomNotification
+     - kMXSessionInitialSyncedRoomNotification
+     - kMXSessionWillLeaveRoomNotification
+     - kMXSessionDidLeaveRoomNotification
+ * MXNotificationCenter: Take into account the `highlight` tweek parameters in push rules.
+ 
+Bug fixes:
+ * Fixed pagination hole that happened when receiving live events between [MXRoom resetBackState] and [MXRoom paginateBackMessages].
+ * MXStore: When reopened, the MXSession did reset all pagination token of all cached room.
+ * MXFileStore: if pagination token was changed with no new messages, the new pagination token was not saved into the file cache.
+ 
+-----------------
+ Matrix Console
+-----------------
+Console source code has been moved into its own git repository: https://github.com/matrix-org/matrix-ios-console.
+
+
 Changes in Matrix iOS SDK in 0.3.2 (2015-03-27)
 ===============================================
 
