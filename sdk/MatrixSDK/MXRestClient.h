@@ -797,14 +797,14 @@ typedef enum : NSUInteger
 - (NSString*)urlOfContent:(NSString*)mxcContentURI;
 
 /**
- Get the HTTP URL of a thumbnail image for a Matrix media content.
-
+ Get the suitable HTTP URL of a thumbnail image from a Matrix media content according to the destined view size.
+ 
  @param mxcContentURI the Matrix content URI to resolve.
- @param thumbnailSize the expected thumbnail image size.
+ @param viewSize in points, it will be converted in pixels by considering screen scale.
  @param thumbnailingMethod the method the Matrix content repository must use to generate the thumbnail.
- @return the thumbnail HTTP URL. nil if the Matrix content URI is invalid.
+ @return the thumbnail HTTP URL. The provided URI is returned if it is not a valid Matrix content URI.
  */
-- (NSString*)urlOfContentThumbnail:(NSString*)mxcContentURI withSize:(CGSize)thumbnailSize andMethod:(MXThumbnailingMethod)thumbnailingMethod;
+- (NSString*)urlOfContentThumbnail:(NSString*)mxcContentURI toFitViewSize:(CGSize)viewSize withMethod:(MXThumbnailingMethod)thumbnailingMethod;
 
 /**
  Get the HTTP URL of an identicon served by the media repository.

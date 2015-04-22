@@ -127,46 +127,12 @@
     [conditionCheckers setObject:checker forKey:conditionKind];
 }
 
-
-#pragma mark - Push notification listeners
-- (id)listenToNotifications:(MXOnNotification)onNotification
+- (MXPushRule *)ruleMatchingEvent:(MXEvent *)event
 {
-    MXOnNotification onNotificationCopy = onNotification;
-    [notificationListeners addObject:onNotificationCopy];
-    return onNotificationCopy;
-}
+    MXPushRule *theRule;
 
-- (void)removeListener:(id)listener
-{
-    [notificationListeners removeObject:listener];
-}
-
-- (void)removeAllListeners
-{
-    [notificationListeners removeAllObjects];
-}
-
-// Notify all listeners
-- (void)notifyListeners:(MXEvent*)event roomState:(MXRoomState*)roomState rule:(MXPushRule*)rule
-{
-    // Make a copy to manage the case where a listener has been removed while calling the blocks
-    NSArray* listeners = [notificationListeners copy];
-    for (MXOnNotification listener in listeners)
-    {
-        if (NSNotFound != [notificationListeners indexOfObject:listener])
-        {
-            listener(event, roomState, rule);
-        }
-    }
-}
-
-
-#pragma mark - Private methods
-// Check if the event matches with defined push rules
-- (void)shouldNotify:(MXEvent*)event roomState:(MXRoomState*)roomState
-{
-    // Check for notifications only if we have listeners
-    if (notificationListeners.count)
+    // Consider only events from other users
+    if (NO == [event.userId isEqualToString:mxSession.matrixRestClient.credentials.userId])
     {
         // Check rules one by one according to their priorities
         for (MXPushRule *rule in flatRules)
@@ -250,32 +216,82 @@
                                                        @"key": @"room_id",
                                                        @"pattern": rule.ruleId
                                                        };
-
+                    
                     conditionsOk = [eventMatchConditionChecker isCondition:equivalentCondition satisfiedBy:event];
                     break;
                 }
             }
-
+            
             if (conditionsOk)
             {
-                // Make sure this is not a rule to prevent from generating a notification
-                BOOL actionNotify = YES;
-                if (1 == rule.actions.count)
-                {
-                    MXPushRuleAction *action = rule.actions[0];
-                    if ([action.action isEqualToString:kMXPushRuleActionStringDontNotify])
-                    {
-                        actionNotify = NO;
-                    }
-                }
-
-                if (actionNotify)
-                {
-                    // All conditions have been satisfied, notify listeners
-                    [self notifyListeners:event roomState:roomState rule:rule];
-                }
-
+                theRule = rule;
                 break;
+            }
+        }
+    }
+
+    return theRule;
+}
+
+
+#pragma mark - Push notification listeners
+- (id)listenToNotifications:(MXOnNotification)onNotification
+{
+    MXOnNotification onNotificationCopy = onNotification;
+    [notificationListeners addObject:onNotificationCopy];
+    return onNotificationCopy;
+}
+
+- (void)removeListener:(id)listener
+{
+    [notificationListeners removeObject:listener];
+}
+
+- (void)removeAllListeners
+{
+    [notificationListeners removeAllObjects];
+}
+
+// Notify all listeners
+- (void)notifyListeners:(MXEvent*)event roomState:(MXRoomState*)roomState rule:(MXPushRule*)rule
+{
+    // Make a copy to manage the case where a listener has been removed while calling the blocks
+    NSArray* listeners = [notificationListeners copy];
+    for (MXOnNotification listener in listeners)
+    {
+        if (NSNotFound != [notificationListeners indexOfObject:listener])
+        {
+            listener(event, roomState, rule);
+        }
+    }
+}
+
+
+#pragma mark - Private methods
+// Check if the event should be notified to the listeners
+- (void)shouldNotify:(MXEvent*)event roomState:(MXRoomState*)roomState
+{
+    // Check for notifications only if we have listeners
+    if (notificationListeners.count)
+    {
+        MXPushRule *rule = [self ruleMatchingEvent:event];
+        if (rule)
+        {
+            // Make sure this is not a rule to prevent from generating a notification
+            BOOL actionNotify = YES;
+            if (1 == rule.actions.count)
+            {
+                MXPushRuleAction *action = rule.actions[0];
+                if ([action.action isEqualToString:kMXPushRuleActionStringDontNotify])
+                {
+                    actionNotify = NO;
+                }
+            }
+
+            if (actionNotify)
+            {
+                // All conditions have been satisfied, notify listeners
+                [self notifyListeners:event roomState:roomState rule:rule];
             }
         }
     }

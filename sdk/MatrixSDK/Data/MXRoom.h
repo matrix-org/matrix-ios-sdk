@@ -65,6 +65,19 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  */
 @property (nonatomic, readonly) BOOL canPaginate;
 
+/**
+ Flag indicating that the room has been initialSynced with the homeserver.
+ 
+ @discussion
+ The room is marked as not sync'ed when its room state is not fully known. This happens in
+ two situations:
+     - the user is invited to a room (the membership is `MXMembershipInvite`). To get 
+       the full room state, he has to join the room.
+     - the membership is currently MXMembershipUnknown. The room came down the events stream
+       and the SDK is doing an initialSync on it. When complete, it will send the `MXSessionInitialSyncedRoomNotification`.
+ */
+@property (nonatomic) BOOL isSync;
+
 
 - (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession;
 
@@ -117,8 +130,8 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  */
 - (NSUInteger)remainingMessagesForPaginationInStore;
 
-#pragma mark - Room operations
 
+#pragma mark - Room operations
 /**
  Send a generic non state event to a room.
 
@@ -127,11 +140,13 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  @param success A block object called when the operation succeeds. It returns
                 the event id of the event generated on the home server
  @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
  */
-- (void)sendEventOfType:(MXEventTypeString)eventTypeString
-                content:(NSDictionary*)content
-                success:(void (^)(NSString *eventId))success
-                failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)sendEventOfType:(MXEventTypeString)eventTypeString
+                            content:(NSDictionary*)content
+                            success:(void (^)(NSString *eventId))success
+                            failure:(void (^)(NSError *error))failure;
 
 /**
  Send a generic state event to a room.
@@ -141,11 +156,13 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  @param success A block object called when the operation succeeds. It returns
  the event id of the event generated on the home server
  @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
  */
-- (void)sendStateEventOfType:(MXEventTypeString)eventTypeString
-                     content:(NSDictionary*)content
-                     success:(void (^)(NSString *eventId))success
-                     failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)sendStateEventOfType:(MXEventTypeString)eventTypeString
+                                 content:(NSDictionary*)content
+                                 success:(void (^)(NSString *eventId))success
+                                 failure:(void (^)(NSError *error))failure;
 
 /**
  Send a room message to a room.
@@ -155,11 +172,13 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  @param success A block object called when the operation succeeds. It returns
                 the event id of the event generated on the home server
  @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
  */
-- (void)sendMessageOfType:(MXMessageType)msgType
-                  content:(NSDictionary*)content
-                  success:(void (^)(NSString *eventId))success
-                  failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)sendMessageOfType:(MXMessageType)msgType
+                              content:(NSDictionary*)content
+                              success:(void (^)(NSString *eventId))success
+                              failure:(void (^)(NSError *error))failure;
 
 /**
  Send a text message to a room
@@ -168,10 +187,12 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  @param success A block object called when the operation succeeds. It returns
                 the event id of the event generated on the home server
  @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
  */
-- (void)sendTextMessage:(NSString*)text
-                success:(void (^)(NSString *eventId))success
-                failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)sendTextMessage:(NSString*)text
+                            success:(void (^)(NSString *eventId))success
+                            failure:(void (^)(NSError *error))failure;
 
 /**
  Set the topic of the room.
@@ -179,10 +200,12 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  @param topic the topic to set.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
  */
-- (void)setTopic:(NSString*)topic
-         success:(void (^)())success
-         failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)setTopic:(NSString*)topic
+                     success:(void (^)())success
+                     failure:(void (^)(NSError *error))failure;
 
 /**
  Set the name of the room.
@@ -190,28 +213,34 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  @param name the name to set.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
  */
-- (void)setName:(NSString*)name
-        success:(void (^)())success
-        failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)setName:(NSString*)name
+                    success:(void (^)())success
+                    failure:(void (^)(NSError *error))failure;
 
 /**
  Join this room where the user has been invited.
  
  @param success A block object called when the operation is complete.
  @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
  */
-- (void)join:(void (^)())success
-     failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)join:(void (^)())success
+                 failure:(void (^)(NSError *error))failure;
 
 /**
  Leave this room.
  
  @param success A block object called when the operation is complete.
  @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
  */
-- (void)leave:(void (^)())success
-     failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)leave:(void (^)())success
+                  failure:(void (^)(NSError *error))failure;
 
 /**
  Invite a user to this room.
@@ -219,10 +248,12 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  @param userId the user id.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
  */
-- (void)inviteUser:(NSString*)userId
-           success:(void (^)())success
-           failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)inviteUser:(NSString*)userId
+                       success:(void (^)())success
+                       failure:(void (^)(NSError *error))failure;
 
 /**
  Kick a user from this room.
@@ -230,11 +261,13 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  @param userId the user id.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
  */
-- (void)kickUser:(NSString*)userId
-          reason:(NSString*)reason
-         success:(void (^)())success
-         failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)kickUser:(NSString*)userId
+                      reason:(NSString*)reason
+                     success:(void (^)())success
+                     failure:(void (^)(NSError *error))failure;
 
 /**
  Ban a user in this room.
@@ -242,11 +275,13 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  @param userId the user id.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
  */
-- (void)banUser:(NSString*)userId
-         reason:(NSString*)reason
-        success:(void (^)())success
-        failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)banUser:(NSString*)userId
+                     reason:(NSString*)reason
+                    success:(void (^)())success
+                    failure:(void (^)(NSError *error))failure;
 
 /**
  Unban a user in this room.
@@ -254,10 +289,12 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  @param userId the user id.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
  */
-- (void)unbanUser:(NSString*)userId
-          success:(void (^)())success
-          failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)unbanUser:(NSString*)userId
+                      success:(void (^)())success
+                      failure:(void (^)(NSError *error))failure;
 
 /**
  Set the power level of a member of the room.
@@ -267,10 +304,12 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
  */
-- (void)setPowerLevelOfUserWithUserID:(NSString*)userId powerLevel:(NSUInteger)powerLevel
-                              success:(void (^)())success
-                              failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)setPowerLevelOfUserWithUserID:(NSString*)userId powerLevel:(NSUInteger)powerLevel
+                                          success:(void (^)())success
+                                          failure:(void (^)(NSError *error))failure;
 
 /**
  Inform the home server that the user is typing (or not) in this room.
@@ -281,11 +320,13 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
  */
-- (void)sendTypingNotification:(BOOL)typing
-                       timeout:(NSUInteger)timeout
-                       success:(void (^)())success
-                       failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)sendTypingNotification:(BOOL)typing
+                                   timeout:(NSUInteger)timeout
+                                   success:(void (^)())success
+                                   failure:(void (^)(NSError *error))failure;
 
 /**
  Redact an event in this room.
@@ -295,11 +336,13 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
  */
-- (void)redactEvent:(NSString*)eventId
-             reason:(NSString*)reason
-            success:(void (^)())success
-            failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)redactEvent:(NSString*)eventId
+                         reason:(NSString*)reason
+                        success:(void (^)())success
+                        failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Events listeners
 /**

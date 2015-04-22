@@ -24,6 +24,109 @@
 #import "MXNotificationCenter.h"
 
 /**
+ `MXSessionState` represents the states in the life cycle of a MXSession instance.
+ */
+typedef enum : NSUInteger {
+    /**
+     The session has just been created.
+     */
+    MXSessionStateInitialised,
+
+    /**
+     Data from the MXStore has been loaded.
+     */
+    MXSessionStateStoreDataReady,
+
+    /**
+     The session is syncing with the server.
+     
+     @discussion
+     It is either doing a global initialSync or restarting the events stream from the previous
+     known position. This position is provided by the store for a cold start or by the `MXSession`
+     itself when [MXSession resume] is called.
+     */
+    MXSessionStateSyncInProgress,
+
+    /**
+     The session data is synchronised with the server and session keeps it synchronised
+     thanks to the events stream, which is now running.
+     */
+    MXSessionStateRunning,
+
+    /**
+     The connection to the homeserver is temporary lost.
+     
+     @discussion
+     The Matrix session will automatically establish it again. Once back, the state will move to
+     MXSessionStateRunning.
+     */
+    MXSessionStateHomeserverNotReachable,
+
+    /**
+     The session has been paused.
+     */
+    MXSessionStatePaused,
+
+    /**
+     The session has been closed and cannot be reused.
+     */
+    MXSessionStateClosed
+} MXSessionState;
+
+
+#pragma mark - Notifications
+/**
+ Posted when the state of the MXSession instance changes.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionStateDidChangeNotification;
+
+/**
+ Posted when MXSession has detected a new room coming from the event stream.
+
+ The passed userInfo dictionary contains:
+     - `kMXSessionNotificationRoomIdKey` the roomId of the room is passed in the userInfo dictionary.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionNewRoomNotification;
+
+/**
+ Posted when MXSession has complete an initialSync on a new room.
+
+ The passed userInfo dictionary contains:
+     - `kMXSessionNotificationRoomIdKey` the roomId of the room is passed in the userInfo dictionary.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionInitialSyncedRoomNotification;
+
+/**
+ Posted when MXSession has detected a room is going to be left.
+
+ The passed userInfo dictionary contains:
+     - `kMXSessionNotificationRoomIdKey` the roomId of the room is passed in the userInfo dictionary.
+     - `kMXSessionNotificationEventKey` the MXEvent responsible for the leaving.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionWillLeaveRoomNotification;
+
+/**
+ Posted when MXSession has detected a room has been left.
+
+ The passed userInfo dictionary contains:
+     - `kMXSessionNotificationRoomIdKey` the roomId of the room is passed in the userInfo dictionary.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionDidLeaveRoomNotification;
+
+
+#pragma mark - Notifications keys
+/**
+ The key in notification userInfo dictionary representating the roomId.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionNotificationRoomIdKey;
+
+/**
+ The key in notification userInfo dictionary representating the event.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
+
+
+/**
  `MXSession` manages data and events from the home server
  It is responsible for:
     - retrieving events from the home server
@@ -39,6 +142,11 @@
  The matrix REST Client used to make Matrix API requests.
  */
 @property (nonatomic, readonly) MXRestClient *matrixRestClient;
+
+/**
+ The current state of the session.
+ */
+@property (nonatomic, readonly) MXSessionState state;
 
 /**
  The profile of the current user.
@@ -162,10 +270,12 @@
  @param success A block object called when the operation succeeds. It provides the MXRoom 
         instance of the joined room.
  @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
  */
-- (void)joinRoom:(NSString*)roomIdOrAlias
-         success:(void (^)(MXRoom *room))success
-         failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
+                     success:(void (^)(MXRoom *room))success
+                     failure:(void (^)(NSError *error))failure;
 
 /**
  Leave a room.
@@ -175,10 +285,12 @@
  @param roomId the id of the room to join.
  @param success A block object called when the operation is complete.
  @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
  */
-- (void)leaveRoom:(NSString*)roomId
-          success:(void (^)())success
-          failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)leaveRoom:(NSString*)roomId
+                      success:(void (^)())success
+                      failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - The user's rooms

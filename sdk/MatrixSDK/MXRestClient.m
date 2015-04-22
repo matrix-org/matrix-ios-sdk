@@ -1342,12 +1342,16 @@ MXAuthAction;
     return contentURL;
 }
 
-- (NSString*)urlOfContentThumbnail:(NSString*)mxcContentURI withSize:(CGSize)thumbnailSize andMethod:(MXThumbnailingMethod)thumbnailingMethod
+- (NSString*)urlOfContentThumbnail:(NSString*)mxcContentURI toFitViewSize:(CGSize)viewSize withMethod:(MXThumbnailingMethod)thumbnailingMethod
 {
-    NSString *thumbnailURL;
+    NSString *thumbnailURL = mxcContentURI;
 
     if ([mxcContentURI hasPrefix:kMXContentUriScheme])
     {
+        // Convert first the provided size in pixels
+        CGFloat scale = [[UIScreen mainScreen] scale];
+        CGSize sizeInPixels = CGSizeMake(viewSize.width * scale, viewSize.height * scale);
+        
         // Replace the "mxc://" scheme by the absolute http location for the content thumbnail
         NSString *mxThumbnailPrefix = [NSString stringWithFormat:@"%@%@/thumbnail/", homeserver, kMXContentPrefixPath];
         thumbnailURL = [mxcContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:mxThumbnailPrefix];
@@ -1369,7 +1373,7 @@ MXAuthAction;
         thumbnailURL = [thumbnailURL stringByReplacingOccurrencesOfString:@"#auto" withString:@""];
 
         // Add thumbnailing parameters to the URL
-        thumbnailURL = [NSString stringWithFormat:@"%@?width=%tu&height=%tu&method=%@", thumbnailURL, (NSUInteger)thumbnailSize.width, (NSUInteger)thumbnailSize.height, thumbnailingMethodString];
+        thumbnailURL = [NSString stringWithFormat:@"%@?width=%tu&height=%tu&method=%@", thumbnailURL, (NSUInteger)sizeInPixels.width, (NSUInteger)sizeInPixels.height, thumbnailingMethodString];
     }
 
     return thumbnailURL;

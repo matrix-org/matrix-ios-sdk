@@ -257,6 +257,7 @@
     }];
 }
 
+/* Disabled as lastActiveAgo events sent by the HS are less accurate than before
 - (void)testListenerForPresence
 {
     // Make sure Alice and Bob have activities
@@ -268,36 +269,40 @@
         __block NSUInteger lastAliceActivity = -1;
         
         // Listen to m.presence only
-        [mxSession listenToEventsOfTypes:@[kMXEventTypeStringPresence]
-                                           onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
-                                               
-                                               if (MXEventDirectionForwards == direction)
-                                               {
-                                                   XCTAssertEqual(event.eventType, MXEventTypePresence, @"We must receive only m.presence - Event: %@", event);
-                                                   
-                                                   MXPresenceEventContent *eventContent = [MXPresenceEventContent modelFromJSON:event.content];
-                                                   XCTAssert([eventContent.userId isEqualToString:aliceRestClient.credentials.userId]);
-                                                   
-                                                   MXUser *mxAlice = [mxSession2 userWithUserId:eventContent.userId];
-                                                   
-                                                   NSUInteger newLastAliceActivity = mxAlice.lastActiveAgo;
-                                                   XCTAssertLessThan(newLastAliceActivity, lastAliceActivity, @"alice activity must be updated");
-                                                   
-                                                   [expectation fulfill];
-                                               }
-                                           }];
-        
+        [mxSession listenToEventsOfTypes:@[kMXEventTypeStringPresence] onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
+
+            if (MXEventDirectionForwards == direction)
+            {
+                XCTAssertEqual(event.eventType, MXEventTypePresence, @"We must receive only m.presence - Event: %@", event);
+
+                MXPresenceEventContent *eventContent = [MXPresenceEventContent modelFromJSON:event.content];
+
+                // Filter out Bob own presence events
+                if (NO == [eventContent.userId isEqualToString:mxSession.matrixRestClient.credentials.userId])
+                {
+                    XCTAssertEqualObjects(eventContent.userId, aliceRestClient.credentials.userId);
+
+                    MXUser *mxAlice = [mxSession2 userWithUserId:eventContent.userId];
+
+                    NSUInteger newLastAliceActivity = mxAlice.lastActiveAgo;
+                    XCTAssertLessThan(newLastAliceActivity, lastAliceActivity, @"alice activity must be updated");
+                    
+                    [expectation fulfill];
+                }
+            }
+        }];
+
         // Start the session
         [mxSession start:^{
-            
+
             // Get the last Alice activity before making her active again
             lastAliceActivity = [mxSession2 userWithUserId:aliceRestClient.credentials.userId].lastActiveAgo;
-            
+
             // Wait a bit before making her active again
-            [NSThread sleepForTimeInterval:1.0];
-            
+            [NSThread sleepForTimeInterval:5.0];
+
             [aliceRestClient sendTextMessageToRoom:roomId text:@"Hi Bob!" success:^(NSString *eventId) {
-                
+
             } failure:^(NSError *error) {
                 NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
             }];
@@ -307,6 +312,7 @@
          }];
     }];
 }
+*/
 
 - (void)testClose
 {
@@ -532,6 +538,186 @@
         } failure:^(NSError *error) {
             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
         }];
+    }];
+}
+
+- (void)testState
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
+
+        __block MXSessionState previousSessionState = MXSessionStateInitialised;
+        [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionStateDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+            if (mxSession)
+            {
+                XCTAssertEqual(note.object, mxSession, @"The notification must embed the MXSession sender");
+                XCTAssertNotEqual(mxSession.state, previousSessionState, @"The state must have changed");
+                previousSessionState = mxSession.state;
+            }
+        }];
+
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        XCTAssertEqual(MXSessionStateInitialised, mxSession.state);
+
+        [mxSession start:^{
+
+            XCTAssertEqual(MXSessionStateRunning, mxSession.state);
+
+            [mxSession pause];
+            XCTAssertEqual(MXSessionStatePaused, mxSession.state);
+
+            [mxSession resume:^{
+                XCTAssertEqual(MXSessionStateRunning, mxSession.state);
+
+                [mxSession close];
+                XCTAssertEqual(MXSessionStateClosed, mxSession.state);
+
+                mxSession = nil;
+                [expectation fulfill];
+            }];
+
+            XCTAssertEqual(MXSessionStateSyncInProgress, mxSession.state);
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+        XCTAssertEqual(MXSessionStateSyncInProgress, mxSession.state);
+    }];
+}
+
+
+#pragma mark MXSessionNewRoomNotification tests
+- (void)testNewRoomNotificationOnInvite
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+
+            mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+            [mxSession start:^{
+
+                // Listen to Alice's MXSessionNewRoomNotification event
+                __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                    XCTAssertEqual(mxSession, note.object, @"The MXSessionNewRoomNotification sender must be the current MXSession");
+
+                    [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                    [expectation fulfill];
+                }];
+
+                [bobRestClient inviteUser:aliceRestClient.credentials.userId toRoom:roomId success:nil failure:nil];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        }];
+
+    }];
+}
+
+- (void)testNewRoomNotificationOnCreatingPublicRoom
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [mxSession start:^{
+
+            __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                XCTAssertEqual(mxSession, note.object, @"The MXSessionNewRoomNotification sender must be the current MXSession");
+
+                MXRoom *publicRoom = [mxSession roomWithRoomId:note.userInfo[kMXSessionNotificationRoomIdKey]];
+                XCTAssertNotNil(publicRoom);
+
+                [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                [expectation fulfill];
+            }];
+
+            [mxSession.matrixRestClient createRoom:nil visibility:kMXRoomVisibilityPublic roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
+
+            } failure:^(NSError *error) {
+                 NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+
+
+        } failure:^(NSError *error) {
+             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+
+    }];
+}
+
+- (void)testNewRoomNotificationOnJoiningPublicRoom
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndAPublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+
+            mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+            [mxSession start:^{
+
+                // Listen to Alice's MXSessionNewRoomNotification event
+                __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                    XCTAssertEqual(mxSession, note.object, @"The MXSessionNewRoomNotification sender must be the current MXSession");
+
+                    MXRoom *publicRoom = [mxSession roomWithRoomId:note.userInfo[kMXSessionNotificationRoomIdKey]];
+                    XCTAssertNotNil(publicRoom);
+
+                    [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                    [expectation fulfill];
+                }];
+
+                [mxSession joinRoom:roomId success:nil failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+        }];
+        
+    }];
+}
+
+
+#pragma mark MXSessionInitialSyncedRoomNotification tests
+- (void)testMXSessionInitialSyncedRoomNotificationOnJoiningPublicRoom
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndAPublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+
+            mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+            [mxSession start:^{
+
+                // Listen to Alice's MXSessionInitialSyncedRoomNotification event
+                __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionInitialSyncedRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                    XCTAssertEqual(mxSession, note.object, @"The MXSessionInitialSyncedRoomNotification sender must be the current MXSession");
+
+                    MXRoom *publicRoom = [mxSession roomWithRoomId:note.userInfo[kMXSessionNotificationRoomIdKey]];
+                    XCTAssertNotNil(publicRoom);
+                    XCTAssert(publicRoom.isSync, @"MXSessionInitialSyncedRoomNotification must inform when the room state is fully known");
+
+                    [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                    [expectation fulfill];
+                }];
+
+                [mxSession joinRoom:roomId success:nil failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+        }];
+        
     }];
 }
 

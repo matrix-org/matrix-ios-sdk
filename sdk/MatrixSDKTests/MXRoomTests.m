@@ -160,14 +160,21 @@
         mxSession = mxSession2;
         
         NSString *roomId = room.state.roomId;
+
+        __block MXMembership lastKnownMembership = MXMembershipUnknown;
+        [room listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+
+            lastKnownMembership = room.state.membership;
+        }];
         
         // This implicitly tests MXSession leaveRoom
         [room leave:^{
-            
+
+            XCTAssertEqual(lastKnownMembership, MXMembershipLeave, @"MXMembershipLeave must have been received before killing the MXRoom object");
+
             MXRoom *room2 = [mxSession roomWithRoomId:roomId];
-            
             XCTAssertNil(room2, @"The room must be no more part of the MXSession rooms");
-            
+
             [expectation fulfill];
             
         } failure:^(NSError *error) {

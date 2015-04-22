@@ -448,8 +448,107 @@
         XCTFail(@"The request should not fail - NSError: %@", error);
         [expectation fulfill];
     }];
-
 }
+
+- (void)checkPaginateWithLiveEvents:(MXRoom*)room
+{
+    __block NSMutableArray *roomEvents = [NSMutableArray array];
+
+    // Use another MXRoom instance to paginate while receiving live events
+    MXRoom *room2 = [[MXRoom alloc] initWithRoomId:room.state.roomId andMatrixSession:mxSession];
+
+    __block NSMutableArray *room2Events = [NSMutableArray array];
+    [room2 listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+
+        if (MXEventDirectionForwards != direction)
+        {
+            [room2Events addObject:event];
+        }
+    }];
+
+    __block NSUInteger liveEvents = 0;
+    [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+
+        if (MXEventDirectionForwards == direction)
+        {
+            // Do some paginations after receiving live events
+            liveEvents++;
+            if (1 == liveEvents)
+            {
+                if ([mxSession.store isKindOfClass:[MXMemoryStore class]])
+                {
+                    XCTAssertGreaterThanOrEqual(room2.remainingMessagesForPaginationInStore, 7);
+                }
+
+                [room2 paginateBackMessages:2 complete:^() {
+
+                    if ([mxSession.store isKindOfClass:[MXMemoryStore class]])
+                    {
+                        XCTAssertGreaterThanOrEqual(room2.remainingMessagesForPaginationInStore, 5);
+                    }
+
+                    // Try with 2 more live events
+                    [room sendTextMessage:@"How is the pagination #2?" success:nil failure:nil];
+                    [room sendTextMessage:@"How is the pagination #3?" success:nil failure:nil];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            }
+            else if (3 == liveEvents)
+
+                [room2 paginateBackMessages:5 complete:^() {
+
+                    [room2 paginateBackMessages:100 complete:^() {
+
+                        [self assertNoDuplicate:room2Events text:@"events got one by one with testSeveralPaginateBacks"];
+
+                        // Now, compare the result with the reference
+                        XCTAssertEqual(roomEvents.count, room2Events.count);
+
+                        // Compare events one by one
+                        for (NSUInteger i = 0; i < room2Events.count; i++)
+                        {
+                            MXEvent *event = roomEvents[i];
+                            MXEvent *event2 = room2Events[i];
+
+                            XCTAssertTrue([event2.eventId isEqualToString:event.eventId], @"Events mismatch: %@ - %@", event, event2);
+                        }
+
+                        [expectation fulfill];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        }
+        else
+        {
+            [roomEvents addObject:event];
+        }
+    }];
+
+    // Take a snapshot of all room history
+    [room resetBackState];
+    [room paginateBackMessages:100 complete:^{
+
+        // Messages are now in the cache
+        // Start checking pagination from the cache
+        [room2 resetBackState];
+
+        [room sendTextMessage:@"How is the pagination #1?" success:nil failure:nil];
+
+    } failure:^(NSError *error) {
+        XCTFail(@"The request should not fail - NSError: %@", error);
+        [expectation fulfill];
+    }];
+}
+
 
 - (void)checkCanPaginateFromHomeServer:(MXRoom*)room
 {
@@ -839,6 +938,13 @@
     }];
 }
 
+- (void)testMXMemoryStorePaginateWithLiveEvents
+{
+    [self doTestWithMXMemoryStore:^(MXRoom *room) {
+        [self checkPaginateWithLiveEvents:room];
+    }];
+}
+
 - (void)testMXMemoryStoreCanPaginateFromHomeServer
 {
     // Preload less messages than the room history counts so that there are still requests to the HS to do
@@ -1129,6 +1235,13 @@
 {
     [self doTestWithMXFileStore:^(MXRoom *room) {
         [self checkSeveralPaginateBacks:room];
+    }];
+}
+
+- (void)testMXFileStorePaginateWithLiveEvents
+{
+    [self doTestWithMXFileStore:^(MXRoom *room) {
+        [self checkPaginateWithLiveEvents:room];
     }];
 }
 
@@ -1476,6 +1589,71 @@
             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
         }];
 
+    }];
+}
+
+// Check the pagination token is valid after reloading the store
+- (void)testMXFileStoreMXSessionPaginationToken
+{
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+
+    [sharedData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
+
+        expectation = expectation2;
+
+        MXFileStore *store = [[MXFileStore alloc] init];
+        [store openWithCredentials:sharedData.bobCredentials onComplete:^{
+
+            // Do a 1st [mxSession start] to fill the store
+            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+            [mxSession setStore:store success:^{
+                [mxSession start:^{
+
+                    MXRoom *room = [mxSession roomWithRoomId:roomId];
+                    [room resetBackState];
+                    [room paginateBackMessages:10 complete:^{
+
+                        NSString *roomPaginationToken = [store paginationTokenOfRoom:roomId];
+                        XCTAssert(roomPaginationToken, @"The room must have a pagination after a pagination");
+
+                        [mxSession close];
+                        mxSession = nil;
+
+                        // Reopen a session and check roomPaginationToken
+                        MXFileStore *store2 = [[MXFileStore alloc] init];
+                        [store2 openWithCredentials:sharedData.bobCredentials onComplete:^{
+
+                            XCTAssertEqualObjects(roomPaginationToken, [store2 paginationTokenOfRoom:roomId], @"The store must keep the pagination token");
+
+                            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                            [mxSession setStore:store2 success:^{
+                                [mxSession start:^{
+
+                                    XCTAssertEqualObjects(roomPaginationToken, [store2 paginationTokenOfRoom:roomId], @"The store must keep the pagination token even after [MXSession start]");
+
+                                    [expectation fulfill];
+
+                                } failure:^(NSError *error) {
+                                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                                }];
+                            } failure:^(NSError *error) {
+                                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                            }];
+                        } failure:^(NSError *error) {
+                            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                        }];
+                    } failure:^(NSError *error) {
+                        NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                    }];
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                }];
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
     }];
 }
 

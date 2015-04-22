@@ -879,28 +879,35 @@
 - (void)testEventsFromTokenServerTimeout
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
-        
-        NSDate *refDate = [NSDate date];
-        
-        [bobRestClient eventsFromToken:@"END" serverTimeout:1000 clientTimeout:40000 success:^(MXPaginationResponse *paginatedResponse) {
-            
-            XCTAssertNotNil(paginatedResponse);
-            
-            // Check expected response params
-            XCTAssertNotNil(paginatedResponse.start);
-            XCTAssertNotNil(paginatedResponse.end);
-            XCTAssertNotNil(paginatedResponse.chunk);
-            XCTAssertEqual(paginatedResponse.chunk.count, 0, @"Events should not come in this short stream time (1s)");
-            
-            NSDate *now  = [NSDate date];
-            XCTAssertLessThanOrEqual([now timeIntervalSinceDate:refDate], 2, @"The HS did not timeout as expected");    // Give 2s for the HS to timeout
- 
-            [expectation fulfill];
-            
-        } failure:^(NSError *error) {
-            XCTFail(@"The request should not fail - NSError: %@", error);
-            [expectation fulfill];
-        }];
+
+        // Delay the test to filter out Bob presence events the HS can send due to requests made in doMXRestClientTestWithBob
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+
+            NSDate *refDate = [NSDate date];
+            [bobRestClient eventsFromToken:@"END" serverTimeout:1000 clientTimeout:40000 success:^(MXPaginationResponse *paginatedResponse) {
+
+                XCTAssertNotNil(paginatedResponse);
+
+                // Check expected response params
+                XCTAssertNotNil(paginatedResponse.start);
+                XCTAssertNotNil(paginatedResponse.end);
+                XCTAssertNotNil(paginatedResponse.chunk);
+                XCTAssertEqual(paginatedResponse.chunk.count, 0, @"Events should not come in this short stream time (1s)");
+
+                if (paginatedResponse.chunk.count) {
+                    NSLog(@"####");
+                }
+
+                NSDate *now  = [NSDate date];
+                XCTAssertLessThanOrEqual([now timeIntervalSinceDate:refDate], 2, @"The HS did not timeout as expected");    // Give 2s for the HS to timeout
+
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        });
     }];
 }
 
@@ -944,9 +951,13 @@
     NSString *mxcURI = @"mxc://matrix.org/rQkrOoaFIRgiACATXUdQIuNJ";
 
     MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:@"http://matrix.org"];
+    
+    CGFloat scale = [[UIScreen mainScreen] scale];
+    CGSize viewSize = CGSizeMake(320, 320);
 
-    NSString *thumbnailURL = [mxRestClient urlOfContentThumbnail:mxcURI withSize:CGSizeMake(320, 320) andMethod:MXThumbnailingMethodScale];
-    XCTAssertEqualObjects(thumbnailURL, @"http://matrix.org/_matrix/media/v1/thumbnail/matrix.org/rQkrOoaFIRgiACATXUdQIuNJ?width=320&height=320&method=scale");
+    NSString *thumbnailURL = [mxRestClient urlOfContentThumbnail:mxcURI toFitViewSize:viewSize withMethod:MXThumbnailingMethodScale];
+    NSString *expected = [NSString stringWithFormat:@"http://matrix.org/_matrix/media/v1/thumbnail/matrix.org/rQkrOoaFIRgiACATXUdQIuNJ?width=%tu&height=%tu&method=scale", (NSUInteger)(viewSize.width * scale), (NSUInteger)(viewSize.height * scale)];
+    XCTAssertEqualObjects(thumbnailURL, expected);
 }
 
 

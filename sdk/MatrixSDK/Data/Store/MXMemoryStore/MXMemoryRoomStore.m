@@ -41,13 +41,6 @@
     if (MXEventDirectionForwards == direction)
     {
         [messages addObject:event];
-
-        // The messages array end has changed, shift the current pagination position
-        // Do not update the position if the oldest message.
-        if (0 < paginationPosition)
-        {
-            paginationPosition -= 1;
-        }
     }
     else
     {
