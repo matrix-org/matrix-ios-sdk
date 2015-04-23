@@ -6,8 +6,8 @@ This open-source library allows you to build iOS apps compatible with Matrix (ht
 This SDK implements an interface to communicate with the Matrix Client/Server API which is defined at http://matrix.org/docs/api/client-server/.
 
 
-Installation
-============
+Use the SDK in your app 
+=======================
 
 The SDK uses CocoaPods (http://cocoapods.org/) as library dependency manager. In order to set this up::
 
@@ -255,6 +255,19 @@ profileTag
   alphanumeric string and use this string for the lifetime of the application
   data. More advanced usage of this will allow for several devices sharing a set
   of push rules.
+
+Development
+===========
+
+The repository contains a Xcode project in order to develop. This project does not build an app but a test suite. See the next section to set the test environment.
+
+Before opening the Matrix SDK Xcode workspace, you need to build it.
+
+The project has some third party library dependencies declared in a pod file. You need to run the CocoaPods command to download them and to set up the Matrix SDK workspace::
+
+        $ pod install
+
+Then, open ``MatrixSDK.xcworkspace``. 
 
 Tests
 =====
