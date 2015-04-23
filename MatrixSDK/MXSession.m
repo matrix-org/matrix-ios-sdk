@@ -645,6 +645,20 @@ typedef void (^MXOnResumeDone)();
 
 
 #pragma mark - Rooms operations
+- (MXHTTPOperation*)createRoom:(NSString*)name
+                    visibility:(MXRoomVisibility)visibility
+                     roomAlias:(NSString*)roomAlias
+                         topic:(NSString*)topic
+                       success:(void (^)(MXRoom *room))success
+                       failure:(void (^)(NSError *error))failure
+{
+    return [matrixRestClient createRoom:name visibility:visibility roomAlias:roomAlias topic:topic success:^(MXCreateRoomResponse *response) {
+
+        [self initialSyncOfRoom:response.roomId withLimit:initialSyncMessagesLimit success:success failure:failure];
+
+    } failure:failure];
+}
+
 - (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
                      success:(void (^)(MXRoom *room))success
                      failure:(void (^)(NSError *error))failure

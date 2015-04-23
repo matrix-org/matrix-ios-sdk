@@ -64,6 +64,9 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
 - (void)doMXRestClientTestWihBobAndSeveralRoomsAndMessages:(XCTestCase*)testCase
                                             readyToTest:(void (^)(MXRestClient *bobRestClient, XCTestExpectation *expectation))readyToTest;
 
+- (void)doMXSessionTestWithBob:(XCTestCase*)testCase
+                   readyToTest:(void (^)(MXSession *mxSession, XCTestExpectation *expectation))readyToTest;
+
 
 - (void)doMXSessionTestWithBobAndARoomWithMessages:(XCTestCase*)testCase
                                     readyToTest:(void (^)(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation))readyToTest;

@@ -369,6 +369,22 @@ NSMutableArray *roomsToClean;
     }
 }
 
+- (void)doMXSessionTestWithBob:(XCTestCase*)testCase
+                   readyToTest:(void (^)(MXSession *mxSession, XCTestExpectation *expectation))readyToTest
+{
+    [self doMXRestClientTestWithBob:testCase readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+
+        [mxSession start:^{
+
+            readyToTest(mxSession, expectation);
+
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
 
 - (void)doMXSessionTestWithBobAndARoomWithMessages:(XCTestCase*)testCase
                                        readyToTest:(void (^)(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation))readyToTest

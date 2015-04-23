@@ -588,6 +588,30 @@
 }
 
 
+- (void)testCreateRoom
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession2, XCTestExpectation *expectation) {
+
+        mxSession = mxSession2;
+
+        // Create a random room with no params
+        [mxSession createRoom:nil visibility:nil roomAlias:nil topic:nil success:^(MXRoom *room) {
+
+            XCTAssertNotNil(room);
+            XCTAssertTrue(room.isSync, @"The callback must be called once the room has been initialSynced");
+
+            XCTAssertEqual(1, room.state.members.count, @"Bob must be the only one. members: %@", room.state.members);
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+
 #pragma mark MXSessionNewRoomNotification tests
 - (void)testNewRoomNotificationOnInvite
 {

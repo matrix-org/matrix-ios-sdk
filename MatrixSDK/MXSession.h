@@ -264,6 +264,27 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
 
 #pragma mark - Rooms operations
 /**
+ Create a room.
+
+ @param name (optional) the room name.
+ @param visibility (optional) the visibility of the room (kMXRoomVisibilityPublic or kMXRoomVisibilityPrivate).
+ @param roomAlias (optional) the room alias on the home server the room will be created.
+ @param topic (optional) the room topic.
+
+ @param success A block object called when the operation succeeds. It provides the MXRoom
+                instance of the joined room.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)createRoom:(NSString*)name
+                    visibility:(MXRoomVisibility)visibility
+                     roomAlias:(NSString*)roomAlias
+                         topic:(NSString*)topic
+                       success:(void (^)(MXRoom *room))success
+                       failure:(void (^)(NSError *error))failure;
+
+/**
  Join a room.
  
  @param roomIdOrAlias the id or an alias of the room to join.
