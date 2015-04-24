@@ -1,26 +1,32 @@
 Matrix iOS SDK
 ==============
 
-This open-source library allows you to build iOS apps compatible with Matrix (http://www.matrix.org), an open standard for interoperable Instant Messaging and VoIP.
+This open-source library allows you to build iOS apps compatible with Matrix
+(http://www.matrix.org), an open standard for interoperable Instant Messaging
+and VoIP.
 
-This SDK implements an interface to communicate with the Matrix Client/Server API which is defined at http://matrix.org/docs/api/client-server/.
+This SDK implements an interface to communicate with the Matrix Client/Server
+API which is defined at http://matrix.org/docs/api/client-server/.
 
 
 Use the SDK in your app 
 =======================
 
-The SDK uses CocoaPods (http://cocoapods.org/) as library dependency manager. In order to set this up::
+The SDK uses CocoaPods (http://cocoapods.org/) as library dependency manager.
+In order to set this up::
 
     sudo gem install cocoapods
     pod setup
 
-The best way to add the last release of the Matrix SDK to your application project is to add the MatrixSDK dependency to your Podfile::
+The best way to add the last release of the Matrix SDK to your application
+project is to add the MatrixSDK dependency to your Podfile::
 
     pod 'MatrixSDK'
 
 If you want to use the develop version of the SDK, use instead:
 
-    pod 'MatrixSDK', :git => 'https://github.com/matrix-org/matrix-ios-sdk.git', :branch => 'develop'
+    pod 'MatrixSDK', :git => 'https://github.com/matrix-org/matrix-ios-sdk.git',
+    :branch => 'develop'
 
 
 Overview
@@ -31,32 +37,42 @@ As a quick overview, there are the classes to know to use the SDK.
 Matrix API level
 ----------------
 :``MXRestClient``:
-    Exposes the Matrix Client-Server API as specified by the Matrix standard to make requests to a Home Server. 
+    Exposes the Matrix Client-Server API as specified by the Matrix standard to
+    make requests to a Home Server. 
 
 
 Business logic and data model
 -----------------------------
-These classes are higher level tools to handle responses from a Home Server. They contain logic to maintain consistent chat room data.
+These classes are higher level tools to handle responses from a Home Server.
+They contain logic to maintain consistent chat room data.
 
 :``MXSession``:
-    This class handles all data arriving from the Home Server. It uses a MXRestClient instance to fetch data from the home server, forwarding it to MXRoom, MXRoomState, MXRoomMember and MXUser objects.
+    This class handles all data arriving from the Home Server. It uses a
+    MXRestClient instance to fetch data from the home server, forwarding it to
+    MXRoom, MXRoomState, MXRoomMember and MXUser objects.
 
 :``MXRoom``:
-     This class provides methods to get room data and to interact with the room (join, leave...).
+     This class provides methods to get room data and to interact with the room
+     (join, leave...).
 
 :``MXRoomState``:
-     This is the state of room at a certain point in time: its name, topic, visibility (public/private), members, etc.
+     This is the state of room at a certain point in time: its name, topic,
+     visibility (public/private), members, etc.
      
 :``MXRoomMember``:
      Represents a member of a room.
      
 :``MXUser``:
-     This is a user known by the current user, outside of the context of a room. MXSession exposes and maintains the list of MXUsers. It provides the user id, displayname and the current presence state
+     This is a user known by the current user, outside of the context of a
+     room. MXSession exposes and maintains the list of MXUsers. It provides
+     the user id, displayname and the current presence state
 
 Usage
 =====
 
-The sample app (https://github.com/matrix-org/matrix-ios-sdk/tree/master/samples/matrixConsole) demonstrates how to build a chat app on top of Matrix. You can refer to it, play with it, hack it to understand the full integration of the Matrix SDK.
+The sample app (https://github.com/matrix-org/matrix-ios-sdk/tree/master/samples/matrixConsole)
+demonstrates how to build a chat app on top of Matrix. You can refer to it,
+play with it, hack it to understand the full integration of the Matrix SDK.
 This section comes back to the basics with sample codes for basic use cases.
 
 One file to import::
@@ -65,7 +81,8 @@ One file to import::
   
 Use case #1: Get public rooms of an home server
 -----------------------------------------------
-This API does not require the user to be authenticated. So, MXRestClient instantiated with initWithHomeServer does the job::
+This API does not require the user to be authenticated. So, MXRestClient
+instantiated with initWithHomeServer does the job::
 
     MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:@"http://matrix.org"];
     [mxRestClient publicRooms:^(NSArray *rooms) {
@@ -79,8 +96,11 @@ This API does not require the user to be authenticated. So, MXRestClient instant
 
 Use case #2: Get the rooms the user has interacted with
 -------------------------------------------------------
-Here the user needs to be authenticated. We will use [MXRestClient initWithCredentials].
-You'll normally create and initialise these two objects once the user has logged in, then keep them throughout the app's lifetime or until the user logs out::
+Here the user needs to be authenticated. We will use 
+[MXRestClient initWithCredentials].
+You'll normally create and initialise these two objects once the user has
+logged in, then keep them throughout the app's lifetime or until the user logs
+out::
 
     MXCredentials *credentials = [[MXCredentials alloc] initWithHomeServer:@"http://matrix.org"
                                                                     userId:@"@your_user_id:matrix.org"
@@ -140,7 +160,8 @@ Let's load a bit of room history using paginateBackMessages::
 
 Use case #4: Post a text message to a room
 ------------------------------------------
-This action does not require any business logic from MXSession: We can use MXRestClient directly::
+This action does not require any business logic from MXSession: We can use
+MXRestClient directly::
 
     [MXRestClient postTextMessage:@"the_room_id" text:@"Hello world!" success:^(NSString *event_id) {
         
@@ -259,11 +280,15 @@ profileTag
 Development
 ===========
 
-The repository contains a Xcode project in order to develop. This project does not build an app but a test suite. See the next section to set the test environment.
+The repository contains a Xcode project in order to develop. This project does
+not build an app but a test suite. See the next section to set the test
+environment.
 
 Before opening the Matrix SDK Xcode workspace, you need to build it.
 
-The project has some third party library dependencies declared in a pod file. You need to run the CocoaPods command to download them and to set up the Matrix SDK workspace::
+The project has some third party library dependencies declared in a pod file.
+You need to run the CocoaPods command to download them and to set up the Matrix
+SDK workspace::
 
         $ pod install
 
@@ -273,26 +298,36 @@ Tests
 =====
 The tests in the SDK Xcode project are both unit and integration tests.
 
-Out of the box, the tests use one of the home servers (located at http://localhost:8080) of the "Demo Federation of Homeservers" (https://github.com/matrix-org/synapse#running-a-demo-federation-of-homeservers). You have to start them from your local Synapse folder::
+Out of the box, the tests use one of the home servers (located at
+http://localhost:8080) of the "Demo Federation of Homeservers"
+(https://github.com/matrix-org/synapse#running-a-demo-federation-of-homeservers)
+. You have to start them from your local Synapse folder::
 
       $ virtualenv env
       $ source env/bin/activate
       $ demo/start.sh --no-rate-limit
 
-Then, you can run the tests from the Xcode Test navigator tab or select the MatrixSDKTests scheme and click on the "Test" action.
+Then, you can run the tests from the Xcode Test navigator tab or select the
+MatrixSDKTests scheme and click on the "Test" action.
 
 Known issues
 ============
 
-Cocoapods may fail to install on OSX 10.8.x with "i18n requires Ruby version >= 1.9.3.".  This is a known problem similar to
-https://github.com/CocoaPods/CocoaPods/issues/2458 that needs to be raised with the cocoapods team.
+Cocoapods may fail to install on OSX 10.8.x with "i18n requires Ruby version 
+>= 1.9.3.".  This is a known problem similar to
+https://github.com/CocoaPods/CocoaPods/issues/2458 that needs to be raised with
+the cocoapods team.
 
 Registration
 ------------
 The SDK currently manages only login-password type registration.
-This type of registration is not accepted by the home server hosted at matrix.org. It has been disabled for security and spamming reasons.
-So, for now, you will be not be able to register a new account with the SDK on such home server. But you can login an existing user.
+This type of registration is not accepted by the home server hosted at
+matrix.org. It has been disabled for security and spamming reasons.
+So, for now, you will be not be able to register a new account with the SDK on
+such home server. But you can login an existing user.
 
-If you run your own home server, the default launch parameters enables the login-password type registration and you will be able to register a new user to it.
+If you run your own home server, the default launch parameters enables the
+login-password type registration and you will be able to register a new user to
+it.
 
 
