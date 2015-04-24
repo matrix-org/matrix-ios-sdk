@@ -6,7 +6,8 @@ Changes in Matrix iOS SDK in 0.4.0 (2015-04-23)
 -----
 Improvements:
  * MXSession: Define a life cycle. The current value is stored in the `state` property. Its changes are notified via NSNotificationCenter (kMXSessionStateDidChangeNotification).
- * MXSession/MXRoom: return a MXHTTPOperation for all requests so that the SDK client can cancel them.
+ * MXSession/MXRoom: return a MXHTTPOperation for all methods taht make HTTP requests to the Matrix Client-Server API so that the SDK client can cancel them.
+ * MXSession: Added createRoom method
  * MXSession: Added notifications to indicate changes on room:
      - kMXSessionNewRoomNotification
      - kMXSessionInitialSyncedRoomNotification
