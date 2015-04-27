@@ -25,15 +25,16 @@
  The files structure is the following:
  + NSCachesDirectory
     + MXFileStore
-        + messages : The messages. One file per room
-            L roomId1
-            L roomId2
-            L ...
-        + state : The state events. One file per room
-            L roomId1
-            L roomId2
-            L ...
-        L MXFileStore : Information about the stored data
+        + Matrix user id (one folder per account)
+            + messages : The messages. One file per room
+                L roomId1
+                L roomId2
+                L ...
+            + state : The state events. One file per room
+                L roomId1
+                L roomId2
+                L ...
+            L MXFileStore : Information about the stored data
  */
 @interface MXFileStore : MXMemoryStore
 

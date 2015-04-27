@@ -20,7 +20,7 @@
 
 #import "MXFileStoreMetaData.h"
 
-NSUInteger const kMXFileVersion = 8;
+NSUInteger const kMXFileVersion = 9;
 
 NSString *const kMXFileStoreFolder = @"MXFileStore";
 NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -73,13 +73,6 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
         roomsToCommitForMessages = [NSMutableArray array];
         roomsToCommitForState = [NSMutableDictionary dictionary];
 
-        NSArray *cacheDirList = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-        NSString *cachePath  = [cacheDirList objectAtIndex:0];
-
-        storePath = [cachePath stringByAppendingPathComponent:kMXFileStoreFolder];
-        storeRoomsMessagesPath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsMessagesFolder];
-        storeRoomsStatePath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsStateFolder];
-
         metaDataHasChanged = NO;
 
         // NSUIntegerMax means that it is not initialized
@@ -92,14 +85,18 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
 
 - (void)openWithCredentials:(MXCredentials*)credentials onComplete:(void (^)())onComplete failure:(void (^)(NSError *))failure
 {
+    // Create the file path where data will be stored for the user id passed in credentials
+    NSArray *cacheDirList = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+    NSString *cachePath  = [cacheDirList objectAtIndex:0];
+
+    storePath = [[cachePath stringByAppendingPathComponent:kMXFileStoreFolder] stringByAppendingPathComponent:credentials.userId];
+    storeRoomsMessagesPath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsMessagesFolder];
+    storeRoomsStatePath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsStateFolder];
+
     /*
     Mount data corresponding to the account credentials.
 
     The MXFileStore needs to prepopulate its MXMemoryStore parent data from the file system before being used.
-
-    MXFileStore manages one account at a time (same home server, same user id and same access token).
-    If `credentials` is different from the previously used one, all the data will be erased
-    and the MXFileStore instance will start from a clean state.
     */
     
     // Load data from the file system on a separate thread
