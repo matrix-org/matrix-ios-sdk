@@ -46,6 +46,7 @@
 /**
  Login flow types
  */
+typedef NSString* MXLoginFlowType;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypePassword;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeOAuth2;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeEmailCode;
