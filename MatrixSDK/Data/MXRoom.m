@@ -21,8 +21,6 @@
 
 @interface MXRoom ()
 {
-    MXSession *mxSession;
-
     // The list of event listeners (`MXEventListener`) in this room
     NSMutableArray *eventListeners;
 
@@ -32,6 +30,7 @@
 @end
 
 @implementation MXRoom
+@synthesize mxSession;
 
 - (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession2
 {

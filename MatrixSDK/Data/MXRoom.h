@@ -42,6 +42,11 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 @interface MXRoom : NSObject
 
 /**
+ The related matrix session.
+ */
+@property (nonatomic, readonly) MXSession *mxSession;
+
+/**
  The uptodate state of the room.
  */
 @property (nonatomic, readonly) MXRoomState *state;
