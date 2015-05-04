@@ -41,4 +41,9 @@
  */
 @property (readonly, nonatomic) NSString *callId;
 
+/**
+ The user id of the caller.
+ */
+@property (readonly, nonatomic) NSString *callerId;
+
 @end

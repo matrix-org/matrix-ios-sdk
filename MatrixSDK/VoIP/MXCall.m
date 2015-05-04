@@ -43,6 +43,7 @@
 
         _room = [callManager.mxSession roomWithRoomId:event.roomId];
         _callId = inviteContent.callId;
+        _callerId = event.userId;
     }
     return self;
 }

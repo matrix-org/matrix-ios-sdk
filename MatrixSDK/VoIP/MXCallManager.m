@@ -42,26 +42,10 @@ NSString *const kMXCallManagerDidReceiveCallInvite = @"kMXCallManagerDidReceiveC
     self = [super init];
     if (self)
     {
-        /*
+        _mxSession = mxSession;
         calls = [NSMutableArray array];
 
-        conditionCheckers = [NSMutableDictionary dictionary];
-
-        // Define condition checkers for default Matrix conditions
-        eventMatchConditionChecker = [[MXPushRuleEventMatchConditionChecker alloc] init];
-        [self setChecker:eventMatchConditionChecker forConditionKind:kMXPushRuleConditionStringEventMatch];
-
-        MXPushRuleDisplayNameCondtionChecker *displayNameCondtionChecker = [[MXPushRuleDisplayNameCondtionChecker alloc] initWithMatrixSession:mxSession];
-        [self setChecker:displayNameCondtionChecker forConditionKind:kMXPushRuleConditionStringContainsDisplayName];
-
-        MXPushRuleRoomMemberCountConditionChecker *roomMemberCountConditionChecker = [[MXPushRuleRoomMemberCountConditionChecker alloc] initWithMatrixSession:mxSession];
-        [self setChecker:roomMemberCountConditionChecker forConditionKind:kMXPushRuleConditionStringRoomMemberCount];
-         
-         */
-
-        _mxSession = mxSession;
-
-        // Lister for incoming calls
+        // Listen to incoming calls
         callInviteListener = [mxSession listenToEventsOfTypes:@[kMXEventTypeStringCallInvite] onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
 
             if (MXEventDirectionForwards == direction)
