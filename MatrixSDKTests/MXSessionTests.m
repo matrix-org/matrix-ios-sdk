@@ -611,6 +611,29 @@
     }];
 }
 
+- (void)testPrivateOneToOneRoomWithUserId
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+        
+        mxSession = bobSession;
+        
+        MXRoom *mxRoom1 = [mxSession privateOneToOneRoomWithUserId:aliceRestClient.credentials.userId];
+        XCTAssertEqualObjects(mxRoom1.state.roomId, roomId, @"We should retrieve the last created room");
+        
+        [mxSession leaveRoom:roomId success:^{
+            MXRoom *mxRoom2 = [mxSession privateOneToOneRoomWithUserId:aliceRestClient.credentials.userId];
+            if (mxRoom2) {
+                XCTAssertNotEqualObjects(mxRoom2.state.roomId, roomId, @"We should not retrieve the left room");
+            }
+            
+            [expectation fulfill];
+            
+            } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
 
 #pragma mark MXSessionNewRoomNotification tests
 - (void)testNewRoomNotificationOnInvite
