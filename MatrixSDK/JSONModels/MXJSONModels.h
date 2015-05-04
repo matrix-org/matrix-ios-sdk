@@ -479,3 +479,135 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleConditionStringRoomMemberCount;
     @property (nonatomic) MXPushRulesSet *global;
 
 @end
+
+
+#pragma mark - Voice over IP
+
+/**
+ `MXCallOffer` represents a call session description.
+ */
+@interface MXCallSessionDescription : MXJSONModel
+
+    /**
+     The type of session description. Can be 'offer' or 'answer'.
+     */
+    @property (nonatomic) NSString *type;
+
+    /**
+     The SDP text of the session description.
+     */
+    @property (nonatomic) NSString *sdp;
+
+@end
+
+/**
+ `MXCallInviteEventContent` represents the content of a m.call.invite event.
+ */
+@interface MXCallInviteEventContent : MXJSONModel
+
+    /**
+     A unique identifier for the call.
+     */
+    @property (nonatomic) NSString *callId;
+
+    /**
+     The session description.
+     */
+    @property (nonatomic) MXCallSessionDescription *offer;
+
+    /**
+     The version of the VoIP specification this message adheres to.
+     */
+    @property (nonatomic) NSUInteger version;
+
+    /**
+     The time in milliseconds that the invite is valid for. 
+     Once the invite age exceeds this value, clients should discard it.
+     They should also no longer show the call as awaiting an answer in the UI.
+     */
+    @property (nonatomic) NSUInteger lifetime;
+
+@end
+
+/**
+ `MXCallCandidate` represents a candidate description.
+ */
+@interface MXCallCandidate : MXJSONModel
+
+    /**
+     The SDP media type this candidate is intended for.
+     */
+    @property (nonatomic) NSString *sdpMid;
+
+    /**
+     The index of the SDP 'm' line this candidate is intended for.
+     */
+    @property (nonatomic) NSUInteger sdpMLineIndex;
+
+    /**
+     The SDP 'a' line of the candidate.
+     */
+    @property (nonatomic) NSString *candidate;
+
+@end
+
+/**
+ `MXCallCandidatesEventContent` represents the content of a m.call.candidates event.
+ */
+@interface MXCallCandidatesEventContent : MXJSONModel
+
+    /**
+     The ID of the call this event relates to.
+     */
+    @property (nonatomic) NSString *callId;
+
+    /**
+     The version of the VoIP specification this message adheres to.
+     */
+    @property (nonatomic) NSUInteger version;
+
+    /**
+     Array of object describing the candidates (@see MXCallCandidate).
+     */
+    @property (nonatomic) NSArray *candidates;
+
+@end
+
+/**
+ `MXCallAnswerEventContent` represents the content of a m.call.answer event.
+ */
+@interface MXCallAnswerEventContent : MXJSONModel
+
+    /**
+     A unique identifier for the call.
+     */
+    @property (nonatomic) NSString *callId;
+
+    /**
+     The version of the VoIP specification this message adheres to.
+     */
+    @property (nonatomic) NSUInteger version;
+
+    /**
+     The session description.
+     */
+    @property (nonatomic) MXCallSessionDescription *answer;
+
+@end
+
+/**
+ `MXCallHangUpEventContent` represents the content of a m.call.hangup event.
+ */
+@interface MXCallHangUpEventContent : MXJSONModel
+
+    /**
+     A unique identifier for the call.
+     */
+    @property (nonatomic) NSString *callId;
+
+    /**
+     The version of the VoIP specification this message adheres to.
+     */
+    @property (nonatomic) NSUInteger version;
+
+@end

@@ -387,3 +387,41 @@ NSString *const kMXPushRuleConditionStringRoomMemberCount       = @"room_member_
 }
 
 @end
+
+
+#pragma mark - Voice over IP
+
+@implementation MXCallSessionDescription
+@end
+
+@implementation MXCallInviteEventContent
+
++ (NSValueTransformer *)offerJSONTransformer
+{
+    return [NSValueTransformer mtl_JSONDictionaryTransformerWithModelClass:MXCallSessionDescription.class];
+}
+
+@end
+
+@implementation MXCallCandidate
+@end
+
+@implementation MXCallCandidatesEventContent
+
++ (NSValueTransformer *)candidateJSONTransformer
+{
+    return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXCallCandidate.class];
+}
+@end
+
+@implementation MXCallAnswerEventContent
+
++ (NSValueTransformer *)answerJSONTransformer
+{
+    return [NSValueTransformer mtl_JSONDictionaryTransformerWithModelClass:MXCallSessionDescription.class];
+}
+
+@end
+
+@implementation MXCallHangUpEventContent
+@end
