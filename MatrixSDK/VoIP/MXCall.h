@@ -20,6 +20,24 @@
 
 @class MXCallManager;
 
+
+/**
+ Call states.
+ */
+typedef enum : NSUInteger
+{
+    MXCallStateFledgling,
+    MXCallStateWaitLocalMedia,
+    MXCallStateCreateOffer,
+    MXCallStateInviteSent,
+    MXCallStateCreateAnswer,
+    MXCallStateRinging,
+    MXCallStateConnecting,
+    MXCallStateConnected,
+    MXCallStateEnded
+} MXCallState;
+
+
 /**
  A `MXCall` instance represents a call.
  */
@@ -43,6 +61,12 @@
  Hang up a call in progress or reject an incoming call.
  */
 - (void)hangup;
+
+
+/**
+ The call state.
+ */
+@property (readonly, nonatomic) MXCallState state;
 
 /**
  The room where the call is placed.

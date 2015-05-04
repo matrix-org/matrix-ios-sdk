@@ -44,6 +44,8 @@
         _room = [callManager.mxSession roomWithRoomId:event.roomId];
         _callId = inviteContent.callId;
         _callerId = event.userId;
+
+        _state = MXCallStateRinging;
     }
     return self;
 }
