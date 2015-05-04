@@ -344,6 +344,12 @@ typedef void (^MXOnResumeDone)();
                             if ([roomDict objectForKey:@"state"])
                             {
                                 [room handleStateEvents:roomDict[@"state"] direction:MXEventDirectionSync];
+                                
+                                if (!room.state.isPublic && room.state.members.count == 2)
+                                {
+                                    // Update one-to-one room dictionary
+                                    [self handleOneToOneRoom:room];
+                                }
                             }
                         }
 
@@ -754,6 +760,12 @@ typedef void (^MXOnResumeDone)();
         if ([JSONData objectForKey:@"state"])
         {
             [room handleStateEvents:JSONData[@"state"] direction:MXEventDirectionSync];
+            
+            if (!room.state.isPublic && room.state.members.count == 2)
+            {
+                // Update one-to-one room dictionary
+                [self handleOneToOneRoom:room];
+            }
         }
 
         // Manage presence provided by this API
