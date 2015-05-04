@@ -596,9 +596,9 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleConditionStringRoomMemberCount;
 @end
 
 /**
- `MXCallHangUpEventContent` represents the content of a m.call.hangup event.
+ `MXCallHangupEventContent` represents the content of a m.call.hangup event.
  */
-@interface MXCallHangUpEventContent : MXJSONModel
+@interface MXCallHangupEventContent : MXJSONModel
 
     /**
      A unique identifier for the call.

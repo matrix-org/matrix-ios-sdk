@@ -26,6 +26,11 @@
  */
 extern NSString *const kMXCallManagerDidReceiveCallInvite;
 
+/**
+ The `MXCallManager` object manages calls for a given Matrix session.
+ It manages call signaling over Matrix (@see http://matrix.org/docs/spec/#id9) and then opens
+ a stream between peers devices using a third party VoIP library.
+ */
 @interface MXCallManager : NSObject
 
 /**

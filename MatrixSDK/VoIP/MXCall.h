@@ -20,6 +20,9 @@
 
 @class MXCallManager;
 
+/**
+ A `MXCall` instance represents a call.
+ */
 @interface MXCall : NSObject
 
 /**
@@ -30,6 +33,16 @@
  @return the newly created MXCall instance.
  */
 - (instancetype)initWithEvent:(MXEvent*)event andCallManager:(MXCallManager*)callManager;
+
+/**
+ Answer to an incoming call.
+ */
+- (void)answer;
+
+/**
+ Hang up a call in progress or reject an incoming call.
+ */
+- (void)hangup;
 
 /**
  The room where the call is placed.

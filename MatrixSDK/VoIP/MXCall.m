@@ -48,4 +48,14 @@
     return self;
 }
 
+- (void)answer
+{
+    NSLog(@"[MXCall] answer");
+}
+
+- (void)hangup
+{
+    NSLog(@"[MXCall] hangup");
+}
+
 @end
