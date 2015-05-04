@@ -460,18 +460,15 @@
     
     // Ignore banned and left (kicked) members
     if (member.membership != MXMembershipLeave && member.membership != MXMembershipBan) {
-        int maxLevel = 0;
-        for (NSString *powerLevel in self.powerLevels.users.allValues) {
-            int level = [powerLevel intValue];
+        NSUInteger maxLevel = self.powerLevels.usersDefault;
+        NSArray *array = self.powerLevels.users.allValues;
+        for (NSNumber *powerLevel in array) {
+            NSUInteger level = [powerLevel unsignedIntegerValue];
             if (level > maxLevel) {
                 maxLevel = level;
             }
         }
-        NSUInteger userPowerLevel = [self.powerLevels powerLevelOfUserWithUserID:userId];
-        float userPowerLevelFloat = 0.0;
-        if (userPowerLevel) {
-            userPowerLevelFloat = userPowerLevel;
-        }
+        float userPowerLevelFloat = [self.powerLevels powerLevelOfUserWithUserID:userId];
         
         powerLevel = maxLevel ? userPowerLevelFloat / maxLevel : 1;
     }
