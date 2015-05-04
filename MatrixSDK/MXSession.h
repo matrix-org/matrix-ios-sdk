@@ -331,6 +331,13 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
  */
 - (NSArray*)rooms;
 
+/**
+ Get the existing private OneToOne room with this user.
+
+ @return the MXRoom instance (nil if the room does not exist yet).
+ */
+- (MXRoom *)privateOneToOneRoomWithUserId:(NSString*)userId;
+
 
 #pragma mark - Matrix users
 /**
