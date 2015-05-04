@@ -120,6 +120,7 @@ typedef void (^MXOnResumeDone)();
         globalEventListeners = [NSMutableArray array];
         roomsInInitialSyncing = [NSMutableArray array];
         _notificationCenter = [[MXNotificationCenter alloc] initWithMatrixSession:self];
+        _callManager = [[MXCallManager alloc] initWithMatrixSession:self];
 
         // By default, load presence data in parallel if a full initialSync is not required
         _loadPresenceBeforeCompletingSessionStart = NO;
@@ -660,6 +661,10 @@ typedef void (^MXOnResumeDone)();
     // Clean notification center
     [_notificationCenter removeAllListeners];
     _notificationCenter = nil;
+
+    // Stop calls
+    [_callManager close];
+    _callManager = nil;
 
     _myUser = nil;
     matrixRestClient = nil;

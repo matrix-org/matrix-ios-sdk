@@ -22,6 +22,7 @@
 #import "MXSessionEventListener.h"
 #import "MXStore.h"
 #import "MXNotificationCenter.h"
+#import "MXCallManager.h"
 
 /**
  `MXSessionState` represents the states in the life cycle of a MXSession instance.
@@ -160,9 +161,14 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
 @property (nonatomic, readonly) id<MXStore> store;
 
 /**
- The module that manages push notificiations.
+ The module that manages push notifications.
  */
 @property (nonatomic, readonly) MXNotificationCenter *notificationCenter;
+
+/**
+ The module that manages incoming and outgoing calls.
+ */
+@property (nonatomic, readonly) MXCallManager *callManager;
 
 
 #pragma mark - options
