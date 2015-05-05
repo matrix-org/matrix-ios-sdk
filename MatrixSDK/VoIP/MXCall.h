@@ -16,9 +16,10 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXRoom.h"
+#import "MXEvent.h"
 
 @class MXCallManager;
+@class MXRoom;
 
 
 /**
@@ -44,13 +45,22 @@ typedef enum : NSUInteger
 @interface MXCall : NSObject
 
 /**
+ Create a `MXCall` instance in order to place a call.
+
+ @param roomId the id of the room where to place the call.
+ @param callManager the manager of all MXCall objects.
+ @return the newly created MXCall instance.
+ */
+- (instancetype)initWithRoomId:(NSString*)roomId andCallManager:(MXCallManager*)callManager;
+
+/**
  Create a `MXCall` instance from a "m.call.invite" event.
 
  @param event the incoming call signaling event.
  @param callManager the manager of all MXCall objects.
  @return the newly created MXCall instance.
  */
-- (instancetype)initWithEvent:(MXEvent*)event andCallManager:(MXCallManager*)callManager;
+- (instancetype)initWithCallInviteEvent:(MXEvent*)event andCallManager:(MXCallManager*)callManager;
 
 /**
  Answer to an incoming call.

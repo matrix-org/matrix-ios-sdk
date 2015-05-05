@@ -30,7 +30,23 @@
 
 @implementation MXCall
 
-- (instancetype)initWithEvent:(MXEvent *)event andCallManager:(MXCallManager *)callManager2
+- (instancetype)initWithRoomId:(NSString *)roomId andCallManager:(MXCallManager *)callManager2
+{
+    self = [super init];
+    if (self)
+    {
+        callManager = callManager2;
+
+        _room = [callManager.mxSession roomWithRoomId:roomId];
+        _callId = [[NSUUID UUID] UUIDString];
+        _callerId = callManager.mxSession.myUser.userId;
+
+        _state = MXCallStateFledgling;
+    }
+    return self;
+}
+
+- (instancetype)initWithCallInviteEvent:(MXEvent *)event andCallManager:(MXCallManager *)callManager2
 {
     self = [super init];
     if (self)

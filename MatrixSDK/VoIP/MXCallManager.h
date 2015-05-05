@@ -48,6 +48,15 @@ extern NSString *const kMXCallManagerDidReceiveCallInvite;
 - (void)close;
 
 /**
+ Place a voice or a video call into a room.
+ 
+ @param roomId the room id where to place the call.
+ @param video YES to make a video call.
+ @result a `MXKCall` object representing the call. Nil if the operation cannot be done.
+ */
+- (MXCall*)placeCallInRoom:(NSString*)roomId withVideo:(BOOL)video;
+
+/**
  The related matrix session.
  */
 @property (nonatomic, readonly) MXSession *mxSession;

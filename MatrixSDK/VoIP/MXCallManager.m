@@ -66,12 +66,30 @@ NSString *const kMXCallManagerDidReceiveCallInvite = @"kMXCallManagerDidReceiveC
     callInviteListener = nil;
 }
 
+- (MXCall *)placeCallInRoom:(NSString *)roomId withVideo:(BOOL)video
+{
+    MXCall *call;
+
+    MXRoom *room = [_mxSession roomWithRoomId:roomId];
+
+    if (room && 2 == room.state.members.count)
+    {
+        call = [[MXCall alloc] initWithRoomId:roomId andCallManager:self];
+        [calls addObject:call];
+    }
+    else
+    {
+        NSLog(@"[MXCallManager] placeCallInRoom: Cannot place call in %@. Members count: %lu", roomId, room.state.members.count);
+    }
+
+    return call;
+}
+
 
 #pragma mark - Private methods
 - (void)handleCallInvite:(MXEvent*)event
 {
-    MXCall *call = [[MXCall alloc] initWithEvent:event andCallManager:self];
-
+    MXCall *call = [[MXCall alloc] initWithCallInviteEvent:event andCallManager:self];
     [calls addObject:call];
 
     // Broadcast the information

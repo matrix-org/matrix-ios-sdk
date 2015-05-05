@@ -513,6 +513,13 @@
 }
 
 
+#pragma mark - Voice over IP
+- (MXCall *)placeCallWithVideo:(BOOL)video
+{
+    return [mxSession.callManager placeCallInRoom:_state.roomId withVideo:video];
+}
+
+
 #pragma mark - Events listeners
 - (id)listenToEvents:(MXOnRoomEvent)onEvent
 {
