@@ -101,6 +101,20 @@ NSString *const kMXCallManagerNewCall = @"kMXCallManagerNewCall";
     return theCall;
 }
 
+- (MXCall *)callInRoom:(NSString *)roomId
+{
+    MXCall *theCall;
+    for (MXCall *call in calls)
+    {
+        if ([call.room.state.roomId isEqualToString:roomId])
+        {
+            theCall = call;
+            break;
+        }
+    }
+    return theCall;
+}
+
 - (MXCall *)placeCallInRoom:(NSString *)roomId withVideo:(BOOL)video
 {
     MXCall *call;

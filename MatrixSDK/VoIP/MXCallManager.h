@@ -58,6 +58,14 @@ extern NSString *const kMXCallManagerNewCall;
 - (MXCall*)callWithCallId:(NSString*)callId;
 
 /**
+ Retrieve the `MXCall` instance that is in progress in a given room.
+ 
+ @param roomId the id of the room to look up.
+ @result the `MXCall` object. Nil if there is no call in progress in the room.
+ */
+- (MXCall*)callInRoom:(NSString*)roomId;
+
+/**
  Place a voice or a video call into a room.
  
  @param roomId the room id where to place the call.
