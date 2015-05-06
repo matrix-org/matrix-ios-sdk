@@ -409,6 +409,24 @@
                               success:(void (^)(NSString *eventId))success
                               failure:(void (^)(NSError *error))failure
 {
+    // @TODO: Temporary hack for dev testing VoIP
+    if ([msgType isEqualToString:kMXMessageTypeText])
+    {
+        NSString *text = content[@"body"];
+        if ([text.capitalizedString isEqualToString:@"C"])
+        {
+            NSLog(@"[MXRoom] Hack to make a voice call");
+            [self placeCallWithVideo:NO];
+            return nil;
+        }
+        if ([text.capitalizedString isEqualToString:@"V"])
+        {
+            NSLog(@"[MXRoom] Hack to make a videl call");
+            [self placeCallWithVideo:YES];
+            return nil;
+        }
+    }
+    
     return [mxSession.matrixRestClient sendMessageToRoom:_state.roomId msgType:msgType content:content success:success failure:failure];
 }
 

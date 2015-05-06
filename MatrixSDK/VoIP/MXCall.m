@@ -38,6 +38,7 @@
         callManager = callManager2;
 
         _room = [callManager.mxSession roomWithRoomId:roomId];
+
         _callId = [[NSUUID UUID] UUIDString];
         _callerId = callManager.mxSession.myUser.userId;
 
@@ -46,24 +47,80 @@
     return self;
 }
 
-- (instancetype)initWithCallInviteEvent:(MXEvent *)event andCallManager:(MXCallManager *)callManager2
+- (void)handleCallEvent:(MXEvent *)event
 {
-    self = [super init];
-    if (self)
+    switch (event.eventType)
     {
-        NSParameterAssert(event.eventType == MXEventTypeCallInvite);
+        case MXEventTypeCallInvite:
+        {
+            MXCallInviteEventContent *content = [MXCallInviteEventContent modelFromJSON:event.content];
 
-        callManager = callManager2;
+            _callId = content.callId;
+            _callerId = event.userId;
+            _isIncoming = YES;
 
-        MXCallInviteEventContent *inviteContent = [MXCallInviteEventContent modelFromJSON:event.content];
+            self.state = MXCallStateRinging;
+            break;
+        }
 
-        _room = [callManager.mxSession roomWithRoomId:event.roomId];
-        _callId = inviteContent.callId;
-        _callerId = event.userId;
+        case MXEventTypeCallAnswer:
+        {
+            // MXCall receives this event only when it placed a call
+            MXCallAnswerEventContent *content = [MXCallAnswerEventContent modelFromJSON:event.content];
 
-        _state = MXCallStateRinging;
+            // Let's the stack finalise the connection
+            [callManager.callStack handleAnswer:content.answer.sdp success:^{
+
+                // Call is up
+                self.state = MXCallStateConnected;
+
+            } failure:^(NSError *error) {
+                // @TODO
+            }];
+        }
+
+        default:
+            break;
     }
-    return self;
+}
+
+
+#pragma mark - Controls
+- (void)callWithVideo:(BOOL)video
+{
+    _isIncoming = NO;
+    [callManager.callStack startCapturingMediaWithVideo:video success:^() {
+
+        [callManager.callStack createOffer:^(NSString *sdp) {
+
+            self.state = MXCallStateCreateOffer;
+
+            NSLog(@"[MXCallManager] placeCallInRoom. Offer created: %@", sdp);
+
+            // The call invite can sent to the HS
+            NSDictionary *content = @{
+                                      @"call_id": _callId,
+                                      @"offer": @{
+                                              @"type": @"offer",
+                                              @"sdp": sdp
+                                              },
+                                      @"version": @(0),
+                                      @"lifetime": @(30 * 1000)
+                                      };
+            [_room sendEventOfType:kMXEventTypeStringCallInvite content:content success:^(NSString *eventId) {
+
+                self.state = MXCallStateInviteSent;
+
+            } failure:^(NSError *error) {
+                // @TODO
+            }];
+
+        } failure:^(NSError *error) {
+            // @TODO
+        }];
+    } failure:^(NSError *error) {
+        // @TODO
+    }];
 }
 
 - (void)answer
@@ -74,6 +131,21 @@
 - (void)hangup
 {
     NSLog(@"[MXCall] hangup");
+}
+
+
+#pragma marl - Properties
+- (BOOL)isVideoCall
+{
+    // @TODO
+    return NO;
+}
+
+- (void)setState:(MXCallState)state
+{
+    _state = state;
+
+    // @TODO: Notify change
 }
 
 @end

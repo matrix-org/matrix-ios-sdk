@@ -17,6 +17,7 @@
 #import <Foundation/Foundation.h>
 
 #import "MXCall.h"
+#import "MXCallStack.h"
 
 @class MXSession;
 
@@ -48,6 +49,14 @@ extern NSString *const kMXCallManagerDidReceiveCallInvite;
 - (void)close;
 
 /**
+ Retrieve the `MXCall` instance with the given call id.
+ 
+ @param callId the id of the call to retrieve.
+ @result the `MXCall` object. Nil if not found.
+ */
+- (MXCall*)callWithCallId:(NSString*)callId;
+
+/**
  Place a voice or a video call into a room.
  
  @param roomId the room id where to place the call.
@@ -60,5 +69,10 @@ extern NSString *const kMXCallManagerDidReceiveCallInvite;
  The related matrix session.
  */
 @property (nonatomic, readonly) MXSession *mxSession;
+
+/**
+ The call stack layer.
+ */
+@property (nonatomic) id<MXCallStack> callStack;
 
 @end

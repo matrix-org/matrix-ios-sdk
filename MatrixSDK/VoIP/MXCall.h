@@ -54,13 +54,18 @@ typedef enum : NSUInteger
 - (instancetype)initWithRoomId:(NSString*)roomId andCallManager:(MXCallManager*)callManager;
 
 /**
- Create a `MXCall` instance from a "m.call.invite" event.
+ Handle call event.
 
- @param event the incoming call signaling event.
- @param callManager the manager of all MXCall objects.
- @return the newly created MXCall instance.
+ @param event the call event coming from the event stream.
  */
-- (instancetype)initWithCallInviteEvent:(MXEvent*)event andCallManager:(MXCallManager*)callManager;
+- (void)handleCallEvent:(MXEvent*)event;
+
+
+#pragma mark - Controls
+/**
+ Initiate a call.
+ */
+- (void)callWithVideo:(BOOL)video;
 
 /**
  Answer to an incoming call.
@@ -73,11 +78,7 @@ typedef enum : NSUInteger
 - (void)hangup;
 
 
-/**
- The call state.
- */
-@property (readonly, nonatomic) MXCallState state;
-
+#pragma mark - Properties
 /**
  The room where the call is placed.
  */
@@ -87,6 +88,21 @@ typedef enum : NSUInteger
  The id of the call.
  */
 @property (readonly, nonatomic) NSString *callId;
+
+/**
+ Flag indicating if this is an incoming call.
+ */
+@property (readonly, nonatomic) BOOL isIncoming;
+
+/**
+ Flag indicating if this is a video call.
+ */
+@property (readonly, nonatomic) BOOL isVideoCall;
+
+/**
+ The call state.
+ */
+@property (readonly, nonatomic) MXCallState state;
 
 /**
  The user id of the caller.
