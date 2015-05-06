@@ -20,7 +20,7 @@
 #import "MXOpenWebRTCCallStack.h"
 
 #pragma mark - Constants definitions
-NSString *const kMXCallManagerDidReceiveCallInvite = @"kMXCallManagerDidReceiveCallInvite";
+NSString *const kMXCallManagerNewCall = @"kMXCallManagerNewCall";
 
 
 @interface MXCallManager ()
@@ -113,6 +113,9 @@ NSString *const kMXCallManagerDidReceiveCallInvite = @"kMXCallManagerDidReceiveC
         [calls addObject:call];
 
         [call callWithVideo:video];
+
+        // Broadcast the new outgoing call
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerNewCall object:call userInfo:nil];
     }
     else
     {
@@ -142,8 +145,8 @@ NSString *const kMXCallManagerDidReceiveCallInvite = @"kMXCallManagerDidReceiveC
 
             [call handleCallEvent:event];
 
-            // Broadcast the information
-            [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerDidReceiveCallInvite object:call userInfo:nil];
+            // Broadcast the incoming call
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerNewCall object:call userInfo:nil];
         }
     }
 }

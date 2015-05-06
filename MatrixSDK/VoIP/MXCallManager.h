@@ -22,10 +22,11 @@
 @class MXSession;
 
 /**
- Posted when the user is receiving an incoming call.
+ Posted when a new `MXCall` instance has been created. It happens on an incoming
+ or a new outgoing call.
  The notification object is the `MXKCall` object representing the call.
  */
-extern NSString *const kMXCallManagerDidReceiveCallInvite;
+extern NSString *const kMXCallManagerNewCall;
 
 /**
  The `MXCallManager` object manages calls for a given Matrix session.
