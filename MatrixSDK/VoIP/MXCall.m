@@ -24,6 +24,11 @@
      The manager of this object.
      */
     MXCallManager *callManager;
+
+    /**
+     The invite received by the peer
+     */
+    MXCallInviteEventContent *callInviteEventContent;
 }
 
 @end
@@ -53,9 +58,9 @@
     {
         case MXEventTypeCallInvite:
         {
-            MXCallInviteEventContent *content = [MXCallInviteEventContent modelFromJSON:event.content];
+            callInviteEventContent = [MXCallInviteEventContent modelFromJSON:event.content];
 
-            _callId = content.callId;
+            _callId = callInviteEventContent.callId;
             _callerId = event.userId;
             _isIncoming = YES;
 
@@ -100,6 +105,9 @@
 - (void)callWithVideo:(BOOL)video
 {
     _isIncoming = NO;
+
+    self.state = MXCallStateWaitLocalMedia;
+
     [callManager.callStack startCapturingMediaWithVideo:video success:^() {
 
         [callManager.callStack createOffer:^(NSString *sdp) {
@@ -136,7 +144,44 @@
 
 - (void)answer
 {
-    NSLog(@"[MXCall] answer");
+    if (self.state == MXCallStateRinging)
+    {
+        self.state = MXCallStateWaitLocalMedia;
+
+        [callManager.callStack startCapturingMediaWithVideo:self.isVideoCall success:^{
+
+            // Create a sdp answer from the offer we got
+            self.state = MXCallStateCreateAnswer;
+            self.state = MXCallStateConnecting;
+            [callManager.callStack handleOffer:callInviteEventContent.offer.sdp success:^(NSString *sdpAnswer) {
+
+                // The call invite can sent to the HS
+                NSDictionary *content = @{
+                                          @"call_id": _callId,
+                                          @"answer": @{
+                                                  @"type": @"answer",
+                                                  @"sdp": sdpAnswer
+                                                  },
+                                          @"version": @(0),
+                                          };
+                [_room sendEventOfType:kMXEventTypeStringCallAnswer content:content success:^(NSString *eventId) {
+
+                    self.state = MXCallStateConnected;
+
+                } failure:^(NSError *error) {
+                    // @TODO
+                }];
+                
+            } failure:^(NSError *error) {
+                // @TODO
+            }];
+            
+            callInviteEventContent = nil;
+
+        } failure:^(NSError *error) {
+            // @TODO
+        }];
+    }
 }
 
 - (void)hangup

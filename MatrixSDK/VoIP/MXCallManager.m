@@ -201,5 +201,4 @@ NSString *const kMXCallManagerNewCall = @"kMXCallManagerNewCall";
     [calls removeObject:call];
 }
 
-
 @end
