@@ -421,8 +421,22 @@
         }
         if ([text.capitalizedString isEqualToString:@"V"])
         {
-            NSLog(@"[MXRoom] Hack to make a videl call");
+            NSLog(@"[MXRoom] Hack to make a video call");
             [self placeCallWithVideo:YES];
+            return nil;
+        }
+        if ([text.capitalizedString isEqualToString:@"H"])
+        {
+            NSLog(@"[MXRoom] Hack to hang up to a call");
+            MXCall *call = [mxSession.callManager callInRoom:_state.roomId];
+            if (call)
+            {
+                [call hangup];
+            }
+            else
+            {
+                NSLog(@"[MXRoom] Hack: Warning: no call in progress here");
+            }
             return nil;
         }
     }

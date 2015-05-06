@@ -79,6 +79,17 @@
             }];
         }
 
+        case MXEventTypeCallHangup:
+        {
+            if (_state != MXCallStateEnded)
+            {
+                // Terminate the call at the stack level
+                [callManager.callStack terminate];
+
+                self.state = MXCallStateEnded;
+            }
+        }
+
         default:
             break;
     }
@@ -130,7 +141,22 @@
 
 - (void)hangup
 {
-    NSLog(@"[MXCall] hangup");
+    if (self.state != MXCallStateEnded)
+    {
+        // Terminate the call at the stack level
+        [callManager.callStack terminate];
+
+        // Send the hangup event
+        NSDictionary *content = @{
+                                  @"call_id": _callId,
+                                  @"version": @(0)
+                                  };
+        [_room sendEventOfType:kMXEventTypeStringCallHangup content:content success:nil failure:^(NSError *error) {
+            // @TODO
+        }];
+        
+        self.state = MXCallStateEnded;
+    }
 }
 
 
@@ -146,6 +172,12 @@
     _state = state;
 
     // @TODO: Notify change
+}
+
+#pragma mark - Private methods
+- (void)sendHangupEvent
+{
+
 }
 
 @end

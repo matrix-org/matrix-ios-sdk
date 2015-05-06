@@ -73,6 +73,11 @@
     [openWebRTCHandler startGetCaptureSourcesForAudio:YES video:video];
 }
 
+- (void)terminate
+{
+    [openWebRTCHandler terminateCall];
+}
+
 
 #pragma mark - Incoming call
 - (void)handleOffer:(NSString *)sdpOffer success:(void (^)(NSString *sdpAnswer))success failure:(void (^)(NSError *))failure

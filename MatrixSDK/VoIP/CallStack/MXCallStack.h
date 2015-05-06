@@ -41,6 +41,11 @@
                              success:(void (^)())success
                              failure:(void (^)(NSError *error))failure;
 
+/**
+ Terminate the current call.
+ */
+- (void)terminate;
+
 
 #pragma mark - Incoming call
 /**

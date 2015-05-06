@@ -69,6 +69,10 @@ NSString *const kMXCallManagerNewCall = @"kMXCallManagerNewCall";
                     case MXEventTypeCallAnswer:
                         [self handleCallAnswer:event];
                         break;
+
+                    case MXEventTypeCallHangup:
+                        [self handleCallHangup:event];
+                        break;
                         
                     default:
                         break;
@@ -81,10 +85,15 @@ NSString *const kMXCallManagerNewCall = @"kMXCallManagerNewCall";
 
 - (void)close
 {
-    // @TODO: Hang up current call
-
     [_mxSession removeListener:callEventsListener];
     callEventsListener = nil;
+
+    // Hang up all calls
+    for (MXCall *call in calls)
+    {
+        [call hangup];
+    }
+    [calls removeAllObjects];
 }
 
 - (MXCall *)callWithCallId:(NSString *)callId
@@ -176,5 +185,21 @@ NSString *const kMXCallManagerNewCall = @"kMXCallManagerNewCall";
         [call handleCallEvent:event];
     }
 }
+
+- (void)handleCallHangup:(MXEvent*)event
+{
+    MXCallHangupEventContent *content = [MXCallHangupEventContent modelFromJSON:event.content];
+
+    // Forward the event to the MXCall object
+    MXCall *call = [self callWithCallId:content.callId];
+    if (call)
+    {
+        [call handleCallEvent:event];
+    }
+
+    // Forget this call. It is no more in progress
+    [calls removeObject:call];
+}
+
 
 @end
