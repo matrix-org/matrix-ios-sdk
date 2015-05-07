@@ -1568,9 +1568,9 @@ MXAuthAction;
                         failure:(void (^)(NSError *))failure
 {
     return [httpClient requestWithMethod:@"GET"
-                                            path:@"voip/turnServer"
-                                      parameters:nil
-                                         success:^(NSDictionary *JSONResponse)
+                                    path:@"voip/turnServer"
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse)
             {
                 if (success)
                 {
