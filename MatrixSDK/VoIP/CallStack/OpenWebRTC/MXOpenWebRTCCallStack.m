@@ -76,6 +76,9 @@
 - (void)terminate
 {
     [openWebRTCHandler terminateCall];
+
+    self.selfVideoView = nil;
+    self.remoteVideoView = nil;
 }
 
 - (void)addTURNServerUris:(NSArray *)uris withUsername:(NSString *)username password:(NSString *)password
@@ -131,6 +134,20 @@
 {
     onHandleAnswerSuccess = success;
     [openWebRTCHandler handleAnswerReceived:sdp];
+}
+
+
+#pragma mark - Properties
+- (void)setSelfVideoView:(UIView *)selfVideoView2
+{
+    selfVideoView = selfVideoView2;
+    [openWebRTCHandler setSelfView:(OpenWebRTCVideoView*)selfVideoView];
+}
+
+- (void)setRemoteVideoView:(UIView *)remoteVideoView2
+{
+    remoteVideoView = remoteVideoView2;
+    [openWebRTCHandler setRemoteView:(OpenWebRTCVideoView*)remoteVideoView];
 }
 
 

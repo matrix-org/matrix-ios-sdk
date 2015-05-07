@@ -95,10 +95,7 @@
         {
             if (_state != MXCallStateEnded)
             {
-                // Terminate the call at the stack level
-                [callManager.callStack terminate];
-
-                self.state = MXCallStateEnded;
+                [self terminate];
             }
             break;
         }
@@ -208,8 +205,7 @@
 {
     if (self.state != MXCallStateEnded)
     {
-        // Terminate the call at the stack level
-        [callManager.callStack terminate];
+        [self terminate];
 
         // Send the hangup event
         NSDictionary *content = @{
@@ -219,8 +215,6 @@
         [_room sendEventOfType:kMXEventTypeStringCallHangup content:content success:nil failure:^(NSError *error) {
             // @TODO
         }];
-        
-        self.state = MXCallStateEnded;
     }
 }
 
@@ -234,6 +228,28 @@
     {
         [_delegate call:self stateDidChange:_state];
     }
+}
+
+- (void)setSelfVideoView:(UIView *)selfVideoView
+{
+    _selfVideoView = selfVideoView;
+    callManager.callStack.selfVideoView = selfVideoView;
+}
+
+- (void)setRemoteVideoView:(UIView *)remoteVideoView
+{
+    _remoteVideoView = remoteVideoView;
+    callManager.callStack.remoteVideoView = remoteVideoView;
+}
+
+
+#pragma mark - Private methods
+- (void)terminate
+{
+    // Terminate the call at the stack level
+    [callManager.callStack terminate];
+
+    self.state = MXCallStateEnded;
 }
 
 @end

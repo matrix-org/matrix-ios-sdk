@@ -117,6 +117,16 @@ typedef enum : NSUInteger
 @property (readonly, nonatomic) NSString *callerId;
 
 /**
+ The UIView that receives frames from the user's camera.
+ */
+@property (nonatomic) UIView *selfVideoView;
+
+/**
+ The UIView that receives frames from the remote camera.
+ */
+@property (nonatomic) UIView *remoteVideoView;
+
+/**
  The delegate.
  */
 @property (nonatomic) id<MXCallDelegate> delegate;
