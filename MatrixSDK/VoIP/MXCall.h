@@ -39,6 +39,8 @@ typedef enum : NSUInteger
 } MXCallState;
 
 
+@protocol MXCallDelegate;
+
 /**
  A `MXCall` instance represents a call.
  */
@@ -108,5 +110,23 @@ typedef enum : NSUInteger
  The user id of the caller.
  */
 @property (readonly, nonatomic) NSString *callerId;
+
+/**
+ The delegate.
+ */
+@property (nonatomic) id<MXCallDelegate> delegate;
+
+@end
+
+
+/**
+ Delegate for `MXCall` object
+ */
+@protocol MXCallDelegate <NSObject>
+
+/**
+ Tells the delegate that state of the call has changed.
+ */
+- (void)call:(MXCall *)call stateDidChange:(MXCallState)state;
 
 @end

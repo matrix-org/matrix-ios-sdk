@@ -217,13 +217,13 @@
 {
     _state = state;
 
-    // @TODO: Notify change
+    if (_delegate)
+    {
+        [_delegate call:self stateDidChange:_state];
+    }
 }
+
 
 #pragma mark - Private methods
-- (void)sendHangupEvent
-{
-
-}
 
 @end
