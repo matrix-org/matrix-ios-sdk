@@ -82,6 +82,7 @@
             } failure:^(NSError *error) {
                 // @TODO
             }];
+            break;
         }
 
         case MXEventTypeCallHangup:
