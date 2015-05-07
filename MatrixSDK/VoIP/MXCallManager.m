@@ -30,7 +30,15 @@ NSString *const kMXCallManagerNewCall = @"kMXCallManagerNewCall";
      */
     NSMutableArray *calls;
 
+    /**
+     Listener to Matrix call-related events.
+     */
     id callEventsListener;
+
+    /**
+     Timer to periodically refresh the TURN server config.
+     */
+    NSTimer *refreshTURNServerTimer;
 }
 
 @end
@@ -73,12 +81,17 @@ NSString *const kMXCallManagerNewCall = @"kMXCallManagerNewCall";
                     case MXEventTypeCallHangup:
                         [self handleCallHangup:event];
                         break;
-                        
+
+                    case MXEventTypeCallCandidates:
+                        [self handleCallCandidates:event];
+                        break;
                     default:
                         break;
                 }
             }
         }];
+
+        [self refreshTURNServer];
     }
     return self;
 }
@@ -94,6 +107,11 @@ NSString *const kMXCallManagerNewCall = @"kMXCallManagerNewCall";
         [call hangup];
     }
     [calls removeAllObjects];
+    calls = nil;
+
+    // Do not refresh TURN servers config anymore
+    [refreshTURNServerTimer invalidate];
+    refreshTURNServerTimer = nil;
 }
 
 - (MXCall *)callWithCallId:(NSString *)callId
@@ -150,6 +168,42 @@ NSString *const kMXCallManagerNewCall = @"kMXCallManagerNewCall";
 
 
 #pragma mark - Private methods
+- (void)refreshTURNServer
+{
+    [_mxSession.matrixRestClient turnServer:^(MXTurnServerResponse *turnServerResponse) {
+
+        // Check this MXCallManager is still alive
+        if (calls)
+        {
+            NSLog(@"[MXCallManager] refreshTURNServer: TTL:%tu URIs: %@", turnServerResponse.ttl, turnServerResponse.uris);
+
+            if (turnServerResponse)
+            {
+                [_callStack addTURNServerUris:turnServerResponse.uris
+                                 withUsername:turnServerResponse.username
+                                     password:turnServerResponse.password];
+            }
+
+            // Re-new when we're about to reach the TTL
+            refreshTURNServerTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:turnServerResponse.ttl * 0.9]
+                                                              interval:0
+                                                                target:self
+                                                              selector:@selector(refreshTURNServer)
+                                                              userInfo:nil
+                                                               repeats:NO];
+            [[NSRunLoop mainRunLoop] addTimer:refreshTURNServerTimer forMode:NSDefaultRunLoopMode];
+        }
+
+    } failure:^(NSError *error) {
+        NSLog(@"[MXCallManager] refreshTURNServer: Failed to get TURN URIs. Error: %@\n", error);
+        if (calls)
+        {
+            NSLog(@"Retry in 60s");
+            refreshTURNServerTimer = [NSTimer timerWithTimeInterval:60 target:self selector:@selector(refreshTURNServer) userInfo:nil repeats:NO];
+        }
+    }];
+}
+
 - (void)handleCallInvite:(MXEvent*)event
 {
     MXCallInviteEventContent *content = [MXCallInviteEventContent modelFromJSON:event.content];
@@ -199,6 +253,18 @@ NSString *const kMXCallManagerNewCall = @"kMXCallManagerNewCall";
 
     // Forget this call. It is no more in progress
     [calls removeObject:call];
+}
+
+- (void)handleCallCandidates:(MXEvent*)event
+{
+    MXCallCandidatesEventContent *content = [MXCallCandidatesEventContent modelFromJSON:event.content];
+
+    // Forward the event to the MXCall object
+    MXCall *call = [self callWithCallId:content.callId];
+    if (call)
+    {
+        [call handleCallEvent:event];
+    }
 }
 
 @end

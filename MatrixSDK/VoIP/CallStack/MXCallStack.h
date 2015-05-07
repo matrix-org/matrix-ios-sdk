@@ -46,6 +46,26 @@
  */
 - (void)terminate;
 
+/**
+ Add TURN or STUN servers.
+
+ @discussion
+ Passed URIs follow URI sheme described in TURN and STUN servers at, respectively,
+ http://tools.ietf.org/html/rfc7064#section-3.1 and http://tools.ietf.org/html/rfc7065#section-3.1
+
+ @param uris an array of TURN or STUN servers URIs.
+ @param username the username of the Matrix user on these TURN servers.
+ @param password the associated password.
+ */
+- (void)addTURNServerUris:(NSArray*)uris withUsername:(NSString*)username password:(NSString*)password;
+
+/**
+ Make the call stack process an incoming candidate.
+ 
+ @param candidate the candidate description.
+ */
+- (void)handleRemoteCandidate:(NSDictionary*)candidate;
+
 
 #pragma mark - Incoming call
 /**

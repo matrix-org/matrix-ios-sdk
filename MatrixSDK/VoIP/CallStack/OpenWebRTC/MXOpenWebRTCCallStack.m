@@ -78,6 +78,39 @@
     [openWebRTCHandler terminateCall];
 }
 
+- (void)addTURNServerUris:(NSArray *)uris withUsername:(NSString *)username password:(NSString *)password
+{
+    for (NSString *uri in uris)
+    {
+        // Parse the URI using NSURL
+        // To do that we need a URL. So, replace the first ':' into "://"
+        NSRange range = [uri rangeOfString:@":"];
+        NSString *fakeUrl = [uri stringByReplacingCharactersInRange:range withString:@"://"];
+
+        NSURL *url = [NSURL URLWithString:fakeUrl];
+
+        BOOL isTCP = (NSNotFound != [url.query rangeOfString:@"transport=tcp"].location);
+
+        if ([url.scheme isEqualToString:@"turn"])
+        {
+            [openWebRTCHandler addTURNServerWithAddress:url.host port:url.port.integerValue username:username password:password isTCP:isTCP];
+        }
+        else if ([url.scheme isEqualToString:@"stun"])
+        {
+            [openWebRTCHandler addSTUNServerWithAddress:url.host port:url.port.integerValue];
+        }
+        else
+        {
+            NSLog(@"[MXOpenWebRTCCallStack] addTURNServerUris: Warning: Unsupported TURN server scheme. URI: %@", uri);
+        }
+    }
+}
+
+- (void)handleRemoteCandidate:(NSDictionary *)candidate
+{
+    [openWebRTCHandler handleRemoteCandidateReceived:candidate];
+}
+
 
 #pragma mark - Incoming call
 - (void)handleOffer:(NSString *)sdpOffer success:(void (^)(NSString *sdpAnswer))success failure:(void (^)(NSError *))failure
@@ -136,8 +169,6 @@
 
 - (void)gotRemoteSourceWithName:(NSString *)name
 {
-    NSLog(@"[MXOpenWebRTCCallStack] gotRemoteSourceWithName: %@", name);
-
     if (onHandleAnswerSuccess)
     {
         onHandleAnswerSuccess();

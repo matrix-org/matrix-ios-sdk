@@ -629,7 +629,9 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleConditionStringRoomMemberCount;
     @property (nonatomic) NSString *password;
 
     /**
-     The list of TURN server URIs.
+     The list URIs of TURN servers - including STUN servers.
+     The URI scheme obeys to http://tools.ietf.org/html/rfc7064#section-3.1 
+     and http://tools.ietf.org/html/rfc7065#section-3.1
      */
     @property (nonatomic) NSArray *uris;
 

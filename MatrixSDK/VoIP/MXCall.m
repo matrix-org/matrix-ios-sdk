@@ -94,6 +94,17 @@
 
                 self.state = MXCallStateEnded;
             }
+            break;
+        }
+
+        case MXEventTypeCallCandidates:
+        {
+            MXCallCandidatesEventContent *content = [MXCallCandidatesEventContent modelFromJSON:event.content];
+            for (NSDictionary *canditate in content.candidates)
+            {
+                [callManager.callStack handleRemoteCandidate:canditate];
+            }
+            break;
         }
 
         default:

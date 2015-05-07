@@ -29,11 +29,16 @@ typedef enum : NSUInteger
 {
     MXCallStateFledgling,
     MXCallStateWaitLocalMedia,
+
+    // MXCallStateWaitLocalMedia
     MXCallStateCreateOffer,
     MXCallStateInviteSent,
-    MXCallStateCreateAnswer,
+
     MXCallStateRinging,
+    // MXCallStateWaitLocalMedia
+    MXCallStateCreateAnswer,
     MXCallStateConnecting,
+
     MXCallStateConnected,
     MXCallStateEnded
 } MXCallState;
