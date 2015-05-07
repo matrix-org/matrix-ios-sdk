@@ -127,6 +127,11 @@ typedef enum : NSUInteger
 @property (nonatomic) UIView *remoteVideoView;
 
 /**
+ The call duration in milliseconds.
+ */
+@property (nonatomic, readonly) NSUInteger duration;
+
+/**
  The delegate.
  */
 @property (nonatomic) id<MXCallDelegate> delegate;

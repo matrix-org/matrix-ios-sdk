@@ -29,6 +29,16 @@
      The invite received by the peer
      */
     MXCallInviteEventContent *callInviteEventContent;
+
+    /**
+     The date when the communication has been established.
+     */
+    NSDate *callConnectedDate;
+
+    /**
+     The total duration of the call. It is computed when the call ends.
+     */
+    NSUInteger totalCallDuration;
 }
 
 @end
@@ -222,6 +232,18 @@
 #pragma marl - Properties
 - (void)setState:(MXCallState)state
 {
+    // Manage call duration
+    if (MXCallStateConnected == state)
+    {
+        // Set the start point
+        callConnectedDate = [NSDate date];
+    }
+    else if (MXCallStateEnded == state)
+    {
+        // Store the total duration
+        totalCallDuration = self.duration;
+    }
+
     _state = state;
 
     if (_delegate)
@@ -240,6 +262,21 @@
 {
     _remoteVideoView = remoteVideoView;
     callManager.callStack.remoteVideoView = remoteVideoView;
+}
+
+- (NSUInteger)duration
+{
+    NSUInteger duration = 0;
+
+    if (MXCallStateConnected == _state)
+    {
+        duration = [[NSDate date] timeIntervalSinceDate:callConnectedDate] * 1000;
+    }
+    else if (MXCallStateEnded == _state)
+    {
+        duration = totalCallDuration;
+    }
+    return duration;
 }
 
 
