@@ -64,6 +64,12 @@
             _callerId = event.userId;
             _isIncoming = YES;
 
+            // Determine if it is voice or video call
+            if (NSNotFound != [callInviteEventContent.offer.sdp rangeOfString:@"m=video"].location)
+            {
+                _isVideoCall = YES;
+            }
+
             self.state = MXCallStateRinging;
             break;
         }
@@ -117,6 +123,8 @@
 - (void)callWithVideo:(BOOL)video
 {
     _isIncoming = NO;
+
+    _isVideoCall = video;
 
     self.state = MXCallStateWaitLocalMedia;
 
@@ -218,12 +226,6 @@
 
 
 #pragma marl - Properties
-- (BOOL)isVideoCall
-{
-    // @TODO
-    return NO;
-}
-
 - (void)setState:(MXCallState)state
 {
     _state = state;
@@ -233,8 +235,5 @@
         [_delegate call:self stateDidChange:_state];
     }
 }
-
-
-#pragma mark - Private methods
 
 @end
