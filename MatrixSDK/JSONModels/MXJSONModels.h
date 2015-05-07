@@ -611,3 +611,33 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleConditionStringRoomMemberCount;
     @property (nonatomic) NSUInteger version;
 
 @end
+
+/**
+ `MXTurnServerResponse` represents the response to turnServer request.
+ It provides TURN server configuration advised by the homeserver.
+ */
+@interface MXTurnServerResponse : MXJSONModel
+
+    /**
+     The username of the Matrix user on the TURN server.
+     */
+    @property (nonatomic) NSString *username;
+
+    /**
+     The associated password.
+     */
+    @property (nonatomic) NSString *password;
+
+    /**
+     The list of TURN server URIs.
+     */
+    @property (nonatomic) NSArray *uris;
+
+    /**
+     Time To Live. The time is seconds this data is still valid.
+     */
+    @property (nonatomic) NSUInteger ttl;
+
+@end
+
+

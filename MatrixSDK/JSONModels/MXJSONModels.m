@@ -425,3 +425,6 @@ NSString *const kMXPushRuleConditionStringRoomMemberCount       = @"room_member_
 
 @implementation MXCallHangupEventContent
 @end
+
+@implementation MXTurnServerResponse
+@end

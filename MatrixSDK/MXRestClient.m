@@ -1562,4 +1562,29 @@ MXAuthAction;
             }];
 }
 
+
+#pragma mark - VoIP API
+- (MXHTTPOperation *)turnServer:(void (^)(MXTurnServerResponse *))success
+                        failure:(void (^)(NSError *))failure
+{
+    return [httpClient requestWithMethod:@"GET"
+                                            path:@"voip/turnServer"
+                                      parameters:nil
+                                         success:^(NSDictionary *JSONResponse)
+            {
+                if (success)
+                {
+                    MXTurnServerResponse *turnServerResponse = [MXTurnServerResponse modelFromJSON:JSONResponse];
+                    success(turnServerResponse);
+                }
+            }
+                                         failure:^(NSError *error)
+            {
+                if (failure)
+                {
+                    failure(error);
+                }
+            }];
+}
+
 @end

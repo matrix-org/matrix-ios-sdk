@@ -915,4 +915,18 @@ typedef enum : NSUInteger
                  success:(void (^)(NSDictionary *JSONResponse))success
                  failure:(void (^)(NSError *error))failure;
 
+
+#pragma mark - VoIP API
+/**
+ Get the TURN server configuration advised by the homeserver.
+
+ @param success A block object called when the operation succeeds. It provides
+                a `MXTurnServerResponse` object. It is nil if the HS has TURN config
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)turnServer:(void (^)(MXTurnServerResponse *turnServerResponse))success
+                       failure:(void (^)(NSError *error))failure;
+
 @end
