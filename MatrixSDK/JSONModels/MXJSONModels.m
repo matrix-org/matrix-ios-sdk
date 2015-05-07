@@ -427,4 +427,34 @@ NSString *const kMXPushRuleConditionStringRoomMemberCount       = @"room_member_
 @end
 
 @implementation MXTurnServerResponse
+
+- (instancetype)init
+{
+    self = [super init];
+    if (self)
+    {
+        _ttlExpirationLocalTs = -1;
+    }
+    return self;
+}
+
+- (void)setTtl:(NSUInteger)ttl
+{
+    if (-1 == _ttlExpirationLocalTs)
+    {
+        NSTimeInterval d = [[NSDate date] timeIntervalSince1970];
+        _ttlExpirationLocalTs = (d + ttl) * 1000 ;
+    }
+}
+
+- (NSUInteger)ttl
+{
+    NSUInteger ttl = 0;
+    if (-1 != _ttlExpirationLocalTs)
+    {
+        ttl = _ttlExpirationLocalTs / 1000 - (uint64_t)[[NSDate date] timeIntervalSince1970];
+    }
+    return ttl;
+}
+
 @end

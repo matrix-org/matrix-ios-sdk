@@ -635,8 +635,16 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleConditionStringRoomMemberCount;
 
     /**
      Time To Live. The time is seconds this data is still valid.
+     It is computed by the user's homeserver when the request is made.
+     Then, the SDK updates the property each time it is read.
      */
     @property (nonatomic) NSUInteger ttl;
+
+    /**
+     The `ttl` value transcoded to an absolute date, a timestamp in milliseconds
+     based on the device clock.
+     */
+    @property (nonatomic) uint64_t ttlExpirationLocalTs;
 
 @end
 
