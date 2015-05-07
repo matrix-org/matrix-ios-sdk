@@ -84,4 +84,9 @@ extern NSString *const kMXCallManagerNewCall;
  */
 @property (nonatomic) id<MXCallStack> callStack;
 
+/**
+ STUN server used if the homeserver does not provide TURN/STUN servers.
+ */
+@property (nonatomic) NSString *fallbackSTUNServer;
+
 @end

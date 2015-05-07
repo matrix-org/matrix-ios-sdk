@@ -22,6 +22,8 @@
 #pragma mark - Constants definitions
 NSString *const kMXCallManagerNewCall = @"kMXCallManagerNewCall";
 
+// Use Google STUN server as fallback
+NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:19302";
 
 @interface MXCallManager ()
 {
@@ -53,6 +55,7 @@ NSString *const kMXCallManagerNewCall = @"kMXCallManagerNewCall";
     {
         _mxSession = mxSession;
         calls = [NSMutableArray array];
+        _fallbackSTUNServer = kMXCallManagerFallbackSTUNServer;
 
         // Use OpenWebRTC library
         _callStack = [[MXOpenWebRTCCallStack alloc] init];
@@ -177,11 +180,16 @@ NSString *const kMXCallManagerNewCall = @"kMXCallManagerNewCall";
         {
             NSLog(@"[MXCallManager] refreshTURNServer: TTL:%tu URIs: %@", turnServerResponse.ttl, turnServerResponse.uris);
 
-            if (turnServerResponse)
+            if (turnServerResponse.uris)
             {
                 [_callStack addTURNServerUris:turnServerResponse.uris
                                  withUsername:turnServerResponse.username
                                      password:turnServerResponse.password];
+            }
+            else
+            {
+                NSLog(@"No TURN server: using fallback STUN server: %@", _fallbackSTUNServer);
+                [_callStack addTURNServerUris:@[_fallbackSTUNServer] withUsername:nil password:nil];
             }
 
             // Re-new when we're about to reach the TTL
