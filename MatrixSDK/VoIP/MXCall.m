@@ -281,14 +281,20 @@
 
 - (void)setSelfVideoView:(UIView *)selfVideoView
 {
-    _selfVideoView = selfVideoView;
-    callStackCall.selfVideoView = selfVideoView;
+    if (selfVideoView != _selfVideoView)
+    {
+        _selfVideoView = selfVideoView;
+        callStackCall.selfVideoView = selfVideoView;
+    }
 }
 
 - (void)setRemoteVideoView:(UIView *)remoteVideoView
 {
-    _remoteVideoView = remoteVideoView;
-    callStackCall.remoteVideoView = remoteVideoView;
+    if (remoteVideoView != _remoteVideoView)
+    {
+        _remoteVideoView = remoteVideoView;
+        callStackCall.remoteVideoView = remoteVideoView;
+    }
 }
 
 - (NSUInteger)duration
