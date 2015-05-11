@@ -90,7 +90,7 @@
             MXCallAnswerEventContent *content = [MXCallAnswerEventContent modelFromJSON:event.content];
 
             // Let's the stack finalise the connection
-            [callManager.callStack handleAnswer:content.answer.sdp success:^{
+            [callManager.callStackCall handleAnswer:content.answer.sdp success:^{
 
                 // Call is up
                 [self setState:MXCallStateConnected reason:event];
@@ -115,7 +115,7 @@
             MXCallCandidatesEventContent *content = [MXCallCandidatesEventContent modelFromJSON:event.content];
             for (NSDictionary *canditate in content.candidates)
             {
-                [callManager.callStack handleRemoteCandidate:canditate];
+                [callManager.callStackCall handleRemoteCandidate:canditate];
             }
             break;
         }
@@ -135,9 +135,9 @@
 
     [self setState:MXCallStateWaitLocalMedia reason:nil];
 
-    [callManager.callStack startCapturingMediaWithVideo:video success:^() {
+    [callManager.callStackCall startCapturingMediaWithVideo:video success:^() {
 
-        [callManager.callStack createOffer:^(NSString *sdp) {
+        [callManager.callStackCall createOffer:^(NSString *sdp) {
 
             [self setState:MXCallStateCreateOffer reason:nil];
 
@@ -175,13 +175,13 @@
     {
         [self setState:MXCallStateWaitLocalMedia reason:nil];
 
-        [callManager.callStack startCapturingMediaWithVideo:self.isVideoCall success:^{
+        [callManager.callStackCall startCapturingMediaWithVideo:self.isVideoCall success:^{
 
             // Create a sdp answer from the offer we got
             [self setState:MXCallStateCreateAnswer reason:nil];
             [self setState:MXCallStateConnecting reason:nil];
 
-            [callManager.callStack handleOffer:callInviteEventContent.offer.sdp success:^(NSString *sdpAnswer) {
+            [callManager.callStackCall handleOffer:callInviteEventContent.offer.sdp success:^(NSString *sdpAnswer) {
 
                 // The call invite can sent to the HS
                 NSDictionary *content = @{
@@ -256,13 +256,13 @@
 - (void)setSelfVideoView:(UIView *)selfVideoView
 {
     _selfVideoView = selfVideoView;
-    callManager.callStack.selfVideoView = selfVideoView;
+    callManager.callStackCall.selfVideoView = selfVideoView;
 }
 
 - (void)setRemoteVideoView:(UIView *)remoteVideoView
 {
     _remoteVideoView = remoteVideoView;
-    callManager.callStack.remoteVideoView = remoteVideoView;
+    callManager.callStackCall.remoteVideoView = remoteVideoView;
 }
 
 - (NSUInteger)duration
@@ -285,7 +285,7 @@
 - (void)terminateWithReason:(MXEvent*)event
 {
     // Terminate the call at the stack level
-    [callManager.callStack terminate];
+    [callManager.callStackCall terminate];
 
     [self setState:MXCallStateEnded reason:event];
 }

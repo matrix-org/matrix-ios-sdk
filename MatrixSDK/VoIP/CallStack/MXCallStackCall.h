@@ -17,7 +17,7 @@
 #import <UIKit/UIKit.h>
 
 /**
- The `MXCallStack` is an abstract interface to integrate a VoIP call stack.
+ The `MXCallStackCall` is an abstract interface to integrate a VoIP call stack.
  
  @discussion
  `MXCallManager` manages Matrix call events for signalling call but
@@ -27,7 +27,7 @@
   - it is limited to one to one call.
   - the current interface manages only one call at a time.
  */
-@protocol MXCallStack <NSObject>
+@protocol MXCallStackCall <NSObject>
 
 /**
  Start capturing device media.

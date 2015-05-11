@@ -14,9 +14,9 @@
  limitations under the License.
  */
 
-#import "MXOpenWebRTCCallStack.h"
+#import "MXOpenWebRTCCallStackCall.h"
 
-@interface MXOpenWebRTCCallStack ()
+@interface MXOpenWebRTCCallStackCall ()
 {
     /**
      The OpenWebRTC handler
@@ -46,7 +46,7 @@
 
 @end
 
-@implementation MXOpenWebRTCCallStack
+@implementation MXOpenWebRTCCallStackCall
 @synthesize selfVideoView, remoteVideoView;
 
 - (instancetype)init

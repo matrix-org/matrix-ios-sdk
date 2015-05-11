@@ -16,16 +16,16 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXCallStack.h"
+#import "MXCallStackCall.h"
 
 #import <OpenWebRTC-SDK/OpenWebRTC.h>
 
 /**
- `MXOpenWebRTCCallStack` is the implementation of the `MXCallStack` protocol using
+ `MXOpenWebRTCCallStack` is the implementation of the `MXOpenWebRTCCallStack` protocol using
  the OpenWebRTC iOS SDK.
 
  @see https://github.com/EricssonResearch/openwebrtc-ios-sdk
  */
-@interface MXOpenWebRTCCallStack : NSObject <MXCallStack, OpenWebRTCNativeHandlerDelegate>
+@interface MXOpenWebRTCCallStackCall : NSObject <MXCallStackCall, OpenWebRTCNativeHandlerDelegate>
 
 @end

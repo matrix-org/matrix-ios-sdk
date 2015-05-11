@@ -17,7 +17,7 @@
 #import <Foundation/Foundation.h>
 
 #import "MXCall.h"
-#import "MXCallStack.h"
+#import "MXCallStackCall.h"
 
 @class MXSession;
 
@@ -82,7 +82,7 @@ extern NSString *const kMXCallManagerNewCall;
 /**
  The call stack layer.
  */
-@property (nonatomic) id<MXCallStack> callStack;
+@property (nonatomic) id<MXCallStackCall> callStackCall;
 
 /**
  STUN server used if the homeserver does not provide TURN/STUN servers.

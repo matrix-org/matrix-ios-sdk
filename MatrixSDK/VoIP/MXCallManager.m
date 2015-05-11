@@ -17,7 +17,7 @@
 #import "MXCallManager.h"
 
 #import "MXSession.h"
-#import "MXOpenWebRTCCallStack.h"
+#import "MXOpenWebRTCCallStackCall.h"
 
 #pragma mark - Constants definitions
 NSString *const kMXCallManagerNewCall = @"kMXCallManagerNewCall";
@@ -58,7 +58,7 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
         _fallbackSTUNServer = kMXCallManagerFallbackSTUNServer;
 
         // Use OpenWebRTC library
-        _callStack = [[MXOpenWebRTCCallStack alloc] init];
+        _callStackCall = [[MXOpenWebRTCCallStackCall alloc] init];
 
         // Listen to call events
         callEventsListener = [mxSession listenToEventsOfTypes:@[
@@ -182,14 +182,14 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
 
             if (turnServerResponse.uris)
             {
-                [_callStack addTURNServerUris:turnServerResponse.uris
+                [_callStackCall addTURNServerUris:turnServerResponse.uris
                                  withUsername:turnServerResponse.username
                                      password:turnServerResponse.password];
             }
             else
             {
                 NSLog(@"No TURN server: using fallback STUN server: %@", _fallbackSTUNServer);
-                [_callStack addTURNServerUris:@[_fallbackSTUNServer] withUsername:nil password:nil];
+                [_callStackCall addTURNServerUris:@[_fallbackSTUNServer] withUsername:nil password:nil];
             }
 
             // Re-new when we're about to reach the TTL

@@ -36,9 +36,9 @@
 		323E0C581A2F6E7D00A31D73 /* MXRoomPowerLevels.m in Sources */ = {isa = PBXBuildFile; fileRef = 323E0C561A2F6E7D00A31D73 /* MXRoomPowerLevels.m */; };
 		323E0C5B1A306D7A00A31D73 /* MXEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 323E0C591A306D7A00A31D73 /* MXEvent.h */; };
 		323E0C5C1A306D7A00A31D73 /* MXEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 323E0C5A1A306D7A00A31D73 /* MXEvent.m */; };
-		324095221AFA432F00D81C97 /* MXCallStack.h in Headers */ = {isa = PBXBuildFile; fileRef = 3240951E1AFA432F00D81C97 /* MXCallStack.h */; };
-		324095231AFA432F00D81C97 /* MXOpenWebRTCCallStack.h in Headers */ = {isa = PBXBuildFile; fileRef = 324095201AFA432F00D81C97 /* MXOpenWebRTCCallStack.h */; };
-		324095241AFA432F00D81C97 /* MXOpenWebRTCCallStack.m in Sources */ = {isa = PBXBuildFile; fileRef = 324095211AFA432F00D81C97 /* MXOpenWebRTCCallStack.m */; };
+		324095221AFA432F00D81C97 /* MXCallStackCall.h in Headers */ = {isa = PBXBuildFile; fileRef = 3240951E1AFA432F00D81C97 /* MXCallStackCall.h */; };
+		324095231AFA432F00D81C97 /* MXOpenWebRTCCallStackCall.h in Headers */ = {isa = PBXBuildFile; fileRef = 324095201AFA432F00D81C97 /* MXOpenWebRTCCallStackCall.h */; };
+		324095241AFA432F00D81C97 /* MXOpenWebRTCCallStackCall.m in Sources */ = {isa = PBXBuildFile; fileRef = 324095211AFA432F00D81C97 /* MXOpenWebRTCCallStackCall.m */; };
 		3245A7501AF7B2930001D8A7 /* MXCall.h in Headers */ = {isa = PBXBuildFile; fileRef = 3245A74C1AF7B2930001D8A7 /* MXCall.h */; };
 		3245A7511AF7B2930001D8A7 /* MXCall.m in Sources */ = {isa = PBXBuildFile; fileRef = 3245A74D1AF7B2930001D8A7 /* MXCall.m */; };
 		3245A7521AF7B2930001D8A7 /* MXCallManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 3245A74E1AF7B2930001D8A7 /* MXCallManager.h */; };
@@ -135,9 +135,9 @@
 		323E0C561A2F6E7D00A31D73 /* MXRoomPowerLevels.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRoomPowerLevels.m; sourceTree = "<group>"; };
 		323E0C591A306D7A00A31D73 /* MXEvent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXEvent.h; sourceTree = "<group>"; };
 		323E0C5A1A306D7A00A31D73 /* MXEvent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXEvent.m; sourceTree = "<group>"; };
-		3240951E1AFA432F00D81C97 /* MXCallStack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallStack.h; sourceTree = "<group>"; };
-		324095201AFA432F00D81C97 /* MXOpenWebRTCCallStack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXOpenWebRTCCallStack.h; sourceTree = "<group>"; };
-		324095211AFA432F00D81C97 /* MXOpenWebRTCCallStack.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXOpenWebRTCCallStack.m; sourceTree = "<group>"; };
+		3240951E1AFA432F00D81C97 /* MXCallStackCall.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallStackCall.h; sourceTree = "<group>"; };
+		324095201AFA432F00D81C97 /* MXOpenWebRTCCallStackCall.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXOpenWebRTCCallStackCall.h; sourceTree = "<group>"; };
+		324095211AFA432F00D81C97 /* MXOpenWebRTCCallStackCall.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXOpenWebRTCCallStackCall.m; sourceTree = "<group>"; };
 		3245A74C1AF7B2930001D8A7 /* MXCall.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCall.h; sourceTree = "<group>"; };
 		3245A74D1AF7B2930001D8A7 /* MXCall.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCall.m; sourceTree = "<group>"; };
 		3245A74E1AF7B2930001D8A7 /* MXCallManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallManager.h; sourceTree = "<group>"; };
@@ -302,8 +302,8 @@
 		3240951D1AFA432F00D81C97 /* CallStack */ = {
 			isa = PBXGroup;
 			children = (
-				3240951E1AFA432F00D81C97 /* MXCallStack.h */,
 				3240951F1AFA432F00D81C97 /* OpenWebRTC */,
+				3240951E1AFA432F00D81C97 /* MXCallStackCall.h */,
 			);
 			path = CallStack;
 			sourceTree = "<group>";
@@ -311,8 +311,8 @@
 		3240951F1AFA432F00D81C97 /* OpenWebRTC */ = {
 			isa = PBXGroup;
 			children = (
-				324095201AFA432F00D81C97 /* MXOpenWebRTCCallStack.h */,
-				324095211AFA432F00D81C97 /* MXOpenWebRTCCallStack.m */,
+				324095201AFA432F00D81C97 /* MXOpenWebRTCCallStackCall.h */,
+				324095211AFA432F00D81C97 /* MXOpenWebRTCCallStackCall.m */,
 			);
 			path = OpenWebRTC;
 			sourceTree = "<group>";
@@ -501,7 +501,7 @@
 				3220094519EFBF30008DE41D /* MXSessionEventListener.h in Headers */,
 				329FB1751A0A3A1600A5E88E /* MXRoomMember.h in Headers */,
 				320DFDE019DD99B60068622A /* MXSession.h in Headers */,
-				324095221AFA432F00D81C97 /* MXCallStack.h in Headers */,
+				324095221AFA432F00D81C97 /* MXCallStackCall.h in Headers */,
 				3233606F1A403A0D0071A488 /* MXFileStore.h in Headers */,
 				327137271A24D50A00DB6757 /* MXMyUser.h in Headers */,
 				3220093819EFA4C9008DE41D /* MXEventListener.h in Headers */,
@@ -509,7 +509,7 @@
 				329FB17F1A0B665800A5E88E /* MXUser.h in Headers */,
 				320DFDE219DD99B60068622A /* MXError.h in Headers */,
 				327E37B61A974F75007F026F /* MXLogger.h in Headers */,
-				324095231AFA432F00D81C97 /* MXOpenWebRTCCallStack.h in Headers */,
+				324095231AFA432F00D81C97 /* MXOpenWebRTCCallStackCall.h in Headers */,
 				320DFDE619DD99B60068622A /* MXHTTPClient.h in Headers */,
 				320DFDDB19DD99B60068622A /* MXRoom.h in Headers */,
 			);
@@ -650,7 +650,7 @@
 				323E0C581A2F6E7D00A31D73 /* MXRoomPowerLevels.m in Sources */,
 				32DC15D51A8CF874006F9AD3 /* MXPushRuleEventMatchConditionChecker.m in Sources */,
 				32CAB1081A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.m in Sources */,
-				324095241AFA432F00D81C97 /* MXOpenWebRTCCallStack.m in Sources */,
+				324095241AFA432F00D81C97 /* MXOpenWebRTCCallStackCall.m in Sources */,
 				3245A7511AF7B2930001D8A7 /* MXCall.m in Sources */,
 				329FB1761A0A3A1600A5E88E /* MXRoomMember.m in Sources */,
 				323360701A403A0D0071A488 /* MXFileStore.m in Sources */,
