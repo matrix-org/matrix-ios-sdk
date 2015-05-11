@@ -452,7 +452,7 @@ NSString *const kMXPushRuleConditionStringRoomMemberCount       = @"room_member_
     NSUInteger ttl = 0;
     if (-1 != _ttlExpirationLocalTs)
     {
-        ttl = _ttlExpirationLocalTs / 1000 - (uint64_t)[[NSDate date] timeIntervalSince1970];
+        ttl = (NSUInteger)(_ttlExpirationLocalTs / 1000 - (uint64_t)[[NSDate date] timeIntervalSince1970]);
     }
     return ttl;
 }
