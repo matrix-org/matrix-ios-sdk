@@ -54,7 +54,6 @@
     self = [super init];
     if (self)
     {
-        [OpenWebRTC initialize];
         openWebRTCHandler = [[OpenWebRTCNativeHandler alloc] initWithDelegate:self];
     }
     return self;

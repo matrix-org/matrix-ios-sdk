@@ -17,7 +17,8 @@
 #import <Foundation/Foundation.h>
 
 #import "MXCall.h"
-#import "MXCallStackCall.h"
+#import "MXCallStack.h"
+#import "MXJSONModels.h"
 
 @class MXSession;
 
@@ -82,7 +83,13 @@ extern NSString *const kMXCallManagerNewCall;
 /**
  The call stack layer.
  */
-@property (nonatomic) id<MXCallStackCall> callStackCall;
+@property (nonatomic) id<MXCallStack> callStack;
+
+/**
+ The list of TURN/STUN servers advertised by the user's homeserver.
+ Can be nil. In this case, use `fallbackSTUNServer`.
+ */
+@property (nonatomic, readonly) MXTurnServerResponse *turnServers;
 
 /**
  STUN server used if the homeserver does not provide TURN/STUN servers.

@@ -17,15 +17,8 @@
 #import <UIKit/UIKit.h>
 
 /**
- The `MXCallStackCall` is an abstract interface to integrate a VoIP call stack.
- 
- @discussion
- `MXCallManager` manages Matrix call events for signalling call but
- `MXCallManager` uses it to connect peer to peer streams.
- 
- Limitation: 
-  - it is limited to one to one call.
-  - the current interface manages only one call at a time.
+ The `MXCallStackCall` is an abstract interface to manage one call at the 
+ call stack layer.
  */
 @protocol MXCallStackCall <NSObject>
 
@@ -42,7 +35,7 @@
                              failure:(void (^)(NSError *error))failure;
 
 /**
- Terminate the current call.
+ Terminate the call.
  */
 - (void)terminate;
 

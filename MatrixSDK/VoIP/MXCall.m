@@ -17,6 +17,7 @@
 #import "MXCall.h"
 
 #import "MXSession.h"
+#import "MXCallStackCall.h"
 
 @interface MXCall ()
 {
@@ -24,6 +25,11 @@
      The manager of this object.
      */
     MXCallManager *callManager;
+
+    /**
+     The call object managed by the call stack
+     */
+    id<MXCallStackCall> callStackCall;
 
     /**
      The invite received by the peer
@@ -58,6 +64,26 @@
         _callerId = callManager.mxSession.myUser.userId;
 
         _state = MXCallStateFledgling;
+
+        callStackCall = [callManager.callStack createCall];
+        if (nil == callStackCall)
+        {
+            NSLog(@"[MXCall] Error: Cannot create call. [MXCallStack createCall] returned nil.");
+            return nil;
+        }
+
+        // Set up TURN/STUN servers
+        if (callManager.turnServers)
+        {
+            [callStackCall addTURNServerUris:callManager.turnServers.uris
+                                        withUsername:callManager.turnServers.username
+                                            password:callManager.turnServers.password];
+        }
+        else
+        {
+            NSLog(@"[MXCall] No TURN server: using fallback STUN server: %@", callManager.fallbackSTUNServer);
+            [callStackCall addTURNServerUris:@[callManager.fallbackSTUNServer] withUsername:nil password:nil];
+        }
     }
     return self;
 }
@@ -90,7 +116,7 @@
             MXCallAnswerEventContent *content = [MXCallAnswerEventContent modelFromJSON:event.content];
 
             // Let's the stack finalise the connection
-            [callManager.callStackCall handleAnswer:content.answer.sdp success:^{
+            [callStackCall handleAnswer:content.answer.sdp success:^{
 
                 // Call is up
                 [self setState:MXCallStateConnected reason:event];
@@ -115,7 +141,7 @@
             MXCallCandidatesEventContent *content = [MXCallCandidatesEventContent modelFromJSON:event.content];
             for (NSDictionary *canditate in content.candidates)
             {
-                [callManager.callStackCall handleRemoteCandidate:canditate];
+                [callStackCall handleRemoteCandidate:canditate];
             }
             break;
         }
@@ -135,9 +161,9 @@
 
     [self setState:MXCallStateWaitLocalMedia reason:nil];
 
-    [callManager.callStackCall startCapturingMediaWithVideo:video success:^() {
+    [callStackCall startCapturingMediaWithVideo:video success:^() {
 
-        [callManager.callStackCall createOffer:^(NSString *sdp) {
+        [callStackCall createOffer:^(NSString *sdp) {
 
             [self setState:MXCallStateCreateOffer reason:nil];
 
@@ -175,13 +201,13 @@
     {
         [self setState:MXCallStateWaitLocalMedia reason:nil];
 
-        [callManager.callStackCall startCapturingMediaWithVideo:self.isVideoCall success:^{
+        [callStackCall startCapturingMediaWithVideo:self.isVideoCall success:^{
 
             // Create a sdp answer from the offer we got
             [self setState:MXCallStateCreateAnswer reason:nil];
             [self setState:MXCallStateConnecting reason:nil];
 
-            [callManager.callStackCall handleOffer:callInviteEventContent.offer.sdp success:^(NSString *sdpAnswer) {
+            [callStackCall handleOffer:callInviteEventContent.offer.sdp success:^(NSString *sdpAnswer) {
 
                 // The call invite can sent to the HS
                 NSDictionary *content = @{
@@ -256,13 +282,13 @@
 - (void)setSelfVideoView:(UIView *)selfVideoView
 {
     _selfVideoView = selfVideoView;
-    callManager.callStackCall.selfVideoView = selfVideoView;
+    callStackCall.selfVideoView = selfVideoView;
 }
 
 - (void)setRemoteVideoView:(UIView *)remoteVideoView
 {
     _remoteVideoView = remoteVideoView;
-    callManager.callStackCall.remoteVideoView = remoteVideoView;
+    callStackCall.remoteVideoView = remoteVideoView;
 }
 
 - (NSUInteger)duration
@@ -285,7 +311,7 @@
 - (void)terminateWithReason:(MXEvent*)event
 {
     // Terminate the call at the stack level
-    [callManager.callStackCall terminate];
+    [callStackCall terminate];
 
     [self setState:MXCallStateEnded reason:event];
 }
