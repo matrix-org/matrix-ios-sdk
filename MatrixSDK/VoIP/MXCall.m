@@ -80,7 +80,7 @@
                 _isVideoCall = YES;
             }
 
-            self.state = MXCallStateRinging;
+            [self setState:MXCallStateRinging reason:event];
             break;
         }
 
@@ -93,7 +93,7 @@
             [callManager.callStack handleAnswer:content.answer.sdp success:^{
 
                 // Call is up
-                self.state = MXCallStateConnected;
+                [self setState:MXCallStateConnected reason:event];
 
             } failure:^(NSError *error) {
                 // @TODO
@@ -105,7 +105,7 @@
         {
             if (_state != MXCallStateEnded)
             {
-                [self terminate];
+                [self terminateWithReason:event];
             }
             break;
         }
@@ -133,13 +133,13 @@
 
     _isVideoCall = video;
 
-    self.state = MXCallStateWaitLocalMedia;
+    [self setState:MXCallStateWaitLocalMedia reason:nil];
 
     [callManager.callStack startCapturingMediaWithVideo:video success:^() {
 
         [callManager.callStack createOffer:^(NSString *sdp) {
 
-            self.state = MXCallStateCreateOffer;
+            [self setState:MXCallStateCreateOffer reason:nil];
 
             NSLog(@"[MXCallManager] placeCallInRoom. Offer created: %@", sdp);
 
@@ -155,7 +155,7 @@
                                       };
             [_room sendEventOfType:kMXEventTypeStringCallInvite content:content success:^(NSString *eventId) {
 
-                self.state = MXCallStateInviteSent;
+                [self setState:MXCallStateInviteSent reason:nil];
 
             } failure:^(NSError *error) {
                 // @TODO
@@ -173,13 +173,14 @@
 {
     if (self.state == MXCallStateRinging)
     {
-        self.state = MXCallStateWaitLocalMedia;
+        [self setState:MXCallStateWaitLocalMedia reason:nil];
 
         [callManager.callStack startCapturingMediaWithVideo:self.isVideoCall success:^{
 
             // Create a sdp answer from the offer we got
-            self.state = MXCallStateCreateAnswer;
-            self.state = MXCallStateConnecting;
+            [self setState:MXCallStateCreateAnswer reason:nil];
+            [self setState:MXCallStateConnecting reason:nil];
+
             [callManager.callStack handleOffer:callInviteEventContent.offer.sdp success:^(NSString *sdpAnswer) {
 
                 // The call invite can sent to the HS
@@ -193,7 +194,7 @@
                                           };
                 [_room sendEventOfType:kMXEventTypeStringCallAnswer content:content success:^(NSString *eventId) {
 
-                    self.state = MXCallStateConnected;
+                    [self setState:MXCallStateConnected reason:nil];
 
                 } failure:^(NSError *error) {
                     // @TODO
@@ -215,7 +216,7 @@
 {
     if (self.state != MXCallStateEnded)
     {
-        [self terminate];
+        [self terminateWithReason:nil];
 
         // Send the hangup event
         NSDictionary *content = @{
@@ -230,7 +231,7 @@
 
 
 #pragma marl - Properties
-- (void)setState:(MXCallState)state
+- (void)setState:(MXCallState)state reason:(MXEvent*)event
 {
     // Manage call duration
     if (MXCallStateConnected == state)
@@ -248,7 +249,7 @@
 
     if (_delegate)
     {
-        [_delegate call:self stateDidChange:_state];
+        [_delegate call:self stateDidChange:_state reason:event];
     }
 }
 
@@ -281,12 +282,12 @@
 
 
 #pragma mark - Private methods
-- (void)terminate
+- (void)terminateWithReason:(MXEvent*)event
 {
     // Terminate the call at the stack level
     [callManager.callStack terminate];
 
-    self.state = MXCallStateEnded;
+    [self setState:MXCallStateEnded reason:event];
 }
 
 @end

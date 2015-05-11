@@ -147,7 +147,13 @@ typedef enum : NSUInteger
 
 /**
  Tells the delegate that state of the call has changed.
+ 
+ @param call the instance that changes.
+ @param state the new state of the MXCall object.
+ @param event if it is the peer who is the origin of this change, we are notified by a Matrix event.
+              The `event` paramater is this event.
+              If it is our user, `event` is nil.
  */
-- (void)call:(MXCall *)call stateDidChange:(MXCallState)state;
+- (void)call:(MXCall *)call stateDidChange:(MXCallState)state reason:(MXEvent*)event;
 
 @end
