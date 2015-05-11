@@ -154,16 +154,19 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
     if (room && 2 == room.state.members.count)
     {
         call = [[MXCall alloc] initWithRoomId:roomId andCallManager:self];
-        [calls addObject:call];
+        if (call)
+        {
+            [calls addObject:call];
 
-        [call callWithVideo:video];
+            [call callWithVideo:video];
 
-        // Broadcast the new outgoing call
-        [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerNewCall object:call userInfo:nil];
+            // Broadcast the new outgoing call
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerNewCall object:call userInfo:nil];
+        }
     }
     else
     {
-        NSLog(@"[MXCallManager] placeCallInRoom: Warning: Cannot place call in %@. Members count: %tu", roomId, room.state.members.count);
+        NSLog(@"[MXCallManager] placeCallInRoom: ERROR: Cannot place call in %@. Members count: %tu", roomId, room.state.members.count);
     }
 
     return call;
