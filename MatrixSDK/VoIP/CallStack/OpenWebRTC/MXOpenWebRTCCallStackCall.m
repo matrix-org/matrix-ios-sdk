@@ -61,15 +61,17 @@
 
 - (void)startCapturingMediaWithVideo:(BOOL)video success:(void (^)())success failure:(void (^)(NSError *))failure
 {
-    // Video requires views to render to
-    if (video && (nil == selfVideoView || nil == remoteVideoView))
-    {
-        failure(nil);
-        return;
-    }
-
     onStartCapturingMediaWithVideoSuccess = success;
-    [openWebRTCHandler startGetCaptureSourcesForAudio:YES video:video];
+
+    // Video requires views to render to before calling startGetCaptureSourcesForAudio
+    if (NO == video || (selfVideoView && remoteVideoView))
+    {
+        [openWebRTCHandler startGetCaptureSourcesForAudio:YES video:video];
+    }
+    else
+    {
+        NSLog(@"[MXOpenWebRTCCallStackCall] Wait for the setting of selfVideoView and remoteVideoView before calling startGetCaptureSourcesForAudio");
+    }
 }
 
 - (void)terminate
@@ -141,12 +143,16 @@
 {
     selfVideoView = selfVideoView2;
     [openWebRTCHandler setSelfView:(OpenWebRTCVideoView*)selfVideoView];
+
+    [self checkStartGetCaptureSourcesForVideo];
 }
 
 - (void)setRemoteVideoView:(UIView *)remoteVideoView2
 {
     remoteVideoView = remoteVideoView2;
     [openWebRTCHandler setRemoteView:(OpenWebRTCVideoView*)remoteVideoView];
+
+    [self checkStartGetCaptureSourcesForVideo];
 }
 
 
@@ -202,6 +208,17 @@
             onHandleAnswerSuccess = nil;
         }
     });
+}
+
+
+#pragma mark - Private methods
+- (void)checkStartGetCaptureSourcesForVideo
+{
+    if (onStartCapturingMediaWithVideoSuccess && selfVideoView && remoteVideoView)
+    {
+        NSLog(@"[MXOpenWebRTCCallStackCall] selfVideoView and remoteVideoView are. Call startGetCaptureSourcesForAudio");
+        [openWebRTCHandler startGetCaptureSourcesForAudio:YES video:YES];
+    }
 }
 
 @end
