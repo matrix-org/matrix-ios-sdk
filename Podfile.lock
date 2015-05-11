@@ -31,11 +31,18 @@ DEPENDENCIES:
   - AFNetworking (~> 2.5.2)
   - Mantle (~> 1.5)
   - OpenWebRTC (~> 0.1)
-  - OpenWebRTC-SDK (from `../openwebrtc-ios-sdk/OpenWebRTC-SDK.podspec`)
+  - OpenWebRTC-SDK (from `https://github.com/EricssonResearch/openwebrtc-ios-sdk.git`,
+    branch `master`)
 
 EXTERNAL SOURCES:
   OpenWebRTC-SDK:
-    :path: ../openwebrtc-ios-sdk/OpenWebRTC-SDK.podspec
+    :branch: master
+    :git: https://github.com/EricssonResearch/openwebrtc-ios-sdk.git
+
+CHECKOUT OPTIONS:
+  OpenWebRTC-SDK:
+    :commit: 629c6dc4694abf49a6a3713eb520eeb75da7cf02
+    :git: https://github.com/EricssonResearch/openwebrtc-ios-sdk.git
 
 SPEC CHECKSUMS:
   AFNetworking: e1d86c2a96bb5d2e7408da36149806706ee122fe
