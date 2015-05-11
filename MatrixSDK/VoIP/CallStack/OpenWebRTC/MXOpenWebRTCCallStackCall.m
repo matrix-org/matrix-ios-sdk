@@ -153,20 +153,26 @@
 #pragma mark - OpenWebRTCNativeHandler delegate
 - (void)answerGenerated:(NSDictionary *)answer
 {
-    if (onHandleOfferSuccess)
-    {
-        onHandleOfferSuccess(answer[@"sdp"]);
-        onHandleOfferSuccess = nil;
-    }
+    dispatch_async(dispatch_get_main_queue(), ^{
+
+        if (onHandleOfferSuccess)
+        {
+            onHandleOfferSuccess(answer[@"sdp"]);
+            onHandleOfferSuccess = nil;
+        }
+    });
 }
 
 - (void)offerGenerated:(NSDictionary *)offer
 {
-    if (onCreateOfferSuccess)
-    {
-        onCreateOfferSuccess(offer[@"sdp"]);
-        onCreateOfferSuccess = nil;
-    }
+    dispatch_async(dispatch_get_main_queue(), ^{
+
+        if (onCreateOfferSuccess)
+        {
+            onCreateOfferSuccess(offer[@"sdp"]);
+            onCreateOfferSuccess = nil;
+        }
+    });
 }
 
 - (void)candidateGenerate:(NSString *)candidate
@@ -176,20 +182,26 @@
 
 - (void)gotLocalSourcesWithNames:(NSArray *)names
 {
-    if (onStartCapturingMediaWithVideoSuccess)
-    {
-        onStartCapturingMediaWithVideoSuccess();
-        onStartCapturingMediaWithVideoSuccess = nil;
-    }
+    dispatch_async(dispatch_get_main_queue(), ^{
+
+        if (onStartCapturingMediaWithVideoSuccess)
+        {
+            onStartCapturingMediaWithVideoSuccess();
+            onStartCapturingMediaWithVideoSuccess = nil;
+        }
+    });
 }
 
 - (void)gotRemoteSourceWithName:(NSString *)name
 {
-    if (onHandleAnswerSuccess)
-    {
-        onHandleAnswerSuccess();
-        onHandleAnswerSuccess = nil;
-    }
+    dispatch_async(dispatch_get_main_queue(), ^{
+
+        if (onHandleAnswerSuccess)
+        {
+            onHandleAnswerSuccess();
+            onHandleAnswerSuccess = nil;
+        }
+    });
 }
 
 @end
