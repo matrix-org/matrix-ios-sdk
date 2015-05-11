@@ -22,6 +22,7 @@
 #import "MXEventListener.h"
 #import "MXRoomState.h"
 #import "MXHTTPOperation.h"
+#import "MXCall.h"
 
 @class MXRoom;
 @class MXSession;
@@ -348,6 +349,17 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
                          reason:(NSString*)reason
                         success:(void (^)())success
                         failure:(void (^)(NSError *error))failure;
+
+
+#pragma mark - Voice over IP
+/**
+ Place a voice or a video call into the room.
+
+ @param video YES to make a video call.
+ @result a `MXKCall` object representing the call. Nil if the operation cannot be done.
+ */
+- (MXCall*)placeCallWithVideo:(BOOL)video;
+
 
 #pragma mark - Events listeners
 /**
