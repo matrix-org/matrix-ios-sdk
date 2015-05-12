@@ -76,6 +76,13 @@ extern NSString *const kMXCallManagerNewCall;
 - (MXCall*)placeCallInRoom:(NSString*)roomId withVideo:(BOOL)video;
 
 /**
+ Make the call manager forget a call.
+ 
+ @param call the `MXCall` instance reference to forget.
+ */
+- (void)removeCall:(MXCall*)call;
+
+/**
  The related matrix session.
  */
 @property (nonatomic, readonly) MXSession *mxSession;

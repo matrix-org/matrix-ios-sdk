@@ -179,6 +179,11 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
     return call;
 }
 
+- (void)removeCall:(MXCall *)call
+{
+    [calls removeObject:call];
+}
+
 
 #pragma mark - Private methods
 - (void)refreshTURNServer
@@ -227,14 +232,11 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
     // Check expiration (usefull filter when receiving load of events when resuming the event stream)
     if (event.age < content.lifetime)
     {
-        // Check this is an invite from the peer
-        // We do not need to manage invite event we requested
-        // @TODO: Manage invite done by the user but from another device
+        // If it is an invite from the peer, we need to create the MXCall
         MXCall *call = [self callWithCallId:content.callId];
         if (nil == call)
         {
             call = [[MXCall alloc] initWithRoomId:event.roomId andCallManager:self];
-
             if (call)
             {
                 [calls addObject:call];
@@ -244,6 +246,10 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
                 // Broadcast the incoming call
                 [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerNewCall object:call userInfo:nil];
             }
+        }
+        else
+        {
+            [call handleCallEvent:event];
         }
     }
 }

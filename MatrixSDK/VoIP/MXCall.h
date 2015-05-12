@@ -41,7 +41,9 @@ typedef enum : NSUInteger
     MXCallStateConnecting,
 
     MXCallStateConnected,
-    MXCallStateEnded
+    MXCallStateEnded,
+
+    MXCallStateInviteExpired
 } MXCallState;
 
 

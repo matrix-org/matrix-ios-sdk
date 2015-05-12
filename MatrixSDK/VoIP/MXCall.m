@@ -45,6 +45,11 @@
      The total duration of the call. It is computed when the call ends.
      */
     NSUInteger totalCallDuration;
+
+    /**
+     Timer to expire an invite.
+     */
+    NSTimer *inviteExpirationTimer;
 }
 
 @end
@@ -96,17 +101,36 @@
         {
             callInviteEventContent = [MXCallInviteEventContent modelFromJSON:event.content];
 
-            _callId = callInviteEventContent.callId;
-            _callerId = event.userId;
-            _isIncoming = YES;
-
-            // Determine if it is voice or video call
-            if (NSNotFound != [callInviteEventContent.offer.sdp rangeOfString:@"m=video"].location)
+            if (NO == [event.userId isEqualToString:_room.mxSession.myUser.userId])
             {
-                _isVideoCall = YES;
+                // Incoming call
+
+                _callId = callInviteEventContent.callId;
+                _callerId = event.userId;
+                _isIncoming = YES;
+
+                // Determine if it is voice or video call
+                if (NSNotFound != [callInviteEventContent.offer.sdp rangeOfString:@"m=video"].location)
+                {
+                    _isVideoCall = YES;
+                }
+                
+                [self setState:MXCallStateRinging reason:event];
+            }
+            else
+            {
+                // Outgoing call. This is the invite event we sent
             }
 
-            [self setState:MXCallStateRinging reason:event];
+            // Start expiration timer
+            inviteExpirationTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:callInviteEventContent.lifetime / 1000]
+                                                              interval:0
+                                                                target:self
+                                                              selector:@selector(expireCallInvite)
+                                                              userInfo:nil
+                                                               repeats:NO];
+            [[NSRunLoop mainRunLoop] addTimer:inviteExpirationTimer forMode:NSDefaultRunLoopMode];
+
             break;
         }
 
@@ -114,6 +138,13 @@
         {
             // MXCall receives this event only when it placed a call
             MXCallAnswerEventContent *content = [MXCallAnswerEventContent modelFromJSON:event.content];
+
+            // The peer accepted our outgoing call
+            if (inviteExpirationTimer)
+            {
+                [inviteExpirationTimer invalidate];
+                inviteExpirationTimer = nil;
+            }
 
             // Let's the stack finalise the connection
             [callStackCall handleAnswer:content.answer.sdp success:^{
@@ -203,6 +234,13 @@
 {
     if (self.state == MXCallStateRinging)
     {
+        // The incoming call is accepted
+        if (inviteExpirationTimer)
+        {
+            [inviteExpirationTimer invalidate];
+            inviteExpirationTimer = nil;
+        }
+
         [self setState:MXCallStateWaitLocalMedia reason:nil];
 
         [callStackCall startCapturingMediaWithVideo:self.isVideoCall success:^{
@@ -324,6 +362,12 @@
 #pragma mark - Private methods
 - (void)terminateWithReason:(MXEvent*)event
 {
+    if (inviteExpirationTimer)
+    {
+        [inviteExpirationTimer invalidate];
+        inviteExpirationTimer = nil;
+    }
+
     // Terminate the call at the stack level
     [callStackCall terminate];
 
@@ -335,6 +379,29 @@
     if ([_delegate performSelector:@selector(call:didEncounterError:)])
     {
         [_delegate call:self didEncounterError:error];
+    }
+}
+
+- (void)expireCallInvite
+{
+    if (inviteExpirationTimer)
+    {
+        inviteExpirationTimer = nil;
+
+        if (!_isIncoming)
+        {
+            // Terminate the call at the stack level we initiated
+            [callStackCall terminate];
+        }
+
+        // Send the notif that the call expired to the app
+        [self setState:MXCallStateInviteExpired reason:nil];
+
+        // And set the final state: MXCallStateEnded
+        [self setState:MXCallStateEnded reason:nil];
+
+        // The call manager can now ignore this call
+        [callManager removeCall:self];
     }
 }
 
