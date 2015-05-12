@@ -233,12 +233,16 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
         if (nil == call)
         {
             call = [[MXCall alloc] initWithRoomId:event.roomId andCallManager:self];
-            [calls addObject:call];
 
-            [call handleCallEvent:event];
+            if (call)
+            {
+                [calls addObject:call];
 
-            // Broadcast the incoming call
-            [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerNewCall object:call userInfo:nil];
+                [call handleCallEvent:event];
+
+                // Broadcast the incoming call
+                [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerNewCall object:call userInfo:nil];
+            }
         }
     }
 }
