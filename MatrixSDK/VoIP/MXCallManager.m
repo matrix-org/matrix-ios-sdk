@@ -186,21 +186,21 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
             if (turnServerResponse.uris)
             {
                 _turnServers = turnServerResponse;
+
+                // Re-new when we're about to reach the TTL
+                refreshTURNServerTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:turnServerResponse.ttl * 0.9]
+                                                                  interval:0
+                                                                    target:self
+                                                                  selector:@selector(refreshTURNServer)
+                                                                  userInfo:nil
+                                                                   repeats:NO];
+                [[NSRunLoop mainRunLoop] addTimer:refreshTURNServerTimer forMode:NSDefaultRunLoopMode];
             }
             else
             {
                 NSLog(@"No TURN server: using fallback STUN server: %@", _fallbackSTUNServer);
                 _turnServers = nil;
             }
-
-            // Re-new when we're about to reach the TTL
-            refreshTURNServerTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:turnServerResponse.ttl * 0.9]
-                                                              interval:0
-                                                                target:self
-                                                              selector:@selector(refreshTURNServer)
-                                                              userInfo:nil
-                                                               repeats:NO];
-            [[NSRunLoop mainRunLoop] addTimer:refreshTURNServerTimer forMode:NSDefaultRunLoopMode];
         }
 
     } failure:^(NSError *error) {
