@@ -17,7 +17,11 @@
 #import "MXCallManager.h"
 
 #import "MXSession.h"
+
+// OWR cannot be built for the iOS simulator (@see https://github.com/EricssonResearch/openwebrtc-examples/issues/79)
+#ifndef DISABLE_OPENWEBRTC_TO_BUID_TESTS
 #import "MXOpenWebRTCCallStack.h"
+#endif
 
 #pragma mark - Constants definitions
 NSString *const kMXCallManagerNewCall = @"kMXCallManagerNewCall";
@@ -57,8 +61,10 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
         calls = [NSMutableArray array];
         _fallbackSTUNServer = kMXCallManagerFallbackSTUNServer;
 
+#ifndef DISABLE_OPENWEBRTC_TO_BUID_TESTS
         // Use OpenWebRTC library
         _callStack = [[MXOpenWebRTCCallStack alloc] init];
+#endif
 
         // Listen to call events
         callEventsListener = [mxSession listenToEventsOfTypes:@[
