@@ -156,4 +156,15 @@ typedef enum : NSUInteger
  */
 - (void)call:(MXCall *)call stateDidChange:(MXCallState)state reason:(MXEvent*)event;
 
+@optional
+
+/**
+ Tells the delegate an error occured.
+ The call cannot be established.
+
+ @param call the instance that changes.
+ @param error the error.
+ */
+- (void)call:(MXCall *)call didEncounterError:(NSError*)error;
+
 @end

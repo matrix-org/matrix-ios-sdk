@@ -122,7 +122,8 @@
                 [self setState:MXCallStateConnected reason:event];
 
             } failure:^(NSError *error) {
-                // @TODO
+                NSLog(@"[MXCall] handleCallEvent: ERROR: Cannot send handle answer. Error: %@\nEvent: %@", error, event);
+                [self didEncounterError:error];
             }];
             break;
         }
@@ -184,14 +185,17 @@
                 [self setState:MXCallStateInviteSent reason:nil];
 
             } failure:^(NSError *error) {
-                // @TODO
+                NSLog(@"[MXCall] callWithVideo: ERROR: Cannot send m.call.invite event. Error: %@", error);
+                [self didEncounterError:error];
             }];
 
         } failure:^(NSError *error) {
-            // @TODO
+            NSLog(@"[MXCall] callWithVideo: ERROR: Cannot create offer. Error: %@", error);
+            [self didEncounterError:error];
         }];
     } failure:^(NSError *error) {
-        // @TODO
+        NSLog(@"[MXCall] callWithVideo: ERROR: Cannot start capturing media. Error: %@", error);
+        [self didEncounterError:error];
     }];
 }
 
@@ -223,17 +227,20 @@
                     [self setState:MXCallStateConnected reason:nil];
 
                 } failure:^(NSError *error) {
-                    // @TODO
+                    NSLog(@"[MXCall] answer: ERROR: Cannot send m.call.answer event. Error: %@", error);
+                    [self didEncounterError:error];
                 }];
                 
             } failure:^(NSError *error) {
-                // @TODO
+                NSLog(@"[MXCall] answer: ERROR: Cannot create offer. Error: %@", error);
+                [self didEncounterError:error];
             }];
             
             callInviteEventContent = nil;
 
         } failure:^(NSError *error) {
-            // @TODO
+            NSLog(@"[MXCall] answer: ERROR: Cannot start capturing media. Error: %@", error);
+            [self didEncounterError:error];
         }];
     }
 }
@@ -250,7 +257,8 @@
                                   @"version": @(0)
                                   };
         [_room sendEventOfType:kMXEventTypeStringCallHangup content:content success:nil failure:^(NSError *error) {
-            // @TODO
+            NSLog(@"[MXCall] hangup: ERROR: Cannot send m.call.hangup event. Error: %@", error);
+            [self didEncounterError:error];
         }];
     }
 }
@@ -320,6 +328,14 @@
     [callStackCall terminate];
 
     [self setState:MXCallStateEnded reason:event];
+}
+
+- (void)didEncounterError:(NSError*)error
+{
+    if ([_delegate performSelector:@selector(call:didEncounterError:)])
+    {
+        [_delegate call:self didEncounterError:error];
+    }
 }
 
 @end
