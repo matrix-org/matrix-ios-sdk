@@ -1,0 +1,136 @@
+/*
+ Copyright 2015 OpenMarket Ltd
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ */
+
+#import <UIKit/UIKit.h>
+#import <XCTest/XCTest.h>
+
+#import "MatrixSDKTestsData.h"
+#import "MXSession.h"
+
+#import "MXMockCallStack.h"
+#import "MXMockCallStackCall.h"
+
+@interface MXVoIPTests : XCTestCase
+{
+    MXSession *mxSession;
+}
+
+@end
+
+@implementation MXVoIPTests
+
+- (void)setUp
+{
+    [super setUp];
+}
+
+- (void)tearDown
+{
+    if (mxSession)
+    {
+        [[MatrixSDKTestsData sharedData] closeMXSession:mxSession];
+        mxSession = nil;
+    }
+    [super tearDown];
+}
+
+
+#pragma mark - Tests with no call stack
+- (void)testNoVoIPStackMXRoomCall
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        mxSession = bobSession;
+        MXRoom *room = [mxSession roomWithRoomId:roomId];
+
+        // Make sure there is no VoIP stack
+        mxSession.callManager.callStack = nil;
+
+        MXCall *call = [room placeCallWithVideo:NO];
+
+        XCTAssertNil(call, @"MXCall cannot be created if there is no VoIP stack");
+
+        [expectation fulfill];
+    }];
+}
+
+- (void)testNoVoIPStackOnCallInvite
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        mxSession = bobSession;
+
+        // Make sure there is no VoIP stack
+        mxSession.callManager.callStack = nil;
+
+
+        NSString *callId = @"callId";
+
+        // The call invite can sent to the HS
+        NSDictionary *content = @{
+                                  @"call_id": callId,
+                                  @"offer": @{
+                                          @"type": @"offer",
+                                          @"sdp": @"A SDP"
+                                          },
+                                  @"version": @(0),
+                                  @"lifetime": @(30 * 1000)
+                                  };
+
+
+        [mxSession listenToEventsOfTypes:@[kMXEventTypeStringCallInvite] onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
+
+            MXCall *call = [mxSession.callManager callWithCallId:callId];
+
+            XCTAssertNil(call, @"MXCall cannot be created if there is no VoIP stack");
+            [expectation fulfill];
+        }];
+
+        [aliceRestClient sendEventToRoom:roomId eventType:kMXEventTypeStringCallInvite content:content success:nil failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
+
+#pragma mark - Tests with a call stack mock
+- (void)testMXRoomCall
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        mxSession = bobSession;
+        MXRoom *room = [mxSession roomWithRoomId:roomId];
+
+        // Set up the mock
+        MXMockCallStack *callStackMock = [[MXMockCallStack alloc] init];
+        mxSession.callManager.callStack = callStackMock;
+
+        MXCall *call = [room placeCallWithVideo:NO];
+
+        XCTAssert(call, @"MXCall must be created on [room placeCallWithVideo:]");
+        XCTAssertNotNil(call.callId);
+        XCTAssertEqual(call.state, MXCallStateWaitLocalMedia);
+
+        MXCall *callInRoom = [mxSession.callManager callInRoom:roomId];
+        XCTAssertEqual(call, callInRoom, @"[MXCallManager callInRoom:] must retrieve the same call");
+
+        [expectation fulfill];
+    }];
+}
+
+
+
+@end
