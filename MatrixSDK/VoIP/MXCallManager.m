@@ -60,6 +60,7 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
         _mxSession = mxSession;
         calls = [NSMutableArray array];
         _fallbackSTUNServer = kMXCallManagerFallbackSTUNServer;
+        _inviteLifetime = 30000;
 
 #ifndef DISABLE_OPENWEBRTC_TO_BUID_TESTS
         // Use OpenWebRTC library

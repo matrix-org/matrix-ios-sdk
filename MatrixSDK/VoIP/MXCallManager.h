@@ -86,6 +86,12 @@ extern NSString *const kMXCallManagerNewCall;
 @property (nonatomic) id<MXCallStack> callStack;
 
 /**
+ The time in milliseconds that an incoming or outgoing call invite is valid for.
+ Default is 30s.
+ */
+@property (nonatomic) NSUInteger inviteLifetime;
+
+/**
  The list of TURN/STUN servers advertised by the user's homeserver.
  Can be nil. In this case, use `fallbackSTUNServer`.
  */

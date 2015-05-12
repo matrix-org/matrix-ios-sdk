@@ -178,7 +178,7 @@
                                               @"sdp": sdp
                                               },
                                       @"version": @(0),
-                                      @"lifetime": @(30 * 1000)
+                                      @"lifetime": @(callManager.inviteLifetime)
                                       };
             [_room sendEventOfType:kMXEventTypeStringCallInvite content:content success:^(NSString *eventId) {
 
