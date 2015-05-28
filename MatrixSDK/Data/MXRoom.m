@@ -409,52 +409,6 @@
                               success:(void (^)(NSString *eventId))success
                               failure:(void (^)(NSError *error))failure
 {
-    // @TODO: Temporary hack for dev testing VoIP
-    if ([msgType isEqualToString:kMXMessageTypeText])
-    {
-        NSString *text = content[@"body"];
-        if ([text.capitalizedString isEqualToString:@"C"])
-        {
-            NSLog(@"[MXRoom] Hack to make a voice call");
-            [self placeCallWithVideo:NO];
-            return nil;
-        }
-        if ([text.capitalizedString isEqualToString:@"V"])
-        {
-            NSLog(@"[MXRoom] Hack to make a video call");
-            [self placeCallWithVideo:YES];
-            return nil;
-        }
-        if ([text.capitalizedString isEqualToString:@"A"])
-        {
-            NSLog(@"[MXRoom] Hack to answer to a call");
-            MXCall *call = [mxSession.callManager callInRoom:_state.roomId];
-            if (call)
-            {
-                [call answer];
-            }
-            else
-            {
-                NSLog(@"[MXRoom] Hack: Warning: no call in progress here");
-            }
-            return nil;
-        }
-        if ([text.capitalizedString isEqualToString:@"H"])
-        {
-            NSLog(@"[MXRoom] Hack to hang up to a call");
-            MXCall *call = [mxSession.callManager callInRoom:_state.roomId];
-            if (call)
-            {
-                [call hangup];
-            }
-            else
-            {
-                NSLog(@"[MXRoom] Hack: Warning: no call in progress here");
-            }
-            return nil;
-        }
-    }
-    
     return [mxSession.matrixRestClient sendMessageToRoom:_state.roomId msgType:msgType content:content success:success failure:failure];
 }
 
