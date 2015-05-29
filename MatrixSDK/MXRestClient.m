@@ -78,7 +78,7 @@ MXAuthAction;
 @end
 
 @implementation MXRestClient
-@synthesize homeserver, credentials;
+@synthesize homeserver, homeserverSuffix, credentials;
 
 -(id)initWithHomeServer:(NSString *)homeserver2
 {
@@ -101,7 +101,7 @@ MXAuthAction;
     if (self)
     {
         homeserver = credentials2.homeServer;
-        credentials = credentials2;
+        self.credentials = credentials2;
         
         httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", homeserver, kMXAPIPrefixPath] andAccessToken:credentials.accessToken];
 
@@ -115,10 +115,22 @@ MXAuthAction;
 {
     homeserver = nil;
     credentials = nil;
+    homeserverSuffix = nil;
     httpClient = nil;
     identityHttpClient = nil;
 }
 
+- (void)setCredentials:(MXCredentials *)inCredentials {
+    credentials = inCredentials;
+    
+    // Extract homeserver suffix from userId
+    NSArray *components = [credentials.userId componentsSeparatedByString:@":"];
+    if (components.count == 2) {
+        homeserverSuffix = [NSString stringWithFormat:@":%@",[components lastObject]];
+    } else {
+        NSLog(@"[MXRestClient] Warning: the userId is not correctly formatted: %@", credentials.userId);
+    }
+}
 
 #pragma mark - Registration operations
 - (MXHTTPOperation*)getRegisterFlow:(void (^)(NSArray *flows))success
@@ -250,7 +262,7 @@ MXAuthAction;
                          success:^(NSDictionary *JSONResponse) {
 
                              // Update our credentials
-                             credentials = [MXCredentials modelFromJSON:JSONResponse];
+                             self.credentials = [MXCredentials modelFromJSON:JSONResponse];
 
                              // Workaround: HS does not return the right URL. Use the one we used to make the request
                              credentials.homeServer = homeserver;

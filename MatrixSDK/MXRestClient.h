@@ -100,6 +100,11 @@ typedef enum : NSUInteger
 @property (nonatomic, readonly) MXCredentials *credentials;
 
 /**
+ The homeserver suffix (for example ":matrix.org"). Available only when credentials have been set.
+ */
+@property (nonatomic, readonly) NSString *homeserverSuffix;
+
+/**
  The identity server.
  By default, it points to the defined home server. If needed, change it by setting
  this property.
