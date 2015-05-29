@@ -125,8 +125,11 @@ MXAuthAction;
     
     // Extract homeserver suffix from userId
     NSArray *components = [credentials.userId componentsSeparatedByString:@":"];
-    if (components.count == 2) {
-        homeserverSuffix = [NSString stringWithFormat:@":%@",[components lastObject]];
+    if (components.count > 1) {
+        // Remove first component
+        NSString *matrixId = components.firstObject;
+        NSRange range = NSMakeRange(0, matrixId.length);
+        homeserverSuffix = [credentials.userId stringByReplacingCharactersInRange:range withString:@""];
     } else {
         NSLog(@"[MXRestClient] Warning: the userId is not correctly formatted: %@", credentials.userId);
     }
