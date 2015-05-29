@@ -115,7 +115,13 @@
                     _isVideoCall = YES;
                 }
                 
-                [self setState:MXCallStateRinging reason:event];
+                [callStackCall startCapturingMediaWithVideo:self.isVideoCall success:^{
+                    [callStackCall handleOffer:callInviteEventContent.offer.sdp];
+                    [self setState:MXCallStateRinging reason:event];
+                } failure:^(NSError *error) {
+                    NSLog(@"[MXCall] startCapturingMediaWithVideo: ERROR: Couldn't start capturing. Error: %@", error);
+                    [self didEncounterError:error];
+                }];
             }
             else
             {
@@ -242,44 +248,38 @@
         }
 
         [self setState:MXCallStateWaitLocalMedia reason:nil];
-
-        [callStackCall startCapturingMediaWithVideo:self.isVideoCall success:^{
-
-            // Create a sdp answer from the offer we got
-            [self setState:MXCallStateCreateAnswer reason:nil];
-            [self setState:MXCallStateConnecting reason:nil];
-
-            [callStackCall handleOffer:callInviteEventContent.offer.sdp success:^(NSString *sdpAnswer) {
-
-                // The call invite can sent to the HS
-                NSDictionary *content = @{
-                                          @"call_id": _callId,
-                                          @"answer": @{
-                                                  @"type": @"answer",
-                                                  @"sdp": sdpAnswer
-                                                  },
-                                          @"version": @(0),
-                                          };
-                [_room sendEventOfType:kMXEventTypeStringCallAnswer content:content success:^(NSString *eventId) {
-
-                    [self setState:MXCallStateConnected reason:nil];
-
-                } failure:^(NSError *error) {
-                    NSLog(@"[MXCall] answer: ERROR: Cannot send m.call.answer event. Error: %@", error);
-                    [self didEncounterError:error];
-                }];
+        
+        
+        // Create a sdp answer from the offer we got
+        [self setState:MXCallStateCreateAnswer reason:nil];
+        [self setState:MXCallStateConnecting reason:nil];
+        
+        [callStackCall createAnswer:^(NSString *sdpAnswer) {
+            
+            // The call invite can sent to the HS
+            NSDictionary *content = @{
+                                      @"call_id": _callId,
+                                      @"answer": @{
+                                              @"type": @"answer",
+                                              @"sdp": sdpAnswer
+                                              },
+                                      @"version": @(0),
+                                      };
+            [_room sendEventOfType:kMXEventTypeStringCallAnswer content:content success:^(NSString *eventId) {
+                
+                [self setState:MXCallStateConnected reason:nil];
                 
             } failure:^(NSError *error) {
-                NSLog(@"[MXCall] answer: ERROR: Cannot create offer. Error: %@", error);
+                NSLog(@"[MXCall] answer: ERROR: Cannot send m.call.answer event. Error: %@", error);
                 [self didEncounterError:error];
             }];
             
-            callInviteEventContent = nil;
-
         } failure:^(NSError *error) {
-            NSLog(@"[MXCall] answer: ERROR: Cannot start capturing media. Error: %@", error);
+            NSLog(@"[MXCall] answer: ERROR: Cannot create offer. Error: %@", error);
             [self didEncounterError:error];
         }];
+        
+        callInviteEventContent = nil;
     }
 }
 

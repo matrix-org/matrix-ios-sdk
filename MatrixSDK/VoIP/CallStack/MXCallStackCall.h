@@ -64,17 +64,25 @@
 /**
  Handle a incoming offer from a peer.
 
- This offer came within a m.call.invite event sent by the peer. 
- The implementation must return a sdp description `MXCallManager` will
- send back in a m.call.answer event.
+ This offer came within a m.call.invite event sent by the peer.
 
  @param sdpOffer the description of the peer media.
+ */
+- (void)handleOffer:(NSString*)sdpOffer;
+
+/**
+ Generate an answer to send to the peer.
+ 
+ handleOffer must have been called with a valid offer.
+ 
+ The implementation must return a sdp description `MXCallManager` will
+ send back in a m.call.answer event.
+ 
  @param success A block object called when the operation succeeds. It provides a description
-                of the answer.
+ of the answer.
  @param failure A block object called when the operation fails.
  */
-- (void)handleOffer:(NSString*)sdpOffer
-            success:(void (^)(NSString *sdpAnswer))success
+- (void)createAnswer:(void (^)(NSString *sdpAnswer))success
             failure:(void (^)(NSError *error))failure;
 
 

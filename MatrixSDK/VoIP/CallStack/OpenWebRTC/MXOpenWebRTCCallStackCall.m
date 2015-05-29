@@ -32,9 +32,9 @@
     void (^onStartCapturingMediaWithVideoSuccess)();
 
     /**
-     Success block for the async `handleAnswer` method.
+     Success block for the async `createAnswer` method.
      */
-    void (^onHandleOfferSuccess)(NSString *sdpAnswer);
+    void (^onCreateAnswerSuccess)(NSString *sdpAnswer);
 
     /**
      Success block for the async `createOffer` method.
@@ -46,6 +46,8 @@
      */
     void (^onHandleAnswerSuccess)();
 }
+
+@property (nonatomic, readwrite, retain) NSString *answer;
 
 @end
 
@@ -120,10 +122,18 @@
 
 
 #pragma mark - Incoming call
-- (void)handleOffer:(NSString *)sdpOffer success:(void (^)(NSString *sdpAnswer))success failure:(void (^)(NSError *))failure
+- (void)handleOffer:(NSString *)sdpOffer
 {
-    onHandleOfferSuccess = success;
     [openWebRTCHandler handleOfferReceived:sdpOffer];
+}
+
+- (void)createAnswer:(void (^)(NSString *))success failure:(void (^)(NSError *))failure
+{
+    if (self.answer) {
+        success(self.answer);
+    } else {
+        onCreateAnswerSuccess = success;
+    }
 }
 
 
@@ -164,10 +174,13 @@
 {
     dispatch_async(dispatch_get_main_queue(), ^{
 
-        if (onHandleOfferSuccess)
+        if (onCreateAnswerSuccess)
         {
-            onHandleOfferSuccess(answer[@"sdp"]);
-            onHandleOfferSuccess = nil;
+            onCreateAnswerSuccess(answer[@"sdp"]);
+            onCreateAnswerSuccess = nil;
+        }
+        else {
+            self.answer = answer[@"sdp"];
         }
     });
 }
