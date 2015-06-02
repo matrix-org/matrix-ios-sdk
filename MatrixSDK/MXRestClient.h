@@ -242,15 +242,16 @@ typedef enum : NSUInteger
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)setPusherWithPushkey:(NSString *)pushkey
-                                kind:(NSObject *)kind
-                               appId:(NSString *)appId
-                      appDisplayName:(NSString *)appDisplayName
-                   deviceDisplayName:(NSString *)deviceDisplayName
-                          profileTag:(NSString *)profileTag
-                                lang:(NSString *)lang
-                                data:(NSDictionary *)data
-                             success:(void (^)())success
-                             failure:(void (^)(NSError *error))failure;
+                                    kind:(NSObject *)kind
+                                   appId:(NSString *)appId
+                          appDisplayName:(NSString *)appDisplayName
+                       deviceDisplayName:(NSString *)deviceDisplayName
+                              profileTag:(NSString *)profileTag
+                                    lang:(NSString *)lang
+                                    data:(NSDictionary *)data
+                                  append:(BOOL)append
+                                 success:(void (^)())success
+                                 failure:(void (^)(NSError *error))failure;
 
 /**
  Get all push notifications rules.

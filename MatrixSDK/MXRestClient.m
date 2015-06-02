@@ -289,15 +289,16 @@ MXAuthAction;
 
 #pragma mark - Push Notifications
 - (MXHTTPOperation*)setPusherWithPushkey:(NSString *)pushkey
-                                kind:(NSObject *)kind
-                               appId:(NSString *)appId
-                      appDisplayName:(NSString *)appDisplayName
-                   deviceDisplayName:(NSString *)deviceDisplayName
-                          profileTag:(NSString *)profileTag
-                                lang:(NSString *)lang
-                                data:(NSDictionary *)data
-                             success:(void (^)())success
-                             failure:(void (^)(NSError *))failure {
+                                    kind:(NSObject *)kind
+                                   appId:(NSString *)appId
+                          appDisplayName:(NSString *)appDisplayName
+                       deviceDisplayName:(NSString *)deviceDisplayName
+                              profileTag:(NSString *)profileTag
+                                    lang:(NSString *)lang
+                                    data:(NSDictionary *)data
+                                  append:(BOOL)append
+                                 success:(void (^)())success
+                                 failure:(void (^)(NSError *))failure {
     NSDictionary *parameters = @{
                                  @"pushkey": pushkey,
                                  @"kind": kind,
@@ -306,7 +307,8 @@ MXAuthAction;
                                  @"device_display_name": deviceDisplayName,
                                  @"profile_tag": profileTag,
                                  @"lang": lang,
-                                 @"data": data
+                                 @"data": data,
+                                 @"append":[NSNumber numberWithBool:append]
                                  };
 
     return [httpClient requestWithMethod:@"POST"
