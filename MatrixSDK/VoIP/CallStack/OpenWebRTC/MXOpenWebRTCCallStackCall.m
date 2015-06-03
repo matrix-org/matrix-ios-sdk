@@ -227,12 +227,23 @@
 }
 
 
+#pragma mark - Properties
+- (UIDeviceOrientation)videoOrientation
+{
+    return openWebRTCHandler.videoOrientation;
+}
+
+- (void)setVideoOrientation:(UIDeviceOrientation)videoOrientation
+{
+    openWebRTCHandler.videoOrientation = videoOrientation;
+}
+
 #pragma mark - Private methods
 - (void)checkStartGetCaptureSourcesForVideo
 {
     if (onStartCapturingMediaWithVideoSuccess && selfVideoView && remoteVideoView)
     {
-        NSLog(@"[MXOpenWebRTCCallStackCall] selfVideoView and remoteVideoView are. Call startGetCaptureSourcesForAudio");
+        NSLog(@"[MXOpenWebRTCCallStackCall] selfVideoView and remoteVideoView are set. Call startGetCaptureSourcesForAudio");
         [openWebRTCHandler startGetCaptureSourcesForAudio:YES video:YES];
     }
 }

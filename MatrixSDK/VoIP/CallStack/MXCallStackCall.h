@@ -112,6 +112,8 @@
              success:(void (^)())success
              failure:(void (^)(NSError *error))failure;
 
+
+#pragma mark - Properties
 /**
  The UIView that receives frames from the user's camera.
  */
@@ -121,5 +123,10 @@
  The UIView that receives frames from the remote camera.
  */
 @property (nonatomic) UIView *remoteVideoView;
+
+/**
+ The camera orientation.
+ */
+@property (nonatomic) UIDeviceOrientation videoOrientation;
 
 @end

@@ -130,6 +130,11 @@ typedef enum : NSUInteger
 @property (nonatomic) UIView *remoteVideoView;
 
 /**
+ The camera orientation.
+ */
+@property (nonatomic) UIDeviceOrientation videoOrientation;
+
+/**
  The call duration in milliseconds.
  */
 @property (nonatomic, readonly) NSUInteger duration;

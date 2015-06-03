@@ -343,6 +343,19 @@
     }
 }
 
+- (UIDeviceOrientation)videoOrientation
+{
+    return callStackCall.videoOrientation;
+}
+
+- (void)setVideoOrientation:(UIDeviceOrientation)videoOrientation
+{
+    if (callStackCall.videoOrientation == videoOrientation)
+    {
+        callStackCall.videoOrientation = videoOrientation;
+    }
+}
+
 - (NSUInteger)duration
 {
     NSUInteger duration = 0;
