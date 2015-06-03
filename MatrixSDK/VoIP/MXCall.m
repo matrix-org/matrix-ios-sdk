@@ -350,7 +350,7 @@
 
 - (void)setVideoOrientation:(UIDeviceOrientation)videoOrientation
 {
-    if (callStackCall.videoOrientation == videoOrientation)
+    if (callStackCall.videoOrientation != videoOrientation)
     {
         callStackCall.videoOrientation = videoOrientation;
     }
