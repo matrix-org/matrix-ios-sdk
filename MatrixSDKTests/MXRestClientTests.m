@@ -986,8 +986,20 @@
             MXPushRuleAction *pushAction = pushRule.actions[0];
             XCTAssertTrue([pushAction isKindOfClass:[MXPushRuleAction class]]);
 
-            // Test a rule with room_member_count condition
-            MXPushRule *roomMemberCountRule = pushRules.global.override.lastObject;
+            // Test a rule with room_member_count condition. There must be one for 1:1 in underride rules
+            MXPushRule *roomMemberCountRule;
+            for (MXPushRule *pushRule in pushRules.global.underride)
+            {
+                if (pushRule.conditions.count)
+                {
+                    MXPushRuleCondition *condition = pushRule.conditions[0];
+                    if (condition.kindType == MXPushRuleConditionTypeRoomMemberCount)
+                    {
+                        roomMemberCountRule = pushRule;
+                        break;
+                    }
+                }
+            }
             XCTAssertNotNil(roomMemberCountRule);
 
             MXPushRuleCondition *condition = roomMemberCountRule.conditions[0];
