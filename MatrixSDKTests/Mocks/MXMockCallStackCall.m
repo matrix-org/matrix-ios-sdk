@@ -23,7 +23,7 @@
 @end
 
 @implementation MXMockCallStackCall
-@synthesize selfVideoView, remoteVideoView;
+@synthesize selfVideoView, remoteVideoView, videoOrientation;
 
 - (instancetype)init
 {
@@ -55,7 +55,12 @@
 
 
 #pragma mark - Incoming call
-- (void)handleOffer:(NSString *)sdpOffer success:(void (^)(NSString *sdpAnswer))success failure:(void (^)(NSError *))failure
+- (void)handleOffer:(NSString *)sdpOffer
+{
+
+}
+
+- (void)createAnswer:(void (^)(NSString *sdpAnswer))success failure:(void (^)(NSError *))failure
 {
     dispatch_async(dispatch_get_main_queue(), ^{
         success(@"SDP ANWER");
