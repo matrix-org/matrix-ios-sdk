@@ -113,7 +113,6 @@ typedef void (^MXOnResumeDone)();
     if (self)
     {
         matrixRestClient = mxRestClient;
-        [self setState:MXSessionStateInitialised];
         rooms = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
         oneToOneRooms = [NSMutableDictionary dictionary];
@@ -124,6 +123,8 @@ typedef void (^MXOnResumeDone)();
 
         // By default, load presence data in parallel if a full initialSync is not required
         _loadPresenceBeforeCompletingSessionStart = NO;
+        
+        [self setState:MXSessionStateInitialised];
     }
     return self;
 }
