@@ -831,10 +831,21 @@ typedef void (^MXOnResumeDone)();
 
 - (MXRoom *)privateOneToOneRoomWithUserId:(NSString*)userId
 {
-    NSArray *array = [oneToOneRooms objectForKey:userId];
-    if (array)
+    NSArray *array = [[oneToOneRooms objectForKey:userId] copy];
+    if (array.count)
     {
-        return array.firstObject;
+        // Update stored rooms before returning the first one.
+        // Indeed a state event may be handled and notified to the SDK user before updating private one-to-one room list.
+        for (MXRoom *room in array)
+        {
+            [self handleOneToOneRoom:room];
+        }
+        
+        array = [oneToOneRooms objectForKey:userId];
+        if (array.count)
+        {
+            return array.firstObject;
+        }
     }
     return nil;
 }
