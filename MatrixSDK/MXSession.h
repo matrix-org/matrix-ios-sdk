@@ -27,7 +27,13 @@
 /**
  `MXSessionState` represents the states in the life cycle of a MXSession instance.
  */
-typedef enum : NSUInteger {
+typedef enum : NSUInteger
+{
+    /**
+     The session is closed (or not initialized yet).
+     */
+    MXSessionStateClosed,
+    
     /**
      The session has just been created.
      */
@@ -66,12 +72,7 @@ typedef enum : NSUInteger {
     /**
      The session has been paused.
      */
-    MXSessionStatePaused,
-
-    /**
-     The session has been closed and cannot be reused.
-     */
-    MXSessionStateClosed
+    MXSessionStatePaused
 } MXSessionState;
 
 

@@ -131,10 +131,13 @@ typedef void (^MXOnResumeDone)();
 
 - (void)setState:(MXSessionState)state
 {
-    _state = state;
-
-    NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
-    [notificationCenter postNotificationName:kMXSessionStateDidChangeNotification object:self userInfo:nil];
+    if (_state != state)
+    {
+        _state = state;
+        
+        NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
+        [notificationCenter postNotificationName:kMXSessionStateDidChangeNotification object:self userInfo:nil];
+    }
 }
 
 -(void)setStore:(id<MXStore>)store success:(void (^)())onStoreDataReady failure:(void (^)(NSError *))failure
