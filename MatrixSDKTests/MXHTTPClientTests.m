@@ -42,25 +42,23 @@
 
 
 - (void)testMainThread {
-
+    
     MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", kMXTestsHomeServerURL, kMXAPIPrefixPath]];
-
+    
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
-
+    
     [httpClient requestWithMethod:@"GET"
-                           path:@"publicRooms"
-                     parameters:nil
-                        success:^(NSDictionary *JSONResponse)
-     {
-         XCTAssertTrue([NSThread isMainThread], @"The block callback must be called from the main thread");
-         [expectation fulfill];
-     }
-                        failure:^(NSError *error)
-     {
-         XCTFail(@"The request should not fail - NSError: %@", error);
-         [expectation fulfill];
-     }];
-
+                             path:@"v1/publicRooms"
+                       parameters:nil
+                          success:^(NSDictionary *JSONResponse) {
+                              XCTAssertTrue([NSThread isMainThread], @"The block callback must be called from the main thread");
+                              [expectation fulfill];
+                          }
+                          failure:^(NSError *error) {
+                              XCTFail(@"The request should not fail - NSError: %@", error);
+                              [expectation fulfill];
+                          }];
+    
     [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
@@ -70,23 +68,21 @@
     MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", kMXTestsHomeServerURL, kMXAPIPrefixPath]];
     
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
-
+    
     [httpClient requestWithMethod:@"GET"
-                           path:@"notExistingAPI"
-                     parameters:nil
-                        success:^(NSDictionary *JSONResponse)
-     {
-         XCTFail(@"The request must fail as the API path does not exist");
-         [expectation fulfill];
-     }
-                        failure:^(NSError *error)
-     {
-         XCTAssertTrue([MXError isMXError:error], @"The HTTP client must have detected a Home Server error");
-   
-         XCTAssertTrue([NSThread isMainThread], @"The block callback must be called from the main thread");
-         
-         [expectation fulfill];
-     }];
+                             path:@"v1/notExistingAPI"
+                       parameters:nil
+                          success:^(NSDictionary *JSONResponse) {
+                              XCTFail(@"The request must fail as the API path does not exist");
+                              [expectation fulfill];
+                          }
+                          failure:^(NSError *error) {
+                              XCTAssertTrue([MXError isMXError:error], @"The HTTP client must have detected a Home Server error");
+                              
+                              XCTAssertTrue([NSThread isMainThread], @"The block callback must be called from the main thread");
+                              
+                              [expectation fulfill];
+                          }];
     
     [self waitForExpectationsWithTimeout:10 handler:nil];
 }
@@ -98,21 +94,19 @@
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
     
     [httpClient requestWithMethod:@"GET"
-                           path:@"publicRooms"
-                     parameters:nil
-                        success:^(NSDictionary *JSONResponse)
-     {
-         XCTFail(@"The request must fail as we are not targetting a home server");
-         [expectation fulfill];
-     }
-                        failure:^(NSError *error)
-     {
-         XCTAssertFalse([MXError isMXError:error], @"The HTTP client must not have detected a Home Server error");
-         
-         XCTAssertTrue([NSThread isMainThread], @"The block callback must be called from the main thread");
-
-         [expectation fulfill];
-     }];
+                             path:@"publicRooms"
+                       parameters:nil
+                          success:^(NSDictionary *JSONResponse) {
+                              XCTFail(@"The request must fail as we are not targetting a home server");
+                              [expectation fulfill];
+                          }
+                          failure:^(NSError *error) {
+                              XCTAssertFalse([MXError isMXError:error], @"The HTTP client must not have detected a Home Server error");
+                              
+                              XCTAssertTrue([NSThread isMainThread], @"The block callback must be called from the main thread");
+                              
+                              [expectation fulfill];
+                          }];
     
     [self waitForExpectationsWithTimeout:10 handler:nil];
 }
