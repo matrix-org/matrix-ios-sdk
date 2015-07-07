@@ -164,6 +164,12 @@ typedef void (^MXOnResumeDone)();
 
     [_store openWithCredentials:matrixRestClient.credentials onComplete:^{
 
+        // Sanity check: The session may be closed before the end of store opening.
+        if (!matrixRestClient)
+        {
+            return;
+        }
+
         // Can we start on data from the MXStore?
         if (_store.isPermanent && _store.eventStreamToken && 0 < _store.rooms.count)
         {
