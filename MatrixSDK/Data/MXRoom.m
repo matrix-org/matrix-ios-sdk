@@ -19,6 +19,8 @@
 #import "MXSession.h"
 #import "MXTools.h"
 
+#import "MXError.h"
+
 @interface MXRoom ()
 {
     // The list of event listeners (`MXEventListener`) in this room
@@ -368,6 +370,20 @@
                                                 complete();
                                                 
                                             } failure:^(NSError *error) {
+                                                // Check whether the pagination end is reached
+                                                MXError *mxError = [[MXError alloc] initWithNSError:error];
+                                                if (mxError && [mxError.error isEqualToString:kMXErrCodeStringInvalidToken])
+                                                {
+                                                    // We run out of items
+                                                    [mxSession.store storeHasReachedHomeServerPaginationEndForRoom:_state.roomId andValue:YES];
+                                                    
+                                                    NSLog(@"[MXRoom] paginateBackMessages: pagination end has been reached");
+                                                    
+                                                    // Ignore the error
+                                                    complete();
+                                                    return;
+                                                }
+                                                
                                                 NSLog(@"[MXRoom] paginateBackMessages error: %@", error);
                                                 failure(error);
                                             }];

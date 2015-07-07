@@ -34,6 +34,8 @@ FOUNDATION_EXPORT NSString *const kMXErrCodeStringUserInUse;
 FOUNDATION_EXPORT NSString *const kMXErrCodeStringRoomInUse;
 FOUNDATION_EXPORT NSString *const kMXErrCodeStringBadPagination;
 
+FOUNDATION_EXPORT NSString *const kMXErrCodeStringInvalidToken;
+
 /**
  `MXError` represents an error sent by the home server.
  MXErrors are encapsulated in NSError. This class is an helper to create NSError or extract MXError from NSError.
