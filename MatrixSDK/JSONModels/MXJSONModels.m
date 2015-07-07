@@ -78,6 +78,40 @@ NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
 
 @end
 
+@implementation MXSyncResponse
+
+// Automatically convert array in private_user_data to an array of MXEvents.
++ (NSValueTransformer *)privateUserDataJSONTransformer
+{
+    return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXEvent.class];
+}
+
+// Automatically convert array in public_user_data to an array of MXEvents.
++ (NSValueTransformer *)publicUserDataJSONTransformer
+{
+    return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXEvent.class];
+}
+
+// Automatically convert array in rooms to an array of MXRoomSyncResponse.
++ (NSValueTransformer *)roomsJSONTransformer
+{
+    return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXRoomSyncResponse.class];
+}
+
+@end
+
+@implementation MXRoomEventBatch
+@end
+
+@implementation MXRoomSyncResponse
+
++ (NSValueTransformer *)eventsJSONTransformer
+{
+    return [NSValueTransformer mtl_JSONDictionaryTransformerWithModelClass:MXRoomEventBatch.class];
+}
+
+@end
+
 
 @implementation MXRoomMemberEventContent
 

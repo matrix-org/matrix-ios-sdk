@@ -78,6 +78,21 @@ typedef enum : NSUInteger
     MXThumbnailingMethodCrop
 } MXThumbnailingMethod;
 
+/**
+ `MXRestClientAPIVersion` lists the existing C-S API versions.
+ */
+typedef enum : NSUInteger
+{
+    /**
+     C-S API V1.
+     */
+    MXRestClientAPIVersion1,
+    
+    /**
+     C-S API V2.
+     */
+    MXRestClientAPIVersion2
+} MXRestClientAPIVersion;
 
 /**
  `MXRestClient` makes requests to Matrix servers.
@@ -756,6 +771,36 @@ typedef enum : NSUInteger
                          success:(void (^)(MXPaginationResponse *paginatedResponse))success
                          failure:(void (^)(NSError *error))failure;
 
+/**
+ Get/Update this user's current state.
+ Get/Update information for all rooms (including messages and state events) from the given token (if any).
+ 
+ @param limit the maximum number of messages to return by room.
+ @param gap should the server drop events and do a non-delta sync for rooms whose limit is exceeded.
+ @param sort the optional sort order of messages in the room, *only honoured during an initial sync*. default: "timeline,asc".
+ @param token the token to stream from (nil in case of initial sync).
+ @param serverTimeout the maximum time in ms to wait for an event.
+ @param clientTimeout the maximum time in ms the SDK must wait for the server response.
+ @param setPresence optional parameter to tell the server not to interpret this request as a client (device) as coming online (and as a convenience method for overriding presence state in general - e.g. setting straight to "idle" rather than having to PUT to /users/{userId}/devices/{deviceId}/presence.  It's meaningless to set "online" as that's the default behaviour on the server.)
+ @param backfill true/false (default true): do we want to pull in state from federation if we have less than <limit> events available for a room?
+ @param filters optional filter parameters (see https://github.com/matrix-org/matrix-doc/blob/client_server_v2_http_api/drafts/cs-v2-http-api.rst).
+ 
+ @param success A block object called when the operation succeeds. It provides a `MXSyncResponse` object.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation *)syncWithLimit:(NSInteger)limit
+                               gap:(BOOL)gap
+                              sort:(NSString*)sort
+                             since:(NSString*)token
+                     serverTimeout:(NSUInteger)serverTimeout
+                     clientTimeout:(NSUInteger)clientTimeout
+                       setPresence:(NSString*)setPresence
+                          backfill:(BOOL)backfill
+                           filters:(NSDictionary*)filters
+                           success:(void (^)(MXSyncResponse *syncResponse))success
+                           failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Directory operations
 /**

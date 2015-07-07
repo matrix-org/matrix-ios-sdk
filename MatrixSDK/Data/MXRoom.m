@@ -34,11 +34,6 @@
 
 - (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession2
 {
-    return [self initWithRoomId:roomId andMatrixSession:mxSession2 andJSONData:nil];
-}
-
-- (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession2 andJSONData:(NSDictionary*)JSONData
-{
     self = [super init];
     if (self)
     {
@@ -46,37 +41,50 @@
         
         eventListeners = [NSMutableArray array];
         
-        _state = [[MXRoomState alloc] initWithRoomId:roomId andMatrixSession:mxSession2 andJSONData:JSONData andDirection:YES];
-
+        _state = [[MXRoomState alloc] initWithRoomId:roomId andMatrixSession:mxSession2 andDirection:YES];
+        
         _typingUsers = [NSArray array];
         
-        if ([JSONData objectForKey:@"inviter"])
-        {
-            // On an initialSync, an home server does not provide the room invitation under an event form
-            // whereas it does when getting the information from a live event (see SPEC-54).
-            // In order to make the SDK behaves the same in both cases, when getting the data from an initialSync,
-            // create and handle a fake membership event that contains the same information.
-            
-            // In both case, the application will see a MXRoom which MXRoomState.membership is invite. The MXRoomState
-            // will contain only one MXRoomMember who is the logged in user. MXRoomMember.originUserId is the inviter.
-            MXEvent *fakeMembershipEvent = [MXEvent modelFromJSON:@{
-                                                                    @"type": kMXEventTypeStringRoomMember,
-                                                                    @"room_id": roomId,
-                                                                    @"content": @{
-                                                                            @"membership": kMXMembershipStringInvite
-                                                                            },
-                                                                    @"user_id": JSONData[@"inviter"],
-                                                                    @"state_key": mxSession.matrixRestClient.credentials.userId,
-                                                                    @"origin_server_ts": [NSNumber numberWithLongLong:kMXUndefinedTimestamp]
-                                                                    }];
-            
-            [self handleMessage:fakeMembershipEvent direction:MXEventDirectionSync pagFrom:@"END"];
+        _isSync = NO;
+    }
+    return self;
+}
 
-            [mxSession.store storeEventForRoom:roomId event:fakeMembershipEvent direction:MXEventDirectionSync];
-        }
-
+- (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession2 andJSONData:(NSDictionary*)JSONData
+{
+    self = [self initWithRoomId:roomId andMatrixSession:mxSession2];
+    if (self)
+    {
         if (JSONData)
         {
+            _state = [[MXRoomState alloc] initWithRoomId:roomId andMatrixSession:mxSession2 andJSONData:JSONData andDirection:YES];
+        
+            if ([JSONData objectForKey:@"inviter"])
+            {
+                // On an initialSync, an home server does not provide the room invitation under an event form
+                // whereas it does when getting the information from a live event (see SPEC-54).
+                // In order to make the SDK behaves the same in both cases, when getting the data from an initialSync,
+                // create and handle a fake membership event that contains the same information.
+                
+                // In both case, the application will see a MXRoom which MXRoomState.membership is invite. The MXRoomState
+                // will contain only one MXRoomMember who is the logged in user. MXRoomMember.originUserId is the inviter.
+                MXEvent *fakeMembershipEvent = [MXEvent modelFromJSON:@{
+                                                                        @"type": kMXEventTypeStringRoomMember,
+                                                                        @"room_id": roomId,
+                                                                        @"content": @{
+                                                                                @"membership": kMXMembershipStringInvite
+                                                                                },
+                                                                        @"user_id": JSONData[@"inviter"],
+                                                                        @"state_key": mxSession.matrixRestClient.credentials.userId,
+                                                                        @"origin_server_ts": [NSNumber numberWithLongLong:kMXUndefinedTimestamp]
+                                                                        }];
+                
+                [self handleMessage:fakeMembershipEvent direction:MXEventDirectionSync];
+                [self handleStateEvent:fakeMembershipEvent direction:MXEventDirectionSync];
+                
+                [mxSession.store storeEventForRoom:roomId event:fakeMembershipEvent direction:MXEventDirectionSync];
+            }
+            
             _isSync = YES;
         }
     }
@@ -100,6 +108,20 @@
     return self;
 }
 
+- (void)resetData
+{
+    _isSync = NO;
+    
+    // Reset room state
+    _state = [[MXRoomState alloc] initWithRoomId:_state.roomId andMatrixSession:mxSession andDirection:YES];
+    backState = nil;
+    
+    // Reset typing notif
+    _typingUsers = [NSArray array];
+    
+    // Flush existing data in store
+    [mxSession.store deleteRoom:_state.roomId];
+}
 
 #pragma mark - Properties getters implementation
 - (MXEvent *)lastMessageWithTypeIn:(NSArray*)types
@@ -116,6 +138,78 @@
     || ![mxSession.store hasReachedHomeServerPaginationEndForRoom:_state.roomId];
 }
 
+#pragma mark - sync v2
+
+- (void)handleRoomSyncResponse:(MXRoomSyncResponse *)roomSyncResponse
+{
+    // Check whether the limit has been exceeded for the number of events
+    if (roomSyncResponse.limited)
+    {
+        // Flush the existing data for this room but keep the listener
+        [self resetData];
+        
+        // TODO GFO notify listener about the gap
+    }
+    
+    _state.isPublic = roomSyncResponse.published;
+    
+    // Is it an initial sync for this room?
+    BOOL isRoomInitialSync = (roomSyncResponse.limited || !mxSession.store.eventStreamToken);
+    
+    // Handle events
+    NSInteger index = roomSyncResponse.events.batch.count;
+    while (index--)
+    {
+        NSString *eventId = [roomSyncResponse.events.batch objectAtIndex:index];
+        NSDictionary *eventDesc = [roomSyncResponse.eventMap objectForKey:eventId];
+        
+        MXEvent *event = [MXEvent modelFromJSON:eventDesc];
+        event.eventId = eventId;
+        
+        if (isRoomInitialSync)
+        {
+            [self handleMessage:event direction:MXEventDirectionSync];
+            
+            // Store the event
+            [mxSession.store storeEventForRoom:_state.roomId event:event direction:MXEventDirectionSync];
+        }
+        else
+        {
+            // Make room data digest the live event
+            [self handleLiveEvent:event];
+        }
+    }
+    
+    // Finalize initial sync
+    if (isRoomInitialSync)
+    {
+        // Store where to start back pagination (if pagination is possible)
+        if (roomSyncResponse.limited)
+        {
+            [mxSession.store storePaginationTokenOfRoom:_state.roomId andToken:roomSyncResponse.events.prevBatch];
+        }
+        
+        // Get the current room state from state events
+        for (NSInteger index = 0; index < roomSyncResponse.state.count; index++)
+        {
+            NSString *eventId = [roomSyncResponse.state objectAtIndex:index];
+            NSDictionary *eventDesc = [roomSyncResponse.eventMap objectForKey:eventId];
+            
+            MXEvent *event = [MXEvent modelFromJSON:eventDesc];
+            event.eventId = eventId;
+            
+            [self handleStateEvent:event direction:MXEventDirectionSync];
+        }
+        
+        // Update store with new room state when all state event have been processed
+        if ([mxSession.store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
+        {
+            [mxSession.store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
+        }
+    }
+    
+    _isSync = YES;
+}
 
 #pragma mark - Messages handling
 - (void)handleMessages:(MXPaginationResponse*)roomMessages
@@ -134,7 +228,7 @@
             MXEvent *storedEvent = [mxSession.store eventWithEventId:event.eventId inRoom:_state.roomId];
             if (!storedEvent)
             {
-                [self handleMessage:event direction:direction pagFrom:roomMessages.start];
+                [self handleMessage:event direction:direction];
 
                 // Store the event
                 [mxSession.store storeEventForRoom:_state.roomId event:event direction:MXEventDirectionBackwards];
@@ -154,7 +248,7 @@
             MXEvent *storedEvent = [mxSession.store eventWithEventId:event.eventId inRoom:_state.roomId];
             if (!storedEvent)
             {
-                [self handleMessage:event direction:direction pagFrom:roomMessages.end];
+                [self handleMessage:event direction:direction];
 
                 // Store the event
                 [mxSession.store storeEventForRoom:_state.roomId event:event direction:direction];
@@ -166,10 +260,10 @@
     }
 }
 
-- (void)handleMessage:(MXEvent*)event direction:(MXEventDirection)direction pagFrom:(NSString*)pagFrom
+- (void)handleMessage:(MXEvent*)event direction:(MXEventDirection)direction
 {
-    // Consider here state event
-    if (event.isState)
+    // Consider here state event (except during initial sync)
+    if (event.isState && (direction != MXEventDirectionSync))
     {
         [self handleStateEvent:event direction:direction];
         
@@ -197,7 +291,8 @@
 {
     NSArray *events = [MXEvent modelsFromJSON:roomStateEvents];
     
-    for (MXEvent *event in events) {
+    for (MXEvent *event in events)
+    {
         [self handleStateEvent:event direction:direction];
     }
 
@@ -225,9 +320,9 @@
         if (MXEventTypeRoomMember == event.eventType)
         {
             // Update MXUser data
-            MXUser *user = [mxSession getOrCreateUser:event.userId];
+            MXUser *user = [mxSession getOrCreateUser:event.sender];
 
-            MXRoomMember *roomMember = [_state memberWithUserId:event.userId];
+            MXRoomMember *roomMember = [_state memberWithUserId:event.sender];
             if (roomMember && MXMembershipJoin == roomMember.membership)
             {
                 [user updateWithRoomMemberEvent:event roomMember:roomMember];
@@ -283,7 +378,7 @@
                 [self handleRedaction:event];
             }
             
-            [self handleMessage:event direction:MXEventDirectionForwards pagFrom:nil];
+            [self handleMessage:event direction:MXEventDirectionForwards];
             
             // Store the event
             [mxSession.store storeEventForRoom:_state.roomId event:event direction:MXEventDirectionForwards];
@@ -327,7 +422,7 @@
         for (NSInteger i = messagesFromStoreCount - 1; i >= 0; i--)
         {
             MXEvent *event = messagesFromStore[i];
-            [self handleMessage:event direction:MXEventDirectionBackwards pagFrom:nil];
+            [self handleMessage:event direction:MXEventDirectionBackwards];
         }
 
         numItems -= messagesFromStoreCount;

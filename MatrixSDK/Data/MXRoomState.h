@@ -62,7 +62,7 @@
 /**
  The visibility of the room: public or, else, private
  */
-@property (nonatomic, readonly) BOOL isPublic;
+@property (nonatomic) BOOL isPublic;
 
 /**
  The aliases of this room.
@@ -93,12 +93,25 @@
  */
 @property (nonatomic, readonly) MXMembership membership;
 
-
 /**
  Create a `MXRoomState` instance.
  
  @param roomId the room id to the room.
- @param mxSession the mxSession to the home server. It is used to get information about the user
+ @param matrixSession the session to the home server. It is used to get information about the user
+ currently connected to the home server.
+ @paran isLive the direction in which this `MXRoomState` instance will be updated.
+ 
+ @return The newly-initialized MXRoomState.
+ */
+- (id)initWithRoomId:(NSString*)roomId
+    andMatrixSession:(MXSession*)matrixSession
+        andDirection:(BOOL)isLive;
+
+/**
+ Create a `MXRoomState` instance during initial server sync based on C-S API v1.
+ 
+ @param roomId the room id to the room.
+ @param matrixSession the mxSession to the home server. It is used to get information about the user
                   currently connected to the home server.
  @param JSONData the JSON object obtained at the initialSync of the room. It is used to store 
                   additional metadata coming outside state events.
@@ -107,7 +120,7 @@
  @return The newly-initialized MXRoomState.
  */
 - (id)initWithRoomId:(NSString*)roomId
-    andMatrixSession:(MXSession*)mxSession
+    andMatrixSession:(MXSession*)matrixSession
          andJSONData:(NSDictionary*)JSONData
         andDirection:(BOOL)isLive;
 

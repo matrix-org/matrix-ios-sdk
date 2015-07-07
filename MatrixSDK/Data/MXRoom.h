@@ -91,6 +91,13 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 
 - (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession andStateEvents:(NSArray*)stateEvents;
 
+/**
+ Update room data according to the provided sync response (since API v2)
+ 
+ @param roomSyncResponse information to sync the room with the home server data
+ */
+- (void)handleRoomSyncResponse:(MXRoomSyncResponse*)roomSyncResponse;
+
 - (void)handleMessages:(MXPaginationResponse*)roomMessages
              direction:(MXEventDirection)direction
          isTimeOrdered:(BOOL)isTimeOrdered;

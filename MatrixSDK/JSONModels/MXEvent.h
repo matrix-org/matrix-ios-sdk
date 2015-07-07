@@ -154,7 +154,12 @@ typedef enum : NSUInteger
 @property (nonatomic) NSString *roomId;
 
 /**
- Contains the fully-qualified ID of the user who sent this event.
+ Contains the fully-qualified ID of the user who sent this event (since API v2).
+ */
+@property (nonatomic) NSString *sender;
+
+/**
+Contains the fully-qualified ID of the user who sent this event (deprecated since API v2).
  */
 @property (nonatomic) NSString *userId;
 

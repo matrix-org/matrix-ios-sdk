@@ -172,7 +172,8 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
 @property (nonatomic, readonly) MXCallManager *callManager;
 
 
-#pragma mark - options
+#pragma mark - Options
+
 /**
  When the SDK starts on data stored in MXStore, this option indicates if it must load
  users presences information before calling the `onServerSyncDone` block of [MXSession start].
@@ -185,6 +186,17 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
  Default is NO.
  */
 @property (nonatomic) BOOL loadPresenceBeforeCompletingSessionStart;
+
+/**
+ The C-S API version used for server sync.
+ 
+ It may be set as long as the session state is MXSessionStateInitialised.
+ Else, by default, the C-S API v2 will be used for sync.
+ */
+@property (nonatomic) MXRestClientAPIVersion syncAPIVersion;
+
+
+#pragma mark - Class methods
 
 /**
  Create a MXSession instance.
@@ -247,6 +259,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
 
 /**
  Pause the session events stream.
+ Caution: this action is ignored if the session state is not MXSessionStateRunning.
  
  No more live events will be received by the listeners.
  */
