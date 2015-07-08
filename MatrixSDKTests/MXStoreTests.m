@@ -710,6 +710,8 @@
         NSUInteger pagEnd = eventCount;
         eventCount = 0;
         [room resetBackState];
+        [mxSession.store deleteRoom:room.state.roomId];
+        
         [room paginateBackMessages:pagEnd complete:^{
 
             XCTAssertEqual(eventCount, pagEnd, @"We should get as many messages as requested");
@@ -878,14 +880,12 @@
     }];
 }
 
-/* Disabled while SYN-162 is not fixed
- - (void)testMXNoStorePaginateWhenReachingTheExactBeginningOfTheRoom
- {
-     [self doTestWithMXNoStore:^(MXRoom *room) {
-         [self checkPaginateWhenReachingTheExactBeginningOfTheRoom:room];
-     }];
- }
- */
+- (void)testMXNoStorePaginateWhenReachingTheExactBeginningOfTheRoom
+{
+    [self doTestWithMXNoStore:^(MXRoom *room) {
+        [self checkPaginateWhenReachingTheExactBeginningOfTheRoom:room];
+    }];
+}
 
 
 #pragma mark - MXMemoryStore
@@ -986,14 +986,12 @@
     }];
 }
 
-/* Disabled while SYN-162 is not fixed
- - (void)testMXMemoryStorePaginateWhenReachingTheExactBeginningOfTheRoom
- {
-     [self doTestWithMXMemoryStore:^(MXRoom *room) {
-         [self checkPaginateWhenReachingTheExactBeginningOfTheRoom:room];
-     }];
- }
- */
+- (void)testMXMemoryStorePaginateWhenReachingTheExactBeginningOfTheRoom
+{
+    [self doTestWithMXMemoryStore:^(MXRoom *room) {
+        [self checkPaginateWhenReachingTheExactBeginningOfTheRoom:room];
+    }];
+}
 
 - (void)testMXMemoryStoreRedactEvent
 {
@@ -1286,14 +1284,12 @@
     }];
 }
 
-/* Disabled while SYN-162 is not fixed
- - (void)testMXFileStorePaginateWhenReachingTheExactBeginningOfTheRoom
- {
-     [self doTestWithMXFileStore:^(MXRoom *room) {
-         [self checkPaginateWhenReachingTheExactBeginningOfTheRoom:room];
-     }];
- }
- */
+- (void)testMXFileStorePaginateWhenReachingTheExactBeginningOfTheRoom
+{
+    [self doTestWithMXFileStore:^(MXRoom *room) {
+        [self checkPaginateWhenReachingTheExactBeginningOfTheRoom:room];
+    }];
+}
 
 - (void)testMXFileStoreRedactEvent
 {
