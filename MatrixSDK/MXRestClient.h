@@ -778,6 +778,7 @@ typedef enum : NSUInteger
  Upload content to HomeServer
  
  @param data the content to upload.
+ @param filename optional filename
  @param mimetype the content type (image/jpeg, audio/aac...)
  @param timeoutInSeconds the maximum time in ms the SDK must wait for the server response.
  
@@ -788,11 +789,12 @@ typedef enum : NSUInteger
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)uploadContent:(NSData *)data
-                     mimeType:(NSString *)mimeType
-                      timeout:(NSTimeInterval)timeoutInSeconds
-                      success:(void (^)(NSString *url))success
-                      failure:(void (^)(NSError *error))failure
-               uploadProgress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))uploadProgress;
+                         filename:(NSString*)filename
+                         mimeType:(NSString *)mimeType
+                          timeout:(NSTimeInterval)timeoutInSeconds
+                          success:(void (^)(NSString *url))success
+                          failure:(void (^)(NSError *error))failure
+                   uploadProgress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))uploadProgress;
 
 /**
  Resolve a Matrix media content URI (in the form of "mxc://...") into an HTTP URL.

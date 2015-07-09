@@ -1253,6 +1253,7 @@ failure:(void (^)(NSError *error))failure
 
 #pragma mark - Media Repository API
 - (MXHTTPOperation*) uploadContent:(NSData *)data
+                          filename:(NSString*)filename
                           mimeType:(NSString *)mimeType
                            timeout:(NSTimeInterval)timeoutInSeconds
                            success:(void (^)(NSString *url))success
@@ -1263,9 +1264,15 @@ failure:(void (^)(NSError *error))failure
     NSString* path = [NSString stringWithFormat:@"%@/upload", kMXContentPrefixPath];
     NSDictionary *headers = @{@"Content-Type": mimeType};
     
+    NSDictionary *parameters;
+    if (filename.length)
+    {
+        parameters = @{@"filename": filename};
+    }
+    
     return [httpClient requestWithMethod:@"POST"
                                     path:path
-                              parameters:nil
+                              parameters:parameters
                                     data:data
                                  headers:headers
                                  timeout:timeoutInSeconds
