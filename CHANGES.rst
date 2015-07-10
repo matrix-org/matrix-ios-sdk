@@ -1,3 +1,31 @@
+Changes in Matrix iOS SDK in 0.5.0 (2015-07-10)
+===============================================
+
+Improvements:
+ * MXSession: Optimise one-to-one rooms handling (keep update a list of these
+   rooms).
+ * MXRoomState: Optimise power level computation during room members handling.
+ * MXEvent: Define "m.file" as new message type.
+ * MXRestClient: Notification Pushers - Support remote notifications for
+   multiple account on the same device.
+ * MXRestClient: Add filename in url parameters in case of file upload
+   (image/video).
+ 
+Bug fixes:
+ * MXFileStore: SYIOS-121 - Support multi-account.
+ * MXFileStore: Fixed store that does not work on some devices. The reason was
+   the store was not able to create the file hierarchy.
+ * MXSession: Post MXSessionStateInitialised state change at the end of
+   initialisation.
+ * MXSession: Post state change event only in case of actual change.
+ * Bug Fix: App crashes on attachment notifications.
+ * Bug Fix: App crash - The session may be closed before the end of store
+   opening.
+ * Bug Fix: Blank room - Handle correctly end of pagination error during back
+   pagination (see SYN-162 - Bogus pagination token when the beginning of the
+   room history is reached).
+
+
 Changes in Matrix iOS SDK in 0.4.0 (2015-04-23)
 ===============================================
 
