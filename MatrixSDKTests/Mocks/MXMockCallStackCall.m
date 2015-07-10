@@ -41,7 +41,7 @@
     });
 }
 
-- (void)terminate
+- (void)end
 {
 }
 

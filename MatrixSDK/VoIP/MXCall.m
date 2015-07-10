@@ -382,7 +382,7 @@
     }
 
     // Terminate the call at the stack level
-    [callStackCall terminate];
+    [callStackCall end];
 
     [self setState:MXCallStateEnded reason:event];
 }
@@ -404,7 +404,7 @@
         if (!_isIncoming)
         {
             // Terminate the call at the stack level we initiated
-            [callStackCall terminate];
+            [callStackCall end];
         }
 
         // Send the notif that the call expired to the app

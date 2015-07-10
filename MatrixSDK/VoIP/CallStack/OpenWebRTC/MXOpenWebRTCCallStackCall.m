@@ -79,7 +79,7 @@
     }
 }
 
-- (void)terminate
+- (void)end
 {
     [openWebRTCHandler terminateCall];
 

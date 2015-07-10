@@ -37,7 +37,7 @@
 /**
  Terminate the call.
  */
-- (void)terminate;
+- (void)end;
 
 /**
  Add TURN or STUN servers.
