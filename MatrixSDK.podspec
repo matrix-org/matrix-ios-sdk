@@ -22,8 +22,6 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/matrix-org/matrix-ios-sdk.git", :tag => "v0.5.0" }
   s.source_files  = "MatrixSDK", "MatrixSDK/**/*.{h,m}"
 
-  s.xcconfig = { "GCC_PREPROCESSOR_DEFINITIONS" => "DISABLE_OPENWEBRTC_TO_BUID_TESTS=1" }
-
   s.requires_arc  = true
 
   s.dependency 'AFNetworking', '~> 2.5.2'
