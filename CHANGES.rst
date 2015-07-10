@@ -1,9 +1,6 @@
 Changes in Matrix iOS SDK in 0.5.0 (2015-07-10)
 ===============================================
 
------
- SDK
------
 Improvements:
  * MXSession: Optimise one-to-one rooms handling (keep update a list of these
    rooms).
