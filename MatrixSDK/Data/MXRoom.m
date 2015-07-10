@@ -19,10 +19,10 @@
 #import "MXSession.h"
 #import "MXTools.h"
 
+#import "MXError.h"
+
 @interface MXRoom ()
 {
-    MXSession *mxSession;
-
     // The list of event listeners (`MXEventListener`) in this room
     NSMutableArray *eventListeners;
 
@@ -32,6 +32,7 @@
 @end
 
 @implementation MXRoom
+@synthesize mxSession;
 
 - (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession2
 {
@@ -369,6 +370,20 @@
                                                 complete();
                                                 
                                             } failure:^(NSError *error) {
+                                                // Check whether the pagination end is reached
+                                                MXError *mxError = [[MXError alloc] initWithNSError:error];
+                                                if (mxError && [mxError.error isEqualToString:kMXErrCodeStringInvalidToken])
+                                                {
+                                                    // We run out of items
+                                                    [mxSession.store storeHasReachedHomeServerPaginationEndForRoom:_state.roomId andValue:YES];
+                                                    
+                                                    NSLog(@"[MXRoom] paginateBackMessages: pagination end has been reached");
+                                                    
+                                                    // Ignore the error
+                                                    complete();
+                                                    return;
+                                                }
+                                                
                                                 NSLog(@"[MXRoom] paginateBackMessages error: %@", error);
                                                 failure(error);
                                             }];
@@ -511,6 +526,13 @@
                         failure:(void (^)(NSError *error))failure
 {
     return [mxSession.matrixRestClient redactEvent:eventId inRoom:_state.roomId reason:reason success:success failure:failure];
+}
+
+
+#pragma mark - Voice over IP
+- (MXCall *)placeCallWithVideo:(BOOL)video
+{
+    return [mxSession.callManager placeCallInRoom:_state.roomId withVideo:video];
 }
 
 

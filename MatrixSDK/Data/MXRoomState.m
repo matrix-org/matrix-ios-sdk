@@ -33,10 +33,16 @@
     
     // kMXRoomVisibilityPublic or kMXRoomVisibilityPrivate
     MXRoomVisibility visibility;
+    
+    /**
+     Maximum power level observed in power level list
+     */
+    NSUInteger maxPowerLevel;
 }
 @end
 
 @implementation MXRoomState
+@synthesize powerLevels;
 
 - (id)initWithRoomId:(NSString*)roomId
     andMatrixSession:(MXSession*)mxSession2
@@ -123,19 +129,6 @@
 - (NSArray *)members
 {
     return [members allValues];
-}
-
-- (MXRoomPowerLevels *)powerLevels
-{
-    MXRoomPowerLevels *powerLevels = nil;
-    
-    // Get it from the state events
-    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomPowerLevels];
-    if (event && [self contentOfEvent:event])
-    {
-        powerLevels = [MXRoomPowerLevels modelFromJSON:[self contentOfEvent:event]];
-    }
-    return powerLevels;
 }
 
 - (BOOL)isPublic
@@ -370,7 +363,21 @@
             }
             break;
         }
+        case MXEventTypeRoomPowerLevels:
+        {
+            powerLevels = [MXRoomPowerLevels modelFromJSON:[self contentOfEvent:event]];
+            // Compute max power level
+            maxPowerLevel = powerLevels.usersDefault;
+            NSArray *array = powerLevels.users.allValues;
+            for (NSNumber *powerLevel in array) {
+                NSUInteger level = [powerLevel unsignedIntegerValue];
+                if (level > maxPowerLevel) {
+                    maxPowerLevel = level;
+                }
+            }
             
+            // Do not break here to store the event into the stateEvents dictionary.
+        }
         default:
             // Store other states into the stateEvents dictionary.
             // The latest value overwrite the previous one.
@@ -460,20 +467,8 @@
     
     // Ignore banned and left (kicked) members
     if (member.membership != MXMembershipLeave && member.membership != MXMembershipBan) {
-        int maxLevel = 0;
-        for (NSString *powerLevel in self.powerLevels.users.allValues) {
-            int level = [powerLevel intValue];
-            if (level > maxLevel) {
-                maxLevel = level;
-            }
-        }
-        NSUInteger userPowerLevel = [self.powerLevels powerLevelOfUserWithUserID:userId];
-        float userPowerLevelFloat = 0.0;
-        if (userPowerLevel) {
-            userPowerLevelFloat = userPowerLevel;
-        }
-        
-        powerLevel = maxLevel ? userPowerLevelFloat / maxLevel : 1;
+        float userPowerLevelFloat = [powerLevels powerLevelOfUserWithUserID:userId];
+        powerLevel = maxPowerLevel ? userPowerLevelFloat / maxPowerLevel : 1;
     }
     
     return powerLevel;

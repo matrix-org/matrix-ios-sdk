@@ -710,6 +710,8 @@
         NSUInteger pagEnd = eventCount;
         eventCount = 0;
         [room resetBackState];
+        [mxSession.store deleteRoom:room.state.roomId];
+        
         [room paginateBackMessages:pagEnd complete:^{
 
             XCTAssertEqual(eventCount, pagEnd, @"We should get as many messages as requested");
@@ -878,14 +880,12 @@
     }];
 }
 
-/* Disabled while SYN-162 is not fixed
- - (void)testMXNoStorePaginateWhenReachingTheExactBeginningOfTheRoom
- {
-     [self doTestWithMXNoStore:^(MXRoom *room) {
-         [self checkPaginateWhenReachingTheExactBeginningOfTheRoom:room];
-     }];
- }
- */
+- (void)testMXNoStorePaginateWhenReachingTheExactBeginningOfTheRoom
+{
+    [self doTestWithMXNoStore:^(MXRoom *room) {
+        [self checkPaginateWhenReachingTheExactBeginningOfTheRoom:room];
+    }];
+}
 
 
 #pragma mark - MXMemoryStore
@@ -986,14 +986,12 @@
     }];
 }
 
-/* Disabled while SYN-162 is not fixed
- - (void)testMXMemoryStorePaginateWhenReachingTheExactBeginningOfTheRoom
- {
-     [self doTestWithMXMemoryStore:^(MXRoom *room) {
-         [self checkPaginateWhenReachingTheExactBeginningOfTheRoom:room];
-     }];
- }
- */
+- (void)testMXMemoryStorePaginateWhenReachingTheExactBeginningOfTheRoom
+{
+    [self doTestWithMXMemoryStore:^(MXRoom *room) {
+        [self checkPaginateWhenReachingTheExactBeginningOfTheRoom:room];
+    }];
+}
 
 - (void)testMXMemoryStoreRedactEvent
 {
@@ -1286,14 +1284,12 @@
     }];
 }
 
-/* Disabled while SYN-162 is not fixed
- - (void)testMXFileStorePaginateWhenReachingTheExactBeginningOfTheRoom
- {
-     [self doTestWithMXFileStore:^(MXRoom *room) {
-         [self checkPaginateWhenReachingTheExactBeginningOfTheRoom:room];
-     }];
- }
- */
+- (void)testMXFileStorePaginateWhenReachingTheExactBeginningOfTheRoom
+{
+    [self doTestWithMXFileStore:^(MXRoom *room) {
+        [self checkPaginateWhenReachingTheExactBeginningOfTheRoom:room];
+    }];
+}
 
 - (void)testMXFileStoreRedactEvent
 {
@@ -1654,6 +1650,60 @@
         } failure:^(NSError *error) {
             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
         }];
+    }];
+}
+
+- (void)testMXFileStoreMultiAccount
+{
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+
+    [sharedData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation2) {
+
+        expectation = expectation2;
+
+        MXFileStore *bobStore1 = [[MXFileStore alloc] init];
+        [bobStore1 openWithCredentials:sharedData.bobCredentials onComplete:^{
+
+            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+            [mxSession setStore:bobStore1 success:^{
+                [mxSession start:^{
+
+                    [mxSession close];
+                    mxSession = nil;
+
+                    MXFileStore *bobStore2 = [[MXFileStore alloc] init];
+                    [bobStore2 openWithCredentials:sharedData.bobCredentials onComplete:^{
+
+                        MXFileStore *aliceStore = [[MXFileStore alloc] init];
+                        [aliceStore openWithCredentials:sharedData.aliceCredentials onComplete:^{
+
+                            MXFileStore *bobStore3 = [[MXFileStore alloc] init];
+                            [bobStore3 openWithCredentials:sharedData.bobCredentials onComplete:^{
+
+                                XCTAssertEqual(bobStore2.diskUsage, bobStore3.diskUsage, @"Bob's store must still have the same content");
+                                XCTAssertEqual(bobStore2.rooms.count, bobStore3.rooms.count);
+
+                                [expectation fulfill];
+
+                            } failure:^(NSError *error) {
+                                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                            }];
+                        } failure:^(NSError *error) {
+                            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                        }];
+                    } failure:^(NSError *error) {
+                        NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                    }];
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                }];
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+
     }];
 }
 

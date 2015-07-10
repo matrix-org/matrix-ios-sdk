@@ -135,6 +135,12 @@
     if (accessToken && (0 == [path rangeOfString:@"access_token="].length))
     {
         path = [path stringByAppendingString:[NSString stringWithFormat:@"?access_token=%@", accessToken]];
+        
+        // Trick: in case of upload the filename (if any) is added in url param
+        if (uploadProgress && parameters[@"filename"])
+        {
+            path = [path stringByAppendingString:[NSString stringWithFormat:@"&filename=%@", parameters[@"filename"]]];
+        }
     }
     
     NSString *URLString = [[NSURL URLWithString:path relativeToURL:httpManager.baseURL] absoluteString];

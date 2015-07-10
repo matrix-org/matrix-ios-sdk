@@ -36,6 +36,13 @@
 		323E0C581A2F6E7D00A31D73 /* MXRoomPowerLevels.m in Sources */ = {isa = PBXBuildFile; fileRef = 323E0C561A2F6E7D00A31D73 /* MXRoomPowerLevels.m */; };
 		323E0C5B1A306D7A00A31D73 /* MXEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 323E0C591A306D7A00A31D73 /* MXEvent.h */; };
 		323E0C5C1A306D7A00A31D73 /* MXEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 323E0C5A1A306D7A00A31D73 /* MXEvent.m */; };
+		324095221AFA432F00D81C97 /* MXCallStackCall.h in Headers */ = {isa = PBXBuildFile; fileRef = 3240951E1AFA432F00D81C97 /* MXCallStackCall.h */; };
+		324095231AFA432F00D81C97 /* MXOpenWebRTCCallStackCall.h in Headers */ = {isa = PBXBuildFile; fileRef = 324095201AFA432F00D81C97 /* MXOpenWebRTCCallStackCall.h */; };
+		324095241AFA432F00D81C97 /* MXOpenWebRTCCallStackCall.m in Sources */ = {isa = PBXBuildFile; fileRef = 324095211AFA432F00D81C97 /* MXOpenWebRTCCallStackCall.m */; };
+		3245A7501AF7B2930001D8A7 /* MXCall.h in Headers */ = {isa = PBXBuildFile; fileRef = 3245A74C1AF7B2930001D8A7 /* MXCall.h */; };
+		3245A7511AF7B2930001D8A7 /* MXCall.m in Sources */ = {isa = PBXBuildFile; fileRef = 3245A74D1AF7B2930001D8A7 /* MXCall.m */; };
+		3245A7521AF7B2930001D8A7 /* MXCallManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 3245A74E1AF7B2930001D8A7 /* MXCallManager.h */; };
+		3245A7531AF7B2930001D8A7 /* MXCallManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 3245A74F1AF7B2930001D8A7 /* MXCallManager.m */; };
 		3246BDC51A1A0789000A7D62 /* MXRoomStateDynamicTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3246BDC41A1A0789000A7D62 /* MXRoomStateDynamicTests.m */; };
 		325653831A2E14ED00CC0423 /* MXStoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 325653821A2E14ED00CC0423 /* MXStoreTests.m */; };
 		3265CB381A14C43E00E24B2F /* MXRoomState.h in Headers */ = {isa = PBXBuildFile; fileRef = 3265CB361A14C43E00E24B2F /* MXRoomState.h */; };
@@ -58,6 +65,9 @@
 		328DDEC11A07E57E008C7DC8 /* MXJSONModelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 328DDEC01A07E57E008C7DC8 /* MXJSONModelTests.m */; };
 		3291D4D41A68FFEB00C3BA41 /* MXFileRoomStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 3291D4D21A68FFEB00C3BA41 /* MXFileRoomStore.h */; };
 		3291D4D51A68FFEB00C3BA41 /* MXFileRoomStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 3291D4D31A68FFEB00C3BA41 /* MXFileRoomStore.m */; };
+		329571931B0240CE00ABB3BA /* MXVoIPTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 329571921B0240CE00ABB3BA /* MXVoIPTests.m */; };
+		329571991B024D2B00ABB3BA /* MXMockCallStack.m in Sources */ = {isa = PBXBuildFile; fileRef = 329571961B024D2B00ABB3BA /* MXMockCallStack.m */; };
+		3295719A1B024D2B00ABB3BA /* MXMockCallStackCall.m in Sources */ = {isa = PBXBuildFile; fileRef = 329571981B024D2B00ABB3BA /* MXMockCallStackCall.m */; };
 		329FB1751A0A3A1600A5E88E /* MXRoomMember.h in Headers */ = {isa = PBXBuildFile; fileRef = 329FB1731A0A3A1600A5E88E /* MXRoomMember.h */; };
 		329FB1761A0A3A1600A5E88E /* MXRoomMember.m in Sources */ = {isa = PBXBuildFile; fileRef = 329FB1741A0A3A1600A5E88E /* MXRoomMember.m */; };
 		329FB1791A0A74B100A5E88E /* MXTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 329FB1771A0A74B100A5E88E /* MXTools.h */; };
@@ -66,6 +76,9 @@
 		329FB17F1A0B665800A5E88E /* MXUser.h in Headers */ = {isa = PBXBuildFile; fileRef = 329FB17D1A0B665800A5E88E /* MXUser.h */; };
 		329FB1801A0B665800A5E88E /* MXUser.m in Sources */ = {isa = PBXBuildFile; fileRef = 329FB17E1A0B665800A5E88E /* MXUser.m */; };
 		32A27D1F19EC335300BAFADE /* MXRoomTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A27D1E19EC335300BAFADE /* MXRoomTests.m */; };
+		32BED28F1B00A23F00E668FE /* MXCallStack.h in Headers */ = {isa = PBXBuildFile; fileRef = 32BED28E1B00A23F00E668FE /* MXCallStack.h */; };
+		32BED2921B00A38700E668FE /* MXOpenWebRTCCallStack.h in Headers */ = {isa = PBXBuildFile; fileRef = 32BED2901B00A38700E668FE /* MXOpenWebRTCCallStack.h */; };
+		32BED2931B00A38700E668FE /* MXOpenWebRTCCallStack.m in Sources */ = {isa = PBXBuildFile; fileRef = 32BED2911B00A38700E668FE /* MXOpenWebRTCCallStack.m */; };
 		32C6F93319DD814400EA4E9C /* MatrixSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C6F93219DD814400EA4E9C /* MatrixSDK.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32CAB1071A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.h in Headers */ = {isa = PBXBuildFile; fileRef = 32CAB1051A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.h */; };
 		32CAB1081A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.m in Sources */ = {isa = PBXBuildFile; fileRef = 32CAB1061A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.m */; };
@@ -128,6 +141,13 @@
 		323E0C561A2F6E7D00A31D73 /* MXRoomPowerLevels.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRoomPowerLevels.m; sourceTree = "<group>"; };
 		323E0C591A306D7A00A31D73 /* MXEvent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXEvent.h; sourceTree = "<group>"; };
 		323E0C5A1A306D7A00A31D73 /* MXEvent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXEvent.m; sourceTree = "<group>"; };
+		3240951E1AFA432F00D81C97 /* MXCallStackCall.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallStackCall.h; sourceTree = "<group>"; };
+		324095201AFA432F00D81C97 /* MXOpenWebRTCCallStackCall.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXOpenWebRTCCallStackCall.h; sourceTree = "<group>"; };
+		324095211AFA432F00D81C97 /* MXOpenWebRTCCallStackCall.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXOpenWebRTCCallStackCall.m; sourceTree = "<group>"; };
+		3245A74C1AF7B2930001D8A7 /* MXCall.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCall.h; sourceTree = "<group>"; };
+		3245A74D1AF7B2930001D8A7 /* MXCall.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCall.m; sourceTree = "<group>"; };
+		3245A74E1AF7B2930001D8A7 /* MXCallManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallManager.h; sourceTree = "<group>"; };
+		3245A74F1AF7B2930001D8A7 /* MXCallManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCallManager.m; sourceTree = "<group>"; };
 		3246BDC41A1A0789000A7D62 /* MXRoomStateDynamicTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRoomStateDynamicTests.m; sourceTree = "<group>"; };
 		325653821A2E14ED00CC0423 /* MXStoreTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXStoreTests.m; sourceTree = "<group>"; };
 		3265CB361A14C43E00E24B2F /* MXRoomState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRoomState.h; sourceTree = "<group>"; };
@@ -151,6 +171,11 @@
 		328DDEC01A07E57E008C7DC8 /* MXJSONModelTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXJSONModelTests.m; sourceTree = "<group>"; };
 		3291D4D21A68FFEB00C3BA41 /* MXFileRoomStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXFileRoomStore.h; sourceTree = "<group>"; };
 		3291D4D31A68FFEB00C3BA41 /* MXFileRoomStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXFileRoomStore.m; sourceTree = "<group>"; };
+		329571921B0240CE00ABB3BA /* MXVoIPTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXVoIPTests.m; sourceTree = "<group>"; };
+		329571951B024D2B00ABB3BA /* MXMockCallStack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXMockCallStack.h; sourceTree = "<group>"; };
+		329571961B024D2B00ABB3BA /* MXMockCallStack.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXMockCallStack.m; sourceTree = "<group>"; };
+		329571971B024D2B00ABB3BA /* MXMockCallStackCall.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXMockCallStackCall.h; sourceTree = "<group>"; };
+		329571981B024D2B00ABB3BA /* MXMockCallStackCall.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXMockCallStackCall.m; sourceTree = "<group>"; };
 		329FB1731A0A3A1600A5E88E /* MXRoomMember.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRoomMember.h; sourceTree = "<group>"; };
 		329FB1741A0A3A1600A5E88E /* MXRoomMember.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRoomMember.m; sourceTree = "<group>"; };
 		329FB1771A0A74B100A5E88E /* MXTools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXTools.h; sourceTree = "<group>"; };
@@ -159,6 +184,9 @@
 		329FB17D1A0B665800A5E88E /* MXUser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXUser.h; sourceTree = "<group>"; };
 		329FB17E1A0B665800A5E88E /* MXUser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXUser.m; sourceTree = "<group>"; };
 		32A27D1E19EC335300BAFADE /* MXRoomTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = MXRoomTests.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
+		32BED28E1B00A23F00E668FE /* MXCallStack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallStack.h; sourceTree = "<group>"; };
+		32BED2901B00A38700E668FE /* MXOpenWebRTCCallStack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXOpenWebRTCCallStack.h; sourceTree = "<group>"; };
+		32BED2911B00A38700E668FE /* MXOpenWebRTCCallStack.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXOpenWebRTCCallStack.m; sourceTree = "<group>"; };
 		32C6F92D19DD814400EA4E9C /* MatrixSDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MatrixSDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		32C6F93119DD814400EA4E9C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		32C6F93219DD814400EA4E9C /* MatrixSDK.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MatrixSDK.h; sourceTree = "<group>"; };
@@ -285,6 +313,39 @@
 			path = MXFileStore;
 			sourceTree = "<group>";
 		};
+		3240951D1AFA432F00D81C97 /* CallStack */ = {
+			isa = PBXGroup;
+			children = (
+				3240951F1AFA432F00D81C97 /* OpenWebRTC */,
+				32BED28E1B00A23F00E668FE /* MXCallStack.h */,
+				3240951E1AFA432F00D81C97 /* MXCallStackCall.h */,
+			);
+			path = CallStack;
+			sourceTree = "<group>";
+		};
+		3240951F1AFA432F00D81C97 /* OpenWebRTC */ = {
+			isa = PBXGroup;
+			children = (
+				32BED2901B00A38700E668FE /* MXOpenWebRTCCallStack.h */,
+				32BED2911B00A38700E668FE /* MXOpenWebRTCCallStack.m */,
+				324095201AFA432F00D81C97 /* MXOpenWebRTCCallStackCall.h */,
+				324095211AFA432F00D81C97 /* MXOpenWebRTCCallStackCall.m */,
+			);
+			path = OpenWebRTC;
+			sourceTree = "<group>";
+		};
+		3245A74B1AF7B2930001D8A7 /* VoIP */ = {
+			isa = PBXGroup;
+			children = (
+				3240951D1AFA432F00D81C97 /* CallStack */,
+				3245A74C1AF7B2930001D8A7 /* MXCall.h */,
+				3245A74D1AF7B2930001D8A7 /* MXCall.m */,
+				3245A74E1AF7B2930001D8A7 /* MXCallManager.h */,
+				3245A74F1AF7B2930001D8A7 /* MXCallManager.m */,
+			);
+			path = VoIP;
+			sourceTree = "<group>";
+		};
 		3281E8B219E42DFE00976E1A /* JSONModels */ = {
 			isa = PBXGroup;
 			children = (
@@ -298,6 +359,17 @@
 				323E0C561A2F6E7D00A31D73 /* MXRoomPowerLevels.m */,
 			);
 			path = JSONModels;
+			sourceTree = "<group>";
+		};
+		329571941B024D2B00ABB3BA /* Mocks */ = {
+			isa = PBXGroup;
+			children = (
+				329571951B024D2B00ABB3BA /* MXMockCallStack.h */,
+				329571961B024D2B00ABB3BA /* MXMockCallStack.m */,
+				329571971B024D2B00ABB3BA /* MXMockCallStackCall.h */,
+				329571981B024D2B00ABB3BA /* MXMockCallStackCall.m */,
+			);
+			path = Mocks;
 			sourceTree = "<group>";
 		};
 		32C6F92319DD814400EA4E9C = {
@@ -327,6 +399,7 @@
 				3281E8B219E42DFE00976E1A /* JSONModels */,
 				32DC15CA1A8CF7AE006F9AD3 /* NotificationCenter */,
 				320DFDD619DD99B60068622A /* Utils */,
+				3245A74B1AF7B2930001D8A7 /* VoIP */,
 				32C6F93219DD814400EA4E9C /* MatrixSDK.h */,
 				320DFDD419DD99B60068622A /* MXRestClient.h */,
 				320DFDD519DD99B60068622A /* MXRestClient.m */,
@@ -350,6 +423,7 @@
 		32C6F93919DD814400EA4E9C /* MatrixSDKTests */ = {
 			isa = PBXGroup;
 			children = (
+				329571941B024D2B00ABB3BA /* Mocks */,
 				327E37B81A977810007F026F /* MXLoggerTests.m */,
 				32C6F93A19DD814400EA4E9C /* Supporting Files */,
 				3281E8A619E41A2000976E1A /* MatrixSDKTestsData.h */,
@@ -370,6 +444,7 @@
 				325653821A2E14ED00CC0423 /* MXStoreTests.m */,
 				323C5A071A70E53500FB0549 /* MXToolsTests.m */,
 				32DC15D61A8DFF0D006F9AD3 /* MXNotificationCenterTests.m */,
+				329571921B0240CE00ABB3BA /* MXVoIPTests.m */,
 			);
 			path = MatrixSDKTests;
 			sourceTree = "<group>";
@@ -440,20 +515,25 @@
 				3281E8B719E42DFE00976E1A /* MXJSONModel.h in Headers */,
 				323E0C5B1A306D7A00A31D73 /* MXEvent.h in Headers */,
 				322360521A8E610500A3CA81 /* MXPushRuleDisplayNameCondtionChecker.h in Headers */,
+				3245A7521AF7B2930001D8A7 /* MXCallManager.h in Headers */,
 				3291D4D41A68FFEB00C3BA41 /* MXFileRoomStore.h in Headers */,
 				32C6F93319DD814400EA4E9C /* MatrixSDK.h in Headers */,
 				323E0C571A2F6E7D00A31D73 /* MXRoomPowerLevels.h in Headers */,
+				3245A7501AF7B2930001D8A7 /* MXCall.h in Headers */,
 				32114A851A262CE000FF2EC4 /* MXStore.h in Headers */,
 				329FB1791A0A74B100A5E88E /* MXTools.h in Headers */,
 				3281E8B919E42DFE00976E1A /* MXJSONModels.h in Headers */,
 				32CAB1071A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.h in Headers */,
 				32CAB10B1A925B41008C5BB9 /* MXHTTPOperation.h in Headers */,
+				32BED2921B00A38700E668FE /* MXOpenWebRTCCallStack.h in Headers */,
 				320DFDE419DD99B60068622A /* MXRestClient.h in Headers */,
 				3265CB381A14C43E00E24B2F /* MXRoomState.h in Headers */,
 				32DC15D41A8CF874006F9AD3 /* MXPushRuleEventMatchConditionChecker.h in Headers */,
 				3220094519EFBF30008DE41D /* MXSessionEventListener.h in Headers */,
+				32BED28F1B00A23F00E668FE /* MXCallStack.h in Headers */,
 				329FB1751A0A3A1600A5E88E /* MXRoomMember.h in Headers */,
 				320DFDE019DD99B60068622A /* MXSession.h in Headers */,
+				324095221AFA432F00D81C97 /* MXCallStackCall.h in Headers */,
 				3233606F1A403A0D0071A488 /* MXFileStore.h in Headers */,
 				327137271A24D50A00DB6757 /* MXMyUser.h in Headers */,
 				3220093819EFA4C9008DE41D /* MXEventListener.h in Headers */,
@@ -461,6 +541,7 @@
 				329FB17F1A0B665800A5E88E /* MXUser.h in Headers */,
 				320DFDE219DD99B60068622A /* MXError.h in Headers */,
 				327E37B61A974F75007F026F /* MXLogger.h in Headers */,
+				324095231AFA432F00D81C97 /* MXOpenWebRTCCallStackCall.h in Headers */,
 				320DFDE619DD99B60068622A /* MXHTTPClient.h in Headers */,
 				320DFDDB19DD99B60068622A /* MXRoom.h in Headers */,
 			);
@@ -599,8 +680,11 @@
 			files = (
 				322360531A8E610500A3CA81 /* MXPushRuleDisplayNameCondtionChecker.m in Sources */,
 				323E0C581A2F6E7D00A31D73 /* MXRoomPowerLevels.m in Sources */,
+				32BED2931B00A38700E668FE /* MXOpenWebRTCCallStack.m in Sources */,
 				32DC15D51A8CF874006F9AD3 /* MXPushRuleEventMatchConditionChecker.m in Sources */,
 				32CAB1081A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.m in Sources */,
+				324095241AFA432F00D81C97 /* MXOpenWebRTCCallStackCall.m in Sources */,
+				3245A7511AF7B2930001D8A7 /* MXCall.m in Sources */,
 				329FB1761A0A3A1600A5E88E /* MXRoomMember.m in Sources */,
 				323360701A403A0D0071A488 /* MXFileStore.m in Sources */,
 				32D7767E1A27860600FC4AA2 /* MXMemoryStore.m in Sources */,
@@ -614,6 +698,7 @@
 				323E0C5C1A306D7A00A31D73 /* MXEvent.m in Sources */,
 				32CAB10C1A925B41008C5BB9 /* MXHTTPOperation.m in Sources */,
 				3281E8BA19E42DFE00976E1A /* MXJSONModels.m in Sources */,
+				3245A7531AF7B2930001D8A7 /* MXCallManager.m in Sources */,
 				3220094619EFBF30008DE41D /* MXSessionEventListener.m in Sources */,
 				327E37B71A974F75007F026F /* MXLogger.m in Sources */,
 				320DFDE719DD99B60068622A /* MXHTTPClient.m in Sources */,
@@ -633,18 +718,21 @@
 			buildActionMask = 2147483647;
 			files = (
 				32DC15D71A8DFF0D006F9AD3 /* MXNotificationCenterTests.m in Sources */,
+				329571991B024D2B00ABB3BA /* MXMockCallStack.m in Sources */,
 				3281E8A819E41A2000976E1A /* MatrixSDKTestsData.m in Sources */,
 				32114A7F1A24E15500FF2EC4 /* MXMyUserTests.m in Sources */,
 				323C5A081A70E53500FB0549 /* MXToolsTests.m in Sources */,
 				3281E89E19E299C000976E1A /* MXErrorTests.m in Sources */,
 				3265CB3B1A151C3800E24B2F /* MXRoomStateTests.m in Sources */,
 				325653831A2E14ED00CC0423 /* MXStoreTests.m in Sources */,
+				3295719A1B024D2B00ABB3BA /* MXMockCallStackCall.m in Sources */,
 				3281E8A019E2CC1200976E1A /* MXHTTPClientTests.m in Sources */,
 				321809B919EEBF3000377451 /* MXEventTests.m in Sources */,
 				328DDEC11A07E57E008C7DC8 /* MXJSONModelTests.m in Sources */,
 				3281E8A219E2DE4300976E1A /* MXSessionTests.m in Sources */,
 				327137241A24BDDE00DB6757 /* MXUserTests.m in Sources */,
 				327E37B91A977810007F026F /* MXLoggerTests.m in Sources */,
+				329571931B0240CE00ABB3BA /* MXVoIPTests.m in Sources */,
 				32A27D1F19EC335300BAFADE /* MXRoomTests.m in Sources */,
 				32D8CAC219DEE6ED002AF8A0 /* MXRestClientNoAuthAPITests.m in Sources */,
 				32FCAB4D19E578860049C555 /* MXRestClientTests.m in Sources */,
@@ -691,6 +779,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
+					"DISABLE_OPENWEBRTC_TO_BUID_TESTS=1",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -732,6 +821,7 @@
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_PREPROCESSOR_DEFINITIONS = "DISABLE_OPENWEBRTC_TO_BUID_TESTS=1";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
@@ -756,9 +846,14 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"COCOAPODS=1",
+					"DISABLE_OPENWEBRTC_TO_BUID_TESTS=1",
+				);
 				INFOPLIST_FILE = MatrixSDK/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -773,9 +868,14 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"COCOAPODS=1",
+					"DISABLE_OPENWEBRTC_TO_BUID_TESTS=1",
+				);
 				INFOPLIST_FILE = MatrixSDK/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -813,6 +913,7 @@
 					"$(SDKROOT)/Developer/Library/Frameworks",
 					"$(inherited)",
 				);
+				GCC_PREPROCESSOR_DEFINITIONS = "";
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,

@@ -117,7 +117,7 @@
     {
         MXEvent *event = messages[i];
 
-        if (NSNotFound != [types indexOfObject:event.type])
+        if (!types || (NSNotFound != [types indexOfObject:event.type]))
         {
             lastMessage = event;
             break;

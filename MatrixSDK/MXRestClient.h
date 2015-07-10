@@ -100,6 +100,11 @@ typedef enum : NSUInteger
 @property (nonatomic, readonly) MXCredentials *credentials;
 
 /**
+ The homeserver suffix (for example ":matrix.org"). Available only when credentials have been set.
+ */
+@property (nonatomic, readonly) NSString *homeserverSuffix;
+
+/**
  The identity server.
  By default, it points to the defined home server. If needed, change it by setting
  this property.
@@ -237,15 +242,16 @@ typedef enum : NSUInteger
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)setPusherWithPushkey:(NSString *)pushkey
-                                kind:(NSObject *)kind
-                               appId:(NSString *)appId
-                      appDisplayName:(NSString *)appDisplayName
-                   deviceDisplayName:(NSString *)deviceDisplayName
-                          profileTag:(NSString *)profileTag
-                                lang:(NSString *)lang
-                                data:(NSDictionary *)data
-                             success:(void (^)())success
-                             failure:(void (^)(NSError *error))failure;
+                                    kind:(NSObject *)kind
+                                   appId:(NSString *)appId
+                          appDisplayName:(NSString *)appDisplayName
+                       deviceDisplayName:(NSString *)deviceDisplayName
+                              profileTag:(NSString *)profileTag
+                                    lang:(NSString *)lang
+                                    data:(NSDictionary *)data
+                                  append:(BOOL)append
+                                 success:(void (^)())success
+                                 failure:(void (^)(NSError *error))failure;
 
 /**
  Get all push notifications rules.
@@ -772,6 +778,7 @@ typedef enum : NSUInteger
  Upload content to HomeServer
  
  @param data the content to upload.
+ @param filename optional filename
  @param mimetype the content type (image/jpeg, audio/aac...)
  @param timeoutInSeconds the maximum time in ms the SDK must wait for the server response.
  
@@ -782,11 +789,12 @@ typedef enum : NSUInteger
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)uploadContent:(NSData *)data
-                     mimeType:(NSString *)mimeType
-                      timeout:(NSTimeInterval)timeoutInSeconds
-                      success:(void (^)(NSString *url))success
-                      failure:(void (^)(NSError *error))failure
-               uploadProgress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))uploadProgress;
+                         filename:(NSString*)filename
+                         mimeType:(NSString *)mimeType
+                          timeout:(NSTimeInterval)timeoutInSeconds
+                          success:(void (^)(NSString *url))success
+                          failure:(void (^)(NSError *error))failure
+                   uploadProgress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))uploadProgress;
 
 /**
  Resolve a Matrix media content URI (in the form of "mxc://...") into an HTTP URL.
@@ -914,5 +922,19 @@ typedef enum : NSUInteger
             clientSecret:(NSString*)clientSecret
                  success:(void (^)(NSDictionary *JSONResponse))success
                  failure:(void (^)(NSError *error))failure;
+
+
+#pragma mark - VoIP API
+/**
+ Get the TURN server configuration advised by the homeserver.
+
+ @param success A block object called when the operation succeeds. It provides
+                a `MXTurnServerResponse` object. It is nil if the HS has TURN config
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)turnServer:(void (^)(MXTurnServerResponse *turnServerResponse))success
+                       failure:(void (^)(NSError *error))failure;
 
 @end

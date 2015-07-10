@@ -22,11 +22,18 @@
 #import "MXSessionEventListener.h"
 #import "MXStore.h"
 #import "MXNotificationCenter.h"
+#import "MXCallManager.h"
 
 /**
  `MXSessionState` represents the states in the life cycle of a MXSession instance.
  */
-typedef enum : NSUInteger {
+typedef enum : NSUInteger
+{
+    /**
+     The session is closed (or not initialized yet).
+     */
+    MXSessionStateClosed,
+    
     /**
      The session has just been created.
      */
@@ -65,12 +72,7 @@ typedef enum : NSUInteger {
     /**
      The session has been paused.
      */
-    MXSessionStatePaused,
-
-    /**
-     The session has been closed and cannot be reused.
-     */
-    MXSessionStateClosed
+    MXSessionStatePaused
 } MXSessionState;
 
 
@@ -160,9 +162,14 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
 @property (nonatomic, readonly) id<MXStore> store;
 
 /**
- The module that manages push notificiations.
+ The module that manages push notifications.
  */
 @property (nonatomic, readonly) MXNotificationCenter *notificationCenter;
+
+/**
+ The module that manages incoming and outgoing calls.
+ */
+@property (nonatomic, readonly) MXCallManager *callManager;
 
 
 #pragma mark - options
@@ -330,6 +337,13 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
  @return an array of MXRooms.
  */
 - (NSArray*)rooms;
+
+/**
+ Get the existing private OneToOne room with this user.
+
+ @return the MXRoom instance (nil if the room does not exist yet).
+ */
+- (MXRoom *)privateOneToOneRoomWithUserId:(NSString*)userId;
 
 
 #pragma mark - Matrix users

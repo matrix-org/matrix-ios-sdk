@@ -387,3 +387,74 @@ NSString *const kMXPushRuleConditionStringRoomMemberCount       = @"room_member_
 }
 
 @end
+
+
+#pragma mark - Voice over IP
+
+@implementation MXCallSessionDescription
+@end
+
+@implementation MXCallInviteEventContent
+
++ (NSValueTransformer *)offerJSONTransformer
+{
+    return [NSValueTransformer mtl_JSONDictionaryTransformerWithModelClass:MXCallSessionDescription.class];
+}
+
+@end
+
+@implementation MXCallCandidate
+@end
+
+@implementation MXCallCandidatesEventContent
+
++ (NSValueTransformer *)candidateJSONTransformer
+{
+    return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXCallCandidate.class];
+}
+@end
+
+@implementation MXCallAnswerEventContent
+
++ (NSValueTransformer *)answerJSONTransformer
+{
+    return [NSValueTransformer mtl_JSONDictionaryTransformerWithModelClass:MXCallSessionDescription.class];
+}
+
+@end
+
+@implementation MXCallHangupEventContent
+@end
+
+@implementation MXTurnServerResponse
+
+- (instancetype)init
+{
+    self = [super init];
+    if (self)
+    {
+        _ttlExpirationLocalTs = -1;
+    }
+    return self;
+}
+
+- (void)setTtl:(NSUInteger)ttl
+{
+    if (-1 == _ttlExpirationLocalTs)
+    {
+        NSTimeInterval d = [[NSDate date] timeIntervalSince1970];
+        _ttlExpirationLocalTs = (d + ttl) * 1000 ;
+    }
+}
+
+- (NSUInteger)ttl
+{
+    NSUInteger ttl = 0;
+    if (-1 != _ttlExpirationLocalTs)
+    {
+        ttl = (NSUInteger)(_ttlExpirationLocalTs / 1000 - (uint64_t)[[NSDate date] timeIntervalSince1970]);
+    }
+    return ttl;
+}
+
+@end
