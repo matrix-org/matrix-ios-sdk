@@ -294,6 +294,8 @@ failure:(void (^)(NSError *error))failure
                                   append:(BOOL)append
                                  success:(void (^)())success
                                  failure:(void (^)(NSError *))failure {
+    // Fill the request parameters on demand
+    // Caution: parameters are JSON serialized in http body, we must use a NSNumber created with a boolean for append value.
     NSDictionary *parameters = @{
                                  @"pushkey": pushkey,
                                  @"kind": kind,
@@ -328,6 +330,101 @@ failure:(void (^)(NSError *error))failure
                                  }
                                  failure:^(NSError *error) {
                                      failure(error);
+                                 }];
+}
+
+- (MXHTTPOperation *)enablePushRule:(NSString*)ruleId
+                              scope:(NSString*)scope
+                               kind:(MXPushRuleKind)kind
+                             enable:(BOOL)enable
+                            success:(void (^)())success
+                            failure:(void (^)(NSError *error))failure
+{
+    NSString *kindString;
+    switch (kind)
+    {
+        case MXPushRuleKindOverride:
+            kindString = @"override";
+            break;
+        case MXPushRuleKindContent:
+            kindString = @"content";
+            break;
+        case MXPushRuleKindRoom:
+            kindString = @"room";
+            break;
+        case MXPushRuleKindSender:
+            kindString = @"sender";
+            break;
+        case MXPushRuleKindUnderride:
+            kindString = @"underride";
+            break;
+    }
+    
+    NSDictionary *headers = @{@"Content-Type": @"application/json"};
+    
+    NSString *enabled = enable ? @"true": @"false";
+    
+    return [httpClient requestWithMethod:@"PUT"
+                                    path:[NSString stringWithFormat:@"v1/pushrules/%@/%@/%@/enabled", scope, kindString, ruleId]
+                              parameters:nil
+                                    data:[enabled dataUsingEncoding:NSUTF8StringEncoding]
+                                 headers:headers
+                                 timeout:-1
+                          uploadProgress:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success)
+                                     {
+                                         success();
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                 }];
+}
+
+- (MXHTTPOperation *)removePushRule:(NSString*)ruleId
+                              scope:(NSString*)scope
+                               kind:(MXPushRuleKind)kind
+                            success:(void (^)())success
+                            failure:(void (^)(NSError *error))failure
+{
+    NSString *kindString;
+    switch (kind)
+    {
+        case MXPushRuleKindOverride:
+            kindString = @"override";
+            break;
+        case MXPushRuleKindContent:
+            kindString = @"content";
+            break;
+        case MXPushRuleKindRoom:
+            kindString = @"room";
+            break;
+        case MXPushRuleKindSender:
+            kindString = @"sender";
+            break;
+        case MXPushRuleKindUnderride:
+            kindString = @"underride";
+            break;
+    }
+    
+    return [httpClient requestWithMethod:@"DELETE"
+                                    path:[NSString stringWithFormat:@"v1/pushrules/%@/%@/%@", scope, kindString, ruleId]
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success)
+                                     {
+                                         success();
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
                                  }];
 }
 
@@ -799,9 +896,9 @@ failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"v1/rooms/%@/typing/%@", roomId, self.credentials.userId];
     
-    // All query parameters are optional. Fill the request parameters on demand
+    // Fill the request parameters on demand
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
-    
+    // Caution: parameters are JSON serialized in http body, we must use a NSNumber created with a boolean for typing value.
     parameters[@"typing"] = [NSNumber numberWithBool:typing];
     
     if (-1 != timeout)

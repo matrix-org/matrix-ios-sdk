@@ -21,6 +21,11 @@
 #import "MXPushRuleDisplayNameCondtionChecker.h"
 #import "MXPushRuleRoomMemberCountConditionChecker.h"
 
+NSString *const kMXNotificationCenterWillUpdateRules = @"kMXNotificationCenterWillUpdateRules";
+NSString *const kMXNotificationCenterDidUpdateRules = @"kMXNotificationCenterDidUpdateRules";
+NSString *const kMXNotificationCenterDidFailRulesUpdate = @"kMXNotificationCenterDidFailRulesUpdate";
+NSString *const kMXNotificationCenterErrorKey = @"kMXNotificationCenterErrorKey";
+
 @interface MXNotificationCenter ()
 {
     /**
@@ -263,6 +268,112 @@
         {
             listener(event, roomState, rule);
         }
+    }
+}
+
+#pragma mark - Push rules handling
+- (void)removeRule:(MXPushRule*)pushRule
+{
+    if (pushRule)
+    {
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXNotificationCenterWillUpdateRules object:self userInfo:nil];
+        
+        [mxSession.matrixRestClient removePushRule:pushRule.ruleId scope:pushRule.scope kind:pushRule.kind success:^{
+            
+            // Remove locally the rule
+            
+            // Caution: only global rules are handled presenly
+            for (NSUInteger index = 0; index < flatRules.count; index++)
+            {
+                MXPushRule *rule = flatRules[index];
+                
+                if ([rule.ruleId isEqualToString:pushRule.ruleId])
+                {
+                    [flatRules removeObjectAtIndex:index];
+                    
+                    NSMutableArray *updatedArray;
+                    switch (rule.kind)
+                    {
+                        case MXPushRuleKindOverride:
+                        {
+                            updatedArray = [NSMutableArray arrayWithArray:_rules.global.override];
+                            [updatedArray removeObject:rule];
+                            _rules.global.override = updatedArray;
+                            break;
+                        }
+                        case MXPushRuleKindContent:
+                        {
+                            updatedArray = [NSMutableArray arrayWithArray:_rules.global.content];
+                            [updatedArray removeObject:rule];
+                            _rules.global.content = updatedArray;
+                            break;
+                        }
+                        case MXPushRuleKindRoom:
+                        {
+                            updatedArray = [NSMutableArray arrayWithArray:_rules.global.room];
+                            [updatedArray removeObject:rule];
+                            _rules.global.room = updatedArray;
+                            break;
+                        }
+                        case MXPushRuleKindSender:
+                        {
+                            updatedArray = [NSMutableArray arrayWithArray:_rules.global.sender];
+                            [updatedArray removeObject:rule];
+                            _rules.global.sender = updatedArray;
+                            break;
+                        }
+                        case MXPushRuleKindUnderride:
+                        {
+                            updatedArray = [NSMutableArray arrayWithArray:_rules.global.underride];
+                            [updatedArray removeObject:rule];
+                            _rules.global.underride = updatedArray;
+                            break;
+                        }
+                    }
+                    
+                    break;
+                }
+            }
+            
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXNotificationCenterDidUpdateRules object:self userInfo:nil];
+            
+        } failure:^(NSError *error) {
+            
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXNotificationCenterDidFailRulesUpdate object:self userInfo:@{kMXNotificationCenterErrorKey:error}];
+            
+        }];
+    }
+}
+
+- (void)enableRule:(MXPushRule*)pushRule isEnabled:(BOOL)enable
+{
+    if (pushRule)
+    {
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXNotificationCenterWillUpdateRules object:self userInfo:nil];
+        
+        [mxSession.matrixRestClient enablePushRule:pushRule.ruleId scope:pushRule.scope kind:pushRule.kind enable:enable success:^{
+            
+            // Update locally the rules
+            
+            // Caution: only global rules are handled presenly
+            for (NSUInteger index = 0; index < flatRules.count; index++)
+            {
+                MXPushRule *rule = flatRules[index];
+                
+                if ([rule.ruleId isEqualToString:pushRule.ruleId])
+                {
+                    rule.enabled = enable;
+                    break;
+                }
+            }
+            
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXNotificationCenterDidUpdateRules object:self userInfo:nil];
+            
+        } failure:^(NSError *error) {
+            
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXNotificationCenterDidFailRulesUpdate object:self userInfo:@{kMXNotificationCenterErrorKey:error}];
+            
+        }];
     }
 }
 

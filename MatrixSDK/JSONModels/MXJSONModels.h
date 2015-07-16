@@ -318,6 +318,11 @@ typedef enum : NSUInteger
      */
     @property (nonatomic) MXPushRuleKind kind;
 
+    /**
+     The scope of the push rule: either 'global' or 'device/<profile_tag>' to specify global rules or device rules for the given profile_tag.
+     */
+    @property (nonatomic) NSString *scope;
+
 @end
 
 /**
@@ -462,6 +467,12 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleConditionStringRoomMemberCount;
     @property (nonatomic) NSArray *underride;
 
 @end
+
+/**
+ Push rule scope definitions - String version
+ */
+FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringGlobal;
+FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 
 /**
  `MXPushRulesResponse` represents the response to the /pushRules/ request.

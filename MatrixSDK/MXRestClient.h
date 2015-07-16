@@ -258,11 +258,43 @@ typedef enum : NSUInteger
  
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
-
+ 
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)pushRules:(void (^)(MXPushRulesResponse *pushRules))success
-                  failure:(void (^)(NSError *error))failure;
+                      failure:(void (^)(NSError *error))failure;
+
+/**
+ Enable/Disable a push notification rule.
+ 
+ @param ruleId The identifier for the rule.
+ @param scope Either 'global' or 'device/<profile_tag>' to specify global rules or device rules for the given profile_tag.
+ @param kind The kind of rule, ie. 'override', 'underride', 'sender', 'room', 'content' (see MXPushRuleKind).
+ @param enable YES to enable
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (MXHTTPOperation *)enablePushRule:(NSString*)ruleId
+                              scope:(NSString*)scope
+                               kind:(MXPushRuleKind)kind
+                             enable:(BOOL)enable
+                            success:(void (^)())success
+                            failure:(void (^)(NSError *error))failure;
+
+/**
+ Remove a push notification rule.
+ 
+ @param ruleId The identifier for the rule.
+ @param scope Either 'global' or 'device/<profile_tag>' to specify global rules or device rules for the given profile_tag.
+ @param kind The kind of rule, ie. 'override', 'underride', 'sender', 'room', 'content' (see MXPushRuleKind).
+  @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (MXHTTPOperation *)removePushRule:(NSString*)ruleId
+                              scope:(NSString*)scope
+                               kind:(MXPushRuleKind)kind
+                            success:(void (^)())success
+                            failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Room operations
