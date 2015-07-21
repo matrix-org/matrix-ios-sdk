@@ -128,6 +128,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationRoomIdKey;
 FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
 
 
+#pragma mark - MXSession
 /**
  `MXSession` manages data and events from the home server
  It is responsible for:
@@ -168,23 +169,10 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
 
 /**
  The module that manages incoming and outgoing calls.
+ Nil by default. It is created when [self enableVoIPWithCallStack:] is called
  */
 @property (nonatomic, readonly) MXCallManager *callManager;
 
-
-#pragma mark - options
-/**
- When the SDK starts on data stored in MXStore, this option indicates if it must load
- users presences information before calling the `onServerSyncDone` block of [MXSession start].
-
- This requires to make a request to the home server which can be useless for some applications.
-
- If `loadPresenceBeforeCompletingSessionStart` is set to NO, the request will be done but it parralel
- with the call of the `onServerSyncDone` block.
-
- Default is NO.
- */
-@property (nonatomic) BOOL loadPresenceBeforeCompletingSessionStart;
 
 /**
  Create a MXSession instance.
@@ -195,22 +183,6 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
  @return The newly-initialized MXSession.
  */
 - (id)initWithMatrixRestClient:(MXRestClient*)mxRestClient;
-
-/*
- Define the Matrix storage component to use.
- 
- It must be set before calling [MXSession start].
- Else, by default, the MXSession instance will use MXNoStore as storage.
- 
- @param store the store to use for the session.
- @param onStoreDataReady A block object called when the SDK has loaded the data from the `MXStore`.
-                         The SDK is then able to serve this data to its client. Note the data may not
-                         be up-to-date. You need to call [MXSession start] to ensure the sync with
-                         the home server.
- @param failure A block object called when the operation fails.
- */
-- (void)setStore:(id<MXStore>)store success:(void (^)())onStoreDataReady
-                  failure:(void (^)(NSError *error))failure;
 
 /**
  Start fetching events from the home server.
@@ -267,6 +239,44 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
  No more data is retrieved from the home server.
  */
 - (void)close;
+
+
+#pragma mark - Options
+/*
+ Define the Matrix storage component to use.
+
+ It must be set before calling [MXSession start].
+ Else, by default, the MXSession instance will use MXNoStore as storage.
+
+ @param store the store to use for the session.
+ @param onStoreDataReady A block object called when the SDK has loaded the data from the `MXStore`.
+ The SDK is then able to serve this data to its client. Note the data may not
+ be up-to-date. You need to call [MXSession start] to ensure the sync with
+ the home server.
+ @param failure A block object called when the operation fails.
+ */
+- (void)setStore:(id<MXStore>)store success:(void (^)())onStoreDataReady
+         failure:(void (^)(NSError *error))failure;
+
+/**
+ When the SDK starts on data stored in MXStore, this option indicates if it must load
+ users presences information before calling the `onServerSyncDone` block of [MXSession start].
+
+ This requires to make a request to the home server which can be useless for some applications.
+
+ If `loadPresenceBeforeCompletingSessionStart` is set to NO, the request will be done but it parralel
+ with the call of the `onServerSyncDone` block.
+
+ Default is NO.
+ */
+@property (nonatomic) BOOL loadPresenceBeforeCompletingSessionStart;
+
+/**
+ Enable VoIP by setting the external VoIP stack to use.
+ 
+ @param callStack the VoIP call stack to use.
+ */
+- (void)enableVoIPWithCallStack:(id<MXCallStack>)callStack;
 
 
 #pragma mark - Rooms operations
