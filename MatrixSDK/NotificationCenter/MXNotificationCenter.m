@@ -26,6 +26,17 @@ NSString *const kMXNotificationCenterDidUpdateRules = @"kMXNotificationCenterDid
 NSString *const kMXNotificationCenterDidFailRulesUpdate = @"kMXNotificationCenterDidFailRulesUpdate";
 NSString *const kMXNotificationCenterErrorKey = @"kMXNotificationCenterErrorKey";
 
+NSString *const kMXNotificationCenterDisableAllNotificationsRuleID = @".m.rule.master";
+NSString *const kMXNotificationCenterContainUserNameRuleID = @".m.rule.contains_user_name";
+NSString *const kMXNotificationCenterContainDisplayNameRuleID = @".m.rule.contains_display_name";
+NSString *const kMXNotificationCenterOneToOneRoomRuleID = @".m.rule.room_one_to_one";
+NSString *const kMXNotificationCenterInviteMeRuleID = @".m.rule.invite_for_me";
+NSString *const kMXNotificationCenterMemberEventRuleID = @".m.rule.member_event";
+NSString *const kMXNotificationCenterCallRuleID = @".m.rule.call";
+NSString *const kMXNotificationCenterSuppressBotsNotificationsRuleID = @".m.rule.suppress_notices";
+NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.message";
+//NSString *const kMXNotificationCenterRuleID_fallback = @".m.rule.fallback";
+
 @interface MXNotificationCenter ()
 {
     /**
@@ -238,6 +249,18 @@ NSString *const kMXNotificationCenterErrorKey = @"kMXNotificationCenterErrorKey"
     return theRule;
 }
 
+- (MXPushRule*)ruleById:(NSString*)pushRuleId
+{
+    for (MXPushRule *rule in flatRules)
+    {
+        if ([rule.ruleId isEqualToString:pushRuleId])
+        {
+            return rule;
+        }
+    }
+    
+    return  nil;
+}
 
 #pragma mark - Push notification listeners
 - (id)listenToNotifications:(MXOnNotification)onNotification

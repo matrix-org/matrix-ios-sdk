@@ -54,6 +54,18 @@ extern NSString *const kMXNotificationCenterErrorKey;
  */
 typedef void (^MXOnNotification)(MXEvent *event, MXRoomState *roomState, MXPushRule *rule);
 
+/**
+ Predefined Rules ID
+ */
+extern NSString *const kMXNotificationCenterDisableAllNotificationsRuleID;
+extern NSString *const kMXNotificationCenterContainUserNameRuleID;
+extern NSString *const kMXNotificationCenterContainDisplayNameRuleID;
+extern NSString *const kMXNotificationCenterOneToOneRoomRuleID;
+extern NSString *const kMXNotificationCenterInviteMeRuleID;
+extern NSString *const kMXNotificationCenterMemberEventRuleID;
+extern NSString *const kMXNotificationCenterCallRuleID;
+extern NSString *const kMXNotificationCenterSuppressBotsNotificationsRuleID;
+extern NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID;
 
 /**
  `MXNotificationCenter` manages push notifications to alert the user.
@@ -123,6 +135,14 @@ typedef void (^MXOnNotification)(MXEvent *event, MXRoomState *roomState, MXPushR
  @return the push rule that matches the event. Nil if no match.
  */
 - (MXPushRule*)ruleMatchingEvent:(MXEvent*)event;
+
+/**
+ Get a push rule by using its id.
+ 
+ @param push rule id
+ @return the push rule that matches the id. Nil if no match.
+ */
+- (MXPushRule*)ruleById:(NSString*)pushRuleId;
 
 
 #pragma mark - Push notification listeners
