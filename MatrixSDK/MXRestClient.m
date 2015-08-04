@@ -50,6 +50,11 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
 NSString *const kMX3PIDMediumEmail  = @"email";
 NSString *const kMX3PIDMediumMSISDN = @"msisdn";
 
+/**
+ MXRestClient error domain
+ */
+NSString *const kMXRestClientErrorDomain = @"kMXRestClientErrorDomain";
+
 
 /**
  Authentication flow: register or login
@@ -489,7 +494,7 @@ failure:(void (^)(NSError *error))failure
     {
         if (failure)
         {
-            failure(nil);
+            failure([NSError errorWithDomain:kMXRestClientErrorDomain code:0 userInfo:@{@"error": @"Invalid argument"}]);
         }
         return nil;
     }

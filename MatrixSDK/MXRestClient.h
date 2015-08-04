@@ -57,6 +57,11 @@ typedef NSString* MX3PIDMedium;
 FOUNDATION_EXPORT NSString *const kMX3PIDMediumEmail;
 FOUNDATION_EXPORT NSString *const kMX3PIDMediumMSISDN;
 
+/**
+ MXRestClient error domain
+ */
+FOUNDATION_EXPORT NSString *const kMXRestClientErrorDomain;
+
 
 /**
  Methods of thumnailing supported by the Matrix content repository.
