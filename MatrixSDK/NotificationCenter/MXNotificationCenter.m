@@ -414,11 +414,11 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
     if ([self ruleById:ruleId])
     {
         NSInteger index = 1;
-        NSMutableString *mutableRuleId = [NSMutableString stringWithFormat:@"%@%d", ruleId, index];
+        NSMutableString *mutableRuleId = [NSMutableString stringWithFormat:@"%@%ld", ruleId, (long)index];
         while ([self ruleById:mutableRuleId])
         {
             index++;
-            mutableRuleId = [NSMutableString stringWithFormat:@"%@%d", ruleId, index];
+            mutableRuleId = [NSMutableString stringWithFormat:@"%@%ld", ruleId, (long)index];
         }
         ruleId = mutableRuleId;
     }
