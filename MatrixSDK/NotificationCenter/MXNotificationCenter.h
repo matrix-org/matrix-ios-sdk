@@ -25,6 +25,26 @@
 @class MXSession;
 
 /**
+ Posted when an existing push rule will be modified (pause, resume, delete) or when a new rule will be added.
+ The notification object is the MXNotificationCenter instance.
+ */
+extern NSString *const kMXNotificationCenterWillUpdateRules;
+
+/**
+ Posted when an existing push rule has been modified (pause, resume, delete) or when a new rule has been added.
+ The notification object is the MXNotificationCenter instance.
+ */
+extern NSString *const kMXNotificationCenterDidUpdateRules;
+
+/**
+ Posted when an action related to a push rule (add, pause, resume, delete) failed.
+ The notification object is the MXNotificationCenter instance. The `userInfo` dictionary may contain an `NSError` object under
+ the `kMXNotificationCenterErrorKey` key.
+ */
+extern NSString *const kMXNotificationCenterDidFailRulesUpdate;
+extern NSString *const kMXNotificationCenterErrorKey;
+
+/**
  Block called when an event must be notified to the user.
  The actions the SDK client must apply is provided in MXPushRule.actions.
 
@@ -34,6 +54,18 @@
  */
 typedef void (^MXOnNotification)(MXEvent *event, MXRoomState *roomState, MXPushRule *rule);
 
+/**
+ Predefined Rules ID
+ */
+extern NSString *const kMXNotificationCenterDisableAllNotificationsRuleID;
+extern NSString *const kMXNotificationCenterContainUserNameRuleID;
+extern NSString *const kMXNotificationCenterContainDisplayNameRuleID;
+extern NSString *const kMXNotificationCenterOneToOneRoomRuleID;
+extern NSString *const kMXNotificationCenterInviteMeRuleID;
+extern NSString *const kMXNotificationCenterMemberEventRuleID;
+extern NSString *const kMXNotificationCenterCallRuleID;
+extern NSString *const kMXNotificationCenterSuppressBotsNotificationsRuleID;
+extern NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID;
 
 /**
  `MXNotificationCenter` manages push notifications to alert the user.
@@ -104,6 +136,14 @@ typedef void (^MXOnNotification)(MXEvent *event, MXRoomState *roomState, MXPushR
  */
 - (MXPushRule*)ruleMatchingEvent:(MXEvent*)event;
 
+/**
+ Get a push rule by using its id.
+ 
+ @param push rule id
+ @return the push rule that matches the id. Nil if no match.
+ */
+- (MXPushRule*)ruleById:(NSString*)pushRuleId;
+
 
 #pragma mark - Push notification listeners
 /**
@@ -127,6 +167,61 @@ typedef void (^MXOnNotification)(MXEvent *event, MXRoomState *roomState, MXPushR
  Unregister all listeners.
  */
 - (void)removeAllListeners;
+
+#pragma mark - Push rules handling
+/**
+ Remove an existing push rule, see MXNotificationCenter notifications for operation result.
+ 
+ @param pushRule the push rule to remove
+ */
+- (void)removeRule:(MXPushRule*)pushRule;
+
+/**
+ Enable/disable an existing push rule, see MXNotificationCenter notifications for operation result.
+ 
+ @param pushRule the push rule to update
+ @param enable YES to enable.
+ */
+- (void)enableRule:(MXPushRule*)pushRule isEnabled:(BOOL)enable;
+
+/**
+ Create a content push rule, see MXNotificationCenter notifications for operation result.
+ 
+ @param pattern the pattern on which the content rule is based.
+ @param notify enable/disable notification on events that match with the pattern.
+ @param sound enable/disable sound during notification.
+ @param highlight enable/disable highlight option.
+ */
+- (void)addContentRule:(NSString *)pattern
+                notify:(BOOL)notify
+                 sound:(BOOL)sound
+             highlight:(BOOL)highlight;
+
+/**
+ Create a room push rule, see MXNotificationCenter notifications for operation result.
+ 
+ @param roomId the room identifier.
+ @param notify enable/disable notification for this room.
+ @param sound enable/disable sound during notification.
+ @param highlight enable/disable highlight option.
+ */
+- (void)addRoomRule:(NSString *)roomId
+             notify:(BOOL)notify
+              sound:(BOOL)sound
+          highlight:(BOOL)highlight;
+
+/**
+ Create a sender push rule, see MXNotificationCenter notifications for operation result.
+ 
+ @param senderId the sender identifier.
+ @param notify enable/disable notification for this sender.
+ @param sound enable/disable sound during notification.
+ @param highlight enable/disable highlight option.
+ */
+- (void)addSenderRule:(NSString *)senderId
+               notify:(BOOL)notify
+                sound:(BOOL)sound
+            highlight:(BOOL)highlight;
 
 @end
 

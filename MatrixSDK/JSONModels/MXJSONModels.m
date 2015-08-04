@@ -372,7 +372,44 @@ NSString *const kMXPushRuleConditionStringRoomMemberCount       = @"room_member_
 
 @end
 
+NSString *const kMXPushRuleScopeStringGlobal           = @"global";
+NSString *const kMXPushRuleScopeStringDevice           = @"device";
+
 @implementation MXPushRulesResponse
+
+- (instancetype)initWithDictionary:(NSDictionary *)dictionaryValue error:(NSError *__autoreleasing *)error
+{
+    // Do the JSON -> class instance properties mapping
+    self = [super initWithDictionary:dictionaryValue error:error];
+    if (self)
+    {
+        // Add the scope for all retrieved rules
+        for (MXPushRule *rule in _global.override)
+        {
+            rule.scope = kMXPushRuleScopeStringGlobal;
+        }
+        for (MXPushRule *rule in _global.content)
+        {
+            rule.scope = kMXPushRuleScopeStringGlobal;
+        }
+        for (MXPushRule *rule in _global.room)
+        {
+            rule.scope = kMXPushRuleScopeStringGlobal;
+        }
+        for (MXPushRule *rule in _global.sender)
+        {
+            rule.scope = kMXPushRuleScopeStringGlobal;
+        }
+        for (MXPushRule *rule in _global.underride)
+        {
+            rule.scope = kMXPushRuleScopeStringGlobal;
+        }
+        
+        // TODO support device rules
+    }
+    
+    return self;
+}
 
 /*
 + (NSValueTransformer *)deviceJSONTransformer 
