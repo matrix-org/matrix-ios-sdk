@@ -287,7 +287,7 @@ typedef enum : NSUInteger
  @param ruleId The identifier for the rule.
  @param scope Either 'global' or 'device/<profile_tag>' to specify global rules or device rules for the given profile_tag.
  @param kind The kind of rule, ie. 'override', 'underride', 'sender', 'room', 'content' (see MXPushRuleKind).
-  @param success A block object called when the operation succeeds.
+ @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
 - (MXHTTPOperation *)removePushRule:(NSString*)ruleId
@@ -295,6 +295,25 @@ typedef enum : NSUInteger
                                kind:(MXPushRuleKind)kind
                             success:(void (^)())success
                             failure:(void (^)(NSError *error))failure;
+
+/**
+ Create a new push rule.
+ 
+ @param ruleId The identifier for the rule (it depends on rule kind: user id for sender rule, room id for room rule...).
+ @param scope Either 'global' or 'device/<profile_tag>' to specify global rules or device rules for the given profile_tag.
+ @param kind The kind of rule, ie. 'sender', 'room' or 'content' (see MXPushRuleKind).
+ @param actions The rule actions: notify, don't notify, set tweak...
+ @param pattern The pattern relevant for content rule.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (MXHTTPOperation *)addPushRule:(NSString*)ruleId
+                           scope:(NSString*)scope
+                            kind:(MXPushRuleKind)kind
+                         actions:(NSArray*)actions
+                         pattern:(NSString*)pattern
+                         success:(void (^)())success
+                         failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Room operations

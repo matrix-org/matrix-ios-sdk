@@ -428,6 +428,72 @@ failure:(void (^)(NSError *error))failure
                                  }];
 }
 
+- (MXHTTPOperation *)addPushRule:(NSString*)ruleId
+                           scope:(NSString*)scope
+                            kind:(MXPushRuleKind)kind
+                         actions:(NSArray*)actions
+                         pattern:(NSString*)pattern
+                         success:(void (^)())success
+                         failure:(void (^)(NSError *error))failure
+{
+    NSString *kindString;
+    NSDictionary *content = nil;
+    
+    switch (kind)
+    {
+        case MXPushRuleKindContent:
+            kindString = @"content";
+            if (pattern.length && actions.count)
+            {
+                content = @{@"pattern": pattern, @"actions": actions};
+            }
+            break;
+        case MXPushRuleKindRoom:
+            kindString = @"room";
+            if (actions.count)
+            {
+                content = @{@"actions": actions};
+            }
+            break;
+        case MXPushRuleKindSender:
+            kindString = @"sender";
+            if (actions.count)
+            {
+                content = @{@"actions": actions};
+            }
+            break;
+        default:
+            break;
+    }
+
+    // Sanity check
+    if (content)
+    {
+        return [httpClient requestWithMethod:@"PUT"
+                                        path:[NSString stringWithFormat:@"v1/pushrules/%@/%@/%@", scope, kindString, ruleId]
+                                  parameters:content
+                                     success:^(NSDictionary *JSONResponse) {
+                                         if (success)
+                                         {
+                                             success();
+                                         }
+                                     }
+                                     failure:^(NSError *error) {
+                                         if (failure)
+                                         {
+                                             failure(error);
+                                         }
+                                     }];
+    }
+    else
+    {
+        if (failure)
+        {
+            failure(nil);
+        }
+        return nil;
+    }
+}
 
 #pragma mark - Room operations
 - (MXHTTPOperation*)sendEventToRoom:(NSString*)roomId

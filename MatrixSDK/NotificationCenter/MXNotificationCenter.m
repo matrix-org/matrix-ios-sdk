@@ -400,6 +400,93 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
     }
 }
 
+- (void)addContentRule:(NSString *)pattern
+                notify:(BOOL)notify
+                 sound:(BOOL)sound
+             highlight:(BOOL)highlight
+{
+    // Compute rule id from pattern
+    NSCharacterSet *set = [NSCharacterSet characterSetWithCharactersInString:@"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"];
+    set = [set invertedSet];
+    NSString *ruleId = [[pattern componentsSeparatedByCharactersInSet:set] componentsJoinedByString:@""];
+    
+    // Check whether the ruleId is unique
+    if ([self ruleById:ruleId])
+    {
+        NSInteger index = 1;
+        NSMutableString *mutableRuleId = [NSMutableString stringWithFormat:@"%@%d", ruleId, index];
+        while ([self ruleById:mutableRuleId])
+        {
+            index++;
+            mutableRuleId = [NSMutableString stringWithFormat:@"%@%d", ruleId, index];
+        }
+        ruleId = mutableRuleId;
+    }
+    
+    [self addRuleWithId:ruleId kind:MXPushRuleKindContent pattern:pattern notify:notify sound:sound highlight:highlight];
+}
+
+- (void)addRoomRule:(NSString *)roomId
+             notify:(BOOL)notify
+              sound:(BOOL)sound
+          highlight:(BOOL)highlight
+{
+    [self addRuleWithId:roomId kind:MXPushRuleKindRoom pattern:nil notify:notify sound:sound highlight:highlight];
+}
+
+- (void)addSenderRule:(NSString *)senderId
+               notify:(BOOL)notify
+                sound:(BOOL)sound
+            highlight:(BOOL)highlight
+{
+    [self addRuleWithId:senderId kind:MXPushRuleKindSender pattern:nil notify:notify sound:sound highlight:highlight];
+}
+
+- (void)addRuleWithId:(NSString*)ruleId
+                 kind:(MXPushRuleKind)kind
+              pattern:(NSString *)pattern
+                notify:(BOOL)notify
+                 sound:(BOOL)sound
+             highlight:(BOOL)highlight
+{
+    [[NSNotificationCenter defaultCenter] postNotificationName:kMXNotificationCenterWillUpdateRules object:self userInfo:nil];
+    
+    NSMutableArray *actions = [NSMutableArray array];
+    if (notify)
+    {
+        [actions addObject:@"notify"];
+    }
+    else
+    {
+        [actions addObject:@"dont_notify"];
+    }
+    
+    if (sound)
+    {
+        [actions addObject:@{@"set_tweak": @"sound", @"value": @"default"}];
+    }
+    
+    if (highlight)
+    {
+        [actions addObject:@{@"set_tweak": @"highlight"}];
+    }
+    
+    [mxSession.matrixRestClient addPushRule:ruleId scope:kMXPushRuleScopeStringGlobal kind:kind actions:actions pattern:pattern success:^{
+        
+        // Refresh locally rules
+        [self refreshRules:^{
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXNotificationCenterDidUpdateRules object:self userInfo:nil];
+        } failure:^(NSError *error) {
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXNotificationCenterDidFailRulesUpdate object:self userInfo:@{kMXNotificationCenterErrorKey:error}];
+        }];
+        
+    } failure:^(NSError *error) {
+        
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXNotificationCenterDidFailRulesUpdate object:self userInfo:@{kMXNotificationCenterErrorKey:error}];
+        
+    }];
+}
+
 
 #pragma mark - Private methods
 // Check if the event should be notified to the listeners
