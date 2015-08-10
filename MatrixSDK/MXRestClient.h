@@ -57,6 +57,11 @@ typedef NSString* MX3PIDMedium;
 FOUNDATION_EXPORT NSString *const kMX3PIDMediumEmail;
 FOUNDATION_EXPORT NSString *const kMX3PIDMediumMSISDN;
 
+/**
+ MXRestClient error domain
+ */
+FOUNDATION_EXPORT NSString *const kMXRestClientErrorDomain;
+
 
 /**
  Methods of thumnailing supported by the Matrix content repository.
@@ -258,11 +263,62 @@ typedef enum : NSUInteger
  
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
-
+ 
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)pushRules:(void (^)(MXPushRulesResponse *pushRules))success
-                  failure:(void (^)(NSError *error))failure;
+                      failure:(void (^)(NSError *error))failure;
+
+/**
+ Enable/Disable a push notification rule.
+ 
+ @param ruleId The identifier for the rule.
+ @param scope Either 'global' or 'device/<profile_tag>' to specify global rules or device rules for the given profile_tag.
+ @param kind The kind of rule, ie. 'override', 'underride', 'sender', 'room', 'content' (see MXPushRuleKind).
+ @param enable YES to enable
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (MXHTTPOperation *)enablePushRule:(NSString*)ruleId
+                              scope:(NSString*)scope
+                               kind:(MXPushRuleKind)kind
+                             enable:(BOOL)enable
+                            success:(void (^)())success
+                            failure:(void (^)(NSError *error))failure;
+
+/**
+ Remove a push notification rule.
+ 
+ @param ruleId The identifier for the rule.
+ @param scope Either 'global' or 'device/<profile_tag>' to specify global rules or device rules for the given profile_tag.
+ @param kind The kind of rule, ie. 'override', 'underride', 'sender', 'room', 'content' (see MXPushRuleKind).
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (MXHTTPOperation *)removePushRule:(NSString*)ruleId
+                              scope:(NSString*)scope
+                               kind:(MXPushRuleKind)kind
+                            success:(void (^)())success
+                            failure:(void (^)(NSError *error))failure;
+
+/**
+ Create a new push rule.
+ 
+ @param ruleId The identifier for the rule (it depends on rule kind: user id for sender rule, room id for room rule...).
+ @param scope Either 'global' or 'device/<profile_tag>' to specify global rules or device rules for the given profile_tag.
+ @param kind The kind of rule, ie. 'sender', 'room' or 'content' (see MXPushRuleKind).
+ @param actions The rule actions: notify, don't notify, set tweak...
+ @param pattern The pattern relevant for content rule.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (MXHTTPOperation *)addPushRule:(NSString*)ruleId
+                           scope:(NSString*)scope
+                            kind:(MXPushRuleKind)kind
+                         actions:(NSArray*)actions
+                         pattern:(NSString*)pattern
+                         success:(void (^)())success
+                         failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Room operations

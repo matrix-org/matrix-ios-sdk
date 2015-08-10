@@ -42,7 +42,7 @@ extern NSString *const kMXCallManagerNewCall;
  @param mxSession the mxSession to the home server.
  @return the newly created MXCallManager instance.
  */
-- (instancetype)initWithMatrixSession:(MXSession*)mxSession;
+- (instancetype)initWithMatrixSession:(MXSession*)mxSession andCallStack:(id<MXCallStack>)callstack;
 
 /**
  Stop the call manager.

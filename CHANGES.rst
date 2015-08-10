@@ -1,3 +1,10 @@
+Changes in Matrix iOS SDK in 0.5.1 (2015-08-10)
+===============================================
+
+Improvements:
+ * MXRestClient: Add API to create push rules.
+ * MXRestClient: Add API to update global notification settings.
+
 Changes in Matrix iOS SDK in 0.5.0 (2015-07-10)
 ===============================================
 

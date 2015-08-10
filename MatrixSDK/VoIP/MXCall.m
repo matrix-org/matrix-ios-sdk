@@ -177,6 +177,8 @@
         case MXEventTypeCallCandidates:
         {
             MXCallCandidatesEventContent *content = [MXCallCandidatesEventContent modelFromJSON:event.content];
+
+            NSLog(@"[MXCall] handleCallCandidates: %@", content.candidates);
             for (NSDictionary *canditate in content.candidates)
             {
                 [callStackCall handleRemoteCandidate:canditate];
@@ -193,6 +195,8 @@
 #pragma mark - Controls
 - (void)callWithVideo:(BOOL)video
 {
+    NSLog(@"[MXCall] callWithVideo");
+    
     _isIncoming = NO;
 
     _isVideoCall = video;
@@ -205,7 +209,7 @@
 
             [self setState:MXCallStateCreateOffer reason:nil];
 
-            NSLog(@"[MXCallManager] placeCallInRoom. Offer created: %@", sdp);
+            NSLog(@"[MXCall] callWithVideo:%@ - Offer created: %@", (video ? @"YES" : @"NO"), sdp);
 
             // The call invite can sent to the HS
             NSDictionary *content = @{
@@ -238,6 +242,8 @@
 
 - (void)answer
 {
+    NSLog(@"[MXCall] answer");
+
     if (self.state == MXCallStateRinging)
     {
         // The incoming call is accepted
@@ -253,8 +259,10 @@
         // Create a sdp answer from the offer we got
         [self setState:MXCallStateCreateAnswer reason:nil];
         [self setState:MXCallStateConnecting reason:nil];
-        
+
         [callStackCall createAnswer:^(NSString *sdpAnswer) {
+
+            NSLog(@"[MXCall] answer - Created SDP:\n%@", sdpAnswer);
             
             // The call invite can sent to the HS
             NSDictionary *content = @{
@@ -285,6 +293,8 @@
 
 - (void)hangup
 {
+    NSLog(@"[MXCall] hangup");
+
     if (self.state != MXCallStateEnded)
     {
         [self terminateWithReason:nil];
@@ -389,7 +399,7 @@
 
 - (void)didEncounterError:(NSError*)error
 {
-    if ([_delegate performSelector:@selector(call:didEncounterError:)])
+    if ([_delegate respondsToSelector:@selector(call:didEncounterError:)])
     {
         [_delegate call:self didEncounterError:error];
     }
