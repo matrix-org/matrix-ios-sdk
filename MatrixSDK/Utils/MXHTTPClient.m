@@ -17,7 +17,7 @@
 #import "MXHTTPClient.h"
 #import "MXError.h"
 
-#import <AFNetworking.h>
+#import <AFNetworking/AFNetworking.h>
 
 #pragma mark - Constants definitions
 /**
