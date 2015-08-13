@@ -1,3 +1,9 @@
+Changes in Matrix iOS SDK in 0.5.2 (2015-08-13)
+===============================================
+
+Improvements:
+ * Fixed code that made Cocoapods 0.38.2 unhappy.
+
 Changes in Matrix iOS SDK in 0.5.1 (2015-08-10)
 ===============================================
 
