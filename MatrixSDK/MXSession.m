@@ -769,8 +769,8 @@ typedef void (^MXOnResumeDone)();
 
         NSString *theRoomId = JSONData[@"room_id"];
         
-        // Clean the store if some data already exist
-        if ([_store.rooms indexOfObject:theRoomId] != NSNotFound)
+        // Clean the store for this room
+        if (![_store respondsToSelector:@selector(rooms)] || [_store.rooms indexOfObject:theRoomId] != NSNotFound)
         {
             NSLog(@"[MXSession] initialSyncOfRoom clean the store (%@).", theRoomId);
             [_store deleteRoom:theRoomId];
