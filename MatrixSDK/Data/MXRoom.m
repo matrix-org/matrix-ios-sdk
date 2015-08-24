@@ -62,6 +62,7 @@
             // In both case, the application will see a MXRoom which MXRoomState.membership is invite. The MXRoomState
             // will contain only one MXRoomMember who is the logged in user. MXRoomMember.originUserId is the inviter.
             MXEvent *fakeMembershipEvent = [MXEvent modelFromJSON:@{
+                                                                    @"event_id": [NSString stringWithFormat:@"fake-invite-%@",[[NSProcessInfo processInfo] globallyUniqueString]],
                                                                     @"type": kMXEventTypeStringRoomMember,
                                                                     @"room_id": roomId,
                                                                     @"content": @{
@@ -76,8 +77,7 @@
 
             [mxSession.store storeEventForRoom:roomId event:fakeMembershipEvent direction:MXEventDirectionSync];
         }
-
-        if (JSONData)
+        else if (JSONData)
         {
             _isSync = YES;
         }
