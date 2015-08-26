@@ -169,7 +169,21 @@
         success(JSONResponse);
         
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+#if DEBUG
         NSLog(@"[MXHTTPClient] Request %p failed for path: %@ - HTTP code: %ld", mxHTTPOperation, path, (long)operation.response.statusCode);
+#else
+        // Hide access token in printed path
+        NSMutableString *printedPath = [NSMutableString stringWithString:path];
+        if (accessToken)
+        {
+            NSRange range = [path rangeOfString:accessToken];
+            if (range.location != NSNotFound)
+            {
+                [printedPath replaceCharactersInRange:range withString:@"..."];
+            }
+        }
+        NSLog(@"[MXHTTPClient] Request %p failed for path: %@ - HTTP code: %ld", mxHTTPOperation, printedPath, (long)operation.response.statusCode);
+#endif
 
         if (operation.responseData)
         {
