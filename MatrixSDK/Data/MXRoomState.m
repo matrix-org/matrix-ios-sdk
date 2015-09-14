@@ -34,7 +34,7 @@
     // The visibility flag in JSON metadata deprecated in API v2
     MXRoomVisibility visibility;
     
-    // YES when the property 'isPublic' has been defined (see 'published' field in 'MXSyncResponse' model since API v2).
+    // YES when the property 'isPublic' has been defined (TODO GFO: see 'published' field in 'MXSyncResponse' model since API v2).
     BOOL isVisibilityKnown;
     
     /**

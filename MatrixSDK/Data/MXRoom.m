@@ -151,7 +151,8 @@
         // TODO GFO notify listener about the gap
     }
     
-    _state.isPublic = roomSyncResponse.published;
+    // TODO GFO handle this field named published
+//    _state.isPublic = roomSyncResponse.published;
     
     // Is it an initial sync for this room?
     BOOL isRoomInitialSync = (roomSyncResponse.limited || !mxSession.store.eventStreamToken);
