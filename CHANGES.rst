@@ -1,3 +1,13 @@
+Changes in Matrix iOS SDK in 0.5.3 (2015-09-14)
+===============================================
+
+Improvements:
+ * Clean the store before the initial room syncing.
+ * MXHTTPClient: improve http client logs.
+
+Bug fixes:
+ * MXRoom: App crashes on invite room during initial sync.
+
 Changes in Matrix iOS SDK in 0.5.2 (2015-08-13)
 ===============================================
 
