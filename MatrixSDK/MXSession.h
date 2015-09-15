@@ -174,6 +174,8 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
 @property (nonatomic, readonly) MXCallManager *callManager;
 
 
+#pragma mark - Class methods
+
 /**
  Create a MXSession instance.
  This instance will use the passed MXRestClient to make requests to the home server.
@@ -219,6 +221,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
 
 /**
  Pause the session events stream.
+ Caution: this action is ignored if the session state is not MXSessionStateRunning.
  
  No more live events will be received by the listeners.
  */
@@ -270,6 +273,14 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
  Default is NO.
  */
 @property (nonatomic) BOOL loadPresenceBeforeCompletingSessionStart;
+
+/**
+ The C-S API version used for server sync.
+ 
+ It may be set as long as the session state is MXSessionStateInitialised.
+ Else, by default, the C-S API v2 will be used for sync.
+ */
+@property (nonatomic) MXRestClientAPIVersion syncAPIVersion;
 
 /**
  Enable VoIP by setting the external VoIP stack to use.

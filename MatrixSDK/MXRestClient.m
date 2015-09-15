@@ -298,7 +298,8 @@ failure:(void (^)(NSError *error))failure
                                     data:(NSDictionary *)data
                                   append:(BOOL)append
                                  success:(void (^)())success
-                                 failure:(void (^)(NSError *))failure {
+                                 failure:(void (^)(NSError *))failure
+{
     // Fill the request parameters on demand
     // Caution: parameters are JSON serialized in http body, we must use a NSNumber created with a boolean for append value.
     NSDictionary *parameters = @{
@@ -971,7 +972,6 @@ failure:(void (^)(NSError *error))failure
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     // Caution: parameters are JSON serialized in http body, we must use a NSNumber created with a boolean for typing value.
     parameters[@"typing"] = [NSNumber numberWithBool:typing];
-    
     if (-1 != timeout)
     {
         parameters[@"timeout"] = [NSNumber numberWithUnsignedInteger:timeout];
@@ -1363,6 +1363,79 @@ failure:(void (^)(NSError *error))failure
                                           failure(error);
                                       }
                                   }];
+    
+    // Disable retry because it interferes with clientTimeout
+    // Let the client manage retries on events streams
+    operation.maxNumberOfTries = 1;
+    
+    return operation;
+}
+
+- (MXHTTPOperation *)syncWithLimit:(NSInteger)limit
+                               gap:(BOOL)gap
+                              sort:(NSString*)sort
+                             since:(NSString*)token
+                     serverTimeout:(NSUInteger)serverTimeout
+                     clientTimeout:(NSUInteger)clientTimeout
+                       setPresence:(NSString*)setPresence
+                          backfill:(BOOL)backfill
+                           filters:(NSDictionary*)filters
+                           success:(void (^)(MXSyncResponse *syncResponse))success
+                           failure:(void (^)(NSError *error))failure
+{
+    // Fill the url parameters (CAUTION: boolean value must be true or false string)
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+    
+    parameters[@"limit"] = [NSNumber numberWithInteger:limit];
+    parameters[@"gap"] = gap ? @"true" : @"false";
+    parameters[@"backfill"] = backfill ? @"true" : @"false";
+    
+    // Handle optional params
+    if (sort)
+    {
+        parameters[@"sort"] = sort;
+    }
+    if (token)
+    {
+        parameters[@"since"] = token;
+    }
+    if (-1 != serverTimeout)
+    {
+        parameters[@"timeout"] = [NSNumber numberWithInteger:serverTimeout];
+    }
+    if (setPresence)
+    {
+        parameters[@"set_presence"] = setPresence;
+    }
+    if (filters.count)
+    {
+        [parameters addEntriesFromDictionary:filters];
+    }
+    
+    NSTimeInterval clientTimeoutInSeconds = clientTimeout;
+    if (-1 != clientTimeoutInSeconds)
+    {
+        // If the Internet connection is lost, this timeout is used to be able to
+        // cancel the current request and notify the client so that it can retry with a new request.
+        clientTimeoutInSeconds = clientTimeoutInSeconds / 1000;
+    }
+    
+    MXHTTPOperation *operation = [httpClient requestWithMethod:@"GET"
+                                                          path:@"/_matrix/client/v2_alpha/sync"
+                                                    parameters:parameters timeout:clientTimeoutInSeconds
+                                                       success:^(NSDictionary *JSONResponse) {
+                                                           if (success)
+                                                           {
+                                                               MXSyncResponse *syncResponse = [MXSyncResponse modelFromJSON:JSONResponse];
+                                                               success(syncResponse);
+                                                           }
+                                                       }
+                                                       failure:^(NSError *error) {
+                                                           if (failure)
+                                                           {
+                                                               failure(error);
+                                                           }
+                                                       }];
     
     // Disable retry because it interferes with clientTimeout
     // Let the client manage retries on events streams
