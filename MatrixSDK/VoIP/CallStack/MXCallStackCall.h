@@ -16,6 +16,8 @@
 
 #import <UIKit/UIKit.h>
 
+@protocol MXCallStackCallDelegate;
+
 /**
  The `MXCallStackCall` is an abstract interface to manage one call at the 
  call stack layer.
@@ -115,6 +117,11 @@
 
 #pragma mark - Properties
 /**
+ The delegate.
+ */
+@property (nonatomic) id<MXCallStackCallDelegate> delegate;
+
+/**
  The UIView that receives frames from the user's camera.
  */
 @property (nonatomic) UIView *selfVideoView;
@@ -125,8 +132,26 @@
 @property (nonatomic) UIView *remoteVideoView;
 
 /**
- The camera orientation.
+ The camera orientation. It is used to display the video in the right direction
+ on the other peer device.
  */
-@property (nonatomic) UIDeviceOrientation videoOrientation;
+@property (nonatomic) UIDeviceOrientation selfOrientation;
+
+@end
+
+
+#pragma mark - MXCallStackCallDelegate
+/**
+ Delegate for `MXCallStackCal` object
+*/
+@protocol MXCallStackCallDelegate <NSObject>
+
+/**
+ Tells the delegate an error occured.
+
+ @param callStackCall the corresponding instance.
+ @param error the error.
+ */
+- (void)callStackCall:(id<MXCallStackCall>)callStackCall onError:(NSError*)error;
 
 @end
