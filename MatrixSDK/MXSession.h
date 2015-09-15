@@ -278,7 +278,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
  The C-S API version used for server sync.
  
  It may be set as long as the session state is MXSessionStateInitialised.
- Else, by default, the C-S API v2 will be used for sync.
+ Else, by default, the C-S API v1 will be used for sync.
  */
 @property (nonatomic) MXRestClientAPIVersion syncAPIVersion;
 

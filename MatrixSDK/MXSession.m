@@ -123,7 +123,7 @@ typedef void (^MXOnResumeDone)();
         // By default, load presence data in parallel if a full initialSync is not required
         _loadPresenceBeforeCompletingSessionStart = NO;
         
-        // TODO By default, matrix session used API v2 fo sync
+        // TODO GFO By default, matrix session should use API v2 fo sync (Update syncAPIVersion comment in MXSession.h)
 //        _syncAPIVersion = MXRestClientAPIVersion2;
         _syncAPIVersion = MXRestClientAPIVersion1;
         
