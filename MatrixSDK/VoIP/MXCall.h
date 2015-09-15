@@ -18,6 +18,7 @@
 #import <UIKit/UIKit.h>
 
 #import "MXEvent.h"
+#import "MXCallStackCall.h"
 
 @class MXCallManager;
 @class MXRoom;
@@ -52,7 +53,7 @@ typedef enum : NSUInteger
 /**
  A `MXCall` instance represents a call.
  */
-@interface MXCall : NSObject
+@interface MXCall : NSObject <MXCallStackCallDelegate>
 
 /**
  Create a `MXCall` instance in order to place a call.
@@ -130,9 +131,10 @@ typedef enum : NSUInteger
 @property (nonatomic) UIView *remoteVideoView;
 
 /**
- The camera orientation.
+ The camera orientation. It is used to display the video in the right direction
+ on the other peer device.
  */
-@property (nonatomic) UIDeviceOrientation videoOrientation;
+@property (nonatomic) UIDeviceOrientation selfOrientation;
 
 /**
  The call duration in milliseconds.

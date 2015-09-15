@@ -77,6 +77,8 @@
             return nil;
         }
 
+        callStackCall.delegate = self;
+
         // Set up TURN/STUN servers
         if (callManager.turnServers)
         {
@@ -353,16 +355,16 @@
     }
 }
 
-- (UIDeviceOrientation)videoOrientation
+- (UIDeviceOrientation)selfOrientation
 {
-    return callStackCall.videoOrientation;
+    return callStackCall.selfOrientation;
 }
 
-- (void)setVideoOrientation:(UIDeviceOrientation)videoOrientation
+- (void)setSelfOrientation:(UIDeviceOrientation)selfOrientation
 {
-    if (callStackCall.videoOrientation != videoOrientation)
+    if (callStackCall.selfOrientation != selfOrientation)
     {
-        callStackCall.videoOrientation = videoOrientation;
+        callStackCall.selfOrientation = selfOrientation;
     }
 }
 
@@ -379,6 +381,14 @@
         duration = totalCallDuration;
     }
     return duration;
+}
+
+
+#pragma mark - MXCallStackCallDelegate
+-(void)callStackCall:(id<MXCallStackCall>)callStackCall onError:(NSError *)error
+{
+    NSLog(@"[MXCall] callStackCall didEncounterError: %@", error);
+    [self didEncounterError:error];
 }
 
 
