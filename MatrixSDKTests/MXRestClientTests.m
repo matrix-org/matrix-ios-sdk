@@ -546,6 +546,9 @@
                 NSMutableDictionary *JSONData2 = [NSMutableDictionary dictionaryWithDictionary:JSONData];
                 [JSONData2 removeObjectForKey:@"presence"];
 
+                // Remove new added field receipts from initialSyncOfRoom result
+                [JSONData2 removeObjectForKey:@"receipts"];
+
                 // Remove visibility from global initialSync
                 NSMutableDictionary *JSONRoomDataInGlobal2 = [NSMutableDictionary dictionaryWithDictionary:JSONRoomDataInGlobal];
                 [JSONRoomDataInGlobal2 removeObjectForKey:@"visibility"];
@@ -605,6 +608,9 @@
                                     // Remove presence from initialSyncOfRoom result
                                     NSMutableDictionary *JSONData2 = [NSMutableDictionary dictionaryWithDictionary:JSONData];
                                     [JSONData2 removeObjectForKey:@"presence"];
+
+                                    // Remove new added field receipts from initialSyncOfRoom result
+                                    [JSONData2 removeObjectForKey:@"receipts"];
 
                                     // Remove visibility from global initialSync
                                     NSMutableDictionary *JSONRoomDataInGlobal2 = [NSMutableDictionary dictionaryWithDictionary:JSONRoomDataInGlobal];
