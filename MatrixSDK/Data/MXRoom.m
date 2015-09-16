@@ -81,6 +81,7 @@
                                                                     }];
             
             [self handleMessage:fakeMembershipEvent direction:MXEventDirectionSync];
+            [self handleStateEvent:fakeMembershipEvent direction:MXEventDirectionSync];
 
             [mxSession.store storeEventForRoom:roomId event:fakeMembershipEvent direction:MXEventDirectionSync];
         }
