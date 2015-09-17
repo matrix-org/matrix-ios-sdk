@@ -123,10 +123,6 @@ typedef void (^MXOnResumeDone)();
         // By default, load presence data in parallel if a full initialSync is not required
         _loadPresenceBeforeCompletingSessionStart = NO;
         
-        // TODO GFO By default, matrix session should use API v2 fo sync (Update syncAPIVersion comment in MXSession.h)
-//        _syncAPIVersion = MXRestClientAPIVersion2;
-        _syncAPIVersion = MXRestClientAPIVersion1;
-        
         [self setState:MXSessionStateInitialised];
     }
     return self;
@@ -141,15 +137,6 @@ typedef void (^MXOnResumeDone)();
         NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
         [notificationCenter postNotificationName:kMXSessionStateDidChangeNotification object:self userInfo:nil];
     }
-}
-
-- (void)setSyncAPIVersion:(MXRestClientAPIVersion)syncAPIVersion
-{
-    if (_state == MXSessionStateInitialised)
-    {
-        _syncAPIVersion = syncAPIVersion;
-    }
-    // Else ignore this change
 }
 
 -(void)setStore:(id<MXStore>)store success:(void (^)())onStoreDataReady failure:(void (^)(NSError *))failure
@@ -331,11 +318,12 @@ typedef void (^MXOnResumeDone)();
                 [_notificationCenter refreshRules:^{
                     
                     // Initial server sync
-                    if (_syncAPIVersion == MXRestClientAPIVersion2)
-                    {
-                        [self serverSyncWithTimeout:0 success:onServerSyncDone failure:failure];
-                    }
-                    else
+                    // TODO GFO server sync v2 is not available yet (use C-S v1 by default)
+//                    if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
+//                    {
+//                        [self serverSyncWithTimeout:0 success:onServerSyncDone failure:failure];
+//                    }
+//                    else
                     {
                         // sync based on API v1 (Legacy)
                         [self initialServerSync:onServerSyncDone failure:failure];
@@ -591,11 +579,12 @@ typedef void (^MXOnResumeDone)();
         onResumeDone = resumeDone;
         
         // Relaunch live events stream (long polling)
-        if (_syncAPIVersion == MXRestClientAPIVersion2)
-        {
-            [self serverSyncWithTimeout:0 success:nil failure:nil];
-        }
-        else
+        // TODO GFO server sync v2 is not available yet (use C-S v1 by default)
+//        if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
+//        {
+//            [self serverSyncWithTimeout:0 success:nil failure:nil];
+//        }
+//        else
         {
             // sync based on API v1 (Legacy)
             [self streamEventsFromToken:_store.eventStreamToken withLongPoll:NO];

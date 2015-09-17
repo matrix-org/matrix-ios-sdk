@@ -275,14 +275,6 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
 @property (nonatomic) BOOL loadPresenceBeforeCompletingSessionStart;
 
 /**
- The C-S API version used for server sync.
- 
- It may be set as long as the session state is MXSessionStateInitialised.
- Else, by default, the C-S API v1 will be used for sync.
- */
-@property (nonatomic) MXRestClientAPIVersion syncAPIVersion;
-
-/**
  Enable VoIP by setting the external VoIP stack to use.
  
  @param callStack the VoIP call stack to use.

@@ -97,6 +97,7 @@ typedef enum : NSUInteger
      C-S API V2.
      */
     MXRestClientAPIVersion2
+    
 } MXRestClientAPIVersion;
 
 /**
@@ -108,6 +109,17 @@ typedef enum : NSUInteger
     - the specified Matrix identity server
  */
 @interface MXRestClient : NSObject
+
+/**
+ The preferred Client-Server API version. This value is applied to each new MXRestClient instance
+ during initialisation step (see 'preferredAPIVersion' property).
+ By default the C-S API v2 is considered.
+ 
+ CAUTION: Change of the preferred version impacts only the new MXRestClient instances.
+ 
+ @param preferredAPIVersion the preferred C-S API version.
+ */
++ (void)registerPreferredAPIVersion:(MXRestClientAPIVersion)preferredAPIVersion;
 
 /**
  The homeserver.
@@ -125,12 +137,18 @@ typedef enum : NSUInteger
 @property (nonatomic, readonly) NSString *homeserverSuffix;
 
 /**
+ The preferred Client-Server API version. This version is used during server requests insofar as it is supported.
+ A prior version is used in case the preferred one is not supported yet.
+ It is set during initialisation according to the registered value (see [registerPreferredAPIVersion:]).
+ */
+@property (nonatomic, readonly) MXRestClientAPIVersion preferredAPIVersion;
+
+/**
  The identity server.
  By default, it points to the defined home server. If needed, change it by setting
  this property.
  */
 @property (nonatomic) NSString *identityServer;
-
 
 -(id)initWithHomeServer:(NSString *)homeserver;
 

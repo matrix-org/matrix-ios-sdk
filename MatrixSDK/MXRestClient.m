@@ -55,6 +55,7 @@ NSString *const kMX3PIDMediumMSISDN = @"msisdn";
  */
 NSString *const kMXRestClientErrorDomain = @"kMXRestClientErrorDomain";
 
+static MXRestClientAPIVersion _currentPreferredAPIVersion = MXRestClientAPIVersion2;
 
 /**
  Authentication flow: register or login
@@ -83,14 +84,20 @@ MXAuthAction;
 @end
 
 @implementation MXRestClient
-@synthesize homeserver, homeserverSuffix, credentials;
+@synthesize homeserver, homeserverSuffix, credentials, preferredAPIVersion;
 
--(id)initWithHomeServer:(NSString *)homeserver2
++ (void)registerPreferredAPIVersion:(MXRestClientAPIVersion)inPreferredAPIVersion
+{
+    _currentPreferredAPIVersion = inPreferredAPIVersion;
+}
+
+-(id)initWithHomeServer:(NSString *)inHomeserver
 {
     self = [super init];
     if (self)
     {
-        homeserver = homeserver2;
+        homeserver = inHomeserver;
+        preferredAPIVersion = _currentPreferredAPIVersion;
         
         httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", homeserver, kMXAPIPrefixPath] andAccessToken:nil];
         
@@ -100,13 +107,14 @@ MXAuthAction;
     return self;
 }
 
--(id)initWithCredentials:(MXCredentials*)credentials2
+-(id)initWithCredentials:(MXCredentials*)inCredentials
 {
     self = [super init];
     if (self)
     {
-        homeserver = credentials2.homeServer;
-        self.credentials = credentials2;
+        homeserver = inCredentials.homeServer;
+        preferredAPIVersion = _currentPreferredAPIVersion;
+        self.credentials = inCredentials;
         
         httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", homeserver, kMXAPIPrefixPath] andAccessToken:credentials.accessToken];
         
@@ -201,10 +209,17 @@ MXAuthAction;
  */
 - (NSString*)authActionPath:(MXAuthAction)authAction
 {
-    NSString *authActionPath = @"api/v1/register";
-    if (MXAuthActionLogin == authAction)
+    NSString *authActionPath = @"api/v1/login";
+    if (MXAuthActionRegister == authAction)
     {
-        authActionPath = @"api/v1/login";
+        if (preferredAPIVersion == MXRestClientAPIVersion2)
+        {
+            authActionPath = @"v2_alpha/register";
+        }
+        else
+        {
+            authActionPath = @"api/v1/register";
+        }
     }
     return authActionPath;
 }
