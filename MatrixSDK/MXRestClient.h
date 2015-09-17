@@ -168,9 +168,9 @@ typedef enum : NSUInteger
 
  @return a MXHTTPOperation instance.
 */
-- (MXHTTPOperation*)register:(NSDictionary*)parameters
-                 success:(void (^)(NSDictionary *JSONResponse))success
-                 failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)registerWithParameters:(NSDictionary*)parameters
+                                   success:(void (^)(NSDictionary *JSONResponse))success
+                                   failure:(void (^)(NSError *error))failure;
 
 /**
  Register a user with the password-based flow.

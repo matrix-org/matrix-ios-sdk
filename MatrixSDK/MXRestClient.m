@@ -147,11 +147,11 @@ MXAuthAction;
     return [self getRegisterOrLoginFlow:MXAuthActionRegister success:success failure:failure];
 }
 
-- (MXHTTPOperation*)register:(NSDictionary*)parameters
-success:(void (^)(NSDictionary *JSONResponse))success
-failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)registerWithParameters:(NSDictionary*)parameters
+                                   success:(void (^)(NSDictionary *JSONResponse))success
+                                   failure:(void (^)(NSError *error))failure
 {
-    return[self registerOrLogin:MXAuthActionRegister parameters:parameters success:success failure:failure];
+    return [self registerOrLogin:MXAuthActionRegister parameters:parameters success:success failure:failure];
 }
 
 - (MXHTTPOperation*)registerWithUser:(NSString*)user andPassword:(NSString*)password
