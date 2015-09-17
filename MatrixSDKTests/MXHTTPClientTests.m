@@ -48,7 +48,7 @@
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
     
     [httpClient requestWithMethod:@"GET"
-                             path:@"v1/publicRooms"
+                             path:@"api/v1/publicRooms"
                        parameters:nil
                           success:^(NSDictionary *JSONResponse) {
                               XCTAssertTrue([NSThread isMainThread], @"The block callback must be called from the main thread");
@@ -70,7 +70,7 @@
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
     
     [httpClient requestWithMethod:@"GET"
-                             path:@"v1/notExistingAPI"
+                             path:@"api/v1/notExistingAPI"
                        parameters:nil
                           success:^(NSDictionary *JSONResponse) {
                               XCTFail(@"The request must fail as the API path does not exist");

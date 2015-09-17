@@ -24,7 +24,7 @@
 /**
  Prefix used in path of home server API requests.
  */
-NSString *const kMXAPIPrefixPath = @"/_matrix/client/api";
+NSString *const kMXAPIPrefixPath = @"/_matrix/client";
 
 /**
  Prefix used in path of identity server API requests.
@@ -201,10 +201,10 @@ failure:(void (^)(NSError *error))failure
  */
 - (NSString*)authActionPath:(MXAuthAction)authAction
 {
-    NSString *authActionPath = @"v1/register";
+    NSString *authActionPath = @"api/v1/register";
     if (MXAuthActionLogin == authAction)
     {
-        authActionPath = @"v1/login";
+        authActionPath = @"api/v1/login";
     }
     return authActionPath;
 }
@@ -315,7 +315,7 @@ failure:(void (^)(NSError *error))failure
                                  };
     
     return [httpClient requestWithMethod:@"POST"
-                                    path:@"v1/pushers/set"
+                                    path:@"api/v1/pushers/set"
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
                                      success();
@@ -328,7 +328,7 @@ failure:(void (^)(NSError *error))failure
 - (MXHTTPOperation *)pushRules:(void (^)(MXPushRulesResponse *pushRules))success failure:(void (^)(NSError *))failure
 {
     return [httpClient requestWithMethod:@"GET"
-                                    path:@"v1/pushrules/"
+                                    path:@"api/v1/pushrules/"
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
                                      MXPushRulesResponse *pushRules = [MXPushRulesResponse modelFromJSON:JSONResponse];
@@ -371,7 +371,7 @@ failure:(void (^)(NSError *error))failure
     NSString *enabled = enable ? @"true": @"false";
     
     return [httpClient requestWithMethod:@"PUT"
-                                    path:[NSString stringWithFormat:@"v1/pushrules/%@/%@/%@/enabled", scope, kindString, ruleId]
+                                    path:[NSString stringWithFormat:@"api/v1/pushrules/%@/%@/%@/enabled", scope, kindString, ruleId]
                               parameters:nil
                                     data:[enabled dataUsingEncoding:NSUTF8StringEncoding]
                                  headers:headers
@@ -418,7 +418,7 @@ failure:(void (^)(NSError *error))failure
     }
     
     return [httpClient requestWithMethod:@"DELETE"
-                                    path:[NSString stringWithFormat:@"v1/pushrules/%@/%@/%@", scope, kindString, ruleId]
+                                    path:[NSString stringWithFormat:@"api/v1/pushrules/%@/%@/%@", scope, kindString, ruleId]
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
                                      if (success)
@@ -476,7 +476,7 @@ failure:(void (^)(NSError *error))failure
     if (content)
     {
         return [httpClient requestWithMethod:@"PUT"
-                                        path:[NSString stringWithFormat:@"v1/pushrules/%@/%@/%@", scope, kindString, ruleId]
+                                        path:[NSString stringWithFormat:@"api/v1/pushrules/%@/%@/%@", scope, kindString, ruleId]
                                   parameters:content
                                      success:^(NSDictionary *JSONResponse) {
                                          if (success)
@@ -508,7 +508,7 @@ failure:(void (^)(NSError *error))failure
                             success:(void (^)(NSString *eventId))success
                             failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"v1/rooms/%@/send/%@", roomId, eventTypeString];
+    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/send/%@", roomId, eventTypeString];
     return [httpClient requestWithMethod:@"POST"
                                     path:path
                               parameters:content
@@ -533,7 +533,7 @@ failure:(void (^)(NSError *error))failure
                                  success:(void (^)(NSString *eventId))success
                                  failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"v1/rooms/%@/state/%@", roomId, eventTypeString];
+    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/state/%@", roomId, eventTypeString];
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:content
@@ -584,7 +584,7 @@ failure:(void (^)(NSError *error))failure
                                 success:(void (^)())success
                                 failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"v1/rooms/%@/%@", roomId, membership];
+    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/%@", roomId, membership];
     
     // A body is required even if empty
     if (nil == parameters)
@@ -614,7 +614,7 @@ failure:(void (^)(NSError *error))failure
                          success:(void (^)())success
                          failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"v1/rooms/%@/state/m.room.topic", roomId];
+    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/state/m.room.topic", roomId];
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:@{
@@ -638,7 +638,7 @@ failure:(void (^)(NSError *error))failure
                         success:(void (^)(NSString *topic))success
                         failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"v1/rooms/%@/state/m.room.topic", roomId];
+    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/state/m.room.topic", roomId];
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
@@ -661,7 +661,7 @@ failure:(void (^)(NSError *error))failure
                         success:(void (^)())success
                         failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"v1/rooms/%@/state/m.room.name", roomId];
+    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/state/m.room.name", roomId];
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:@{
@@ -685,7 +685,7 @@ failure:(void (^)(NSError *error))failure
                        success:(void (^)(NSString *name))success
                        failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"v1/rooms/%@/state/m.room.name", roomId];
+    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/state/m.room.name", roomId];
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
@@ -708,7 +708,7 @@ failure:(void (^)(NSError *error))failure
                      failure:(void (^)(NSError *error))failure
 {
     // Characters in a room alias need to be escaped in the URL
-    NSString *path = [NSString stringWithFormat:@"v1/join/%@", [roomIdOrAlias stringByAddingPercentEscapesUsingEncoding:NSASCIIStringEncoding]];
+    NSString *path = [NSString stringWithFormat:@"api/v1/join/%@", [roomIdOrAlias stringByAddingPercentEscapesUsingEncoding:NSASCIIStringEncoding]];
     return [httpClient requestWithMethod:@"POST"
                                     path:path
                               parameters:nil
@@ -759,7 +759,7 @@ failure:(void (^)(NSError *error))failure
                      success:(void (^)())success
                      failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"v1/rooms/%@/state/m.room.member/%@", roomId, userId];
+    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/state/m.room.member/%@", roomId, userId];
     
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     parameters[@"membership"] = @"leave";
@@ -843,7 +843,7 @@ failure:(void (^)(NSError *error))failure
     }
     
     return [httpClient requestWithMethod:@"POST"
-                                    path:@"v1/createRoom"
+                                    path:@"api/v1/createRoom"
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
                                      if (success)
@@ -867,7 +867,7 @@ failure:(void (^)(NSError *error))failure
                             success:(void (^)(MXPaginationResponse *paginatedResponse))success
                             failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"v1/rooms/%@/messages", roomId];
+    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/messages", roomId];
     
     // All query parameters are optional. Fill the request parameters on demand
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
@@ -910,7 +910,7 @@ failure:(void (^)(NSError *error))failure
                           success:(void (^)(NSArray *roomMemberEvents))success
                           failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"v1/rooms/%@/members", roomId];
+    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/members", roomId];
     
     return [httpClient requestWithMethod:@"GET"
                                     path:path
@@ -941,7 +941,7 @@ failure:(void (^)(NSError *error))failure
                         success:(void (^)(NSDictionary *JSONData))success
                         failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"v1/rooms/%@/state", roomId];
+    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/state", roomId];
     
     return [httpClient requestWithMethod:@"GET"
                                     path:path
@@ -966,7 +966,7 @@ failure:(void (^)(NSError *error))failure
                                          success:(void (^)())success
                                          failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"v1/rooms/%@/typing/%@", roomId, self.credentials.userId];
+    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/typing/%@", roomId, self.credentials.userId];
     
     // Fill the request parameters on demand
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
@@ -1007,7 +1007,7 @@ failure:(void (^)(NSError *error))failure
                         success:(void (^)())success
                         failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"v1/rooms/%@/redact/%@", roomId, eventId];
+    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/redact/%@", roomId, eventId];
     
     // All query parameters are optional. Fill the request parameters on demand
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
@@ -1038,7 +1038,7 @@ failure:(void (^)(NSError *error))failure
                               success:(void (^)(NSDictionary *JSONData))success
                               failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"v1/rooms/%@/initialSync", roomId];
+    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/initialSync", roomId];
     
     return [httpClient requestWithMethod:@"GET"
                                     path:path
@@ -1065,7 +1065,7 @@ failure:(void (^)(NSError *error))failure
                            success:(void (^)())success
                            failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"v1/profile/%@/displayname", credentials.userId];
+    NSString *path = [NSString stringWithFormat:@"api/v1/profile/%@/displayname", credentials.userId];
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:@{
@@ -1094,7 +1094,7 @@ failure:(void (^)(NSError *error))failure
         userId = credentials.userId;
     }
     
-    NSString *path = [NSString stringWithFormat:@"v1/profile/%@/displayname", userId];
+    NSString *path = [NSString stringWithFormat:@"api/v1/profile/%@/displayname", userId];
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
@@ -1117,7 +1117,7 @@ failure:(void (^)(NSError *error))failure
                          success:(void (^)())success
                          failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"v1/profile/%@/avatar_url", credentials.userId];
+    NSString *path = [NSString stringWithFormat:@"api/v1/profile/%@/avatar_url", credentials.userId];
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:@{
@@ -1146,7 +1146,7 @@ failure:(void (^)(NSError *error))failure
         userId = credentials.userId;
     }
     
-    NSString *path = [NSString stringWithFormat:@"v1/profile/%@/avatarUrl", userId];
+    NSString *path = [NSString stringWithFormat:@"api/v1/profile/%@/avatarUrl", userId];
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
@@ -1171,7 +1171,7 @@ failure:(void (^)(NSError *error))failure
                         success:(void (^)())success
                         failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"v1/presence/%@/status", credentials.userId];
+    NSString *path = [NSString stringWithFormat:@"api/v1/presence/%@/status", credentials.userId];
     
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     parameters[@"presence"] = [MXTools presenceString:presence];
@@ -1206,7 +1206,7 @@ failure:(void (^)(NSError *error))failure
         userId = credentials.userId;
     }
     
-    NSString *path = [NSString stringWithFormat:@"v1/presence/%@/status", userId];
+    NSString *path = [NSString stringWithFormat:@"api/v1/presence/%@/status", userId];
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
@@ -1248,7 +1248,7 @@ failure:(void (^)(NSError *error))failure
 - (MXHTTPOperation*)presenceList:(void (^)(MXPresenceResponse *presence))success
                          failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"v1/presence/list/%@", credentials.userId];
+    NSString *path = [NSString stringWithFormat:@"api/v1/presence/list/%@", credentials.userId];
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
@@ -1271,7 +1271,7 @@ failure:(void (^)(NSError *error))failure
                                  success:(void (^)())success
                                  failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"v1/presence/list/%@", credentials.userId];
+    NSString *path = [NSString stringWithFormat:@"api/v1/presence/list/%@", credentials.userId];
     
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     parameters[@"invite"] = users;
@@ -1300,7 +1300,7 @@ failure:(void (^)(NSError *error))failure
                                  failure:(void (^)(NSError *))failure
 {
     return [httpClient requestWithMethod:@"GET"
-                                    path:@"v1/initialSync"
+                                    path:@"api/v1/initialSync"
                               parameters:@{
                                            @"limit": [NSNumber numberWithInteger:limit]
                                            }
@@ -1346,7 +1346,7 @@ failure:(void (^)(NSError *error))failure
     }
     
     MXHTTPOperation *operation = [httpClient requestWithMethod:@"GET"
-                                                          path:@"v1/events"
+                                                          path:@"api/v1/events"
                                                     parameters:parameters timeout:clientTimeoutInSeconds
                                                        success:^(NSDictionary *JSONResponse)
                                   {
@@ -1421,7 +1421,7 @@ failure:(void (^)(NSError *error))failure
     }
     
     MXHTTPOperation *operation = [httpClient requestWithMethod:@"GET"
-                                                          path:@"/_matrix/client/v2_alpha/sync"
+                                                          path:@"v2_alpha/sync"
                                                     parameters:parameters timeout:clientTimeoutInSeconds
                                                        success:^(NSDictionary *JSONResponse) {
                                                            if (success)
@@ -1448,7 +1448,7 @@ failure:(void (^)(NSError *error))failure
                         failure:(void (^)(NSError *error))failure
 {
     return [httpClient requestWithMethod:@"GET"
-                                    path:@"v1/publicRooms"
+                                    path:@"api/v1/publicRooms"
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
                                      if (success)
@@ -1472,7 +1472,7 @@ failure:(void (^)(NSError *error))failure
                                failure:(void (^)(NSError *error))failure
 {
     // Note: characters in a room alias need to be escaped in the URL
-    NSString *path = [NSString stringWithFormat:@"v1/directory/room/%@", [roomAlias stringByAddingPercentEscapesUsingEncoding:NSASCIIStringEncoding]];
+    NSString *path = [NSString stringWithFormat:@"api/v1/directory/room/%@", [roomAlias stringByAddingPercentEscapesUsingEncoding:NSASCIIStringEncoding]];
     
     return [httpClient requestWithMethod:@"GET"
                                     path:path
@@ -1762,7 +1762,7 @@ failure:(void (^)(NSError *error))failure
                         failure:(void (^)(NSError *))failure
 {
     return [httpClient requestWithMethod:@"GET"
-                                    path:@"v1/voip/turnServer"
+                                    path:@"api/v1/voip/turnServer"
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
                                      if (success)
