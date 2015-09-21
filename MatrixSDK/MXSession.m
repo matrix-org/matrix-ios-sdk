@@ -983,11 +983,12 @@ typedef void (^MXOnResumeDone)();
 
             [room handleMessages:roomMessages direction:MXEventDirectionSync isTimeOrdered:YES];
 
-            // If the initialSync returns less messages than requested, we got all history from the home server
-            if (roomMessages.chunk.count < limit)
-            {
-                [_store storeHasReachedHomeServerPaginationEndForRoom:room.state.roomId andValue:YES];
-            }
+            // Uncomment the following lines when SYN-482 will be fixed
+//            // If the initialSync returns less messages than requested, we got all history from the home server
+//            if (roomMessages.chunk.count < limit)
+//            {
+//                [_store storeHasReachedHomeServerPaginationEndForRoom:room.state.roomId andValue:YES];
+//            }
         }
 
         // Manage room state
