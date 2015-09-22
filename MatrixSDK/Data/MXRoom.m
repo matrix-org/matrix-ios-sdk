@@ -468,7 +468,7 @@
                                             } failure:^(NSError *error) {
                                                 // Check whether the pagination end is reached
                                                 MXError *mxError = [[MXError alloc] initWithNSError:error];
-                                                if (mxError && [mxError.error isEqualToString:kMXErrCodeStringInvalidToken])
+                                                if (mxError && [mxError.error isEqualToString:kMXErrorStringInvalidToken])
                                                 {
                                                     // We run out of items
                                                     [mxSession.store storeHasReachedHomeServerPaginationEndForRoom:_state.roomId andValue:YES];
