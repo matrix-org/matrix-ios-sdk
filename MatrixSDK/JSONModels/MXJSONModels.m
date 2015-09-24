@@ -73,7 +73,7 @@ NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
 // Automatically convert array in chunk to an array of MXEvents.
 + (NSValueTransformer *)chunkJSONTransformer
 {
-    return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXEvent.class];
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXEvent.class];
 }
 
 @end
@@ -83,19 +83,19 @@ NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
 // Automatically convert array in private_user_data to an array of MXEvents.
 + (NSValueTransformer *)privateUserDataJSONTransformer
 {
-    return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXEvent.class];
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXEvent.class];
 }
 
 // Automatically convert array in public_user_data to an array of MXEvents.
 + (NSValueTransformer *)publicUserDataJSONTransformer
 {
-    return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXEvent.class];
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXEvent.class];
 }
 
 // Automatically convert array in rooms to an array of MXRoomSyncResponse.
 + (NSValueTransformer *)roomsJSONTransformer
 {
-    return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXRoomSyncResponse.class];
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXRoomSyncResponse.class];
 }
 
 @end
@@ -107,7 +107,7 @@ NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
 
 + (NSValueTransformer *)eventsJSONTransformer
 {
-    return [NSValueTransformer mtl_JSONDictionaryTransformerWithModelClass:MXRoomEventBatch.class];
+    return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXRoomEventBatch.class];
 }
 
 @end
@@ -381,27 +381,27 @@ NSString *const kMXPushRuleConditionStringRoomMemberCount       = @"room_member_
 
 + (NSValueTransformer *)overrideJSONTransformer
 {
-    return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXPushRule.class];
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXPushRule.class];
 }
 
 + (NSValueTransformer *)contentJSONTransformer
 {
-    return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXPushRule.class];
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXPushRule.class];
 }
 
 + (NSValueTransformer *)roomJSONTransformer
 {
-    return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXPushRule.class];
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXPushRule.class];
 }
 
 + (NSValueTransformer *)senderJSONTransformer
 {
-    return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXPushRule.class];
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXPushRule.class];
 }
 
 + (NSValueTransformer *)underrideJSONTransformer
 {
-    return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXPushRule.class];
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXPushRule.class];
 }
 
 @end
@@ -454,7 +454,7 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
 
 + (NSValueTransformer *)globalJSONTransformer
 {
-    return [NSValueTransformer mtl_JSONDictionaryTransformerWithModelClass:MXPushRulesSet.class];
+    return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXPushRulesSet.class];
 }
 
 @end
@@ -469,7 +469,7 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
 
 + (NSValueTransformer *)offerJSONTransformer
 {
-    return [NSValueTransformer mtl_JSONDictionaryTransformerWithModelClass:MXCallSessionDescription.class];
+    return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXCallSessionDescription.class];
 }
 
 @end
@@ -481,7 +481,7 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
 
 + (NSValueTransformer *)candidateJSONTransformer
 {
-    return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXCallCandidate.class];
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXCallCandidate.class];
 }
 @end
 
@@ -489,7 +489,7 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
 
 + (NSValueTransformer *)answerJSONTransformer
 {
-    return [NSValueTransformer mtl_JSONDictionaryTransformerWithModelClass:MXCallSessionDescription.class];
+    return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXCallSessionDescription.class];
 }
 
 @end

@@ -55,7 +55,8 @@ NSString *const kMX3PIDMediumMSISDN = @"msisdn";
  */
 NSString *const kMXRestClientErrorDomain = @"kMXRestClientErrorDomain";
 
-static MXRestClientAPIVersion _currentPreferredAPIVersion = MXRestClientAPIVersion2;
+// TODO GFO increase this preferred API version when new version is available
+static MXRestClientAPIVersion _currentPreferredAPIVersion = MXRestClientAPIVersion1;
 
 /**
  Authentication flow: register or login
