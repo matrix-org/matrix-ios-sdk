@@ -35,6 +35,11 @@
  */
 #define MXHTTPCLIENT_RETRY_JITTER_MS 3000
 
+/**
+ `MXHTTPClientErrorResponseDataKey`
+ The corresponding value is an `NSDictionary` containing the response data of the operation associated with an error.
+ */
+NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.error.response.data";
 
 @interface MXHTTPClient ()
 {
@@ -187,58 +192,79 @@
 
         if (operation.responseData)
         {
-            // If the home server (or any other Matrix server) sent data, it contains errcode and error
-            // Try to send an NSError encapsulating MXError information
+            // If the home server (or any other Matrix server) sent data, it may contain 'errcode' and 'error'.
+            // In this case, we return an NSError which encapsulates MXError information.
+            // When neither 'errcode' nor 'error' are present the received data are reported in NSError userInfo thanks to 'MXHTTPClientErrorResponseDataKey' key.
             NSError *serializationError = nil;
             NSDictionary *JSONResponse = [httpManager.responseSerializer responseObjectForResponse:operation.response
                                                                                               data:operation.responseData
                                                                                              error:&serializationError];
-
+            
             if (JSONResponse)
             {
                 NSLog(@"[MXHTTPClient] Error JSONResponse: %@", JSONResponse);
-
-                // Extract values from the home server JSON response
-                MXError *mxError = [[MXError alloc] initWithErrorCode:JSONResponse[@"errcode"]
-                                                                error:JSONResponse[@"error"]];
-
-                if ([mxError.errcode isEqualToString:kMXErrCodeStringLimitExceeded])
+                
+                if (JSONResponse[@"errcode"] || JSONResponse[@"error"])
                 {
-                    // Wait and retry if we have not retried too much
-                    if (mxHTTPOperation.age < MXHTTPCLIENT_RATE_LIMIT_MAX_MS)
+                    // Extract values from the home server JSON response
+                    MXError *mxError = [[MXError alloc] initWithErrorCode:JSONResponse[@"errcode"]
+                                                                    error:JSONResponse[@"error"]];
+                    
+                    if ([mxError.errcode isEqualToString:kMXErrCodeStringLimitExceeded])
                     {
-                        NSString *retryAfterMsString = JSONResponse[@"retry_after_ms"];
-                        if (retryAfterMsString)
+                        // Wait and retry if we have not retried too much
+                        if (mxHTTPOperation.age < MXHTTPCLIENT_RATE_LIMIT_MAX_MS)
                         {
-                            error = nil;
-
-                            NSLog(@"[MXHTTPClient] Request %p reached rate limiting. Wait for %@ms", mxHTTPOperation, retryAfterMsString);
-
-                            // Wait for the time provided by the server before retrying
-                            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, [retryAfterMsString intValue] * USEC_PER_SEC), dispatch_get_main_queue(), ^{
-
-                                NSLog(@"[MXHTTPClient] Retry rate limited request %p", mxHTTPOperation);
-
-                                [self tryRequest:mxHTTPOperation method:httpMethod path:path parameters:parameters data:data headers:headers timeout:timeoutInSeconds uploadProgress:uploadProgress success:^(NSDictionary *JSONResponse) {
-
-                                    NSLog(@"[MXHTTPClient] Success of rate limited request %p after %tu tries", mxHTTPOperation, mxHTTPOperation.numberOfTries);
-
-                                    success(JSONResponse);
-
-                                } failure:^(NSError *error) {
-                                    failure(error);
-                                }];
-                            });
+                            NSString *retryAfterMsString = JSONResponse[@"retry_after_ms"];
+                            if (retryAfterMsString)
+                            {
+                                error = nil;
+                                
+                                NSLog(@"[MXHTTPClient] Request %p reached rate limiting. Wait for %@ms", mxHTTPOperation, retryAfterMsString);
+                                
+                                // Wait for the time provided by the server before retrying
+                                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, [retryAfterMsString intValue] * USEC_PER_SEC), dispatch_get_main_queue(), ^{
+                                    
+                                    NSLog(@"[MXHTTPClient] Retry rate limited request %p", mxHTTPOperation);
+                                    
+                                    [self tryRequest:mxHTTPOperation method:httpMethod path:path parameters:parameters data:data headers:headers timeout:timeoutInSeconds uploadProgress:uploadProgress success:^(NSDictionary *JSONResponse) {
+                                        
+                                        NSLog(@"[MXHTTPClient] Success of rate limited request %p after %tu tries", mxHTTPOperation, mxHTTPOperation.numberOfTries);
+                                        
+                                        success(JSONResponse);
+                                        
+                                    } failure:^(NSError *error) {
+                                        failure(error);
+                                    }];
+                                });
+                            }
+                        }
+                        else
+                        {
+                            NSLog(@"[MXHTTPClient] Giving up rate limited request %p: spent too long retrying.", mxHTTPOperation);
                         }
                     }
                     else
                     {
-                        NSLog(@"[MXHTTPClient] Giving up rate limited request %p: spent too long retrying.", mxHTTPOperation);
+                        error = [mxError createNSError];
                     }
                 }
                 else
                 {
-                    error = [mxError createNSError];
+                    // Report the received data in userInfo dictionary
+                    NSMutableDictionary *userInfo;
+                    if (error.userInfo)
+                    {
+                        userInfo = [NSMutableDictionary dictionaryWithDictionary:error.userInfo];
+                    }
+                    else
+                    {
+                        userInfo = [NSMutableDictionary dictionary];
+                    }
+                    
+                    [userInfo setObject:JSONResponse forKey:MXHTTPClientErrorResponseDataKey];
+                    
+                    error = [NSError errorWithDomain:error.domain code:error.code userInfo:userInfo];
                 }
             }
         }

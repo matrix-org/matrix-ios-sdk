@@ -19,6 +19,12 @@
 #import "MXHTTPOperation.h"
 
 /**
+ `MXHTTPClientErrorResponseDataKey`
+ The corresponding value is an `NSDictionary` containing the response data of the operation associated with an error.
+ */
+extern NSString * const MXHTTPClientErrorResponseDataKey;
+
+/**
  `MXHTTPClient` is an abstraction layer for making requests to a HTTP server.
 
 */

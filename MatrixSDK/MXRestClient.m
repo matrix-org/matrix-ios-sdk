@@ -173,7 +173,7 @@ MXAuthAction;
 
 - (NSString*)registerFallback;
 {
-    return [[NSURL URLWithString:@"_matrix/static/client/register" relativeToURL:[NSURL URLWithString:homeserver]] absoluteString];;
+    return [[NSURL URLWithString:@"_matrix/static/client/register" relativeToURL:[NSURL URLWithString:homeserver]] absoluteString];
 }
 
 #pragma mark - Login operations
@@ -228,23 +228,52 @@ MXAuthAction;
 - (MXHTTPOperation*)getRegisterOrLoginFlow:(MXAuthAction)authAction
                                    success:(void (^)(NSArray *flows))success failure:(void (^)(NSError *error))failure
 {
-    return [httpClient requestWithMethod:@"GET"
+    NSString *httpMethod = @"GET";
+    NSDictionary *parameters = nil;
+    
+    if ((MXAuthActionRegister == authAction) && (preferredAPIVersion == MXRestClientAPIVersion2))
+    {
+        // C-S API v2: use POST with no params to get the login mechanism to use when registering
+        // The request will failed with Unauthorized status code, but the login mechanism will be available in response data.
+        httpMethod = @"POST";
+        parameters = @{};
+    }
+    
+    return [httpClient requestWithMethod:httpMethod
                                     path:[self authActionPath:authAction]
-                              parameters:nil
+                              parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+
                                      // sanity check
                                      if (success)
                                      {
                                          NSArray *flows = [MXLoginFlow modelsFromJSON:JSONResponse[@"flows"]];
                                          success(flows);
                                      }
+
                                  }
                                  failure:^(NSError *error) {
-                                     // sanity check
-                                     if (failure)
+
+                                     // C-S API v2: The login mechanism should be available in response data in case of unauthorized request.
+                                     NSArray *flows = nil;
+                                     if (error.userInfo[MXHTTPClientErrorResponseDataKey])
+                                     {
+                                         NSDictionary *userInfo = error.userInfo[MXHTTPClientErrorResponseDataKey];
+                                         flows = [MXLoginFlow modelsFromJSON:userInfo[@"flows"]];
+                                     }
+
+                                     if (flows)
+                                     {
+                                         if (success)
+                                         {
+                                             success(flows);
+                                         }
+                                     }
+                                     else if (failure)
                                      {
                                          failure(error);
                                      }
+
                                  }];
 }
 
