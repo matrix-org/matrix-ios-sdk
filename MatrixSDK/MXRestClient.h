@@ -160,12 +160,13 @@ typedef enum : NSUInteger
 /**
  Get the list of register flows supported by the home server.
  
- @param success A block object called when the operation succeeds. flows is an array of MXLoginFlow objects
+ @param success A block object called when the operation succeeds. It provides the raw JSON response
+ from the server.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)getRegisterFlow:(void (^)(NSArray *flows))success
+- (MXHTTPOperation*)getRegisterFlow:(void (^)(NSDictionary *JSONResponse))success
                         failure:(void (^)(NSError *error))failure;
 
 /**
@@ -219,12 +220,13 @@ typedef enum : NSUInteger
 /**
  Get the list of login flows supported by the home server.
  
- @param success A block object called when the operation succeeds. flows is an array of MXLoginFlow objects
+ @param success A block object called when the operation succeeds. It provides the raw JSON response
+ from the server.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)getLoginFlow:(void (^)(NSArray *flows))success
+- (MXHTTPOperation*)getLoginFlow:(void (^)(NSDictionary *JSONResponse))success
                      failure:(void (^)(NSError *error))failure;
 
 /**

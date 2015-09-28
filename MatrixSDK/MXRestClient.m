@@ -134,23 +134,27 @@ MXAuthAction;
     identityHttpClient = nil;
 }
 
-- (void)setCredentials:(MXCredentials *)inCredentials {
+- (void)setCredentials:(MXCredentials *)inCredentials
+{
     credentials = inCredentials;
     
     // Extract homeserver suffix from userId
     NSArray *components = [credentials.userId componentsSeparatedByString:@":"];
-    if (components.count > 1) {
+    if (components.count > 1)
+    {
         // Remove first component
         NSString *matrixId = components.firstObject;
         NSRange range = NSMakeRange(0, matrixId.length);
         homeserverSuffix = [credentials.userId stringByReplacingCharactersInRange:range withString:@""];
-    } else {
+    }
+    else
+    {
         NSLog(@"[MXRestClient] Warning: the userId is not correctly formatted: %@", credentials.userId);
     }
 }
 
 #pragma mark - Registration operations
-- (MXHTTPOperation*)getRegisterFlow:(void (^)(NSArray *flows))success
+- (MXHTTPOperation*)getRegisterFlow:(void (^)(NSDictionary *JSONResponse))success
                             failure:(void (^)(NSError *error))failure
 {
     return [self getRegisterOrLoginFlow:MXAuthActionRegister success:success failure:failure];
@@ -177,7 +181,7 @@ MXAuthAction;
 }
 
 #pragma mark - Login operations
-- (MXHTTPOperation*)getLoginFlow:(void (^)(NSArray *flows))success
+- (MXHTTPOperation*)getLoginFlow:(void (^)(NSDictionary *JSONResponse))success
                          failure:(void (^)(NSError *error))failure
 {
     return [self getRegisterOrLoginFlow:MXAuthActionLogin success:success failure:failure];
@@ -226,7 +230,7 @@ MXAuthAction;
 }
 
 - (MXHTTPOperation*)getRegisterOrLoginFlow:(MXAuthAction)authAction
-                                   success:(void (^)(NSArray *flows))success failure:(void (^)(NSError *error))failure
+                                   success:(void (^)(NSDictionary *JSONResponse))success failure:(void (^)(NSError *error))failure
 {
     NSString *httpMethod = @"GET";
     NSDictionary *parameters = nil;
@@ -247,26 +251,24 @@ MXAuthAction;
                                      // sanity check
                                      if (success)
                                      {
-                                         NSArray *flows = [MXLoginFlow modelsFromJSON:JSONResponse[@"flows"]];
-                                         success(flows);
+                                         success(JSONResponse);
                                      }
 
                                  }
                                  failure:^(NSError *error) {
 
                                      // C-S API v2: The login mechanism should be available in response data in case of unauthorized request.
-                                     NSArray *flows = nil;
+                                     NSDictionary *JSONResponse = nil;
                                      if (error.userInfo[MXHTTPClientErrorResponseDataKey])
                                      {
-                                         NSDictionary *userInfo = error.userInfo[MXHTTPClientErrorResponseDataKey];
-                                         flows = [MXLoginFlow modelsFromJSON:userInfo[@"flows"]];
+                                         JSONResponse = error.userInfo[MXHTTPClientErrorResponseDataKey];
                                      }
 
-                                     if (flows)
+                                     if (JSONResponse)
                                      {
                                          if (success)
                                          {
-                                             success(flows);
+                                             success(JSONResponse);
                                          }
                                      }
                                      else if (failure)
