@@ -94,6 +94,16 @@ FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeRecaptcha;
     @property (nonatomic) NSString *accessToken;
 
     /**
+     The server certificate trusted by the user (nil when the server is trusted by the device).
+     */
+    @property (nonatomic) NSData *allowedCertificate;
+
+    /**
+     The ignored server certificate (set when the user ignores a certificate change).
+     */
+    @property (nonatomic) NSData *ignoredCertificate;
+
+    /**
      Simple MXCredentials construtor
      */
     - (instancetype)initWithHomeServer:(NSString*)homeServer

@@ -16,7 +16,6 @@
 
 #import "MXRestClient.h"
 
-#import "MXHTTPClient.h"
 #import "MXJSONModel.h"
 #import "MXTools.h"
 
@@ -92,7 +91,7 @@ MXAuthAction;
     _currentPreferredAPIVersion = inPreferredAPIVersion;
 }
 
--(id)initWithHomeServer:(NSString *)inHomeserver
+-(id)initWithHomeServer:(NSString *)inHomeserver andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
 {
     self = [super init];
     if (self)
@@ -100,7 +99,9 @@ MXAuthAction;
         homeserver = inHomeserver;
         preferredAPIVersion = _currentPreferredAPIVersion;
         
-        httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", homeserver, kMXAPIPrefixPath] andAccessToken:nil];
+        httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", homeserver, kMXAPIPrefixPath]
+                                               accessToken:nil
+                         andOnUnrecognizedCertificateBlock:onUnrecognizedCertBlock];
         
         // By default, use the same address for the identity server
         self.identityServer = homeserver;
@@ -108,7 +109,7 @@ MXAuthAction;
     return self;
 }
 
--(id)initWithCredentials:(MXCredentials*)inCredentials
+-(id)initWithCredentials:(MXCredentials*)inCredentials andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
 {
     self = [super init];
     if (self)
@@ -117,7 +118,9 @@ MXAuthAction;
         preferredAPIVersion = _currentPreferredAPIVersion;
         self.credentials = inCredentials;
         
-        httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", homeserver, kMXAPIPrefixPath] andAccessToken:credentials.accessToken];
+        httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", homeserver, kMXAPIPrefixPath]
+                                               accessToken:credentials.accessToken
+                         andOnUnrecognizedCertificateBlock:onUnrecognizedCertBlock];
         
         // By default, use the same address for the identity server
         self.identityServer = homeserver;
@@ -317,6 +320,9 @@ MXAuthAction;
                              
                              // Workaround: HS does not return the right URL. Use the one we used to make the request
                              credentials.homeServer = homeserver;
+                             
+                             // Report the certificate trusted by user (if any)
+                             credentials.allowedCertificate = httpClient.allowedCertificate;
                              
                              // sanity check
                              if (success)
@@ -1640,7 +1646,8 @@ MXAuthAction;
 - (void)setIdentityServer:(NSString *)identityServer
 {
     _identityServer = [identityServer copy];
-    identityHttpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", identityServer, kMXIdentityAPIPrefixPath]];
+    identityHttpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", identityServer, kMXIdentityAPIPrefixPath]
+                             andOnUnrecognizedCertificateBlock:nil];
 }
 
 - (MXHTTPOperation*)lookup3pid:(NSString*)address

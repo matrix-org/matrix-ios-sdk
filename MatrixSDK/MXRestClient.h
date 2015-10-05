@@ -17,7 +17,7 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-#import "MXHTTPOperation.h"
+#import "MXHTTPClient.h"
 #import "MXEvent.h"
 #import "MXJSONModels.h"
 
@@ -150,9 +150,23 @@ typedef enum : NSUInteger
  */
 @property (nonatomic) NSString *identityServer;
 
--(id)initWithHomeServer:(NSString *)homeserver;
+/**
+ Create an instance based on homeserver url.
+ 
+ @param homeserver the homeserver URL.
+ @param onUnrecognizedCertBlock the block called to handle unrecognized certificate (nil if unrecognized certificates are ignored).
+ @return a MXRestClient instance.
+ */
+-(id)initWithHomeServer:(NSString *)homeserver andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock;
 
--(id)initWithCredentials:(MXCredentials*)credentials;
+/**
+ Create an instance based on a matrix user account.
+ 
+ @param credentials the response to a login or a register request.
+ @param onUnrecognizedCertBlock the block called to handle unrecognized certificate (nil if unrecognized certificates are ignored).
+ @return a MXRestClient instance.
+ */
+-(id)initWithCredentials:(MXCredentials*)credentials andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock;
 
 - (void)close;
 
