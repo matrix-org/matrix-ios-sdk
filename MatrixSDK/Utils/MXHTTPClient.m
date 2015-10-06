@@ -62,17 +62,22 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
      The list of blocks managing request retries once network is back
      */
     NSMutableArray *reachabilityObservers;
+
+    /**
+     Unrecognized Certificate handler
+     */
+    MXHTTPClientOnUnrecognizedCertificate onUnrecognizedCertificateBlock;
 }
 @end
 
 @implementation MXHTTPClient
 
--(id)initWithBaseURL:(NSString *)baseURL
+-(id)initWithBaseURL:(NSString *)baseURL andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
 {
-    return [self initWithBaseURL:baseURL andAccessToken:nil];
+    return [self initWithBaseURL:baseURL accessToken:nil andOnUnrecognizedCertificateBlock:onUnrecognizedCertBlock];
 }
 
--(id)initWithBaseURL:(NSString *)baseURL andAccessToken:(NSString *)access_token
+-(id)initWithBaseURL:(NSString *)baseURL accessToken:(NSString *)access_token andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
 {
     self = [super init];
     if (self)
@@ -80,6 +85,19 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
         accessToken = access_token;
         
         httpManager = [[AFHTTPRequestOperationManager alloc] initWithBaseURL:[NSURL URLWithString:baseURL]];
+        
+        // If some certificates are included in app bundle, we enable the AFNetworking pinning mode based on certificate 'AFSSLPinningModeCertificate'.
+        // These certificates will be handled as pinned certificates, the app allows them without prompting the user.
+        // This is an additional option for the developer to handle certificates.
+        AFSecurityPolicy *securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeCertificate];
+        if (securityPolicy.pinnedCertificates.count)
+        {
+            securityPolicy.allowInvalidCertificates = YES;
+            securityPolicy.validatesDomainName = YES; // Enable the domain validation on pinned certificates retrieved from app bundle.
+            httpManager.securityPolicy = securityPolicy;
+        }
+        
+        onUnrecognizedCertificateBlock = onUnrecognizedCertBlock;
         
         // Send requests parameters in JSON format 
         httpManager.requestSerializer = [AFJSONRequestSerializer serializer];
@@ -348,6 +366,87 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
             failure(error);
         }
     }];
+    
+    // Handle SSL certificates
+    [mxHTTPOperation.operation setWillSendRequestForAuthenticationChallengeBlock:^(NSURLConnection *connection, NSURLAuthenticationChallenge *challenge) {
+        
+        NSURLProtectionSpace *protectionSpace = [challenge protectionSpace];
+        
+        if ([protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust])
+        {
+            if ([httpManager.securityPolicy evaluateServerTrust:protectionSpace.serverTrust forDomain:protectionSpace.host])
+            {
+                NSURLCredential *credential = [NSURLCredential credentialForTrust:protectionSpace.serverTrust];
+                [[challenge sender] useCredential:credential forAuthenticationChallenge:challenge];
+            }
+            else
+            {
+                NSLog(@"[MXHTTPClient] Shall we trust %@?", protectionSpace.host);
+                
+                if (onUnrecognizedCertificateBlock)
+                {
+                    SecTrustRef trust = [protectionSpace serverTrust];
+                    
+                    if (SecTrustGetCertificateCount(trust) > 0)
+                    {
+                        // Consider here the leaf certificate (the one at index 0).
+                        SecCertificateRef certif = SecTrustGetCertificateAtIndex(trust, 0);
+                        
+                        NSData *certifData = (__bridge NSData*)SecCertificateCopyData(certif);
+                        if (onUnrecognizedCertificateBlock(certifData))
+                        {
+                            NSLog(@"[MXHTTPClient] Yes, the user trusts its certificate");
+                            
+                            _allowedCertificate = certifData;
+                            
+                            // Update http manager security policy with this trusted certificate.
+                            AFSecurityPolicy *securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeCertificate];
+                            securityPolicy.pinnedCertificates = @[certifData];
+                            securityPolicy.allowInvalidCertificates = YES;
+                            // Disable the domain validation for this certificate trusted by the user.
+                            securityPolicy.validatesDomainName = NO;
+                            httpManager.securityPolicy = securityPolicy;
+                            
+                            // Evaluate again server security
+                            if ([httpManager.securityPolicy evaluateServerTrust:protectionSpace.serverTrust forDomain:protectionSpace.host])
+                            {
+                                NSURLCredential *credential = [NSURLCredential credentialForTrust:protectionSpace.serverTrust];
+                                [[challenge sender] useCredential:credential forAuthenticationChallenge:challenge];
+                                return;
+                            }
+                            
+                            // Here pin certificate failed
+                            NSLog(@"[MXHTTPClient] Failed to pin certificate for %@", protectionSpace.host);
+                            [[challenge sender] continueWithoutCredentialForAuthenticationChallenge:challenge];
+                            return;
+                        }
+                    }
+                }
+                
+                // Here we don't trust the certificate
+                NSLog(@"[MXHTTPClient] No, the user doesn't trust it");
+                [[challenge sender] cancelAuthenticationChallenge:challenge];
+            }
+        }
+        else
+        {
+            if ([challenge previousFailureCount] == 0)
+            {
+                if (httpManager.credential)
+                {
+                    [[challenge sender] useCredential:httpManager.credential forAuthenticationChallenge:challenge];
+                }
+                else
+                {
+                    [[challenge sender] continueWithoutCredentialForAuthenticationChallenge:challenge];
+                }
+            }
+            else
+            {
+                [[challenge sender] continueWithoutCredentialForAuthenticationChallenge:challenge];
+            }
+        }
+    }];
 
     // Make the request continue in background
     [mxHTTPOperation.operation setShouldExecuteAsBackgroundTaskWithExpirationHandler:nil];
@@ -365,7 +464,6 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
     NSUInteger jitter = arc4random_uniform(MXHTTPCLIENT_RETRY_JITTER_MS);
     return  (MXHTTPCLIENT_RETRY_AFTER_MS + jitter);
 }
-
 
 #pragma mark - Private methods
 - (void)setUpNetworkReachibility
