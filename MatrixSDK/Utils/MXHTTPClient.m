@@ -86,12 +86,14 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
         
         httpManager = [[AFHTTPRequestOperationManager alloc] initWithBaseURL:[NSURL URLWithString:baseURL]];
         
-        // Check whether some certificates have been included in app bundle
+        // If some certificates are included in app bundle, we enable the AFNetworking pinning mode based on certificate 'AFSSLPinningModeCertificate'.
+        // These certificates will be handled as pinned certificates, the app allows them without prompting the user.
+        // This is an additional option for the developer to handle certificates.
         AFSecurityPolicy *securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeCertificate];
         if (securityPolicy.pinnedCertificates.count)
         {
             securityPolicy.allowInvalidCertificates = YES;
-//            securityPolicy.validatesDomainName = NO; // Do not disable the domain validation on pinned certificates, keep here the default value.
+            securityPolicy.validatesDomainName = YES; // Enable the domain validation on pinned certificates retrieved from app bundle.
             httpManager.securityPolicy = securityPolicy;
         }
         
@@ -384,11 +386,11 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
                 if (onUnrecognizedCertificateBlock)
                 {
                     SecTrustRef trust = [protectionSpace serverTrust];
-                    CFIndex index = SecTrustGetCertificateCount(trust);
                     
-                    for (int i = 0; i < index; i++)
+                    if (SecTrustGetCertificateCount(trust) > 0)
                     {
-                        SecCertificateRef certif = SecTrustGetCertificateAtIndex(trust, i);
+                        // Consider here the leaf certificate (the one at index 0).
+                        SecCertificateRef certif = SecTrustGetCertificateAtIndex(trust, 0);
                         
                         NSData *certifData = (__bridge NSData*)SecCertificateCopyData(certif);
                         if (onUnrecognizedCertificateBlock(certifData))
