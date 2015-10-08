@@ -21,23 +21,43 @@
     NSMutableDictionary *others;
 }
 
+/**
+ * The JSONKeyPathsByPropertyKey dictionnaries for all subclasses of MXJSONModel.
+ * The key is the child class name. The value, the JSONKeyPathsByPropertyKey dictionnary of the child class.
+ */
+static NSMutableDictionary *JSONKeyPathsByPropertyKeyByClass;
+
++ (void)initialize
+{
+    @synchronized(self)
+    {
+        if (!JSONKeyPathsByPropertyKeyByClass)
+        {
+            JSONKeyPathsByPropertyKeyByClass = [NSMutableDictionary dictionary];
+        }
+
+        // Compute the JSONKeyPathsByPropertyKey for this subclass
+        NSMutableDictionary *JSONKeyPathsByPropertyKey = [NSMutableDictionary dictionary];
+
+        NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"(?<=[a-z])([A-Z])|([A-Z])(?=[a-z])" options:0 error:nil];
+
+        // List all properties defined by the class
+        NSSet *propertyKeys = [self.class propertyKeys];
+        for (NSString *propertyKey in propertyKeys)
+        {
+            // Manage camel-cased properties
+            // Home server uses underscore-separated compounds keys like "event_id". ObjC properties name trend is more camelCase like "eventId".
+            NSString *underscoredString = [[regex stringByReplacingMatchesInString:propertyKey options:0 range:NSMakeRange(0, propertyKey.length) withTemplate:@"_$1$2"] lowercaseString];
+            JSONKeyPathsByPropertyKey[propertyKey] = underscoredString;
+        }
+
+        JSONKeyPathsByPropertyKeyByClass[NSStringFromClass(self.class)] = JSONKeyPathsByPropertyKey;
+    }
+}
+
 + (NSDictionary *)JSONKeyPathsByPropertyKey
 {
-    NSMutableDictionary *JSONKeyPathsByPropertyKey = [NSMutableDictionary dictionary];
-    
-    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"(?<=[a-z])([A-Z])|([A-Z])(?=[a-z])" options:0 error:nil];
-
-    // List all properties defined by the class
-    NSSet *propertyKeys = [self.class propertyKeys];
-    for (NSString *propertyKey in propertyKeys)
-    {
-        // Manage camel-cased properties
-        // Home server uses underscore-separated compounds keys like "event_id". ObjC properties name trend is more camelCase like "eventId".
-        NSString *underscoredString = [[regex stringByReplacingMatchesInString:propertyKey options:0 range:NSMakeRange(0, propertyKey.length) withTemplate:@"_$1$2"] lowercaseString];
-        JSONKeyPathsByPropertyKey[propertyKey] = underscoredString;
-    }
-
-    return JSONKeyPathsByPropertyKey;
+    return JSONKeyPathsByPropertyKeyByClass[NSStringFromClass(self.class)];
 }
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
