@@ -29,7 +29,7 @@ static NSMutableDictionary *JSONKeyPathsByPropertyKeyByClass;
 
 + (void)initialize
 {
-    @synchronized(self)
+    @synchronized(JSONKeyPathsByPropertyKeyByClass)
     {
         if (!JSONKeyPathsByPropertyKeyByClass)
         {
