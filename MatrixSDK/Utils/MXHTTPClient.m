@@ -189,9 +189,13 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
     mxHTTPOperation.numberOfTries++;
     mxHTTPOperation.operation = [httpManager HTTPRequestOperationWithRequest:request success:^(AFHTTPRequestOperation *operation, NSDictionary *JSONResponse) {
 
+        mxHTTPOperation.operation = nil;
         success(JSONResponse);
-        
+
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+
+        mxHTTPOperation.operation = nil;
+
 #if DEBUG
         NSLog(@"[MXHTTPClient] Request %p failed for path: %@ - HTTP code: %ld", mxHTTPOperation, path, (long)operation.response.statusCode);
 #else
