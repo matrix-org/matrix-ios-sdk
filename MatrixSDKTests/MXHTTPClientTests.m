@@ -43,8 +43,9 @@
 
 - (void)testMainThread {
     
-    MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", kMXTestsHomeServerURL, kMXAPIPrefixPath]];
-    
+    MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", kMXTestsHomeServerURL, kMXAPIPrefixPath]
+                                   andOnUnrecognizedCertificateBlock:nil];
+
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
     
     [httpClient requestWithMethod:@"GET"
@@ -65,7 +66,8 @@
 
 - (void)testMXError {
     
-    MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", kMXTestsHomeServerURL, kMXAPIPrefixPath]];
+    MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", kMXTestsHomeServerURL, kMXAPIPrefixPath]
+                                   andOnUnrecognizedCertificateBlock:nil];
     
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
     
@@ -89,7 +91,8 @@
 
 - (void)testNSError {
     
-    MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@/non-existing-path", kMXTestsHomeServerURL]];
+    MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@/non-existing-path", kMXTestsHomeServerURL]
+                                   andOnUnrecognizedCertificateBlock:nil];
     
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
     

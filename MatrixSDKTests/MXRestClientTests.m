@@ -946,7 +946,8 @@
 {
     NSString *mxcURI = @"mxc://matrix.org/rQkrOoaFIRgiACATXUdQIuNJ";
 
-    MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:@"http://matrix.org"];
+    MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:@"http://matrix.org"
+                                        andOnUnrecognizedCertificateBlock:nil];
 
     NSString *contentURL = [mxRestClient urlOfContent:mxcURI];
     XCTAssertEqualObjects(contentURL, @"http://matrix.org/_matrix/media/v1/download/matrix.org/rQkrOoaFIRgiACATXUdQIuNJ");
@@ -956,7 +957,8 @@
 {
     NSString *mxcURI = @"mxc://matrix.org/rQkrOoaFIRgiACATXUdQIuNJ";
 
-    MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:@"http://matrix.org"];
+    MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:@"http://matrix.org"
+                                        andOnUnrecognizedCertificateBlock:nil];
     
     CGFloat scale = [[UIScreen mainScreen] scale];
     CGSize viewSize = CGSizeMake(320, 320);
