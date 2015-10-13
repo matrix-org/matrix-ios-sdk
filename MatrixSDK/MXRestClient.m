@@ -1833,4 +1833,32 @@ MXAuthAction;
                                  }];
 }
 
+#pragma mark - read receips
+/**
+ Send a read receipt.
+ 
+ @param roomId the id of the room.
+ @param eventId the id of the event.
+ @param success A block object called when the operation succeeds. It returns
+ the event id of the event generated on the home server
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)sendReadReceipts:(NSString*)roomId
+                             eventId:(NSString*)eventId
+                             success:(void (^)(NSString *eventId))success
+                             failure:(void (^)(NSError *error))failure
+{
+    return [httpClient requestWithMethod:@"POST"
+                                    path: [NSString stringWithFormat:@"v2_alpha/rooms/%@/receipt/read/%@", roomId, eventId]
+                              parameters:[[NSDictionary alloc] init]
+                                 success:^(NSDictionary *JSONResponse) {
+                                     success(eventId);
+                                 }
+                                 failure:^(NSError *error) {
+                                     failure(error);
+                                 }];
+    
+}
 @end

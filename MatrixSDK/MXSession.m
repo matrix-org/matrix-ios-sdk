@@ -456,6 +456,15 @@ typedef void (^MXOnResumeDone)();
                 [self handlePresenceEvent:event direction:MXEventDirectionForwards];
                 break;
             }
+                
+            case MXEventTypeReceipt: {
+                MXRoom *room = [self roomWithRoomId:event.roomId];
+               
+                if (room) {
+                    [room handleLiveEvent:event];
+                }
+                break;
+            }
 
             case MXEventTypeTypingNotification:
             {
@@ -660,6 +669,8 @@ typedef void (^MXOnResumeDone)();
             return;
         }
         
+        NSMutableArray * roomids = [[NSMutableArray alloc] init];
+        
         NSArray *roomDicts = JSONData[@"rooms"];
         
         NSLog(@"[MXSession] Received %tu rooms in %.0fms", roomDicts.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
@@ -667,6 +678,7 @@ typedef void (^MXOnResumeDone)();
         for (NSDictionary *roomDict in roomDicts)
         {
             MXRoom *room = [self getOrCreateRoom:roomDict[@"room_id"] withJSONData:roomDict notify:NO];
+            [roomids addObject:room.state.roomId];
             
             if ([roomDict objectForKey:@"messages"])
             {
@@ -694,10 +706,30 @@ typedef void (^MXOnResumeDone)();
         }
         
         // Manage presence
-        for (NSDictionary *presenceDict in JSONData[@"presence"])
+        NSArray *presenceDicts = JSONData[@"presence"];
+        for (NSDictionary *presenceDict in presenceDicts)
         {
             MXEvent *presenceEvent = [MXEvent modelFromJSON:presenceDict];
             [self handlePresenceEvent:presenceEvent direction:MXEventDirectionSync];
+        }
+        
+        // Manage receipts
+        NSArray *receiptDicts = JSONData[@"receipts"];
+        for (NSDictionary *receiptDict in receiptDicts)
+        {
+            MXEvent *receiptEvent = [MXEvent modelFromJSON:receiptDict];
+            MXRoom *room = [self roomWithRoomId:receiptEvent.roomId];
+            
+            if (room) {
+                [room handleReceiptEvent:receiptEvent direction:MXEventDirectionSync];
+            }
+        }
+        
+        // init the receips to the latest received one.
+        // else the unread messages counter will not be properly managed.
+        for(NSString* roomId in roomDicts) {
+            MXRoom *room = [self roomWithRoomId:roomId];
+            [room initRoomReceipts];
         }
         
         // Start listening to live events
@@ -1009,6 +1041,16 @@ typedef void (^MXOnResumeDone)();
             MXEvent *presenceEvent = [MXEvent modelFromJSON:presenceDict];
             [self handlePresenceEvent:presenceEvent direction:MXEventDirectionSync];
         }
+        
+        // Manage receipts provided by this API
+        for (NSDictionary *receiptsDict in JSONData[@"receipts"])
+        {
+            MXEvent *receiptEvent = [MXEvent modelFromJSON:receiptsDict];
+            [room handleReceiptEvent:receiptEvent direction:MXEventDirectionSync];
+        }
+        
+        // init the receips to the latest received one.
+        [room initRoomReceipts];
 
         // Commit store changes done in [room handleMessages]
         if ([_store respondsToSelector:@selector(commit)])
@@ -1025,7 +1067,6 @@ typedef void (^MXOnResumeDone)();
                                                           userInfo:@{
                                                                      kMXSessionNotificationRoomIdKey: roomId
                                                                      }];
-
         if (success)
         {
             success(room);

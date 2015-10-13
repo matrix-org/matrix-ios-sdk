@@ -25,9 +25,17 @@
 {
     @protected
     NSMutableDictionary *roomStores;
+    
+    @protected
+    // dict of dict of MXReceiptData indexed by userId
+    NSMutableDictionary *receiptsByRoomId;
+    
+    @protected
+    MXCredentials *credentials;
 }
 
 #pragma mark - protected operations
+
 /**
  Interface to create or retrieve a MXMemoryRoomStore type object.
  

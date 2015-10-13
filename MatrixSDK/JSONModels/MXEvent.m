@@ -32,6 +32,7 @@ NSString *const kMXEventTypeStringRoomMessageFeedback = @"m.room.message.feedbac
 NSString *const kMXEventTypeStringRoomRedaction       = @"m.room.redaction";
 NSString *const kMXEventTypeStringPresence            = @"m.presence";
 NSString *const kMXEventTypeStringTypingNotification  = @"m.typing";
+NSString *const kMXEventTypeStringReceipt             = @"m.receipt";
 
 NSString *const kMXEventTypeStringCallInvite          = @"m.call.invite";
 NSString *const kMXEventTypeStringCallCandidates      = @"m.call.candidates";
@@ -165,6 +166,39 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 {
     // The event is a state event if has a state_key
     return (nil != self.stateKey);
+}
+
+- (NSArray*)senders
+{
+    NSMutableArray* list = [[NSMutableArray alloc] init];
+    
+    if (eventType == MXEventTypeReceipt)
+    {
+        NSArray* eventIds = [_content allKeys];
+        
+        for(NSString* eventId in eventIds) {
+            NSDictionary* eventDict = [_content objectForKey:eventId];
+            NSDictionary* readDict = [eventDict objectForKey:@"read"];
+            
+            if (readDict)
+            {
+                NSArray* userIds = [readDict allKeys];
+                
+                for(NSString* userId in userIds)
+                {
+                    if ([list indexOfObject:userId] == NSNotFound) {
+                        [list addObject:userId];
+                    }
+                }
+            }
+        }
+    }
+    else if (_sender)
+    {
+        [list addObject:_sender];
+    }
+    
+    return list;
 }
 
 - (MXEvent*)prune

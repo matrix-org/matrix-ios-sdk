@@ -44,6 +44,7 @@ typedef enum : NSUInteger
     MXEventTypeCallCandidates,
     MXEventTypeCallAnswer,
     MXEventTypeCallHangup,
+    MXEventTypeReceipt,
 
     // The event is a custom event. Refer to its `MXEventTypeString` version
     MXEventTypeCustom = 1000
@@ -66,6 +67,7 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomMessageFeedback;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomRedaction;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringPresence;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringTypingNotification;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringReceipt;
 
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallInvite;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallCandidates;
@@ -158,6 +160,12 @@ typedef enum : NSUInteger
  Contains the fully-qualified ID of the user who sent this event (since API v2).
  */
 @property (nonatomic) NSString *sender;
+
+/**
+ Contains the fully-qualified ID of the users who sent this event.
+ Should be used with the read receipts.
+ */
+@property (nonatomic) NSArray *senders;
 
 /**
 Contains the fully-qualified ID of the user who sent this event (deprecated since API v2).

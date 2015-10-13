@@ -35,12 +35,14 @@
     if (self)
     {
         roomStores = [NSMutableDictionary dictionary];
+        receiptsByRoomId = [NSMutableDictionary dictionary];
     }
     return self;
 }
 
-- (void)openWithCredentials:(MXCredentials *)credentials onComplete:(void (^)())onComplete failure:(void (^)(NSError *))failure
+- (void)openWithCredentials:(MXCredentials *)someCredentials onComplete:(void (^)())onComplete failure:(void (^)(NSError *))failure
 {
+    credentials = someCredentials;
     // Nothing to do
     onComplete();
 }
@@ -68,6 +70,11 @@
     if (roomStores[roomId])
     {
         [roomStores removeObjectForKey:roomId];
+    }
+    
+    if (receiptsByRoomId[roomId])
+    {
+        [receiptsByRoomId removeObjectForKey:roomId];
     }
 }
 
@@ -125,6 +132,80 @@
 {
     MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
     return [roomStore lastMessageWithTypeIn:types];
+}
+
+/**
+ * Returns the receipts list for an event in a dedicated room.
+ * They are sorted from the latest to the oldest ones.
+ * @param roomId The room Id.
+ * @param eventId The event Id.
+ * @return the receipts for an event in a dedicated room.
+ */
+- (NSArray*)getEventReceipts:(NSString*)roomId eventId:(NSString*)eventId {
+    NSMutableArray* receipts = [[NSMutableArray alloc] init];
+    
+    NSMutableDictionary* receiptsByUserId = [receiptsByRoomId objectForKey:roomId];
+    
+    if (receiptsByUserId) {
+        NSArray* userIds = [[receiptsByUserId allKeys] copy];
+        
+        for(NSString* userId in userIds) {
+            MXReceiptData* receipt = [receiptsByUserId objectForKey:userId];
+            
+            if (receipt && [receipt.eventId isEqualToString:eventId]) {
+                [receipts addObject:receipt];
+            }
+        }
+    }
+    
+    return receipts;
+}
+
+/**
+ * Store the receipt for an user in a room
+ * @param receipt The event
+ * @param roomId The roomId
+ */
+- (BOOL)storeReceipt:(MXReceiptData*)receipt roomId:(NSString*)roomId {
+    NSMutableDictionary* receiptsByUserId = [receiptsByRoomId objectForKey:roomId];
+    
+    if (!receiptsByUserId) {
+        receiptsByUserId = [[NSMutableDictionary alloc] init];
+        [receiptsByRoomId setObject:receiptsByUserId forKey:roomId];
+    }
+    
+    MXReceiptData* curReceipt = [receiptsByUserId objectForKey:receipt.userId];
+    
+    // not yet defined or a new event
+    if (!curReceipt || (![receipt.eventId isEqualToString:curReceipt.eventId] && (receipt.ts > curReceipt.ts)))
+    {
+        [receiptsByUserId setObject:receipt forKey:receipt.userId];
+        return true;
+    }
+    
+    return false;
+}
+
+
+/**
+ * Provides the unread messages list.
+ * @param roomId the room id.
+ * @return the unread messages list.
+ */
+
+- (NSArray*)unreadMessages:(NSString*)roomId {
+    MXMemoryRoomStore* store = [roomStores valueForKey:roomId];
+    NSMutableDictionary* receipsByUserId = [receiptsByRoomId objectForKey:roomId];
+    
+    if (store && receipsByUserId) {
+        MXReceiptData* data = [receipsByUserId objectForKey:credentials.userId];
+        
+        if (data) {
+            return [store eventsAfter:data.eventId except:credentials.userId];
+        }
+    }
+   
+    return NULL;
 }
 
 - (BOOL)isPermanent
