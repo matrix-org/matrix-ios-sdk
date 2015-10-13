@@ -49,5 +49,13 @@
 - (void)checkPaginateWhenReachingTheExactBeginningOfTheRoom:(MXRoom*)room;  // Test for https://matrix.org/jira/browse/SYN-162
 - (void)checkRedactEvent:(MXRoom*)room;
 
+// Tests that may not relevant for all implementations
+- (void)checkUserDisplaynameAndAvatarUrl:(Class)mxStoreClass;
+- (void)checkMXSessionOnStoreDataReady:(Class)mxStoreClass;
+- (void)checkRoomDeletion:(Class)mxStoreClass;
+- (void)checkEventAge:(Class)mxStoreClass;
+- (void)checkMXRoomPaginationToken:(Class)mxStoreClass;
+- (void)checkMultiAccount:(Class)mxStoreClass;
+
 @end
 
