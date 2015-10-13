@@ -161,6 +161,23 @@
 }
 
 
+#pragma mark - Tests on MXStore optional methods
+- (void)testMXFileStoreRoomDeletion
+{
+    [self checkRoomDeletion:MXMemoryStore.class];
+}
+
+- (void)testMXFileStoreAge
+{
+    [self checkEventAge:MXMemoryStore.class];
+}
+
+- (void)testMXFileStoreMultiAccount
+{
+    [self checkMultiAccount:MXMemoryStore.class];
+}
+
+
 #pragma mark - MXMemoryStore specific tests
 - (void)testMXMemoryStorePaginate
 {

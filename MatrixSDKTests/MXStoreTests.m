@@ -749,7 +749,10 @@
             XCTAssertNil(store.userDisplayname);
             XCTAssertNil(store.userAvatarUrl);
 
-            [store close];
+            if ([store respondsToSelector:@selector(close)])
+            {
+                [store close];
+            }
 
             [store openWithCredentials:sharedData.aliceCredentials onComplete:^{
 
@@ -773,7 +776,10 @@
                             XCTAssertEqualObjects(store2.userDisplayname, kMXTestsAliceDisplayName);
                             XCTAssertEqualObjects(store2.userAvatarUrl, kMXTestsAliceAvatarURL);
 
-                            [store2 close];
+                            if ([store2 respondsToSelector:@selector(close)])
+                            {
+                                [store2 close];
+                            }
                             [expectation fulfill];
 
                         } failure:^(NSError *error) {
@@ -816,7 +822,10 @@
             XCTAssertNil(store.userAvatarUrl);
             XCTAssertEqual(store.rooms.count, 0);
 
-            [store close];
+            if ([store respondsToSelector:@selector(close)])
+            {
+                [store close];
+            }
 
             [store openWithCredentials:sharedData.bobCredentials onComplete:^{
 
@@ -936,7 +945,10 @@
 
                             XCTAssertEqual(NSNotFound, [store2.rooms indexOfObject:roomId], @"The room %@ must be no more in the store", roomId);
 
-                            [store2 close];
+                            if ([store2 respondsToSelector:@selector(close)])
+                            {
+                                [store2 close];
+                            }
 
                             [expectation fulfill];
 
@@ -986,7 +998,11 @@
                     NSUInteger age = event.age;
                     uint64_t ageLocalTs = event.ageLocalTs;
 
-                    [store close];
+                    if ([store respondsToSelector:@selector(close)])
+                    {
+                        [store close];
+                    }
+                    
                     [store openWithCredentials:sharedData.bobCredentials onComplete:^{
 
                         MXEvent *sameEvent = [store eventWithEventId:event.eventId inRoom:roomId];
