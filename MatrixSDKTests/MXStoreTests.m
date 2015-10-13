@@ -628,6 +628,7 @@
                     if (direction == MXEventDirectionForwards && MXMembershipInvite == room2.state.membership)
                     {
                         // Join the room on the invitation and check we can paginate all expected text messages
+                        // By default the last Alice's message (sent while Bob is not in the room) is not visible.
                         [room2 join:^{
 
                             NSMutableArray *events = [NSMutableArray array];
@@ -635,8 +636,8 @@
 
                                 if (0 == events.count)
                                 {
-                                    // The most recent message must be "Hi bob" sent by Alice
-                                    XCTAssertEqualObjects(aliceTextEventId, event.eventId);
+                                    // The most recent message must not be "Hi bob" sent by Alice
+                                    XCTAssertNotEqualObjects(aliceTextEventId, event.eventId);
                                 }
 
                                 [events addObject:event];
@@ -646,7 +647,7 @@
                             [room2 resetBackState];
                             [room2 paginateBackMessages:100 complete:^{
 
-                                XCTAssertEqual(events.count, 6, "The room should contain 5 + 1 messages");
+                                XCTAssertEqual(events.count, 5, "The room should contain only 5 messages (the last message sent while the user is not in the room is not visible)");
                                 [expectation fulfill];
 
                             } failure:^(NSError *error) {

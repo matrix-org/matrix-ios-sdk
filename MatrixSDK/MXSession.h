@@ -174,6 +174,8 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
 @property (nonatomic, readonly) MXCallManager *callManager;
 
 
+#pragma mark - Class methods
+
 /**
  Create a MXSession instance.
  This instance will use the passed MXRestClient to make requests to the home server.
@@ -219,6 +221,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
 
 /**
  Pause the session events stream.
+ Caution: this action is ignored if the session state is not MXSessionStateRunning.
  
  No more live events will be received by the listeners.
  */

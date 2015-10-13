@@ -135,7 +135,7 @@
                                  @"password": MXTESTS_PWD
                                  };
 
-    [mxRestClient register:parameters success:^(NSDictionary *JSONResponse) {
+    [mxRestClient registerWithParameters:parameters success:^(NSDictionary *JSONResponse) {
 
         XCTAssertNotNil(JSONResponse[@"access_token"], @"password-based registration flow is complete in one stage. We must get the access token.");
 

@@ -36,11 +36,6 @@
 
 - (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession2
 {
-    return [self initWithRoomId:roomId andMatrixSession:mxSession2 andJSONData:nil];
-}
-
-- (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession2 andJSONData:(NSDictionary*)JSONData
-{
     self = [super init];
     if (self)
     {
@@ -48,9 +43,22 @@
         
         eventListeners = [NSMutableArray array];
         
-        _state = [[MXRoomState alloc] initWithRoomId:roomId andMatrixSession:mxSession2 andJSONData:JSONData andDirection:YES];
+        _state = [[MXRoomState alloc] initWithRoomId:roomId andMatrixSession:mxSession2 andDirection:YES];
 
         _typingUsers = [NSArray array];
+        
+        _isSync = NO;
+    }
+    
+    return self;
+}
+
+- (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession2 andJSONData:(NSDictionary*)JSONData
+{
+    self = [self initWithRoomId:roomId andMatrixSession:mxSession2];
+    if (self)
+    {
+        _state = [[MXRoomState alloc] initWithRoomId:roomId andMatrixSession:mxSession2 andJSONData:JSONData andDirection:YES];
         
         if ([JSONData objectForKey:@"inviter"])
         {
@@ -73,7 +81,8 @@
                                                                     @"origin_server_ts": [NSNumber numberWithLongLong:kMXUndefinedTimestamp]
                                                                     }];
             
-            [self handleMessage:fakeMembershipEvent direction:MXEventDirectionSync pagFrom:@"END"];
+            [self handleMessage:fakeMembershipEvent direction:MXEventDirectionSync];
+            [self handleStateEvent:fakeMembershipEvent direction:MXEventDirectionSync];
 
             [mxSession.store storeEventForRoom:roomId event:fakeMembershipEvent direction:MXEventDirectionSync];
         }
@@ -102,6 +111,20 @@
     return self;
 }
 
+- (void)resetData
+{
+    _isSync = NO;
+    
+    // Reset room state
+    _state = [[MXRoomState alloc] initWithRoomId:_state.roomId andMatrixSession:mxSession andDirection:YES];
+    backState = nil;
+    
+    // Reset typing notif
+    _typingUsers = [NSArray array];
+    
+    // Flush existing data in store
+    [mxSession.store deleteRoom:_state.roomId];
+}
 
 #pragma mark - Properties getters implementation
 - (MXEvent *)lastMessageWithTypeIn:(NSArray*)types
@@ -118,6 +141,79 @@
     || ![mxSession.store hasReachedHomeServerPaginationEndForRoom:_state.roomId];
 }
 
+#pragma mark - sync v2
+
+- (void)handleRoomSyncResponse:(MXRoomSyncResponse *)roomSyncResponse
+{
+    // Check whether the limit has been exceeded for the number of events
+    if (roomSyncResponse.limited)
+    {
+        // Flush the existing data for this room but keep the listener
+        [self resetData];
+        
+        // TODO GFO notify listener about the gap
+    }
+    
+    // TODO GFO handle this field named published
+//    _state.isPublic = roomSyncResponse.published;
+    
+    // Is it an initial sync for this room?
+    BOOL isRoomInitialSync = (roomSyncResponse.limited || !mxSession.store.eventStreamToken);
+    
+    // Handle events
+    NSInteger index = roomSyncResponse.events.batch.count;
+    while (index--)
+    {
+        NSString *eventId = [roomSyncResponse.events.batch objectAtIndex:index];
+        NSDictionary *eventDesc = [roomSyncResponse.eventMap objectForKey:eventId];
+        
+        MXEvent *event = [MXEvent modelFromJSON:eventDesc];
+        event.eventId = eventId;
+        
+        if (isRoomInitialSync)
+        {
+            [self handleMessage:event direction:MXEventDirectionSync];
+            
+            // Store the event
+            [mxSession.store storeEventForRoom:_state.roomId event:event direction:MXEventDirectionSync];
+        }
+        else
+        {
+            // Make room data digest the live event
+            [self handleLiveEvent:event];
+        }
+    }
+    
+    // Finalize initial sync
+    if (isRoomInitialSync)
+    {
+        // Store where to start back pagination (if pagination is possible)
+        if (roomSyncResponse.limited)
+        {
+            [mxSession.store storePaginationTokenOfRoom:_state.roomId andToken:roomSyncResponse.events.prevBatch];
+        }
+        
+        // Get the current room state from state events
+        for (NSInteger index = 0; index < roomSyncResponse.state.count; index++)
+        {
+            NSString *eventId = [roomSyncResponse.state objectAtIndex:index];
+            NSDictionary *eventDesc = [roomSyncResponse.eventMap objectForKey:eventId];
+            
+            MXEvent *event = [MXEvent modelFromJSON:eventDesc];
+            event.eventId = eventId;
+            
+            [self handleStateEvent:event direction:MXEventDirectionSync];
+        }
+        
+        // Update store with new room state when all state event have been processed
+        if ([mxSession.store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
+        {
+            [mxSession.store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
+        }
+    }
+    
+    _isSync = YES;
+}
 
 #pragma mark - Messages handling
 - (void)handleMessages:(MXPaginationResponse*)roomMessages
@@ -136,7 +232,7 @@
             MXEvent *storedEvent = [mxSession.store eventWithEventId:event.eventId inRoom:_state.roomId];
             if (!storedEvent)
             {
-                [self handleMessage:event direction:direction pagFrom:roomMessages.start];
+                [self handleMessage:event direction:direction];
 
                 // Store the event
                 [mxSession.store storeEventForRoom:_state.roomId event:event direction:MXEventDirectionBackwards];
@@ -156,7 +252,7 @@
             MXEvent *storedEvent = [mxSession.store eventWithEventId:event.eventId inRoom:_state.roomId];
             if (!storedEvent)
             {
-                [self handleMessage:event direction:direction pagFrom:roomMessages.end];
+                [self handleMessage:event direction:direction];
 
                 // Store the event
                 [mxSession.store storeEventForRoom:_state.roomId event:event direction:direction];
@@ -168,10 +264,10 @@
     }
 }
 
-- (void)handleMessage:(MXEvent*)event direction:(MXEventDirection)direction pagFrom:(NSString*)pagFrom
+- (void)handleMessage:(MXEvent*)event direction:(MXEventDirection)direction
 {
-    // Consider here state event
-    if (event.isState)
+    // Consider here state event (except during initial sync)
+    if (event.isState && (direction != MXEventDirectionSync))
     {
         [self handleStateEvent:event direction:direction];
         
@@ -199,7 +295,8 @@
 {
     NSArray *events = [MXEvent modelsFromJSON:roomStateEvents];
     
-    for (MXEvent *event in events) {
+    for (MXEvent *event in events)
+    {
         [self handleStateEvent:event direction:direction];
     }
 
@@ -227,9 +324,9 @@
         if (MXEventTypeRoomMember == event.eventType)
         {
             // Update MXUser data
-            MXUser *user = [mxSession getOrCreateUser:event.userId];
+            MXUser *user = [mxSession getOrCreateUser:event.sender];
 
-            MXRoomMember *roomMember = [_state memberWithUserId:event.userId];
+            MXRoomMember *roomMember = [_state memberWithUserId:event.sender];
             if (roomMember && MXMembershipJoin == roomMember.membership)
             {
                 [user updateWithRoomMemberEvent:event roomMember:roomMember];
@@ -261,6 +358,47 @@
 
 
 #pragma mark - Handle live event
+
+- (BOOL)handleReceiptEvent:(MXEvent *)event direction:(MXEventDirection)direction {
+    BOOL managedEvents = false;
+    
+    NSArray* eventIds = [event.content allKeys];
+    
+    for(NSString* eventId in eventIds) {
+        NSDictionary* eventDict = [event.content objectForKey:eventId];
+        NSDictionary* readDict = [eventDict objectForKey:@"read"];
+        
+        if (readDict)
+        {
+            NSArray* userIds = [readDict allKeys];
+            
+            for(NSString* userId in userIds)
+            {
+                NSDictionary* params = [readDict objectForKey:userId];
+                
+                if ([params valueForKey:@"ts"]) {
+                    
+                    MXReceiptData* data = [[MXReceiptData alloc] init];
+                    data.userId = userId;
+                    data.eventId = eventId;
+                    data.ts = ((NSNumber*)[params objectForKey:@"ts"]).longLongValue;
+                    
+                    managedEvents |= [mxSession.store storeReceipt:data roomId:_state.roomId];
+                }
+            }
+        }
+    }
+    
+    // warn only if the receipts are not duplicated ones.
+    if (managedEvents)
+    {
+        // Notify listeners
+        [self notifyListeners:event direction:direction];
+    }
+    
+    return managedEvents;
+}
+
 - (void)handleLiveEvent:(MXEvent*)event
 {
     // Handle first typing notifications
@@ -272,6 +410,10 @@
 
         // Notify listeners
         [self notifyListeners:event direction:MXEventDirectionForwards];
+    }
+    else if (event.eventType == MXEventTypeReceipt)
+    {
+        [self handleReceiptEvent:event direction:MXEventDirectionForwards];
     }
     else
     {
@@ -285,11 +427,11 @@
                 [self handleRedaction:event];
             }
             
-            [self handleMessage:event direction:MXEventDirectionForwards pagFrom:nil];
+            [self handleMessage:event direction:MXEventDirectionForwards];
             
             // Store the event
             [mxSession.store storeEventForRoom:_state.roomId event:event direction:MXEventDirectionForwards];
-
+            
             // And notify listeners
             [self notifyListeners:event direction:MXEventDirectionForwards];
         }
@@ -329,7 +471,7 @@
         for (NSInteger i = messagesFromStoreCount - 1; i >= 0; i--)
         {
             MXEvent *event = messagesFromStore[i];
-            [self handleMessage:event direction:MXEventDirectionBackwards pagFrom:nil];
+            [self handleMessage:event direction:MXEventDirectionBackwards];
         }
 
         numItems -= messagesFromStoreCount;
@@ -372,7 +514,7 @@
                                             } failure:^(NSError *error) {
                                                 // Check whether the pagination end is reached
                                                 MXError *mxError = [[MXError alloc] initWithNSError:error];
-                                                if (mxError && [mxError.error isEqualToString:kMXErrCodeStringInvalidToken])
+                                                if (mxError && [mxError.error isEqualToString:kMXErrorStringInvalidToken])
                                                 {
                                                     // We run out of items
                                                     [mxSession.store storeHasReachedHomeServerPaginationEndForRoom:_state.roomId andValue:YES];
@@ -594,6 +736,83 @@
             [listener notify:event direction:direction andCustomObject:stateBeforeThisEvent];
         }
     }
+}
+
+#pragma mark - Receipts management
+
+/**
+ * Update the read receipt token.
+ * @param token the new token
+ * @param ts the token ts
+ * @return true if the token is refreshed
+ */
+- (BOOL)setReadReceiptToken:(NSString*)token ts:(long)ts {
+    MXReceiptData *data = [[MXReceiptData alloc] init];
+    
+    data.userId = mxSession.myUser.userId;
+    data.eventId = token;
+    data.ts = ts;
+    
+    if ([mxSession.store storeReceipt:data roomId:_state.roomId]) {
+        [mxSession.store commit];
+        return YES;
+    }
+    
+    return NO;
+}
+
+
+- (BOOL) updateToLatestReceipts:(BOOL)sendReceipt {
+    MXEvent* event =[mxSession.store lastMessageOfRoom:_state.roomId withTypeIn:@[kMXEventTypeStringRoomMessage]];
+    
+    if (event) {
+        MXReceiptData *data = [[MXReceiptData alloc] init];
+        
+        data.userId = mxSession.myUser.userId;
+        data.eventId = event.eventId;
+        data.ts = (uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000);
+        
+        if ([mxSession.store storeReceipt:data roomId:_state.roomId]) {
+            [mxSession.store commit];
+            
+            if (sendReceipt) {
+                [mxSession.matrixRestClient sendReadReceipts:_state.roomId eventId:event.eventId success:^(NSString *eventId) {
+                }
+
+                 failure:^(NSError *error) {
+                 }];
+            }
+            
+            return YES;
+        }
+    }
+    
+    return NO;
+}
+
+
+/**
+ * @return true if there is an update
+ */
+- (BOOL)initRoomReceipts {
+    return [self updateToLatestReceipts:NO];
+}
+
+/**
+ *
+ * @return true if there is an update
+ */
+- (BOOL)markAllAsRead
+{
+    return [self updateToLatestReceipts:YES];
+}
+
+/**
+ The number of unread messages.
+ */
+-(NSArray*) unreadMessages
+{
+    return [mxSession.store unreadMessages:_state.roomId];
 }
 
 @end

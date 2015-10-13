@@ -17,7 +17,7 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-#import "MXHTTPOperation.h"
+#import "MXHTTPClient.h"
 #import "MXEvent.h"
 #import "MXJSONModels.h"
 
@@ -83,6 +83,22 @@ typedef enum : NSUInteger
     MXThumbnailingMethodCrop
 } MXThumbnailingMethod;
 
+/**
+ `MXRestClientAPIVersion` lists the existing C-S API versions.
+ */
+typedef enum : NSUInteger
+{
+    /**
+     C-S API V1.
+     */
+    MXRestClientAPIVersion1,
+    
+    /**
+     C-S API V2.
+     */
+    MXRestClientAPIVersion2
+    
+} MXRestClientAPIVersion;
 
 /**
  `MXRestClient` makes requests to Matrix servers.
@@ -93,6 +109,17 @@ typedef enum : NSUInteger
     - the specified Matrix identity server
  */
 @interface MXRestClient : NSObject
+
+/**
+ The preferred Client-Server API version. This value is applied to each new MXRestClient instance
+ during initialisation step (see 'preferredAPIVersion' property).
+ By default the C-S API v2 is considered.
+ 
+ CAUTION: Change of the preferred version impacts only the new MXRestClient instances.
+ 
+ @param preferredAPIVersion the preferred C-S API version.
+ */
++ (void)registerPreferredAPIVersion:(MXRestClientAPIVersion)preferredAPIVersion;
 
 /**
  The homeserver.
@@ -110,16 +137,36 @@ typedef enum : NSUInteger
 @property (nonatomic, readonly) NSString *homeserverSuffix;
 
 /**
+ The preferred Client-Server API version. This version is used during server requests insofar as it is supported.
+ A prior version is used in case the preferred one is not supported yet.
+ It is set during initialisation according to the registered value (see [registerPreferredAPIVersion:]).
+ */
+@property (nonatomic, readonly) MXRestClientAPIVersion preferredAPIVersion;
+
+/**
  The identity server.
  By default, it points to the defined home server. If needed, change it by setting
  this property.
  */
 @property (nonatomic) NSString *identityServer;
 
+/**
+ Create an instance based on homeserver url.
+ 
+ @param homeserver the homeserver URL.
+ @param onUnrecognizedCertBlock the block called to handle unrecognized certificate (nil if unrecognized certificates are ignored).
+ @return a MXRestClient instance.
+ */
+-(id)initWithHomeServer:(NSString *)homeserver andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock;
 
--(id)initWithHomeServer:(NSString *)homeserver;
-
--(id)initWithCredentials:(MXCredentials*)credentials;
+/**
+ Create an instance based on a matrix user account.
+ 
+ @param credentials the response to a login or a register request.
+ @param onUnrecognizedCertBlock the block called to handle unrecognized certificate (nil if unrecognized certificates are ignored).
+ @return a MXRestClient instance.
+ */
+-(id)initWithCredentials:(MXCredentials*)credentials andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock;
 
 - (void)close;
 
@@ -127,12 +174,13 @@ typedef enum : NSUInteger
 /**
  Get the list of register flows supported by the home server.
  
- @param success A block object called when the operation succeeds. flows is an array of MXLoginFlow objects
+ @param success A block object called when the operation succeeds. It provides the raw JSON response
+ from the server.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)getRegisterFlow:(void (^)(NSArray *flows))success
+- (MXHTTPOperation*)getRegisterFlow:(void (^)(NSDictionary *JSONResponse))success
                         failure:(void (^)(NSError *error))failure;
 
 /**
@@ -153,9 +201,9 @@ typedef enum : NSUInteger
 
  @return a MXHTTPOperation instance.
 */
-- (MXHTTPOperation*)register:(NSDictionary*)parameters
-                 success:(void (^)(NSDictionary *JSONResponse))success
-                 failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)registerWithParameters:(NSDictionary*)parameters
+                                   success:(void (^)(NSDictionary *JSONResponse))success
+                                   failure:(void (^)(NSError *error))failure;
 
 /**
  Register a user with the password-based flow.
@@ -186,12 +234,13 @@ typedef enum : NSUInteger
 /**
  Get the list of login flows supported by the home server.
  
- @param success A block object called when the operation succeeds. flows is an array of MXLoginFlow objects
+ @param success A block object called when the operation succeeds. It provides the raw JSON response
+ from the server.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)getLoginFlow:(void (^)(NSArray *flows))success
+- (MXHTTPOperation*)getLoginFlow:(void (^)(NSDictionary *JSONResponse))success
                      failure:(void (^)(NSError *error))failure;
 
 /**
@@ -812,6 +861,36 @@ typedef enum : NSUInteger
                          success:(void (^)(MXPaginationResponse *paginatedResponse))success
                          failure:(void (^)(NSError *error))failure;
 
+/**
+ Get/Update this user's current state.
+ Get/Update information for all rooms (including messages and state events) from the given token (if any).
+ 
+ @param limit the maximum number of messages to return by room.
+ @param gap should the server drop events and do a non-delta sync for rooms whose limit is exceeded.
+ @param sort the optional sort order of messages in the room, *only honoured during an initial sync*. default: "timeline,asc".
+ @param token the token to stream from (nil in case of initial sync).
+ @param serverTimeout the maximum time in ms to wait for an event.
+ @param clientTimeout the maximum time in ms the SDK must wait for the server response.
+ @param setPresence optional parameter to tell the server not to interpret this request as a client (device) as coming online (and as a convenience method for overriding presence state in general - e.g. setting straight to "idle" rather than having to PUT to /users/{userId}/devices/{deviceId}/presence.  It's meaningless to set "online" as that's the default behaviour on the server.)
+ @param backfill true/false (default true): do we want to pull in state from federation if we have less than <limit> events available for a room?
+ @param filters optional filter parameters (see https://github.com/matrix-org/matrix-doc/blob/client_server_v2_http_api/drafts/cs-v2-http-api.rst).
+ 
+ @param success A block object called when the operation succeeds. It provides a `MXSyncResponse` object.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation *)syncWithLimit:(NSInteger)limit
+                               gap:(BOOL)gap
+                              sort:(NSString*)sort
+                             since:(NSString*)token
+                     serverTimeout:(NSUInteger)serverTimeout
+                     clientTimeout:(NSUInteger)clientTimeout
+                       setPresence:(NSString*)setPresence
+                          backfill:(BOOL)backfill
+                           filters:(NSDictionary*)filters
+                           success:(void (^)(MXSyncResponse *syncResponse))success
+                           failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Directory operations
 /**
@@ -992,5 +1071,23 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)turnServer:(void (^)(MXTurnServerResponse *turnServerResponse))success
                        failure:(void (^)(NSError *error))failure;
+
+
+#pragma mark - read receips
+/**
+ Send a read receipt.
+ 
+ @param roomId the id of the room.
+ @param eventId the id of the event.
+ @param success A block object called when the operation succeeds. It returns
+ the event id of the event generated on the home server
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)sendReadReceipts:(NSString*)roomId
+                             eventId:(NSString*)eventId
+                              success:(void (^)(NSString *eventId))success
+                              failure:(void (^)(NSError *error))failure;
 
 @end

@@ -94,6 +94,16 @@ FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeRecaptcha;
     @property (nonatomic) NSString *accessToken;
 
     /**
+     The server certificate trusted by the user (nil when the server is trusted by the device).
+     */
+    @property (nonatomic) NSData *allowedCertificate;
+
+    /**
+     The ignored server certificate (set when the user ignores a certificate change).
+     */
+    @property (nonatomic) NSData *ignoredCertificate;
+
+    /**
      Simple MXCredentials construtor
      */
     - (instancetype)initWithHomeServer:(NSString*)homeServer
@@ -139,6 +149,87 @@ FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeRecaptcha;
      The opaque token for the end.
      */
     @property (nonatomic) NSString *end;
+
+@end
+
+/**
+ `MXSyncResponse` represents the response to sync request.
+ */
+@interface MXSyncResponse : MXJSONModel
+
+    /**
+     The opaque token for the end.
+     */
+    @property (nonatomic) NSString *nextBatch;
+
+    /**
+     Updates about our own user data (array of MXEvents).
+     */
+    @property (nonatomic) NSArray *privateUserData;
+
+    /**
+     Updates about publically published users' data (array of MXEvents).
+     */
+    @property (nonatomic) NSArray *publicUserData;
+
+    /**
+     List of rooms (array of MXRoomSyncResponse).
+     */
+    @property (nonatomic) NSArray *rooms;
+
+@end
+
+/**
+ `MXRoomEventBatch` represents a batch of events for a room sync.
+ */
+@interface MXRoomEventBatch : MXJSONModel
+
+    /**
+     List of event ids (array of NSString).
+     */
+    @property (nonatomic) NSArray *batch;
+
+    /**
+     The opaque token for the start (used for scrollback).
+     */
+    @property (nonatomic) NSString *prevBatch;
+
+@end
+
+/**
+ `MXRoomSyncResponse` represents the response for a room to sync request.
+ */
+@interface MXRoomSyncResponse : MXJSONModel
+
+    /**
+     The room identifier.
+     */
+    @property (nonatomic) NSString *roomId;
+
+    /**
+     Has the limit been exceeded for the number of events returned for this room? if so, the client should be aware that there's a gap in the event stream.
+     */
+    @property (nonatomic) BOOL limited;
+
+    /**
+     HS telling us that this room has been published in our aliases directory.
+     */
+    @property (nonatomic) BOOL published;
+
+    /**
+     Events mapping: keys are event ids (values are event descriptions).
+     */
+    @property (nonatomic) NSDictionary *eventMap;
+
+    /**
+     Batch of events.
+     */
+    @property (nonatomic) MXRoomEventBatch *events;
+
+    /**
+     List of state event ids (array of NSString).
+     */
+    @property (nonatomic) NSArray *state;
 
 @end
 

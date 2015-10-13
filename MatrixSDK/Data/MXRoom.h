@@ -72,6 +72,11 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 @property (nonatomic, readonly) BOOL canPaginate;
 
 /**
+ The unread messages.
+ */
+@property (nonatomic, readonly) NSArray* unreadMessages;
+
+/**
  Flag indicating that the room has been initialSynced with the homeserver.
  
  @discussion
@@ -91,6 +96,13 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 
 - (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession andStateEvents:(NSArray*)stateEvents;
 
+/**
+ Update room data according to the provided sync response (since API v2)
+ 
+ @param roomSyncResponse information to sync the room with the home server data
+ */
+- (void)handleRoomSyncResponse:(MXRoomSyncResponse*)roomSyncResponse;
+
 - (void)handleMessages:(MXPaginationResponse*)roomMessages
              direction:(MXEventDirection)direction
          isTimeOrdered:(BOOL)isTimeOrdered;
@@ -104,6 +116,15 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  */
 - (void)handleLiveEvent:(MXEvent*)event;
 
+
+/**
+ Handle a receipt event
+ 
+ @param event the event to handle.
+ @param the direction
+ @param
+ */
+- (BOOL)handleReceiptEvent:(MXEvent *)event direction:(MXEventDirection)direction;
 
 #pragma mark - Back pagination
 /**
@@ -390,5 +411,24 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  Unregister all listeners.
  */
 - (void)removeAllListeners;
+
+#pragma mark - Receipts management
+/**
+ * Update the read receipt token.
+ * @param token the new token
+ * @param ts the token ts
+ * @return true if the token is refreshed
+ */
+- (BOOL)setReadReceiptToken:(NSString*)token ts:(long)ts;
+
+/**
+ * @return true if there is an update
+ */
+- (BOOL)markAllAsRead;
+
+/**
+ * @return true if there is an update
+ */
+- (BOOL)initRoomReceipts;
 
 @end

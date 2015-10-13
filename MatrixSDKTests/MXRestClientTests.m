@@ -378,7 +378,7 @@
             XCTAssertEqual(roomMemberEvents.count, 1);
             
             MXEvent *roomMemberEvent = roomMemberEvents[0];
-            XCTAssertTrue([roomMemberEvent.userId isEqualToString:bobRestClient.credentials.userId]);
+            XCTAssertTrue([roomMemberEvent.sender isEqualToString:bobRestClient.credentials.userId]);
             
             [expectation fulfill];
             
@@ -546,6 +546,9 @@
                 NSMutableDictionary *JSONData2 = [NSMutableDictionary dictionaryWithDictionary:JSONData];
                 [JSONData2 removeObjectForKey:@"presence"];
 
+                // Remove new added field receipts from initialSyncOfRoom result
+                [JSONData2 removeObjectForKey:@"receipts"];
+
                 // Remove visibility from global initialSync
                 NSMutableDictionary *JSONRoomDataInGlobal2 = [NSMutableDictionary dictionaryWithDictionary:JSONRoomDataInGlobal];
                 [JSONRoomDataInGlobal2 removeObjectForKey:@"visibility"];
@@ -605,6 +608,9 @@
                                     // Remove presence from initialSyncOfRoom result
                                     NSMutableDictionary *JSONData2 = [NSMutableDictionary dictionaryWithDictionary:JSONData];
                                     [JSONData2 removeObjectForKey:@"presence"];
+
+                                    // Remove new added field receipts from initialSyncOfRoom result
+                                    [JSONData2 removeObjectForKey:@"receipts"];
 
                                     // Remove visibility from global initialSync
                                     NSMutableDictionary *JSONRoomDataInGlobal2 = [NSMutableDictionary dictionaryWithDictionary:JSONRoomDataInGlobal];
@@ -668,7 +674,7 @@
             for (MXEvent *roomMemberEvent in roomMemberEvents)
             {
                 MXRoomMemberEventContent *roomMemberEventContent = [MXRoomMemberEventContent modelFromJSON:roomMemberEvent.content];
-                if ([roomMemberEvent.userId isEqualToString:aliceRestClient.credentials.userId])
+                if ([roomMemberEvent.sender isEqualToString:aliceRestClient.credentials.userId])
                 {
                     XCTAssert([roomMemberEventContent.displayname isEqualToString:kMXTestsAliceDisplayName], @"displayname is wrong: %@", roomMemberEventContent.displayname);
                     XCTAssert([roomMemberEventContent.avatarUrl isEqualToString:kMXTestsAliceAvatarURL], @"member.avatarUrl is wrong: %@", roomMemberEventContent.avatarUrl);
