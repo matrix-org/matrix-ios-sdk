@@ -95,4 +95,10 @@
  */
 - (MXEvent*)lastMessageWithTypeIn:(NSArray*)types;
 
+/**
+ * @param eventId the event id to find.
+ * @return the messages events after an event Id
+ */
+- (NSArray*) eventsAfter:(NSString *)eventId except:(NSString*)userId;
+
 @end

@@ -49,6 +49,7 @@
         
         _isSync = NO;
     }
+    
     return self;
 }
 
@@ -357,6 +358,7 @@
 
 
 #pragma mark - Handle live event
+
 - (void)handleLiveEvent:(MXEvent*)event
 {
     // Handle first typing notifications
@@ -368,6 +370,10 @@
 
         // Notify listeners
         [self notifyListeners:event direction:MXEventDirectionForwards];
+    }
+    else if (event.eventType == MXEventTypeReceipt)
+    {
+        [self handleReceiptEvent:event direction:MXEventDirectionForwards];
     }
     else
     {
@@ -385,7 +391,7 @@
             
             // Store the event
             [mxSession.store storeEventForRoom:_state.roomId event:event direction:MXEventDirectionForwards];
-
+            
             // And notify listeners
             [self notifyListeners:event direction:MXEventDirectionForwards];
         }
@@ -690,6 +696,109 @@
             [listener notify:event direction:direction andCustomObject:stateBeforeThisEvent];
         }
     }
+}
+
+#pragma mark - Receipts management
+
+- (BOOL)handleReceiptEvent:(MXEvent *)event direction:(MXEventDirection)direction
+{
+    BOOL managedEvents = false;
+    
+    NSArray* eventIds = [event.content allKeys];
+    
+    for(NSString* eventId in eventIds)
+    {
+        NSDictionary* eventDict = [event.content objectForKey:eventId];
+        NSDictionary* readDict = [eventDict objectForKey:@"read"];
+        
+        if (readDict)
+        {
+            NSArray* userIds = [readDict allKeys];
+            
+            for(NSString* userId in userIds)
+            {
+                NSDictionary* params = [readDict objectForKey:userId];
+                
+                if ([params valueForKey:@"ts"])
+                {    
+                    MXReceiptData* data = [[MXReceiptData alloc] init];
+                    data.userId = userId;
+                    data.eventId = eventId;
+                    data.ts = ((NSNumber*)[params objectForKey:@"ts"]).longLongValue;
+                    
+                    managedEvents |= [mxSession.store storeReceipt:data roomId:_state.roomId];
+                }
+            }
+        }
+    }
+    
+    // warn only if the receipts are not duplicated ones.
+    if (managedEvents)
+    {
+        // Notify listeners
+        [self notifyListeners:event direction:direction];
+    }
+    
+    return managedEvents;
+}
+
+- (BOOL)setReadReceiptToken:(NSString*)token ts:(long)ts
+{
+    MXReceiptData *data = [[MXReceiptData alloc] init];
+    
+    data.userId = mxSession.myUser.userId;
+    data.eventId = token;
+    data.ts = ts;
+    
+    if ([mxSession.store storeReceipt:data roomId:_state.roomId])
+    {
+        [mxSession.store commit];
+        return YES;
+    }
+    
+    return NO;
+}
+
+- (BOOL) acknowledgeLatestMessage:(BOOL)sendReceipt
+{
+    MXEvent* event =[mxSession.store lastMessageOfRoom:_state.roomId withTypeIn:@[kMXEventTypeStringRoomMessage]];
+    
+    if (event)
+    {
+        MXReceiptData *data = [[MXReceiptData alloc] init];
+        
+        data.userId = mxSession.myUser.userId;
+        data.eventId = event.eventId;
+        data.ts = (uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000);
+        
+        if ([mxSession.store storeReceipt:data roomId:_state.roomId])
+        {
+            [mxSession.store commit];
+            
+            if (sendReceipt)
+            {
+                [mxSession.matrixRestClient sendReadReceipts:_state.roomId eventId:event.eventId success:^(NSString *eventId) {
+                }
+
+                 failure:^(NSError *error) {
+                 }];
+            }
+            
+            return YES;
+        }
+    }
+    
+    return NO;
+}
+
+-(NSArray*) unreadMessages
+{
+    return [mxSession.store unreadMessages:_state.roomId];
+}
+
+- (NSArray*)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort
+{
+    return [mxSession.store getEventReceipts:_state.roomId eventId:eventId sorted:sort];
 }
 
 @end

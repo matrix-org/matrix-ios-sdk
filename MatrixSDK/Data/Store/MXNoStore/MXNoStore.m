@@ -168,4 +168,31 @@
     return NO;
 }
 
+- (NSArray*)getEventReceipts:(NSString*)roomId eventId:(NSString*)eventId sorted:(BOOL)sort
+{
+    return NULL;
+}
+
+/**
+ * Store the receipt for an user in a room
+ * @param receipt The event
+ * @param roomId The roomId
+ * @return true if the receipt has been stored
+ */
+- (BOOL)storeReceipt:(MXReceiptData*)receipt roomId:(NSString*)roomId
+{
+    return NO;
+}
+
+/**
+ * Provides the unread messages list.
+ * @param roomId the room id.
+ * @return the unread messages list.
+ */
+- (NSArray*)unreadMessages:(NSString*)roomId
+{
+    return NULL;
+}
+
+
 @end

@@ -117,13 +117,41 @@
     {
         MXEvent *event = messages[i];
 
-        if (!types || (NSNotFound != [types indexOfObject:event.type]))
+        if (event.eventId && (!types || (NSNotFound != [types indexOfObject:event.type])))
         {
             lastMessage = event;
             break;
         }
     }
+    
     return lastMessage;
+}
+
+/**
+ * @param eventId the event id to find.
+ * @return the messages events after an event Id
+ */
+- (NSArray*) eventsAfter:(NSString *)eventId except:(NSString*)userId
+{
+    NSMutableArray* list = [[NSMutableArray alloc] init];
+    Boolean gotIt = false;
+    
+    if (eventId) {
+        for (NSInteger i = 0; i < messages.count; i++)
+        {
+            MXEvent *event = messages[i];
+            
+            if (gotIt) {
+                if (![event.sender isEqualToString:userId] && [event.type isEqualToString:kMXEventTypeStringRoomMessage]) {
+                    [list addObject:event];
+                }
+            } else {
+                gotIt = [event.eventId isEqualToString:eventId];
+            }
+        }
+    }
+    
+    return list;
 }
 
 - (NSString *)description

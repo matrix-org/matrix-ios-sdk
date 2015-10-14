@@ -72,6 +72,11 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 @property (nonatomic, readonly) BOOL canPaginate;
 
 /**
+ The unread messages.
+ */
+@property (nonatomic, readonly) NSArray* unreadMessages;
+
+/**
  Flag indicating that the room has been initialSynced with the homeserver.
  
  @discussion
@@ -110,7 +115,6 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  @param event the event to handle.
  */
 - (void)handleLiveEvent:(MXEvent*)event;
-
 
 #pragma mark - Back pagination
 /**
@@ -397,5 +401,40 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  Unregister all listeners.
  */
 - (void)removeAllListeners;
+
+#pragma mark - Receipts management
+
+/**
+ Handle a receipt event
+ 
+ @param event the event to handle.
+ @param the direction
+ @param
+ */
+- (BOOL)handleReceiptEvent:(MXEvent *)event direction:(MXEventDirection)direction;
+
+/**
+ Update the read receipt token.
+ @param token the new token
+ @param ts the token ts
+@return true if the token is refreshed
+ */
+- (BOOL)setReadReceiptToken:(NSString*)token ts:(long)ts;
+
+/**
+ Acknowlegde the latest room message.
+ Put sendReceipt YES to send a receipt event if the latest message was not yet acknowledged.
+ @param sendReceipt YES to send a receipt event if required
+ @return true if there is an update
+ */
+- (BOOL) acknowledgeLatestMessage:(BOOL)sendReceipt;
+
+/**
+ Returns the receipts list for an event.
+ @param eventId The event Id.
+ @param sort YES to sort them from the latest to the oldest.
+ @return the receipts for an event in a dedicated room.
+ */
+- (NSArray*)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort;
 
 @end
