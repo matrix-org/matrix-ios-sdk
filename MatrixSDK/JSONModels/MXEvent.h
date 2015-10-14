@@ -162,10 +162,10 @@ typedef enum : NSUInteger
 @property (nonatomic) NSString *sender;
 
 /**
- Contains the fully-qualified ID of the users who sent this event.
+ Contains the fully-qualified IDs of the users who sent a read receipt for this event.
  Should be used with the read receipts.
  */
-@property (nonatomic) NSArray *senders;
+@property (nonatomic) NSArray *receiptSenders;
 
 /**
 Contains the fully-qualified ID of the user who sent this event (deprecated since API v2).

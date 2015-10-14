@@ -457,11 +457,19 @@ typedef void (^MXOnResumeDone)();
                 break;
             }
                 
-            case MXEventTypeReceipt: {
-                MXRoom *room = [self roomWithRoomId:event.roomId];
-               
-                if (room) {
-                    [room handleLiveEvent:event];
+            case MXEventTypeReceipt:
+            {
+                if (event.roomId)
+                {
+                    MXRoom *room = [self roomWithRoomId:event.roomId];
+                    if (room)
+                    {
+                        [room handleLiveEvent:event];
+                    }
+                    else
+                    {
+                        NSLog(@"[MXSession] Warning: Received a receipt notification for an unknown room: %@. Event: %@", event.roomId, event);
+                    }
                 }
                 break;
             }
@@ -720,16 +728,18 @@ typedef void (^MXOnResumeDone)();
             MXEvent *receiptEvent = [MXEvent modelFromJSON:receiptDict];
             MXRoom *room = [self roomWithRoomId:receiptEvent.roomId];
             
-            if (room) {
+            if (room)
+            {
                 [room handleReceiptEvent:receiptEvent direction:MXEventDirectionSync];
             }
         }
         
         // init the receips to the latest received one.
         // else the unread messages counter will not be properly managed.
-        for(NSString* roomId in roomDicts) {
+        for(NSString* roomId in roomDicts)
+        {
             MXRoom *room = [self roomWithRoomId:roomId];
-            [room initRoomReceipts];
+            [room acknowledgeLatestMessage:NO];
         }
         
         // Start listening to live events
@@ -1091,7 +1101,15 @@ typedef void (^MXOnResumeDone)();
 #pragma mark - The user's rooms
 - (MXRoom *)roomWithRoomId:(NSString *)roomId
 {
-    return [rooms objectForKey:roomId];
+    // sanity check
+    if (roomId)
+    {
+        return [rooms objectForKey:roomId];
+    }
+    else
+    {
+        return NULL;
+    }
 }
 
 - (NSArray *)rooms

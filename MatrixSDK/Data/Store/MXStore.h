@@ -136,12 +136,13 @@
 
 /**
  * Returns the receipts list for an event in a dedicated room.
- * They are sorted from the latest to the oldest ones.
+ * if sort is set to YES, they are sorted from the latest to the oldest ones.
  * @param roomId The room Id.
  * @param eventId The event Id.
+ * @param sort to sort them from the latest to the oldest
  * @return the receipts for an event in a dedicated room.
  */
-- (NSArray*)getEventReceipts:(NSString*)roomId eventId:(NSString*)eventId;
+- (NSArray*)getEventReceipts:(NSString*)roomId eventId:(NSString*)eventId sorted:(BOOL)sort;
 
 /**
  * Store the receipt for an user in a room

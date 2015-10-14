@@ -136,26 +136,42 @@
 
 /**
  * Returns the receipts list for an event in a dedicated room.
- * They are sorted from the latest to the oldest ones.
+ * if sort is set to YES, they are sorted from the latest to the oldest ones.
  * @param roomId The room Id.
  * @param eventId The event Id.
+ * @param sort to sort them from the latest to the oldest
  * @return the receipts for an event in a dedicated room.
  */
-- (NSArray*)getEventReceipts:(NSString*)roomId eventId:(NSString*)eventId {
+- (NSArray*)getEventReceipts:(NSString*)roomId eventId:(NSString*)eventId sorted:(BOOL)sort
+{
     NSMutableArray* receipts = [[NSMutableArray alloc] init];
     
     NSMutableDictionary* receiptsByUserId = [receiptsByRoomId objectForKey:roomId];
     
-    if (receiptsByUserId) {
+    if (receiptsByUserId)
+    {
         NSArray* userIds = [[receiptsByUserId allKeys] copy];
         
-        for(NSString* userId in userIds) {
+        for(NSString* userId in userIds)
+        {
             MXReceiptData* receipt = [receiptsByUserId objectForKey:userId];
             
-            if (receipt && [receipt.eventId isEqualToString:eventId]) {
+            if (receipt && [receipt.eventId isEqualToString:eventId])
+            {
                 [receipts addObject:receipt];
             }
         }
+    }
+
+    if (sort)
+    {
+        return [receipts sortedArrayUsingComparator:^NSComparisonResult(id a, id b)
+                                {
+                                    MXReceiptData *first =  (MXReceiptData*)a;
+                                    MXReceiptData *second = (MXReceiptData*)b;
+                                    
+                                    return (first.ts < second.ts) ? NSOrderedDescending : NSOrderedAscending;
+                                }];
     }
     
     return receipts;
@@ -166,10 +182,12 @@
  * @param receipt The event
  * @param roomId The roomId
  */
-- (BOOL)storeReceipt:(MXReceiptData*)receipt roomId:(NSString*)roomId {
+- (BOOL)storeReceipt:(MXReceiptData*)receipt roomId:(NSString*)roomId
+{
     NSMutableDictionary* receiptsByUserId = [receiptsByRoomId objectForKey:roomId];
     
-    if (!receiptsByUserId) {
+    if (!receiptsByUserId)
+    {
         receiptsByUserId = [[NSMutableDictionary alloc] init];
         [receiptsByRoomId setObject:receiptsByUserId forKey:roomId];
     }
@@ -193,14 +211,17 @@
  * @return the unread messages list.
  */
 
-- (NSArray*)unreadMessages:(NSString*)roomId {
+- (NSArray*)unreadMessages:(NSString*)roomId
+{
     MXMemoryRoomStore* store = [roomStores valueForKey:roomId];
     NSMutableDictionary* receipsByUserId = [receiptsByRoomId objectForKey:roomId];
     
-    if (store && receipsByUserId) {
+    if (store && receipsByUserId)
+    {
         MXReceiptData* data = [receipsByUserId objectForKey:credentials.userId];
         
-        if (data) {
+        if (data)
+        {
             return [store eventsAfter:data.eventId except:credentials.userId];
         }
     }

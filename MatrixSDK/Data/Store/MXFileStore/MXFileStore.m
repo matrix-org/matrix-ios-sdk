@@ -604,7 +604,8 @@ NSString *const kMXReceiptsFolder = @"receipts";
 - (void)loadReceipts
 {
     // backward compliancy
-    if (![[NSFileManager defaultManager] fileExistsAtPath:storeReceiptsPath]) {
+    if (![[NSFileManager defaultManager] fileExistsAtPath:storeReceiptsPath])
+    {
         [[NSFileManager defaultManager] createDirectoryAtPath:storeReceiptsPath withIntermediateDirectories:YES attributes:nil error:nil];
     }
     
@@ -613,8 +614,8 @@ NSString *const kMXReceiptsFolder = @"receipts";
     NSDate *startDate = [NSDate date];
     NSLog(@"[MXFileStore] loadReceipts:");
     
-    for (NSString *roomId in roomIDArray)  {
-        
+    for (NSString *roomId in roomIDArray)
+    {
         NSString *roomFile = [storeReceiptsPath stringByAppendingPathComponent:roomId];
         
         NSMutableDictionary *receiptsDict = NULL;
@@ -646,7 +647,8 @@ NSString *const kMXReceiptsFolder = @"receipts";
     // backward compliancy (it should be done in any known room)
     roomIDArray = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsMessagesPath error:nil];
     
-    for (NSString *roomId in roomIDArray)  {
+    for (NSString *roomId in roomIDArray)
+    {
         NSMutableDictionary *receiptsDict = [receiptsByRoomId objectForKey:roomId];
     
         if (!receiptsDict)
@@ -655,15 +657,13 @@ NSString *const kMXReceiptsFolder = @"receipts";
             [receiptsByRoomId setObject:receiptsDict forKey:roomId];
         }
         
-        if (![receiptsDict objectForKey:credentials.userId]) {
+        if (![receiptsDict objectForKey:credentials.userId])
+        {
             MXMemoryRoomStore* store = roomStores[roomId];
             MXEvent* event = [store lastMessageWithTypeIn: NULL];
             
-            if (!event.eventId) {
-                event = [store lastMessageWithTypeIn: NULL];
-            }
-            
-            if (event) {
+            if (event)
+            {
                 MXReceiptData *data = [[MXReceiptData alloc] init];
                 data.userId = credentials.userId;
                 data.eventId = event.eventId;

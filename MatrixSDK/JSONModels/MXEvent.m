@@ -168,7 +168,7 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     return (nil != self.stateKey);
 }
 
-- (NSArray*)senders
+- (NSArray*)receiptSenders
 {
     NSMutableArray* list = [[NSMutableArray alloc] init];
     
@@ -176,7 +176,8 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     {
         NSArray* eventIds = [_content allKeys];
         
-        for(NSString* eventId in eventIds) {
+        for(NSString* eventId in eventIds)
+        {
             NSDictionary* eventDict = [_content objectForKey:eventId];
             NSDictionary* readDict = [eventDict objectForKey:@"read"];
             
@@ -186,7 +187,8 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
                 
                 for(NSString* userId in userIds)
                 {
-                    if ([list indexOfObject:userId] == NSNotFound) {
+                    if ([list indexOfObject:userId] == NSNotFound)
+                    {
                         [list addObject:userId];
                     }
                 }

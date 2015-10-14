@@ -168,7 +168,7 @@
     return NO;
 }
 
-- (NSArray*)getEventReceipts:(NSString*)roomId eventId:(NSString*)eventId
+- (NSArray*)getEventReceipts:(NSString*)roomId eventId:(NSString*)eventId sorted:(BOOL)sort
 {
     return NULL;
 }
