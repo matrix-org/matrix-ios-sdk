@@ -184,23 +184,6 @@
  */
 - (BOOL)storeReceipt:(MXReceiptData*)receipt roomId:(NSString*)roomId
 {
-    // check if the user acknowlegdes his own events
-    if (![credentials.userId isEqualToString:receipt.userId])
-    {
-        MXEvent* event = [self eventWithEventId:receipt.eventId inRoom:roomId];
-        
-        // unknown event -> cannot save the receipt
-        if (!event)
-        {
-            return NO;
-        }
-        
-        if ([event.sender isEqualToString:receipt.userId])
-        {
-            return NO;
-        }
-    }
-    
     NSMutableDictionary* receiptsByUserId = [receiptsByRoomId objectForKey:roomId];
     
     if (!receiptsByUserId)
