@@ -1060,7 +1060,7 @@ typedef void (^MXOnResumeDone)();
         }
         
         // init the receips to the latest received one.
-        [room initRoomReceipts];
+        [room acknowledgeLatestMessage:NO];
 
         // Commit store changes done in [room handleMessages]
         if ([_store respondsToSelector:@selector(commit)])
