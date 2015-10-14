@@ -162,8 +162,8 @@ typedef enum : NSUInteger
 @property (nonatomic) NSString *sender;
 
 /**
- Contains the fully-qualified IDs of the users who sent a read receipt for this event.
- Should be used with the read receipts.
+ Contains the fully-qualified IDs of the users who sent read receipts with this event.
+ This property is relevant only for events with 'kMXEventTypeStringReceipt' type.
  */
 @property (nonatomic) NSArray *receiptSenders;
 
