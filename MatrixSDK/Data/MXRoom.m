@@ -300,7 +300,6 @@
 - (void)cloneState:(MXEventDirection)direction
 {
     // create a new instance of the state
-    // any
     if (MXEventDirectionBackwards == direction)
     {
         backState = [backState copy];
