@@ -185,7 +185,9 @@ typedef void (^MXOnResumeDone)();
             for (NSString *roomId in _store.rooms)
             {
                 NSArray *stateEvents = [_store stateOfRoom:roomId];
-                [self createRoom:roomId withStateEvents:stateEvents notify:NO];
+                @autoreleasepool {
+                    [self createRoom:roomId withStateEvents:stateEvents notify:NO];
+                }
             }
 
             NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
@@ -256,10 +258,12 @@ typedef void (^MXOnResumeDone)();
 
                 NSLog(@"[MXSession] Got presence of %tu users in %.0fms", userPresenceEvents.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
-                for (MXEvent *userPresenceEvent in userPresenceEvents)
-                {
-                    MXUser *user = [self getOrCreateUser:userPresenceEvent.content[@"user_id"]];
-                    [user updateWithPresenceEvent:userPresenceEvent];
+                @autoreleasepool {
+                    for (MXEvent *userPresenceEvent in userPresenceEvents)
+                    {
+                        MXUser *user = [self getOrCreateUser:userPresenceEvent.content[@"user_id"]];
+                        [user updateWithPresenceEvent:userPresenceEvent];
+                    }
                 }
 
                 if (onPresenceDone)

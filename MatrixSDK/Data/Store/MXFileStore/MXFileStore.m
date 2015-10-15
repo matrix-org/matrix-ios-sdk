@@ -112,58 +112,60 @@ NSString *const kMXReceiptsFolder = @"receipts";
 
         NSLog(@"[MXFileStore] diskUsage: %@", [NSByteCountFormatter stringFromByteCount:self.diskUsage countStyle:NSByteCountFormatterCountStyleFile]);
 
-        [self loadMetaData];
+        @autoreleasepool {
+            [self loadMetaData];
 
-        // Do some validations
+            // Do some validations
 
-        // Check if
-        if (nil == metaData)
-        {
-            [self deleteAllData];
-        }
-        // Check store version
-        else if (kMXFileVersion != metaData.version)
-        {
-            NSLog(@"[MXFileStore] New MXFileStore version detected");
-            [self deleteAllData];
-        }
-        // Check credentials
-        else if (nil == credentials)
-        {
-            [self deleteAllData];
-        }
-        // Check credentials
-        else if (NO == [metaData.homeServer isEqualToString:credentials.homeServer]
-                 || NO == [metaData.userId isEqualToString:credentials.userId]
-                 || NO == [metaData.accessToken isEqualToString:credentials.accessToken])
+            // Check if
+            if (nil == metaData)
+            {
+                [self deleteAllData];
+            }
+            // Check store version
+            else if (kMXFileVersion != metaData.version)
+            {
+                NSLog(@"[MXFileStore] New MXFileStore version detected");
+                [self deleteAllData];
+            }
+            // Check credentials
+            else if (nil == credentials)
+            {
+                [self deleteAllData];
+            }
+            // Check credentials
+            else if (NO == [metaData.homeServer isEqualToString:credentials.homeServer]
+                     || NO == [metaData.userId isEqualToString:credentials.userId]
+                     || NO == [metaData.accessToken isEqualToString:credentials.accessToken])
 
-        {
-            NSLog(@"[MXFileStore] Credentials do not match");
-            [self deleteAllData];
-        }
+            {
+                NSLog(@"[MXFileStore] Credentials do not match");
+                [self deleteAllData];
+            }
 
-        // If metaData is still defined, we can load rooms data
-        if (metaData)
-        {
-            [self loadRoomsMessages];
-        }
-        
-        if (metaData)
-        {
-            [self loadReceipts];
+            // If metaData is still defined, we can load rooms data
+            if (metaData)
+            {
+                [self loadRoomsMessages];
+            }
+            
+            if (metaData)
+            {
+                [self loadReceipts];
 
-        }
-        
-        // Else, if credentials is valid, create and store it
-        if (nil == metaData && credentials.homeServer && credentials.userId && credentials.accessToken)
-        {
-            metaData = [[MXFileStoreMetaData alloc] init];
-            metaData.homeServer = [credentials.homeServer copy];
-            metaData.userId = [credentials.userId copy];
-            metaData.accessToken = [credentials.accessToken copy];
-            metaData.version = kMXFileVersion;
-            metaDataHasChanged = YES;
-            [self saveMetaData];
+            }
+            
+            // Else, if credentials is valid, create and store it
+            if (nil == metaData && credentials.homeServer && credentials.userId && credentials.accessToken)
+            {
+                metaData = [[MXFileStoreMetaData alloc] init];
+                metaData.homeServer = [credentials.homeServer copy];
+                metaData.userId = [credentials.userId copy];
+                metaData.accessToken = [credentials.accessToken copy];
+                metaData.version = kMXFileVersion;
+                metaDataHasChanged = YES;
+                [self saveMetaData];
+            }
         }
         
         dispatch_async(dispatch_get_main_queue(), ^{

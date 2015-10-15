@@ -99,11 +99,13 @@
     self = [self initWithRoomId:roomId andMatrixSession:mxSession2];
     if (self)
     {
-        for (MXEvent *event in stateEvents)
-        {
-            [self handleStateEvent:event direction:MXEventDirectionSync];
+        @autoreleasepool {
+            for (MXEvent *event in stateEvents)
+            {
+                [self handleStateEvent:event direction:MXEventDirectionSync];
+            }
         }
-
+        
         if (stateEvents) {
             _isSync = YES;
         }
@@ -453,15 +455,17 @@
 
     if (messagesFromStoreCount)
     {
-        // messagesFromStore are in chronological order
-        // Handle events from the most recent
-        for (NSInteger i = messagesFromStoreCount - 1; i >= 0; i--)
-        {
-            MXEvent *event = messagesFromStore[i];
-            [self handleMessage:event direction:MXEventDirectionBackwards];
+        @autoreleasepool {
+            // messagesFromStore are in chronological order
+            // Handle events from the most recent
+            for (NSInteger i = messagesFromStoreCount - 1; i >= 0; i--)
+            {
+                MXEvent *event = messagesFromStore[i];
+                [self handleMessage:event direction:MXEventDirectionBackwards];
+            }
+            
+            numItems -= messagesFromStoreCount;
         }
-
-        numItems -= messagesFromStoreCount;
     }
 
     if (0 < numItems && NO == [mxSession.store hasReachedHomeServerPaginationEndForRoom:_state.roomId])
@@ -479,24 +483,26 @@
                                               limit:numItems
                                             success:^(MXPaginationResponse *paginatedResponse) {
 
-                                                // Check pagination end
-                                                if (paginatedResponse.chunk.count < numItems)
-                                                {
-                                                    // We run out of items
-                                                    [mxSession.store storeHasReachedHomeServerPaginationEndForRoom:_state.roomId andValue:YES];
+                                                @autoreleasepool {
+                                                    // Check pagination end
+                                                    if (paginatedResponse.chunk.count < numItems)
+                                                    {
+                                                        // We run out of items
+                                                        [mxSession.store storeHasReachedHomeServerPaginationEndForRoom:_state.roomId andValue:YES];
+                                                    }
+                                                    
+                                                    // Process these new events
+                                                    [self handleMessages:paginatedResponse direction:MXEventDirectionBackwards isTimeOrdered:NO];
+                                                    
+                                                    // Commit store changes
+                                                    if ([mxSession.store respondsToSelector:@selector(commit)])
+                                                    {
+                                                        [mxSession.store commit];
+                                                    }
+                                                    
+                                                    // Inform the method caller
+                                                    complete();
                                                 }
-
-                                                // Process these new events
-                                                [self handleMessages:paginatedResponse direction:MXEventDirectionBackwards isTimeOrdered:NO];
-
-                                                // Commit store changes
-                                                if ([mxSession.store respondsToSelector:@selector(commit)])
-                                                {
-                                                    [mxSession.store commit];
-                                                }
-                                                
-                                                // Inform the method caller
-                                                complete();
                                                 
                                             } failure:^(NSError *error) {
                                                 // Check whether the pagination end is reached
