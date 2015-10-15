@@ -178,15 +178,24 @@
 
 - (void)checkEventWithEventIdOfStore:(id<MXStore>)store
 {
-    MXEvent *event = [MXEvent modelFromJSON:@{@"event_id" : @"anID"}];
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
 
-    [store storeEventForRoom:@"roomId" event:event direction:MXEventDirectionForwards];
+    [sharedData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+        [store openWithCredentials:bobRestClient.credentials onComplete:^{
+            MXEvent *event = [MXEvent modelFromJSON:@{@"event_id" : @"anID", @"room_id": @"roomId"}];
 
-    MXEvent *storedEvent = [store eventWithEventId:@"anID" inRoom:@"roomId"];
+            [store storeEventForRoom:@"roomId" event:event direction:MXEventDirectionForwards];
 
-    XCTAssertEqualObjects(storedEvent, event);
+            MXEvent *storedEvent = [store eventWithEventId:@"anID" inRoom:@"roomId"];
 
-    [expectation fulfill];
+            XCTAssertEqualObjects(storedEvent, event);
+
+            [expectation fulfill];
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
 }
 
 - (void)checkPaginateBack:(MXRoom*)room
@@ -523,11 +532,13 @@
     XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
 
     [room resetBackState];
-    XCTAssertEqual([room lastMessageWithTypeIn:nil], lastMessage, @"The last message should stay the same");
+    MXEvent *lastMessage2 = [room lastMessageWithTypeIn:nil];
+    XCTAssertEqualObjects(lastMessage2.eventId, lastMessage.eventId,  @"The last message should stay the same");
 
     [room paginateBackMessages:100 complete:^() {
 
-        XCTAssertEqual([room lastMessageWithTypeIn:nil], lastMessage, @"The last message should stay the same");
+        MXEvent *lastMessage3 = [room lastMessageWithTypeIn:nil];
+        XCTAssertEqualObjects(lastMessage3.eventId, lastMessage.eventId,  @"The last message should stay the same");
 
         [expectation fulfill];
 
