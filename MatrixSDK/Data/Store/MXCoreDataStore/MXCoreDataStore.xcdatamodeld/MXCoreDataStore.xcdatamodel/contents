@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="8195" systemVersion="14F27" minimumToolsVersion="Xcode 7.0">
+    <entity name="Account" representedClassName="Account" syncable="YES">
+        <attribute name="eventStreamToken" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="homeServer" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="userAvatarUrl" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="userDisplayName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="userId" attributeType="String" minValueString="1" indexed="YES" syncable="YES"/>
+        <attribute name="version" optional="YES" attributeType="Integer 32" defaultValueString="0" syncable="YES"/>
+        <relationship name="rooms" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Room" syncable="YES"/>
+    </entity>
+    <entity name="MXEventEntity" representedClassName="MXEventEntity" syncable="YES">
+        <attribute name="ageLocalTs" optional="YES" attributeType="Integer 64" defaultValueString="0" syncable="YES"/>
+        <attribute name="content" optional="YES" attributeType="Transformable" syncable="YES"/>
+        <attribute name="eventId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="originServerTs" optional="YES" attributeType="Integer 64" defaultValueString="0" syncable="YES"/>
+        <attribute name="prevContent" optional="YES" attributeType="Transformable" syncable="YES"/>
+        <attribute name="redactedBecause" optional="YES" attributeType="Transformable" syncable="YES"/>
+        <attribute name="redacts" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="roomId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="sender" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="stateKey" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="type" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="userId" optional="YES" attributeType="String" syncable="YES"/>
+    </entity>
+    <entity name="Room" representedClassName="Room" syncable="YES">
+        <attribute name="hasReachedHomeServerPaginationEnd" optional="YES" attributeType="Boolean" syncable="YES"/>
+        <attribute name="paginationToken" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="roomId" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="messages" optional="YES" toMany="YES" deletionRule="Cascade" ordered="YES" destinationEntity="MXEventEntity" syncable="YES"/>
+        <relationship name="state" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="MXEventEntity" syncable="YES"/>
+    </entity>
+    <elements>
+        <element name="Account" positionX="-693" positionY="-225" width="128" height="148"/>
+        <element name="MXEventEntity" positionX="-18" positionY="-81" width="128" height="223"/>
+        <element name="Room" positionX="-423" positionY="-163" width="243" height="118"/>
+    </elements>
+</model>
