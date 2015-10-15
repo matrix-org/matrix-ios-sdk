@@ -266,17 +266,22 @@
 
 - (void)handleMessage:(MXEvent*)event direction:(MXEventDirection)direction
 {
-    // Consider here state event (except during initial sync)
-    if (event.isState && (direction != MXEventDirectionSync))
+    if (event.isState)
     {
-        [self handleStateEvent:event direction:direction];
+        [self cloneState:direction];
         
-        // Update store with new room state once a live event has been processed
-        if (direction == MXEventDirectionForwards)
+        // Consider here state event (except during initial sync)
+        if (direction != MXEventDirectionSync)
         {
-            if ([mxSession.store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
+            [self handleStateEvent:event direction:direction];
+            
+            // Update store with new room state once a live event has been processed
+            if (direction == MXEventDirectionForwards)
             {
-                [mxSession.store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
+                if ([mxSession.store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
+                {
+                    [mxSession.store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
+                }
             }
         }
     }
@@ -291,9 +296,32 @@
 
 
 #pragma mark - State events handling
+
+- (void)cloneState:(MXEventDirection)direction
+{
+    // create a new instance of the state
+    // any
+    if (MXEventDirectionBackwards == direction)
+    {
+        backState = [backState copy];
+    }
+    else
+    {
+        _state = [_state copy];
+    }
+}
+
 - (void)handleStateEvents:(NSArray*)roomStateEvents direction:(MXEventDirection)direction
 {
     NSArray *events = [MXEvent modelsFromJSON:roomStateEvents];
+    
+    // check if there is something to do
+    if (!events || (events.count == 0))
+    {
+        return;
+    }
+    
+    [self cloneState:direction];
     
     for (MXEvent *event in events)
     {
@@ -402,7 +430,7 @@
 - (void)resetBackState
 {
     // Reset the back state to the current room state
-    backState = [[MXRoomState alloc] initBackStateWith:_state];
+    backState = _state;
 
     // Reset store pagination
     [mxSession.store resetPaginationOfRoom:_state.roomId];
@@ -665,35 +693,40 @@
 
 - (void)notifyListeners:(MXEvent*)event direction:(MXEventDirection)direction
 {
-    MXRoomState *stateBeforeThisEvent;
+    MXRoomState * roomState;
     
     if (MXEventDirectionBackwards == direction)
     {
-        stateBeforeThisEvent = backState;
+        roomState = backState;
     }
     else
     {
-        // Use the current state for live event
-        stateBeforeThisEvent = [[MXRoomState alloc] initBackStateWith:_state];
         if ([event isState])
         {
+            // Use the current state for live event
+            roomState = [[MXRoomState alloc] initBackStateWith:_state];
+            
             // If this is a state event, compute the room state before this event
             // as this is the information we pass to the MXOnRoomEvent callback block
-            [stateBeforeThisEvent handleStateEvent:event];
+            [roomState handleStateEvent:event];
+        }
+        else
+        {
+            roomState = _state;
         }
     }
-
+    
     // Notify all listeners
     // The SDK client may remove a listener while calling them by enumeration
     // So, use a copy of them
     NSArray *listeners = [eventListeners copy];
-
+    
     for (MXEventListener *listener in listeners)
     {
         // And check the listener still exists before calling it
         if (NSNotFound != [eventListeners indexOfObject:listener])
         {
-            [listener notify:event direction:direction andCustomObject:stateBeforeThisEvent];
+            [listener notify:event direction:direction andCustomObject:roomState];
         }
     }
 }

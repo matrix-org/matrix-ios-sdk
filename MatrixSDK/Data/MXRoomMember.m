@@ -98,6 +98,7 @@
     memberCopy->_membership = _membership;
     memberCopy->_prevMembership = _prevMembership;
     memberCopy->_originUserId = [_originUserId copyWithZone:zone];
+    memberCopy->_originalEvent = _originalEvent;
 
     return memberCopy;
 }
