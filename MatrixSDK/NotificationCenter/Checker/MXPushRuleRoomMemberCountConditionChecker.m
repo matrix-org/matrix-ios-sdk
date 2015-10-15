@@ -49,7 +49,7 @@
 
 - (BOOL)isCondition:(MXPushRuleCondition *)condition satisfiedBy:(MXEvent *)event
 {
-    if (event.eventType == MXEventTypeTypingNotification)
+    if ((event.eventType == MXEventTypeTypingNotification) || (event.eventType == MXEventTypeReceipt))
     {
         // Do not take into account typing notifications in room_member_count conditions
         // as it may fire a lot of times
