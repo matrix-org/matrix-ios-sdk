@@ -31,6 +31,26 @@
 		3226DC3819DEED3B00866530 /* MatrixSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32C6F92D19DD814400EA4E9C /* MatrixSDK.framework */; };
 		3233606F1A403A0D0071A488 /* MXFileStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 3233606D1A403A0D0071A488 /* MXFileStore.h */; };
 		323360701A403A0D0071A488 /* MXFileStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 3233606E1A403A0D0071A488 /* MXFileStore.m */; };
+		323B2ACF1BCD3EF000B11F34 /* MXCoreDataStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 323B2ACB1BCD3EF000B11F34 /* MXCoreDataStore.h */; settings = {ASSET_TAGS = (); }; };
+		323B2AD01BCD3EF000B11F34 /* MXCoreDataStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 323B2ACC1BCD3EF000B11F34 /* MXCoreDataStore.m */; settings = {ASSET_TAGS = (); }; };
+		323B2AD31BCD3F1400B11F34 /* MXStoreCoreDataStoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 323B2AD21BCD3F1400B11F34 /* MXStoreCoreDataStoreTests.m */; settings = {ASSET_TAGS = (); }; };
+		323B2AD91BCD46D800B11F34 /* MXCoreDataStore.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 323B2AD71BCD46D800B11F34 /* MXCoreDataStore.xcdatamodeld */; settings = {ASSET_TAGS = (); }; };
+		323B2ADF1BCD4CB600B11F34 /* Account+CoreDataProperties.h in Headers */ = {isa = PBXBuildFile; fileRef = 323B2ADB1BCD4CB600B11F34 /* Account+CoreDataProperties.h */; settings = {ASSET_TAGS = (); }; };
+		323B2AE01BCD4CB600B11F34 /* Account+CoreDataProperties.m in Sources */ = {isa = PBXBuildFile; fileRef = 323B2ADC1BCD4CB600B11F34 /* Account+CoreDataProperties.m */; settings = {ASSET_TAGS = (); }; };
+		323B2AE11BCD4CB600B11F34 /* Account.h in Headers */ = {isa = PBXBuildFile; fileRef = 323B2ADD1BCD4CB600B11F34 /* Account.h */; settings = {ASSET_TAGS = (); }; };
+		323B2AE21BCD4CB600B11F34 /* Account.m in Sources */ = {isa = PBXBuildFile; fileRef = 323B2ADE1BCD4CB600B11F34 /* Account.m */; settings = {ASSET_TAGS = (); }; };
+		323B2AED1BCD5CA900B11F34 /* MXCoreDataStore.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 323B2AD71BCD46D800B11F34 /* MXCoreDataStore.xcdatamodeld */; };
+		323B2AEF1BCD5CDE00B11F34 /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 323B2AEE1BCD5CDE00B11F34 /* CoreData.framework */; };
+		323B2AF01BCD5DB100B11F34 /* MatrixSDKBundle.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 323B2AE71BCD5C7F00B11F34 /* MatrixSDKBundle.bundle */; };
+		323B2AF11BCD5DDB00B11F34 /* MatrixSDKBundle.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 323B2AE71BCD5C7F00B11F34 /* MatrixSDKBundle.bundle */; };
+		323B2AF61BCE8AC800B11F34 /* Room+CoreDataProperties.h in Headers */ = {isa = PBXBuildFile; fileRef = 323B2AF21BCE8AC800B11F34 /* Room+CoreDataProperties.h */; settings = {ASSET_TAGS = (); }; };
+		323B2AF71BCE8AC800B11F34 /* Room+CoreDataProperties.m in Sources */ = {isa = PBXBuildFile; fileRef = 323B2AF31BCE8AC800B11F34 /* Room+CoreDataProperties.m */; settings = {ASSET_TAGS = (); }; };
+		323B2AF81BCE8AC800B11F34 /* Room.h in Headers */ = {isa = PBXBuildFile; fileRef = 323B2AF41BCE8AC800B11F34 /* Room.h */; settings = {ASSET_TAGS = (); }; };
+		323B2AF91BCE8AC900B11F34 /* Room.m in Sources */ = {isa = PBXBuildFile; fileRef = 323B2AF51BCE8AC800B11F34 /* Room.m */; settings = {ASSET_TAGS = (); }; };
+		323B2AFE1BCE9B6700B11F34 /* MXEventEntity+CoreDataProperties.h in Headers */ = {isa = PBXBuildFile; fileRef = 323B2AFA1BCE9B6700B11F34 /* MXEventEntity+CoreDataProperties.h */; settings = {ASSET_TAGS = (); }; };
+		323B2AFF1BCE9B6700B11F34 /* MXEventEntity+CoreDataProperties.m in Sources */ = {isa = PBXBuildFile; fileRef = 323B2AFB1BCE9B6700B11F34 /* MXEventEntity+CoreDataProperties.m */; settings = {ASSET_TAGS = (); }; };
+		323B2B001BCE9B6700B11F34 /* MXEventEntity.h in Headers */ = {isa = PBXBuildFile; fileRef = 323B2AFC1BCE9B6700B11F34 /* MXEventEntity.h */; settings = {ASSET_TAGS = (); }; };
+		323B2B011BCE9B6700B11F34 /* MXEventEntity.m in Sources */ = {isa = PBXBuildFile; fileRef = 323B2AFD1BCE9B6700B11F34 /* MXEventEntity.m */; settings = {ASSET_TAGS = (); }; };
 		323C5A081A70E53500FB0549 /* MXToolsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 323C5A071A70E53500FB0549 /* MXToolsTests.m */; };
 		323E0C571A2F6E7D00A31D73 /* MXRoomPowerLevels.h in Headers */ = {isa = PBXBuildFile; fileRef = 323E0C551A2F6E7D00A31D73 /* MXRoomPowerLevels.h */; };
 		323E0C581A2F6E7D00A31D73 /* MXRoomPowerLevels.m in Sources */ = {isa = PBXBuildFile; fileRef = 323E0C561A2F6E7D00A31D73 /* MXRoomPowerLevels.m */; };
@@ -63,6 +83,12 @@
 		32832B5C1BCC048300241108 /* MXStoreFileStoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32832B581BCC048300241108 /* MXStoreFileStoreTests.m */; settings = {ASSET_TAGS = (); }; };
 		32832B5D1BCC048300241108 /* MXStoreMemoryStoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32832B591BCC048300241108 /* MXStoreMemoryStoreTests.m */; settings = {ASSET_TAGS = (); }; };
 		32832B5E1BCC048300241108 /* MXStoreNoStoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32832B5A1BCC048300241108 /* MXStoreNoStoreTests.m */; settings = {ASSET_TAGS = (); }; };
+		328A419E1BCFDB2F00271841 /* Account+CoreDataProperties.h in Headers */ = {isa = PBXBuildFile; fileRef = 328A41981BCFDB2F00271841 /* Account+CoreDataProperties.h */; settings = {ASSET_TAGS = (); }; };
+		328A419F1BCFDB2F00271841 /* Account+CoreDataProperties.m in Sources */ = {isa = PBXBuildFile; fileRef = 328A41991BCFDB2F00271841 /* Account+CoreDataProperties.m */; settings = {ASSET_TAGS = (); }; };
+		328A41A01BCFDB2F00271841 /* Room+CoreDataProperties.h in Headers */ = {isa = PBXBuildFile; fileRef = 328A419A1BCFDB2F00271841 /* Room+CoreDataProperties.h */; settings = {ASSET_TAGS = (); }; };
+		328A41A11BCFDB2F00271841 /* Room+CoreDataProperties.m in Sources */ = {isa = PBXBuildFile; fileRef = 328A419B1BCFDB2F00271841 /* Room+CoreDataProperties.m */; settings = {ASSET_TAGS = (); }; };
+		328A41A21BCFDB2F00271841 /* MXEventEntity+CoreDataProperties.h in Headers */ = {isa = PBXBuildFile; fileRef = 328A419C1BCFDB2F00271841 /* MXEventEntity+CoreDataProperties.h */; settings = {ASSET_TAGS = (); }; };
+		328A41A31BCFDB2F00271841 /* MXEventEntity+CoreDataProperties.m in Sources */ = {isa = PBXBuildFile; fileRef = 328A419D1BCFDB2F00271841 /* MXEventEntity+CoreDataProperties.m */; settings = {ASSET_TAGS = (); }; };
 		328DDEC11A07E57E008C7DC8 /* MXJSONModelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 328DDEC01A07E57E008C7DC8 /* MXJSONModelTests.m */; };
 		3291D4D41A68FFEB00C3BA41 /* MXFileRoomStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 3291D4D21A68FFEB00C3BA41 /* MXFileRoomStore.h */; };
 		3291D4D51A68FFEB00C3BA41 /* MXFileRoomStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 3291D4D31A68FFEB00C3BA41 /* MXFileRoomStore.m */; };
@@ -108,7 +134,26 @@
 			remoteGlobalIDString = 32C6F92C19DD814400EA4E9C;
 			remoteInfo = MatrixSDK;
 		};
+		328A41961BCFD9AC00271841 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 32C6F92419DD814400EA4E9C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 323B2AE61BCD5C7F00B11F34;
+			remoteInfo = MatrixSDKBundle;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		323B2ADA1BCD47F000B11F34 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 7;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		2BF02FACC417CA3368671024 /* Pods-MatrixSDK.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDK.debug.xcconfig"; path = "Pods/Target Support Files/Pods-MatrixSDK/Pods-MatrixSDK.debug.xcconfig"; sourceTree = "<group>"; };
@@ -135,6 +180,25 @@
 		322360511A8E610500A3CA81 /* MXPushRuleDisplayNameCondtionChecker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXPushRuleDisplayNameCondtionChecker.m; sourceTree = "<group>"; };
 		3233606D1A403A0D0071A488 /* MXFileStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXFileStore.h; sourceTree = "<group>"; };
 		3233606E1A403A0D0071A488 /* MXFileStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXFileStore.m; sourceTree = "<group>"; };
+		323B2ACB1BCD3EF000B11F34 /* MXCoreDataStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCoreDataStore.h; sourceTree = "<group>"; };
+		323B2ACC1BCD3EF000B11F34 /* MXCoreDataStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCoreDataStore.m; sourceTree = "<group>"; };
+		323B2AD21BCD3F1400B11F34 /* MXStoreCoreDataStoreTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXStoreCoreDataStoreTests.m; sourceTree = "<group>"; };
+		323B2AD81BCD46D800B11F34 /* MXCoreDataStore.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = MXCoreDataStore.xcdatamodel; sourceTree = "<group>"; };
+		323B2ADB1BCD4CB600B11F34 /* Account+CoreDataProperties.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "Account+CoreDataProperties.h"; sourceTree = "<group>"; };
+		323B2ADC1BCD4CB600B11F34 /* Account+CoreDataProperties.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "Account+CoreDataProperties.m"; sourceTree = "<group>"; };
+		323B2ADD1BCD4CB600B11F34 /* Account.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Account.h; sourceTree = "<group>"; };
+		323B2ADE1BCD4CB600B11F34 /* Account.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Account.m; sourceTree = "<group>"; };
+		323B2AE71BCD5C7F00B11F34 /* MatrixSDKBundle.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MatrixSDKBundle.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
+		323B2AE91BCD5C7F00B11F34 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		323B2AEE1BCD5CDE00B11F34 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
+		323B2AF21BCE8AC800B11F34 /* Room+CoreDataProperties.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "Room+CoreDataProperties.h"; sourceTree = "<group>"; };
+		323B2AF31BCE8AC800B11F34 /* Room+CoreDataProperties.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "Room+CoreDataProperties.m"; sourceTree = "<group>"; };
+		323B2AF41BCE8AC800B11F34 /* Room.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Room.h; sourceTree = "<group>"; };
+		323B2AF51BCE8AC800B11F34 /* Room.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Room.m; sourceTree = "<group>"; };
+		323B2AFA1BCE9B6700B11F34 /* MXEventEntity+CoreDataProperties.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "MXEventEntity+CoreDataProperties.h"; path = "MatrixSDK/Data/Store/MXCoreDataStore/MXEventEntity+CoreDataProperties.h"; sourceTree = SOURCE_ROOT; };
+		323B2AFB1BCE9B6700B11F34 /* MXEventEntity+CoreDataProperties.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "MXEventEntity+CoreDataProperties.m"; path = "MatrixSDK/Data/Store/MXCoreDataStore/MXEventEntity+CoreDataProperties.m"; sourceTree = SOURCE_ROOT; };
+		323B2AFC1BCE9B6700B11F34 /* MXEventEntity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MXEventEntity.h; path = MatrixSDK/Data/Store/MXCoreDataStore/MXEventEntity.h; sourceTree = SOURCE_ROOT; };
+		323B2AFD1BCE9B6700B11F34 /* MXEventEntity.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MXEventEntity.m; path = MatrixSDK/Data/Store/MXCoreDataStore/MXEventEntity.m; sourceTree = SOURCE_ROOT; };
 		323C5A071A70E53500FB0549 /* MXToolsTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXToolsTests.m; sourceTree = "<group>"; };
 		323E0C551A2F6E7D00A31D73 /* MXRoomPowerLevels.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRoomPowerLevels.h; sourceTree = "<group>"; };
 		323E0C561A2F6E7D00A31D73 /* MXRoomPowerLevels.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRoomPowerLevels.m; sourceTree = "<group>"; };
@@ -169,6 +233,12 @@
 		32832B591BCC048300241108 /* MXStoreMemoryStoreTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXStoreMemoryStoreTests.m; sourceTree = "<group>"; };
 		32832B5A1BCC048300241108 /* MXStoreNoStoreTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXStoreNoStoreTests.m; sourceTree = "<group>"; };
 		32832B5B1BCC048300241108 /* MXStoreTests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXStoreTests.h; sourceTree = "<group>"; };
+		328A41981BCFDB2F00271841 /* Account+CoreDataProperties.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "Account+CoreDataProperties.h"; path = "MatrixSDK/Data/Store/MXCoreDataStore/Account+CoreDataProperties.h"; sourceTree = "<group>"; };
+		328A41991BCFDB2F00271841 /* Account+CoreDataProperties.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "Account+CoreDataProperties.m"; path = "MatrixSDK/Data/Store/MXCoreDataStore/Account+CoreDataProperties.m"; sourceTree = "<group>"; };
+		328A419A1BCFDB2F00271841 /* Room+CoreDataProperties.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "Room+CoreDataProperties.h"; path = "MatrixSDK/Data/Store/MXCoreDataStore/Room+CoreDataProperties.h"; sourceTree = "<group>"; };
+		328A419B1BCFDB2F00271841 /* Room+CoreDataProperties.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "Room+CoreDataProperties.m"; path = "MatrixSDK/Data/Store/MXCoreDataStore/Room+CoreDataProperties.m"; sourceTree = "<group>"; };
+		328A419C1BCFDB2F00271841 /* MXEventEntity+CoreDataProperties.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "MXEventEntity+CoreDataProperties.h"; path = "MatrixSDK/Data/Store/MXCoreDataStore/MXEventEntity+CoreDataProperties.h"; sourceTree = "<group>"; };
+		328A419D1BCFDB2F00271841 /* MXEventEntity+CoreDataProperties.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "MXEventEntity+CoreDataProperties.m"; path = "MatrixSDK/Data/Store/MXCoreDataStore/MXEventEntity+CoreDataProperties.m"; sourceTree = "<group>"; };
 		328DDEC01A07E57E008C7DC8 /* MXJSONModelTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXJSONModelTests.m; sourceTree = "<group>"; };
 		3291D4D21A68FFEB00C3BA41 /* MXFileRoomStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXFileRoomStore.h; sourceTree = "<group>"; };
 		3291D4D31A68FFEB00C3BA41 /* MXFileRoomStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXFileRoomStore.m; sourceTree = "<group>"; };
@@ -214,6 +284,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		323B2AE41BCD5C7F00B11F34 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				323B2AEF1BCD5CDE00B11F34 /* CoreData.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		32C6F92919DD814400EA4E9C /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -286,6 +364,7 @@
 				32114A861A262E5200FF2EC4 /* MXNoStore */,
 				32D7767A1A2785CE00FC4AA2 /* MXMemoryStore */,
 				3233606C1A403A0D0071A488 /* MXFileStore */,
+				323B2ACA1BCD3EF000B11F34 /* MXCoreDataStore */,
 			);
 			path = Store;
 			sourceTree = "<group>";
@@ -310,6 +389,36 @@
 				32CE6FB71A409B1F00317F1E /* MXFileStoreMetaData.m */,
 			);
 			path = MXFileStore;
+			sourceTree = "<group>";
+		};
+		323B2ACA1BCD3EF000B11F34 /* MXCoreDataStore */ = {
+			isa = PBXGroup;
+			children = (
+				323B2AD71BCD46D800B11F34 /* MXCoreDataStore.xcdatamodeld */,
+				323B2ACB1BCD3EF000B11F34 /* MXCoreDataStore.h */,
+				323B2ACC1BCD3EF000B11F34 /* MXCoreDataStore.m */,
+				323B2AF21BCE8AC800B11F34 /* Room+CoreDataProperties.h */,
+				323B2AF31BCE8AC800B11F34 /* Room+CoreDataProperties.m */,
+				323B2AF41BCE8AC800B11F34 /* Room.h */,
+				323B2AF51BCE8AC800B11F34 /* Room.m */,
+				323B2ADB1BCD4CB600B11F34 /* Account+CoreDataProperties.h */,
+				323B2ADC1BCD4CB600B11F34 /* Account+CoreDataProperties.m */,
+				323B2ADD1BCD4CB600B11F34 /* Account.h */,
+				323B2ADE1BCD4CB600B11F34 /* Account.m */,
+				323B2AFA1BCE9B6700B11F34 /* MXEventEntity+CoreDataProperties.h */,
+				323B2AFB1BCE9B6700B11F34 /* MXEventEntity+CoreDataProperties.m */,
+				323B2AFC1BCE9B6700B11F34 /* MXEventEntity.h */,
+				323B2AFD1BCE9B6700B11F34 /* MXEventEntity.m */,
+			);
+			path = MXCoreDataStore;
+			sourceTree = "<group>";
+		};
+		323B2AE81BCD5C7F00B11F34 /* MatrixSDKBundle */ = {
+			isa = PBXGroup;
+			children = (
+				323B2AE91BCD5C7F00B11F34 /* Info.plist */,
+			);
+			path = MatrixSDKBundle;
 			sourceTree = "<group>";
 		};
 		3240951D1AFA432F00D81C97 /* CallStack */ = {
@@ -362,8 +471,15 @@
 		32C6F92319DD814400EA4E9C = {
 			isa = PBXGroup;
 			children = (
+				328A41981BCFDB2F00271841 /* Account+CoreDataProperties.h */,
+				328A41991BCFDB2F00271841 /* Account+CoreDataProperties.m */,
+				328A419A1BCFDB2F00271841 /* Room+CoreDataProperties.h */,
+				328A419B1BCFDB2F00271841 /* Room+CoreDataProperties.m */,
+				328A419C1BCFDB2F00271841 /* MXEventEntity+CoreDataProperties.h */,
+				328A419D1BCFDB2F00271841 /* MXEventEntity+CoreDataProperties.m */,
 				32C6F92F19DD814400EA4E9C /* MatrixSDK */,
 				32C6F93919DD814400EA4E9C /* MatrixSDKTests */,
+				323B2AE81BCD5C7F00B11F34 /* MatrixSDKBundle */,
 				32C6F92E19DD814400EA4E9C /* Products */,
 				238F35931D935D88B55C4FBC /* Pods */,
 				9F1F634E8B36B1ED6D163B04 /* Frameworks */,
@@ -375,6 +491,7 @@
 			children = (
 				32C6F92D19DD814400EA4E9C /* MatrixSDK.framework */,
 				32C6F93819DD814400EA4E9C /* MatrixSDKTests.xctest */,
+				323B2AE71BCD5C7F00B11F34 /* MatrixSDKBundle.bundle */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -433,6 +550,7 @@
 				32832B5A1BCC048300241108 /* MXStoreNoStoreTests.m */,
 				32832B591BCC048300241108 /* MXStoreMemoryStoreTests.m */,
 				32832B581BCC048300241108 /* MXStoreFileStoreTests.m */,
+				323B2AD21BCD3F1400B11F34 /* MXStoreCoreDataStoreTests.m */,
 				323C5A071A70E53500FB0549 /* MXToolsTests.m */,
 				32DC15D61A8DFF0D006F9AD3 /* MXNotificationCenterTests.m */,
 				329571921B0240CE00ABB3BA /* MXVoIPTests.m */,
@@ -486,6 +604,7 @@
 		9F1F634E8B36B1ED6D163B04 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				323B2AEE1BCD5CDE00B11F34 /* CoreData.framework */,
 				E1674C6FF8BBF074E7F76059 /* libPods-MatrixSDK.a */,
 			);
 			name = Frameworks;
@@ -501,6 +620,7 @@
 				32114A8F1A262ECB00FF2EC4 /* MXNoStore.h in Headers */,
 				32D776811A27877300FC4AA2 /* MXMemoryRoomStore.h in Headers */,
 				32DC15CF1A8CF7AE006F9AD3 /* MXPushRuleConditionChecker.h in Headers */,
+				328A41A01BCFDB2F00271841 /* Room+CoreDataProperties.h in Headers */,
 				32D7767D1A27860600FC4AA2 /* MXMemoryStore.h in Headers */,
 				32CE6FB81A409B1F00317F1E /* MXFileStoreMetaData.h in Headers */,
 				3281E8B719E42DFE00976E1A /* MXJSONModel.h in Headers */,
@@ -513,15 +633,22 @@
 				3245A7501AF7B2930001D8A7 /* MXCall.h in Headers */,
 				32114A851A262CE000FF2EC4 /* MXStore.h in Headers */,
 				329FB1791A0A74B100A5E88E /* MXTools.h in Headers */,
+				323B2B001BCE9B6700B11F34 /* MXEventEntity.h in Headers */,
 				3281E8B919E42DFE00976E1A /* MXJSONModels.h in Headers */,
+				323B2AFE1BCE9B6700B11F34 /* MXEventEntity+CoreDataProperties.h in Headers */,
+				323B2ADF1BCD4CB600B11F34 /* Account+CoreDataProperties.h in Headers */,
 				32CAB1071A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.h in Headers */,
 				32CAB10B1A925B41008C5BB9 /* MXHTTPOperation.h in Headers */,
 				320DFDE419DD99B60068622A /* MXRestClient.h in Headers */,
 				3265CB381A14C43E00E24B2F /* MXRoomState.h in Headers */,
 				32DC15D41A8CF874006F9AD3 /* MXPushRuleEventMatchConditionChecker.h in Headers */,
+				323B2AE11BCD4CB600B11F34 /* Account.h in Headers */,
 				3220094519EFBF30008DE41D /* MXSessionEventListener.h in Headers */,
 				32BED28F1B00A23F00E668FE /* MXCallStack.h in Headers */,
+				328A419E1BCFDB2F00271841 /* Account+CoreDataProperties.h in Headers */,
+				323B2AF81BCE8AC800B11F34 /* Room.h in Headers */,
 				329FB1751A0A3A1600A5E88E /* MXRoomMember.h in Headers */,
+				323B2ACF1BCD3EF000B11F34 /* MXCoreDataStore.h in Headers */,
 				320DFDE019DD99B60068622A /* MXSession.h in Headers */,
 				324095221AFA432F00D81C97 /* MXCallStackCall.h in Headers */,
 				3233606F1A403A0D0071A488 /* MXFileStore.h in Headers */,
@@ -529,8 +656,10 @@
 				3220093819EFA4C9008DE41D /* MXEventListener.h in Headers */,
 				32DC15D01A8CF7AE006F9AD3 /* MXNotificationCenter.h in Headers */,
 				329FB17F1A0B665800A5E88E /* MXUser.h in Headers */,
+				328A41A21BCFDB2F00271841 /* MXEventEntity+CoreDataProperties.h in Headers */,
 				320DFDE219DD99B60068622A /* MXError.h in Headers */,
 				327E37B61A974F75007F026F /* MXLogger.h in Headers */,
+				323B2AF61BCE8AC800B11F34 /* Room+CoreDataProperties.h in Headers */,
 				320DFDE619DD99B60068622A /* MXHTTPClient.h in Headers */,
 				320DFDDB19DD99B60068622A /* MXRoom.h in Headers */,
 			);
@@ -539,6 +668,23 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		323B2AE61BCD5C7F00B11F34 /* MatrixSDKBundle */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 323B2AEA1BCD5C7F00B11F34 /* Build configuration list for PBXNativeTarget "MatrixSDKBundle" */;
+			buildPhases = (
+				323B2AE31BCD5C7F00B11F34 /* Sources */,
+				323B2AE41BCD5C7F00B11F34 /* Frameworks */,
+				323B2AE51BCD5C7F00B11F34 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MatrixSDKBundle;
+			productName = MatrixSDKBundle;
+			productReference = 323B2AE71BCD5C7F00B11F34 /* MatrixSDKBundle.bundle */;
+			productType = "com.apple.product-type.bundle";
+		};
 		32C6F92C19DD814400EA4E9C /* MatrixSDK */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 32C6F94019DD814400EA4E9C /* Build configuration list for PBXNativeTarget "MatrixSDK" */;
@@ -549,6 +695,7 @@
 				32C6F92A19DD814400EA4E9C /* Headers */,
 				32C6F92B19DD814400EA4E9C /* Resources */,
 				FDD4B60A568A908CBDAC1A26 /* Copy Pods Resources */,
+				323B2ADA1BCD47F000B11F34 /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -570,6 +717,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				328A41971BCFD9AC00271841 /* PBXTargetDependency */,
 				3226DC3719DEED2100866530 /* PBXTargetDependency */,
 			);
 			name = MatrixSDKTests;
@@ -586,6 +734,9 @@
 				LastUpgradeCheck = 0600;
 				ORGANIZATIONNAME = matrix.org;
 				TargetAttributes = {
+					323B2AE61BCD5C7F00B11F34 = {
+						CreatedOnToolsVersion = 7.0.1;
+					};
 					32C6F92C19DD814400EA4E9C = {
 						CreatedOnToolsVersion = 6.0;
 					};
@@ -608,15 +759,24 @@
 			targets = (
 				32C6F92C19DD814400EA4E9C /* MatrixSDK */,
 				32C6F93719DD814400EA4E9C /* MatrixSDKTests */,
+				323B2AE61BCD5C7F00B11F34 /* MatrixSDKBundle */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		323B2AE51BCD5C7F00B11F34 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		32C6F92B19DD814400EA4E9C /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				323B2AF01BCD5DB100B11F34 /* MatrixSDKBundle.bundle in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -624,6 +784,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				323B2AF11BCD5DDB00B11F34 /* MatrixSDKBundle.bundle in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -663,39 +824,58 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		323B2AE31BCD5C7F00B11F34 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				323B2AED1BCD5CA900B11F34 /* MXCoreDataStore.xcdatamodeld in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		32C6F92819DD814400EA4E9C /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				328A41A31BCFDB2F00271841 /* MXEventEntity+CoreDataProperties.m in Sources */,
+				323B2AF71BCE8AC800B11F34 /* Room+CoreDataProperties.m in Sources */,
 				322360531A8E610500A3CA81 /* MXPushRuleDisplayNameCondtionChecker.m in Sources */,
 				323E0C581A2F6E7D00A31D73 /* MXRoomPowerLevels.m in Sources */,
 				32DC15D51A8CF874006F9AD3 /* MXPushRuleEventMatchConditionChecker.m in Sources */,
 				32CAB1081A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.m in Sources */,
 				3245A7511AF7B2930001D8A7 /* MXCall.m in Sources */,
+				323B2AE21BCD4CB600B11F34 /* Account.m in Sources */,
 				329FB1761A0A3A1600A5E88E /* MXRoomMember.m in Sources */,
 				323360701A403A0D0071A488 /* MXFileStore.m in Sources */,
 				32D7767E1A27860600FC4AA2 /* MXMemoryStore.m in Sources */,
+				323B2B011BCE9B6700B11F34 /* MXEventEntity.m in Sources */,
 				3265CB391A14C43E00E24B2F /* MXRoomState.m in Sources */,
+				323B2AD91BCD46D800B11F34 /* MXCoreDataStore.xcdatamodeld in Sources */,
+				323B2AD01BCD3EF000B11F34 /* MXCoreDataStore.m in Sources */,
 				3281E8B819E42DFE00976E1A /* MXJSONModel.m in Sources */,
 				32D776821A27877300FC4AA2 /* MXMemoryRoomStore.m in Sources */,
 				320DFDE319DD99B60068622A /* MXError.m in Sources */,
 				327137281A24D50A00DB6757 /* MXMyUser.m in Sources */,
 				32114A901A262ECB00FF2EC4 /* MXNoStore.m in Sources */,
 				32CE6FB91A409B1F00317F1E /* MXFileStoreMetaData.m in Sources */,
+				328A41A11BCFDB2F00271841 /* Room+CoreDataProperties.m in Sources */,
 				323E0C5C1A306D7A00A31D73 /* MXEvent.m in Sources */,
+				323B2AFF1BCE9B6700B11F34 /* MXEventEntity+CoreDataProperties.m in Sources */,
 				32CAB10C1A925B41008C5BB9 /* MXHTTPOperation.m in Sources */,
 				3281E8BA19E42DFE00976E1A /* MXJSONModels.m in Sources */,
 				3245A7531AF7B2930001D8A7 /* MXCallManager.m in Sources */,
 				3220094619EFBF30008DE41D /* MXSessionEventListener.m in Sources */,
 				327E37B71A974F75007F026F /* MXLogger.m in Sources */,
 				320DFDE719DD99B60068622A /* MXHTTPClient.m in Sources */,
+				328A419F1BCFDB2F00271841 /* Account+CoreDataProperties.m in Sources */,
 				320DFDE119DD99B60068622A /* MXSession.m in Sources */,
 				320DFDDC19DD99B60068622A /* MXRoom.m in Sources */,
 				3291D4D51A68FFEB00C3BA41 /* MXFileRoomStore.m in Sources */,
 				329FB1801A0B665800A5E88E /* MXUser.m in Sources */,
+				323B2AF91BCE8AC900B11F34 /* Room.m in Sources */,
 				3220093919EFA4C9008DE41D /* MXEventListener.m in Sources */,
 				32DC15D11A8CF7AE006F9AD3 /* MXNotificationCenter.m in Sources */,
 				329FB17A1A0A74B100A5E88E /* MXTools.m in Sources */,
+				323B2AE01BCD4CB600B11F34 /* Account+CoreDataProperties.m in Sources */,
 				320DFDE519DD99B60068622A /* MXRestClient.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -707,6 +887,7 @@
 				32DC15D71A8DFF0D006F9AD3 /* MXNotificationCenterTests.m in Sources */,
 				329571991B024D2B00ABB3BA /* MXMockCallStack.m in Sources */,
 				3281E8A819E41A2000976E1A /* MatrixSDKTestsData.m in Sources */,
+				323B2AD31BCD3F1400B11F34 /* MXStoreCoreDataStoreTests.m in Sources */,
 				32832B5D1BCC048300241108 /* MXStoreMemoryStoreTests.m in Sources */,
 				32114A7F1A24E15500FF2EC4 /* MXMyUserTests.m in Sources */,
 				32832B5E1BCC048300241108 /* MXStoreNoStoreTests.m in Sources */,
@@ -739,9 +920,50 @@
 			target = 32C6F92C19DD814400EA4E9C /* MatrixSDK */;
 			targetProxy = 3226DC3619DEED2100866530 /* PBXContainerItemProxy */;
 		};
+		328A41971BCFD9AC00271841 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 323B2AE61BCD5C7F00B11F34 /* MatrixSDKBundle */;
+			targetProxy = 328A41961BCFD9AC00271841 /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		323B2AEB1BCD5C7F00B11F34 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				INFOPLIST_FILE = MatrixSDKBundle/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				PRODUCT_BUNDLE_IDENTIFIER = org.matrix.MatrixSDKBundle;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				WRAPPER_EXTENSION = bundle;
+			};
+			name = Debug;
+		};
+		323B2AEC1BCD5C7F00B11F34 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_NO_COMMON_BLOCKS = YES;
+				INFOPLIST_FILE = MatrixSDKBundle/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				PRODUCT_BUNDLE_IDENTIFIER = org.matrix.MatrixSDKBundle;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				WRAPPER_EXTENSION = bundle;
+			};
+			name = Release;
+		};
 		32C6F93E19DD814400EA4E9C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -919,6 +1141,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		323B2AEA1BCD5C7F00B11F34 /* Build configuration list for PBXNativeTarget "MatrixSDKBundle" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				323B2AEB1BCD5C7F00B11F34 /* Debug */,
+				323B2AEC1BCD5C7F00B11F34 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		32C6F92719DD814400EA4E9C /* Build configuration list for PBXProject "MatrixSDK" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -947,6 +1178,19 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		323B2AD71BCD46D800B11F34 /* MXCoreDataStore.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				323B2AD81BCD46D800B11F34 /* MXCoreDataStore.xcdatamodel */,
+			);
+			currentVersion = 323B2AD81BCD46D800B11F34 /* MXCoreDataStore.xcdatamodel */;
+			path = MXCoreDataStore.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
 	};
 	rootObject = 32C6F92419DD814400EA4E9C /* Project object */;
 }
