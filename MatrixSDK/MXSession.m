@@ -184,8 +184,8 @@ typedef void (^MXOnResumeDone)();
             NSDate *startDate2 = [NSDate date];
             for (NSString *roomId in _store.rooms)
             {
-                NSArray *stateEvents = [_store stateOfRoom:roomId];
                 @autoreleasepool {
+                    NSArray *stateEvents = [_store stateOfRoom:roomId];
                     [self createRoom:roomId withStateEvents:stateEvents notify:NO];
                 }
             }
