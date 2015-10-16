@@ -374,4 +374,26 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     [aCoder encodeObject:_redactedBecause forKey:@"redactedBecause"];
 }
 
+
+#pragma mark - MTLManagedObjectSerializing
++ (NSString *)managedObjectEntityName
+{
+    return @"MXEventEntity";
+}
+
++ (NSDictionary *)managedObjectKeysByPropertyKey
+{
+    NSMutableDictionary *managedObjectKeysByPropertyKey = [[NSMutableDictionary alloc] init];
+
+    for (NSString *key in self.JSONKeyPathsByPropertyKey.allKeys)
+    {
+        if (![key isEqualToString:@"age"])
+        {
+            managedObjectKeysByPropertyKey[key] = key;
+        }
+    }
+    // // Return an empty dictionary because the property names are identical in the class and entity
+    return managedObjectKeysByPropertyKey;
+}
+
 @end
