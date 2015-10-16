@@ -29,6 +29,7 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import <MatrixSDK/MXNoStore.h>
 #import <MatrixSDK/MXMemoryStore.h>
 #import <MatrixSDK/MXFileStore.h>
+#import <MatrixSDK/MXCoreDataStore.h>
 
 #import <MatrixSDK/MXLogger.h>
 
