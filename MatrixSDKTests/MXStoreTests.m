@@ -838,6 +838,9 @@
 
                 [mxSession start:^{
 
+                    NSString *eventStreamToken = [store.eventStreamToken copy];
+                    NSUInteger storeRoomsCount = store.rooms.count;
+
                     [mxSession close];
                     mxSession = nil;
 
@@ -850,8 +853,6 @@
                             id<MXStore> store2 = [[mxStoreClass alloc] init];
 
                             __block BOOL onStoreDataReadyCalled;
-                            NSString *eventStreamToken = [store2.eventStreamToken copy];
-                            NSUInteger storeRoomsCount = store2.rooms.count;
 
                             MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
