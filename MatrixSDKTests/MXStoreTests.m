@@ -654,9 +654,9 @@
         // Paginate for the exact number of events in the room
         NSUInteger pagEnd = eventCount;
         eventCount = 0;
-        [room resetBackState];
         [mxSession.store deleteRoom:room.state.roomId];
-        
+        [room resetBackState];
+
         [room paginateBackMessages:pagEnd complete:^{
 
             XCTAssertEqual(eventCount, pagEnd, @"We should get as many messages as requested");
