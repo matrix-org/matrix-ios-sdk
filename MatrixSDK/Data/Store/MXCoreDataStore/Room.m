@@ -1,21 +1,28 @@
-//
-//  Room.m
-//  MatrixSDK
-//
-//  Created by Emmanuel ROHEE on 14/10/15.
-//  Copyright © 2015 matrix.org. All rights reserved.
-//
+/*
+ Copyright 2015 OpenMarket Ltd
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ */
 
 #import "Room.h"
 
-#import "objc/objc-class.h"
+#import "MXEventEntity+CoreDataProperties.h"
 
 @interface Room ()
 {
     // This is the position from the end
     NSInteger paginationPosition;
 }
-
 @end
 
 @implementation Room
@@ -29,64 +36,52 @@
     return self;
 }
 
-
 - (void)storeEvent:(MXEvent *)event direction:(MXEventDirection)direction
 {
-    Class currentClass = [self class];
-    while (currentClass) {
-        // Iterate over all instance methods for this class
-        unsigned int methodCount;
-        Method *methodList = class_copyMethodList(currentClass, &methodCount);
-        unsigned int i = 0;
-        for (; i < methodCount; i++) {
-            NSLog(@"%@ - %@", [NSString stringWithCString:class_getName(currentClass) encoding:NSUTF8StringEncoding], [NSString stringWithCString:sel_getName(method_getName(methodList[i])) encoding:NSUTF8StringEncoding]);
-        }
-
-        free(methodList);
-        currentClass = class_getSuperclass(currentClass);
-    }
-    
+	// Convert Mantle MXEvent objects to MXEventEntities
     NSError *error;
     MXEventEntity *eventEntity = [MTLManagedObjectAdapter managedObjectFromModel:event
                                                             insertingIntoContext:self.managedObjectContext
                                                                            error:&error];
-    if (MXEventDirectionForwards == direction || 0 == self.messages.count)
+
+    // For info, do not set the room, it is automatically done by the CoreDataGeneratedAccessors methods
+    // Setting it automatically adds the message to the tail of self.messages and prevents insertObject
+    // from working
+    //eventEntity.room = self;
+
+    if (MXEventDirectionForwards == direction)
     {
-        NSLog(@"### storeEvent addMessagesObject to %@", self.roomId);
         [self addMessagesObject:eventEntity];
-        [self.managedObjectContext save:nil];
     }
     else
     {
-        NSLog(@"### storeEvent insertMessages to %@", self.roomId);
-        //[self addMessagesObject:eventEntity];
-        [self insertMessages:@[eventEntity] atIndexes:[NSIndexSet indexSetWithIndex:0]];
+        [self insertObject:eventEntity inMessagesAtIndex:0];
     }
+
+    NSAssert([self eventEntityWithEventId:event.eventId], @"The event must be in the db (and be unique)");
 }
 
 - (void)replaceEvent:(MXEvent*)event
 {
+    MXEventEntity *eventEntity = [self eventEntityWithEventId:event.eventId];
+    NSUInteger index = [self.messages indexOfObject:eventEntity];
 
+    [self removeObjectFromMessagesAtIndex:index];
+    [self.managedObjectContext deleteObject:eventEntity];
+    [self.managedObjectContext save:nil];
+
+    NSError *error;
+    MXEventEntity *newEventEntity = [MTLManagedObjectAdapter managedObjectFromModel:event
+                                                            insertingIntoContext:self.managedObjectContext
+                                                                           error:&error];
+    [self insertObject:newEventEntity inMessagesAtIndex:index];
 }
 
 - (MXEvent *)eventWithEventId:(NSString *)eventId
 {
     NSError *error;
 
-    NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
-    NSEntityDescription *entity = [NSEntityDescription entityForName:@"MXEventEntity"
-                                              inManagedObjectContext:self.managedObjectContext];
-    [fetchRequest setEntity:entity];
-    
-    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"roomId == %@ AND eventId == %@", self.roomId, eventId];
-    [fetchRequest setPredicate:predicate];
-
-    MXEventEntity *eventEntity;
-    NSArray *fetchedObjects = [self.managedObjectContext executeFetchRequest:fetchRequest error:&error];
-    if (fetchedObjects.count)
-    {
-        eventEntity = fetchedObjects[0];
-    }
+    MXEventEntity *eventEntity = [self eventEntityWithEventId:eventId];
 
     MXEvent *event = [MTLManagedObjectAdapter modelOfClass:MXEvent.class
                                          fromManagedObject:eventEntity
@@ -94,7 +89,6 @@
 
     return event;
 }
-
 
 - (void)resetPagination
 {
@@ -118,7 +112,6 @@
         else
         {
             // Return the last slice of messages
-            NSLog(@"#### %@", self.messages.array);
             paginatedMessagesEntities = [self.messages.array subarrayWithRange:NSMakeRange(0, paginationPosition)];
             paginationPosition = 0;
         }
@@ -176,17 +169,75 @@
     return event;
 }
 
-- (void)flush
+- (void)storeState:(NSArray*)stateEvents
 {
-    //self.hasReachedHomeServerPaginationEnd = @NO;
-    //paginationPosition = 0;
-    //[self removeMessages:self.messages];
-    //[self removeState:self.state];
+    // Butcher mode: Remove everything before setting new state events
+    // This can be optimised but the tables in the core data db must be redesigned before
+    [self removeState:self.state];
+    [self.managedObjectContext save:nil];
+
+    // Convert Mantle MXEvent objects to MXEventEntities
+    for (MXEvent *event in stateEvents)
+    {
+        MXEventEntity *eventEntity = [MTLManagedObjectAdapter managedObjectFromModel:event
+                                                                insertingIntoContext:self.managedObjectContext
+                                                                               error:nil];
+        [self addStateObject:eventEntity];
+    }
 }
 
-//- (NSString *)description
-//{
-//    return [NSString stringWithFormat:@"%tu messages - paginationToken: %@ - hasReachedHomeServerPaginationEnd: %d", messages.count, _paginationToken, _hasReachedHomeServerPaginationEnd];
-//}
+- (NSArray*)stateEvents
+{
+    // Convert back self.state MXEventEntities to MXEvents
+    NSMutableArray *stateEvents = [NSMutableArray arrayWithCapacity:self.state.count];
+    for (MXEventEntity *eventEntity in self.state)
+    {
+        MXEvent *event = [MTLManagedObjectAdapter modelOfClass:MXEvent.class
+                                             fromManagedObject:eventEntity
+                                                         error:nil];
+
+        [stateEvents addObject:event];
+    }
+
+    return stateEvents;
+}
+
+
+#pragma mark - Private methods
+- (MXEventEntity *)eventEntityWithEventId:(NSString *)eventId
+{
+    NSError *error;
+
+    // TODO: how to efficiently search into only self.messages excluding events in self.state?
+    NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
+    NSEntityDescription *entity = [NSEntityDescription entityForName:@"MXEventEntity"
+                                              inManagedObjectContext:self.managedObjectContext];
+    [fetchRequest setEntity:entity];
+
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"roomId == %@ AND eventId == %@", self.roomId, eventId];
+    [fetchRequest setPredicate:predicate];
+
+    MXEventEntity *eventEntity;
+    NSArray *fetchedObjects = [self.managedObjectContext executeFetchRequest:fetchRequest error:&error];
+
+    // TODO: the same: how to efficiently search into only self.messages excluding events in self.state?
+    NSMutableArray *fetchedObjects2 = [NSMutableArray array];
+    for (MXEventEntity *fetchedObject in fetchedObjects)
+    {
+        if (NSNotFound != [self.messages indexOfObject:fetchedObject])
+        {
+            [fetchedObjects2 addObject:fetchedObject];
+        }
+    }
+
+    NSAssert(fetchedObjects2.count <= 1, @"MXCoreData eventEntityWithEventId: Event with id %@ is not unique (%tu) in the db", eventId, fetchedObjects2.count);
+
+    if (fetchedObjects2.count)
+    {
+        eventEntity = fetchedObjects2[0];
+    }
+
+    return eventEntity;
+}
 
 @end

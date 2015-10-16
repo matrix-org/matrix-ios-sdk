@@ -17,27 +17,16 @@
 #import "MXStore.h"
 
 /**
- `MXFileStore` extends MXMemoryStore by adding permanent storage.
+ `MXCoreDataStore` is an implementation of the `MXStore` interface based on Core Data.
 
- The data are stored on [MXStore commit] and reloaded on [MXFileStore openWithCredentials:].
- Between them MXFileStore behaves as MXMemoryStore: the data is mounted in memory.
- 
- The files structure is the following:
- + NSCachesDirectory
-    + MXFileStore
-        + Matrix user id (one folder per account)
-            + messages : The messages. One file per room
-                L roomId1
-                L roomId2
-                L ...
-            + state : The state events. One file per room
-                L roomId1
-                L roomId2
-                L ...
-            L MXFileStore : Information about the stored data
+ There is one DB (sqlite file) / core data instance per user. There is no relationships
+ between these dbs.
  */
 @interface MXCoreDataStore : NSObject <MXStore>
 
+/**
+ Erase all data
+ */
 + (void)flush;
 
 @end
