@@ -188,12 +188,8 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
 
     mxHTTPOperation.numberOfTries++;
     mxHTTPOperation.operation = [httpManager HTTPRequestOperationWithRequest:request success:^(AFHTTPRequestOperation *operation, NSDictionary *JSONResponse) {
-
-        @autoreleasepool {
-            mxHTTPOperation.operation = nil;
-            success(JSONResponse);
-        }
-        
+        mxHTTPOperation.operation = nil;
+        success(JSONResponse);
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
 
         mxHTTPOperation.operation = nil;

@@ -689,52 +689,59 @@ typedef void (^MXOnResumeDone)();
         
         for (NSDictionary *roomDict in roomDicts)
         {
-            MXRoom *room = [self getOrCreateRoom:roomDict[@"room_id"] withJSONData:roomDict notify:NO];
-            [roomids addObject:room.state.roomId];
-            
-            if ([roomDict objectForKey:@"messages"])
-            {
-                MXPaginationResponse *roomMessages = [MXPaginationResponse modelFromJSON:[roomDict objectForKey:@"messages"]];
+            @autoreleasepool {
+                MXRoom *room = [self getOrCreateRoom:roomDict[@"room_id"] withJSONData:roomDict notify:NO];
+                [roomids addObject:room.state.roomId];
                 
-                [room handleMessages:roomMessages
-                           direction:MXEventDirectionBackwards isTimeOrdered:YES];
-                
-                // If the initialSync returns less messages than requested, we got all history from the home server
-                if (roomMessages.chunk.count < initialSyncMessagesLimit)
+                if ([roomDict objectForKey:@"messages"])
                 {
-                    [_store storeHasReachedHomeServerPaginationEndForRoom:room.state.roomId andValue:YES];
+                    MXPaginationResponse *roomMessages = [MXPaginationResponse modelFromJSON:[roomDict objectForKey:@"messages"]];
+                    
+                    [room handleMessages:roomMessages
+                               direction:MXEventDirectionBackwards isTimeOrdered:YES];
+                    
+                    // If the initialSync returns less messages than requested, we got all history from the home server
+                    if (roomMessages.chunk.count < initialSyncMessagesLimit)
+                    {
+                        [_store storeHasReachedHomeServerPaginationEndForRoom:room.state.roomId andValue:YES];
+                    }
                 }
-            }
-            if ([roomDict objectForKey:@"state"])
-            {
-                [room handleStateEvents:roomDict[@"state"] direction:MXEventDirectionSync];
-                
-                if (!room.state.isPublic && room.state.members.count == 2)
+                if ([roomDict objectForKey:@"state"])
                 {
-                    // Update one-to-one room dictionary
-                    [self handleOneToOneRoom:room];
+                    [room handleStateEvents:roomDict[@"state"] direction:MXEventDirectionSync];
+                    
+                    if (!room.state.isPublic && room.state.members.count == 2)
+                    {
+                        // Update one-to-one room dictionary
+                        [self handleOneToOneRoom:room];
+                    }
                 }
             }
         }
         
         // Manage presence
-        NSArray *presenceDicts = JSONData[@"presence"];
-        for (NSDictionary *presenceDict in presenceDicts)
-        {
-            MXEvent *presenceEvent = [MXEvent modelFromJSON:presenceDict];
-            [self handlePresenceEvent:presenceEvent direction:MXEventDirectionSync];
+        @autoreleasepool {
+            NSArray *presenceDicts = JSONData[@"presence"];
+            for (NSDictionary *presenceDict in presenceDicts)
+            {
+                MXEvent *presenceEvent = [MXEvent modelFromJSON:presenceDict];
+                [self handlePresenceEvent:presenceEvent direction:MXEventDirectionSync];
+                
+            }
         }
         
         // Manage receipts
-        NSArray *receiptDicts = JSONData[@"receipts"];
-        for (NSDictionary *receiptDict in receiptDicts)
-        {
-            MXEvent *receiptEvent = [MXEvent modelFromJSON:receiptDict];
-            MXRoom *room = [self roomWithRoomId:receiptEvent.roomId];
-            
-            if (room)
+        @autoreleasepool {
+            NSArray *receiptDicts = JSONData[@"receipts"];
+            for (NSDictionary *receiptDict in receiptDicts)
             {
-                [room handleReceiptEvent:receiptEvent direction:MXEventDirectionSync];
+                MXEvent *receiptEvent = [MXEvent modelFromJSON:receiptDict];
+                MXRoom *room = [self roomWithRoomId:receiptEvent.roomId];
+                
+                if (room)
+                {
+                    [room handleReceiptEvent:receiptEvent direction:MXEventDirectionSync];
+                }
             }
         }
         
@@ -789,47 +796,49 @@ typedef void (^MXOnResumeDone)();
         
         for (MXRoomSyncResponse *roomSyncResponse in syncResponse.rooms)
         {
-            BOOL isOneToOneRoom = NO;
-            
-            // Retrieve existing room or create a new one
-            MXRoom *room = [self roomWithRoomId:roomSyncResponse.roomId];
-            if (nil == room)
-            {
-                room = [[MXRoom alloc] initWithRoomId:roomSyncResponse.roomId andMatrixSession:self];
-                [self addRoom:room notify:!isInitialSync];
+            @autoreleasepool {
+                BOOL isOneToOneRoom = NO;
                 
-                if (!roomSyncResponse.limited)
+                // Retrieve existing room or create a new one
+                MXRoom *room = [self roomWithRoomId:roomSyncResponse.roomId];
+                if (nil == room)
                 {
-                    // we got less messages than requested for this new room, we got all history from the home server
-                    [_store storeHasReachedHomeServerPaginationEndForRoom:roomSyncResponse.roomId andValue:YES];
+                    room = [[MXRoom alloc] initWithRoomId:roomSyncResponse.roomId andMatrixSession:self];
+                    [self addRoom:room notify:!isInitialSync];
+                    
+                    if (!roomSyncResponse.limited)
+                    {
+                        // we got less messages than requested for this new room, we got all history from the home server
+                        [_store storeHasReachedHomeServerPaginationEndForRoom:roomSyncResponse.roomId andValue:YES];
+                    }
                 }
-            }
-            else
-            {
-                isOneToOneRoom = (!room.state.isPublic && room.state.members.count == 2);
-            }
-            
-            // Sync room
-            [room handleRoomSyncResponse:roomSyncResponse];
-            
-            // Remove the room from the rooms list if the user has been kicked or banned
-            if (MXMembershipLeave == room.state.membership || MXMembershipBan == room.state.membership)
-            {
-                MXEvent *roomMemberEvent = [room lastMessageWithTypeIn:@[kMXEventTypeStringRoomMember]];
+                else
+                {
+                    isOneToOneRoom = (!room.state.isPublic && room.state.members.count == 2);
+                }
                 
-                // Notify the room is going to disappear
-                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionWillLeaveRoomNotification
-                                                                    object:self
-                                                                  userInfo:@{
-                                                                             kMXSessionNotificationRoomIdKey: room.state.roomId,
-                                                                             kMXSessionNotificationEventKey: roomMemberEvent
-                                                                             }];
-                [self removeRoom:room.state.roomId];
-            }
-            else if (isOneToOneRoom || (!room.state.isPublic && room.state.members.count == 2))
-            {
-                // Update one-to-one room dictionary
-                [self handleOneToOneRoom:room];
+                // Sync room
+                [room handleRoomSyncResponse:roomSyncResponse];
+                
+                // Remove the room from the rooms list if the user has been kicked or banned
+                if (MXMembershipLeave == room.state.membership || MXMembershipBan == room.state.membership)
+                {
+                    MXEvent *roomMemberEvent = [room lastMessageWithTypeIn:@[kMXEventTypeStringRoomMember]];
+                    
+                    // Notify the room is going to disappear
+                    [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionWillLeaveRoomNotification
+                                                                        object:self
+                                                                      userInfo:@{
+                                                                                 kMXSessionNotificationRoomIdKey: room.state.roomId,
+                                                                                 kMXSessionNotificationEventKey: roomMemberEvent
+                                                                                 }];
+                    [self removeRoom:room.state.roomId];
+                }
+                else if (isOneToOneRoom || (!room.state.isPublic && room.state.members.count == 2))
+                {
+                    // Update one-to-one room dictionary
+                    [self handleOneToOneRoom:room];
+                }
             }
         }
         

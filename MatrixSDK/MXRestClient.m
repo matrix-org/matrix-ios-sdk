@@ -384,8 +384,10 @@ MXAuthAction;
                                     path:@"api/v1/pushrules/"
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
-                                     MXPushRulesResponse *pushRules = [MXPushRulesResponse modelFromJSON:JSONResponse];
-                                     success(pushRules);
+                                     @autoreleasepool {
+                                         MXPushRulesResponse *pushRules = [MXPushRulesResponse modelFromJSON:JSONResponse];
+                                         success(pushRules);
+                                     }
                                  }
                                  failure:^(NSError *error) {
                                      failure(error);
@@ -1506,8 +1508,10 @@ MXAuthAction;
                                  success:^(NSDictionary *JSONResponse) {
                                      if (success)
                                      {
-                                         NSArray *publicRooms = [MXPublicRoom modelsFromJSON:JSONResponse[@"chunk"]];
-                                         success(publicRooms);
+                                         @autoreleasepool {
+                                             NSArray *publicRooms = [MXPublicRoom modelsFromJSON:JSONResponse[@"chunk"]];
+                                             success(publicRooms);
+                                         }
                                      }
                                  }
                                  failure:^(NSError *error) {
