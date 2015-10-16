@@ -26,16 +26,18 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 
 @interface MXCoreDataStore ()
 {
+    /**
+     The account associated to the store.
+     */
+    Account *account;
+
+    /**
+     Classic Core Data objects.
+     */
     NSManagedObjectModel *managedObjectModel;
     NSPersistentStoreCoordinator *persistentStoreCoordinator;
     NSManagedObjectContext *managedObjectContext;
-
-    // Flag to indicate metaData needs to be store
-    BOOL metaDataHasChanged;
-
-    Account *account;
 }
-
 @end
 
 @implementation MXCoreDataStore
@@ -45,6 +47,7 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     self = [super init];
     if (self)
     {
+        // Load the Managed Object Model Definition from the Matrix SDK bundle
         NSString *bundlePath = [[NSBundle bundleForClass:[self class]] pathForResource:@"MatrixSDKBundle"
                                                                                 ofType:@"bundle"];
         NSBundle *bundle = [NSBundle bundleWithPath:bundlePath];
@@ -63,33 +66,14 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 
     NSLog(@"[MXCoreDataStore] openWithCredentials for %@", credentials.userId);
 
-    // The folder where MXCoreDataStore db files are stored
-    NSURL *storesPath = [[[NSFileManager defaultManager] URLsForDirectory:NSCachesDirectory inDomains:NSUserDomainMask] lastObject];
-    storesPath = [storesPath URLByAppendingPathComponent:kMXCoreDataStoreFolder];
-    [[NSFileManager defaultManager] createDirectoryAtPath:storesPath.path withIntermediateDirectories:YES attributes:nil error:nil];
+    NSAssert(!account, @"[MXCoreDataStore] The store is already open");
 
-    // The SQLite file path. There is one per account, one db per account
-    NSString *userSQLiteFile = [NSString stringWithFormat:@"%@.sqlite", credentials.userId];
-    NSURL *storeURL = [storesPath URLByAppendingPathComponent:userSQLiteFile];
-
-    // Persistent Store Coordinator
-    persistentStoreCoordinator = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel: managedObjectModel];
-    if (![persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:storeURL options:nil error:&error])
+    error = [self setupCoreData:credentials.userId];
+    if (error)
     {
-        NSLog(@"[MXCoreDataStore] openWithCredentials: %@ mismaches with current Managed Object Model. Reset it", userSQLiteFile);
-        [[NSFileManager defaultManager] removeItemAtPath:storeURL.path error:&error];
-
-        if (![persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:storeURL options:nil error:&error])
-        {
-            NSLog(@"[MXCoreDataStore] openWithCredentials: Failed to create persistent store. Error: %@", error);
-            failure(error);
-            return;
-        }
+        failure(error);
+        return;
     }
-
-    // MOC
-    managedObjectContext = [[NSManagedObjectContext alloc] init];
-    managedObjectContext.persistentStoreCoordinator = persistentStoreCoordinator;
 
     // Check if the account already exists
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
@@ -104,43 +88,52 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     {
         account = fetchedObjects[0];
     }
-    else
+
+    // Validate the store
+    if (account)
     {
-        // Else, create it
+        // Check store version
+        if (kMXCoreDataStoreVersion != account.version.unsignedIntegerValue)
+        {
+            NSLog(@"[MXCoreDataStore] New MXCoreDataStore version detected");
+            [self deleteAllData];
+            [self setupCoreData:credentials.userId];
+        }
+        // Check credentials
+        else if (nil == credentials)
+        {
+            NSLog(@"[MXCoreDataStore] Nil credentials");
+            [self deleteAllData];
+            [self setupCoreData:credentials.userId];
+        }
+        // Check credentials
+        else if (NO == [account.homeServer isEqualToString:credentials.homeServer]
+                 || NO == [account.userId isEqualToString:credentials.userId]
+                 || NO == [account.accessToken isEqualToString:credentials.accessToken])
+
+        {
+            NSLog(@"[MXCoreDataStore] Credentials do not match");
+            [self deleteAllData];
+            [self setupCoreData:credentials.userId];
+        }
+    }
+
+    if (!account)
+    {
+        // Create a new account
         account = [NSEntityDescription
                             insertNewObjectForEntityForName:@"Account"
                             inManagedObjectContext:managedObjectContext];
 
         account.userId = credentials.userId;
         account.homeServer = credentials.homeServer;
+        account.accessToken = credentials.accessToken;
+        account.version = @(kMXCoreDataStoreVersion);
 
         [self commit];
     }
 
     onComplete();
-
-/*
-    Account *account = [NSEntityDescription
-                                      insertNewObjectForEntityForName:@"Account"
-                                      inManagedObjectContext:context];
-
-    account.userId = credentials.userId;
-
-    NSError *error;
-    if (![context save:&error]) {
-        NSLog(@"Whoops, couldn't save: %@", [error localizedDescription]);
-    }
-
-    // Test listing all FailedBankInfos from the store
-    NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
-    NSEntityDescription *entity = [NSEntityDescription entityForName:@"Account"
-                                              inManagedObjectContext:context];
-    [fetchRequest setEntity:entity];
-    NSArray *fetchedObjects = [context executeFetchRequest:fetchRequest error:&error];
-    for (Account *info in fetchedObjects) {
-        NSLog(@"Name: %@", info.userId);
-    }
-*/
 }
 
 
@@ -153,25 +146,24 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 
 - (void)replaceEvent:(MXEvent*)event inRoom:(NSString*)roomId
 {
-}
-
-- (void)deleteRoom:(NSString *)roomId
-{
     Room *room = [self getOrCreateRoomEntity:roomId];
-    [room flush];
-
-    NSLog(@"#### deleteRoom: %@", roomId);
-    NSLog(@"---- %tu", account.rooms.count);
-    [managedObjectContext deleteObject:room];
-    //[account removeRoomsObject:room];
-    NSLog(@"++++ %tu", account.rooms.count);
-
+    [room replaceEvent:event];
 }
 
 - (MXEvent *)eventWithEventId:(NSString *)eventId inRoom:(NSString *)roomId
 {
     Room *room = [self getOrCreateRoomEntity:roomId];
     return [room eventWithEventId:eventId];
+}
+
+- (void)deleteRoom:(NSString *)roomId
+{
+    Room *room = [self getOrCreateRoomEntity:roomId];
+
+    // Related events will be deleted via cascade
+    [account removeRoomsObject:room];
+    [managedObjectContext deleteObject:room];
+    [managedObjectContext save:nil];
 }
 
 - (void)deleteAllData
@@ -186,6 +178,10 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
         [[NSFileManager defaultManager] removeItemAtPath:store.URL.path error:nil];
     }
     [managedObjectContext unlock];
+
+    account = nil;
+    persistentStoreCoordinator = nil;
+    managedObjectContext = nil;
 }
 
 - (void)storePaginationTokenOfRoom:(NSString *)roomId andToken:(NSString *)token
@@ -200,7 +196,6 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     return room.paginationToken;
 }
 
-
 - (void)storeHasReachedHomeServerPaginationEndForRoom:(NSString *)roomId andValue:(BOOL)value
 {
     Room *room = [self getOrCreateRoomEntity:roomId];
@@ -210,68 +205,8 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 - (BOOL)hasReachedHomeServerPaginationEndForRoom:(NSString*)roomId
 {
     Room *room = [self getOrCreateRoomEntity:roomId];
-    return room.hasReachedHomeServerPaginationEnd;
+    return [room.hasReachedHomeServerPaginationEnd boolValue];
 }
-
-- (BOOL)isPermanent
-{
-    return YES;
-}
-
-- (void)setEventStreamToken:(NSString *)eventStreamToken
-{
-    account.eventStreamToken = eventStreamToken;
-    metaDataHasChanged = YES;
-}
-
-- (NSString *)eventStreamToken
-{
-    return account.eventStreamToken;
-}
-
-- (NSArray *)rooms
-{
-    NSMutableArray *rooms = [NSMutableArray array];
-    for (Room *room in account.rooms)
-    {
-        [rooms addObject:room.roomId];
-    }
-    return rooms;
-}
-
-- (void)storeStateForRoom:(NSString*)roomId stateEvents:(NSArray*)stateEvents
-{
-    Room *room = [self getOrCreateRoomEntity:roomId];
-    //return room.state;
-    //room.state =
-}
-
-- (NSArray*)stateOfRoom:(NSString *)roomId
-{
-    return nil;
-}
-
--(void)setUserDisplayname:(NSString *)userDisplayname
-{
-    account.userDisplayName = userDisplayname;
-}
-
--(NSString *)userDisplayname
-{
-    return account.userDisplayName;
-}
-
--(void)setUserAvatarUrl:(NSString *)userAvatarUrl
-{
-    account.userAvatarUrl = userAvatarUrl;
-    metaDataHasChanged = YES;
-}
-
-- (NSString *)userAvatarUrl
-{
-    return account.userAvatarUrl;
-}
-
 
 - (void)resetPaginationOfRoom:(NSString*)roomId
 {
@@ -291,11 +226,25 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     return [room remainingMessagesForPagination];
 }
 
-
 - (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types;
 {
     Room *room = [self getOrCreateRoomEntity:roomId];
     return [room lastMessageWithTypeIn:types];
+}
+
+- (BOOL)isPermanent
+{
+    return YES;
+}
+
+- (void)setEventStreamToken:(NSString *)eventStreamToken
+{
+    account.eventStreamToken = eventStreamToken;
+}
+
+- (NSString *)eventStreamToken
+{
+    return account.eventStreamToken;
 }
 
 - (void)commit
@@ -309,12 +258,101 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 
 - (void)close
 {
-    managedObjectContext  = nil;
+    NSLog(@"[MXCoreDataStore] closed for %@", account.userId);
+
+    account = nil;
+    managedObjectContext = nil;
     persistentStoreCoordinator = nil;
+}
+
+- (NSArray *)rooms
+{
+    NSMutableArray *rooms = [NSMutableArray array];
+    for (Room *room in account.rooms)
+    {
+        [rooms addObject:room.roomId];
+    }
+    return rooms;
+}
+
+- (void)storeStateForRoom:(NSString*)roomId stateEvents:(NSArray*)stateEvents
+{
+    Room *room = [self getOrCreateRoomEntity:roomId];
+    [room storeState:stateEvents];
+}
+
+- (NSArray*)stateOfRoom:(NSString *)roomId
+{
+    Room *room = [self getOrCreateRoomEntity:roomId];
+    return [room stateEvents];
+}
+
+-(void)setUserDisplayname:(NSString *)userDisplayname
+{
+    account.userDisplayName = userDisplayname;
+}
+
+-(NSString *)userDisplayname
+{
+    return account.userDisplayName;
+}
+
+-(void)setUserAvatarUrl:(NSString *)userAvatarUrl
+{
+    account.userAvatarUrl = userAvatarUrl;
+}
+
+- (NSString *)userAvatarUrl
+{
+    return account.userAvatarUrl;
+}
+
+
+#pragma mark - MXCoreDataStore specific Methods
++ (void)flush
+{
+    // Erase the MXCoreData root folder to flush all DBs used by MXCoreDataStore
+    NSURL *storesPath = [[[NSFileManager defaultManager] URLsForDirectory:NSCachesDirectory inDomains:NSUserDomainMask] lastObject];
+    storesPath = [storesPath URLByAppendingPathComponent:kMXCoreDataStoreFolder];
+
+    [[NSFileManager defaultManager] removeItemAtPath:storesPath.path error:nil];
 }
 
 
 #pragma mark - Private methods
+- (NSError*)setupCoreData:(NSString*)userId
+{
+    NSError *error;
+
+    // The folder where MXCoreDataStore db files are stored
+    NSURL *storesPath = [[[NSFileManager defaultManager] URLsForDirectory:NSCachesDirectory inDomains:NSUserDomainMask] lastObject];
+    storesPath = [storesPath URLByAppendingPathComponent:kMXCoreDataStoreFolder];
+    [[NSFileManager defaultManager] createDirectoryAtPath:storesPath.path withIntermediateDirectories:YES attributes:nil error:nil];
+
+    // The SQLite file path. There is one per user
+    NSString *userSQLiteFile = [NSString stringWithFormat:@"%@.sqlite", userId];
+    NSURL *storeURL = [storesPath URLByAppendingPathComponent:userSQLiteFile];
+
+    // Persistent Store Coordinator
+    persistentStoreCoordinator = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel: managedObjectModel];
+    if (![persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:storeURL options:nil error:&error])
+    {
+        NSLog(@"[MXCoreDataStore] openWithCredentials: %@ mismaches with current Managed Object Model. Reset it", userSQLiteFile);
+        [[NSFileManager defaultManager] removeItemAtPath:storeURL.path error:&error];
+
+        if (![persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:storeURL options:nil error:&error])
+        {
+            NSLog(@"[MXCoreDataStore] openWithCredentials: Failed to create persistent store. Error: %@", error);
+        }
+    }
+
+    // MOC
+    managedObjectContext = [[NSManagedObjectContext alloc] init];
+    managedObjectContext.persistentStoreCoordinator = persistentStoreCoordinator;
+
+    return error;
+}
+
 - (Room*)getOrCreateRoomEntity:(NSString*)roomId
 {
     Room *room;
@@ -327,11 +365,7 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     NSPredicate *predicate = [NSPredicate predicateWithFormat:@"roomId == %@", roomId];
     [fetchRequest setPredicate:predicate];
 
-    NSLog(@"#### getOrCreateRoomEntity: %@", roomId);
-
     NSArray *fetchedObjects = [managedObjectContext executeFetchRequest:fetchRequest error:nil];
-    NSLog(@"     fetchedObjects: %tu", fetchedObjects.count);
-
     if (fetchedObjects.count)
     {
         room = fetchedObjects[0];
@@ -343,20 +377,10 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
                    inManagedObjectContext:managedObjectContext];
 
         room.roomId = roomId;
+        room.account = account;
         [account addRoomsObject:room];
     }
     return room;
-}
-
-
-#pragma mark - Core Data Methods
-+ (void)flush
-{
-    // Erase the MXCoreData root folder to flush all DBs
-    NSURL *storesPath = [[[NSFileManager defaultManager] URLsForDirectory:NSCachesDirectory inDomains:NSUserDomainMask] lastObject];
-    storesPath = [storesPath URLByAppendingPathComponent:kMXCoreDataStoreFolder];
-
-    [[NSFileManager defaultManager] removeItemAtPath:storesPath.path error:nil];
 }
 
 @end
