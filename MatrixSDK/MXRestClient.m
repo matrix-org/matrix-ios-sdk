@@ -563,8 +563,10 @@ MXAuthAction;
                             success:(void (^)(NSString *eventId))success
                             failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/send/%@", roomId, eventTypeString];
-    return [httpClient requestWithMethod:@"POST"
+    // Prepare the path by adding a random transaction id (This id is used to prevent duplicated event).
+    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/send/%@/%tu", roomId, eventTypeString, arc4random_uniform(INT32_MAX)];
+    
+    return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:content
                                  success:^(NSDictionary *JSONResponse) {
