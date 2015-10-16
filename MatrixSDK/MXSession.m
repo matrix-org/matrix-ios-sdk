@@ -747,9 +747,9 @@ typedef void (^MXOnResumeDone)();
         
         // init the receips to the latest received one.
         // else the unread messages counter will not be properly managed.
-        for(NSString* roomId in roomDicts)
+        for (NSDictionary *roomDict in roomDicts)
         {
-            MXRoom *room = [self roomWithRoomId:roomId];
+            MXRoom *room = [self roomWithRoomId:roomDict[@"room_id"]];
             [room acknowledgeLatestMessage:NO];
         }
         
