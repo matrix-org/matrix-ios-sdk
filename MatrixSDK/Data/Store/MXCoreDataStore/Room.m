@@ -146,9 +146,7 @@
         NSEntityDescription *entity = [NSEntityDescription entityForName:@"MXEventEntity"
                                                   inManagedObjectContext:self.managedObjectContext];
         [fetchRequest setEntity:entity];
-
-        // TODO
-        NSPredicate *predicate = [NSPredicate predicateWithFormat:@"roomId == %@ AND type == %@", self.roomId, types[0]];
+        NSPredicate *predicate = [NSPredicate predicateWithFormat:@"roomId == %@ AND type IN %@", self.roomId, types];
         [fetchRequest setPredicate:predicate];
 
         NSArray *fetchedObjects = [self.managedObjectContext executeFetchRequest:fetchRequest error:&error];
