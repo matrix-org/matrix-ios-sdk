@@ -47,14 +47,10 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     self = [super init];
     if (self)
     {
-        // Load the Managed Object Model Definition from the Matrix SDK bundle
-        NSString *bundlePath = [[NSBundle bundleForClass:[self class]] pathForResource:@"MatrixSDKBundle"
-                                                                                ofType:@"bundle"];
-        NSBundle *bundle = [NSBundle bundleWithPath:bundlePath];
-        NSString *modelPath = [bundle pathForResource:@"MXCoreDataStore"
-                                               ofType:@"momd"];
-
-        NSURL *modelURL = [NSURL fileURLWithPath:modelPath];
+        // Load the MXCoreDataStore Managed Object Model Definition
+        // Note: [NSBundle bundleForClass:[self class]] is prefered to [NSBundle mainBundle]
+        // because it works for unit tests
+        NSURL *modelURL = [[NSBundle bundleForClass:[self class]] URLForResource:@"MXCoreDataStore" withExtension:@"momd"];
         managedObjectModel = [[NSManagedObjectModel alloc] initWithContentsOfURL:modelURL];
     }
     return self;
