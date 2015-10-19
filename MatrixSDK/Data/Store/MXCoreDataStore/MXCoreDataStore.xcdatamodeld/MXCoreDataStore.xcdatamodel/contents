@@ -23,19 +23,20 @@
         <attribute name="stateKey" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="type" attributeType="String" syncable="YES"/>
         <attribute name="userId" attributeType="String" syncable="YES"/>
-        <relationship name="room" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Room" inverseName="messages" inverseEntity="Room" syncable="YES"/>
+        <relationship name="messageForRoom" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Room" inverseName="messages" inverseEntity="Room" syncable="YES"/>
+        <relationship name="stateForRoom" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Room" inverseName="state" inverseEntity="Room" syncable="YES"/>
     </entity>
     <entity name="Room" representedClassName="Room" syncable="YES">
         <attribute name="hasReachedHomeServerPaginationEnd" optional="YES" attributeType="Boolean" syncable="YES"/>
         <attribute name="paginationToken" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="roomId" optional="YES" attributeType="String" syncable="YES"/>
         <relationship name="account" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Account" inverseName="rooms" inverseEntity="Account" syncable="YES"/>
-        <relationship name="messages" optional="YES" toMany="YES" deletionRule="Cascade" ordered="YES" destinationEntity="MXEventEntity" inverseName="room" inverseEntity="MXEventEntity" syncable="YES"/>
-        <relationship name="state" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="MXEventEntity" syncable="YES"/>
+        <relationship name="messages" optional="YES" toMany="YES" deletionRule="Cascade" ordered="YES" destinationEntity="MXEventEntity" inverseName="messageForRoom" inverseEntity="MXEventEntity" syncable="YES"/>
+        <relationship name="state" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="MXEventEntity" inverseName="stateForRoom" inverseEntity="MXEventEntity" syncable="YES"/>
     </entity>
     <elements>
         <element name="Account" positionX="-693" positionY="-225" width="128" height="165"/>
-        <element name="MXEventEntity" positionX="-18" positionY="-81" width="128" height="240"/>
+        <element name="MXEventEntity" positionX="-18" positionY="-81" width="128" height="253"/>
         <element name="Room" positionX="-423" positionY="-163" width="243" height="133"/>
     </elements>
 </model>

@@ -146,8 +146,9 @@
         NSEntityDescription *entity = [NSEntityDescription entityForName:@"MXEventEntity"
                                                   inManagedObjectContext:self.managedObjectContext];
         [fetchRequest setEntity:entity];
-        NSPredicate *predicate = [NSPredicate predicateWithFormat:@"roomId == %@ AND type IN %@", self.roomId, types];
+        NSPredicate *predicate = [NSPredicate predicateWithFormat:@"messageForRoom.roomId == %@ AND type IN %@", self.roomId, types];
         [fetchRequest setPredicate:predicate];
+        [fetchRequest setFetchLimit:1];
 
         NSArray *fetchedObjects = [self.managedObjectContext executeFetchRequest:fetchRequest error:&error];
         if (fetchedObjects.count)
@@ -212,8 +213,10 @@
                                               inManagedObjectContext:self.managedObjectContext];
     [fetchRequest setEntity:entity];
 
-    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"roomId == %@ AND eventId == %@", self.roomId, eventId];
+    // Use messageForRoom.roomId as filter to search among messages events not state events of the room
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"messageForRoom.roomId == %@ AND eventId == %@", self.roomId, eventId];
     [fetchRequest setPredicate:predicate];
+    [fetchRequest setFetchLimit:1];
 
     MXEventEntity *eventEntity;
     NSArray *fetchedObjects = [self.managedObjectContext executeFetchRequest:fetchRequest error:&error];
