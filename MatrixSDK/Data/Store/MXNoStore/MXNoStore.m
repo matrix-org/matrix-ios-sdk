@@ -170,7 +170,7 @@
 
 - (NSArray*)getEventReceipts:(NSString*)roomId eventId:(NSString*)eventId sorted:(BOOL)sort
 {
-    return NULL;
+    return nil;
 }
 
 /**
@@ -191,7 +191,7 @@
  */
 - (NSArray*)unreadMessages:(NSString*)roomId
 {
-    return NULL;
+    return nil;
 }
 
 

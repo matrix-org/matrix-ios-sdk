@@ -226,7 +226,7 @@
         }
     }
    
-    return NULL;
+    return nil;
 }
 
 - (BOOL)isPermanent
