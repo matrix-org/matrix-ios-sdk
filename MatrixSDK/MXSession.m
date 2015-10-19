@@ -56,7 +56,6 @@ NSString *const kMXSessionNotificationEventKey = @"event";
 // Block called when MSSession resume is complete
 typedef void (^MXOnResumeDone)();
 
-
 @interface MXSession ()
 {
     /**
@@ -96,6 +95,16 @@ typedef void (^MXOnResumeDone)();
      The block to call when MSSession resume is complete.
      */
     MXOnResumeDone onResumeDone;
+    
+    /**
+     The block to call when MSSession catchup is successfully done.
+     */
+    MXOnCatchupDone onCatchupDone;
+    
+    /**
+     The block to call when MSSession catchup fails.
+     */
+    MXOnCatchupFail onCatchupFail;
 
     /**
      The list of rooms ids where a room initialSync is in progress (made by [self initialSyncOfRoom])
@@ -350,13 +359,12 @@ typedef void (^MXOnResumeDone)();
 
 - (void)streamEventsFromToken:(NSString*)token withLongPoll:(BOOL)longPoll
 {
-    NSUInteger serverTimeout = 0;
-    if (longPoll)
-    {
-        serverTimeout = SERVER_TIMEOUT_MS;
-    }
-    
-    eventStreamRequest = [matrixRestClient eventsFromToken:token serverTimeout:serverTimeout clientTimeout:CLIENT_TIMEOUT_MS success:^(MXPaginationResponse *paginatedResponse) {
+    [self streamEventsFromToken:token withLongPoll:longPoll serverTimeOut:(longPoll ? SERVER_TIMEOUT_MS : 0) clientTimeout:CLIENT_TIMEOUT_MS];
+}
+
+- (void)streamEventsFromToken:(NSString*)token withLongPoll:(BOOL)longPoll serverTimeOut:(NSUInteger)serverTimeout clientTimeout:(NSUInteger)clientTimeout
+{
+    eventStreamRequest = [matrixRestClient eventsFromToken:token serverTimeout:serverTimeout clientTimeout:clientTimeout success:^(MXPaginationResponse *paginatedResponse) {
 
         // eventStreamRequest is nil when the event stream has been paused
         if (eventStreamRequest)
@@ -373,6 +381,27 @@ typedef void (^MXOnResumeDone)();
             if ([_store respondsToSelector:@selector(commit)])
             {
                 [_store commit];
+            }
+            
+            // there is a pending catchup
+            if (onCatchupDone)
+            {
+                NSLog(@"[MXSession] Events stream catchup with %tu new events", events.count);
+                onCatchupDone();
+                onCatchupDone = nil;
+                
+                // check that the application was not resumed while catching up
+                if (_state == MXSessionStateCatchingUp)
+                {
+                    NSLog(@"[MXSession] go to paused ");
+                    eventStreamRequest = nil;
+                    [self setState:MXSessionStatePaused];
+                    return;
+                }
+                else
+                {
+                    NSLog(@"[MXSession] resume after a catchup ");
+                }
             }
 
             // If we are resuming inform the app that it received the last uptodate data
@@ -391,7 +420,7 @@ typedef void (^MXOnResumeDone)();
                     return;
                 }
             }
-
+            
             if (MXSessionStateHomeserverNotReachable == _state)
             {
                 // The connection to the homeserver is now back
@@ -404,6 +433,27 @@ typedef void (^MXOnResumeDone)();
 
     } failure:^(NSError *error) {
 
+        if (onCatchupFail)
+        {
+            NSLog(@"[MXSession] catchup fails %@", error);
+            
+            onCatchupFail(error);
+            onCatchupFail = nil;
+            
+            // check that the application was not resumed while catching up
+            if (_state == MXSessionStateCatchingUp)
+            {
+                NSLog(@"[MXSession] go to paused ");
+                eventStreamRequest = nil;
+                [self setState:MXSessionStatePaused];
+                return;
+            }
+            else
+            {
+                NSLog(@"[MXSession] resume after a catchup ");
+            }
+        }
+        
         // eventStreamRequest is nil when the request has been canceled
         if (eventStreamRequest)
         {
@@ -574,8 +624,15 @@ typedef void (^MXOnResumeDone)();
 
 - (void)pause
 {
-    if (_state == MXSessionStateRunning)
+    NSLog(@"[MXSession] pause the event stream in state %lu", _state);
+    
+    if ((_state == MXSessionStateRunning) || (_state == MXSessionStateCatchingUp))
     {
+        // reset the callback
+        onResumeDone = nil;
+        onCatchupDone = nil;
+        onCatchupFail = nil;
+        
         // Cancel the current request managing the event stream
         [eventStreamRequest cancel];
         eventStreamRequest = nil;
@@ -584,10 +641,10 @@ typedef void (^MXOnResumeDone)();
     }
 }
 
-- (void)resume:(void (^)())resumeDone;
+- (void)resume:(void (^)())resumeDone
 {
     // Check whether no request is already in progress
-    if (!eventStreamRequest)
+    if (!eventStreamRequest || (_state == MXSessionStateCatchingUp))
     {
         // Force reload of push rules now.
         // The spec, @see SPEC-106 ticket, does not allow to be notified when there was a change
@@ -608,7 +665,36 @@ typedef void (^MXOnResumeDone)();
 //        else
         {
             // sync based on API v1 (Legacy)
-            [self streamEventsFromToken:_store.eventStreamToken withLongPoll:NO];
+            if (!eventStreamRequest)
+            {
+                [self streamEventsFromToken:_store.eventStreamToken withLongPoll:NO];
+            }
+        }
+    }
+}
+
+- (void)catchup:(unsigned int)timeout success:(MXOnCatchupDone)catchupDone failure:(MXOnCatchupFail)catchupfails
+{
+    // Check whether no request is already in progress
+    if (!eventStreamRequest)
+    {
+        if (MXSessionStatePaused != _state)
+        {
+            NSLog(@"[MXSession] catchup cannot be done in the current state %lu", _state);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                catchupfails(nil);
+            });
+        }
+        else
+        {
+            NSLog(@"[MXSession] start a catchup");
+            [self setState:MXSessionStateCatchingUp];
+            
+            // catchup from the latest known from the last known token
+            onCatchupDone = catchupDone;
+            onCatchupFail = catchupfails;
+            
+            [self streamEventsFromToken:_store.eventStreamToken withLongPoll:NO serverTimeOut:0 clientTimeout:timeout];
         }
     }
 }
@@ -1121,7 +1207,7 @@ typedef void (^MXOnResumeDone)();
     }
     else
     {
-        return NULL;
+        return nil;
     }
 }
 
