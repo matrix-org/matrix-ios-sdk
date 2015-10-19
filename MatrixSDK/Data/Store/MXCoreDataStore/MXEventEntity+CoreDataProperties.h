@@ -32,7 +32,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nullable, nonatomic, retain) NSString *stateKey;
 @property (nullable, nonatomic, retain) NSString *type;
 @property (nullable, nonatomic, retain) NSString *userId;
-@property (nullable, nonatomic, retain) Room *room;
+@property (nullable, nonatomic, retain) Room *messageForRoom;   // Only for MXEventEntity part of room.messages
+@property (nullable, nonatomic, retain) Room *stateForRoom;     // Only for MXEventEntity part of room.state
 
 @end
 

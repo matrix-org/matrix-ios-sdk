@@ -30,6 +30,7 @@
 @dynamic stateKey;
 @dynamic type;
 @dynamic userId;
-@dynamic room;
+@dynamic messageForRoom;
+@dynamic stateForRoom;
 
 @end
