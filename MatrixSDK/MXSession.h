@@ -240,12 +240,6 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
  */
 - (void)resume:(void (^)())resumeDone;
 
-
-/**
- Cancel the session events stream.
- */
-- (void)cancel;
-
 /**
  Perform an events stream catchup.
  

@@ -620,8 +620,15 @@ typedef void (^MXOnResumeDone)();
 
 - (void)pause
 {
+    NSLog(@"[MXSession] pause the event stream in state %lu", _state);
+    
     if ((_state == MXSessionStateRunning) || (_state == MXSessionStateCatchingUp))
     {
+        // reset the callback
+        onResumeDone = nil;
+        onCatchupDone = nil;
+        onCatchupFail = nil;
+        
         // Cancel the current request managing the event stream
         [eventStreamRequest cancel];
         eventStreamRequest = nil;
@@ -662,25 +669,6 @@ typedef void (^MXOnResumeDone)();
     }
 }
 
-- (void)cancel
-{
-    if (!eventStreamRequest)
-    {
-        NSLog(@"[MXSession] cancel the event stream in state %lu", _state);
-        
-        // reset the callback
-        onResumeDone = NULL;
-        onCatchupDone = NULL;
-        onCatchupFail = NULL;
-        
-        // cancel the request
-        [eventStreamRequest cancel];
-        eventStreamRequest = NULL;
-        
-        [self setState:MXSessionStatePaused];
-    }
-}
-
 - (void)catchup:(unsigned int)timeout success:(MXOnCatchupDone)catchupDone failure:(MXOnCatchupFail)catchupfails
 {
     // Check whether no request is already in progress
@@ -702,7 +690,7 @@ typedef void (^MXOnResumeDone)();
             onCatchupDone = catchupDone;
             onCatchupFail = catchupfails;
             
-            [self streamEventsFromToken:_store.eventStreamToken withLongPoll:NO serverTimeOut:timeout clientTimeout:timeout];
+            [self streamEventsFromToken:_store.eventStreamToken withLongPoll:NO serverTimeOut:0 clientTimeout:timeout];
         }
     }
 }
@@ -1206,7 +1194,7 @@ typedef void (^MXOnResumeDone)();
     }
     else
     {
-        return NULL;
+        return nil;
     }
 }
 
