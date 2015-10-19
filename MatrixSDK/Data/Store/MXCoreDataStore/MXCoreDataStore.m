@@ -334,6 +334,8 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     if (![persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:storeURL options:nil error:&error])
     {
         NSLog(@"[MXCoreDataStore] openWithCredentials: %@ mismaches with current Managed Object Model. Reset it", userSQLiteFile);
+
+        error = nil;
         [[NSFileManager defaultManager] removeItemAtPath:storeURL.path error:&error];
 
         if (![persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:storeURL options:nil error:&error])
