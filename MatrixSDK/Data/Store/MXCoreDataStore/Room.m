@@ -134,9 +134,12 @@
 
         // Use messageForRoom.roomId as filter to search among messages events not state events of the room
         NSPredicate *predicate = [NSPredicate predicateWithFormat:@"messageForRoom.roomId == %@ AND type IN %@", self.roomId, types];
-        [fetchRequest setPredicate:predicate];
-        [fetchRequest setFetchBatchSize:1];
-        [fetchRequest setFetchLimit:1];
+        fetchRequest.predicate = predicate;
+        fetchRequest.fetchBatchSize = 1;
+        fetchRequest.fetchLimit = 1;
+
+        // Sort by age
+        fetchRequest.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"ageLocalTs" ascending:NO]];
 
         NSArray *fetchedObjects = [self.managedObjectContext executeFetchRequest:fetchRequest error:&error];
         if (fetchedObjects.count)
