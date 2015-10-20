@@ -37,6 +37,12 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     NSManagedObjectModel *managedObjectModel;
     NSPersistentStoreCoordinator *persistentStoreCoordinator;
     NSManagedObjectContext *managedObjectContext;
+
+    /**
+     Cache to optimise [MXCoreDataStore getOrCreateRoomEntity:].
+     Even if the Room.roomId attribute is indexed in Core Data, the db lookup is still slow.
+     */
+    NSMutableDictionary *roomsByRoomId;
 }
 @end
 
@@ -47,6 +53,8 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     self = [super init];
     if (self)
     {
+        roomsByRoomId = [NSMutableDictionary dictionary];
+
         // Load the MXCoreDataStore Managed Object Model Definition
         // Note: [NSBundle bundleForClass:[self class]] is prefered to [NSBundle mainBundle]
         // because it works for unit tests
@@ -160,6 +168,8 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     [account removeRoomsObject:room];
     [managedObjectContext deleteObject:room];
     [managedObjectContext save:nil];
+
+    [roomsByRoomId removeObjectForKey:roomId];
 }
 
 - (void)deleteAllData
@@ -178,6 +188,7 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     account = nil;
     persistentStoreCoordinator = nil;
     managedObjectContext = nil;
+    roomsByRoomId = [NSMutableDictionary dictionary];
 }
 
 - (void)storePaginationTokenOfRoom:(NSString *)roomId andToken:(NSString *)token
@@ -255,6 +266,12 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 - (void)close
 {
     NSLog(@"[MXCoreDataStore] closed for %@", account.userId);
+
+    // Release Core Data memory
+    if (managedObjectContext)
+    {
+        [managedObjectContext reset];
+    }
 
     account = nil;
     managedObjectContext = nil;
@@ -353,31 +370,41 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 
 - (Room*)getOrCreateRoomEntity:(NSString*)roomId
 {
-    Room *room;
-
-    // Check if the account already exists
-    NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
-    NSEntityDescription *entity = [NSEntityDescription entityForName:@"Room"
-                                              inManagedObjectContext:managedObjectContext];
-    [fetchRequest setEntity:entity];
-    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"roomId == %@", roomId];
-    [fetchRequest setPredicate:predicate];
-
-    NSArray *fetchedObjects = [managedObjectContext executeFetchRequest:fetchRequest error:nil];
-    if (fetchedObjects.count)
+    // First, check in the "room by roomId" cache
+    Room *room = roomsByRoomId[roomId];
+    if (!room)
     {
-        room = fetchedObjects[0];
-    }
-    else
-    {
-        room = [NSEntityDescription
-                   insertNewObjectForEntityForName:@"Room"
-                   inManagedObjectContext:managedObjectContext];
+        // Secondly, search it in Core Data
+        NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
+        NSEntityDescription *entity = [NSEntityDescription entityForName:@"Room"
+                                                  inManagedObjectContext:managedObjectContext];
+        [fetchRequest setEntity:entity];
+        NSPredicate *predicate = [NSPredicate predicateWithFormat:@"roomId == %@", roomId];
+        [fetchRequest setPredicate:predicate];
+        [fetchRequest setFetchBatchSize:1];
+        [fetchRequest setFetchLimit:1];
 
-        room.roomId = roomId;
-        room.account = account;
-        [account addRoomsObject:room];
+        NSArray *fetchedObjects = [managedObjectContext executeFetchRequest:fetchRequest error:nil];
+        if (fetchedObjects.count)
+        {
+            room = fetchedObjects[0];
+        }
+        else
+        {
+            // Else, create it
+            room = [NSEntityDescription
+                    insertNewObjectForEntityForName:@"Room"
+                    inManagedObjectContext:managedObjectContext];
+
+            room.roomId = roomId;
+            room.account = account;
+            [account addRoomsObject:room];
+        }
+
+        // Cache it for next calls
+        roomsByRoomId[roomId] = room;
     }
+
     return room;
 }
 

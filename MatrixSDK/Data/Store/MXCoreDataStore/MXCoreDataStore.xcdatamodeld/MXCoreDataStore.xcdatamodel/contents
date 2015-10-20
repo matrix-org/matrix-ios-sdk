@@ -29,7 +29,7 @@
     <entity name="Room" representedClassName="Room" syncable="YES">
         <attribute name="hasReachedHomeServerPaginationEnd" optional="YES" attributeType="Boolean" syncable="YES"/>
         <attribute name="paginationToken" optional="YES" attributeType="String" syncable="YES"/>
-        <attribute name="roomId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="roomId" attributeType="String" indexed="YES" syncable="YES"/>
         <relationship name="account" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Account" inverseName="rooms" inverseEntity="Account" syncable="YES"/>
         <relationship name="messages" optional="YES" toMany="YES" deletionRule="Cascade" ordered="YES" destinationEntity="MXEventEntity" inverseName="messageForRoom" inverseEntity="MXEventEntity" syncable="YES"/>
         <relationship name="state" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="MXEventEntity" inverseName="stateForRoom" inverseEntity="MXEventEntity" syncable="YES"/>
