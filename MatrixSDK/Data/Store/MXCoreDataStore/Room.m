@@ -131,8 +131,11 @@
         NSEntityDescription *entity = [NSEntityDescription entityForName:@"MXEventEntity"
                                                   inManagedObjectContext:self.managedObjectContext];
         [fetchRequest setEntity:entity];
+
+        // Use messageForRoom.roomId as filter to search among messages events not state events of the room
         NSPredicate *predicate = [NSPredicate predicateWithFormat:@"messageForRoom.roomId == %@ AND type IN %@", self.roomId, types];
         [fetchRequest setPredicate:predicate];
+        [fetchRequest setFetchBatchSize:1];
         [fetchRequest setFetchLimit:1];
 
         NSArray *fetchedObjects = [self.managedObjectContext executeFetchRequest:fetchRequest error:&error];
@@ -192,26 +195,17 @@
     // Use messageForRoom.roomId as filter to search among messages events not state events of the room
     NSPredicate *predicate = [NSPredicate predicateWithFormat:@"messageForRoom.roomId == %@ AND eventId == %@", self.roomId, eventId];
     [fetchRequest setPredicate:predicate];
+    [fetchRequest setFetchBatchSize:1];
     [fetchRequest setFetchLimit:1];
 
     MXEventEntity *eventEntity;
     NSArray *fetchedObjects = [self.managedObjectContext executeFetchRequest:fetchRequest error:&error];
 
-    // TODO: the same: how to efficiently search into only self.messages excluding events in self.state?
-    NSMutableArray *fetchedObjects2 = [NSMutableArray array];
-    for (MXEventEntity *fetchedObject in fetchedObjects)
-    {
-        if (NSNotFound != [self.messages indexOfObject:fetchedObject])
-        {
-            [fetchedObjects2 addObject:fetchedObject];
-        }
-    }
+    NSAssert(fetchedObjects.count <= 1, @"MXCoreData eventEntityWithEventId: Event with id %@ is not unique (%tu) in the db", eventId, fetchedObjects.count);
 
-    NSAssert(fetchedObjects2.count <= 1, @"MXCoreData eventEntityWithEventId: Event with id %@ is not unique (%tu) in the db", eventId, fetchedObjects2.count);
-
-    if (fetchedObjects2.count)
+    if (fetchedObjects.count)
     {
-        eventEntity = fetchedObjects2[0];
+        eventEntity = fetchedObjects[0];
     }
 
     return eventEntity;
