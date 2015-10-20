@@ -68,6 +68,7 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomRedaction;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringPresence;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringTypingNotification;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringReceipt;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringRead;
 
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallInvite;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallCandidates;

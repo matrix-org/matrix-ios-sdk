@@ -1857,7 +1857,7 @@ MXAuthAction;
                              failure:(void (^)(NSError *error))failure
 {
     return [httpClient requestWithMethod:@"POST"
-                                    path: [NSString stringWithFormat:@"v2_alpha/rooms/%@/receipt/read/%@", roomId, eventId]
+                                    path: [NSString stringWithFormat:@"v2_alpha/rooms/%@/receipt/m.read/%@", roomId, eventId]
                               parameters:[[NSDictionary alloc] init]
                                  success:^(NSDictionary *JSONResponse) {
                                      success(eventId);

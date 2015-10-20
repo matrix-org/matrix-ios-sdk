@@ -33,6 +33,7 @@ NSString *const kMXEventTypeStringRoomRedaction       = @"m.room.redaction";
 NSString *const kMXEventTypeStringPresence            = @"m.presence";
 NSString *const kMXEventTypeStringTypingNotification  = @"m.typing";
 NSString *const kMXEventTypeStringReceipt             = @"m.receipt";
+NSString *const kMXEventTypeStringRead                = @"m.read";
 
 NSString *const kMXEventTypeStringCallInvite          = @"m.call.invite";
 NSString *const kMXEventTypeStringCallCandidates      = @"m.call.candidates";
@@ -179,7 +180,7 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
         for(NSString* eventId in eventIds)
         {
             NSDictionary* eventDict = [_content objectForKey:eventId];
-            NSDictionary* readDict = [eventDict objectForKey:@"read"];
+            NSDictionary* readDict = [eventDict objectForKey:kMXEventTypeStringRead];
             
             if (readDict)
             {

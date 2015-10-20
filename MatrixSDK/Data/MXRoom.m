@@ -747,7 +747,7 @@
     for(NSString* eventId in eventIds)
     {
         NSDictionary* eventDict = [event.content objectForKey:eventId];
-        NSDictionary* readDict = [eventDict objectForKey:@"read"];
+        NSDictionary* readDict = [eventDict objectForKey:kMXEventTypeStringRead];
         
         if (readDict)
         {
