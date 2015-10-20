@@ -180,9 +180,17 @@
 {
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
 
-    [sharedData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+    [sharedData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation2) {
+
+        expectation = expectation2;
+
         [store openWithCredentials:bobRestClient.credentials onComplete:^{
-            MXEvent *event = [MXEvent modelFromJSON:@{@"event_id" : @"anID", @"room_id": @"roomId"}];
+            MXEvent *event = [MXEvent modelFromJSON:@{
+                                                      @"event_id": @"anID",
+                                                      @"type": @"type",
+                                                      @"room_id": @"roomId",
+                                                      @"user_id": @"userId:"
+                                                      }];
 
             [store storeEventForRoom:@"roomId" event:event direction:MXEventDirectionForwards];
 
