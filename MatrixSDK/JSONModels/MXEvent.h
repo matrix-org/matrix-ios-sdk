@@ -16,8 +16,6 @@
 
 #import "MXJSONModel.h"
 
-#import <MTLManagedObjectAdapter/MTLManagedObjectAdapter.h>
-
 /**
  Types of Matrix events
  
@@ -138,7 +136,7 @@ typedef enum : NSUInteger
  It contains all possible keys an event can contain. Thus, all events can be resolved 
  by this model.
  */
-@interface MXEvent : MXJSONModel <MTLManagedObjectSerializing>
+@interface MXEvent : MXJSONModel
 
 /**
  The unique id of the event.
