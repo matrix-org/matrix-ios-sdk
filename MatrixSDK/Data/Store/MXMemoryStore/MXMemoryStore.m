@@ -204,14 +204,13 @@
     return false;
 }
 
-
 /**
- * Provides the unread messages list.
+ * Provides the unread events list.
  * @param roomId the room id.
- * @return the unread messages list.
+ * @param types an array of event types strings (MXEventTypeString).
+ * @return the unread events list.
  */
-
-- (NSArray*)unreadMessages:(NSString*)roomId
+- (NSArray*)unreadEvents:(NSString*)roomId withTypeIn:(NSArray*)types
 {
     MXMemoryRoomStore* store = [roomStores valueForKey:roomId];
     NSMutableDictionary* receipsByUserId = [receiptsByRoomId objectForKey:roomId];
@@ -222,7 +221,7 @@
         
         if (data)
         {
-            return [store eventsAfter:data.eventId except:credentials.userId];
+            return [store eventsAfter:data.eventId except:credentials.userId withTypeIn:types];
         }
     }
    

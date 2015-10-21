@@ -836,7 +836,7 @@ typedef void (^MXOnResumeDone)();
         for (NSDictionary *roomDict in roomDicts)
         {
             MXRoom *room = [self roomWithRoomId:roomDict[@"room_id"]];
-            [room acknowledgeLatestMessage:NO];
+            [room acknowledgeLatestEvent:NO];
         }
         
         // Start listening to live events
@@ -1159,7 +1159,7 @@ typedef void (^MXOnResumeDone)();
         }
         
         // init the receips to the latest received one.
-        [room acknowledgeLatestMessage:NO];
+        [room acknowledgeLatestEvent:NO];
 
         // Commit store changes done in [room handleMessages]
         if ([_store respondsToSelector:@selector(commit)])
