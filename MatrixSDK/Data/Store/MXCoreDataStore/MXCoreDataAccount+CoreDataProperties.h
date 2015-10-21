@@ -14,11 +14,11 @@
  limitations under the License.
  */
 
-#import "Account.h"
+#import "MXCoreDataAccount.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface Account (CoreDataProperties)
+@interface MXCoreDataAccount (CoreDataProperties)
 
 @property (nullable, nonatomic, retain) NSString *eventStreamToken;
 @property (nullable, nonatomic, retain) NSString *homeServer;
@@ -31,7 +31,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface Account (CoreDataGeneratedAccessors)
+@interface MXCoreDataAccount (CoreDataGeneratedAccessors)
 
 - (void)addRoomsObject:(Room *)value;
 - (void)removeRoomsObject:(Room *)value;

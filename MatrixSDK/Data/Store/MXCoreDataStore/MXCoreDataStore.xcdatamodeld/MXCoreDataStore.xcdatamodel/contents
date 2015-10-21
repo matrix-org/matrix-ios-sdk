@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="8195" systemVersion="14F27" minimumToolsVersion="Xcode 7.0">
-    <entity name="Account" representedClassName="Account" syncable="YES">
+    <entity name="MXCoreDataAccount" representedClassName="MXCoreDataAccount" syncable="YES">
         <attribute name="accessToken" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="eventStreamToken" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="homeServer" optional="YES" attributeType="String" syncable="YES"/>
@@ -30,12 +30,12 @@
         <attribute name="hasReachedHomeServerPaginationEnd" optional="YES" attributeType="Boolean" syncable="YES"/>
         <attribute name="paginationToken" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="roomId" attributeType="String" indexed="YES" syncable="YES"/>
-        <relationship name="account" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Account" inverseName="rooms" inverseEntity="Account" syncable="YES"/>
+        <relationship name="account" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXCoreDataAccount" inverseName="rooms" inverseEntity="MXCoreDataAccount" syncable="YES"/>
         <relationship name="messages" optional="YES" toMany="YES" deletionRule="Cascade" ordered="YES" destinationEntity="MXCoreDataEvent" inverseName="messageForRoom" inverseEntity="MXCoreDataEvent" syncable="YES"/>
         <relationship name="state" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="MXCoreDataEvent" inverseName="stateForRoom" inverseEntity="MXCoreDataEvent" syncable="YES"/>
     </entity>
     <elements>
-        <element name="Account" positionX="0" positionY="0" width="0" height="0"/>
+        <element name="MXCoreDataAccount" positionX="0" positionY="0" width="0" height="0"/>
         <element name="MXCoreDataEvent" positionX="0" positionY="0" width="0" height="0"/>
         <element name="Room" positionX="0" positionY="0" width="0" height="0"/>
     </elements>
