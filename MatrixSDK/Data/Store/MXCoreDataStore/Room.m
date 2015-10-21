@@ -173,9 +173,24 @@
 
 - (NSArray*)stateEvents
 {
+    NSError *error;
+
+    // Do not loop into self.state. It is 30% slower than making the following Core Data requests
+    NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
+    NSEntityDescription *entity = [NSEntityDescription entityForName:@"MXEventEntity"
+                                              inManagedObjectContext:self.managedObjectContext];
+    [fetchRequest setEntity:entity];
+
+    // Use stateForRoom.roomId as filter to search among state events not message events of the room
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"stateForRoom.roomId == %@", self.roomId];
+    [fetchRequest setPredicate:predicate];
+    [fetchRequest setFetchBatchSize:100];
+
+    NSArray *fetchedObjects = [self.managedObjectContext executeFetchRequest:fetchRequest error:&error];
+
     // Convert back self.state MXEventEntities to MXEvents
-    NSMutableArray *stateEvents = [NSMutableArray arrayWithCapacity:self.state.count];
-    for (MXEventEntity *eventEntity in self.state)
+    NSMutableArray *stateEvents = [NSMutableArray array];
+    for (MXEventEntity *eventEntity in fetchedObjects)
     {
         [stateEvents addObject:[self eventFromEventEntity:eventEntity]];
     }
@@ -189,7 +204,6 @@
 {
     NSError *error;
 
-    // TODO: how to efficiently search into only self.messages excluding events in self.state?
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
     NSEntityDescription *entity = [NSEntityDescription entityForName:@"MXEventEntity"
                                               inManagedObjectContext:self.managedObjectContext];
