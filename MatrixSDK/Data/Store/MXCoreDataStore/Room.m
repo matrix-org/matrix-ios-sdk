@@ -16,7 +16,7 @@
 
 #import "Room.h"
 
-#import "MXEventEntity+CoreDataProperties.h"
+#import "MXCoreDataEvent.h"
 
 @interface Room ()
 {
@@ -38,45 +38,45 @@
 
 - (void)storeEvent:(MXEvent *)event direction:(MXEventDirection)direction
 {
-	// Convert Mantle MXEvent objectsto MXEventEntitie
-    MXEventEntity *eventEntity = [self eventEntityFromEvent:event];
+	// Convert Mantle MXEvent object to MXCoreDataEvent
+    MXCoreDataEvent *cdEvent = [self coreDataEventFromEvent:event];
 
     // For info, do not set the room, it is automatically done by the CoreDataGeneratedAccessors methods
     // Setting it automatically adds the message to the tail of self.messages and prevents insertObject
     // from working
-    //eventEntity.room = self;
+    //cdEvent.room = self;
 
     if (MXEventDirectionForwards == direction)
     {
-        [self addMessagesObject:eventEntity];
+        [self addMessagesObject:cdEvent];
     }
     else
     {
-        [self insertObject:eventEntity inMessagesAtIndex:0];
+        [self insertObject:cdEvent inMessagesAtIndex:0];
     }
 
-    //NSAssert([self eventEntityWithEventId:event.eventId], @"The event must be in the db (and be unique)");
+    //NSAssert([self coreDataEventWithEventId:event.eventId], @"The event must be in the db (and be unique)");
 }
 
 - (void)replaceEvent:(MXEvent*)event
 {
-    MXEventEntity *eventEntity = [self eventEntityWithEventId:event.eventId];
-    NSUInteger index = [self.messages indexOfObject:eventEntity];
+    MXCoreDataEvent *cdEvent = [self coreDataEventWithEventId:event.eventId];
+    NSUInteger index = [self.messages indexOfObject:cdEvent];
 
     [self removeObjectFromMessagesAtIndex:index];
-    [self.managedObjectContext deleteObject:eventEntity];
+    [self.managedObjectContext deleteObject:cdEvent];
     [self.managedObjectContext save:nil];
 
-    [self insertObject:[self eventEntityFromEvent:event] inMessagesAtIndex:index];
+    [self insertObject:[self coreDataEventFromEvent:event] inMessagesAtIndex:index];
 }
 
 - (MXEvent *)eventWithEventId:(NSString *)eventId
 {
     MXEvent *event;
-    MXEventEntity *eventEntity = [self eventEntityWithEventId:eventId];
-    if (eventEntity)
+    MXCoreDataEvent *cdEvent = [self coreDataEventWithEventId:eventId];
+    if (cdEvent)
     {
-        event = [self eventFromEventEntity:eventEntity];
+        event = [self eventFromCoreDataEvent:cdEvent];
     }
     return event;
 }
@@ -107,9 +107,9 @@
     }
 
     NSMutableArray *paginatedMessages = [NSMutableArray arrayWithCapacity:paginatedMessagesEntities.count];
-    for (MXEventEntity *eventEntity in paginatedMessagesEntities)
+    for (MXCoreDataEvent *cdEvent in paginatedMessagesEntities)
     {
-        [paginatedMessages addObject:[self eventFromEventEntity:eventEntity]];
+        [paginatedMessages addObject:[self eventFromCoreDataEvent:cdEvent]];
     }
 
     return paginatedMessages;
@@ -123,12 +123,12 @@
 - (MXEvent*)lastMessageWithTypeIn:(NSArray*)types
 {
     NSError *error;
-    MXEventEntity *eventEntity;
+    MXCoreDataEvent *cdEvent;
 
     if (types)
     {
         NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
-        NSEntityDescription *entity = [NSEntityDescription entityForName:@"MXEventEntity"
+        NSEntityDescription *entity = [NSEntityDescription entityForName:@"MXCoreDataEvent"
                                                   inManagedObjectContext:self.managedObjectContext];
         [fetchRequest setEntity:entity];
 
@@ -144,15 +144,15 @@
         NSArray *fetchedObjects = [self.managedObjectContext executeFetchRequest:fetchRequest error:&error];
         if (fetchedObjects.count)
         {
-            eventEntity = fetchedObjects[0];
+            cdEvent = fetchedObjects[0];
         }
     }
     else
     {
-        eventEntity = self.messages.lastObject;
+        cdEvent = self.messages.lastObject;
     }
 
-    MXEvent *event = [self eventFromEventEntity:eventEntity];
+    MXEvent *event = [self eventFromCoreDataEvent:cdEvent];
     
     return event;
 }
@@ -164,10 +164,10 @@
     [self removeState:self.state];
     [self.managedObjectContext save:nil];
 
-    // Convert Mantle MXEvent objects to MXEventEntities
+    // Convert Mantle MXEvent objects to MXCoreDataEvents
     for (MXEvent *event in stateEvents)
     {
-        [self addStateObject:[self eventEntityFromEvent:event]];
+        [self addStateObject:[self coreDataEventFromEvent:event]];
     }
 }
 
@@ -177,7 +177,7 @@
 
     // Do not loop into self.state. It is 30% slower than making the following Core Data requests
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
-    NSEntityDescription *entity = [NSEntityDescription entityForName:@"MXEventEntity"
+    NSEntityDescription *entity = [NSEntityDescription entityForName:@"MXCoreDataEvent"
                                               inManagedObjectContext:self.managedObjectContext];
     [fetchRequest setEntity:entity];
 
@@ -188,11 +188,11 @@
 
     NSArray *fetchedObjects = [self.managedObjectContext executeFetchRequest:fetchRequest error:&error];
 
-    // Convert back self.state MXEventEntities to MXEvents
+    // Convert back self.state MXCoreDataEvents to MXEvents
     NSMutableArray *stateEvents = [NSMutableArray array];
-    for (MXEventEntity *eventEntity in fetchedObjects)
+    for (MXCoreDataEvent *cdEvent in fetchedObjects)
     {
-        [stateEvents addObject:[self eventFromEventEntity:eventEntity]];
+        [stateEvents addObject:[self eventFromCoreDataEvent:cdEvent]];
     }
 
     return stateEvents;
@@ -200,12 +200,12 @@
 
 
 #pragma mark - Private methods
-- (MXEventEntity *)eventEntityWithEventId:(NSString *)eventId
+- (MXCoreDataEvent *)coreDataEventWithEventId:(NSString *)eventId
 {
     NSError *error;
 
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
-    NSEntityDescription *entity = [NSEntityDescription entityForName:@"MXEventEntity"
+    NSEntityDescription *entity = [NSEntityDescription entityForName:@"MXCoreDataEvent"
                                               inManagedObjectContext:self.managedObjectContext];
     [fetchRequest setEntity:entity];
 
@@ -215,66 +215,66 @@
     [fetchRequest setFetchBatchSize:1];
     [fetchRequest setFetchLimit:1];
 
-    MXEventEntity *eventEntity;
+    MXCoreDataEvent *cdEvent;
     NSArray *fetchedObjects = [self.managedObjectContext executeFetchRequest:fetchRequest error:&error];
 
-    NSAssert(fetchedObjects.count <= 1, @"MXCoreData eventEntityWithEventId: Event with id %@ is not unique (%tu) in the db", eventId, fetchedObjects.count);
+    NSAssert(fetchedObjects.count <= 1, @"MXCoreData coreDataEventWithEventId: Event with id %@ is not unique (%tu) in the db", eventId, fetchedObjects.count);
 
     if (fetchedObjects.count)
     {
-        eventEntity = fetchedObjects[0];
+        cdEvent = fetchedObjects[0];
     }
 
-    return eventEntity;
+    return cdEvent;
 }
 
 
-#pragma mark - MXEvent / MXEventEntity conversion
+#pragma mark - MXEvent / MXCoreDataEvent conversion
 // Do not use MTLManagedObjectSerializing, the Mantle/CoreData bridge, as it is far slower than the
 // following code
 // TODO: The next step is to directly store MXEvent object in CD.
-- (MXEvent*)eventFromEventEntity:(MXEventEntity*)eventEntity
+- (MXEvent*)eventFromCoreDataEvent:(MXCoreDataEvent*)cdEvent
 {
     // This method is 4x times quicker than MTLManagedObjectSerializing equivalent
     MXEvent *event = [[MXEvent alloc] init];
 
-    event.roomId = eventEntity.roomId;
-    event.eventId = eventEntity.eventId;
-    event.userId = eventEntity.userId;
-    event.sender = eventEntity.sender;
-    event.type = eventEntity.type;
-    event.stateKey = eventEntity.stateKey;
-    event.ageLocalTs = [eventEntity.ageLocalTs unsignedLongLongValue];
-    event.originServerTs = [eventEntity.originServerTs unsignedLongLongValue];
-    event.content = eventEntity.content;
-    event.prevContent = eventEntity.prevContent;
-    event.redactedBecause = eventEntity.redactedBecause;
-    event.redacts = eventEntity.redacts;
+    event.roomId = cdEvent.roomId;
+    event.eventId = cdEvent.eventId;
+    event.userId = cdEvent.userId;
+    event.sender = cdEvent.sender;
+    event.type = cdEvent.type;
+    event.stateKey = cdEvent.stateKey;
+    event.ageLocalTs = [cdEvent.ageLocalTs unsignedLongLongValue];
+    event.originServerTs = [cdEvent.originServerTs unsignedLongLongValue];
+    event.content = cdEvent.content;
+    event.prevContent = cdEvent.prevContent;
+    event.redactedBecause = cdEvent.redactedBecause;
+    event.redacts = cdEvent.redacts;
 
     return event;
 }
 
-- (MXEventEntity*)eventEntityFromEvent:(MXEvent*)event
+- (MXCoreDataEvent*)coreDataEventFromEvent:(MXEvent*)event
 {
     // This method is 8x times quicker than MTLManagedObjectSerializing equivalent
-    MXEventEntity *eventEntity = [NSEntityDescription
-                                  insertNewObjectForEntityForName:@"MXEventEntity"
+    MXCoreDataEvent *cdEvent = [NSEntityDescription
+                                  insertNewObjectForEntityForName:@"MXCoreDataEvent"
                                   inManagedObjectContext:self.managedObjectContext];
 
-    eventEntity.roomId = event.roomId;
-    eventEntity.eventId = event.eventId;
-    eventEntity.userId = event.userId;
-    eventEntity.sender = event.sender;
-    eventEntity.type = event.type;
-    eventEntity.stateKey = event.stateKey;
-    eventEntity.ageLocalTs = @(event.ageLocalTs);
-    eventEntity.originServerTs = @(event.originServerTs);
-    eventEntity.content = event.content;
-    eventEntity.prevContent = event.prevContent;
-    eventEntity.redactedBecause = event.redactedBecause;
-    eventEntity.redacts = event.redacts;
+    cdEvent.roomId = event.roomId;
+    cdEvent.eventId = event.eventId;
+    cdEvent.userId = event.userId;
+    cdEvent.sender = event.sender;
+    cdEvent.type = event.type;
+    cdEvent.stateKey = event.stateKey;
+    cdEvent.ageLocalTs = @(event.ageLocalTs);
+    cdEvent.originServerTs = @(event.originServerTs);
+    cdEvent.content = event.content;
+    cdEvent.prevContent = event.prevContent;
+    cdEvent.redactedBecause = event.redactedBecause;
+    cdEvent.redacts = event.redacts;
 
-    return eventEntity;
+    return cdEvent;
 }
 
 @end

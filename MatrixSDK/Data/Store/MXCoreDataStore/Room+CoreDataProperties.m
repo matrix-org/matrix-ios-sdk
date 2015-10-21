@@ -30,7 +30,7 @@ static NSString *const kItemsKey = @"messages";
 // There is an old bug on core data and NSOrderedSet with one to many objects relationships
 // where CoreDataGeneratedAccessors methods crash.
 // The best workaround is to rewrite them (@see http://stackoverflow.com/questions/7385439/exception-thrown-in-nsorderedset-generated-accessors/9556747#9556747)
-- (void)insertObject:(MXEventEntity *)value inMessagesAtIndex:(NSUInteger)idx
+- (void)insertObject:(MXCoreDataEvent *)value inMessagesAtIndex:(NSUInteger)idx
 {
     NSIndexSet* indexes = [NSIndexSet indexSetWithIndex:idx];
     [self willChange:NSKeyValueChangeInsertion valuesAtIndexes:indexes forKey:kItemsKey];
@@ -51,7 +51,7 @@ static NSString *const kItemsKey = @"messages";
     [self didChange:NSKeyValueChangeRemoval valuesAtIndexes:indexes forKey:kItemsKey];
 }
 
-- (void)addMessagesObject:(MXEventEntity *)value {
+- (void)addMessagesObject:(MXCoreDataEvent *)value {
     NSMutableOrderedSet *tmpOrderedSet = [NSMutableOrderedSet orderedSetWithOrderedSet:[self mutableOrderedSetValueForKey:kItemsKey]];
     NSUInteger idx = [tmpOrderedSet count];
     NSIndexSet* indexes = [NSIndexSet indexSetWithIndex:idx];

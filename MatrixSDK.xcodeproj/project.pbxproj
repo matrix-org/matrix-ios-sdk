@@ -44,10 +44,10 @@
 		323B2AF71BCE8AC800B11F34 /* Room+CoreDataProperties.m in Sources */ = {isa = PBXBuildFile; fileRef = 323B2AF31BCE8AC800B11F34 /* Room+CoreDataProperties.m */; settings = {ASSET_TAGS = (); }; };
 		323B2AF81BCE8AC800B11F34 /* Room.h in Headers */ = {isa = PBXBuildFile; fileRef = 323B2AF41BCE8AC800B11F34 /* Room.h */; settings = {ASSET_TAGS = (); }; };
 		323B2AF91BCE8AC900B11F34 /* Room.m in Sources */ = {isa = PBXBuildFile; fileRef = 323B2AF51BCE8AC800B11F34 /* Room.m */; settings = {ASSET_TAGS = (); }; };
-		323B2AFE1BCE9B6700B11F34 /* MXEventEntity+CoreDataProperties.h in Headers */ = {isa = PBXBuildFile; fileRef = 323B2AFA1BCE9B6700B11F34 /* MXEventEntity+CoreDataProperties.h */; settings = {ASSET_TAGS = (); }; };
-		323B2AFF1BCE9B6700B11F34 /* MXEventEntity+CoreDataProperties.m in Sources */ = {isa = PBXBuildFile; fileRef = 323B2AFB1BCE9B6700B11F34 /* MXEventEntity+CoreDataProperties.m */; settings = {ASSET_TAGS = (); }; };
-		323B2B001BCE9B6700B11F34 /* MXEventEntity.h in Headers */ = {isa = PBXBuildFile; fileRef = 323B2AFC1BCE9B6700B11F34 /* MXEventEntity.h */; settings = {ASSET_TAGS = (); }; };
-		323B2B011BCE9B6700B11F34 /* MXEventEntity.m in Sources */ = {isa = PBXBuildFile; fileRef = 323B2AFD1BCE9B6700B11F34 /* MXEventEntity.m */; settings = {ASSET_TAGS = (); }; };
+		323B2AFE1BCE9B6700B11F34 /* MXCoreDataEvent+CoreDataProperties.h in Headers */ = {isa = PBXBuildFile; fileRef = 323B2AFA1BCE9B6700B11F34 /* MXCoreDataEvent+CoreDataProperties.h */; settings = {ASSET_TAGS = (); }; };
+		323B2AFF1BCE9B6700B11F34 /* MXCoreDataEvent+CoreDataProperties.m in Sources */ = {isa = PBXBuildFile; fileRef = 323B2AFB1BCE9B6700B11F34 /* MXCoreDataEvent+CoreDataProperties.m */; settings = {ASSET_TAGS = (); }; };
+		323B2B001BCE9B6700B11F34 /* MXCoreDataEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 323B2AFC1BCE9B6700B11F34 /* MXCoreDataEvent.h */; settings = {ASSET_TAGS = (); }; };
+		323B2B011BCE9B6700B11F34 /* MXCoreDataEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 323B2AFD1BCE9B6700B11F34 /* MXCoreDataEvent.m */; settings = {ASSET_TAGS = (); }; };
 		323C5A081A70E53500FB0549 /* MXToolsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 323C5A071A70E53500FB0549 /* MXToolsTests.m */; };
 		323E0C571A2F6E7D00A31D73 /* MXRoomPowerLevels.h in Headers */ = {isa = PBXBuildFile; fileRef = 323E0C551A2F6E7D00A31D73 /* MXRoomPowerLevels.h */; };
 		323E0C581A2F6E7D00A31D73 /* MXRoomPowerLevels.m in Sources */ = {isa = PBXBuildFile; fileRef = 323E0C561A2F6E7D00A31D73 /* MXRoomPowerLevels.m */; };
@@ -179,10 +179,10 @@
 		323B2AF31BCE8AC800B11F34 /* Room+CoreDataProperties.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "Room+CoreDataProperties.m"; sourceTree = "<group>"; };
 		323B2AF41BCE8AC800B11F34 /* Room.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Room.h; sourceTree = "<group>"; };
 		323B2AF51BCE8AC800B11F34 /* Room.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Room.m; sourceTree = "<group>"; };
-		323B2AFA1BCE9B6700B11F34 /* MXEventEntity+CoreDataProperties.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "MXEventEntity+CoreDataProperties.h"; path = "MatrixSDK/Data/Store/MXCoreDataStore/MXEventEntity+CoreDataProperties.h"; sourceTree = SOURCE_ROOT; };
-		323B2AFB1BCE9B6700B11F34 /* MXEventEntity+CoreDataProperties.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "MXEventEntity+CoreDataProperties.m"; path = "MatrixSDK/Data/Store/MXCoreDataStore/MXEventEntity+CoreDataProperties.m"; sourceTree = SOURCE_ROOT; };
-		323B2AFC1BCE9B6700B11F34 /* MXEventEntity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MXEventEntity.h; path = MatrixSDK/Data/Store/MXCoreDataStore/MXEventEntity.h; sourceTree = SOURCE_ROOT; };
-		323B2AFD1BCE9B6700B11F34 /* MXEventEntity.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MXEventEntity.m; path = MatrixSDK/Data/Store/MXCoreDataStore/MXEventEntity.m; sourceTree = SOURCE_ROOT; };
+		323B2AFA1BCE9B6700B11F34 /* MXCoreDataEvent+CoreDataProperties.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "MXCoreDataEvent+CoreDataProperties.h"; path = "MatrixSDK/Data/Store/MXCoreDataStore/MXCoreDataEvent+CoreDataProperties.h"; sourceTree = SOURCE_ROOT; };
+		323B2AFB1BCE9B6700B11F34 /* MXCoreDataEvent+CoreDataProperties.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "MXCoreDataEvent+CoreDataProperties.m"; path = "MatrixSDK/Data/Store/MXCoreDataStore/MXCoreDataEvent+CoreDataProperties.m"; sourceTree = SOURCE_ROOT; };
+		323B2AFC1BCE9B6700B11F34 /* MXCoreDataEvent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MXCoreDataEvent.h; path = MatrixSDK/Data/Store/MXCoreDataStore/MXCoreDataEvent.h; sourceTree = SOURCE_ROOT; };
+		323B2AFD1BCE9B6700B11F34 /* MXCoreDataEvent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MXCoreDataEvent.m; path = MatrixSDK/Data/Store/MXCoreDataStore/MXCoreDataEvent.m; sourceTree = SOURCE_ROOT; };
 		323C5A071A70E53500FB0549 /* MXToolsTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXToolsTests.m; sourceTree = "<group>"; };
 		323E0C551A2F6E7D00A31D73 /* MXRoomPowerLevels.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRoomPowerLevels.h; sourceTree = "<group>"; };
 		323E0C561A2F6E7D00A31D73 /* MXRoomPowerLevels.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRoomPowerLevels.m; sourceTree = "<group>"; };
@@ -377,10 +377,10 @@
 				323B2ADC1BCD4CB600B11F34 /* Account+CoreDataProperties.m */,
 				323B2ADD1BCD4CB600B11F34 /* Account.h */,
 				323B2ADE1BCD4CB600B11F34 /* Account.m */,
-				323B2AFA1BCE9B6700B11F34 /* MXEventEntity+CoreDataProperties.h */,
-				323B2AFB1BCE9B6700B11F34 /* MXEventEntity+CoreDataProperties.m */,
-				323B2AFC1BCE9B6700B11F34 /* MXEventEntity.h */,
-				323B2AFD1BCE9B6700B11F34 /* MXEventEntity.m */,
+				323B2AFA1BCE9B6700B11F34 /* MXCoreDataEvent+CoreDataProperties.h */,
+				323B2AFB1BCE9B6700B11F34 /* MXCoreDataEvent+CoreDataProperties.m */,
+				323B2AFC1BCE9B6700B11F34 /* MXCoreDataEvent.h */,
+				323B2AFD1BCE9B6700B11F34 /* MXCoreDataEvent.m */,
 			);
 			path = MXCoreDataStore;
 			sourceTree = "<group>";
@@ -590,9 +590,9 @@
 				3245A7501AF7B2930001D8A7 /* MXCall.h in Headers */,
 				32114A851A262CE000FF2EC4 /* MXStore.h in Headers */,
 				329FB1791A0A74B100A5E88E /* MXTools.h in Headers */,
-				323B2B001BCE9B6700B11F34 /* MXEventEntity.h in Headers */,
+				323B2B001BCE9B6700B11F34 /* MXCoreDataEvent.h in Headers */,
 				3281E8B919E42DFE00976E1A /* MXJSONModels.h in Headers */,
-				323B2AFE1BCE9B6700B11F34 /* MXEventEntity+CoreDataProperties.h in Headers */,
+				323B2AFE1BCE9B6700B11F34 /* MXCoreDataEvent+CoreDataProperties.h in Headers */,
 				323B2ADF1BCD4CB600B11F34 /* Account+CoreDataProperties.h in Headers */,
 				32CAB1071A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.h in Headers */,
 				32CAB10B1A925B41008C5BB9 /* MXHTTPOperation.h in Headers */,
@@ -763,7 +763,7 @@
 				329FB1761A0A3A1600A5E88E /* MXRoomMember.m in Sources */,
 				323360701A403A0D0071A488 /* MXFileStore.m in Sources */,
 				32D7767E1A27860600FC4AA2 /* MXMemoryStore.m in Sources */,
-				323B2B011BCE9B6700B11F34 /* MXEventEntity.m in Sources */,
+				323B2B011BCE9B6700B11F34 /* MXCoreDataEvent.m in Sources */,
 				3265CB391A14C43E00E24B2F /* MXRoomState.m in Sources */,
 				323B2AD01BCD3EF000B11F34 /* MXCoreDataStore.m in Sources */,
 				3281E8B819E42DFE00976E1A /* MXJSONModel.m in Sources */,
@@ -773,7 +773,7 @@
 				32114A901A262ECB00FF2EC4 /* MXNoStore.m in Sources */,
 				32CE6FB91A409B1F00317F1E /* MXFileStoreMetaData.m in Sources */,
 				323E0C5C1A306D7A00A31D73 /* MXEvent.m in Sources */,
-				323B2AFF1BCE9B6700B11F34 /* MXEventEntity+CoreDataProperties.m in Sources */,
+				323B2AFF1BCE9B6700B11F34 /* MXCoreDataEvent+CoreDataProperties.m in Sources */,
 				32CAB10C1A925B41008C5BB9 /* MXHTTPOperation.m in Sources */,
 				3281E8BA19E42DFE00976E1A /* MXJSONModels.m in Sources */,
 				3245A7531AF7B2930001D8A7 /* MXCallManager.m in Sources */,
