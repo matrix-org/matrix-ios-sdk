@@ -18,7 +18,7 @@
 
 #import "MXCoreDataEvent.h"
 #import "MXCoreDataAccount.h"
-#import "Room.h"
+#import "MXCoreDataRoom.h"
 
 NSUInteger const kMXCoreDataStoreVersion = 1;
 
@@ -144,25 +144,25 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 #pragma mark - MXStore
 - (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXEventDirection)direction
 {
-    Room *room = [self getOrCreateRoomEntity:roomId];
+    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
     [room storeEvent:event direction:direction];
 }
 
 - (void)replaceEvent:(MXEvent*)event inRoom:(NSString*)roomId
 {
-    Room *room = [self getOrCreateRoomEntity:roomId];
+    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
     [room replaceEvent:event];
 }
 
 - (MXEvent *)eventWithEventId:(NSString *)eventId inRoom:(NSString *)roomId
 {
-    Room *room = [self getOrCreateRoomEntity:roomId];
+    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
     return [room eventWithEventId:eventId];
 }
 
 - (void)deleteRoom:(NSString *)roomId
 {
-    Room *room = [self getOrCreateRoomEntity:roomId];
+    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
 
     // Related events will be deleted via cascade
     [account removeRoomsObject:room];
@@ -193,49 +193,49 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 
 - (void)storePaginationTokenOfRoom:(NSString *)roomId andToken:(NSString *)token
 {
-    Room *room = [self getOrCreateRoomEntity:roomId];
+    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
     room.paginationToken = token;
 }
 
 - (NSString*)paginationTokenOfRoom:(NSString*)roomId
 {
-    Room *room = [self getOrCreateRoomEntity:roomId];
+    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
     return room.paginationToken;
 }
 
 - (void)storeHasReachedHomeServerPaginationEndForRoom:(NSString *)roomId andValue:(BOOL)value
 {
-    Room *room = [self getOrCreateRoomEntity:roomId];
+    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
     room.hasReachedHomeServerPaginationEnd = @(value);
 }
 
 - (BOOL)hasReachedHomeServerPaginationEndForRoom:(NSString*)roomId
 {
-    Room *room = [self getOrCreateRoomEntity:roomId];
+    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
     return [room.hasReachedHomeServerPaginationEnd boolValue];
 }
 
 - (void)resetPaginationOfRoom:(NSString*)roomId
 {
-    Room *room = [self getOrCreateRoomEntity:roomId];
+    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
     [room resetPagination];
 }
 
 - (NSArray*)paginateRoom:(NSString*)roomId numMessages:(NSUInteger)numMessages
 {
-    Room *room = [self getOrCreateRoomEntity:roomId];
+    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
     return [room paginate:numMessages];
 }
 
 - (NSUInteger)remainingMessagesForPaginationInRoom:(NSString *)roomId
 {
-    Room *room = [self getOrCreateRoomEntity:roomId];
+    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
     return [room remainingMessagesForPagination];
 }
 
 - (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types;
 {
-    Room *room = [self getOrCreateRoomEntity:roomId];
+    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
     return [room lastMessageWithTypeIn:types];
 }
 
@@ -281,7 +281,7 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 - (NSArray *)rooms
 {
     // Ask Core Data to list roomIds of all Room entities in one SQL request 
-    NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"Room"];
+    NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"MXCoreDataRoom"];
     fetchRequest.resultType = NSDictionaryResultType;
     fetchRequest.propertiesToFetch = @[@"roomId"];
 
@@ -294,13 +294,13 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 
 - (void)storeStateForRoom:(NSString*)roomId stateEvents:(NSArray*)stateEvents
 {
-    Room *room = [self getOrCreateRoomEntity:roomId];
+    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
     [room storeState:stateEvents];
 }
 
 - (NSArray*)stateOfRoom:(NSString *)roomId
 {
-    Room *room = [self getOrCreateRoomEntity:roomId];
+    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
     return [room stateEvents];
 }
 
@@ -372,15 +372,15 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     return error;
 }
 
-- (Room*)getOrCreateRoomEntity:(NSString*)roomId
+- (MXCoreDataRoom*)getOrCreateRoomEntity:(NSString*)roomId
 {
     // First, check in the "room by roomId" cache
-    Room *room = roomsByRoomId[roomId];
+    MXCoreDataRoom *room = roomsByRoomId[roomId];
     if (!room)
     {
         // Secondly, search it in Core Data
         NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
-        NSEntityDescription *entity = [NSEntityDescription entityForName:@"Room"
+        NSEntityDescription *entity = [NSEntityDescription entityForName:@"MXCoreDataRoom"
                                                   inManagedObjectContext:managedObjectContext];
         [fetchRequest setEntity:entity];
         NSPredicate *predicate = [NSPredicate predicateWithFormat:@"roomId == %@", roomId];
@@ -397,7 +397,7 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
         {
             // Else, create it
             room = [NSEntityDescription
-                    insertNewObjectForEntityForName:@"Room"
+                    insertNewObjectForEntityForName:@"MXCoreDataRoom"
                     inManagedObjectContext:managedObjectContext];
 
             room.roomId = roomId;

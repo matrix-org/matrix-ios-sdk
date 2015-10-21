@@ -17,7 +17,7 @@
 #import <Foundation/Foundation.h>
 #import <CoreData/CoreData.h>
 
-#import "Room.h"
+#import "MXCoreDataRoom.h"
 
 NS_ASSUME_NONNULL_BEGIN
 

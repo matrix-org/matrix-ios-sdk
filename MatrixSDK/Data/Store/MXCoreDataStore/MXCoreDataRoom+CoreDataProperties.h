@@ -14,11 +14,11 @@
  limitations under the License.
  */
 
-#import "Room.h"
+#import "MXCoreDataRoom.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface Room (CoreDataProperties)
+@interface MXCoreDataRoom (CoreDataProperties)
 
 @property (nullable, nonatomic, retain) NSNumber *hasReachedHomeServerPaginationEnd;
 @property (nullable, nonatomic, retain) NSString *paginationToken;
@@ -29,7 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface Room (CoreDataGeneratedAccessors)
+@interface MXCoreDataRoom (CoreDataGeneratedAccessors)
 
 - (void)insertObject:(MXCoreDataEvent *)value inMessagesAtIndex:(NSUInteger)idx;
 - (void)removeObjectFromMessagesAtIndex:(NSUInteger)idx;

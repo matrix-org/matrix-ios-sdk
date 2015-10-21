@@ -14,11 +14,11 @@
  limitations under the License.
  */
 
-#import "Room+CoreDataProperties.h"
+#import "MXCoreDataRoom+CoreDataProperties.h"
 
 static NSString *const kItemsKey = @"messages";
 
-@implementation Room (CoreDataProperties)
+@implementation MXCoreDataRoom (CoreDataProperties)
 
 @dynamic hasReachedHomeServerPaginationEnd;
 @dynamic paginationToken;

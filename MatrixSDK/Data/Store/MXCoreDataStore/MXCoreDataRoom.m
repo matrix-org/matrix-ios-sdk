@@ -14,18 +14,18 @@
  limitations under the License.
  */
 
-#import "Room.h"
+#import "MXCoreDataRoom.h"
 
 #import "MXCoreDataEvent.h"
 
-@interface Room ()
+@interface MXCoreDataRoom ()
 {
     // This is the position from the end
     NSInteger paginationPosition;
 }
 @end
 
-@implementation Room
+@implementation MXCoreDataRoom
 
 - (instancetype)init
 {

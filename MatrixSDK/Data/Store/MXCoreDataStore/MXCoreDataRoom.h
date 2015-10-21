@@ -24,7 +24,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface Room : NSManagedObject
+@interface MXCoreDataRoom : NSManagedObject
 
 /**
  Store room event received from the home server.
@@ -102,4 +102,4 @@ NS_ASSUME_NONNULL_BEGIN
 
 NS_ASSUME_NONNULL_END
 
-#import "Room+CoreDataProperties.h"
+#import "MXCoreDataRoom+CoreDataProperties.h"
