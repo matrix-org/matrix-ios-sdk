@@ -25,7 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nullable, nonatomic, retain) NSString *roomId;
 @property (nullable, nonatomic, retain) NSOrderedSet<MXCoreDataEvent *> *messages;
 @property (nullable, nonatomic, retain) NSSet<MXCoreDataEvent *> *state;
-@property (nullable, nonatomic, retain) Account *account;
+@property (nullable, nonatomic, retain) MXCoreDataAccount *account;
 
 @end
 

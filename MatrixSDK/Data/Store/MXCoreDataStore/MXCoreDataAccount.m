@@ -14,17 +14,10 @@
  limitations under the License.
  */
 
-#import "Account+CoreDataProperties.h"
+#import "MXCoreDataAccount.h"
 
-@implementation Account (CoreDataProperties)
+@implementation MXCoreDataAccount
 
-@dynamic eventStreamToken;
-@dynamic homeServer;
-@dynamic userAvatarUrl;
-@dynamic userDisplayName;
-@dynamic userId;
-@dynamic version;
-@dynamic accessToken;
-@dynamic rooms;
+// Insert code here to add functionality to your managed object subclass
 
 @end

@@ -19,7 +19,7 @@
 
 #import "MXEventListener.h"
 
-@class Account;
+@class MXCoreDataAccount;
 @class MXCoreDataEvent;
 
 NS_ASSUME_NONNULL_BEGIN

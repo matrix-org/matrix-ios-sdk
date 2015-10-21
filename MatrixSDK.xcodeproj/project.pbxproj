@@ -36,10 +36,10 @@
 		323B2ACF1BCD3EF000B11F34 /* MXCoreDataStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 323B2ACB1BCD3EF000B11F34 /* MXCoreDataStore.h */; settings = {ASSET_TAGS = (); }; };
 		323B2AD01BCD3EF000B11F34 /* MXCoreDataStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 323B2ACC1BCD3EF000B11F34 /* MXCoreDataStore.m */; settings = {ASSET_TAGS = (); }; };
 		323B2AD31BCD3F1400B11F34 /* MXStoreCoreDataStoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 323B2AD21BCD3F1400B11F34 /* MXStoreCoreDataStoreTests.m */; settings = {ASSET_TAGS = (); }; };
-		323B2ADF1BCD4CB600B11F34 /* Account+CoreDataProperties.h in Headers */ = {isa = PBXBuildFile; fileRef = 323B2ADB1BCD4CB600B11F34 /* Account+CoreDataProperties.h */; settings = {ASSET_TAGS = (); }; };
-		323B2AE01BCD4CB600B11F34 /* Account+CoreDataProperties.m in Sources */ = {isa = PBXBuildFile; fileRef = 323B2ADC1BCD4CB600B11F34 /* Account+CoreDataProperties.m */; settings = {ASSET_TAGS = (); }; };
-		323B2AE11BCD4CB600B11F34 /* Account.h in Headers */ = {isa = PBXBuildFile; fileRef = 323B2ADD1BCD4CB600B11F34 /* Account.h */; settings = {ASSET_TAGS = (); }; };
-		323B2AE21BCD4CB600B11F34 /* Account.m in Sources */ = {isa = PBXBuildFile; fileRef = 323B2ADE1BCD4CB600B11F34 /* Account.m */; settings = {ASSET_TAGS = (); }; };
+		323B2ADF1BCD4CB600B11F34 /* MXCoreDataAccount+CoreDataProperties.h in Headers */ = {isa = PBXBuildFile; fileRef = 323B2ADB1BCD4CB600B11F34 /* MXCoreDataAccount+CoreDataProperties.h */; settings = {ASSET_TAGS = (); }; };
+		323B2AE01BCD4CB600B11F34 /* MXCoreDataAccount+CoreDataProperties.m in Sources */ = {isa = PBXBuildFile; fileRef = 323B2ADC1BCD4CB600B11F34 /* MXCoreDataAccount+CoreDataProperties.m */; settings = {ASSET_TAGS = (); }; };
+		323B2AE11BCD4CB600B11F34 /* MXCoreDataAccount.h in Headers */ = {isa = PBXBuildFile; fileRef = 323B2ADD1BCD4CB600B11F34 /* MXCoreDataAccount.h */; settings = {ASSET_TAGS = (); }; };
+		323B2AE21BCD4CB600B11F34 /* MXCoreDataAccount.m in Sources */ = {isa = PBXBuildFile; fileRef = 323B2ADE1BCD4CB600B11F34 /* MXCoreDataAccount.m */; settings = {ASSET_TAGS = (); }; };
 		323B2AF61BCE8AC800B11F34 /* Room+CoreDataProperties.h in Headers */ = {isa = PBXBuildFile; fileRef = 323B2AF21BCE8AC800B11F34 /* Room+CoreDataProperties.h */; settings = {ASSET_TAGS = (); }; };
 		323B2AF71BCE8AC800B11F34 /* Room+CoreDataProperties.m in Sources */ = {isa = PBXBuildFile; fileRef = 323B2AF31BCE8AC800B11F34 /* Room+CoreDataProperties.m */; settings = {ASSET_TAGS = (); }; };
 		323B2AF81BCE8AC800B11F34 /* Room.h in Headers */ = {isa = PBXBuildFile; fileRef = 323B2AF41BCE8AC800B11F34 /* Room.h */; settings = {ASSET_TAGS = (); }; };
@@ -168,10 +168,10 @@
 		323B2ACB1BCD3EF000B11F34 /* MXCoreDataStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCoreDataStore.h; sourceTree = "<group>"; };
 		323B2ACC1BCD3EF000B11F34 /* MXCoreDataStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCoreDataStore.m; sourceTree = "<group>"; };
 		323B2AD21BCD3F1400B11F34 /* MXStoreCoreDataStoreTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXStoreCoreDataStoreTests.m; sourceTree = "<group>"; };
-		323B2ADB1BCD4CB600B11F34 /* Account+CoreDataProperties.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "Account+CoreDataProperties.h"; sourceTree = "<group>"; };
-		323B2ADC1BCD4CB600B11F34 /* Account+CoreDataProperties.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "Account+CoreDataProperties.m"; sourceTree = "<group>"; };
-		323B2ADD1BCD4CB600B11F34 /* Account.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Account.h; sourceTree = "<group>"; };
-		323B2ADE1BCD4CB600B11F34 /* Account.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Account.m; sourceTree = "<group>"; };
+		323B2ADB1BCD4CB600B11F34 /* MXCoreDataAccount+CoreDataProperties.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MXCoreDataAccount+CoreDataProperties.h"; sourceTree = "<group>"; };
+		323B2ADC1BCD4CB600B11F34 /* MXCoreDataAccount+CoreDataProperties.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "MXCoreDataAccount+CoreDataProperties.m"; sourceTree = "<group>"; };
+		323B2ADD1BCD4CB600B11F34 /* MXCoreDataAccount.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCoreDataAccount.h; sourceTree = "<group>"; };
+		323B2ADE1BCD4CB600B11F34 /* MXCoreDataAccount.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCoreDataAccount.m; sourceTree = "<group>"; };
 		323B2AEE1BCD5CDE00B11F34 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
 		323B2AF21BCE8AC800B11F34 /* Room+CoreDataProperties.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "Room+CoreDataProperties.h"; sourceTree = "<group>"; };
 		323B2AF31BCE8AC800B11F34 /* Room+CoreDataProperties.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "Room+CoreDataProperties.m"; sourceTree = "<group>"; };
@@ -369,10 +369,10 @@
 				323B2AF31BCE8AC800B11F34 /* Room+CoreDataProperties.m */,
 				323B2AF41BCE8AC800B11F34 /* Room.h */,
 				323B2AF51BCE8AC800B11F34 /* Room.m */,
-				323B2ADB1BCD4CB600B11F34 /* Account+CoreDataProperties.h */,
-				323B2ADC1BCD4CB600B11F34 /* Account+CoreDataProperties.m */,
-				323B2ADD1BCD4CB600B11F34 /* Account.h */,
-				323B2ADE1BCD4CB600B11F34 /* Account.m */,
+				323B2ADB1BCD4CB600B11F34 /* MXCoreDataAccount+CoreDataProperties.h */,
+				323B2ADC1BCD4CB600B11F34 /* MXCoreDataAccount+CoreDataProperties.m */,
+				323B2ADD1BCD4CB600B11F34 /* MXCoreDataAccount.h */,
+				323B2ADE1BCD4CB600B11F34 /* MXCoreDataAccount.m */,
 				323B2AFA1BCE9B6700B11F34 /* MXCoreDataEvent+CoreDataProperties.h */,
 				323B2AFB1BCE9B6700B11F34 /* MXCoreDataEvent+CoreDataProperties.m */,
 				323B2AFC1BCE9B6700B11F34 /* MXCoreDataEvent.h */,
@@ -587,13 +587,13 @@
 				323B2B001BCE9B6700B11F34 /* MXCoreDataEvent.h in Headers */,
 				3281E8B919E42DFE00976E1A /* MXJSONModels.h in Headers */,
 				323B2AFE1BCE9B6700B11F34 /* MXCoreDataEvent+CoreDataProperties.h in Headers */,
-				323B2ADF1BCD4CB600B11F34 /* Account+CoreDataProperties.h in Headers */,
+				323B2ADF1BCD4CB600B11F34 /* MXCoreDataAccount+CoreDataProperties.h in Headers */,
 				32CAB1071A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.h in Headers */,
 				32CAB10B1A925B41008C5BB9 /* MXHTTPOperation.h in Headers */,
 				320DFDE419DD99B60068622A /* MXRestClient.h in Headers */,
 				3265CB381A14C43E00E24B2F /* MXRoomState.h in Headers */,
 				32DC15D41A8CF874006F9AD3 /* MXPushRuleEventMatchConditionChecker.h in Headers */,
-				323B2AE11BCD4CB600B11F34 /* Account.h in Headers */,
+				323B2AE11BCD4CB600B11F34 /* MXCoreDataAccount.h in Headers */,
 				3220094519EFBF30008DE41D /* MXSessionEventListener.h in Headers */,
 				32BED28F1B00A23F00E668FE /* MXCallStack.h in Headers */,
 				323B2AF81BCE8AC800B11F34 /* Room.h in Headers */,
@@ -752,7 +752,7 @@
 				32DC15D51A8CF874006F9AD3 /* MXPushRuleEventMatchConditionChecker.m in Sources */,
 				32CAB1081A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.m in Sources */,
 				3245A7511AF7B2930001D8A7 /* MXCall.m in Sources */,
-				323B2AE21BCD4CB600B11F34 /* Account.m in Sources */,
+				323B2AE21BCD4CB600B11F34 /* MXCoreDataAccount.m in Sources */,
 				329FB1761A0A3A1600A5E88E /* MXRoomMember.m in Sources */,
 				323360701A403A0D0071A488 /* MXFileStore.m in Sources */,
 				32D7767E1A27860600FC4AA2 /* MXMemoryStore.m in Sources */,
@@ -782,7 +782,7 @@
 				3220093919EFA4C9008DE41D /* MXEventListener.m in Sources */,
 				32DC15D11A8CF7AE006F9AD3 /* MXNotificationCenter.m in Sources */,
 				329FB17A1A0A74B100A5E88E /* MXTools.m in Sources */,
-				323B2AE01BCD4CB600B11F34 /* Account+CoreDataProperties.m in Sources */,
+				323B2AE01BCD4CB600B11F34 /* MXCoreDataAccount+CoreDataProperties.m in Sources */,
 				320DFDE519DD99B60068622A /* MXRestClient.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

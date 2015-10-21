@@ -17,10 +17,10 @@
 #import "MXCoreDataStore.h"
 
 #import "MXCoreDataEvent.h"
-#import "Account.h"
+#import "MXCoreDataAccount.h"
 #import "Room.h"
 
-NSUInteger const kMXCoreDataStoreVersion = 2;
+NSUInteger const kMXCoreDataStoreVersion = 1;
 
 NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 
@@ -29,7 +29,7 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     /**
      The account associated to the store.
      */
-    Account *account;
+    MXCoreDataAccount *account;
 
     /**
      Classic Core Data objects.
@@ -81,7 +81,7 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 
     // Check if the account already exists
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
-    NSEntityDescription *entity = [NSEntityDescription entityForName:@"Account"
+    NSEntityDescription *entity = [NSEntityDescription entityForName:@"MXCoreDataAccount"
                                               inManagedObjectContext:managedObjectContext];
     [fetchRequest setEntity:entity];
     NSPredicate *predicate = [NSPredicate predicateWithFormat:@"userId == %@", credentials.userId];
@@ -126,7 +126,7 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     {
         // Create a new account
         account = [NSEntityDescription
-                            insertNewObjectForEntityForName:@"Account"
+                            insertNewObjectForEntityForName:@"MXCoreDataAccount"
                             inManagedObjectContext:managedObjectContext];
 
         account.userId = credentials.userId;
