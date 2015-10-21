@@ -280,12 +280,16 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 
 - (NSArray *)rooms
 {
-    NSMutableArray *rooms = [NSMutableArray array];
-    for (Room *room in account.rooms)
-    {
-        [rooms addObject:room.roomId];
-    }
-    return rooms;
+    // Ask Core Data to list roomIds of all Room entities in one SQL request 
+    NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"Room"];
+    fetchRequest.resultType = NSDictionaryResultType;
+    fetchRequest.propertiesToFetch = @[@"roomId"];
+
+    NSError *error      = nil;
+    NSArray *results    = [managedObjectContext executeFetchRequest:fetchRequest
+                                                                   error:&error];
+
+    return [results valueForKey:@"roomId"];
 }
 
 - (void)storeStateForRoom:(NSString*)roomId stateEvents:(NSArray*)stateEvents
