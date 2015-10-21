@@ -27,16 +27,16 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nullable, nonatomic, retain) NSString *userId;
 @property (nullable, nonatomic, retain) NSNumber *version;
 @property (nullable, nonatomic, retain) NSString *accessToken;
-@property (nullable, nonatomic, retain) NSSet<Room *> *rooms;
+@property (nullable, nonatomic, retain) NSSet<MXCoreDataRoom *> *rooms;
 
 @end
 
 @interface MXCoreDataAccount (CoreDataGeneratedAccessors)
 
-- (void)addRoomsObject:(Room *)value;
-- (void)removeRoomsObject:(Room *)value;
-- (void)addRooms:(NSSet<Room *> *)values;
-- (void)removeRooms:(NSSet<Room *> *)values;
+- (void)addRoomsObject:(MXCoreDataRoom *)value;
+- (void)removeRoomsObject:(MXCoreDataRoom *)value;
+- (void)addRooms:(NSSet<MXCoreDataRoom *> *)values;
+- (void)removeRooms:(NSSet<MXCoreDataRoom *> *)values;
 
 @end
 

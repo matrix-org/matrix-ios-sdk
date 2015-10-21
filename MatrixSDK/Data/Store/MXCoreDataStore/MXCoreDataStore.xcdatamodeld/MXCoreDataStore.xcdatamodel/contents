@@ -8,7 +8,7 @@
         <attribute name="userDisplayName" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="userId" attributeType="String" minValueString="1" indexed="YES" syncable="YES"/>
         <attribute name="version" optional="YES" attributeType="Integer 32" defaultValueString="0" syncable="YES"/>
-        <relationship name="rooms" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Room" inverseName="account" inverseEntity="Room" syncable="YES"/>
+        <relationship name="rooms" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="MXCoreDataRoom" inverseName="account" inverseEntity="MXCoreDataRoom" syncable="YES"/>
     </entity>
     <entity name="MXCoreDataEvent" representedClassName="MXCoreDataEvent" syncable="YES">
         <attribute name="ageLocalTs" attributeType="Integer 64" defaultValueString="0" syncable="YES"/>
@@ -23,10 +23,10 @@
         <attribute name="stateKey" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="type" attributeType="String" syncable="YES"/>
         <attribute name="userId" attributeType="String" syncable="YES"/>
-        <relationship name="messageForRoom" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Room" inverseName="messages" inverseEntity="Room" syncable="YES"/>
-        <relationship name="stateForRoom" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Room" inverseName="state" inverseEntity="Room" syncable="YES"/>
+        <relationship name="messageForRoom" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXCoreDataRoom" inverseName="messages" inverseEntity="MXCoreDataRoom" syncable="YES"/>
+        <relationship name="stateForRoom" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXCoreDataRoom" inverseName="state" inverseEntity="MXCoreDataRoom" syncable="YES"/>
     </entity>
-    <entity name="Room" representedClassName="Room" syncable="YES">
+    <entity name="MXCoreDataRoom" representedClassName="MXCoreDataRoom" syncable="YES">
         <attribute name="hasReachedHomeServerPaginationEnd" optional="YES" attributeType="Boolean" syncable="YES"/>
         <attribute name="paginationToken" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="roomId" attributeType="String" indexed="YES" syncable="YES"/>
@@ -37,6 +37,6 @@
     <elements>
         <element name="MXCoreDataAccount" positionX="0" positionY="0" width="0" height="0"/>
         <element name="MXCoreDataEvent" positionX="0" positionY="0" width="0" height="0"/>
-        <element name="Room" positionX="0" positionY="0" width="0" height="0"/>
+        <element name="MXCoreDataRoom" positionX="0" positionY="0" width="0" height="0"/>
     </elements>
 </model>
