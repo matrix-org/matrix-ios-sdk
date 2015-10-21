@@ -16,11 +16,11 @@
 
 #import "MXCoreDataStore.h"
 
-#import "MXEventEntity.h"
+#import "MXCoreDataEvent.h"
 #import "Account.h"
 #import "Room.h"
 
-NSUInteger const kMXCoreDataStoreVersion = 1;
+NSUInteger const kMXCoreDataStoreVersion = 2;
 
 NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 

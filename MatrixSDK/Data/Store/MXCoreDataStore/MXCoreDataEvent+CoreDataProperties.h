@@ -14,11 +14,11 @@
  limitations under the License.
  */
 
-#import "MXEventEntity.h"
+#import "MXCoreDataEvent.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface MXEventEntity (CoreDataProperties)
+@interface MXCoreDataEvent (CoreDataProperties)
 
 @property (nullable, nonatomic, retain) NSNumber *ageLocalTs;
 @property (nullable, nonatomic, retain) id content;
@@ -32,8 +32,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nullable, nonatomic, retain) NSString *stateKey;
 @property (nullable, nonatomic, retain) NSString *type;
 @property (nullable, nonatomic, retain) NSString *userId;
-@property (nullable, nonatomic, retain) Room *messageForRoom;   // Only for MXEventEntity part of room.messages
-@property (nullable, nonatomic, retain) Room *stateForRoom;     // Only for MXEventEntity part of room.state
+@property (nullable, nonatomic, retain) Room *messageForRoom;   // Only for MXCoreDataEvent part of room.messages
+@property (nullable, nonatomic, retain) Room *stateForRoom;     // Only for MXCoreDataEvent part of room.state
 
 @end
 

@@ -13,24 +13,10 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  */
+#import "MXCoreDataEvent.h"
 
-#import "MXEventEntity+CoreDataProperties.h"
+@implementation MXCoreDataEvent
 
-@implementation MXEventEntity (CoreDataProperties)
-
-@dynamic ageLocalTs;
-@dynamic content;
-@dynamic eventId;
-@dynamic originServerTs;
-@dynamic prevContent;
-@dynamic redactedBecause;
-@dynamic redacts;
-@dynamic roomId;
-@dynamic sender;
-@dynamic stateKey;
-@dynamic type;
-@dynamic userId;
-@dynamic messageForRoom;
-@dynamic stateForRoom;
+// Insert code here to add functionality to your managed object subclass
 
 @end

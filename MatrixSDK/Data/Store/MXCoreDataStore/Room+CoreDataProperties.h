@@ -23,29 +23,29 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nullable, nonatomic, retain) NSNumber *hasReachedHomeServerPaginationEnd;
 @property (nullable, nonatomic, retain) NSString *paginationToken;
 @property (nullable, nonatomic, retain) NSString *roomId;
-@property (nullable, nonatomic, retain) NSOrderedSet<MXEventEntity *> *messages;
-@property (nullable, nonatomic, retain) NSSet<MXEventEntity *> *state;
+@property (nullable, nonatomic, retain) NSOrderedSet<MXCoreDataEvent *> *messages;
+@property (nullable, nonatomic, retain) NSSet<MXCoreDataEvent *> *state;
 @property (nullable, nonatomic, retain) Account *account;
 
 @end
 
 @interface Room (CoreDataGeneratedAccessors)
 
-- (void)insertObject:(MXEventEntity *)value inMessagesAtIndex:(NSUInteger)idx;
+- (void)insertObject:(MXCoreDataEvent *)value inMessagesAtIndex:(NSUInteger)idx;
 - (void)removeObjectFromMessagesAtIndex:(NSUInteger)idx;
-- (void)insertMessages:(NSArray<MXEventEntity *> *)value atIndexes:(NSIndexSet *)indexes;
+- (void)insertMessages:(NSArray<MXCoreDataEvent *> *)value atIndexes:(NSIndexSet *)indexes;
 - (void)removeMessagesAtIndexes:(NSIndexSet *)indexes;
-- (void)replaceObjectInMessagesAtIndex:(NSUInteger)idx withObject:(MXEventEntity *)value;
-- (void)replaceMessagesAtIndexes:(NSIndexSet *)indexes withMessages:(NSArray<MXEventEntity *> *)values;
-- (void)addMessagesObject:(MXEventEntity *)value;
-- (void)removeMessagesObject:(MXEventEntity *)value;
-- (void)addMessages:(NSOrderedSet<MXEventEntity *> *)values;
-- (void)removeMessages:(NSOrderedSet<MXEventEntity *> *)values;
+- (void)replaceObjectInMessagesAtIndex:(NSUInteger)idx withObject:(MXCoreDataEvent *)value;
+- (void)replaceMessagesAtIndexes:(NSIndexSet *)indexes withMessages:(NSArray<MXCoreDataEvent *> *)values;
+- (void)addMessagesObject:(MXCoreDataEvent *)value;
+- (void)removeMessagesObject:(MXCoreDataEvent *)value;
+- (void)addMessages:(NSOrderedSet<MXCoreDataEvent *> *)values;
+- (void)removeMessages:(NSOrderedSet<MXCoreDataEvent *> *)values;
 
-- (void)addStateObject:(MXEventEntity *)value;
-- (void)removeStateObject:(MXEventEntity *)value;
-- (void)addState:(NSSet<MXEventEntity *> *)values;
-- (void)removeState:(NSSet<MXEventEntity *> *)values;
+- (void)addStateObject:(MXCoreDataEvent *)value;
+- (void)removeStateObject:(MXCoreDataEvent *)value;
+- (void)addState:(NSSet<MXCoreDataEvent *> *)values;
+- (void)removeState:(NSSet<MXCoreDataEvent *> *)values;
 
 @end
 

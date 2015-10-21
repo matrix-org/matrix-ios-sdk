@@ -21,7 +21,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface MXEventEntity : NSManagedObject
+@interface MXCoreDataEvent : NSManagedObject
 
 // Insert code here to declare functionality of your managed object subclass
 
@@ -29,4 +29,4 @@ NS_ASSUME_NONNULL_BEGIN
 
 NS_ASSUME_NONNULL_END
 
-#import "MXEventEntity+CoreDataProperties.h"
+#import "MXCoreDataEvent+CoreDataProperties.h"
