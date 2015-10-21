@@ -366,7 +366,8 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     }
 
     // MOC
-    managedObjectContext = [[NSManagedObjectContext alloc] init];
+    // Some requests are made from the UI, so avoid to block it and use NSMainQueueConcurrencyType
+    managedObjectContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
     managedObjectContext.persistentStoreCoordinator = persistentStoreCoordinator;
 
     return error;
