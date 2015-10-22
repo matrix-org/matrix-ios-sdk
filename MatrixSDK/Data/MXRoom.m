@@ -815,6 +815,13 @@
 
 - (BOOL)acknowledgeLatestEvent:(BOOL)sendReceipt;
 {
+    // Sanity check on supported C-S version
+    if (mxSession.matrixRestClient.preferredAPIVersion < MXRestClientAPIVersion2)
+    {
+        NSLog(@"[MXRoom] acknowledgeLatestEvent failed: read receipts are not supported on C-S v1 API");
+        return NO;
+    }
+    
     MXEvent* event =[mxSession.store lastMessageOfRoom:_state.roomId withTypeIn:_acknowledgableEventTypes];
     if (event)
     {
@@ -831,10 +838,10 @@
             if (sendReceipt)
             {
                 [mxSession.matrixRestClient sendReadReceipts:_state.roomId eventId:event.eventId success:^(NSString *eventId) {
-                }
-
-                 failure:^(NSError *error) {
-                 }];
+                    
+                } failure:^(NSError *error) {
+                    
+                }];
             }
             
             return YES;

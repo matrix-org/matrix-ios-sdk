@@ -330,7 +330,7 @@ typedef void (^MXOnResumeDone)();
                 // Additional step: load push rules from the home server
                 [_notificationCenter refreshRules:^{
                     
-                    // Initial server sync
+                    // Initial server sync - Check the supported C-S version.
                     // TODO GFO server sync v2 is not available yet (use C-S v1 by default)
 //                    if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
 //                    {
@@ -624,7 +624,7 @@ typedef void (^MXOnResumeDone)();
 
 - (void)pause
 {
-    NSLog(@"[MXSession] pause the event stream in state %lu", _state);
+    NSLog(@"[MXSession] pause the event stream in state %tu", _state);
     
     if ((_state == MXSessionStateRunning) || (_state == MXSessionStateCatchingUp))
     {
@@ -656,7 +656,7 @@ typedef void (^MXOnResumeDone)();
         // Resume from the last known token
         onResumeDone = resumeDone;
         
-        // Relaunch live events stream (long polling)
+        // Relaunch live events stream (long polling) - Check supported C-S version
         // TODO GFO server sync v2 is not available yet (use C-S v1 by default)
 //        if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
 //        {
@@ -680,7 +680,7 @@ typedef void (^MXOnResumeDone)();
     {
         if (MXSessionStatePaused != _state)
         {
-            NSLog(@"[MXSession] catchup cannot be done in the current state %lu", _state);
+            NSLog(@"[MXSession] catchup cannot be done in the current state %tu", _state);
             dispatch_async(dispatch_get_main_queue(), ^{
                 catchupfails(nil);
             });
@@ -860,6 +860,9 @@ typedef void (^MXOnResumeDone)();
     }];
 }
 
+/**
+ server sync v2
+ */
 - (void)serverSyncWithTimeout:(NSUInteger)serverTimeout
                       success:(void (^)())success
                       failure:(void (^)(NSError *error))failure
