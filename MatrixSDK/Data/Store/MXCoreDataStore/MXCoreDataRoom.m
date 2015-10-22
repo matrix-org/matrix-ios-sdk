@@ -63,11 +63,7 @@
     MXCoreDataEvent *cdEvent = [self coreDataEventWithEventId:event.eventId];
     NSUInteger index = [self.messages indexOfObject:cdEvent];
 
-    [self removeObjectFromMessagesAtIndex:index];
-    [self.managedObjectContext deleteObject:cdEvent];
-    [self.managedObjectContext save:nil];
-
-    [self insertObject:[self coreDataEventFromEvent:event] inMessagesAtIndex:index];
+    [self replaceObjectInMessagesAtIndex:index withObject:[self coreDataEventFromEvent:event]];
 }
 
 - (MXEvent *)eventWithEventId:(NSString *)eventId
@@ -159,16 +155,13 @@
 
 - (void)storeState:(NSArray*)stateEvents
 {
-    // Butcher mode: Remove everything before setting new state events
-    // This can be optimised but the tables in the core data db must be redesigned before
-    [self removeState:self.state];
-    [self.managedObjectContext save:nil];
-
-    // Convert Mantle MXEvent objects to MXCoreDataEvents
+    NSMutableSet *newState = [NSMutableSet set];
     for (MXEvent *event in stateEvents)
     {
-        [self addStateObject:[self coreDataEventFromEvent:event]];
+        [newState addObject:[self coreDataEventFromEvent:event]];
     }
+
+    self.state = newState;
 }
 
 - (NSArray*)stateEvents
