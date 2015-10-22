@@ -239,6 +239,21 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     return [room lastMessageWithTypeIn:types];
 }
 
+- (NSArray*)getEventReceipts:(NSString*)roomId eventId:(NSString*)eventId sorted:(BOOL)sort
+{
+    return nil;
+}
+
+- (BOOL)storeReceipt:(MXReceiptData*)receipt roomId:(NSString*)roomId
+{
+    return NO;
+}
+
+- (NSArray*)unreadMessages:(NSString*)roomId
+{
+    return nil;
+}
+
 - (BOOL)isPermanent
 {
     return YES;
