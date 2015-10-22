@@ -144,8 +144,12 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 #pragma mark - MXStore
 - (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXEventDirection)direction
 {
+    NSDate *startDate = [NSDate date];
+
     MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
     [room storeEvent:event direction:direction];
+
+    NSLog(@"[MXCoreDataStore] storeEventForRoom %.3fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (void)replaceEvent:(MXEvent*)event inRoom:(NSString*)roomId
@@ -156,8 +160,13 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 
 - (MXEvent *)eventWithEventId:(NSString *)eventId inRoom:(NSString *)roomId
 {
+    //NSDate *startDate = [NSDate date];
+
     MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
-    return [room eventWithEventId:eventId];
+    MXEvent *event = [room eventWithEventId:eventId];
+
+    //NSLog(@"[MXCoreDataStore] eventWithEventId %.3fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    return event;
 }
 
 - (void)deleteRoom:(NSString *)roomId
@@ -261,7 +270,11 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 
 - (void)setEventStreamToken:(NSString *)eventStreamToken
 {
+    NSDate *startDate = [NSDate date];
+
     account.eventStreamToken = eventStreamToken;
+
+    NSLog(@"[MXCoreDataStore] setEventStreamToken %.3fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (NSString *)eventStreamToken
@@ -271,11 +284,14 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 
 - (void)commit
 {
+    NSDate *startDate = [NSDate date];
     NSError *error;
     if (![managedObjectContext save:&error])
     {
         NSLog(@"[MXCoreDataStore] commit: Cannot commit. Error: %@", [error localizedDescription]);
     }
+
+    NSLog(@"[MXCoreDataStore] commit in %.3fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (void)close
@@ -309,14 +325,24 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 
 - (void)storeStateForRoom:(NSString*)roomId stateEvents:(NSArray*)stateEvents
 {
+    NSDate *startDate = [NSDate date];
+
     MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
     [room storeState:stateEvents];
+
+    NSLog(@"[MXCoreDataStore] storeStateForRoom %@ in %.3fms", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (NSArray*)stateOfRoom:(NSString *)roomId
 {
+    NSDate *startDate = [NSDate date];
+
     MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
-    return [room stateEvents];
+    NSArray *state = [room stateEvents];
+
+    NSLog(@"[MXCoreDataStore] stateOfRoom %@ in %.3fms", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+
+    return state;
 }
 
 -(void)setUserDisplayname:(NSString *)userDisplayname
