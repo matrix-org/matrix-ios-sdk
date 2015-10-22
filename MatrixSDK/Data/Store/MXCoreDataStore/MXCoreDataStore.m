@@ -27,22 +27,41 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 @interface MXCoreDataStore ()
 {
     /**
-     The account associated to the store.
-     */
-    MXCoreDataAccount *account;
-
-    /**
      Classic Core Data objects.
      */
     NSManagedObjectModel *managedObjectModel;
     NSPersistentStoreCoordinator *persistentStoreCoordinator;
-    NSManagedObjectContext *managedObjectContext;
+
+    /**
+     Use 2 MOCs: one context for reading data from the UI.
+     One context to permanently store data in background which requires time.
+     All MXStore read operations are realised with `uiManagedObjectContext`.
+     All MXStore write operations are realised with `backgroundManagedObjectContext`.
+     */
+    NSManagedObjectContext *uiManagedObjectContext;
+    NSManagedObjectContext *bgManagedObjectContext;
+
+    /**
+     The user account associated to the store.
+     We need one per MOC
+     */
+    MXCoreDataAccount *uiAccount;
+    MXCoreDataAccount *bgAccount;
 
     /**
      Cache to optimise [MXCoreDataStore getOrCreateRoomEntity:].
      Even if the Room.roomId attribute is indexed in Core Data, the db lookup is still slow.
+     We need one cache per MOC.
      */
-    NSMutableDictionary *roomsByRoomId;
+    NSMutableDictionary<NSString*, MXCoreDataRoom*> *uiRoomsByRoomId;
+    NSMutableDictionary<NSString*, MXCoreDataRoom*> *bgRoomsByRoomId;
+
+    /**
+     The "FIFO" list of pending [MXCoreDataStore commit:] completion blocks.
+     As a commit can be requested before the previous saving operation request is done, 
+     the completion blocks need to be queued.
+     */
+    NSMutableArray<MXStoreOnCommitComplete> *commitCompleteBlocks;
 }
 @end
 
@@ -53,7 +72,9 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     self = [super init];
     if (self)
     {
-        roomsByRoomId = [NSMutableDictionary dictionary];
+        uiRoomsByRoomId = [NSMutableDictionary dictionary];
+        bgRoomsByRoomId = [NSMutableDictionary dictionary];
+        commitCompleteBlocks = [NSMutableArray array];
 
         // Load the MXCoreDataStore Managed Object Model Definition
         // Note: [NSBundle bundleForClass:[self class]] is prefered to [NSBundle mainBundle]
@@ -70,7 +91,7 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 
     NSLog(@"[MXCoreDataStore] openWithCredentials for %@", credentials.userId);
 
-    NSAssert(!account, @"[MXCoreDataStore] The store is already open");
+    NSAssert(!uiAccount, @"[MXCoreDataStore] The store is already open");
 
     error = [self setupCoreData:credentials.userId];
     if (error)
@@ -82,22 +103,23 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     // Check if the account already exists
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
     NSEntityDescription *entity = [NSEntityDescription entityForName:@"MXCoreDataAccount"
-                                              inManagedObjectContext:managedObjectContext];
+                                              inManagedObjectContext:uiManagedObjectContext];
     [fetchRequest setEntity:entity];
     NSPredicate *predicate = [NSPredicate predicateWithFormat:@"userId == %@", credentials.userId];
-    [fetchRequest setPredicate:predicate];
+    fetchRequest.predicate = predicate;
+    fetchRequest.fetchLimit = 1;
 
-    NSArray *fetchedObjects = [managedObjectContext executeFetchRequest:fetchRequest error:&error];
+    NSArray *fetchedObjects = [uiManagedObjectContext executeFetchRequest:fetchRequest error:&error];
     if (fetchedObjects.count)
     {
-        account = fetchedObjects[0];
+        uiAccount = fetchedObjects[0];
     }
 
     // Validate the store
-    if (account)
+    if (uiAccount)
     {
         // Check store version
-        if (kMXCoreDataStoreVersion != account.version.unsignedIntegerValue)
+        if (kMXCoreDataStoreVersion != uiAccount.version.unsignedIntegerValue)
         {
             NSLog(@"[MXCoreDataStore] New MXCoreDataStore version detected");
             [self deleteAllData];
@@ -111,9 +133,9 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
             [self setupCoreData:credentials.userId];
         }
         // Check credentials
-        else if (NO == [account.homeServer isEqualToString:credentials.homeServer]
-                 || NO == [account.userId isEqualToString:credentials.userId]
-                 || NO == [account.accessToken isEqualToString:credentials.accessToken])
+        else if (NO == [uiAccount.homeServer isEqualToString:credentials.homeServer]
+                 || NO == [uiAccount.userId isEqualToString:credentials.userId]
+                 || NO == [uiAccount.accessToken isEqualToString:credentials.accessToken])
 
         {
             NSLog(@"[MXCoreDataStore] Credentials do not match");
@@ -122,19 +144,40 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
         }
     }
 
-    if (!account)
+    if (!uiAccount)
     {
-        // Create a new account
-        account = [NSEntityDescription
+        // Create a new account with the background MOC
+        bgAccount = [NSEntityDescription
                             insertNewObjectForEntityForName:@"MXCoreDataAccount"
-                            inManagedObjectContext:managedObjectContext];
+                            inManagedObjectContext:bgManagedObjectContext];
 
-        account.userId = credentials.userId;
-        account.homeServer = credentials.homeServer;
-        account.accessToken = credentials.accessToken;
-        account.version = @(kMXCoreDataStoreVersion);
+        bgAccount.userId = credentials.userId;
+        bgAccount.homeServer = credentials.homeServer;
+        bgAccount.accessToken = credentials.accessToken;
+        bgAccount.version = @(kMXCoreDataStoreVersion);
 
-        [self commit];
+        [self commit:^{
+
+            // And retrieve its equivalent for the ui thread MOC
+            NSError *error;
+            NSArray *fetchedObjects = [uiManagedObjectContext executeFetchRequest:fetchRequest error:&error];
+            if (fetchedObjects.count)
+            {
+                uiAccount = fetchedObjects[0];
+            }
+
+            onComplete();
+        }];
+        return;
+    }
+    else
+    {
+        // Get the background equivalent account object
+        NSArray *fetchedObjects = [bgManagedObjectContext executeFetchRequest:fetchRequest error:&error];
+        if (fetchedObjects.count)
+        {
+            bgAccount = fetchedObjects[0];
+        }
     }
 
     onComplete();
@@ -146,105 +189,118 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 {
     NSDate *startDate = [NSDate date];
 
-    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
-    [room storeEvent:event direction:direction];
+    [bgManagedObjectContext performBlock:^{
+        MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId forRead:NO];
+        [room storeEvent:event direction:direction];
+    }];
 
     NSLog(@"[MXCoreDataStore] storeEventForRoom %.3fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (void)replaceEvent:(MXEvent*)event inRoom:(NSString*)roomId
 {
-    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
-    [room replaceEvent:event];
+    [bgManagedObjectContext performBlock:^{
+        MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId forRead:NO];
+        [room replaceEvent:event];
+    }];
 }
 
 - (MXEvent *)eventWithEventId:(NSString *)eventId inRoom:(NSString *)roomId
 {
-    //NSDate *startDate = [NSDate date];
+    NSDate *startDate = [NSDate date];
 
-    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
+    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId forRead:YES];
     MXEvent *event = [room eventWithEventId:eventId];
 
-    //NSLog(@"[MXCoreDataStore] eventWithEventId %.3fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXCoreDataStore] eventWithEventId %.3fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
     return event;
 }
 
 - (void)deleteRoom:(NSString *)roomId
 {
-    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
+    [bgManagedObjectContext performBlock:^{
+        MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId forRead:NO];
 
-    // Related events will be deleted via cascade
-    [account removeRoomsObject:room];
-    [managedObjectContext deleteObject:room];
-    [managedObjectContext save:nil];
+        // Related events will be deleted via cascade
+        [bgAccount removeRoomsObject:room];
+        [bgManagedObjectContext deleteObject:room];
 
-    [roomsByRoomId removeObjectForKey:roomId];
+        [uiRoomsByRoomId removeObjectForKey:roomId];
+        [bgRoomsByRoomId removeObjectForKey:roomId];
+    }];
 }
 
 - (void)deleteAllData
 {
     NSLog(@"[MXCoreDataStore] Delete all data");
 
-    [managedObjectContext lock];
+    [uiManagedObjectContext lock];
     NSArray *stores = [persistentStoreCoordinator persistentStores];
     for(NSPersistentStore *store in stores)
     {
         [persistentStoreCoordinator removePersistentStore:store error:nil];
         [[NSFileManager defaultManager] removeItemAtPath:store.URL.path error:nil];
     }
-    [managedObjectContext unlock];
+    [uiManagedObjectContext unlock];
 
-    account = nil;
+    uiAccount = nil;
+    bgAccount = nil;
     persistentStoreCoordinator = nil;
-    managedObjectContext = nil;
-    roomsByRoomId = [NSMutableDictionary dictionary];
+    uiManagedObjectContext = nil;
+    bgManagedObjectContext = nil;
+    uiRoomsByRoomId = [NSMutableDictionary dictionary];
+    bgRoomsByRoomId = [NSMutableDictionary dictionary];
 }
 
 - (void)storePaginationTokenOfRoom:(NSString *)roomId andToken:(NSString *)token
 {
-    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
-    room.paginationToken = token;
+    [bgManagedObjectContext performBlock:^{
+        MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId forRead:NO];
+        room.paginationToken = token;
+    }];
 }
 
 - (NSString*)paginationTokenOfRoom:(NSString*)roomId
 {
-    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
+    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId forRead:YES];
     return room.paginationToken;
 }
 
 - (void)storeHasReachedHomeServerPaginationEndForRoom:(NSString *)roomId andValue:(BOOL)value
 {
-    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
-    room.hasReachedHomeServerPaginationEnd = @(value);
+    [bgManagedObjectContext performBlock:^{
+        MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId forRead:NO];
+        room.hasReachedHomeServerPaginationEnd = @(value);
+    }];
 }
 
 - (BOOL)hasReachedHomeServerPaginationEndForRoom:(NSString*)roomId
 {
-    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
+    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId forRead:YES];
     return [room.hasReachedHomeServerPaginationEnd boolValue];
 }
 
 - (void)resetPaginationOfRoom:(NSString*)roomId
 {
-    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
+    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId forRead:YES];
     [room resetPagination];
 }
 
 - (NSArray*)paginateRoom:(NSString*)roomId numMessages:(NSUInteger)numMessages
 {
-    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
+    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId forRead:YES];
     return [room paginate:numMessages];
 }
 
 - (NSUInteger)remainingMessagesForPaginationInRoom:(NSString *)roomId
 {
-    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
+    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId forRead:YES];
     return [room remainingMessagesForPagination];
 }
 
 - (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types;
 {
-    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
+    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId forRead:YES];
     return [room lastMessageWithTypeIn:types];
 }
 
@@ -272,40 +328,95 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 {
     NSDate *startDate = [NSDate date];
 
-    account.eventStreamToken = eventStreamToken;
+    [bgManagedObjectContext performBlock:^{
+        bgAccount.eventStreamToken = eventStreamToken;
+    }];
 
-    NSLog(@"[MXCoreDataStore] setEventStreamToken %.3fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXCoreDataStore] setEventStreamToken %@ in %.3fms", eventStreamToken, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (NSString *)eventStreamToken
 {
-    return account.eventStreamToken;
+    NSString *eventStreamToken = uiAccount.eventStreamToken;
+    return eventStreamToken;
 }
 
-- (void)commit
+- (void)commit:(MXStoreOnCommitComplete)onComplete
 {
-    NSDate *startDate = [NSDate date];
-    NSError *error;
-    if (![managedObjectContext save:&error])
+    NSLog(@"[MXCoreDataStore] commit START");
+
+    // Store the completion block for later
+    @synchronized(commitCompleteBlocks)
     {
-        NSLog(@"[MXCoreDataStore] commit: Cannot commit. Error: %@", [error localizedDescription]);
+        if (onComplete)
+        {
+            [commitCompleteBlocks insertObject:onComplete atIndex:0];
+        }
+        else
+        {
+            [commitCompleteBlocks insertObject:^{} atIndex:0];
+        }
     }
 
-    NSLog(@"[MXCoreDataStore] commit in %.3fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSDate *startDate = [NSDate date];
+
+    // Launch save on the background context
+    // The UI context will be automatically updated by [self mergeChanges:]
+    [bgManagedObjectContext performBlock:^{
+        NSError *error;
+        if (![bgManagedObjectContext save:&error])
+        {
+            NSLog(@"[MXCoreDataStore] commit: Cannot commit. Error: %@", [error localizedDescription]);
+        }
+
+        NSLog(@"[MXCoreDataStore] commit in background in %.3fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+        NSLog(@"[MXCoreDataStore] commit END");
+    }];
+}
+
+// Called on bgManagedObjectContext's NSManagedObjectContextDidSaveNotification
+- (void)mergeChanges:(NSNotification *)notification
+{
+    dispatch_sync(dispatch_get_main_queue(), ^{
+
+        NSDate *startDate2 = [NSDate date];
+
+        // Report changes saved in bgManagedObjectContext's to uiManagedObjectContext
+        [uiManagedObjectContext mergeChangesFromContextDidSaveNotification:notification];
+
+        NSLog(@"[MXCoreDataStore] commit in ui thread in %.3fms", [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+
+        // Unqueue and execute the associated commit completion block
+        MXStoreOnCommitComplete onCommitComplete;
+        @synchronized(commitCompleteBlocks)
+        {
+            onCommitComplete = commitCompleteBlocks.lastObject;
+            [commitCompleteBlocks removeLastObject];
+        }
+
+        if (onCommitComplete)
+        {
+            onCommitComplete();
+        }
+    });
 }
 
 - (void)close
 {
-    NSLog(@"[MXCoreDataStore] closed for %@", account.userId);
+    NSLog(@"[MXCoreDataStore] closed for %@", uiAccount.userId);
+
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:NSManagedObjectContextDidSaveNotification object:nil];
 
     // Release Core Data memory
-    if (managedObjectContext)
+    if (uiManagedObjectContext)
     {
-        [managedObjectContext reset];
+        [uiManagedObjectContext reset];
     }
 
-    account = nil;
-    managedObjectContext = nil;
+    uiAccount = nil;
+    bgAccount = nil;
+    uiManagedObjectContext = nil;
+    bgManagedObjectContext = nil;
     persistentStoreCoordinator = nil;
 }
 
@@ -316,8 +427,8 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     fetchRequest.resultType = NSDictionaryResultType;
     fetchRequest.propertiesToFetch = @[@"roomId"];
 
-    NSError *error      = nil;
-    NSArray *results    = [managedObjectContext executeFetchRequest:fetchRequest
+    NSError *error = nil;
+    NSArray *results = [uiManagedObjectContext executeFetchRequest:fetchRequest
                                                                    error:&error];
 
     return [results valueForKey:@"roomId"];
@@ -327,8 +438,10 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 {
     NSDate *startDate = [NSDate date];
 
-    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
-    [room storeState:stateEvents];
+    [bgManagedObjectContext performBlock:^{
+        MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId forRead:NO];
+        [room storeState:stateEvents];
+    }];
 
     NSLog(@"[MXCoreDataStore] storeStateForRoom %@ in %.3fms", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
@@ -337,7 +450,7 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 {
     NSDate *startDate = [NSDate date];
 
-    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
+    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId forRead:YES];
     NSArray *state = [room stateEvents];
 
     NSLog(@"[MXCoreDataStore] stateOfRoom %@ in %.3fms", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
@@ -347,22 +460,26 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 
 -(void)setUserDisplayname:(NSString *)userDisplayname
 {
-    account.userDisplayName = userDisplayname;
+    [bgManagedObjectContext performBlock:^{
+        bgAccount.userDisplayName = userDisplayname;
+    }];
 }
 
 -(NSString *)userDisplayname
 {
-    return account.userDisplayName;
+    return uiAccount.userDisplayName;
 }
 
 -(void)setUserAvatarUrl:(NSString *)userAvatarUrl
 {
-    account.userAvatarUrl = userAvatarUrl;
+    [bgManagedObjectContext performBlock:^{
+        bgAccount.userAvatarUrl = userAvatarUrl;
+    }];
 }
 
 - (NSString *)userAvatarUrl
 {
-    return account.userAvatarUrl;
+    return uiAccount.userAvatarUrl;
 }
 
 
@@ -408,14 +525,36 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 
     // MOC
     // Some requests are made from the UI, so avoid to block it and use NSMainQueueConcurrencyType
-    managedObjectContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
-    managedObjectContext.persistentStoreCoordinator = persistentStoreCoordinator;
+    uiManagedObjectContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
+    uiManagedObjectContext.persistentStoreCoordinator = persistentStoreCoordinator;
 
+    bgManagedObjectContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
+    bgManagedObjectContext.persistentStoreCoordinator = persistentStoreCoordinator;
+
+    // Be notified when something is stored in bgManagedObjectContext
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:NSManagedObjectContextDidSaveNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(mergeChanges:)
+                                                 name:NSManagedObjectContextDidSaveNotification
+                                               object:bgManagedObjectContext];
     return error;
 }
 
-- (MXCoreDataRoom*)getOrCreateRoomEntity:(NSString*)roomId
+/**
+ Return the MXCoreDataRoom object that corresponds to the expected context
+ which can be uiManagedObjectContext or bgManagedObjectContext depending on whether 
+ the goal is to read or to write.
+ 
+ @param roomId the room id of the MXCoreDataRoom to lookup.
+ @param read the request goal.
+ @return the MXCoreDataRoom object. It is created in the db if it does not already exist.
+ */
+- (MXCoreDataRoom*)getOrCreateRoomEntity:(NSString*)roomId forRead:(BOOL)read
 {
+    NSManagedObjectContext *moc = read ? uiManagedObjectContext : bgManagedObjectContext;
+    NSMutableDictionary<NSString*, MXCoreDataRoom*> *roomsByRoomId = read ? uiRoomsByRoomId : bgRoomsByRoomId;
+    MXCoreDataAccount *account = read ? uiAccount : bgAccount;
+
     // First, check in the "room by roomId" cache
     MXCoreDataRoom *room = roomsByRoomId[roomId];
     if (!room)
@@ -423,14 +562,14 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
         // Secondly, search it in Core Data
         NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
         NSEntityDescription *entity = [NSEntityDescription entityForName:@"MXCoreDataRoom"
-                                                  inManagedObjectContext:managedObjectContext];
+                                                  inManagedObjectContext:moc];
         [fetchRequest setEntity:entity];
         NSPredicate *predicate = [NSPredicate predicateWithFormat:@"roomId == %@", roomId];
         [fetchRequest setPredicate:predicate];
         [fetchRequest setFetchBatchSize:1];
         [fetchRequest setFetchLimit:1];
 
-        NSArray *fetchedObjects = [managedObjectContext executeFetchRequest:fetchRequest error:nil];
+        NSArray *fetchedObjects = [moc executeFetchRequest:fetchRequest error:nil];
         if (fetchedObjects.count)
         {
             room = fetchedObjects[0];
@@ -440,7 +579,7 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
             // Else, create it
             room = [NSEntityDescription
                     insertNewObjectForEntityForName:@"MXCoreDataRoom"
-                    inManagedObjectContext:managedObjectContext];
+                    inManagedObjectContext:moc];
 
             room.roomId = roomId;
             room.account = account;
