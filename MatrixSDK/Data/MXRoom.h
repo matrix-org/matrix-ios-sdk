@@ -430,7 +430,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 - (BOOL)setReadReceiptToken:(NSString*)token ts:(long)ts;
 
 /**
- Acknowlegde the latest event (except the receipts, the presence and the typing ones)
+ Acknowlegde the latest event of type defined in acknowledgableEventTypes.
  Put sendReceipt YES to send a receipt event if the latest event was not yet acknowledged.
  @param sendReceipt YES to send a receipt event if required
  @return true if there is an update
