@@ -221,7 +221,26 @@
         
         if (data)
         {
-            return [store eventsAfter:data.eventId except:credentials.userId withTypeIn:types];
+            NSArray* unreadOnes = [store eventsAfter:data.eventId except:credentials.userId withTypeIn:types];
+            
+            if (unreadOnes.count)
+            {
+                NSMutableArray* unread = [[NSMutableArray alloc] initWithCapacity:unreadOnes.count];
+                
+                // ignore oneself events
+                // assume you read what you wrote
+                for(MXEvent* event in unreadOnes)
+                {
+                    if (![event.sender isEqualToString:credentials.userId])
+                    {
+                        [unread addObject:event];
+                    }
+                }
+                
+                return unread;
+            }
+            
+            return unreadOnes;
         }
     }
    
