@@ -72,9 +72,17 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 @property (nonatomic, readonly) BOOL canPaginate;
 
 /**
- The unread messages.
+ The unread events.
+ They are filtered by acknowledgableEventTypes.
  */
-@property (nonatomic, readonly) NSArray* unreadMessages;
+@property (nonatomic, readonly) NSArray* unreadEvents;
+
+/**
+ * An array of event types strings (MXEventTypeString).
+ * By default any event type except the typing, the receipts and the presence ones.
+ */
+@property (nonatomic) NSArray* acknowledgableEventTypes;
+
 
 /**
  Flag indicating that the room has been initialSynced with the homeserver.
@@ -422,12 +430,12 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 - (BOOL)setReadReceiptToken:(NSString*)token ts:(long)ts;
 
 /**
- Acknowlegde the latest room message.
- Put sendReceipt YES to send a receipt event if the latest message was not yet acknowledged.
+ Acknowlegde the latest event of type defined in acknowledgableEventTypes.
+ Put sendReceipt YES to send a receipt event if the latest event was not yet acknowledged.
  @param sendReceipt YES to send a receipt event if required
  @return true if there is an update
  */
-- (BOOL) acknowledgeLatestMessage:(BOOL)sendReceipt;
+- (BOOL)acknowledgeLatestEvent:(BOOL)sendReceipt;
 
 /**
  Returns the receipts list for an event.

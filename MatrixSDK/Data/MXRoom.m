@@ -48,6 +48,22 @@
         _typingUsers = [NSArray array];
         
         _isSync = NO;
+        
+        _acknowledgableEventTypes = @[kMXEventTypeStringRoomName,
+                                      kMXEventTypeStringRoomTopic,
+                                      kMXEventTypeStringRoomMember,
+                                      kMXEventTypeStringRoomCreate,
+                                      kMXEventTypeStringRoomJoinRules,
+                                      kMXEventTypeStringRoomPowerLevels,
+                                      kMXEventTypeStringRoomAliases,
+                                      kMXEventTypeStringRoomMessage,
+                                      kMXEventTypeStringRoomMessageFeedback,
+                                      kMXEventTypeStringRoomRedaction,
+                                      kMXEventTypeStringCallInvite,
+                                      kMXEventTypeStringCallCandidates,
+                                      kMXEventTypeStringCallAnswer,
+                                      kMXEventTypeStringCallHangup
+                                      ];
     }
     
     return self;
@@ -758,7 +774,7 @@
                 NSDictionary* params = [readDict objectForKey:userId];
                 
                 if ([params valueForKey:@"ts"])
-                {    
+                {
                     MXReceiptData* data = [[MXReceiptData alloc] init];
                     data.userId = userId;
                     data.eventId = eventId;
@@ -797,10 +813,9 @@
     return NO;
 }
 
-- (BOOL) acknowledgeLatestMessage:(BOOL)sendReceipt
+- (BOOL)acknowledgeLatestEvent:(BOOL)sendReceipt;
 {
-    MXEvent* event =[mxSession.store lastMessageOfRoom:_state.roomId withTypeIn:@[kMXEventTypeStringRoomMessage]];
-    
+    MXEvent* event =[mxSession.store lastMessageOfRoom:_state.roomId withTypeIn:_acknowledgableEventTypes];
     if (event)
     {
         MXReceiptData *data = [[MXReceiptData alloc] init];
@@ -829,9 +844,9 @@
     return NO;
 }
 
--(NSArray*) unreadMessages
+-(NSArray*) unreadEvents
 {
-    return [mxSession.store unreadMessages:_state.roomId];
+    return [mxSession.store unreadEvents:_state.roomId withTypeIn:_acknowledgableEventTypes];
 }
 
 - (NSArray*)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort
