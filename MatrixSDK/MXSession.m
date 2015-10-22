@@ -570,7 +570,7 @@ typedef void (^MXOnResumeDone)();
                                 // the right timing to do it.
                                 // SDK client will be notified when the full state is available thanks to `MXSessionInitialSyncedRoomNotification`.
                                 NSLog(@"[MXSession] Make a initialSyncOfRoom as the room seems to be joined from another device or MXSession. This also happens when creating a room: the HS autojoins the creator. Room: %@", event.roomId);
-                                [self initialSyncOfRoom:event.roomId withLimit:0 success:nil failure:nil];
+                                [self initialSyncOfRoom:event.roomId withLimit:10 success:nil failure:nil];
                             }
                         }
                     }
