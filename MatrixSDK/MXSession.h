@@ -120,6 +120,10 @@ FOUNDATION_EXPORT NSString *const kMXSessionWillLeaveRoomNotification;
  */
 FOUNDATION_EXPORT NSString *const kMXSessionDidLeaveRoomNotification;
 
+/**
+ Posted when MXSession has performed a server sync.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionDidSyncNotification;
 
 #pragma mark - Notifications keys
 /**
@@ -251,6 +255,12 @@ typedef void (^MXOnCatchupDone)();
 typedef void (^MXOnCatchupFail)(NSError *error);
 
 - (void)catchup:(unsigned int)timeout success:(MXOnCatchupDone)catchupDone failure:(MXOnCatchupFail)catchupfails;
+
+/**
+ Restart the session events stream.
+ @return YES if the operation succeeds
+ */
+- (BOOL)reconnect;
 
 /**
  Close the session.
