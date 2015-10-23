@@ -862,7 +862,7 @@ typedef enum : NSUInteger
                          failure:(void (^)(NSError *error))failure;
 
 /**
- Get/Update this user's current state.
+ Get/Update this user's current state. Based on server sync C-S v2 API.
  Get/Update information for all rooms (including messages and state events) from the given token (if any).
  
  @param limit the maximum number of messages to return by room.
@@ -1075,7 +1075,7 @@ typedef enum : NSUInteger
 
 #pragma mark - read receips
 /**
- Send a read receipt.
+ Send a read receipt (available only on C-S v2).
  
  @param roomId the id of the room.
  @param eventId the id of the event.
