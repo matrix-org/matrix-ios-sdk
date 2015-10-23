@@ -72,6 +72,19 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 @property (nonatomic, readonly) BOOL canPaginate;
 
 /**
+ The unread events.
+ They are filtered by acknowledgableEventTypes.
+ */
+@property (nonatomic, readonly) NSArray* unreadEvents;
+
+/**
+ * An array of event types strings (MXEventTypeString).
+ * By default any event type except the typing, the receipts and the presence ones.
+ */
+@property (nonatomic) NSArray* acknowledgableEventTypes;
+
+
+/**
  Flag indicating that the room has been initialSynced with the homeserver.
  
  @discussion
@@ -91,6 +104,13 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 
 - (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession andStateEvents:(NSArray*)stateEvents;
 
+/**
+ Update room data according to the provided sync response (since API v2)
+ 
+ @param roomSyncResponse information to sync the room with the home server data
+ */
+- (void)handleRoomSyncResponse:(MXRoomSyncResponse*)roomSyncResponse;
+
 - (void)handleMessages:(MXPaginationResponse*)roomMessages
              direction:(MXEventDirection)direction
          isTimeOrdered:(BOOL)isTimeOrdered;
@@ -103,7 +123,6 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  @param event the event to handle.
  */
 - (void)handleLiveEvent:(MXEvent*)event;
-
 
 #pragma mark - Back pagination
 /**
@@ -390,5 +409,40 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  Unregister all listeners.
  */
 - (void)removeAllListeners;
+
+#pragma mark - Receipts management
+
+/**
+ Handle a receipt event
+ 
+ @param event the event to handle.
+ @param the direction
+ @param
+ */
+- (BOOL)handleReceiptEvent:(MXEvent *)event direction:(MXEventDirection)direction;
+
+/**
+ Update the read receipt token.
+ @param token the new token
+ @param ts the token ts
+@return true if the token is refreshed
+ */
+- (BOOL)setReadReceiptToken:(NSString*)token ts:(long)ts;
+
+/**
+ Acknowlegde the latest event of type defined in acknowledgableEventTypes.
+ Put sendReceipt YES to send a receipt event if the latest event was not yet acknowledged.
+ @param sendReceipt YES to send a receipt event if required
+ @return true if there is an update
+ */
+- (BOOL)acknowledgeLatestEvent:(BOOL)sendReceipt;
+
+/**
+ Returns the receipts list for an event.
+ @param eventId The event Id.
+ @param sort YES to sort them from the latest to the oldest.
+ @return the receipts for an event in a dedicated room.
+ */
+- (NSArray*)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort;
 
 @end

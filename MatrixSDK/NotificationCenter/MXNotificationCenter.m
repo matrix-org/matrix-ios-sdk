@@ -96,7 +96,7 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
         [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
 
             if (MXEventDirectionForwards == direction
-                && NO == [event.userId isEqualToString:mxSession.matrixRestClient.credentials.userId])
+                && NO == [event.sender isEqualToString:mxSession.matrixRestClient.credentials.userId])
             {
                 [self shouldNotify:event roomState:customObject];
             }
@@ -148,7 +148,7 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
     MXPushRule *theRule;
 
     // Consider only events from other users
-    if (NO == [event.userId isEqualToString:mxSession.matrixRestClient.credentials.userId])
+    if (NO == [event.sender isEqualToString:mxSession.matrixRestClient.credentials.userId])
     {
         // Check rules one by one according to their priorities
         for (MXPushRule *rule in flatRules)

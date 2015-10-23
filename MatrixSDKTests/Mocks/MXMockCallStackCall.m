@@ -23,7 +23,7 @@
 @end
 
 @implementation MXMockCallStackCall
-@synthesize selfVideoView, remoteVideoView, videoOrientation;
+@synthesize selfVideoView, remoteVideoView, selfOrientation, delegate;
 
 - (instancetype)init
 {

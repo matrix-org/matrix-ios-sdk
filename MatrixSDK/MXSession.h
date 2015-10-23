@@ -53,7 +53,12 @@ typedef enum : NSUInteger
      itself when [MXSession resume] is called.
      */
     MXSessionStateSyncInProgress,
-
+    
+    /**
+     The session is catching up
+     */
+    MXSessionStateCatchingUp,
+        
     /**
      The session data is synchronised with the server and session keeps it synchronised
      thanks to the events stream, which is now running.
@@ -174,6 +179,8 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
 @property (nonatomic, readonly) MXCallManager *callManager;
 
 
+#pragma mark - Class methods
+
 /**
  Create a MXSession instance.
  This instance will use the passed MXRestClient to make requests to the home server.
@@ -219,6 +226,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
 
 /**
  Pause the session events stream.
+ Caution: this action is ignored if the session state is not MXSessionStateRunning.
  
  No more live events will be received by the listeners.
  */
@@ -231,6 +239,18 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
                    the app has received uptodate data/events.
  */
 - (void)resume:(void (^)())resumeDone;
+
+/**
+ Perform an events stream catchup.
+ 
+ @param timeout the max time in milliseconds to perform the catchup
+ @param catchupDone A block called when the SDK has been successfully performed a catchup
+ @param catchupfails A block called when the catchup fails.
+ */
+typedef void (^MXOnCatchupDone)();
+typedef void (^MXOnCatchupFail)(NSError *error);
+
+- (void)catchup:(unsigned int)timeout success:(MXOnCatchupDone)catchupDone failure:(MXOnCatchupFail)catchupfails;
 
 /**
  Close the session.

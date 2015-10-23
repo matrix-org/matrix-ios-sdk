@@ -61,7 +61,8 @@
 {
     [super setUp];
 
-    httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", kMXTestsHomeServerURL, kMXAPIPrefixPath]];
+    httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", kMXTestsHomeServerURL, kMXAPIPrefixPath]
+                     andOnUnrecognizedCertificateBlock:nil];
 }
 
 - (void)tearDown
@@ -77,7 +78,7 @@
         
         // Use publicRooms JSON response to check modelFromJSON
         [httpClient requestWithMethod:@"GET"
-                                 path:@"v1/publicRooms"
+                                 path:@"api/v1/publicRooms"
                            parameters:nil
                               success:^(NSDictionary *JSONResponse)
          {
@@ -103,7 +104,7 @@
         
         // Use publicRooms JSON response to check modelFromJSON
         [httpClient requestWithMethod:@"GET"
-                                 path:@"v1/publicRooms"
+                                 path:@"api/v1/publicRooms"
                            parameters:nil
                               success:^(NSDictionary *JSONResponse)
          {
@@ -146,7 +147,7 @@
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndThePublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         [httpClient requestWithMethod:@"GET"
-                                 path:@"v1/publicRooms"
+                                 path:@"api/v1/publicRooms"
                            parameters:nil
                               success:^(NSDictionary *JSONResponse)
          {

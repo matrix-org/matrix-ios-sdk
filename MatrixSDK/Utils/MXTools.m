@@ -41,7 +41,8 @@
                  kMXEventTypeStringCallInvite: [NSNumber numberWithUnsignedInteger:MXEventTypeCallInvite],
                  kMXEventTypeStringCallCandidates: [NSNumber numberWithUnsignedInteger:MXEventTypeCallCandidates],
                  kMXEventTypeStringCallAnswer: [NSNumber numberWithUnsignedInteger:MXEventTypeCallAnswer],
-                 kMXEventTypeStringCallHangup: [NSNumber numberWithUnsignedInteger:MXEventTypeCallHangup]
+                 kMXEventTypeStringCallHangup: [NSNumber numberWithUnsignedInteger:MXEventTypeCallHangup],
+                 kMXEventTypeStringReceipt: [NSNumber numberWithUnsignedInteger:MXEventTypeReceipt]
                  };
     });
     return inst;

@@ -57,8 +57,9 @@ NSMutableArray *roomsToClean;
     self = [super init];
     if (self)
     {
-        mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL];
-        
+        mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL
+                              andOnUnrecognizedCertificateBlock:nil];
+
         startDate = [NSDate date];
     }
     return self;
@@ -117,7 +118,8 @@ NSMutableArray *roomsToClean;
 {
     [self getBobCredentials:^{
         
-        MXRestClient *restClient = [[MXRestClient alloc] initWithCredentials:self.bobCredentials];
+        MXRestClient *restClient = [[MXRestClient alloc] initWithCredentials:self.bobCredentials
+                                           andOnUnrecognizedCertificateBlock:nil];
         
         success(restClient);
     }];
@@ -137,7 +139,8 @@ NSMutableArray *roomsToClean;
     
     [sharedData getBobCredentials:^{
         
-        MXRestClient *restClient = [[MXRestClient alloc] initWithCredentials:self.bobCredentials];
+        MXRestClient *restClient = [[MXRestClient alloc] initWithCredentials:self.bobCredentials
+                                           andOnUnrecognizedCertificateBlock:nil];
 
         if (accountToClean)
         {
@@ -466,7 +469,8 @@ NSMutableArray *roomsToClean;
 {
     [self getAliceCredentials:^{
         
-        MXRestClient *aliceRestClient = [[MXRestClient alloc] initWithCredentials:self.aliceCredentials];
+        MXRestClient *aliceRestClient = [[MXRestClient alloc] initWithCredentials:self.aliceCredentials
+                                                andOnUnrecognizedCertificateBlock:nil];
         __block MXRestClient *aliceRestClient2 = aliceRestClient;
         
         // Set Alice displayname and avator

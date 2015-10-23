@@ -16,6 +16,7 @@
 
 #import "MXJSONModels.h"
 #import "MXEvent.h"
+#import "MXReceiptData.h"
 
 /**
  The `MXStore` protocol defines an interface that must be implemented in order to store
@@ -132,6 +133,32 @@
  @return the MXEvent object corresponding to the last message.
  */
 - (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types;
+
+/**
+ * Returns the receipts list for an event in a dedicated room.
+ * if sort is set to YES, they are sorted from the latest to the oldest ones.
+ * @param roomId The room Id.
+ * @param eventId The event Id.
+ * @param sort to sort them from the latest to the oldest
+ * @return the receipts for an event in a dedicated room.
+ */
+- (NSArray*)getEventReceipts:(NSString*)roomId eventId:(NSString*)eventId sorted:(BOOL)sort;
+
+/**
+ * Store the receipt for an user in a room
+ * @param receipt The event
+ * @param roomId The roomId
+ * @return true if the receipt has been stored
+ */
+- (BOOL)storeReceipt:(MXReceiptData*)receipt roomId:(NSString*)roomId;
+
+/**
+ * Provides the unread events list.
+ * @param roomId the room id.
+ * @param types an array of event types strings (MXEventTypeString).
+ * @return the unread events list.
+ */
+- (NSArray*)unreadEvents:(NSString*)roomId withTypeIn:(NSArray*)types;
 
 /**
  Indicate if the MXStore implementation stores data permanently.

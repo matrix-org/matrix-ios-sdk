@@ -31,7 +31,7 @@ NSString *const kMXErrCodeStringUserInUse       = @"M_USER_IN_USE";
 NSString *const kMXErrCodeStringRoomInUse       = @"M_ROOM_IN_USE";
 NSString *const kMXErrCodeStringBadPagination   = @"M_BAD_PAGINATION";
 
-NSString *const kMXErrCodeStringInvalidToken    = @"Invalid token";
+NSString *const kMXErrorStringInvalidToken    = @"Invalid token";
 
 
 // Random NSError code
