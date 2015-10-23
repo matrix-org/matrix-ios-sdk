@@ -35,6 +35,7 @@ NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification"
 NSString *const kMXSessionInitialSyncedRoomNotification = @"kMXSessionInitialSyncedRoomNotification";
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
 NSString *const kMXSessionDidLeaveRoomNotification = @"kMXSessionDidLeaveRoomNotification";
+NSString *const kMXSessionDidSyncNotification = @"kMXSessionDidSyncNotification";
 NSString *const kMXSessionNotificationRoomIdKey = @"roomId";
 NSString *const kMXSessionNotificationEventKey = @"event";
 
@@ -409,8 +410,6 @@ typedef void (^MXOnResumeDone)();
             {
                 NSLog(@"[MXSession] Events stream resumed with %tu new events", events.count);
 
-                [self setState:MXSessionStateRunning];
-
                 onResumeDone();
                 onResumeDone = nil;
 
@@ -421,14 +420,16 @@ typedef void (^MXOnResumeDone)();
                 }
             }
             
-            if (MXSessionStateHomeserverNotReachable == _state)
-            {
-                // The connection to the homeserver is now back
-                [self setState:MXSessionStateRunning];
-            }
+            // the event stream is running by now
+            [self setState:MXSessionStateRunning];
 
             // Go streaming from the returned token
             [self streamEventsFromToken:paginatedResponse.end withLongPoll:YES];
+            
+            // Broadcast that a server sync has been processed.
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidSyncNotification
+                                                                object:self
+                                                              userInfo:nil];
         }
 
     } failure:^(NSError *error) {
@@ -454,46 +455,72 @@ typedef void (^MXOnResumeDone)();
             }
         }
         
-        // eventStreamRequest is nil when the request has been canceled
         if (eventStreamRequest)
         {
-            // Inform the app there is a problem with the connection to the homeserver
-            [self setState:MXSessionStateHomeserverNotReachable];
-
-            // Check if it is a network connectivity issue
-            AFNetworkReachabilityManager *networkReachabilityManager = [AFNetworkReachabilityManager sharedManager];
-            NSLog(@"[MXSession] events stream broken. Network reachability: %d", networkReachabilityManager.isReachable);
-
-            if (networkReachabilityManager.isReachable)
+            // on 64 bits devices, the error codes are huge integers.
+            int32_t code = (int32_t)error.code;
+            
+            if (code == kCFURLErrorCancelled)
             {
-                // The problem is not the network
-                // Relaunch the request in a random near futur.
-                // Random time it used to avoid all Matrix clients to retry all in the same time
-                // if there is server side issue like server restart
-                 dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, [MXHTTPClient jitterTimeForRetry] * NSEC_PER_MSEC);
-                 dispatch_after(delayTime, dispatch_get_main_queue(), ^(void) {
-
-                     if (eventStreamRequest)
-                     {
-                         NSLog(@"[MXSession] Retry resuming events stream");
-                         [self streamEventsFromToken:token withLongPoll:longPoll];
-                     }
-                 });
+                NSLog(@"[MXSession] The connection has been cancelled.");
+            }
+            // timeout case : the request has been triggerd with a timeout value
+            // but there is no data to retrieve
+            else if ((code == kCFURLErrorTimedOut) && !longPoll)
+            {
+                NSLog(@"[MXSession] The connection has been timeout.");
+                
+                [eventStreamRequest cancel];
+                eventStreamRequest = nil;
+                
+                // Broadcast that a server sync is processed.
+                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidSyncNotification
+                                                                    object:self
+                                                                  userInfo:nil];
+                
+                // switch back to the long poll management
+                [self streamEventsFromToken:token withLongPoll:YES];
             }
             else
             {
-                // The device is not connected to the internet, wait for the connection to be up again before retrying
-                __block __weak id reachabilityObserver =
-                [[NSNotificationCenter defaultCenter] addObserverForName:AFNetworkingReachabilityDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+                // Inform the app there is a problem with the connection to the homeserver
+                [self setState:MXSessionStateHomeserverNotReachable];
 
-                    if (networkReachabilityManager.isReachable && eventStreamRequest)
-                    {
-                        [[NSNotificationCenter defaultCenter] removeObserver:reachabilityObserver];
+                // Check if it is a network connectivity issue
+                AFNetworkReachabilityManager *networkReachabilityManager = [AFNetworkReachabilityManager sharedManager];
+                NSLog(@"[MXSession] events stream broken. Network reachability: %d", networkReachabilityManager.isReachable);
 
-                        NSLog(@"[MXSession] Retry resuming events stream");
-                        [self streamEventsFromToken:token withLongPoll:longPoll];
-                    }
-                }];
+                if (networkReachabilityManager.isReachable)
+                {
+                    // The problem is not the network
+                    // Relaunch the request in a random near futur.
+                    // Random time it used to avoid all Matrix clients to retry all in the same time
+                    // if there is server side issue like server restart
+                     dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, [MXHTTPClient jitterTimeForRetry] * NSEC_PER_MSEC);
+                     dispatch_after(delayTime, dispatch_get_main_queue(), ^(void) {
+
+                         if (eventStreamRequest)
+                         {
+                             NSLog(@"[MXSession] Retry resuming events stream");
+                             [self streamEventsFromToken:token withLongPoll:longPoll];
+                         }
+                     });
+                }
+                else
+                {
+                    // The device is not connected to the internet, wait for the connection to be up again before retrying
+                    __block __weak id reachabilityObserver =
+                    [[NSNotificationCenter defaultCenter] addObserverForName:AFNetworkingReachabilityDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                        if (networkReachabilityManager.isReachable && eventStreamRequest)
+                        {
+                            [[NSNotificationCenter defaultCenter] removeObserver:reachabilityObserver];
+
+                            NSLog(@"[MXSession] Retry resuming events stream");
+                            [self streamEventsFromToken:token withLongPoll:longPoll];
+                        }
+                    }];
+                }
             }
         }
     }];
@@ -697,6 +724,27 @@ typedef void (^MXOnResumeDone)();
             [self streamEventsFromToken:_store.eventStreamToken withLongPoll:NO serverTimeOut:0 clientTimeout:timeout];
         }
     }
+}
+
+- (BOOL)reconnect
+{
+    if (eventStreamRequest)
+    {
+        NSLog(@"[MXSession] Reconnect starts");
+        [eventStreamRequest cancel];
+        eventStreamRequest = nil;
+        
+        // retrieve the available data asap
+        // disable the long poll to get the available data asap
+        [self streamEventsFromToken:_store.eventStreamToken withLongPoll:NO serverTimeOut:0 clientTimeout:10];
+        return YES;
+    }
+    else
+    {
+        NSLog(@"[MXSession] Reconnect fails.");
+    }
+    
+    return NO;
 }
 
 - (void)close
