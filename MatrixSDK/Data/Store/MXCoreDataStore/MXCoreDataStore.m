@@ -572,7 +572,16 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     MXCoreDataAccount *account = read ? uiAccount : bgAccount;
 
     // First, check in the "room by roomId" cache
-    MXCoreDataRoom *room = roomsByRoomId[roomId];
+    MXCoreDataRoom *room;
+    if (NO == read)
+    {
+        // Unfortunately, the cache can only work with MSManagedObjects from bgManagedObjectContext
+        // But it is (for now, TODO) unreliable for objects on uiManagedObjectContext because
+        // mergeChangesFromContextDidSaveNotification does not updated loaded objects.
+        // So we have to re-fetch them.
+        room = roomsByRoomId[roomId];
+    }
+
     if (!room)
     {
         // Secondly, search it in Core Data
