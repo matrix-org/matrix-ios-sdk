@@ -377,33 +377,36 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 // Called on bgManagedObjectContext's NSManagedObjectContextDidSaveNotification
 - (void)mergeChanges:(NSNotification *)notification
 {
-    dispatch_sync(dispatch_get_main_queue(), ^{
+    dispatch_async(dispatch_get_main_queue(), ^{
 
-        NSDate *startDate2 = [NSDate date];
-
-        // Report changes saved in bgManagedObjectContext's to uiManagedObjectContext
-        [uiManagedObjectContext mergeChangesFromContextDidSaveNotification:notification];
-
-        NSLog(@"[MXCoreDataStore] commit in ui thread in %.3fms", [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
-
-        // Unqueue and execute the associated commit completion block
-        MXStoreOnCommitComplete onCommitComplete;
-        @synchronized(commitCompleteBlocks)
+        if (uiManagedObjectContext)
         {
-            onCommitComplete = commitCompleteBlocks.lastObject;
-            [commitCompleteBlocks removeLastObject];
-        }
+            NSDate *startDate2 = [NSDate date];
 
-        if (onCommitComplete)
-        {
-            onCommitComplete();
+            // Report changes saved in bgManagedObjectContext's to uiManagedObjectContext
+            [uiManagedObjectContext mergeChangesFromContextDidSaveNotification:notification];
+
+            NSLog(@"[MXCoreDataStore] commit in ui thread in %.3fms", [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+
+            // Unqueue and execute the associated commit completion block
+            MXStoreOnCommitComplete onCommitComplete;
+            @synchronized(commitCompleteBlocks)
+            {
+                onCommitComplete = commitCompleteBlocks.lastObject;
+                [commitCompleteBlocks removeLastObject];
+            }
+
+            if (onCommitComplete)
+            {
+                onCommitComplete();
+            }
         }
     });
 }
 
 - (void)close
 {
-    NSLog(@"[MXCoreDataStore] closed for %@", uiAccount.userId);
+    NSLog(@"[MXCoreDataStore] Closing store for %@", uiAccount.userId);
 
     [[NSNotificationCenter defaultCenter] removeObserver:self name:NSManagedObjectContextDidSaveNotification object:nil];
 
@@ -411,12 +414,25 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     if (uiManagedObjectContext)
     {
         [uiManagedObjectContext reset];
+        uiManagedObjectContext = nil;
+    }
+    if (bgManagedObjectContext)
+    {
+        NSLog(@"[MXCoreDataStore]    Waiting for background thread");
+
+        // Synchronously wait for pending background blocks
+        [bgManagedObjectContext performBlockAndWait:^{}];
+
+        NSLog(@"[MXCoreDataStore]    Waiting for background thread -> DONE");
+
+        [bgManagedObjectContext reset];
+        bgManagedObjectContext = nil;
     }
 
     uiAccount = nil;
     bgAccount = nil;
-    uiManagedObjectContext = nil;
-    bgManagedObjectContext = nil;
+    [uiRoomsByRoomId removeAllObjects];
+    [bgRoomsByRoomId removeAllObjects];
     persistentStoreCoordinator = nil;
 }
 
