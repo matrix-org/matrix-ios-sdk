@@ -121,31 +121,33 @@
     NSError *error;
     MXCoreDataEvent *cdEvent;
 
+    NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
+    NSEntityDescription *entity = [NSEntityDescription entityForName:@"MXCoreDataEvent"
+                                              inManagedObjectContext:self.managedObjectContext];
+    [fetchRequest setEntity:entity];
+
+    // Use messageForRoom.roomId as filter to search among messages events not state events of the room
+    NSPredicate *predicate;
     if (types)
     {
-        NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
-        NSEntityDescription *entity = [NSEntityDescription entityForName:@"MXCoreDataEvent"
-                                                  inManagedObjectContext:self.managedObjectContext];
-        [fetchRequest setEntity:entity];
-
-        // Use messageForRoom.roomId as filter to search among messages events not state events of the room
-        NSPredicate *predicate = [NSPredicate predicateWithFormat:@"messageForRoom.roomId == %@ AND type IN %@", self.roomId, types];
-        fetchRequest.predicate = predicate;
-        fetchRequest.fetchBatchSize = 1;
-        fetchRequest.fetchLimit = 1;
-
-        // Sort by age
-        fetchRequest.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"ageLocalTs" ascending:NO]];
-
-        NSArray *fetchedObjects = [self.managedObjectContext executeFetchRequest:fetchRequest error:&error];
-        if (fetchedObjects.count)
-        {
-            cdEvent = fetchedObjects[0];
-        }
+        predicate = [NSPredicate predicateWithFormat:@"messageForRoom.roomId == %@ AND type IN %@", self.roomId, types];
     }
     else
     {
-        cdEvent = self.messages.lastObject;
+        predicate = [NSPredicate predicateWithFormat:@"messageForRoom.roomId == %@", self.roomId];
+    }
+
+    fetchRequest.predicate = predicate;
+    fetchRequest.fetchBatchSize = 1;
+    fetchRequest.fetchLimit = 1;
+
+    // Sort by age
+    fetchRequest.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"ageLocalTs" ascending:NO]];
+
+    NSArray *fetchedObjects = [self.managedObjectContext executeFetchRequest:fetchRequest error:&error];
+    if (fetchedObjects.count)
+    {
+        cdEvent = fetchedObjects[0];
     }
 
     MXEvent *event = [self eventFromCoreDataEvent:cdEvent];
