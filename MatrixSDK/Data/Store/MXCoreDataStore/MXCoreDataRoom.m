@@ -20,8 +20,9 @@
 
 @interface MXCoreDataRoom ()
 {
-    // This is the position from the end
-    NSInteger paginationPosition;
+    // The pagination references
+    MXEvent *paginationStartEvent;
+    NSUInteger paginationOffset;
 }
 @end
 
@@ -79,41 +80,57 @@
 
 - (void)resetPagination
 {
-    paginationPosition = self.messages.count;
+    // Reset the pagination starting point
+    paginationStartEvent = [self lastMessageWithTypeIn:nil];
+    paginationOffset = 0;
+}
+
+- (NSFetchRequest*)nextPaginationFetchRequest
+{
+    NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
+    NSEntityDescription *entity = [NSEntityDescription entityForName:@"MXCoreDataEvent"
+                                              inManagedObjectContext:self.managedObjectContext];
+    [fetchRequest setEntity:entity];
+
+    // Search for messages older than the pagination start point event
+    NSString *ageLocalTs = [NSString stringWithFormat:@"%tu", paginationStartEvent.ageLocalTs];
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"ageLocalTs <= %@ AND messageForRoom.roomId == %@", ageLocalTs, self.roomId];
+
+    return fetchRequest;
 }
 
 - (NSArray *)paginate:(NSUInteger)numMessages
 {
-    NSArray *paginatedMessagesEntities;
+    NSError *error;
+    
+    NSFetchRequest* fetchRequest = [self nextPaginationFetchRequest ];
+    fetchRequest.fetchBatchSize = numMessages;
+    fetchRequest.fetchLimit = numMessages;
+    fetchRequest.fetchOffset = paginationOffset;
 
-    if (0 < paginationPosition)
-    {
-        if (numMessages < paginationPosition)
-        {
-            // Return a slice of messages
-            paginatedMessagesEntities = [self.messages.array subarrayWithRange:NSMakeRange(paginationPosition - numMessages, numMessages)];
-            paginationPosition -= numMessages;
-        }
-        else
-        {
-            // Return the last slice of messages
-            paginatedMessagesEntities = [self.messages.array subarrayWithRange:NSMakeRange(0, paginationPosition)];
-            paginationPosition = 0;
-        }
-    }
+    // Sort by age. We want the most recents within the [past, paginationStartEvent-paginationOffset] window
+    fetchRequest.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"ageLocalTs" ascending:NO]];
 
+    NSArray *paginatedMessagesEntities = [self.managedObjectContext executeFetchRequest:fetchRequest error:&error];
+
+    // Reorder them by time
     NSMutableArray *paginatedMessages = [NSMutableArray arrayWithCapacity:paginatedMessagesEntities.count];
-    for (MXCoreDataEvent *cdEvent in paginatedMessagesEntities)
+    for (NSInteger i = paginatedMessagesEntities.count - 1; 0 <= i; i--)
     {
+        MXCoreDataEvent *cdEvent = paginatedMessagesEntities[i];
         [paginatedMessages addObject:[self eventFromCoreDataEvent:cdEvent]];
     }
+
+    // Move the pagination cursor
+    paginationOffset += paginatedMessagesEntities.count;
 
     return paginatedMessages;
 }
 
 - (NSUInteger)remainingMessagesForPagination
 {
-    return paginationPosition;
+    NSFetchRequest *fetchRequest = [self nextPaginationFetchRequest];
+    return [self.managedObjectContext countForFetchRequest:fetchRequest error:nil] - paginationOffset;
 }
 
 - (MXEvent*)lastMessageWithTypeIn:(NSArray*)types
