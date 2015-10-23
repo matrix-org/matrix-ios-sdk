@@ -370,13 +370,16 @@
                     // Now, compare the result with the reference
                     XCTAssertEqual(roomEvents.count, room2Events.count);
 
-                    // Compare events one by one
-                    for (NSUInteger i = 0; i < room2Events.count; i++)
+                    if (roomEvents.count == room2Events.count)
                     {
-                        MXEvent *event = roomEvents[i];
-                        MXEvent *event2 = room2Events[i];
+                        // Compare events one by one
+                        for (NSUInteger i = 0; i < room2Events.count; i++)
+                        {
+                            MXEvent *event = roomEvents[i];
+                            MXEvent *event2 = room2Events[i];
 
-                        XCTAssertTrue([event2.eventId isEqualToString:event.eventId], @"Events mismatch: %@ - %@", event, event2);
+                            XCTAssertTrue([event2.eventId isEqualToString:event.eventId], @"Events mismatch: %@ - %@", event, event2);
+                        }
                     }
 
                     [expectation fulfill];
@@ -1000,6 +1003,7 @@
                 [store openWithCredentials:sharedData.bobCredentials onComplete:^{
 
                     MXEvent *sameEvent = [store eventWithEventId:event.eventId inRoom:roomId];
+                    XCTAssertNotNil(sameEvent);
 
                     NSUInteger sameEventAge = sameEvent.age;
                     uint64_t sameEventAgeLocalTs = sameEvent.ageLocalTs;
