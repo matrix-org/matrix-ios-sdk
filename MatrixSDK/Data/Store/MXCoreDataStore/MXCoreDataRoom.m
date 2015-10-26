@@ -61,7 +61,7 @@
 
 - (void)replaceEvent:(MXEvent*)event
 {
-    MXCoreDataEvent *cdEvent = [self coreDataEventWithEventId:event.eventId];
+    MXCoreDataEvent *cdEvent = [MXCoreDataRoom coreDataEventWithEventId:event.eventId roomId:self.roomId moc:self.managedObjectContext];
     NSUInteger index = [self.messages indexOfObject:cdEvent];
 
     [self replaceObjectInMessagesAtIndex:index withObject:[self coreDataEventFromEvent:event]];
@@ -70,10 +70,21 @@
 - (MXEvent *)eventWithEventId:(NSString *)eventId
 {
     MXEvent *event;
-    MXCoreDataEvent *cdEvent = [self coreDataEventWithEventId:eventId];
+    MXCoreDataEvent *cdEvent = [MXCoreDataRoom coreDataEventWithEventId:eventId roomId:self.roomId moc:self.managedObjectContext];
     if (cdEvent)
     {
-        event = [self eventFromCoreDataEvent:cdEvent];
+        event = [MXCoreDataRoom eventFromCoreDataEvent:cdEvent];
+    }
+    return event;
+}
+
++ (MXEvent *)eventWithEventId:(NSString *)eventId inRoom:(NSString *)roomId moc:(NSManagedObjectContext*)moc
+{
+    MXEvent *event;
+    MXCoreDataEvent *cdEvent = [MXCoreDataRoom coreDataEventWithEventId:eventId roomId:roomId moc:moc];
+    if (cdEvent)
+    {
+        event = [MXCoreDataRoom eventFromCoreDataEvent:cdEvent];
     }
     return event;
 }
@@ -113,7 +124,7 @@
     for (NSInteger i = currentPosition - numMessages ; i < currentPosition; i++)
     {
         MXCoreDataEvent *cdEvent = paginatedMessagesEntities[i];
-        [paginatedMessages addObject:[self eventFromCoreDataEvent:cdEvent]];
+        [paginatedMessages addObject:[MXCoreDataRoom eventFromCoreDataEvent:cdEvent]];
     }
 
     // Move the pagination cursor
@@ -161,7 +172,7 @@
         cdEvent = fetchedObjects[0];
     }
 
-    MXEvent *event = [self eventFromCoreDataEvent:cdEvent];
+    MXEvent *event = [MXCoreDataRoom eventFromCoreDataEvent:cdEvent];
     
     return event;
 }
@@ -198,7 +209,7 @@
     NSMutableArray *stateEvents = [NSMutableArray array];
     for (MXCoreDataEvent *cdEvent in fetchedObjects)
     {
-        [stateEvents addObject:[self eventFromCoreDataEvent:cdEvent]];
+        [stateEvents addObject:[MXCoreDataRoom eventFromCoreDataEvent:cdEvent]];
     }
 
     return stateEvents;
@@ -206,23 +217,23 @@
 
 
 #pragma mark - Private methods
-- (MXCoreDataEvent *)coreDataEventWithEventId:(NSString *)eventId
++ (MXCoreDataEvent *)coreDataEventWithEventId:(NSString *)eventId roomId:(NSString*)roomId moc:(NSManagedObjectContext*)moc
 {
     NSError *error;
 
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
     NSEntityDescription *entity = [NSEntityDescription entityForName:@"MXCoreDataEvent"
-                                              inManagedObjectContext:self.managedObjectContext];
+                                              inManagedObjectContext:moc];
     [fetchRequest setEntity:entity];
 
     // Use messageForRoom.roomId as filter to search among messages events not state events of the room
-    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"messageForRoom.roomId == %@ AND eventId == %@", self.roomId, eventId];
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"messageForRoom.roomId == %@ AND eventId == %@", roomId, eventId];
     [fetchRequest setPredicate:predicate];
     [fetchRequest setFetchBatchSize:1];
     [fetchRequest setFetchLimit:1];
 
     MXCoreDataEvent *cdEvent;
-    NSArray *fetchedObjects = [self.managedObjectContext executeFetchRequest:fetchRequest error:&error];
+    NSArray *fetchedObjects = [moc executeFetchRequest:fetchRequest error:&error];
 
     NSAssert(fetchedObjects.count <= 1, @"MXCoreData coreDataEventWithEventId: Event with id %@ is not unique (%tu) in the db", eventId, fetchedObjects.count);
 
@@ -239,7 +250,7 @@
 // Do not use MTLManagedObjectSerializing, the Mantle/CoreData bridge, as it is far slower than the
 // following code
 // TODO: The next step is to directly store MXEvent object in CD.
-- (MXEvent*)eventFromCoreDataEvent:(MXCoreDataEvent*)cdEvent
++ (MXEvent*)eventFromCoreDataEvent:(MXCoreDataEvent*)cdEvent
 {
     // This method is 4x times quicker than MTLManagedObjectSerializing equivalent
     MXEvent *event = [[MXEvent alloc] init];

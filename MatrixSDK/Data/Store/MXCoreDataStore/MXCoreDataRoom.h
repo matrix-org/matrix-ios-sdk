@@ -45,9 +45,21 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Get an event from this room.
 
+ @param eventId the id of the event to retrieve.
  @return the MXEvent object or nil if not found.
  */
 - (MXEvent *)eventWithEventId:(NSString *)eventId;
+
+/**
+ Get an event from this room.
+ This methods does not required to previously re-fetch MXCoreDataRoom.
+
+ @param eventId the id of the event to retrieve.
+ @param roomId the room id
+ @param moc the manage object context in order to make a core data request
+ @return the MXEvent object or nil if not found.
+ */
++ (MXEvent *)eventWithEventId:(NSString *)eventId inRoom:(NSString *)roomId moc:(NSManagedObjectContext*)moc;
 
 /**
  Reset pagination mechanism in the room..
