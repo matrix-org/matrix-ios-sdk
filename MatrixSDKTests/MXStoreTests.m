@@ -194,11 +194,14 @@
 
             [store storeEventForRoom:@"roomId" event:event direction:MXEventDirectionForwards];
 
-            MXEvent *storedEvent = [store eventWithEventId:@"anID" inRoom:@"roomId"];
+            [store commit:^{
+                MXEvent *storedEvent = [store eventWithEventId:@"anID" inRoom:@"roomId"];
 
-            XCTAssertEqualObjects(storedEvent, event);
+                XCTAssertEqualObjects(storedEvent, event);
 
-            [expectation fulfill];
+                [expectation fulfill];
+            }];
+
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
@@ -349,14 +352,14 @@
         // The several paginations
         [room2 resetBackState];
 
-        if ([mxSession.store isKindOfClass:[MXMemoryStore class]])
+        if (mxSession.store.isPermanent)
         {
             XCTAssertGreaterThanOrEqual(room2.remainingMessagesForPaginationInStore, 7);
         }
 
         [room2 paginateBackMessages:2 complete:^() {
 
-            if ([mxSession.store isKindOfClass:[MXMemoryStore class]])
+            if (mxSession.store.isPermanent)
             {
                 XCTAssertGreaterThanOrEqual(room2.remainingMessagesForPaginationInStore, 5);
             }
@@ -428,14 +431,14 @@
             liveEvents++;
             if (1 == liveEvents)
             {
-                if ([mxSession.store isKindOfClass:[MXMemoryStore class]])
+                if (mxSession.store.isPermanent)
                 {
                     XCTAssertGreaterThanOrEqual(room2.remainingMessagesForPaginationInStore, 7);
                 }
 
                 [room2 paginateBackMessages:2 complete:^() {
 
-                    if ([mxSession.store isKindOfClass:[MXMemoryStore class]])
+                    if (mxSession.store.isPermanent)
                     {
                         XCTAssertGreaterThanOrEqual(room2.remainingMessagesForPaginationInStore, 5);
                     }
