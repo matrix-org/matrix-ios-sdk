@@ -76,6 +76,10 @@
     return theEvent;
 }
 
+- (void)removeAllMessages
+{
+    [messages removeAllObjects];
+}
 
 - (void)resetPagination
 {
