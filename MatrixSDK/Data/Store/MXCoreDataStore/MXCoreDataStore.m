@@ -27,10 +27,9 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 @interface MXCoreDataStore ()
 {
     /**
-     Classic Core Data objects.
+      The Core Data Model.
      */
     NSManagedObjectModel *managedObjectModel;
-    NSPersistentStoreCoordinator *persistentStoreCoordinator;
 
     /**
      Use 2 MOCs: one context for reading data from the UI.
@@ -40,6 +39,15 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
      */
     NSManagedObjectContext *uiManagedObjectContext;
     NSManagedObjectContext *bgManagedObjectContext;
+
+    /**
+     Use one persistent store coordinator per context.
+     They both point to the same SQLite file.
+     This is the quickest configuration explained by Apple in this video:
+     https://developer.apple.com/videos/play/wwdc2013-211/ at 27:30.
+     */
+    NSPersistentStoreCoordinator *uiPersistentStoreCoordinator;
+    NSPersistentStoreCoordinator *bgPersistentStoreCoordinator;
 
     /**
      The user account associated to the store.
@@ -192,9 +200,10 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     [bgManagedObjectContext performBlock:^{
         MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId forRead:NO];
         [room storeEvent:event direction:direction];
+         //NSLog(@"[MXCoreDataStore] storeEventForRoom %@ %.3fms DONE: count: %tu", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000, room.messages.count);
     }];
 
-    NSLog(@"[MXCoreDataStore] storeEventForRoom %.3fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    //NSLog(@"[MXCoreDataStore] storeEventForRoom %@ %.3fms", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (void)replaceEvent:(MXEvent*)event inRoom:(NSString*)roomId
@@ -209,10 +218,9 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 {
     NSDate *startDate = [NSDate date];
 
-    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId forRead:YES];
-    MXEvent *event = [room eventWithEventId:eventId];
+    MXEvent *event = [MXCoreDataRoom eventWithEventId:eventId inRoom:roomId moc:uiManagedObjectContext];
 
-    NSLog(@"[MXCoreDataStore] eventWithEventId %.3fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXCoreDataStore] eventWithEventId %@ (%tu): %.3fms", eventId, [eventId hash], [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
     return event;
 }
 
@@ -235,17 +243,18 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     NSLog(@"[MXCoreDataStore] Delete all data");
 
     [uiManagedObjectContext lock];
-    NSArray *stores = [persistentStoreCoordinator persistentStores];
+    NSArray *stores = [uiPersistentStoreCoordinator persistentStores];
     for(NSPersistentStore *store in stores)
     {
-        [persistentStoreCoordinator removePersistentStore:store error:nil];
+        [uiPersistentStoreCoordinator removePersistentStore:store error:nil];
         [[NSFileManager defaultManager] removeItemAtPath:store.URL.path error:nil];
     }
     [uiManagedObjectContext unlock];
 
     uiAccount = nil;
     bgAccount = nil;
-    persistentStoreCoordinator = nil;
+    uiPersistentStoreCoordinator = nil;
+    bgPersistentStoreCoordinator = nil;
     uiManagedObjectContext = nil;
     bgManagedObjectContext = nil;
     uiRoomsByRoomId = [NSMutableDictionary dictionary];
@@ -433,7 +442,8 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     bgAccount = nil;
     [uiRoomsByRoomId removeAllObjects];
     [bgRoomsByRoomId removeAllObjects];
-    persistentStoreCoordinator = nil;
+    uiPersistentStoreCoordinator = nil;
+    uiManagedObjectContext = nil;
 }
 
 - (NSArray *)rooms
@@ -525,27 +535,36 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     NSURL *storeURL = [storesPath URLByAppendingPathComponent:userSQLiteFile];
 
     // Persistent Store Coordinator
-    persistentStoreCoordinator = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel: managedObjectModel];
-    if (![persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:storeURL options:nil error:&error])
+    uiPersistentStoreCoordinator = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel: managedObjectModel];
+    if (![uiPersistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:storeURL options:nil error:&error])
     {
         NSLog(@"[MXCoreDataStore] openWithCredentials: %@ mismaches with current Managed Object Model. Reset it", userSQLiteFile);
 
         error = nil;
         [[NSFileManager defaultManager] removeItemAtPath:storeURL.path error:&error];
 
-        if (![persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:storeURL options:nil error:&error])
+        if (![uiPersistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:storeURL options:nil error:&error])
         {
             NSLog(@"[MXCoreDataStore] openWithCredentials: Failed to create persistent store. Error: %@", error);
+            return error;
         }
     }
 
     // MOC
     // Some requests are made from the UI, so avoid to block it and use NSMainQueueConcurrencyType
     uiManagedObjectContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
-    uiManagedObjectContext.persistentStoreCoordinator = persistentStoreCoordinator;
+    uiManagedObjectContext.persistentStoreCoordinator = uiPersistentStoreCoordinator;
+
+    // Background MOC
+    bgPersistentStoreCoordinator = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel: managedObjectModel];
+    if (![bgPersistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:storeURL options:nil error:&error])
+    {
+        NSLog(@"[MXCoreDataStore] Cannot create bgPersistentStoreCoordinator");
+        return error;
+    }
 
     bgManagedObjectContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
-    bgManagedObjectContext.persistentStoreCoordinator = persistentStoreCoordinator;
+    bgManagedObjectContext.persistentStoreCoordinator = bgPersistentStoreCoordinator;
 
     // Be notified when something is stored in bgManagedObjectContext
     [[NSNotificationCenter defaultCenter] removeObserver:self name:NSManagedObjectContextDidSaveNotification object:nil];
