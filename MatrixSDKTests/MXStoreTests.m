@@ -194,13 +194,11 @@
 
             [store storeEventForRoom:@"roomId" event:event direction:MXEventDirectionForwards];
 
-            [store commit:^{
-                MXEvent *storedEvent = [store eventWithEventId:@"anID" inRoom:@"roomId"];
+            MXEvent *storedEvent = [store eventWithEventId:@"anID" inRoom:@"roomId"];
 
-                XCTAssertEqualObjects(storedEvent, event);
+            XCTAssertEqualObjects(storedEvent, event);
 
-                [expectation fulfill];
-            }];
+            [expectation fulfill];
 
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);

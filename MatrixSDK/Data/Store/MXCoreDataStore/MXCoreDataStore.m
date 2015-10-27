@@ -63,13 +63,6 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
      */
     NSMutableDictionary<NSString*, MXCoreDataRoom*> *uiRoomsByRoomId;
     NSMutableDictionary<NSString*, MXCoreDataRoom*> *bgRoomsByRoomId;
-
-    /**
-     The "FIFO" list of pending [MXCoreDataStore commit:] completion blocks.
-     As a commit can be requested before the previous saving operation request is done, 
-     the completion blocks need to be queued.
-     */
-    NSMutableArray<MXStoreOnCommitComplete> *commitCompleteBlocks;
 }
 @end
 
@@ -82,7 +75,6 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     {
         uiRoomsByRoomId = [NSMutableDictionary dictionary];
         bgRoomsByRoomId = [NSMutableDictionary dictionary];
-        commitCompleteBlocks = [NSMutableArray array];
 
         // Load the MXCoreDataStore Managed Object Model Definition
         // Note: [NSBundle bundleForClass:[self class]] is prefered to [NSBundle mainBundle]
@@ -164,7 +156,7 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
         bgAccount.accessToken = credentials.accessToken;
         bgAccount.version = @(kMXCoreDataStoreVersion);
 
-        [self commit:^{
+        [self commit];
 
             // And retrieve its equivalent for the ui thread MOC
             NSError *error;
@@ -173,10 +165,6 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
             {
                 uiAccount = fetchedObjects[0];
             }
-
-            onComplete();
-        }];
-        return;
     }
     else
     {
@@ -350,28 +338,16 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     return eventStreamToken;
 }
 
-- (void)commit:(MXStoreOnCommitComplete)onComplete
+- (void)commit
 {
     NSLog(@"[MXCoreDataStore] commit START");
-
-    // Store the completion block for later
-    @synchronized(commitCompleteBlocks)
-    {
-        if (onComplete)
-        {
-            [commitCompleteBlocks insertObject:onComplete atIndex:0];
-        }
-        else
-        {
-            [commitCompleteBlocks insertObject:^{} atIndex:0];
-        }
-    }
 
     NSDate *startDate = [NSDate date];
 
     // Launch save on the background context
     // The UI context will be automatically updated by [self mergeChanges:]
-    [bgManagedObjectContext performBlock:^{
+    // TEMP: Make the commit synchronous
+    [bgManagedObjectContext performBlockAndWait:^{
         NSError *error;
         if (![bgManagedObjectContext save:&error])
         {
@@ -379,8 +355,9 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
         }
 
         NSLog(@"[MXCoreDataStore] commit in background in %.3fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
-        NSLog(@"[MXCoreDataStore] commit END");
+        //NSLog(@"[MXCoreDataStore] commit END");
     }];
+    NSLog(@"[MXCoreDataStore] commit END in %.3fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 // Called on bgManagedObjectContext's NSManagedObjectContextDidSaveNotification
@@ -396,19 +373,6 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
             [uiManagedObjectContext mergeChangesFromContextDidSaveNotification:notification];
 
             NSLog(@"[MXCoreDataStore] commit in ui thread in %.3fms", [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
-
-            // Unqueue and execute the associated commit completion block
-            MXStoreOnCommitComplete onCommitComplete;
-            @synchronized(commitCompleteBlocks)
-            {
-                onCommitComplete = commitCompleteBlocks.lastObject;
-                [commitCompleteBlocks removeLastObject];
-            }
-
-            if (onCommitComplete)
-            {
-                onCommitComplete();
-            }
         }
     });
 }
