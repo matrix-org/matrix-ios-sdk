@@ -23,9 +23,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nullable, nonatomic, retain) NSNumber *hasReachedHomeServerPaginationEnd;
 @property (nullable, nonatomic, retain) NSString *paginationToken;
 @property (nullable, nonatomic, retain) NSString *roomId;
-@property (nullable, nonatomic, retain) NSOrderedSet<MXCoreDataEvent *> *messages;
-@property (nullable, nonatomic, retain) NSSet<MXCoreDataEvent *> *state;
 @property (nullable, nonatomic, retain) MXCoreDataAccount *account;
+@property (nullable, nonatomic, retain) NSOrderedSet<MXCoreDataEvent *> *messages;
+@property (nullable, nonatomic, retain) MXCoreDataRoomState *state;
 
 @end
 
@@ -41,11 +41,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)removeMessagesObject:(MXCoreDataEvent *)value;
 - (void)addMessages:(NSOrderedSet<MXCoreDataEvent *> *)values;
 - (void)removeMessages:(NSOrderedSet<MXCoreDataEvent *> *)values;
-
-- (void)addStateObject:(MXCoreDataEvent *)value;
-- (void)removeStateObject:(MXCoreDataEvent *)value;
-- (void)addState:(NSSet<MXCoreDataEvent *> *)values;
-- (void)removeState:(NSSet<MXCoreDataEvent *> *)values;
 
 @end
 

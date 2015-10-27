@@ -17,6 +17,7 @@
 #import "MXCoreDataRoom.h"
 
 #import "MXCoreDataEvent.h"
+#import "MXCoreDataRoomState.h"
 
 @interface MXCoreDataRoom ()
 {
@@ -98,7 +99,7 @@
     [fetchRequest setEntity:entity];
 
     // Search for messages older than the pagination start point event
-    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"messageForRoom.roomId == %@", self.roomId];
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"room.roomId == %@", self.roomId];
     fetchRequest.fetchBatchSize = 20;
 
     // Sort by age
@@ -148,15 +149,14 @@
                                               inManagedObjectContext:self.managedObjectContext];
     [fetchRequest setEntity:entity];
 
-    // Use messageForRoom.roomId as filter to search among messages events not state events of the room
     NSPredicate *predicate;
     if (types)
     {
-        predicate = [NSPredicate predicateWithFormat:@"messageForRoom.roomId == %@ AND type IN %@", self.roomId, types];
+        predicate = [NSPredicate predicateWithFormat:@"room.roomId == %@ AND type IN %@", self.roomId, types];
     }
     else
     {
-        predicate = [NSPredicate predicateWithFormat:@"messageForRoom.roomId == %@", self.roomId];
+        predicate = [NSPredicate predicateWithFormat:@"room.roomId == %@", self.roomId];
     }
 
     fetchRequest.predicate = predicate;
@@ -179,37 +179,31 @@
 
 - (void)storeState:(NSArray*)stateEvents
 {
-    NSMutableSet *newState = [NSMutableSet set];
-    for (MXEvent *event in stateEvents)
+    // Create state entity if not already here
+    if (!self.state)
     {
-        [newState addObject:[self coreDataEventFromEvent:event]];
+        self.state = [NSEntityDescription
+                      insertNewObjectForEntityForName:@"MXCoreDataRoomState"
+                      inManagedObjectContext:self.managedObjectContext];
+
     }
 
-    self.state = newState;
+    NSDate *startDate = [NSDate date];
+    NSData *data = [NSKeyedArchiver archivedDataWithRootObject:stateEvents];
+    NSLog(@"[MXCoreDataStore] storeStateForRoom CONVERSION in %.3fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+
+    self.state.state = data;
 }
 
 - (NSArray*)stateEvents
 {
-    NSError *error;
-
-    // Do not loop into self.state. It is 30% slower than making the following Core Data requests
-    NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
-    NSEntityDescription *entity = [NSEntityDescription entityForName:@"MXCoreDataEvent"
-                                              inManagedObjectContext:self.managedObjectContext];
-    [fetchRequest setEntity:entity];
-
-    // Use stateForRoom.roomId as filter to search among state events not message events of the room
-    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"stateForRoom.roomId == %@", self.roomId];
-    [fetchRequest setPredicate:predicate];
-    [fetchRequest setFetchBatchSize:100];
-
-    NSArray *fetchedObjects = [self.managedObjectContext executeFetchRequest:fetchRequest error:&error];
-
-    // Convert back self.state MXCoreDataEvents to MXEvents
-    NSMutableArray *stateEvents = [NSMutableArray array];
-    for (MXCoreDataEvent *cdEvent in fetchedObjects)
+    NSArray *stateEvents;
+    
+    if (self.state && self.state.state)
     {
-        [stateEvents addObject:[MXCoreDataRoom eventFromCoreDataEvent:cdEvent]];
+        NSDate *startDate = [NSDate date];
+        stateEvents = [NSKeyedUnarchiver unarchiveObjectWithData:self.state.state];
+        NSLog(@"[MXCoreDataStore] stateOfRoom CONVERSION in %.3fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
     }
 
     return stateEvents;
@@ -226,8 +220,7 @@
                                               inManagedObjectContext:moc];
     [fetchRequest setEntity:entity];
 
-    // Use messageForRoom.roomId as filter to search among messages events not state events of the room
-    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"messageForRoom.roomId == %@ AND eventId == %@", roomId, eventId];
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"eventId == %@", eventId];
     [fetchRequest setPredicate:predicate];
     [fetchRequest setFetchBatchSize:1];
     [fetchRequest setFetchLimit:1];

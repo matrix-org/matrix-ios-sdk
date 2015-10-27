@@ -21,6 +21,7 @@
 
 @class MXCoreDataAccount;
 @class MXCoreDataEvent;
+@class MXCoreDataRoomState;
 
 NS_ASSUME_NONNULL_BEGIN
 

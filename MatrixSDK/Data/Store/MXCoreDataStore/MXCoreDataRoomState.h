@@ -14,22 +14,19 @@
  limitations under the License.
  */
 
-#import "MXCoreDataEvent+CoreDataProperties.h"
+#import <Foundation/Foundation.h>
+#import <CoreData/CoreData.h>
 
-@implementation MXCoreDataEvent (CoreDataProperties)
+@class MXCoreDataRoom;
 
-@dynamic ageLocalTs;
-@dynamic content;
-@dynamic eventId;
-@dynamic originServerTs;
-@dynamic prevContent;
-@dynamic redactedBecause;
-@dynamic redacts;
-@dynamic roomId;
-@dynamic sender;
-@dynamic stateKey;
-@dynamic type;
-@dynamic userId;
-@dynamic room;
+NS_ASSUME_NONNULL_BEGIN
+
+@interface MXCoreDataRoomState : NSManagedObject
+
+// Insert code here to declare functionality of your managed object subclass
 
 @end
+
+NS_ASSUME_NONNULL_END
+
+#import "MXCoreDataRoomState+CoreDataProperties.h"

@@ -23,9 +23,9 @@ static NSString *const kItemsKey = @"messages";
 @dynamic hasReachedHomeServerPaginationEnd;
 @dynamic paginationToken;
 @dynamic roomId;
+@dynamic account;
 @dynamic messages;
 @dynamic state;
-@dynamic account;
 
 // There is an old bug on core data and NSOrderedSet with one to many objects relationships
 // where CoreDataGeneratedAccessors methods crash.

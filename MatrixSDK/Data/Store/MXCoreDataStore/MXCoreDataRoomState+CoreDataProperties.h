@@ -14,22 +14,15 @@
  limitations under the License.
  */
 
-#import "MXCoreDataEvent+CoreDataProperties.h"
+#import "MXCoreDataRoomState.h"
 
-@implementation MXCoreDataEvent (CoreDataProperties)
+NS_ASSUME_NONNULL_BEGIN
 
-@dynamic ageLocalTs;
-@dynamic content;
-@dynamic eventId;
-@dynamic originServerTs;
-@dynamic prevContent;
-@dynamic redactedBecause;
-@dynamic redacts;
-@dynamic roomId;
-@dynamic sender;
-@dynamic stateKey;
-@dynamic type;
-@dynamic userId;
-@dynamic room;
+@interface MXCoreDataRoomState (CoreDataProperties)
+
+@property (nullable, nonatomic, retain) NSData *state;
+@property (nullable, nonatomic, retain) MXCoreDataRoom *room;
 
 @end
+
+NS_ASSUME_NONNULL_END

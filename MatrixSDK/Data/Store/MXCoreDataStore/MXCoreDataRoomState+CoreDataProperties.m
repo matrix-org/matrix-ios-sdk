@@ -14,22 +14,11 @@
  limitations under the License.
  */
 
-#import "MXCoreDataEvent+CoreDataProperties.h"
+#import "MXCoreDataRoomState+CoreDataProperties.h"
 
-@implementation MXCoreDataEvent (CoreDataProperties)
+@implementation MXCoreDataRoomState (CoreDataProperties)
 
-@dynamic ageLocalTs;
-@dynamic content;
-@dynamic eventId;
-@dynamic originServerTs;
-@dynamic prevContent;
-@dynamic redactedBecause;
-@dynamic redacts;
-@dynamic roomId;
-@dynamic sender;
-@dynamic stateKey;
-@dynamic type;
-@dynamic userId;
+@dynamic state;
 @dynamic room;
 
 @end
