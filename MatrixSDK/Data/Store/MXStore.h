@@ -70,6 +70,13 @@
 - (MXEvent*)eventWithEventId:(NSString*)eventId inRoom:(NSString*)roomId;
 
 /**
+ Remove all existing messages in a room.
+ 
+ @param roomId the id of the room.
+ */
+- (void)deleteAllMessagesInRoom:(NSString *)roomId;
+
+/**
  Erase a room and all related data.
  
  @param roomId the id of the room.

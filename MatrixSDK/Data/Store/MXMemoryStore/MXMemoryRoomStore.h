@@ -61,8 +61,12 @@
 @property (nonatomic) BOOL hasReachedHomeServerPaginationEnd;
 
 /**
- Reset pagination mechanism in the room..
+ Reset the current messages array.
+ */
+- (void)removeAllMessages;
 
+/**
+ Reset pagination mechanism in the room.
  */
 - (void)resetPagination;
 

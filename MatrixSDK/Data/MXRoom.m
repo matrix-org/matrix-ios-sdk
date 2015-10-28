@@ -21,6 +21,11 @@
 
 #import "MXError.h"
 
+NSString *const kMXRoomSyncWithLimitedTimelineNotification = @"kMXRoomSyncWithLimitedTimelineNotification";
+NSString *const kMXRoomNotificationRoomIdKey = @"roomId";
+
+NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
+
 @interface MXRoom ()
 {
     // The list of event listeners (`MXEventListener`) in this room
@@ -86,7 +91,7 @@
             // In both case, the application will see a MXRoom which MXRoomState.membership is invite. The MXRoomState
             // will contain only one MXRoomMember who is the logged in user. MXRoomMember.originUserId is the inviter.
             MXEvent *fakeMembershipEvent = [MXEvent modelFromJSON:@{
-                                                                    @"event_id": [NSString stringWithFormat:@"fake-invite-%@",[[NSProcessInfo processInfo] globallyUniqueString]],
+                                                                    @"event_id": [NSString stringWithFormat:@"%@%@", kMXRoomInviteStateEventIdPrefix,[[NSProcessInfo processInfo] globallyUniqueString]],
                                                                     @"type": kMXEventTypeStringRoomMember,
                                                                     @"room_id": roomId,
                                                                     @"content": @{
@@ -130,21 +135,6 @@
     return self;
 }
 
-- (void)resetData
-{
-    _isSync = NO;
-    
-    // Reset room state
-    _state = [[MXRoomState alloc] initWithRoomId:_state.roomId andMatrixSession:mxSession andDirection:YES];
-    backState = nil;
-    
-    // Reset typing notif
-    _typingUsers = [NSArray array];
-    
-    // Flush existing data in store
-    [mxSession.store deleteRoom:_state.roomId];
-}
-
 #pragma mark - Properties getters implementation
 - (MXEvent *)lastMessageWithTypeIn:(NSArray*)types
 {
@@ -162,61 +152,73 @@
 
 #pragma mark - sync v2
 
-- (void)handleRoomSyncResponse:(MXRoomSyncResponse *)roomSyncResponse
+- (void)handleRoomSyncResponse:(MXRoomSync *)roomSync
 {
-    // Check whether the limit has been exceeded for the number of events
-    if (roomSyncResponse.limited)
-    {
-        // Flush the existing data for this room but keep the listener
-        [self resetData];
-        
-        // TODO GFO notify listener about the gap
-    }
-    
-    // TODO GFO handle this field named published
-//    _state.isPublic = roomSyncResponse.published;
-    
     // Is it an initial sync for this room?
-    BOOL isRoomInitialSync = (roomSyncResponse.limited || !mxSession.store.eventStreamToken);
+    BOOL isRoomInitialSync = !mxSession.store.eventStreamToken;
     
-    // Handle events
-    NSInteger index = roomSyncResponse.events.batch.count;
-    while (index--)
+    // Handle timeline.events (Note: timeline events are in chronological order)
+    if (isRoomInitialSync)
     {
-        NSString *eventId = [roomSyncResponse.events.batch objectAtIndex:index];
-        NSDictionary *eventDesc = [roomSyncResponse.eventMap objectForKey:eventId];
-        
-        MXEvent *event = [MXEvent modelFromJSON:eventDesc];
-        event.eventId = eventId;
-        
-        if (isRoomInitialSync)
+        // We will handle these events with direction = MXEventDirectionSync.
+        // In this direction:
+        // - the room state update is disabled (see [handleMessage:direction]). We will build this room state at the end thanks to state.events.
+        // - the events are inserted at the beginning of the stored events, so we will process them in reverse.
+        NSInteger index = roomSync.timeline.events.count;
+        while (index--)
         {
+            NSString *eventId = [roomSync.timeline.events objectAtIndex:index];
+            NSDictionary *eventDesc = [roomSync.eventMap objectForKey:eventId];
+            
+            MXEvent *event = [MXEvent modelFromJSON:eventDesc];
+            event.eventId = eventId;
+            
             [self handleMessage:event direction:MXEventDirectionSync];
             
             // Store the event
             [mxSession.store storeEventForRoom:_state.roomId event:event direction:MXEventDirectionSync];
         }
-        else
+    }
+    else
+    {
+        // Check whether some events have not been received from server.
+        if (roomSync.timeline.limited)
         {
+            // Flush the existing messages for this room by keeping state events.
+            [mxSession.store deleteAllMessagesInRoom:_state.roomId];
+        }
+        
+        // Here the events are handled in forward direction (see [handleLiveEvent:]).
+        // They will be added at the end of the stored events, so we keep the chronologinal order.
+        NSInteger index = 0;
+        while (index < roomSync.timeline.events.count)
+        {
+            NSString *eventId = [roomSync.timeline.events objectAtIndex:index++];
+            NSDictionary *eventDesc = [roomSync.eventMap objectForKey:eventId];
+            
+            MXEvent *event = [MXEvent modelFromJSON:eventDesc];
+            event.eventId = eventId;
+            
             // Make room data digest the live event
             [self handleLiveEvent:event];
         }
     }
     
+    // In case of limited timeline, update token where to start back pagination
+    if (roomSync.timeline.limited)
+    {
+        [mxSession.store storePaginationTokenOfRoom:_state.roomId andToken:roomSync.timeline.prevBatch];
+    }
+    
     // Finalize initial sync
     if (isRoomInitialSync)
     {
-        // Store where to start back pagination (if pagination is possible)
-        if (roomSyncResponse.limited)
+        // Build the current room state from state events
+        // Note: We consider it is not required to clone the existing room state here, because this is an initial sync.
+        for (NSInteger index = 0; index < roomSync.state.events.count; index++)
         {
-            [mxSession.store storePaginationTokenOfRoom:_state.roomId andToken:roomSyncResponse.events.prevBatch];
-        }
-        
-        // Get the current room state from state events
-        for (NSInteger index = 0; index < roomSyncResponse.state.count; index++)
-        {
-            NSString *eventId = [roomSyncResponse.state objectAtIndex:index];
-            NSDictionary *eventDesc = [roomSyncResponse.eventMap objectForKey:eventId];
+            NSString *eventId = [roomSync.state.events objectAtIndex:index];
+            NSDictionary *eventDesc = [roomSync.eventMap objectForKey:eventId];
             
             MXEvent *event = [MXEvent modelFromJSON:eventDesc];
             event.eventId = eventId;
@@ -230,8 +232,32 @@
             [mxSession.store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
         }
     }
+    else if (roomSync.timeline.limited)
+    {
+        // The room has been resync with a limited timeline - Post notification
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomSyncWithLimitedTimelineNotification
+                                                            object:self
+                                                          userInfo:@{
+                                                                     kMXRoomNotificationRoomIdKey: self.state.roomId
+                                                                     }];
+    }
     
     _isSync = YES;
+}
+
+- (void)handleInvitedRoom:(MXInvitedRoomSync *)invitedRoomSync
+{
+    // Handle the state events as live events (the room state will be updated, and the listeners (if any) will be notified).
+    for (MXEvent *event in invitedRoomSync.inviteState.events)
+    {
+        // Add a fake event id if none in order to be able to store the event
+        if (!event.eventId)
+        {
+            event.eventId = [NSString stringWithFormat:@"%@%@", kMXRoomInviteStateEventIdPrefix, [[NSProcessInfo processInfo] globallyUniqueString]];
+        }
+        
+        [self handleLiveEvent:event];
+    }
 }
 
 #pragma mark - Messages handling
@@ -239,6 +265,13 @@
              direction:(MXEventDirection)direction
          isTimeOrdered:(BOOL)isTimeOrdered
 {
+    // Here direction is MXEventDirectionBackwards or MXEventDirectionSync
+    if (direction == MXEventDirectionForwards)
+    {
+        NSLog(@"[MXRoom] handleMessages error: forward direction is not supported");
+        return;
+    }
+    
     NSArray *events = roomMessages.chunk;
     
     // Handles messages according to their time order
@@ -261,8 +294,10 @@
         // Store how far back we've paginated
         [mxSession.store storePaginationTokenOfRoom:_state.roomId andToken:roomMessages.end];
     }
-    else {
+    else
+    {
         // InitialSync returns messages in chronological order
+        // We have to read them in reverse to fill the store from the beginning.
         for (NSInteger i = events.count - 1; i >= 0; i--)
         {
             MXEvent *event = events[i];
@@ -287,11 +322,11 @@
 {
     if (event.isState)
     {
-        [self cloneState:direction];
-        
         // Consider here state event (except during initial sync)
         if (direction != MXEventDirectionSync)
         {
+            [self cloneState:direction];
+            
             [self handleStateEvent:event direction:direction];
             
             // Update store with new room state once a live event has been processed
@@ -826,7 +861,8 @@
     }
     
     MXEvent* event =[mxSession.store lastMessageOfRoom:_state.roomId withTypeIn:_acknowledgableEventTypes];
-    if (event)
+    // Sanity check on event id: Do not send read receipt on event without id
+    if (event.eventId && ([event.eventId hasPrefix:kMXRoomInviteStateEventIdPrefix] == NO))
     {
         MXReceiptData *data = [[MXReceiptData alloc] init];
         

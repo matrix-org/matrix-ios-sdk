@@ -85,6 +85,12 @@
     return nil;
 }
 
+- (void)deleteAllMessagesInRoom:(NSString *)roomId
+{
+    // In case of no store this operation is similar to delete the room.
+    [self deleteRoom:roomId];
+}
+
 - (void)deleteRoom:(NSString *)roomId
 {
     if (paginationTokens[roomId])

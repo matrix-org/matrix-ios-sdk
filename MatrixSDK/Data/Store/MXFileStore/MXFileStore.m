@@ -20,7 +20,7 @@
 
 #import "MXFileStoreMetaData.h"
 
-NSUInteger const kMXFileVersion = 9;
+NSUInteger const kMXFileVersion = 10;
 
 NSString *const kMXFileStoreFolder = @"MXFileStore";
 NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -230,37 +230,88 @@ NSString *const kMXReceiptsFolder = @"receipts";
     }
 }
 
-- (void)deleteRoom:(NSString *)roomId
+- (void)deleteAllMessagesInRoom:(NSString *)roomId
 {
-    [super deleteRoom:roomId];
-
-    // Remove the corresponding data from the file system
+    [super deleteAllMessagesInRoom:roomId];
+    
+    NSUInteger totalSize = 0;
+    
+    // Remove room messages and read receipts from file system. Keep room state
     NSString *roomFile = [storeRoomsMessagesPath stringByAppendingPathComponent:roomId];
     NSUInteger fileSize = [[[[NSFileManager defaultManager] attributesOfItemAtPath:roomFile error:nil] objectForKey:NSFileSize] intValue];
-    
     NSError *error;
     [[NSFileManager defaultManager] removeItemAtPath:roomFile error:&error];
-    
-    @synchronized(self)
+    if (!error)
     {
-        if ((cachedDiskUsage != NSUIntegerMax) && (!error))
-        {
-            // ignore the directory size update
-            // assume that it is small comparing to the file size
-            cachedDiskUsage -= fileSize;
-        }
+        totalSize += fileSize;
     }
-
-    // Read receipts
+    
+    // Remove Read receipts
     roomFile = [storeReceiptsPath stringByAppendingPathComponent:roomId];
     fileSize = [[[[NSFileManager defaultManager] attributesOfItemAtPath:roomFile error:nil] objectForKey:NSFileSize] intValue];
     [[NSFileManager defaultManager] removeItemAtPath:roomFile error:&error];
+    if (!error)
+    {
+        totalSize += fileSize;
+    }
     
     @synchronized(self)
     {
-        if ((cachedDiskUsage != NSUIntegerMax) && (!error))
+        if ((cachedDiskUsage != NSUIntegerMax) && (!totalSize))
         {
-            cachedDiskUsage -= fileSize;
+            // ignore the directory size update
+            // assume that it is small comparing to the file size
+            cachedDiskUsage -= totalSize;
+        }
+    }
+    
+    if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
+    {
+        [roomsToCommitForMessages addObject:roomId];
+    }
+}
+
+- (void)deleteRoom:(NSString *)roomId
+{
+    [super deleteRoom:roomId];
+    
+    NSUInteger totalSize = 0;
+
+    // Remove room messages from file system
+    NSString *roomFile = [storeRoomsMessagesPath stringByAppendingPathComponent:roomId];
+    NSUInteger fileSize = [[[[NSFileManager defaultManager] attributesOfItemAtPath:roomFile error:nil] objectForKey:NSFileSize] intValue];
+    NSError *error;
+    [[NSFileManager defaultManager] removeItemAtPath:roomFile error:&error];
+    if (!error)
+    {
+        totalSize += fileSize;
+    }
+    
+    // Remove room state
+    roomFile = [storeRoomsStatePath stringByAppendingPathComponent:roomId];
+    fileSize = [[[[NSFileManager defaultManager] attributesOfItemAtPath:roomFile error:nil] objectForKey:NSFileSize] intValue];
+    [[NSFileManager defaultManager] removeItemAtPath:roomFile error:&error];
+    if (!error)
+    {
+        totalSize += fileSize;
+    }
+
+    // Remove Read receipts
+    roomFile = [storeReceiptsPath stringByAppendingPathComponent:roomId];
+    fileSize = [[[[NSFileManager defaultManager] attributesOfItemAtPath:roomFile error:nil] objectForKey:NSFileSize] intValue];
+    [[NSFileManager defaultManager] removeItemAtPath:roomFile error:&error];
+    if (!error)
+    {
+        totalSize += fileSize;
+    }
+    
+    @synchronized(self)
+    {
+        if ((cachedDiskUsage != NSUIntegerMax) && (!totalSize))
+        {
+            // ignore the directory size update
+            // assume that it is small comparing to the file size
+            cachedDiskUsage -= totalSize;
         }
     }
 }
