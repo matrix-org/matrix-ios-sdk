@@ -204,6 +204,11 @@ MXAuthAction;
                                  success:success failure:failure];
 }
 
+- (NSString*)loginFallback;
+{
+    return [[NSURL URLWithString:@"/_matrix/static/client/login" relativeToURL:[NSURL URLWithString:homeserver]] absoluteString];
+}
+
 
 #pragma mark - Common operations for register and login
 /*

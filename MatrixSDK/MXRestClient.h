@@ -277,6 +277,14 @@ typedef enum : NSUInteger
                       success:(void (^)(MXCredentials *credentials))success
                       failure:(void (^)(NSError *error))failure;
 
+/**
+ Get the login fallback page to make login via a web browser or a web view.
+ 
+ Presently only server auth v1 is supported.
+ 
+ @return the fallback page URL.
+ */
+- (NSString*)loginFallback;
 
 #pragma mark - Push Notifications
 /**
