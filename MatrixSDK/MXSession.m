@@ -332,11 +332,12 @@ typedef void (^MXOnResumeDone)();
                 [_notificationCenter refreshRules:^{
                     
                     // Initial server sync - Check the supported C-S version.
-                    if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
-                    {
-                        [self serverSyncWithServerTimeout:0 success:onServerSyncDone failure:failure clientTimeout:CLIENT_TIMEOUT_MS];
-                    }
-                    else
+// FIXME enable server sync v2
+//                    if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
+//                    {
+//                        [self serverSyncWithServerTimeout:0 success:onServerSyncDone failure:failure clientTimeout:CLIENT_TIMEOUT_MS];
+//                    }
+//                    else
                     {
                         // sync based on API v1 (Legacy)
                         [self initialServerSync:onServerSyncDone failure:failure];
@@ -685,11 +686,12 @@ typedef void (^MXOnResumeDone)();
         if (!eventStreamRequest)
         {
             // Relaunch live events stream (long polling) - Check supported C-S version
-            if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
-            {
-                [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS];
-            }
-            else
+// FIXME enable server sync v2
+//            if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
+//            {
+//                [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS];
+//            }
+//            else
             {
                 // sync based on API v1 (Legacy)
                 [self streamEventsFromToken:_store.eventStreamToken withLongPoll:NO];
@@ -715,16 +717,17 @@ typedef void (^MXOnResumeDone)();
             NSLog(@"[MXSession] start a catchup");
             [self setState:MXSessionStateCatchingUp];
             
-            // Catchup from the latest known from the last known token
+            // Catchup from the latest known token
             onCatchupDone = catchupDone;
             onCatchupFail = catchupfails;
             
             // Check supported C-S version
-            if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
-            {
-                [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:timeout];
-            }
-            else
+// FIXME enable server sync v2
+//            if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
+//            {
+//                [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:timeout];
+//            }
+//            else
             {
                 // sync based on API v1 (Legacy)
                 [self streamEventsFromToken:_store.eventStreamToken withLongPoll:NO serverTimeOut:0 clientTimeout:timeout];
@@ -745,11 +748,12 @@ typedef void (^MXOnResumeDone)();
         // disable the long poll to get the available data asap
         
         // Check supported C-S version
-        if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
-        {
-            [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:10];
-        }
-        else
+// FIXME enable server sync v2
+//        if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
+//        {
+//            [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:10];
+//        }
+//        else
         {
             // sync based on API v1 (Legacy)
             [self streamEventsFromToken:_store.eventStreamToken withLongPoll:NO serverTimeOut:0 clientTimeout:10];
