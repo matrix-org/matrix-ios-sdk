@@ -28,8 +28,7 @@
 
         self.paginationToken = [aDecoder decodeObjectForKey:@"paginationToken"];
 
-        NSNumber *hasReachedHomeServerPaginationEndNumber = [aDecoder decodeObjectForKey:@"hasReachedHomeServerPaginationEnd"];
-        self.hasReachedHomeServerPaginationEnd = [hasReachedHomeServerPaginationEndNumber boolValue];
+        self.hasReachedHomeServerPaginationEnd = [aDecoder decodeBoolForKey:@"hasReachedHomeServerPaginationEnd"];
     }
     return self;
 }
@@ -45,8 +44,12 @@
     // not a problem.
     [aCoder encodeObject:[messages mutableCopy] forKey:@"messages"];
 
-    [aCoder encodeObject:self.paginationToken forKey:@"paginationToken"];
-    [aCoder encodeObject:[NSNumber numberWithBool:self.hasReachedHomeServerPaginationEnd] forKey:@"hasReachedHomeServerPaginationEnd"];
+    if (self.paginationToken)
+    {
+        [aCoder encodeObject:self.paginationToken forKey:@"paginationToken"];
+    }
+    
+    [aCoder encodeBool:self.hasReachedHomeServerPaginationEnd forKey:@"hasReachedHomeServerPaginationEnd"];
 }
 
 @end

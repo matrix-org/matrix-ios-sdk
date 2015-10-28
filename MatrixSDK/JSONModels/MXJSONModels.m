@@ -78,41 +78,6 @@ NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
 
 @end
 
-@implementation MXSyncResponse
-
-// Automatically convert array in private_user_data to an array of MXEvents.
-+ (NSValueTransformer *)privateUserDataJSONTransformer
-{
-    return [MTLJSONAdapter arrayTransformerWithModelClass:MXEvent.class];
-}
-
-// Automatically convert array in public_user_data to an array of MXEvents.
-+ (NSValueTransformer *)publicUserDataJSONTransformer
-{
-    return [MTLJSONAdapter arrayTransformerWithModelClass:MXEvent.class];
-}
-
-// Automatically convert array in rooms to an array of MXRoomSyncResponse.
-+ (NSValueTransformer *)roomsJSONTransformer
-{
-    return [MTLJSONAdapter arrayTransformerWithModelClass:MXRoomSyncResponse.class];
-}
-
-@end
-
-@implementation MXRoomEventBatch
-@end
-
-@implementation MXRoomSyncResponse
-
-+ (NSValueTransformer *)eventsJSONTransformer
-{
-    return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXRoomEventBatch.class];
-}
-
-@end
-
-
 @implementation MXRoomMemberEventContent
 
 // Override the default Mantle modelFromJSON method
@@ -459,8 +424,98 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
 
 @end
 
+#pragma mark - Server sync v2 response
+#pragma mark -
+
+@implementation MXRoomSyncState
+@end
+
+@implementation MXRoomSyncTimeline
+@end
+
+@implementation MXRoomSyncEphemeral
+
+// Automatically convert events array to an array of MXEvents.
++ (NSValueTransformer *)eventsJSONTransformer
+{
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXEvent.class];
+}
+
+@end
+
+@implementation MXRoomInviteState
+
+// Automatically convert events array to an array of MXEvents.
++ (NSValueTransformer *)eventsJSONTransformer
+{
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXEvent.class];
+}
+
+@end
+
+@implementation MXRoomSync
+
+// Automatically convert state dictionary in MXRoomSyncState.
++ (NSValueTransformer *)stateJSONTransformer
+{
+    return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXRoomSyncState.class];
+}
+
+// Automatically convert timeline dictionary in MXRoomSyncTimeline.
++ (NSValueTransformer *)timelineJSONTransformer
+{
+    return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXRoomSyncTimeline.class];
+}
+
+// Automatically convert ephemeral dictionary in MXRoomSyncEphemeral.
++ (NSValueTransformer *)ephemeralJSONTransformer
+{
+    return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXRoomSyncEphemeral.class];
+}
+
+@end
+
+@implementation MXInvitedRoomSync
+
+// Automatically convert invite_state dictionary in MXRoomInviteState.
++ (NSValueTransformer *)inviteStateJSONTransformer
+{
+    return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXRoomInviteState.class];
+}
+
+@end
+
+@implementation MXPresenceSyncResponse
+
+// Automatically convert events array to an array of MXEvents.
++ (NSValueTransformer *)eventsJSONTransformer
+{
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXEvent.class];
+}
+
+@end
+
+@implementation MXRoomsSyncResponse
+@end
+
+@implementation MXSyncResponse
+
+// Automatically convert presence dictionary to MXPresenceSyncResponse instance.
++ (NSValueTransformer *)presenceJSONTransformer
+{
+    return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXPresenceSyncResponse.class];
+}
+
+// Automatically convert rooms dictionary to MXRoomsSyncResponse instance.
++ (NSValueTransformer *)roomsJSONTransformer
+{
+    return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXRoomsSyncResponse.class];
+}
+
+@end
 
 #pragma mark - Voice over IP
+#pragma mark -
 
 @implementation MXCallSessionDescription
 @end

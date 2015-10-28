@@ -65,6 +65,13 @@
     return [roomStore eventWithEventId:eventId];
 }
 
+- (void)deleteAllMessagesInRoom:(NSString *)roomId
+{
+    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    [roomStore removeAllMessages];
+    roomStore.paginationToken = nil;
+}
+
 - (void)deleteRoom:(NSString *)roomId
 {
     if (roomStores[roomId])
