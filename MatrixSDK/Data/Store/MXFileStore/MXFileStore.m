@@ -432,8 +432,13 @@ NSString *const kMXReceiptsFolder = @"receipts";
     {
         [self saveRoomsMessages];
         [self saveRoomsState];
-        [self saveMetaData];
         [self saveReceipts];
+
+        // Save meta data only at the end because it is critical to save the eventStreamToken
+        // after everything else.
+        // If there is a crash during the commit operation, we will be able to retrieve non
+        // stored data thanks to the old eventStreamToken stored at the previous commit.
+        [self saveMetaData];
     }
 }
 
