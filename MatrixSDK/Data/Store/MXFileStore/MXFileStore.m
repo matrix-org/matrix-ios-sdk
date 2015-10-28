@@ -112,7 +112,8 @@ NSString *const kMXReceiptsFolder = @"receipts";
 
         NSLog(@"[MXFileStore] diskUsage: %@", [NSByteCountFormatter stringFromByteCount:self.diskUsage countStyle:NSByteCountFormatterCountStyleFile]);
 
-        @autoreleasepool {
+        @autoreleasepool
+        {
             [self loadMetaData];
 
             // Do some validations

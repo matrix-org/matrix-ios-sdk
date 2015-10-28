@@ -194,7 +194,8 @@ typedef void (^MXOnResumeDone)();
             NSDate *startDate2 = [NSDate date];
             for (NSString *roomId in _store.rooms)
             {
-                @autoreleasepool {
+                @autoreleasepool
+                {
                     NSArray *stateEvents = [_store stateOfRoom:roomId];
                     [self createRoom:roomId withStateEvents:stateEvents notify:NO];
                 }
@@ -268,7 +269,8 @@ typedef void (^MXOnResumeDone)();
 
                 NSLog(@"[MXSession] Got presence of %tu users in %.0fms", userPresenceEvents.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
-                @autoreleasepool {
+                @autoreleasepool
+                {
                     for (MXEvent *userPresenceEvent in userPresenceEvents)
                     {
                         MXUser *user = [self getOrCreateUser:userPresenceEvent.content[@"user_id"]];
@@ -530,108 +532,111 @@ typedef void (^MXOnResumeDone)();
 {
     for (MXEvent *event in events)
     {
-        switch (event.eventType)
+        @autoreleasepool
         {
-            case MXEventTypePresence:
+            switch (event.eventType)
             {
-                [self handlePresenceEvent:event direction:MXEventDirectionForwards];
-                break;
-            }
-                
-            case MXEventTypeReceipt:
-            {
-                if (event.roomId)
+                case MXEventTypePresence:
                 {
-                    MXRoom *room = [self roomWithRoomId:event.roomId];
-                    if (room)
-                    {
-                        [room handleLiveEvent:event];
-                    }
-                    else
-                    {
-                        NSLog(@"[MXSession] Warning: Received a receipt notification for an unknown room: %@. Event: %@", event.roomId, event);
-                    }
+                    [self handlePresenceEvent:event direction:MXEventDirectionForwards];
+                    break;
                 }
-                break;
-            }
 
-            case MXEventTypeTypingNotification:
-            {
-                if (event.roomId)
+                case MXEventTypeReceipt:
                 {
-                    MXRoom *room = [self roomWithRoomId:event.roomId];
-                    if (room)
+                    if (event.roomId)
                     {
-                        [room handleLiveEvent:event];
-                    }
-                    else
-                    {
-                        NSLog(@"[MXSession] Warning: Received a typing notification for an unknown room: %@. Event: %@", event.roomId, event);
-                    }
-                }
-                break;
-            }
-
-            default:
-                if (event.roomId)
-                {
-                    // Check join membership event in order to get the full state of the room
-                    if (MXEventTypeRoomMember == event.eventType && NO == [self isRoomInitialSyncing:event.roomId])
-                    {
-                        MXMembership roomMembership = MXMembershipUnknown;
                         MXRoom *room = [self roomWithRoomId:event.roomId];
                         if (room)
                         {
-                            roomMembership = room.state.membership;
+                            [room handleLiveEvent:event];
+                        }
+                        else
+                        {
+                            NSLog(@"[MXSession] Warning: Received a receipt notification for an unknown room: %@. Event: %@", event.roomId, event);
+                        }
+                    }
+                    break;
+                }
+
+                case MXEventTypeTypingNotification:
+                {
+                    if (event.roomId)
+                    {
+                        MXRoom *room = [self roomWithRoomId:event.roomId];
+                        if (room)
+                        {
+                            [room handleLiveEvent:event];
+                        }
+                        else
+                        {
+                            NSLog(@"[MXSession] Warning: Received a typing notification for an unknown room: %@. Event: %@", event.roomId, event);
+                        }
+                    }
+                    break;
+                }
+
+                default:
+                    if (event.roomId)
+                    {
+                        // Check join membership event in order to get the full state of the room
+                        if (MXEventTypeRoomMember == event.eventType && NO == [self isRoomInitialSyncing:event.roomId])
+                        {
+                            MXMembership roomMembership = MXMembershipUnknown;
+                            MXRoom *room = [self roomWithRoomId:event.roomId];
+                            if (room)
+                            {
+                                roomMembership = room.state.membership;
+                            }
+
+                            if (MXMembershipUnknown == roomMembership || MXMembershipInvite == roomMembership)
+                            {
+                                MXRoomMemberEventContent *roomMemberContent = [MXRoomMemberEventContent modelFromJSON:event.content];
+                                if (MXMembershipJoin == [MXTools membership:roomMemberContent.membership])
+                                {
+                                    // If we receive this event while [MXSession joinRoom] has not been called,
+                                    // it means the join has been done by another device. We need to make an initialSync on the room
+                                    // to get a valid room state.
+                                    // For info, a user can get the full state of the room only when he has joined the room. So it is
+                                    // the right timing to do it.
+                                    // SDK client will be notified when the full state is available thanks to `MXSessionInitialSyncedRoomNotification`.
+                                    NSLog(@"[MXSession] Make a initialSyncOfRoom as the room seems to be joined from another device or MXSession. This also happens when creating a room: the HS autojoins the creator. Room: %@", event.roomId);
+                                    [self initialSyncOfRoom:event.roomId withLimit:10 success:nil failure:nil];
+                                }
+                            }
                         }
 
-                        if (MXMembershipUnknown == roomMembership || MXMembershipInvite == roomMembership)
+                        // Prepare related room
+                        MXRoom *room = [self getOrCreateRoom:event.roomId withJSONData:nil notify:YES];
+                        BOOL isOneToOneRoom = (!room.state.isPublic && room.state.members.count == 2);
+
+                        // Make room data digest the event
+                        [room handleLiveEvent:event];
+
+                        // Update one-to-one room dictionary
+                        if (isOneToOneRoom || (!room.state.isPublic && room.state.members.count == 2))
                         {
-                            MXRoomMemberEventContent *roomMemberContent = [MXRoomMemberEventContent modelFromJSON:event.content];
-                            if (MXMembershipJoin == [MXTools membership:roomMemberContent.membership])
+                            [self handleOneToOneRoom:room];
+                        }
+
+                        // Remove the room from the rooms list if the user has been kicked or banned
+                        if (MXEventTypeRoomMember == event.eventType)
+                        {
+                            if (MXMembershipLeave == room.state.membership || MXMembershipBan == room.state.membership)
                             {
-                                // If we receive this event while [MXSession joinRoom] has not been called,
-                                // it means the join has been done by another device. We need to make an initialSync on the room
-                                // to get a valid room state.
-                                // For info, a user can get the full state of the room only when he has joined the room. So it is
-                                // the right timing to do it.
-                                // SDK client will be notified when the full state is available thanks to `MXSessionInitialSyncedRoomNotification`.
-                                NSLog(@"[MXSession] Make a initialSyncOfRoom as the room seems to be joined from another device or MXSession. This also happens when creating a room: the HS autojoins the creator. Room: %@", event.roomId);
-                                [self initialSyncOfRoom:event.roomId withLimit:10 success:nil failure:nil];
+                                // Notify the room is going to disappear
+                                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionWillLeaveRoomNotification
+                                                                                    object:self
+                                                                                  userInfo:@{
+                                                                                             kMXSessionNotificationRoomIdKey: event.roomId,
+                                                                                             kMXSessionNotificationEventKey: event
+                                                                                             }];
+                                [self removeRoom:event.roomId];
                             }
                         }
                     }
-
-                    // Prepare related room
-                    MXRoom *room = [self getOrCreateRoom:event.roomId withJSONData:nil notify:YES];
-                    BOOL isOneToOneRoom = (!room.state.isPublic && room.state.members.count == 2);
-
-                    // Make room data digest the event
-                    [room handleLiveEvent:event];
-                    
-                    // Update one-to-one room dictionary
-                    if (isOneToOneRoom || (!room.state.isPublic && room.state.members.count == 2))
-                    {
-                        [self handleOneToOneRoom:room];
-                    }
-
-                    // Remove the room from the rooms list if the user has been kicked or banned
-                    if (MXEventTypeRoomMember == event.eventType)
-                    {
-                        if (MXMembershipLeave == room.state.membership || MXMembershipBan == room.state.membership)
-                        {
-                            // Notify the room is going to disappear
-                            [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionWillLeaveRoomNotification
-                                                                                object:self
-                                                                              userInfo:@{
-                                                                                         kMXSessionNotificationRoomIdKey: event.roomId,
-                                                                                         kMXSessionNotificationEventKey: event
-                                                                                         }];
-                            [self removeRoom:event.roomId];
-                        }
-                    }
-                }
-                break;
+                    break;
+            }
         }
     }
 }
@@ -845,7 +850,8 @@ typedef void (^MXOnResumeDone)();
         
         for (NSDictionary *roomDict in roomDicts)
         {
-            @autoreleasepool {
+            @autoreleasepool
+            {
                 MXRoom *room = [self getOrCreateRoom:roomDict[@"room_id"] withJSONData:roomDict notify:NO];
                 [roomids addObject:room.state.roomId];
                 
@@ -876,7 +882,8 @@ typedef void (^MXOnResumeDone)();
         }
         
         // Manage presence
-        @autoreleasepool {
+        @autoreleasepool
+        {
             NSArray *presenceDicts = JSONData[@"presence"];
             for (NSDictionary *presenceDict in presenceDicts)
             {
@@ -887,7 +894,8 @@ typedef void (^MXOnResumeDone)();
         }
         
         // Manage receipts
-        @autoreleasepool {
+        @autoreleasepool
+        {
             NSArray *receiptDicts = JSONData[@"receipts"];
             for (NSDictionary *receiptDict in receiptDicts)
             {
@@ -961,7 +969,8 @@ typedef void (^MXOnResumeDone)();
             NSDictionary *roomSyncDesc = [syncResponse.rooms.joined objectForKey:roomId];
             MXRoomSync *roomSync = [MXRoomSync modelFromJSON:roomSyncDesc];
             
-            @autoreleasepool {
+            @autoreleasepool
+            {
                 BOOL isOneToOneRoom = NO;
                 
                 // Retrieve existing room or create a new one

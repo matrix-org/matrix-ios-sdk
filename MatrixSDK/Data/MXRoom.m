@@ -120,7 +120,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     self = [self initWithRoomId:roomId andMatrixSession:mxSession2];
     if (self)
     {
-        @autoreleasepool {
+        @autoreleasepool
+        {
             for (MXEvent *event in stateEvents)
             {
                 [self handleStateEvent:event direction:MXEventDirectionSync];
@@ -506,7 +507,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
     if (messagesFromStoreCount)
     {
-        @autoreleasepool {
+        @autoreleasepool
+        {
             // messagesFromStore are in chronological order
             // Handle events from the most recent
             for (NSInteger i = messagesFromStoreCount - 1; i >= 0; i--)
@@ -534,7 +536,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                                               limit:numItems
                                             success:^(MXPaginationResponse *paginatedResponse) {
 
-                                                @autoreleasepool {
+                                                @autoreleasepool
+                                                {
                                                     // Check pagination end
                                                     if (paginatedResponse.chunk.count < numItems)
                                                     {
