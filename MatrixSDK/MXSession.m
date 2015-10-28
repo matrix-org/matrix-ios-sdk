@@ -335,7 +335,7 @@ typedef void (^MXOnResumeDone)();
 // FIXME enable server sync v2
 //                    if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
 //                    {
-//                        [self serverSyncWithServerTimeout:0 success:onServerSyncDone failure:failure clientTimeout:CLIENT_TIMEOUT_MS];
+//                        [self serverSyncWithServerTimeout:0 success:onServerSyncDone failure:failure clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
 //                    }
 //                    else
                     {
@@ -689,7 +689,7 @@ typedef void (^MXOnResumeDone)();
 // FIXME enable server sync v2
 //            if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
 //            {
-//                [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS];
+//                [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
 //            }
 //            else
             {
@@ -725,7 +725,7 @@ typedef void (^MXOnResumeDone)();
 // FIXME enable server sync v2
 //            if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
 //            {
-//                [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:timeout];
+//                [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:timeout setPresence:@"offline"];
 //            }
 //            else
             {
@@ -751,7 +751,7 @@ typedef void (^MXOnResumeDone)();
 // FIXME enable server sync v2
 //        if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
 //        {
-//            [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:10];
+//            [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:10 setPresence:nil];
 //        }
 //        else
         {
@@ -936,11 +936,12 @@ typedef void (^MXOnResumeDone)();
                       success:(void (^)())success
                       failure:(void (^)(NSError *error))failure
                       clientTimeout:(NSUInteger)clientTimeout
+                        setPresence:(NSString*)setPresence
 {
     NSDate *startDate = [NSDate date];
     NSLog(@"[MXSession] Do a server sync");
     
-    eventStreamRequest = [matrixRestClient syncWithLimit:initialSyncMessagesLimit gap:YES sort:nil since:_store.eventStreamToken serverTimeout:serverTimeout clientTimeout:clientTimeout setPresence:nil backfill:YES filters:nil success:^(MXSyncResponse *syncResponse) {
+    eventStreamRequest = [matrixRestClient syncFromToken:_store.eventStreamToken serverTimeout:serverTimeout clientTimeout:clientTimeout setPresence:setPresence filter:nil success:^(MXSyncResponse *syncResponse) {
         
         // Make sure [MXSession close] or [MXSession pause] has not been called before the server response
         if (!eventStreamRequest)
@@ -1133,7 +1134,7 @@ typedef void (^MXOnResumeDone)();
         [self setState:MXSessionStateRunning];
         
         // Pursue live events listening (long polling)
-        [self serverSyncWithServerTimeout:SERVER_TIMEOUT_MS success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS];
+        [self serverSyncWithServerTimeout:SERVER_TIMEOUT_MS success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
         
         // Broadcast that a server sync has been processed.
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidSyncNotification
@@ -1206,7 +1207,7 @@ typedef void (^MXOnResumeDone)();
                                                                   userInfo:nil];
                 
                 // Switch back to the long poll management
-                [self serverSyncWithServerTimeout:SERVER_TIMEOUT_MS success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS];
+                [self serverSyncWithServerTimeout:SERVER_TIMEOUT_MS success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
             }
             else
             {
@@ -1229,7 +1230,7 @@ typedef void (^MXOnResumeDone)();
                         if (eventStreamRequest)
                         {
                             NSLog(@"[MXSession] Retry resuming events stream");
-                            [self serverSyncWithServerTimeout:serverTimeout success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS];
+                            [self serverSyncWithServerTimeout:serverTimeout success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
                         }
                     });
                 }
@@ -1244,7 +1245,7 @@ typedef void (^MXOnResumeDone)();
                             [[NSNotificationCenter defaultCenter] removeObserver:reachabilityObserver];
                             
                             NSLog(@"[MXSession] Retry resuming events stream");
-                            [self serverSyncWithServerTimeout:serverTimeout success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS];
+                            [self serverSyncWithServerTimeout:serverTimeout success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
                         }
                     }];
                 }
