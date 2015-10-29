@@ -29,7 +29,7 @@ static NSString *const kItemsKey = @"messages";
 
 // There is an old bug on core data and NSOrderedSet with one to many objects relationships
 // where CoreDataGeneratedAccessors methods crash.
-// The best workaround is to rewrite them (@see http://stackoverflow.com/questions/7385439/exception-thrown-in-nsorderedset-generated-accessors/9556747#9556747)
+// The best workaround is to rewrite them. @see http://stackoverflow.com/questions/7385439/exception-thrown-in-nsorderedset-generated-accessors/9556747#9556747
 - (void)insertObject:(MXCoreDataEvent *)value inMessagesAtIndex:(NSUInteger)idx
 {
     NSIndexSet* indexes = [NSIndexSet indexSetWithIndex:idx];
@@ -45,6 +45,14 @@ static NSString *const kItemsKey = @"messages";
     [self willChange:NSKeyValueChangeRemoval valuesAtIndexes:indexes forKey:kItemsKey];
     NSMutableOrderedSet *tmpOrderedSet = [NSMutableOrderedSet orderedSetWithOrderedSet:[self mutableOrderedSetValueForKey:kItemsKey]];
     [tmpOrderedSet removeObjectAtIndex:idx];
+    [self setPrimitiveValue:tmpOrderedSet forKey:kItemsKey];
+    [self didChange:NSKeyValueChangeRemoval valuesAtIndexes:indexes forKey:kItemsKey];
+}
+
+- (void)removeMessagesAtIndexes:(NSIndexSet *)indexes {
+    [self willChange:NSKeyValueChangeRemoval valuesAtIndexes:indexes forKey:kItemsKey];
+    NSMutableOrderedSet *tmpOrderedSet = [NSMutableOrderedSet orderedSetWithOrderedSet:[self mutableOrderedSetValueForKey:kItemsKey]];
+    [tmpOrderedSet removeObjectsAtIndexes:indexes];
     [self setPrimitiveValue:tmpOrderedSet forKey:kItemsKey];
     [self didChange:NSKeyValueChangeRemoval valuesAtIndexes:indexes forKey:kItemsKey];
 }

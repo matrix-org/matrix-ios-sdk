@@ -51,7 +51,7 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 
     /**
      The user account associated to the store.
-     We need one per MOC
+     We need one per MOC.
      */
     MXCoreDataAccount *uiAccount;
     MXCoreDataAccount *bgAccount;
@@ -214,7 +214,10 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 
 - (void)deleteAllMessagesInRoom:(NSString *)roomId
 {
-    // TODO
+    [bgManagedObjectContext performBlock:^{
+        MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
+        [room removeAllMessages];
+    }];
 }
 
 - (void)deleteRoom:(NSString *)roomId
@@ -354,7 +357,7 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 
     // Launch save on the background context
     // The UI context will be automatically updated by [self mergeChanges:]
-    // TEMP: Make the commit synchronous
+    // TEMP: Temporay make the commit synchronous
     [bgManagedObjectContext performBlockAndWait:^{
         NSError *error;
         if (![bgManagedObjectContext save:&error])
@@ -363,7 +366,6 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
         }
 
         NSLog(@"[MXCoreDataStore] commit in background in %.3fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
-        //NSLog(@"[MXCoreDataStore] commit END");
     }];
     NSLog(@"[MXCoreDataStore] commit END in %.3fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }

@@ -90,6 +90,11 @@
     return event;
 }
 
+- (void)removeAllMessages
+{
+    [self removeMessagesAtIndexes:[NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, self.messages.count)]];
+}
+
 - (void)resetPagination
 {
     // Take a snapshot of messages in the db

@@ -63,8 +63,12 @@ NS_ASSUME_NONNULL_BEGIN
 + (MXEvent *)eventWithEventId:(NSString *)eventId inRoom:(NSString *)roomId moc:(NSManagedObjectContext*)moc;
 
 /**
- Reset pagination mechanism in the room..
+ Reset the current messages array.
+ */
+- (void)removeAllMessages;
 
+/**
+ Reset pagination mechanism in the room..
  */
 - (void)resetPagination;
 
