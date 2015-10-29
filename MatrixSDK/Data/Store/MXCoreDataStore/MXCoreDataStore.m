@@ -183,10 +183,10 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 #pragma mark - MXStore
 - (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXEventDirection)direction
 {
-    NSDate *startDate = [NSDate date];
+    //NSDate *startDate = [NSDate date];
 
     [bgManagedObjectContext performBlock:^{
-        MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId forRead:NO];
+        MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
         [room storeEvent:event direction:direction];
          //NSLog(@"[MXCoreDataStore] storeEventForRoom %@ %.3fms DONE: count: %tu", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000, room.messages.count);
     }];
@@ -197,7 +197,7 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 - (void)replaceEvent:(MXEvent*)event inRoom:(NSString*)roomId
 {
     [bgManagedObjectContext performBlock:^{
-        MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId forRead:NO];
+        MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
         [room replaceEvent:event];
     }];
 }
@@ -215,7 +215,7 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 - (void)deleteRoom:(NSString *)roomId
 {
     [bgManagedObjectContext performBlock:^{
-        MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId forRead:NO];
+        MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
 
         // Related events will be deleted via cascade
         [bgAccount removeRoomsObject:room];
@@ -252,52 +252,52 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 - (void)storePaginationTokenOfRoom:(NSString *)roomId andToken:(NSString *)token
 {
     [bgManagedObjectContext performBlock:^{
-        MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId forRead:NO];
+        MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
         room.paginationToken = token;
     }];
 }
 
 - (NSString*)paginationTokenOfRoom:(NSString*)roomId
 {
-    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId forRead:YES];
+    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
     return room.paginationToken;
 }
 
 - (void)storeHasReachedHomeServerPaginationEndForRoom:(NSString *)roomId andValue:(BOOL)value
 {
     [bgManagedObjectContext performBlock:^{
-        MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId forRead:NO];
+        MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
         room.hasReachedHomeServerPaginationEnd = @(value);
     }];
 }
 
 - (BOOL)hasReachedHomeServerPaginationEndForRoom:(NSString*)roomId
 {
-    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId forRead:YES];
+    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
     return [room.hasReachedHomeServerPaginationEnd boolValue];
 }
 
 - (void)resetPaginationOfRoom:(NSString*)roomId
 {
-    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId forRead:YES];
+    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
     [room resetPagination];
 }
 
 - (NSArray*)paginateRoom:(NSString*)roomId numMessages:(NSUInteger)numMessages
 {
-    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId forRead:YES];
+    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
     return [room paginate:numMessages];
 }
 
 - (NSUInteger)remainingMessagesForPaginationInRoom:(NSString *)roomId
 {
-    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId forRead:YES];
+    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
     return [room remainingMessagesForPagination];
 }
 
 - (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types;
 {
-    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId forRead:YES];
+    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
     return [room lastMessageWithTypeIn:types];
 }
 
@@ -429,7 +429,7 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     NSDate *startDate = [NSDate date];
 
     [bgManagedObjectContext performBlock:^{
-        MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId forRead:NO];
+        MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
         [room storeState:stateEvents];
     }];
 
@@ -440,7 +440,7 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 {
     NSDate *startDate = [NSDate date];
 
-    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId forRead:YES];
+    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
     NSArray *state = [room stateEvents];
 
     NSLog(@"[MXCoreDataStore] stateOfRoom %@ in %.3fms", roomId, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
@@ -541,22 +541,23 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 
 /**
  Return the MXCoreDataRoom object that corresponds to the expected context
- which can be uiManagedObjectContext or bgManagedObjectContext depending on whether 
- the goal is to read or to write.
+ which can be uiManagedObjectContext or bgManagedObjectContext depending on the current
+ thread (main or background).
  
  @param roomId the room id of the MXCoreDataRoom to lookup.
  @param read the request goal.
  @return the MXCoreDataRoom object. It is created in the db if it does not already exist.
  */
-- (MXCoreDataRoom*)getOrCreateRoomEntity:(NSString*)roomId forRead:(BOOL)read
+- (MXCoreDataRoom*)getOrCreateRoomEntity:(NSString*)roomId
 {
-    NSManagedObjectContext *moc = read ? uiManagedObjectContext : bgManagedObjectContext;
-    NSMutableDictionary<NSString*, MXCoreDataRoom*> *roomsByRoomId = read ? uiRoomsByRoomId : bgRoomsByRoomId;
-    MXCoreDataAccount *account = read ? uiAccount : bgAccount;
+    BOOL isMainThread = [NSThread isMainThread];
+    NSManagedObjectContext *moc = isMainThread ? uiManagedObjectContext : bgManagedObjectContext;
+    NSMutableDictionary<NSString*, MXCoreDataRoom*> *roomsByRoomId = isMainThread ? uiRoomsByRoomId : bgRoomsByRoomId;
+    MXCoreDataAccount *account = isMainThread ? uiAccount : bgAccount;
 
     // First, check in the "room by roomId" cache
     MXCoreDataRoom *room;
-    if (NO == read)
+    if (NO == isMainThread)
     {
         // Unfortunately, the cache can only work with MSManagedObjects from bgManagedObjectContext
         // But it is (for now, TODO) unreliable for objects on uiManagedObjectContext because
