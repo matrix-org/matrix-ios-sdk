@@ -212,6 +212,11 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     return event;
 }
 
+- (void)deleteAllMessagesInRoom:(NSString *)roomId
+{
+    // TODO
+}
+
 - (void)deleteRoom:(NSString *)roomId
 {
     [bgManagedObjectContext performBlock:^{
@@ -303,16 +308,19 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 
 - (NSArray*)getEventReceipts:(NSString*)roomId eventId:(NSString*)eventId sorted:(BOOL)sort
 {
+    // TODO
     return nil;
 }
 
 - (BOOL)storeReceipt:(MXReceiptData*)receipt roomId:(NSString*)roomId
 {
+    // TODO
     return NO;
 }
 
-- (NSArray*)unreadMessages:(NSString*)roomId
+- (NSArray*)unreadEvents:(NSString*)roomId withTypeIn:(NSArray*)types
 {
+    // TODO
     return nil;
 }
 
