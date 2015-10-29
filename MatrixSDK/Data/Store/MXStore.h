@@ -70,6 +70,13 @@
 - (MXEvent*)eventWithEventId:(NSString*)eventId inRoom:(NSString*)roomId;
 
 /**
+ Remove all existing messages in a room.
+ 
+ @param roomId the id of the room.
+ */
+- (void)deleteAllMessagesInRoom:(NSString *)roomId;
+
+/**
  Erase a room and all related data.
  
  @param roomId the id of the room.
@@ -153,11 +160,12 @@
 - (BOOL)storeReceipt:(MXReceiptData*)receipt roomId:(NSString*)roomId;
 
 /**
- * Provides the unread messages list.
+ * Provides the unread events list.
  * @param roomId the room id.
- * @return the unread messages list.
+ * @param types an array of event types strings (MXEventTypeString).
+ * @return the unread events list.
  */
-- (NSArray*)unreadMessages:(NSString*)roomId;
+- (NSArray*)unreadEvents:(NSString*)roomId withTypeIn:(NSArray*)types;
 
 /**
  Indicate if the MXStore implementation stores data permanently.

@@ -61,8 +61,12 @@
 @property (nonatomic) BOOL hasReachedHomeServerPaginationEnd;
 
 /**
- Reset pagination mechanism in the room..
+ Reset the current messages array.
+ */
+- (void)removeAllMessages;
 
+/**
+ Reset pagination mechanism in the room.
  */
 - (void)resetPagination;
 
@@ -97,8 +101,9 @@
 
 /**
  * @param eventId the event id to find.
+ * @param types an array of event types strings (MXEventTypeString).
  * @return the messages events after an event Id
  */
-- (NSArray*) eventsAfter:(NSString *)eventId except:(NSString*)userId;
+- (NSArray*)eventsAfter:(NSString *)eventId except:(NSString*)userId withTypeIn:(NSArray*)types;
 
 @end

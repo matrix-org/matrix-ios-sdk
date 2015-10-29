@@ -65,6 +65,13 @@
     return [roomStore eventWithEventId:eventId];
 }
 
+- (void)deleteAllMessagesInRoom:(NSString *)roomId
+{
+    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    [roomStore removeAllMessages];
+    roomStore.paginationToken = nil;
+}
+
 - (void)deleteRoom:(NSString *)roomId
 {
     if (roomStores[roomId])
@@ -204,14 +211,13 @@
     return false;
 }
 
-
 /**
- * Provides the unread messages list.
+ * Provides the unread events list.
  * @param roomId the room id.
- * @return the unread messages list.
+ * @param types an array of event types strings (MXEventTypeString).
+ * @return the unread events list.
  */
-
-- (NSArray*)unreadMessages:(NSString*)roomId
+- (NSArray*)unreadEvents:(NSString*)roomId withTypeIn:(NSArray*)types
 {
     MXMemoryRoomStore* store = [roomStores valueForKey:roomId];
     NSMutableDictionary* receipsByUserId = [receiptsByRoomId objectForKey:roomId];
@@ -222,7 +228,26 @@
         
         if (data)
         {
-            return [store eventsAfter:data.eventId except:credentials.userId];
+            NSArray* unreadOnes = [store eventsAfter:data.eventId except:credentials.userId withTypeIn:types];
+            
+            if (unreadOnes.count)
+            {
+                NSMutableArray* unread = [[NSMutableArray alloc] initWithCapacity:unreadOnes.count];
+                
+                // ignore oneself events
+                // assume you read what you wrote
+                for(MXEvent* event in unreadOnes)
+                {
+                    if (![event.sender isEqualToString:credentials.userId])
+                    {
+                        [unread addObject:event];
+                    }
+                }
+                
+                return unread;
+            }
+            
+            return unreadOnes;
         }
     }
    

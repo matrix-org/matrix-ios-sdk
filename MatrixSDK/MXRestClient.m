@@ -54,8 +54,8 @@ NSString *const kMX3PIDMediumMSISDN = @"msisdn";
  */
 NSString *const kMXRestClientErrorDomain = @"kMXRestClientErrorDomain";
 
-// TODO GFO increase this preferred API version when new version is available
-static MXRestClientAPIVersion _currentPreferredAPIVersion = MXRestClientAPIVersion1;
+// Increase this preferred API version when new version is available
+static MXRestClientAPIVersion _currentPreferredAPIVersion = MXRestClientAPIVersion2;
 
 /**
  Authentication flow: register or login
@@ -204,6 +204,11 @@ MXAuthAction;
                                  success:success failure:failure];
 }
 
+- (NSString*)loginFallback;
+{
+    return [[NSURL URLWithString:@"/_matrix/static/client/login" relativeToURL:[NSURL URLWithString:homeserver]] absoluteString];
+}
+
 
 #pragma mark - Common operations for register and login
 /*
@@ -220,11 +225,12 @@ MXAuthAction;
     NSString *authActionPath = @"api/v1/login";
     if (MXAuthActionRegister == authAction)
     {
-        if (preferredAPIVersion == MXRestClientAPIVersion2)
-        {
-            authActionPath = @"v2_alpha/register";
-        }
-        else
+        // TODO GFO server register v2 is not available yet (use C-S v1 by default)
+//        if (preferredAPIVersion == MXRestClientAPIVersion2)
+//        {
+//            authActionPath = @"v2_alpha/register";
+//        }
+//        else
         {
             authActionPath = @"api/v1/register";
         }
@@ -238,13 +244,14 @@ MXAuthAction;
     NSString *httpMethod = @"GET";
     NSDictionary *parameters = nil;
     
-    if ((MXAuthActionRegister == authAction) && (preferredAPIVersion == MXRestClientAPIVersion2))
-    {
-        // C-S API v2: use POST with no params to get the login mechanism to use when registering
-        // The request will failed with Unauthorized status code, but the login mechanism will be available in response data.
-        httpMethod = @"POST";
-        parameters = @{};
-    }
+    // TODO GFO server register v2 is not available yet (use C-S v1 by default)
+//    if ((MXAuthActionRegister == authAction) && (preferredAPIVersion == MXRestClientAPIVersion2))
+//    {
+//        // C-S API v2: use POST with no params to get the login mechanism to use when registering
+//        // The request will failed with Unauthorized status code, but the login mechanism will be available in response data.
+//        httpMethod = @"POST";
+//        parameters = @{};
+//    }
     
     return [httpClient requestWithMethod:httpMethod
                                     path:[self authActionPath:authAction]
@@ -384,7 +391,8 @@ MXAuthAction;
                                     path:@"api/v1/pushrules/"
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
-                                     @autoreleasepool {
+                                     @autoreleasepool
+                                     {
                                          MXPushRulesResponse *pushRules = [MXPushRulesResponse modelFromJSON:JSONResponse];
                                          success(pushRules);
                                      }
@@ -1428,30 +1436,20 @@ MXAuthAction;
     return operation;
 }
 
-- (MXHTTPOperation *)syncWithLimit:(NSInteger)limit
-                               gap:(BOOL)gap
-                              sort:(NSString*)sort
-                             since:(NSString*)token
+/**
+ server sync v2
+ */
+- (MXHTTPOperation *)syncFromToken:(NSString*)token
                      serverTimeout:(NSUInteger)serverTimeout
                      clientTimeout:(NSUInteger)clientTimeout
                        setPresence:(NSString*)setPresence
-                          backfill:(BOOL)backfill
-                           filters:(NSDictionary*)filters
+                            filter:(NSString*)filterId
                            success:(void (^)(MXSyncResponse *syncResponse))success
                            failure:(void (^)(NSError *error))failure
 {
     // Fill the url parameters (CAUTION: boolean value must be true or false string)
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     
-    parameters[@"limit"] = [NSNumber numberWithInteger:limit];
-    parameters[@"gap"] = gap ? @"true" : @"false";
-    parameters[@"backfill"] = backfill ? @"true" : @"false";
-    
-    // Handle optional params
-    if (sort)
-    {
-        parameters[@"sort"] = sort;
-    }
     if (token)
     {
         parameters[@"since"] = token;
@@ -1464,9 +1462,9 @@ MXAuthAction;
     {
         parameters[@"set_presence"] = setPresence;
     }
-    if (filters.count)
+    if (filterId)
     {
-        [parameters addEntriesFromDictionary:filters];
+        parameters[@"filter"] = filterId;
     }
     
     NSTimeInterval clientTimeoutInSeconds = clientTimeout;
@@ -1510,7 +1508,8 @@ MXAuthAction;
                                  success:^(NSDictionary *JSONResponse) {
                                      if (success)
                                      {
-                                         @autoreleasepool {
+                                         @autoreleasepool
+                                         {
                                              NSArray *publicRooms = [MXPublicRoom modelsFromJSON:JSONResponse[@"chunk"]];
                                              success(publicRooms);
                                          }
@@ -1841,7 +1840,7 @@ MXAuthAction;
 
 #pragma mark - read receips
 /**
- Send a read receipt.
+ Send a read receipt (available only on C-S v2).
  
  @param roomId the id of the room.
  @param eventId the id of the event.

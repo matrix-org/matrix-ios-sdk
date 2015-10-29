@@ -76,6 +76,10 @@
     return theEvent;
 }
 
+- (void)removeAllMessages
+{
+    [messages removeAllObjects];
+}
 
 - (void)resetPagination
 {
@@ -129,23 +133,29 @@
 
 /**
  * @param eventId the event id to find.
+ * @param types an array of event types strings (MXEventTypeString).
  * @return the messages events after an event Id
  */
-- (NSArray*) eventsAfter:(NSString *)eventId except:(NSString*)userId
+- (NSArray*)eventsAfter:(NSString *)eventId except:(NSString*)userId withTypeIn:(NSArray*)types
 {
     NSMutableArray* list = [[NSMutableArray alloc] init];
     Boolean gotIt = false;
     
-    if (eventId) {
+    if (eventId)
+    {
         for (NSInteger i = 0; i < messages.count; i++)
         {
             MXEvent *event = messages[i];
             
-            if (gotIt) {
-                if (![event.sender isEqualToString:userId] && [event.type isEqualToString:kMXEventTypeStringRoomMessage]) {
+            if (gotIt)
+            {
+                if (!types || ([types indexOfObject:event.type] != NSNotFound))
+                {
                     [list addObject:event];
                 }
-            } else {
+            }
+            else
+            {
                 gotIt = [event.eventId isEqualToString:eventId];
             }
         }

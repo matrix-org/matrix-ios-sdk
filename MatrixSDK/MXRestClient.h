@@ -277,6 +277,14 @@ typedef enum : NSUInteger
                       success:(void (^)(MXCredentials *credentials))success
                       failure:(void (^)(NSError *error))failure;
 
+/**
+ Get the login fallback page to make login via a web browser or a web view.
+ 
+ Presently only server auth v1 is supported.
+ 
+ @return the fallback page URL.
+ */
+- (NSString*)loginFallback;
 
 #pragma mark - Push Notifications
 /**
@@ -862,33 +870,32 @@ typedef enum : NSUInteger
                          failure:(void (^)(NSError *error))failure;
 
 /**
- Get/Update this user's current state.
- Get/Update information for all rooms (including messages and state events) from the given token (if any).
+ Synchronise the client's state and receive new messages. Based on server sync C-S v2 API.
  
- @param limit the maximum number of messages to return by room.
- @param gap should the server drop events and do a non-delta sync for rooms whose limit is exceeded.
- @param sort the optional sort order of messages in the room, *only honoured during an initial sync*. default: "timeline,asc".
+ Synchronise the client's state with the latest state on the server.
+ Client's use this API when they first log in to get an initial snapshot
+ of the state on the server, and then continue to call this API to get
+ incremental deltas to the state, and to receive new messages.
+ 
  @param token the token to stream from (nil in case of initial sync).
  @param serverTimeout the maximum time in ms to wait for an event.
  @param clientTimeout the maximum time in ms the SDK must wait for the server response.
- @param setPresence optional parameter to tell the server not to interpret this request as a client (device) as coming online (and as a convenience method for overriding presence state in general - e.g. setting straight to "idle" rather than having to PUT to /users/{userId}/devices/{deviceId}/presence.  It's meaningless to set "online" as that's the default behaviour on the server.)
- @param backfill true/false (default true): do we want to pull in state from federation if we have less than <limit> events available for a room?
- @param filters optional filter parameters (see https://github.com/matrix-org/matrix-doc/blob/client_server_v2_http_api/drafts/cs-v2-http-api.rst).
- 
+ @param setPresence  the optional parameter which controls whether the client is automatically
+ marked as online by polling this API. If this parameter is omitted then the client is
+ automatically marked as online when it uses this API. Otherwise if
+ the parameter is set to "offline" then the client is not marked as
+ being online when it uses this API.
+ @param filterId the ID of a filter created using the filter API (optinal).
  @param success A block object called when the operation succeeds. It provides a `MXSyncResponse` object.
  @param failure A block object called when the operation fails.
  
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation *)syncWithLimit:(NSInteger)limit
-                               gap:(BOOL)gap
-                              sort:(NSString*)sort
-                             since:(NSString*)token
+- (MXHTTPOperation *)syncFromToken:(NSString*)token
                      serverTimeout:(NSUInteger)serverTimeout
                      clientTimeout:(NSUInteger)clientTimeout
                        setPresence:(NSString*)setPresence
-                          backfill:(BOOL)backfill
-                           filters:(NSDictionary*)filters
+                            filter:(NSString*)filterId
                            success:(void (^)(MXSyncResponse *syncResponse))success
                            failure:(void (^)(NSError *error))failure;
 
@@ -1075,7 +1082,7 @@ typedef enum : NSUInteger
 
 #pragma mark - read receips
 /**
- Send a read receipt.
+ Send a read receipt (available only on C-S v2).
  
  @param roomId the id of the room.
  @param eventId the id of the event.
