@@ -1439,30 +1439,17 @@ MXAuthAction;
 /**
  server sync v2
  */
-- (MXHTTPOperation *)syncWithLimit:(NSInteger)limit
-                               gap:(BOOL)gap
-                              sort:(NSString*)sort
-                             since:(NSString*)token
+- (MXHTTPOperation *)syncFromToken:(NSString*)token
                      serverTimeout:(NSUInteger)serverTimeout
                      clientTimeout:(NSUInteger)clientTimeout
                        setPresence:(NSString*)setPresence
-                          backfill:(BOOL)backfill
-                           filters:(NSDictionary*)filters
+                            filter:(NSString*)filterId
                            success:(void (^)(MXSyncResponse *syncResponse))success
                            failure:(void (^)(NSError *error))failure
 {
     // Fill the url parameters (CAUTION: boolean value must be true or false string)
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     
-//    parameters[@"limit"] = [NSNumber numberWithInteger:limit];
-//    parameters[@"gap"] = gap ? @"true" : @"false";
-//    parameters[@"backfill"] = backfill ? @"true" : @"false";
-    
-    // Handle optional params
-//    if (sort)
-//    {
-//        parameters[@"sort"] = sort;
-//    }
     if (token)
     {
         parameters[@"since"] = token;
@@ -1475,9 +1462,9 @@ MXAuthAction;
     {
         parameters[@"set_presence"] = setPresence;
     }
-    if (filters.count)
+    if (filterId)
     {
-        [parameters addEntriesFromDictionary:filters];
+        parameters[@"filter"] = filterId;
     }
     
     NSTimeInterval clientTimeoutInSeconds = clientTimeout;
