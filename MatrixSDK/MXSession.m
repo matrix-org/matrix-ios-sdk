@@ -26,6 +26,8 @@
 #import "MXMemoryStore.h"
 #import "MXFileStore.h"
 
+// FIXME Enable server sync v2
+//#define MXSESSION_ENABLE_SERVER_SYNC_V2
 
 #pragma mark - Constants definitions
 
@@ -334,12 +336,13 @@ typedef void (^MXOnResumeDone)();
                 [_notificationCenter refreshRules:^{
                     
                     // Initial server sync - Check the supported C-S version.
-// FIXME enable server sync v2
-//                    if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
-//                    {
-//                        [self serverSyncWithServerTimeout:0 success:onServerSyncDone failure:failure clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
-//                    }
-//                    else
+#ifdef MXSESSION_ENABLE_SERVER_SYNC_V2
+                    if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
+                    {
+                        [self serverSyncWithServerTimeout:0 success:onServerSyncDone failure:failure clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+                    }
+                    else
+#endif
                     {
                         // sync based on API v1 (Legacy)
                         [self initialServerSync:onServerSyncDone failure:failure];
@@ -691,12 +694,13 @@ typedef void (^MXOnResumeDone)();
         if (!eventStreamRequest)
         {
             // Relaunch live events stream (long polling) - Check supported C-S version
-// FIXME enable server sync v2
-//            if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
-//            {
-//                [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
-//            }
-//            else
+#ifdef MXSESSION_ENABLE_SERVER_SYNC_V2
+            if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
+            {
+                [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+            }
+            else
+#endif
             {
                 // sync based on API v1 (Legacy)
                 [self streamEventsFromToken:_store.eventStreamToken withLongPoll:NO];
@@ -727,12 +731,13 @@ typedef void (^MXOnResumeDone)();
             onCatchupFail = catchupfails;
             
             // Check supported C-S version
-// FIXME enable server sync v2
-//            if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
-//            {
-//                [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:timeout setPresence:@"offline"];
-//            }
-//            else
+#ifdef MXSESSION_ENABLE_SERVER_SYNC_V2
+            if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
+            {
+                [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:timeout setPresence:@"offline"];
+            }
+            else
+#endif
             {
                 // sync based on API v1 (Legacy)
                 [self streamEventsFromToken:_store.eventStreamToken withLongPoll:NO serverTimeOut:0 clientTimeout:timeout];
@@ -753,12 +758,13 @@ typedef void (^MXOnResumeDone)();
         // disable the long poll to get the available data asap
         
         // Check supported C-S version
-// FIXME enable server sync v2
-//        if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
-//        {
-//            [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:10 setPresence:nil];
-//        }
-//        else
+#ifdef MXSESSION_ENABLE_SERVER_SYNC_V2
+        if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
+        {
+            [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:10 setPresence:nil];
+        }
+        else
+#endif
         {
             // sync based on API v1 (Legacy)
             [self streamEventsFromToken:_store.eventStreamToken withLongPoll:NO serverTimeOut:0 clientTimeout:10];
