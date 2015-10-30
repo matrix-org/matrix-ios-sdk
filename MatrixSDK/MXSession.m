@@ -26,7 +26,7 @@
 #import "MXMemoryStore.h"
 #import "MXFileStore.h"
 
-// FIXME Enable server sync v2
+// FIXME SYNCV2 Enable server sync v2
 //#define MXSESSION_ENABLE_SERVER_SYNC_V2
 
 #pragma mark - Constants definitions
@@ -1036,7 +1036,7 @@ typedef void (^MXOnResumeDone)();
             @autoreleasepool {
                 
                 // Presently we remove the existing room from the rooms list.
-                // FIXME Archive/Display the left rooms!
+                // FIXME SYNCV2 Archive/Display the left rooms!
                 // For that create 'handleArchivedRoomSync' method
                 
                 // Retrieve existing room
