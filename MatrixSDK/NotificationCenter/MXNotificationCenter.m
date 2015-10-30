@@ -236,7 +236,7 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
                     MXPushRuleCondition *equivalentCondition = [[MXPushRuleCondition alloc] init];
                     equivalentCondition.kindType = MXPushRuleConditionTypeEventMatch;
                     equivalentCondition.parameters = @{
-                                                       @"key": @"room_id",
+                                                       @"key": @"user_id",
                                                        @"pattern": rule.ruleId
                                                        };
                     
