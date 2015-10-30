@@ -145,7 +145,7 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
 
 - (MXPushRule *)ruleMatchingEvent:(MXEvent *)event
 {
-    MXPushRule *theRule;
+    MXPushRule *theRule = nil;
 
     // Consider only events from other users
     if (NO == [event.sender isEqualToString:mxSession.matrixRestClient.credentials.userId])
