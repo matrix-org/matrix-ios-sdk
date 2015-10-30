@@ -107,10 +107,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
             [mxSession.store storeEventForRoom:roomId event:fakeMembershipEvent direction:MXEventDirectionSync];
         }
-        else if (JSONData)
-        {
-            _isSync = YES;
-        }
     }
     return self;
 }
