@@ -139,12 +139,13 @@ static NSMutableDictionary *JSONKeyPathsByPropertyKeyByClass;
     NSMutableDictionary * originalDictionary = [NSMutableDictionary dictionary];
 
     NSDictionary *JSONKeyPathsByPropertyKey = [self.class JSONKeyPathsByPropertyKey];
-
-    for (NSString *key in self.dictionaryValue)
+    NSDictionary *dictValue = self.dictionaryValue;
+    
+    for (NSString *key in dictValue)
     {
         // Convert back camelCased property names (ex:roomId) to underscored names (ex:room_id)
         // Thus, we store events as they come from the home server
-        originalDictionary[JSONKeyPathsByPropertyKey[key]] = self.dictionaryValue[key];
+        originalDictionary[JSONKeyPathsByPropertyKey[key]] = dictValue[key];
     }
 
     return originalDictionary;

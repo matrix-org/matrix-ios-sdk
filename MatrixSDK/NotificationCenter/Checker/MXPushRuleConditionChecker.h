@@ -30,8 +30,9 @@
 
  @param condition the condition.
  @param event the event to check.
+ @param contentAsJsonDict the content as a dictionnary.
  @return YES if the event satisties the condition.
  */
-- (BOOL)isCondition:(MXPushRuleCondition*)condition satisfiedBy:(MXEvent*)event;
+- (BOOL)isCondition:(MXPushRuleCondition*)condition satisfiedBy:(MXEvent*)event withJsonDict:(NSDictionary*)contentAsJsonDict;
 
 @end

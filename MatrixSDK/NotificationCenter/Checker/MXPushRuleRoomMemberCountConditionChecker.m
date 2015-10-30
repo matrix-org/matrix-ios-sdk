@@ -47,7 +47,7 @@
     return self;
 }
 
-- (BOOL)isCondition:(MXPushRuleCondition *)condition satisfiedBy:(MXEvent *)event
+- (BOOL)isCondition:(MXPushRuleCondition*)condition satisfiedBy:(MXEvent*)event withJsonDict:(NSDictionary*)contentAsJsonDict
 {
     if ((event.eventType == MXEventTypeTypingNotification) || (event.eventType == MXEventTypeReceipt))
     {
