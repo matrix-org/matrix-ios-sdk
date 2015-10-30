@@ -52,7 +52,7 @@
         }
         
 
-        NSRegularExpression *regex = [regExByPatternDict valueForKey:pattern];
+        NSRegularExpression *regex = [regExByPatternDict objectForKey:pattern];
 
         // not yet defined
         if (!regex)
