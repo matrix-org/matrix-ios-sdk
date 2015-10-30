@@ -44,9 +44,12 @@
     // If it exists, search for the current display name in the content body with case insensitive
     if (mxSession.myUser.displayname && event.content)
     {
-        if ([event.content[@"body"] isKindOfClass:[NSString class]])
+        NSObject* bodyAsVoid = event.content[@"body"];
+        
+        if (bodyAsVoid && [bodyAsVoid isKindOfClass:[NSString class]])
         {
-            NSString *body = event.content[@"body"];
+            NSString *body = (NSString*)bodyAsVoid;
+            
             if (body)
             {
                 if (NSNotFound != [body rangeOfString:mxSession.myUser.displayname options:NSCaseInsensitiveSearch].location)
