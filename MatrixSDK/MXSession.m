@@ -887,7 +887,7 @@ typedef void (^MXOnResumeDone)();
                     }
                 }
                 
-                room.isSync = YES;
+                // Notify that room has been sync'ed
                 [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomInitialSyncNotification
                                                                     object:room
                                                                   userInfo:nil];
@@ -1417,8 +1417,6 @@ typedef void (^MXOnResumeDone)();
         [roomsInInitialSyncing removeObject:roomId];
 
         // Notify that room has been sync'ed
-        room.isSync = YES;
-        
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomInitialSyncNotification
                                                             object:room
                                                           userInfo:nil];

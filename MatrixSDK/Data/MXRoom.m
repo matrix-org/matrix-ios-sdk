@@ -52,8 +52,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
         _typingUsers = [NSArray array];
         
-        _isSync = NO;
-        
         _acknowledgableEventTypes = @[kMXEventTypeStringRoomName,
                                       kMXEventTypeStringRoomTopic,
                                       kMXEventTypeStringRoomMember,
@@ -123,10 +121,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                 [self handleStateEvent:event direction:MXEventDirectionSync];
             }
         }
-        
-        if (stateEvents) {
-            _isSync = YES;
-        }
     }
     return self;
 }
@@ -151,7 +145,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 - (void)handleJoinedRoomSync:(MXRoomSync *)roomSync
 {
     // Is it an initial sync for this room?
-    BOOL isRoomInitialSync = !_isSync;
+    BOOL isRoomInitialSync = (self.state.membership == MXMembershipUnknown || self.state.membership == MXMembershipInvite);
     
     // Check whether the room was pending on an invitation.
     if (self.state.membership == MXMembershipInvite)
@@ -159,8 +153,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         // Reset the storage of this room. An initial sync of the room will be done with the provided 'roomSync'.
         NSLog(@"[MXRoom] handleJoinedRoomSync: clean invited room from the store (%@).", self.state.roomId);
         [mxSession.store deleteRoom:self.state.roomId];
-        
-        isRoomInitialSync = YES; // Note: this boolean should be already true because 'isSync' should be false here.
     }
     
     // Handle timeline.events (Note: timeline events are in chronological order)
@@ -247,8 +239,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         // init the receips to the latest received one.
         [self acknowledgeLatestEvent:NO];
         
-        _isSync = YES;
-        
+        // Notify that room has been sync'ed
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomInitialSyncNotification
                                                             object:self
                                                           userInfo:nil];
