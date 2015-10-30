@@ -450,8 +450,7 @@
                         
                         XCTAssertNotNil(newRoom);
                         
-                        XCTAssertEqual(newRoom.state.membership, MXMembershipInvite);;
-                        XCTAssertFalse(newRoom.isSync, @"The initialSync can be done only on joined room");
+                        XCTAssertEqual(newRoom.state.membership, MXMembershipInvite);
                         
                         // The room must have only one member: Alice who has been invited by Bob.
                         // While Alice does not join the room, we cannot get more information
@@ -526,7 +525,6 @@
                         
                         // Now, we must have more information about the room
                         // Check its new state
-                        XCTAssert(newRoom.isSync, @"The room must be advertised as synced");
                         XCTAssertEqual(newRoom.state.members.count, 2);
                         XCTAssert([newRoom.state.topic isEqualToString:@"We test room invitation here"], @"Wrong topic. Found: %@", newRoom.state.topic);
                         
@@ -734,7 +732,9 @@
 
                 MXRoom *room = [mxSession roomWithRoomId:newRoomId];
                 XCTAssertNotNil(room);
-                XCTAssertFalse(room.isSync, @"The room is not yet sync'ed");
+                
+                BOOL isSync = (room.state.membership != MXMembershipInvite && room.state.membership != MXMembershipUnknown);
+                XCTAssertFalse(isSync, @"The room is not yet sync'ed");
 
                 [[NSNotificationCenter defaultCenter] removeObserver:newRoomObserver];
             }];
@@ -747,7 +747,9 @@
                 MXRoom *room = note.object;
 
                 XCTAssertEqualObjects(newRoomId, room.state.roomId);
-                XCTAssert(room.isSync, @"The room must be sync'ed now");
+                
+                BOOL isSync = (room.state.membership != MXMembershipInvite && room.state.membership != MXMembershipUnknown);
+                XCTAssert(isSync, @"The room must be sync'ed now");
 
                 [[NSNotificationCenter defaultCenter] removeObserver:initialSyncObserver];
                 [expectation fulfill];
