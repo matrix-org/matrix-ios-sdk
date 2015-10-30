@@ -30,21 +30,20 @@
 #pragma mark - Notifications
 
 /**
+ Posted when a room initial sync is completed.
+ 
+ The notification object is the concerned room (MXRoom instance).
+ */
+FOUNDATION_EXPORT NSString *const kMXRoomInitialSyncNotification;
+
+/**
  Posted when a limited timeline is observed for an existing room during server sync v2.
  All the existing messages have been removed from the room storage. Only the messages received during this sync are available.
  The token where to start back pagination has been updated.
  
- The passed userInfo dictionary contains:
- - `kMXRoomNotificationRoomIdKey` the roomId of the concerned room.
+ The notification object is the concerned room (MXRoom instance).
  */
 FOUNDATION_EXPORT NSString *const kMXRoomSyncWithLimitedTimelineNotification;
-
-#pragma mark - Notifications keys
-
-/**
- The key in notification userInfo dictionary representating the roomId.
- */
-FOUNDATION_EXPORT NSString *const kMXRoomNotificationRoomIdKey;
 
 /**
  Block called when an event of the registered types has been handled by the `MXRoom` instance.
@@ -130,14 +129,14 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  
  @param roomSync information to sync the room with the home server data
  */
-- (void)handleRoomSyncResponse:(MXRoomSync*)roomSync;
+- (void)handleJoinedRoomSync:(MXRoomSync*)roomSync;
 
 /**
  Update the invited room state according to the provided data (since API v2)
  
  @param invitedRoom information to update the room state.
  */
-- (void)handleInvitedRoom:(MXInvitedRoomSync *)invitedRoomSync;
+- (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync;
 
 #pragma mark - handle events
 
