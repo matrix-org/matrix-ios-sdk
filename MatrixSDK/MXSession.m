@@ -851,7 +851,9 @@ typedef void (^MXOnResumeDone)();
         
         NSArray *roomDicts = JSONData[@"rooms"];
         
-        NSLog(@"[MXSession] Received %tu rooms in %.0fms", roomDicts.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+        NSLog(@"[MXSession] Received %tu rooms in %.3fms", roomDicts.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+
+        NSDate *startDate2 = [NSDate date];
         
         for (NSDictionary *roomDict in roomDicts)
         {
@@ -930,7 +932,9 @@ typedef void (^MXOnResumeDone)();
         {
             [_store commit];
         }
-        
+
+        NSLog(@"[MXSession] InitialSync events processed and stored in %.3fms", [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+
         // Resume from the last known token
         [self streamEventsFromToken:_store.eventStreamToken withLongPoll:YES];
         

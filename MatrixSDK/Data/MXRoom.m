@@ -865,7 +865,10 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     
     if ([mxSession.store storeReceipt:data roomId:_state.roomId])
     {
-        [mxSession.store commit];
+        if ([mxSession.store respondsToSelector:@selector(commit)])
+        {
+            [mxSession.store commit];
+        }
         return YES;
     }
     
@@ -893,8 +896,11 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         
         if ([mxSession.store storeReceipt:data roomId:_state.roomId])
         {
-            [mxSession.store commit];
-            
+            if ([mxSession.store respondsToSelector:@selector(commit)])
+            {
+                [mxSession.store commit];
+            }
+
             if (sendReceipt)
             {
                 [mxSession.matrixRestClient sendReadReceipts:_state.roomId eventId:event.eventId success:^(NSString *eventId) {
