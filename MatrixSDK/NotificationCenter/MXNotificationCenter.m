@@ -150,6 +150,8 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
     // Consider only events from other users
     if (NO == [event.sender isEqualToString:mxSession.matrixRestClient.credentials.userId])
     {
+        NSDictionary *JSONDictionary = nil;
+        
         // Check rules one by one according to their priorities
         for (MXPushRule *rule in flatRules)
         {
@@ -157,6 +159,11 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
             if (!rule.enabled)
             {
                 continue;
+            }
+            
+            if (!JSONDictionary)
+            {
+                JSONDictionary = event.originalDictionary;
             }
 
             BOOL conditionsOk = YES;
@@ -176,7 +183,7 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
                         id<MXPushRuleConditionChecker> checker = [conditionCheckers valueForKey:condition.kind];
                         if (checker)
                         {
-                            conditionsOk = [checker isCondition:condition satisfiedBy:event];
+                            conditionsOk = [checker isCondition:condition satisfiedBy:event withJsonDict:JSONDictionary];
                             if (NO == conditionsOk)
                             {
                                 // Do not need to go further
@@ -203,7 +210,7 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
                                                        @"pattern": rule.pattern
                                                        };
 
-                    conditionsOk = [eventMatchConditionChecker isCondition:equivalentCondition satisfiedBy:event];
+                    conditionsOk = [eventMatchConditionChecker isCondition:equivalentCondition satisfiedBy:event withJsonDict:JSONDictionary];
                     break;
                 }
 
@@ -218,7 +225,7 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
                                                        @"pattern": rule.ruleId
                                                        };
 
-                    conditionsOk = [eventMatchConditionChecker isCondition:equivalentCondition satisfiedBy:event];
+                    conditionsOk = [eventMatchConditionChecker isCondition:equivalentCondition satisfiedBy:event withJsonDict:JSONDictionary];
                     break;
                 }
 
@@ -233,7 +240,7 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
                                                        @"pattern": rule.ruleId
                                                        };
                     
-                    conditionsOk = [eventMatchConditionChecker isCondition:equivalentCondition satisfiedBy:event];
+                    conditionsOk = [eventMatchConditionChecker isCondition:equivalentCondition satisfiedBy:event withJsonDict:JSONDictionary];
                     break;
                 }
             }

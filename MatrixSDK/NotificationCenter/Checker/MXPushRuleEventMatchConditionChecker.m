@@ -18,15 +18,13 @@
 
 @implementation MXPushRuleEventMatchConditionChecker
 
-- (BOOL)isCondition:(MXPushRuleCondition*)condition satisfiedBy:(MXEvent*)event
+- (BOOL)isCondition:(MXPushRuleCondition*)condition satisfiedBy:(MXEvent*)event withJsonDict:(NSDictionary*)contentAsJsonDict
 {
     BOOL isSatisfied = NO;
-
-    // Come back to JSON dictionary in order to easily travel to key path defined by condition.parameter.key
-    NSDictionary *JSONDictionary = event.originalDictionary;
-
+    
     // Retrieve the value
-    NSObject *value = [JSONDictionary valueForKeyPath:condition.parameters[@"key"]];
+    NSObject *value = [contentAsJsonDict valueForKeyPath:condition.parameters[@"key"]];
+    
     if (value && [value isKindOfClass:[NSString class]])
     {
         // If it exists, compare it to the regular expression in condition.parameter.pattern
