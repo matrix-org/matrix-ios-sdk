@@ -26,7 +26,7 @@
 #import "MXMemoryStore.h"
 #import "MXFileStore.h"
 
-// FIXME Enable server sync v2
+// FIXME SYNCV2 Enable server sync v2
 //#define MXSESSION_ENABLE_SERVER_SYNC_V2
 
 #pragma mark - Constants definitions
@@ -851,7 +851,9 @@ typedef void (^MXOnResumeDone)();
         
         NSArray *roomDicts = JSONData[@"rooms"];
         
-        NSLog(@"[MXSession] Received %tu rooms in %.0fms", roomDicts.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+        NSLog(@"[MXSession] Received %tu rooms in %.3fms", roomDicts.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+
+        NSDate *startDate2 = [NSDate date];
         
         for (NSDictionary *roomDict in roomDicts)
         {
@@ -936,7 +938,9 @@ typedef void (^MXOnResumeDone)();
         {
             [_store commit];
         }
-        
+
+        NSLog(@"[MXSession] InitialSync events processed and stored in %.3fms", [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+
         // Resume from the last known token
         [self streamEventsFromToken:_store.eventStreamToken withLongPoll:YES];
         
@@ -1038,7 +1042,7 @@ typedef void (^MXOnResumeDone)();
             @autoreleasepool {
                 
                 // Presently we remove the existing room from the rooms list.
-                // FIXME Archive/Display the left rooms!
+                // FIXME SYNCV2 Archive/Display the left rooms!
                 // For that create 'handleArchivedRoomSync' method
                 
                 // Retrieve existing room
