@@ -869,11 +869,12 @@ typedef void (^MXOnResumeDone)();
                     [room handleMessages:roomMessages
                                direction:MXEventDirectionBackwards isTimeOrdered:YES];
                     
-                    // If the initialSync returns less messages than requested, we got all history from the home server
-                    if (roomMessages.chunk.count < initialSyncMessagesLimit)
-                    {
-                        [_store storeHasReachedHomeServerPaginationEndForRoom:room.state.roomId andValue:YES];
-                    }
+                    // Uncomment the following lines when SYN-482 will be fixed
+//                    // If the initialSync returns less messages than requested, we got all history from the home server
+//                    if (roomMessages.chunk.count < initialSyncMessagesLimit)
+//                    {
+//                        [_store storeHasReachedHomeServerPaginationEndForRoom:room.state.roomId andValue:YES];
+//                    }
                 }
                 if ([roomDict objectForKey:@"state"])
                 {
@@ -885,6 +886,11 @@ typedef void (^MXOnResumeDone)();
                         [self handleOneToOneRoom:room];
                     }
                 }
+                
+                // Notify that room has been sync'ed
+                [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomInitialSyncNotification
+                                                                    object:room
+                                                                  userInfo:nil];
             }
         }
         
@@ -1355,6 +1361,7 @@ typedef void (^MXOnResumeDone)();
             [_store deleteRoom:theRoomId];
         }
         
+        // Retrieve an existing room or create a new one.
         MXRoom *room = [self getOrCreateRoom:theRoomId withJSONData:JSONData notify:YES];
 
         // Manage room messages
@@ -1410,8 +1417,6 @@ typedef void (^MXOnResumeDone)();
         [roomsInInitialSyncing removeObject:roomId];
 
         // Notify that room has been sync'ed
-        room.isSync = YES;
-        
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomInitialSyncNotification
                                                             object:room
                                                           userInfo:nil];

@@ -598,7 +598,9 @@
         [mxSession createRoom:nil visibility:nil roomAlias:nil topic:nil success:^(MXRoom *room) {
 
             XCTAssertNotNil(room);
-            XCTAssertTrue(room.isSync, @"The callback must be called once the room has been initialSynced");
+            
+            BOOL isSync = (room.state.membership != MXMembershipInvite && room.state.membership != MXMembershipUnknown);
+            XCTAssertTrue(isSync, @"The callback must be called once the room has been initialSynced");
 
             XCTAssertEqual(1, room.state.members.count, @"Bob must be the only one. members: %@", room.state.members);
 
@@ -748,7 +750,8 @@
                     MXRoom *publicRoom = (MXRoom*)note.object;
                     XCTAssertNotNil(publicRoom);
 
-                    XCTAssert(publicRoom.isSync, @"kMXRoomInitialSyncNotification must inform when the room state is fully known");
+                    BOOL isSync = (publicRoom.state.membership != MXMembershipInvite && publicRoom.state.membership != MXMembershipUnknown);
+                    XCTAssert(isSync, @"kMXRoomInitialSyncNotification must inform when the room state is fully known");
 
                     XCTAssertEqual(mxSession, publicRoom.mxSession, @"The session of the sent MXRoom must be the right one");
 
