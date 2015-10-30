@@ -111,7 +111,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
      - the user is invited to a room (the membership is `MXMembershipInvite`). To get 
        the full room state, he has to join the room.
      - the membership is currently MXMembershipUnknown. The room came down the events stream
-       and the SDK is doing an initialSync on it. When complete, it will send the `MXSessionInitialSyncedRoomNotification`.
+       and the SDK is doing an initialSync on it. When complete, it will send the `kMXRoomInitialSyncNotification`.
  */
 @property (nonatomic) BOOL isSync;
 

@@ -601,7 +601,7 @@ typedef void (^MXOnResumeDone)();
                                     // to get a valid room state.
                                     // For info, a user can get the full state of the room only when he has joined the room. So it is
                                     // the right timing to do it.
-                                    // SDK client will be notified when the full state is available thanks to `MXSessionInitialSyncedRoomNotification`.
+                                    // SDK client will be notified when the full state is available thanks to `kMXRoomInitialSyncNotification`.
                                     NSLog(@"[MXSession] Make a initialSyncOfRoom as the room seems to be joined from another device or MXSession. This also happens when creating a room: the HS autojoins the creator. Room: %@", event.roomId);
                                     [self initialSyncOfRoom:event.roomId withLimit:10 success:nil failure:nil];
                                 }

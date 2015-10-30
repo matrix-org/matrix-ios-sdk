@@ -739,14 +739,14 @@
                 [[NSNotificationCenter defaultCenter] removeObserver:newRoomObserver];
             }];
 
-            // Check MXSessionInitialSyncedRoomNotification that must be then received
-            __block __weak id initialSyncObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionInitialSyncedRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+            // Check kMXRoomInitialSyncNotification that must be then received
+            __block __weak id initialSyncObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomInitialSyncNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-                XCTAssertNotNil(newRoomId);
-                XCTAssertEqualObjects(newRoomId, note.userInfo[@"roomId"]);
+                XCTAssertNotNil(note.object);
 
-                MXRoom *room = [mxSession roomWithRoomId:newRoomId];
-                XCTAssertNotNil(room);
+                MXRoom *room = note.object;
+
+                XCTAssertEqualObjects(newRoomId, room.state.roomId);
                 XCTAssert(room.isSync, @"The room must be sync'ed now");
 
                 [[NSNotificationCenter defaultCenter] removeObserver:initialSyncObserver];
