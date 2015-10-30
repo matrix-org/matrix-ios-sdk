@@ -96,14 +96,6 @@ FOUNDATION_EXPORT NSString *const kMXSessionStateDidChangeNotification;
 FOUNDATION_EXPORT NSString *const kMXSessionNewRoomNotification;
 
 /**
- Posted when MXSession has complete an initialSync on a new room.
-
- The passed userInfo dictionary contains:
-     - `kMXSessionNotificationRoomIdKey` the roomId of the room is passed in the userInfo dictionary.
- */
-FOUNDATION_EXPORT NSString *const kMXSessionInitialSyncedRoomNotification;
-
-/**
  Posted when MXSession has detected a room is going to be left.
 
  The passed userInfo dictionary contains:

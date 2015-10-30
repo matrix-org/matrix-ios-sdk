@@ -34,7 +34,6 @@
 const NSString *MatrixSDKVersion = @"0.5.3";
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
-NSString *const kMXSessionInitialSyncedRoomNotification = @"kMXSessionInitialSyncedRoomNotification";
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
 NSString *const kMXSessionDidLeaveRoomNotification = @"kMXSessionDidLeaveRoomNotification";
 NSString *const kMXSessionDidSyncNotification = @"kMXSessionDidSyncNotification";
@@ -985,12 +984,6 @@ typedef void (^MXOnResumeDone)();
                 {
                     room = [[MXRoom alloc] initWithRoomId:roomId andMatrixSession:self];
                     [self addRoom:room notify:!isInitialSync];
-                    
-                    if (!roomSync.timeline.limited)
-                    {
-                        // We got all history from the home server
-                        [_store storeHasReachedHomeServerPaginationEndForRoom:roomId andValue:YES];
-                    }
                 }
                 else
                 {
@@ -998,24 +991,8 @@ typedef void (^MXOnResumeDone)();
                 }
                 
                 // Sync room
-                [room handleRoomSyncResponse:roomSync];
-                
-                // FIXME remove the following commented code
-//                // Remove the room from the rooms list if the user has been kicked or banned
-//                if (MXMembershipLeave == room.state.membership || MXMembershipBan == room.state.membership)
-//                {
-//                    MXEvent *roomMemberEvent = [room lastMessageWithTypeIn:@[kMXEventTypeStringRoomMember]];
-//                    
-//                    // Notify the room is going to disappear
-//                    [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionWillLeaveRoomNotification
-//                                                                        object:self
-//                                                                      userInfo:@{
-//                                                                                 kMXSessionNotificationRoomIdKey: room.state.roomId,
-//                                                                                 kMXSessionNotificationEventKey: roomMemberEvent
-//                                                                                 }];
-//                    [self removeRoom:room.state.roomId];
-//                }
-//                else
+                [room handleJoinedRoomSync:roomSync];
+
                 if (isOneToOneRoom || (!room.state.isPublic && room.state.members.count == 2))
                 {
                     // Update one-to-one room dictionary
@@ -1041,7 +1018,7 @@ typedef void (^MXOnResumeDone)();
                 }
                 
                 // Prepare invited room
-                [room handleInvitedRoom:invitedRoomSync];
+                [room handleInvitedRoomSync:invitedRoomSync];
             }
         }
         
@@ -1056,6 +1033,7 @@ typedef void (^MXOnResumeDone)();
                 
                 // Presently we remove the existing room from the rooms list.
                 // FIXME Archive/Display the left rooms!
+                // For that create 'handleArchivedRoomSync' method
                 
                 // Retrieve existing room
                 MXRoom *room = [self roomWithRoomId:roomId];
@@ -1300,7 +1278,20 @@ typedef void (^MXOnResumeDone)();
 {
     return [matrixRestClient joinRoom:roomIdOrAlias success:^(NSString *theRoomId) {
 
-        [self initialSyncOfRoom:theRoomId withLimit:initialSyncMessagesLimit success:success failure:failure];
+#ifdef MXSESSION_ENABLE_SERVER_SYNC_V2
+        if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
+        {
+            if (success)
+            {
+                MXRoom *room = [self getOrCreateRoom:theRoomId withJSONData:nil notify:YES];
+                success(room);
+            }
+        }
+        else
+#endif
+        {
+            [self initialSyncOfRoom:theRoomId withLimit:initialSyncMessagesLimit success:success failure:failure];
+        }
 
     } failure:failure];
 }
@@ -1416,11 +1407,10 @@ typedef void (^MXOnResumeDone)();
 
         // Notify that room has been sync'ed
         room.isSync = YES;
-        [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionInitialSyncedRoomNotification
-                                                            object:self
-                                                          userInfo:@{
-                                                                     kMXSessionNotificationRoomIdKey: roomId
-                                                                     }];
+        
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomInitialSyncNotification
+                                                            object:room
+                                                          userInfo:nil];
         if (success)
         {
             success(room);

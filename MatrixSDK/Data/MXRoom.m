@@ -22,7 +22,7 @@
 #import "MXError.h"
 
 NSString *const kMXRoomSyncWithLimitedTimelineNotification = @"kMXRoomSyncWithLimitedTimelineNotification";
-NSString *const kMXRoomNotificationRoomIdKey = @"roomId";
+NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotification";
 
 NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
@@ -152,10 +152,20 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 #pragma mark - sync v2
 
-- (void)handleRoomSyncResponse:(MXRoomSync *)roomSync
+- (void)handleJoinedRoomSync:(MXRoomSync *)roomSync
 {
     // Is it an initial sync for this room?
-    BOOL isRoomInitialSync = !mxSession.store.eventStreamToken;
+    BOOL isRoomInitialSync = !_isSync;
+    
+    // Check whether the room was pending on an invitation.
+    if (self.state.membership == MXMembershipInvite)
+    {
+        // Reset the storage of this room. An initial sync of the room will be done with the provided 'roomSync'.
+        NSLog(@"[MXRoom] handleJoinedRoomSync: clean invited room from the store (%@).", self.state.roomId);
+        [mxSession.store deleteRoom:self.state.roomId];
+        
+        isRoomInitialSync = YES; // Note: this boolean should be already true because 'isSync' should be false here.
+    }
     
     // Handle timeline.events (Note: timeline events are in chronological order)
     if (isRoomInitialSync)
@@ -177,6 +187,12 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             
             // Store the event
             [mxSession.store storeEventForRoom:_state.roomId event:event direction:MXEventDirectionSync];
+        }
+        
+        // Check whether we got all history from the home server
+        if (!roomSync.timeline.limited)
+        {
+            [mxSession.store storeHasReachedHomeServerPaginationEndForRoom:self.state.roomId andValue:YES];
         }
     }
     else
@@ -231,21 +247,26 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         {
             [mxSession.store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
         }
+        
+        // init the receips to the latest received one.
+        [self acknowledgeLatestEvent:NO];
+        
+        _isSync = YES;
+        
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomInitialSyncNotification
+                                                            object:self
+                                                          userInfo:nil];
     }
     else if (roomSync.timeline.limited)
     {
         // The room has been resync with a limited timeline - Post notification
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomSyncWithLimitedTimelineNotification
                                                             object:self
-                                                          userInfo:@{
-                                                                     kMXRoomNotificationRoomIdKey: self.state.roomId
-                                                                     }];
+                                                          userInfo:nil];
     }
-    
-    _isSync = YES;
 }
 
-- (void)handleInvitedRoom:(MXInvitedRoomSync *)invitedRoomSync
+- (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync
 {
     // Handle the state events as live events (the room state will be updated, and the listeners (if any) will be notified).
     for (MXEvent *event in invitedRoomSync.inviteState.events)
