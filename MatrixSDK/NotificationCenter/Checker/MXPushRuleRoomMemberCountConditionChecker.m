@@ -81,7 +81,9 @@
 
             // Check the targeted room member count against value
             MXRoom *room = [mxSession roomWithRoomId:event.roomId];
-            if (room)
+            
+            // sanity checks
+            if (room && room.state && room.state.members)
             {
                 if (nil == op || [op isEqualToString:@"=="])
                 {
