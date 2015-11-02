@@ -67,22 +67,22 @@
 
 - (id)initWithRoomId:(NSString*)roomId
     andMatrixSession:(MXSession*)matrixSession
-         andJSONData:(NSDictionary*)JSONData
+         andInitialSync:(MXRoomInitialSync*)initialSync
         andDirection:(BOOL)isLive
 {
     self = [self initWithRoomId:roomId andMatrixSession:matrixSession andDirection:isLive];
     if (self)
     {
         // Store optional metadata
-        if (JSONData)
+        if (initialSync)
         {
-            if ([JSONData objectForKey:@"visibility"])
+            if (initialSync.visibility)
             {
-                visibility = JSONData[@"visibility"];
+                visibility = initialSync.visibility;
             }
-            if ([JSONData objectForKey:@"membership"])
+            if (initialSync.membership)
             {
-                membership = [MXTools membership:JSONData[@"membership"]];
+                membership = [MXTools membership:initialSync.membership];
             }
         }
     }

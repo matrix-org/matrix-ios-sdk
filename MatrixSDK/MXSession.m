@@ -609,7 +609,7 @@ typedef void (^MXOnResumeDone)();
                         }
 
                         // Prepare related room
-                        MXRoom *room = [self getOrCreateRoom:event.roomId withJSONData:nil notify:YES];
+                        MXRoom *room = [self getOrCreateRoom:event.roomId withInitialSync:nil notify:YES];
                         BOOL isOneToOneRoom = (!room.state.isPublic && room.state.members.count == 2);
 
                         // Make room data digest the event
@@ -839,7 +839,7 @@ typedef void (^MXOnResumeDone)();
     NSLog(@"[MXSession] Do a global initialSync");
     
     // Then, we can do the global sync
-    [matrixRestClient initialSyncWithLimit:initialSyncMessagesLimit success:^(NSDictionary *JSONData) {
+    [matrixRestClient initialSyncWithLimit:initialSyncMessagesLimit success:^(MXInitialSyncResponse *initialSync) {
         
         // Make sure [MXSession close] has not been called before the server response
         if (nil == _myUser)
@@ -849,36 +849,32 @@ typedef void (^MXOnResumeDone)();
         
         NSMutableArray * roomids = [[NSMutableArray alloc] init];
         
-        NSArray *roomDicts = JSONData[@"rooms"];
-        
-        NSLog(@"[MXSession] Received %tu rooms in %.3fms", roomDicts.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+        NSLog(@"[MXSession] Received %tu rooms in %.3fms", initialSync.rooms.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
         NSDate *startDate2 = [NSDate date];
         
-        for (NSDictionary *roomDict in roomDicts)
+        for (MXRoomInitialSync* roomInitialSync in initialSync.rooms)
         {
             @autoreleasepool
             {
-                MXRoom *room = [self getOrCreateRoom:roomDict[@"room_id"] withJSONData:roomDict notify:NO];
+                MXRoom *room = [self getOrCreateRoom:roomInitialSync.roomId withInitialSync:roomInitialSync notify:NO];
                 [roomids addObject:room.state.roomId];
                 
-                if ([roomDict objectForKey:@"messages"])
+                if (roomInitialSync.messages)
                 {
-                    MXPaginationResponse *roomMessages = [MXPaginationResponse modelFromJSON:[roomDict objectForKey:@"messages"]];
-                    
-                    [room handleMessages:roomMessages
+                    [room handleMessages:roomInitialSync.messages
                                direction:MXEventDirectionBackwards isTimeOrdered:YES];
                     
                     // Uncomment the following lines when SYN-482 will be fixed
 //                    // If the initialSync returns less messages than requested, we got all history from the home server
-//                    if (roomMessages.chunk.count < initialSyncMessagesLimit)
+//                    if (roomInitialSync.messages.chunk.count < initialSyncMessagesLimit)
 //                    {
 //                        [_store storeHasReachedHomeServerPaginationEndForRoom:room.state.roomId andValue:YES];
 //                    }
                 }
-                if ([roomDict objectForKey:@"state"])
+                if (roomInitialSync.state)
                 {
-                    [room handleStateEvents:roomDict[@"state"] direction:MXEventDirectionSync];
+                    [room handleStateEvents:roomInitialSync.state direction:MXEventDirectionSync];
                     
                     if (!room.state.isPublic && room.state.members.count == 2)
                     {
@@ -897,22 +893,17 @@ typedef void (^MXOnResumeDone)();
         // Manage presence
         @autoreleasepool
         {
-            NSArray *presenceDicts = JSONData[@"presence"];
-            for (NSDictionary *presenceDict in presenceDicts)
+            for (MXEvent *presenceEvent in initialSync.presence)
             {
-                MXEvent *presenceEvent = [MXEvent modelFromJSON:presenceDict];
                 [self handlePresenceEvent:presenceEvent direction:MXEventDirectionSync];
-                
             }
         }
         
         // Manage receipts
         @autoreleasepool
         {
-            NSArray *receiptDicts = JSONData[@"receipts"];
-            for (NSDictionary *receiptDict in receiptDicts)
+            for (MXEvent *receiptEvent in initialSync.receipts)
             {
-                MXEvent *receiptEvent = [MXEvent modelFromJSON:receiptDict];
                 MXRoom *room = [self roomWithRoomId:receiptEvent.roomId];
                 
                 if (room)
@@ -924,14 +915,14 @@ typedef void (^MXOnResumeDone)();
         
         // init the receips to the latest received one.
         // else the unread messages counter will not be properly managed.
-        for (NSDictionary *roomDict in roomDicts)
+        for (MXRoomInitialSync* roomInitialSync in initialSync.rooms)
         {
-            MXRoom *room = [self roomWithRoomId:roomDict[@"room_id"]];
+            MXRoom *room = [self roomWithRoomId:roomInitialSync.roomId];
             [room acknowledgeLatestEvent:NO];
         }
         
         // Start listening to live events
-        _store.eventStreamToken = JSONData[@"end"];
+        _store.eventStreamToken = initialSync.end;
         
         // Commit store changes done in [room handleMessages]
         if ([_store respondsToSelector:@selector(commit)])
@@ -1293,7 +1284,7 @@ typedef void (^MXOnResumeDone)();
         {
             if (success)
             {
-                MXRoom *room = [self getOrCreateRoom:theRoomId withJSONData:nil notify:YES];
+                MXRoom *room = [self getOrCreateRoom:theRoomId withInitialSync:nil notify:YES];
                 success(room);
             }
         }
@@ -1343,8 +1334,8 @@ typedef void (^MXOnResumeDone)();
 {
     [roomsInInitialSyncing addObject:roomId];
 
-    // Do an initial to get state and messages in the room
-    return [matrixRestClient initialSyncOfRoom:roomId withLimit:limit success:^(NSDictionary *JSONData) {
+    // Do an initial sync to get state and messages in the room
+    return [matrixRestClient initialSyncOfRoom:roomId withLimit:limit success:^(MXRoomInitialSync *roomInitialSync) {
 
         if (MXSessionStateClosed == _state)
         {
@@ -1352,7 +1343,7 @@ typedef void (^MXOnResumeDone)();
             return;
         }
 
-        NSString *theRoomId = JSONData[@"room_id"];
+        NSString *theRoomId = roomInitialSync.roomId;
         
         // Clean the store for this room
         if (![_store respondsToSelector:@selector(rooms)] || [_store.rooms indexOfObject:theRoomId] != NSNotFound)
@@ -1362,27 +1353,25 @@ typedef void (^MXOnResumeDone)();
         }
         
         // Retrieve an existing room or create a new one.
-        MXRoom *room = [self getOrCreateRoom:theRoomId withJSONData:JSONData notify:YES];
+        MXRoom *room = [self getOrCreateRoom:theRoomId withInitialSync:roomInitialSync notify:YES];
 
         // Manage room messages
-        if ([JSONData objectForKey:@"messages"])
+        if (roomInitialSync.messages)
         {
-            MXPaginationResponse *roomMessages = [MXPaginationResponse modelFromJSON:[JSONData objectForKey:@"messages"]];
-
-            [room handleMessages:roomMessages direction:MXEventDirectionSync isTimeOrdered:YES];
+            [room handleMessages:roomInitialSync.messages direction:MXEventDirectionSync isTimeOrdered:YES];
 
             // Uncomment the following lines when SYN-482 will be fixed
 //            // If the initialSync returns less messages than requested, we got all history from the home server
-//            if (roomMessages.chunk.count < limit)
+//            if (roomInitialSync.messages.chunk.count < limit)
 //            {
 //                [_store storeHasReachedHomeServerPaginationEndForRoom:room.state.roomId andValue:YES];
 //            }
         }
 
         // Manage room state
-        if ([JSONData objectForKey:@"state"])
+        if (roomInitialSync.state)
         {
-            [room handleStateEvents:JSONData[@"state"] direction:MXEventDirectionSync];
+            [room handleStateEvents:roomInitialSync.state direction:MXEventDirectionSync];
             
             if (!room.state.isPublic && room.state.members.count == 2)
             {
@@ -1392,16 +1381,14 @@ typedef void (^MXOnResumeDone)();
         }
 
         // Manage presence provided by this API
-        for (NSDictionary *presenceDict in JSONData[@"presence"])
+        for (MXEvent *presenceEvent in roomInitialSync.presence)
         {
-            MXEvent *presenceEvent = [MXEvent modelFromJSON:presenceDict];
             [self handlePresenceEvent:presenceEvent direction:MXEventDirectionSync];
         }
         
         // Manage receipts provided by this API
-        for (NSDictionary *receiptsDict in JSONData[@"receipts"])
+        for (MXEvent *receiptEvent in roomInitialSync.receipts)
         {
-            MXEvent *receiptEvent = [MXEvent modelFromJSON:receiptsDict];
             [room handleReceiptEvent:receiptEvent direction:MXEventDirectionSync];
         }
         
@@ -1481,19 +1468,19 @@ typedef void (^MXOnResumeDone)();
     return nil;
 }
 
-- (MXRoom *)getOrCreateRoom:(NSString *)roomId withJSONData:JSONData notify:(BOOL)notify
+- (MXRoom *)getOrCreateRoom:(NSString *)roomId withInitialSync:(MXRoomInitialSync*)initialSync notify:(BOOL)notify
 {
     MXRoom *room = [self roomWithRoomId:roomId];
     if (nil == room)
     {
-        room = [self createRoom:roomId withJSONData:JSONData notify:notify];
+        room = [self createRoom:roomId withInitialSync:initialSync notify:notify];
     }
     return room;
 }
 
-- (MXRoom *)createRoom:(NSString *)roomId withJSONData:(NSDictionary*)JSONData notify:(BOOL)notify
+- (MXRoom *)createRoom:(NSString *)roomId withInitialSync:(MXRoomInitialSync*)initialSync notify:(BOOL)notify
 {
-    MXRoom *room = [[MXRoom alloc] initWithRoomId:roomId andMatrixSession:self andJSONData:JSONData];
+    MXRoom *room = [[MXRoom alloc] initWithRoomId:roomId andMatrixSession:self andInitialSync:initialSync];
     
     [self addRoom:room notify:notify];
     return room;

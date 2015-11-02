@@ -72,14 +72,14 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     return self;
 }
 
-- (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession2 andJSONData:(NSDictionary*)JSONData
+- (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession2 andInitialSync:(MXRoomInitialSync*)initialSync
 {
     self = [self initWithRoomId:roomId andMatrixSession:mxSession2];
     if (self)
     {
-        _state = [[MXRoomState alloc] initWithRoomId:roomId andMatrixSession:mxSession2 andJSONData:JSONData andDirection:YES];
+        _state = [[MXRoomState alloc] initWithRoomId:roomId andMatrixSession:mxSession2 andInitialSync:initialSync andDirection:YES];
         
-        if ([JSONData objectForKey:@"inviter"])
+        if (initialSync.inviter.length)
         {
             // On an initialSync, an home server does not provide the room invitation under an event form
             // whereas it does when getting the information from a live event (see SPEC-54).
@@ -95,7 +95,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                                                                     @"content": @{
                                                                             @"membership": kMXMembershipStringInvite
                                                                             },
-                                                                    @"user_id": JSONData[@"inviter"],
+                                                                    @"user_id": initialSync.inviter,
                                                                     @"state_key": mxSession.matrixRestClient.credentials.userId,
                                                                     @"origin_server_ts": [NSNumber numberWithLongLong:kMXUndefinedTimestamp]
                                                                     }];
@@ -372,19 +372,17 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     }
 }
 
-- (void)handleStateEvents:(NSArray*)roomStateEvents direction:(MXEventDirection)direction
+- (void)handleStateEvents:(NSArray<MXEvent*>*)roomStateEvents direction:(MXEventDirection)direction
 {
-    NSArray *events = [MXEvent modelsFromJSON:roomStateEvents];
-    
     // check if there is something to do
-    if (!events || (events.count == 0))
+    if (!roomStateEvents || (roomStateEvents.count == 0))
     {
         return;
     }
     
     [self cloneState:direction];
     
-    for (MXEvent *event in events)
+    for (MXEvent *event in roomStateEvents)
     {
         [self handleStateEvent:event direction:direction];
     }

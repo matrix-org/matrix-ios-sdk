@@ -709,15 +709,15 @@ typedef enum : NSUInteger
  @param roomId the id of the room.
  @param limit the maximum number of messages to return.
  
- @param success A block object called when the operation succeeds. It provides the raw 
-                home server JSON response. @see http://matrix.org/docs/api/client-server/#!/-rooms/get_room_sync_data)
+ @param success A block object called when the operation succeeds. It provides the model created from
+                the home server JSON response. @see http://matrix.org/docs/api/client-server/#!/-rooms/get_room_sync_data)
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)initialSyncOfRoom:(NSString*)roomId
                         withLimit:(NSInteger)limit
-                          success:(void (^)(NSDictionary *JSONData))success
+                          success:(void (^)(MXRoomInitialSync *roomInitialSync))success
                           failure:(void (^)(NSError *error))failure;
 
 
@@ -828,14 +828,13 @@ typedef enum : NSUInteger
  
  @param limit the maximum number of messages to return.
  
- @param success A block object called when the operation succeeds. It provides the raw
-                home server JSON response. @see http://matrix.org/docs/api/client-server/#!/-events/initial_sync
+ @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)initialSyncWithLimit:(NSInteger)limit
-                             success:(void (^)(NSDictionary *JSONData))success
+                             success:(void (^)(MXInitialSyncResponse *initialSyncResponse))success
                              failure:(void (^)(NSError *error))failure;
 
 /**

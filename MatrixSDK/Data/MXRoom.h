@@ -103,7 +103,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 
 - (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession;
 
-- (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession andJSONData:(NSDictionary*)JSONData;
+- (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession andInitialSync:(MXRoomInitialSync*)initialSync;
 
 - (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession andStateEvents:(NSArray*)stateEvents;
 
@@ -136,7 +136,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
              direction:(MXEventDirection)direction
          isTimeOrdered:(BOOL)isTimeOrdered;
 
-- (void)handleStateEvents:(NSArray*)roomStateEvents direction:(MXEventDirection)direction;
+- (void)handleStateEvents:(NSArray<MXEvent*>*)roomStateEvents direction:(MXEventDirection)direction;
 
 /**
  Handle an event (message or state) that comes from the events streaming.
