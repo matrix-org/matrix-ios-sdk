@@ -646,10 +646,10 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @interface MXRoomSync : MXJSONModel
 
     /**
-     Events mapping: keys are event ids (values are event descriptions).
+     Events mapping: keys are event ids (JSON values have been converted to MXEvent).
      The events are referenced from the 'timeline' and 'state' keys for this room.
      */
-    @property (nonatomic) NSDictionary<NSString*, NSDictionary*> *eventMap;
+    @property (nonatomic) NSDictionary *eventMap;
 
     /**
      The state updates for the room.
@@ -690,19 +690,19 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @interface MXRoomsSyncResponse : MXJSONModel
 
     /**
-     Joined rooms: keys are rooms ids (values will be converted to MXRoomSync).
+     Joined rooms: keys are rooms ids (JSON values have been converted to MXRoomSync).
      */
-    @property (nonatomic) NSDictionary<NSString*, NSDictionary*> *joined;
+    @property (nonatomic) NSDictionary *joined;
 
     /**
-     The rooms that the user has been invited to: keys are rooms ids (values will be converted to MXInvitedRoomSync).
+     The rooms that the user has been invited to: keys are rooms ids (JSON values have been converted to MXInvitedRoomSync).
      */
-    @property (nonatomic) NSDictionary<NSString*, NSDictionary*> *invited;
+    @property (nonatomic) NSDictionary *invited;
 
     /**
-     The rooms that the user has left or been banned from: keys are rooms ids (values will be converted to MXRoomSync).
+     The rooms that the user has left or been banned from: keys are rooms ids (JSON values have been converted to MXRoomSync).
      */
-    @property (nonatomic) NSDictionary<NSString*, NSDictionary*> *archived;
+    @property (nonatomic) NSDictionary *archived;
 
 @end
 
@@ -736,7 +736,7 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
     /**
      List of rooms.
      */
-    @property (nonatomic) MXRoomsSyncResponse *rooms;
+    @property (nonatomic) MXRoomsSyncResponse *mxRooms;
 
 @end
 

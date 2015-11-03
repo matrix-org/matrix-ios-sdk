@@ -503,6 +503,34 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
 
 @implementation MXRoomSync
 
+// Override the default Mantle modelFromJSON method to prepare event mapping dictionary.
+// Indeed the values in received eventMap dictionary are JSON dictionaries. We convert them in MXEvent object.
+// The event identifier is reported inside the MXEvent too.
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXRoomSync *roomSync = [super modelFromJSON:JSONDictionary];
+    if (roomSync && roomSync.eventMap.count)
+    {
+        NSArray *eventIds = roomSync.eventMap.allKeys;
+        
+        NSMutableDictionary *mxEventMap = [NSMutableDictionary dictionaryWithCapacity:eventIds.count];
+        
+        for (NSUInteger index = 0; index < eventIds.count; index++)
+        {
+            NSString *eventId = eventIds[index];
+            NSDictionary *eventDesc = [roomSync.eventMap objectForKey:eventId];
+            
+            MXEvent *event = [MXEvent modelFromJSON:eventDesc];
+            event.eventId = eventId;
+            
+            mxEventMap[eventId] = event;
+        }
+        
+        roomSync.eventMap = mxEventMap;
+    }
+    return roomSync;
+}
+
 // Automatically convert state dictionary in MXRoomSyncState.
 + (NSValueTransformer *)stateJSONTransformer
 {
@@ -544,20 +572,106 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
 @end
 
 @implementation MXRoomsSyncResponse
+
+// Override the default Mantle modelFromJSON method to prepare room lists.
+// Indeed the values in received dictionaries are JSON dictionaries. We convert them in MXRoomSync
+// or MXInvitedRoomSync objects.
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXRoomsSyncResponse *roomsSync = [super modelFromJSON:JSONDictionary];
+    if (roomsSync)
+    {
+        if (roomsSync.joined.count)
+        {
+            NSArray *roomIds = roomsSync.joined.allKeys;
+            
+            NSMutableDictionary *mxJoined = [NSMutableDictionary dictionaryWithCapacity:roomIds.count];
+            
+            for (NSUInteger index = 0; index < roomIds.count; index++)
+            {
+                NSString *roomId = roomIds[index];
+                NSDictionary *roomSyncDesc = roomsSync.joined[roomId];
+                
+                mxJoined[roomId] = [MXRoomSync modelFromJSON:roomSyncDesc];
+            }
+            
+            roomsSync.joined = mxJoined;
+        }
+        
+        if (roomsSync.invited.count)
+        {
+            NSArray *roomIds = roomsSync.invited.allKeys;
+            
+            NSMutableDictionary *mxInvited = [NSMutableDictionary dictionaryWithCapacity:roomIds.count];
+            
+            for (NSUInteger index = 0; index < roomIds.count; index++)
+            {
+                NSString *roomId = roomIds[index];
+                NSDictionary *roomSyncDesc = roomsSync.invited[roomId];
+                
+                mxInvited[roomId] = [MXInvitedRoomSync modelFromJSON:roomSyncDesc];
+            }
+            
+            roomsSync.invited = mxInvited;
+        }
+        
+        if (roomsSync.archived.count)
+        {
+            NSArray *roomIds = roomsSync.archived.allKeys;
+            
+            NSMutableDictionary *mxArchived = [NSMutableDictionary dictionaryWithCapacity:roomIds.count];
+            
+            for (NSUInteger index = 0; index < roomIds.count; index++)
+            {
+                NSString *roomId = roomIds[index];
+                NSDictionary *roomSyncDesc = roomsSync.archived[roomId];
+                
+                mxArchived[roomId] = [MXRoomSync modelFromJSON:roomSyncDesc];
+            }
+            
+            roomsSync.archived = mxArchived;
+        }
+    }
+    return roomsSync;
+}
+
+@end
+
+@interface MXSyncResponse ()
+
+    /**
+     The original list of rooms.
+     */
+    @property (nonatomic) NSDictionary *rooms;
+
 @end
 
 @implementation MXSyncResponse
+
+// Override the default Mantle modelFromJSON method to prepare rooms dictionary.
+// Contrary to 'presence', we need to create a model from the JSON dictionary 'rooms' (see modelFromJSON call) in order to create
+// all its sub-items. We obtain then a full converted JSON in a MXRoomsSyncResponse object 'mxRooms'.
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXSyncResponse *syncResponse = [super modelFromJSON:JSONDictionary];
+    
+    // The server response must contain here a 'rooms' key.
+    if (syncResponse && syncResponse.rooms)
+    {
+        // Trigger a full conversion of this JSON dictionary.
+        syncResponse.mxRooms = [MXRoomsSyncResponse modelFromJSON:syncResponse.rooms];
+        
+        // Remove original dictionary
+        syncResponse.rooms = nil;
+    }
+    
+    return syncResponse;
+}
 
 // Automatically convert presence dictionary to MXPresenceSyncResponse instance.
 + (NSValueTransformer *)presenceJSONTransformer
 {
     return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXPresenceSyncResponse.class];
-}
-
-// Automatically convert rooms dictionary to MXRoomsSyncResponse instance.
-+ (NSValueTransformer *)roomsJSONTransformer
-{
-    return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXRoomsSyncResponse.class];
 }
 
 @end
