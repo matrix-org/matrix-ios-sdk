@@ -113,7 +113,7 @@
  @param roomId the room id to the room.
  @param matrixSession the mxSession to the home server. It is used to get information about the user
                   currently connected to the home server.
- @param JSONData the JSON object obtained at the initialSync of the room. It is used to store 
+ @param initialSync the description obtained at the initialSync of the room. It is used to store 
                   additional metadata coming outside state events.
  @paran isLive the direction in which this `MXRoomState` instance will be updated.
  
@@ -121,7 +121,7 @@
  */
 - (id)initWithRoomId:(NSString*)roomId
     andMatrixSession:(MXSession*)matrixSession
-         andJSONData:(NSDictionary*)JSONData
+         andInitialSync:(MXRoomInitialSync*)initialSync
         andDirection:(BOOL)isLive;
 
 /**

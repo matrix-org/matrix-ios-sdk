@@ -424,6 +424,54 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
 
 @end
 
+#pragma mark - Server sync v1 response
+#pragma mark -
+
+@implementation MXRoomInitialSync
+
+// Automatically convert state array to an array of MXEvents.
++ (NSValueTransformer *)stateJSONTransformer
+{
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXEvent.class];
+}
+
+// Automatically convert presence array to an array of MXEvents.
++ (NSValueTransformer *)presenceJSONTransformer
+{
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXEvent.class];
+}
+
+// Automatically convert receipts array to an array of MXEvents.
++ (NSValueTransformer *)receiptsJSONTransformer
+{
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXEvent.class];
+}
+
+@end
+
+@implementation MXInitialSyncResponse
+
+// Automatically convert rooms array to an array of MXRoomInitialSync.
++ (NSValueTransformer *)roomsJSONTransformer
+{
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXRoomInitialSync.class];
+}
+
+// Automatically convert presence array to an array of MXEvents.
++ (NSValueTransformer *)presenceJSONTransformer
+{
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXEvent.class];
+}
+
+// Automatically convert receipts array to an array of MXEvents.
++ (NSValueTransformer *)receiptsJSONTransformer
+{
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXEvent.class];
+}
+
+@end
+
+
 #pragma mark - Server sync v2 response
 #pragma mark -
 

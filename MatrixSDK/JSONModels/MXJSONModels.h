@@ -502,6 +502,83 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 
 @end
 
+#pragma mark - Server sync v1 response
+#pragma mark -
+
+/**
+ `MXRoomInitialSync` represents a room description in server response during initial sync v1.
+ */
+@interface MXRoomInitialSync : MXJSONModel
+
+    /**
+     The room identifier.
+     */
+    @property (nonatomic) NSString *roomId;
+
+    /**
+     The last recent messages of the room.
+     */
+    @property (nonatomic) MXPaginationResponse *messages;
+
+    /**
+     The state events.
+     */
+    @property (nonatomic) NSArray<MXEvent*> *state;
+
+    /**
+     The current user membership in this room.
+     */
+    @property (nonatomic) NSString* membership;
+
+    /**
+     The room visibility (public/private).
+     */
+    @property (nonatomic) NSString* visibility;
+
+    /**
+     The matrix id of the inviter in case of pending invitation.
+     */
+    @property (nonatomic) NSString *inviter;
+
+    /**
+     The presence status of other users (Provided in case of room initial sync @see http://matrix.org/docs/api/client-server/#!/-rooms/get_room_sync_data)).
+     */
+    @property (nonatomic) NSArray<MXEvent*> *presence;
+
+    /**
+     The read receipts (Provided in case of room initial sync).
+     */
+    @property (nonatomic) NSArray<MXEvent*> *receipts;
+
+@end
+
+/**
+ `MXInitialSyncResponse` represents the request response for server initial sync v1. @see http://matrix.org/docs/api/client-server/#!/-events/initial_sync
+ */
+@interface MXInitialSyncResponse : MXJSONModel
+
+    /**
+     List of rooms.
+     */
+    @property (nonatomic) NSArray<MXRoomInitialSync*> *rooms;
+
+    /**
+     The presence status of other users.
+     */
+    @property (nonatomic) NSArray<MXEvent*> *presence;
+
+    /**
+     The read receipts.
+     */
+    @property (nonatomic) NSArray<MXEvent*> *receipts;
+
+    /**
+     The opaque token for the end.
+     */
+    @property (nonatomic) NSString *end;
+
+@end
+
 #pragma mark - Server sync v2 response
 #pragma mark -
 
