@@ -270,6 +270,8 @@ typedef void (^MXOnResumeDone)();
 
                 NSLog(@"[MXSession] Got presence of %tu users in %.0fms", userPresenceEvents.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
+                NSDate *t0 = [NSDate date];
+                
                 @autoreleasepool
                 {
                     for (MXEvent *userPresenceEvent in userPresenceEvents)
@@ -283,6 +285,9 @@ typedef void (^MXOnResumeDone)();
                 {
                     onPresenceDone();
                 }
+                
+                NSLog(@"[MXSession] Presences proceeded in %.0fms", [[NSDate date] timeIntervalSinceDate:t0] * 1000);
+                
             } failure:^(NSError *error) {
                 if (onPresenceError)
                 {
