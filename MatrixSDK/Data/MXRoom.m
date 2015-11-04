@@ -166,7 +166,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         while (index--)
         {
             NSString *eventId = roomSync.timeline.events[index];
-            MXEvent *event = roomSync.eventMap[eventId];
+            MXEvent *event = roomSync.mxEventMap[eventId];
             
             [self handleMessage:event direction:MXEventDirectionSync];
             
@@ -195,7 +195,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         while (index < roomSync.timeline.events.count)
         {
             NSString *eventId = roomSync.timeline.events[index++];
-            MXEvent *event = roomSync.eventMap[eventId];
+            MXEvent *event = roomSync.mxEventMap[eventId];
             
             // Make room data digest the live event
             [self handleLiveEvent:event];
@@ -216,7 +216,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         for (NSInteger index = 0; index < roomSync.state.events.count; index++)
         {
             NSString *eventId = roomSync.state.events[index];
-            MXEvent *event = roomSync.eventMap[eventId];
+            MXEvent *event = roomSync.mxEventMap[eventId];
             
             [self handleStateEvent:event direction:MXEventDirectionSync];
         }
