@@ -467,27 +467,27 @@
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [bobRestClient initialSyncOfRoom:roomId withLimit:3 success:^(NSDictionary *JSONData) {
+        [bobRestClient initialSyncOfRoom:roomId withLimit:3 success:^(MXRoomInitialSync *roomInitialSync) {
             
-            XCTAssertNotNil(JSONData);
-            XCTAssertNotNil(JSONData[@"room_id"]);
-            XCTAssertNotNil(JSONData[@"membership"]);
-            XCTAssertNotNil(JSONData[@"messages"]);
-            XCTAssertNotNil(JSONData[@"messages"][@"chunk"]);
-            XCTAssertNotNil(JSONData[@"state"]);
-            XCTAssertNotNil(JSONData[@"presence"]);
+            XCTAssertNotNil(roomInitialSync);
+            XCTAssertNotNil(roomInitialSync.roomId);
+            XCTAssertNotNil(roomInitialSync.membership);
+            XCTAssertNotNil(roomInitialSync.messages);
+            XCTAssertNotNil(roomInitialSync.messages.chunk);
+            XCTAssertNotNil(roomInitialSync.state);
+            XCTAssertNotNil(roomInitialSync.presence);
             
-            XCTAssert([JSONData[@"room_id"] isEqualToString:roomId]);
-            XCTAssert([JSONData[@"membership"] isEqualToString:@"join"]);
+            XCTAssert([roomInitialSync.roomId isEqualToString:roomId]);
+            XCTAssert([roomInitialSync.membership isEqualToString:@"join"]);
             
-            XCTAssert([JSONData[@"messages"][@"chunk"] isKindOfClass:[NSArray class]]);
-            NSArray *messages = JSONData[@"messages"][@"chunk"];
+            XCTAssert([roomInitialSync.messages.chunk isKindOfClass:[NSArray class]]);
+            NSArray *messages = roomInitialSync.messages.chunk;
             XCTAssertEqual(messages.count, 3);
             
-            XCTAssert([JSONData[@"state"] isKindOfClass:[NSArray class]]);
+            XCTAssert([roomInitialSync.state isKindOfClass:[NSArray class]]);
             
-            XCTAssert([JSONData[@"presence"] isKindOfClass:[NSArray class]]);
-            NSArray *presences = JSONData[@"presence"];
+            XCTAssert([roomInitialSync.presence isKindOfClass:[NSArray class]]);
+            NSArray *presences = roomInitialSync.presence;
             XCTAssertEqual(presences.count, 1);
             
             [expectation fulfill];
@@ -500,22 +500,17 @@
 }
 
 // Remove the `age` field from a dictionary and all its sub dictionaries
-- (NSDictionary*)removeAgeFieldFromJSONDictionary:(NSDictionary*)JSONDict
+- (void) removeAgeField:(MXRoomInitialSync*)roomInitialSync
 {
-    // As JSONDict is unmutable, transform it to a JSON string, remove the lines containing `age`
-    // and convert back the string to a JSON dict
-    NSError *error;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:JSONDict
-                                                       options:NSJSONWritingPrettyPrinted
-                                                         error:&error];
-    NSString *JSONString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-
-    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"\"age\"(.*)," options:NSRegularExpressionCaseInsensitive error:&error];
-    NSString *modifiedJSONString = [regex stringByReplacingMatchesInString:JSONString options:0 range:NSMakeRange(0, JSONString.length) withTemplate:@""];
-
-    NSData *data = [modifiedJSONString dataUsingEncoding:NSUTF8StringEncoding];
-
-    return [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
+    for (MXEvent *event in roomInitialSync.messages.chunk)
+    {
+        event.ageLocalTs = 0;
+    }
+    
+    for (MXEvent *event in roomInitialSync.state)
+    {
+        event.ageLocalTs = 0;
+    }
 }
 
 // Compare the result of initialSyncOfRoom with the data retrieved from a global initialSync
@@ -523,42 +518,40 @@
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
-        [bobRestClient initialSyncWithLimit:3 success:^(NSDictionary *JSONData) {
+        [bobRestClient initialSyncWithLimit:3 success:^(MXInitialSyncResponse *initialSyncResponse) {
 
-            NSDictionary *JSONRoomDataInGlobal;
+            MXRoomInitialSync *roomDataInGlobal;
 
-            for (NSDictionary *roomDict in JSONData[@"rooms"])
+            for (MXRoomInitialSync *roomSync in initialSyncResponse.rooms)
             {
-                if ([roomId isEqualToString:roomDict[@"room_id"]])
+                if ([roomId isEqualToString:roomSync.roomId])
                 {
-                    JSONRoomDataInGlobal = roomDict;
+                    roomDataInGlobal = roomSync;
                 }
             }
 
-            XCTAssertNotNil(JSONRoomDataInGlobal);
+            XCTAssertNotNil(roomDataInGlobal);
 
-            [bobRestClient initialSyncOfRoom:roomId withLimit:3 success:^(NSDictionary *JSONData) {
+            [bobRestClient initialSyncOfRoom:roomId withLimit:3 success:^(MXRoomInitialSync *roomInitialSync) {
 
-                XCTAssertNotNil(JSONData);
+                XCTAssertNotNil(roomInitialSync);
 
                 // Do some cleaning before comparison
                 // Remove presence from initialSyncOfRoom result
-                NSMutableDictionary *JSONData2 = [NSMutableDictionary dictionaryWithDictionary:JSONData];
-                [JSONData2 removeObjectForKey:@"presence"];
+                roomInitialSync.presence = nil;
 
                 // Remove new added field receipts from initialSyncOfRoom result
-                [JSONData2 removeObjectForKey:@"receipts"];
+                roomInitialSync.receipts = nil;
 
                 // Remove visibility from global initialSync
-                NSMutableDictionary *JSONRoomDataInGlobal2 = [NSMutableDictionary dictionaryWithDictionary:JSONRoomDataInGlobal];
-                [JSONRoomDataInGlobal2 removeObjectForKey:@"visibility"];
+                roomDataInGlobal.visibility = nil;
 
                 // Remove the `age` field which is time dynamic
-                NSDictionary *JSONData3 = [self removeAgeFieldFromJSONDictionary:JSONData2];
-                NSDictionary *JSONRoomDataInGlobal3 = [self removeAgeFieldFromJSONDictionary:JSONRoomDataInGlobal2];
+                [self removeAgeField:roomDataInGlobal];
+                [self removeAgeField:roomInitialSync];
 
                 // Do the comparison
-                XCTAssertEqualObjects(JSONRoomDataInGlobal3, JSONData3);
+                XCTAssertEqualObjects(roomDataInGlobal, roomInitialSync);
 
                 [expectation fulfill];
 
@@ -586,49 +579,47 @@
                     [aliceRestClient inviteUser:bobRestClient.credentials.userId toRoom:roomId success:^{
                         [bobRestClient joinRoom:roomId success:^(NSString *theRoomId) {
 
-                            [bobRestClient initialSyncWithLimit:10 success:^(NSDictionary *JSONData) {
+                            [bobRestClient initialSyncWithLimit:10 success:^(MXInitialSyncResponse *initialSyncResponse) {
 
-                                NSDictionary *JSONRoomDataInGlobal;
-
-                                for (NSDictionary *roomDict in JSONData[@"rooms"])
+                                MXRoomInitialSync *roomDataInGlobal;
+                                
+                                for (MXRoomInitialSync *roomSync in initialSyncResponse.rooms)
                                 {
-                                    if ([roomId isEqualToString:roomDict[@"room_id"]])
+                                    if ([roomId isEqualToString:roomSync.roomId])
                                     {
-                                        JSONRoomDataInGlobal = roomDict;
+                                        roomDataInGlobal = roomSync;
                                     }
                                 }
+                                
+                                XCTAssertNotNil(roomDataInGlobal);
 
-                                XCTAssertNotNil(JSONRoomDataInGlobal);
+                                [bobRestClient initialSyncOfRoom:roomId withLimit:10 success:^(MXRoomInitialSync *roomInitialSync) {
 
-                                [bobRestClient initialSyncOfRoom:roomId withLimit:10 success:^(NSDictionary *JSONData) {
-
-                                    XCTAssertNotNil(JSONData);
+                                    XCTAssertNotNil(roomInitialSync);
 
                                     // Do some cleaning before comparison
                                     // Remove presence from initialSyncOfRoom result
-                                    NSMutableDictionary *JSONData2 = [NSMutableDictionary dictionaryWithDictionary:JSONData];
-                                    [JSONData2 removeObjectForKey:@"presence"];
+                                    roomInitialSync.presence = nil;
 
                                     // Remove new added field receipts from initialSyncOfRoom result
-                                    [JSONData2 removeObjectForKey:@"receipts"];
+                                    roomInitialSync.receipts = nil;
 
                                     // Remove visibility from global initialSync
-                                    NSMutableDictionary *JSONRoomDataInGlobal2 = [NSMutableDictionary dictionaryWithDictionary:JSONRoomDataInGlobal];
-                                    [JSONRoomDataInGlobal2 removeObjectForKey:@"visibility"];
+                                    roomDataInGlobal.visibility = nil;
 
                                     // Remove the `age` field which is time dynamic
-                                    NSDictionary *JSONData3 = [self removeAgeFieldFromJSONDictionary:JSONData2];
-                                    NSDictionary *JSONRoomDataInGlobal3 = [self removeAgeFieldFromJSONDictionary:JSONRoomDataInGlobal2];
+                                    [self removeAgeField:roomDataInGlobal];
+                                    [self removeAgeField:roomInitialSync];
 
                                     // Do the comparison
-                                    XCTAssertEqualObjects(JSONRoomDataInGlobal3, JSONData3);
+                                    XCTAssertEqualObjects(roomDataInGlobal, roomInitialSync);
 
                                     //[expectation fulfill];
 
-                                    [bobRestClient messagesForRoom:roomId from:JSONRoomDataInGlobal[@"messages"][@"start"] to:nil limit:1 success:^(MXPaginationResponse *paginatedResponse) {
+                                    [bobRestClient messagesForRoom:roomId from:roomDataInGlobal.messages.start to:nil limit:1 success:^(MXPaginationResponse *paginatedResponse) {
 
                                         //NSLog(@"%@", JSONData[@"messages"][@"chunk"]);
-                                        NSLog(@"%@", JSONRoomDataInGlobal[@"messages"][@"chunk"]);
+                                        NSLog(@"%@", roomDataInGlobal.messages.chunk);
                                         NSLog(@"-------");
                                         NSLog(@"%@", paginatedResponse.chunk);
 

@@ -165,11 +165,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         NSInteger index = roomSync.timeline.events.count;
         while (index--)
         {
-            NSString *eventId = [roomSync.timeline.events objectAtIndex:index];
-            NSDictionary *eventDesc = [roomSync.eventMap objectForKey:eventId];
-            
-            MXEvent *event = [MXEvent modelFromJSON:eventDesc];
-            event.eventId = eventId;
+            NSString *eventId = roomSync.timeline.events[index];
+            MXEvent *event = roomSync.mxEventMap[eventId];
             
             [self handleMessage:event direction:MXEventDirectionSync];
             
@@ -197,11 +194,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         NSInteger index = 0;
         while (index < roomSync.timeline.events.count)
         {
-            NSString *eventId = [roomSync.timeline.events objectAtIndex:index++];
-            NSDictionary *eventDesc = [roomSync.eventMap objectForKey:eventId];
-            
-            MXEvent *event = [MXEvent modelFromJSON:eventDesc];
-            event.eventId = eventId;
+            NSString *eventId = roomSync.timeline.events[index++];
+            MXEvent *event = roomSync.mxEventMap[eventId];
             
             // Make room data digest the live event
             [self handleLiveEvent:event];
@@ -221,11 +215,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         // Note: We consider it is not required to clone the existing room state here, because this is an initial sync.
         for (NSInteger index = 0; index < roomSync.state.events.count; index++)
         {
-            NSString *eventId = [roomSync.state.events objectAtIndex:index];
-            NSDictionary *eventDesc = [roomSync.eventMap objectForKey:eventId];
-            
-            MXEvent *event = [MXEvent modelFromJSON:eventDesc];
-            event.eventId = eventId;
+            NSString *eventId = roomSync.state.events[index];
+            MXEvent *event = roomSync.mxEventMap[eventId];
             
             [self handleStateEvent:event direction:MXEventDirectionSync];
         }

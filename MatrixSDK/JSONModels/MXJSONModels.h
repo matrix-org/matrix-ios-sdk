@@ -646,10 +646,10 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @interface MXRoomSync : MXJSONModel
 
     /**
-     Events mapping: keys are event ids (values are event descriptions).
+     Converted events mapping: keys are event ids.
      The events are referenced from the 'timeline' and 'state' keys for this room.
      */
-    @property (nonatomic) NSDictionary<NSString*, NSDictionary*> *eventMap;
+    @property (nonatomic) NSDictionary<NSString*, MXEvent*> *mxEventMap;
 
     /**
      The state updates for the room.
@@ -690,19 +690,19 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @interface MXRoomsSyncResponse : MXJSONModel
 
     /**
-     Joined rooms: keys are rooms ids (values will be converted to MXRoomSync).
+     Converted joined rooms: keys are rooms ids.
      */
-    @property (nonatomic) NSDictionary<NSString*, NSDictionary*> *joined;
+    @property (nonatomic) NSDictionary<NSString*, MXRoomSync*> *mxJoined;
 
     /**
-     The rooms that the user has been invited to: keys are rooms ids (values will be converted to MXInvitedRoomSync).
+     Converted invited rooms. The rooms that the user has been invited to: keys are rooms ids.
      */
-    @property (nonatomic) NSDictionary<NSString*, NSDictionary*> *invited;
+    @property (nonatomic) NSDictionary<NSString*, MXInvitedRoomSync*> *mxInvited;
 
     /**
-     The rooms that the user has left or been banned from: keys are rooms ids (values will be converted to MXRoomSync).
+     Converted archived rooms. The rooms that the user has left or been banned from: keys are rooms ids.
      */
-    @property (nonatomic) NSDictionary<NSString*, NSDictionary*> *archived;
+    @property (nonatomic) NSDictionary<NSString*, MXRoomSync*> *mxArchived;
 
 @end
 
@@ -734,9 +734,9 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
     @property (nonatomic) MXPresenceSyncResponse *presence;
 
     /**
-     List of rooms.
+     Converted list of rooms.
      */
-    @property (nonatomic) MXRoomsSyncResponse *rooms;
+    @property (nonatomic) MXRoomsSyncResponse *mxRooms;
 
 @end
 

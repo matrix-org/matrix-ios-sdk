@@ -963,17 +963,16 @@ typedef void (^MXOnResumeDone)();
             return;
         }
         
-        NSLog(@"[MXSession] Received %tu joined rooms, %tu invited rooms, %tu archived rooms in %.0fms", syncResponse.rooms.joined.count, syncResponse.rooms.invited.count, syncResponse.rooms.archived.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+        NSLog(@"[MXSession] Received %tu joined rooms, %tu invited rooms, %tu archived rooms in %.0fms", syncResponse.mxRooms.mxJoined.count, syncResponse.mxRooms.mxInvited.count, syncResponse.mxRooms.mxArchived.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
         
         // Check whether this is the initial sync
         BOOL isInitialSync = !_store.eventStreamToken;
         
         // Handle first joined rooms
-        NSArray *roomIds = syncResponse.rooms.joined.allKeys;
+        NSArray *roomIds = syncResponse.mxRooms.mxJoined.allKeys;
         for (NSString *roomId in roomIds)
         {
-            NSDictionary *roomSyncDesc = [syncResponse.rooms.joined objectForKey:roomId];
-            MXRoomSync *roomSync = [MXRoomSync modelFromJSON:roomSyncDesc];
+            MXRoomSync *roomSync = syncResponse.mxRooms.mxJoined[roomId];
             
             @autoreleasepool
             {
@@ -1003,11 +1002,10 @@ typedef void (^MXOnResumeDone)();
         }
         
         // Handle invited rooms
-        roomIds = syncResponse.rooms.invited.allKeys;
+        roomIds = syncResponse.mxRooms.mxInvited.allKeys;
         for (NSString *roomId in roomIds)
         {
-            NSDictionary *invitedRoomSyncDesc = [syncResponse.rooms.invited objectForKey:roomId];
-            MXInvitedRoomSync *invitedRoomSync = [MXInvitedRoomSync modelFromJSON:invitedRoomSyncDesc];
+            MXInvitedRoomSync *invitedRoomSync = syncResponse.mxRooms.mxInvited[roomId];
             
             @autoreleasepool {
                 // Retrieve existing room or create a new one
@@ -1024,11 +1022,10 @@ typedef void (^MXOnResumeDone)();
         }
         
         // Handle archived rooms
-        roomIds = syncResponse.rooms.archived.allKeys;
+        roomIds = syncResponse.mxRooms.mxArchived.allKeys;
         for (NSString *roomId in roomIds)
         {
-            NSDictionary *leftRoomSyncDesc = [syncResponse.rooms.archived objectForKey:roomId];
-            MXRoomSync *leftRoomSync = [MXRoomSync modelFromJSON:leftRoomSyncDesc];
+            MXRoomSync *leftRoomSync = syncResponse.mxRooms.mxArchived[roomId];
             
             @autoreleasepool {
                 
@@ -1045,11 +1042,8 @@ typedef void (^MXOnResumeDone)();
                     NSInteger index = leftRoomSync.timeline.events.count;
                     while (index--)
                     {
-                        NSString *eventId = [leftRoomSync.timeline.events objectAtIndex:index];
-                        NSDictionary *eventDesc = [leftRoomSync.eventMap objectForKey:eventId];
-                        
-                        MXEvent *event = [MXEvent modelFromJSON:eventDesc];
-                        event.eventId = eventId;
+                        NSString *eventId = leftRoomSync.timeline.events[index];
+                        MXEvent *event = leftRoomSync.mxEventMap[eventId];
                         
                         if ([event.type isEqualToString:kMXEventTypeStringRoomMember])
                         {
