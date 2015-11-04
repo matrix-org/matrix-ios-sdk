@@ -502,7 +502,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     MXHTTPOperation *operation;
 
     NSAssert(nil != backState, @"[MXRoom] paginateBackMessages: resetBackState must be called before starting the back pagination");
-
+    
     // Return messages in the store first
     NSUInteger messagesFromStoreCount = 0;
     NSArray *messagesFromStore = [mxSession.store paginateRoom:_state.roomId numMessages:numItems];
@@ -510,6 +510,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     {
         messagesFromStoreCount = messagesFromStore.count;
     }
+    
+    NSLog(@"[MXRoom] paginateBackMessages %tu messages in %@ (%tu are retrieved from the store)", numItems, _state.roomId, messagesFromStoreCount);
 
     if (messagesFromStoreCount)
     {
@@ -535,6 +537,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         if (nil == paginationToken) {
             paginationToken = @"END";
         }
+        
+        NSLog(@"[MXRoom] paginateBackMessages : request %tu messages from the server", numItems);
 
         operation = [mxSession.matrixRestClient messagesForRoom:_state.roomId
                                                from:paginationToken
@@ -544,6 +548,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
                                                 @autoreleasepool
                                                 {
+                                                    NSLog(@"[MXRoom] paginateBackMessages : get %tu messages from the server", paginatedResponse.chunk.count);
+                                                    
                                                     // Check pagination end
                                                     if (paginatedResponse.chunk.count < numItems)
                                                     {
@@ -562,6 +568,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                                                     
                                                     // Inform the method caller
                                                     complete();
+                                                    
+                                                    NSLog(@"[MXRoom] paginateBackMessages : is done");
                                                 }
                                                 
                                             } failure:^(NSError *error) {
@@ -587,6 +595,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     {
         // Nothing more to do
         complete();
+        
+        NSLog(@"[MXRoom] paginateBackMessages : is done");
     }
 
     return operation;
