@@ -73,11 +73,10 @@ NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
 // Automatically convert array in chunk to an array of MXEvents.
 + (NSValueTransformer *)chunkJSONTransformer
 {
-    return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXEvent.class];
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXEvent.class];
 }
 
 @end
-
 
 @implementation MXRoomMemberEventContent
 
@@ -347,27 +346,27 @@ NSString *const kMXPushRuleConditionStringRoomMemberCount       = @"room_member_
 
 + (NSValueTransformer *)overrideJSONTransformer
 {
-    return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXPushRule.class];
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXPushRule.class];
 }
 
 + (NSValueTransformer *)contentJSONTransformer
 {
-    return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXPushRule.class];
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXPushRule.class];
 }
 
 + (NSValueTransformer *)roomJSONTransformer
 {
-    return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXPushRule.class];
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXPushRule.class];
 }
 
 + (NSValueTransformer *)senderJSONTransformer
 {
-    return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXPushRule.class];
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXPushRule.class];
 }
 
 + (NSValueTransformer *)underrideJSONTransformer
 {
-    return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXPushRule.class];
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXPushRule.class];
 }
 
 @end
@@ -420,13 +419,302 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
 
 + (NSValueTransformer *)globalJSONTransformer
 {
-    return [NSValueTransformer mtl_JSONDictionaryTransformerWithModelClass:MXPushRulesSet.class];
+    return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXPushRulesSet.class];
+}
+
+@end
+
+#pragma mark - Server sync v1 response
+#pragma mark -
+
+@implementation MXRoomInitialSync
+
+// Automatically convert state array to an array of MXEvents.
++ (NSValueTransformer *)stateJSONTransformer
+{
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXEvent.class];
+}
+
+// Automatically convert presence array to an array of MXEvents.
++ (NSValueTransformer *)presenceJSONTransformer
+{
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXEvent.class];
+}
+
+// Automatically convert receipts array to an array of MXEvents.
++ (NSValueTransformer *)receiptsJSONTransformer
+{
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXEvent.class];
+}
+
+@end
+
+@implementation MXInitialSyncResponse
+
+// Automatically convert rooms array to an array of MXRoomInitialSync.
++ (NSValueTransformer *)roomsJSONTransformer
+{
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXRoomInitialSync.class];
+}
+
+// Automatically convert presence array to an array of MXEvents.
++ (NSValueTransformer *)presenceJSONTransformer
+{
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXEvent.class];
+}
+
+// Automatically convert receipts array to an array of MXEvents.
++ (NSValueTransformer *)receiptsJSONTransformer
+{
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXEvent.class];
 }
 
 @end
 
 
+#pragma mark - Server sync v2 response
+#pragma mark -
+
+@implementation MXRoomSyncState
+@end
+
+@implementation MXRoomSyncTimeline
+@end
+
+@implementation MXRoomSyncEphemeral
+
+// Automatically convert events array to an array of MXEvents.
++ (NSValueTransformer *)eventsJSONTransformer
+{
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXEvent.class];
+}
+
+@end
+
+@implementation MXRoomInviteState
+
+// Automatically convert events array to an array of MXEvents.
++ (NSValueTransformer *)eventsJSONTransformer
+{
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXEvent.class];
+}
+
+@end
+
+@interface MXRoomSync ()
+
+    /**
+     The original events mapping: keys are event ids (values are event descriptions).
+     The events are referenced from the 'timeline' and 'state' keys for this room.
+     */
+    @property (nonatomic) NSDictionary<NSString*, NSDictionary*> *eventMap;
+
+@end
+
+@implementation MXRoomSync
+
+// Override the default Mantle modelFromJSON method to convert event mapping dictionary.
+// Indeed the values in received eventMap dictionary are JSON dictionaries. We convert them in MXEvent object.
+// The event identifier is reported inside the MXEvent too.
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXRoomSync *roomSync = [super modelFromJSON:JSONDictionary];
+    if (roomSync && roomSync.eventMap.count)
+    {
+        NSArray *eventIds = roomSync.eventMap.allKeys;
+        
+        NSMutableDictionary *mxEventMap = [NSMutableDictionary dictionaryWithCapacity:eventIds.count];
+        
+        for (NSUInteger index = 0; index < eventIds.count; index++)
+        {
+            NSString *eventId = eventIds[index];
+            NSDictionary *eventDesc = [roomSync.eventMap objectForKey:eventId];
+            
+            MXEvent *event = [MXEvent modelFromJSON:eventDesc];
+            event.eventId = eventId;
+            
+            mxEventMap[eventId] = event;
+        }
+        
+        roomSync.mxEventMap = mxEventMap;
+        
+        // Remove the orignal events map
+        roomSync.eventMap = nil;
+    }
+    return roomSync;
+}
+
+// Automatically convert state dictionary in MXRoomSyncState.
++ (NSValueTransformer *)stateJSONTransformer
+{
+    return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXRoomSyncState.class];
+}
+
+// Automatically convert timeline dictionary in MXRoomSyncTimeline.
++ (NSValueTransformer *)timelineJSONTransformer
+{
+    return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXRoomSyncTimeline.class];
+}
+
+// Automatically convert ephemeral dictionary in MXRoomSyncEphemeral.
++ (NSValueTransformer *)ephemeralJSONTransformer
+{
+    return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXRoomSyncEphemeral.class];
+}
+
+@end
+
+@implementation MXInvitedRoomSync
+
+// Automatically convert invite_state dictionary in MXRoomInviteState.
++ (NSValueTransformer *)inviteStateJSONTransformer
+{
+    return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXRoomInviteState.class];
+}
+
+@end
+
+@implementation MXPresenceSyncResponse
+
+// Automatically convert events array to an array of MXEvents.
++ (NSValueTransformer *)eventsJSONTransformer
+{
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXEvent.class];
+}
+
+@end
+
+@interface MXRoomsSyncResponse ()
+
+    /**
+     Joined rooms: keys are rooms ids (values will be converted to MXRoomSync).
+     */
+    @property (nonatomic) NSDictionary<NSString*, NSDictionary*> *joined;
+
+    /**
+     The rooms that the user has been invited to: keys are rooms ids (values will be converted to MXInvitedRoomSync).
+     */
+    @property (nonatomic) NSDictionary<NSString*, NSDictionary*> *invited;
+
+    /**
+     The rooms that the user has left or been banned from: keys are rooms ids (values will be converted to MXRoomSync).
+     */
+    @property (nonatomic) NSDictionary<NSString*, NSDictionary*> *archived;
+
+@end
+
+@implementation MXRoomsSyncResponse
+
+// Override the default Mantle modelFromJSON method to convert room lists.
+// Indeed the values in received dictionaries are JSON dictionaries. We convert them in MXRoomSync
+// or MXInvitedRoomSync objects.
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXRoomsSyncResponse *roomsSync = [super modelFromJSON:JSONDictionary];
+    if (roomsSync)
+    {
+        if (roomsSync.joined.count)
+        {
+            NSArray *roomIds = roomsSync.joined.allKeys;
+            
+            NSMutableDictionary *mxJoined = [NSMutableDictionary dictionaryWithCapacity:roomIds.count];
+            
+            for (NSUInteger index = 0; index < roomIds.count; index++)
+            {
+                NSString *roomId = roomIds[index];
+                NSDictionary *roomSyncDesc = roomsSync.joined[roomId];
+                
+                mxJoined[roomId] = [MXRoomSync modelFromJSON:roomSyncDesc];
+            }
+            
+            roomsSync.mxJoined = mxJoined;
+        }
+        
+        if (roomsSync.invited.count)
+        {
+            NSArray *roomIds = roomsSync.invited.allKeys;
+            
+            NSMutableDictionary *mxInvited = [NSMutableDictionary dictionaryWithCapacity:roomIds.count];
+            
+            for (NSUInteger index = 0; index < roomIds.count; index++)
+            {
+                NSString *roomId = roomIds[index];
+                NSDictionary *roomSyncDesc = roomsSync.invited[roomId];
+                
+                mxInvited[roomId] = [MXInvitedRoomSync modelFromJSON:roomSyncDesc];
+            }
+            
+            roomsSync.mxInvited = mxInvited;
+        }
+        
+        if (roomsSync.archived.count)
+        {
+            NSArray *roomIds = roomsSync.archived.allKeys;
+            
+            NSMutableDictionary *mxArchived = [NSMutableDictionary dictionaryWithCapacity:roomIds.count];
+            
+            for (NSUInteger index = 0; index < roomIds.count; index++)
+            {
+                NSString *roomId = roomIds[index];
+                NSDictionary *roomSyncDesc = roomsSync.archived[roomId];
+                
+                mxArchived[roomId] = [MXRoomSync modelFromJSON:roomSyncDesc];
+            }
+            
+            roomsSync.mxArchived = mxArchived;
+        }
+        
+        // Remove original dictionary
+        roomsSync.joined = nil;
+        roomsSync.invited = nil;
+        roomsSync.archived = nil;
+    }
+    return roomsSync;
+}
+
+@end
+
+@interface MXSyncResponse ()
+
+    /**
+     The original list of rooms.
+     */
+    @property (nonatomic) NSDictionary<NSString*, NSDictionary*> *rooms;
+
+@end
+
+@implementation MXSyncResponse
+
+// Override the default Mantle modelFromJSON method to prepare rooms dictionary.
+// Contrary to 'presence', we need to create a model from the JSON dictionary 'rooms' (see modelFromJSON call) in order to create
+// all its sub-items. We obtain then a full converted JSON in a MXRoomsSyncResponse object 'mxRooms'.
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXSyncResponse *syncResponse = [super modelFromJSON:JSONDictionary];
+    
+    // The server response must contain here a 'rooms' key.
+    if (syncResponse && syncResponse.rooms)
+    {
+        // Trigger a full conversion of this JSON dictionary.
+        syncResponse.mxRooms = [MXRoomsSyncResponse modelFromJSON:syncResponse.rooms];
+        
+        // Remove original dictionary
+        syncResponse.rooms = nil;
+    }
+    
+    return syncResponse;
+}
+
+// Automatically convert presence dictionary to MXPresenceSyncResponse instance.
++ (NSValueTransformer *)presenceJSONTransformer
+{
+    return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXPresenceSyncResponse.class];
+}
+
+@end
+
 #pragma mark - Voice over IP
+#pragma mark -
 
 @implementation MXCallSessionDescription
 @end
@@ -435,7 +723,7 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
 
 + (NSValueTransformer *)offerJSONTransformer
 {
-    return [NSValueTransformer mtl_JSONDictionaryTransformerWithModelClass:MXCallSessionDescription.class];
+    return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXCallSessionDescription.class];
 }
 
 @end
@@ -447,7 +735,7 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
 
 + (NSValueTransformer *)candidateJSONTransformer
 {
-    return [NSValueTransformer mtl_JSONArrayTransformerWithModelClass:MXCallCandidate.class];
+    return [MTLJSONAdapter arrayTransformerWithModelClass:MXCallCandidate.class];
 }
 @end
 
@@ -455,7 +743,7 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
 
 + (NSValueTransformer *)answerJSONTransformer
 {
-    return [NSValueTransformer mtl_JSONDictionaryTransformerWithModelClass:MXCallSessionDescription.class];
+    return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXCallSessionDescription.class];
 }
 
 @end

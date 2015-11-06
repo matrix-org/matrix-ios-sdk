@@ -103,12 +103,12 @@
         {
             callInviteEventContent = [MXCallInviteEventContent modelFromJSON:event.content];
 
-            if (NO == [event.userId isEqualToString:_room.mxSession.myUser.userId])
+            if (NO == [event.sender isEqualToString:_room.mxSession.myUser.userId])
             {
                 // Incoming call
 
                 _callId = callInviteEventContent.callId;
-                _callerId = event.userId;
+                _callerId = event.sender;
                 _isIncoming = YES;
 
                 // Determine if it is voice or video call

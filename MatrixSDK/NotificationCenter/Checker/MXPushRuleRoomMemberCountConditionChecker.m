@@ -47,9 +47,9 @@
     return self;
 }
 
-- (BOOL)isCondition:(MXPushRuleCondition *)condition satisfiedBy:(MXEvent *)event
+- (BOOL)isCondition:(MXPushRuleCondition*)condition satisfiedBy:(MXEvent*)event withJsonDict:(NSDictionary*)contentAsJsonDict
 {
-    if (event.eventType == MXEventTypeTypingNotification)
+    if ((event.eventType == MXEventTypeTypingNotification) || (event.eventType == MXEventTypeReceipt))
     {
         // Do not take into account typing notifications in room_member_count conditions
         // as it may fire a lot of times
@@ -81,7 +81,9 @@
 
             // Check the targeted room member count against value
             MXRoom *room = [mxSession roomWithRoomId:event.roomId];
-            if (room)
+            
+            // sanity checks
+            if (room && room.state && room.state.members)
             {
                 if (nil == op || [op isEqualToString:@"=="])
                 {

@@ -53,7 +53,12 @@ typedef enum : NSUInteger
      itself when [MXSession resume] is called.
      */
     MXSessionStateSyncInProgress,
-
+    
+    /**
+     The session is catching up
+     */
+    MXSessionStateCatchingUp,
+        
     /**
      The session data is synchronised with the server and session keeps it synchronised
      thanks to the events stream, which is now running.
@@ -91,14 +96,6 @@ FOUNDATION_EXPORT NSString *const kMXSessionStateDidChangeNotification;
 FOUNDATION_EXPORT NSString *const kMXSessionNewRoomNotification;
 
 /**
- Posted when MXSession has complete an initialSync on a new room.
-
- The passed userInfo dictionary contains:
-     - `kMXSessionNotificationRoomIdKey` the roomId of the room is passed in the userInfo dictionary.
- */
-FOUNDATION_EXPORT NSString *const kMXSessionInitialSyncedRoomNotification;
-
-/**
  Posted when MXSession has detected a room is going to be left.
 
  The passed userInfo dictionary contains:
@@ -115,6 +112,10 @@ FOUNDATION_EXPORT NSString *const kMXSessionWillLeaveRoomNotification;
  */
 FOUNDATION_EXPORT NSString *const kMXSessionDidLeaveRoomNotification;
 
+/**
+ Posted when MXSession has performed a server sync.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionDidSyncNotification;
 
 #pragma mark - Notifications keys
 /**
@@ -174,6 +175,8 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
 @property (nonatomic, readonly) MXCallManager *callManager;
 
 
+#pragma mark - Class methods
+
 /**
  Create a MXSession instance.
  This instance will use the passed MXRestClient to make requests to the home server.
@@ -219,6 +222,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
 
 /**
  Pause the session events stream.
+ Caution: this action is ignored if the session state is not MXSessionStateRunning.
  
  No more live events will be received by the listeners.
  */
@@ -231,6 +235,24 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
                    the app has received uptodate data/events.
  */
 - (void)resume:(void (^)())resumeDone;
+
+/**
+ Perform an events stream catchup.
+ 
+ @param timeout the max time in milliseconds to perform the catchup
+ @param catchupDone A block called when the SDK has been successfully performed a catchup
+ @param catchupfails A block called when the catchup fails.
+ */
+typedef void (^MXOnCatchupDone)();
+typedef void (^MXOnCatchupFail)(NSError *error);
+
+- (void)catchup:(unsigned int)timeout success:(MXOnCatchupDone)catchupDone failure:(MXOnCatchupFail)catchupfails;
+
+/**
+ Restart the session events stream.
+ @return YES if the operation succeeds
+ */
+- (BOOL)reconnect;
 
 /**
  Close the session.

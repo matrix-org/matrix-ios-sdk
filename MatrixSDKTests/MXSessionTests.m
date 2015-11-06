@@ -598,7 +598,9 @@
         [mxSession createRoom:nil visibility:nil roomAlias:nil topic:nil success:^(MXRoom *room) {
 
             XCTAssertNotNil(room);
-            XCTAssertTrue(room.isSync, @"The callback must be called once the room has been initialSynced");
+            
+            BOOL isSync = (room.state.membership != MXMembershipInvite && room.state.membership != MXMembershipUnknown);
+            XCTAssertTrue(isSync, @"The callback must be called once the room has been initialSynced");
 
             XCTAssertEqual(1, room.state.members.count, @"Bob must be the only one. members: %@", room.state.members);
 
@@ -732,8 +734,8 @@
 }
 
 
-#pragma mark MXSessionInitialSyncedRoomNotification tests
-- (void)testMXSessionInitialSyncedRoomNotificationOnJoiningPublicRoom
+#pragma mark kMXRoomInitialSyncNotification tests
+- (void)testMXRoomInitialSyncNotificationOnJoiningPublicRoom
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndAPublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
@@ -742,14 +744,16 @@
             mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
             [mxSession start:^{
 
-                // Listen to Alice's MXSessionInitialSyncedRoomNotification event
-                __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionInitialSyncedRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+                // Listen to Alice's kMXRoomInitialSyncNotification event
+                __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomInitialSyncNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-                    XCTAssertEqual(mxSession, note.object, @"The MXSessionInitialSyncedRoomNotification sender must be the current MXSession");
-
-                    MXRoom *publicRoom = [mxSession roomWithRoomId:note.userInfo[kMXSessionNotificationRoomIdKey]];
+                    MXRoom *publicRoom = (MXRoom*)note.object;
                     XCTAssertNotNil(publicRoom);
-                    XCTAssert(publicRoom.isSync, @"MXSessionInitialSyncedRoomNotification must inform when the room state is fully known");
+
+                    BOOL isSync = (publicRoom.state.membership != MXMembershipInvite && publicRoom.state.membership != MXMembershipUnknown);
+                    XCTAssert(isSync, @"kMXRoomInitialSyncNotification must inform when the room state is fully known");
+
+                    XCTAssertEqual(mxSession, publicRoom.mxSession, @"The session of the sent MXRoom must be the right one");
 
                     [[NSNotificationCenter defaultCenter] removeObserver:observer];
                     [expectation fulfill];

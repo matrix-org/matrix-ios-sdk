@@ -20,13 +20,14 @@
 
 #import "MXFileStoreMetaData.h"
 
-NSUInteger const kMXFileVersion = 9;
+NSUInteger const kMXFileVersion = 10;
 
 NSString *const kMXFileStoreFolder = @"MXFileStore";
 NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
 
 NSString *const kMXFileStoreRoomsMessagesFolder = @"messages";
 NSString *const kMXFileStoreRoomsStateFolder = @"state";
+NSString *const kMXReceiptsFolder = @"receipts";
 
 @interface MXFileStore ()
 {
@@ -38,6 +39,8 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     NSMutableArray *roomsToCommitForMessages;
 
     NSMutableDictionary *roomsToCommitForState;
+    
+    NSMutableArray *roomsToCommitForReceipts;
 
     // The path of the MXFileStore folder
     NSString *storePath;
@@ -47,6 +50,9 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
 
     // The path of rooms states folder
     NSString *storeRoomsStatePath;
+    
+    // the path of the other room member receipts
+    NSString* storeReceiptsPath;
 
     // Flag to indicate metaData needs to be store
     BOOL metaDataHasChanged;
@@ -72,6 +78,7 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     {
         roomsToCommitForMessages = [NSMutableArray array];
         roomsToCommitForState = [NSMutableDictionary dictionary];
+        roomsToCommitForReceipts = [NSMutableArray array];
 
         metaDataHasChanged = NO;
 
@@ -83,16 +90,17 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     return self;
 }
 
-- (void)openWithCredentials:(MXCredentials*)credentials onComplete:(void (^)())onComplete failure:(void (^)(NSError *))failure
+- (void)openWithCredentials:(MXCredentials*)someCredentials onComplete:(void (^)())onComplete failure:(void (^)(NSError *))failure
 {
     // Create the file path where data will be stored for the user id passed in credentials
     NSArray *cacheDirList = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
     NSString *cachePath  = [cacheDirList objectAtIndex:0];
 
+    credentials = someCredentials;
     storePath = [[cachePath stringByAppendingPathComponent:kMXFileStoreFolder] stringByAppendingPathComponent:credentials.userId];
     storeRoomsMessagesPath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsMessagesFolder];
     storeRoomsStatePath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsStateFolder];
-
+    storeReceiptsPath = [storePath stringByAppendingPathComponent:kMXReceiptsFolder];
     /*
     Mount data corresponding to the account credentials.
 
@@ -104,52 +112,61 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
 
         NSLog(@"[MXFileStore] diskUsage: %@", [NSByteCountFormatter stringFromByteCount:self.diskUsage countStyle:NSByteCountFormatterCountStyleFile]);
 
-        [self loadMetaData];
+        @autoreleasepool
+        {
+            [self loadMetaData];
 
-        // Do some validations
+            // Do some validations
 
-        // Check if
-        if (nil == metaData)
-        {
-            [self deleteAllData];
-        }
-        // Check store version
-        else if (kMXFileVersion != metaData.version)
-        {
-            NSLog(@"[MXFileStore] New MXFileStore version detected");
-            [self deleteAllData];
-        }
-        // Check credentials
-        else if (nil == credentials)
-        {
-            [self deleteAllData];
-        }
-        // Check credentials
-        else if (NO == [metaData.homeServer isEqualToString:credentials.homeServer]
-                 || NO == [metaData.userId isEqualToString:credentials.userId]
-                 || NO == [metaData.accessToken isEqualToString:credentials.accessToken])
+            // Check if
+            if (nil == metaData)
+            {
+                [self deleteAllData];
+            }
+            // Check store version
+            else if (kMXFileVersion != metaData.version)
+            {
+                NSLog(@"[MXFileStore] New MXFileStore version detected");
+                [self deleteAllData];
+            }
+            // Check credentials
+            else if (nil == credentials)
+            {
+                [self deleteAllData];
+            }
+            // Check credentials
+            else if (NO == [metaData.homeServer isEqualToString:credentials.homeServer]
+                     || NO == [metaData.userId isEqualToString:credentials.userId]
+                     || NO == [metaData.accessToken isEqualToString:credentials.accessToken])
 
-        {
-            NSLog(@"[MXFileStore] Credentials do not match");
-            [self deleteAllData];
-        }
+            {
+                NSLog(@"[MXFileStore] Credentials do not match");
+                [self deleteAllData];
+            }
 
-        // If metaData is still defined, we can load rooms data
-        if (metaData)
-        {
-            [self loadRoomsMessages];
-        }
+            // If metaData is still defined, we can load rooms data
+            if (metaData)
+            {
+                [self loadRoomsMessages];
+            }
+            
+            if (metaData)
+            {
+                [self loadReceipts];
 
-        // Else, if credentials is valid, create and store it
-        if (nil == metaData && credentials.homeServer && credentials.userId && credentials.accessToken)
-        {
-            metaData = [[MXFileStoreMetaData alloc] init];
-            metaData.homeServer = [credentials.homeServer copy];
-            metaData.userId = [credentials.userId copy];
-            metaData.accessToken = [credentials.accessToken copy];
-            metaData.version = kMXFileVersion;
-            metaDataHasChanged = YES;
-            [self saveMetaData];
+            }
+            
+            // Else, if credentials is valid, create and store it
+            if (nil == metaData && credentials.homeServer && credentials.userId && credentials.accessToken)
+            {
+                metaData = [[MXFileStoreMetaData alloc] init];
+                metaData.homeServer = [credentials.homeServer copy];
+                metaData.userId = [credentials.userId copy];
+                metaData.accessToken = [credentials.accessToken copy];
+                metaData.version = kMXFileVersion;
+                metaDataHasChanged = YES;
+                [self saveMetaData];
+            }
         }
         
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -213,24 +230,88 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     }
 }
 
-- (void)deleteRoom:(NSString *)roomId
+- (void)deleteAllMessagesInRoom:(NSString *)roomId
 {
-    [super deleteRoom:roomId];
-
-    // Remove the corresponding data from the file system
+    [super deleteAllMessagesInRoom:roomId];
+    
+    NSUInteger totalSize = 0;
+    
+    // Remove room messages and read receipts from file system. Keep room state
     NSString *roomFile = [storeRoomsMessagesPath stringByAppendingPathComponent:roomId];
     NSUInteger fileSize = [[[[NSFileManager defaultManager] attributesOfItemAtPath:roomFile error:nil] objectForKey:NSFileSize] intValue];
-    
     NSError *error;
     [[NSFileManager defaultManager] removeItemAtPath:roomFile error:&error];
+    if (!error)
+    {
+        totalSize += fileSize;
+    }
+    
+    // Remove Read receipts
+    roomFile = [storeReceiptsPath stringByAppendingPathComponent:roomId];
+    fileSize = [[[[NSFileManager defaultManager] attributesOfItemAtPath:roomFile error:nil] objectForKey:NSFileSize] intValue];
+    [[NSFileManager defaultManager] removeItemAtPath:roomFile error:&error];
+    if (!error)
+    {
+        totalSize += fileSize;
+    }
     
     @synchronized(self)
     {
-        if ((cachedDiskUsage != NSUIntegerMax) && (!error))
+        if ((cachedDiskUsage != NSUIntegerMax) && (!totalSize))
         {
             // ignore the directory size update
             // assume that it is small comparing to the file size
-            cachedDiskUsage -= fileSize;
+            cachedDiskUsage -= totalSize;
+        }
+    }
+    
+    if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
+    {
+        [roomsToCommitForMessages addObject:roomId];
+    }
+}
+
+- (void)deleteRoom:(NSString *)roomId
+{
+    [super deleteRoom:roomId];
+    
+    NSUInteger totalSize = 0;
+
+    // Remove room messages from file system
+    NSString *roomFile = [storeRoomsMessagesPath stringByAppendingPathComponent:roomId];
+    NSUInteger fileSize = [[[[NSFileManager defaultManager] attributesOfItemAtPath:roomFile error:nil] objectForKey:NSFileSize] intValue];
+    NSError *error;
+    [[NSFileManager defaultManager] removeItemAtPath:roomFile error:&error];
+    if (!error)
+    {
+        totalSize += fileSize;
+    }
+    
+    // Remove room state
+    roomFile = [storeRoomsStatePath stringByAppendingPathComponent:roomId];
+    fileSize = [[[[NSFileManager defaultManager] attributesOfItemAtPath:roomFile error:nil] objectForKey:NSFileSize] intValue];
+    [[NSFileManager defaultManager] removeItemAtPath:roomFile error:&error];
+    if (!error)
+    {
+        totalSize += fileSize;
+    }
+
+    // Remove Read receipts
+    roomFile = [storeReceiptsPath stringByAppendingPathComponent:roomId];
+    fileSize = [[[[NSFileManager defaultManager] attributesOfItemAtPath:roomFile error:nil] objectForKey:NSFileSize] intValue];
+    [[NSFileManager defaultManager] removeItemAtPath:roomFile error:&error];
+    if (!error)
+    {
+        totalSize += fileSize;
+    }
+    
+    @synchronized(self)
+    {
+        if ((cachedDiskUsage != NSUIntegerMax) && (!totalSize))
+        {
+            // ignore the directory size update
+            // assume that it is small comparing to the file size
+            cachedDiskUsage -= totalSize;
         }
     }
 }
@@ -249,6 +330,7 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     [[NSFileManager defaultManager] createDirectoryAtPath:storePath withIntermediateDirectories:YES attributes:nil error:nil];
     [[NSFileManager defaultManager] createDirectoryAtPath:storeRoomsMessagesPath withIntermediateDirectories:YES attributes:nil error:nil];
     [[NSFileManager defaultManager] createDirectoryAtPath:storeRoomsStatePath withIntermediateDirectories:YES attributes:nil error:nil];
+    [[NSFileManager defaultManager] createDirectoryAtPath:storeReceiptsPath withIntermediateDirectories:YES attributes:nil error:nil];
 
     // Reset data
     metaData = nil;
@@ -350,6 +432,12 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     {
         [self saveRoomsMessages];
         [self saveRoomsState];
+        [self saveReceipts];
+
+        // Save meta data only at the end because it is critical to save the eventStreamToken
+        // after everything else.
+        // If there is a crash during the commit operation, we will be able to retrieve non
+        // stored data thanks to the old eventStreamToken stored at the previous commit.
         [self saveMetaData];
     }
 }
@@ -375,7 +463,6 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
     }
     return roomStore;
 }
-
 
 #pragma mark - Rooms messages
 // Load the data store in files
@@ -545,6 +632,149 @@ NSString *const kMXFileStoreRoomsStateFolder = @"state";
                 // if the size is not marked as to be recomputed
                 if (cachedDiskUsage != NSUIntegerMax) {
                     cachedDiskUsage += deltaSize;
+                }
+            }
+        });
+    }
+}
+
+#pragma mark - Room receipts
+
+/**
+ * Store the receipt for an user in a room
+ * @param receipt The event
+ * @param roomId The roomId
+ */
+- (BOOL)storeReceipt:(MXReceiptData*)receipt roomId:(NSString*)roomId
+{
+    if ([super storeReceipt:receipt roomId:roomId]) {
+        if (NSNotFound == [roomsToCommitForReceipts indexOfObject:roomId])
+        {
+            [roomsToCommitForReceipts addObject:roomId];
+        }
+        return YES;
+    }
+    
+    return NO;
+}
+
+
+// Load the data store in files
+- (void)loadReceipts
+{
+    // backward compliancy
+    if (![[NSFileManager defaultManager] fileExistsAtPath:storeReceiptsPath])
+    {
+        [[NSFileManager defaultManager] createDirectoryAtPath:storeReceiptsPath withIntermediateDirectories:YES attributes:nil error:nil];
+    }
+    
+    NSArray *roomIDArray = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeReceiptsPath error:nil];
+    
+    NSDate *startDate = [NSDate date];
+    NSLog(@"[MXFileStore] loadReceipts:");
+    
+    for (NSString *roomId in roomIDArray)
+    {
+        NSString *roomFile = [storeReceiptsPath stringByAppendingPathComponent:roomId];
+        
+        NSMutableDictionary *receiptsDict = NULL;
+        @try
+        {
+            receiptsDict =[NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+        }
+        @catch (NSException *exception)
+        {
+            NSLog(@"[loadReceipts] Warning: loadReceipts file for room %@ has been corrupted", roomId);
+        }
+        
+        if (receiptsDict)
+        {
+            NSLog(@"   - %@: %@", roomId, receiptsDict);
+            
+            [receiptsByRoomId setObject:receiptsDict forKey:roomId];
+        }
+        else
+        {
+            NSLog(@"[MXFileStore] Warning: MXFileStore has been reset due to receipts file corruption. Room id: %@", roomId);
+            [self deleteAllData];
+            break;
+        }
+    }
+    
+    // check if the user has a default read receipt value
+    // else the unread message counters will never been updated.
+    // backward compliancy (it should be done in any known room)
+    roomIDArray = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsMessagesPath error:nil];
+    
+    for (NSString *roomId in roomIDArray)
+    {
+        NSMutableDictionary *receiptsDict = [receiptsByRoomId objectForKey:roomId];
+    
+        if (!receiptsDict)
+        {
+            receiptsDict = [[NSMutableDictionary alloc] init];
+            [receiptsByRoomId setObject:receiptsDict forKey:roomId];
+        }
+        
+        if (![receiptsDict objectForKey:credentials.userId])
+        {
+            MXMemoryRoomStore* store = roomStores[roomId];
+            MXEvent* event = [store lastMessageWithTypeIn: NULL];
+            
+            if (event)
+            {
+                MXReceiptData *data = [[MXReceiptData alloc] init];
+                data.userId = credentials.userId;
+                data.eventId = event.eventId;
+                data.ts = (uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000);
+                
+                [receiptsDict setObject:data forKey:credentials.userId];
+            }
+            
+            [roomsToCommitForReceipts addObject:roomId];
+        }
+    }
+    
+    [self saveReceipts];
+    
+    NSLog(@"[MXFileStore] Loaded receipts of %lu rooms in %.0fms", (unsigned long)roomStores.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+}
+
+- (void)saveReceipts
+{
+    if (roomsToCommitForReceipts.count)
+    {
+        NSArray *roomsToCommit = [[NSArray alloc] initWithArray:roomsToCommitForReceipts copyItems:YES];
+        [roomsToCommitForReceipts removeAllObjects];
+        
+        dispatch_async(dispatchQueue, ^(void){
+
+            NSUInteger messageDirSize = [[[[NSFileManager defaultManager] attributesOfItemAtPath:storeReceiptsPath error:nil] objectForKey:NSFileSize] intValue];
+            NSUInteger deltaCacheSize = 0;
+            
+            // Save rooms where there was changes
+            for (NSString *roomId in roomsToCommit)
+            {
+                NSMutableDictionary* receiptsByUserId = receiptsByRoomId[roomId];
+                if (receiptsByUserId)
+                {
+                    NSString *receiptsFile = [storeReceiptsPath stringByAppendingPathComponent:roomId];
+                    NSUInteger filesize = [[[[NSFileManager defaultManager] attributesOfItemAtPath:receiptsFile error:nil] objectForKey:NSFileSize] intValue];
+                    
+                    [NSKeyedArchiver archiveRootObject:receiptsByUserId toFile:receiptsFile];
+                    
+                    deltaCacheSize += [[[[NSFileManager defaultManager] attributesOfItemAtPath:receiptsFile error:nil] objectForKey:NSFileSize] intValue] - filesize;
+                }
+            }
+            
+            // the message directory size is also updated
+            deltaCacheSize += [[[[NSFileManager defaultManager] attributesOfItemAtPath:storeReceiptsPath error:nil] objectForKey:NSFileSize] intValue] - messageDirSize;
+            
+            @synchronized(self)
+            {
+                if (cachedDiskUsage != NSUIntegerMax)
+                {
+                    cachedDiskUsage += deltaCacheSize;
                 }
             }
         });

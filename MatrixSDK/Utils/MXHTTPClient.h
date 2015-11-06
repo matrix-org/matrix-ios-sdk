@@ -19,18 +19,38 @@
 #import "MXHTTPOperation.h"
 
 /**
+ `MXHTTPClientErrorResponseDataKey`
+ The corresponding value is an `NSDictionary` containing the response data of the operation associated with an error.
+ */
+extern NSString * const MXHTTPClientErrorResponseDataKey;
+
+/**
+ Block called when an authentication challenge from a server failed whereas a certificate is present in certificate chain.
+ 
+ @param certificate the server certificate to evaluate.
+ @return YES to accept/trust this certificate, NO to cancel/ignore it.
+ */
+typedef BOOL (^MXHTTPClientOnUnrecognizedCertificate)(NSData *certificate);
+
+/**
  `MXHTTPClient` is an abstraction layer for making requests to a HTTP server.
 
 */
 @interface MXHTTPClient : NSObject
 
 /**
+ The current trusted certificate (if any).
+ */
+@property (nonatomic, readonly) NSData* allowedCertificate;
+
+/**
  Create an instance to make requests to the server.
 
  @param baseURL the server URL from which requests will be done.
+ @param onUnrecognizedCertBlock the block called to handle unrecognized certificate (nil if unrecognized certificates are ignored).
  @return a MXHTTPClient instance.
  */
-- (id)initWithBaseURL:(NSString*)baseURL;
+- (id)initWithBaseURL:(NSString*)baseURL andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock;
 
 /**
  Create an intance to make access-token-authenticated requests to the server.
@@ -38,9 +58,10 @@
 
  @param baseURL the server URL from which requests will be done.
  @param accessToken the access token to authenticate requests.
+ @param onUnrecognizedCertBlock the block called to handle unrecognized certificate (nil if unrecognized certificates are ignored).
  @return a MXHTTPClient instance.
  */
-- (id)initWithBaseURL:(NSString*)baseURL andAccessToken:(NSString*)accessToken;
+- (id)initWithBaseURL:(NSString*)baseURL accessToken:(NSString*)accessToken andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock;
 
 /**
  Make a HTTP request to the server.

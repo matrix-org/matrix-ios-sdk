@@ -17,26 +17,14 @@
 #import <UIKit/UIKit.h>
 #import <XCTest/XCTest.h>
 
-#import "MXNoStore.h"
+#import "MXStoreTests.h"
+
 #import "MXMemoryStore.h"
 #import "MXFileStore.h"
-
-#import "MatrixSDKTestsData.h"
-
-#import "MXSession.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-retain-cycles"
-
-@interface MXStoreTests : XCTestCase
-{
-    MXSession *mxSession;
-
-    // The current test expectation
-    XCTestExpectation *expectation;
-}
-@end
 
 @implementation MXStoreTests
 
@@ -131,43 +119,6 @@
     }];
 }
 
-- (void)doTestWithMXNoStore:(void (^)(MXRoom *room))readyToTest
-{
-    MXNoStore *store = [[MXNoStore alloc] init];
-    [self doTestWithStore:store readyToTest:readyToTest];
-}
-
-- (void)doTestWithTwoUsersAndMXNoStore:(void (^)(MXRoom *room))readyToTest
-{
-    MXNoStore *store = [[MXNoStore alloc] init];
-    [self doTestWithTwoUsersAndStore:store readyToTest:readyToTest];
-}
-
-- (void)doTestWithMXMemoryStore:(void (^)(MXRoom *room))readyToTest
-{
-    MXMemoryStore *store = [[MXMemoryStore alloc] init];
-    [self doTestWithStore:store readyToTest:readyToTest];
-}
-
-- (void)doTestWithTwoUsersAndMXMemoryStore:(void (^)(MXRoom *room))readyToTest
-{
-    MXMemoryStore *store = [[MXMemoryStore alloc] init];
-    [self doTestWithTwoUsersAndStore:store readyToTest:readyToTest];
-}
-
-- (void)doTestWithMXFileStore:(void (^)(MXRoom *room))readyToTest
-{
-    MXFileStore *store = [[MXFileStore alloc] init];
-    [self doTestWithStore:store readyToTest:readyToTest];
-}
-
-- (void)doTestWithTwoUsersAndMXFileStore:(void (^)(MXRoom *room))readyToTest
-{
-    MXFileStore *store = [[MXFileStore alloc] init];
-    [self doTestWithTwoUsersAndStore:store readyToTest:readyToTest];
-}
-
-
 - (void)doTestWithStore:(id<MXStore>)store
        andMessagesLimit:(NSUInteger)messagesLimit
             readyToTest:(void (^)(MXRoom *room))readyToTest
@@ -207,24 +158,6 @@
     }];
 }
 
-- (void)doTestWithMXNoStoreAndMessagesLimit:(NSUInteger)messagesLimit readyToTest:(void (^)(MXRoom *room))readyToTest
-{
-    MXNoStore *store = [[MXNoStore alloc] init];
-    [self doTestWithStore:store andMessagesLimit:messagesLimit readyToTest:readyToTest];
-}
-
-- (void)doTestWithMXMemoryStoreAndMessagesLimit:(NSUInteger)messagesLimit readyToTest:(void (^)(MXRoom *room))readyToTest
-{
-    MXMemoryStore *store = [[MXMemoryStore alloc] init];
-    [self doTestWithStore:store andMessagesLimit:messagesLimit readyToTest:readyToTest];
-}
-
-- (void)doTestWithMXFileStoreAndMessagesLimit:(NSUInteger)messagesLimit readyToTest:(void (^)(MXRoom *room))readyToTest
-{
-    MXFileStore *store = [[MXFileStore alloc] init];
-    [self doTestWithStore:store andMessagesLimit:messagesLimit readyToTest:readyToTest];
-}
-
 
 - (void)assertNoDuplicate:(NSArray*)events text:(NSString*)text
 {
@@ -245,15 +178,33 @@
 
 - (void)checkEventWithEventIdOfStore:(id<MXStore>)store
 {
-    MXEvent *event = [MXEvent modelFromJSON:@{@"event_id" : @"anID"}];
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
 
-    [store storeEventForRoom:@"roomId" event:event direction:MXEventDirectionForwards];
+    [sharedData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation2) {
 
-    MXEvent *storedEvent = [store eventWithEventId:@"anID" inRoom:@"roomId"];
+        expectation = expectation2;
 
-    XCTAssertEqualObjects(storedEvent, event);
+        [store openWithCredentials:bobRestClient.credentials onComplete:^{
+            MXEvent *event = [MXEvent modelFromJSON:@{
+                                                      @"event_id": @"anID",
+                                                      @"type": @"type",
+                                                      @"room_id": @"roomId",
+                                                      @"user_id": @"userId:"
+                                                      }];
 
-    [expectation fulfill];
+            [store storeEventForRoom:@"roomId" event:event direction:MXEventDirectionForwards];
+
+            MXEvent *storedEvent = [store eventWithEventId:@"anID" inRoom:@"roomId"];
+
+            XCTAssertEqualObjects(storedEvent, event);
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
 }
 
 - (void)checkPaginateBack:(MXRoom*)room
@@ -399,14 +350,14 @@
         // The several paginations
         [room2 resetBackState];
 
-        if ([mxSession.store isKindOfClass:[MXMemoryStore class]])
+        if (mxSession.store.isPermanent)
         {
             XCTAssertGreaterThanOrEqual(room2.remainingMessagesForPaginationInStore, 7);
         }
 
         [room2 paginateBackMessages:2 complete:^() {
 
-            if ([mxSession.store isKindOfClass:[MXMemoryStore class]])
+            if (mxSession.store.isPermanent)
             {
                 XCTAssertGreaterThanOrEqual(room2.remainingMessagesForPaginationInStore, 5);
             }
@@ -420,13 +371,16 @@
                     // Now, compare the result with the reference
                     XCTAssertEqual(roomEvents.count, room2Events.count);
 
-                    // Compare events one by one
-                    for (NSUInteger i = 0; i < room2Events.count; i++)
+                    if (roomEvents.count == room2Events.count)
                     {
-                        MXEvent *event = roomEvents[i];
-                        MXEvent *event2 = room2Events[i];
+                        // Compare events one by one
+                        for (NSUInteger i = 0; i < room2Events.count; i++)
+                        {
+                            MXEvent *event = roomEvents[i];
+                            MXEvent *event2 = room2Events[i];
 
-                        XCTAssertTrue([event2.eventId isEqualToString:event.eventId], @"Events mismatch: %@ - %@", event, event2);
+                            XCTAssertTrue([event2.eventId isEqualToString:event.eventId], @"Events mismatch: %@ - %@", event, event2);
+                        }
                     }
 
                     [expectation fulfill];
@@ -475,14 +429,14 @@
             liveEvents++;
             if (1 == liveEvents)
             {
-                if ([mxSession.store isKindOfClass:[MXMemoryStore class]])
+                if (mxSession.store.isPermanent)
                 {
                     XCTAssertGreaterThanOrEqual(room2.remainingMessagesForPaginationInStore, 7);
                 }
 
                 [room2 paginateBackMessages:2 complete:^() {
 
-                    if ([mxSession.store isKindOfClass:[MXMemoryStore class]])
+                    if (mxSession.store.isPermanent)
                     {
                         XCTAssertGreaterThanOrEqual(room2.remainingMessagesForPaginationInStore, 5);
                     }
@@ -590,11 +544,13 @@
     XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
 
     [room resetBackState];
-    XCTAssertEqual([room lastMessageWithTypeIn:nil], lastMessage, @"The last message should stay the same");
+    MXEvent *lastMessage2 = [room lastMessageWithTypeIn:nil];
+    XCTAssertEqualObjects(lastMessage2.eventId, lastMessage.eventId,  @"The last message should stay the same");
 
     [room paginateBackMessages:100 complete:^() {
 
-        XCTAssertEqual([room lastMessageWithTypeIn:nil], lastMessage, @"The last message should stay the same");
+        MXEvent *lastMessage3 = [room lastMessageWithTypeIn:nil];
+        XCTAssertEqualObjects(lastMessage3.eventId, lastMessage.eventId,  @"The last message should stay the same");
 
         [expectation fulfill];
 
@@ -628,6 +584,7 @@
                     if (direction == MXEventDirectionForwards && MXMembershipInvite == room2.state.membership)
                     {
                         // Join the room on the invitation and check we can paginate all expected text messages
+                        // By default the last Alice's message (sent while Bob is not in the room) is not visible.
                         [room2 join:^{
 
                             NSMutableArray *events = [NSMutableArray array];
@@ -635,8 +592,8 @@
 
                                 if (0 == events.count)
                                 {
-                                    // The most recent message must be "Hi bob" sent by Alice
-                                    XCTAssertEqualObjects(aliceTextEventId, event.eventId);
+                                    // The most recent message must not be "Hi bob" sent by Alice
+                                    XCTAssertNotEqualObjects(aliceTextEventId, event.eventId);
                                 }
 
                                 [events addObject:event];
@@ -646,7 +603,7 @@
                             [room2 resetBackState];
                             [room2 paginateBackMessages:100 complete:^{
 
-                                XCTAssertEqual(events.count, 6, "The room should contain 5 + 1 messages");
+                                XCTAssertEqual(events.count, 5, "The room should contain only 5 messages (the last message sent while the user is not in the room is not visible)");
                                 [expectation fulfill];
 
                             } failure:^(NSError *error) {
@@ -709,9 +666,9 @@
         // Paginate for the exact number of events in the room
         NSUInteger pagEnd = eventCount;
         eventCount = 0;
-        [room resetBackState];
         [mxSession.store deleteRoom:room.state.roomId];
-        
+        [room resetBackState];
+
         [room paginateBackMessages:pagEnd complete:^{
 
             XCTAssertEqual(eventCount, pagEnd, @"We should get as many messages as requested");
@@ -798,510 +755,8 @@
 }
 
 
-#pragma mark - MXNoStore tests
-/* This feature is not available with MXNoStore
-- (void)testMXNoStoreEventWithEventId
-{
-    MXNoStore *store = [[MXNoStore alloc] init];
-    [self checkEventWithEventIdOfStore:store];
-}
-*/
-
-- (void)testMXNoStorePaginateBack
-{
-    [self doTestWithMXNoStore:^(MXRoom *room) {
-        [self checkPaginateBack:room];
-    }];
-}
-
-- (void)testMXNoStorePaginateBackFilter
-{
-    [self doTestWithMXNoStore:^(MXRoom *room) {
-        [self checkPaginateBackFilter:room];
-    }];
-}
-
-- (void)testMXNoStorePaginateBackOrder
-{
-    [self doTestWithMXNoStore:^(MXRoom *room) {
-        [self checkPaginateBackOrder:room];
-    }];
-}
-
-- (void)testMXNoStorePaginateBackDuplicates
-{
-    [self doTestWithMXNoStore:^(MXRoom *room) {
-        [self checkPaginateBackDuplicates:room];
-    }];
-}
-
-- (void)testMXNoStorePaginateBackDuplicatesInRoomWithTwoUsers
-{
-    [self doTestWithMXMemoryStore:^(MXRoom *room) {
-        [self checkPaginateBackDuplicates:room];
-    }];
-}
-
-- (void)testMXNoStoreSeveralPaginateBacks
-{
-    [self doTestWithMXNoStore:^(MXRoom *room) {
-        [self checkSeveralPaginateBacks:room];
-    }];
-}
-
-- (void)testMXNoStoreCanPaginateFromHomeServer
-{
-    // Preload less messages than the room history counts so that there are still requests to the HS to do
-    [self doTestWithMXNoStoreAndMessagesLimit:1 readyToTest:^(MXRoom *room) {
-        [self checkCanPaginateFromHomeServer:room];
-    }];
-}
-
-- (void)testMXNoStoreCanPaginateFromMXStore
-{
-    // Preload more messages than the room history counts so that all messages are already loaded
-    // room.canPaginate will use [MXStore canPaginateInRoom]
-    [self doTestWithMXNoStoreAndMessagesLimit:100 readyToTest:^(MXRoom *room) {
-        [self checkCanPaginateFromMXStore:room];
-    }];
-}
-
-- (void)testMXNoStoreLastMessageAfterPaginate
-{
-    [self doTestWithMXNoStore:^(MXRoom *room) {
-        [self checkLastMessageAfterPaginate:room];
-    }];
-}
-
-- (void)testMXNoStorePaginateWhenJoiningAgainAfterLeft
-{
-    [self doTestWithMXNoStoreAndMessagesLimit:10 readyToTest:^(MXRoom *room) {
-        [self checkPaginateWhenJoiningAgainAfterLeft:room];
-    }];
-}
-
-- (void)testMXNoStorePaginateWhenReachingTheExactBeginningOfTheRoom
-{
-    [self doTestWithMXNoStore:^(MXRoom *room) {
-        [self checkPaginateWhenReachingTheExactBeginningOfTheRoom:room];
-    }];
-}
-
-
-#pragma mark - MXMemoryStore
-- (void)testMXMemoryEventWithEventId
-{
-    MXMemoryStore *store = [[MXMemoryStore alloc] init];
-    [self checkEventWithEventIdOfStore:store];
-}
-
-- (void)testMXMemoryStorePaginateBack
-{
-    [self doTestWithMXMemoryStore:^(MXRoom *room) {
-        [self checkPaginateBack:room];
-    }];
-}
-
-- (void)testMXMemoryStorePaginateBackFilter
-{
-    [self doTestWithMXMemoryStore:^(MXRoom *room) {
-        [self checkPaginateBackFilter:room];
-    }];
-}
-
-- (void)testMXMemoryStorePaginateBackOrder
-{
-    [self doTestWithMXMemoryStore:^(MXRoom *room) {
-        [self checkPaginateBackOrder:room];
-    }];
-}
-
-- (void)testMXMemoryStorePaginateBackDuplicates
-{
-    [self doTestWithMXMemoryStore:^(MXRoom *room) {
-        [self checkPaginateBackDuplicates:room];
-    }];
-}
-
-// This test illustrates bug SYIOS-9
-- (void)testMXMemoryStorePaginateBackDuplicatesInRoomWithTwoUsers
-{
-    [self doTestWithTwoUsersAndMXMemoryStore:^(MXRoom *room) {
-        [self checkPaginateBackDuplicates:room];
-    }];
-}
-
-- (void)testMXMemoryStoreSeveralPaginateBacks
-{
-    [self doTestWithMXMemoryStore:^(MXRoom *room) {
-        [self checkSeveralPaginateBacks:room];
-    }];
-}
-
-- (void)testMXMemoryStorePaginateWithLiveEvents
-{
-    [self doTestWithMXMemoryStore:^(MXRoom *room) {
-        [self checkPaginateWithLiveEvents:room];
-    }];
-}
-
-- (void)testMXMemoryStoreCanPaginateFromHomeServer
-{
-    // Preload less messages than the room history counts so that there are still requests to the HS to do
-    [self doTestWithMXMemoryStoreAndMessagesLimit:1 readyToTest:^(MXRoom *room) {
-        [self checkCanPaginateFromHomeServer:room];
-    }];
-}
-
-- (void)testMXMemoryStoreCanPaginateFromMXStore
-{
-    // Preload more messages than the room history counts so that all messages are already loaded
-    // room.canPaginate will use [MXStore canPaginateInRoom]
-    [self doTestWithMXMemoryStoreAndMessagesLimit:100 readyToTest:^(MXRoom *room) {
-        [self checkCanPaginateFromMXStore:room];
-    }];
-}
-
-- (void)testMXMemoryStoreLastMessageAfterPaginate
-{
-    [self doTestWithMXMemoryStore:^(MXRoom *room) {
-        [self checkLastMessageAfterPaginate:room];
-    }];
-}
-
-- (void)testMXMemoryStorePaginateWhenJoiningAgainAfterLeft
-{
-    [self doTestWithMXMemoryStoreAndMessagesLimit:100 readyToTest:^(MXRoom *room) {
-        [self checkPaginateWhenJoiningAgainAfterLeft:room];
-    }];
-}
-
-- (void)testMXMemoryStoreAndHomeServerPaginateWhenJoiningAgainAfterLeft
-{
-    // Not preloading all messages of the room causes a duplicated event issue with MXMemoryStore
-    // See `testMXMemoryStorePaginateBackDuplicatesInRoomWithTwoUsers`.
-    // Check here if MXMemoryStore is able to filter this duplicate
-    [self doTestWithMXMemoryStoreAndMessagesLimit:10 readyToTest:^(MXRoom *room) {
-        [self checkPaginateWhenJoiningAgainAfterLeft:room];
-    }];
-}
-
-- (void)testMXMemoryStorePaginateWhenReachingTheExactBeginningOfTheRoom
-{
-    [self doTestWithMXMemoryStore:^(MXRoom *room) {
-        [self checkPaginateWhenReachingTheExactBeginningOfTheRoom:room];
-    }];
-}
-
-- (void)testMXMemoryStoreRedactEvent
-{
-    [self doTestWithMXMemoryStoreAndMessagesLimit:100 readyToTest:^(MXRoom *room) {
-        [self checkRedactEvent:room];
-    }];
-}
-
-
-#pragma mark - MXMemoryStore specific tests
-- (void)testMXMemoryStorePaginate
-{
-    [self doTestWithMXMemoryStoreAndMessagesLimit:0 readyToTest:^(MXRoom *room) {
-
-        __block NSUInteger eventCount = 0;
-        __block MXEvent *firstEventInTheRoom;
-        [room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
-
-            eventCount++;
-
-            firstEventInTheRoom = event;
-        }];
-
-        // First make a call to paginateBackMessages that will make a request to the server
-        [room resetBackState];
-        [room paginateBackMessages:100 complete:^{
-
-            XCTAssertEqual(firstEventInTheRoom.eventType, MXEventTypeRoomCreate, @"First event in a room is always m.room.create");
-
-            [room removeAllListeners];
-
-            __block NSUInteger eventCount2 = 0;
-            __block MXEvent *firstEventInTheRoom2;
-            [room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
-
-                eventCount2++;
-
-                firstEventInTheRoom2 = event;
-            }];
-
-            [room resetBackState];
-            [room paginateBackMessages:100 complete:^{
-
-                XCTAssertEqual(eventCount, eventCount2);
-                XCTAssertEqual(firstEventInTheRoom2.eventType, MXEventTypeRoomCreate, @"First event in a room is always m.room.create");
-                XCTAssertEqualObjects(firstEventInTheRoom, firstEventInTheRoom2);
-
-                [expectation fulfill];
-
-            } failure:^(NSError *error) {
-                XCTFail(@"The request should not fail - NSError: %@", error);
-                [expectation fulfill];
-            }];
-
-        } failure:^(NSError *error) {
-            XCTFail(@"The request should not fail - NSError: %@", error);
-            [expectation fulfill];
-        }];
-
-    }];
-}
-
-
-- (void)testMXMemoryStorePaginateAgain
-{
-    [self doTestWithMXMemoryStoreAndMessagesLimit:0 readyToTest:^(MXRoom *room) {
-
-        __block NSInteger paginateBackMessagesCallCount = 0;
-
-        __block NSMutableArray *roomEvents = [NSMutableArray array];
-        [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
-
-            XCTAssertEqual(paginateBackMessagesCallCount, 1, @"Messages must asynchronously come");
-
-            [roomEvents addObject:event];
-        }];
-
-        [room resetBackState];
-        [room paginateBackMessages:8 complete:^() {
-
-            [room removeAllListeners];
-
-            __block NSMutableArray *room2Events = [NSMutableArray array];
-            [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
-
-                [room2Events addObject:event];
-
-                if (room2Events.count <=2)
-                {
-                    XCTAssertEqual(paginateBackMessagesCallCount, 1, @"Messages for 'paginateBackMessages:2' must synchronously come");
-                }
-                else if (room2Events.count <=7)
-                {
-                    XCTAssertEqual(paginateBackMessagesCallCount, 1, @"Messages for 'paginateBackMessages:5' must synchronously come");
-                }
-                else if (room2Events.count <=8)
-                {
-                    XCTAssertEqual(paginateBackMessagesCallCount, 1, @"The first messages for 'paginateBackMessages:100' must synchronously come");
-                }
-                else
-                {
-                    XCTAssertEqual(paginateBackMessagesCallCount, 4, @"Other Messages for 'paginateBackMessages:100' must ssynchronously come");
-                }
-            }];
-
-            XCTAssertTrue(room.canPaginate, @"There is still at least one event to retrieve from the server");
-
-            // The several paginations
-            [room resetBackState];
-            [room paginateBackMessages:2 complete:^() {
-
-                [room paginateBackMessages:5 complete:^() {
-
-                    [room paginateBackMessages:100 complete:^() {
-
-                        // Now, compare the result with the reference
-                        XCTAssertEqual(roomEvents.count, 8);
-                        XCTAssertGreaterThan(room2Events.count, roomEvents.count);
-
-                        // Compare events one by one
-                        for (NSUInteger i = 0; i < roomEvents.count; i++)
-                        {
-                            MXEvent *event = roomEvents[i];
-                            MXEvent *event2 = room2Events[i];
-
-                            XCTAssertTrue([event2.eventId isEqualToString:event.eventId], @"Events mismatch: %@ - %@", event, event2);
-                        }
-
-                        XCTAssertFalse(room.canPaginate, @"We reach the beginning of the history");
-
-                        [room resetBackState];
-                        XCTAssertTrue(room.canPaginate, @"We must be able to paginate again");
-
-                        [expectation fulfill];
-
-                    } failure:^(NSError *error) {
-                        XCTFail(@"The request should not fail - NSError: %@", error);
-                        [expectation fulfill];
-                    }];
-
-                    paginateBackMessagesCallCount++;
-
-                } failure:^(NSError *error) {
-                    XCTFail(@"The request should not fail - NSError: %@", error);
-                    [expectation fulfill];
-                }];
-
-                paginateBackMessagesCallCount++;
-
-            } failure:^(NSError *error) {
-                XCTFail(@"The request should not fail - NSError: %@", error);
-                [expectation fulfill];
-            }];
-
-            paginateBackMessagesCallCount++;
-
-        } failure:^(NSError *error) {
-            XCTFail(@"The request should not fail - NSError: %@", error);
-            [expectation fulfill];
-        }];
-        
-        paginateBackMessagesCallCount++;
-
-    }];
-}
-
-- (void)testMXMemoryStoreLastMessage
-{
-    [self doTestWithMXMemoryStore:^(MXRoom *room) {
-
-        [room resetBackState];
-        [room paginateBackMessages:8 complete:^() {
-
-            MXEvent *lastMessage = [room lastMessageWithTypeIn:nil];
-            XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
-
-            lastMessage = [room lastMessageWithTypeIn:@[kMXEventTypeStringRoomMessage]];
-            XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
-
-            lastMessage = [room lastMessageWithTypeIn:@[kMXEventTypeStringRoomMember]];
-            XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMember);
-
-            [expectation fulfill];
-
-        } failure:^(NSError *error) {
-            XCTFail(@"The request should not fail - NSError: %@", error);
-            [expectation fulfill];
-        }];
-
-    }];
-
-}
-
-
-#pragma mark - MXFileStore
-- (void)testMXFileEventWithEventId
-{
-    MXFileStore *store = [[MXFileStore alloc] init];
-    [self checkEventWithEventIdOfStore:store];
-}
-
-- (void)testMXFileStorePaginateBack
-{
-    [self doTestWithMXFileStore:^(MXRoom *room) {
-        [self checkPaginateBack:room];
-    }];
-}
-
-- (void)testMXFileStorePaginateBackFilter
-{
-    [self doTestWithMXFileStore:^(MXRoom *room) {
-        [self checkPaginateBackFilter:room];
-    }];
-}
-
-- (void)testMXFileStorePaginateBackOrder
-{
-    [self doTestWithMXFileStore:^(MXRoom *room) {
-        [self checkPaginateBackOrder:room];
-    }];
-}
-
-- (void)testMXFileStorePaginateBackDuplicates
-{
-    [self doTestWithMXFileStore:^(MXRoom *room) {
-        [self checkPaginateBackDuplicates:room];
-    }];
-}
-
-// This test illustrates bug SYIOS-9
-- (void)testMXFileStorePaginateBackDuplicatesInRoomWithTwoUsers
-{
-    [self doTestWithTwoUsersAndMXFileStore:^(MXRoom *room) {
-        [self checkPaginateBackDuplicates:room];
-    }];
-}
-
-- (void)testMXFileStoreSeveralPaginateBacks
-{
-    [self doTestWithMXFileStore:^(MXRoom *room) {
-        [self checkSeveralPaginateBacks:room];
-    }];
-}
-
-- (void)testMXFileStorePaginateWithLiveEvents
-{
-    [self doTestWithMXFileStore:^(MXRoom *room) {
-        [self checkPaginateWithLiveEvents:room];
-    }];
-}
-
-- (void)testMXFileStoreCanPaginateFromHomeServer
-{
-    // Preload less messages than the room history counts so that there are still requests to the HS to do
-    [self doTestWithMXFileStoreAndMessagesLimit:1 readyToTest:^(MXRoom *room) {
-        [self checkCanPaginateFromHomeServer:room];
-    }];
-}
-
-- (void)testMXFileStoreCanPaginateFromMXStore
-{
-    // Preload more messages than the room history counts so that all messages are already loaded
-    // room.canPaginate will use [MXStore canPaginateInRoom]
-    [self doTestWithMXFileStoreAndMessagesLimit:100 readyToTest:^(MXRoom *room) {
-        [self checkCanPaginateFromMXStore:room];
-    }];
-}
-
-- (void)testMXFileStoreLastMessageAfterPaginate
-{
-    [self doTestWithMXFileStore:^(MXRoom *room) {
-        [self checkLastMessageAfterPaginate:room];
-    }];
-}
-
-- (void)testMXFileStorePaginateWhenJoiningAgainAfterLeft
-{
-    [self doTestWithMXFileStoreAndMessagesLimit:100 readyToTest:^(MXRoom *room) {
-        [self checkPaginateWhenJoiningAgainAfterLeft:room];
-    }];
-}
-
-- (void)testMXFileStoreAndHomeServerPaginateWhenJoiningAgainAfterLeft
-{
-    // Not preloading all messages of the room causes a duplicated event issue with MXFileStore
-    // See `testMXFileStorePaginateBackDuplicatesInRoomWithTwoUsers`.
-    // Check here if MXFileStore is able to filter this duplicate
-    [self doTestWithMXFileStoreAndMessagesLimit:10 readyToTest:^(MXRoom *room) {
-        [self checkPaginateWhenJoiningAgainAfterLeft:room];
-    }];
-}
-
-- (void)testMXFileStorePaginateWhenReachingTheExactBeginningOfTheRoom
-{
-    [self doTestWithMXFileStore:^(MXRoom *room) {
-        [self checkPaginateWhenReachingTheExactBeginningOfTheRoom:room];
-    }];
-}
-
-- (void)testMXFileStoreRedactEvent
-{
-    [self doTestWithMXFileStoreAndMessagesLimit:100 readyToTest:^(MXRoom *room) {
-        [self checkRedactEvent:room];
-    }];
-}
-
-
-#pragma mark - MXFileStore specific tests
-
-- (void)testMXFileStoreUserDisplaynameAndAvatarUrl
+#pragma mark - Tests on MXStore optional methods
+- (void)checkUserDisplaynameAndAvatarUrl:(Class)mxStoreClass
 {
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
 
@@ -1309,7 +764,7 @@
 
         expectation = expectation2;
 
-        MXFileStore *store = [[MXFileStore alloc] init];
+        id<MXStore> store = [[mxStoreClass alloc] init];
         [store openWithCredentials:sharedData.aliceCredentials onComplete:^{
 
             [store deleteAllData];
@@ -1317,37 +772,37 @@
             XCTAssertNil(store.userDisplayname);
             XCTAssertNil(store.userAvatarUrl);
 
-            [store close];
+            if ([store respondsToSelector:@selector(close)])
+            {
+                [store close];
+            }
 
-            [store openWithCredentials:sharedData.aliceCredentials onComplete:^{
+            XCTAssertNil(store.userDisplayname);
+            XCTAssertNil(store.userAvatarUrl);
 
-                XCTAssertNil(store.userDisplayname);
-                XCTAssertNil(store.userAvatarUrl);
+            // Let's (and verify) MXSession start update the store with user information
+            mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
 
-                // Let's (and verify) MXSession start update the store with user information
-                mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+            [mxSession setStore:store success:^{
 
-                [mxSession setStore:store success:^{
+                [mxSession start:^{
 
-                    [mxSession start:^{
+                    [mxSession close];
+                    mxSession = nil;
 
-                        [mxSession close];
-                        mxSession = nil;
+                    // Check user information is permanent
+                    id<MXStore> store2 = [[mxStoreClass alloc] init];
+                    [store2 openWithCredentials:sharedData.aliceCredentials onComplete:^{
 
-                        // Check user information is permanent
-                        MXFileStore *store2 = [[MXFileStore alloc] init];
-                        [store2 openWithCredentials:sharedData.aliceCredentials onComplete:^{
+                        XCTAssertEqualObjects(store2.userDisplayname, kMXTestsAliceDisplayName);
+                        XCTAssertEqualObjects(store2.userAvatarUrl, kMXTestsAliceAvatarURL);
 
-                            XCTAssertEqualObjects(store2.userDisplayname, kMXTestsAliceDisplayName);
-                            XCTAssertEqualObjects(store2.userAvatarUrl, kMXTestsAliceAvatarURL);
-
+                        if ([store2 respondsToSelector:@selector(close)])
+                        {
                             [store2 close];
-                            [expectation fulfill];
+                        }
+                        [expectation fulfill];
 
-                        } failure:^(NSError *error) {
-                            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
-                        }];
-                        
                     } failure:^(NSError *error) {
                         NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
                     }];
@@ -1365,7 +820,7 @@
     }];
 }
 
-- (void)testMXFileStoreMXSessionOnStoreDataReady
+- (void)checkMXSessionOnStoreDataReady:(Class)mxStoreClass
 {
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
 
@@ -1374,7 +829,7 @@
         expectation = expectation2;
 
 
-        MXFileStore *store = [[MXFileStore alloc] init];
+        id<MXStore> store = [[mxStoreClass alloc] init];
         [store openWithCredentials:sharedData.bobCredentials onComplete:^{
 
             // Make sure to start from an empty store
@@ -1384,129 +839,62 @@
             XCTAssertNil(store.userAvatarUrl);
             XCTAssertEqual(store.rooms.count, 0);
 
-            [store close];
+            if ([store respondsToSelector:@selector(close)])
+            {
+                [store close];
+            }
 
-            [store openWithCredentials:sharedData.bobCredentials onComplete:^{
-
-                // Do a 1st [mxSession start] to fill the store
-                mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
-
-                [mxSession setStore:store success:^{
-
-                    [mxSession start:^{
-
-                        [mxSession close];
-                        mxSession = nil;
-
-                        // Create another random room to create more data server side
-                        [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
-
-                            [bobRestClient sendTextMessageToRoom:response.roomId text:@"A Message" success:^(NSString *eventId) {
-
-                                // Do a 2nd [mxSession start] with the filled store
-                                MXFileStore *store2 = [[MXFileStore alloc] init];
-                                [store2 openWithCredentials:sharedData.bobCredentials onComplete:^{
-
-                                    __block BOOL onStoreDataReadyCalled;
-                                    NSString *eventStreamToken = [store2.eventStreamToken copy];
-                                    NSUInteger storeRoomsCount = store2.rooms.count;
-
-                                    MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
-
-                                    [mxSession2 setStore:store2 success:^{
-                                        onStoreDataReadyCalled = YES;
-
-                                        XCTAssertEqual(mxSession2.rooms.count, storeRoomsCount, @"MXSessionOnStoreDataReady must have loaded as many MXRooms as room stored");
-                                        XCTAssertEqual(store2.rooms.count, storeRoomsCount, @"There must still the same number of stored rooms");
-                                        XCTAssertEqualObjects(eventStreamToken, store2.eventStreamToken, @"The event stream token must not have changed yet");
-
-                                        [mxSession2 start:^{
-
-                                            XCTAssert(onStoreDataReadyCalled, @"onStoreDataReady must alway be called before onServerSyncDone");
-
-                                            XCTAssertEqual(mxSession2.rooms.count, storeRoomsCount + 1, @"MXSessionOnStoreDataReady must have loaded as many MXRooms as room stored");
-                                            XCTAssertEqual(store2.rooms.count, storeRoomsCount + 1, @"There must still the same number of stored rooms");
-                                            XCTAssertNotEqualObjects(eventStreamToken, store2.eventStreamToken, @"The event stream token must not have changed yet");
-
-                                            [mxSession2 close];
-
-                                            [expectation fulfill];
-
-                                        } failure:^(NSError *error) {
-                                            XCTFail(@"The request should not fail - NSError: %@", error);
-                                            [expectation fulfill];
-                                        }];
-
-                                    } failure:^(NSError *error) {
-                                        NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
-                                    }];
-
-                                } failure:^(NSError *error) {
-                                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
-                                }];
-                                
-                            } failure:^(NSError *error) {
-                                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
-                            }];
-                            
-                        } failure:^(NSError *error) {
-                            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
-                        }];
-                        
-                    } failure:^(NSError *error) {
-                        XCTFail(@"The request should not fail - NSError: %@", error);
-                        [expectation fulfill];
-                    }];
-
-                } failure:^(NSError *error) {
-                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
-                }];
-
-            } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
-            }];
-        } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
-        }];
-
-    }];
-}
-
-- (void)testMXFileStoreRoomDeletion
-{
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-
-    [sharedData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
-
-        expectation = expectation2;
-
-        MXFileStore *store = [[MXFileStore alloc] init];
-        [store openWithCredentials:sharedData.bobCredentials onComplete:^{
-
+            // Do a 1st [mxSession start] to fill the store
             mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
-
             [mxSession setStore:store success:^{
 
                 [mxSession start:^{
 
-                    // Quit the newly created room
-                    MXRoom *room = [mxSession roomWithRoomId:roomId];
-                    [room leave:^{
+                    NSString *eventStreamToken = [store.eventStreamToken copy];
+                    NSUInteger storeRoomsCount = store.rooms.count;
 
-                        XCTAssertEqual(NSNotFound, [store.rooms indexOfObject:roomId], @"The room %@ must be no more in the store", roomId);
+                    [mxSession close];
+                    mxSession = nil;
 
-                        [mxSession close];
-                        mxSession = nil;
+                    // Create another random room to create more data server side
+                    [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
 
-                        // Reload the store, to be sure the room is no more here
-                        MXFileStore *store2 = [[MXFileStore alloc] init];
-                        [store2 openWithCredentials:sharedData.bobCredentials onComplete:^{
+                        [bobRestClient sendTextMessageToRoom:response.roomId text:@"A Message" success:^(NSString *eventId) {
 
-                            XCTAssertEqual(NSNotFound, [store2.rooms indexOfObject:roomId], @"The room %@ must be no more in the store", roomId);
+                            // Do a 2nd [mxSession start] with the filled store
+                            id<MXStore> store2 = [[mxStoreClass alloc] init];
 
-                            [store2 close];
+                            __block BOOL onStoreDataReadyCalled;
 
-                            [expectation fulfill];
+                            MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+
+                            [mxSession2 setStore:store2 success:^{
+                                onStoreDataReadyCalled = YES;
+
+                                XCTAssertEqual(mxSession2.rooms.count, storeRoomsCount, @"MXSessionOnStoreDataReady must have loaded as many MXRooms as room stored");
+                                XCTAssertEqual(store2.rooms.count, storeRoomsCount, @"There must still the same number of stored rooms");
+                                XCTAssertEqualObjects(eventStreamToken, store2.eventStreamToken, @"The event stream token must not have changed yet");
+
+                                [mxSession2 start:^{
+
+                                    XCTAssert(onStoreDataReadyCalled, @"onStoreDataReady must alway be called before onServerSyncDone");
+
+                                    XCTAssertEqual(mxSession2.rooms.count, storeRoomsCount + 1, @"MXSessionOnStoreDataReady must have loaded as many MXRooms as room stored");
+                                    XCTAssertEqual(store2.rooms.count, storeRoomsCount + 1, @"There must still the same number of stored rooms");
+                                    XCTAssertNotEqualObjects(eventStreamToken, store2.eventStreamToken, @"The event stream token must not have changed yet");
+
+                                    [mxSession2 close];
+
+                                    [expectation fulfill];
+
+                                } failure:^(NSError *error) {
+                                    XCTFail(@"The request should not fail - NSError: %@", error);
+                                    [expectation fulfill];
+                                }];
+
+                            } failure:^(NSError *error) {
+                                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                            }];
 
                         } failure:^(NSError *error) {
                             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
@@ -1516,6 +904,62 @@
                         NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
                     }];
                     
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+                
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+        
+    }];
+}
+
+- (void)checkRoomDeletion:(Class)mxStoreClass
+{
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+
+    [sharedData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
+
+        expectation = expectation2;
+
+        id<MXStore> store = [[mxStoreClass alloc] init];
+
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [mxSession setStore:store success:^{
+
+            [mxSession start:^{
+
+                // Quit the newly created room
+                MXRoom *room = [mxSession roomWithRoomId:roomId];
+                [room leave:^{
+
+                    XCTAssertEqual(NSNotFound, [store.rooms indexOfObject:roomId], @"The room %@ must be no more in the store", roomId);
+
+                    [mxSession close];
+                    mxSession = nil;
+
+                    // Reload the store, to be sure the room is no more here
+                    id<MXStore> store2 = [[mxStoreClass alloc] init];
+                    [store2 openWithCredentials:sharedData.bobCredentials onComplete:^{
+
+                        XCTAssertEqual(NSNotFound, [store2.rooms indexOfObject:roomId], @"The room %@ must be no more in the store", roomId);
+
+                        if ([store2 respondsToSelector:@selector(close)])
+                        {
+                            [store2 close];
+                        }
+
+                        [expectation fulfill];
+
+                    } failure:^(NSError *error) {
+                        NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                    }];
+
                 } failure:^(NSError *error) {
                     NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
                 }];
@@ -1531,7 +975,7 @@
 }
 
 // Check that MXEvent.age and MXEvent.ageLocalTs are consistent after being stored.
-- (void)testMXFileStoreAge
+- (void)checkEventAge:(Class)mxStoreClass
 {
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
 
@@ -1539,40 +983,39 @@
 
         expectation = expectation2;
 
-        MXFileStore *store = [[MXFileStore alloc] init];
-        [store openWithCredentials:sharedData.bobCredentials onComplete:^{
+        id<MXStore> store = [[mxStoreClass alloc] init];
 
-            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [mxSession setStore:store success:^{
+            [mxSession start:^{
 
-            [mxSession setStore:store success:^{
-                [mxSession start:^{
+                MXRoom *room = [mxSession roomWithRoomId:roomId];
 
-                    MXRoom *room = [mxSession roomWithRoomId:roomId];
+                MXEvent *event = [room lastMessageWithTypeIn:nil];
 
-                    MXEvent *event = [room lastMessageWithTypeIn:nil];
+                NSUInteger age = event.age;
+                uint64_t ageLocalTs = event.ageLocalTs;
 
-                    NSUInteger age = event.age;
-                    uint64_t ageLocalTs = event.ageLocalTs;
-
+                if ([store respondsToSelector:@selector(close)])
+                {
                     [store close];
-                    [store openWithCredentials:sharedData.bobCredentials onComplete:^{
+                }
 
-                        MXEvent *sameEvent = [store eventWithEventId:event.eventId inRoom:roomId];
+                [store openWithCredentials:sharedData.bobCredentials onComplete:^{
 
-                        NSUInteger sameEventAge = sameEvent.age;
-                        uint64_t sameEventAgeLocalTs = sameEvent.ageLocalTs;
+                    MXEvent *sameEvent = [store eventWithEventId:event.eventId inRoom:roomId];
+                    XCTAssertNotNil(sameEvent);
 
-                        XCTAssertGreaterThan(sameEventAge, 0, @"MXEvent.age should strictly positive");
-                        XCTAssertLessThanOrEqual(age, sameEventAge, @"MXEvent.age should auto increase");
-                        XCTAssertLessThanOrEqual(sameEventAge - age, 1000, @"sameEventAge and age should be almost the same");
+                    NSUInteger sameEventAge = sameEvent.age;
+                    uint64_t sameEventAgeLocalTs = sameEvent.ageLocalTs;
 
-                        XCTAssertEqual(ageLocalTs, sameEventAgeLocalTs, @"MXEvent.ageLocalTs must still be the same");
+                    XCTAssertGreaterThan(sameEventAge, 0, @"MXEvent.age should strictly positive");
+                    XCTAssertLessThanOrEqual(age, sameEventAge, @"MXEvent.age should auto increase");
+                    XCTAssertLessThanOrEqual(sameEventAge - age, 1000, @"sameEventAge and age should be almost the same");
 
-                        [expectation fulfill];
-                    } failure:^(NSError *error) {
-                        NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
-                    }];
+                    XCTAssertEqual(ageLocalTs, sameEventAgeLocalTs, @"MXEvent.ageLocalTs must still be the same");
 
+                    [expectation fulfill];
                 } failure:^(NSError *error) {
                     NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
                 }];
@@ -1584,12 +1027,11 @@
         } failure:^(NSError *error) {
             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
         }];
-
     }];
 }
 
 // Check the pagination token is valid after reloading the store
-- (void)testMXFileStoreMXSessionPaginationToken
+- (void)checkMXRoomPaginationToken:(Class)mxStoreClass
 {
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
 
@@ -1597,44 +1039,37 @@
 
         expectation = expectation2;
 
-        MXFileStore *store = [[MXFileStore alloc] init];
-        [store openWithCredentials:sharedData.bobCredentials onComplete:^{
+        id<MXStore> store = [[mxStoreClass alloc] init];
 
-            // Do a 1st [mxSession start] to fill the store
-            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
-            [mxSession setStore:store success:^{
-                [mxSession start:^{
+        // Do a 1st [mxSession start] to fill the store
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [mxSession setStore:store success:^{
+            [mxSession start:^{
 
-                    MXRoom *room = [mxSession roomWithRoomId:roomId];
-                    [room resetBackState];
-                    [room paginateBackMessages:10 complete:^{
+                MXRoom *room = [mxSession roomWithRoomId:roomId];
+                [room resetBackState];
+                [room paginateBackMessages:10 complete:^{
 
-                        NSString *roomPaginationToken = [store paginationTokenOfRoom:roomId];
-                        XCTAssert(roomPaginationToken, @"The room must have a pagination after a pagination");
+                    NSString *roomPaginationToken = [store paginationTokenOfRoom:roomId];
+                    XCTAssert(roomPaginationToken, @"The room must have a pagination after a pagination");
 
-                        [mxSession close];
-                        mxSession = nil;
+                    [mxSession close];
+                    mxSession = nil;
 
-                        // Reopen a session and check roomPaginationToken
-                        MXFileStore *store2 = [[MXFileStore alloc] init];
-                        [store2 openWithCredentials:sharedData.bobCredentials onComplete:^{
+                    // Reopen a session and check roomPaginationToken
+                    id<MXStore> store2 = [[mxStoreClass alloc] init];
 
-                            XCTAssertEqualObjects(roomPaginationToken, [store2 paginationTokenOfRoom:roomId], @"The store must keep the pagination token");
+                    mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                    [mxSession setStore:store2 success:^{
 
-                            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
-                            [mxSession setStore:store2 success:^{
-                                [mxSession start:^{
+                        XCTAssertEqualObjects(roomPaginationToken, [store2 paginationTokenOfRoom:roomId], @"The store must keep the pagination token");
 
-                                    XCTAssertEqualObjects(roomPaginationToken, [store2 paginationTokenOfRoom:roomId], @"The store must keep the pagination token even after [MXSession start]");
+                        [mxSession start:^{
 
-                                    [expectation fulfill];
+                            XCTAssertEqualObjects(roomPaginationToken, [store2 paginationTokenOfRoom:roomId], @"The store must keep the pagination token even after [MXSession start]");
 
-                                } failure:^(NSError *error) {
-                                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
-                                }];
-                            } failure:^(NSError *error) {
-                                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
-                            }];
+                            [expectation fulfill];
+
                         } failure:^(NSError *error) {
                             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
                         }];
@@ -1653,7 +1088,7 @@
     }];
 }
 
-- (void)testMXFileStoreMultiAccount
+- (void)checkMultiAccount:(Class)mxStoreClass
 {
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
 
@@ -1661,33 +1096,33 @@
 
         expectation = expectation2;
 
-        MXFileStore *bobStore1 = [[MXFileStore alloc] init];
-        [bobStore1 openWithCredentials:sharedData.bobCredentials onComplete:^{
+        id<MXStore> bobStore1 = [[mxStoreClass alloc] init];
 
-            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
-            [mxSession setStore:bobStore1 success:^{
-                [mxSession start:^{
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [mxSession setStore:bobStore1 success:^{
+            [mxSession start:^{
 
-                    [mxSession close];
-                    mxSession = nil;
+                [mxSession close];
+                mxSession = nil;
 
-                    MXFileStore *bobStore2 = [[MXFileStore alloc] init];
-                    [bobStore2 openWithCredentials:sharedData.bobCredentials onComplete:^{
+                id<MXStore> bobStore2 = [[mxStoreClass alloc] init];
+                [bobStore2 openWithCredentials:sharedData.bobCredentials onComplete:^{
 
-                        MXFileStore *aliceStore = [[MXFileStore alloc] init];
-                        [aliceStore openWithCredentials:sharedData.aliceCredentials onComplete:^{
+                    id<MXStore> aliceStore = [[mxStoreClass alloc] init];
+                    [aliceStore openWithCredentials:sharedData.aliceCredentials onComplete:^{
 
-                            MXFileStore *bobStore3 = [[MXFileStore alloc] init];
-                            [bobStore3 openWithCredentials:sharedData.bobCredentials onComplete:^{
+                        id<MXStore> bobStore3 = [[mxStoreClass alloc] init];
+                        [bobStore3 openWithCredentials:sharedData.bobCredentials onComplete:^{
 
-                                XCTAssertEqual(bobStore2.diskUsage, bobStore3.diskUsage, @"Bob's store must still have the same content");
-                                XCTAssertEqual(bobStore2.rooms.count, bobStore3.rooms.count);
+                            XCTAssertEqual(bobStore2.rooms.count, bobStore3.rooms.count);
 
-                                [expectation fulfill];
+                            if ([bobStore2 isKindOfClass:[MXFileStore class]])
+                            {
+                                XCTAssertEqual(((MXFileStore*)bobStore2).diskUsage, ((MXFileStore*)bobStore3).diskUsage, @"Bob's store must still have the same content");
+                            }
 
-                            } failure:^(NSError *error) {
-                                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
-                            }];
+                            [expectation fulfill];
+
                         } failure:^(NSError *error) {
                             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
                         }];
@@ -1703,7 +1138,6 @@
         } failure:^(NSError *error) {
             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
         }];
-
     }];
 }
 

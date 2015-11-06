@@ -32,6 +32,8 @@ NSString *const kMXEventTypeStringRoomMessageFeedback = @"m.room.message.feedbac
 NSString *const kMXEventTypeStringRoomRedaction       = @"m.room.redaction";
 NSString *const kMXEventTypeStringPresence            = @"m.presence";
 NSString *const kMXEventTypeStringTypingNotification  = @"m.typing";
+NSString *const kMXEventTypeStringReceipt             = @"m.receipt";
+NSString *const kMXEventTypeStringRead                = @"m.read";
 
 NSString *const kMXEventTypeStringCallInvite          = @"m.call.invite";
 NSString *const kMXEventTypeStringCallCandidates      = @"m.call.candidates";
@@ -93,11 +95,16 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
             // Workaround: Presence events provided by the home server do not contain userId
             // in the root of the JSON event object but under its content sub object.
             // Set self.userId in order to follow other events format.
-            if (nil == self.userId)
+            if (nil == self.sender)
             {
                 // userId may be in the event content
-                self.userId = self.content[@"user_id"];
+                self.sender = self.content[@"user_id"];
             }
+        }
+        else if (nil == self.sender)
+        {
+            // Catch up the legacy field user_id (deprecated in v2)
+            self.sender = self.userId;
         }
 
         // Clean JSON data by removing all null values
@@ -160,6 +167,41 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 {
     // The event is a state event if has a state_key
     return (nil != self.stateKey);
+}
+
+- (NSArray*)receiptSenders
+{
+    NSMutableArray* list = [[NSMutableArray alloc] init];
+    
+    if (eventType == MXEventTypeReceipt)
+    {
+        NSArray* eventIds = [_content allKeys];
+        
+        for(NSString* eventId in eventIds)
+        {
+            NSDictionary* eventDict = [_content objectForKey:eventId];
+            NSDictionary* readDict = [eventDict objectForKey:kMXEventTypeStringRead];
+            
+            if (readDict)
+            {
+                NSArray* userIds = [readDict allKeys];
+                
+                for(NSString* userId in userIds)
+                {
+                    if ([list indexOfObject:userId] == NSNotFound)
+                    {
+                        [list addObject:userId];
+                    }
+                }
+            }
+        }
+    }
+    else if (_sender)
+    {
+        [list addObject:_sender];
+    }
+    
+    return list;
 }
 
 - (MXEvent*)prune
@@ -303,7 +345,7 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
         _eventId = [aDecoder decodeObjectForKey:@"eventId"];
         self.type = [aDecoder decodeObjectForKey:@"type"];
         _roomId = [aDecoder decodeObjectForKey:@"roomId"];
-        _userId = [aDecoder decodeObjectForKey:@"userId"];
+        _sender = [aDecoder decodeObjectForKey:@"userId"];
         _content = [aDecoder decodeObjectForKey:@"content"];
         _prevContent = [aDecoder decodeObjectForKey:@"prevContent"];
         _stateKey = [aDecoder decodeObjectForKey:@"stateKey"];
@@ -322,7 +364,7 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     [aCoder encodeObject:_eventId forKey:@"eventId"];
     [aCoder encodeObject:_type forKey:@"type"];
     [aCoder encodeObject:_roomId forKey:@"roomId"];
-    [aCoder encodeObject:_userId forKey:@"userId"];
+    [aCoder encodeObject:_sender forKey:@"userId"];
     [aCoder encodeObject:_content forKey:@"content"];
     [aCoder encodeObject:_prevContent forKey:@"prevContent"];
     [aCoder encodeObject:_stateKey forKey:@"stateKey"];

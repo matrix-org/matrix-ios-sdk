@@ -43,12 +43,13 @@
 
 - (void)testMainThread {
     
-    MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", kMXTestsHomeServerURL, kMXAPIPrefixPath]];
-    
+    MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", kMXTestsHomeServerURL, kMXAPIPrefixPath]
+                                   andOnUnrecognizedCertificateBlock:nil];
+
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
     
     [httpClient requestWithMethod:@"GET"
-                             path:@"v1/publicRooms"
+                             path:@"api/v1/publicRooms"
                        parameters:nil
                           success:^(NSDictionary *JSONResponse) {
                               XCTAssertTrue([NSThread isMainThread], @"The block callback must be called from the main thread");
@@ -65,12 +66,13 @@
 
 - (void)testMXError {
     
-    MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", kMXTestsHomeServerURL, kMXAPIPrefixPath]];
+    MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", kMXTestsHomeServerURL, kMXAPIPrefixPath]
+                                   andOnUnrecognizedCertificateBlock:nil];
     
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
     
     [httpClient requestWithMethod:@"GET"
-                             path:@"v1/notExistingAPI"
+                             path:@"api/v1/notExistingAPI"
                        parameters:nil
                           success:^(NSDictionary *JSONResponse) {
                               XCTFail(@"The request must fail as the API path does not exist");
@@ -89,7 +91,8 @@
 
 - (void)testNSError {
     
-    MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@/non-existing-path", kMXTestsHomeServerURL]];
+    MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@/non-existing-path", kMXTestsHomeServerURL]
+                                   andOnUnrecognizedCertificateBlock:nil];
     
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
     

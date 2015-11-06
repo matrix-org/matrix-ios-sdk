@@ -18,6 +18,8 @@
 
 #import "MXJSONModel.h"
 
+@class MXEvent;
+
 /**
  This file contains definitions of basic JSON responses or objects received
  from a Matrix home server.
@@ -94,6 +96,16 @@ FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeRecaptcha;
     @property (nonatomic) NSString *accessToken;
 
     /**
+     The server certificate trusted by the user (nil when the server is trusted by the device).
+     */
+    @property (nonatomic) NSData *allowedCertificate;
+
+    /**
+     The ignored server certificate (set when the user ignores a certificate change).
+     */
+    @property (nonatomic) NSData *ignoredCertificate;
+
+    /**
      Simple MXCredentials construtor
      */
     - (instancetype)initWithHomeServer:(NSString*)homeServer
@@ -141,7 +153,6 @@ FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeRecaptcha;
     @property (nonatomic) NSString *end;
 
 @end
-
 
 /**
  `MXRoomMemberEventContent` represents the content of a m.room.member event.
@@ -491,8 +502,246 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 
 @end
 
+#pragma mark - Server sync v1 response
+#pragma mark -
+
+/**
+ `MXRoomInitialSync` represents a room description in server response during initial sync v1.
+ */
+@interface MXRoomInitialSync : MXJSONModel
+
+    /**
+     The room identifier.
+     */
+    @property (nonatomic) NSString *roomId;
+
+    /**
+     The last recent messages of the room.
+     */
+    @property (nonatomic) MXPaginationResponse *messages;
+
+    /**
+     The state events.
+     */
+    @property (nonatomic) NSArray<MXEvent*> *state;
+
+    /**
+     The current user membership in this room.
+     */
+    @property (nonatomic) NSString* membership;
+
+    /**
+     The room visibility (public/private).
+     */
+    @property (nonatomic) NSString* visibility;
+
+    /**
+     The matrix id of the inviter in case of pending invitation.
+     */
+    @property (nonatomic) NSString *inviter;
+
+    /**
+     The presence status of other users (Provided in case of room initial sync @see http://matrix.org/docs/api/client-server/#!/-rooms/get_room_sync_data)).
+     */
+    @property (nonatomic) NSArray<MXEvent*> *presence;
+
+    /**
+     The read receipts (Provided in case of room initial sync).
+     */
+    @property (nonatomic) NSArray<MXEvent*> *receipts;
+
+@end
+
+/**
+ `MXInitialSyncResponse` represents the request response for server initial sync v1. @see http://matrix.org/docs/api/client-server/#!/-events/initial_sync
+ */
+@interface MXInitialSyncResponse : MXJSONModel
+
+    /**
+     List of rooms.
+     */
+    @property (nonatomic) NSArray<MXRoomInitialSync*> *rooms;
+
+    /**
+     The presence status of other users.
+     */
+    @property (nonatomic) NSArray<MXEvent*> *presence;
+
+    /**
+     The read receipts.
+     */
+    @property (nonatomic) NSArray<MXEvent*> *receipts;
+
+    /**
+     The opaque token for the end.
+     */
+    @property (nonatomic) NSString *end;
+
+@end
+
+#pragma mark - Server sync v2 response
+#pragma mark -
+
+/**
+ `MXRoomSyncState` represents the state updates for a room during server sync v2.
+ */
+@interface MXRoomSyncState : MXJSONModel
+
+    /**
+     List of event ids (array of NSString).
+     */
+    @property (nonatomic) NSArray<NSString*> *events;
+
+@end
+
+/**
+ `MXRoomSyncTimeline` represents the timeline of messages and state changes for a room during server sync v2.
+ */
+@interface MXRoomSyncTimeline : MXJSONModel
+
+    /**
+     List of event ids (array of NSString).
+     */
+    @property (nonatomic) NSArray<NSString*> *events;
+
+    /**
+     Boolean which tells whether there are more events on the server
+     */
+    @property (nonatomic) BOOL limited;
+
+    /**
+     If the batch was limited then this is a token that can be supplied to the server to retrieve more events
+     */
+    @property (nonatomic) NSString *prevBatch;
+
+@end
+
+/**
+ `MXRoomSyncEphemeral` represents the ephemeral events in the room that aren't recorded in the timeline or state of the room (e.g. typing).
+ */
+@interface MXRoomSyncEphemeral : MXJSONModel
+
+    /**
+     List of ephemeral events (array of MXEvent).
+     */
+    @property (nonatomic) NSArray<MXEvent*> *events;
+
+@end
+
+/**
+ `MXRoomInviteState` represents the state of a room that the user has been invited to.
+ */
+@interface MXRoomInviteState : MXJSONModel
+
+    /**
+     List of state events (array of MXEvent).
+     */
+    @property (nonatomic) NSArray<MXEvent*> *events;
+
+@end
+
+/**
+ `MXRoomSync` represents the response for a room during server sync v2.
+ */
+@interface MXRoomSync : MXJSONModel
+
+    /**
+     Converted events mapping: keys are event ids.
+     The events are referenced from the 'timeline' and 'state' keys for this room.
+     */
+    @property (nonatomic) NSDictionary<NSString*, MXEvent*> *mxEventMap;
+
+    /**
+     The state updates for the room.
+     */
+    @property (nonatomic) MXRoomSyncState *state;
+
+    /**
+     The timeline of messages and state changes in the room.
+     */
+    @property (nonatomic) MXRoomSyncTimeline *timeline;
+
+    /**
+     The ephemeral events in the room that aren't recorded in the timeline or state of the room (e.g. typing).
+     */
+    @property (nonatomic) MXRoomSyncEphemeral *ephemeral;
+
+@end
+
+/**
+ `MXInvitedRoomSync` represents a room invitation during server sync v2.
+ */
+@interface MXInvitedRoomSync : MXJSONModel
+
+    /**
+     The state of a room that the user has been invited to. These state events may only have the 'sender', 'type', 'state_key'
+     and 'content' keys present. These events do not replace any state that the client already has for the room, for example if
+     the client has archived the room. Instead the client should keep two separate copies of the state: the one from the 'invite_state'
+     and one from the archived 'state'. If the client joins the room then the current state will be given as a delta against the
+     archived 'state' not the 'invite_state'.
+     */
+    @property (nonatomic) MXRoomInviteState *inviteState;
+
+@end
+
+/**
+ `MXRoomsSyncResponse` represents the rooms list in server sync v2 response.
+ */
+@interface MXRoomsSyncResponse : MXJSONModel
+
+    /**
+     Converted joined rooms: keys are rooms ids.
+     */
+    @property (nonatomic) NSDictionary<NSString*, MXRoomSync*> *mxJoined;
+
+    /**
+     Converted invited rooms. The rooms that the user has been invited to: keys are rooms ids.
+     */
+    @property (nonatomic) NSDictionary<NSString*, MXInvitedRoomSync*> *mxInvited;
+
+    /**
+     Converted archived rooms. The rooms that the user has left or been banned from: keys are rooms ids.
+     */
+    @property (nonatomic) NSDictionary<NSString*, MXRoomSync*> *mxArchived;
+
+@end
+
+/**
+ `MXPresenceSyncResponse` represents the updates to the presence status of other users during server sync v2.
+ */
+@interface MXPresenceSyncResponse : MXJSONModel
+
+    /**
+     List of presence events (array of MXEvent with type m.presence).
+     */
+    @property (nonatomic) NSArray<MXEvent*> *events;
+
+@end
+
+/**
+ `MXSyncResponse` represents the request response for server sync v2.
+ */
+@interface MXSyncResponse : MXJSONModel
+
+    /**
+     The opaque token for the end.
+     */
+    @property (nonatomic) NSString *nextBatch;
+
+    /**
+     The updates to the presence status of other users.
+     */
+    @property (nonatomic) MXPresenceSyncResponse *presence;
+
+    /**
+     Converted list of rooms.
+     */
+    @property (nonatomic) MXRoomsSyncResponse *mxRooms;
+
+@end
 
 #pragma mark - Voice over IP
+#pragma mark -
 
 /**
  `MXCallOffer` represents a call session description.

@@ -16,24 +16,52 @@
 
 #import "MXPushRuleEventMatchConditionChecker.h"
 
+@interface MXPushRuleEventMatchConditionChecker ()
+{
+    NSMutableDictionary* regExByPatternDict;
+}
+@end
+
 @implementation MXPushRuleEventMatchConditionChecker
 
-- (BOOL)isCondition:(MXPushRuleCondition*)condition satisfiedBy:(MXEvent*)event
+- (BOOL)isCondition:(MXPushRuleCondition*)condition satisfiedBy:(MXEvent*)event withJsonDict:(NSDictionary*)contentAsJsonDict
 {
     BOOL isSatisfied = NO;
-
-    // Come back to JSON dictionary in order to easily travel to key path defined by condition.parameter.key
-    NSDictionary *JSONDictionary = event.originalDictionary;
-
+    
     // Retrieve the value
-    NSObject *value = [JSONDictionary valueForKeyPath:condition.parameters[@"key"]];
+    NSObject *value = [contentAsJsonDict valueForKeyPath:condition.parameters[@"key"]];
+    
     if (value && [value isKindOfClass:[NSString class]])
     {
         // If it exists, compare it to the regular expression in condition.parameter.pattern
         NSString *stringValue = (NSString *)value;
+        NSString* pattern = (NSString*)condition.parameters[@"pattern"];
+        
+        // if there is no pattern
+        if (!pattern || !pattern.length)
+        {
+            // cannot match
+            return NO;
+        }
+        
+        // the regexs are cached to avoid creating them at each call
+        // and it also should speed up it/
+        if (!regExByPatternDict)
+        {
+            regExByPatternDict = [[NSMutableDictionary alloc] init];
+        }
+        
 
-        NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:[self globToRegex:(NSString*)condition.parameters[@"pattern"] ]
-                                                                               options:0 error:nil];
+        NSRegularExpression *regex = [regExByPatternDict objectForKey:pattern];
+
+        // not yet defined
+        if (!regex)
+        {
+            // defined it.
+            regex = [NSRegularExpression regularExpressionWithPattern:[self globToRegex:pattern] options:0 error:nil];
+            [regExByPatternDict setObject:regex forKey:pattern];
+        }
+           
 
         if ([regex numberOfMatchesInString:stringValue options:0 range:NSMakeRange(0, stringValue.length)])
         {

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="9057" systemVersion="14F27" minimumToolsVersion="Xcode 7.0">
+    <entity name="MXCoreDataAccount" representedClassName="MXCoreDataAccount" syncable="YES">
+        <attribute name="accessToken" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="eventStreamToken" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="homeServer" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="userAvatarUrl" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="userDisplayName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="userId" attributeType="String" minValueString="1" indexed="YES" syncable="YES"/>
+        <attribute name="version" optional="YES" attributeType="Integer 32" defaultValueString="0" syncable="YES"/>
+        <relationship name="rooms" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="MXCoreDataRoom" inverseName="account" inverseEntity="MXCoreDataRoom" syncable="YES"/>
+    </entity>
+    <entity name="MXCoreDataEvent" representedClassName="MXCoreDataEvent" syncable="YES">
+        <attribute name="ageLocalTs" attributeType="Integer 64" defaultValueString="0" syncable="YES"/>
+        <attribute name="content" optional="YES" attributeType="Transformable" syncable="YES"/>
+        <attribute name="eventId" attributeType="String" indexed="YES" syncable="YES"/>
+        <attribute name="originServerTs" attributeType="Integer 64" defaultValueString="0" syncable="YES"/>
+        <attribute name="prevContent" optional="YES" attributeType="Transformable" syncable="YES"/>
+        <attribute name="redactedBecause" optional="YES" attributeType="Transformable" syncable="YES"/>
+        <attribute name="redacts" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="roomId" attributeType="String" syncable="YES"/>
+        <attribute name="sender" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="stateKey" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="type" attributeType="String" syncable="YES"/>
+        <attribute name="userId" attributeType="String" syncable="YES"/>
+        <relationship name="room" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXCoreDataRoom" inverseName="messages" inverseEntity="MXCoreDataRoom" syncable="YES"/>
+    </entity>
+    <entity name="MXCoreDataRoom" representedClassName="MXCoreDataRoom" syncable="YES">
+        <attribute name="hasReachedHomeServerPaginationEnd" optional="YES" attributeType="Boolean" syncable="YES"/>
+        <attribute name="paginationToken" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="roomId" attributeType="String" indexed="YES" syncable="YES"/>
+        <relationship name="account" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXCoreDataAccount" inverseName="rooms" inverseEntity="MXCoreDataAccount" syncable="YES"/>
+        <relationship name="messages" optional="YES" toMany="YES" deletionRule="Cascade" ordered="YES" destinationEntity="MXCoreDataEvent" inverseName="room" inverseEntity="MXCoreDataEvent" syncable="YES"/>
+        <relationship name="state" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXCoreDataRoomState" inverseName="room" inverseEntity="MXCoreDataRoomState" syncable="YES"/>
+    </entity>
+    <entity name="MXCoreDataRoomState" representedClassName="MXCoreDataRoomState" syncable="YES">
+        <attribute name="state" optional="YES" attributeType="Binary" syncable="YES"/>
+        <relationship name="room" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXCoreDataRoom" inverseName="state" inverseEntity="MXCoreDataRoom" syncable="YES"/>
+    </entity>
+    <elements>
+        <element name="MXCoreDataAccount" positionX="0" positionY="0" width="128" height="163"/>
+        <element name="MXCoreDataEvent" positionX="540" positionY="-139" width="128" height="238"/>
+        <element name="MXCoreDataRoom" positionX="232" positionY="0" width="128" height="133"/>
+        <element name="MXCoreDataRoomState" positionX="477" positionY="200" width="128" height="73"/>
+    </elements>
+</model>

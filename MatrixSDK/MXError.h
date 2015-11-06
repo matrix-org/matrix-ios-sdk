@@ -34,7 +34,7 @@ FOUNDATION_EXPORT NSString *const kMXErrCodeStringUserInUse;
 FOUNDATION_EXPORT NSString *const kMXErrCodeStringRoomInUse;
 FOUNDATION_EXPORT NSString *const kMXErrCodeStringBadPagination;
 
-FOUNDATION_EXPORT NSString *const kMXErrCodeStringInvalidToken;
+FOUNDATION_EXPORT NSString *const kMXErrorStringInvalidToken;
 
 /**
  `MXError` represents an error sent by the home server.

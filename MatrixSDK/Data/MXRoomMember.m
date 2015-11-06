@@ -56,13 +56,13 @@
         }
         else
         {
-            _userId = roomMemberEvent.userId;
+            _userId = roomMemberEvent.sender;
         }
         
         if (roomMemberEventContent == roomMemberEvent.content)
         {
             // The user who made the last membership change is the event user id
-            _originUserId = roomMemberEvent.userId;
+            _originUserId = roomMemberEvent.sender;
             
             // If defined, keep the previous membership information
             if (roomMemberEvent.prevContent)
@@ -98,6 +98,7 @@
     memberCopy->_membership = _membership;
     memberCopy->_prevMembership = _prevMembership;
     memberCopy->_originUserId = [_originUserId copyWithZone:zone];
+    memberCopy->_originalEvent = _originalEvent;
 
     return memberCopy;
 }

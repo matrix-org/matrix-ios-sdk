@@ -31,8 +31,11 @@
      */
     MXMembership membership;
     
-    // kMXRoomVisibilityPublic or kMXRoomVisibilityPrivate
+    // The visibility flag in JSON metadata deprecated in API v2
     MXRoomVisibility visibility;
+    
+    // YES when the property 'isPublic' has been defined.
+    BOOL isVisibilityKnown;
     
     /**
      Maximum power level observed in power level list
@@ -42,34 +45,44 @@
 @end
 
 @implementation MXRoomState
-@synthesize powerLevels;
+@synthesize powerLevels, isPublic;
 
 - (id)initWithRoomId:(NSString*)roomId
-    andMatrixSession:(MXSession*)mxSession2
-         andJSONData:(NSDictionary*)JSONData
+    andMatrixSession:(MXSession*)matrixSession
         andDirection:(BOOL)isLive
 {
     self = [super init];
     if (self)
     {
-        mxSession = mxSession2;
+        mxSession = matrixSession;
         _roomId = roomId;
         
         _isLive = isLive;
         
         stateEvents = [NSMutableDictionary dictionary];
         members = [NSMutableDictionary dictionary];
-        
+    }
+    return self;
+}
+
+- (id)initWithRoomId:(NSString*)roomId
+    andMatrixSession:(MXSession*)matrixSession
+         andInitialSync:(MXRoomInitialSync*)initialSync
+        andDirection:(BOOL)isLive
+{
+    self = [self initWithRoomId:roomId andMatrixSession:matrixSession andDirection:isLive];
+    if (self)
+    {
         // Store optional metadata
-        if (JSONData)
+        if (initialSync)
         {
-            if ([JSONData objectForKey:@"visibility"])
+            if (initialSync.visibility)
             {
-                visibility = JSONData[@"visibility"];
+                visibility = initialSync.visibility;
             }
-            if ([JSONData objectForKey:@"membership"])
+            if (initialSync.membership)
             {
-                membership = [MXTools membership:JSONData[@"membership"]];
+                membership = [MXTools membership:initialSync.membership];
             }
         }
     }
@@ -131,23 +144,37 @@
     return [members allValues];
 }
 
+- (void)setIsPublic:(BOOL)isPublicValue
+{
+    isPublic = isPublicValue;
+    isVisibilityKnown = YES;
+}
+
 - (BOOL)isPublic
 {
-    BOOL isPublic = NO;
+    if (isVisibilityKnown)
+    {
+        return isPublic;
+    }
     
+    // Check the legacy visibility metadata
     if (visibility)
     {
-        // Check the visibility metadata
         if ([visibility isEqualToString:kMXRoomVisibilityPublic])
         {
-            isPublic = YES;
+            self.isPublic = YES;
+        }
+        else
+        {
+            self.isPublic = NO;
         }
     }
     else
     {
+        isPublic = NO;
+        
         // Check this in the room state events
         MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomJoinRules];
-        
         if (event && [self contentOfEvent:event])
         {
             NSString *join_rule = [self contentOfEvent:event][@"join_rule"];
@@ -493,6 +520,9 @@
     {
         stateCopy->visibility = [visibility copyWithZone:zone];
     }
+    stateCopy->isVisibilityKnown = isVisibilityKnown;
+    
+    stateCopy->isPublic = isPublic;
     stateCopy->membership = membership;
 
     return stateCopy;
