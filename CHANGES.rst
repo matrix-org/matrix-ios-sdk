@@ -1,3 +1,24 @@
+Changes in Matrix iOS SDK in 0.5.4 (2015-11-06)
+===============================================
+
+Improvements:
+ * Use autoreleasepool to reduce memory usage.
+ * MXHTTPClient: Handle unrecognized certificate during authentication challenge from a server.
+ * MXHTTPClient: Fixed memory leaks of MXHTTPOperation objects.
+ * MXJSONModel: Optimise memory usage during model creation.
+ * MXRestClient: Add read receipts management (sent with API v2, received with API v1).
+ * MXRestClient: Define login fallback (server auth v1).
+ * MXRoom: Clone room state only in case of change.
+ * MXNotificationCenter: Reduce computation time during events handling.
+
+Bug fixes:
+ * MXRoom: Room invitation failed.
+ * MXSession: No history is displayed in new joined room.
+ * SYIOS-164: Duplicated events on bad networks
+ * SYIOS-165: Join an empty room on one device is not properly dispatched to the other devices.
+ * SYIOS-169: Improve MXEvent conversion.
+ * SYIOS-170: Public Room: room history is wrong when user joins for the second time.
+
 Changes in Matrix iOS SDK in 0.5.3 (2015-09-14)
 ===============================================
 
