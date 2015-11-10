@@ -41,6 +41,13 @@
      Maximum power level observed in power level list
      */
     NSUInteger maxPowerLevel;
+
+    /**
+     Disambiguate members names in big rooms takes time. So, cache computed data.
+     The key is the user id. The value, the member name to display.
+     This cache is resetted when there is new room member event.
+     */
+    NSMutableDictionary *membersNamesCache;
 }
 @end
 
@@ -61,6 +68,7 @@
         
         stateEvents = [NSMutableDictionary dictionary];
         members = [NSMutableDictionary dictionary];
+        membersNamesCache = [NSMutableDictionary dictionary];
     }
     return self;
 }
@@ -388,6 +396,9 @@
                 // The user is no more part of the room. Remove him.
                 [members removeObjectForKey:event.stateKey];
             }
+
+            // Reset members names because the computation data basis has changed
+            [membersNamesCache removeAllObjects];
             break;
         }
         case MXEventTypeRoomPowerLevels:
@@ -396,9 +407,11 @@
             // Compute max power level
             maxPowerLevel = powerLevels.usersDefault;
             NSArray *array = powerLevels.users.allValues;
-            for (NSNumber *powerLevel in array) {
+            for (NSNumber *powerLevel in array)
+            {
                 NSUInteger level = [powerLevel unsignedIntegerValue];
-                if (level > maxPowerLevel) {
+                if (level > maxPowerLevel)
+                {
                     maxPowerLevel = level;
                 }
             }
@@ -421,40 +434,48 @@
 
 - (NSString*)memberName:(NSString*)userId
 {
-    NSString *displayName = nil;
-    
-     // Get the user display name from the member list of the room
-    MXRoomMember *member = [self memberWithUserId:userId];
-    
-    // Do not consider null displayname
-    if (member && member.displayname.length)
-    {
-        displayName = member.displayname;
-        
-        // Disambiguate users who have the same displayname in the room
-        for(MXRoomMember* member in members.allValues) {
-            if (![member.userId isEqualToString:userId] && [member.displayname isEqualToString:displayName])
-            {
-                displayName = [NSString stringWithFormat:@"%@(%@)", displayName, userId];
-                break;
-            }
-        }
-    }
-    
-    // The user may not have joined the room yet. So try to resolve display name from presence data
-    // Note: This data may not be available
+    // First, lookup in the cache
+    NSString *displayName = membersNamesCache[userId];
+
     if (!displayName)
     {
-        MXUser* user = [mxSession userWithUserId:userId];
-        
-        if (user) {
-            displayName = user.displayname;
+        // Get the user display name from the member list of the room
+        MXRoomMember *member = [self memberWithUserId:userId];
+
+        // Do not consider null displayname
+        if (member && member.displayname.length)
+        {
+            displayName = member.displayname;
+
+            // Disambiguate users who have the same displayname in the room
+            for (MXRoomMember* member in members.allValues)
+            {
+                if ([member.displayname isEqualToString:displayName] && ![member.userId isEqualToString:userId])
+                {
+                    displayName = [NSString stringWithFormat:@"%@(%@)", displayName, userId];
+                    break;
+                }
+            }
         }
-    }
-    
-    if (!displayName) {
-        // By default, use the user ID
-        displayName = userId;
+
+        // The user may not have joined the room yet. So try to resolve display name from presence data
+        // Note: This data may not be available
+        if (!displayName)
+        {
+            MXUser* user = [mxSession userWithUserId:userId];
+
+            if (user) {
+                displayName = user.displayname;
+            }
+        }
+        
+        if (!displayName) {
+            // By default, use the user ID
+            displayName = userId;
+        }
+
+        // Cache the computed name
+        membersNamesCache[userId] = displayName;
     }
 
     return displayName;
@@ -473,12 +494,14 @@
     if (!displayName)
     {
         MXUser* user = [mxSession userWithUserId:userId];
-        if (user) {
+        if (user)
+        {
             displayName = user.displayname;
         }
     }
     
-    if (!displayName) {
+    if (!displayName)
+    {
         // By default, use the user ID
         displayName = userId;
     }
@@ -486,14 +509,16 @@
     return displayName;
 }
 
-- (float)memberNormalizedPowerLevel:(NSString*)userId {
+- (float)memberNormalizedPowerLevel:(NSString*)userId
+{
     float powerLevel = 0;
     
     // Get the user display name from the member list of the room
     MXRoomMember *member = [self memberWithUserId:userId];
     
     // Ignore banned and left (kicked) members
-    if (member.membership != MXMembershipLeave && member.membership != MXMembershipBan) {
+    if (member.membership != MXMembershipLeave && member.membership != MXMembershipBan)
+    {
         float userPowerLevelFloat = [powerLevels powerLevelOfUserWithUserID:userId];
         powerLevel = maxPowerLevel ? userPowerLevelFloat / maxPowerLevel : 1;
     }
@@ -524,6 +549,8 @@
     
     stateCopy->isPublic = isPublic;
     stateCopy->membership = membership;
+
+    stateCopy->membersNamesCache = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:membersNamesCache copyItems:YES];
 
     return stateCopy;
 }
