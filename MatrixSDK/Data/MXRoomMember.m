@@ -16,6 +16,8 @@
 
 #import "MXRoomMember.h"
 
+#import "MXRestClient.h"
+
 #import "MXJSONModels.h"
 #import "MXTools.h"
 
@@ -45,7 +47,8 @@
         // Use MXRoomMemberEventContent to parse the JSON event content
         MXRoomMemberEventContent *roomMemberContent = [MXRoomMemberEventContent modelFromJSON:roomMemberEventContent];
         _displayname = roomMemberContent.displayname;
-        _avatarUrl = roomMemberContent.avatarUrl;
+        // We ignore non mxc avatar url
+        _avatarUrl = ([roomMemberContent.avatarUrl hasPrefix:kMXContentUriScheme] ? roomMemberContent.avatarUrl : nil);
         _membership = [MXTools membership:roomMemberContent.membership];
         _originalEvent = roomMemberEvent;
 

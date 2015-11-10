@@ -93,7 +93,16 @@
     }
     if (presenceContent.avatarUrl)
     {
-        self.avatarUrl = [presenceContent.avatarUrl copy];
+        // We ignore non mxc avatar url
+        if ([presenceContent.avatarUrl hasPrefix:kMXContentUriScheme])
+        {
+            self.avatarUrl = [presenceContent.avatarUrl copy];
+        }
+        else
+        {
+            self.avatarUrl = nil;
+        }
+        
     }
     // If the member has no defined, force to use an identicon
     if (nil == self.avatarUrl)
