@@ -131,36 +131,33 @@
     return lastMessage;
 }
 
-/**
- * @param eventId the event id to find.
- * @param types an array of event types strings (MXEventTypeString).
- * @return the messages events after an event Id
- */
-- (NSArray*)eventsAfter:(NSString *)eventId except:(NSString*)userId withTypeIn:(NSArray*)types
+- (NSArray*)eventsAfter:(NSString *)eventId except:(NSString*)userId withTypeIn:(NSSet*)types
 {
     NSMutableArray* list = [[NSMutableArray alloc] init];
-    Boolean gotIt = false;
-    
+
     if (eventId)
     {
-        for (NSInteger i = 0; i < messages.count; i++)
+        // Check messages from the most recent
+        for (NSInteger i = messages.count - 1; i >= 0 ; i--)
         {
             MXEvent *event = messages[i];
-            
-            if (gotIt)
+
+            if (NO == [event.eventId isEqualToString:eventId])
             {
-                if (!types || ([types indexOfObject:event.type] != NSNotFound))
+                // Keep events matching filters
+                if ((!types || [types containsObject:event.type]) && ![event.sender isEqualToString:userId])
                 {
-                    [list addObject:event];
+                    [list insertObject:event atIndex:0];
                 }
             }
             else
             {
-                gotIt = [event.eventId isEqualToString:eventId];
+                // We are done
+                break;
             }
         }
     }
-    
+
     return list;
 }
 
