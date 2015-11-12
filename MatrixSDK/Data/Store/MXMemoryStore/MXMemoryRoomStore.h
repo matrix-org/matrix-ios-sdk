@@ -100,10 +100,12 @@
 - (MXEvent*)lastMessageWithTypeIn:(NSArray*)types;
 
 /**
- * @param eventId the event id to find.
- * @param types an array of event types strings (MXEventTypeString).
- * @return the messages events after an event Id
+ Get all events newer than the event with the passed id.
+
+  @param eventId the event id to find.
+  @param types a set of event types strings (MXEventTypeString).
+  @return the messages events after an event Id
  */
-- (NSArray*)eventsAfter:(NSString *)eventId except:(NSString*)userId withTypeIn:(NSArray*)types;
+- (NSArray*)eventsAfter:(NSString *)eventId except:(NSString*)userId withTypeIn:(NSSet*)types;
 
 @end

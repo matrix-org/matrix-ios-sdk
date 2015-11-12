@@ -102,7 +102,6 @@
         {
             self.avatarUrl = nil;
         }
-        
     }
     // If the member has no defined, force to use an identicon
     if (nil == self.avatarUrl)
