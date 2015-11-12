@@ -1,3 +1,11 @@
+Changes in Matrix iOS SDK in 0.5.5 (2015-11-12)
+===============================================
+
+Improvements:
+ * MXMemoryStore: Improved [MXStore unreadEvents] implementation. It is 7-8 times quicker now.
+ * MXRoomState: Added cache to [MXRoomState memberName:] to optimise it.
+ * MXUser/MXRoomMember: Ignore non mxc avatar url.
+
 Changes in Matrix iOS SDK in 0.5.4 (2015-11-06)
 ===============================================
 
