@@ -30,7 +30,7 @@
 NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
 
 NSString * const kMXTestsAliceDisplayName = @"mxAlice";
-NSString * const kMXTestsAliceAvatarURL = @"http://matrix.org/matrix.png";
+NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqmmttIQ";
 
 
 #define MXTESTS_BOB @"mxBob"

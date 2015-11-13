@@ -109,14 +109,14 @@
             [mxSession.myUser listenToUserUpdate:^(MXEvent *event) {
 
                 XCTAssertEqual(event.eventType, MXEventTypePresence);
-                XCTAssert([mxSession.myUser.avatarUrl isEqualToString:@"http://matrix.org/matrix2.png"], @"Wrong avatar. Found: %@", mxSession.myUser.avatarUrl);
+                XCTAssert([mxSession.myUser.avatarUrl isEqualToString:@"mxc://matrix.org/rQkrOoaFIRgiACATXUdQIuNJ"], @"Wrong avatar. Found: %@", mxSession.myUser.avatarUrl);
 
             }];
 
-            // Update the profile
-            [mxSession.myUser setAvatarUrl:@"http://matrix.org/matrix2.png" success:^{
+            // Update the profile with a mxc URL (non mxc url are ignored)
+            [mxSession.myUser setAvatarUrl:@"mxc://matrix.org/rQkrOoaFIRgiACATXUdQIuNJ" success:^{
 
-                XCTAssert([mxSession.myUser.avatarUrl isEqualToString:@"http://matrix.org/matrix2.png"], @"Wrong avatar. Found: %@", mxSession.myUser.avatarUrl);
+                XCTAssert([mxSession.myUser.avatarUrl isEqualToString:@"mxc://matrix.org/rQkrOoaFIRgiACATXUdQIuNJ"], @"Wrong avatar. Found: %@", mxSession.myUser.avatarUrl);
                 [expectation fulfill];
 
             } failure:^(NSError *error) {

@@ -31,7 +31,7 @@
 
 #pragma mark - Constants definitions
 
-const NSString *MatrixSDKVersion = @"0.5.5";
+const NSString *MatrixSDKVersion = @"0.5.6";
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
@@ -413,6 +413,9 @@ typedef void (^MXOnResumeDone)();
                     NSLog(@"[MXSession] resume after a catchup ");
                 }
             }
+            
+            // the event stream is running by now
+            [self setState:MXSessionStateRunning];
 
             // If we are resuming inform the app that it received the last uptodate data
             if (onResumeDone)
@@ -428,9 +431,6 @@ typedef void (^MXOnResumeDone)();
                     return;
                 }
             }
-            
-            // the event stream is running by now
-            [self setState:MXSessionStateRunning];
 
             // Go streaming from the returned token
             [self streamEventsFromToken:paginatedResponse.end withLongPoll:YES];
