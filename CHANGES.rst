@@ -1,3 +1,10 @@
+Changes in Matrix iOS SDK in 0.5.6 (2015-11-13)
+===============================================
+
+Bug fixes:
+ * MXRoomState: All room members have the same power level when a new state event is received.
+ * MXRoom: The backward room state is corrupted (former display name and avatar are missing).
+
 Changes in Matrix iOS SDK in 0.5.5 (2015-11-12)
 ===============================================
 
