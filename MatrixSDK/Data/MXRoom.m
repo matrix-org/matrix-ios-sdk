@@ -480,7 +480,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 - (void)resetBackState
 {
     // Reset the back state to the current room state
-    backState = _state;
+    backState = [[MXRoomState alloc] initBackStateWith:_state];
 
     // Reset store pagination
     [mxSession.store resetPaginationOfRoom:_state.roomId];

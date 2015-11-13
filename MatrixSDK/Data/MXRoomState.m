@@ -359,7 +359,7 @@
 {
     MXMembership result;
     
-    // Find the uptodate value in room state events
+    // Find the current value in room state events
     MXRoomMember *user = [self memberWithUserId:mxSession.matrixRestClient.credentials.userId];
     if (user)
     {
@@ -551,6 +551,9 @@
     stateCopy->membership = membership;
 
     stateCopy->membersNamesCache = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:membersNamesCache copyItems:YES];
+    
+    stateCopy->powerLevels = [powerLevels copy];
+    stateCopy->maxPowerLevel = maxPowerLevel;
 
     return stateCopy;
 }
