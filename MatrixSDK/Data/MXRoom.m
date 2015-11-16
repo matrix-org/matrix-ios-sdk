@@ -33,6 +33,12 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
     // The historical state of the room when paginating back
     MXRoomState *backState;
+
+    // The state that was in the `state` property before it changed
+    // It is cached because it costs time to recompute it from the current state
+    // It is particularly noticeable for rooms with a lot of members (ie a lot of
+    // room members state events)
+    MXRoomState *previousState;
 }
 @end
 
@@ -359,6 +365,9 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     }
     else
     {
+        // Keep the previous state in cache for future usage in [self notifyListeners]
+        previousState = _state;
+        
         _state = [_state copy];
     }
 }
@@ -769,12 +778,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     {
         if ([event isState])
         {
-            // Use the current state for live event
-            roomState = [[MXRoomState alloc] initBackStateWith:_state];
-            
-            // If this is a state event, compute the room state before this event
-            // as this is the information we pass to the MXOnRoomEvent callback block
-            [roomState handleStateEvent:event];
+            // Provide the state of the room before this event
+            roomState = previousState;
         }
         else
         {
