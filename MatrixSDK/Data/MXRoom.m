@@ -286,8 +286,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         for (MXEvent *event in events) {
 
             // Make sure we have not processed this event yet
-            MXEvent *storedEvent = [mxSession.store eventWithEventId:event.eventId inRoom:_state.roomId];
-            if (!storedEvent)
+            if (![mxSession.store eventExistsWithEventId:event.eventId inRoom:_state.roomId])
             {
                 [self handleMessage:event direction:direction];
 
@@ -465,8 +464,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     else
     {
         // Make sure we have not processed this event yet
-        MXEvent *storedEvent = [mxSession.store eventWithEventId:event.eventId inRoom:_state.roomId];
-        if (!storedEvent)
+        if (![mxSession.store eventExistsWithEventId:event.eventId inRoom:_state.roomId])
         {
             // Handle here redaction event from live event stream
             if (event.eventType == MXEventTypeRoomRedaction)

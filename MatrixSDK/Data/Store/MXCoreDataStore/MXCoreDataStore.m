@@ -202,13 +202,26 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     }];
 }
 
+- (BOOL)eventExistsWithEventId:(NSString *)eventId inRoom:(NSString *)roomId
+{
+    // Look up directy in the db
+    // Event ids are unique. We do not need to filter per room
+    NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
+    NSEntityDescription *entity = [NSEntityDescription entityForName:@"MXCoreDataEvent"
+                                              inManagedObjectContext:uiManagedObjectContext];
+    [fetchRequest setEntity:entity];
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"eventId == %@", eventId];
+    [fetchRequest setPredicate:predicate];
+
+    NSUInteger count = [uiManagedObjectContext countForFetchRequest:fetchRequest error:nil];
+
+    return (count != NSNotFound) ? (count > 0) : NO;
+}
+
 - (MXEvent *)eventWithEventId:(NSString *)eventId inRoom:(NSString *)roomId
 {
-    NSDate *startDate = [NSDate date];
-
     MXEvent *event = [MXCoreDataRoom eventWithEventId:eventId inRoom:roomId moc:uiManagedObjectContext];
 
-    NSLog(@"[MXCoreDataStore] eventWithEventId %@ (%tu): %.3fms", eventId, [eventId hash], [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
     return event;
 }
 

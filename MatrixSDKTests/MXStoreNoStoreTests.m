@@ -50,6 +50,12 @@
 
 #pragma mark - MXNoStore tests
 /* This feature is not available with MXNoStore
+- (void)testMXNoStoreEventExistsWithEventId
+{
+    MXNoStore *store = [[MXNoStore alloc] init];
+    [self checkEventExistsWithEventIdOfStore:store];
+}
+
 - (void)testMXNoStoreEventWithEventId
 {
     MXNoStore *store = [[MXNoStore alloc] init];

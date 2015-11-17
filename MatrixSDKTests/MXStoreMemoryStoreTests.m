@@ -49,7 +49,13 @@
 
 
 #pragma mark - MXMemoryStore
-- (void)testMXMemoryEventWithEventId
+- (void)testMXMemoryStoreEventExistsWithEventId
+{
+    MXMemoryStore *store = [[MXMemoryStore alloc] init];
+    [self checkEventExistsWithEventIdOfStore:store];
+}
+
+- (void)testMXMemoryStoreEventWithEventId
 {
     MXMemoryStore *store = [[MXMemoryStore alloc] init];
     [self checkEventWithEventIdOfStore:store];
