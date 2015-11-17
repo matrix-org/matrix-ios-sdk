@@ -57,6 +57,11 @@ NSString *const kMXReceiptsFolder = @"receipts";
     // Flag to indicate metaData needs to be store
     BOOL metaDataHasChanged;
 
+    // Cache used to preload room states while the store is opening.
+    // It is filled on the separate thread so that the UI thread will not be blocked
+    // when it will read rooms states.
+    NSMutableDictionary *preloadedRoomsStates;
+
     // File reading and writing operations are dispatched to a separated thread.
     // The queue invokes blocks serially in FIFO order.
     // This ensures that data is stored in the expected order: MXFileStore metadata
@@ -79,6 +84,7 @@ NSString *const kMXReceiptsFolder = @"receipts";
         roomsToCommitForMessages = [NSMutableArray array];
         roomsToCommitForState = [NSMutableDictionary dictionary];
         roomsToCommitForReceipts = [NSMutableArray array];
+        preloadedRoomsStates = [NSMutableDictionary dictionary];
 
         metaDataHasChanged = NO;
 
@@ -148,6 +154,7 @@ NSString *const kMXReceiptsFolder = @"receipts";
             if (metaData)
             {
                 [self loadRoomsMessages];
+                [self preloadRoomsStates];
             }
             
             if (metaData)
@@ -391,8 +398,26 @@ NSString *const kMXReceiptsFolder = @"receipts";
 
 - (NSArray*)stateOfRoom:(NSString *)roomId
 {
-    NSString *roomFile = [storeRoomsStatePath stringByAppendingPathComponent:roomId];
-    NSArray *stateEvents =[NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+    // First, try to get the state from the cache
+    NSArray *stateEvents = preloadedRoomsStates[roomId];
+
+    if (!stateEvents)
+    {
+        NSString *roomFile = [storeRoomsStatePath stringByAppendingPathComponent:roomId];
+        stateEvents =[NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+
+        if (NO == [NSThread isMainThread])
+        {
+            // If this method is called from the `dispatchQueue` thread, it means MXFileStore is preloading
+            // rooms states. So, fill the cache.
+            preloadedRoomsStates[roomId] = stateEvents;
+        }
+    }
+    else
+    {
+        // The cache information is valid only once
+        [preloadedRoomsStates removeObjectForKey:roomId];
+    }
 
     return stateEvents;
 }
@@ -549,6 +574,19 @@ NSString *const kMXReceiptsFolder = @"receipts";
 
 
 #pragma mark - Rooms state
+/**
+ Preload states of all rooms.
+
+ This operation must be called on the `dispatchQueue` thread to avoid blocking the main thread.
+ */
+- (void)preloadRoomsStates
+{
+    for (NSString *roomId in roomStores)
+    {
+        preloadedRoomsStates[roomId] = [self stateOfRoom:roomId];
+    }
+}
+
 - (void)saveRoomsState
 {
     if (roomsToCommitForState.count)
