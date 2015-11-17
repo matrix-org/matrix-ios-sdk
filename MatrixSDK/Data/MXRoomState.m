@@ -536,10 +536,13 @@
 
     stateCopy->_isLive = _isLive;
 
-    // Use [NSMutableDictionary initWithDictionary:copyItems:] to deep copy NSDictionaries values
-    stateCopy->stateEvents = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:stateEvents copyItems:YES];
+    // Copy the list of state events pointers. A deep copy is not necessary as MXEvent objects are immutable
+    stateCopy->stateEvents = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:stateEvents];
 
-    stateCopy->members = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:members copyItems:YES];
+    // Same thing here. MXRoomMembers are also immutable. A new instance of it is created each time
+    // the sdk receives room member event, even if it is an update of an existing member like a
+    // membership change (ex: "invited" -> "joined")
+    stateCopy->members = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:members];
 
     if (visibility)
     {
