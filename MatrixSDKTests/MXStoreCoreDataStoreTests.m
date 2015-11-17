@@ -49,6 +49,12 @@
 
 
 #pragma mark - MXCoreDataStore
+- (void)testMXCoreDataStoreEventExistsWithEventId
+{
+    MXCoreDataStore *store = [[MXCoreDataStore alloc] init];
+    [self checkEventExistsWithEventIdOfStore:store];
+}
+
 - (void)testMXCoreDataStoreEventWithEventId
 {
     MXCoreDataStore *store = [[MXCoreDataStore alloc] init];
