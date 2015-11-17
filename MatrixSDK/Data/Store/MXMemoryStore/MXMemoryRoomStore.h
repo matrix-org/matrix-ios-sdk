@@ -23,7 +23,12 @@
     @protected
     // The events downloaded so far.
     // The order is chronological: the first item is the oldest message.
-    NSMutableArray *messages;
+    NSMutableArray<MXEvent*> *messages;
+
+    // A cache to quickly retrieve an event by its event id.
+    // This significanly improves [MXMemoryStore eventWithEventId:] and [MXMemoryStore eventExistsWithEventId:]
+    // speed. The last one is critical since it is called on each received event to check event duplication.
+    NSMutableDictionary<NSString*, MXEvent*> *messagesByEventIds;
 }
 
 /**
