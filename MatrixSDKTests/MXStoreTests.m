@@ -176,6 +176,37 @@
 
 #pragma mark - MXStore generic tests
 
+- (void)checkEventExistsWithEventIdOfStore:(id<MXStore>)store
+{
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+
+    [sharedData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation2) {
+
+        expectation = expectation2;
+
+        [store openWithCredentials:bobRestClient.credentials onComplete:^{
+            MXEvent *event = [MXEvent modelFromJSON:@{
+                                                      @"event_id": @"anID",
+                                                      @"type": @"type",
+                                                      @"room_id": @"roomId",
+                                                      @"user_id": @"userId:"
+                                                      }];
+
+            [store storeEventForRoom:@"roomId" event:event direction:MXEventDirectionForwards];
+
+            BOOL exists = [store eventExistsWithEventId:@"anID" inRoom:@"roomId"];
+
+            XCTAssertEqual(exists, YES);
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 - (void)checkEventWithEventIdOfStore:(id<MXStore>)store
 {
     MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];

@@ -60,6 +60,16 @@
 - (void)replaceEvent:(MXEvent*)event inRoom:(NSString*)roomId;
 
 /**
+ Returns a Boolean value that indicates whether an event is already stored.
+ 
+ @param eventId the id of the event to retrieve.
+ @param roomId the id of the room.
+
+ @return YES if the event exists in the store.
+ */
+- (BOOL)eventExistsWithEventId:(NSString*)eventId inRoom:(NSString*)roomId;
+
+/**
  Get an event in a room from the store.
 
  @param eventId the id of the event to retrieve.

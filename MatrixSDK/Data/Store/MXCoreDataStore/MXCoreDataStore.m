@@ -202,6 +202,14 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     }];
 }
 
+- (BOOL)eventExistsWithEventId:(NSString *)eventId inRoom:(NSString *)roomId
+{
+    // TODO: Do the correct implementation in Core Data
+    // Checking event id existence in the db is far quicker than extracting all data
+    // to rebuild the MXEvent object
+    return (nil != [self eventWithEventId:eventId inRoom:roomId]);
+}
+
 - (MXEvent *)eventWithEventId:(NSString *)eventId inRoom:(NSString *)roomId
 {
     NSDate *startDate = [NSDate date];
