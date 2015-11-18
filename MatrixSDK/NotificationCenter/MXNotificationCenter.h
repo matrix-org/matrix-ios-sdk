@@ -86,6 +86,13 @@ extern NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID;
     - allow to set push rules @TODO
  */
 @interface MXNotificationCenter : NSObject
+{
+@protected
+    /**
+     The flatRules property.
+     */
+    NSMutableArray *flatRules;
+}
 
 /**
  Push notification rules.

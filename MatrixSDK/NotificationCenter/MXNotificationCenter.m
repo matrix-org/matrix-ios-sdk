@@ -50,11 +50,6 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
     NSMutableArray *notificationListeners;
 
     /**
-     The rules property.
-     */
-    NSMutableArray *flatRules;
-
-    /**
      The list of condition checkers.
      The keys are the condition kinds and the values, the `MXPushRuleConditionChecker` objects
      to use to validate a condition.
