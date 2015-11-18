@@ -20,6 +20,22 @@
 #import "MXTools.h"
 
 @implementation MXPublicRoom
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXPublicRoom *publicRoom = [[MXPublicRoom alloc] init];
+
+    NSDictionary *sanitisedJSONDictionary = [MXJSONModel removeNullValuesInJSON:JSONDictionary];
+
+    publicRoom.roomId = sanitisedJSONDictionary[@"room_id"];
+    publicRoom.name = sanitisedJSONDictionary[@"name"];
+    publicRoom.aliases = sanitisedJSONDictionary[@"aliases"];
+    publicRoom.topic = sanitisedJSONDictionary[@"topic"];
+    publicRoom.numJoinedMembers = [((NSNumber*)sanitisedJSONDictionary[@"num_joined_members"]) unsignedIntegerValue];
+
+    return publicRoom;
+}
+
 - (NSString *)displayname
 {
     NSString *displayname;
