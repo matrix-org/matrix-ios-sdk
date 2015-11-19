@@ -728,9 +728,7 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
     MXSyncResponse *syncResponse = [[MXSyncResponse alloc] init];
-
-    // The server response must contain here a 'rooms' key.
-    if (syncResponse && JSONDictionary[@"rooms"])
+    if (syncResponse)
     {
         syncResponse.nextBatch = JSONDictionary[@"next_batch"];
         syncResponse.presence = [MXPresenceSyncResponse modelFromJSON:JSONDictionary[@"presence"]];
