@@ -83,36 +83,55 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     return self;
 }
 
-- (instancetype)initWithDictionary:(NSDictionary *)dictionaryValue error:(NSError *__autoreleasing *)error
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    // Do the JSON -> class instance properties mapping
-    self = [super initWithDictionary:dictionaryValue error:error];
-
-    if (self)
+    MXEvent *event = [[MXEvent alloc] init];
+    if (event)
     {
-        if (MXEventTypePresence == eventType)
-        {
-            // Workaround: Presence events provided by the home server do not contain userId
-            // in the root of the JSON event object but under its content sub object.
-            // Set self.userId in order to follow other events format.
-            if (nil == self.sender)
-            {
-                // userId may be in the event content
-                self.sender = self.content[@"user_id"];
-            }
-        }
-        else if (nil == self.sender)
-        {
-            // Catch up the legacy field user_id (deprecated in v2)
-            self.sender = self.userId;
-        }
+        event.eventId = JSONDictionary[@"event_id"];
+        event.type = JSONDictionary[@"type"];
+        event.roomId = JSONDictionary[@"room_id"];
+        event.sender = JSONDictionary[@"sender"];
+        event.userId = JSONDictionary[@"user_id"];
+        event.content = JSONDictionary[@"content"];
+        event.prevContent = JSONDictionary[@"prev_content"];
+        event.stateKey = JSONDictionary[@"state_key"];
+        event.originServerTs = [((NSNumber*)JSONDictionary[@"origin_server_ts"]) unsignedLongLongValue];
+        event.age = [((NSNumber*)JSONDictionary[@"age"]) unsignedIntegerValue];
+        event.redacts = JSONDictionary[@"redacts"];
+        event.redactedBecause = JSONDictionary[@"redacted_because"];
 
-        // Clean JSON data by removing all null values
-        _content = [MXJSONModel removeNullValuesInJSON:_content];
-        _prevContent = [MXJSONModel removeNullValuesInJSON:_prevContent];
+        [event finalise];
     }
 
-    return self;
+    return event;
+}
+
+/**
+ Finalise the parsing of a Matrix event.
+ */
+- (void)finalise
+{
+    if (MXEventTypePresence == eventType)
+    {
+        // Workaround: Presence events provided by the home server do not contain userId
+        // in the root of the JSON event object but under its content sub object.
+        // Set self.userId in order to follow other events format.
+        if (nil == self.sender)
+        {
+            // userId may be in the event content
+            self.sender = self.content[@"user_id"];
+        }
+    }
+    else if (nil == self.sender)
+    {
+        // Catch up the legacy field user_id (deprecated in v2)
+        self.sender = self.userId;
+    }
+
+    // Clean JSON data by removing all null values
+    _content = [MXJSONModel removeNullValuesInJSON:_content];
+    _prevContent = [MXJSONModel removeNullValuesInJSON:_prevContent];
 }
 
 - (MXEventType)eventType
