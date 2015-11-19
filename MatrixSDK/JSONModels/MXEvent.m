@@ -107,20 +107,6 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     return event;
 }
 
-// TODO: To remove once v2 methods will use [MXEvent modelFromJSON]
-- (instancetype)initWithDictionary:(NSDictionary *)dictionaryValue error:(NSError *__autoreleasing *)error
-{
-    // Do the JSON -> class instance properties mapping
-    self = [super initWithDictionary:dictionaryValue error:error];
-
-    if (self)
-    {
-        [self finalise];
-    }
-
-    return self;
-}
-
 /**
  Finalise the parsing of a Matrix event.
  */
