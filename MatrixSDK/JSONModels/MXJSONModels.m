@@ -24,14 +24,16 @@
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
     MXPublicRoom *publicRoom = [[MXPublicRoom alloc] init];
+    if (publicRoom)
+    {
+        NSDictionary *sanitisedJSONDictionary = [MXJSONModel removeNullValuesInJSON:JSONDictionary];
 
-    NSDictionary *sanitisedJSONDictionary = [MXJSONModel removeNullValuesInJSON:JSONDictionary];
-
-    publicRoom.roomId = sanitisedJSONDictionary[@"room_id"];
-    publicRoom.name = sanitisedJSONDictionary[@"name"];
-    publicRoom.aliases = sanitisedJSONDictionary[@"aliases"];
-    publicRoom.topic = sanitisedJSONDictionary[@"topic"];
-    publicRoom.numJoinedMembers = [((NSNumber*)sanitisedJSONDictionary[@"num_joined_members"]) unsignedIntegerValue];
+        publicRoom.roomId = sanitisedJSONDictionary[@"room_id"];
+        publicRoom.name = sanitisedJSONDictionary[@"name"];
+        publicRoom.aliases = sanitisedJSONDictionary[@"aliases"];
+        publicRoom.topic = sanitisedJSONDictionary[@"topic"];
+        publicRoom.numJoinedMembers = [((NSNumber*)sanitisedJSONDictionary[@"num_joined_members"]) unsignedIntegerValue];
+    }
 
     return publicRoom;
 }
@@ -89,16 +91,18 @@ NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
     MXPaginationResponse *paginationResponse = [[MXPaginationResponse alloc] init];
-
-    paginationResponse.chunk = [MXEvent modelsFromJSON:JSONDictionary[@"chunk"]];
-    paginationResponse.start = JSONDictionary[@"start"];
-    paginationResponse.end = JSONDictionary[@"end"];
-
-    // Have the same behavior as before when JSON was parsed by Mantle: return an empty chunk array
-    // rather than nil
-    if (!paginationResponse.chunk)
+    if (paginationResponse)
     {
-        paginationResponse.chunk = [NSArray array];
+        paginationResponse.chunk = [MXEvent modelsFromJSON:JSONDictionary[@"chunk"]];
+        paginationResponse.start = JSONDictionary[@"start"];
+        paginationResponse.end = JSONDictionary[@"end"];
+
+        // Have the same behavior as before when JSON was parsed by Mantle: return an empty chunk array
+        // rather than nil
+        if (!paginationResponse.chunk)
+        {
+            paginationResponse.chunk = [NSArray array];
+        }
     }
 
     return paginationResponse;
@@ -115,10 +119,12 @@ NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
     MXRoomMemberEventContent *roomMemberEventContent = [[MXRoomMemberEventContent alloc] init];
-
-    roomMemberEventContent.displayname = JSONDictionary[@"displayname"];
-    roomMemberEventContent.avatarUrl = JSONDictionary[@"avatar_url"];
-    roomMemberEventContent.membership = JSONDictionary[@"membership"];
+    if (roomMemberEventContent)
+    {
+        roomMemberEventContent.displayname = JSONDictionary[@"displayname"];
+        roomMemberEventContent.avatarUrl = JSONDictionary[@"avatar_url"];
+        roomMemberEventContent.membership = JSONDictionary[@"membership"];
+    }
 
     return roomMemberEventContent;
 }
@@ -460,15 +466,17 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
     MXRoomInitialSync *initialSync = [[MXRoomInitialSync alloc] init];
-
-    initialSync.roomId = JSONDictionary[@"room_id"];
-    initialSync.messages = [MXPaginationResponse modelFromJSON:JSONDictionary[@"messages"]];
-    initialSync.state = [MXEvent modelsFromJSON:JSONDictionary[@"state"]];
-    initialSync.membership = JSONDictionary[@"membership"];
-    initialSync.visibility = JSONDictionary[@"visibility"];
-    initialSync.inviter = JSONDictionary[@"inviter"];
-    initialSync.presence = [MXEvent modelsFromJSON:JSONDictionary[@"presence"]];
-    initialSync.receipts = [MXEvent modelsFromJSON:JSONDictionary[@"receipts"]];
+    if (initialSync)
+    {
+        initialSync.roomId = JSONDictionary[@"room_id"];
+        initialSync.messages = [MXPaginationResponse modelFromJSON:JSONDictionary[@"messages"]];
+        initialSync.state = [MXEvent modelsFromJSON:JSONDictionary[@"state"]];
+        initialSync.membership = JSONDictionary[@"membership"];
+        initialSync.visibility = JSONDictionary[@"visibility"];
+        initialSync.inviter = JSONDictionary[@"inviter"];
+        initialSync.presence = [MXEvent modelsFromJSON:JSONDictionary[@"presence"]];
+        initialSync.receipts = [MXEvent modelsFromJSON:JSONDictionary[@"receipts"]];
+    }
 
     return initialSync;
 }
@@ -480,11 +488,13 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
     MXInitialSyncResponse *initialSyncResponse = [[MXInitialSyncResponse alloc] init];
-
-    initialSyncResponse.rooms = [MXRoomInitialSync modelsFromJSON:JSONDictionary[@"rooms"]];
-    initialSyncResponse.presence = [MXEvent modelsFromJSON:JSONDictionary[@"presence"]];
-    initialSyncResponse.receipts = [MXEvent modelsFromJSON:JSONDictionary[@"receipts"]];
-    initialSyncResponse.end = JSONDictionary[@"end"];
+    if (initialSyncResponse)
+    {
+        initialSyncResponse.rooms = [MXRoomInitialSync modelsFromJSON:JSONDictionary[@"rooms"]];
+        initialSyncResponse.presence = [MXEvent modelsFromJSON:JSONDictionary[@"presence"]];
+        initialSyncResponse.receipts = [MXEvent modelsFromJSON:JSONDictionary[@"receipts"]];
+        initialSyncResponse.end = JSONDictionary[@"end"];
+    }
 
     return initialSyncResponse;
 }
