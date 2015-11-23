@@ -21,6 +21,7 @@
 #import "MXRoomMember.h"
 #import "MXEventListener.h"
 #import "MXRoomState.h"
+#import "MXRoomAccountData.h"
 #import "MXHTTPOperation.h"
 #import "MXCall.h"
 
@@ -69,6 +70,11 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  The uptodate state of the room.
  */
 @property (nonatomic, readonly) MXRoomState *state;
+
+/**
+ The private user data for this room.
+ */
+@property (nonatomic, readonly) MXRoomAccountData *accountData;
 
 /**
  The list of ids of users currently typing in this room.
@@ -144,6 +150,13 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  @param event the event to handle.
  */
 - (void)handleLiveEvent:(MXEvent*)event;
+
+/**
+ Handle private user data events..
+ 
+ @param accounDataEvents the events to handle.
+ */
+- (void)handleAccounDataEvents:(NSArray<MXEvent*>*)accounDataEvents;
 
 #pragma mark - Back pagination
 /**

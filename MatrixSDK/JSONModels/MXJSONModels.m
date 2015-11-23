@@ -148,6 +148,16 @@ NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
     return self;
 }
 
++ (NSDictionary<NSString *,MXRoomTag *> *)roomTagsWithTagEvent:(MXEvent *)event
+{
+    NSMutableDictionary *tags = [NSMutableDictionary dictionary];
+    for (NSString *tagName in event.content[@"tags"])
+    {
+        tags[tagName] = [[MXRoomTag alloc] initWithName:tagName andOrder:event.content[@"tags"][tagName][@"order"]];
+    }
+    return tags;
+}
+
 @end
 
 NSString *const kMXPresenceOnline = @"online";
@@ -489,6 +499,7 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
         initialSync.roomId = JSONDictionary[@"room_id"];
         initialSync.messages = [MXPaginationResponse modelFromJSON:JSONDictionary[@"messages"]];
         initialSync.state = [MXEvent modelsFromJSON:JSONDictionary[@"state"]];
+        initialSync.accountData = [MXEvent modelsFromJSON:JSONDictionary[@"account_data"]];
         initialSync.membership = JSONDictionary[@"membership"];
         initialSync.visibility = JSONDictionary[@"visibility"];
         initialSync.inviter = JSONDictionary[@"inviter"];

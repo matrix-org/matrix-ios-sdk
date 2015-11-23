@@ -887,6 +887,10 @@ typedef void (^MXOnResumeDone)();
                         [self handleOneToOneRoom:room];
                     }
                 }
+                if (roomInitialSync.accountData)
+                {
+                    [room handleAccounDataEvents:roomInitialSync.accountData];
+                }
                 
                 // Notify that room has been sync'ed
                 [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomInitialSyncNotification
@@ -1377,6 +1381,12 @@ typedef void (^MXOnResumeDone)();
                 // Update one-to-one room dictionary
                 [self handleOneToOneRoom:room];
             }
+        }
+
+        // Manage the private data that this user has attached to this room
+        if (roomInitialSync.accountData)
+        {
+            [room handleAccounDataEvents:roomInitialSync.accountData];
         }
 
         // Manage presence provided by this API

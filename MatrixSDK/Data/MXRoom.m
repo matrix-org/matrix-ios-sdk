@@ -56,6 +56,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         
         _state = [[MXRoomState alloc] initWithRoomId:roomId andMatrixSession:mxSession2 andDirection:YES];
 
+        _accountData = [[MXRoomAccountData alloc] init];
+
         _typingUsers = [NSArray array];
         
         _acknowledgableEventTypes = @[kMXEventTypeStringRoomName,
@@ -482,6 +484,16 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         }
     }
 }
+
+
+#pragma mark - Room private account data handling
+- (void)handleAccounDataEvents:(NSArray<MXEvent*>*)accounDataEvents
+{
+    [_accountData handleEvents:accounDataEvents];
+
+    // TODO: To store in MXStore
+}
+
 
 #pragma mark - Back pagination
 - (void)resetBackState
