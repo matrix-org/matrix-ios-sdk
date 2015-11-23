@@ -178,6 +178,12 @@ FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeRecaptcha;
 
 
 /**
+ Room tags defined by Matrix spec.
+ */
+FOUNDATION_EXPORT NSString *const kMXRoomTagFavourite;
+FOUNDATION_EXPORT NSString *const kMXRoomTagLowPriority;
+
+/**
  `MXRoomTag` represents a room tag.
  */
 @interface MXRoomTag : NSObject

@@ -132,6 +132,9 @@ NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
 @end
 
 
+NSString *const kMXRoomTagFavourite = @"m.favourite";
+NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
+
 @implementation MXRoomTag
 
 - (id)initWithName:(NSString *)name andOrder:(NSString *)order
