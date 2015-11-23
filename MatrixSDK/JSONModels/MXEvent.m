@@ -30,6 +30,7 @@ NSString *const kMXEventTypeStringRoomAliases         = @"m.room.aliases";
 NSString *const kMXEventTypeStringRoomMessage         = @"m.room.message";
 NSString *const kMXEventTypeStringRoomMessageFeedback = @"m.room.message.feedback";
 NSString *const kMXEventTypeStringRoomRedaction       = @"m.room.redaction";
+NSString *const kMXEventTypeStringRoomTag             = @"m.tag";
 NSString *const kMXEventTypeStringPresence            = @"m.presence";
 NSString *const kMXEventTypeStringTypingNotification  = @"m.typing";
 NSString *const kMXEventTypeStringReceipt             = @"m.receipt";
