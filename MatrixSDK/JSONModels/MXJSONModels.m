@@ -132,6 +132,21 @@ NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
 @end
 
 
+@implementation MXRoomTag
+
+- (id)initWithName:(NSString *)name andOrder:(NSString *)order
+{
+    self = [super init];
+    if (self)
+    {
+        _name = name;
+        _order = order;
+    }
+    return self;
+}
+
+@end
+
 NSString *const kMXPresenceOnline = @"online";
 NSString *const kMXPresenceUnavailable = @"unavailable";
 NSString *const kMXPresenceOffline = @"offline";

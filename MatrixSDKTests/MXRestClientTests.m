@@ -21,6 +21,10 @@
 #import "MatrixSDKTestsData.h"
 #import "MXRoomMember.h"
 
+// Do not bother with retain cycles warnings in tests
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-retain-cycles"
+
 @interface MXRestClientTests : XCTestCase
 
 @end
@@ -681,6 +685,50 @@
     }];
 }
 
+
+#pragma mark - #pragma mark - Room tags operations
+- (void)testAddAndRemoveTag
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+        // Add a new tag
+        [bobRestClient addTag:@"aTag" withOrder:nil toRoom:roomId success:^{
+
+            // Check it
+            [bobRestClient tagsOfRoom:roomId success:^(NSArray<MXRoomTag *> *tags) {
+
+                XCTAssertEqual(tags.count, 1);
+                XCTAssertEqualObjects(tags[0].name, @"aTag");
+                XCTAssertEqual(tags[0].order, nil);
+
+                // Remove it
+                [bobRestClient removeTag:@"aTag" fromRoom:roomId success:^{
+
+                    // Check the deletion
+                    [bobRestClient tagsOfRoom:roomId success:^(NSArray<MXRoomTag *> *tags) {
+
+                        XCTAssertEqual(tags.count, 0);
+                        [expectation fulfill];
+
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The request should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+
 #pragma mark - Profile operations
 - (void)testUserDisplayName
 {
@@ -1021,3 +1069,6 @@
 }
 
 @end
+
+#pragma clang diagnostic pop
+

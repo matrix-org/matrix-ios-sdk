@@ -178,6 +178,32 @@ FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeRecaptcha;
 
 
 /**
+ `MXRoomTag` represents a room tag.
+ */
+@interface MXRoomTag : NSObject
+
+/**
+ The name of a tag.
+ */
+@property (nonatomic, readonly) NSString *name;
+
+/**
+ An optional information to order the room within a list of rooms with the same tag name.
+ If not nil, the `order` string is used to make lexicographically by unicode codepoint
+ comparison.
+ */
+@property (nonatomic, readonly) NSString *order;
+
+/**
+ Basic constructors.
+ */
+- (id)initWithName:(NSString*)name andOrder:(NSString*)order;
+- (id)initWithTagEvent:(MXEvent*)event;
+
+@end
+
+
+/**
  Presence definitions
  */
 typedef enum : NSUInteger
