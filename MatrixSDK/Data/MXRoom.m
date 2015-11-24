@@ -750,6 +750,48 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 }
 
 
+#pragma mark - Room tags operations
+- (MXHTTPOperation*)addTag:(NSString*)tag
+                 withOrder:(NSString*)order
+                   success:(void (^)())success
+                   failure:(void (^)(NSError *error))failure
+{
+    // _accountData.tags will be updated by the live streams
+    return [mxSession.matrixRestClient addTag:tag withOrder:order toRoom:_state.roomId success:success failure:failure];
+}
+
+- (MXHTTPOperation*)removeTag:(NSString*)tag
+                      success:(void (^)())success
+                      failure:(void (^)(NSError *error))failure
+{
+    // _accountData.tags will be updated by the live streams
+    return [mxSession.matrixRestClient removeTag:tag fromRoom:_state.roomId success:success failure:failure];
+}
+
+- (MXHTTPOperation*)replaceTag:(NSString*)oldTag
+                         byTag:(NSString*)newTag
+                     withOrder:(NSString*)newTagOrder
+                       success:(void (^)())success
+                       failure:(void (^)(NSError *error))failure
+{
+    // Combine remove and add tag operations
+    MXHTTPOperation *removeTageHttpOperation = [self removeTag:oldTag success:^{
+
+        if (newTag)
+        {
+            MXHTTPOperation *addTagHttpOperation = [self addTag:newTag withOrder:newTagOrder success:success failure:failure];
+
+            // Transfer the new AFHTTPRequestOperation to the returned MXHTTPOperation
+            // So that user has hand on it
+            removeTageHttpOperation.operation = addTagHttpOperation.operation;
+        }
+
+    } failure:failure];
+
+    return removeTageHttpOperation;
+}
+
+
 #pragma mark - Voice over IP
 - (MXCall *)placeCallWithVideo:(BOOL)video
 {

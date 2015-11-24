@@ -21,6 +21,10 @@
 
 #import "MXSession.h"
 
+// Do not bother with retain cycles warnings in tests
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-retain-cycles"
+
 @interface MXRoomTests : XCTestCase
 {
     MXSession *mxSession;
@@ -326,4 +330,90 @@
     }];
 }
 
+- (void)testAddAndRemoveTag
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+        mxSession = mxSession2;
+
+        NSString *tag = @"aTag";
+        NSString *order = @"0.5";
+
+        __block NSUInteger tagEventUpdata = 0;
+
+        // Wait for the m.tag event to get the room tags update
+        [room listenToEventsOfTypes:@[kMXEventTypeStringRoomTag] onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+
+            if (++tagEventUpdata == 1)
+            {
+                // This event is fired after the [room addTag:] request
+                MXRoomTag *roomTag = room.accountData.tags[tag];
+
+                XCTAssertNotNil(roomTag);
+                XCTAssertEqualObjects(roomTag.name, tag);
+                XCTAssertEqualObjects(roomTag.order, order);
+
+            }
+            else if (tagEventUpdata == 2)
+            {
+                // This event is fired after the [room removeTag:] request
+                XCTAssertNotNil(room.accountData.tags);
+                XCTAssertEqual(room.accountData.tags.count, 0);
+
+                [expectation fulfill];
+            }
+        }];
+
+        // Do the test
+        [room addTag:tag withOrder:order success:^{
+            [room removeTag:tag success:nil failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testReplaceTag
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+        mxSession = mxSession2;
+
+        NSString *tag = @"aTag";
+        NSString *order = @"0.5";
+        NSString *newTag = @"newTag";
+        NSString *newTagOrder = nil;
+
+        // Wait for the m.tag event that corresponds to "newTag"
+        [room listenToEventsOfTypes:@[kMXEventTypeStringRoomTag] onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+
+            MXRoomTag *newRoomTag = room.accountData.tags[newTag];
+            if (newRoomTag)
+            {
+                XCTAssertNotNil(newRoomTag);
+                XCTAssertEqualObjects(newRoomTag.name, newTag);
+                XCTAssertEqualObjects(newRoomTag.order, newTagOrder);
+
+                [expectation fulfill];
+            }
+        }];
+
+        // Prepare initial condition: have a tag
+        [room addTag:tag withOrder:order success:^{
+
+            // Do the test
+            [room replaceTag:tag byTag:newTag withOrder:newTagOrder success:nil failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
 @end
+
+#pragma clang diagnostic pop

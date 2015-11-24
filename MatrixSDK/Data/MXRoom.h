@@ -405,6 +405,58 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
                         failure:(void (^)(NSError *error))failure;
 
 
+
+#pragma mark - Room tags operations
+/**
+ Add a tag to a room.
+
+ Use this method to update the order of an existing tag.
+
+ @param tag the new tag to add to the room.
+ @param order the order. @see MXRoomTag.order.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)addTag:(NSString*)tag
+                 withOrder:(NSString*)order
+                   success:(void (^)())success
+                   failure:(void (^)(NSError *error))failure;
+/**
+ Remove a tag from a room.
+
+ @param tag the tag to remove.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)removeTag:(NSString*)tag
+                      success:(void (^)())success
+                      failure:(void (^)(NSError *error))failure;
+
+/**
+ Remove a tag and add another one.
+
+ @param oldTag the tag to remove.
+ @param newTag the new tag to add. Nil can be used. Then, no new tag will be added.
+ @param newTagOrder the order of the new tag.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)replaceTag:(NSString*)oldTag
+                         byTag:(NSString*)newTag
+                     withOrder:(NSString*)newTagOrder
+                       success:(void (^)())success
+                       failure:(void (^)(NSError *error))failure;
+
+
 #pragma mark - Voice over IP
 /**
  Place a voice or a video call into the room.
