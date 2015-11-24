@@ -487,11 +487,17 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 
 #pragma mark - Room private account data handling
-- (void)handleAccounDataEvents:(NSArray<MXEvent*>*)accounDataEvents
+- (void)handleAccounDataEvents:(NSArray<MXEvent*>*)accounDataEvents direction:(MXEventDirection)direction
 {
-    [_accountData handleEvents:accounDataEvents];
+    for (MXEvent *event in accounDataEvents)
+    {
+        [_accountData handleEvent:event];
 
-    // TODO: To store in MXStore
+        // TODO: To store in MXStore
+
+        // And notify listeners
+        [self notifyListeners:event direction:direction];
+    }
 }
 
 

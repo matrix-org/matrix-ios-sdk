@@ -27,10 +27,10 @@
 @property (nonatomic, readonly) NSDictionary <NSString*, MXRoomTag*> *tags;
 
 /**
- Process events that modify room account data (like m.tag events).
+ Process an event that modifies room account data (like m.tag event).
 
- @param events an events
+ @param event an event
  */
-- (void)handleEvents:(NSArray<MXEvent*>*)events;
+- (void)handleEvent:(MXEvent*)event;
 
 @end

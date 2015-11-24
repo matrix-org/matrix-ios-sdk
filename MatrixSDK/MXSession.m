@@ -583,6 +583,16 @@ typedef void (^MXOnResumeDone)();
                     break;
                 }
 
+                case MXEventTypeRoomTag:
+                {
+                    if (event.roomId)
+                    {
+                        MXRoom *room = [self roomWithRoomId:event.roomId];
+                        [room handleAccounDataEvents:@[event] direction:MXEventDirectionForwards];
+                    }
+                    break;
+                }
+
                 default:
                     if (event.roomId)
                     {
@@ -889,7 +899,7 @@ typedef void (^MXOnResumeDone)();
                 }
                 if (roomInitialSync.accountData)
                 {
-                    [room handleAccounDataEvents:roomInitialSync.accountData];
+                    [room handleAccounDataEvents:roomInitialSync.accountData  direction:MXEventDirectionSync];
                 }
                 
                 // Notify that room has been sync'ed
@@ -1386,7 +1396,7 @@ typedef void (^MXOnResumeDone)();
         // Manage the private data that this user has attached to this room
         if (roomInitialSync.accountData)
         {
-            [room handleAccounDataEvents:roomInitialSync.accountData];
+            [room handleAccounDataEvents:roomInitialSync.accountData direction:MXEventDirectionForwards];
         }
 
         // Manage presence provided by this API

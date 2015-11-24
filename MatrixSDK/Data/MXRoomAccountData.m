@@ -20,19 +20,16 @@
 
 @implementation MXRoomAccountData
 
-- (void)handleEvents:(NSArray<MXEvent *> *)events
+- (void)handleEvent:(MXEvent *)event
 {
-    for (MXEvent *event in events)
+    switch (event.eventType)
     {
-        switch (event.eventType)
-        {
-            case MXEventTypeRoomTag:
-                _tags = [MXRoomTag roomTagsWithTagEvent:event];
-                break;
+        case MXEventTypeRoomTag:
+            _tags = [MXRoomTag roomTagsWithTagEvent:event];
+            break;
 
-            default:
-                break;
-        }
+        default:
+            break;
     }
 }
 

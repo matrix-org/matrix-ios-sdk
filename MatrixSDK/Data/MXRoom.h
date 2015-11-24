@@ -152,11 +152,12 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 - (void)handleLiveEvent:(MXEvent*)event;
 
 /**
- Handle private user data events..
+ Handle private user data events.
  
  @param accounDataEvents the events to handle.
+ @param direction the process direction: MXEventDirectionSync or MXEventDirectionForwards. MXEventDirectionBackwards is not applicable here.
  */
-- (void)handleAccounDataEvents:(NSArray<MXEvent*>*)accounDataEvents;
+- (void)handleAccounDataEvents:(NSArray<MXEvent*>*)accounDataEvents direction:(MXEventDirection)direction;
 
 #pragma mark - Back pagination
 /**
