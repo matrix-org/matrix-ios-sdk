@@ -1286,7 +1286,7 @@ MXAuthAction;
 
 #pragma mark - Room tags operations
 - (MXHTTPOperation*)tagsOfRoom:(NSString*)roomId
-                       success:(void (^)(NSArray<MXEvent*> *tags))success
+                       success:(void (^)(NSArray<MXRoomTag*> *tags))success
                        failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"v2_alpha/user/%@/rooms/%@/tags", credentials.userId, roomId];

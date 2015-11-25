@@ -829,67 +829,6 @@ typedef enum : NSUInteger
                          failure:(void (^)(NSError *error))failure;
 
 
-#pragma mark - Room tags operations
-/**
- Get a fresh list of room tags from the homeserver.
- This operation updates the self.accountData.tags value.
-
- @param success A block object called when the operation succeeds.
- @param failure A block object called when the operation fails.
-
- @return a MXHTTPOperation instance.
- */
-- (MXHTTPOperation*)refreshTags:(void (^)())success
-                       failure:(void (^)(NSError *error))failure;
-
-/**
- Add a tag to a room.
-
- Use this method to update the order of an existing tag.
-
- @param tag the new tag to add to the room.
- @param order the order. @see MXRoomTag.order.
-
- @param success A block object called when the operation succeeds.
- @param failure A block object called when the operation fails.
-
- @return a MXHTTPOperation instance.
- */
-- (MXHTTPOperation*)addTag:(NSString*)tag
-                 withOrder:(NSString*)order
-                   success:(void (^)())success
-                   failure:(void (^)(NSError *error))failure;
-/**
- Remove a tag from a room.
-
- @param tag the tag to remove.
-
- @param success A block object called when the operation succeeds.
- @param failure A block object called when the operation fails.
-
- @return a MXHTTPOperation instance.
- */
-- (MXHTTPOperation*)removeTag:(NSString*)tag
-                      success:(void (^)())success
-                      failure:(void (^)(NSError *error))failure;
-
-/**
- Replace a tag from a room.
-
- @param tag the tag to remove.
-
- @param success A block object called when the operation succeeds.
- @param failure A block object called when the operation fails.
-
- @return a MXHTTPOperation instance.
- */
-- (MXHTTPOperation*)replaceTag:(NSString*)oldTag
-                         byTag:(NSString*)newTag
-                     withOrder:(NSString*)newTagOrder
-                       success:(void (^)())success
-                       failure:(void (^)(NSError *error))failure;
-
-
 #pragma mark - Presence operations
 /**
  Set the current user presence status.
