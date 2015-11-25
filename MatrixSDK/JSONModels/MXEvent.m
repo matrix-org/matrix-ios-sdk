@@ -27,6 +27,7 @@ NSString *const kMXEventTypeStringRoomCreate          = @"m.room.create";
 NSString *const kMXEventTypeStringRoomJoinRules       = @"m.room.join_rules";
 NSString *const kMXEventTypeStringRoomPowerLevels     = @"m.room.power_levels";
 NSString *const kMXEventTypeStringRoomAliases         = @"m.room.aliases";
+NSString *const kMXEventTypeStringRoomCanonicalAlias  = @"m.room.canonical_alias";
 NSString *const kMXEventTypeStringRoomMessage         = @"m.room.message";
 NSString *const kMXEventTypeStringRoomMessageFeedback = @"m.room.message.feedback";
 NSString *const kMXEventTypeStringRoomRedaction       = @"m.room.redaction";
@@ -279,6 +280,12 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
         case MXEventTypeRoomAliases:
         {
             allowedKeys = @[@"aliases"];
+            break;
+        }
+            
+        case MXEventTypeRoomCanonicalAlias:
+        {
+            allowedKeys = @[@"alias"];
             break;
         }
             

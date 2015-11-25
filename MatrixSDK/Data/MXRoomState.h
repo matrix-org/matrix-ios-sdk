@@ -70,6 +70,11 @@
 @property (nonatomic, readonly) NSArray *aliases;
 
 /**
+ Informs which alias is the canonical one.
+ */
+@property (nonatomic, readonly) NSString *canonicalAlias;
+
+/**
  The name of the room as provided by the home server.
  */
 @property (nonatomic, readonly) NSString *name;
