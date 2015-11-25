@@ -420,6 +420,28 @@ typedef void (^MXOnCatchupFail)(NSError *error);
 - (NSArray*)recentsWithTypeIn:(NSArray*)types;
 
 
+#pragma mark - User's rooms tags
+/**
+ Get the list of rooms that are tagged the specified tag.
+ The returned array is ordered according to the room tag order.
+ 
+ @param tag the tag to look for. Use the fake tag to get rooms with no tags.
+ @return an ordered list of room having the tag.
+ */
+- (NSArray<MXRoom*>*)roomsWithTag:(NSString*)tag;
+
+/**
+ Get all tags and the tagged rooms defined by the user.
+ 
+ Note: rooms with no tags are returned under the fake tag. The corresponding returned
+ array is not ordered.
+
+ @return a dictionary where the key is the tag name and value, an array of
+         room tagged with this tag. The array order is the same as [MXSession roomsWithTag:]
+ */
+- (NSDictionary<NSString*, NSArray<MXRoom*>*>*)roomsByTags;
+
+
 #pragma mark - Global events listeners
 /**
  Register a global listener to events related to the current session.

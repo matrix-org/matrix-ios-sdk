@@ -1685,6 +1685,7 @@ typedef void (^MXOnResumeDone)();
     return user;
 }
 
+
 #pragma mark - User's recents
 - (NSArray*)recentsWithTypeIn:(NSArray*)types
 {
@@ -1707,6 +1708,93 @@ typedef void (^MXOnResumeDone)();
     }];
     
     return recents;
+}
+
+
+#pragma mark - User's rooms tags
+- (NSArray<MXRoom*>*)roomsWithTag:(NSString*)tag
+{
+    // Get all room with the passed tag
+    NSMutableArray *roomsWithTag = [NSMutableArray array];
+    for (MXRoom *room in rooms.allValues)
+    {
+        if (room.accountData.tags[tag])
+        {
+            [roomsWithTag addObject:room];
+        }
+    }
+
+    // Sort them according to their tag order
+    [roomsWithTag sortUsingComparator:^NSComparisonResult(MXRoom *room1, MXRoom *room2) {
+        return [self compareRoomsByTag:tag room1:room1 room2:room2];
+    }];
+
+    return roomsWithTag;
+}
+
+- (NSDictionary<NSString*, NSArray<MXRoom*>*>*)roomsByTags
+{
+    NSMutableDictionary<NSString*, NSMutableArray<MXRoom*>*> *roomsByTags = [NSMutableDictionary dictionary];
+
+    NSMutableArray<MXRoom*> *recent = [NSMutableArray array];
+
+    // Sort all rooms according to their defined tags
+    for (MXRoom *room in rooms.allValues)
+    {
+        if (0 < room.accountData.tags.count)
+        {
+            for (NSString *tagName in room.accountData.tags)
+            {
+                MXRoomTag *tag = room.accountData.tags[tagName];
+                if (!roomsByTags[tag.name])
+                {
+                    roomsByTags[tag.name] = [NSMutableArray array];
+                }
+                [roomsByTags[tag.name] addObject:room];
+            }
+        }
+        else
+        {
+            // Put room with no tags in the recent list
+            [recent addObject:room];
+        }
+    }
+
+    // For each tag, sort rooms according to their tag order
+    for (NSString *tag in roomsByTags)
+    {
+        [roomsByTags[tag] sortUsingComparator:^NSComparisonResult(MXRoom *room1, MXRoom *room2) {
+            return [self compareRoomsByTag:tag room1:room1 room2:room2];
+        }];
+    }
+
+    // Shortcut: return other
+    roomsByTags[@"m.recent"] = recent;
+
+    return roomsByTags;
+}
+
+- (NSComparisonResult)compareRoomsByTag:(NSString*)tag room1:(MXRoom*)room1 room2:(MXRoom*)room2
+{
+    NSComparisonResult result = NSOrderedSame;
+
+    MXRoomTag *tag1 = room1.accountData.tags[tag];
+    MXRoomTag *tag2 = room2.accountData.tags[tag];
+
+    if (tag1.order && !tag2.order)
+    {
+        result = NSOrderedAscending;
+    }
+    else if (!tag1.order && tag2.order)
+    {
+        result = NSOrderedDescending;
+    }
+    else
+    {
+        // Do a lexicographic comparison
+        result = [tag1.order localizedCompare:tag2.order];
+    }
+    return result;
 }
 
 

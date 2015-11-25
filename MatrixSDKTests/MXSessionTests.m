@@ -772,6 +772,99 @@
     }];
 }
 
+
+#pragma mark rooms tags
+- (void)doRoomByTagsOrderTest:(XCTestCase*)testCase withOrder1:(NSString*)order1 order2:(NSString*)order2 order3:(NSString*)order3
+{
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+
+    [sharedData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+
+        // Create rooms with the same tag but with the passed orders
+        // Use the room topic to define the expected order
+        NSString *tag = [[NSProcessInfo processInfo] globallyUniqueString];
+
+        // Room with a tag with "oranges" order
+        [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:@"2" success:^(MXCreateRoomResponse *response) {
+            [bobRestClient addTag:tag withOrder:order2  toRoom:response.roomId success:^{
+
+                // Room with a tag with no order
+                [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:@"3" success:^(MXCreateRoomResponse *response) {
+                    [bobRestClient addTag:tag withOrder:order3 toRoom:response.roomId success:^{
+
+                        // Room with a tag with "apples" order
+                        [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:@"1" success:^(MXCreateRoomResponse *response) {
+                            [bobRestClient addTag:tag withOrder:order1 toRoom:response.roomId success:^{
+
+
+                                // Do the test
+                                mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                                [mxSession start:^{
+
+                                    NSDictionary<NSString*, NSArray<MXRoom*>*> *roomByTags = [mxSession roomsByTags];
+
+                                    XCTAssertGreaterThanOrEqual(roomByTags.count, 1);
+
+                                    XCTAssertNotNil(roomByTags[tag]);
+                                    XCTAssertEqual(roomByTags[tag].count, 3);
+
+                                    MXRoom *room1 = roomByTags[tag][0];
+                                    MXRoom *room2 = roomByTags[tag][1];
+                                    MXRoom *room3 = roomByTags[tag][2];
+
+                                    XCTAssertEqualObjects(room1.state.topic, @"1", "The order is wrong");
+                                    XCTAssertEqualObjects(room2.state.topic, @"2", "The order is wrong");
+                                    XCTAssertEqualObjects(room3.state.topic, @"3", "The order is wrong");
+
+
+                                    // By the way, check roomsWithTag
+                                    NSArray<MXRoom*> *roomsWithTag = [mxSession roomsWithTag:tag];
+                                    XCTAssertEqualObjects(roomsWithTag, roomByTags[tag], "[MXSession roomsWithTag:] must return the same list");
+
+                                    [expectation fulfill];
+
+                                } failure:^(NSError *error) {
+                                    XCTFail(@"The request should not fail - NSError: %@", error);
+                                    [expectation fulfill];
+                                }];
+
+                            } failure:^(NSError *error) {
+                                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                            }];
+                        } failure:^(NSError *error) {
+                            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                        }];
+                    } failure:^(NSError *error) {
+                        NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                    }];
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                }];
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+
+}
+
+- (void)testRoomByTagsOrderWithStringTagOrder
+{
+    [self doRoomByTagsOrderTest:self withOrder1:@"apples" order2:@"oranges" order3:nil];
+}
+
+- (void)testRoomByTagsOrderWithFloatTagOrder
+{
+    [self doRoomByTagsOrderTest:self withOrder1:@"0.2" order2:@"0.9" order3:nil];
+}
+
+- (void)testRoomByTagsOrderWithFloatAndStringTagOrder
+{
+    [self doRoomByTagsOrderTest:self withOrder1:@"0.9" order2:@"apples" order3:nil];
+}
+
 @end
 
 #pragma clang diagnostic pop
