@@ -40,16 +40,24 @@
 
 - (NSString *)displayname
 {
-    NSString *displayname;
-    if (self.aliases && 0 < self.aliases.count)
+    NSString *displayname = self.name;
+    
+    if (!displayname.length)
     {
-        // TODO(same as in webclient code): select the smarter alias from the array
-        displayname = self.aliases[0];
+        if (self.aliases && 0 < self.aliases.count)
+        {
+            // TODO(same as in webclient code): select the smarter alias from the array
+            displayname = self.aliases[0];
+        }
+        else
+        {
+            NSLog(@"[MXPublicRoom] Warning: room id leak for %@", self.roomId);
+            displayname = self.roomId;
+        }
     }
-    else
+    else if ([displayname hasPrefix:@"#"] == NO && self.aliases.count)
     {
-        NSLog(@"[MXPublicRoom] Warning: room id leak for %@", self.roomId);
-        displayname = self.roomId;
+        displayname = [NSString stringWithFormat:@"%@ (%@)", displayname, self.aliases[0]];
     }
     
     return displayname;
