@@ -892,6 +892,56 @@
     [self doRoomByTagsOrderTest:self withOrder1:@"0.9" order2:@"apples" order3:nil];
 }
 
+- (void)testRoomByTagsAndNoRoomTag
+{
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+
+    [sharedData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+
+        // Create a tagged room
+        [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:@"Tagged" success:^(MXCreateRoomResponse *response) {
+            [bobRestClient addTag:@"aTag" withOrder:nil  toRoom:response.roomId success:^{
+
+                // And a not tagged room
+                [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:@"Not tagged" success:^(MXCreateRoomResponse *response) {
+
+                    // Do the test
+                    mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                    [mxSession start:^{
+
+                        NSDictionary<NSString*, NSArray<MXRoom*>*> *roomByTags = [mxSession roomsByTags];
+
+                        XCTAssertGreaterThanOrEqual(roomByTags.count, 2, "There must be at least 2 tags ('aTag' and kMXSessionNoRoomTag)");
+
+                        // By the way, check roomsWithTag
+                        NSArray *roomsWithNoTags = [mxSession roomsWithTag:kMXSessionNoRoomTag];
+                        XCTAssertEqualObjects(roomsWithNoTags, roomByTags[kMXSessionNoRoomTag], "[MXSession roomsWithTag:] must return the same list");
+
+                        MXRoom *theNonTaggedRoom = [mxSession roomWithRoomId:response.roomId];
+
+                        XCTAssertNotEqual([roomsWithNoTags indexOfObject:theNonTaggedRoom], NSNotFound);
+
+                        [expectation fulfill];
+
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The request should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+
+
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                }];
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop

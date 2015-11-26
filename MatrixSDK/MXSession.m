@@ -39,7 +39,7 @@ NSString *const kMXSessionDidLeaveRoomNotification = @"kMXSessionDidLeaveRoomNot
 NSString *const kMXSessionDidSyncNotification = @"kMXSessionDidSyncNotification";
 NSString *const kMXSessionNotificationRoomIdKey = @"roomId";
 NSString *const kMXSessionNotificationEventKey = @"event";
-
+NSString *const kMXSessionNoRoomTag = @"m.recent";  // Use the same value as matrix-react-sdk
 
 /**
  Default timeouts used by the events streams.
@@ -1733,29 +1733,45 @@ typedef void (^MXOnResumeDone)();
 #pragma mark - User's rooms tags
 - (NSArray<MXRoom*>*)roomsWithTag:(NSString*)tag
 {
-    // Get all room with the passed tag
-    NSMutableArray *roomsWithTag = [NSMutableArray array];
-    for (MXRoom *room in rooms.allValues)
+    if (![tag isEqualToString:kMXSessionNoRoomTag])
     {
-        if (room.accountData.tags[tag])
+        // Get all room with the passed tag
+        NSMutableArray *roomsWithTag = [NSMutableArray array];
+        for (MXRoom *room in rooms.allValues)
         {
-            [roomsWithTag addObject:room];
+            if (room.accountData.tags[tag])
+            {
+                [roomsWithTag addObject:room];
+            }
         }
+
+        // Sort them according to their tag order
+        [roomsWithTag sortUsingComparator:^NSComparisonResult(MXRoom *room1, MXRoom *room2) {
+            return [self compareRoomsByTag:tag room1:room1 room2:room2];
+        }];
+
+        return roomsWithTag;
     }
-
-    // Sort them according to their tag order
-    [roomsWithTag sortUsingComparator:^NSComparisonResult(MXRoom *room1, MXRoom *room2) {
-        return [self compareRoomsByTag:tag room1:room1 room2:room2];
-    }];
-
-    return roomsWithTag;
+    else
+    {
+        // List rooms with no tags
+        NSMutableArray *roomsWithNoTag = [NSMutableArray array];
+        for (MXRoom *room in rooms.allValues)
+        {
+            if (0 == room.accountData.tags.count)
+            {
+                [roomsWithNoTag addObject:room];
+            }
+        }
+        return roomsWithNoTag;
+    }
 }
 
 - (NSDictionary<NSString*, NSArray<MXRoom*>*>*)roomsByTags
 {
     NSMutableDictionary<NSString*, NSMutableArray<MXRoom*>*> *roomsByTags = [NSMutableDictionary dictionary];
 
-    NSMutableArray<MXRoom*> *recent = [NSMutableArray array];
+    NSMutableArray<MXRoom*> *roomsWithNoTag = [NSMutableArray array];
 
     // Sort all rooms according to their defined tags
     for (MXRoom *room in rooms.allValues)
@@ -1775,7 +1791,7 @@ typedef void (^MXOnResumeDone)();
         else
         {
             // Put room with no tags in the recent list
-            [recent addObject:room];
+            [roomsWithNoTag addObject:room];
         }
     }
 
@@ -1787,8 +1803,8 @@ typedef void (^MXOnResumeDone)();
         }];
     }
 
-    // Shortcut: return other
-    roomsByTags[@"m.recent"] = recent;
+    // roomsWithNoTag can now be added to the result dictionary
+    roomsByTags[kMXSessionNoRoomTag] = roomsWithNoTag;
 
     return roomsByTags;
 }

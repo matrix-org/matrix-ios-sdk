@@ -129,6 +129,13 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationRoomIdKey;
 FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
 
 
+#pragma mark - Other constants
+/**
+ Fake tag used to identify rooms that do not have tags in `roomsWithTag` and `roomsByTags` methods.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
+
+
 #pragma mark - MXSession
 /**
  `MXSession` manages data and events from the home server
@@ -434,7 +441,7 @@ typedef void (^MXOnCatchupFail)(NSError *error);
  Get the list of rooms that are tagged the specified tag.
  The returned array is ordered according to the room tag order.
  
- @param tag the tag to look for. Use the fake tag to get rooms with no tags.
+ @param tag the tag to look for. Use the fake `kMXSessionNoRoomTag` tag to get rooms with no tags.
  @return an ordered list of room having the tag.
  */
 - (NSArray<MXRoom*>*)roomsWithTag:(NSString*)tag;
