@@ -258,12 +258,11 @@
     NSString *alias = self.canonicalAlias;
     if (!alias)
     {
+        // For rooms where canonical alias is not defined, we use the 1st alias as a workaround
         NSArray *aliases = self.aliases;
         
         if (aliases.count)
         {
-            // If there is an alias, use it
-            // TODO: only one alias is managed for now
             alias = [aliases[0] copy];
         }
     }
