@@ -417,7 +417,16 @@ typedef void (^MXOnCatchupFail)(NSError *error);
  @param types an array of event types strings (MXEventTypeString) the app is interested in.
  @return an array of MXEvents.
  */
-- (NSArray*)recentsWithTypeIn:(NSArray*)types;
+- (NSArray<MXEvent*>*)recentsWithTypeIn:(NSArray<MXEventTypeString>*)types;
+
+/**
+ Sort a list of rooms according to their last messages time stamp.
+ 
+ @param rooms the rooms to sort.
+ @param types an array of event types strings (MXEventTypeString) the app is interested in.
+ @return an array where rooms are ordered.
+ */
+- (NSArray<MXRoom*>*)sortRooms:(NSArray<MXRoom*>*)rooms byLastMessageWithTypeIn:(NSArray<MXEventTypeString>*)types;
 
 
 #pragma mark - User's rooms tags

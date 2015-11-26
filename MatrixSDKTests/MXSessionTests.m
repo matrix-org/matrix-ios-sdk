@@ -121,6 +121,33 @@
     }];
 }
 
+- (void)testSortRooms
+{
+    [[MatrixSDKTestsData sharedData]doMXRestClientTestWihBobAndSeveralRoomsAndMessages:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [mxSession start:^{
+
+            NSArray *recents = [mxSession recentsWithTypeIn:nil];
+
+            NSArray *sortedRooms = [mxSession sortRooms:mxSession.rooms byLastMessageWithTypeIn:nil];
+
+            // Compare 'sortedRooms' last message with 'recents'. They must be the same WITH the same order.
+            XCTAssertEqual(sortedRooms.count, recents.count);
+            for (NSUInteger i =0; i < sortedRooms.count; i++)
+            {
+                XCTAssertEqual([sortedRooms[i] lastMessageWithTypeIn:nil], recents[i], @"Message at position %tu is not the right one", i);
+            }
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 
 - (void)testListenerForAllLiveEvents
 {

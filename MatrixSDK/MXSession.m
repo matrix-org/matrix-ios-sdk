@@ -1687,7 +1687,7 @@ typedef void (^MXOnResumeDone)();
 
 
 #pragma mark - User's recents
-- (NSArray*)recentsWithTypeIn:(NSArray*)types
+- (NSArray<MXEvent*>*)recentsWithTypeIn:(NSArray<MXEventTypeString>*)types
 {
     NSMutableArray *recents = [NSMutableArray arrayWithCapacity:rooms.count];
     for (MXRoom *room in rooms.allValues)
@@ -1697,19 +1697,38 @@ typedef void (^MXOnResumeDone)();
     }
     
     // Order them by origin_server_ts
-    [recents sortUsingComparator:^NSComparisonResult(MXEvent *obj1, MXEvent *obj2) {
-        NSComparisonResult result = NSOrderedAscending;
-        if (obj2.originServerTs > obj1.originServerTs) {
-            result = NSOrderedDescending;
-        } else if (obj2.originServerTs == obj1.originServerTs) {
-            result = NSOrderedSame;
-        }
-        return result;
-    }];
+    [recents sortUsingSelector:@selector(compareOriginServerTs:)];
     
     return recents;
 }
 
+- (NSArray<MXRoom*>*)sortRooms:(NSArray<MXRoom*>*)roomsToSort byLastMessageWithTypeIn:(NSArray<MXEventTypeString>*)types
+{
+    NSMutableArray<MXRoom*> *sortedRooms = [NSMutableArray arrayWithCapacity:roomsToSort.count];
+
+    NSMutableArray<MXEvent*>  *sortedLastMessages = [NSMutableArray arrayWithCapacity:roomsToSort.count];
+    NSMapTable<MXEvent*, MXRoom*> *roomsByLastMessages = [[NSMapTable alloc] initWithKeyOptions:NSPointerFunctionsObjectPointerPersonality valueOptions:NSPointerFunctionsObjectPointerPersonality capacity:roomsToSort.count];
+
+    // Get all last messages
+    for (MXRoom *room in roomsToSort)
+    {
+        MXEvent *lastRoomMessage = [room lastMessageWithTypeIn:types];
+        [sortedLastMessages addObject:lastRoomMessage];
+
+        [roomsByLastMessages setObject:room forKey:lastRoomMessage];
+    }
+
+    // Order them by origin_server_ts
+    [sortedLastMessages sortUsingSelector:@selector(compareOriginServerTs:)];
+
+    // Build the ordered room list
+    for (MXEvent *lastRoomMessage in sortedLastMessages)
+    {
+        [sortedRooms addObject:[roomsByLastMessages objectForKey:lastRoomMessage]];
+    }
+
+    return sortedRooms;
+}
 
 #pragma mark - User's rooms tags
 - (NSArray<MXRoom*>*)roomsWithTag:(NSString*)tag

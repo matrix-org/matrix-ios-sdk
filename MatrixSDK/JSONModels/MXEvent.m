@@ -306,6 +306,20 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     return [MXEvent modelFromJSON:prunedEventDict];
 }
 
+- (NSComparisonResult)compareOriginServerTs:(MXEvent *)otherEvent
+{
+    NSComparisonResult result = NSOrderedAscending;
+    if (otherEvent.originServerTs > _originServerTs)
+    {
+        result = NSOrderedDescending;
+    }
+    else if (otherEvent.originServerTs == _originServerTs)
+    {
+        result = NSOrderedSame;
+    }
+    return result;
+}
+
 
 #pragma mark - private
 - (NSMutableDictionary*)filterInEventWithKeys:(NSArray*)keys
