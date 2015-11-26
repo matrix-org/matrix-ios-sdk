@@ -874,7 +874,6 @@
             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
         }];
     }];
-
 }
 
 - (void)testRoomByTagsOrderWithStringTagOrder
@@ -933,6 +932,81 @@
                     NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
                 }];
 
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
+- (void)testTagOrderToBeAtIndex
+{
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+
+    [sharedData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+
+        // Create 2 rooms with the same tag but different order
+        // Use the room topic to define the expected order
+        NSString *tag = [[NSProcessInfo processInfo] globallyUniqueString];
+
+        // Room at position #1
+        [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
+            [bobRestClient addTag:tag withOrder:@"0.1"  toRoom:response.roomId success:^{
+
+                // Room at position #2
+                [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
+                    [bobRestClient addTag:tag withOrder:@"0.2" toRoom:response.roomId success:^{
+
+                        // Room at position #3
+                        [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
+                            [bobRestClient addTag:tag withOrder:@"0.3" toRoom:response.roomId success:^{
+
+                                // Do the tests
+                                mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                                [mxSession start:^{
+
+                                    NSString *orderForFirstPosition = [mxSession tagOrderToBeAtIndex:0 withTag:tag];
+                                    XCTAssertLessThan(orderForFirstPosition.floatValue, 0.1);
+
+                                    NSString *orderForThirdPosition = [mxSession tagOrderToBeAtIndex:2 withTag:tag];
+                                    XCTAssertGreaterThan(orderForThirdPosition.floatValue, 0.2);
+                                    XCTAssertLessThan(orderForThirdPosition.floatValue, 0.3);
+
+                                    NSString *orderForLastPosition = [mxSession tagOrderToBeAtIndex:3 withTag:tag];
+                                    XCTAssertGreaterThan(orderForLastPosition.floatValue, 0.3);
+
+                                    orderForLastPosition = [mxSession tagOrderToBeAtIndex:10 withTag:tag];
+                                    XCTAssertGreaterThan(orderForLastPosition.floatValue, 0.3);
+
+
+                                    // Test the method on a fresh new tag
+                                    NSString *newTag = [[NSProcessInfo processInfo] globallyUniqueString];
+
+                                    NSString *orderForFirstTaggedRoom = [mxSession tagOrderToBeAtIndex:2 withTag:newTag];
+                                    XCTAssertGreaterThan(orderForFirstTaggedRoom.floatValue, 0);
+                                    XCTAssertLessThan(orderForFirstTaggedRoom.floatValue, 1);
+
+                                    [expectation fulfill];
+
+                                } failure:^(NSError *error) {
+                                    XCTFail(@"The request should not fail - NSError: %@", error);
+                                    [expectation fulfill];
+                                }];
+
+                            } failure:^(NSError *error) {
+                                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                            }];
+                        } failure:^(NSError *error) {
+                            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                        }];
+                    } failure:^(NSError *error) {
+                        NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                    }];
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                }];
             } failure:^(NSError *error) {
                 NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
             }];

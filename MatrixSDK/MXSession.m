@@ -1832,6 +1832,53 @@ typedef void (^MXOnResumeDone)();
     return result;
 }
 
+- (NSString *)tagOrderToBeAtIndex:(NSUInteger)index withTag:(NSString *)tag
+{
+    // Algo (and the [0.0, 1.0] assumption) inspired from matrix-react-sdk:
+    // We sort rooms by the lexicographic ordering of the 'order' metadata on their tags.
+    // For convenience, we calculate this for now a floating point number between 0.0 and 1.0.
+
+    CGFloat orderA = 0.0; // by default we're next to the beginning of the list
+    CGFloat orderB = 1.0; // by default we're next to the end of the list too
+
+    NSArray<MXRoom*> *roomsWithTag = [self roomsWithTag:tag];
+    if (roomsWithTag.count)
+    {
+        if (index > 0)
+        {
+            // Bound max index to the array size
+            NSUInteger prevIndex = (index < roomsWithTag.count) ? index : roomsWithTag.count;
+
+            MXRoomTag *prevTag = roomsWithTag[prevIndex - 1].accountData.tags[tag];
+            if (!prevTag.order)
+            {
+                NSLog(@"[MXSession] computeTagOrderForRoom: Previous room in sublist has no ordering metadata. This should never happen.");
+            }
+            else
+            {
+                orderA = [prevTag.order floatValue];
+            }
+        }
+
+        if (index <= roomsWithTag.count - 1)
+        {
+            MXRoomTag *nextTag = roomsWithTag[index ].accountData.tags[tag];
+            if (!nextTag.order)
+            {
+                NSLog(@"[MXSession] computeTagOrderForRoom: Next room in sublist has no ordering metadata. This should never happen.");
+            }
+            else
+            {
+                orderB = [nextTag.order floatValue];
+            }
+        }
+    }
+
+    CGFloat order = (orderA + orderB) / 2.0;
+
+    return [NSString stringWithFormat:@"%f", order];
+}
+
 
 #pragma mark - Global events listeners
 - (id)listenToEvents:(MXOnSessionEvent)onEvent

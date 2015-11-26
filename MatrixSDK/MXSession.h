@@ -457,6 +457,16 @@ typedef void (^MXOnCatchupFail)(NSError *error);
  */
 - (NSDictionary<NSString*, NSArray<MXRoom*>*>*)roomsByTags;
 
+/**
+ Compute the tag order to use for a room tag so that the room will appear in the expected position
+ in the list of rooms stamped with this tag.
+
+ @param index the targeted index of the room in the list of rooms with the tag `tag`.
+ @param tag the tag.
+ @return the tag order to apply to get the expected position.
+ */
+- (NSString*)tagOrderToBeAtIndex:(NSUInteger)index withTag:(NSString *)tag;
+
 
 #pragma mark - Global events listeners
 /**
