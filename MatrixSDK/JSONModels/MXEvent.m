@@ -22,6 +22,7 @@
 
 NSString *const kMXEventTypeStringRoomName            = @"m.room.name";
 NSString *const kMXEventTypeStringRoomTopic           = @"m.room.topic";
+NSString *const kMXEventTypeStringRoomAvatar          = @"m.room.avatar";
 NSString *const kMXEventTypeStringRoomMember          = @"m.room.member";
 NSString *const kMXEventTypeStringRoomCreate          = @"m.room.create";
 NSString *const kMXEventTypeStringRoomJoinRules       = @"m.room.join_rules";

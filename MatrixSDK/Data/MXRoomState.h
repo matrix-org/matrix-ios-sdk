@@ -85,6 +85,11 @@
 @property (nonatomic, readonly) NSString *topic;
 
 /**
+ The avatar url of the room.
+ */
+@property (nonatomic, readonly) NSString *avatar;
+
+/**
  The display name of the room.
  It is computed from information retrieved so far.
  */

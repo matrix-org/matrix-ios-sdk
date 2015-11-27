@@ -268,6 +268,19 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
                      failure:(void (^)(NSError *error))failure;
 
 /**
+ Set the avatar of the room.
+
+ @param avatar the avatar url to set.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setAvatar:(NSString*)avatar
+                      success:(void (^)())success
+                      failure:(void (^)(NSError *error))failure;
+
+/**
  Set the name of the room.
 
  @param name the name to set.

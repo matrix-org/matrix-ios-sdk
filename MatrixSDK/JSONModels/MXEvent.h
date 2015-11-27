@@ -30,6 +30,7 @@ typedef enum : NSUInteger
 {
     MXEventTypeRoomName,
     MXEventTypeRoomTopic,
+    MXEventTypeRoomAvatar,
     MXEventTypeRoomMember,
     MXEventTypeRoomCreate,
     MXEventTypeRoomJoinRules,
@@ -59,6 +60,7 @@ typedef enum : NSUInteger
 typedef NSString* MXEventTypeString;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomName;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomTopic;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomAvatar;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomMember;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomCreate;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomJoinRules;
