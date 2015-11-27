@@ -198,7 +198,8 @@ typedef void (^MXOnResumeDone)();
                 @autoreleasepool
                 {
                     NSArray *stateEvents = [_store stateOfRoom:roomId];
-                    [self createRoom:roomId withStateEvents:stateEvents notify:NO];
+                    MXRoomAccountData *roomAccountData = [_store accountDataOfRoom:roomId];
+                    [self createRoom:roomId withStateEvents:stateEvents andAccountData:roomAccountData notify:NO];
                 }
             }
 
@@ -1505,9 +1506,9 @@ typedef void (^MXOnResumeDone)();
     return room;
 }
 
-- (MXRoom *)createRoom:(NSString *)roomId withStateEvents:(NSArray*)stateEvents notify:(BOOL)notify
+- (MXRoom *)createRoom:(NSString *)roomId withStateEvents:(NSArray*)stateEvents andAccountData:(MXRoomAccountData*)accountData notify:(BOOL)notify
 {
-    MXRoom *room = [[MXRoom alloc] initWithRoomId:roomId andMatrixSession:self andStateEvents:stateEvents];
+    MXRoom *room = [[MXRoom alloc] initWithRoomId:roomId andMatrixSession:self andStateEvents:stateEvents andAccountData:accountData];
 
     [self addRoom:room notify:notify];
     return room;

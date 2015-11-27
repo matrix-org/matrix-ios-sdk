@@ -17,6 +17,7 @@
 #import "MXJSONModels.h"
 #import "MXEvent.h"
 #import "MXReceiptData.h"
+#import "MXRoomAccountData.h"
 
 /**
  The `MXStore` protocol defines an interface that must be implemented in order to store
@@ -238,6 +239,10 @@
  @return the stored state events that define the room state.
  */
 - (NSArray*)stateOfRoom:(NSString*)roomId;
+
+
+- (void)storeAccountDataForRoom:(NSString*)roomId userData:(MXRoomAccountData*)accountData;
+- (MXRoomAccountData*)accountDataOfRoom:(NSString*)roomId;
 
 /**
  Store/retrieve the user display name.

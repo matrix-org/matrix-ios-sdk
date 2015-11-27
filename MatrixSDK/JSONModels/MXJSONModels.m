@@ -158,6 +158,23 @@ NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
     return tags;
 }
 
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super init];
+    if (self)
+    {
+        _name = [aDecoder decodeObjectForKey:@"name"];
+        _order = [aDecoder decodeObjectForKey:@"order"];
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    [aCoder encodeObject:_name forKey:@"name"];
+    [aCoder encodeObject:_order forKey:@"order"];
+}
+
 @end
 
 NSString *const kMXPresenceOnline = @"online";

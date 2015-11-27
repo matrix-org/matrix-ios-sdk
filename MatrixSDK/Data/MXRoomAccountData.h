@@ -18,7 +18,7 @@
 
 #import "MXJSONModels.h"
 
-@interface MXRoomAccountData : NSObject
+@interface MXRoomAccountData : NSObject <NSCoding>
 
 /**
  The tags the user defined for this room.

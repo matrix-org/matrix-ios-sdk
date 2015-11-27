@@ -57,6 +57,7 @@
 - (void)checkEventAge:(Class)mxStoreClass;
 - (void)checkMXRoomPaginationToken:(Class)mxStoreClass;
 - (void)checkMultiAccount:(Class)mxStoreClass;
+- (void)checkRoomAccountDataTags:(Class)mxStoreClass;
 
 @end
 

@@ -20,13 +20,14 @@
 
 #import "MXFileStoreMetaData.h"
 
-NSUInteger const kMXFileVersion = 10;
+NSUInteger const kMXFileVersion = 11;
 
 NSString *const kMXFileStoreFolder = @"MXFileStore";
 NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
 
 NSString *const kMXFileStoreRoomsMessagesFolder = @"messages";
 NSString *const kMXFileStoreRoomsStateFolder = @"state";
+NSString *const kMXFileStoreRoomsAccountDataFolder = @"accountData";
 NSString *const kMXReceiptsFolder = @"receipts";
 
 @interface MXFileStore ()
@@ -39,6 +40,8 @@ NSString *const kMXReceiptsFolder = @"receipts";
     NSMutableArray *roomsToCommitForMessages;
 
     NSMutableDictionary *roomsToCommitForState;
+
+    NSMutableDictionary<NSString*, MXRoomAccountData*> *roomsToCommitForAccountData;
     
     NSMutableArray *roomsToCommitForReceipts;
 
@@ -50,7 +53,10 @@ NSString *const kMXReceiptsFolder = @"receipts";
 
     // The path of rooms states folder
     NSString *storeRoomsStatePath;
-    
+
+    // The path of rooms user data folder
+    NSString *storeRoomsAccountDataPath;
+
     // the path of the other room member receipts
     NSString* storeReceiptsPath;
 
@@ -60,7 +66,10 @@ NSString *const kMXReceiptsFolder = @"receipts";
     // Cache used to preload room states while the store is opening.
     // It is filled on the separate thread so that the UI thread will not be blocked
     // when it will read rooms states.
-    NSMutableDictionary *preloadedRoomsStates;
+    NSMutableDictionary<NSString*, NSArray*> *preloadedRoomsStates;
+
+    // Same kind of cache for room account data.
+    NSMutableDictionary<NSString*, MXRoomAccountData*> *preloadedRoomAccountData;
 
     // File reading and writing operations are dispatched to a separated thread.
     // The queue invokes blocks serially in FIFO order.
@@ -83,8 +92,10 @@ NSString *const kMXReceiptsFolder = @"receipts";
     {
         roomsToCommitForMessages = [NSMutableArray array];
         roomsToCommitForState = [NSMutableDictionary dictionary];
+        roomsToCommitForAccountData = [NSMutableDictionary dictionary];
         roomsToCommitForReceipts = [NSMutableArray array];
         preloadedRoomsStates = [NSMutableDictionary dictionary];
+        preloadedRoomAccountData = [NSMutableDictionary dictionary];
 
         metaDataHasChanged = NO;
 
@@ -106,6 +117,7 @@ NSString *const kMXReceiptsFolder = @"receipts";
     storePath = [[cachePath stringByAppendingPathComponent:kMXFileStoreFolder] stringByAppendingPathComponent:credentials.userId];
     storeRoomsMessagesPath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsMessagesFolder];
     storeRoomsStatePath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsStateFolder];
+    storeRoomsAccountDataPath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsAccountDataFolder];
     storeReceiptsPath = [storePath stringByAppendingPathComponent:kMXReceiptsFolder];
     /*
     Mount data corresponding to the account credentials.
@@ -155,6 +167,7 @@ NSString *const kMXReceiptsFolder = @"receipts";
             {
                 [self loadRoomsMessages];
                 [self preloadRoomsStates];
+                [self preloadRoomsAccountData];
             }
             
             if (metaData)
@@ -303,6 +316,15 @@ NSString *const kMXReceiptsFolder = @"receipts";
         totalSize += fileSize;
     }
 
+    // Remove rooms user data
+    roomFile = [storeRoomsAccountDataPath stringByAppendingPathComponent:roomId];
+    fileSize = [[[[NSFileManager defaultManager] attributesOfItemAtPath:roomFile error:nil] objectForKey:NSFileSize] intValue];
+    [[NSFileManager defaultManager] removeItemAtPath:roomFile error:&error];
+    if (!error)
+    {
+        totalSize += fileSize;
+    }
+
     // Remove Read receipts
     roomFile = [storeReceiptsPath stringByAppendingPathComponent:roomId];
     fileSize = [[[[NSFileManager defaultManager] attributesOfItemAtPath:roomFile error:nil] objectForKey:NSFileSize] intValue];
@@ -337,6 +359,7 @@ NSString *const kMXReceiptsFolder = @"receipts";
     [[NSFileManager defaultManager] createDirectoryAtPath:storePath withIntermediateDirectories:YES attributes:nil error:nil];
     [[NSFileManager defaultManager] createDirectoryAtPath:storeRoomsMessagesPath withIntermediateDirectories:YES attributes:nil error:nil];
     [[NSFileManager defaultManager] createDirectoryAtPath:storeRoomsStatePath withIntermediateDirectories:YES attributes:nil error:nil];
+    [[NSFileManager defaultManager] createDirectoryAtPath:storeRoomsAccountDataPath withIntermediateDirectories:YES attributes:nil error:nil];
     [[NSFileManager defaultManager] createDirectoryAtPath:storeReceiptsPath withIntermediateDirectories:YES attributes:nil error:nil];
 
     // Reset data
@@ -392,7 +415,6 @@ NSString *const kMXReceiptsFolder = @"receipts";
 
 - (void)storeStateForRoom:(NSString*)roomId stateEvents:(NSArray*)stateEvents
 {
-    //
     roomsToCommitForState[roomId] = stateEvents;
 }
 
@@ -422,7 +444,38 @@ NSString *const kMXReceiptsFolder = @"receipts";
     return stateEvents;
 }
 
--(void)setUserDisplayname:(NSString *)userDisplayname
+- (void)storeAccountDataForRoom:(NSString *)roomId userData:(MXRoomAccountData *)accountData
+{
+    roomsToCommitForAccountData[roomId] = accountData;
+}
+
+- (MXRoomAccountData *)accountDataOfRoom:(NSString *)roomId
+{
+    // First, try to get the data from the cache
+    MXRoomAccountData *roomUserdData = preloadedRoomAccountData[roomId];
+
+    if (!roomUserdData)
+    {
+        NSString *roomFile = [storeRoomsAccountDataPath stringByAppendingPathComponent:roomId];
+        roomUserdData =[NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+
+        if (NO == [NSThread isMainThread])
+        {
+            // If this method is called from the `dispatchQueue` thread, it means MXFileStore is preloading
+            // data. So, fill the cache.
+            preloadedRoomAccountData[roomId] = roomUserdData;
+        }
+    }
+    else
+    {
+        // The cache information is valid only once
+        [preloadedRoomAccountData removeObjectForKey:roomId];
+    }
+
+    return roomUserdData;
+}
+
+- (void)setUserDisplayname:(NSString *)userDisplayname
 {
     if (metaData && NO == [metaData.userDisplayName isEqualToString:userDisplayname])
     {
@@ -431,12 +484,12 @@ NSString *const kMXReceiptsFolder = @"receipts";
     }
 }
 
--(NSString *)userDisplayname
+- (NSString *)userDisplayname
 {
     return metaData.userDisplayName;
 }
 
--(void)setUserAvatarUrl:(NSString *)userAvatarUrl
+- (void)setUserAvatarUrl:(NSString *)userAvatarUrl
 {
     if (metaData && NO == [metaData.userAvatarUrl isEqualToString:userAvatarUrl])
     {
@@ -445,7 +498,7 @@ NSString *const kMXReceiptsFolder = @"receipts";
     }
 }
 
--(NSString *)userAvatarUrl
+- (NSString *)userAvatarUrl
 {
     return metaData.userAvatarUrl;
 }
@@ -457,6 +510,7 @@ NSString *const kMXReceiptsFolder = @"receipts";
     {
         [self saveRoomsMessages];
         [self saveRoomsState];
+        [self saveRoomsAccountData];
         [self saveReceipts];
 
         // Save meta data only at the end because it is critical to save the eventStreamToken
@@ -625,6 +679,61 @@ NSString *const kMXReceiptsFolder = @"receipts";
         });
     }
 }
+
+
+#pragma mark - Rooms state
+/**
+ Preload account data of all rooms.
+
+ This operation must be called on the `dispatchQueue` thread to avoid blocking the main thread.
+ */
+- (void)preloadRoomsAccountData
+{
+    for (NSString *roomId in roomStores)
+    {
+        preloadedRoomAccountData[roomId] = [self accountDataOfRoom:roomId];
+    }
+}
+
+- (void)saveRoomsAccountData
+{
+    if (roomsToCommitForAccountData.count)
+    {
+        // Take a snapshot of room ids to store to process them on the other thread
+        NSDictionary *roomsToCommit = [NSDictionary dictionaryWithDictionary:roomsToCommitForAccountData];
+        [roomsToCommitForAccountData removeAllObjects];
+
+        dispatch_async(dispatchQueue, ^(void){
+            NSUInteger deltaCacheSize = 0;
+
+            NSUInteger dirSize = [[[[NSFileManager defaultManager] attributesOfItemAtPath:storeRoomsAccountDataPath error:nil] objectForKey:NSFileSize] intValue];
+
+            for (NSString *roomId in roomsToCommit)
+            {
+                MXRoomAccountData *roomAccountData = roomsToCommit[roomId];
+
+                NSString *roomFile = [storeRoomsAccountDataPath stringByAppendingPathComponent:roomId];
+
+                NSUInteger sizeBeforeSaving = [[[[NSFileManager defaultManager] attributesOfItemAtPath:roomFile error:nil] objectForKey:NSFileSize] intValue];
+                [NSKeyedArchiver archiveRootObject:roomAccountData toFile:roomFile];
+                deltaCacheSize += [[[[NSFileManager defaultManager] attributesOfItemAtPath:roomFile error:nil] objectForKey:NSFileSize] intValue] - sizeBeforeSaving;
+            }
+
+            // apply the directory size update
+            deltaCacheSize += [[[[NSFileManager defaultManager] attributesOfItemAtPath:storeRoomsAccountDataPath error:nil] objectForKey:NSFileSize] intValue] - dirSize;
+
+            @synchronized(self)
+            {
+                // if the size is not marked as to be recomputed
+                if (cachedDiskUsage != NSUIntegerMax)
+                {
+                    cachedDiskUsage += deltaCacheSize;
+                }
+            }
+        });
+    }
+}
+
 
 #pragma mark - MXFileStore metadata
 - (void)loadMetaData

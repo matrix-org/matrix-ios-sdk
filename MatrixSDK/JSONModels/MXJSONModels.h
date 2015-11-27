@@ -186,7 +186,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomTagLowPriority;
 /**
  `MXRoomTag` represents a room tag.
  */
-@interface MXRoomTag : NSObject
+@interface MXRoomTag : NSObject <NSCoding>
 
 /**
  The name of a tag.

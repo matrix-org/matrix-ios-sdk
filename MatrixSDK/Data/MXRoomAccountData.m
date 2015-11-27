@@ -33,4 +33,20 @@
     }
 }
 
+#pragma mark - NSCoding
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super init];
+    if (self)
+    {
+        _tags = [aDecoder decodeObjectForKey:@"tags"];
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    [aCoder encodeObject:_tags forKey:@"tags"];
+}
+
 @end

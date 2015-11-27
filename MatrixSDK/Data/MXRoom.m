@@ -117,7 +117,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     return self;
 }
 
-- (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession2 andStateEvents:(NSArray *)stateEvents
+- (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession2 andStateEvents:(NSArray *)stateEvents andAccountData:(MXRoomAccountData*)accountData
 {
     self = [self initWithRoomId:roomId andMatrixSession:mxSession2];
     if (self)
@@ -128,6 +128,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             {
                 [self handleStateEvent:event direction:MXEventDirectionSync];
             }
+
+            _accountData = accountData;
         }
     }
     return self;
@@ -493,7 +495,11 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     {
         [_accountData handleEvent:event];
 
-        // TODO: To store in MXStore
+        // Update the store
+        if ([mxSession.store respondsToSelector:@selector(storeAccountDataForRoom:userData:)])
+        {
+            [mxSession.store storeAccountDataForRoom:_state.roomId userData:_accountData];
+        }
 
         // And notify listeners
         [self notifyListeners:event direction:direction];
