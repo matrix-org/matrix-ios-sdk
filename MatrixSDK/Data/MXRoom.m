@@ -983,4 +983,9 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     return [mxSession.store getEventReceipts:_state.roomId eventId:eventId sorted:sort];
 }
 
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"<MXRoom: %p> %@: %@ - %@", self, _state.roomId, _state.name, _state.topic];
+}
+
 @end
