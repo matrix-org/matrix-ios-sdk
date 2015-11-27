@@ -209,13 +209,26 @@
     return aliases;
 }
 
+- (NSString*)canonicalAlias
+{
+    NSString *canonicalAlias;
+    
+    // Check it from the state events
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomCanonicalAlias];
+    if (event && [self contentOfEvent:event])
+    {
+        canonicalAlias = [[self contentOfEvent:event][@"alias"] copy];
+    }
+    return canonicalAlias;
+}
+
 - (NSString *)name
 {
     NSString *name;
     
     // Check it from the state events
     MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomName];
-    if (event && event.content)
+    if (event && [self contentOfEvent:event])
     {
         name = [[self contentOfEvent:event][@"name"] copy];
     }
@@ -228,7 +241,7 @@
     
     // Check it from the state events
     MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomTopic];
-    if (event && event.content)
+    if (event && [self contentOfEvent:event])
     {
         topic = [[self contentOfEvent:event][@"topic"] copy];
     }
@@ -239,111 +252,112 @@
 {
     // Reuse the Synapse web client algo
     
-    NSString *displayname;
+    NSString *displayname = self.name;
     
-    NSArray *aliases = self.aliases;
-    NSString *alias;
-    if (!displayname && aliases && 0 < aliases.count)
+    // Check for alias (consider first canonical alias).
+    NSString *alias = self.canonicalAlias;
+    if (!alias)
     {
-        // If there is an alias, use it
-        // TODO: only one alias is managed for now
-        alias = [aliases[0] copy];
-    }
-    
-    // Check it from the state events
-    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomName];
-    if (event && [self contentOfEvent:event])
-    {
-        displayname = [[self contentOfEvent:event][@"name"] copy];
-    }
-    
-    else if (alias)
-    {
-        displayname = alias;
-    }
-    // compute a name
-    else if (members.count > 0)
-    {
-        if (members.count >= 3)
+        // For rooms where canonical alias is not defined, we use the 1st alias as a workaround
+        NSArray *aliases = self.aliases;
+        
+        if (aliases.count)
         {
-            // this is a group chat and should have the names of participants
-            // according to "(<num> <name1>, <name2>, <name3> ..."
-            NSMutableString* roomName = [[NSMutableString alloc] init];
-            int count = 0;
-            
-            for (NSString *memberUserId in members.allKeys)
+            alias = [aliases[0] copy];
+        }
+    }
+    
+    // Compute a name if none
+    if (!displayname)
+    {
+        // use alias (if any)
+        if (alias)
+        {
+            displayname = alias;
+        }
+        // use members
+        else if (members.count > 0)
+        {
+            if (members.count >= 3)
             {
-                if (NO == [memberUserId isEqualToString:mxSession.matrixRestClient.credentials.userId])
+                // this is a group chat and should have the names of participants
+                // according to "(<num> <name1>, <name2>, <name3> ..."
+                NSMutableString* roomName = [[NSMutableString alloc] init];
+                int count = 0;
+                
+                for (NSString *memberUserId in members.allKeys)
                 {
-                    MXRoomMember *member = [self memberWithUserId:memberUserId];
-                    
-                    // only manage the invited an joined users
-                    if ((member.membership == MXMembershipInvite) || (member.membership == MXMembershipJoin))
+                    if (NO == [memberUserId isEqualToString:mxSession.matrixRestClient.credentials.userId])
                     {
-                        // some participants are already added
-                        if (roomName.length != 0)
-                        {
-                            // add a separator
-                            [roomName appendString:@", "];
-                        }
+                        MXRoomMember *member = [self memberWithUserId:memberUserId];
                         
-                        NSString* username = [self memberSortedName:memberUserId];
-                        
-                        if (username.length == 0)
+                        // only manage the invited an joined users
+                        if ((member.membership == MXMembershipInvite) || (member.membership == MXMembershipJoin))
                         {
-                            [roomName appendString:memberUserId];
+                            // some participants are already added
+                            if (roomName.length != 0)
+                            {
+                                // add a separator
+                                [roomName appendString:@", "];
+                            }
+                            
+                            NSString* username = [self memberSortedName:memberUserId];
+                            
+                            if (username.length == 0)
+                            {
+                                [roomName appendString:memberUserId];
+                            }
+                            else
+                            {
+                                [roomName appendString:username];
+                            }
+                            count++;
                         }
-                        else
-                        {
-                            [roomName appendString:username];
-                        }
-                        count++;
+                    }
+                }
+                
+                displayname = [NSString stringWithFormat:@"(%d) %@",count, roomName];
+            }
+            else if (members.count == 2)
+            {
+                // this is a "one to one" room and should have the name of other user
+                
+                for (NSString *memberUserId in members.allKeys)
+                {
+                    if (NO == [memberUserId isEqualToString:mxSession.matrixRestClient.credentials.userId])
+                    {
+                        displayname = [self memberName:memberUserId];
+                        break;
                     }
                 }
             }
-            
-            displayname = [NSString stringWithFormat:@"(%d) %@",count, roomName];
-        }
-        else if (members.count == 2)
-        {
-            // this is a "one to one" room and should have the name of other user
-            
-            for (NSString *memberUserId in members.allKeys)
+            else if (members.count == 1)
             {
-                if (NO == [memberUserId isEqualToString:mxSession.matrixRestClient.credentials.userId])
+                // this could be just us (self-chat) or could be the other person
+                // in a room if they have invited us to the room. Find out which
+                
+                NSString *otherUserId;
+                
+                MXRoomMember *member = members.allValues[0];
+                
+                if ([mxSession.matrixRestClient.credentials.userId isEqualToString:member.userId])
                 {
-                    displayname = [self memberName:memberUserId];
-                    break;
+                    // It is an invite or a self chat
+                    otherUserId = member.originUserId;
                 }
+                else
+                {
+                    // XXX: Not sure how it can happen
+                    // The logged-in user should be always in the list of the room members
+                    otherUserId = member.userId;
+                }
+                displayname = [self memberName:otherUserId];
             }
-        }
-        else if (members.count == 1)
-        {
-            // this could be just us (self-chat) or could be the other person
-            // in a room if they have invited us to the room. Find out which
-            
-            NSString *otherUserId;
-            
-            MXRoomMember *member = members.allValues[0];
-            
-            if ([mxSession.matrixRestClient.credentials.userId isEqualToString:member.userId])
-            {
-                // It is an invite or a self chat
-                otherUserId = member.originUserId;
-            }
-            else
-            {
-                // XXX: Not sure how it can happen
-                // The logged-in user should be always in the list of the room members
-                otherUserId = member.userId;
-            }
-            displayname = [self memberName:otherUserId];
         }
     }
-    
-    // Always show the alias in the room displayed name
-    if (displayname && alias && NO == [displayname isEqualToString:alias])
+    else if (([displayname hasPrefix:@"#"] == NO) && alias)
     {
+        // Always show the alias in the room displayed name
         displayname = [NSString stringWithFormat:@"%@ (%@)", displayname, alias];
     }
     

@@ -105,18 +105,22 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
     return [mxSession.matrixRestClient pushRules:^(MXPushRulesResponse *pushRules) {
 
         _rules = pushRules;
-        flatRules = [NSMutableArray array];
-
-        // Add rules by their priority
-
-        // @TODO: manage device rules
-
-        // Global rules
-        [flatRules addObjectsFromArray:pushRules.global.override];
-        [flatRules addObjectsFromArray:pushRules.global.content];
-        [flatRules addObjectsFromArray:pushRules.global.room];
-        [flatRules addObjectsFromArray:pushRules.global.sender];
-        [flatRules addObjectsFromArray:pushRules.global.underride];
+        
+        @synchronized(self)
+        {
+            flatRules = [NSMutableArray array];
+            
+            // Add rules by their priority
+            
+            // @TODO: manage device rules
+            
+            // Global rules
+            [flatRules addObjectsFromArray:pushRules.global.override];
+            [flatRules addObjectsFromArray:pushRules.global.content];
+            [flatRules addObjectsFromArray:pushRules.global.room];
+            [flatRules addObjectsFromArray:pushRules.global.sender];
+            [flatRules addObjectsFromArray:pushRules.global.underride];
+        }
 
         if (success)
         {
@@ -147,103 +151,106 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
     {
         NSDictionary *JSONDictionary = nil;
         
-        // Check rules one by one according to their priorities
-        for (MXPushRule *rule in flatRules)
+        @synchronized(self)
         {
-            // Skip disabled rules
-            if (!rule.enabled)
+            // Check rules one by one according to their priorities
+            for (MXPushRule *rule in flatRules)
             {
-                continue;
-            }
-            
-            if (!JSONDictionary)
-            {
-                JSONDictionary = event.originalDictionary;
-            }
-
-            BOOL conditionsOk = YES;
-
-            // The test depends of the kind of the rule
-            switch (rule.kind)
-            {
-                case MXPushRuleKindOverride:
-                case MXPushRuleKindUnderride:
+                // Skip disabled rules
+                if (!rule.enabled)
                 {
-                    // Check all conditions described by the rule
-                    // If there is no condition, the rule must be applied
-                    conditionsOk = YES;
-
-                    for (MXPushRuleCondition *condition in rule.conditions)
+                    continue;
+                }
+                
+                if (!JSONDictionary)
+                {
+                    JSONDictionary = event.originalDictionary;
+                }
+                
+                BOOL conditionsOk = YES;
+                
+                // The test depends of the kind of the rule
+                switch (rule.kind)
+                {
+                    case MXPushRuleKindOverride:
+                    case MXPushRuleKindUnderride:
                     {
-                        id<MXPushRuleConditionChecker> checker = [conditionCheckers valueForKey:condition.kind];
-                        if (checker)
+                        // Check all conditions described by the rule
+                        // If there is no condition, the rule must be applied
+                        conditionsOk = YES;
+                        
+                        for (MXPushRuleCondition *condition in rule.conditions)
                         {
-                            conditionsOk = [checker isCondition:condition satisfiedBy:event withJsonDict:JSONDictionary];
-                            if (NO == conditionsOk)
+                            id<MXPushRuleConditionChecker> checker = [conditionCheckers valueForKey:condition.kind];
+                            if (checker)
                             {
-                                // Do not need to go further
-                                break;
+                                conditionsOk = [checker isCondition:condition satisfiedBy:event withJsonDict:JSONDictionary];
+                                if (NO == conditionsOk)
+                                {
+                                    // Do not need to go further
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                NSLog(@"[MXNotificationCenter] Warning: There is no MXPushRuleConditionChecker to check condition of kind: %@", condition.kind);
+                                conditionsOk = NO;
                             }
                         }
-                        else
-                        {
-                            NSLog(@"[MXNotificationCenter] Warning: There is no MXPushRuleConditionChecker to check condition of kind: %@", condition.kind);
-                            conditionsOk = NO;
-                        }
+                        break;
                     }
-                    break;
+                        
+                    case MXPushRuleKindContent:
+                    {
+                        // Content rules are rules on the "content.body" field
+                        // Tranlate this into a fake condition
+                        MXPushRuleCondition *equivalentCondition = [[MXPushRuleCondition alloc] init];
+                        equivalentCondition.kindType = MXPushRuleConditionTypeEventMatch;
+                        equivalentCondition.parameters = @{
+                                                           @"key": @"content.body",
+                                                           @"pattern": rule.pattern
+                                                           };
+                        
+                        conditionsOk = [eventMatchConditionChecker isCondition:equivalentCondition satisfiedBy:event withJsonDict:JSONDictionary];
+                        break;
+                    }
+                        
+                    case MXPushRuleKindRoom:
+                    {
+                        // Room rules are rules on the "room_id" field
+                        // Translate this into a fake condition
+                        MXPushRuleCondition *equivalentCondition = [[MXPushRuleCondition alloc] init];
+                        equivalentCondition.kindType = MXPushRuleConditionTypeEventMatch;
+                        equivalentCondition.parameters = @{
+                                                           @"key": @"room_id",
+                                                           @"pattern": rule.ruleId
+                                                           };
+                        
+                        conditionsOk = [eventMatchConditionChecker isCondition:equivalentCondition satisfiedBy:event withJsonDict:JSONDictionary];
+                        break;
+                    }
+                        
+                    case MXPushRuleKindSender:
+                    {
+                        // Sender rules are rules on the "user_id" field
+                        // Translate this into a fake condition
+                        MXPushRuleCondition *equivalentCondition = [[MXPushRuleCondition alloc] init];
+                        equivalentCondition.kindType = MXPushRuleConditionTypeEventMatch;
+                        equivalentCondition.parameters = @{
+                                                           @"key": @"user_id",
+                                                           @"pattern": rule.ruleId
+                                                           };
+                        
+                        conditionsOk = [eventMatchConditionChecker isCondition:equivalentCondition satisfiedBy:event withJsonDict:JSONDictionary];
+                        break;
+                    }
                 }
-
-                case MXPushRuleKindContent:
+                
+                if (conditionsOk)
                 {
-                    // Content rules are rules on the "content.body" field
-                    // Tranlate this into a fake condition
-                    MXPushRuleCondition *equivalentCondition = [[MXPushRuleCondition alloc] init];
-                    equivalentCondition.kindType = MXPushRuleConditionTypeEventMatch;
-                    equivalentCondition.parameters = @{
-                                                       @"key": @"content.body",
-                                                       @"pattern": rule.pattern
-                                                       };
-
-                    conditionsOk = [eventMatchConditionChecker isCondition:equivalentCondition satisfiedBy:event withJsonDict:JSONDictionary];
+                    theRule = rule;
                     break;
                 }
-
-                case MXPushRuleKindRoom:
-                {
-                    // Room rules are rules on the "room_id" field
-                    // Translate this into a fake condition
-                    MXPushRuleCondition *equivalentCondition = [[MXPushRuleCondition alloc] init];
-                    equivalentCondition.kindType = MXPushRuleConditionTypeEventMatch;
-                    equivalentCondition.parameters = @{
-                                                       @"key": @"room_id",
-                                                       @"pattern": rule.ruleId
-                                                       };
-
-                    conditionsOk = [eventMatchConditionChecker isCondition:equivalentCondition satisfiedBy:event withJsonDict:JSONDictionary];
-                    break;
-                }
-
-                case MXPushRuleKindSender:
-                {
-                    // Sender rules are rules on the "user_id" field
-                    // Translate this into a fake condition
-                    MXPushRuleCondition *equivalentCondition = [[MXPushRuleCondition alloc] init];
-                    equivalentCondition.kindType = MXPushRuleConditionTypeEventMatch;
-                    equivalentCondition.parameters = @{
-                                                       @"key": @"user_id",
-                                                       @"pattern": rule.ruleId
-                                                       };
-                    
-                    conditionsOk = [eventMatchConditionChecker isCondition:equivalentCondition satisfiedBy:event withJsonDict:JSONDictionary];
-                    break;
-                }
-            }
-            
-            if (conditionsOk)
-            {
-                theRule = rule;
-                break;
             }
         }
     }
@@ -253,11 +260,14 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
 
 - (MXPushRule*)ruleById:(NSString*)pushRuleId
 {
-    for (MXPushRule *rule in flatRules)
+    @synchronized(self)
     {
-        if ([rule.ruleId isEqualToString:pushRuleId])
+        for (MXPushRule *rule in flatRules)
         {
-            return rule;
+            if ([rule.ruleId isEqualToString:pushRuleId])
+            {
+                return rule;
+            }
         }
     }
     
@@ -305,61 +315,64 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
         
         [mxSession.matrixRestClient removePushRule:pushRule.ruleId scope:pushRule.scope kind:pushRule.kind success:^{
             
-            // Remove locally the rule
-            
-            // Caution: only global rules are handled presenly
-            for (NSUInteger index = 0; index < flatRules.count; index++)
+            @synchronized(self)
             {
-                MXPushRule *rule = flatRules[index];
+                // Remove locally the rule
                 
-                if ([rule.ruleId isEqualToString:pushRule.ruleId])
+                // Caution: only global rules are handled presenly
+                for (NSUInteger index = 0; index < flatRules.count; index++)
                 {
-                    [flatRules removeObjectAtIndex:index];
+                    MXPushRule *rule = flatRules[index];
                     
-                    NSMutableArray *updatedArray;
-                    switch (rule.kind)
+                    if ([rule.ruleId isEqualToString:pushRule.ruleId])
                     {
-                        case MXPushRuleKindOverride:
+                        [flatRules removeObjectAtIndex:index];
+                        
+                        NSMutableArray *updatedArray;
+                        switch (rule.kind)
                         {
-                            updatedArray = [NSMutableArray arrayWithArray:_rules.global.override];
-                            [updatedArray removeObject:rule];
-                            _rules.global.override = updatedArray;
-                            break;
+                            case MXPushRuleKindOverride:
+                            {
+                                updatedArray = [NSMutableArray arrayWithArray:_rules.global.override];
+                                [updatedArray removeObject:rule];
+                                _rules.global.override = updatedArray;
+                                break;
+                            }
+                            case MXPushRuleKindContent:
+                            {
+                                updatedArray = [NSMutableArray arrayWithArray:_rules.global.content];
+                                [updatedArray removeObject:rule];
+                                _rules.global.content = updatedArray;
+                                break;
+                            }
+                            case MXPushRuleKindRoom:
+                            {
+                                updatedArray = [NSMutableArray arrayWithArray:_rules.global.room];
+                                [updatedArray removeObject:rule];
+                                _rules.global.room = updatedArray;
+                                break;
+                            }
+                            case MXPushRuleKindSender:
+                            {
+                                updatedArray = [NSMutableArray arrayWithArray:_rules.global.sender];
+                                [updatedArray removeObject:rule];
+                                _rules.global.sender = updatedArray;
+                                break;
+                            }
+                            case MXPushRuleKindUnderride:
+                            {
+                                updatedArray = [NSMutableArray arrayWithArray:_rules.global.underride];
+                                [updatedArray removeObject:rule];
+                                _rules.global.underride = updatedArray;
+                                break;
+                            }
                         }
-                        case MXPushRuleKindContent:
-                        {
-                            updatedArray = [NSMutableArray arrayWithArray:_rules.global.content];
-                            [updatedArray removeObject:rule];
-                            _rules.global.content = updatedArray;
-                            break;
-                        }
-                        case MXPushRuleKindRoom:
-                        {
-                            updatedArray = [NSMutableArray arrayWithArray:_rules.global.room];
-                            [updatedArray removeObject:rule];
-                            _rules.global.room = updatedArray;
-                            break;
-                        }
-                        case MXPushRuleKindSender:
-                        {
-                            updatedArray = [NSMutableArray arrayWithArray:_rules.global.sender];
-                            [updatedArray removeObject:rule];
-                            _rules.global.sender = updatedArray;
-                            break;
-                        }
-                        case MXPushRuleKindUnderride:
-                        {
-                            updatedArray = [NSMutableArray arrayWithArray:_rules.global.underride];
-                            [updatedArray removeObject:rule];
-                            _rules.global.underride = updatedArray;
-                            break;
-                        }
+                        
+                        break;
                     }
-                    
-                    break;
                 }
             }
-            
+
             [[NSNotificationCenter defaultCenter] postNotificationName:kMXNotificationCenterDidUpdateRules object:self userInfo:nil];
             
         } failure:^(NSError *error) {
@@ -378,17 +391,20 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
         
         [mxSession.matrixRestClient enablePushRule:pushRule.ruleId scope:pushRule.scope kind:pushRule.kind enable:enable success:^{
             
-            // Update locally the rules
-            
-            // Caution: only global rules are handled presenly
-            for (NSUInteger index = 0; index < flatRules.count; index++)
+            @synchronized(self)
             {
-                MXPushRule *rule = flatRules[index];
+                // Update locally the rules
                 
-                if ([rule.ruleId isEqualToString:pushRule.ruleId])
+                // Caution: only global rules are handled presenly
+                for (NSUInteger index = 0; index < flatRules.count; index++)
                 {
-                    rule.enabled = enable;
-                    break;
+                    MXPushRule *rule = flatRules[index];
+                    
+                    if ([rule.ruleId isEqualToString:pushRule.ruleId])
+                    {
+                        rule.enabled = enable;
+                        break;
+                    }
                 }
             }
             
