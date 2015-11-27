@@ -178,6 +178,50 @@ FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeRecaptcha;
 
 
 /**
+ Room tags defined by Matrix spec.
+ */
+FOUNDATION_EXPORT NSString *const kMXRoomTagFavourite;
+FOUNDATION_EXPORT NSString *const kMXRoomTagLowPriority;
+
+/**
+ `MXRoomTag` represents a room tag.
+ */
+@interface MXRoomTag : NSObject <NSCoding>
+
+/**
+ The name of a tag.
+ */
+@property (nonatomic, readonly) NSString *name;
+
+/**
+ An optional information to order the room within a list of rooms with the same tag name.
+ If not nil, the `order` string is used to make lexicographically by unicode codepoint
+ comparison.
+ */
+@property (nonatomic, readonly) NSString *order;
+
+/**
+ Basic constructor.
+ 
+ @param name the tag name
+ @param order the order.
+ @return a new MXRoomTag instance.
+ */
+- (id)initWithName:(NSString*)name andOrder:(NSString*)order;
+
+/**
+ Extract a list of tags from a room tag event.
+ 
+ @param a room tag event (which can contains several tags)
+ @return a dictionary containing the tags the user defined for one room.
+         The key is the tag name. The value, the associated MXRoomTag object.
+ */
++ (NSDictionary<NSString*, MXRoomTag*>*)roomTagsWithTagEvent:(MXEvent*)event;
+
+@end
+
+
+/**
  Presence definitions
  */
 typedef enum : NSUInteger
@@ -524,6 +568,11 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
      The state events.
      */
     @property (nonatomic) NSArray<MXEvent*> *state;
+
+    /**
+     The private data that this user has attached to this room.
+     */
+    @property (nonatomic) NSArray<MXEvent*> *accountData;
 
     /**
      The current user membership in this room.

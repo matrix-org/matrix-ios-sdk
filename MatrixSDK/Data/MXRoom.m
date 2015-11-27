@@ -56,6 +56,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         
         _state = [[MXRoomState alloc] initWithRoomId:roomId andMatrixSession:mxSession2 andDirection:YES];
 
+        _accountData = [[MXRoomAccountData alloc] init];
+
         _typingUsers = [NSArray array];
         
         _acknowledgableEventTypes = @[kMXEventTypeStringRoomName,
@@ -116,7 +118,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     return self;
 }
 
-- (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession2 andStateEvents:(NSArray *)stateEvents
+- (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession2 andStateEvents:(NSArray *)stateEvents andAccountData:(MXRoomAccountData*)accountData
 {
     self = [self initWithRoomId:roomId andMatrixSession:mxSession2];
     if (self)
@@ -127,6 +129,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             {
                 [self handleStateEvent:event direction:MXEventDirectionSync];
             }
+
+            _accountData = accountData;
         }
     }
     return self;
@@ -484,6 +488,26 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     }
 }
 
+
+#pragma mark - Room private account data handling
+- (void)handleAccounDataEvents:(NSArray<MXEvent*>*)accounDataEvents direction:(MXEventDirection)direction
+{
+    for (MXEvent *event in accounDataEvents)
+    {
+        [_accountData handleEvent:event];
+
+        // Update the store
+        if ([mxSession.store respondsToSelector:@selector(storeAccountDataForRoom:userData:)])
+        {
+            [mxSession.store storeAccountDataForRoom:_state.roomId userData:_accountData];
+        }
+
+        // And notify listeners
+        [self notifyListeners:event direction:direction];
+    }
+}
+
+
 #pragma mark - Back pagination
 - (void)resetBackState
 {
@@ -733,6 +757,48 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 }
 
 
+#pragma mark - Room tags operations
+- (MXHTTPOperation*)addTag:(NSString*)tag
+                 withOrder:(NSString*)order
+                   success:(void (^)())success
+                   failure:(void (^)(NSError *error))failure
+{
+    // _accountData.tags will be updated by the live streams
+    return [mxSession.matrixRestClient addTag:tag withOrder:order toRoom:_state.roomId success:success failure:failure];
+}
+
+- (MXHTTPOperation*)removeTag:(NSString*)tag
+                      success:(void (^)())success
+                      failure:(void (^)(NSError *error))failure
+{
+    // _accountData.tags will be updated by the live streams
+    return [mxSession.matrixRestClient removeTag:tag fromRoom:_state.roomId success:success failure:failure];
+}
+
+- (MXHTTPOperation*)replaceTag:(NSString*)oldTag
+                         byTag:(NSString*)newTag
+                     withOrder:(NSString*)newTagOrder
+                       success:(void (^)())success
+                       failure:(void (^)(NSError *error))failure
+{
+    // Combine remove and add tag operations
+    MXHTTPOperation *removeTageHttpOperation = [self removeTag:oldTag success:^{
+
+        if (newTag)
+        {
+            MXHTTPOperation *addTagHttpOperation = [self addTag:newTag withOrder:newTagOrder success:success failure:failure];
+
+            // Transfer the new AFHTTPRequestOperation to the returned MXHTTPOperation
+            // So that user has hand on it
+            removeTageHttpOperation.operation = addTagHttpOperation.operation;
+        }
+
+    } failure:failure];
+
+    return removeTageHttpOperation;
+}
+
+
 #pragma mark - Voice over IP
 - (MXCall *)placeCallWithVideo:(BOOL)video
 {
@@ -915,6 +981,11 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 - (NSArray*)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort
 {
     return [mxSession.store getEventReceipts:_state.roomId eventId:eventId sorted:sort];
+}
+
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"<MXRoom: %p> %@: %@ - %@", self, _state.roomId, _state.name, _state.topic];
 }
 
 @end

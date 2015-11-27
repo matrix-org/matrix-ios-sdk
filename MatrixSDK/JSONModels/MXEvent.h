@@ -39,6 +39,7 @@ typedef enum : NSUInteger
     MXEventTypeRoomMessage,
     MXEventTypeRoomMessageFeedback,
     MXEventTypeRoomRedaction,
+    MXEventTypeRoomTag,
     MXEventTypePresence,
     MXEventTypeTypingNotification,
     MXEventTypeCallInvite,
@@ -67,6 +68,7 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomCanonicalAlias;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomMessage;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomMessageFeedback;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomRedaction;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomTag;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringPresence;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringTypingNotification;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringReceipt;
@@ -250,5 +252,15 @@ Contains the fully-qualified ID of the user who sent this event (deprecated sinc
  but we do want to keep necessary information like type, state_key etc.
  */
 - (MXEvent*)prune;
+
+/**
+ Comparator to use to order array of events by their originServerTs value.
+ 
+ Arrays are then sorting so that the newest event will be positionned at index 0.
+ 
+ @param otherEvent the MXEvent object to compare with self.
+ @return a NSComparisonResult value: NSOrderedDescending if otherEvent is newer than self.
+ */
+- (NSComparisonResult)compareOriginServerTs:(MXEvent *)otherEvent;
 
 @end

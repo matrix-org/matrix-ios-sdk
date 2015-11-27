@@ -1284,6 +1284,108 @@ MXAuthAction;
 }
 
 
+#pragma mark - Room tags operations
+- (MXHTTPOperation*)tagsOfRoom:(NSString*)roomId
+                       success:(void (^)(NSArray<MXRoomTag*> *tags))success
+                       failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"v2_alpha/user/%@/rooms/%@/tags", credentials.userId, roomId];
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success)
+                                     {
+                                         // Use here the processing queue in order to keep the server response order
+                                         dispatch_async(processingQueue, ^{
+
+                                             // Sort the response into an array of MXRoomTags
+                                             NSMutableArray *tags = [NSMutableArray array];
+                                             for (NSString *tagName in JSONResponse[@"tags"])
+                                             {
+                                                 MXRoomTag *tag = [[MXRoomTag alloc] initWithName:tagName andOrder:JSONResponse[@"tags"][tagName][@"order"]];
+                                                 [tags addObject:tag];
+                                             }
+
+                                             dispatch_async(dispatch_get_main_queue(), ^{
+
+                                                 success(tags);
+
+                                             });
+                                         });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                 }];
+}
+
+- (MXHTTPOperation*)addTag:(NSString*)tag
+                 withOrder:(NSString*)order
+                    toRoom:(NSString*)roomId
+                   success:(void (^)())success
+                   failure:(void (^)(NSError *error))failure
+{
+   NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+    if (order)
+    {
+        parameters[@"order"] = order;
+    }
+
+    NSString *path = [NSString stringWithFormat:@"v2_alpha/user/%@/rooms/%@/tags/%@", credentials.userId, roomId, tag];
+    return [httpClient requestWithMethod:@"PUT"
+                                    path:path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success)
+                                     {
+                                         // Use here the processing queue in order to keep the server response order
+                                         dispatch_async(processingQueue, ^{
+
+                                             dispatch_async(dispatch_get_main_queue(), ^{
+
+                                                 success();
+
+                                             });
+
+                                         });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                 }];
+}
+
+- (MXHTTPOperation*)removeTag:(NSString*)tag
+                     fromRoom:(NSString*)roomId
+                      success:(void (^)())success
+                      failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"v2_alpha/user/%@/rooms/%@/tags/%@", credentials.userId, roomId, tag];
+    return [httpClient requestWithMethod:@"DELETE"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success)
+                                     {
+                                         success();
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                 }];
+}
+
+
 #pragma mark - Profile operations
 - (MXHTTPOperation*)setDisplayName:(NSString*)displayname
                            success:(void (^)())success

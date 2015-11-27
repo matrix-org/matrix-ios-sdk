@@ -140,6 +140,69 @@ NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
 @end
 
 
+NSString *const kMXRoomTagFavourite = @"m.favourite";
+NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
+
+@implementation MXRoomTag
+
+- (id)initWithName:(NSString *)name andOrder:(NSString *)order
+{
+    self = [super init];
+    if (self)
+    {
+        _name = name;
+        _order = order;
+    }
+    return self;
+}
+
++ (NSDictionary<NSString *,MXRoomTag *> *)roomTagsWithTagEvent:(MXEvent *)event
+{
+    NSMutableDictionary *tags = [NSMutableDictionary dictionary];
+    for (NSString *tagName in event.content[@"tags"])
+    {
+        NSString *order;
+
+        // Be robust if the server sends an integer tag order
+        if ([event.content[@"tags"][tagName][@"order"] isKindOfClass:NSNumber.class])
+        {
+            NSLog(@"[MXRoomTag] Warning: the room tag order is an integer value not a string in this event: %@", event);
+            order = [event.content[@"tags"][tagName][@"order"] stringValue];
+        }
+        else
+        {
+            order = event.content[@"tags"][tagName][@"order"];
+        }
+
+        tags[tagName] = [[MXRoomTag alloc] initWithName:tagName andOrder:order];
+    }
+    return tags;
+}
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super init];
+    if (self)
+    {
+        _name = [aDecoder decodeObjectForKey:@"name"];
+        _order = [aDecoder decodeObjectForKey:@"order"];
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    [aCoder encodeObject:_name forKey:@"name"];
+    [aCoder encodeObject:_order forKey:@"order"];
+}
+
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"<MXRoomTag: %p> %@: %@", self, _name, _order];
+}
+
+@end
+
 NSString *const kMXPresenceOnline = @"online";
 NSString *const kMXPresenceUnavailable = @"unavailable";
 NSString *const kMXPresenceOffline = @"offline";
@@ -479,6 +542,7 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
         initialSync.roomId = JSONDictionary[@"room_id"];
         initialSync.messages = [MXPaginationResponse modelFromJSON:JSONDictionary[@"messages"]];
         initialSync.state = [MXEvent modelsFromJSON:JSONDictionary[@"state"]];
+        initialSync.accountData = [MXEvent modelsFromJSON:JSONDictionary[@"account_data"]];
         initialSync.membership = JSONDictionary[@"membership"];
         initialSync.visibility = JSONDictionary[@"visibility"];
         initialSync.inviter = JSONDictionary[@"inviter"];

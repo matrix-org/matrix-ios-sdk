@@ -59,6 +59,8 @@
 		3245A7521AF7B2930001D8A7 /* MXCallManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 3245A74E1AF7B2930001D8A7 /* MXCallManager.h */; };
 		3245A7531AF7B2930001D8A7 /* MXCallManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 3245A74F1AF7B2930001D8A7 /* MXCallManager.m */; };
 		3246BDC51A1A0789000A7D62 /* MXRoomStateDynamicTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3246BDC41A1A0789000A7D62 /* MXRoomStateDynamicTests.m */; };
+		32481A841C03572900782AD3 /* MXRoomAccountData.h in Headers */ = {isa = PBXBuildFile; fileRef = 32481A821C03572900782AD3 /* MXRoomAccountData.h */; };
+		32481A851C03572900782AD3 /* MXRoomAccountData.m in Sources */ = {isa = PBXBuildFile; fileRef = 32481A831C03572900782AD3 /* MXRoomAccountData.m */; };
 		325653831A2E14ED00CC0423 /* MXStoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 325653821A2E14ED00CC0423 /* MXStoreTests.m */; };
 		3264E2A21BDF8D1500F89A86 /* MXCoreDataRoomState.h in Headers */ = {isa = PBXBuildFile; fileRef = 3264E29E1BDF8D1500F89A86 /* MXCoreDataRoomState.h */; };
 		3264E2A31BDF8D1500F89A86 /* MXCoreDataRoomState.m in Sources */ = {isa = PBXBuildFile; fileRef = 3264E29F1BDF8D1500F89A86 /* MXCoreDataRoomState.m */; };
@@ -199,6 +201,8 @@
 		3245A74E1AF7B2930001D8A7 /* MXCallManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallManager.h; sourceTree = "<group>"; };
 		3245A74F1AF7B2930001D8A7 /* MXCallManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCallManager.m; sourceTree = "<group>"; };
 		3246BDC41A1A0789000A7D62 /* MXRoomStateDynamicTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRoomStateDynamicTests.m; sourceTree = "<group>"; };
+		32481A821C03572900782AD3 /* MXRoomAccountData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRoomAccountData.h; sourceTree = "<group>"; };
+		32481A831C03572900782AD3 /* MXRoomAccountData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRoomAccountData.m; sourceTree = "<group>"; };
 		325653821A2E14ED00CC0423 /* MXStoreTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXStoreTests.m; sourceTree = "<group>"; };
 		3264E29E1BDF8D1500F89A86 /* MXCoreDataRoomState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCoreDataRoomState.h; sourceTree = "<group>"; };
 		3264E29F1BDF8D1500F89A86 /* MXCoreDataRoomState.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCoreDataRoomState.m; sourceTree = "<group>"; };
@@ -310,6 +314,8 @@
 				320DFDCB19DD99B60068622A /* MXRoom.m */,
 				3265CB361A14C43E00E24B2F /* MXRoomState.h */,
 				3265CB371A14C43E00E24B2F /* MXRoomState.m */,
+				32481A821C03572900782AD3 /* MXRoomAccountData.h */,
+				32481A831C03572900782AD3 /* MXRoomAccountData.m */,
 				3220093619EFA4C9008DE41D /* MXEventListener.h */,
 				3220093719EFA4C9008DE41D /* MXEventListener.m */,
 				3220094319EFBF30008DE41D /* MXSessionEventListener.h */,
@@ -608,6 +614,7 @@
 				3264E2A41BDF8D1500F89A86 /* MXCoreDataRoomState+CoreDataProperties.h in Headers */,
 				329FB1791A0A74B100A5E88E /* MXTools.h in Headers */,
 				323B2B001BCE9B6700B11F34 /* MXCoreDataEvent.h in Headers */,
+				32481A841C03572900782AD3 /* MXRoomAccountData.h in Headers */,
 				3281E8B919E42DFE00976E1A /* MXJSONModels.h in Headers */,
 				323B2AFE1BCE9B6700B11F34 /* MXCoreDataEvent+CoreDataProperties.h in Headers */,
 				323B2ADF1BCD4CB600B11F34 /* MXCoreDataAccount+CoreDataProperties.h in Headers */,
@@ -771,6 +778,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				323B2AF71BCE8AC800B11F34 /* MXCoreDataRoom+CoreDataProperties.m in Sources */,
+				32481A851C03572900782AD3 /* MXRoomAccountData.m in Sources */,
 				322360531A8E610500A3CA81 /* MXPushRuleDisplayNameCondtionChecker.m in Sources */,
 				323E0C581A2F6E7D00A31D73 /* MXRoomPowerLevels.m in Sources */,
 				32DC15D51A8CF874006F9AD3 /* MXPushRuleEventMatchConditionChecker.m in Sources */,

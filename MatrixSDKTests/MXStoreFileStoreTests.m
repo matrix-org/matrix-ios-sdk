@@ -198,6 +198,11 @@
     [self checkMultiAccount:MXFileStore.class];
 }
 
+- (void)testMXFileStoreRoomAccountDataTags
+{
+    [self checkRoomAccountDataTags:MXFileStore.class];
+}
+
 @end
 
 #pragma clang diagnostic pop

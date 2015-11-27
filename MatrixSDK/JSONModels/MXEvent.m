@@ -31,6 +31,7 @@ NSString *const kMXEventTypeStringRoomCanonicalAlias  = @"m.room.canonical_alias
 NSString *const kMXEventTypeStringRoomMessage         = @"m.room.message";
 NSString *const kMXEventTypeStringRoomMessageFeedback = @"m.room.message.feedback";
 NSString *const kMXEventTypeStringRoomRedaction       = @"m.room.redaction";
+NSString *const kMXEventTypeStringRoomTag             = @"m.tag";
 NSString *const kMXEventTypeStringPresence            = @"m.presence";
 NSString *const kMXEventTypeStringTypingNotification  = @"m.typing";
 NSString *const kMXEventTypeStringReceipt             = @"m.receipt";
@@ -310,6 +311,20 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     // Note: Contrary to server, we ignore here the "unsigned" event level key.
     
     return [MXEvent modelFromJSON:prunedEventDict];
+}
+
+- (NSComparisonResult)compareOriginServerTs:(MXEvent *)otherEvent
+{
+    NSComparisonResult result = NSOrderedAscending;
+    if (otherEvent.originServerTs > _originServerTs)
+    {
+        result = NSOrderedDescending;
+    }
+    else if (otherEvent.originServerTs == _originServerTs)
+    {
+        result = NSOrderedSame;
+    }
+    return result;
 }
 
 

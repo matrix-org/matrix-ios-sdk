@@ -1172,6 +1172,105 @@
     }];
 }
 
+- (void)checkRoomAccountDataTags:(Class)mxStoreClass
+{
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+
+    [sharedData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation2) {
+
+        expectation = expectation2;
+
+        // Create 2 rooms with the same tag and one with another
+        NSString *tag1 = [[NSProcessInfo processInfo] globallyUniqueString];
+        NSString *tag2 = [[NSProcessInfo processInfo] globallyUniqueString];
+
+        // Room #1
+        [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:@"2" success:^(MXCreateRoomResponse *response) {
+            [bobRestClient addTag:tag1 withOrder:@"0.2"  toRoom:response.roomId success:^{
+
+                // Room #2
+                [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:@"1" success:^(MXCreateRoomResponse *response) {
+                    [bobRestClient addTag:tag1 withOrder:@"0.1" toRoom:response.roomId success:^{
+
+                        // Room #3
+                        [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:@"the only one" success:^(MXCreateRoomResponse *response) {
+                            [bobRestClient addTag:tag2 withOrder:@"0.1" toRoom:response.roomId success:^{
+
+
+                                // Do the test
+                                id<MXStore> store = [[mxStoreClass alloc] init];
+                                [store openWithCredentials:sharedData.bobCredentials onComplete:^{
+
+                                    // Make sure to start from an empty store
+                                    [store deleteAllData];
+
+                                    if ([store respondsToSelector:@selector(close)])
+                                    {
+                                        [store close];
+                                    }
+
+                                    // Do a 1st [mxSession start] to fill the store
+                                    mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                                    [mxSession setStore:store success:^{
+                                        [mxSession start:^{
+
+                                            [mxSession close];
+                                            mxSession = nil;
+
+                                            // Reopen a session and check roomAccountData
+                                            id<MXStore> store2 = [[mxStoreClass alloc] init];
+
+                                            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                                            [mxSession setStore:store2 success:^{
+
+                                                NSArray<MXRoom*> *roomsWithTagTag1 = [mxSession roomsWithTag:tag1];
+                                                XCTAssertEqual(roomsWithTagTag1.count, 2);
+                                                XCTAssertEqualObjects(roomsWithTagTag1[0].accountData.tags[tag1].order, @"0.1");
+                                                XCTAssertEqualObjects(roomsWithTagTag1[1].accountData.tags[tag1].order, @"0.2");
+
+                                                NSArray<MXRoom*> *roomsWithTagTag2 = [mxSession roomsWithTag:tag2];
+                                                XCTAssertEqual(roomsWithTagTag2.count, 1);
+                                                XCTAssertEqualObjects(roomsWithTagTag2[0].accountData.tags[tag2].order, @"0.1");
+
+                                                [expectation fulfill];
+
+                                            } failure:^(NSError *error) {
+                                                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                                            }];
+
+                                        } failure:^(NSError *error) {
+                                            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                                        }];
+
+                                    } failure:^(NSError *error) {
+                                        XCTFail(@"The request should not fail - NSError: %@", error);
+                                        [expectation fulfill];
+                                    }];
+
+                                } failure:^(NSError *error) {
+                                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                                }];
+                            } failure:^(NSError *error) {
+                                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                            }];
+                        } failure:^(NSError *error) {
+                            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                        }];
+                    } failure:^(NSError *error) {
+                        NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                    }];
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                }];
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop
