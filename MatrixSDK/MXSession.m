@@ -1829,6 +1829,12 @@ typedef void (^MXOnResumeDone)();
     {
         // Do a lexicographic comparison
         result = [tag1.order localizedCompare:tag2.order];
+
+        // In case of same order, order rooms by their last event
+        if (NSOrderedSame == result)
+        {
+            result = [[room1 lastMessageWithTypeIn:nil] compareOriginServerTs:[room2 lastMessageWithTypeIn:nil]];
+        }
     }
     return result;
 }
