@@ -478,6 +478,35 @@ typedef enum : NSUInteger
                     success:(void (^)(NSString *topic))success
                     failure:(void (^)(NSError *error))failure;
 
+
+/**
+ Set the avatar of a room.
+
+ @param roomId the id of the room.
+ @param avatar the avatar url to set.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setRoomAvatar:(NSString*)roomId
+                           avatar:(NSString*)avatar
+                          success:(void (^)())success
+                          failure:(void (^)(NSError *error))failure;
+
+/**
+ Get the avatar of a room.
+
+ @param roomId the id of the room.
+ @param success A block object called when the operation succeeds. It provides the room avatar url.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)avatarOfRoom:(NSString*)roomId
+                        success:(void (^)(NSString *avatar))success
+                        failure:(void (^)(NSError *error))failure;
+
 /**
  Set the name of a room.
  

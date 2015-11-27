@@ -100,6 +100,32 @@
     }];
 }
 
+- (void)testRoomAvatar
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        __block MXRestClient *bobRestClient2 = bobRestClient;
+        [bobRestClient setRoomAvatar:roomId avatar:@"http://matrix.org/matrix.png" success:^{
+
+            [bobRestClient2 avatarOfRoom:roomId success:^(NSString *avatar) {
+
+                XCTAssertNotNil(avatar);
+                XCTAssertNotEqual(avatar.length, 0);
+                XCTAssertEqualObjects(avatar, @"http://matrix.org/matrix.png");
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 - (void)testRoomName
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
