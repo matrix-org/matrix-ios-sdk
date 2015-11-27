@@ -18,6 +18,9 @@
 
 #import "MXJSONModels.h"
 
+/**
+ `MXRoomAccountData` represents private data that the user has defined for a room.
+ */
 @interface MXRoomAccountData : NSObject <NSCoding>
 
 /**
