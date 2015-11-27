@@ -782,7 +782,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                        failure:(void (^)(NSError *error))failure
 {
     // Combine remove and add tag operations
-    MXHTTPOperation *removeTageHttpOperation = [self removeTag:oldTag success:^{
+    MXHTTPOperation *removeTageHttpOperation;
+    removeTageHttpOperation = [self removeTag:oldTag success:^{
 
         if (newTag)
         {
