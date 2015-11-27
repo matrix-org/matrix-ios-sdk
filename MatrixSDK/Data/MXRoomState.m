@@ -248,6 +248,19 @@
     return topic;
 }
 
+- (NSString *)avatar
+{
+    NSString *avatar;
+
+    // Check it from the state events
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomAvatar];
+    if (event && [self contentOfEvent:event])
+    {
+        avatar = [[self contentOfEvent:event][@"url"] copy];
+    }
+    return avatar;
+}
+
 - (NSString *)displayname
 {
     // Reuse the Synapse web client algo

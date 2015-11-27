@@ -779,6 +779,72 @@ MXAuthAction;
                                  }];
 }
 
+
+- (MXHTTPOperation *)setRoomAvatar:(NSString *)roomId
+                            avatar:(NSString *)avatar
+                           success:(void (^)())success
+                           failure:(void (^)(NSError *))failure
+{
+    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/state/m.room.avatar", roomId];
+    return [httpClient requestWithMethod:@"PUT"
+                                    path:path
+                              parameters:@{
+                                           @"url": avatar
+                                           }
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success)
+                                     {
+                                         // Use here the processing queue in order to keep the server response order
+                                         dispatch_async(processingQueue, ^{
+
+                                             dispatch_async(dispatch_get_main_queue(), ^{
+
+                                                 success();
+
+                                             });
+
+                                         });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                 }];
+}
+
+- (MXHTTPOperation *)avatarOfRoom:(NSString *)roomId
+                          success:(void (^)(NSString *))success
+                          failure:(void (^)(NSError *))failure
+{
+    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/state/m.room.avatar", roomId];
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success)
+                                     {
+                                         // Use here the processing queue in order to keep the server response order
+                                         dispatch_async(processingQueue, ^{
+
+                                             dispatch_async(dispatch_get_main_queue(), ^{
+
+                                                 success(JSONResponse[@"url"]);
+
+                                             });
+
+                                         });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                 }];
+}
+
 - (MXHTTPOperation*)setRoomName:(NSString*)roomId
                            name:(NSString*)name
                         success:(void (^)())success

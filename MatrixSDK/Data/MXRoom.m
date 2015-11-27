@@ -62,6 +62,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         
         _acknowledgableEventTypes = @[kMXEventTypeStringRoomName,
                                       kMXEventTypeStringRoomTopic,
+                                      kMXEventTypeStringRoomAvatar,
                                       kMXEventTypeStringRoomMember,
                                       kMXEventTypeStringRoomCreate,
                                       kMXEventTypeStringRoomJoinRules,
@@ -669,6 +670,14 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 {
     return [mxSession.matrixRestClient setRoomTopic:_state.roomId topic:topic success:success failure:failure];
 }
+
+- (MXHTTPOperation*)setAvatar:(NSString*)avatar
+                     success:(void (^)())success
+                     failure:(void (^)(NSError *error))failure
+{
+    return [mxSession.matrixRestClient setRoomAvatar:_state.roomId avatar:avatar success:success failure:failure];
+}
+
 
 - (MXHTTPOperation*)setName:(NSString*)name
                     success:(void (^)())success
