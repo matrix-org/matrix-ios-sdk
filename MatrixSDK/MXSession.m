@@ -1817,25 +1817,26 @@ typedef void (^MXOnResumeDone)();
     MXRoomTag *tag1 = room1.accountData.tags[tag];
     MXRoomTag *tag2 = room2.accountData.tags[tag];
 
-    if (tag1.order && !tag2.order)
-    {
-        result = NSOrderedAscending;
-    }
-    else if (!tag1.order && tag2.order)
-    {
-        result = NSOrderedDescending;
-    }
-    else
+    if (tag1.order && tag2.order)
     {
         // Do a lexicographic comparison
         result = [tag1.order localizedCompare:tag2.order];
-
-        // In case of same order, order rooms by their last event
-        if (NSOrderedSame == result)
-        {
-            result = [[room1 lastMessageWithTypeIn:nil] compareOriginServerTs:[room2 lastMessageWithTypeIn:nil]];
-        }
     }
+    else if (tag1.order)
+    {
+        result = NSOrderedAscending;
+    }
+    else if (tag2.order)
+    {
+        result = NSOrderedDescending;
+    }
+
+    // In case of same order, order rooms by their last event
+    if (NSOrderedSame == result)
+    {
+        result = [[room1 lastMessageWithTypeIn:nil] compareOriginServerTs:[room2 lastMessageWithTypeIn:nil]];
+    }
+
     return result;
 }
 
