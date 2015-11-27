@@ -161,7 +161,20 @@ NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
     NSMutableDictionary *tags = [NSMutableDictionary dictionary];
     for (NSString *tagName in event.content[@"tags"])
     {
-        tags[tagName] = [[MXRoomTag alloc] initWithName:tagName andOrder:event.content[@"tags"][tagName][@"order"]];
+        NSString *order;
+
+        // Be robust if the server sends an integer tag order
+        if ([event.content[@"tags"][tagName][@"order"] isKindOfClass:NSNumber.class])
+        {
+            NSLog(@"[MXRoomTag] Warning: the room tag order is an integer value not a string in this event: %@", event);
+            order = [event.content[@"tags"][tagName][@"order"] stringValue];
+        }
+        else
+        {
+            order = event.content[@"tags"][tagName][@"order"];
+        }
+
+        tags[tagName] = [[MXRoomTag alloc] initWithName:tagName andOrder:order];
     }
     return tags;
 }
@@ -181,6 +194,11 @@ NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
 {
     [aCoder encodeObject:_name forKey:@"name"];
     [aCoder encodeObject:_order forKey:@"order"];
+}
+
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"<MXRoomTag: %p> %@: %@", self, _name, _order];
 }
 
 @end
