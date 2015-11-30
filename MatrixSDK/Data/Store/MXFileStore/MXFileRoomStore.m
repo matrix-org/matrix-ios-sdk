@@ -29,6 +29,16 @@
         self.paginationToken = [aDecoder decodeObjectForKey:@"paginationToken"];
 
         self.hasReachedHomeServerPaginationEnd = [aDecoder decodeBoolForKey:@"hasReachedHomeServerPaginationEnd"];
+
+        // Rebuild the messagesByEventIds cache
+        for (MXEvent *event in messages)
+        {
+            if (event.eventId)
+            {
+                messagesByEventIds[event.eventId] = event;
+            }
+        }
+
     }
     return self;
 }

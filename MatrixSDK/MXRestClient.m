@@ -779,6 +779,72 @@ MXAuthAction;
                                  }];
 }
 
+
+- (MXHTTPOperation *)setRoomAvatar:(NSString *)roomId
+                            avatar:(NSString *)avatar
+                           success:(void (^)())success
+                           failure:(void (^)(NSError *))failure
+{
+    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/state/m.room.avatar", roomId];
+    return [httpClient requestWithMethod:@"PUT"
+                                    path:path
+                              parameters:@{
+                                           @"url": avatar
+                                           }
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success)
+                                     {
+                                         // Use here the processing queue in order to keep the server response order
+                                         dispatch_async(processingQueue, ^{
+
+                                             dispatch_async(dispatch_get_main_queue(), ^{
+
+                                                 success();
+
+                                             });
+
+                                         });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                 }];
+}
+
+- (MXHTTPOperation *)avatarOfRoom:(NSString *)roomId
+                          success:(void (^)(NSString *))success
+                          failure:(void (^)(NSError *))failure
+{
+    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/state/m.room.avatar", roomId];
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success)
+                                     {
+                                         // Use here the processing queue in order to keep the server response order
+                                         dispatch_async(processingQueue, ^{
+
+                                             dispatch_async(dispatch_get_main_queue(), ^{
+
+                                                 success(JSONResponse[@"url"]);
+
+                                             });
+
+                                         });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                 }];
+}
+
 - (MXHTTPOperation*)setRoomName:(NSString*)roomId
                            name:(NSString*)name
                         success:(void (^)())success
@@ -1284,6 +1350,108 @@ MXAuthAction;
 }
 
 
+#pragma mark - Room tags operations
+- (MXHTTPOperation*)tagsOfRoom:(NSString*)roomId
+                       success:(void (^)(NSArray<MXRoomTag*> *tags))success
+                       failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"v2_alpha/user/%@/rooms/%@/tags", credentials.userId, roomId];
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success)
+                                     {
+                                         // Use here the processing queue in order to keep the server response order
+                                         dispatch_async(processingQueue, ^{
+
+                                             // Sort the response into an array of MXRoomTags
+                                             NSMutableArray *tags = [NSMutableArray array];
+                                             for (NSString *tagName in JSONResponse[@"tags"])
+                                             {
+                                                 MXRoomTag *tag = [[MXRoomTag alloc] initWithName:tagName andOrder:JSONResponse[@"tags"][tagName][@"order"]];
+                                                 [tags addObject:tag];
+                                             }
+
+                                             dispatch_async(dispatch_get_main_queue(), ^{
+
+                                                 success(tags);
+
+                                             });
+                                         });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                 }];
+}
+
+- (MXHTTPOperation*)addTag:(NSString*)tag
+                 withOrder:(NSString*)order
+                    toRoom:(NSString*)roomId
+                   success:(void (^)())success
+                   failure:(void (^)(NSError *error))failure
+{
+   NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+    if (order)
+    {
+        parameters[@"order"] = order;
+    }
+
+    NSString *path = [NSString stringWithFormat:@"v2_alpha/user/%@/rooms/%@/tags/%@", credentials.userId, roomId, tag];
+    return [httpClient requestWithMethod:@"PUT"
+                                    path:path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success)
+                                     {
+                                         // Use here the processing queue in order to keep the server response order
+                                         dispatch_async(processingQueue, ^{
+
+                                             dispatch_async(dispatch_get_main_queue(), ^{
+
+                                                 success();
+
+                                             });
+
+                                         });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                 }];
+}
+
+- (MXHTTPOperation*)removeTag:(NSString*)tag
+                     fromRoom:(NSString*)roomId
+                      success:(void (^)())success
+                      failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"v2_alpha/user/%@/rooms/%@/tags/%@", credentials.userId, roomId, tag];
+    return [httpClient requestWithMethod:@"DELETE"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success)
+                                     {
+                                         success();
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                 }];
+}
+
+
 #pragma mark - Profile operations
 - (MXHTTPOperation*)setDisplayName:(NSString*)displayname
                            success:(void (^)())success
@@ -1512,18 +1680,36 @@ MXAuthAction;
     // In C-S API v1, the only way to get all user presence is to make
     // a global initialSync
     // @TODO: Change it with C-S API v2 new APIs
-    return [self initialSyncWithLimit:0 success:^(MXInitialSyncResponse *initialSyncResponse) {
-        if (success)
-        {
-            success(initialSyncResponse.presence);
-        }
-        
-    } failure:^(NSError *error) {
-        if (failure)
-        {
-            failure(error);
-        }
-    }];
+    return [httpClient requestWithMethod:@"GET"
+                                    path:@"api/v1/initialSync"
+                              parameters:@{
+                                           @"limit": [NSNumber numberWithInteger:0]
+                                           }
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success)
+                                     {
+                                         // Create model from JSON dictionary on the processing queue
+                                         dispatch_async(processingQueue, ^{
+
+                                             // Parse only events from the `presence` field of the response.
+                                             // There is no interest to parse all JSONResponse with the MXInitialSyncResponse model,
+                                             // which is CPU expensive due to the possible high number of rooms states events.
+                                             NSArray<MXEvent*> *presence = [MXEvent modelsFromJSON:JSONResponse[@"presence"]];
+
+                                             dispatch_async(dispatch_get_main_queue(), ^{
+
+                                                 success(presence);
+
+                                             });
+                                        });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                 }];
 }
 
 - (MXHTTPOperation*)presenceList:(void (^)(MXPresenceResponse *presence))success

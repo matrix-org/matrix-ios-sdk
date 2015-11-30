@@ -77,12 +77,8 @@
     NSString *res = [glob stringByReplacingOccurrencesOfString:@"*" withString:@".*"];
     res = [res stringByReplacingOccurrencesOfString:@"?" withString:@"."];
 
-    if ([res isEqualToString:glob])
-    {
-        // If no special characters were found (detected here by no replacements having been made),
-        // add asterisks to both sides
-        res = [NSString stringWithFormat:@".*%@.*", glob];
-    }
+    // In all cases, enable world delimiters
+    res = [NSString stringWithFormat:@"\\b%@\\b", res];
 
     return res;
 }

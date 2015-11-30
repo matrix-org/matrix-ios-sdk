@@ -48,12 +48,6 @@
     return userPowerLevel;
 }
 
-// FIXME remove the following method when SYN-190 will be fixed
-- (NSUInteger)invite {
-    // Consider here the minimum power level required to ban someone
-    return _ban;
-}
-
 - (NSUInteger)minimumPowerLevelForSendingEventAsMessage:(MXEventTypeString)eventTypeString
 {
     NSUInteger minimumPowerLevel;

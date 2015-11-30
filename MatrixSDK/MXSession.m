@@ -31,7 +31,7 @@
 
 #pragma mark - Constants definitions
 
-const NSString *MatrixSDKVersion = @"0.5.6";
+const NSString *MatrixSDKVersion = @"0.5.7";
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
@@ -39,7 +39,7 @@ NSString *const kMXSessionDidLeaveRoomNotification = @"kMXSessionDidLeaveRoomNot
 NSString *const kMXSessionDidSyncNotification = @"kMXSessionDidSyncNotification";
 NSString *const kMXSessionNotificationRoomIdKey = @"roomId";
 NSString *const kMXSessionNotificationEventKey = @"event";
-
+NSString *const kMXSessionNoRoomTag = @"m.recent";  // Use the same value as matrix-react-sdk
 
 /**
  Default timeouts used by the events streams.
@@ -198,7 +198,8 @@ typedef void (^MXOnResumeDone)();
                 @autoreleasepool
                 {
                     NSArray *stateEvents = [_store stateOfRoom:roomId];
-                    [self createRoom:roomId withStateEvents:stateEvents notify:NO];
+                    MXRoomAccountData *roomAccountData = [_store accountDataOfRoom:roomId];
+                    [self createRoom:roomId withStateEvents:stateEvents andAccountData:roomAccountData notify:NO];
                 }
             }
 
@@ -583,6 +584,16 @@ typedef void (^MXOnResumeDone)();
                     break;
                 }
 
+                case MXEventTypeRoomTag:
+                {
+                    if (event.roomId)
+                    {
+                        MXRoom *room = [self roomWithRoomId:event.roomId];
+                        [room handleAccounDataEvents:@[event] direction:MXEventDirectionForwards];
+                    }
+                    break;
+                }
+
                 default:
                     if (event.roomId)
                     {
@@ -886,6 +897,10 @@ typedef void (^MXOnResumeDone)();
                         // Update one-to-one room dictionary
                         [self handleOneToOneRoom:room];
                     }
+                }
+                if (roomInitialSync.accountData)
+                {
+                    [room handleAccounDataEvents:roomInitialSync.accountData  direction:MXEventDirectionSync];
                 }
                 
                 // Notify that room has been sync'ed
@@ -1379,6 +1394,12 @@ typedef void (^MXOnResumeDone)();
             }
         }
 
+        // Manage the private data that this user has attached to this room
+        if (roomInitialSync.accountData)
+        {
+            [room handleAccounDataEvents:roomInitialSync.accountData direction:MXEventDirectionForwards];
+        }
+
         // Manage presence provided by this API
         for (MXEvent *presenceEvent in roomInitialSync.presence)
         {
@@ -1485,9 +1506,9 @@ typedef void (^MXOnResumeDone)();
     return room;
 }
 
-- (MXRoom *)createRoom:(NSString *)roomId withStateEvents:(NSArray*)stateEvents notify:(BOOL)notify
+- (MXRoom *)createRoom:(NSString *)roomId withStateEvents:(NSArray*)stateEvents andAccountData:(MXRoomAccountData*)accountData notify:(BOOL)notify
 {
-    MXRoom *room = [[MXRoom alloc] initWithRoomId:roomId andMatrixSession:self andStateEvents:stateEvents];
+    MXRoom *room = [[MXRoom alloc] initWithRoomId:roomId andMatrixSession:self andStateEvents:stateEvents andAccountData:accountData];
 
     [self addRoom:room notify:notify];
     return room;
@@ -1665,8 +1686,9 @@ typedef void (^MXOnResumeDone)();
     return user;
 }
 
+
 #pragma mark - User's recents
-- (NSArray*)recentsWithTypeIn:(NSArray*)types
+- (NSArray<MXEvent*>*)recentsWithTypeIn:(NSArray<MXEventTypeString>*)types
 {
     NSMutableArray *recents = [NSMutableArray arrayWithCapacity:rooms.count];
     for (MXRoom *room in rooms.allValues)
@@ -1676,17 +1698,193 @@ typedef void (^MXOnResumeDone)();
     }
     
     // Order them by origin_server_ts
-    [recents sortUsingComparator:^NSComparisonResult(MXEvent *obj1, MXEvent *obj2) {
-        NSComparisonResult result = NSOrderedAscending;
-        if (obj2.originServerTs > obj1.originServerTs) {
-            result = NSOrderedDescending;
-        } else if (obj2.originServerTs == obj1.originServerTs) {
-            result = NSOrderedSame;
-        }
-        return result;
-    }];
+    [recents sortUsingSelector:@selector(compareOriginServerTs:)];
     
     return recents;
+}
+
+- (NSArray<MXRoom*>*)sortRooms:(NSArray<MXRoom*>*)roomsToSort byLastMessageWithTypeIn:(NSArray<MXEventTypeString>*)types
+{
+    NSMutableArray<MXRoom*> *sortedRooms = [NSMutableArray arrayWithCapacity:roomsToSort.count];
+
+    NSMutableArray<MXEvent*>  *sortedLastMessages = [NSMutableArray arrayWithCapacity:roomsToSort.count];
+    NSMapTable<MXEvent*, MXRoom*> *roomsByLastMessages = [[NSMapTable alloc] initWithKeyOptions:NSPointerFunctionsObjectPointerPersonality valueOptions:NSPointerFunctionsObjectPointerPersonality capacity:roomsToSort.count];
+
+    // Get all last messages
+    for (MXRoom *room in roomsToSort)
+    {
+        MXEvent *lastRoomMessage = [room lastMessageWithTypeIn:types];
+        [sortedLastMessages addObject:lastRoomMessage];
+
+        [roomsByLastMessages setObject:room forKey:lastRoomMessage];
+    }
+
+    // Order them by origin_server_ts
+    [sortedLastMessages sortUsingSelector:@selector(compareOriginServerTs:)];
+
+    // Build the ordered room list
+    for (MXEvent *lastRoomMessage in sortedLastMessages)
+    {
+        [sortedRooms addObject:[roomsByLastMessages objectForKey:lastRoomMessage]];
+    }
+
+    return sortedRooms;
+}
+
+#pragma mark - User's rooms tags
+- (NSArray<MXRoom*>*)roomsWithTag:(NSString*)tag
+{
+    if (![tag isEqualToString:kMXSessionNoRoomTag])
+    {
+        // Get all room with the passed tag
+        NSMutableArray *roomsWithTag = [NSMutableArray array];
+        for (MXRoom *room in rooms.allValues)
+        {
+            if (room.accountData.tags[tag])
+            {
+                [roomsWithTag addObject:room];
+            }
+        }
+
+        // Sort them according to their tag order
+        [roomsWithTag sortUsingComparator:^NSComparisonResult(MXRoom *room1, MXRoom *room2) {
+            return [self compareRoomsByTag:tag room1:room1 room2:room2];
+        }];
+
+        return roomsWithTag;
+    }
+    else
+    {
+        // List rooms with no tags
+        NSMutableArray *roomsWithNoTag = [NSMutableArray array];
+        for (MXRoom *room in rooms.allValues)
+        {
+            if (0 == room.accountData.tags.count)
+            {
+                [roomsWithNoTag addObject:room];
+            }
+        }
+        return roomsWithNoTag;
+    }
+}
+
+- (NSDictionary<NSString*, NSArray<MXRoom*>*>*)roomsByTags
+{
+    NSMutableDictionary<NSString*, NSMutableArray<MXRoom*>*> *roomsByTags = [NSMutableDictionary dictionary];
+
+    NSMutableArray<MXRoom*> *roomsWithNoTag = [NSMutableArray array];
+
+    // Sort all rooms according to their defined tags
+    for (MXRoom *room in rooms.allValues)
+    {
+        if (0 < room.accountData.tags.count)
+        {
+            for (NSString *tagName in room.accountData.tags)
+            {
+                MXRoomTag *tag = room.accountData.tags[tagName];
+                if (!roomsByTags[tag.name])
+                {
+                    roomsByTags[tag.name] = [NSMutableArray array];
+                }
+                [roomsByTags[tag.name] addObject:room];
+            }
+        }
+        else
+        {
+            // Put room with no tags in the recent list
+            [roomsWithNoTag addObject:room];
+        }
+    }
+
+    // For each tag, sort rooms according to their tag order
+    for (NSString *tag in roomsByTags)
+    {
+        [roomsByTags[tag] sortUsingComparator:^NSComparisonResult(MXRoom *room1, MXRoom *room2) {
+            return [self compareRoomsByTag:tag room1:room1 room2:room2];
+        }];
+    }
+
+    // roomsWithNoTag can now be added to the result dictionary
+    roomsByTags[kMXSessionNoRoomTag] = roomsWithNoTag;
+
+    return roomsByTags;
+}
+
+- (NSComparisonResult)compareRoomsByTag:(NSString*)tag room1:(MXRoom*)room1 room2:(MXRoom*)room2
+{
+    NSComparisonResult result = NSOrderedSame;
+
+    MXRoomTag *tag1 = room1.accountData.tags[tag];
+    MXRoomTag *tag2 = room2.accountData.tags[tag];
+
+    if (tag1.order && tag2.order)
+    {
+        // Do a lexicographic comparison
+        result = [tag1.order localizedCompare:tag2.order];
+    }
+    else if (tag1.order)
+    {
+        result = NSOrderedAscending;
+    }
+    else if (tag2.order)
+    {
+        result = NSOrderedDescending;
+    }
+
+    // In case of same order, order rooms by their last event
+    if (NSOrderedSame == result)
+    {
+        result = [[room1 lastMessageWithTypeIn:nil] compareOriginServerTs:[room2 lastMessageWithTypeIn:nil]];
+    }
+
+    return result;
+}
+
+- (NSString *)tagOrderToBeAtIndex:(NSUInteger)index withTag:(NSString *)tag
+{
+    // Algo (and the [0.0, 1.0] assumption) inspired from matrix-react-sdk:
+    // We sort rooms by the lexicographic ordering of the 'order' metadata on their tags.
+    // For convenience, we calculate this for now a floating point number between 0.0 and 1.0.
+
+    CGFloat orderA = 0.0; // by default we're next to the beginning of the list
+    CGFloat orderB = 1.0; // by default we're next to the end of the list too
+
+    NSArray<MXRoom*> *roomsWithTag = [self roomsWithTag:tag];
+    if (roomsWithTag.count)
+    {
+        if (index > 0)
+        {
+            // Bound max index to the array size
+            NSUInteger prevIndex = (index < roomsWithTag.count) ? index : roomsWithTag.count;
+
+            MXRoomTag *prevTag = roomsWithTag[prevIndex - 1].accountData.tags[tag];
+            if (!prevTag.order)
+            {
+                NSLog(@"[MXSession] computeTagOrderForRoom: Previous room in sublist has no ordering metadata. This should never happen.");
+            }
+            else
+            {
+                orderA = [prevTag.order floatValue];
+            }
+        }
+
+        if (index <= roomsWithTag.count - 1)
+        {
+            MXRoomTag *nextTag = roomsWithTag[index ].accountData.tags[tag];
+            if (!nextTag.order)
+            {
+                NSLog(@"[MXSession] computeTagOrderForRoom: Next room in sublist has no ordering metadata. This should never happen.");
+            }
+            else
+            {
+                orderB = [nextTag.order floatValue];
+            }
+        }
+    }
+
+    CGFloat order = (orderA + orderB) / 2.0;
+
+    return [NSString stringWithFormat:@"%f", order];
 }
 
 

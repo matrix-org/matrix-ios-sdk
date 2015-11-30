@@ -233,7 +233,7 @@
 
                         XCTAssertNotNil(roomState);
 
-                        XCTAssert([roomState.topic isEqualToString:@"Topic #1"], @"roomState.topic is wrong. Found: %@", roomState.topic);
+                        XCTAssertEqualObjects(roomState.topic, @"Topic #1", @"roomState.topic is wrong. Found: %@", roomState.topic);
                         XCTAssert([room.state.topic isEqualToString:@"Topic #2"]);
                         break;
                         
@@ -363,7 +363,6 @@
             mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
             
             [mxSession start:^{
-        } onServerSyncDone:^{
                 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
 
@@ -546,7 +545,6 @@
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         
         [mxSession start:^{
-        } onServerSyncDone:^{
             
             MXRoom *room = [mxSession roomWithRoomId:roomId];
             
@@ -709,6 +707,6 @@
         
     }];
 }
-*/ 
+*/
 
 @end

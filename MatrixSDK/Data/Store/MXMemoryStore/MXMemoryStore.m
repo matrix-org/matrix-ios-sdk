@@ -59,6 +59,11 @@
     [roomStore replaceEvent:event];
 }
 
+- (BOOL)eventExistsWithEventId:(NSString *)eventId inRoom:(NSString *)roomId
+{
+    return (nil != [self eventWithEventId:eventId inRoom:roomId]);
+}
+
 - (MXEvent *)eventWithEventId:(NSString *)eventId inRoom:(NSString *)roomId
 {
     MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];

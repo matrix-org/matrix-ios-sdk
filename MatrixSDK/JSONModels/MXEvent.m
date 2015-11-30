@@ -22,14 +22,17 @@
 
 NSString *const kMXEventTypeStringRoomName            = @"m.room.name";
 NSString *const kMXEventTypeStringRoomTopic           = @"m.room.topic";
+NSString *const kMXEventTypeStringRoomAvatar          = @"m.room.avatar";
 NSString *const kMXEventTypeStringRoomMember          = @"m.room.member";
 NSString *const kMXEventTypeStringRoomCreate          = @"m.room.create";
 NSString *const kMXEventTypeStringRoomJoinRules       = @"m.room.join_rules";
 NSString *const kMXEventTypeStringRoomPowerLevels     = @"m.room.power_levels";
 NSString *const kMXEventTypeStringRoomAliases         = @"m.room.aliases";
+NSString *const kMXEventTypeStringRoomCanonicalAlias  = @"m.room.canonical_alias";
 NSString *const kMXEventTypeStringRoomMessage         = @"m.room.message";
 NSString *const kMXEventTypeStringRoomMessageFeedback = @"m.room.message.feedback";
 NSString *const kMXEventTypeStringRoomRedaction       = @"m.room.redaction";
+NSString *const kMXEventTypeStringRoomTag             = @"m.tag";
 NSString *const kMXEventTypeStringPresence            = @"m.presence";
 NSString *const kMXEventTypeStringTypingNotification  = @"m.typing";
 NSString *const kMXEventTypeStringReceipt             = @"m.receipt";
@@ -83,36 +86,55 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     return self;
 }
 
-- (instancetype)initWithDictionary:(NSDictionary *)dictionaryValue error:(NSError *__autoreleasing *)error
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    // Do the JSON -> class instance properties mapping
-    self = [super initWithDictionary:dictionaryValue error:error];
-
-    if (self)
+    MXEvent *event = [[MXEvent alloc] init];
+    if (event)
     {
-        if (MXEventTypePresence == eventType)
-        {
-            // Workaround: Presence events provided by the home server do not contain userId
-            // in the root of the JSON event object but under its content sub object.
-            // Set self.userId in order to follow other events format.
-            if (nil == self.sender)
-            {
-                // userId may be in the event content
-                self.sender = self.content[@"user_id"];
-            }
-        }
-        else if (nil == self.sender)
-        {
-            // Catch up the legacy field user_id (deprecated in v2)
-            self.sender = self.userId;
-        }
+        event.eventId = JSONDictionary[@"event_id"];
+        event.type = JSONDictionary[@"type"];
+        event.roomId = JSONDictionary[@"room_id"];
+        event.sender = JSONDictionary[@"sender"];
+        event.userId = JSONDictionary[@"user_id"];
+        event.content = JSONDictionary[@"content"];
+        event.prevContent = JSONDictionary[@"prev_content"];
+        event.stateKey = JSONDictionary[@"state_key"];
+        event.originServerTs = [((NSNumber*)JSONDictionary[@"origin_server_ts"]) unsignedLongLongValue];
+        event.age = [((NSNumber*)JSONDictionary[@"age"]) unsignedIntegerValue];
+        event.redacts = JSONDictionary[@"redacts"];
+        event.redactedBecause = JSONDictionary[@"redacted_because"];
 
-        // Clean JSON data by removing all null values
-        _content = [MXJSONModel removeNullValuesInJSON:_content];
-        _prevContent = [MXJSONModel removeNullValuesInJSON:_prevContent];
+        [event finalise];
     }
 
-    return self;
+    return event;
+}
+
+/**
+ Finalise the parsing of a Matrix event.
+ */
+- (void)finalise
+{
+    if (MXEventTypePresence == eventType)
+    {
+        // Workaround: Presence events provided by the home server do not contain userId
+        // in the root of the JSON event object but under its content sub object.
+        // Set self.userId in order to follow other events format.
+        if (nil == self.sender)
+        {
+            // userId may be in the event content
+            self.sender = self.content[@"user_id"];
+        }
+    }
+    else if (nil == self.sender)
+    {
+        // Catch up the legacy field user_id (deprecated in v2)
+        self.sender = self.userId;
+    }
+
+    // Clean JSON data by removing all null values
+    _content = [MXJSONModel removeNullValuesInJSON:_content];
+    _prevContent = [MXJSONModel removeNullValuesInJSON:_prevContent];
 }
 
 - (MXEventType)eventType
@@ -208,6 +230,7 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 {
     // Filter in event by keeping only the following keys
     NSArray *allowedKeys = @[@"event_id",
+                             @"sender",
                              @"user_id",
                              @"room_id",
                              @"hashes",
@@ -263,6 +286,12 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
             break;
         }
             
+        case MXEventTypeRoomCanonicalAlias:
+        {
+            allowedKeys = @[@"alias"];
+            break;
+        }
+            
         case MXEventTypeRoomMessageFeedback:
         {
             allowedKeys = @[@"type", @"target_event_id"];
@@ -284,6 +313,20 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     // Note: Contrary to server, we ignore here the "unsigned" event level key.
     
     return [MXEvent modelFromJSON:prunedEventDict];
+}
+
+- (NSComparisonResult)compareOriginServerTs:(MXEvent *)otherEvent
+{
+    NSComparisonResult result = NSOrderedAscending;
+    if (otherEvent.originServerTs > _originServerTs)
+    {
+        result = NSOrderedDescending;
+    }
+    else if (otherEvent.originServerTs == _originServerTs)
+    {
+        result = NSOrderedSame;
+    }
+    return result;
 }
 
 

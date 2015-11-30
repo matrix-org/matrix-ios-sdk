@@ -33,6 +33,12 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
     // The historical state of the room when paginating back
     MXRoomState *backState;
+
+    // The state that was in the `state` property before it changed
+    // It is cached because it costs time to recompute it from the current state
+    // It is particularly noticeable for rooms with a lot of members (ie a lot of
+    // room members state events)
+    MXRoomState *previousState;
 }
 @end
 
@@ -50,15 +56,19 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         
         _state = [[MXRoomState alloc] initWithRoomId:roomId andMatrixSession:mxSession2 andDirection:YES];
 
+        _accountData = [[MXRoomAccountData alloc] init];
+
         _typingUsers = [NSArray array];
         
         _acknowledgableEventTypes = @[kMXEventTypeStringRoomName,
                                       kMXEventTypeStringRoomTopic,
+                                      kMXEventTypeStringRoomAvatar,
                                       kMXEventTypeStringRoomMember,
                                       kMXEventTypeStringRoomCreate,
                                       kMXEventTypeStringRoomJoinRules,
                                       kMXEventTypeStringRoomPowerLevels,
                                       kMXEventTypeStringRoomAliases,
+                                      kMXEventTypeStringRoomCanonicalAlias,
                                       kMXEventTypeStringRoomMessage,
                                       kMXEventTypeStringRoomMessageFeedback,
                                       kMXEventTypeStringRoomRedaction,
@@ -109,7 +119,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     return self;
 }
 
-- (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession2 andStateEvents:(NSArray *)stateEvents
+- (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession2 andStateEvents:(NSArray *)stateEvents andAccountData:(MXRoomAccountData*)accountData
 {
     self = [self initWithRoomId:roomId andMatrixSession:mxSession2];
     if (self)
@@ -120,6 +130,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             {
                 [self handleStateEvent:event direction:MXEventDirectionSync];
             }
+
+            _accountData = accountData;
         }
     }
     return self;
@@ -280,8 +292,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         for (MXEvent *event in events) {
 
             // Make sure we have not processed this event yet
-            MXEvent *storedEvent = [mxSession.store eventWithEventId:event.eventId inRoom:_state.roomId];
-            if (!storedEvent)
+            if (![mxSession.store eventExistsWithEventId:event.eventId inRoom:_state.roomId])
             {
                 [self handleMessage:event direction:direction];
 
@@ -359,6 +370,9 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     }
     else
     {
+        // Keep the previous state in cache for future usage in [self notifyListeners]
+        previousState = _state;
+        
         _state = [_state copy];
     }
 }
@@ -456,8 +470,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     else
     {
         // Make sure we have not processed this event yet
-        MXEvent *storedEvent = [mxSession.store eventWithEventId:event.eventId inRoom:_state.roomId];
-        if (!storedEvent)
+        if (![mxSession.store eventExistsWithEventId:event.eventId inRoom:_state.roomId])
         {
             // Handle here redaction event from live event stream
             if (event.eventType == MXEventTypeRoomRedaction)
@@ -475,6 +488,26 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         }
     }
 }
+
+
+#pragma mark - Room private account data handling
+- (void)handleAccounDataEvents:(NSArray<MXEvent*>*)accounDataEvents direction:(MXEventDirection)direction
+{
+    for (MXEvent *event in accounDataEvents)
+    {
+        [_accountData handleEvent:event];
+
+        // Update the store
+        if ([mxSession.store respondsToSelector:@selector(storeAccountDataForRoom:userData:)])
+        {
+            [mxSession.store storeAccountDataForRoom:_state.roomId userData:_accountData];
+        }
+
+        // And notify listeners
+        [self notifyListeners:event direction:direction];
+    }
+}
+
 
 #pragma mark - Back pagination
 - (void)resetBackState
@@ -638,6 +671,14 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     return [mxSession.matrixRestClient setRoomTopic:_state.roomId topic:topic success:success failure:failure];
 }
 
+- (MXHTTPOperation*)setAvatar:(NSString*)avatar
+                     success:(void (^)())success
+                     failure:(void (^)(NSError *error))failure
+{
+    return [mxSession.matrixRestClient setRoomAvatar:_state.roomId avatar:avatar success:success failure:failure];
+}
+
+
 - (MXHTTPOperation*)setName:(NSString*)name
                     success:(void (^)())success
                     failure:(void (^)(NSError *error))failure
@@ -725,6 +766,49 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 }
 
 
+#pragma mark - Room tags operations
+- (MXHTTPOperation*)addTag:(NSString*)tag
+                 withOrder:(NSString*)order
+                   success:(void (^)())success
+                   failure:(void (^)(NSError *error))failure
+{
+    // _accountData.tags will be updated by the live streams
+    return [mxSession.matrixRestClient addTag:tag withOrder:order toRoom:_state.roomId success:success failure:failure];
+}
+
+- (MXHTTPOperation*)removeTag:(NSString*)tag
+                      success:(void (^)())success
+                      failure:(void (^)(NSError *error))failure
+{
+    // _accountData.tags will be updated by the live streams
+    return [mxSession.matrixRestClient removeTag:tag fromRoom:_state.roomId success:success failure:failure];
+}
+
+- (MXHTTPOperation*)replaceTag:(NSString*)oldTag
+                         byTag:(NSString*)newTag
+                     withOrder:(NSString*)newTagOrder
+                       success:(void (^)())success
+                       failure:(void (^)(NSError *error))failure
+{
+    // Combine remove and add tag operations
+    MXHTTPOperation *removeTageHttpOperation;
+    removeTageHttpOperation = [self removeTag:oldTag success:^{
+
+        if (newTag)
+        {
+            MXHTTPOperation *addTagHttpOperation = [self addTag:newTag withOrder:newTagOrder success:success failure:failure];
+
+            // Transfer the new AFHTTPRequestOperation to the returned MXHTTPOperation
+            // So that user has hand on it
+            removeTageHttpOperation.operation = addTagHttpOperation.operation;
+        }
+
+    } failure:failure];
+
+    return removeTageHttpOperation;
+}
+
+
 #pragma mark - Voice over IP
 - (MXCall *)placeCallWithVideo:(BOOL)video
 {
@@ -769,12 +853,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     {
         if ([event isState])
         {
-            // Use the current state for live event
-            roomState = [[MXRoomState alloc] initBackStateWith:_state];
-            
-            // If this is a state event, compute the room state before this event
-            // as this is the information we pass to the MXOnRoomEvent callback block
-            [roomState handleStateEvent:event];
+            // Provide the state of the room before this event
+            roomState = previousState;
         }
         else
         {
@@ -911,6 +991,11 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 - (NSArray*)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort
 {
     return [mxSession.store getEventReceipts:_state.roomId eventId:eventId sorted:sort];
+}
+
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"<MXRoom: %p> %@: %@ - %@", self, _state.roomId, _state.name, _state.topic];
 }
 
 @end

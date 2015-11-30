@@ -478,6 +478,35 @@ typedef enum : NSUInteger
                     success:(void (^)(NSString *topic))success
                     failure:(void (^)(NSError *error))failure;
 
+
+/**
+ Set the avatar of a room.
+
+ @param roomId the id of the room.
+ @param avatar the avatar url to set.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setRoomAvatar:(NSString*)roomId
+                           avatar:(NSString*)avatar
+                          success:(void (^)())success
+                          failure:(void (^)(NSError *error))failure;
+
+/**
+ Get the avatar of a room.
+
+ @param roomId the id of the room.
+ @param success A block object called when the operation succeeds. It provides the room avatar url.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)avatarOfRoom:(NSString*)roomId
+                        success:(void (^)(NSString *avatar))success
+                        failure:(void (^)(NSError *error))failure;
+
 /**
  Set the name of a room.
  
@@ -719,6 +748,57 @@ typedef enum : NSUInteger
                         withLimit:(NSInteger)limit
                           success:(void (^)(MXRoomInitialSync *roomInitialSync))success
                           failure:(void (^)(NSError *error))failure;
+
+
+#pragma mark - Room tags operations
+/**
+ List the tags of a room.
+
+ @param roomId the id of the room.
+
+ @param success A block object called when the operation succeeds. It provides an array of `MXRoomTag` objects.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)tagsOfRoom:(NSString*)roomId
+                              success:(void (^)(NSArray<MXRoomTag*> *tags))success
+                              failure:(void (^)(NSError *error))failure;
+
+/**
+ Add a tag to a room.
+ 
+ Use this method to update the order of an existing tag.
+
+ @param tag the new tag to add to the room.
+ @param order the order. @see MXRoomTag.order.
+ @param roomId the id of the room.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)addTag:(NSString*)tag
+                 withOrder:(NSString*)order
+                    toRoom:(NSString*)roomId
+                           success:(void (^)())success
+                           failure:(void (^)(NSError *error))failure;
+/**
+ Remove a tag from a room.
+
+ @param tag the tag to remove.
+ @param roomId the id of the room.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)removeTag:(NSString*)tag
+                    fromRoom:(NSString*)roomId
+                   success:(void (^)())success
+                   failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Profile operations

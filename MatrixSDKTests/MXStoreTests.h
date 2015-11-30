@@ -35,6 +35,7 @@
 
 - (void)assertNoDuplicate:(NSArray*)events text:(NSString*)text;
 
+- (void)checkEventExistsWithEventIdOfStore:(id<MXStore>)store;
 - (void)checkEventWithEventIdOfStore:(id<MXStore>)store;
 - (void)checkPaginateBack:(MXRoom*)room;
 - (void)checkPaginateBackFilter:(MXRoom*)room;
@@ -56,6 +57,7 @@
 - (void)checkEventAge:(Class)mxStoreClass;
 - (void)checkMXRoomPaginationToken:(Class)mxStoreClass;
 - (void)checkMultiAccount:(Class)mxStoreClass;
+- (void)checkRoomAccountDataTags:(Class)mxStoreClass;
 
 @end
 

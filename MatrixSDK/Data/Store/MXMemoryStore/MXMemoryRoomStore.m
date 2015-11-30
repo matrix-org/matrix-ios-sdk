@@ -32,6 +32,7 @@
     if (self)
     {
         messages = [NSMutableArray array];
+        messagesByEventIds = [NSMutableDictionary dictionary];
     }
     return self;
 }
@@ -46,6 +47,11 @@
     {
         [messages insertObject:event atIndex:0];
     }
+
+    if (event.eventId)
+    {
+        messagesByEventIds[event.eventId] = event;
+    }
 }
 
 - (void)replaceEvent:(MXEvent*)event
@@ -57,6 +63,8 @@
         if ([anEvent.eventId isEqualToString:event.eventId])
         {
             [messages replaceObjectAtIndex:index withObject:event];
+
+            messagesByEventIds[event.eventId] = event;
             break;
         }
     }
@@ -64,21 +72,13 @@
 
 - (MXEvent *)eventWithEventId:(NSString *)eventId
 {
-    MXEvent *theEvent;
-    for (MXEvent *event in messages)
-    {
-        if ([eventId isEqualToString:event.eventId])
-        {
-            theEvent = event;
-            break;
-        }
-    }
-    return theEvent;
+    return messagesByEventIds[eventId];
 }
 
 - (void)removeAllMessages
 {
     [messages removeAllObjects];
+    [messagesByEventIds removeAllObjects];
 }
 
 - (void)resetPagination

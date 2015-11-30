@@ -95,21 +95,45 @@ static NSMutableDictionary *JSONKeyPathsByPropertyKeyByClass;
 
 + (NSDictionary *)removeNullValuesInJSON:(NSDictionary *)JSONDictionary
 {
-    NSMutableDictionary *dictionary = [NSMutableDictionary dictionaryWithDictionary:JSONDictionary];
-    NSArray *keys = dictionary.allKeys;
-    for (NSString *key in keys)
+    // A new dictionary is created and returned only if necessary
+    NSMutableDictionary *dictionary;
+
+    for (NSString *key in JSONDictionary)
     {
-        id value = dictionary[key];
+        id value = JSONDictionary[key];
         if ([value isEqual:[NSNull null]])
         {
+            if (!dictionary)
+            {
+               dictionary = [NSMutableDictionary dictionaryWithDictionary:JSONDictionary];
+            }
+
             [dictionary removeObjectForKey:key];
         }
         else if ([value isKindOfClass:[NSDictionary class]])
         {
-            [dictionary setObject:[MXJSONModel removeNullValuesInJSON:value] forKey:key];
+            NSDictionary *subDictionary = [MXJSONModel removeNullValuesInJSON:value];
+            if (subDictionary != value)
+            {
+                if (!dictionary)
+                {
+                    dictionary = [NSMutableDictionary dictionaryWithDictionary:JSONDictionary];
+                }
+
+                dictionary[key] = subDictionary;
+
+            }
         }
     }
-    return dictionary;
+
+    if (dictionary)
+    {
+        return dictionary;
+    }
+    else
+    {
+        return JSONDictionary;
+    }
 }
 
 - (void)setOthers:(NSDictionary *)JSONDictionary
@@ -143,9 +167,13 @@ static NSMutableDictionary *JSONKeyPathsByPropertyKeyByClass;
     
     for (NSString *key in dictValue)
     {
-        // Convert back camelCased property names (ex:roomId) to underscored names (ex:room_id)
-        // Thus, we store events as they come from the home server
-        originalDictionary[JSONKeyPathsByPropertyKey[key]] = dictValue[key];
+        // Ignore NSNull values introduced by dictionaryWithValuesForKeys use in 'dictionaryValue' getter.
+        if (![dictValue[key] isKindOfClass:[NSNull class]])
+        {
+            // Convert back camelCased property names (ex:roomId) to underscored names (ex:room_id)
+            // Thus, we store events as they come from the home server.
+            originalDictionary[JSONKeyPathsByPropertyKey[key]] = dictValue[key];
+        }
     }
 
     return originalDictionary;

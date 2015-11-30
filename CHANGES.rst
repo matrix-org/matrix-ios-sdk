@@ -1,3 +1,20 @@
+Changes in Matrix iOS SDK in 0.5.7 (2015-11-30)
+===============================================
+
+Improvements:
+ * MXStore: Added a new optimised eventExistsWithEventId: method.
+ * MXRoomState: Room state optimisation.
+ * MXEvent: Events handling optimisation.
+ * MXSession: Add Room tag support.
+ * MXRoom: Add Room avatar support.
+
+Bug fixes:
+ * SYIOS-176: Single word highlighting failed.
+ * SYIOS-140: Add support for canonical alias.
+ * SYIOS-184: We don't seem to have any way to invite users into a room.
+ * MXNotificationCenter: NSMutableArray was mutated while being enumerated.
+ * App crashes at launch after an event redaction.
+
 Changes in Matrix iOS SDK in 0.5.6 (2015-11-13)
 ===============================================
 

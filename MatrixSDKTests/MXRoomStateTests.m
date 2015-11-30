@@ -142,6 +142,78 @@
 }
 
 
+- (void)testRoomAvatarProvidedByInitialSync
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
+
+        MXRestClient *bobRestClient2 = bobRestClient;
+
+        [bobRestClient setRoomAvatar:roomId avatar:@"http://matrix.org/matrix.png" success:^{
+
+            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+            [mxSession start:^{
+
+                MXRoom *room = [mxSession roomWithRoomId:roomId];
+
+                XCTAssertNotNil(room.state.avatar);
+                XCTAssertEqualObjects(room.state.avatar, @"http://matrix.org/matrix.png");
+
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        
+    }];
+}
+
+- (void)testRoomAvatarLive
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
+
+        MXRestClient *bobRestClient2 = bobRestClient;
+
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+        [mxSession start:^{
+
+            MXRoom *room = [mxSession roomWithRoomId:roomId];
+
+            XCTAssertNil(room.state.avatar, @"There must be no room avatar yet. Found: %@", room.state.avatar);
+
+            // Listen to live event. We should receive only one: a m.room.avatar event
+            [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+
+                XCTAssertEqual(event.eventType, MXEventTypeRoomAvatar);
+
+                XCTAssertNotNil(room.state.avatar);
+                XCTAssertEqualObjects(room.state.avatar, @"http://matrix.org/matrix.png");
+
+                [expectation fulfill];
+
+            }];
+
+            // Change the avatar
+            [bobRestClient2 setRoomAvatar:roomId avatar:@"http://matrix.org/matrix.png" success:^{
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+    }];
+}
+
 - (void)testRoomNameProvidedByInitialSync
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {

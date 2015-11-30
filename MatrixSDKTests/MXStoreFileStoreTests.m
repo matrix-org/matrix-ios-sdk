@@ -49,7 +49,13 @@
 
 
 #pragma mark - MXFileStore
-- (void)testMXFileEventWithEventId
+- (void)testMXFileStoreEventExistsWithEventId
+{
+    MXMemoryStore *store = [[MXMemoryStore alloc] init];
+    [self checkEventExistsWithEventIdOfStore:store];
+}
+
+- (void)testMXFileStoreEventWithEventId
 {
     MXFileStore *store = [[MXFileStore alloc] init];
     [self checkEventWithEventIdOfStore:store];
@@ -190,6 +196,11 @@
 - (void)testMXFileStoreMultiAccount
 {
     [self checkMultiAccount:MXFileStore.class];
+}
+
+- (void)testMXFileStoreRoomAccountDataTags
+{
+    [self checkRoomAccountDataTags:MXFileStore.class];
 }
 
 @end

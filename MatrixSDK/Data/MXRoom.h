@@ -21,6 +21,7 @@
 #import "MXRoomMember.h"
 #import "MXEventListener.h"
 #import "MXRoomState.h"
+#import "MXRoomAccountData.h"
 #import "MXHTTPOperation.h"
 #import "MXCall.h"
 
@@ -71,6 +72,11 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 @property (nonatomic, readonly) MXRoomState *state;
 
 /**
+ The private user data for this room.
+ */
+@property (nonatomic, readonly) MXRoomAccountData *accountData;
+
+/**
  The list of ids of users currently typing in this room.
  This array is updated on each received m.typing event (MXEventTypeTypingNotification).
  */
@@ -105,7 +111,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 
 - (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession andInitialSync:(MXRoomInitialSync*)initialSync;
 
-- (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession andStateEvents:(NSArray*)stateEvents;
+- (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession andStateEvents:(NSArray*)stateEvents andAccountData:(MXRoomAccountData*)accountData;
 
 #pragma mark - server sync v2
 
@@ -144,6 +150,14 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  @param event the event to handle.
  */
 - (void)handleLiveEvent:(MXEvent*)event;
+
+/**
+ Handle private user data events.
+ 
+ @param accounDataEvents the events to handle.
+ @param direction the process direction: MXEventDirectionSync or MXEventDirectionForwards. MXEventDirectionBackwards is not applicable here.
+ */
+- (void)handleAccounDataEvents:(NSArray<MXEvent*>*)accounDataEvents direction:(MXEventDirection)direction;
 
 #pragma mark - Back pagination
 /**
@@ -252,6 +266,19 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 - (MXHTTPOperation*)setTopic:(NSString*)topic
                      success:(void (^)())success
                      failure:(void (^)(NSError *error))failure;
+
+/**
+ Set the avatar of the room.
+
+ @param avatar the avatar url to set.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setAvatar:(NSString*)avatar
+                      success:(void (^)())success
+                      failure:(void (^)(NSError *error))failure;
 
 /**
  Set the name of the room.
@@ -389,6 +416,58 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
                          reason:(NSString*)reason
                         success:(void (^)())success
                         failure:(void (^)(NSError *error))failure;
+
+
+
+#pragma mark - Room tags operations
+/**
+ Add a tag to a room.
+
+ Use this method to update the order of an existing tag.
+
+ @param tag the new tag to add to the room.
+ @param order the order. @see MXRoomTag.order.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)addTag:(NSString*)tag
+                 withOrder:(NSString*)order
+                   success:(void (^)())success
+                   failure:(void (^)(NSError *error))failure;
+/**
+ Remove a tag from a room.
+
+ @param tag the tag to remove.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)removeTag:(NSString*)tag
+                      success:(void (^)())success
+                      failure:(void (^)(NSError *error))failure;
+
+/**
+ Remove a tag and add another one.
+
+ @param oldTag the tag to remove.
+ @param newTag the new tag to add. Nil can be used. Then, no new tag will be added.
+ @param newTagOrder the order of the new tag.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)replaceTag:(NSString*)oldTag
+                         byTag:(NSString*)newTag
+                     withOrder:(NSString*)newTagOrder
+                       success:(void (^)())success
+                       failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Voice over IP
