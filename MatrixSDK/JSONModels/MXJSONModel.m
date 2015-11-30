@@ -167,9 +167,13 @@ static NSMutableDictionary *JSONKeyPathsByPropertyKeyByClass;
     
     for (NSString *key in dictValue)
     {
-        // Convert back camelCased property names (ex:roomId) to underscored names (ex:room_id)
-        // Thus, we store events as they come from the home server
-        originalDictionary[JSONKeyPathsByPropertyKey[key]] = dictValue[key];
+        // Ignore NSNull values introduced by dictionaryWithValuesForKeys use in 'dictionaryValue' getter.
+        if (![dictValue[key] isKindOfClass:[NSNull class]])
+        {
+            // Convert back camelCased property names (ex:roomId) to underscored names (ex:room_id)
+            // Thus, we store events as they come from the home server.
+            originalDictionary[JSONKeyPathsByPropertyKey[key]] = dictValue[key];
+        }
     }
 
     return originalDictionary;

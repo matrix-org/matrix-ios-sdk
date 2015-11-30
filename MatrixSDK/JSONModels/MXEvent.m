@@ -230,6 +230,7 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 {
     // Filter in event by keeping only the following keys
     NSArray *allowedKeys = @[@"event_id",
+                             @"sender",
                              @"user_id",
                              @"room_id",
                              @"hashes",
