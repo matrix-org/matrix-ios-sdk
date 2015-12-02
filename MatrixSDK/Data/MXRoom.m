@@ -802,6 +802,15 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             // So that user has hand on it
             removeTageHttpOperation.operation = addTagHttpOperation.operation;
         }
+        else
+        {
+           // warn that the job is done
+           dispatch_async(dispatch_get_main_queue(), ^{
+            
+               success();
+           
+           });
+        }
 
     } failure:failure];
 
