@@ -407,6 +407,15 @@
     {
         case MXEventTypeRoomMember:
         {
+            // In case of invite, process the provided but incomplete room state
+            if (event.inviteRoomState)
+            {
+                for (MXEvent *inviteRoomStateEvent in event.inviteRoomState)
+                {
+                    [self handleStateEvent:inviteRoomStateEvent];
+                }
+            }
+
             MXRoomMember *roomMember = [[MXRoomMember alloc] initWithMXEvent:event andEventContent:[self contentOfEvent:event]];
             if (roomMember)
             {

@@ -546,6 +546,10 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
         initialSync.membership = JSONDictionary[@"membership"];
         initialSync.visibility = JSONDictionary[@"visibility"];
         initialSync.inviter = JSONDictionary[@"inviter"];
+        if (JSONDictionary[@"invite"])
+        {
+            initialSync.invite = [MXEvent modelFromJSON:JSONDictionary[@"invite"]];
+        }
         initialSync.presence = [MXEvent modelsFromJSON:JSONDictionary[@"presence"]];
         initialSync.receipts = [MXEvent modelsFromJSON:JSONDictionary[@"receipts"]];
     }
