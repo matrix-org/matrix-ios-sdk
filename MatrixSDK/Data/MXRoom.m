@@ -88,32 +88,19 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     if (self)
     {
         _state = [[MXRoomState alloc] initWithRoomId:roomId andMatrixSession:mxSession2 andInitialSync:initialSync andDirection:YES];
-        
-        if (initialSync.inviter.length)
-        {
-            // On an initialSync, an home server does not provide the room invitation under an event form
-            // whereas it does when getting the information from a live event (see SPEC-54).
-            // In order to make the SDK behaves the same in both cases, when getting the data from an initialSync,
-            // create and handle a fake membership event that contains the same information.
-            
-            // In both case, the application will see a MXRoom which MXRoomState.membership is invite. The MXRoomState
-            // will contain only one MXRoomMember who is the logged in user. MXRoomMember.originUserId is the inviter.
-            MXEvent *fakeMembershipEvent = [MXEvent modelFromJSON:@{
-                                                                    @"event_id": [NSString stringWithFormat:@"%@%@", kMXRoomInviteStateEventIdPrefix,[[NSProcessInfo processInfo] globallyUniqueString]],
-                                                                    @"type": kMXEventTypeStringRoomMember,
-                                                                    @"room_id": roomId,
-                                                                    @"content": @{
-                                                                            @"membership": kMXMembershipStringInvite
-                                                                            },
-                                                                    @"user_id": initialSync.inviter,
-                                                                    @"state_key": mxSession.matrixRestClient.credentials.userId,
-                                                                    @"origin_server_ts": [NSNumber numberWithLongLong:kMXUndefinedTimestamp]
-                                                                    }];
-            
-            [self handleMessage:fakeMembershipEvent direction:MXEventDirectionSync];
-            [self handleStateEvent:fakeMembershipEvent direction:MXEventDirectionSync];
 
-            [mxSession.store storeEventForRoom:roomId event:fakeMembershipEvent direction:MXEventDirectionSync];
+        if (initialSync.invite)
+        {
+            // Process the invite event content: it contains a partial room state
+            [self handleStateEvent:initialSync.invite direction:MXEventDirectionSync];
+            if ([mxSession.store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
+            {
+                [mxSession.store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
+            }
+
+            // Put the invite in the room messages list so that 
+            [self handleMessage:initialSync.invite direction:MXEventDirectionSync];
+            [mxSession.store storeEventForRoom:roomId event:initialSync.invite direction:MXEventDirectionSync];
         }
     }
     return self;

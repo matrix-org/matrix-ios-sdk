@@ -590,6 +590,11 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
     @property (nonatomic) NSString *inviter;
 
     /**
+     The invite event if membership is invite.
+     */
+    @property (nonatomic) MXEvent *invite;
+
+    /**
      The presence status of other users (Provided in case of room initial sync @see http://matrix.org/docs/api/client-server/#!/-rooms/get_room_sync_data)).
      */
     @property (nonatomic) NSArray<MXEvent*> *presence;
