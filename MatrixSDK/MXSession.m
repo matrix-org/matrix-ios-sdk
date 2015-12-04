@@ -37,6 +37,7 @@ NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification"
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
 NSString *const kMXSessionDidLeaveRoomNotification = @"kMXSessionDidLeaveRoomNotification";
 NSString *const kMXSessionDidSyncNotification = @"kMXSessionDidSyncNotification";
+NSString *const kMXSessionInvitedRoomsDidChangeNotification = @"kMXSessionInvitedRoomsDidChangeNotification";
 NSString *const kMXSessionNotificationRoomIdKey = @"roomId";
 NSString *const kMXSessionNotificationEventKey = @"event";
 NSString *const kMXSessionNoRoomTag = @"m.recent";  // Use the same value as matrix-react-sdk
@@ -64,7 +65,7 @@ typedef void (^MXOnResumeDone)();
      Rooms data
      Each key is a room ID. Each value, the MXRoom instance.
      */
-    NSMutableDictionary *rooms;
+    NSMutableDictionary<NSString*, MXRoom*> *rooms;
     
     /**
      Users data
@@ -112,6 +113,11 @@ typedef void (^MXOnResumeDone)();
      The list of rooms ids where a room initialSync is in progress (made by [self initialSyncOfRoom])
      */
     NSMutableArray *roomsInInitialSyncing;
+
+    /**
+     The maintained list of rooms where the user has a pending invitation.
+     */
+    NSMutableArray<MXRoom *> *invitedRooms;
 }
 @end
 
@@ -1327,13 +1333,19 @@ typedef void (^MXOnResumeDone)();
                 if ([roomId isEqualToString:note.userInfo[kMXSessionNotificationRoomIdKey]])
                 {
                     [[NSNotificationCenter defaultCenter] removeObserver:observer];
-                    success();
+                    if (success)
+                    {
+                        success();
+                    }
                 }
             }];
         }
         else
         {
-            success();
+            if (success)
+            {
+                success();
+            }
         }
 
     } failure:failure];
@@ -1730,6 +1742,67 @@ typedef void (^MXOnResumeDone)();
 
     return sortedRooms;
 }
+
+
+#pragma mark - User's special rooms
+- (NSArray<MXRoom *> *)invitedRooms
+{
+    if (nil == invitedRooms)
+    {
+        // On the first call, set up the invitation list and mechanism to update it
+        invitedRooms = [NSMutableArray array];
+
+        // Compute the current invitation list
+        for (MXRoom *room in rooms.allValues)
+        {
+            if (room.state.membership == MXMembershipInvite)
+            {
+                [invitedRooms addObject:room];
+            }
+        }
+
+        // Order them by origin_server_ts
+        [invitedRooms sortUsingSelector:@selector(compareOriginServerTs:)];
+
+        // Add a listener in order to update the app about invitation list change
+        [self listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
+
+            if (MXEventDirectionForwards == direction)
+            {
+                BOOL notify = NO;
+                MXRoomState *roomPrevState = (MXRoomState *)customObject;
+                MXRoom *room = [self roomWithRoomId:event.roomId];
+
+                if (event.inviteRoomState)
+                {
+                    // This is an invite event. Add the room to the invitation list
+                    [invitedRooms addObject:room];
+                    notify = YES;
+                }
+                else if (roomPrevState.membership == MXMembershipInvite)
+                {
+                    // An invitation was pending for this room. A new membership event means the
+                    // user has accepted or rejected the invitation.
+                    [invitedRooms removeObject:room];
+                    notify = YES;
+                }
+
+                if (notify)
+                {
+                    [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionInvitedRoomsDidChangeNotification
+                                                                        object:self
+                                                                      userInfo:@{
+                                                                                 kMXSessionNotificationRoomIdKey: event.roomId,
+                                                                                 kMXSessionNotificationEventKey: event
+                                                                                 }];
+                }
+            }
+        }];
+    }
+
+    return invitedRooms;
+}
+
 
 #pragma mark - User's rooms tags
 - (NSArray<MXRoom*>*)roomsWithTag:(NSString*)tag
