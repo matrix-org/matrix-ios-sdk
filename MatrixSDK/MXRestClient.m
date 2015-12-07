@@ -372,6 +372,16 @@ MXAuthAction;
                                  success:(void (^)())success
                                  failure:(void (^)(NSError *))failure
 {
+    
+    // sanity check
+    if (!pushkey || !kind || !appDisplayName || !deviceDisplayName || !profileTag || !lang || !data || !append)
+    {
+        NSError* error = [NSError errorWithDomain:@"Invalid params" code:500 userInfo:nil];
+        
+        failure(error);
+        return nil;
+    }
+    
     // Fill the request parameters on demand
     // Caution: parameters are JSON serialized in http body, we must use a NSNumber created with a boolean for append value.
     NSDictionary *parameters = @{
