@@ -224,16 +224,6 @@ MXAuthAction;
 
 #pragma mark - password update operation
 
-/**
- Update the account password.
- 
- @param oldPassword the current password to update.
- @param newPassword the new password.
- @param success A block object called when the operation succeeds.
- @param failure A block object called when the operation fails.
- 
- @return a MXHTTPOperation instance.
- */
 - (MXHTTPOperation*)changePassword:(NSString*)oldPassword with:(NSString*)newPassword
                            success:(void (^)())success
                            failure:(void (^)(NSError *error))failure
@@ -247,14 +237,12 @@ MXAuthAction;
         return nil;
     }
     
-    NSDictionary *authparameters = @{
-                                     @"type": kMXLoginFlowTypePassword,
-                                     @"user": self.credentials.userId,
-                                     @"password": oldPassword,
-                                     };
-    
     NSDictionary *parameters = @{
-                                 @"auth": authparameters,
+                                 @"auth": @{
+                                             @"type": kMXLoginFlowTypePassword,
+                                             @"user": self.credentials.userId,
+                                             @"password": oldPassword,
+                                           },
                                  @"new_password": newPassword
                                  };
     
