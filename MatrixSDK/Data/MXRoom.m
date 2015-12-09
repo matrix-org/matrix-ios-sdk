@@ -917,11 +917,11 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     return managedEvents;
 }
 
-- (BOOL)setReadReceiptToken:(NSString*)token ts:(long)ts
+- (BOOL)setReadReceipt:(NSString*)userID token:(NSString*)token ts:(uint64_t)ts
 {
     MXReceiptData *data = [[MXReceiptData alloc] init];
     
-    data.userId = mxSession.myUser.userId;
+    data.userId = userID;
     data.eventId = token;
     data.ts = ts;
     
@@ -937,7 +937,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     return NO;
 }
 
-- (BOOL)acknowledgeLatestEvent:(BOOL)sendReceipt;
+- (BOOL)acknowledgeLatestEvent:(BOOL)sendReceipt
 {
     // Sanity check on supported C-S version
     if (mxSession.matrixRestClient.preferredAPIVersion < MXRestClientAPIVersion2)
