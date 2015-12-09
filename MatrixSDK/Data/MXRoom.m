@@ -343,6 +343,21 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     {
         [self notifyListeners:event direction:direction];
     }
+    else
+    {
+        // for each new message
+        // assume that the sender aknowledges oldest messages
+        if (event.sender && event.eventId)
+        {
+            MXReceiptData* data = [[MXReceiptData alloc] init];
+            data.userId = event.sender;
+            data.eventId = event.eventId;
+            data.ts = event.ageLocalTs;
+        
+            [mxSession.store storeReceipt:data roomId:_state.roomId];
+        }
+    }
+
 }
 
 
