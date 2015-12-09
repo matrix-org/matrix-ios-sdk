@@ -522,12 +522,14 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 - (BOOL)handleReceiptEvent:(MXEvent *)event direction:(MXEventDirection)direction;
 
 /**
- Update the read receipt token.
+ Update the read receipt token of an userId.
+ @param userID the userId
  @param token the new token
  @param ts the token ts
-@return true if the token is refreshed
+
+ @return true if the token is refreshed
  */
-- (BOOL)setReadReceiptToken:(NSString*)token ts:(long)ts;
+- (BOOL)setReadReceipt:(NSString*)userID token:(NSString*)token ts:(uint64_t)ts;
 
 /**
  Acknowlegde the latest event of type defined in acknowledgableEventTypes.

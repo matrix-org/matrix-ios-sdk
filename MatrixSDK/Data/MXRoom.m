@@ -343,21 +343,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     {
         [self notifyListeners:event direction:direction];
     }
-    else
-    {
-        // for each new message
-        // assume that the sender aknowledges oldest messages
-        if (event.sender && event.eventId)
-        {
-            MXReceiptData* data = [[MXReceiptData alloc] init];
-            data.userId = event.sender;
-            data.eventId = event.eventId;
-            data.ts = event.ageLocalTs;
-        
-            [mxSession.store storeReceipt:data roomId:_state.roomId];
-        }
-    }
-
 }
 
 
@@ -932,11 +917,11 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     return managedEvents;
 }
 
-- (BOOL)setReadReceiptToken:(NSString*)token ts:(long)ts
+- (BOOL)setReadReceipt:(NSString*)userID token:(NSString*)token ts:(uint64_t)ts
 {
     MXReceiptData *data = [[MXReceiptData alloc] init];
     
-    data.userId = mxSession.myUser.userId;
+    data.userId = userID;
     data.eventId = token;
     data.ts = ts;
     
@@ -952,7 +937,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     return NO;
 }
 
-- (BOOL)acknowledgeLatestEvent:(BOOL)sendReceipt;
+- (BOOL)acknowledgeLatestEvent:(BOOL)sendReceipt
 {
     // Sanity check on supported C-S version
     if (mxSession.matrixRestClient.preferredAPIVersion < MXRestClientAPIVersion2)
