@@ -545,4 +545,14 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  */
 - (NSArray*)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort;
 
+/**
+ Comparator to use to order array of rooms by their lastest originServerTs value.
+ 
+ Arrays are then sorting so that the oldest room is set at position 0.
+ 
+ @param otherRoom the MXRoom object to compare with.
+ @return a NSComparisonResult value: NSOrderedDescending if otherRoom is newer than self.
+ */
+- (NSComparisonResult)compareOriginServerTs:(MXRoom *)otherRoom;
+
 @end

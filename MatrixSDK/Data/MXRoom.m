@@ -979,6 +979,11 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     return NO;
 }
 
+- (NSComparisonResult)compareOriginServerTs:(MXRoom *)otherRoom
+{
+    return [[otherRoom lastMessageWithTypeIn:nil] compareOriginServerTs:[self lastMessageWithTypeIn:nil]];
+}
+
 -(NSArray*) unreadEvents
 {
     return [mxSession.store unreadEvents:_state.roomId withTypeIn:_acknowledgableEventTypes];
