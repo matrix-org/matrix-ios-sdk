@@ -16,6 +16,8 @@
 
 #import "MXRoomState.h"
 
+#import "MXSDKOptions.h"
+
 #import "MXSession.h"
 #import "MXTools.h"
 
@@ -421,9 +423,10 @@
             {
                 members[roomMember.userId] = roomMember;
 
-                // If the member has no defined, force to use an identicon
-                if (nil == roomMember.avatarUrl)
+                // Handle here the case where the member has no defined avatar.
+                if (nil == roomMember.avatarUrl && ![MXSDKOptions sharedInstance].disableIdenticonUseForUserAvatar)
                 {
+                    // Force to use an identicon url
                     roomMember.avatarUrl = [mxSession.matrixRestClient urlOfIdenticon:roomMember.userId];
                 }
             }

@@ -1,5 +1,5 @@
 /*
- Copyright 2014 OpenMarket Ltd
+ Copyright 2015 OpenMarket Ltd
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -14,25 +14,17 @@
  limitations under the License.
  */
 
-#import <UIKit/UIKit.h>
-
-/**
- The Matrix iOS SDK version.
- */
-FOUNDATION_EXPORT NSString *MatrixSDKVersion;
-
-#import <MatrixSDK/MXRestClient.h>
-#import <MatrixSDK/MXSession.h>
-#import <MatrixSDK/MXError.h>
-
-#import <MatrixSDK/MXStore.h>
-#import <MatrixSDK/MXNoStore.h>
-#import <MatrixSDK/MXMemoryStore.h>
-#import <MatrixSDK/MXFileStore.h>
-#import <MatrixSDK/MXCoreDataStore.h>
-
-#import <MatrixSDK/MXLogger.h>
-
-#import "MXTools.h"
-
 #import "MXSDKOptions.h"
+
+static MXSDKOptions *sharedOnceInstance = nil;
+
+@implementation MXSDKOptions
+
++ (MXSDKOptions *)sharedInstance
+{
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{ sharedOnceInstance = [[self alloc] init]; });
+    return sharedOnceInstance;
+}
+
+@end
