@@ -16,6 +16,8 @@
 
 #import "MXUser.h"
 
+#import "MXSDKOptions.h"
+
 #import "MXSession.h"
 #import "MXEvent.h"
 #import "MXJSONModels.h"
@@ -66,10 +68,11 @@
     {
         self.displayname = [roomMember.displayname copy];
         self.avatarUrl = [roomMember.avatarUrl copy];
-
-        // If the member has no defined, force to use an identicon
-        if (nil == self.avatarUrl)
+        
+        // Handle here the case where the user has no defined avatar.
+        if (nil == self.avatarUrl && ![MXSDKOptions sharedInstance].disableIdenticonUseForUserAvatar)
         {
+            // Force to use an identicon url
             self.avatarUrl = [mxSession.matrixRestClient urlOfIdenticon:self.userId];
         }
 
@@ -103,9 +106,11 @@
             self.avatarUrl = nil;
         }
     }
-    // If the member has no defined, force to use an identicon
-    if (nil == self.avatarUrl)
+    
+    // Handle here the case where the user has no defined avatar.
+    if (nil == self.avatarUrl && ![MXSDKOptions sharedInstance].disableIdenticonUseForUserAvatar)
     {
+        // Force to use an identicon url
         self.avatarUrl = [mxSession.matrixRestClient urlOfIdenticon:self.userId];
     }
 
