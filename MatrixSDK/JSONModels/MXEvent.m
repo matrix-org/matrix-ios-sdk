@@ -103,6 +103,10 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
         event.age = [((NSNumber*)JSONDictionary[@"age"]) unsignedIntegerValue];
         event.redacts = JSONDictionary[@"redacts"];
         event.redactedBecause = JSONDictionary[@"redacted_because"];
+        if (JSONDictionary[@"invite_room_state"])
+        {
+            event.inviteRoomState = [MXEvent modelsFromJSON:JSONDictionary[@"invite_room_state"]];
+        }
 
         [event finalise];
     }
@@ -398,6 +402,7 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
         _ageLocalTs = [ageLocalTs unsignedLongLongValue];
         _redacts = [aDecoder decodeObjectForKey:@"redacts"];
         _redactedBecause = [aDecoder decodeObjectForKey:@"redactedBecause"];
+        _inviteRoomState = [aDecoder decodeObjectForKey:@"inviteRoomState"];
     }
     return self;
 }
@@ -415,6 +420,7 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     [aCoder encodeObject:@(_ageLocalTs) forKey:@"ageLocalTs"];
     [aCoder encodeObject:_redacts forKey:@"redacts"];
     [aCoder encodeObject:_redactedBecause forKey:@"redactedBecause"];
+    [aCoder encodeObject:_inviteRoomState forKey:@"inviteRoomState"];
 }
 
 @end

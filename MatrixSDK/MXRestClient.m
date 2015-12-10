@@ -222,6 +222,42 @@ MXAuthAction;
 }
 
 
+#pragma mark - password update operation
+
+- (MXHTTPOperation*)changePassword:(NSString*)oldPassword with:(NSString*)newPassword
+                           success:(void (^)())success
+                           failure:(void (^)(NSError *error))failure
+{
+    // sanity check
+    if (!oldPassword || !newPassword)
+    {
+        NSError* error = [NSError errorWithDomain:@"Invalid params" code:500 userInfo:nil];
+        
+        failure(error);
+        return nil;
+    }
+    
+    NSDictionary *parameters = @{
+                                 @"auth": @{
+                                             @"type": kMXLoginFlowTypePassword,
+                                             @"user": self.credentials.userId,
+                                             @"password": oldPassword,
+                                           },
+                                 @"new_password": newPassword
+                                 };
+    
+    return [httpClient requestWithMethod:@"POST"
+                                    path:@"v2_alpha/account/password"
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     success();
+                                 }
+                                 failure:^(NSError *error) {
+                                     failure(error);
+                                 }];
+}
+
+
 #pragma mark - Common operations for register and login
 /*
  The only difference between register and login request are the path of the requests.
@@ -372,6 +408,16 @@ MXAuthAction;
                                  success:(void (^)())success
                                  failure:(void (^)(NSError *))failure
 {
+    
+    // sanity check
+    if (!pushkey || !kind || !appDisplayName || !deviceDisplayName || !profileTag || !lang || !data || !append)
+    {
+        NSError* error = [NSError errorWithDomain:@"Invalid params" code:500 userInfo:nil];
+        
+        failure(error);
+        return nil;
+    }
+    
     // Fill the request parameters on demand
     // Caution: parameters are JSON serialized in http body, we must use a NSNumber created with a boolean for append value.
     NSDictionary *parameters = @{

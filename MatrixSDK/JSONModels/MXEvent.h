@@ -230,6 +230,10 @@ Contains the fully-qualified ID of the user who sent this event (deprecated sinc
  */
 @property (nonatomic) NSDictionary *redactedBecause;
 
+/**
+ In case of invite event, inviteRoomState contains a subset of the state of the room at the time of the invite.
+ */
+@property (nonatomic) NSArray<MXEvent *> *inviteRoomState;
 
 /**
  The enum version of the event type.

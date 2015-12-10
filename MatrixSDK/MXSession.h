@@ -117,6 +117,18 @@ FOUNDATION_EXPORT NSString *const kMXSessionDidLeaveRoomNotification;
  */
 FOUNDATION_EXPORT NSString *const kMXSessionDidSyncNotification;
 
+/**
+ Posted when MXSession has detected a change in the `invitedRooms` property.
+ 
+ The user has received a room invitation or he has accepted or rejected one.
+ Note this notification is sent only when the `invitedRooms` method has been called.
+
+ The passed userInfo dictionary contains:
+ - `kMXSessionNotificationRoomIdKey` the roomId of the room concerned by the changed
+ - `kMXSessionNotificationEventKey` the MXEvent responsible for the change.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionInvitedRoomsDidChangeNotification;
+
 #pragma mark - Notifications keys
 /**
  The key in notification userInfo dictionary representating the roomId.
@@ -434,6 +446,17 @@ typedef void (^MXOnCatchupFail)(NSError *error);
  @return an array where rooms are ordered.
  */
 - (NSArray<MXRoom*>*)sortRooms:(NSArray<MXRoom*>*)rooms byLastMessageWithTypeIn:(NSArray<MXEventTypeString>*)types;
+
+
+#pragma mark - User's special rooms
+/**
+ Get the list of rooms where the user has a pending invitation.
+ 
+ The `kMXSessionInvitedRoomsDidChangeNotification` will be sent when a change is detected by the SDK.
+ 
+ @return an array where rooms are ordered.
+ */
+- (NSArray<MXRoom*>*)invitedRooms;
 
 
 #pragma mark - User's rooms tags

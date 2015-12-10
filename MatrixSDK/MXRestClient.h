@@ -286,6 +286,20 @@ typedef enum : NSUInteger
  */
 - (NSString*)loginFallback;
 
+/**
+ Replace the account password.
+ 
+ @param oldPassword the current password to update.
+ @param newPassword the new password.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)changePassword:(NSString*)oldPassword with:(NSString*)newPassword
+                          success:(void (^)())success
+                          failure:(void (^)(NSError *error))failure;
+
 #pragma mark - Push Notifications
 /**
  Update the pusher for this device on the Home Server.
