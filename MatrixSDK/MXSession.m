@@ -1767,7 +1767,20 @@ typedef void (^MXOnResumeDone)();
         // Add a listener in order to update the app about invitation list change
         [self listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
 
-            if (MXEventDirectionForwards == direction)
+            // in some race conditions the oneself join event is received during the sync instead of MXEventDirectionSync
+            //
+            // standard case
+            // 1 - send a join request
+            // 2 - receive the join event in the live stream -> call this method
+            // 3 - perform an initial sync when the join method call the success callback
+            //
+            // but, this case also happens
+            // 1 - send a join request
+            // 2 - perform an initial sync when the join method call the success callback
+            // 3 - receive the join event in the live stream -> this method is not called because the event has already been stored in the step 2
+            // so, we need to manage the sync direction
+            
+            if ((MXEventDirectionForwards == direction) || (MXEventDirectionSync == direction))
             {
                 BOOL notify = NO;
                 MXRoomState *roomPrevState = (MXRoomState *)customObject;
@@ -1775,16 +1788,24 @@ typedef void (^MXOnResumeDone)();
 
                 if (event.inviteRoomState)
                 {
-                    // This is an invite event. Add the room to the invitation list
-                    [invitedRooms addObject:room];
-                    notify = YES;
+                    // check if the room is not yet in the list
+                    if ((MXEventDirectionForwards == direction) && ([invitedRooms indexOfObject:room] == NSNotFound))
+                    {
+                        // This is an invite event. Add the room to the invitation list
+                        [invitedRooms addObject:room];
+                        notify = YES;
+                    }
                 }
                 else if (roomPrevState.membership == MXMembershipInvite)
                 {
-                    // An invitation was pending for this room. A new membership event means the
-                    // user has accepted or rejected the invitation.
-                    [invitedRooms removeObject:room];
-                    notify = YES;
+                    // check if the room is registred.
+                    if ([invitedRooms indexOfObject:room] != NSNotFound)
+                    {
+                        // An invitation was pending for this room. A new membership event means the
+                        // user has accepted or rejected the invitation.
+                        [invitedRooms removeObject:room];
+                        notify = YES;
+                    }
                 }
 
                 if (notify)
