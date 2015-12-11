@@ -991,7 +991,34 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 - (NSArray*)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort
 {
-    return [mxSession.store getEventReceipts:_state.roomId eventId:eventId sorted:sort];
+    NSArray *receipts = [mxSession.store getEventReceipts:_state.roomId eventId:eventId sorted:sort];
+    
+    // if some receipts are found
+    if (receipts)
+    {
+        NSString* myUserId = mxSession.myUser.userId;
+        NSMutableArray* res = [[NSMutableArray alloc] init];
+        
+        // Remove the oneself receipts
+        for (MXReceiptData* data in receipts)
+        {
+            if (![data.userId isEqualToString:myUserId])
+            {
+                [res addObject:data];
+            }
+        }
+        
+        if (res.count > 0)
+        {
+            receipts = res;
+        }
+        else
+        {
+            receipts = nil;
+        }
+    }
+    
+    return receipts;
 }
 
 - (NSString *)description
