@@ -1940,8 +1940,8 @@ typedef void (^MXOnResumeDone)();
     // We sort rooms by the lexicographic ordering of the 'order' metadata on their tags.
     // For convenience, we calculate this for now a floating point number between 0.0 and 1.0.
 
-    CGFloat orderA = 0.0; // by default we're next to the beginning of the list
-    CGFloat orderB = 1.0; // by default we're next to the end of the list too
+    double orderA = 0.0; // by default we're next to the beginning of the list
+    double orderB = 1.0; // by default we're next to the end of the list too
 
     NSArray<MXRoom*> *roomsWithTag = [self roomsWithTag:tag];
     if (roomsWithTag.count)
@@ -1958,7 +1958,10 @@ typedef void (^MXOnResumeDone)();
             }
             else
             {
-                orderA = [prevTag.order floatValue];
+                if (prevTag.parsedOrder)
+                {
+                    orderA = [prevTag.parsedOrder doubleValue];
+                }
             }
         }
 
@@ -1971,7 +1974,10 @@ typedef void (^MXOnResumeDone)();
             }
             else
             {
-                orderB = [nextTag.order floatValue];
+                if (nextTag.parsedOrder)
+                {
+                    orderB = [nextTag.parsedOrder doubleValue];
+                }
             }
         }
     }

@@ -152,6 +152,7 @@ NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
     {
         _name = name;
         _order = order;
+        _parsedOrder = nil;
     }
     return self;
 }
@@ -221,6 +222,32 @@ NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
 {
     [aCoder encodeObject:_name forKey:@"name"];
     [aCoder encodeObject:_order forKey:@"order"];
+}
+
+- (NSNumber*)orderAsNumber
+{
+    if (!_parsedOrder && _order)
+    {
+        NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
+        [formatter setMaximumFractionDigits:16];
+        [formatter setMinimumFractionDigits:0];
+        [formatter setDecimalSeparator:@","];
+        [formatter setGroupingSeparator:@""];
+        
+        // assume that the default separator is the '.'.
+        [formatter setDecimalSeparator:@"."];
+        
+        _parsedOrder = [formatter numberFromString:_order];
+        
+        if (!_parsedOrder)
+        {
+            // check again with ',' as decimal separator.
+            [formatter setDecimalSeparator:@","];
+            _parsedOrder = [formatter numberFromString:_order];
+        }
+    }
+    
+    return _parsedOrder;
 }
 
 - (NSString *)description
