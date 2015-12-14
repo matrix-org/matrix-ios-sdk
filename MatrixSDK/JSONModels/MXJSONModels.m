@@ -143,6 +143,12 @@ NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
 NSString *const kMXRoomTagFavourite = @"m.favourite";
 NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
 
+@interface MXRoomTag()
+{
+    NSNumber* _parsedOrder;
+}
+@end
+
 @implementation MXRoomTag
 
 - (id)initWithName:(NSString *)name andOrder:(NSString *)order
@@ -224,7 +230,7 @@ NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
     [aCoder encodeObject:_order forKey:@"order"];
 }
 
-- (NSNumber*)orderAsNumber
+- (NSNumber*)parsedOrder
 {
     if (!_parsedOrder && _order)
     {
