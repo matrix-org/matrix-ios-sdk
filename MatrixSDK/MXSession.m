@@ -1979,7 +1979,9 @@ typedef void (^MXOnResumeDone)();
     CGFloat order = (orderA + orderB) / 2.0;
 
     NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
-    [formatter setMaximumFractionDigits:6];
+    [formatter setGroupingSeparator:@""];
+    [formatter setDecimalSeparator:@"."];
+    [formatter setMaximumFractionDigits:16];
     [formatter setMinimumFractionDigits:0];
     
     // remove trailing 0
