@@ -159,9 +159,9 @@ NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
 + (NSDictionary<NSString *,MXRoomTag *> *)roomTagsWithTagEvent:(MXEvent *)event
 {
     NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
-    [formatter setMaximumFractionDigits:12];
+    [formatter setMaximumFractionDigits:16];
     [formatter setMinimumFractionDigits:0];
-    [formatter setDecimalSeparator:@","];
+    [formatter setDecimalSeparator:@"."];
     [formatter setGroupingSeparator:@""];
     
     NSMutableDictionary *tags = [NSMutableDictionary dictionary];
@@ -173,7 +173,7 @@ NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
         if ([event.content[@"tags"][tagName][@"order"] isKindOfClass:NSNumber.class])
         {
             NSLog(@"[MXRoomTag] Warning: the room tag order is an integer value not a string in this event: %@", event);
-            order = [event.content[@"tags"][tagName][@"order"] stringValue];
+            order = [formatter stringFromNumber:event.content[@"tags"][tagName][@"order"]];
         }
         else
         {
@@ -181,27 +181,23 @@ NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
             
             if (order)
             {
-                // assume that the default separator is the ..
-                [formatter setDecimalSeparator:@"."];
-                
+                // Do some cleaning if the order is a number (and do nothing if the order is a string)
                 NSNumber *value = [formatter numberFromString:order];
-                
                 if (!value)
                 {
+                    // Manage numbers with ',' decimal separator
                     [formatter setDecimalSeparator:@","];
                     value = [formatter numberFromString:order];
                     [formatter setDecimalSeparator:@"."];
                 }
                 
-                if (!value)
+                if (value)
                 {
-                    value = [NSNumber numberWithFloat:0];
+                    // remove trailing 0
+                    // in some cases, the order is 0.00000 ("%f" formatter");
+                    // with this method, it becomes "0".
+                    order = [formatter stringFromNumber:value];
                 }
-                
-                // remove trailing 0
-                // in some cases, the order is 0.00000 ("%f" formatter");
-                // with this method, it becomes "0".
-                order = [formatter stringFromNumber:value];
             }
         }
 
