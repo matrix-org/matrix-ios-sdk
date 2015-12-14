@@ -1978,7 +1978,14 @@ typedef void (^MXOnResumeDone)();
 
     CGFloat order = (orderA + orderB) / 2.0;
 
-    return [NSString stringWithFormat:@"%f", order];
+    NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
+    [formatter setMaximumFractionDigits:6];
+    [formatter setMinimumFractionDigits:0];
+    
+    // remove trailing 0
+    // in some cases, the order is 0.00000 ("%f" formatter");
+    // with this method, it becomes "0".
+    return [formatter stringFromNumber:[NSNumber numberWithFloat:order]];
 }
 
 

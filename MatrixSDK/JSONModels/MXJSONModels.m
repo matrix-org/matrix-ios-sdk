@@ -158,6 +158,10 @@ NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
 
 + (NSDictionary<NSString *,MXRoomTag *> *)roomTagsWithTagEvent:(MXEvent *)event
 {
+    NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
+    [formatter setMaximumFractionDigits:6];
+    [formatter setMinimumFractionDigits:0];
+    
     NSMutableDictionary *tags = [NSMutableDictionary dictionary];
     for (NSString *tagName in event.content[@"tags"])
     {
@@ -172,6 +176,14 @@ NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
         else
         {
             order = event.content[@"tags"][tagName][@"order"];
+            
+            if (order)
+            {
+                // remove trailing 0
+                // in some cases, the order is 0.00000 ("%f" formatter");
+                // with this method, it becomes "0".
+                order = [formatter stringFromNumber:[NSNumber numberWithFloat:[order floatValue]]];
+            }
         }
 
         tags[tagName] = [[MXRoomTag alloc] initWithName:tagName andOrder:order];
