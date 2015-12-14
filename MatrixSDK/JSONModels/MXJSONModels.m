@@ -159,8 +159,10 @@ NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
 + (NSDictionary<NSString *,MXRoomTag *> *)roomTagsWithTagEvent:(MXEvent *)event
 {
     NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
-    [formatter setMaximumFractionDigits:6];
+    [formatter setMaximumFractionDigits:12];
     [formatter setMinimumFractionDigits:0];
+    [formatter setDecimalSeparator:@","];
+    [formatter setGroupingSeparator:@""];
     
     NSMutableDictionary *tags = [NSMutableDictionary dictionary];
     for (NSString *tagName in event.content[@"tags"])
@@ -179,10 +181,27 @@ NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
             
             if (order)
             {
+                // assume that the default separator is the ..
+                [formatter setDecimalSeparator:@"."];
+                
+                NSNumber *value = [formatter numberFromString:order];
+                
+                if (!value)
+                {
+                    [formatter setDecimalSeparator:@","];
+                    value = [formatter numberFromString:order];
+                    [formatter setDecimalSeparator:@"."];
+                }
+                
+                if (!value)
+                {
+                    value = [NSNumber numberWithFloat:0];
+                }
+                
                 // remove trailing 0
                 // in some cases, the order is 0.00000 ("%f" formatter");
                 // with this method, it becomes "0".
-                order = [formatter stringFromNumber:[NSNumber numberWithFloat:[order floatValue]]];
+                order = [formatter stringFromNumber:value];
             }
         }
 
