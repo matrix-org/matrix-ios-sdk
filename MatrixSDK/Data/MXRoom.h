@@ -538,7 +538,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 - (BOOL)acknowledgeLatestEvent:(BOOL)sendReceipt;
 
 /**
- Returns the receipts list for an event.
+ Returns the receipts list for an event, excluding the receipt from the current user.
  @param eventId The event Id.
  @param sort YES to sort them from the latest to the oldest.
  @return the receipts for an event in a dedicated room.
