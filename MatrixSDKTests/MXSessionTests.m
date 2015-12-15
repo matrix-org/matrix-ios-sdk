@@ -1015,24 +1015,28 @@
                                 mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
                                 [mxSession start:^{
 
-                                    NSString *orderForFirstPosition = [mxSession tagOrderToBeAtIndex:0 withTag:tag];
+                                    NSString *orderForFirstPosition = [mxSession tagOrderToBeAtIndex:0 from:NSNotFound withTag:tag];
                                     XCTAssertLessThan(orderForFirstPosition.floatValue, 0.1);
 
-                                    NSString *orderForThirdPosition = [mxSession tagOrderToBeAtIndex:2 withTag:tag];
+                                    NSString *orderForThirdPosition = [mxSession tagOrderToBeAtIndex:2 from:NSNotFound withTag:tag];
                                     XCTAssertGreaterThan(orderForThirdPosition.floatValue, 0.2);
                                     XCTAssertLessThan(orderForThirdPosition.floatValue, 0.3);
 
-                                    NSString *orderForLastPosition = [mxSession tagOrderToBeAtIndex:3 withTag:tag];
+                                    NSString *orderForLastPosition = [mxSession tagOrderToBeAtIndex:3 from:NSNotFound withTag:tag];
                                     XCTAssertGreaterThan(orderForLastPosition.floatValue, 0.3);
 
-                                    orderForLastPosition = [mxSession tagOrderToBeAtIndex:10 withTag:tag];
+                                    orderForLastPosition = [mxSession tagOrderToBeAtIndex:10 from:NSNotFound withTag:tag];
                                     XCTAssertGreaterThan(orderForLastPosition.floatValue, 0.3);
+
+                                    NSString *orderForSecondPositionWhenComingFromFirst = [mxSession tagOrderToBeAtIndex:1 from:0 withTag:tag];
+                                    XCTAssertGreaterThan(orderForSecondPositionWhenComingFromFirst.floatValue, 0.2);
+                                    XCTAssertLessThan(orderForSecondPositionWhenComingFromFirst.floatValue, 0.3);
 
 
                                     // Test the method on a fresh new tag
                                     NSString *newTag = [[NSProcessInfo processInfo] globallyUniqueString];
 
-                                    NSString *orderForFirstTaggedRoom = [mxSession tagOrderToBeAtIndex:2 withTag:newTag];
+                                    NSString *orderForFirstTaggedRoom = [mxSession tagOrderToBeAtIndex:2 from:NSNotFound withTag:newTag];
                                     XCTAssertGreaterThan(orderForFirstTaggedRoom.floatValue, 0);
                                     XCTAssertLessThan(orderForFirstTaggedRoom.floatValue, 1);
 
