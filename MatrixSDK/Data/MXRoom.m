@@ -784,9 +784,25 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     {
         operation = [self removeTag:oldTag success:success failure:failure];
     }
-    else
+    // define a tag or define a new order
+    else if ((!oldTag && newTag) || [oldTag isEqualToString:newTag])
     {
         operation = [self addTag:newTag withOrder:newTagOrder success:success failure:failure];
+    }
+    else
+    {
+        // the tag is not the same
+        // weird, but the tag must be removed and defined again
+        // so combine remove and add tag operations
+        operation = [self removeTag:oldTag success:^{
+            
+            MXHTTPOperation *addTagHttpOperation = [self addTag:newTag withOrder:newTagOrder success:success failure:failure];
+            
+            // Transfer the new AFHTTPRequestOperation to the returned MXHTTPOperation
+            // So that user has hand on it
+            operation.operation = addTagHttpOperation.operation;
+            
+        } failure:failure];
     }
     
     return operation;
