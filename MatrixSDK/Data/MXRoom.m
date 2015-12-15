@@ -777,31 +777,19 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                        success:(void (^)())success
                        failure:(void (^)(NSError *error))failure
 {
-    // Combine remove and add tag operations
-    MXHTTPOperation *removeTageHttpOperation;
-    removeTageHttpOperation = [self removeTag:oldTag success:^{
-
-        if (newTag)
-        {
-            MXHTTPOperation *addTagHttpOperation = [self addTag:newTag withOrder:newTagOrder success:success failure:failure];
-
-            // Transfer the new AFHTTPRequestOperation to the returned MXHTTPOperation
-            // So that user has hand on it
-            removeTageHttpOperation.operation = addTagHttpOperation.operation;
-        }
-        else
-        {
-           // warn that the job is done
-           dispatch_async(dispatch_get_main_queue(), ^{
-            
-               success();
-           
-           });
-        }
-
-    } failure:failure];
-
-    return removeTageHttpOperation;
+    MXHTTPOperation *operation;
+    
+    // remove tag
+    if (oldTag && !newTag)
+    {
+        operation = [self removeTag:oldTag success:success failure:failure];
+    }
+    else
+    {
+        operation = [self addTag:newTag withOrder:newTagOrder success:success failure:failure];
+    }
+    
+    return operation;
 }
 
 
