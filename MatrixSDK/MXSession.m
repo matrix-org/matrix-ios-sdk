@@ -1789,7 +1789,8 @@ typedef void (^MXOnResumeDone)();
                 if (event.inviteRoomState)
                 {
                     // check if the room is not yet in the list
-                    if ((MXEventDirectionForwards == direction) && ([invitedRooms indexOfObject:room] == NSNotFound))
+                    // must be done in forward and sync direction
+                    if ([invitedRooms indexOfObject:room] == NSNotFound)
                     {
                         // This is an invite event. Add the room to the invitation list
                         [invitedRooms addObject:room];
@@ -1934,7 +1935,7 @@ typedef void (^MXOnResumeDone)();
     return result;
 }
 
-- (NSString *)tagOrderToBeAtIndex:(NSUInteger)index withTag:(NSString *)tag
+- (NSString*)tagOrderToBeAtIndex:(NSUInteger)index from:(NSUInteger)originIndex withTag:(NSString *)tag
 {
     // Algo (and the [0.0, 1.0] assumption) inspired from matrix-react-sdk:
     // We sort rooms by the lexicographic ordering of the 'order' metadata on their tags.
@@ -1946,6 +1947,13 @@ typedef void (^MXOnResumeDone)();
     NSArray<MXRoom*> *roomsWithTag = [self roomsWithTag:tag];
     if (roomsWithTag.count)
     {
+        // when an object is moved down, the index must be incremented
+        // because the object will be removed from the list to be inserted after its destination
+        if ((originIndex != NSNotFound) && (originIndex < index))
+        {
+            index++;
+        }
+        
         if (index > 0)
         {
             // Bound max index to the array size
@@ -1982,7 +1990,7 @@ typedef void (^MXOnResumeDone)();
         }
     }
 
-    CGFloat order = (orderA + orderB) / 2.0;
+    double order = (orderA + orderB) / 2.0;
 
     NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
     [formatter setGroupingSeparator:@""];
@@ -1993,7 +2001,7 @@ typedef void (^MXOnResumeDone)();
     // remove trailing 0
     // in some cases, the order is 0.00000 ("%f" formatter");
     // with this method, it becomes "0".
-    return [formatter stringFromNumber:[NSNumber numberWithFloat:order]];
+    return [formatter stringFromNumber:[NSNumber numberWithDouble:order]];
 }
 
 

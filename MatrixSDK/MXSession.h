@@ -485,10 +485,11 @@ typedef void (^MXOnCatchupFail)(NSError *error);
  in the list of rooms stamped with this tag.
 
  @param index the targeted index of the room in the list of rooms with the tag `tag`.
+ @param originIndex the origin index. NSNotFound if there is none.
  @param tag the tag.
  @return the tag order to apply to get the expected position.
  */
-- (NSString*)tagOrderToBeAtIndex:(NSUInteger)index withTag:(NSString *)tag;
+- (NSString*)tagOrderToBeAtIndex:(NSUInteger)index from:(NSUInteger)originIndex withTag:(NSString *)tag;
 
 
 #pragma mark - Global events listeners
