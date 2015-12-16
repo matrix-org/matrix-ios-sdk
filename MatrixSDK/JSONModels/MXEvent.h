@@ -169,12 +169,6 @@ typedef enum : NSUInteger
 @property (nonatomic) NSString *sender;
 
 /**
- Contains the fully-qualified IDs of the users who sent read receipts with this event.
- This property is relevant only for events with 'kMXEventTypeStringReceipt' type.
- */
-@property (nonatomic) NSArray *receiptSenders;
-
-/**
 Contains the fully-qualified ID of the user who sent this event (deprecated since API v2).
  */
 @property (nonatomic) NSString *userId;
@@ -250,6 +244,20 @@ Contains the fully-qualified ID of the user who sent this event (deprecated sinc
  Unlike [MXJSONModel originalDictionary], it returns also properties computed by the SDK.
  */
 - (NSDictionary *)dictionary;
+
+/**
+ Returns the event IDs for which a read receipt is defined in this event.
+ 
+ This property is relevant only for events with 'kMXEventTypeStringReceipt' type.
+ */
+- (NSArray *)readReceiptEventIds;
+
+/**
+ Returns the fully-qualified IDs of the users who sent read receipts with this event.
+ 
+ This property is relevant only for events with 'kMXEventTypeStringReceipt' type.
+ */
+- (NSArray *)readReceiptSenders;
 
 /**
  Returns a pruned version of the event, which removes all keys we

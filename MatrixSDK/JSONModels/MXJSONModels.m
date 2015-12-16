@@ -143,6 +143,12 @@ NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
 NSString *const kMXRoomTagFavourite = @"m.favourite";
 NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
 
+@interface MXRoomTag()
+{
+    NSNumber* _parsedOrder;
+}
+@end
+
 @implementation MXRoomTag
 
 - (id)initWithName:(NSString *)name andOrder:(NSString *)order
@@ -152,12 +158,19 @@ NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
     {
         _name = name;
         _order = order;
+        _parsedOrder = nil;
     }
     return self;
 }
 
 + (NSDictionary<NSString *,MXRoomTag *> *)roomTagsWithTagEvent:(MXEvent *)event
 {
+    NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
+    [formatter setMaximumFractionDigits:16];
+    [formatter setMinimumFractionDigits:0];
+    [formatter setDecimalSeparator:@"."];
+    [formatter setGroupingSeparator:@""];
+    
     NSMutableDictionary *tags = [NSMutableDictionary dictionary];
     for (NSString *tagName in event.content[@"tags"])
     {
@@ -167,11 +180,32 @@ NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
         if ([event.content[@"tags"][tagName][@"order"] isKindOfClass:NSNumber.class])
         {
             NSLog(@"[MXRoomTag] Warning: the room tag order is an integer value not a string in this event: %@", event);
-            order = [event.content[@"tags"][tagName][@"order"] stringValue];
+            order = [formatter stringFromNumber:event.content[@"tags"][tagName][@"order"]];
         }
         else
         {
             order = event.content[@"tags"][tagName][@"order"];
+            
+            if (order)
+            {
+                // Do some cleaning if the order is a number (and do nothing if the order is a string)
+                NSNumber *value = [formatter numberFromString:order];
+                if (!value)
+                {
+                    // Manage numbers with ',' decimal separator
+                    [formatter setDecimalSeparator:@","];
+                    value = [formatter numberFromString:order];
+                    [formatter setDecimalSeparator:@"."];
+                }
+                
+                if (value)
+                {
+                    // remove trailing 0
+                    // in some cases, the order is 0.00000 ("%f" formatter");
+                    // with this method, it becomes "0".
+                    order = [formatter stringFromNumber:value];
+                }
+            }
         }
 
         tags[tagName] = [[MXRoomTag alloc] initWithName:tagName andOrder:order];
@@ -194,6 +228,32 @@ NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
 {
     [aCoder encodeObject:_name forKey:@"name"];
     [aCoder encodeObject:_order forKey:@"order"];
+}
+
+- (NSNumber*)parsedOrder
+{
+    if (!_parsedOrder && _order)
+    {
+        NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
+        [formatter setMaximumFractionDigits:16];
+        [formatter setMinimumFractionDigits:0];
+        [formatter setDecimalSeparator:@","];
+        [formatter setGroupingSeparator:@""];
+        
+        // assume that the default separator is the '.'.
+        [formatter setDecimalSeparator:@"."];
+        
+        _parsedOrder = [formatter numberFromString:_order];
+        
+        if (!_parsedOrder)
+        {
+            // check again with ',' as decimal separator.
+            [formatter setDecimalSeparator:@","];
+            _parsedOrder = [formatter numberFromString:_order];
+        }
+    }
+    
+    return _parsedOrder;
 }
 
 - (NSString *)description

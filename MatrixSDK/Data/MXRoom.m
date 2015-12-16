@@ -792,31 +792,35 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                        success:(void (^)())success
                        failure:(void (^)(NSError *error))failure
 {
-    // Combine remove and add tag operations
-    MXHTTPOperation *removeTageHttpOperation;
-    removeTageHttpOperation = [self removeTag:oldTag success:^{
-
-        if (newTag)
-        {
+    MXHTTPOperation *operation;
+    
+    // remove tag
+    if (oldTag && !newTag)
+    {
+        operation = [self removeTag:oldTag success:success failure:failure];
+    }
+    // define a tag or define a new order
+    else if ((!oldTag && newTag) || [oldTag isEqualToString:newTag])
+    {
+        operation = [self addTag:newTag withOrder:newTagOrder success:success failure:failure];
+    }
+    else
+    {
+        // the tag is not the same
+        // weird, but the tag must be removed and defined again
+        // so combine remove and add tag operations
+        operation = [self removeTag:oldTag success:^{
+            
             MXHTTPOperation *addTagHttpOperation = [self addTag:newTag withOrder:newTagOrder success:success failure:failure];
-
+            
             // Transfer the new AFHTTPRequestOperation to the returned MXHTTPOperation
             // So that user has hand on it
-            removeTageHttpOperation.operation = addTagHttpOperation.operation;
-        }
-        else
-        {
-           // warn that the job is done
-           dispatch_async(dispatch_get_main_queue(), ^{
+            operation.operation = addTagHttpOperation.operation;
             
-               success();
-           
-           });
-        }
-
-    } failure:failure];
-
-    return removeTageHttpOperation;
+        } failure:failure];
+    }
+    
+    return operation;
 }
 
 
@@ -994,6 +998,11 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     return NO;
 }
 
+- (NSComparisonResult)compareOriginServerTs:(MXRoom *)otherRoom
+{
+    return [[otherRoom lastMessageWithTypeIn:nil] compareOriginServerTs:[self lastMessageWithTypeIn:nil]];
+}
+
 -(NSArray*) unreadEvents
 {
     return [mxSession.store unreadEvents:_state.roomId withTypeIn:_acknowledgableEventTypes];
@@ -1001,7 +1010,34 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 - (NSArray*)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort
 {
-    return [mxSession.store getEventReceipts:_state.roomId eventId:eventId sorted:sort];
+    NSArray *receipts = [mxSession.store getEventReceipts:_state.roomId eventId:eventId sorted:sort];
+    
+    // if some receipts are found
+    if (receipts)
+    {
+        NSString* myUserId = mxSession.myUser.userId;
+        NSMutableArray* res = [[NSMutableArray alloc] init];
+        
+        // Remove the oneself receipts
+        for (MXReceiptData* data in receipts)
+        {
+            if (![data.userId isEqualToString:myUserId])
+            {
+                [res addObject:data];
+            }
+        }
+        
+        if (res.count > 0)
+        {
+            receipts = res;
+        }
+        else
+        {
+            receipts = nil;
+        }
+    }
+    
+    return receipts;
 }
 
 - (NSString *)description

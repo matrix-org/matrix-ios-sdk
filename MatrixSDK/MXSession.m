@@ -1779,17 +1779,17 @@ typedef void (^MXOnResumeDone)();
             // 2 - perform an initial sync when the join method call the success callback
             // 3 - receive the join event in the live stream -> this method is not called because the event has already been stored in the step 2
             // so, we need to manage the sync direction
-            
             if ((MXEventDirectionForwards == direction) || (MXEventDirectionSync == direction))
             {
                 BOOL notify = NO;
                 MXRoomState *roomPrevState = (MXRoomState *)customObject;
                 MXRoom *room = [self roomWithRoomId:event.roomId];
 
-                if (event.inviteRoomState)
+                if (room.state.membership == MXMembershipInvite)
                 {
                     // check if the room is not yet in the list
-                    if ((MXEventDirectionForwards == direction) && ([invitedRooms indexOfObject:room] == NSNotFound))
+                    // must be done in forward and sync direction
+                    if ([invitedRooms indexOfObject:room] == NSNotFound)
                     {
                         // This is an invite event. Add the room to the invitation list
                         [invitedRooms addObject:room];
@@ -1934,18 +1934,25 @@ typedef void (^MXOnResumeDone)();
     return result;
 }
 
-- (NSString *)tagOrderToBeAtIndex:(NSUInteger)index withTag:(NSString *)tag
+- (NSString*)tagOrderToBeAtIndex:(NSUInteger)index from:(NSUInteger)originIndex withTag:(NSString *)tag
 {
     // Algo (and the [0.0, 1.0] assumption) inspired from matrix-react-sdk:
     // We sort rooms by the lexicographic ordering of the 'order' metadata on their tags.
     // For convenience, we calculate this for now a floating point number between 0.0 and 1.0.
 
-    CGFloat orderA = 0.0; // by default we're next to the beginning of the list
-    CGFloat orderB = 1.0; // by default we're next to the end of the list too
+    double orderA = 0.0; // by default we're next to the beginning of the list
+    double orderB = 1.0; // by default we're next to the end of the list too
 
     NSArray<MXRoom*> *roomsWithTag = [self roomsWithTag:tag];
     if (roomsWithTag.count)
     {
+        // when an object is moved down, the index must be incremented
+        // because the object will be removed from the list to be inserted after its destination
+        if ((originIndex != NSNotFound) && (originIndex < index))
+        {
+            index++;
+        }
+        
         if (index > 0)
         {
             // Bound max index to the array size
@@ -1958,7 +1965,10 @@ typedef void (^MXOnResumeDone)();
             }
             else
             {
-                orderA = [prevTag.order floatValue];
+                if (prevTag.parsedOrder)
+                {
+                    orderA = [prevTag.parsedOrder doubleValue];
+                }
             }
         }
 
@@ -1971,14 +1981,26 @@ typedef void (^MXOnResumeDone)();
             }
             else
             {
-                orderB = [nextTag.order floatValue];
+                if (nextTag.parsedOrder)
+                {
+                    orderB = [nextTag.parsedOrder doubleValue];
+                }
             }
         }
     }
 
-    CGFloat order = (orderA + orderB) / 2.0;
+    double order = (orderA + orderB) / 2.0;
 
-    return [NSString stringWithFormat:@"%f", order];
+    NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
+    [formatter setGroupingSeparator:@""];
+    [formatter setDecimalSeparator:@"."];
+    [formatter setMaximumFractionDigits:16];
+    [formatter setMinimumFractionDigits:0];
+    
+    // remove trailing 0
+    // in some cases, the order is 0.00000 ("%f" formatter");
+    // with this method, it becomes "0".
+    return [formatter stringFromNumber:[NSNumber numberWithDouble:order]];
 }
 
 

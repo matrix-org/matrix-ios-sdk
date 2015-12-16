@@ -16,6 +16,8 @@
 
 #import "MXRoomState.h"
 
+#import "MXSDKOptions.h"
+
 #import "MXSession.h"
 #import "MXTools.h"
 
@@ -407,23 +409,15 @@
     {
         case MXEventTypeRoomMember:
         {
-            // In case of invite, process the provided but incomplete room state
-            if (event.inviteRoomState)
-            {
-                for (MXEvent *inviteRoomStateEvent in event.inviteRoomState)
-                {
-                    [self handleStateEvent:inviteRoomStateEvent];
-                }
-            }
-
             MXRoomMember *roomMember = [[MXRoomMember alloc] initWithMXEvent:event andEventContent:[self contentOfEvent:event]];
             if (roomMember)
             {
                 members[roomMember.userId] = roomMember;
 
-                // If the member has no defined, force to use an identicon
-                if (nil == roomMember.avatarUrl)
+                // Handle here the case where the member has no defined avatar.
+                if (nil == roomMember.avatarUrl && ![MXSDKOptions sharedInstance].disableIdenticonUseForUserAvatar)
                 {
+                    // Force to use an identicon url
                     roomMember.avatarUrl = [mxSession.matrixRestClient urlOfIdenticon:roomMember.userId];
                 }
             }
@@ -435,6 +429,16 @@
 
             // Reset members names because the computation data basis has changed
             [membersNamesCache removeAllObjects];
+
+            // In case of invite, process the provided but incomplete room state
+            if (self.membership == MXMembershipInvite && event.inviteRoomState)
+            {
+                for (MXEvent *inviteRoomStateEvent in event.inviteRoomState)
+                {
+                    [self handleStateEvent:inviteRoomStateEvent];
+                }
+            }
+
             break;
         }
         case MXEventTypeRoomPowerLevels:

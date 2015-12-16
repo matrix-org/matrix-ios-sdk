@@ -201,6 +201,12 @@ FOUNDATION_EXPORT NSString *const kMXRoomTagLowPriority;
 @property (nonatomic, readonly) NSString *order;
 
 /**
+ Try to parse order as NSNumber.
+ Provides nil if the items cannot be parsed.
+ */
+@property (nonatomic, readonly) NSNumber *parsedOrder;
+
+/**
  Basic constructor.
  
  @param name the tag name

@@ -538,11 +538,21 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 - (BOOL)acknowledgeLatestEvent:(BOOL)sendReceipt;
 
 /**
- Returns the receipts list for an event.
+ Returns the receipts list for an event, excluding the receipt from the current user.
  @param eventId The event Id.
  @param sort YES to sort them from the latest to the oldest.
  @return the receipts for an event in a dedicated room.
  */
 - (NSArray*)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort;
+
+/**
+ Comparator to use to order array of rooms by their lastest originServerTs value.
+ 
+ Arrays are then sorting so that the oldest room is set at position 0.
+ 
+ @param otherRoom the MXRoom object to compare with.
+ @return a NSComparisonResult value: NSOrderedDescending if otherRoom is newer than self.
+ */
+- (NSComparisonResult)compareOriginServerTs:(MXRoom *)otherRoom;
 
 @end

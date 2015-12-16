@@ -195,13 +195,38 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     return (nil != self.stateKey);
 }
 
-- (NSArray*)receiptSenders
+- (NSArray *)readReceiptEventIds
 {
-    NSMutableArray* list = [[NSMutableArray alloc] init];
+    NSMutableArray* list = nil;
     
     if (eventType == MXEventTypeReceipt)
     {
         NSArray* eventIds = [_content allKeys];
+        list = [[NSMutableArray alloc] initWithCapacity:eventIds.count];
+        
+        for (NSString* eventId in eventIds)
+        {
+            NSDictionary* eventDict = [_content objectForKey:eventId];
+            NSDictionary* readDict = [eventDict objectForKey:kMXEventTypeStringRead];
+            
+            if (readDict)
+            {
+                [list addObject:eventId];
+            }
+        }
+    }
+    
+    return list;
+}
+
+- (NSArray *)readReceiptSenders
+{
+    NSMutableArray* list = nil;
+    
+    if (eventType == MXEventTypeReceipt)
+    {
+        NSArray* eventIds = [_content allKeys];
+        list = [[NSMutableArray alloc] initWithCapacity:eventIds.count];
         
         for(NSString* eventId in eventIds)
         {
@@ -221,10 +246,6 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
                 }
             }
         }
-    }
-    else if (_sender)
-    {
-        [list addObject:_sender];
     }
     
     return list;
