@@ -1779,14 +1779,13 @@ typedef void (^MXOnResumeDone)();
             // 2 - perform an initial sync when the join method call the success callback
             // 3 - receive the join event in the live stream -> this method is not called because the event has already been stored in the step 2
             // so, we need to manage the sync direction
-            
             if ((MXEventDirectionForwards == direction) || (MXEventDirectionSync == direction))
             {
                 BOOL notify = NO;
                 MXRoomState *roomPrevState = (MXRoomState *)customObject;
                 MXRoom *room = [self roomWithRoomId:event.roomId];
 
-                if (event.inviteRoomState)
+                if (room.state.membership == MXMembershipInvite)
                 {
                     // check if the room is not yet in the list
                     // must be done in forward and sync direction
