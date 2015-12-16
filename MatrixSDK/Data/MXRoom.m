@@ -412,17 +412,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             MXRoomMember *roomMember = [_state memberWithUserId:event.sender];
             if (roomMember && MXMembershipJoin == roomMember.membership)
             {
-                // store the accountData when the oneself user joins
-                // to let him play with tags
-                if ([roomMember.userId isEqualToString:self.mxSession.myUser.userId])
-                {
-                    if ([mxSession.store respondsToSelector:@selector(storeAccountDataForRoom:userData:)])
-                    {
-                        [mxSession.store storeAccountDataForRoom:_state.roomId userData:_accountData];
-                        [mxSession.store commit];
-                    }
-                }
-                
                 [user updateWithRoomMemberEvent:event roomMember:roomMember];
             }
         }
