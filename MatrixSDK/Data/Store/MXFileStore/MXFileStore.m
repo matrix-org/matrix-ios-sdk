@@ -458,6 +458,13 @@ NSString *const kMXReceiptsFolder = @"receipts";
     {
         NSString *roomFile = [storeRoomsAccountDataPath stringByAppendingPathComponent:roomId];
         roomUserdData =[NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+        
+        // if the file does not exist, create the roomAccountData
+        // the file saving could have failed.
+        if (!roomUserdData)
+        {
+            roomUserdData = [[MXRoomAccountData alloc] init];
+        }
 
         if (NO == [NSThread isMainThread])
         {
