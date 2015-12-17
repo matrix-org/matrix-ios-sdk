@@ -1299,12 +1299,23 @@ typedef void (^MXOnResumeDone)();
 {
     return [matrixRestClient joinRoom:roomIdOrAlias success:^(NSString *theRoomId) {
 
+        MXRoom *room = [self getOrCreateRoom:theRoomId withInitialSync:nil notify:YES];
+        
+        // check if the room is in the invited rooms list
+        if ([self removeInvitedRoom:room])
+        {            
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionInvitedRoomsDidChangeNotification
+                                                                object:self
+                                                              userInfo:@{
+                                                                         kMXSessionNotificationRoomIdKey: room.state.roomId,
+                                                                         }];
+        }
+        
 #ifdef MXSESSION_ENABLE_SERVER_SYNC_V2
         if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
         {
             if (success)
             {
-                MXRoom *room = [self getOrCreateRoom:theRoomId withInitialSync:nil notify:YES];
                 success(room);
             }
         }
@@ -1745,6 +1756,41 @@ typedef void (^MXOnResumeDone)();
 
 
 #pragma mark - User's special rooms
+
+- (BOOL)removeInvitedRoom:(MXRoom*)roomToRemove
+{
+    BOOL hasBeenFound = NO;
+    
+    // sanity check
+    if (invitedRooms.count > 0)
+    {
+        hasBeenFound =  ([invitedRooms indexOfObject:roomToRemove] != NSNotFound);
+        
+        // if the room object is not found
+        // check if there is a room with the same roomId
+        // indeed, during the room initial sync, the room object is deleted to be created again.
+        if (!hasBeenFound)
+        {
+            for(MXRoom* room in invitedRooms)
+            {
+                if ([room.state.roomId isEqualToString:roomToRemove.state.roomId])
+                {
+                    roomToRemove = room;
+                    hasBeenFound = YES;
+                    break;
+                }
+            }
+        }
+        
+        if (hasBeenFound)
+        {
+            [invitedRooms removeObject:roomToRemove];
+        }
+    }
+    
+    return hasBeenFound;
+}
+
 - (NSArray<MXRoom *> *)invitedRooms
 {
     if (nil == invitedRooms)
@@ -1798,14 +1844,9 @@ typedef void (^MXOnResumeDone)();
                 }
                 else if (roomPrevState.membership == MXMembershipInvite)
                 {
-                    // check if the room is registred.
-                    if ([invitedRooms indexOfObject:room] != NSNotFound)
-                    {
-                        // An invitation was pending for this room. A new membership event means the
-                        // user has accepted or rejected the invitation.
-                        [invitedRooms removeObject:room];
-                        notify = YES;
-                    }
+                    // An invitation was pending for this room. A new membership event means the
+                    // user has accepted or rejected the invitation.
+                    notify = [self removeInvitedRoom:room];
                 }
 
                 if (notify)
