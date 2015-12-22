@@ -32,11 +32,46 @@
  */
 @interface MXPublicRoom : MXJSONModel
 
+    /**
+     The ID of the room.
+     */
     @property (nonatomic) NSString *roomId;
+
+    /**
+     The name of the room, if any. May be nil.
+     */
     @property (nonatomic) NSString *name;
-    @property (nonatomic) NSArray *aliases; // Array of NSString
+
+    /**
+     Aliases of the room.
+     */
+    @property (nonatomic) NSArray<NSString*> *aliases;
+
+    /**
+     The topic of the room, if any. May be nil.
+     */
     @property (nonatomic) NSString *topic;
+
+    /**
+     The number of members joined to the room.
+     */
     @property (nonatomic) NSUInteger numJoinedMembers;
+
+    /**
+     Whether the room may be viewed by guest users without joining.
+     */
+    @property (nonatomic) BOOL worldReadable;
+
+    /**
+     Whether guest users may join the room and participate in it.
+     If they can, they will be subject to ordinary power level rules like any other user.
+     */
+    @property (nonatomic) BOOL guestCanJoin;
+
+    /**
+     The URL for the room's avatar. May be nil.
+     */
+    @property (nonatomic) NSString *avatarUrl;
 
     // The display name is computed from available information
     // @TODO: move it to MXSession as this class has additional information to compute the optimal display name
