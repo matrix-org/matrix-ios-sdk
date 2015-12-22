@@ -683,9 +683,9 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @interface MXRoomSyncState : MXJSONModel
 
     /**
-     List of event ids (array of NSString).
+     List of state events (array of MXEvent). The resulting state corresponds to the *start* of the timeline.
      */
-    @property (nonatomic) NSArray<NSString*> *events;
+    @property (nonatomic) NSArray<MXEvent*> *events;
 
 @end
 
@@ -695,9 +695,9 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @interface MXRoomSyncTimeline : MXJSONModel
 
     /**
-     List of event ids (array of NSString).
+     List of events (array of MXEvent).
      */
-    @property (nonatomic) NSArray<NSString*> *events;
+    @property (nonatomic) NSArray<MXEvent*> *events;
 
     /**
      Boolean which tells whether there are more events on the server
@@ -741,12 +741,6 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @interface MXRoomSync : MXJSONModel
 
     /**
-     Converted events mapping: keys are event ids.
-     The events are referenced from the 'timeline' and 'state' keys for this room.
-     */
-    @property (nonatomic) NSDictionary<NSString*, MXEvent*> *mxEventMap;
-
-    /**
      The state updates for the room.
      */
     @property (nonatomic) MXRoomSyncState *state;
@@ -757,7 +751,7 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
     @property (nonatomic) MXRoomSyncTimeline *timeline;
 
     /**
-     The ephemeral events in the room that aren't recorded in the timeline or state of the room (e.g. typing).
+     The ephemeral events in the room that aren't recorded in the timeline or state of the room (e.g. typing, receipts).
      */
     @property (nonatomic) MXRoomSyncEphemeral *ephemeral;
 
@@ -785,19 +779,19 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @interface MXRoomsSyncResponse : MXJSONModel
 
     /**
-     Converted joined rooms: keys are rooms ids.
+     Joined rooms: keys are rooms ids.
      */
-    @property (nonatomic) NSDictionary<NSString*, MXRoomSync*> *mxJoined;
+    @property (nonatomic) NSDictionary<NSString*, MXRoomSync*> *join;
 
     /**
-     Converted invited rooms. The rooms that the user has been invited to: keys are rooms ids.
+     Invitations. The rooms that the user has been invited to: keys are rooms ids.
      */
-    @property (nonatomic) NSDictionary<NSString*, MXInvitedRoomSync*> *mxInvited;
+    @property (nonatomic) NSDictionary<NSString*, MXInvitedRoomSync*> *invite;
 
     /**
-     Converted archived rooms. The rooms that the user has left or been banned from: keys are rooms ids.
+     Left rooms. The rooms that the user has left or been banned from: keys are rooms ids.
      */
-    @property (nonatomic) NSDictionary<NSString*, MXRoomSync*> *mxArchived;
+    @property (nonatomic) NSDictionary<NSString*, MXRoomSync*> *leave;
 
 @end
 
@@ -829,9 +823,9 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
     @property (nonatomic) MXPresenceSyncResponse *presence;
 
     /**
-     Converted list of rooms.
+     List of rooms.
      */
-    @property (nonatomic) MXRoomsSyncResponse *mxRooms;
+    @property (nonatomic) MXRoomsSyncResponse *rooms;
 
 @end
 

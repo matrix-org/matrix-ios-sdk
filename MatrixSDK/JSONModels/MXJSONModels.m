@@ -645,9 +645,31 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
 #pragma mark -
 
 @implementation MXRoomSyncState
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXRoomSyncState *roomSyncState = [[MXRoomSyncState alloc] init];
+    if (roomSyncState)
+    {
+        roomSyncState.events = [MXEvent modelsFromJSON:JSONDictionary[@"events"]];
+    }
+    return roomSyncState;
+}
+
 @end
 
 @implementation MXRoomSyncTimeline
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXRoomSyncTimeline *roomSyncTimeline = [[MXRoomSyncTimeline alloc] init];
+    if (roomSyncTimeline)
+    {
+        roomSyncTimeline.events = [MXEvent modelsFromJSON:JSONDictionary[@"events"]];
+    }
+    return roomSyncTimeline;
+}
+
 @end
 
 @implementation MXRoomSyncEphemeral
@@ -678,65 +700,18 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
 
 @end
 
-@interface MXRoomSync ()
-
-    /**
-     The original events mapping: keys are event ids (values are event descriptions).
-     The events are referenced from the 'timeline' and 'state' keys for this room.
-     */
-    @property (nonatomic) NSDictionary<NSString*, NSDictionary*> *eventMap;
-
-@end
-
 @implementation MXRoomSync
 
-// Override the default Mantle modelFromJSON method to convert event mapping dictionary.
-// Indeed the values in received eventMap dictionary are JSON dictionaries. We convert them in MXEvent object.
-// The event identifier is reported inside the MXEvent too.
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    MXRoomSync *roomSync = [super modelFromJSON:JSONDictionary];
-    if (roomSync && roomSync.eventMap.count)
+    MXRoomSync *roomSync = [[MXRoomSync alloc] init];
+    if (roomSync)
     {
-        NSArray *eventIds = roomSync.eventMap.allKeys;
-        
-        NSMutableDictionary *mxEventMap = [NSMutableDictionary dictionaryWithCapacity:eventIds.count];
-        
-        for (NSUInteger index = 0; index < eventIds.count; index++)
-        {
-            NSString *eventId = eventIds[index];
-            NSDictionary *eventDesc = [roomSync.eventMap objectForKey:eventId];
-            
-            MXEvent *event = [MXEvent modelFromJSON:eventDesc];
-            event.eventId = eventId;
-            
-            mxEventMap[eventId] = event;
-        }
-        
-        roomSync.mxEventMap = mxEventMap;
-        
-        // Remove the orignal events map
-        roomSync.eventMap = nil;
+        roomSync.state = [MXRoomSyncState modelFromJSON:JSONDictionary[@"state"]];
+        roomSync.timeline = [MXRoomSyncTimeline modelFromJSON:JSONDictionary[@"timeline"]];
+        roomSync.ephemeral = [MXRoomSyncEphemeral modelFromJSON:JSONDictionary[@"ephemeral"]];
     }
     return roomSync;
-}
-
-// Automatically convert state dictionary in MXRoomSyncState.
-+ (NSValueTransformer *)stateJSONTransformer
-{
-    return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXRoomSyncState.class];
-}
-
-// Automatically convert timeline dictionary in MXRoomSyncTimeline.
-+ (NSValueTransformer *)timelineJSONTransformer
-{
-    return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXRoomSyncTimeline.class];
-}
-
-// Automatically convert ephemeral dictionary in MXRoomSyncEphemeral.
-+ (NSValueTransformer *)ephemeralJSONTransformer
-{
-    return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXRoomSyncEphemeral.class];
 }
 
 @end
@@ -769,91 +744,38 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
 
 @end
 
-@interface MXRoomsSyncResponse ()
-
-    /**
-     Joined rooms: keys are rooms ids (values will be converted to MXRoomSync).
-     */
-    @property (nonatomic) NSDictionary<NSString*, NSDictionary*> *joined;
-
-    /**
-     The rooms that the user has been invited to: keys are rooms ids (values will be converted to MXInvitedRoomSync).
-     */
-    @property (nonatomic) NSDictionary<NSString*, NSDictionary*> *invited;
-
-    /**
-     The rooms that the user has left or been banned from: keys are rooms ids (values will be converted to MXRoomSync).
-     */
-    @property (nonatomic) NSDictionary<NSString*, NSDictionary*> *archived;
-
-@end
-
 @implementation MXRoomsSyncResponse
 
 // Override the default Mantle modelFromJSON method to convert room lists.
-// Indeed the values in received dictionaries are JSON dictionaries. We convert them in MXRoomSync
-// or MXInvitedRoomSync objects.
+// Indeed the values in received dictionaries are JSON dictionaries. We convert them in
+// MXRoomSync or MXInvitedRoomSync objects.
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    MXRoomsSyncResponse *roomsSync = [super modelFromJSON:JSONDictionary];
+    MXRoomsSyncResponse *roomsSync = [[MXRoomsSyncResponse alloc] init];
     if (roomsSync)
     {
-        if (roomsSync.joined.count)
+        NSMutableDictionary *mxJoin = [NSMutableDictionary dictionary];
+        for (NSString *roomId in JSONDictionary[@"join"])
         {
-            NSArray *roomIds = roomsSync.joined.allKeys;
-            
-            NSMutableDictionary *mxJoined = [NSMutableDictionary dictionaryWithCapacity:roomIds.count];
-            
-            for (NSUInteger index = 0; index < roomIds.count; index++)
-            {
-                NSString *roomId = roomIds[index];
-                NSDictionary *roomSyncDesc = roomsSync.joined[roomId];
-                
-                mxJoined[roomId] = [MXRoomSync modelFromJSON:roomSyncDesc];
-            }
-            
-            roomsSync.mxJoined = mxJoined;
+            mxJoin[roomId] = [MXRoomSync modelFromJSON:JSONDictionary[@"join"][roomId]];
         }
+        roomsSync.join = mxJoin;
         
-        if (roomsSync.invited.count)
+        NSMutableDictionary *mxInvite = [NSMutableDictionary dictionary];
+        for (NSString *roomId in JSONDictionary[@"invite"])
         {
-            NSArray *roomIds = roomsSync.invited.allKeys;
-            
-            NSMutableDictionary *mxInvited = [NSMutableDictionary dictionaryWithCapacity:roomIds.count];
-            
-            for (NSUInteger index = 0; index < roomIds.count; index++)
-            {
-                NSString *roomId = roomIds[index];
-                NSDictionary *roomSyncDesc = roomsSync.invited[roomId];
-                
-                mxInvited[roomId] = [MXInvitedRoomSync modelFromJSON:roomSyncDesc];
-            }
-            
-            roomsSync.mxInvited = mxInvited;
+            mxInvite[roomId] = [MXInvitedRoomSync modelFromJSON:JSONDictionary[@"invite"][roomId]];
         }
+        roomsSync.invite = mxInvite;
         
-        if (roomsSync.archived.count)
+        NSMutableDictionary *mxLeave = [NSMutableDictionary dictionary];
+        for (NSString *roomId in JSONDictionary[@"leave"])
         {
-            NSArray *roomIds = roomsSync.archived.allKeys;
-            
-            NSMutableDictionary *mxArchived = [NSMutableDictionary dictionaryWithCapacity:roomIds.count];
-            
-            for (NSUInteger index = 0; index < roomIds.count; index++)
-            {
-                NSString *roomId = roomIds[index];
-                NSDictionary *roomSyncDesc = roomsSync.archived[roomId];
-                
-                mxArchived[roomId] = [MXRoomSync modelFromJSON:roomSyncDesc];
-            }
-            
-            roomsSync.mxArchived = mxArchived;
+            mxLeave[roomId] = [MXRoomSync modelFromJSON:JSONDictionary[@"leave"][roomId]];
         }
-        
-        // Remove original dictionary
-        roomsSync.joined = nil;
-        roomsSync.invited = nil;
-        roomsSync.archived = nil;
+        roomsSync.leave = mxLeave;
     }
+    
     return roomsSync;
 }
 
@@ -861,9 +783,6 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
 
 @implementation MXSyncResponse
 
-// Override the default Mantle modelFromJSON method to prepare rooms dictionary.
-// Contrary to 'presence', we need to create a model from the JSON dictionary 'rooms' (see modelFromJSON call) in order to create
-// all its sub-items. We obtain then a full converted JSON in a MXRoomsSyncResponse object 'mxRooms'.
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
     MXSyncResponse *syncResponse = [[MXSyncResponse alloc] init];
@@ -871,7 +790,7 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
     {
         syncResponse.nextBatch = JSONDictionary[@"next_batch"];
         syncResponse.presence = [MXPresenceSyncResponse modelFromJSON:JSONDictionary[@"presence"]];
-        syncResponse.mxRooms = [MXRoomsSyncResponse modelFromJSON:JSONDictionary[@"rooms"]];
+        syncResponse.rooms = [MXRoomsSyncResponse modelFromJSON:JSONDictionary[@"rooms"]];
     }
 
     return syncResponse;
