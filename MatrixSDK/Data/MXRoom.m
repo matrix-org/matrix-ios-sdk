@@ -232,6 +232,9 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     {
         [self handleLiveEvent:event];
     }
+    
+    // Handle account data events (if any)
+    [self handleAccounDataEvents:roomSync.accountData.events direction:MXEventDirectionForwards];
 }
 
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync
