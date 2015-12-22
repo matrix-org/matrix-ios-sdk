@@ -724,6 +724,18 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @end
 
 /**
+ `MXRoomSyncAccountData` represents the account data events for a room.
+ */
+@interface MXRoomSyncAccountData : MXJSONModel
+
+    /**
+     List of account data events (array of MXEvent).
+     */
+    @property (nonatomic) NSArray<MXEvent*> *events;
+
+@end
+
+/**
  `MXRoomInviteState` represents the state of a room that the user has been invited to.
  */
 @interface MXRoomInviteState : MXJSONModel
@@ -754,6 +766,11 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
      The ephemeral events in the room that aren't recorded in the timeline or state of the room (e.g. typing, receipts).
      */
     @property (nonatomic) MXRoomSyncEphemeral *ephemeral;
+
+    /**
+     The account data events for the room (e.g. tags).
+     */
+    @property (nonatomic) MXRoomSyncAccountData *accountData;
 
 @end
 

@@ -156,9 +156,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     
     // Build/Update first the room state corresponding to the 'start' of the timeline.
     // Note: We consider it is not required to clone the existing room state here, because no notification is posted for these events.
-    for (NSInteger index = 0; index < roomSync.state.events.count; index++)
+    for (MXEvent *event in roomSync.state.events)
     {
-        MXEvent *event = roomSync.state.events[index];
         [self handleStateEvent:event direction:MXEventDirectionSync];
     }
     
@@ -173,11 +172,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     {
         // Here the events are handled in forward direction (see [handleLiveEvent:]).
         // They will be added at the end of the stored events, so we keep the chronologinal order.
-        NSInteger index = 0;
-        while (index < roomSync.timeline.events.count)
+        for (MXEvent *event in roomSync.timeline.events)
         {
-            MXEvent *event = roomSync.timeline.events[index++];
-            
             // Make room data digest the live event
             [self handleLiveEvent:event];
         }
@@ -199,11 +195,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         
         // Here the events are handled in forward direction (see [handleLiveEvent:]).
         // They will be added at the end of the stored events, so we keep the chronologinal order.
-        NSInteger index = 0;
-        while (index < roomSync.timeline.events.count)
+        for (MXEvent *event in roomSync.timeline.events)
         {
-            MXEvent *event = roomSync.timeline.events[index++];
-            
             // Make room data digest the live event
             [self handleLiveEvent:event];
         }
@@ -234,7 +227,14 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                                                           userInfo:nil];
     }
     
-    // FIXME Handle here ephemeral table
+    // Handle here ephemeral events (if any)
+    for (MXEvent *event in roomSync.ephemeral.events)
+    {
+        [self handleLiveEvent:event];
+    }
+    
+    // Handle account data events (if any)
+    [self handleAccounDataEvents:roomSync.accountData.events direction:MXEventDirectionForwards];
 }
 
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync

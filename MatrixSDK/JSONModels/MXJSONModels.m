@@ -686,6 +686,20 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
 
 @end
 
+@implementation MXRoomSyncAccountData
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXRoomSyncAccountData *roomSyncAccountData = [[MXRoomSyncAccountData alloc] init];
+    if (roomSyncAccountData)
+    {
+        roomSyncAccountData.events = [MXEvent modelsFromJSON:JSONDictionary[@"events"]];
+    }
+    return roomSyncAccountData;
+}
+
+@end
+
 @implementation MXRoomInviteState
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
@@ -710,6 +724,7 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
         roomSync.state = [MXRoomSyncState modelFromJSON:JSONDictionary[@"state"]];
         roomSync.timeline = [MXRoomSyncTimeline modelFromJSON:JSONDictionary[@"timeline"]];
         roomSync.ephemeral = [MXRoomSyncEphemeral modelFromJSON:JSONDictionary[@"ephemeral"]];
+        roomSync.accountData = [MXRoomSyncAccountData modelFromJSON:JSONDictionary[@"account_data"]];
     }
     return roomSync;
 }
