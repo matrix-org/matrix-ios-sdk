@@ -33,6 +33,9 @@
         publicRoom.aliases = sanitisedJSONDictionary[@"aliases"];
         publicRoom.topic = sanitisedJSONDictionary[@"topic"];
         publicRoom.numJoinedMembers = [((NSNumber*)sanitisedJSONDictionary[@"num_joined_members"]) unsignedIntegerValue];
+        publicRoom.worldReadable = [((NSNumber*)sanitisedJSONDictionary[@"world_readable"]) boolValue];
+        publicRoom.guestCanJoin = [((NSNumber*)sanitisedJSONDictionary[@"guest_can_join"]) boolValue];
+        publicRoom.avatarUrl = sanitisedJSONDictionary[@"avatar_url"];
     }
 
     return publicRoom;
