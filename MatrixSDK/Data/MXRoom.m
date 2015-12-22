@@ -154,23 +154,32 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         [mxSession.store deleteRoom:self.state.roomId];
     }
     
-    // Handle timeline.events (Note: timeline events are in chronological order)
+    // Build/Update first the room state corresponding to the 'start' of the timeline.
+    // Note: We consider it is not required to clone the existing room state here, because no notification is posted for these events.
+    for (NSInteger index = 0; index < roomSync.state.events.count; index++)
+    {
+        MXEvent *event = roomSync.state.events[index];
+        [self handleStateEvent:event direction:MXEventDirectionSync];
+    }
+    
+    // Update store with new room state when all state event have been processed
+    if ([mxSession.store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
+    {
+        [mxSession.store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
+    }
+    
+    // Handle now timeline.events, the room state is updated during this step too (Note: timeline events are in chronological order)
     if (isRoomInitialSync)
     {
-        // We will handle these events with direction = MXEventDirectionSync.
-        // In this direction:
-        // - the room state update is disabled (see [handleMessage:direction]). We will build this room state at the end thanks to state.events.
-        // - the events are inserted at the beginning of the stored events, so we will process them in reverse.
-        NSInteger index = roomSync.timeline.events.count;
-        while (index--)
+        // Here the events are handled in forward direction (see [handleLiveEvent:]).
+        // They will be added at the end of the stored events, so we keep the chronologinal order.
+        NSInteger index = 0;
+        while (index < roomSync.timeline.events.count)
         {
-            NSString *eventId = roomSync.timeline.events[index];
-            MXEvent *event = roomSync.mxEventMap[eventId];
+            MXEvent *event = roomSync.timeline.events[index++];
             
-            [self handleMessage:event direction:MXEventDirectionSync];
-            
-            // Store the event
-            [mxSession.store storeEventForRoom:_state.roomId event:event direction:MXEventDirectionSync];
+            // Make room data digest the live event
+            [self handleLiveEvent:event];
         }
         
         // Check whether we got all history from the home server
@@ -193,8 +202,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         NSInteger index = 0;
         while (index < roomSync.timeline.events.count)
         {
-            NSString *eventId = roomSync.timeline.events[index++];
-            MXEvent *event = roomSync.mxEventMap[eventId];
+            MXEvent *event = roomSync.timeline.events[index++];
             
             // Make room data digest the live event
             [self handleLiveEvent:event];
@@ -210,22 +218,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     // Finalize initial sync
     if (isRoomInitialSync)
     {
-        // Build the current room state from state events
-        // Note: We consider it is not required to clone the existing room state here, because this is an initial sync.
-        for (NSInteger index = 0; index < roomSync.state.events.count; index++)
-        {
-            NSString *eventId = roomSync.state.events[index];
-            MXEvent *event = roomSync.mxEventMap[eventId];
-            
-            [self handleStateEvent:event direction:MXEventDirectionSync];
-        }
-        
-        // Update store with new room state when all state event have been processed
-        if ([mxSession.store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
-        {
-            [mxSession.store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
-        }
-        
         // init the receips to the latest received one.
         [self acknowledgeLatestEvent:NO];
         
@@ -241,6 +233,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                                                             object:self
                                                           userInfo:nil];
     }
+    
+    // FIXME Handle here ephemeral table
 }
 
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync
