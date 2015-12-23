@@ -2032,7 +2032,7 @@ MXAuthAction;
                                  }];
 }
 
-#pragma mark - read receips
+#pragma mark - read receipts
 /**
  Send a read receipt (available only on C-S v2).
  
@@ -2395,6 +2395,64 @@ MXAuthAction;
                                          failure(error);
                                      }
                                  }];
+}
+
+#pragma mark - Search
+- (MXHTTPOperation*)searchMessageText:(NSString*)text
+                              inRooms:(NSArray<NSString*>*)rooms
+                          beforeLimit:(NSUInteger)beforeLimit
+                           afterLimit:(NSUInteger)afterLimit
+                            nextBatch:(NSString*)nextBatch
+                              success:(void (^)(MXSearchResponse *searchResponse))success
+                              failure:(void (^)(NSError *error))failure
+{
+    NSDictionary *parameters = @{
+                                 @"search_categories": @{
+                                         @"room_events": @{
+                                                 @"search_term": text,
+                                                 @"filter": @{
+                                                         @"rooms": rooms
+                                                         },
+                                                 @"order_by": @"recent",
+                                                 @"event_context": @{
+                                                            @"before_limit": @(beforeLimit),
+                                                            @"after_limit": @(afterLimit),
+                                                            @"include_profile": @(YES)
+                                                         }
+
+                                                 }
+                                         }
+                                 };
+
+    return [self search:parameters success:success failure:failure];
+}
+
+- (MXHTTPOperation*)search:(NSDictionary*)parameters
+                   success:(void (^)(MXSearchResponse *searchResponse))success
+                   failure:(void (^)(NSError *error))failure
+{
+    return [httpClient requestWithMethod:@"POST"
+                                    path: [NSString stringWithFormat:@"api/v1/search"]
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+
+                                     // Use here the processing queue in order to keep the server response order
+                                     dispatch_async(processingQueue, ^{
+
+                                         dispatch_async(dispatch_get_main_queue(), ^{
+
+                                             MXSearchResponse *searchResponse = [MXSearchResponse modelFromJSON:JSONResponse];
+
+                                             if (success)
+                                             {
+                                                 success(searchResponse);
+                                             }
+                                         });
+
+                                     });
+
+                                 }
+                                 failure:failure];
 }
 
 @end

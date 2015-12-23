@@ -1173,7 +1173,7 @@ typedef enum : NSUInteger
                        failure:(void (^)(NSError *error))failure;
 
 
-#pragma mark - read receips
+#pragma mark - read receipts
 /**
  Send a read receipt (available only on C-S v2).
  
@@ -1189,5 +1189,19 @@ typedef enum : NSUInteger
                              eventId:(NSString*)eventId
                               success:(void (^)(NSString *eventId))success
                               failure:(void (^)(NSError *error))failure;
+
+
+#pragma mark - Search
+- (MXHTTPOperation*)searchMessageText:(NSString*)text
+                              inRooms:(NSArray<NSString*>*)rooms
+                          beforeLimit:(NSUInteger)beforeLimit
+                           afterLimit:(NSUInteger)afterLimit
+                            nextBatch:(NSString*)nextBatch
+                              success:(void (^)(MXSearchResponse *searchResponse))success
+                              failure:(void (^)(NSError *error))failure;
+
+- (MXHTTPOperation*)search:(NSDictionary*)parameters
+                   success:(void (^)(MXSearchResponse *searchResponse))success
+                   failure:(void (^)(NSError *error))failure;
 
 @end

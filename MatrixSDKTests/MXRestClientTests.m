@@ -1094,6 +1094,36 @@
     }];
 }
 
+
+#pragma mark - Search
+- (void)testSearchText
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+
+        NSString *message = [[NSProcessInfo processInfo] globallyUniqueString];
+
+        [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
+
+            [mxSession.matrixRestClient searchMessageText:message
+                                                  inRooms:@[room.state.roomId]
+                                              beforeLimit:1
+                                               afterLimit:1
+                                                nextBatch:nil
+                                                  success:^(MXSearchResponse *searchResponse) {
+
+                                                      [expectation fulfill];
+                                                      
+                                                  } failure:^(NSError *error) {
+                                                      XCTFail(@"The request should not fail - NSError: %@", error);
+                                                      [expectation fulfill];
+                                                  }];
+        }];
+
+        [room sendTextMessage:message success:nil failure:nil];
+
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop
