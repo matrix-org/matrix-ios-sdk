@@ -587,6 +587,177 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 
 @end
 
+
+#pragma mark - Search
+#pragma mark -
+
+/**
+ `MXSearchUserProfile` represents the context of a result.
+ */
+@interface MXSearchUserProfile : MXJSONModel
+
+    /**
+     The avatar URL for this user, if any.
+     */
+    @property (nonatomic) NSString *avatarUrl;
+
+    /**
+     The display name for this user, if any.
+     */
+    @property (nonatomic) NSString *displayName;
+
+@end
+
+/**
+ `MXSearchEventContext` represents the context of a result.
+ */
+@interface MXSearchEventContext : MXJSONModel
+
+    /**
+     Pagination token for the start of the chunk.
+     */
+    @property (nonatomic) NSString *start;
+
+    /**
+     Pagination token for the end of the chunk.
+     */
+    @property (nonatomic) NSString *end;
+
+    /**
+     Events just before the result.
+     */
+    @property (nonatomic) NSArray<MXEvent*> *eventsBefore;
+
+    /**
+     Events just after the result.
+     */
+    @property (nonatomic) NSArray<MXEvent*> *eventsAfter;
+
+    /**
+     The historic profile information of the users that sent the events returned.
+     The key is the user id, the value the user profile.
+     */
+    @property (nonatomic) NSDictionary<NSString*, MXSearchUserProfile*> *profileInfo;
+
+@end
+
+/**
+ `MXSearchResult` represents a result.
+ */
+@interface MXSearchResult : MXJSONModel
+
+    /**
+     The event that matched.
+     */
+    @property (nonatomic) MXEvent *result;
+
+    /**
+     A number that describes how closely this result matches the search. Higher is closer.
+     */
+    @property (nonatomic) NSInteger rank;
+
+    /**
+     Context for result, if requested.
+     */
+    @property (nonatomic) MXSearchEventContext *context;
+
+@end
+
+/**
+ `MXSearchGroupContent` represents TODO.
+ */
+@interface MXSearchGroupContent : MXJSONModel
+
+    /**
+     Which results are in this group.
+     */
+    @property (nonatomic) NSArray<NSString*> *results;  // TODO: not MXSearchResult?
+
+    /**
+     Key that can be used to order different groups.
+     */
+    @property (nonatomic) NSInteger order;
+
+    /**
+     Token that can be used to get the next batch of results in the group, if exists.
+     */
+    @property (nonatomic) NSString *nextBatch;
+
+@end
+
+/**
+ `MXSearchResponse` represents the mapping of category name to search criteria.
+ */
+@interface MXSearchGroup : MXJSONModel
+
+    /**
+     Total number of results found.
+     The key is "room_id" ??? TODO , the value the group.
+     */
+    @property (nonatomic) NSDictionary<NSString*, MXSearchGroupContent*> *group;
+
+@end
+
+/**
+ `MXSearchRoomEvents` represents the mapping of category name to search criteria.
+ */
+@interface MXSearchRoomEvents : MXJSONModel
+
+    /**
+     Total number of results found.
+     */
+    @property (nonatomic) NSUInteger count;
+
+    /**
+     List of results in the requested order.
+     */
+    @property (nonatomic) NSArray<MXSearchResult*> *results;
+
+    /**
+     The current state for every room in the results. 
+     This is included if the request had the include_state key set with a value of true.
+     The key is the roomId, the value its state. (TODO: right?)
+     */
+    @property (nonatomic) NSDictionary<NSString*, NSArray<MXEvent*> *> *state; // TODO: MXEvent??
+
+    /**
+     Total number of results found.
+     */
+    @property (nonatomic) NSDictionary<NSString*, MXSearchGroup*> *groups;
+
+    /**
+     Token that can be used to get the next batch of results in the group, if exists.
+     */
+    @property (nonatomic) NSString *nextBatch;
+
+@end
+
+/**
+ `MXSearchResponse` represents which categories to search in and their criteria..
+ */
+@interface MXSearchCategories : MXJSONModel
+
+    /**
+     Mapping of category name to search criteria.
+     */
+    @property (nonatomic) MXSearchRoomEvents *roomEvents;
+
+@end
+
+
+/**
+ `MXSearchResponse` represents the response to the /search/ request.
+ */
+@interface MXSearchResponse : MXJSONModel
+
+    /**
+     Categories to search in and their criteria..
+     */
+    @property (nonatomic) MXSearchCategories *searchCategories;
+
+@end
+
+
 #pragma mark - Server sync v1 response
 #pragma mark -
 
