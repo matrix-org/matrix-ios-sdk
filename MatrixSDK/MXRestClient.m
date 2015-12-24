@@ -2121,16 +2121,15 @@ MXAuthAction;
     // Define an absolute path based on Matrix content respository path instead of the base url
     NSString* path = [NSString stringWithFormat:@"%@/upload", kMXContentPrefixPath];
     NSDictionary *headers = @{@"Content-Type": mimeType};
-    
-    NSDictionary *parameters;
+
     if (filename.length)
     {
-        parameters = @{@"filename": filename};
+        path = [path stringByAppendingString:[NSString stringWithFormat:@"?filename=%@", filename]];
     }
     
     return [httpClient requestWithMethod:@"POST"
                                     path:path
-                              parameters:parameters
+                              parameters:nil
                                     data:data
                                  headers:headers
                                  timeout:timeoutInSeconds
