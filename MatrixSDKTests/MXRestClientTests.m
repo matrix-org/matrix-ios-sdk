@@ -1101,15 +1101,26 @@
     [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
         NSString *message = [[NSProcessInfo processInfo] globallyUniqueString];
+        __block NSString *messageEventId;
 
         [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
 
             [mxSession.matrixRestClient searchMessageText:message
                                                   inRooms:@[room.state.roomId]
-                                              beforeLimit:1
+                                              beforeLimit:3
                                                afterLimit:1
                                                 nextBatch:nil
-                                                  success:^(MXSearchResponse *searchResponse) {
+                                                  success:^(MXSearchRoomEventResults *roomEventResults) {
+
+                                                      XCTAssertEqual(roomEventResults.count, 1);
+                                                      XCTAssertEqual(roomEventResults.results.count, 1);
+
+                                                      MXSearchResult *result = roomEventResults.results[0];
+
+                                                      XCTAssertEqualObjects(messageEventId, result.result.eventId);
+
+                                                      XCTAssertEqual(result.context.eventsBefore.count, 3);
+                                                      XCTAssertEqual(result.context.eventsAfter.count, 0, @"This is the last message of the room. So there must be no message after");
 
                                                       [expectation fulfill];
                                                       
@@ -1119,8 +1130,10 @@
                                                   }];
         }];
 
-        [room sendTextMessage:message success:nil failure:nil];
-
+        [room sendTextMessage:message success:^(NSString *eventId) {
+            messageEventId = eventId;
+        } failure:nil];
+x
     }];
 }
 

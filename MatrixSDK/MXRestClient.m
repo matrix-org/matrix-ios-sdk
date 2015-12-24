@@ -2403,7 +2403,7 @@ MXAuthAction;
                           beforeLimit:(NSUInteger)beforeLimit
                            afterLimit:(NSUInteger)afterLimit
                             nextBatch:(NSString*)nextBatch
-                              success:(void (^)(MXSearchResponse *searchResponse))success
+                              success:(void (^)(MXSearchRoomEventResults *roomEventResults))success
                               failure:(void (^)(NSError *error))failure
 {
     NSDictionary *parameters = @{
@@ -2428,7 +2428,7 @@ MXAuthAction;
 }
 
 - (MXHTTPOperation*)search:(NSDictionary*)parameters
-                   success:(void (^)(MXSearchResponse *searchResponse))success
+                   success:(void (^)(MXSearchRoomEventResults *roomEventResults))success
                    failure:(void (^)(NSError *error))failure
 {
     return [httpClient requestWithMethod:@"POST"
@@ -2445,7 +2445,7 @@ MXAuthAction;
 
                                              if (success)
                                              {
-                                                 success(searchResponse);
+                                                 success(searchResponse.searchCategories.roomEvents);
                                              }
                                          });
 
