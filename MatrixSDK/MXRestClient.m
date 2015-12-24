@@ -2422,15 +2422,22 @@ MXAuthAction;
                                             };
     }
 
-    return [self searchRoomEvents:roomEventsParameters success:success failure:failure];
+    return [self searchRoomEvents:roomEventsParameters nextBatch:nextBatch success:success failure:failure];
 }
 
 - (MXHTTPOperation*)search:(NSDictionary*)parameters
+                 nextBatch:(NSString*)nextBatch
                    success:(void (^)(MXSearchRoomEventResults *roomEventResults))success
                    failure:(void (^)(NSError *error))failure
 {
+    NSString *path = @"api/v1/search";
+    if (nextBatch)
+    {
+        path = [NSString stringWithFormat:@"%@?next_batch=%@", path, nextBatch];
+    }
+
     return [httpClient requestWithMethod:@"POST"
-                                    path: [NSString stringWithFormat:@"api/v1/search"]
+                                    path: path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
 
@@ -2455,6 +2462,7 @@ MXAuthAction;
 
 // Shorcut for calling [self search] without needing to manage top hierarchy parameters
 - (MXHTTPOperation*)searchRoomEvents:(NSDictionary*)roomEventsParameters
+                           nextBatch:(NSString*)nextBatch
                    success:(void (^)(MXSearchRoomEventResults *roomEventResults))success
                    failure:(void (^)(NSError *error))failure
 {
@@ -2464,7 +2472,7 @@ MXAuthAction;
                                          }
                                  };
 
-    return [self search:parameters success:success failure:failure];
+    return [self search:parameters nextBatch:nextBatch success:success failure:failure];
 }
 
 @end

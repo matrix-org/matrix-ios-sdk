@@ -1201,6 +1201,7 @@ typedef enum : NSUInteger
                               failure:(void (^)(NSError *error))failure;
 
 - (MXHTTPOperation*)search:(NSDictionary*)parameters
+                 nextBatch:(NSString*)nextBatch
                    success:(void (^)(MXSearchRoomEventResults *roomEventResults))success
                    failure:(void (^)(NSError *error))failure;
 
