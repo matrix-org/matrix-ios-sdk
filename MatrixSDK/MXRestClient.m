@@ -2406,25 +2406,24 @@ MXAuthAction;
                               success:(void (^)(MXSearchRoomEventResults *roomEventResults))success
                               failure:(void (^)(NSError *error))failure
 {
-    NSDictionary *parameters = @{
-                                 @"search_categories": @{
-                                         @"room_events": @{
-                                                 @"search_term": text,
-                                                 @"filter": @{
-                                                         @"rooms": rooms
-                                                         },
-                                                 @"order_by": @"recent",
-                                                 @"event_context": @{
-                                                            @"before_limit": @(beforeLimit),
-                                                            @"after_limit": @(afterLimit),
-                                                            @"include_profile": @(YES)
-                                                         }
+    NSMutableDictionary *roomEventsParameters = [NSMutableDictionary dictionaryWithDictionary:
+                                                 @{
+                                                   @"search_term": text,
+                                                   @"order_by": @"recent",
+                                                   @"event_context": @{
+                                                           @"before_limit": @(beforeLimit),
+                                                           @"after_limit": @(afterLimit),
+                                                           @"include_profile": @(YES)
+                                                           }
+                                                   }];
+    if (rooms)
+    {
+        roomEventsParameters[@"filter"] = @{
+                                            @"rooms": rooms
+                                            };
+    }
 
-                                                 }
-                                         }
-                                 };
-
-    return [self search:parameters success:success failure:failure];
+    return [self searchRoomEvents:roomEventsParameters success:success failure:failure];
 }
 
 - (MXHTTPOperation*)search:(NSDictionary*)parameters
@@ -2453,6 +2452,20 @@ MXAuthAction;
 
                                  }
                                  failure:failure];
+}
+
+// Shorcut for calling [self search] without needing to manage top hierarchy parameters
+- (MXHTTPOperation*)searchRoomEvents:(NSDictionary*)roomEventsParameters
+                   success:(void (^)(MXSearchRoomEventResults *roomEventResults))success
+                   failure:(void (^)(NSError *error))failure
+{
+    NSDictionary *parameters = @{
+                                 @"search_categories": @{
+                                         @"room_events": roomEventsParameters
+                                         }
+                                 };
+
+    return [self search:parameters success:success failure:failure];
 }
 
 @end
