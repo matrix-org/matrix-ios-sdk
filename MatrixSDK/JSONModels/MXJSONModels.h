@@ -592,7 +592,7 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 #pragma mark -
 
 /**
- `MXSearchUserProfile` represents the context of a result.
+ `MXSearchUserProfile` represents The historic profile information of a user in a result context.
  */
 @interface MXSearchUserProfile : MXJSONModel
 
@@ -664,14 +664,14 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @end
 
 /**
- `MXSearchGroupContent` represents TODO.
+ `MXSearchGroupContent` represents ??? TODO.
  */
 @interface MXSearchGroupContent : MXJSONModel
 
     /**
      Which results are in this group.
      */
-    @property (nonatomic) NSArray<NSString*> *results;  // TODO: not MXSearchResult?
+    @property (nonatomic) NSArray<NSString*> *results;  // TODO: not MXSearchResult ??? or result id
 
     /**
      Key that can be used to order different groups.
@@ -701,7 +701,7 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 /**
  `MXSearchRoomEvents` represents the mapping of category name to search criteria.
  */
-@interface MXSearchRoomEvents : MXJSONModel
+@interface MXSearchRoomEventResults : MXJSONModel
 
     /**
      Total number of results found.
@@ -721,7 +721,8 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
     @property (nonatomic) NSDictionary<NSString*, NSArray<MXEvent*> *> *state; // TODO: MXEvent??
 
     /**
-     Total number of results found.
+     Any groups that were requested.
+     The key is the group id ??? TODO
      */
     @property (nonatomic) NSDictionary<NSString*, MXSearchGroup*> *groups;
 
@@ -740,13 +741,13 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
     /**
      Mapping of category name to search criteria.
      */
-    @property (nonatomic) MXSearchRoomEvents *roomEvents;
+    @property (nonatomic) MXSearchRoomEventResults *roomEvents;
 
 @end
 
 
 /**
- `MXSearchResponse` represents the response to the /search/ request.
+ `MXSearchResponse` represents the response to the /search request.
  */
 @interface MXSearchResponse : MXJSONModel
 

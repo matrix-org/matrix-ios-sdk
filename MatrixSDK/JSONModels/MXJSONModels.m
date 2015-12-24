@@ -693,33 +693,33 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
 
 @end
 
-@implementation MXSearchRoomEvents
+@implementation MXSearchRoomEventResults
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    MXSearchRoomEvents *searchRoomEvents = [[MXSearchRoomEvents alloc] init];
-    if (searchRoomEvents)
+    MXSearchRoomEventResults *searchRoomEventResults = [[MXSearchRoomEventResults alloc] init];
+    if (searchRoomEventResults)
     {
-        searchRoomEvents.count = [((NSNumber*)JSONDictionary[@"count"]) unsignedIntegerValue];
-        searchRoomEvents.results = [MXSearchResult modelsFromJSON:JSONDictionary[@"results"]];
-        searchRoomEvents.nextBatch = JSONDictionary[@"next_batch"];
+        searchRoomEventResults.count = [((NSNumber*)JSONDictionary[@"count"]) unsignedIntegerValue];
+        searchRoomEventResults.results = [MXSearchResult modelsFromJSON:JSONDictionary[@"results"]];
+        searchRoomEventResults.nextBatch = JSONDictionary[@"next_batch"];
 
         NSMutableDictionary<NSString*, MXSearchGroup*> *groups = [NSMutableDictionary dictionary];
         for (NSString *groupId in JSONDictionary[@"groups"])
         {
             groups[groupId] = [MXSearchGroup modelFromJSON: JSONDictionary[@"groups"][groupId]];
         }
-        searchRoomEvents.groups = groups;
+        searchRoomEventResults.groups = groups;
 
         NSMutableDictionary<NSString*, NSArray<MXEvent*> *> *state = [NSMutableDictionary dictionary];
         for (NSString *roomId in JSONDictionary[@"state"])
         {
             state[roomId] = [MXEvent modelsFromJSON: JSONDictionary[@"state"][roomId]];
         }
-        searchRoomEvents.state = state;
+        searchRoomEventResults.state = state;
     }
 
-    return searchRoomEvents;
+    return searchRoomEventResults;
 }
 
 @end
@@ -731,7 +731,7 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
     MXSearchCategories *searchCategories = [[MXSearchCategories alloc] init];
     if (searchCategories)
     {
-        searchCategories.roomEvents = [MXSearchRoomEvents modelFromJSON:JSONDictionary[@"room_events"]];
+        searchCategories.roomEvents = [MXSearchRoomEventResults modelFromJSON:JSONDictionary[@"room_events"]];
     }
 
     return searchCategories;
