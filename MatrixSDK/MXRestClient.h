@@ -1179,8 +1179,9 @@ typedef enum : NSUInteger
  
  @param roomId the id of the room.
  @param eventId the id of the event.
+
  @param success A block object called when the operation succeeds. It returns
- the event id of the event generated on the home server
+                the event id of the event generated on the home server
  @param failure A block object called when the operation fails.
  
  @return a MXHTTPOperation instance.
@@ -1192,6 +1193,20 @@ typedef enum : NSUInteger
 
 
 #pragma mark - Search
+/**
+ Search a text in room messages.
+
+ @param text the text to search for.
+ @param rooms a list of rooms to search in. nil means all rooms the user is in.
+ @param beforeLimit the number of events to get before the matching results.
+ @param afterLimit the number of events to get after the matching results.
+ @param nextBatch the token to pass for doing pagination from a previous response.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
 - (MXHTTPOperation*)searchMessageText:(NSString*)text
                               inRooms:(NSArray<NSString*>*)rooms
                           beforeLimit:(NSUInteger)beforeLimit
@@ -1199,7 +1214,17 @@ typedef enum : NSUInteger
                             nextBatch:(NSString*)nextBatch
                               success:(void (^)(MXSearchRoomEventResults *roomEventResults))success
                               failure:(void (^)(NSError *error))failure;
+/**
+ Make a search.
 
+ @param parameters the search parameters as defined by the Matrix search spec (http://matrix.org/docs/api/client-server/#!/Search/post_search ).
+ @param nextBatch the token to pass for doing pagination from a previous response.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
 - (MXHTTPOperation*)search:(NSDictionary*)parameters
                  nextBatch:(NSString*)nextBatch
                    success:(void (^)(MXSearchRoomEventResults *roomEventResults))success
