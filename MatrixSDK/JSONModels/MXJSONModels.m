@@ -664,7 +664,7 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
     {
         searchGroupContent.order = [((NSNumber*)JSONDictionary[@"order"]) integerValue];
         NSAssert(NO, @"What is results?");
-        searchGroupContent.results = nil;   // TODO
+        searchGroupContent.results = nil;   // TODO_SEARCH
         searchGroupContent.nextBatch = JSONDictionary[@"next_batch"];
     }
 
