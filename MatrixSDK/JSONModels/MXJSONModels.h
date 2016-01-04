@@ -664,14 +664,14 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @end
 
 /**
- `MXSearchGroupContent` represents ??? TODO.
+ `MXSearchGroupContent` represents (TODO_SEARCH).
  */
 @interface MXSearchGroupContent : MXJSONModel
 
     /**
      Which results are in this group.
      */
-    @property (nonatomic) NSArray<NSString*> *results;  // TODO: not MXSearchResult ??? or result id
+    @property (nonatomic) NSArray<NSString*> *results;  // TODO_SEARCH: not MXSearchResult ??? or result id
 
     /**
      Key that can be used to order different groups.
@@ -692,7 +692,7 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 
     /**
      Total number of results found.
-     The key is "room_id" ??? TODO , the value the group.
+     The key is "room_id" (TODO_SEARCH) , the value the group.
      */
     @property (nonatomic) NSDictionary<NSString*, MXSearchGroupContent*> *group;
 
@@ -716,13 +716,13 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
     /**
      The current state for every room in the results. 
      This is included if the request had the include_state key set with a value of true.
-     The key is the roomId, the value its state. (TODO: right?)
+     The key is the roomId, the value its state. (TODO_SEARCH: right?)
      */
-    @property (nonatomic) NSDictionary<NSString*, NSArray<MXEvent*> *> *state; // TODO: MXEvent??
+    @property (nonatomic) NSDictionary<NSString*, NSArray<MXEvent*> *> *state; // TODO_SEARCH: MXEvent??
 
     /**
      Any groups that were requested.
-     The key is the group id ??? TODO
+     The key is the group id (TODO_SEARCH).
      */
     @property (nonatomic) NSDictionary<NSString*, MXSearchGroup*> *groups;
 
