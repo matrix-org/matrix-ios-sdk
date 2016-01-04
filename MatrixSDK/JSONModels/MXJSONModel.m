@@ -124,6 +124,43 @@ static NSMutableDictionary *JSONKeyPathsByPropertyKeyByClass;
 
             }
         }
+        else if ([value isKindOfClass:[NSArray class]])
+        {
+            // Check dictionaries in this array
+            NSArray *arrayValue = value;
+            NSMutableArray *newArrayValue;
+
+            for (NSInteger i = 0; i < arrayValue.count; i++)
+            {
+                NSObject *arrayItem = arrayValue[i];
+
+                if ([arrayItem isKindOfClass:[NSDictionary class]])
+                {
+                    NSDictionary *subDictionary = [MXJSONModel removeNullValuesInJSON:(NSDictionary*)arrayItem];
+                    if (subDictionary != arrayItem)
+                    {
+                        // This dictionary need to be sanitised. Update its parent array
+                        if (!newArrayValue)
+                        {
+                            newArrayValue = [NSMutableArray arrayWithArray:arrayValue];
+                        }
+
+                        [newArrayValue replaceObjectAtIndex:i withObject:subDictionary];
+                    }
+                }
+            }
+
+            if (newArrayValue)
+            {
+                // The array has changed, update it in the dictionary
+                if (!dictionary)
+                {
+                    dictionary = [NSMutableDictionary dictionaryWithDictionary:JSONDictionary];
+                }
+
+                dictionary[key] = newArrayValue;
+            }
+        }
     }
 
     if (dictionary)

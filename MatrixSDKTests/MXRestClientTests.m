@@ -1094,6 +1094,151 @@
     }];
 }
 
+
+#pragma mark - Search
+- (void)testSearchText
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        [bobRestClient searchMessageText:@"Fake message"
+                                 inRooms:@[roomId]
+                             beforeLimit:0
+                              afterLimit:0
+                               nextBatch:nil
+                                 success:^(MXSearchRoomEventResults *roomEventResults) {
+
+                                     XCTAssertEqual(roomEventResults.count, 5);
+                                     XCTAssertEqual(roomEventResults.results.count, 5);
+
+                                     MXSearchResult *result = roomEventResults.results[0];
+
+                                     XCTAssertEqualObjects(roomId, result.result.roomId);
+
+                                     XCTAssertEqual(result.context.eventsBefore.count, 0);
+                                     XCTAssertEqual(result.context.eventsAfter.count, 0);
+
+                                     XCTAssertNil(roomEventResults.nextBatch, @"The result contains all matching events");
+
+                                     [expectation fulfill];
+
+                                 } failure:^(NSError *error) {
+                                     XCTFail(@"The request should not fail - NSError: %@", error);
+                                     [expectation fulfill];
+                                 }];
+    }];
+}
+
+- (void)testSearchUniqueTextAcrossRooms
+{
+    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+
+        NSString *message = [[NSProcessInfo processInfo] globallyUniqueString];
+        __block NSString *messageEventId;
+
+        [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
+
+            [mxSession.matrixRestClient searchMessageText:message
+                                                  inRooms:nil
+                                              beforeLimit:3
+                                               afterLimit:1
+                                                nextBatch:nil
+                                                  success:^(MXSearchRoomEventResults *roomEventResults) {
+
+                                                      XCTAssertEqual(roomEventResults.count, 1);
+                                                      XCTAssertEqual(roomEventResults.results.count, 1);
+
+                                                      MXSearchResult *result = roomEventResults.results[0];
+
+                                                      XCTAssertEqualObjects(messageEventId, result.result.eventId);
+
+                                                      XCTAssertEqual(result.context.eventsBefore.count, 3);
+                                                      XCTAssertEqual(result.context.eventsAfter.count, 0, @"This is the last message of the room. So there must be no message after");
+
+                                                      XCTAssertNil(roomEventResults.nextBatch, @"The result contains all matching events");
+
+                                                      [expectation fulfill];
+                                                      
+                                                  } failure:^(NSError *error) {
+                                                      XCTFail(@"The request should not fail - NSError: %@", error);
+                                                      [expectation fulfill];
+                                                  }];
+        }];
+
+        [room sendTextMessage:message success:^(NSString *eventId) {
+            messageEventId = eventId;
+        } failure:nil];
+    }];
+}
+
+- (void)testSearchPaginate
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        // Add 50 messages to the room
+        [[MatrixSDKTestsData sharedData] for:bobRestClient andRoom:roomId sendMessages:20 success:^{
+
+            [bobRestClient searchMessageText:@"Fake message"
+                                     inRooms:@[roomId]
+                                 beforeLimit:0
+                                  afterLimit:0
+                                   nextBatch:nil
+                                     success:^(MXSearchRoomEventResults *roomEventResults) {
+
+                                         XCTAssertEqual(roomEventResults.count, 20);
+                                         XCTAssertEqual(roomEventResults.results.count, 10);    // With the assumption that HS returns 10-events batches
+
+                                         MXSearchResult *topMostRecentResult = roomEventResults.results[0];
+
+                                         XCTAssertNotNil(roomEventResults.nextBatch);
+
+                                         // Paginate the search
+                                         [bobRestClient searchMessageText:@"Fake message"
+                                                                  inRooms:@[roomId]
+                                                              beforeLimit:0
+                                                               afterLimit:0
+                                                                nextBatch:roomEventResults.nextBatch
+                                                                  success:^(MXSearchRoomEventResults *roomEventResults) {
+
+                                                                      XCTAssertEqual(roomEventResults.count, 20);
+                                                                      XCTAssertEqual(roomEventResults.results.count, 10);    // With the assumption that HS returns 10-events batches
+
+                                                                      MXSearchResult *top2ndBatchResult = roomEventResults.results[0];
+
+                                                                      XCTAssertLessThan(top2ndBatchResult.result.originServerTs, topMostRecentResult.result.originServerTs);
+
+                                                                      // Paginate the search
+                                                                      [bobRestClient searchMessageText:@"Fake message"
+                                                                                               inRooms:@[roomId]
+                                                                                           beforeLimit:0
+                                                                                            afterLimit:0
+                                                                                             nextBatch:roomEventResults.nextBatch
+                                                                                               success:^(MXSearchRoomEventResults *roomEventResults) {
+
+                                                                                                   XCTAssertEqual(roomEventResults.count, 20);
+                                                                                                   XCTAssertEqual(roomEventResults.results.count, 0, @"We must have reach the end");
+
+                                                                                                   XCTAssertNil(roomEventResults.nextBatch);
+                                                                                                   
+                                                                                                   [expectation fulfill];
+                                                                                                   
+                                                                                               } failure:^(NSError *error) {
+                                                                                                   XCTFail(@"The request should not fail - NSError: %@", error);
+                                                                                                   [expectation fulfill];
+                                                                                               }];
+                                                                  } failure:^(NSError *error) {
+                                                                      XCTFail(@"The request should not fail - NSError: %@", error);
+                                                                      [expectation fulfill];
+                                                                  }];
+
+                                     } failure:^(NSError *error) {
+                                         XCTFail(@"The request should not fail - NSError: %@", error);
+                                         [expectation fulfill];
+                                     }];
+
+        }];
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop

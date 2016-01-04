@@ -592,6 +592,171 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
 
 @end
 
+
+#pragma mark - Search
+#pragma mark -
+
+@implementation MXSearchUserProfile
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXSearchUserProfile *searchUserProfile = [[MXSearchUserProfile alloc] init];
+    if (searchUserProfile)
+    {
+        searchUserProfile.avatarUrl = JSONDictionary[@"avatar_url"];
+        searchUserProfile.displayName = JSONDictionary[@"displayname"];
+    }
+
+    return searchUserProfile;
+}
+
+@end
+
+@implementation MXSearchEventContext
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXSearchEventContext *searchEventContext = [[MXSearchEventContext alloc] init];
+    if (searchEventContext)
+    {
+        searchEventContext.start = JSONDictionary[@"start"];
+        searchEventContext.end = JSONDictionary[@"end"];
+
+        searchEventContext.eventsBefore = [MXEvent modelsFromJSON:JSONDictionary[@"events_before"]];
+        searchEventContext.eventsAfter = [MXEvent modelsFromJSON:JSONDictionary[@"events_after"]];
+
+        NSMutableDictionary<NSString*, MXSearchUserProfile*> *profileInfo = [NSMutableDictionary dictionary];
+        for (NSString *userId in JSONDictionary[@"profile_info"])
+        {
+            profileInfo[userId] = [MXSearchUserProfile modelFromJSON:JSONDictionary[@"profile_info"][userId]];
+        }
+        searchEventContext.profileInfo = profileInfo;
+    }
+
+    return searchEventContext;
+}
+
+@end
+
+@implementation MXSearchResult
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXSearchResult *searchResult = [[MXSearchResult alloc] init];
+    if (searchResult)
+    {
+        searchResult.result = [MXEvent modelFromJSON:JSONDictionary[@"result"]];
+        searchResult.rank = [((NSNumber*)JSONDictionary[@"rank"]) integerValue];
+        searchResult.context = [MXSearchEventContext modelFromJSON:JSONDictionary[@"context"]];
+    }
+
+    return searchResult;
+}
+
+@end
+
+@implementation MXSearchGroupContent
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXSearchGroupContent *searchGroupContent = [[MXSearchGroupContent alloc] init];
+    if (searchGroupContent)
+    {
+        searchGroupContent.order = [((NSNumber*)JSONDictionary[@"order"]) integerValue];
+        NSAssert(NO, @"What is results?");
+        searchGroupContent.results = nil;   // TODO_SEARCH
+        searchGroupContent.nextBatch = JSONDictionary[@"next_batch"];
+    }
+
+    return searchGroupContent;
+}
+
+@end
+
+@implementation MXSearchGroup
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXSearchGroup *searchGroup = [[MXSearchGroup alloc] init];
+    if (searchGroup)
+    {
+        NSMutableDictionary<NSString*, MXSearchGroupContent*> *group = [NSMutableDictionary dictionary];
+        for (NSString *key in JSONDictionary[@"state"])
+        {
+            group[key] = [MXSearchGroupContent modelFromJSON: JSONDictionary[@"key"][key]];
+        }
+        searchGroup.group = group;
+    }
+
+    return searchGroup;
+}
+
+@end
+
+@implementation MXSearchRoomEventResults
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXSearchRoomEventResults *searchRoomEventResults = [[MXSearchRoomEventResults alloc] init];
+    if (searchRoomEventResults)
+    {
+        searchRoomEventResults.count = [((NSNumber*)JSONDictionary[@"count"]) unsignedIntegerValue];
+        searchRoomEventResults.results = [MXSearchResult modelsFromJSON:JSONDictionary[@"results"]];
+        searchRoomEventResults.nextBatch = JSONDictionary[@"next_batch"];
+
+        NSMutableDictionary<NSString*, MXSearchGroup*> *groups = [NSMutableDictionary dictionary];
+        for (NSString *groupId in JSONDictionary[@"groups"])
+        {
+            groups[groupId] = [MXSearchGroup modelFromJSON: JSONDictionary[@"groups"][groupId]];
+        }
+        searchRoomEventResults.groups = groups;
+
+        NSMutableDictionary<NSString*, NSArray<MXEvent*> *> *state = [NSMutableDictionary dictionary];
+        for (NSString *roomId in JSONDictionary[@"state"])
+        {
+            state[roomId] = [MXEvent modelsFromJSON: JSONDictionary[@"state"][roomId]];
+        }
+        searchRoomEventResults.state = state;
+    }
+
+    return searchRoomEventResults;
+}
+
+@end
+
+@implementation MXSearchCategories
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXSearchCategories *searchCategories = [[MXSearchCategories alloc] init];
+    if (searchCategories)
+    {
+        searchCategories.roomEvents = [MXSearchRoomEventResults modelFromJSON:JSONDictionary[@"room_events"]];
+    }
+
+    return searchCategories;
+}
+
+@end
+
+@implementation MXSearchResponse
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXSearchResponse *searchResponse = [[MXSearchResponse alloc] init];
+    if (searchResponse)
+    {
+        NSDictionary *sanitisedJSONDictionary = [MXJSONModel removeNullValuesInJSON:JSONDictionary];
+
+        searchResponse.searchCategories = [MXSearchCategories modelFromJSON:sanitisedJSONDictionary[@"search_categories"]];
+    }
+
+    return searchResponse;
+}
+
+@end
+
+
 #pragma mark - Server sync v1 response
 #pragma mark -
 
