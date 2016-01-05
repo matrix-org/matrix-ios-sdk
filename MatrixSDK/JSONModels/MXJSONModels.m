@@ -831,6 +831,8 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
     if (roomSyncTimeline)
     {
         roomSyncTimeline.events = [MXEvent modelsFromJSON:JSONDictionary[@"events"]];
+        roomSyncTimeline.limited = [((NSNumber*)JSONDictionary[@"limited"]) boolValue];
+        roomSyncTimeline.prevBatch = JSONDictionary[@"prev_batch"];
     }
     return roomSyncTimeline;
 }
