@@ -274,16 +274,21 @@ NSString *const kMXPresenceHidden = @"hidden";
 
 @implementation MXPresenceEventContent
 
-- (instancetype)initWithDictionary:(NSDictionary *)dictionaryValue error:(NSError *__autoreleasing *)error
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    // Do the JSON -> class instance properties mapping
-    self = [super initWithDictionary:dictionaryValue error:error];
-    if (self)
+    MXPresenceEventContent *presenceEventContent = [[MXPresenceEventContent alloc] init];
+    if (presenceEventContent)
     {
-        _presenceStatus = [MXTools presence:_presence];
+        presenceEventContent.userId = JSONDictionary[@"user_id"];
+        presenceEventContent.displayname = JSONDictionary[@"displayname"];
+        presenceEventContent.avatarUrl = JSONDictionary[@"avatar_url"];
+        presenceEventContent.lastActiveAgo = [((NSNumber*)JSONDictionary[@"last_active_ago"]) unsignedIntegerValue];
+        presenceEventContent.presence = JSONDictionary[@"presence"];
+        presenceEventContent.statusMsg = JSONDictionary[@"status_msg"];
+        
+        presenceEventContent.presenceStatus = [MXTools presence:presenceEventContent.presence];
     }
-
-    return self;
+    return presenceEventContent;
 }
 
 @end
