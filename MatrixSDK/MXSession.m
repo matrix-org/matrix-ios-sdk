@@ -27,7 +27,7 @@
 #import "MXFileStore.h"
 
 // FIXME SYNCV2 Enable server sync v2
-//#define MXSESSION_ENABLE_SERVER_SYNC_V2
+#define MXSESSION_ENABLE_SERVER_SYNC_V2
 
 #pragma mark - Constants definitions
 

@@ -20,7 +20,7 @@
 
 #import "MXFileStoreMetaData.h"
 
-NSUInteger const kMXFileVersion = 13;
+NSUInteger const kMXFileVersion = 14;
 
 NSString *const kMXFileStoreFolder = @"MXFileStore";
 NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -408,6 +408,7 @@ NSString *const kMXReceiptsFolder = @"receipts";
         metaDataHasChanged = YES;
     }
 }
+
 - (NSArray *)rooms
 {
     return roomStores.allKeys;
