@@ -555,14 +555,14 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                                                 {
                                                     NSLog(@"[MXRoom] paginateBackMessages : get %tu messages from the server", paginatedResponse.chunk.count);
                                                     
-                                                    // Check pagination end
-                                                    if (paginatedResponse.chunk.count < numItems)
+                                                    // Check pagination end - @see SPEC-319 ticket
+                                                    if (paginatedResponse.chunk.count == 0 && [paginatedResponse.start isEqualToString:paginatedResponse.end])
                                                     {
                                                         // We run out of items
                                                         [mxSession.store storeHasReachedHomeServerPaginationEndForRoom:_state.roomId andValue:YES];
                                                     }
                                                     
-                                                    // Process these new events
+                                                    // Process received events and update pagination tokens
                                                     [self handleMessages:paginatedResponse direction:MXEventDirectionBackwards isTimeOrdered:NO];
                                                     
                                                     // Commit store changes
