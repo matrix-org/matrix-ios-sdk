@@ -55,9 +55,9 @@ typedef enum : NSUInteger
     MXSessionStateSyncInProgress,
     
     /**
-     The session is catching up
+     The session is catching up in background
      */
-    MXSessionStateCatchingUp,
+    MXSessionStateBackgroundSyncInProgress,
         
     /**
      The session data is synchronised with the server and session keeps it synchronised
@@ -256,16 +256,16 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 - (void)resume:(void (^)())resumeDone;
 
 /**
- Perform an events stream catchup.
+ Perform an events stream catchup in background (by keeping user offline).
  
  @param timeout the max time in milliseconds to perform the catchup
- @param catchupDone A block called when the SDK has been successfully performed a catchup
- @param catchupfails A block called when the catchup fails.
+ @param backgroundSyncDone A block called when the SDK has been successfully performed a catchup
+ @param backgroundSyncfails A block called when the catchup fails.
  */
-typedef void (^MXOnCatchupDone)();
-typedef void (^MXOnCatchupFail)(NSError *error);
+typedef void (^MXOnBackgroundSyncDone)();
+typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
-- (void)catchup:(unsigned int)timeout success:(MXOnCatchupDone)catchupDone failure:(MXOnCatchupFail)catchupfails;
+- (void)backgroundSync:(unsigned int)timeout success:(MXOnBackgroundSyncDone)backgroundSyncDone failure:(MXOnBackgroundSyncFail)backgroundSyncfails;
 
 /**
  Restart the session events stream.

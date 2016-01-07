@@ -100,14 +100,14 @@ typedef void (^MXOnResumeDone)();
     MXOnResumeDone onResumeDone;
     
     /**
-     The block to call when MSSession catchup is successfully done.
+     The block to call when MSSession backgroundSync is successfully done.
      */
-    MXOnCatchupDone onCatchupDone;
+    MXOnBackgroundSyncDone onBackgroundSyncDone;
     
     /**
-     The block to call when MSSession catchup fails.
+     The block to call when MSSession backgroundSync fails.
      */
-    MXOnCatchupFail onCatchupFail;
+    MXOnBackgroundSyncFail onBackgroundSyncFail;
 
     /**
      The list of rooms ids where a room initialSync is in progress (made by [self initialSyncOfRoom])
@@ -400,15 +400,15 @@ typedef void (^MXOnResumeDone)();
                 [_store commit];
             }
             
-            // there is a pending catchup
-            if (onCatchupDone)
+            // there is a pending backgroundSync
+            if (onBackgroundSyncDone)
             {
-                NSLog(@"[MXSession] Events stream catchup with %tu new events", events.count);
-                onCatchupDone();
-                onCatchupDone = nil;
+                NSLog(@"[MXSession] background Sync with %tu new events", events.count);
+                onBackgroundSyncDone();
+                onBackgroundSyncDone = nil;
                 
                 // check that the application was not resumed while catching up
-                if (_state == MXSessionStateCatchingUp)
+                if (_state == MXSessionStateBackgroundSyncInProgress)
                 {
                     NSLog(@"[MXSession] go to paused ");
                     eventStreamRequest = nil;
@@ -417,7 +417,7 @@ typedef void (^MXOnResumeDone)();
                 }
                 else
                 {
-                    NSLog(@"[MXSession] resume after a catchup ");
+                    NSLog(@"[MXSession] resume after a background Sync ");
                 }
             }
             
@@ -450,15 +450,15 @@ typedef void (^MXOnResumeDone)();
 
     } failure:^(NSError *error) {
 
-        if (onCatchupFail)
+        if (onBackgroundSyncFail)
         {
-            NSLog(@"[MXSession] catchup fails %@", error);
+            NSLog(@"[MXSession] background Sync fails %@", error);
             
-            onCatchupFail(error);
-            onCatchupFail = nil;
+            onBackgroundSyncFail(error);
+            onBackgroundSyncFail = nil;
             
-            // check that the application was not resumed while catching up
-            if (_state == MXSessionStateCatchingUp)
+            // check that the application was not resumed while catching up in background
+            if (_state == MXSessionStateBackgroundSyncInProgress)
             {
                 NSLog(@"[MXSession] go to paused ");
                 eventStreamRequest = nil;
@@ -467,7 +467,7 @@ typedef void (^MXOnResumeDone)();
             }
             else
             {
-                NSLog(@"[MXSession] resume after a catchup ");
+                NSLog(@"[MXSession] resume after a background Sync");
             }
         }
         
@@ -682,12 +682,12 @@ typedef void (^MXOnResumeDone)();
 {
     NSLog(@"[MXSession] pause the event stream in state %tu", _state);
     
-    if ((_state == MXSessionStateRunning) || (_state == MXSessionStateCatchingUp))
+    if ((_state == MXSessionStateRunning) || (_state == MXSessionStateBackgroundSyncInProgress))
     {
         // reset the callback
         onResumeDone = nil;
-        onCatchupDone = nil;
-        onCatchupFail = nil;
+        onBackgroundSyncDone = nil;
+        onBackgroundSyncFail = nil;
         
         // Cancel the current request managing the event stream
         [eventStreamRequest cancel];
@@ -700,7 +700,7 @@ typedef void (^MXOnResumeDone)();
 - (void)resume:(void (^)())resumeDone
 {
     // Check whether no request is already in progress
-    if (!eventStreamRequest || (_state == MXSessionStateCatchingUp))
+    if (!eventStreamRequest || (_state == MXSessionStateBackgroundSyncInProgress))
     {
         // Force reload of push rules now.
         // The spec, @see SPEC-106 ticket, does not allow to be notified when there was a change
@@ -730,26 +730,26 @@ typedef void (^MXOnResumeDone)();
     }
 }
 
-- (void)catchup:(unsigned int)timeout success:(MXOnCatchupDone)catchupDone failure:(MXOnCatchupFail)catchupfails
+- (void)backgroundSync:(unsigned int)timeout success:(MXOnBackgroundSyncDone)backgroundSyncDone failure:(MXOnBackgroundSyncFail)backgroundSyncfails
 {
     // Check whether no request is already in progress
     if (!eventStreamRequest)
     {
         if (MXSessionStatePaused != _state)
         {
-            NSLog(@"[MXSession] catchup cannot be done in the current state %tu", _state);
+            NSLog(@"[MXSession] background Sync cannot be done in the current state %tu", _state);
             dispatch_async(dispatch_get_main_queue(), ^{
-                catchupfails(nil);
+                backgroundSyncfails(nil);
             });
         }
         else
         {
-            NSLog(@"[MXSession] start a catchup");
-            [self setState:MXSessionStateCatchingUp];
+            NSLog(@"[MXSession] start a background Sync");
+            [self setState:MXSessionStateBackgroundSyncInProgress];
             
-            // Catchup from the latest known token
-            onCatchupDone = catchupDone;
-            onCatchupFail = catchupfails;
+            // BackgroundSync from the latest known token
+            onBackgroundSyncDone = backgroundSyncDone;
+            onBackgroundSyncFail = backgroundSyncfails;
             
             // Check supported C-S version
 #ifdef MXSESSION_ENABLE_SERVER_SYNC_V2
@@ -1107,15 +1107,15 @@ typedef void (^MXOnResumeDone)();
             [_store commit];
         }
         
-        // there is a pending catchup
-        if (onCatchupDone)
+        // there is a pending backgroundSync
+        if (onBackgroundSyncDone)
         {
-            NSLog(@"[MXSession] Events stream catchup succeeded");
-            onCatchupDone();
-            onCatchupDone = nil;
+            NSLog(@"[MXSession] Events stream background Sync succeeded");
+            onBackgroundSyncDone();
+            onBackgroundSyncDone = nil;
             
-            // check that the application was not resumed while catching up
-            if (_state == MXSessionStateCatchingUp)
+            // check that the application was not resumed while catching up in background
+            if (_state == MXSessionStateBackgroundSyncInProgress)
             {
                 NSLog(@"[MXSession] go to paused ");
                 eventStreamRequest = nil;
@@ -1124,7 +1124,7 @@ typedef void (^MXOnResumeDone)();
             }
             else
             {
-                NSLog(@"[MXSession] resume after a catchup ");
+                NSLog(@"[MXSession] resume after a background Sync");
             }
         }
         
@@ -1168,15 +1168,15 @@ typedef void (^MXOnResumeDone)();
         }
         
         // Handle failure during catch up first
-        if (onCatchupFail)
+        if (onBackgroundSyncFail)
         {
-            NSLog(@"[MXSession] catchup fails %@", error);
+            NSLog(@"[MXSession] background Sync fails %@", error);
             
-            onCatchupFail(error);
-            onCatchupFail = nil;
+            onBackgroundSyncFail(error);
+            onBackgroundSyncFail = nil;
             
-            // check that the application was not resumed while catching up
-            if (_state == MXSessionStateCatchingUp)
+            // check that the application was not resumed while catching up in background
+            if (_state == MXSessionStateBackgroundSyncInProgress)
             {
                 NSLog(@"[MXSession] go to paused ");
                 eventStreamRequest = nil;
@@ -1185,7 +1185,7 @@ typedef void (^MXOnResumeDone)();
             }
             else
             {
-                NSLog(@"[MXSession] resume after a catchup ");
+                NSLog(@"[MXSession] resume after a background Sync");
             }
         }
         
