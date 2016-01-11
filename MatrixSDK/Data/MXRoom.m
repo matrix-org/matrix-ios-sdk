@@ -337,6 +337,16 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     {
         [self notifyListeners:event direction:direction];
     }
+    else
+    {
+        MXReceiptData* data = [[MXReceiptData alloc] init];
+        data.userId = event.sender;
+        data.eventId = event.eventId;
+        data.ts = event.originServerTs;
+        
+        [mxSession.store storeReceipt:data roomId:_state.roomId];
+        // notifyListeners call is performed in the calling method.
+    }
 }
 
 
