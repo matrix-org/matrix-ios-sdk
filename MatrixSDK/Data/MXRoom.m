@@ -605,6 +605,13 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                                                 NSLog(@"[MXRoom] paginateBackMessages error: %@", error);
                                                 failure(error);
                                             }];
+        
+        if (messagesFromStoreCount)
+        {
+            // Disable retry to let the caller handle messages from store without delay.
+            // The caller will trigger a new pagination if need.
+            operation.maxNumberOfTries = 1;
+        }
     }
     else
     {
