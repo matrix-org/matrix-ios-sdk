@@ -263,7 +263,10 @@ typedef void (^MXOnResumeDone)();
     // Can we resume from data available in the cache
     if (_store.isPermanent && _store.eventStreamToken && 0 < _store.rooms.count)
     {
-        // MXSession.loadPresenceBeforeCompletingSessionStart leads to 2 scenarios
+        // Note since server sync v2, we don't need to handle presence separately.
+        // TODO: the following code should be cleaned when sync v1 will be deprecated by removing 'loadPresence' function.
+        
+        // In sync v1, MXSession.loadPresenceBeforeCompletingSessionStart leads 2 scenarios to load presence.
         // Cut the actions into blocks to realize them
         void (^loadPresence) (void (^onPresenceDone)(), void (^onPresenceError)(NSError *error)) = ^void(void (^onPresenceDone)(), void (^onPresenceError)(NSError *error)) {
             NSDate *startDate = [NSDate date];
@@ -313,20 +316,30 @@ typedef void (^MXOnResumeDone)();
                 onServerSyncDone();
             }];
         };
-
-        // Then, apply
-        if (_loadPresenceBeforeCompletingSessionStart)
+        
+#ifdef MXSESSION_ENABLE_SERVER_SYNC_V2
+        if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
         {
-            // Load presence before resuming the stream
-            loadPresence(^() {
-                resumeEventsStream();
-            }, failure);
+            // Resume the stream (presence will be retrieved durng server sync)
+            resumeEventsStream();
         }
         else
+#endif
         {
-            // Resume the stream and load presence in parralel
-            resumeEventsStream();
-            loadPresence(nil, nil);
+            // Then, apply
+            if (_loadPresenceBeforeCompletingSessionStart)
+            {
+                // Load presence before resuming the stream
+                loadPresence(^() {
+                    resumeEventsStream();
+                }, failure);
+            }
+            else
+            {
+                // Resume the stream and load presence in parralel
+                resumeEventsStream();
+                loadPresence(nil, nil);
+            }
         }
     }
     else
