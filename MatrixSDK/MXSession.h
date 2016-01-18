@@ -300,6 +300,8 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
          failure:(void (^)(NSError *error))failure;
 
 /**
+ This property is used only in case of server sync v1. It is deprecated for server sync v2 and later.
+ 
  When the SDK starts on data stored in MXStore, this option indicates if it must load
  users presences information before calling the `onServerSyncDone` block of [MXSession start].
 
