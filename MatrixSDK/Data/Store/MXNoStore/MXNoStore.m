@@ -27,6 +27,9 @@
     // key: roomId, value: the last message of this room
     NSMutableDictionary *lastMessages;
 
+    // key: roomId, value: the text message the user typed
+    NSMutableDictionary *partialTextMessages;
+
     NSString *eventStreamToken;
 }
 @end
@@ -43,6 +46,7 @@
         paginationTokens = [NSMutableDictionary dictionary];
         hasReachedHomeServerPaginations = [NSMutableDictionary dictionary];
         lastMessages = [NSMutableDictionary dictionary];
+        partialTextMessages = [NSMutableDictionary dictionary];
     }
     return self;
 }
@@ -111,6 +115,10 @@
     {
         [lastMessages removeObjectForKey:roomId];
     }
+    if (partialTextMessages[roomId])
+    {
+        [partialTextMessages removeObjectForKey:roomId];
+    }
 }
 
 - (void)deleteAllData
@@ -118,6 +126,7 @@
     [paginationTokens removeAllObjects];
     [hasReachedHomeServerPaginations removeAllObjects];
     [lastMessages removeAllObjects];
+    [partialTextMessages removeAllObjects];
 }
 
 - (void)storePaginationTokenOfRoom:(NSString*)roomId andToken:(NSString*)token
@@ -173,6 +182,23 @@
     NSLog(@"[MXNoStore] Warning: MXNoStore implementation of lastMessageOfRoom is limited");
 
     return lastMessages[roomId];
+}
+
+- (void)storePartialTextMessageForRoom:(NSString *)roomId partialTextMessage:(NSString *)partialTextMessage
+{
+    if (partialTextMessage)
+    {
+        partialTextMessages[roomId] = partialTextMessage;
+    }
+    else
+    {
+        [partialTextMessages removeObjectForKey:roomId];
+    }
+}
+
+- (NSString *)partialTextMessageOfRoom:(NSString *)roomId
+{
+    return partialTextMessages[roomId];
 }
 
 - (BOOL)isPermanent

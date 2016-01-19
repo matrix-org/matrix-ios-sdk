@@ -20,7 +20,7 @@
 
 #import "MXFileStoreMetaData.h"
 
-NSUInteger const kMXFileVersion = 15;
+NSUInteger const kMXFileVersion = 16;
 
 NSString *const kMXFileStoreFolder = @"MXFileStore";
 NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -388,6 +388,16 @@ NSString *const kMXReceiptsFolder = @"receipts";
 {
     [super storeHasReachedHomeServerPaginationEndForRoom:roomId andValue:value];
 
+    if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
+    {
+        [roomsToCommitForMessages addObject:roomId];
+    }
+}
+
+- (void)storePartialTextMessageForRoom:(NSString *)roomId partialTextMessage:(NSString *)partialTextMessage
+{
+    [super storePartialTextMessageForRoom:roomId partialTextMessage:partialTextMessage];
+    
     if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
     {
         [roomsToCommitForMessages addObject:roomId];

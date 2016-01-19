@@ -30,6 +30,8 @@
 
         self.hasReachedHomeServerPaginationEnd = [aDecoder decodeBoolForKey:@"hasReachedHomeServerPaginationEnd"];
 
+        self.partialTextMessage = [aDecoder decodeObjectForKey:@"partialTextMessage"];
+
         // Rebuild the messagesByEventIds cache
         for (MXEvent *event in messages)
         {
@@ -38,7 +40,6 @@
                 messagesByEventIds[event.eventId] = event;
             }
         }
-
     }
     return self;
 }
@@ -60,6 +61,11 @@
     }
     
     [aCoder encodeBool:self.hasReachedHomeServerPaginationEnd forKey:@"hasReachedHomeServerPaginationEnd"];
+
+    if (self.partialTextMessage)
+    {
+        [aCoder encodeObject:self.partialTextMessage forKey:@"partialTextMessage"];
+    }
 }
 
 @end

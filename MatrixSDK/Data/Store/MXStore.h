@@ -152,6 +152,24 @@
  */
 - (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types;
 
+
+/**
+ Store the text message partially typed by the user but not yet sent.
+ 
+ @param roomId the id of the room.
+ @param partialTextMessage the text to store. Nil to reset it.
+ */
+- (void)storePartialTextMessageForRoom:(NSString*)roomId partialTextMessage:(NSString*)partialTextMessage;
+
+/**
+ The text message typed by the user but not yet sent.
+
+ @param roomId the id of the room.
+ @return the text message. Can be nil.
+ */
+- (NSString*)partialTextMessageOfRoom:(NSString*)roomId;
+
+
 /**
  * Returns the receipts list for an event in a dedicated room.
  * if sort is set to YES, they are sorted from the latest to the oldest ones.
