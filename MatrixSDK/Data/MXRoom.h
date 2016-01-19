@@ -77,6 +77,13 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 @property (nonatomic, readonly) MXRoomAccountData *accountData;
 
 /**
+ The text message partially typed by the user but not yet sent.
+ The value is stored by the session store. Thus, it can be retrieved
+ when the application restarts.
+ */
+@property (nonatomic) NSString *partialTextMessage;
+
+/**
  The list of ids of users currently typing in this room.
  This array is updated on each received m.typing event (MXEventTypeTypingNotification).
  */

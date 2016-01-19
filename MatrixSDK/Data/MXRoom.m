@@ -124,7 +124,21 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     return self;
 }
 
-#pragma mark - Properties getters implementation
+#pragma mark - Properties implementation
+- (void)setPartialTextMessage:(NSString *)partialTextMessage
+{
+    [mxSession.store storePartialTextMessageForRoom:_state.roomId partialTextMessage:partialTextMessage];
+    if ([mxSession.store respondsToSelector:@selector(commit)])
+    {
+        [mxSession.store commit];
+    }
+}
+
+- (NSString *)partialTextMessage
+{
+    return [mxSession.store partialTextMessageOfRoom:_state.roomId];
+}
+
 - (MXEvent *)lastMessageWithTypeIn:(NSArray*)types
 {
     return [mxSession.store lastMessageOfRoom:_state.roomId withTypeIn:types];

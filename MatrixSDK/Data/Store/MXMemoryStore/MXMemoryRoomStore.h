@@ -113,4 +113,9 @@
  */
 - (NSArray*)eventsAfter:(NSString *)eventId except:(NSString*)userId withTypeIn:(NSSet*)types;
 
+/**
+ The text message partially typed by the user but not yet sent in the room.
+ */
+@property (nonatomic) NSString *partialTextMessage;
+
 @end
