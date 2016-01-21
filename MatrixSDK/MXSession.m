@@ -952,13 +952,13 @@ typedef void (^MXOnResumeDone)();
             }
         }
         
-        // init the receips to the latest received one.
-        // else the unread messages counter will not be properly managed.
-        for (MXRoomInitialSync* roomInitialSync in initialSync.rooms)
-        {
-            MXRoom *room = [self roomWithRoomId:roomInitialSync.roomId];
-            [room acknowledgeLatestEvent:NO];
-        }
+//        // init the receips to the latest received one.
+//        // else the unread messages counter will not be properly managed.
+//        for (MXRoomInitialSync* roomInitialSync in initialSync.rooms)
+//        {
+//            MXRoom *room = [self roomWithRoomId:roomInitialSync.roomId];
+//            [room acknowledgeLatestEvent:NO];
+//        }
         
         // Start listening to live events
         _store.eventStreamToken = initialSync.end;
@@ -1456,8 +1456,8 @@ typedef void (^MXOnResumeDone)();
             [room handleReceiptEvent:receiptEvent direction:MXEventDirectionSync];
         }
         
-        // init the receips to the latest received one.
-        [room acknowledgeLatestEvent:NO];
+//        // init the receips to the latest received one.
+//        [room acknowledgeLatestEvent:NO];
 
         // Commit store changes done in [room handleMessages]
         if ([_store respondsToSelector:@selector(commit)])

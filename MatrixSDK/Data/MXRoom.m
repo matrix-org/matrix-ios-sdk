@@ -225,9 +225,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     // Finalize initial sync
     if (isRoomInitialSync)
     {
-        // init the receips to the latest received one.
-        [self acknowledgeLatestEvent:NO];
-        
         // Notify that room has been sync'ed
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomInitialSyncNotification
                                                             object:self
