@@ -189,35 +189,56 @@ typedef void (^MXOnResumeDone)();
         // Can we start on data from the MXStore?
         if (_store.isPermanent && _store.eventStreamToken && 0 < _store.rooms.count)
         {
-            // Mount data from the permanent store
-            NSLog(@"[MXSession] Loading room state events to build MXRoom objects...");
-
-            // Create the user's profile from the store
-            _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId andDisplayname:_store.userDisplayname andAvatarUrl:_store.userAvatarUrl andMatrixSession:self];
-            // And store him as a common MXUser
-            users[matrixRestClient.credentials.userId] = _myUser;
-
-            // Create MXRooms from their states stored in the store
-            NSDate *startDate2 = [NSDate date];
-            for (NSString *roomId in _store.rooms)
-            {
-                @autoreleasepool
+            // Define here a method to load data from store
+            void (^loadStoreData) () = ^void() {
+                // Mount data from the permanent store
+                NSLog(@"[MXSession] Loading room state events to build MXRoom objects...");
+                
+                // Create the user's profile from the store
+                _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId andDisplayname:_store.userDisplayname andAvatarUrl:_store.userAvatarUrl andMatrixSession:self];
+                // And store him as a common MXUser
+                users[matrixRestClient.credentials.userId] = _myUser;
+                
+                // Create MXRooms from their states stored in the store
+                NSDate *startDate2 = [NSDate date];
+                for (NSString *roomId in _store.rooms)
                 {
-                    NSArray *stateEvents = [_store stateOfRoom:roomId];
-                    MXRoomAccountData *roomAccountData = [_store accountDataOfRoom:roomId];
-                    [self createRoom:roomId withStateEvents:stateEvents andAccountData:roomAccountData notify:NO];
+                    @autoreleasepool
+                    {
+                        NSArray *stateEvents = [_store stateOfRoom:roomId];
+                        MXRoomAccountData *roomAccountData = [_store accountDataOfRoom:roomId];
+                        [self createRoom:roomId withStateEvents:stateEvents andAccountData:roomAccountData notify:NO];
+                    }
                 }
-            }
-
-            NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+                
+                NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+                
+                NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                
+                [self setState:MXSessionStateStoreDataReady];
+                
+                // The SDK client can use this data
+                onStoreDataReady();
+            };
+            
+            // Reload first the push rules to display correctly bing events.
+            // The store data are loaded even if this operation failed to let the app run in offline mode.
+            NSLog(@"[MXSession] Reload push rules from the home server...");
+            [_notificationCenter refreshRules:^{
+                loadStoreData();
+            } failure:^(NSError *error) {
+                loadStoreData();
+            }];
         }
-
-        NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
-
-        [self setState:MXSessionStateStoreDataReady];
-
-        // The SDK client can use this data
-        onStoreDataReady();
+        else
+        {
+            NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+            
+            [self setState:MXSessionStateStoreDataReady];
+            
+            // The SDK client can use this data
+            onStoreDataReady();
+        }
 
     } failure:^(NSError *error) {
         [self setState:MXSessionStateInitialised];
