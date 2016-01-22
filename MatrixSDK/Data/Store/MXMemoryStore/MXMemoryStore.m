@@ -248,6 +248,32 @@
 }
 
 
+#pragma mark - Outgoing events
+- (void)storeOutgoingMessageForRoom:(NSString*)roomId outgoingMessage:(MXEvent*)outgoingMessage
+{
+    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    [roomStore storeOutgoingMessage:outgoingMessage];
+}
+
+- (void)removeAllOutgoingMessagesFromRoom:(NSString*)roomId
+{
+    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    [roomStore removeAllOutgoingMessages];
+}
+
+- (void)removeOutgoingMessageFromRoom:(NSString*)roomId outgoingMessage:(NSString*)outgoingMessageEventId
+{
+    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    [roomStore removeOutgoingMessage:outgoingMessageEventId];
+}
+
+- (NSArray<MXEvent*>*)outgoingMessagesInRoom:(NSString*)roomId
+{
+    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    return roomStore.outgoingMessages;
+}
+
+
 #pragma mark - Protected operations
 - (MXMemoryRoomStore*)getOrCreateRoomStore:(NSString*)roomId
 {

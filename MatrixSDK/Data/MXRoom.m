@@ -775,6 +775,58 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 }
 
 
+#pragma mark - Outgoing events manangement
+- (void)storeOutgoingMessage:(MXEvent*)outgoingMessage
+{
+    if ([mxSession.store respondsToSelector:@selector(storeOutgoingMessageForRoom:outgoingMessage:)]
+        && [mxSession.store respondsToSelector:@selector(commit)])
+    {
+        [mxSession.store storeOutgoingMessageForRoom:_state.roomId outgoingMessage:outgoingMessage];
+        [mxSession.store commit];
+    }
+}
+
+- (void)removeAllOutgoingMessages
+{
+    if ([mxSession.store respondsToSelector:@selector(removeAllOutgoingMessagesFromRoom:)]
+        && [mxSession.store respondsToSelector:@selector(commit)])
+    {
+        [mxSession.store removeAllOutgoingMessagesFromRoom:_state.roomId];
+        [mxSession.store commit];
+    }
+}
+
+- (void)removeOutgoingMessage:(NSString*)outgoingMessageEventId
+{
+    if ([mxSession.store respondsToSelector:@selector(removeOutgoingMessageFromRoom:outgoingMessage:)]
+        && [mxSession.store respondsToSelector:@selector(commit)])
+    {
+        [mxSession.store removeOutgoingMessageFromRoom:_state.roomId outgoingMessage:outgoingMessageEventId];
+        [mxSession.store commit];
+    }
+}
+
+- (void)updateOutgoingMessage:(NSString *)outgoingMessageEventId withOutgoingMessage:(MXEvent *)outgoingMessage
+{
+    // Do the update by removing the existing one and create a new one
+    // Thus, `outgoingMessage` will go at the end of the outgoing messages list
+    [self removeOutgoingMessage:outgoingMessageEventId];
+    [self storeOutgoingMessage:outgoingMessage];
+}
+
+- (NSArray<MXEvent*>*)outgoingMessages
+{
+    if ([mxSession.store respondsToSelector:@selector(outgoingMessagesInRoom:)])
+    {
+        return [mxSession.store outgoingMessagesInRoom:_state.roomId];
+    }
+    else
+    {
+        return nil;
+    }
+}
+
+
 #pragma mark - Room tags operations
 - (MXHTTPOperation*)addTag:(NSString*)tag
                  withOrder:(NSString*)order

@@ -425,6 +425,42 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
                         failure:(void (^)(NSError *error))failure;
 
 
+#pragma mark - Outgoing events manangement
+/**
+ Store into the store an outgoing mesage event being sent in the room.
+ 
+ If the store used by the MXSession is based on a permanent storage, the application
+ will be able to retrieve messages that failed to be sent in a previous app session.
+
+ @param event the MXEvent object of the message.
+ */
+- (void)storeOutgoingMessage:(MXEvent*)outgoingMessage;
+
+/**
+ Remove all outgoing mesages from the room.
+ */
+- (void)removeAllOutgoingMessages;
+
+/**
+ Remove an outgoing mesage from the room.
+
+ @param outgoingMessageEventId the id of the message to remove.
+ */
+- (void)removeOutgoingMessage:(NSString*)outgoingMessageEventId;
+
+/**
+ Update an outgoing mesage.
+
+ @param outgoingMessageEventId the id of the message to update.
+ @param outgoingMessage the new outgoing message content.
+ */
+- (void)updateOutgoingMessage:(NSString*)outgoingMessageEventId withOutgoingMessage:(MXEvent*)outgoingMessage;
+
+/**
+ All outgoing mesages pending in the room.
+ */
+- (NSArray<MXEvent*>*)outgoingMessages;
+
 
 #pragma mark - Room tags operations
 /**
