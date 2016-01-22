@@ -16,7 +16,6 @@ Improvements:
  * MXHTTPClient: Accept path that already contains url parameters.
  * MXJSONModels: Improve performance (Limit Mantle use).
  * MXStore: Store the partial text message typed by the user.
- * Enable Background Sync (Active when push body will contain ‘content-available’ key).
 
 Bug fixes:
  * MXRoom: Fix detection of the end of the back pagination. End of pagination is now detected when returned chunk is empty and both tokens (start/end) are equal.
