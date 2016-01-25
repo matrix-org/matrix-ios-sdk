@@ -278,6 +278,40 @@
 */
 - (MXRoomAccountData*)accountDataOfRoom:(NSString*)roomId;
 
+
+#pragma mark - Outgoing events
+/**
+ Store into the store an outgoing message event being sent in a room.
+ 
+ @param roomId the id of the room.
+ @param event the MXEvent object of the message.
+ */
+- (void)storeOutgoingMessageForRoom:(NSString*)roomId outgoingMessage:(MXEvent*)outgoingMessage;
+
+/**
+ Remove all outgoing messages from a room.
+
+ @param roomId the id of the room.
+ */
+- (void)removeAllOutgoingMessagesFromRoom:(NSString*)roomId;
+
+/**
+ Remove an outgoing message from a room.
+
+ @param roomId the id of the room.
+ @param outgoingMessageEventId the id of the message to remove.
+ */
+- (void)removeOutgoingMessageFromRoom:(NSString*)roomId outgoingMessage:(NSString*)outgoingMessageEventId;
+
+/**
+ Get all outgoing messages pending in a room.
+
+ @param roomId the id of the room.
+ @return the list of messages that have not been sent yet
+ */
+- (NSArray<MXEvent*>*)outgoingMessagesInRoom:(NSString*)roomId;
+
+
 /**
  Store/retrieve the user display name.
  */
