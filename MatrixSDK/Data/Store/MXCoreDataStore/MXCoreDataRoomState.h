@@ -33,4 +33,4 @@ NS_ASSUME_NONNULL_END
 
 #import "MXCoreDataRoomState+CoreDataProperties.h"
 
-#endif
+#endif // MXCOREDATA_STORE
