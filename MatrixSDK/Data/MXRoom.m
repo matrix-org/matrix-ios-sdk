@@ -775,7 +775,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 }
 
 
-#pragma mark - Outgoing events manangement
+#pragma mark - Outgoing events management
 - (void)storeOutgoingMessage:(MXEvent*)outgoingMessage
 {
     if ([mxSession.store respondsToSelector:@selector(storeOutgoingMessageForRoom:outgoingMessage:)]

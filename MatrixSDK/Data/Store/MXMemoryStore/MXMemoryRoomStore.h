@@ -122,26 +122,26 @@
 @property (nonatomic) NSString *partialTextMessage;
 
 /**
- Store into the store an outgoing mesage event being sent in the room.
+ Store into the store an outgoing message event being sent in the room.
 
  @param event the MXEvent object of the message.
  */
 - (void)storeOutgoingMessage:(MXEvent*)outgoingMessage;
 
 /**
- Remove all outgoing mesages from the room.
+ Remove all outgoing messages from the room.
  */
 - (void)removeAllOutgoingMessages;
 
 /**
- Remove an outgoing mesage from the room.
+ Remove an outgoing message from the room.
 
  @param outgoingMessageEventId the id of the message to remove.
  */
 - (void)removeOutgoingMessage:(NSString*)outgoingMessageEventId;
 
 /**
- All outgoing mesages pending in the room.
+ All outgoing messages pending in the room.
  */
 @property (nonatomic) NSArray<MXEvent*> *outgoingMessages;
 
