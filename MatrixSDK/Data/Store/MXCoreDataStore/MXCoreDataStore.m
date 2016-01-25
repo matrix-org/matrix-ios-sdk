@@ -16,6 +16,8 @@
 
 #import "MXCoreDataStore.h"
 
+#ifdef MXCOREDATA_STORE
+
 #import "MXCoreDataEvent.h"
 #import "MXCoreDataAccount.h"
 #import "MXCoreDataRoom.h"
@@ -626,3 +628,5 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 }
 
 @end
+
+#endif // MXCOREDATA_STORE

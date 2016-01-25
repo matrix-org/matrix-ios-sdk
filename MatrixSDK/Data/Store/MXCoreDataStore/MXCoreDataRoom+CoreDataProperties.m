@@ -16,6 +16,8 @@
 
 #import "MXCoreDataRoom+CoreDataProperties.h"
 
+#ifdef MXCOREDATA_STORE
+
 static NSString *const kItemsKey = @"messages";
 
 @implementation MXCoreDataRoom (CoreDataProperties)
@@ -78,3 +80,5 @@ static NSString *const kItemsKey = @"messages";
 }
 
 @end
+
+#endif // MXCOREDATA_STORE

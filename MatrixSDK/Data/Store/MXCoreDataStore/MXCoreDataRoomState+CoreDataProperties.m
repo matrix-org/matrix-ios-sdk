@@ -16,9 +16,13 @@
 
 #import "MXCoreDataRoomState+CoreDataProperties.h"
 
+#ifdef MXCOREDATA_STORE
+
 @implementation MXCoreDataRoomState (CoreDataProperties)
 
 @dynamic state;
 @dynamic room;
 
 @end
+
+#endif

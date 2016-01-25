@@ -16,6 +16,8 @@
 
 #import "MXCoreDataEvent.h"
 
+#ifdef MXCOREDATA_STORE
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface MXCoreDataEvent (CoreDataProperties)
@@ -37,3 +39,5 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 NS_ASSUME_NONNULL_END
+
+#endif // MXCOREDATA_STORE

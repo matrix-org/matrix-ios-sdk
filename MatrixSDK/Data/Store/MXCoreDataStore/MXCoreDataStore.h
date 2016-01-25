@@ -16,6 +16,8 @@
 
 #import "MXStore.h"
 
+#ifdef MXCOREDATA_STORE
+
 /**
  `MXCoreDataStore` is an implementation of the `MXStore` interface based on Core Data.
 
@@ -30,3 +32,5 @@
 + (void)flush;
 
 @end
+
+#endif

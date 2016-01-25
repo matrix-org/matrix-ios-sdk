@@ -16,6 +16,8 @@
 
 #import "MXCoreDataRoomState.h"
 
+#ifdef MXCOREDATA_STORE
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface MXCoreDataRoomState (CoreDataProperties)
@@ -26,3 +28,5 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 NS_ASSUME_NONNULL_END
+
+#endif
