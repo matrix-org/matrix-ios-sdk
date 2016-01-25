@@ -97,12 +97,39 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
         event.sender = JSONDictionary[@"sender"];
         event.userId = JSONDictionary[@"user_id"];
         event.content = JSONDictionary[@"content"];
-        event.prevContent = JSONDictionary[@"prev_content"];
         event.stateKey = JSONDictionary[@"state_key"];
         event.originServerTs = [((NSNumber*)JSONDictionary[@"origin_server_ts"]) unsignedLongLongValue];
-        event.age = [((NSNumber*)JSONDictionary[@"age"]) unsignedIntegerValue];
+        
         event.redacts = JSONDictionary[@"redacts"];
+        
+        event.prevContent =  JSONDictionary[@"prev_content"];
+        // 'prev_content' has been moved under unsigned in some server responses (see sync API).
+        if (!event.prevContent)
+        {
+            event.prevContent = JSONDictionary[@"unsigned"][@"prev_content"];
+        }
+        
+        // 'age' has been moved under unsigned.
+        if (JSONDictionary[@"age"])
+        {
+            event.age = [((NSNumber*)JSONDictionary[@"age"]) unsignedIntegerValue];
+        }
+        else if (JSONDictionary[@"unsigned"][@"age"])
+        {
+            event.age = [((NSNumber*)JSONDictionary[@"unsigned"][@"age"]) unsignedIntegerValue];
+        }
+        
         event.redactedBecause = JSONDictionary[@"redacted_because"];
+        if (!event.redactedBecause)
+        {
+            // 'redacted_because' has been moved under unsigned.
+            event.redactedBecause = JSONDictionary[@"unsigned"][@"redacted_because"];
+        }
+        
+        if (JSONDictionary[@"invite_room_state"])
+        {
+            event.inviteRoomState = [MXEvent modelsFromJSON:JSONDictionary[@"invite_room_state"]];
+        }
 
         [event finalise];
     }
@@ -191,13 +218,38 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     return (nil != self.stateKey);
 }
 
-- (NSArray*)receiptSenders
+- (NSArray *)readReceiptEventIds
 {
-    NSMutableArray* list = [[NSMutableArray alloc] init];
+    NSMutableArray* list = nil;
     
     if (eventType == MXEventTypeReceipt)
     {
         NSArray* eventIds = [_content allKeys];
+        list = [[NSMutableArray alloc] initWithCapacity:eventIds.count];
+        
+        for (NSString* eventId in eventIds)
+        {
+            NSDictionary* eventDict = [_content objectForKey:eventId];
+            NSDictionary* readDict = [eventDict objectForKey:kMXEventTypeStringRead];
+            
+            if (readDict)
+            {
+                [list addObject:eventId];
+            }
+        }
+    }
+    
+    return list;
+}
+
+- (NSArray *)readReceiptSenders
+{
+    NSMutableArray* list = nil;
+    
+    if (eventType == MXEventTypeReceipt)
+    {
+        NSArray* eventIds = [_content allKeys];
+        list = [[NSMutableArray alloc] initWithCapacity:eventIds.count];
         
         for(NSString* eventId in eventIds)
         {
@@ -217,10 +269,6 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
                 }
             }
         }
-    }
-    else if (_sender)
-    {
-        [list addObject:_sender];
     }
     
     return list;
@@ -398,6 +446,7 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
         _ageLocalTs = [ageLocalTs unsignedLongLongValue];
         _redacts = [aDecoder decodeObjectForKey:@"redacts"];
         _redactedBecause = [aDecoder decodeObjectForKey:@"redactedBecause"];
+        _inviteRoomState = [aDecoder decodeObjectForKey:@"inviteRoomState"];
     }
     return self;
 }
@@ -415,6 +464,7 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     [aCoder encodeObject:@(_ageLocalTs) forKey:@"ageLocalTs"];
     [aCoder encodeObject:_redacts forKey:@"redacts"];
     [aCoder encodeObject:_redactedBecause forKey:@"redactedBecause"];
+    [aCoder encodeObject:_inviteRoomState forKey:@"inviteRoomState"];
 }
 
 @end

@@ -17,6 +17,8 @@
 #import <Foundation/Foundation.h>
 #import <CoreData/CoreData.h>
 
+#ifdef MXCOREDATA_STORE
+
 #import "MXEventListener.h"
 
 @class MXCoreDataAccount;
@@ -120,3 +122,5 @@ NS_ASSUME_NONNULL_BEGIN
 NS_ASSUME_NONNULL_END
 
 #import "MXCoreDataRoom+CoreDataProperties.h"
+
+#endif //  MXCOREDATA_STORE

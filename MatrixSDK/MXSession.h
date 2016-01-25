@@ -55,9 +55,9 @@ typedef enum : NSUInteger
     MXSessionStateSyncInProgress,
     
     /**
-     The session is catching up
+     The session is catching up in background
      */
-    MXSessionStateCatchingUp,
+    MXSessionStateBackgroundSyncInProgress,
         
     /**
      The session data is synchronised with the server and session keeps it synchronised
@@ -116,6 +116,18 @@ FOUNDATION_EXPORT NSString *const kMXSessionDidLeaveRoomNotification;
  Posted when MXSession has performed a server sync.
  */
 FOUNDATION_EXPORT NSString *const kMXSessionDidSyncNotification;
+
+/**
+ Posted when MXSession has detected a change in the `invitedRooms` property.
+ 
+ The user has received a room invitation or he has accepted or rejected one.
+ Note this notification is sent only when the `invitedRooms` method has been called.
+
+ The passed userInfo dictionary contains:
+ - `kMXSessionNotificationRoomIdKey` the roomId of the room concerned by the changed
+ - `kMXSessionNotificationEventKey` the MXEvent responsible for the change.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionInvitedRoomsDidChangeNotification;
 
 #pragma mark - Notifications keys
 /**
@@ -244,16 +256,16 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 - (void)resume:(void (^)())resumeDone;
 
 /**
- Perform an events stream catchup.
+ Perform an events stream catchup in background (by keeping user offline).
  
  @param timeout the max time in milliseconds to perform the catchup
- @param catchupDone A block called when the SDK has been successfully performed a catchup
- @param catchupfails A block called when the catchup fails.
+ @param backgroundSyncDone A block called when the SDK has been successfully performed a catchup
+ @param backgroundSyncfails A block called when the catchup fails.
  */
-typedef void (^MXOnCatchupDone)();
-typedef void (^MXOnCatchupFail)(NSError *error);
+typedef void (^MXOnBackgroundSyncDone)();
+typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
-- (void)catchup:(unsigned int)timeout success:(MXOnCatchupDone)catchupDone failure:(MXOnCatchupFail)catchupfails;
+- (void)backgroundSync:(unsigned int)timeout success:(MXOnBackgroundSyncDone)backgroundSyncDone failure:(MXOnBackgroundSyncFail)backgroundSyncfails;
 
 /**
  Restart the session events stream.
@@ -288,6 +300,8 @@ typedef void (^MXOnCatchupFail)(NSError *error);
          failure:(void (^)(NSError *error))failure;
 
 /**
+ This property is used only in case of server sync v1. It is deprecated for server sync v2 and later.
+ 
  When the SDK starts on data stored in MXStore, this option indicates if it must load
  users presences information before calling the `onServerSyncDone` block of [MXSession start].
 
@@ -436,6 +450,17 @@ typedef void (^MXOnCatchupFail)(NSError *error);
 - (NSArray<MXRoom*>*)sortRooms:(NSArray<MXRoom*>*)rooms byLastMessageWithTypeIn:(NSArray<MXEventTypeString>*)types;
 
 
+#pragma mark - User's special rooms
+/**
+ Get the list of rooms where the user has a pending invitation.
+ 
+ The `kMXSessionInvitedRoomsDidChangeNotification` will be sent when a change is detected by the SDK.
+ 
+ @return an array where rooms are ordered.
+ */
+- (NSArray<MXRoom*>*)invitedRooms;
+
+
 #pragma mark - User's rooms tags
 /**
  Get the list of rooms that are tagged the specified tag.
@@ -462,10 +487,11 @@ typedef void (^MXOnCatchupFail)(NSError *error);
  in the list of rooms stamped with this tag.
 
  @param index the targeted index of the room in the list of rooms with the tag `tag`.
+ @param originIndex the origin index. NSNotFound if there is none.
  @param tag the tag.
  @return the tag order to apply to get the expected position.
  */
-- (NSString*)tagOrderToBeAtIndex:(NSUInteger)index withTag:(NSString *)tag;
+- (NSString*)tagOrderToBeAtIndex:(NSUInteger)index from:(NSUInteger)originIndex withTag:(NSString *)tag;
 
 
 #pragma mark - Global events listeners

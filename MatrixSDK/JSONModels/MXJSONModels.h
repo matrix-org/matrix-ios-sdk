@@ -32,11 +32,46 @@
  */
 @interface MXPublicRoom : MXJSONModel
 
+    /**
+     The ID of the room.
+     */
     @property (nonatomic) NSString *roomId;
+
+    /**
+     The name of the room, if any. May be nil.
+     */
     @property (nonatomic) NSString *name;
-    @property (nonatomic) NSArray *aliases; // Array of NSString
+
+    /**
+     Aliases of the room.
+     */
+    @property (nonatomic) NSArray<NSString*> *aliases;
+
+    /**
+     The topic of the room, if any. May be nil.
+     */
     @property (nonatomic) NSString *topic;
+
+    /**
+     The number of members joined to the room.
+     */
     @property (nonatomic) NSUInteger numJoinedMembers;
+
+    /**
+     Whether the room may be viewed by guest users without joining.
+     */
+    @property (nonatomic) BOOL worldReadable;
+
+    /**
+     Whether guest users may join the room and participate in it.
+     If they can, they will be subject to ordinary power level rules like any other user.
+     */
+    @property (nonatomic) BOOL guestCanJoin;
+
+    /**
+     The URL for the room's avatar. May be nil.
+     */
+    @property (nonatomic) NSString *avatarUrl;
 
     // The display name is computed from available information
     // @TODO: move it to MXSession as this class has additional information to compute the optimal display name
@@ -199,6 +234,12 @@ FOUNDATION_EXPORT NSString *const kMXRoomTagLowPriority;
  comparison.
  */
 @property (nonatomic, readonly) NSString *order;
+
+/**
+ Try to parse order as NSNumber.
+ Provides nil if the items cannot be parsed.
+ */
+@property (nonatomic, readonly) NSNumber *parsedOrder;
 
 /**
  Basic constructor.
@@ -546,6 +587,178 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 
 @end
 
+
+#pragma mark - Search
+#pragma mark -
+
+/**
+ `MXSearchUserProfile` represents The historic profile information of a user in a result context.
+ */
+@interface MXSearchUserProfile : MXJSONModel
+
+    /**
+     The avatar URL for this user, if any.
+     */
+    @property (nonatomic) NSString *avatarUrl;
+
+    /**
+     The display name for this user, if any.
+     */
+    @property (nonatomic) NSString *displayName;
+
+@end
+
+/**
+ `MXSearchEventContext` represents the context of a result.
+ */
+@interface MXSearchEventContext : MXJSONModel
+
+    /**
+     Pagination token for the start of the chunk.
+     */
+    @property (nonatomic) NSString *start;
+
+    /**
+     Pagination token for the end of the chunk.
+     */
+    @property (nonatomic) NSString *end;
+
+    /**
+     Events just before the result.
+     */
+    @property (nonatomic) NSArray<MXEvent*> *eventsBefore;
+
+    /**
+     Events just after the result.
+     */
+    @property (nonatomic) NSArray<MXEvent*> *eventsAfter;
+
+    /**
+     The historic profile information of the users that sent the events returned.
+     The key is the user id, the value the user profile.
+     */
+    @property (nonatomic) NSDictionary<NSString*, MXSearchUserProfile*> *profileInfo;
+
+@end
+
+/**
+ `MXSearchResult` represents a result.
+ */
+@interface MXSearchResult : MXJSONModel
+
+    /**
+     The event that matched.
+     */
+    @property (nonatomic) MXEvent *result;
+
+    /**
+     A number that describes how closely this result matches the search. Higher is closer.
+     */
+    @property (nonatomic) NSInteger rank;
+
+    /**
+     Context for result, if requested.
+     */
+    @property (nonatomic) MXSearchEventContext *context;
+
+@end
+
+/**
+ `MXSearchGroupContent` represents (TODO_SEARCH).
+ */
+@interface MXSearchGroupContent : MXJSONModel
+
+    /**
+     Which results are in this group.
+     */
+    @property (nonatomic) NSArray<NSString*> *results;  // TODO_SEARCH: not MXSearchResult ??? or result id
+
+    /**
+     Key that can be used to order different groups.
+     */
+    @property (nonatomic) NSInteger order;
+
+    /**
+     Token that can be used to get the next batch of results in the group, if exists.
+     */
+    @property (nonatomic) NSString *nextBatch;
+
+@end
+
+/**
+ `MXSearchResponse` represents the mapping of category name to search criteria.
+ */
+@interface MXSearchGroup : MXJSONModel
+
+    /**
+     Total number of results found.
+     The key is "room_id" (TODO_SEARCH) , the value the group.
+     */
+    @property (nonatomic) NSDictionary<NSString*, MXSearchGroupContent*> *group;
+
+@end
+
+/**
+ `MXSearchRoomEvents` represents the mapping of category name to search criteria.
+ */
+@interface MXSearchRoomEventResults : MXJSONModel
+
+    /**
+     Total number of results found.
+     */
+    @property (nonatomic) NSUInteger count;
+
+    /**
+     List of results in the requested order.
+     */
+    @property (nonatomic) NSArray<MXSearchResult*> *results;
+
+    /**
+     The current state for every room in the results. 
+     This is included if the request had the include_state key set with a value of true.
+     The key is the roomId, the value its state. (TODO_SEARCH: right?)
+     */
+    @property (nonatomic) NSDictionary<NSString*, NSArray<MXEvent*> *> *state; // TODO_SEARCH: MXEvent??
+
+    /**
+     Any groups that were requested.
+     The key is the group id (TODO_SEARCH).
+     */
+    @property (nonatomic) NSDictionary<NSString*, MXSearchGroup*> *groups;
+
+    /**
+     Token that can be used to get the next batch of results in the group, if exists.
+     */
+    @property (nonatomic) NSString *nextBatch;
+
+@end
+
+/**
+ `MXSearchResponse` represents which categories to search in and their criteria..
+ */
+@interface MXSearchCategories : MXJSONModel
+
+    /**
+     Mapping of category name to search criteria.
+     */
+    @property (nonatomic) MXSearchRoomEventResults *roomEvents;
+
+@end
+
+
+/**
+ `MXSearchResponse` represents the response to the /search request.
+ */
+@interface MXSearchResponse : MXJSONModel
+
+    /**
+     Categories to search in and their criteria..
+     */
+    @property (nonatomic) MXSearchCategories *searchCategories;
+
+@end
+
+
 #pragma mark - Server sync v1 response
 #pragma mark -
 
@@ -588,6 +801,11 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
      The matrix id of the inviter in case of pending invitation.
      */
     @property (nonatomic) NSString *inviter;
+
+    /**
+     The invite event if membership is invite.
+     */
+    @property (nonatomic) MXEvent *invite;
 
     /**
      The presence status of other users (Provided in case of room initial sync @see http://matrix.org/docs/api/client-server/#!/-rooms/get_room_sync_data)).
@@ -637,9 +855,9 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @interface MXRoomSyncState : MXJSONModel
 
     /**
-     List of event ids (array of NSString).
+     List of state events (array of MXEvent). The resulting state corresponds to the *start* of the timeline.
      */
-    @property (nonatomic) NSArray<NSString*> *events;
+    @property (nonatomic) NSArray<MXEvent*> *events;
 
 @end
 
@@ -649,9 +867,9 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @interface MXRoomSyncTimeline : MXJSONModel
 
     /**
-     List of event ids (array of NSString).
+     List of events (array of MXEvent).
      */
-    @property (nonatomic) NSArray<NSString*> *events;
+    @property (nonatomic) NSArray<MXEvent*> *events;
 
     /**
      Boolean which tells whether there are more events on the server
@@ -678,6 +896,18 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @end
 
 /**
+ `MXRoomSyncAccountData` represents the account data events for a room.
+ */
+@interface MXRoomSyncAccountData : MXJSONModel
+
+    /**
+     List of account data events (array of MXEvent).
+     */
+    @property (nonatomic) NSArray<MXEvent*> *events;
+
+@end
+
+/**
  `MXRoomInviteState` represents the state of a room that the user has been invited to.
  */
 @interface MXRoomInviteState : MXJSONModel
@@ -695,12 +925,6 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @interface MXRoomSync : MXJSONModel
 
     /**
-     Converted events mapping: keys are event ids.
-     The events are referenced from the 'timeline' and 'state' keys for this room.
-     */
-    @property (nonatomic) NSDictionary<NSString*, MXEvent*> *mxEventMap;
-
-    /**
      The state updates for the room.
      */
     @property (nonatomic) MXRoomSyncState *state;
@@ -711,9 +935,14 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
     @property (nonatomic) MXRoomSyncTimeline *timeline;
 
     /**
-     The ephemeral events in the room that aren't recorded in the timeline or state of the room (e.g. typing).
+     The ephemeral events in the room that aren't recorded in the timeline or state of the room (e.g. typing, receipts).
      */
     @property (nonatomic) MXRoomSyncEphemeral *ephemeral;
+
+    /**
+     The account data events for the room (e.g. tags).
+     */
+    @property (nonatomic) MXRoomSyncAccountData *accountData;
 
 @end
 
@@ -739,19 +968,19 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @interface MXRoomsSyncResponse : MXJSONModel
 
     /**
-     Converted joined rooms: keys are rooms ids.
+     Joined rooms: keys are rooms ids.
      */
-    @property (nonatomic) NSDictionary<NSString*, MXRoomSync*> *mxJoined;
+    @property (nonatomic) NSDictionary<NSString*, MXRoomSync*> *join;
 
     /**
-     Converted invited rooms. The rooms that the user has been invited to: keys are rooms ids.
+     Invitations. The rooms that the user has been invited to: keys are rooms ids.
      */
-    @property (nonatomic) NSDictionary<NSString*, MXInvitedRoomSync*> *mxInvited;
+    @property (nonatomic) NSDictionary<NSString*, MXInvitedRoomSync*> *invite;
 
     /**
-     Converted archived rooms. The rooms that the user has left or been banned from: keys are rooms ids.
+     Left rooms. The rooms that the user has left or been banned from: keys are rooms ids.
      */
-    @property (nonatomic) NSDictionary<NSString*, MXRoomSync*> *mxArchived;
+    @property (nonatomic) NSDictionary<NSString*, MXRoomSync*> *leave;
 
 @end
 
@@ -783,9 +1012,9 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
     @property (nonatomic) MXPresenceSyncResponse *presence;
 
     /**
-     Converted list of rooms.
+     List of rooms.
      */
-    @property (nonatomic) MXRoomsSyncResponse *mxRooms;
+    @property (nonatomic) MXRoomsSyncResponse *rooms;
 
 @end
 

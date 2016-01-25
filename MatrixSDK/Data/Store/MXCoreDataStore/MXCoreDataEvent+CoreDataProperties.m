@@ -16,6 +16,8 @@
 
 #import "MXCoreDataEvent+CoreDataProperties.h"
 
+#ifdef MXCOREDATA_STORE
+
 @implementation MXCoreDataEvent (CoreDataProperties)
 
 @dynamic ageLocalTs;
@@ -33,3 +35,5 @@
 @dynamic room;
 
 @end
+
+#endif // MXCOREDATA_STORE

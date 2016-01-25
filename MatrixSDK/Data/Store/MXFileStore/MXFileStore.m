@@ -20,7 +20,7 @@
 
 #import "MXFileStoreMetaData.h"
 
-NSUInteger const kMXFileVersion = 13;
+NSUInteger const kMXFileVersion = 17;
 
 NSString *const kMXFileStoreFolder = @"MXFileStore";
 NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -394,6 +394,16 @@ NSString *const kMXReceiptsFolder = @"receipts";
     }
 }
 
+- (void)storePartialTextMessageForRoom:(NSString *)roomId partialTextMessage:(NSString *)partialTextMessage
+{
+    [super storePartialTextMessageForRoom:roomId partialTextMessage:partialTextMessage];
+    
+    if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
+    {
+        [roomsToCommitForMessages addObject:roomId];
+    }
+}
+
 - (BOOL)isPermanent
 {
     return YES;
@@ -408,6 +418,7 @@ NSString *const kMXReceiptsFolder = @"receipts";
         metaDataHasChanged = YES;
     }
 }
+
 - (NSArray *)rooms
 {
     return roomStores.allKeys;
@@ -681,7 +692,7 @@ NSString *const kMXReceiptsFolder = @"receipts";
 }
 
 
-#pragma mark - Rooms state
+#pragma mark - Rooms account data
 /**
  Preload account data of all rooms.
 
@@ -731,6 +742,38 @@ NSString *const kMXReceiptsFolder = @"receipts";
                 }
             }
         });
+    }
+}
+
+
+#pragma mark - Outgoing events
+- (void)storeOutgoingMessageForRoom:(NSString*)roomId outgoingMessage:(MXEvent*)outgoingMessage
+{
+    [super storeOutgoingMessageForRoom:roomId outgoingMessage:outgoingMessage];
+
+    if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
+    {
+        [roomsToCommitForMessages addObject:roomId];
+    }
+}
+
+- (void)removeAllOutgoingMessagesFromRoom:(NSString*)roomId
+{
+    [super removeAllOutgoingMessagesFromRoom:roomId];
+
+    if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
+    {
+        [roomsToCommitForMessages addObject:roomId];
+    }
+}
+
+- (void)removeOutgoingMessageFromRoom:(NSString*)roomId outgoingMessage:(NSString*)outgoingMessageEventId
+{
+    [super removeOutgoingMessageFromRoom:roomId outgoingMessage:outgoingMessageEventId];
+
+    if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
+    {
+        [roomsToCommitForMessages addObject:roomId];
     }
 }
 

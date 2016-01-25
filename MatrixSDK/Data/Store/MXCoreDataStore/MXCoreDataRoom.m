@@ -16,6 +16,8 @@
 
 #import "MXCoreDataRoom.h"
 
+#ifdef MXCOREDATA_STORE
+
 #import "MXCoreDataEvent.h"
 #import "MXCoreDataRoomState.h"
 
@@ -293,3 +295,5 @@
 }
 
 @end
+
+#endif //  MXCOREDATA_STORE

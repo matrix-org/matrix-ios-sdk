@@ -25,6 +25,7 @@
 @end
 
 @implementation MXMemoryRoomStore
+@synthesize outgoingMessages;
 
 - (instancetype)init
 {
@@ -33,6 +34,7 @@
     {
         messages = [NSMutableArray array];
         messagesByEventIds = [NSMutableDictionary dictionary];
+        outgoingMessages = [NSMutableArray array];;
     }
     return self;
 }
@@ -159,6 +161,29 @@
     }
 
     return list;
+}
+
+- (void)storeOutgoingMessage:(MXEvent*)outgoingMessage
+{
+    [outgoingMessages addObject:outgoingMessage];
+}
+
+- (void)removeAllOutgoingMessages
+{
+    [outgoingMessages removeAllObjects];
+}
+
+- (void)removeOutgoingMessage:(NSString*)outgoingMessageEventId
+{
+    for (NSUInteger i = 0; i < outgoingMessages.count; i++)
+    {
+        MXEvent *outgoingMessage = outgoingMessages[i];
+        if ([outgoingMessage.eventId isEqualToString:outgoingMessageEventId])
+        {
+            [outgoingMessages removeObjectAtIndex:i];
+            break;
+        }
+    }
 }
 
 - (NSString *)description
