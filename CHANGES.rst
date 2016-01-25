@@ -16,6 +16,7 @@ Improvements:
  * MXHTTPClient: Accept path that already contains url parameters.
  * MXJSONModels: Improve performance (Limit Mantle use).
  * MXStore: Store the partial text message typed by the user.
+ * MXStore: Store messages which are being sent (unsent messages are then stored).
 
 Bug fixes:
  * MXRoom: Fix detection of the end of the back pagination. End of pagination is now detected when returned chunk is empty and both tokens (start/end) are equal.
