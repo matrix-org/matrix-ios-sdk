@@ -259,6 +259,12 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             event.eventId = [NSString stringWithFormat:@"%@%@", kMXRoomInviteStateEventIdPrefix, [[NSProcessInfo processInfo] globallyUniqueString]];
         }
         
+        // Report the room id if not defined
+        if (!event.roomId)
+        {
+            event.roomId = _state.roomId;
+        }
+        
         [self handleLiveEvent:event];
     }
 }
