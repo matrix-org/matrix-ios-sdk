@@ -1,3 +1,29 @@
+Changes in Matrix iOS SDK in 0.6.0 (2016-01-22)
+===============================================
+
+Improvements:
+ * MXSession: Switch on server sync v2 (Left room are handled but not stored for the moment).
+ * MXSession: Support room tags.
+ * MXSession: Improve the invitations management.
+ * MXRestClient: Support server change password API.
+ * MXRestClient: Support server search API.
+ * MXSDKOption: Add new option: enable/disable identicon use at SDK level.
+ * MXRoom: Add room comparator based on originServerTs value.
+ * MXRoom: Exclude the current user from the receipts list retrieved for an event.
+ * MXEvent: Add properties for receipt events to retrieve event ids or sender ids.
+ * MXEvent: Report server API changes (handle ‘unsigned’ dictionary).
+ * MXPublicRoom: Support worldReadable, guestCanJoin and avatarURL fields.
+ * MXHTTPClient: Accept path that already contains url parameters.
+ * MXJSONModels: Improve performance (Limit Mantle use).
+ * MXStore: Store the partial text message typed by the user.
+ * MXStore: Store messages which are being sent (unsent messages are then stored).
+
+Bug fixes:
+ * MXRoom: Fix detection of the end of the back pagination. End of pagination is now detected when returned chunk is empty and both tokens (start/end) are equal.
+ * MXRoom: Generate a read receipt for the sender of an incoming message.
+ * MXRoom: Improve offline experience - Disable retry option on pagination requests when data are available from store. The caller is then able to handle messages from store without delay.
+ * MXSession: Load push rules from server before loading store data in order to highlight the bing events.
+
 Changes in Matrix iOS SDK in 0.5.7 (2015-11-30)
 ===============================================
 
