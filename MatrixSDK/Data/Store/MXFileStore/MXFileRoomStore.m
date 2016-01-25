@@ -32,6 +32,8 @@
 
         self.partialTextMessage = [aDecoder decodeObjectForKey:@"partialTextMessage"];
 
+        outgoingMessages = [aDecoder decodeObjectForKey:@"outgoingMessages"];
+
         // Rebuild the messagesByEventIds cache
         for (MXEvent *event in messages)
         {
@@ -66,6 +68,8 @@
     {
         [aCoder encodeObject:self.partialTextMessage forKey:@"partialTextMessage"];
     }
+
+    [aCoder encodeObject:[outgoingMessages mutableCopy] forKey:@"outgoingMessages"];
 }
 
 @end

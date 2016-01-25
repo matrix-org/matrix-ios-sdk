@@ -224,11 +224,16 @@ typedef void (^MXOnResumeDone)();
             // Reload first the push rules to display correctly bing events.
             // The store data are loaded even if this operation failed to let the app run in offline mode.
             NSLog(@"[MXSession] Reload push rules from the home server...");
-            [_notificationCenter refreshRules:^{
+            MXHTTPOperation *operation = [_notificationCenter refreshRules:^{
                 loadStoreData();
             } failure:^(NSError *error) {
                 loadStoreData();
             }];
+
+            // Attempt to retrieve them only once: if there is no network,
+            // we do not want to be blocked by the MXHTTPClient that will wait
+            // for the network to be back before retry internally.
+            operation.maxNumberOfTries = 1;
         }
         else
         {

@@ -17,6 +17,8 @@
 #import <Foundation/Foundation.h>
 #import <CoreData/CoreData.h>
 
+#ifdef MXCOREDATA_STORE
+
 @class MXCoreDataRoom;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -30,3 +32,5 @@ NS_ASSUME_NONNULL_BEGIN
 NS_ASSUME_NONNULL_END
 
 #import "MXCoreDataRoomState+CoreDataProperties.h"
+
+#endif // MXCOREDATA_STORE

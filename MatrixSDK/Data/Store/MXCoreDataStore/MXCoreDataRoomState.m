@@ -17,8 +17,12 @@
 #import "MXCoreDataRoomState.h"
 #import "MXCoreDataRoom.h"
 
+#ifdef MXCOREDATA_STORE
+
 @implementation MXCoreDataRoomState
 
 // Insert code here to add functionality to your managed object subclass
 
 @end
+
+#endif // MXCOREDATA_STORE
