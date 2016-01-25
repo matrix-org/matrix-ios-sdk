@@ -20,6 +20,8 @@
 #import "MXCoreDataStore.h"
 #import "MXStoreTests.h"
 
+#ifdef MXCOREDATA_STORE
+
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-retain-cycles"
@@ -202,3 +204,5 @@
 @end
 
 #pragma clang diagnostic pop
+
+#endif // MXCOREDATA_STORE

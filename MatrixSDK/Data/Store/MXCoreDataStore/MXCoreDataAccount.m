@@ -16,8 +16,12 @@
 
 #import "MXCoreDataAccount.h"
 
+#ifdef MXCOREDATA_STORE
+
 @implementation MXCoreDataAccount
 
 // Insert code here to add functionality to your managed object subclass
 
 @end
+
+#endif // MXCOREDATA_STORE
