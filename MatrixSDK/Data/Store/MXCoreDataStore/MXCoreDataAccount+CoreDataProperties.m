@@ -16,6 +16,8 @@
 
 #import "MXCoreDataAccount+CoreDataProperties.h"
 
+#ifdef MXCOREDATA_STORE
+
 @implementation MXCoreDataAccount (CoreDataProperties)
 
 @dynamic eventStreamToken;
@@ -28,3 +30,5 @@
 @dynamic rooms;
 
 @end
+
+#endif // MXCOREDATA_STORE

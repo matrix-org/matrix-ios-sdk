@@ -77,6 +77,13 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 @property (nonatomic, readonly) MXRoomAccountData *accountData;
 
 /**
+ The text message partially typed by the user but not yet sent.
+ The value is stored by the session store. Thus, it can be retrieved
+ when the application restarts.
+ */
+@property (nonatomic) NSString *partialTextMessage;
+
+/**
  The list of ids of users currently typing in this room.
  This array is updated on each received m.typing event (MXEventTypeTypingNotification).
  */
@@ -418,6 +425,42 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
                         failure:(void (^)(NSError *error))failure;
 
 
+#pragma mark - Outgoing events management
+/**
+ Store into the store an outgoing message event being sent in the room.
+ 
+ If the store used by the MXSession is based on a permanent storage, the application
+ will be able to retrieve messages that failed to be sent in a previous app session.
+
+ @param event the MXEvent object of the message.
+ */
+- (void)storeOutgoingMessage:(MXEvent*)outgoingMessage;
+
+/**
+ Remove all outgoing messages from the room.
+ */
+- (void)removeAllOutgoingMessages;
+
+/**
+ Remove an outgoing message from the room.
+
+ @param outgoingMessageEventId the id of the message to remove.
+ */
+- (void)removeOutgoingMessage:(NSString*)outgoingMessageEventId;
+
+/**
+ Update an outgoing message.
+
+ @param outgoingMessageEventId the id of the message to update.
+ @param outgoingMessage the new outgoing message content.
+ */
+- (void)updateOutgoingMessage:(NSString*)outgoingMessageEventId withOutgoingMessage:(MXEvent*)outgoingMessage;
+
+/**
+ All outgoing messages pending in the room.
+ */
+- (NSArray<MXEvent*>*)outgoingMessages;
+
 
 #pragma mark - Room tags operations
 /**
@@ -538,11 +581,21 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 - (BOOL)acknowledgeLatestEvent:(BOOL)sendReceipt;
 
 /**
- Returns the receipts list for an event.
+ Returns the receipts list for an event, excluding the receipt from the current user.
  @param eventId The event Id.
  @param sort YES to sort them from the latest to the oldest.
  @return the receipts for an event in a dedicated room.
  */
 - (NSArray*)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort;
+
+/**
+ Comparator to use to order array of rooms by their lastest originServerTs value.
+ 
+ Arrays are then sorting so that the oldest room is set at position 0.
+ 
+ @param otherRoom the MXRoom object to compare with.
+ @return a NSComparisonResult value: NSOrderedDescending if otherRoom is newer than self.
+ */
+- (NSComparisonResult)compareOriginServerTs:(MXRoom *)otherRoom;
 
 @end

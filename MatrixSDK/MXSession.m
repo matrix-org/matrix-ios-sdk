@@ -27,7 +27,7 @@
 #import "MXFileStore.h"
 
 // FIXME SYNCV2 Enable server sync v2
-//#define MXSESSION_ENABLE_SERVER_SYNC_V2
+#define MXSESSION_ENABLE_SERVER_SYNC_V2
 
 #pragma mark - Constants definitions
 
@@ -37,6 +37,7 @@ NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification"
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
 NSString *const kMXSessionDidLeaveRoomNotification = @"kMXSessionDidLeaveRoomNotification";
 NSString *const kMXSessionDidSyncNotification = @"kMXSessionDidSyncNotification";
+NSString *const kMXSessionInvitedRoomsDidChangeNotification = @"kMXSessionInvitedRoomsDidChangeNotification";
 NSString *const kMXSessionNotificationRoomIdKey = @"roomId";
 NSString *const kMXSessionNotificationEventKey = @"event";
 NSString *const kMXSessionNoRoomTag = @"m.recent";  // Use the same value as matrix-react-sdk
@@ -45,7 +46,7 @@ NSString *const kMXSessionNoRoomTag = @"m.recent";  // Use the same value as mat
  Default timeouts used by the events streams.
  */
 #define SERVER_TIMEOUT_MS 30000
-#define CLIENT_TIMEOUT_MS 40000
+#define CLIENT_TIMEOUT_MS 120000
 
 
 /**
@@ -64,7 +65,7 @@ typedef void (^MXOnResumeDone)();
      Rooms data
      Each key is a room ID. Each value, the MXRoom instance.
      */
-    NSMutableDictionary *rooms;
+    NSMutableDictionary<NSString*, MXRoom*> *rooms;
     
     /**
      Users data
@@ -99,19 +100,24 @@ typedef void (^MXOnResumeDone)();
     MXOnResumeDone onResumeDone;
     
     /**
-     The block to call when MSSession catchup is successfully done.
+     The block to call when MSSession backgroundSync is successfully done.
      */
-    MXOnCatchupDone onCatchupDone;
+    MXOnBackgroundSyncDone onBackgroundSyncDone;
     
     /**
-     The block to call when MSSession catchup fails.
+     The block to call when MSSession backgroundSync fails.
      */
-    MXOnCatchupFail onCatchupFail;
+    MXOnBackgroundSyncFail onBackgroundSyncFail;
 
     /**
      The list of rooms ids where a room initialSync is in progress (made by [self initialSyncOfRoom])
      */
     NSMutableArray *roomsInInitialSyncing;
+
+    /**
+     The maintained list of rooms where the user has a pending invitation.
+     */
+    NSMutableArray<MXRoom *> *invitedRooms;
 }
 @end
 
@@ -183,35 +189,61 @@ typedef void (^MXOnResumeDone)();
         // Can we start on data from the MXStore?
         if (_store.isPermanent && _store.eventStreamToken && 0 < _store.rooms.count)
         {
-            // Mount data from the permanent store
-            NSLog(@"[MXSession] Loading room state events to build MXRoom objects...");
-
-            // Create the user's profile from the store
-            _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId andDisplayname:_store.userDisplayname andAvatarUrl:_store.userAvatarUrl andMatrixSession:self];
-            // And store him as a common MXUser
-            users[matrixRestClient.credentials.userId] = _myUser;
-
-            // Create MXRooms from their states stored in the store
-            NSDate *startDate2 = [NSDate date];
-            for (NSString *roomId in _store.rooms)
-            {
-                @autoreleasepool
+            // Define here a method to load data from store
+            void (^loadStoreData) () = ^void() {
+                // Mount data from the permanent store
+                NSLog(@"[MXSession] Loading room state events to build MXRoom objects...");
+                
+                // Create the user's profile from the store
+                _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId andDisplayname:_store.userDisplayname andAvatarUrl:_store.userAvatarUrl andMatrixSession:self];
+                // And store him as a common MXUser
+                users[matrixRestClient.credentials.userId] = _myUser;
+                
+                // Create MXRooms from their states stored in the store
+                NSDate *startDate2 = [NSDate date];
+                for (NSString *roomId in _store.rooms)
                 {
-                    NSArray *stateEvents = [_store stateOfRoom:roomId];
-                    MXRoomAccountData *roomAccountData = [_store accountDataOfRoom:roomId];
-                    [self createRoom:roomId withStateEvents:stateEvents andAccountData:roomAccountData notify:NO];
+                    @autoreleasepool
+                    {
+                        NSArray *stateEvents = [_store stateOfRoom:roomId];
+                        MXRoomAccountData *roomAccountData = [_store accountDataOfRoom:roomId];
+                        [self createRoom:roomId withStateEvents:stateEvents andAccountData:roomAccountData notify:NO];
+                    }
                 }
-            }
+                
+                NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+                
+                NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                
+                [self setState:MXSessionStateStoreDataReady];
+                
+                // The SDK client can use this data
+                onStoreDataReady();
+            };
+            
+            // Reload first the push rules to display correctly bing events.
+            // The store data are loaded even if this operation failed to let the app run in offline mode.
+            NSLog(@"[MXSession] Reload push rules from the home server...");
+            MXHTTPOperation *operation = [_notificationCenter refreshRules:^{
+                loadStoreData();
+            } failure:^(NSError *error) {
+                loadStoreData();
+            }];
 
-            NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+            // Attempt to retrieve them only once: if there is no network,
+            // we do not want to be blocked by the MXHTTPClient that will wait
+            // for the network to be back before retry internally.
+            operation.maxNumberOfTries = 1;
         }
-
-        NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
-
-        [self setState:MXSessionStateStoreDataReady];
-
-        // The SDK client can use this data
-        onStoreDataReady();
+        else
+        {
+            NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+            
+            [self setState:MXSessionStateStoreDataReady];
+            
+            // The SDK client can use this data
+            onStoreDataReady();
+        }
 
     } failure:^(NSError *error) {
         [self setState:MXSessionStateInitialised];
@@ -257,7 +289,10 @@ typedef void (^MXOnResumeDone)();
     // Can we resume from data available in the cache
     if (_store.isPermanent && _store.eventStreamToken && 0 < _store.rooms.count)
     {
-        // MXSession.loadPresenceBeforeCompletingSessionStart leads to 2 scenarios
+        // Note since server sync v2, we don't need to handle presence separately.
+        // TODO: the following code should be cleaned when sync v1 will be deprecated by removing 'loadPresence' function.
+        
+        // In sync v1, MXSession.loadPresenceBeforeCompletingSessionStart leads 2 scenarios to load presence.
         // Cut the actions into blocks to realize them
         void (^loadPresence) (void (^onPresenceDone)(), void (^onPresenceError)(NSError *error)) = ^void(void (^onPresenceDone)(), void (^onPresenceError)(NSError *error)) {
             NSDate *startDate = [NSDate date];
@@ -307,20 +342,30 @@ typedef void (^MXOnResumeDone)();
                 onServerSyncDone();
             }];
         };
-
-        // Then, apply
-        if (_loadPresenceBeforeCompletingSessionStart)
+        
+#ifdef MXSESSION_ENABLE_SERVER_SYNC_V2
+        if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
         {
-            // Load presence before resuming the stream
-            loadPresence(^() {
-                resumeEventsStream();
-            }, failure);
+            // Resume the stream (presence will be retrieved durng server sync)
+            resumeEventsStream();
         }
         else
+#endif
         {
-            // Resume the stream and load presence in parralel
-            resumeEventsStream();
-            loadPresence(nil, nil);
+            // Then, apply
+            if (_loadPresenceBeforeCompletingSessionStart)
+            {
+                // Load presence before resuming the stream
+                loadPresence(^() {
+                    resumeEventsStream();
+                }, failure);
+            }
+            else
+            {
+                // Resume the stream and load presence in parralel
+                resumeEventsStream();
+                loadPresence(nil, nil);
+            }
         }
     }
     else
@@ -394,15 +439,15 @@ typedef void (^MXOnResumeDone)();
                 [_store commit];
             }
             
-            // there is a pending catchup
-            if (onCatchupDone)
+            // there is a pending backgroundSync
+            if (onBackgroundSyncDone)
             {
-                NSLog(@"[MXSession] Events stream catchup with %tu new events", events.count);
-                onCatchupDone();
-                onCatchupDone = nil;
+                NSLog(@"[MXSession] background Sync with %tu new events", events.count);
+                onBackgroundSyncDone();
+                onBackgroundSyncDone = nil;
                 
                 // check that the application was not resumed while catching up
-                if (_state == MXSessionStateCatchingUp)
+                if (_state == MXSessionStateBackgroundSyncInProgress)
                 {
                     NSLog(@"[MXSession] go to paused ");
                     eventStreamRequest = nil;
@@ -411,7 +456,7 @@ typedef void (^MXOnResumeDone)();
                 }
                 else
                 {
-                    NSLog(@"[MXSession] resume after a catchup ");
+                    NSLog(@"[MXSession] resume after a background Sync ");
                 }
             }
             
@@ -444,15 +489,15 @@ typedef void (^MXOnResumeDone)();
 
     } failure:^(NSError *error) {
 
-        if (onCatchupFail)
+        if (onBackgroundSyncFail)
         {
-            NSLog(@"[MXSession] catchup fails %@", error);
+            NSLog(@"[MXSession] background Sync fails %@", error);
             
-            onCatchupFail(error);
-            onCatchupFail = nil;
+            onBackgroundSyncFail(error);
+            onBackgroundSyncFail = nil;
             
-            // check that the application was not resumed while catching up
-            if (_state == MXSessionStateCatchingUp)
+            // check that the application was not resumed while catching up in background
+            if (_state == MXSessionStateBackgroundSyncInProgress)
             {
                 NSLog(@"[MXSession] go to paused ");
                 eventStreamRequest = nil;
@@ -461,7 +506,7 @@ typedef void (^MXOnResumeDone)();
             }
             else
             {
-                NSLog(@"[MXSession] resume after a catchup ");
+                NSLog(@"[MXSession] resume after a background Sync");
             }
         }
         
@@ -676,12 +721,12 @@ typedef void (^MXOnResumeDone)();
 {
     NSLog(@"[MXSession] pause the event stream in state %tu", _state);
     
-    if ((_state == MXSessionStateRunning) || (_state == MXSessionStateCatchingUp))
+    if ((_state == MXSessionStateRunning) || (_state == MXSessionStateBackgroundSyncInProgress))
     {
         // reset the callback
         onResumeDone = nil;
-        onCatchupDone = nil;
-        onCatchupFail = nil;
+        onBackgroundSyncDone = nil;
+        onBackgroundSyncFail = nil;
         
         // Cancel the current request managing the event stream
         [eventStreamRequest cancel];
@@ -694,7 +739,7 @@ typedef void (^MXOnResumeDone)();
 - (void)resume:(void (^)())resumeDone
 {
     // Check whether no request is already in progress
-    if (!eventStreamRequest || (_state == MXSessionStateCatchingUp))
+    if (!eventStreamRequest || (_state == MXSessionStateBackgroundSyncInProgress))
     {
         // Force reload of push rules now.
         // The spec, @see SPEC-106 ticket, does not allow to be notified when there was a change
@@ -724,26 +769,26 @@ typedef void (^MXOnResumeDone)();
     }
 }
 
-- (void)catchup:(unsigned int)timeout success:(MXOnCatchupDone)catchupDone failure:(MXOnCatchupFail)catchupfails
+- (void)backgroundSync:(unsigned int)timeout success:(MXOnBackgroundSyncDone)backgroundSyncDone failure:(MXOnBackgroundSyncFail)backgroundSyncfails
 {
     // Check whether no request is already in progress
     if (!eventStreamRequest)
     {
         if (MXSessionStatePaused != _state)
         {
-            NSLog(@"[MXSession] catchup cannot be done in the current state %tu", _state);
+            NSLog(@"[MXSession] background Sync cannot be done in the current state %tu", _state);
             dispatch_async(dispatch_get_main_queue(), ^{
-                catchupfails(nil);
+                backgroundSyncfails(nil);
             });
         }
         else
         {
-            NSLog(@"[MXSession] start a catchup");
-            [self setState:MXSessionStateCatchingUp];
+            NSLog(@"[MXSession] start a background Sync");
+            [self setState:MXSessionStateBackgroundSyncInProgress];
             
-            // Catchup from the latest known token
-            onCatchupDone = catchupDone;
-            onCatchupFail = catchupfails;
+            // BackgroundSync from the latest known token
+            onBackgroundSyncDone = backgroundSyncDone;
+            onBackgroundSyncFail = backgroundSyncfails;
             
             // Check supported C-S version
 #ifdef MXSESSION_ENABLE_SERVER_SYNC_V2
@@ -933,13 +978,13 @@ typedef void (^MXOnResumeDone)();
             }
         }
         
-        // init the receips to the latest received one.
-        // else the unread messages counter will not be properly managed.
-        for (MXRoomInitialSync* roomInitialSync in initialSync.rooms)
-        {
-            MXRoom *room = [self roomWithRoomId:roomInitialSync.roomId];
-            [room acknowledgeLatestEvent:NO];
-        }
+//        // init the receips to the latest received one.
+//        // else the unread messages counter will not be properly managed.
+//        for (MXRoomInitialSync* roomInitialSync in initialSync.rooms)
+//        {
+//            MXRoom *room = [self roomWithRoomId:roomInitialSync.roomId];
+//            [room acknowledgeLatestEvent:NO];
+//        }
         
         // Start listening to live events
         _store.eventStreamToken = initialSync.end;
@@ -975,7 +1020,16 @@ typedef void (^MXOnResumeDone)();
     NSDate *startDate = [NSDate date];
     NSLog(@"[MXSession] Do a server sync");
     
-    eventStreamRequest = [matrixRestClient syncFromToken:_store.eventStreamToken serverTimeout:serverTimeout clientTimeout:clientTimeout setPresence:setPresence filter:nil success:^(MXSyncResponse *syncResponse) {
+    // *** PATCH SYNC V2 ***
+    NSString *inlineFilter;
+    if (_store.eventStreamToken)
+    {
+        // We increase the limit for catch-up syncs so that we get more of the v1 behaviour until v2 /sync performance improves
+        inlineFilter = @"{\"room\":{\"timeline\":{\"limit\":250}}}";
+    }
+    // *** PATCH SYNC V2 ***
+    
+    eventStreamRequest = [matrixRestClient syncFromToken:_store.eventStreamToken serverTimeout:serverTimeout clientTimeout:clientTimeout setPresence:setPresence filter:inlineFilter success:^(MXSyncResponse *syncResponse) {
         
         // Make sure [MXSession close] or [MXSession pause] has not been called before the server response
         if (!eventStreamRequest)
@@ -983,19 +1037,18 @@ typedef void (^MXOnResumeDone)();
             return;
         }
         
-        NSLog(@"[MXSession] Received %tu joined rooms, %tu invited rooms, %tu archived rooms in %.0fms", syncResponse.mxRooms.mxJoined.count, syncResponse.mxRooms.mxInvited.count, syncResponse.mxRooms.mxArchived.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+        NSLog(@"[MXSession] Received %tu joined rooms, %tu invited rooms, %tu left rooms in %.0fms", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
         
         // Check whether this is the initial sync
         BOOL isInitialSync = !_store.eventStreamToken;
         
         // Handle first joined rooms
-        NSArray *roomIds = syncResponse.mxRooms.mxJoined.allKeys;
-        for (NSString *roomId in roomIds)
+        for (NSString *roomId in syncResponse.rooms.join)
         {
-            MXRoomSync *roomSync = syncResponse.mxRooms.mxJoined[roomId];
+            MXRoomSync *roomSync = syncResponse.rooms.join[roomId];
             
-            @autoreleasepool
-            {
+            @autoreleasepool {
+                
                 BOOL isOneToOneRoom = NO;
                 
                 // Retrieve existing room or create a new one
@@ -1018,16 +1071,17 @@ typedef void (^MXOnResumeDone)();
                     // Update one-to-one room dictionary
                     [self handleOneToOneRoom:room];
                 }
+                
             }
         }
         
         // Handle invited rooms
-        roomIds = syncResponse.mxRooms.mxInvited.allKeys;
-        for (NSString *roomId in roomIds)
+        for (NSString *roomId in syncResponse.rooms.invite)
         {
-            MXInvitedRoomSync *invitedRoomSync = syncResponse.mxRooms.mxInvited[roomId];
+            MXInvitedRoomSync *invitedRoomSync = syncResponse.rooms.invite[roomId];
             
             @autoreleasepool {
+                
                 // Retrieve existing room or create a new one
                 MXRoom *room = [self roomWithRoomId:roomId];
                 if (nil == room)
@@ -1038,14 +1092,14 @@ typedef void (^MXOnResumeDone)();
                 
                 // Prepare invited room
                 [room handleInvitedRoomSync:invitedRoomSync];
+                
             }
         }
         
         // Handle archived rooms
-        roomIds = syncResponse.mxRooms.mxArchived.allKeys;
-        for (NSString *roomId in roomIds)
+        for (NSString *roomId in syncResponse.rooms.leave)
         {
-            MXRoomSync *leftRoomSync = syncResponse.mxRooms.mxArchived[roomId];
+            MXRoomSync *leftRoomSync = syncResponse.rooms.leave[roomId];
             
             @autoreleasepool {
                 
@@ -1062,8 +1116,7 @@ typedef void (^MXOnResumeDone)();
                     NSInteger index = leftRoomSync.timeline.events.count;
                     while (index--)
                     {
-                        NSString *eventId = leftRoomSync.timeline.events[index];
-                        MXEvent *event = leftRoomSync.mxEventMap[eventId];
+                        MXEvent *event = leftRoomSync.timeline.events[index];
                         
                         if ([event.type isEqualToString:kMXEventTypeStringRoomMember])
                         {
@@ -1102,15 +1155,15 @@ typedef void (^MXOnResumeDone)();
             [_store commit];
         }
         
-        // there is a pending catchup
-        if (onCatchupDone)
+        // there is a pending backgroundSync
+        if (onBackgroundSyncDone)
         {
-            NSLog(@"[MXSession] Events stream catchup succeeded");
-            onCatchupDone();
-            onCatchupDone = nil;
+            NSLog(@"[MXSession] Events stream background Sync succeeded");
+            onBackgroundSyncDone();
+            onBackgroundSyncDone = nil;
             
-            // check that the application was not resumed while catching up
-            if (_state == MXSessionStateCatchingUp)
+            // check that the application was not resumed while catching up in background
+            if (_state == MXSessionStateBackgroundSyncInProgress)
             {
                 NSLog(@"[MXSession] go to paused ");
                 eventStreamRequest = nil;
@@ -1119,7 +1172,7 @@ typedef void (^MXOnResumeDone)();
             }
             else
             {
-                NSLog(@"[MXSession] resume after a catchup ");
+                NSLog(@"[MXSession] resume after a background Sync");
             }
         }
         
@@ -1163,15 +1216,15 @@ typedef void (^MXOnResumeDone)();
         }
         
         // Handle failure during catch up first
-        if (onCatchupFail)
+        if (onBackgroundSyncFail)
         {
-            NSLog(@"[MXSession] catchup fails %@", error);
+            NSLog(@"[MXSession] background Sync fails %@", error);
             
-            onCatchupFail(error);
-            onCatchupFail = nil;
+            onBackgroundSyncFail(error);
+            onBackgroundSyncFail = nil;
             
-            // check that the application was not resumed while catching up
-            if (_state == MXSessionStateCatchingUp)
+            // check that the application was not resumed while catching up in background
+            if (_state == MXSessionStateBackgroundSyncInProgress)
             {
                 NSLog(@"[MXSession] go to paused ");
                 eventStreamRequest = nil;
@@ -1180,7 +1233,7 @@ typedef void (^MXOnResumeDone)();
             }
             else
             {
-                NSLog(@"[MXSession] resume after a catchup ");
+                NSLog(@"[MXSession] resume after a background Sync");
             }
         }
         
@@ -1293,12 +1346,23 @@ typedef void (^MXOnResumeDone)();
 {
     return [matrixRestClient joinRoom:roomIdOrAlias success:^(NSString *theRoomId) {
 
+        MXRoom *room = [self getOrCreateRoom:theRoomId withInitialSync:nil notify:YES];
+        
+        // check if the room is in the invited rooms list
+        if ([self removeInvitedRoom:room])
+        {            
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionInvitedRoomsDidChangeNotification
+                                                                object:self
+                                                              userInfo:@{
+                                                                         kMXSessionNotificationRoomIdKey: room.state.roomId,
+                                                                         }];
+        }
+        
 #ifdef MXSESSION_ENABLE_SERVER_SYNC_V2
         if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
         {
             if (success)
             {
-                MXRoom *room = [self getOrCreateRoom:theRoomId withInitialSync:nil notify:YES];
                 success(room);
             }
         }
@@ -1327,13 +1391,19 @@ typedef void (^MXOnResumeDone)();
                 if ([roomId isEqualToString:note.userInfo[kMXSessionNotificationRoomIdKey]])
                 {
                     [[NSNotificationCenter defaultCenter] removeObserver:observer];
-                    success();
+                    if (success)
+                    {
+                        success();
+                    }
                 }
             }];
         }
         else
         {
-            success();
+            if (success)
+            {
+                success();
+            }
         }
 
     } failure:failure];
@@ -1412,8 +1482,8 @@ typedef void (^MXOnResumeDone)();
             [room handleReceiptEvent:receiptEvent direction:MXEventDirectionSync];
         }
         
-        // init the receips to the latest received one.
-        [room acknowledgeLatestEvent:NO];
+//        // init the receips to the latest received one.
+//        [room acknowledgeLatestEvent:NO];
 
         // Commit store changes done in [room handleMessages]
         if ([_store respondsToSelector:@selector(commit)])
@@ -1731,6 +1801,118 @@ typedef void (^MXOnResumeDone)();
     return sortedRooms;
 }
 
+
+#pragma mark - User's special rooms
+
+- (BOOL)removeInvitedRoom:(MXRoom*)roomToRemove
+{
+    BOOL hasBeenFound = NO;
+    
+    // sanity check
+    if (invitedRooms.count > 0)
+    {
+        hasBeenFound =  ([invitedRooms indexOfObject:roomToRemove] != NSNotFound);
+        
+        // if the room object is not found
+        // check if there is a room with the same roomId
+        // indeed, during the room initial sync, the room object is deleted to be created again.
+        if (!hasBeenFound)
+        {
+            for(MXRoom* room in invitedRooms)
+            {
+                if ([room.state.roomId isEqualToString:roomToRemove.state.roomId])
+                {
+                    roomToRemove = room;
+                    hasBeenFound = YES;
+                    break;
+                }
+            }
+        }
+        
+        if (hasBeenFound)
+        {
+            [invitedRooms removeObject:roomToRemove];
+        }
+    }
+    
+    return hasBeenFound;
+}
+
+- (NSArray<MXRoom *> *)invitedRooms
+{
+    if (nil == invitedRooms)
+    {
+        // On the first call, set up the invitation list and mechanism to update it
+        invitedRooms = [NSMutableArray array];
+
+        // Compute the current invitation list
+        for (MXRoom *room in rooms.allValues)
+        {
+            if (room.state.membership == MXMembershipInvite)
+            {
+                [invitedRooms addObject:room];
+            }
+        }
+
+        // Order them by origin_server_ts
+        [invitedRooms sortUsingSelector:@selector(compareOriginServerTs:)];
+
+        // Add a listener in order to update the app about invitation list change
+        [self listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
+
+            // in some race conditions the oneself join event is received during the sync instead of MXEventDirectionSync
+            //
+            // standard case
+            // 1 - send a join request
+            // 2 - receive the join event in the live stream -> call this method
+            // 3 - perform an initial sync when the join method call the success callback
+            //
+            // but, this case also happens
+            // 1 - send a join request
+            // 2 - perform an initial sync when the join method call the success callback
+            // 3 - receive the join event in the live stream -> this method is not called because the event has already been stored in the step 2
+            // so, we need to manage the sync direction
+            if ((MXEventDirectionForwards == direction) || (MXEventDirectionSync == direction))
+            {
+                BOOL notify = NO;
+                MXRoomState *roomPrevState = (MXRoomState *)customObject;
+                MXRoom *room = [self roomWithRoomId:event.roomId];
+
+                if (room.state.membership == MXMembershipInvite)
+                {
+                    // check if the room is not yet in the list
+                    // must be done in forward and sync direction
+                    if ([invitedRooms indexOfObject:room] == NSNotFound)
+                    {
+                        // This is an invite event. Add the room to the invitation list
+                        [invitedRooms addObject:room];
+                        notify = YES;
+                    }
+                }
+                else if (roomPrevState.membership == MXMembershipInvite)
+                {
+                    // An invitation was pending for this room. A new membership event means the
+                    // user has accepted or rejected the invitation.
+                    notify = [self removeInvitedRoom:room];
+                }
+
+                if (notify)
+                {
+                    [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionInvitedRoomsDidChangeNotification
+                                                                        object:self
+                                                                      userInfo:@{
+                                                                                 kMXSessionNotificationRoomIdKey: event.roomId,
+                                                                                 kMXSessionNotificationEventKey: event
+                                                                                 }];
+                }
+            }
+        }];
+    }
+
+    return invitedRooms;
+}
+
+
 #pragma mark - User's rooms tags
 - (NSArray<MXRoom*>*)roomsWithTag:(NSString*)tag
 {
@@ -1840,18 +2022,25 @@ typedef void (^MXOnResumeDone)();
     return result;
 }
 
-- (NSString *)tagOrderToBeAtIndex:(NSUInteger)index withTag:(NSString *)tag
+- (NSString*)tagOrderToBeAtIndex:(NSUInteger)index from:(NSUInteger)originIndex withTag:(NSString *)tag
 {
     // Algo (and the [0.0, 1.0] assumption) inspired from matrix-react-sdk:
     // We sort rooms by the lexicographic ordering of the 'order' metadata on their tags.
     // For convenience, we calculate this for now a floating point number between 0.0 and 1.0.
 
-    CGFloat orderA = 0.0; // by default we're next to the beginning of the list
-    CGFloat orderB = 1.0; // by default we're next to the end of the list too
+    double orderA = 0.0; // by default we're next to the beginning of the list
+    double orderB = 1.0; // by default we're next to the end of the list too
 
     NSArray<MXRoom*> *roomsWithTag = [self roomsWithTag:tag];
     if (roomsWithTag.count)
     {
+        // when an object is moved down, the index must be incremented
+        // because the object will be removed from the list to be inserted after its destination
+        if ((originIndex != NSNotFound) && (originIndex < index))
+        {
+            index++;
+        }
+        
         if (index > 0)
         {
             // Bound max index to the array size
@@ -1864,7 +2053,10 @@ typedef void (^MXOnResumeDone)();
             }
             else
             {
-                orderA = [prevTag.order floatValue];
+                if (prevTag.parsedOrder)
+                {
+                    orderA = [prevTag.parsedOrder doubleValue];
+                }
             }
         }
 
@@ -1877,14 +2069,26 @@ typedef void (^MXOnResumeDone)();
             }
             else
             {
-                orderB = [nextTag.order floatValue];
+                if (nextTag.parsedOrder)
+                {
+                    orderB = [nextTag.parsedOrder doubleValue];
+                }
             }
         }
     }
 
-    CGFloat order = (orderA + orderB) / 2.0;
+    double order = (orderA + orderB) / 2.0;
 
-    return [NSString stringWithFormat:@"%f", order];
+    NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
+    [formatter setGroupingSeparator:@""];
+    [formatter setDecimalSeparator:@"."];
+    [formatter setMaximumFractionDigits:16];
+    [formatter setMinimumFractionDigits:0];
+    
+    // remove trailing 0
+    // in some cases, the order is 0.00000 ("%f" formatter");
+    // with this method, it becomes "0".
+    return [formatter stringFromNumber:[NSNumber numberWithDouble:order]];
 }
 
 

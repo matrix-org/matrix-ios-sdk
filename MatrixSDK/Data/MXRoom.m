@@ -88,32 +88,19 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     if (self)
     {
         _state = [[MXRoomState alloc] initWithRoomId:roomId andMatrixSession:mxSession2 andInitialSync:initialSync andDirection:YES];
-        
-        if (initialSync.inviter.length)
-        {
-            // On an initialSync, an home server does not provide the room invitation under an event form
-            // whereas it does when getting the information from a live event (see SPEC-54).
-            // In order to make the SDK behaves the same in both cases, when getting the data from an initialSync,
-            // create and handle a fake membership event that contains the same information.
-            
-            // In both case, the application will see a MXRoom which MXRoomState.membership is invite. The MXRoomState
-            // will contain only one MXRoomMember who is the logged in user. MXRoomMember.originUserId is the inviter.
-            MXEvent *fakeMembershipEvent = [MXEvent modelFromJSON:@{
-                                                                    @"event_id": [NSString stringWithFormat:@"%@%@", kMXRoomInviteStateEventIdPrefix,[[NSProcessInfo processInfo] globallyUniqueString]],
-                                                                    @"type": kMXEventTypeStringRoomMember,
-                                                                    @"room_id": roomId,
-                                                                    @"content": @{
-                                                                            @"membership": kMXMembershipStringInvite
-                                                                            },
-                                                                    @"user_id": initialSync.inviter,
-                                                                    @"state_key": mxSession.matrixRestClient.credentials.userId,
-                                                                    @"origin_server_ts": [NSNumber numberWithLongLong:kMXUndefinedTimestamp]
-                                                                    }];
-            
-            [self handleMessage:fakeMembershipEvent direction:MXEventDirectionSync];
-            [self handleStateEvent:fakeMembershipEvent direction:MXEventDirectionSync];
 
-            [mxSession.store storeEventForRoom:roomId event:fakeMembershipEvent direction:MXEventDirectionSync];
+        if (initialSync.invite)
+        {
+            // Process the invite event content: it contains a partial room state
+            [self handleStateEvent:initialSync.invite direction:MXEventDirectionSync];
+            if ([mxSession.store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
+            {
+                [mxSession.store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
+            }
+
+            // Put the invite in the room messages list so that 
+            [self handleMessage:initialSync.invite direction:MXEventDirectionSync];
+            [mxSession.store storeEventForRoom:roomId event:initialSync.invite direction:MXEventDirectionSync];
         }
     }
     return self;
@@ -137,7 +124,21 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     return self;
 }
 
-#pragma mark - Properties getters implementation
+#pragma mark - Properties implementation
+- (void)setPartialTextMessage:(NSString *)partialTextMessage
+{
+    [mxSession.store storePartialTextMessageForRoom:_state.roomId partialTextMessage:partialTextMessage];
+    if ([mxSession.store respondsToSelector:@selector(commit)])
+    {
+        [mxSession.store commit];
+    }
+}
+
+- (NSString *)partialTextMessage
+{
+    return [mxSession.store partialTextMessageOfRoom:_state.roomId];
+}
+
 - (MXEvent *)lastMessageWithTypeIn:(NSArray*)types
 {
     return [mxSession.store lastMessageOfRoom:_state.roomId withTypeIn:types];
@@ -167,23 +168,28 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         [mxSession.store deleteRoom:self.state.roomId];
     }
     
-    // Handle timeline.events (Note: timeline events are in chronological order)
+    // Build/Update first the room state corresponding to the 'start' of the timeline.
+    // Note: We consider it is not required to clone the existing room state here, because no notification is posted for these events.
+    for (MXEvent *event in roomSync.state.events)
+    {
+        [self handleStateEvent:event direction:MXEventDirectionSync];
+    }
+    
+    // Update store with new room state when all state event have been processed
+    if ([mxSession.store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
+    {
+        [mxSession.store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
+    }
+    
+    // Handle now timeline.events, the room state is updated during this step too (Note: timeline events are in chronological order)
     if (isRoomInitialSync)
     {
-        // We will handle these events with direction = MXEventDirectionSync.
-        // In this direction:
-        // - the room state update is disabled (see [handleMessage:direction]). We will build this room state at the end thanks to state.events.
-        // - the events are inserted at the beginning of the stored events, so we will process them in reverse.
-        NSInteger index = roomSync.timeline.events.count;
-        while (index--)
+        // Here the events are handled in forward direction (see [handleLiveEvent:]).
+        // They will be added at the end of the stored events, so we keep the chronologinal order.
+        for (MXEvent *event in roomSync.timeline.events)
         {
-            NSString *eventId = roomSync.timeline.events[index];
-            MXEvent *event = roomSync.mxEventMap[eventId];
-            
-            [self handleMessage:event direction:MXEventDirectionSync];
-            
-            // Store the event
-            [mxSession.store storeEventForRoom:_state.roomId event:event direction:MXEventDirectionSync];
+            // Make room data digest the live event
+            [self handleLiveEvent:event];
         }
         
         // Check whether we got all history from the home server
@@ -203,12 +209,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         
         // Here the events are handled in forward direction (see [handleLiveEvent:]).
         // They will be added at the end of the stored events, so we keep the chronologinal order.
-        NSInteger index = 0;
-        while (index < roomSync.timeline.events.count)
+        for (MXEvent *event in roomSync.timeline.events)
         {
-            NSString *eventId = roomSync.timeline.events[index++];
-            MXEvent *event = roomSync.mxEventMap[eventId];
-            
             // Make room data digest the live event
             [self handleLiveEvent:event];
         }
@@ -223,25 +225,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     // Finalize initial sync
     if (isRoomInitialSync)
     {
-        // Build the current room state from state events
-        // Note: We consider it is not required to clone the existing room state here, because this is an initial sync.
-        for (NSInteger index = 0; index < roomSync.state.events.count; index++)
-        {
-            NSString *eventId = roomSync.state.events[index];
-            MXEvent *event = roomSync.mxEventMap[eventId];
-            
-            [self handleStateEvent:event direction:MXEventDirectionSync];
-        }
-        
-        // Update store with new room state when all state event have been processed
-        if ([mxSession.store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
-        {
-            [mxSession.store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
-        }
-        
-        // init the receips to the latest received one.
-        [self acknowledgeLatestEvent:NO];
-        
         // Notify that room has been sync'ed
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomInitialSyncNotification
                                                             object:self
@@ -254,6 +237,15 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                                                             object:self
                                                           userInfo:nil];
     }
+    
+    // Handle here ephemeral events (if any)
+    for (MXEvent *event in roomSync.ephemeral.events)
+    {
+        [self handleLiveEvent:event];
+    }
+    
+    // Handle account data events (if any)
+    [self handleAccounDataEvents:roomSync.accountData.events direction:MXEventDirectionForwards];
 }
 
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync
@@ -265,6 +257,12 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         if (!event.eventId)
         {
             event.eventId = [NSString stringWithFormat:@"%@%@", kMXRoomInviteStateEventIdPrefix, [[NSProcessInfo processInfo] globallyUniqueString]];
+        }
+        
+        // Report the room id if not defined
+        if (!event.roomId)
+        {
+            event.roomId = _state.roomId;
         }
         
         [self handleLiveEvent:event];
@@ -355,6 +353,16 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     if (MXEventDirectionForwards != direction)
     {
         [self notifyListeners:event direction:direction];
+    }
+    else
+    {
+        MXReceiptData* data = [[MXReceiptData alloc] init];
+        data.userId = event.sender;
+        data.eventId = event.eventId;
+        data.ts = event.originServerTs;
+        
+        [mxSession.store storeReceipt:data roomId:_state.roomId];
+        // notifyListeners call is performed in the calling method.
     }
 }
 
@@ -574,14 +582,14 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                                                 {
                                                     NSLog(@"[MXRoom] paginateBackMessages : get %tu messages from the server", paginatedResponse.chunk.count);
                                                     
-                                                    // Check pagination end
-                                                    if (paginatedResponse.chunk.count < numItems)
+                                                    // Check pagination end - @see SPEC-319 ticket
+                                                    if (paginatedResponse.chunk.count == 0 && [paginatedResponse.start isEqualToString:paginatedResponse.end])
                                                     {
                                                         // We run out of items
                                                         [mxSession.store storeHasReachedHomeServerPaginationEndForRoom:_state.roomId andValue:YES];
                                                     }
                                                     
-                                                    // Process these new events
+                                                    // Process received events and update pagination tokens
                                                     [self handleMessages:paginatedResponse direction:MXEventDirectionBackwards isTimeOrdered:NO];
                                                     
                                                     // Commit store changes
@@ -614,6 +622,13 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                                                 NSLog(@"[MXRoom] paginateBackMessages error: %@", error);
                                                 failure(error);
                                             }];
+        
+        if (messagesFromStoreCount)
+        {
+            // Disable retry to let the caller handle messages from store without delay.
+            // The caller will trigger a new pagination if need.
+            operation.maxNumberOfTries = 1;
+        }
     }
     else
     {
@@ -766,6 +781,58 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 }
 
 
+#pragma mark - Outgoing events management
+- (void)storeOutgoingMessage:(MXEvent*)outgoingMessage
+{
+    if ([mxSession.store respondsToSelector:@selector(storeOutgoingMessageForRoom:outgoingMessage:)]
+        && [mxSession.store respondsToSelector:@selector(commit)])
+    {
+        [mxSession.store storeOutgoingMessageForRoom:_state.roomId outgoingMessage:outgoingMessage];
+        [mxSession.store commit];
+    }
+}
+
+- (void)removeAllOutgoingMessages
+{
+    if ([mxSession.store respondsToSelector:@selector(removeAllOutgoingMessagesFromRoom:)]
+        && [mxSession.store respondsToSelector:@selector(commit)])
+    {
+        [mxSession.store removeAllOutgoingMessagesFromRoom:_state.roomId];
+        [mxSession.store commit];
+    }
+}
+
+- (void)removeOutgoingMessage:(NSString*)outgoingMessageEventId
+{
+    if ([mxSession.store respondsToSelector:@selector(removeOutgoingMessageFromRoom:outgoingMessage:)]
+        && [mxSession.store respondsToSelector:@selector(commit)])
+    {
+        [mxSession.store removeOutgoingMessageFromRoom:_state.roomId outgoingMessage:outgoingMessageEventId];
+        [mxSession.store commit];
+    }
+}
+
+- (void)updateOutgoingMessage:(NSString *)outgoingMessageEventId withOutgoingMessage:(MXEvent *)outgoingMessage
+{
+    // Do the update by removing the existing one and create a new one
+    // Thus, `outgoingMessage` will go at the end of the outgoing messages list
+    [self removeOutgoingMessage:outgoingMessageEventId];
+    [self storeOutgoingMessage:outgoingMessage];
+}
+
+- (NSArray<MXEvent*>*)outgoingMessages
+{
+    if ([mxSession.store respondsToSelector:@selector(outgoingMessagesInRoom:)])
+    {
+        return [mxSession.store outgoingMessagesInRoom:_state.roomId];
+    }
+    else
+    {
+        return nil;
+    }
+}
+
+
 #pragma mark - Room tags operations
 - (MXHTTPOperation*)addTag:(NSString*)tag
                  withOrder:(NSString*)order
@@ -790,22 +857,35 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                        success:(void (^)())success
                        failure:(void (^)(NSError *error))failure
 {
-    // Combine remove and add tag operations
-    MXHTTPOperation *removeTageHttpOperation;
-    removeTageHttpOperation = [self removeTag:oldTag success:^{
-
-        if (newTag)
-        {
+    MXHTTPOperation *operation;
+    
+    // remove tag
+    if (oldTag && !newTag)
+    {
+        operation = [self removeTag:oldTag success:success failure:failure];
+    }
+    // define a tag or define a new order
+    else if ((!oldTag && newTag) || [oldTag isEqualToString:newTag])
+    {
+        operation = [self addTag:newTag withOrder:newTagOrder success:success failure:failure];
+    }
+    else
+    {
+        // the tag is not the same
+        // weird, but the tag must be removed and defined again
+        // so combine remove and add tag operations
+        operation = [self removeTag:oldTag success:^{
+            
             MXHTTPOperation *addTagHttpOperation = [self addTag:newTag withOrder:newTagOrder success:success failure:failure];
-
+            
             // Transfer the new AFHTTPRequestOperation to the returned MXHTTPOperation
             // So that user has hand on it
-            removeTageHttpOperation.operation = addTagHttpOperation.operation;
-        }
-
-    } failure:failure];
-
-    return removeTageHttpOperation;
+            operation.operation = addTagHttpOperation.operation;
+            
+        } failure:failure];
+    }
+    
+    return operation;
 }
 
 
@@ -983,6 +1063,11 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     return NO;
 }
 
+- (NSComparisonResult)compareOriginServerTs:(MXRoom *)otherRoom
+{
+    return [[otherRoom lastMessageWithTypeIn:nil] compareOriginServerTs:[self lastMessageWithTypeIn:nil]];
+}
+
 -(NSArray*) unreadEvents
 {
     return [mxSession.store unreadEvents:_state.roomId withTypeIn:_acknowledgableEventTypes];
@@ -990,7 +1075,34 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 - (NSArray*)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort
 {
-    return [mxSession.store getEventReceipts:_state.roomId eventId:eventId sorted:sort];
+    NSArray *receipts = [mxSession.store getEventReceipts:_state.roomId eventId:eventId sorted:sort];
+    
+    // if some receipts are found
+    if (receipts)
+    {
+        NSString* myUserId = mxSession.myUser.userId;
+        NSMutableArray* res = [[NSMutableArray alloc] init];
+        
+        // Remove the oneself receipts
+        for (MXReceiptData* data in receipts)
+        {
+            if (![data.userId isEqualToString:myUserId])
+            {
+                [res addObject:data];
+            }
+        }
+        
+        if (res.count > 0)
+        {
+            receipts = res;
+        }
+        else
+        {
+            receipts = nil;
+        }
+    }
+    
+    return receipts;
 }
 
 - (NSString *)description

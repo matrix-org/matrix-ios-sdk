@@ -146,14 +146,20 @@
     return [roomStore lastMessageWithTypeIn:types];
 }
 
-/**
- * Returns the receipts list for an event in a dedicated room.
- * if sort is set to YES, they are sorted from the latest to the oldest ones.
- * @param roomId The room Id.
- * @param eventId The event Id.
- * @param sort to sort them from the latest to the oldest
- * @return the receipts for an event in a dedicated room.
- */
+
+- (void)storePartialTextMessageForRoom:(NSString *)roomId partialTextMessage:(NSString *)partialTextMessage
+{
+    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    roomStore.partialTextMessage = partialTextMessage;
+}
+
+- (NSString *)partialTextMessageOfRoom:(NSString *)roomId
+{
+    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    return roomStore.partialTextMessage;
+}
+
+
 - (NSArray*)getEventReceipts:(NSString*)roomId eventId:(NSString*)eventId sorted:(BOOL)sort
 {
     NSMutableArray* receipts = [[NSMutableArray alloc] init];
@@ -189,11 +195,6 @@
     return receipts;
 }
 
-/**
- * Store the receipt for an user in a room
- * @param receipt The event
- * @param roomId The roomId
- */
 - (BOOL)storeReceipt:(MXReceiptData*)receipt roomId:(NSString*)roomId
 {
     NSMutableDictionary* receiptsByUserId = [receiptsByRoomId objectForKey:roomId];
@@ -216,12 +217,6 @@
     return false;
 }
 
-/**
- * Provides the unread events list.
- * @param roomId the room id.
- * @param types an array of event types strings (MXEventTypeString).
- * @return the unread events list.
- */
 - (NSArray*)unreadEvents:(NSString*)roomId withTypeIn:(NSArray*)types
 {
     MXMemoryRoomStore* store = [roomStores valueForKey:roomId];
@@ -250,6 +245,32 @@
 - (NSArray *)rooms
 {
     return roomStores.allKeys;
+}
+
+
+#pragma mark - Outgoing events
+- (void)storeOutgoingMessageForRoom:(NSString*)roomId outgoingMessage:(MXEvent*)outgoingMessage
+{
+    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    [roomStore storeOutgoingMessage:outgoingMessage];
+}
+
+- (void)removeAllOutgoingMessagesFromRoom:(NSString*)roomId
+{
+    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    [roomStore removeAllOutgoingMessages];
+}
+
+- (void)removeOutgoingMessageFromRoom:(NSString*)roomId outgoingMessage:(NSString*)outgoingMessageEventId
+{
+    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    [roomStore removeOutgoingMessage:outgoingMessageEventId];
+}
+
+- (NSArray<MXEvent*>*)outgoingMessagesInRoom:(NSString*)roomId
+{
+    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    return roomStore.outgoingMessages;
 }
 
 

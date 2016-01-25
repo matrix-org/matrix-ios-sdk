@@ -33,6 +33,9 @@
         publicRoom.aliases = sanitisedJSONDictionary[@"aliases"];
         publicRoom.topic = sanitisedJSONDictionary[@"topic"];
         publicRoom.numJoinedMembers = [((NSNumber*)sanitisedJSONDictionary[@"num_joined_members"]) unsignedIntegerValue];
+        publicRoom.worldReadable = [((NSNumber*)sanitisedJSONDictionary[@"world_readable"]) boolValue];
+        publicRoom.guestCanJoin = [((NSNumber*)sanitisedJSONDictionary[@"guest_can_join"]) boolValue];
+        publicRoom.avatarUrl = sanitisedJSONDictionary[@"avatar_url"];
     }
 
     return publicRoom;
@@ -143,6 +146,12 @@ NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
 NSString *const kMXRoomTagFavourite = @"m.favourite";
 NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
 
+@interface MXRoomTag()
+{
+    NSNumber* _parsedOrder;
+}
+@end
+
 @implementation MXRoomTag
 
 - (id)initWithName:(NSString *)name andOrder:(NSString *)order
@@ -152,12 +161,19 @@ NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
     {
         _name = name;
         _order = order;
+        _parsedOrder = nil;
     }
     return self;
 }
 
 + (NSDictionary<NSString *,MXRoomTag *> *)roomTagsWithTagEvent:(MXEvent *)event
 {
+    NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
+    [formatter setMaximumFractionDigits:16];
+    [formatter setMinimumFractionDigits:0];
+    [formatter setDecimalSeparator:@"."];
+    [formatter setGroupingSeparator:@""];
+    
     NSMutableDictionary *tags = [NSMutableDictionary dictionary];
     for (NSString *tagName in event.content[@"tags"])
     {
@@ -167,11 +183,32 @@ NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
         if ([event.content[@"tags"][tagName][@"order"] isKindOfClass:NSNumber.class])
         {
             NSLog(@"[MXRoomTag] Warning: the room tag order is an integer value not a string in this event: %@", event);
-            order = [event.content[@"tags"][tagName][@"order"] stringValue];
+            order = [formatter stringFromNumber:event.content[@"tags"][tagName][@"order"]];
         }
         else
         {
             order = event.content[@"tags"][tagName][@"order"];
+            
+            if (order)
+            {
+                // Do some cleaning if the order is a number (and do nothing if the order is a string)
+                NSNumber *value = [formatter numberFromString:order];
+                if (!value)
+                {
+                    // Manage numbers with ',' decimal separator
+                    [formatter setDecimalSeparator:@","];
+                    value = [formatter numberFromString:order];
+                    [formatter setDecimalSeparator:@"."];
+                }
+                
+                if (value)
+                {
+                    // remove trailing 0
+                    // in some cases, the order is 0.00000 ("%f" formatter");
+                    // with this method, it becomes "0".
+                    order = [formatter stringFromNumber:value];
+                }
+            }
         }
 
         tags[tagName] = [[MXRoomTag alloc] initWithName:tagName andOrder:order];
@@ -196,6 +233,32 @@ NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
     [aCoder encodeObject:_order forKey:@"order"];
 }
 
+- (NSNumber*)parsedOrder
+{
+    if (!_parsedOrder && _order)
+    {
+        NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
+        [formatter setMaximumFractionDigits:16];
+        [formatter setMinimumFractionDigits:0];
+        [formatter setDecimalSeparator:@","];
+        [formatter setGroupingSeparator:@""];
+        
+        // assume that the default separator is the '.'.
+        [formatter setDecimalSeparator:@"."];
+        
+        _parsedOrder = [formatter numberFromString:_order];
+        
+        if (!_parsedOrder)
+        {
+            // check again with ',' as decimal separator.
+            [formatter setDecimalSeparator:@","];
+            _parsedOrder = [formatter numberFromString:_order];
+        }
+    }
+    
+    return _parsedOrder;
+}
+
 - (NSString *)description
 {
     return [NSString stringWithFormat:@"<MXRoomTag: %p> %@: %@", self, _name, _order];
@@ -211,16 +274,21 @@ NSString *const kMXPresenceHidden = @"hidden";
 
 @implementation MXPresenceEventContent
 
-- (instancetype)initWithDictionary:(NSDictionary *)dictionaryValue error:(NSError *__autoreleasing *)error
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    // Do the JSON -> class instance properties mapping
-    self = [super initWithDictionary:dictionaryValue error:error];
-    if (self)
+    MXPresenceEventContent *presenceEventContent = [[MXPresenceEventContent alloc] init];
+    if (presenceEventContent)
     {
-        _presenceStatus = [MXTools presence:_presence];
+        presenceEventContent.userId = JSONDictionary[@"user_id"];
+        presenceEventContent.displayname = JSONDictionary[@"displayname"];
+        presenceEventContent.avatarUrl = JSONDictionary[@"avatar_url"];
+        presenceEventContent.lastActiveAgo = [((NSNumber*)JSONDictionary[@"last_active_ago"]) unsignedIntegerValue];
+        presenceEventContent.presence = JSONDictionary[@"presence"];
+        presenceEventContent.statusMsg = JSONDictionary[@"status_msg"];
+        
+        presenceEventContent.presenceStatus = [MXTools presence:presenceEventContent.presence];
     }
-
-    return self;
+    return presenceEventContent;
 }
 
 @end
@@ -529,6 +597,171 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
 
 @end
 
+
+#pragma mark - Search
+#pragma mark -
+
+@implementation MXSearchUserProfile
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXSearchUserProfile *searchUserProfile = [[MXSearchUserProfile alloc] init];
+    if (searchUserProfile)
+    {
+        searchUserProfile.avatarUrl = JSONDictionary[@"avatar_url"];
+        searchUserProfile.displayName = JSONDictionary[@"displayname"];
+    }
+
+    return searchUserProfile;
+}
+
+@end
+
+@implementation MXSearchEventContext
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXSearchEventContext *searchEventContext = [[MXSearchEventContext alloc] init];
+    if (searchEventContext)
+    {
+        searchEventContext.start = JSONDictionary[@"start"];
+        searchEventContext.end = JSONDictionary[@"end"];
+
+        searchEventContext.eventsBefore = [MXEvent modelsFromJSON:JSONDictionary[@"events_before"]];
+        searchEventContext.eventsAfter = [MXEvent modelsFromJSON:JSONDictionary[@"events_after"]];
+
+        NSMutableDictionary<NSString*, MXSearchUserProfile*> *profileInfo = [NSMutableDictionary dictionary];
+        for (NSString *userId in JSONDictionary[@"profile_info"])
+        {
+            profileInfo[userId] = [MXSearchUserProfile modelFromJSON:JSONDictionary[@"profile_info"][userId]];
+        }
+        searchEventContext.profileInfo = profileInfo;
+    }
+
+    return searchEventContext;
+}
+
+@end
+
+@implementation MXSearchResult
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXSearchResult *searchResult = [[MXSearchResult alloc] init];
+    if (searchResult)
+    {
+        searchResult.result = [MXEvent modelFromJSON:JSONDictionary[@"result"]];
+        searchResult.rank = [((NSNumber*)JSONDictionary[@"rank"]) integerValue];
+        searchResult.context = [MXSearchEventContext modelFromJSON:JSONDictionary[@"context"]];
+    }
+
+    return searchResult;
+}
+
+@end
+
+@implementation MXSearchGroupContent
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXSearchGroupContent *searchGroupContent = [[MXSearchGroupContent alloc] init];
+    if (searchGroupContent)
+    {
+        searchGroupContent.order = [((NSNumber*)JSONDictionary[@"order"]) integerValue];
+        NSAssert(NO, @"What is results?");
+        searchGroupContent.results = nil;   // TODO_SEARCH
+        searchGroupContent.nextBatch = JSONDictionary[@"next_batch"];
+    }
+
+    return searchGroupContent;
+}
+
+@end
+
+@implementation MXSearchGroup
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXSearchGroup *searchGroup = [[MXSearchGroup alloc] init];
+    if (searchGroup)
+    {
+        NSMutableDictionary<NSString*, MXSearchGroupContent*> *group = [NSMutableDictionary dictionary];
+        for (NSString *key in JSONDictionary[@"state"])
+        {
+            group[key] = [MXSearchGroupContent modelFromJSON: JSONDictionary[@"key"][key]];
+        }
+        searchGroup.group = group;
+    }
+
+    return searchGroup;
+}
+
+@end
+
+@implementation MXSearchRoomEventResults
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXSearchRoomEventResults *searchRoomEventResults = [[MXSearchRoomEventResults alloc] init];
+    if (searchRoomEventResults)
+    {
+        searchRoomEventResults.count = [((NSNumber*)JSONDictionary[@"count"]) unsignedIntegerValue];
+        searchRoomEventResults.results = [MXSearchResult modelsFromJSON:JSONDictionary[@"results"]];
+        searchRoomEventResults.nextBatch = JSONDictionary[@"next_batch"];
+
+        NSMutableDictionary<NSString*, MXSearchGroup*> *groups = [NSMutableDictionary dictionary];
+        for (NSString *groupId in JSONDictionary[@"groups"])
+        {
+            groups[groupId] = [MXSearchGroup modelFromJSON: JSONDictionary[@"groups"][groupId]];
+        }
+        searchRoomEventResults.groups = groups;
+
+        NSMutableDictionary<NSString*, NSArray<MXEvent*> *> *state = [NSMutableDictionary dictionary];
+        for (NSString *roomId in JSONDictionary[@"state"])
+        {
+            state[roomId] = [MXEvent modelsFromJSON: JSONDictionary[@"state"][roomId]];
+        }
+        searchRoomEventResults.state = state;
+    }
+
+    return searchRoomEventResults;
+}
+
+@end
+
+@implementation MXSearchCategories
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXSearchCategories *searchCategories = [[MXSearchCategories alloc] init];
+    if (searchCategories)
+    {
+        searchCategories.roomEvents = [MXSearchRoomEventResults modelFromJSON:JSONDictionary[@"room_events"]];
+    }
+
+    return searchCategories;
+}
+
+@end
+
+@implementation MXSearchResponse
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXSearchResponse *searchResponse = [[MXSearchResponse alloc] init];
+    if (searchResponse)
+    {
+        NSDictionary *sanitisedJSONDictionary = [MXJSONModel removeNullValuesInJSON:JSONDictionary];
+
+        searchResponse.searchCategories = [MXSearchCategories modelFromJSON:sanitisedJSONDictionary[@"search_categories"]];
+    }
+
+    return searchResponse;
+}
+
+@end
+
+
 #pragma mark - Server sync v1 response
 #pragma mark -
 
@@ -546,6 +779,10 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
         initialSync.membership = JSONDictionary[@"membership"];
         initialSync.visibility = JSONDictionary[@"visibility"];
         initialSync.inviter = JSONDictionary[@"inviter"];
+        if (JSONDictionary[@"invite"])
+        {
+            initialSync.invite = [MXEvent modelFromJSON:JSONDictionary[@"invite"]];
+        }
         initialSync.presence = [MXEvent modelsFromJSON:JSONDictionary[@"presence"]];
         initialSync.receipts = [MXEvent modelsFromJSON:JSONDictionary[@"receipts"]];
     }
@@ -578,9 +815,33 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
 #pragma mark -
 
 @implementation MXRoomSyncState
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXRoomSyncState *roomSyncState = [[MXRoomSyncState alloc] init];
+    if (roomSyncState)
+    {
+        roomSyncState.events = [MXEvent modelsFromJSON:JSONDictionary[@"events"]];
+    }
+    return roomSyncState;
+}
+
 @end
 
 @implementation MXRoomSyncTimeline
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXRoomSyncTimeline *roomSyncTimeline = [[MXRoomSyncTimeline alloc] init];
+    if (roomSyncTimeline)
+    {
+        roomSyncTimeline.events = [MXEvent modelsFromJSON:JSONDictionary[@"events"]];
+        roomSyncTimeline.limited = [((NSNumber*)JSONDictionary[@"limited"]) boolValue];
+        roomSyncTimeline.prevBatch = JSONDictionary[@"prev_batch"];
+    }
+    return roomSyncTimeline;
+}
+
 @end
 
 @implementation MXRoomSyncEphemeral
@@ -593,6 +854,20 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
         roomSyncEphemeral.events = [MXEvent modelsFromJSON:JSONDictionary[@"events"]];
     }
     return roomSyncEphemeral;
+}
+
+@end
+
+@implementation MXRoomSyncAccountData
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXRoomSyncAccountData *roomSyncAccountData = [[MXRoomSyncAccountData alloc] init];
+    if (roomSyncAccountData)
+    {
+        roomSyncAccountData.events = [MXEvent modelsFromJSON:JSONDictionary[@"events"]];
+    }
+    return roomSyncAccountData;
 }
 
 @end
@@ -611,65 +886,19 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
 
 @end
 
-@interface MXRoomSync ()
-
-    /**
-     The original events mapping: keys are event ids (values are event descriptions).
-     The events are referenced from the 'timeline' and 'state' keys for this room.
-     */
-    @property (nonatomic) NSDictionary<NSString*, NSDictionary*> *eventMap;
-
-@end
-
 @implementation MXRoomSync
 
-// Override the default Mantle modelFromJSON method to convert event mapping dictionary.
-// Indeed the values in received eventMap dictionary are JSON dictionaries. We convert them in MXEvent object.
-// The event identifier is reported inside the MXEvent too.
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    MXRoomSync *roomSync = [super modelFromJSON:JSONDictionary];
-    if (roomSync && roomSync.eventMap.count)
+    MXRoomSync *roomSync = [[MXRoomSync alloc] init];
+    if (roomSync)
     {
-        NSArray *eventIds = roomSync.eventMap.allKeys;
-        
-        NSMutableDictionary *mxEventMap = [NSMutableDictionary dictionaryWithCapacity:eventIds.count];
-        
-        for (NSUInteger index = 0; index < eventIds.count; index++)
-        {
-            NSString *eventId = eventIds[index];
-            NSDictionary *eventDesc = [roomSync.eventMap objectForKey:eventId];
-            
-            MXEvent *event = [MXEvent modelFromJSON:eventDesc];
-            event.eventId = eventId;
-            
-            mxEventMap[eventId] = event;
-        }
-        
-        roomSync.mxEventMap = mxEventMap;
-        
-        // Remove the orignal events map
-        roomSync.eventMap = nil;
+        roomSync.state = [MXRoomSyncState modelFromJSON:JSONDictionary[@"state"]];
+        roomSync.timeline = [MXRoomSyncTimeline modelFromJSON:JSONDictionary[@"timeline"]];
+        roomSync.ephemeral = [MXRoomSyncEphemeral modelFromJSON:JSONDictionary[@"ephemeral"]];
+        roomSync.accountData = [MXRoomSyncAccountData modelFromJSON:JSONDictionary[@"account_data"]];
     }
     return roomSync;
-}
-
-// Automatically convert state dictionary in MXRoomSyncState.
-+ (NSValueTransformer *)stateJSONTransformer
-{
-    return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXRoomSyncState.class];
-}
-
-// Automatically convert timeline dictionary in MXRoomSyncTimeline.
-+ (NSValueTransformer *)timelineJSONTransformer
-{
-    return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXRoomSyncTimeline.class];
-}
-
-// Automatically convert ephemeral dictionary in MXRoomSyncEphemeral.
-+ (NSValueTransformer *)ephemeralJSONTransformer
-{
-    return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXRoomSyncEphemeral.class];
 }
 
 @end
@@ -702,91 +931,38 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
 
 @end
 
-@interface MXRoomsSyncResponse ()
-
-    /**
-     Joined rooms: keys are rooms ids (values will be converted to MXRoomSync).
-     */
-    @property (nonatomic) NSDictionary<NSString*, NSDictionary*> *joined;
-
-    /**
-     The rooms that the user has been invited to: keys are rooms ids (values will be converted to MXInvitedRoomSync).
-     */
-    @property (nonatomic) NSDictionary<NSString*, NSDictionary*> *invited;
-
-    /**
-     The rooms that the user has left or been banned from: keys are rooms ids (values will be converted to MXRoomSync).
-     */
-    @property (nonatomic) NSDictionary<NSString*, NSDictionary*> *archived;
-
-@end
-
 @implementation MXRoomsSyncResponse
 
 // Override the default Mantle modelFromJSON method to convert room lists.
-// Indeed the values in received dictionaries are JSON dictionaries. We convert them in MXRoomSync
-// or MXInvitedRoomSync objects.
+// Indeed the values in received dictionaries are JSON dictionaries. We convert them in
+// MXRoomSync or MXInvitedRoomSync objects.
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    MXRoomsSyncResponse *roomsSync = [super modelFromJSON:JSONDictionary];
+    MXRoomsSyncResponse *roomsSync = [[MXRoomsSyncResponse alloc] init];
     if (roomsSync)
     {
-        if (roomsSync.joined.count)
+        NSMutableDictionary *mxJoin = [NSMutableDictionary dictionary];
+        for (NSString *roomId in JSONDictionary[@"join"])
         {
-            NSArray *roomIds = roomsSync.joined.allKeys;
-            
-            NSMutableDictionary *mxJoined = [NSMutableDictionary dictionaryWithCapacity:roomIds.count];
-            
-            for (NSUInteger index = 0; index < roomIds.count; index++)
-            {
-                NSString *roomId = roomIds[index];
-                NSDictionary *roomSyncDesc = roomsSync.joined[roomId];
-                
-                mxJoined[roomId] = [MXRoomSync modelFromJSON:roomSyncDesc];
-            }
-            
-            roomsSync.mxJoined = mxJoined;
+            mxJoin[roomId] = [MXRoomSync modelFromJSON:JSONDictionary[@"join"][roomId]];
         }
+        roomsSync.join = mxJoin;
         
-        if (roomsSync.invited.count)
+        NSMutableDictionary *mxInvite = [NSMutableDictionary dictionary];
+        for (NSString *roomId in JSONDictionary[@"invite"])
         {
-            NSArray *roomIds = roomsSync.invited.allKeys;
-            
-            NSMutableDictionary *mxInvited = [NSMutableDictionary dictionaryWithCapacity:roomIds.count];
-            
-            for (NSUInteger index = 0; index < roomIds.count; index++)
-            {
-                NSString *roomId = roomIds[index];
-                NSDictionary *roomSyncDesc = roomsSync.invited[roomId];
-                
-                mxInvited[roomId] = [MXInvitedRoomSync modelFromJSON:roomSyncDesc];
-            }
-            
-            roomsSync.mxInvited = mxInvited;
+            mxInvite[roomId] = [MXInvitedRoomSync modelFromJSON:JSONDictionary[@"invite"][roomId]];
         }
+        roomsSync.invite = mxInvite;
         
-        if (roomsSync.archived.count)
+        NSMutableDictionary *mxLeave = [NSMutableDictionary dictionary];
+        for (NSString *roomId in JSONDictionary[@"leave"])
         {
-            NSArray *roomIds = roomsSync.archived.allKeys;
-            
-            NSMutableDictionary *mxArchived = [NSMutableDictionary dictionaryWithCapacity:roomIds.count];
-            
-            for (NSUInteger index = 0; index < roomIds.count; index++)
-            {
-                NSString *roomId = roomIds[index];
-                NSDictionary *roomSyncDesc = roomsSync.archived[roomId];
-                
-                mxArchived[roomId] = [MXRoomSync modelFromJSON:roomSyncDesc];
-            }
-            
-            roomsSync.mxArchived = mxArchived;
+            mxLeave[roomId] = [MXRoomSync modelFromJSON:JSONDictionary[@"leave"][roomId]];
         }
-        
-        // Remove original dictionary
-        roomsSync.joined = nil;
-        roomsSync.invited = nil;
-        roomsSync.archived = nil;
+        roomsSync.leave = mxLeave;
     }
+    
     return roomsSync;
 }
 
@@ -794,9 +970,6 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
 
 @implementation MXSyncResponse
 
-// Override the default Mantle modelFromJSON method to prepare rooms dictionary.
-// Contrary to 'presence', we need to create a model from the JSON dictionary 'rooms' (see modelFromJSON call) in order to create
-// all its sub-items. We obtain then a full converted JSON in a MXRoomsSyncResponse object 'mxRooms'.
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
     MXSyncResponse *syncResponse = [[MXSyncResponse alloc] init];
@@ -804,7 +977,7 @@ NSString *const kMXPushRuleScopeStringDevice           = @"device";
     {
         syncResponse.nextBatch = JSONDictionary[@"next_batch"];
         syncResponse.presence = [MXPresenceSyncResponse modelFromJSON:JSONDictionary[@"presence"]];
-        syncResponse.mxRooms = [MXRoomsSyncResponse modelFromJSON:JSONDictionary[@"rooms"]];
+        syncResponse.rooms = [MXRoomsSyncResponse modelFromJSON:JSONDictionary[@"rooms"]];
     }
 
     return syncResponse;

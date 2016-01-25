@@ -1015,24 +1015,28 @@
                                 mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
                                 [mxSession start:^{
 
-                                    NSString *orderForFirstPosition = [mxSession tagOrderToBeAtIndex:0 withTag:tag];
+                                    NSString *orderForFirstPosition = [mxSession tagOrderToBeAtIndex:0 from:NSNotFound withTag:tag];
                                     XCTAssertLessThan(orderForFirstPosition.floatValue, 0.1);
 
-                                    NSString *orderForThirdPosition = [mxSession tagOrderToBeAtIndex:2 withTag:tag];
+                                    NSString *orderForThirdPosition = [mxSession tagOrderToBeAtIndex:2 from:NSNotFound withTag:tag];
                                     XCTAssertGreaterThan(orderForThirdPosition.floatValue, 0.2);
                                     XCTAssertLessThan(orderForThirdPosition.floatValue, 0.3);
 
-                                    NSString *orderForLastPosition = [mxSession tagOrderToBeAtIndex:3 withTag:tag];
+                                    NSString *orderForLastPosition = [mxSession tagOrderToBeAtIndex:3 from:NSNotFound withTag:tag];
                                     XCTAssertGreaterThan(orderForLastPosition.floatValue, 0.3);
 
-                                    orderForLastPosition = [mxSession tagOrderToBeAtIndex:10 withTag:tag];
+                                    orderForLastPosition = [mxSession tagOrderToBeAtIndex:10 from:NSNotFound withTag:tag];
                                     XCTAssertGreaterThan(orderForLastPosition.floatValue, 0.3);
+
+                                    NSString *orderForSecondPositionWhenComingFromFirst = [mxSession tagOrderToBeAtIndex:1 from:0 withTag:tag];
+                                    XCTAssertGreaterThan(orderForSecondPositionWhenComingFromFirst.floatValue, 0.2);
+                                    XCTAssertLessThan(orderForSecondPositionWhenComingFromFirst.floatValue, 0.3);
 
 
                                     // Test the method on a fresh new tag
                                     NSString *newTag = [[NSProcessInfo processInfo] globallyUniqueString];
 
-                                    NSString *orderForFirstTaggedRoom = [mxSession tagOrderToBeAtIndex:2 withTag:newTag];
+                                    NSString *orderForFirstTaggedRoom = [mxSession tagOrderToBeAtIndex:2 from:NSNotFound withTag:newTag];
                                     XCTAssertGreaterThan(orderForFirstTaggedRoom.floatValue, 0);
                                     XCTAssertLessThan(orderForFirstTaggedRoom.floatValue, 1);
 
@@ -1063,6 +1067,77 @@
         }];
     }];
 }
+
+- (void)testInvitedRooms
+{
+    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+
+    [sharedData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        mxSession = bobSession;
+
+        NSUInteger prevInviteCount = mxSession.invitedRooms.count;
+
+        __block NSString *testRoomId;
+        __block NSUInteger testState = 0;
+
+        [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionInvitedRoomsDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+            MXRoom *impactedRoom = [mxSession roomWithRoomId:note.userInfo[kMXSessionNotificationRoomIdKey]];
+            MXEvent *event = note.userInfo[kMXSessionNotificationEventKey];
+
+            NSArray *invitedRooms = mxSession.invitedRooms;
+
+            switch (testState)
+            {
+                case 0:
+                    // First notif is for the invite
+                    // The room must be in the invitedRooms list
+                    XCTAssertEqual(invitedRooms.count, prevInviteCount + 1);
+
+                    XCTAssertNotEqual([invitedRooms indexOfObject:impactedRoom], NSNotFound, @"The room must be in the invitation list");
+                    XCTAssertNotNil(event.inviteRoomState, @"The event must be an invite");
+
+                    testState++;
+
+                    // Join the room now
+                    //[impactedRoom join:nil failure:nil];
+                    [impactedRoom leave:nil failure:nil];
+
+                    break;
+
+                case 1:
+                    // 2nd notif comes when the user has accepted the invitation
+                    XCTAssertEqual(invitedRooms.count, prevInviteCount );
+
+                    XCTAssertEqual([invitedRooms indexOfObject:impactedRoom], NSNotFound, @"The room must be no more in the invitation list");
+                    XCTAssertNil(event.inviteRoomState, @"The event must not be an invite");
+
+                    [expectation fulfill];
+                    
+                default:
+                    break;
+            }
+
+        }];
+
+        // Make Alice invite Bob in a room
+        [aliceRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
+
+            testRoomId = response.roomId;
+
+            [aliceRestClient inviteUser:bobSession.matrixRestClient.credentials.userId toRoom:testRoomId success:^{
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
 
 @end
 

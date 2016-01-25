@@ -222,6 +222,42 @@ MXAuthAction;
 }
 
 
+#pragma mark - password update operation
+
+- (MXHTTPOperation*)changePassword:(NSString*)oldPassword with:(NSString*)newPassword
+                           success:(void (^)())success
+                           failure:(void (^)(NSError *error))failure
+{
+    // sanity check
+    if (!oldPassword || !newPassword)
+    {
+        NSError* error = [NSError errorWithDomain:@"Invalid params" code:500 userInfo:nil];
+        
+        failure(error);
+        return nil;
+    }
+    
+    NSDictionary *parameters = @{
+                                 @"auth": @{
+                                             @"type": kMXLoginFlowTypePassword,
+                                             @"user": self.credentials.userId,
+                                             @"password": oldPassword,
+                                           },
+                                 @"new_password": newPassword
+                                 };
+    
+    return [httpClient requestWithMethod:@"POST"
+                                    path:@"v2_alpha/account/password"
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     success();
+                                 }
+                                 failure:^(NSError *error) {
+                                     failure(error);
+                                 }];
+}
+
+
 #pragma mark - Common operations for register and login
 /*
  The only difference between register and login request are the path of the requests.
@@ -372,6 +408,16 @@ MXAuthAction;
                                  success:(void (^)())success
                                  failure:(void (^)(NSError *))failure
 {
+    
+    // sanity check
+    if (!pushkey || !kind || !appDisplayName || !deviceDisplayName || !profileTag || !lang || !data || !append)
+    {
+        NSError* error = [NSError errorWithDomain:@"Invalid params" code:500 userInfo:nil];
+        
+        failure(error);
+        return nil;
+    }
+    
     // Fill the request parameters on demand
     // Caution: parameters are JSON serialized in http body, we must use a NSNumber created with a boolean for append value.
     NSDictionary *parameters = @{
@@ -1986,7 +2032,7 @@ MXAuthAction;
                                  }];
 }
 
-#pragma mark - read receips
+#pragma mark - read receipts
 /**
  Send a read receipt (available only on C-S v2).
  
@@ -2075,16 +2121,15 @@ MXAuthAction;
     // Define an absolute path based on Matrix content respository path instead of the base url
     NSString* path = [NSString stringWithFormat:@"%@/upload", kMXContentPrefixPath];
     NSDictionary *headers = @{@"Content-Type": mimeType};
-    
-    NSDictionary *parameters;
+
     if (filename.length)
     {
-        parameters = @{@"filename": filename};
+        path = [path stringByAppendingString:[NSString stringWithFormat:@"?filename=%@", filename]];
     }
     
     return [httpClient requestWithMethod:@"POST"
                                     path:path
-                              parameters:parameters
+                              parameters:nil
                                     data:data
                                  headers:headers
                                  timeout:timeoutInSeconds
@@ -2349,6 +2394,85 @@ MXAuthAction;
                                          failure(error);
                                      }
                                  }];
+}
+
+#pragma mark - Search
+- (MXHTTPOperation*)searchMessageText:(NSString*)text
+                              inRooms:(NSArray<NSString*>*)rooms
+                          beforeLimit:(NSUInteger)beforeLimit
+                           afterLimit:(NSUInteger)afterLimit
+                            nextBatch:(NSString*)nextBatch
+                              success:(void (^)(MXSearchRoomEventResults *roomEventResults))success
+                              failure:(void (^)(NSError *error))failure
+{
+    NSMutableDictionary *roomEventsParameters = [NSMutableDictionary dictionaryWithDictionary:
+                                                 @{
+                                                   @"search_term": text,
+                                                   @"order_by": @"recent",
+                                                   @"event_context": @{
+                                                           @"before_limit": @(beforeLimit),
+                                                           @"after_limit": @(afterLimit),
+                                                           @"include_profile": @(YES)
+                                                           }
+                                                   }];
+    if (rooms)
+    {
+        roomEventsParameters[@"filter"] = @{
+                                            @"rooms": rooms
+                                            };
+    }
+
+    return [self searchRoomEvents:roomEventsParameters nextBatch:nextBatch success:success failure:failure];
+}
+
+- (MXHTTPOperation*)search:(NSDictionary*)parameters
+                 nextBatch:(NSString*)nextBatch
+                   success:(void (^)(MXSearchRoomEventResults *roomEventResults))success
+                   failure:(void (^)(NSError *error))failure
+{
+    NSString *path = @"api/v1/search";
+    if (nextBatch)
+    {
+        path = [NSString stringWithFormat:@"%@?next_batch=%@", path, nextBatch];
+    }
+
+    return [httpClient requestWithMethod:@"POST"
+                                    path: path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+
+                                     // Use here the processing queue in order to keep the server response order
+                                     dispatch_async(processingQueue, ^{
+
+                                         dispatch_async(dispatch_get_main_queue(), ^{
+
+                                             MXSearchResponse *searchResponse = [MXSearchResponse modelFromJSON:JSONResponse];
+
+                                             if (success)
+                                             {
+                                                 success(searchResponse.searchCategories.roomEvents);
+                                             }
+                                         });
+
+                                     });
+
+                                 }
+                                 failure:failure];
+}
+
+// Shorcut for calling [self search] without needing to manage top hierarchy parameters
+- (MXHTTPOperation*)searchRoomEvents:(NSDictionary*)roomEventsParameters
+                           nextBatch:(NSString*)nextBatch
+                   success:(void (^)(MXSearchRoomEventResults *roomEventResults))success
+                   failure:(void (^)(NSError *error))failure
+{
+    NSDictionary *parameters = @{
+                                 @"search_categories": @{
+                                         @"room_events": roomEventsParameters
+                                         }
+                                 };
+
+    return [self search:parameters nextBatch:nextBatch success:success failure:failure];
 }
 
 @end
