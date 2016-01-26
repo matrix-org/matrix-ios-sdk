@@ -445,7 +445,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     {
         // Redact the stored event
         redactedEvent = [redactedEvent prune];
-        redactedEvent.redactedBecause = redactionEvent.originalDictionary;
+        redactedEvent.redactedBecause = redactionEvent.JSONDictionary;
         
         if (redactedEvent.isState) {
             // FIXME: The room state must be refreshed here since this redacted event.
@@ -751,7 +751,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 {
     // To set this new value, we have to take the current powerLevels content,
     // Update it with expected values and send it to the home server.
-    NSMutableDictionary *newPowerLevelsEventContent = [NSMutableDictionary dictionaryWithDictionary:_state.powerLevels.dictionaryValue];
+    NSMutableDictionary *newPowerLevelsEventContent = [NSMutableDictionary dictionaryWithDictionary:_state.powerLevels.JSONDictionary];
 
     NSMutableDictionary *newPowerLevelsEventContentUsers = [NSMutableDictionary dictionaryWithDictionary:newPowerLevelsEventContent[@"users"]];
     newPowerLevelsEventContentUsers[userId] = [NSNumber numberWithUnsignedInteger:powerLevel];

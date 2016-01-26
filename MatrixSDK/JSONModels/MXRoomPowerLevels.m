@@ -19,6 +19,25 @@
 #import "MXTools.h"
 
 @implementation MXRoomPowerLevels
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXRoomPowerLevels *roomPowerLevels = [[MXRoomPowerLevels alloc] init];
+    if (roomPowerLevels)
+    {
+        roomPowerLevels.users = JSONDictionary[@"users"];
+        roomPowerLevels.usersDefault = [(NSNumber*)JSONDictionary[@"users_default"] unsignedIntegerValue];
+        roomPowerLevels.ban = [(NSNumber*)JSONDictionary[@"ban"] unsignedIntegerValue];
+        roomPowerLevels.kick = [(NSNumber*)JSONDictionary[@"kick"] unsignedIntegerValue];
+        roomPowerLevels.redact = [(NSNumber*)JSONDictionary[@"redact"] unsignedIntegerValue];
+        roomPowerLevels.invite = [(NSNumber*)JSONDictionary[@"invite"] unsignedIntegerValue];
+        roomPowerLevels.events = JSONDictionary[@"events"];
+        roomPowerLevels.eventsDefault = [(NSNumber*)JSONDictionary[@"events_default"] unsignedIntegerValue];
+        roomPowerLevels.stateDefault = [(NSNumber*)JSONDictionary[@"state_default"] unsignedIntegerValue];
+    }
+    return roomPowerLevels;
+}
+
 - (instancetype)init
 {
     self = [super init];
@@ -84,6 +103,41 @@
     }
 
     return minimumPowerLevel;
+}
+
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
+
+    JSONDictionary[@"users"] = _users;
+    JSONDictionary[@"usersDefault"] = @(_usersDefault);
+    JSONDictionary[@"ban"] = @(_ban);
+    JSONDictionary[@"kick"] = @(_kick);
+    JSONDictionary[@"redact"] = @(_redact);
+    JSONDictionary[@"invite"] = @(_invite);
+    JSONDictionary[@"events"] = _events;
+    JSONDictionary[@"eventsDefault"] = @(_eventsDefault);
+    JSONDictionary[@"stateDefault"] = @(_stateDefault);
+
+    return JSONDictionary;
+}
+
+#pragma mark - NSCopying
+- (id)copyWithZone:(NSZone *)zone
+{
+    MXRoomPowerLevels *roomPowerLevelsCopy = [[MXRoomPowerLevels allocWithZone:zone] init];
+
+    roomPowerLevelsCopy.users = [_users copyWithZone:zone];
+    roomPowerLevelsCopy.usersDefault = _usersDefault;
+    roomPowerLevelsCopy.ban = _ban;
+    roomPowerLevelsCopy.kick = _kick;
+    roomPowerLevelsCopy.redact = _redact;
+    roomPowerLevelsCopy.invite = _invite;
+    roomPowerLevelsCopy.events = [_events copyWithZone:zone];
+    roomPowerLevelsCopy.eventsDefault = _eventsDefault;
+    roomPowerLevelsCopy.stateDefault = _stateDefault;
+
+    return roomPowerLevelsCopy;
 }
 
 @end
