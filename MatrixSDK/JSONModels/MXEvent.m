@@ -209,9 +209,6 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
         JSONDictionary[@"state_key"] = _stateKey;
         JSONDictionary[@"origin_server_ts"] = @(_originServerTs);
         JSONDictionary[@"redacts"] = _redacts;
-
-        // XXX: Should not be under "undefined" in V2 ?
-        // Store them at the dictionary root as there are before
         JSONDictionary[@"prev_content"] = _prevContent;
         JSONDictionary[@"age"] = @(self.age);
         JSONDictionary[@"redacted_because"] = _redactedBecause;

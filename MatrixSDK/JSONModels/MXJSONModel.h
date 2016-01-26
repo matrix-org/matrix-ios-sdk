@@ -17,16 +17,21 @@
 #import <Foundation/Foundation.h>
 
 /**
- A class that inherits from `MXJSONModel` represents the response to a request to a Matrix home server.
+ A class that inherits from `MXJSONModel` represents the response to a request
+ to a Matrix home server.
  
- Matrix home server responses are a JSON string. The `MXJSONModel` class maps the members in the JSON object to the properties declared in the class that inherits from MXJSONModel
+ Matrix home server responses are JSON strings. `MXJSONModel` derived classes map
+ the members of the JSON object into their properties.
+ 
+ Some of the methods below are pure virtual methods in C++ definition and must be
+ implemented by the derived class if they are used by the code.
  */
 @interface MXJSONModel : NSObject <NSCopying, NSCoding>
 
 
 #pragma mark - Class methods
 /**
- Create a model instance from a JSON dictionary
+ Create a model instance from a JSON dictionary.
  
  @param JSONDictionary the JSON data.
  @return the newly created instance.
@@ -57,8 +62,9 @@
 - (NSDictionary *)JSONDictionary;
 
 /**
- This dictionary contains keys/values that have been in the JSON source object but not decoded.
- TODO: To implement to that app can manage custom events or paramaters.
+ This dictionary contains keys/values that have been in the JSON source object
+ but not decoded.
+ TODO: To implement so that app can manage custom events or paramaters.
  */
 - (NSDictionary *)others;
 
