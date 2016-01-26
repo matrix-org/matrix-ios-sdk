@@ -80,7 +80,20 @@ NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
 
 @implementation MXCredentials
 
--(instancetype)initWithHomeServer:(NSString *)homeServer userId:(NSString *)userId accessToken:(NSString *)accessToken
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXCredentials *credentials = [[MXCredentials alloc] init];
+    if (credentials)
+    {
+        credentials.homeServer = JSONDictionary[@"home_server"];
+        credentials.userId = JSONDictionary[@"user_id"];
+        credentials.accessToken = JSONDictionary[@"access_token"];
+    }
+
+    return credentials;
+}
+
+- (instancetype)initWithHomeServer:(NSString *)homeServer userId:(NSString *)userId accessToken:(NSString *)accessToken
 {
     self = [super init];
     if (self)
@@ -95,6 +108,18 @@ NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
 @end
 
 @implementation MXCreateRoomResponse
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXCreateRoomResponse *createRoomResponse = [[MXCreateRoomResponse alloc] init];
+    if (createRoomResponse)
+    {
+        createRoomResponse.roomId = JSONDictionary[@"room_id"];
+    }
+
+    return createRoomResponse;
+}
+
 @end
 
 @implementation MXPaginationResponse
