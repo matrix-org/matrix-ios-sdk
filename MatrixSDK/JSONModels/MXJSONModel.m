@@ -17,9 +17,6 @@
 #import "MXJSONModel.h"
 
 @implementation MXJSONModel
-{
-    NSMutableDictionary *others;
-}
 
 /**
  * The JSONKeyPathsByPropertyKey dictionnaries for all subclasses of MXJSONModel.
@@ -66,9 +63,6 @@ static NSMutableDictionary *JSONKeyPathsByPropertyKeyByClass;
     id model = [MTLJSONAdapter modelOfClass:[self class]
                      fromJSONDictionary:JSONDictionary
                                   error:nil];
-    
-    // Put JSON keys not defined as class properties under the others dict
-    [model setOthers:JSONDictionary];
     
     return model;
 }
@@ -171,28 +165,6 @@ static NSMutableDictionary *JSONKeyPathsByPropertyKeyByClass;
     {
         return JSONDictionary;
     }
-}
-
-- (void)setOthers:(NSDictionary *)JSONDictionary
-{
-    // Store non declared JSON keys into the others property
-    NSArray *modelJSONKeys = [[self.class JSONKeyPathsByPropertyKey] allValues];
-    for (NSString *key in JSONDictionary)
-    {
-        if (![modelJSONKeys containsObject:key])
-        {
-            if (nil == others)
-            {
-                others = [NSMutableDictionary dictionary];
-            }
-            others[key] = JSONDictionary[key];
-        }
-    }
-}
-
--(NSDictionary *)others
-{
-    return others;
 }
 
 - (NSDictionary *)originalDictionary

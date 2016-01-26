@@ -26,7 +26,8 @@
 @interface MXJSONModel : MTLModel <MTLJSONSerializing>
 
 /**
- This dictionary contains keys/values that have been in the JSON source object.
+ This dictionary contains keys/values that have been in the JSON source object but not decoded.
+ TODO: To implement to that app can manage custom events or paramaters.
  */
 - (NSDictionary *)others;
 

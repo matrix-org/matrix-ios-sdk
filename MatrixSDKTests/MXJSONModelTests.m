@@ -142,40 +142,6 @@
     XCTAssert(((NSDictionary*)cleanDict[@"dict1"][@"dict2"]).count == 0, @"JSON null value must be removed. Found: %@", cleanDict[@"dict1"][@"dict2"]);
 }
 
-- (void)testOthers
-{
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndThePublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
-        
-        [httpClient requestWithMethod:@"GET"
-                                 path:@"api/v1/publicRooms"
-                           parameters:nil
-                              success:^(NSDictionary *JSONResponse)
-         {
-             NSArray *chunk = JSONResponse[@"chunk"];
-             
-             // Convert the JSON in a MXJSONModel class with no property
-             // All values in the JSON must go into the MXJSONModel.others dictionary
-             MXJSONModelTestClass *nonTypedObject = [MXJSONModelTestClass modelFromJSON:chunk[0]];
-             XCTAssertNotNil(nonTypedObject.others);
-             
-             // Check expected keys for a MXPublicRoom JSON
-             NSDictionary *others = nonTypedObject.others;
-             XCTAssertNotNil(others[@"room_id"]);
-             XCTAssertNotNil(others[@"name"]);
-             XCTAssertNotNil(others[@"aliases"]);
-             
-             MXPublicRoom *publicRoom = [MXPublicRoom modelFromJSON:chunk[0]];
-             XCTAssertNil(publicRoom.others, @"Each field of a publicRooms JSON response should be declared as property in MXPublicRoom.");
-             
-             [expectation fulfill];
-             
-         } failure:^(NSError *error) {
-             XCTFail(@"The request should not fail - NSError: %@", error);
-             [expectation fulfill];
-         }];
-    }];
-}
-
 - (void)testNullValue
 {
     NSDictionary *JSONDict = @{
