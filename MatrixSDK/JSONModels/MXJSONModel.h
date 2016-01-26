@@ -32,11 +32,6 @@
 - (NSDictionary *)others;
 
 /**
- Rebuild the original JSON dictionary
- */
-- (NSDictionary *)originalDictionary;
-
-/**
  Create a model instance from a JSON dictionary
  
  @param JSONDictionary the JSON data.

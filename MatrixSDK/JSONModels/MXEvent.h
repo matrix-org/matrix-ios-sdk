@@ -241,9 +241,14 @@ Contains the fully-qualified ID of the user who sent this event (deprecated sinc
 
 /**
  Returns all MXEvent properties into a dictionary.
- Unlike [MXJSONModel originalDictionary], it returns also properties computed by the SDK.
+ Unlike [self originalDictionary], it returns also properties computed by the SDK.
  */
 - (NSDictionary *)dictionary;
+
+/**
+ Rebuild the original JSON dictionary
+ */
+- (NSDictionary *)originalDictionary;
 
 /**
  Returns the event IDs for which a read receipt is defined in this event.

@@ -198,18 +198,40 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 
 - (NSDictionary *)originalDictionary
 {
-    NSMutableDictionary *originalDictionary = [NSMutableDictionary dictionaryWithDictionary:[super originalDictionary]];
+    NSMutableDictionary *originalDictionary = [NSMutableDictionary dictionary];
+    if (originalDictionary)
+    {
+        originalDictionary[@"event_id"] = _eventId;
+        originalDictionary[@"type"] = _type;
+        originalDictionary[@"room_id"] = _roomId;
+        originalDictionary[@"user_id"] = _userId;
+        originalDictionary[@"content"] = _content;
+        originalDictionary[@"state_key"] = _stateKey;
+        originalDictionary[@"origin_server_ts"] = @(_originServerTs);
+        originalDictionary[@"redacts"] = _redacts;
 
-    // Remove properties that are created by the SDK
-    [originalDictionary removeObjectForKey:@"age_local_ts"];
+        // XXX: Should not be under "undefined" in V2 ?
+        // Store them at the dictionary root as there are before
+        originalDictionary[@"prev_content"] = _prevContent;
+        originalDictionary[@"age"] = @(self.age);
+        originalDictionary[@"redacted_because"] = _redactedBecause;
+
+        if (_inviteRoomState)
+        {
+            originalDictionary[@"invite_room_state"] = _inviteRoomState;
+        }
+    }
 
     return originalDictionary;
 }
 
 - (NSDictionary *)dictionary
 {
-    // Return originalDictionary as is. It will contain the useful age_local_ts info.
-    return [super originalDictionary];
+    // Return originalDictionary plus the useful age_local_ts info.
+    NSMutableDictionary *dictionary = [NSMutableDictionary dictionaryWithDictionary:[self originalDictionary]];
+    dictionary[@"age_local_ts"] = @(_ageLocalTs);
+
+    return dictionary;
 }
 
 - (BOOL)isState
