@@ -23,14 +23,10 @@
  
  Matrix home server responses are a JSON string. The `MXJSONModel` class maps the members in the JSON object to the properties declared in the class that inherits from MXJSONModel
  */
-@interface MXJSONModel : MTLModel <MTLJSONSerializing>
+@interface MXJSONModel : NSObject <NSCopying, NSCoding>
 
-/**
- This dictionary contains keys/values that have been in the JSON source object but not decoded.
- TODO: To implement to that app can manage custom events or paramaters.
- */
-- (NSDictionary *)others;
 
+#pragma mark - Class methods
 /**
  Create a model instance from a JSON dictionary
  
@@ -54,5 +50,18 @@
  @return JSON data without null values
  */
 + (NSDictionary *)removeNullValuesInJSON:(NSDictionary *)JSONDictionary;
+
+
+#pragma mark - Instance methods
+/**
+ Rebuild the original JSON dictionary
+ */
+- (NSDictionary *)JSONDictionary;
+
+/**
+ This dictionary contains keys/values that have been in the JSON source object but not decoded.
+ TODO: To implement to that app can manage custom events or paramaters.
+ */
+- (NSDictionary *)others;
 
 @end

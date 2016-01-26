@@ -196,42 +196,33 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     return age;
 }
 
-- (NSDictionary *)originalDictionary
+- (NSDictionary *)JSONDictionary
 {
-    NSMutableDictionary *originalDictionary = [NSMutableDictionary dictionary];
-    if (originalDictionary)
+    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
+    if (JSONDictionary)
     {
-        originalDictionary[@"event_id"] = _eventId;
-        originalDictionary[@"type"] = _type;
-        originalDictionary[@"room_id"] = _roomId;
-        originalDictionary[@"user_id"] = _userId;
-        originalDictionary[@"content"] = _content;
-        originalDictionary[@"state_key"] = _stateKey;
-        originalDictionary[@"origin_server_ts"] = @(_originServerTs);
-        originalDictionary[@"redacts"] = _redacts;
+        JSONDictionary[@"event_id"] = _eventId;
+        JSONDictionary[@"type"] = _type;
+        JSONDictionary[@"room_id"] = _roomId;
+        JSONDictionary[@"user_id"] = _userId;
+        JSONDictionary[@"content"] = _content;
+        JSONDictionary[@"state_key"] = _stateKey;
+        JSONDictionary[@"origin_server_ts"] = @(_originServerTs);
+        JSONDictionary[@"redacts"] = _redacts;
 
         // XXX: Should not be under "undefined" in V2 ?
         // Store them at the dictionary root as there are before
-        originalDictionary[@"prev_content"] = _prevContent;
-        originalDictionary[@"age"] = @(self.age);
-        originalDictionary[@"redacted_because"] = _redactedBecause;
+        JSONDictionary[@"prev_content"] = _prevContent;
+        JSONDictionary[@"age"] = @(self.age);
+        JSONDictionary[@"redacted_because"] = _redactedBecause;
 
         if (_inviteRoomState)
         {
-            originalDictionary[@"invite_room_state"] = _inviteRoomState;
+            JSONDictionary[@"invite_room_state"] = _inviteRoomState;
         }
     }
 
-    return originalDictionary;
-}
-
-- (NSDictionary *)dictionary
-{
-    // Return originalDictionary plus the useful age_local_ts info.
-    NSMutableDictionary *dictionary = [NSMutableDictionary dictionaryWithDictionary:[self originalDictionary]];
-    dictionary[@"age_local_ts"] = @(_ageLocalTs);
-
-    return dictionary;
+    return JSONDictionary;
 }
 
 - (BOOL)isState
@@ -403,7 +394,7 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 #pragma mark - private
 - (NSMutableDictionary*)filterInEventWithKeys:(NSArray*)keys
 {
-    NSDictionary *originalDict = self.originalDictionary;
+    NSDictionary *originalDict = self.JSONDictionary;
     NSMutableDictionary *filteredEvent = [NSMutableDictionary dictionary];
     
     for (NSString* key in keys)

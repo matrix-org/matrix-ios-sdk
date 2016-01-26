@@ -152,14 +152,14 @@
     }];
 }
 
-- (void)testOriginalDictionary
+- (void)testJSONDictionary
 {
     [self doTestWithMXEvents:^(MXRestClient *bobRestClient, NSString *roomId, NSArray *events, XCTestExpectation *expectation) {
 
         for (MXEvent *event in events)
         {
-            XCTAssertNil([event.originalDictionary objectForKey:@"event_type"], @"eventType is an information added by the SDK not sent by the home server");
-            XCTAssertNil([event.originalDictionary objectForKey:@"age_local_ts"], @"ageLocalTs is an information added by the SDK not sent by the home server");
+            XCTAssertNil([event.JSONDictionary objectForKey:@"event_type"], @"eventType is an information added by the SDK not sent by the home server");
+            XCTAssertNil([event.JSONDictionary objectForKey:@"age_local_ts"], @"ageLocalTs is an information added by the SDK not sent by the home server");
         }
 
         [expectation fulfill];
