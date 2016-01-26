@@ -325,30 +325,34 @@ NSString *const kMXPushRuleConditionStringRoomMemberCount       = @"room_member_
 
 @implementation MXPushRule
 
-+ (NSDictionary *)JSONKeyPathsByPropertyKey {
++ (NSArray *)modelsFromJSON:(NSArray *)JSONDictionaries withScope:(NSString *)scope andKind:(MXPushRuleKind)kind
+{
+    NSArray <MXPushRule*> *pushRules = [self modelsFromJSON:JSONDictionaries];
 
-    // The home server use "default" as key name but `default` is a reserved word
-    // in Objective C and cannot be used as a property name. So, it is replaced
-    // by `isDefault` in the SDK.
+    for (MXPushRule *pushRule in pushRules)
+    {
+        pushRule.scope = scope;
+        pushRule.kind = kind;
+    }
 
-    // Override the default JSON keys/ObjC properties mapping to match this change.
-    NSMutableDictionary *JSONKeyPathsByPropertyKey = [NSMutableDictionary dictionaryWithDictionary:[super JSONKeyPathsByPropertyKey]];
-    JSONKeyPathsByPropertyKey[@"isDefault"] = @"default";
-    return JSONKeyPathsByPropertyKey;
+    return pushRules;
 }
 
-- (instancetype)initWithDictionary:(NSDictionary *)dictionaryValue error:(NSError *__autoreleasing *)error
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    // Do the JSON -> class instance properties mapping
-    self = [super initWithDictionary:dictionaryValue error:error];
-    if (self)
+    MXPushRule *pushRule = [[MXPushRule alloc] init];
+    if (pushRule)
     {
-        // Decode actions
-        NSMutableArray *actions = [NSMutableArray arrayWithCapacity:_actions.count];
-        for (NSUInteger i = 0; i < _actions.count; i++)
-        {
-            NSObject *rawAction = _actions[i];
+        pushRule.ruleId = JSONDictionary[@"rule_id"];
+        pushRule.isDefault = [((NSNumber*)JSONDictionary[@"default"]) boolValue];
+        pushRule.enabled = [((NSNumber*)JSONDictionary[@"enabled"]) boolValue];
+        pushRule.pattern = JSONDictionary[@"pattern"];
+        pushRule.conditions = [MXPushRuleCondition modelsFromJSON:JSONDictionary[@"conditions"]];
 
+        // Decode actions
+        NSMutableArray *actions = [NSMutableArray array];
+        for (NSObject *rawAction in JSONDictionary[@"actions"])
+        {
             // According to the push rules specification
             // The action field can a string or dictionary, translate both into
             // a MXPushRuleAction object
@@ -387,17 +391,10 @@ NSString *const kMXPushRuleConditionStringRoomMemberCount       = @"room_member_
             [actions addObject:action];
         }
 
-        _actions = actions;
-
-        // Do not use the conditionsJSONTransformer Mantle method technique here
-        // because it flushes any JSON keys that are not declared as property.
-        // [MXJSONModel modelsFromJSON] will store them into its `others` dict property.
-        // And MXPushRuleCondition.parameters will redirect to its MXPushRuleCondition.others.
-        // This is how MXPushRuleCondition parameters are stored.
-        _conditions = [MXPushRuleCondition modelsFromJSON:dictionaryValue[@"conditions"]];
+        pushRule.actions = actions;
     }
 
-    return self;
+    return pushRule;
 }
 
 @end
@@ -487,114 +484,39 @@ NSString *const kMXPushRuleConditionStringRoomMemberCount       = @"room_member_
 
 @implementation MXPushRulesSet
 
-- (instancetype)initWithDictionary:(NSDictionary *)dictionaryValue error:(NSError *__autoreleasing *)error
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary withScope:(NSString*)scope
 {
-    // Do the JSON -> class instance properties mapping
-    self = [super initWithDictionary:dictionaryValue error:error];
-    if (self)
+    MXPushRulesSet *pushRulesSet = [[MXPushRulesSet alloc] init];
+    if (pushRulesSet)
     {
-        // Add the categories the rules belong to
-        for (MXPushRule *rule in _override)
-        {
-            rule.kind = MXPushRuleKindOverride;
-        }
-        for (MXPushRule *rule in _content)
-        {
-            rule.kind = MXPushRuleKindContent;
-        }
-        for (MXPushRule *rule in _room)
-        {
-            rule.kind = MXPushRuleKindRoom;
-        }
-        for (MXPushRule *rule in _sender)
-        {
-            rule.kind = MXPushRuleKindSender;
-        }
-        for (MXPushRule *rule in _underride)
-        {
-            rule.kind = MXPushRuleKindUnderride;
-        }
+        pushRulesSet.override = [MXPushRule modelsFromJSON:JSONDictionary[@"override"] withScope:scope andKind:MXPushRuleKindOverride];
+        pushRulesSet.content = [MXPushRule modelsFromJSON:JSONDictionary[@"content"] withScope:scope andKind:MXPushRuleKindContent];
+        pushRulesSet.room = [MXPushRule modelsFromJSON:JSONDictionary[@"room"] withScope:scope andKind:MXPushRuleKindRoom];
+        pushRulesSet.sender = [MXPushRule modelsFromJSON:JSONDictionary[@"sender"] withScope:scope andKind:MXPushRuleKindSender];
+        pushRulesSet.underride = [MXPushRule modelsFromJSON:JSONDictionary[@"underride"] withScope:scope andKind:MXPushRuleKindUnderride];
     }
 
-    return self;
-}
-
-+ (NSValueTransformer *)overrideJSONTransformer
-{
-    return [MTLJSONAdapter arrayTransformerWithModelClass:MXPushRule.class];
-}
-
-+ (NSValueTransformer *)contentJSONTransformer
-{
-    return [MTLJSONAdapter arrayTransformerWithModelClass:MXPushRule.class];
-}
-
-+ (NSValueTransformer *)roomJSONTransformer
-{
-    return [MTLJSONAdapter arrayTransformerWithModelClass:MXPushRule.class];
-}
-
-+ (NSValueTransformer *)senderJSONTransformer
-{
-    return [MTLJSONAdapter arrayTransformerWithModelClass:MXPushRule.class];
-}
-
-+ (NSValueTransformer *)underrideJSONTransformer
-{
-    return [MTLJSONAdapter arrayTransformerWithModelClass:MXPushRule.class];
+    return pushRulesSet;
 }
 
 @end
 
-NSString *const kMXPushRuleScopeStringGlobal           = @"global";
-NSString *const kMXPushRuleScopeStringDevice           = @"device";
-
 @implementation MXPushRulesResponse
 
-- (instancetype)initWithDictionary:(NSDictionary *)dictionaryValue error:(NSError *__autoreleasing *)error
+NSString *const kMXPushRuleScopeStringGlobal = @"global";
+NSString *const kMXPushRuleScopeStringDevice = @"device";
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    // Do the JSON -> class instance properties mapping
-    self = [super initWithDictionary:dictionaryValue error:error];
-    if (self)
+    MXPushRulesResponse *pushRulesResponse = [[MXPushRulesResponse alloc] init];
+    if (pushRulesResponse)
     {
-        // Add the scope for all retrieved rules
-        for (MXPushRule *rule in _global.override)
-        {
-            rule.scope = kMXPushRuleScopeStringGlobal;
-        }
-        for (MXPushRule *rule in _global.content)
-        {
-            rule.scope = kMXPushRuleScopeStringGlobal;
-        }
-        for (MXPushRule *rule in _global.room)
-        {
-            rule.scope = kMXPushRuleScopeStringGlobal;
-        }
-        for (MXPushRule *rule in _global.sender)
-        {
-            rule.scope = kMXPushRuleScopeStringGlobal;
-        }
-        for (MXPushRule *rule in _global.underride)
-        {
-            rule.scope = kMXPushRuleScopeStringGlobal;
-        }
-        
+        pushRulesResponse.global = [MXPushRulesSet modelFromJSON:JSONDictionary[kMXPushRuleScopeStringGlobal] withScope:kMXPushRuleScopeStringGlobal];
+
         // TODO support device rules
     }
-    
-    return self;
-}
 
-/*
-+ (NSValueTransformer *)deviceJSONTransformer 
- {
-    @TODO: This seems to be a dictionary where keys are profile_tag and values, MXPushRulesSet.
-}
-*/
-
-+ (NSValueTransformer *)globalJSONTransformer
-{
-    return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXPushRulesSet.class];
+    return pushRulesResponse;
 }
 
 @end
