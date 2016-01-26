@@ -916,41 +916,121 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 #pragma mark -
 
 @implementation MXCallSessionDescription
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXCallSessionDescription *callSessionDescription = [[MXCallSessionDescription alloc] init];
+    if (callSessionDescription)
+    {
+        callSessionDescription.type = JSONDictionary[@"type"];
+        callSessionDescription.sdp = JSONDictionary[@"sdp"];
+    }
+
+    return callSessionDescription;
+}
+
 @end
 
 @implementation MXCallInviteEventContent
 
-+ (NSValueTransformer *)offerJSONTransformer
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXCallSessionDescription.class];
+    MXCallInviteEventContent *callInviteEventContent = [[MXCallInviteEventContent alloc] init];
+    if (callInviteEventContent)
+    {
+        callInviteEventContent.callId = JSONDictionary[@"call_id"];
+        callInviteEventContent.offer = [MXCallSessionDescription modelFromJSON:JSONDictionary[@"offer"]];
+        callInviteEventContent.version = [((NSNumber*)JSONDictionary[@"version"]) unsignedIntegerValue];
+        callInviteEventContent.lifetime = [((NSNumber*)JSONDictionary[@"lifetime"]) unsignedIntegerValue];
+    }
+
+    return callInviteEventContent;
 }
 
 @end
 
 @implementation MXCallCandidate
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXCallCandidate *callCandidate = [[MXCallCandidate alloc] init];
+    if (callCandidate)
+    {
+        callCandidate.sdpMid = JSONDictionary[@"sdpMid"];
+        callCandidate.sdpMLineIndex = [((NSNumber*)JSONDictionary[@"sdpMLineIndex"]) unsignedIntegerValue];
+        callCandidate.candidate = JSONDictionary[@"candidate"];
+    }
+
+    return callCandidate;
+}
+
 @end
 
 @implementation MXCallCandidatesEventContent
 
-+ (NSValueTransformer *)candidateJSONTransformer
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    return [MTLJSONAdapter arrayTransformerWithModelClass:MXCallCandidate.class];
+    MXCallCandidatesEventContent *callCandidatesEventContent = [[MXCallCandidatesEventContent alloc] init];
+    if (callCandidatesEventContent)
+    {
+        callCandidatesEventContent.callId = JSONDictionary[@"call_id"];
+        callCandidatesEventContent.version = [((NSNumber*)JSONDictionary[@"version"]) unsignedIntegerValue];
+        callCandidatesEventContent.candidates = [MXCallCandidate modelsFromJSON:JSONDictionary[@"candidates"]];
+    }
+
+    return callCandidatesEventContent;
 }
+
 @end
 
 @implementation MXCallAnswerEventContent
 
-+ (NSValueTransformer *)answerJSONTransformer
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    return [MTLJSONAdapter dictionaryTransformerWithModelClass:MXCallSessionDescription.class];
+    MXCallAnswerEventContent *callAnswerEventContent = [[MXCallAnswerEventContent alloc] init];
+    if (callAnswerEventContent)
+    {
+        callAnswerEventContent.callId = JSONDictionary[@"call_id"];
+        callAnswerEventContent.version = [((NSNumber*)JSONDictionary[@"version"]) unsignedIntegerValue];
+        callAnswerEventContent.answer = [MXCallSessionDescription modelFromJSON:JSONDictionary[@"answer"]];
+    }
+
+    return callAnswerEventContent;
 }
 
 @end
 
 @implementation MXCallHangupEventContent
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXCallHangupEventContent *callHangupEventContent = [[MXCallHangupEventContent alloc] init];
+    if (callHangupEventContent)
+    {
+        callHangupEventContent.callId = JSONDictionary[@"call_id"];
+        callHangupEventContent.version = [((NSNumber*)JSONDictionary[@"version"]) unsignedIntegerValue];
+    }
+
+    return callHangupEventContent;
+}
+
 @end
 
 @implementation MXTurnServerResponse
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXTurnServerResponse *turnServerResponse = [[MXTurnServerResponse alloc] init];
+    if (turnServerResponse)
+    {
+        turnServerResponse.username = JSONDictionary[@"username"];
+        turnServerResponse.password = JSONDictionary[@"password"];
+        turnServerResponse.uris = JSONDictionary[@"uris"];
+        turnServerResponse.ttl = [((NSNumber*)JSONDictionary[@"ttl"]) unsignedIntegerValue];
+    }
+
+    return turnServerResponse;
+}
 
 - (instancetype)init
 {
