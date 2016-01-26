@@ -16,8 +16,6 @@
 
 #import <Foundation/Foundation.h>
 
-#import <Mantle/Mantle.h>
-
 /**
  A class that inherits from `MXJSONModel` represents the response to a request to a Matrix home server.
  
