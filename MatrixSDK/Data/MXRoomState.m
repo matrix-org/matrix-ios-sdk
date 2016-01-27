@@ -455,7 +455,8 @@
             NSArray *array = powerLevels.users.allValues;
             for (NSNumber *powerLevel in array)
             {
-                NSUInteger level = [powerLevel unsignedIntegerValue];
+                NSUInteger level = 0;
+                MXJSONModelSetUInteger(level, powerLevel);
                 if (level > maxPowerLevel)
                 {
                     maxPowerLevel = level;
