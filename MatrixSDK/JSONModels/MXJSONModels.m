@@ -82,8 +82,8 @@ NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
     MXLoginFlow *loginFlow = [[MXLoginFlow alloc] init];
     if (loginFlow)
     {
-        loginFlow.type = JSONDictionary[@"type"];
-        loginFlow.stages = JSONDictionary[@"stages"];
+        MXJSONModelSetString(loginFlow.type, JSONDictionary[@"type"]);
+        MXJSONModelSetArray(loginFlow.stages, JSONDictionary[@"stages"]);
     }
     
     return loginFlow;
