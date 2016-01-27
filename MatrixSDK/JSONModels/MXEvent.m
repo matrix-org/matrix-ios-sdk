@@ -204,6 +204,7 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
         JSONDictionary[@"event_id"] = _eventId;
         JSONDictionary[@"type"] = _type;
         JSONDictionary[@"room_id"] = _roomId;
+        JSONDictionary[@"sender"] = _sender;
         JSONDictionary[@"user_id"] = _userId;
         JSONDictionary[@"content"] = _content;
         JSONDictionary[@"state_key"] = _stateKey;
