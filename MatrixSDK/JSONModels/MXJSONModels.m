@@ -76,6 +76,19 @@ NSString *const kMXLoginFlowTypeEmailIdentity = @"m.login.email.identity";
 NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
 
 @implementation MXLoginFlow
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXLoginFlow *loginFlow = [[MXLoginFlow alloc] init];
+    if (loginFlow)
+    {
+        loginFlow.type = JSONDictionary[@"type"];
+        loginFlow.stages = JSONDictionary[@"stages"];
+    }
+    
+    return loginFlow;
+}
+
 @end
 
 @implementation MXCredentials
