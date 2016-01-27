@@ -91,44 +91,44 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     MXEvent *event = [[MXEvent alloc] init];
     if (event)
     {
-        event.eventId = JSONDictionary[@"event_id"];
-        event.type = JSONDictionary[@"type"];
-        event.roomId = JSONDictionary[@"room_id"];
-        event.sender = JSONDictionary[@"sender"];
-        event.userId = JSONDictionary[@"user_id"];
-        event.content = JSONDictionary[@"content"];
-        event.stateKey = JSONDictionary[@"state_key"];
-        event.originServerTs = [((NSNumber*)JSONDictionary[@"origin_server_ts"]) unsignedLongLongValue];
+        MXJSONModelSetString(event.eventId, JSONDictionary[@"event_id"]);
+        MXJSONModelSetString(event.type, JSONDictionary[@"type"]);
+        MXJSONModelSetString(event.roomId, JSONDictionary[@"room_id"]);
+        MXJSONModelSetString(event.sender, JSONDictionary[@"sender"]);
+        MXJSONModelSetString(event.userId, JSONDictionary[@"user_id"]);
+        MXJSONModelSetDictionary(event.content, JSONDictionary[@"content"]);
+        MXJSONModelSetString(event.stateKey, JSONDictionary[@"state_key"]);
+        MXJSONModelSetUInt64(event.originServerTs, JSONDictionary[@"origin_server_ts"]);
         
-        event.redacts = JSONDictionary[@"redacts"];
+        MXJSONModelSetString(event.redacts, JSONDictionary[@"redacts"]);
         
-        event.prevContent =  JSONDictionary[@"prev_content"];
+        MXJSONModelSetDictionary(event.prevContent, JSONDictionary[@"prev_content"]);
         // 'prev_content' has been moved under unsigned in some server responses (see sync API).
         if (!event.prevContent)
         {
-            event.prevContent = JSONDictionary[@"unsigned"][@"prev_content"];
+            MXJSONModelSetDictionary(event.prevContent, JSONDictionary[@"unsigned"][@"prev_content"]);
         }
         
         // 'age' has been moved under unsigned.
         if (JSONDictionary[@"age"])
         {
-            event.age = [((NSNumber*)JSONDictionary[@"age"]) unsignedIntegerValue];
+            MXJSONModelSetUInteger(event.age, JSONDictionary[@"age"]);
         }
         else if (JSONDictionary[@"unsigned"][@"age"])
         {
-            event.age = [((NSNumber*)JSONDictionary[@"unsigned"][@"age"]) unsignedIntegerValue];
+            MXJSONModelSetUInteger(event.age, JSONDictionary[@"unsigned"][@"age"]);
         }
         
-        event.redactedBecause = JSONDictionary[@"redacted_because"];
+        MXJSONModelSetDictionary(event.redactedBecause, JSONDictionary[@"redacted_because"]);
         if (!event.redactedBecause)
         {
             // 'redacted_because' has been moved under unsigned.
-            event.redactedBecause = JSONDictionary[@"unsigned"][@"redacted_because"];
+            MXJSONModelSetDictionary(event.redactedBecause, JSONDictionary[@"unsigned"][@"redacted_because"]);
         }
         
         if (JSONDictionary[@"invite_room_state"])
         {
-            event.inviteRoomState = [MXEvent modelsFromJSON:JSONDictionary[@"invite_room_state"]];
+            MXJSONModelSetMXJSONModelArray(event.inviteRoomState, MXEvent, JSONDictionary[@"invite_room_state"]);
         }
 
         [event finalise];

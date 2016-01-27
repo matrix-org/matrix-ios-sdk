@@ -25,15 +25,15 @@
     MXRoomPowerLevels *roomPowerLevels = [[MXRoomPowerLevels alloc] init];
     if (roomPowerLevels)
     {
-        roomPowerLevels.users = JSONDictionary[@"users"];
-        roomPowerLevels.usersDefault = [(NSNumber*)JSONDictionary[@"users_default"] unsignedIntegerValue];
-        roomPowerLevels.ban = [(NSNumber*)JSONDictionary[@"ban"] unsignedIntegerValue];
-        roomPowerLevels.kick = [(NSNumber*)JSONDictionary[@"kick"] unsignedIntegerValue];
-        roomPowerLevels.redact = [(NSNumber*)JSONDictionary[@"redact"] unsignedIntegerValue];
-        roomPowerLevels.invite = [(NSNumber*)JSONDictionary[@"invite"] unsignedIntegerValue];
-        roomPowerLevels.events = JSONDictionary[@"events"];
-        roomPowerLevels.eventsDefault = [(NSNumber*)JSONDictionary[@"events_default"] unsignedIntegerValue];
-        roomPowerLevels.stateDefault = [(NSNumber*)JSONDictionary[@"state_default"] unsignedIntegerValue];
+        MXJSONModelSetDictionary(roomPowerLevels.users, JSONDictionary[@"users"]);
+        MXJSONModelSetUInteger(roomPowerLevels.usersDefault, JSONDictionary[@"users_default"]);
+        MXJSONModelSetUInteger(roomPowerLevels.ban, JSONDictionary[@"ban"]);
+        MXJSONModelSetUInteger(roomPowerLevels.kick, JSONDictionary[@"kick"]);
+        MXJSONModelSetUInteger(roomPowerLevels.redact, JSONDictionary[@"redact"]);
+        MXJSONModelSetUInteger(roomPowerLevels.invite, JSONDictionary[@"invite"]);
+        MXJSONModelSetDictionary(roomPowerLevels.events, JSONDictionary[@"events"]);
+        MXJSONModelSetUInteger(roomPowerLevels.eventsDefault, JSONDictionary[@"events_default"]);
+        MXJSONModelSetUInteger(roomPowerLevels.stateDefault, JSONDictionary[@"state_default"]);
     }
     return roomPowerLevels;
 }
