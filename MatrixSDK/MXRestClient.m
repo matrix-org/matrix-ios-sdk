@@ -2029,7 +2029,7 @@ MXAuthAction;
                                              dispatch_async(processingQueue, ^{
                                                  
                                                  NSArray *publicRooms;
-                                                 MXJSONModelSetMXJSONModel(publicRooms, MXPublicRoom, JSONResponse[@"chunk"]);
+                                                 MXJSONModelSetMXJSONModelArray(publicRooms, MXPublicRoom, JSONResponse[@"chunk"]);
                                                  
                                                  dispatch_async(dispatch_get_main_queue(), ^{
                                                      

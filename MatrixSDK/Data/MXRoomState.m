@@ -207,7 +207,7 @@
     MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomAliases];
     if (event && [self contentOfEvent:event])
     {
-        MXJSONModelSetString(aliases, [self contentOfEvent:event][@"aliases"]);
+        MXJSONModelSetArray(aliases, [self contentOfEvent:event][@"aliases"]);
         aliases = [aliases copy];
     }
     return aliases;

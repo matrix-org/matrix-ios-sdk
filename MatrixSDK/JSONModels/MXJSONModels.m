@@ -372,7 +372,7 @@ NSString *const kMXPushRuleConditionStringRoomMemberCount       = @"room_member_
         MXJSONModelSetString(pushRule.ruleId, JSONDictionary[@"rule_id"]);
         MXJSONModelSetBoolean(pushRule.isDefault, JSONDictionary[@"default"]);
         MXJSONModelSetBoolean(pushRule.enabled, JSONDictionary[@"enabled"]);
-        MXJSONModelSetDictionary(pushRule.pattern, JSONDictionary[@"pattern"]);
+        MXJSONModelSetString(pushRule.pattern, JSONDictionary[@"pattern"]);
         MXJSONModelSetMXJSONModelArray(pushRule.conditions, MXPushRuleCondition, JSONDictionary[@"conditions"]);
 
         // Decode actions
@@ -446,7 +446,7 @@ NSString *const kMXPushRuleConditionStringRoomMemberCount       = @"room_member_
     MXPushRuleCondition *condition = [[MXPushRuleCondition alloc] init];
     if (condition)
     {
-        MXJSONModelSetDictionary(condition.kind, JSONDictionary[@"kind"]);
+        MXJSONModelSetString(condition.kind, JSONDictionary[@"kind"]);
 
         // MXPushRuleCondition.parameters are all other JSON objects which keys is not `kind`
         NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:JSONDictionary];
