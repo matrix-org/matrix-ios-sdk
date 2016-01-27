@@ -147,4 +147,4 @@
 /**
  Log a validation error.
  */
-#define MXJSONModelSetLogError(class, value)   NSAssert(NO, @"[MXJSONModelSet] Error: Unexpected type for parsing at %@:%d. Expected: %@. Got: %@", @(__FILE__).lastPathComponent, __LINE__, class, value)
+#define MXJSONModelSetLogError(theClass, value)   NSAssert(NO, @"[MXJSONModelSet] Error: Unexpected type for parsing at %@:%d. Expected: %@. Got: %@ (%@)", @(__FILE__).lastPathComponent, __LINE__, theClass, value, NSStringFromClass([value class]))
