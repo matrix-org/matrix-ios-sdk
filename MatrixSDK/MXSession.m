@@ -312,8 +312,13 @@ typedef void (^MXOnResumeDone)();
                 {
                     for (MXEvent *userPresenceEvent in userPresenceEvents)
                     {
-                        MXUser *user = [self getOrCreateUser:userPresenceEvent.content[@"user_id"]];
-                        [user updateWithPresenceEvent:userPresenceEvent];
+                        NSString *userId;
+                        MXJSONModelSetString(userId, userPresenceEvent.content[@"user_id"]);
+                        if (userId)
+                        {
+                            MXUser *user = [self getOrCreateUser:userId];
+                            [user updateWithPresenceEvent:userPresenceEvent];
+                        }
                     }
                 }
 

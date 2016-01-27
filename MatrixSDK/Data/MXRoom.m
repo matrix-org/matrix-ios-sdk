@@ -466,7 +466,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     {
         // Typing notifications events are not room messages nor room state events
         // They are just volatile information
-        _typingUsers = event.content[@"user_ids"];
+        MXJSONModelSetArray(_typingUsers, event.content[@"user_ids"]);
 
         // Notify listeners
         [self notifyListeners:event direction:MXEventDirectionForwards];

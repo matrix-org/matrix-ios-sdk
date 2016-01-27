@@ -57,7 +57,8 @@
     }
 
     BOOL isSatisfied = NO;
-    NSString *is = condition.parameters[@"is"];
+    NSString *is;
+    MXJSONModelSetString(is, condition.parameters[@"is"]);
     if (is)
     {
         // Extract the operand and the value from the is parameter

@@ -58,7 +58,8 @@
     // By default, use usersDefault
     NSUInteger userPowerLevel = _usersDefault;
 
-    NSNumber *powerLevel = _users[userId];
+    NSNumber *powerLevel;
+    MXJSONModelSetNumber(powerLevel, _users[userId]);
     if (powerLevel)
     {
         userPowerLevel = [powerLevel unsignedIntegerValue];
@@ -91,7 +92,8 @@
 {
     NSUInteger minimumPowerLevel;
 
-    NSNumber *powerLevel = _events[eventTypeString];
+    NSNumber *powerLevel;
+    MXJSONModelSetNumber(powerLevel, _events[eventTypeString]);
     if (powerLevel)
     {
         minimumPowerLevel = [powerLevel unsignedIntegerValue];
