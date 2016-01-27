@@ -80,7 +80,12 @@
  @param class the expected class.
  @param value the value to set.
  */
-#define MXJSONModelSet(var, class, value)       if ([value isKindOfClass:class]) var = value
+#define MXJSONModelSet(var, class, value) \
+    if (value) \
+    { \
+        if ([value isKindOfClass:class]) var = value; \
+        else MXJSONModelSetLogError(class, value);  \
+    }
 
 /**
  Typed declinations of MXJSONModelSet.
@@ -99,10 +104,17 @@
  @param var the variable to set the value to.
  @param value the value to set.
  */
-#define MXJSONModelSetBoolean(var, value)       if ([value isKindOfClass:NSNumber.class]) var = [((NSNumber*)value) boolValue]
-#define MXJSONModelSetInteger(var, value)       if ([value isKindOfClass:NSNumber.class]) var = [((NSNumber*)value) integerValue]
-#define MXJSONModelSetUInteger(var, value)      if ([value isKindOfClass:NSNumber.class]) var = [((NSNumber*)value) unsignedIntegerValue]
-#define MXJSONModelSetUInt64(var, value)        if ([value isKindOfClass:NSNumber.class]) var = [((NSNumber*)value) unsignedLongLongValue]
+#define MXJSONModelSetBoolean(var, value)       MXJSONModelSetNumberValue(var, boolValue, value)
+#define MXJSONModelSetInteger(var, value)       MXJSONModelSetNumberValue(var, integerValue, value)
+#define MXJSONModelSetUInteger(var, value)      MXJSONModelSetNumberValue(var, unsignedIntegerValue, value)
+#define MXJSONModelSetUInt64(var, value)        MXJSONModelSetNumberValue(var, unsignedLongLongValue, value)
+
+#define MXJSONModelSetNumberValue(var, method, value)  \
+    if (value) \
+    { \
+        if ([value isKindOfClass:NSNumber.class]) var = [((NSNumber*)value) method]; \
+        else MXJSONModelSetLogError(NSNumber.class, value);  \
+    }
 
 /**
  Validate, decode the MXJSONModel object in 'value', then set it into the variable.
@@ -112,7 +124,11 @@
  @param value the value to decode, then set.
  */
 #define MXJSONModelSetMXJSONModel(var, MXJSONModelClass, value) \
-    if ([value isKindOfClass:NSDictionary.class]) var = [MXJSONModelClass modelFromJSON:value]
+    if (value) \
+    { \
+        if ([value isKindOfClass:NSDictionary.class]) var = [MXJSONModelClass modelFromJSON:value]; \
+        else MXJSONModelSetLogError(NSDictionary.class, value);  \
+    }
 
 /**
  Same as 'MXJSONModelSetMXJSONModel' but for array of MXJSONModel objects.
@@ -122,5 +138,13 @@
  @param values the values to decode, then set.
  */
 #define MXJSONModelSetMXJSONModelArray(var, MXJSONModelClass, values) \
-    if ([values isKindOfClass:NSArray.class]) var = [MXJSONModelClass modelsFromJSON:values]
+    if (values) \
+    { \
+        if ([values isKindOfClass:NSArray.class]) var = [MXJSONModelClass modelsFromJSON:values]; \
+        else MXJSONModelSetLogError(NSArray.class, values);  \
+    }
 
+/**
+ Log a validation error.
+ */
+#define MXJSONModelSetLogError(class, value)   NSAssert(NO, @"[MXJSONModelSet] Error: Unexpected type for parsing at %@:%d. Expected: %@. Got: %@", @(__FILE__).lastPathComponent, __LINE__, class, value)
