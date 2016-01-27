@@ -196,20 +196,30 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     return age;
 }
 
-- (NSDictionary *)originalDictionary
+- (NSDictionary *)JSONDictionary
 {
-    NSMutableDictionary *originalDictionary = [NSMutableDictionary dictionaryWithDictionary:[super originalDictionary]];
+    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
+    if (JSONDictionary)
+    {
+        JSONDictionary[@"event_id"] = _eventId;
+        JSONDictionary[@"type"] = _type;
+        JSONDictionary[@"room_id"] = _roomId;
+        JSONDictionary[@"user_id"] = _userId;
+        JSONDictionary[@"content"] = _content;
+        JSONDictionary[@"state_key"] = _stateKey;
+        JSONDictionary[@"origin_server_ts"] = @(_originServerTs);
+        JSONDictionary[@"redacts"] = _redacts;
+        JSONDictionary[@"prev_content"] = _prevContent;
+        JSONDictionary[@"age"] = @(self.age);
+        JSONDictionary[@"redacted_because"] = _redactedBecause;
 
-    // Remove properties that are created by the SDK
-    [originalDictionary removeObjectForKey:@"age_local_ts"];
+        if (_inviteRoomState)
+        {
+            JSONDictionary[@"invite_room_state"] = _inviteRoomState;
+        }
+    }
 
-    return originalDictionary;
-}
-
-- (NSDictionary *)dictionary
-{
-    // Return originalDictionary as is. It will contain the useful age_local_ts info.
-    return [super originalDictionary];
+    return JSONDictionary;
 }
 
 - (BOOL)isState
@@ -381,7 +391,7 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 #pragma mark - private
 - (NSMutableDictionary*)filterInEventWithKeys:(NSArray*)keys
 {
-    NSDictionary *originalDict = self.originalDictionary;
+    NSDictionary *originalDict = self.JSONDictionary;
     NSMutableDictionary *filteredEvent = [NSMutableDictionary dictionary];
     
     for (NSString* key in keys)
