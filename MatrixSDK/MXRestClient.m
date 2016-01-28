@@ -643,8 +643,10 @@ MXAuthAction;
                                          dispatch_async(processingQueue, ^{
                                              
                                              dispatch_async(dispatch_get_main_queue(), ^{
-                                                 
-                                                 success(JSONResponse[@"event_id"]);
+
+                                                 NSString *eventId;
+                                                 MXJSONModelSetString(eventId, JSONResponse[@"event_id"]);
+                                                 success(eventId);
                                                  
                                              });
                                              
@@ -678,7 +680,9 @@ MXAuthAction;
                                              
                                              dispatch_async(dispatch_get_main_queue(), ^{
                                                  
-                                                 success(JSONResponse[@"event_id"]);
+                                                 NSString *eventId;
+                                                 MXJSONModelSetString(eventId, JSONResponse[@"event_id"]);
+                                                 success(eventId);
                                                  
                                              });
                                              
@@ -810,7 +814,9 @@ MXAuthAction;
                                              
                                              dispatch_async(dispatch_get_main_queue(), ^{
                                                  
-                                                 success(JSONResponse[@"topic"]);
+                                                 NSString *topic;
+                                                 MXJSONModelSetString(topic, JSONResponse[@"topic"]);
+                                                 success(topic);
                                                  
                                              });
                                              
@@ -876,7 +882,9 @@ MXAuthAction;
 
                                              dispatch_async(dispatch_get_main_queue(), ^{
 
-                                                 success(JSONResponse[@"url"]);
+                                                 NSString *url;
+                                                 MXJSONModelSetString(url, JSONResponse[@"url"]);
+                                                 success(url);
 
                                              });
 
@@ -941,7 +949,9 @@ MXAuthAction;
                                              
                                              dispatch_async(dispatch_get_main_queue(), ^{
                                                  
-                                                 success(JSONResponse[@"name"]);
+                                                 NSString *name;
+                                                 MXJSONModelSetString(name, JSONResponse[@"name"]);
+                                                 success(name);
                                                  
                                              });
                                              
@@ -973,7 +983,8 @@ MXAuthAction;
                                              
                                              dispatch_async(dispatch_get_main_queue(), ^{
                                                  
-                                                 NSString *roomId = JSONResponse[@"room_id"];
+                                                 NSString *roomId;
+                                                 MXJSONModelSetString(roomId, JSONResponse[@"room_id"]);
                                                  if (!roomId.length) {
                                                      roomId = roomIdOrAlias;
                                                  }
@@ -1554,9 +1565,11 @@ MXAuthAction;
                                              NSDictionary *cleanedJSONResponse = [MXJSONModel removeNullValuesInJSON:JSONResponse];
                                              
                                              dispatch_async(dispatch_get_main_queue(), ^{
-                                                 
-                                                 success(cleanedJSONResponse[@"displayname"]);
-                                                 
+
+                                                 NSString *displayname;
+                                                 MXJSONModelSetString(displayname, cleanedJSONResponse[@"displayname"]);
+                                                 success(displayname);
+
                                              });
                                              
                                          });
@@ -1626,7 +1639,9 @@ MXAuthAction;
                                              
                                              dispatch_async(dispatch_get_main_queue(), ^{
                                                  
-                                                 success(cleanedJSONResponse[@"avatar_url"]);
+                                                 NSString *avatarUrl;
+                                                 MXJSONModelSetString(avatarUrl, cleanedJSONResponse[@"avatar_url"]);
+                                                 success(avatarUrl);
                                                  
                                              });
                                              
@@ -1740,7 +1755,8 @@ MXAuthAction;
                                              // Parse only events from the `presence` field of the response.
                                              // There is no interest to parse all JSONResponse with the MXInitialSyncResponse model,
                                              // which is CPU expensive due to the possible high number of rooms states events.
-                                             NSArray<MXEvent*> *presence = [MXEvent modelsFromJSON:JSONResponse[@"presence"]];
+                                             NSArray<MXEvent*> *presence;
+                                             MXJSONModelSetMXJSONModelArray(presence, MXEvent, JSONResponse[@"presence"]);
 
                                              dispatch_async(dispatch_get_main_queue(), ^{
 
@@ -2012,7 +2028,8 @@ MXAuthAction;
                                              // Create public rooms array from JSON on processing queue
                                              dispatch_async(processingQueue, ^{
                                                  
-                                                 NSArray *publicRooms = [MXPublicRoom modelsFromJSON:JSONResponse[@"chunk"]];
+                                                 NSArray *publicRooms;
+                                                 MXJSONModelSetMXJSONModelArray(publicRooms, MXPublicRoom, JSONResponse[@"chunk"]);
                                                  
                                                  dispatch_async(dispatch_get_main_queue(), ^{
                                                      
@@ -2092,8 +2109,10 @@ MXAuthAction;
                                          dispatch_async(processingQueue, ^{
                                              
                                              dispatch_async(dispatch_get_main_queue(), ^{
-                                                 
-                                                 success(JSONResponse[@"room_id"]);
+
+                                                 NSString *roomId;
+                                                 MXJSONModelSetString(roomId, JSONResponse[@"room_id"]);
+                                                 success(roomId);
                                                  
                                              });
                                              
@@ -2137,7 +2156,8 @@ MXAuthAction;
                                  success:^(NSDictionary *JSONResponse) {
                                      if (success)
                                      {
-                                         NSString *contentURL = JSONResponse[@"content_uri"];
+                                         NSString *contentURL;
+                                         MXJSONModelSetString(contentURL, JSONResponse[@"content_uri"]);
                                          NSLog(@"[MXRestClient] uploadContent succeeded: %@",contentURL);
                                          success(contentURL);
                                      }
@@ -2227,7 +2247,9 @@ MXAuthAction;
                                          success:^(NSDictionary *JSONResponse) {
                                              if (success)
                                              {
-                                                 success(JSONResponse[@"mxid"]);
+                                                 NSString *mxid;
+                                                 MXJSONModelSetString(mxid, JSONResponse[@"mxid"]);
+                                                 success(mxid);
                                              }
                                          }
                                          failure:^(NSError *error) {
@@ -2310,7 +2332,9 @@ MXAuthAction;
                                          success:^(NSDictionary *JSONResponse) {
                                              if (success)
                                              {
-                                                 success(JSONResponse[@"sid"]);
+                                                 NSString *sid;
+                                                 MXJSONModelSetString(sid, JSONResponse[@"sid"]);
+                                                 success(sid);
                                              }
                                          }
                                          failure:^(NSError *error) {
@@ -2335,8 +2359,9 @@ MXAuthAction;
                                          success:^(NSDictionary *JSONResponse) {
                                              if (success)
                                              {
-                                                 NSNumber *successNumber = JSONResponse[@"success"];
-                                                 success([successNumber boolValue]);
+                                                 BOOL succeeded = false;
+                                                 MXJSONModelSetBoolean(succeeded, JSONResponse[@"success"]);
+                                                 success(succeeded);
                                              }
                                          }
                                          failure:^(NSError *error) {

@@ -187,7 +187,8 @@
         MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomJoinRules];
         if (event && [self contentOfEvent:event])
         {
-            NSString *join_rule = [self contentOfEvent:event][@"join_rule"];
+            NSString *join_rule;
+            MXJSONModelSetString(join_rule, [self contentOfEvent:event][@"join_rule"]);
             if ([join_rule isEqualToString:kMXRoomVisibilityPublic])
             {
                 isPublic = YES;
@@ -206,7 +207,8 @@
     MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomAliases];
     if (event && [self contentOfEvent:event])
     {
-        aliases = [[self contentOfEvent:event][@"aliases"] copy];
+        MXJSONModelSetArray(aliases, [self contentOfEvent:event][@"aliases"]);
+        aliases = [aliases copy];
     }
     return aliases;
 }
@@ -219,7 +221,8 @@
     MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomCanonicalAlias];
     if (event && [self contentOfEvent:event])
     {
-        canonicalAlias = [[self contentOfEvent:event][@"alias"] copy];
+        MXJSONModelSetString(canonicalAlias, [self contentOfEvent:event][@"alias"]);
+        canonicalAlias = [canonicalAlias copy];
     }
     return canonicalAlias;
 }
@@ -232,7 +235,8 @@
     MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomName];
     if (event && [self contentOfEvent:event])
     {
-        name = [[self contentOfEvent:event][@"name"] copy];
+        MXJSONModelSetString(name, [self contentOfEvent:event][@"name"]);
+        name = [name copy];
     }
     return name;
 }
@@ -245,7 +249,8 @@
     MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomTopic];
     if (event && [self contentOfEvent:event])
     {
-        topic = [[self contentOfEvent:event][@"topic"] copy];
+        MXJSONModelSetString(topic, [self contentOfEvent:event][@"topic"]);
+        topic = [topic copy];
     }
     return topic;
 }
@@ -258,7 +263,8 @@
     MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomAvatar];
     if (event && [self contentOfEvent:event])
     {
-        avatar = [[self contentOfEvent:event][@"url"] copy];
+        MXJSONModelSetString(avatar, [self contentOfEvent:event][@"url"]);
+        avatar = [avatar copy];
     }
     return avatar;
 }
@@ -449,7 +455,8 @@
             NSArray *array = powerLevels.users.allValues;
             for (NSNumber *powerLevel in array)
             {
-                NSUInteger level = [powerLevel unsignedIntegerValue];
+                NSUInteger level = 0;
+                MXJSONModelSetUInteger(level, powerLevel);
                 if (level > maxPowerLevel)
                 {
                     maxPowerLevel = level;

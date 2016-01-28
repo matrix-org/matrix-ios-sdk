@@ -28,14 +28,14 @@
     {
         NSDictionary *sanitisedJSONDictionary = [MXJSONModel removeNullValuesInJSON:JSONDictionary];
 
-        publicRoom.roomId = sanitisedJSONDictionary[@"room_id"];
-        publicRoom.name = sanitisedJSONDictionary[@"name"];
-        publicRoom.aliases = sanitisedJSONDictionary[@"aliases"];
-        publicRoom.topic = sanitisedJSONDictionary[@"topic"];
-        publicRoom.numJoinedMembers = [((NSNumber*)sanitisedJSONDictionary[@"num_joined_members"]) unsignedIntegerValue];
-        publicRoom.worldReadable = [((NSNumber*)sanitisedJSONDictionary[@"world_readable"]) boolValue];
-        publicRoom.guestCanJoin = [((NSNumber*)sanitisedJSONDictionary[@"guest_can_join"]) boolValue];
-        publicRoom.avatarUrl = sanitisedJSONDictionary[@"avatar_url"];
+        MXJSONModelSetString(publicRoom.roomId , sanitisedJSONDictionary[@"room_id"]);
+        MXJSONModelSetString(publicRoom.name , sanitisedJSONDictionary[@"name"]);
+        MXJSONModelSetArray(publicRoom.aliases , sanitisedJSONDictionary[@"aliases"]);
+        MXJSONModelSetString(publicRoom.topic , sanitisedJSONDictionary[@"topic"]);
+        MXJSONModelSetUInteger(publicRoom.numJoinedMembers, sanitisedJSONDictionary[@"num_joined_members"]);
+        MXJSONModelSetBoolean(publicRoom.worldReadable, sanitisedJSONDictionary[@"world_readable"]);
+        MXJSONModelSetBoolean(publicRoom.guestCanJoin, sanitisedJSONDictionary[@"guest_can_join"]);
+        MXJSONModelSetString(publicRoom.avatarUrl , sanitisedJSONDictionary[@"avatar_url"]);
     }
 
     return publicRoom;
@@ -82,8 +82,8 @@ NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
     MXLoginFlow *loginFlow = [[MXLoginFlow alloc] init];
     if (loginFlow)
     {
-        loginFlow.type = JSONDictionary[@"type"];
-        loginFlow.stages = JSONDictionary[@"stages"];
+        MXJSONModelSetString(loginFlow.type, JSONDictionary[@"type"]);
+        MXJSONModelSetArray(loginFlow.stages, JSONDictionary[@"stages"]);
     }
     
     return loginFlow;
@@ -98,9 +98,9 @@ NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
     MXCredentials *credentials = [[MXCredentials alloc] init];
     if (credentials)
     {
-        credentials.homeServer = JSONDictionary[@"home_server"];
-        credentials.userId = JSONDictionary[@"user_id"];
-        credentials.accessToken = JSONDictionary[@"access_token"];
+        MXJSONModelSetString(credentials.homeServer, JSONDictionary[@"home_server"]);
+        MXJSONModelSetString(credentials.userId, JSONDictionary[@"user_id"]);
+        MXJSONModelSetString(credentials.accessToken, JSONDictionary[@"access_token"]);
     }
 
     return credentials;
@@ -127,7 +127,7 @@ NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
     MXCreateRoomResponse *createRoomResponse = [[MXCreateRoomResponse alloc] init];
     if (createRoomResponse)
     {
-        createRoomResponse.roomId = JSONDictionary[@"room_id"];
+        MXJSONModelSetString(createRoomResponse.roomId, JSONDictionary[@"room_id"]);
     }
 
     return createRoomResponse;
@@ -142,9 +142,9 @@ NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
     MXPaginationResponse *paginationResponse = [[MXPaginationResponse alloc] init];
     if (paginationResponse)
     {
-        paginationResponse.chunk = [MXEvent modelsFromJSON:JSONDictionary[@"chunk"]];
-        paginationResponse.start = JSONDictionary[@"start"];
-        paginationResponse.end = JSONDictionary[@"end"];
+        MXJSONModelSetMXJSONModelArray(paginationResponse.chunk, MXEvent, JSONDictionary[@"chunk"]);
+        MXJSONModelSetString(paginationResponse.start, JSONDictionary[@"start"]);
+        MXJSONModelSetString(paginationResponse.end, JSONDictionary[@"end"]);
 
         // Have the same behavior as before when JSON was parsed by Mantle: return an empty chunk array
         // rather than nil
@@ -170,9 +170,9 @@ NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
     MXRoomMemberEventContent *roomMemberEventContent = [[MXRoomMemberEventContent alloc] init];
     if (roomMemberEventContent)
     {
-        roomMemberEventContent.displayname = JSONDictionary[@"displayname"];
-        roomMemberEventContent.avatarUrl = JSONDictionary[@"avatar_url"];
-        roomMemberEventContent.membership = JSONDictionary[@"membership"];
+        MXJSONModelSetString(roomMemberEventContent.displayname, JSONDictionary[@"displayname"]);
+        MXJSONModelSetString(roomMemberEventContent.avatarUrl, JSONDictionary[@"avatar_url"]);
+        MXJSONModelSetString(roomMemberEventContent.membership, JSONDictionary[@"membership"]);
     }
 
     return roomMemberEventContent;
@@ -317,12 +317,12 @@ NSString *const kMXPresenceHidden = @"hidden";
     MXPresenceEventContent *presenceEventContent = [[MXPresenceEventContent alloc] init];
     if (presenceEventContent)
     {
-        presenceEventContent.userId = JSONDictionary[@"user_id"];
-        presenceEventContent.displayname = JSONDictionary[@"displayname"];
-        presenceEventContent.avatarUrl = JSONDictionary[@"avatar_url"];
-        presenceEventContent.lastActiveAgo = [((NSNumber*)JSONDictionary[@"last_active_ago"]) unsignedIntegerValue];
-        presenceEventContent.presence = JSONDictionary[@"presence"];
-        presenceEventContent.statusMsg = JSONDictionary[@"status_msg"];
+        MXJSONModelSetString(presenceEventContent.userId, JSONDictionary[@"user_id"]);
+        MXJSONModelSetString(presenceEventContent.displayname, JSONDictionary[@"displayname"]);
+        MXJSONModelSetString(presenceEventContent.avatarUrl, JSONDictionary[@"avatar_url"]);
+        MXJSONModelSetUInteger(presenceEventContent.lastActiveAgo, JSONDictionary[@"last_active_ago"]);
+        MXJSONModelSetString(presenceEventContent.presence, JSONDictionary[@"presence"]);
+        MXJSONModelSetString(presenceEventContent.statusMsg, JSONDictionary[@"status_msg"]);
         
         presenceEventContent.presenceStatus = [MXTools presence:presenceEventContent.presence];
     }
@@ -339,11 +339,11 @@ NSString *const kMXPresenceHidden = @"hidden";
     MXPresenceResponse *presenceResponse = [[MXPresenceResponse alloc] init];
     if (presenceResponse)
     {
-        presenceResponse.lastActiveAgo = [((NSNumber*)JSONDictionary[@"last_active_ago"]) unsignedIntegerValue];
-        presenceResponse.presence = JSONDictionary[@"presence"];
-        presenceResponse.presenceStatus = [MXTools presence:presenceResponse.presence];
-        presenceResponse.statusMsg = JSONDictionary[@"status_msg"];
+        MXJSONModelSetUInteger(presenceResponse.lastActiveAgo, JSONDictionary[@"last_active_ago"]);
+        MXJSONModelSetString(presenceResponse.presence, JSONDictionary[@"presence"]);
+        MXJSONModelSetString(presenceResponse.statusMsg, JSONDictionary[@"status_msg"]);
 
+        presenceResponse.presenceStatus = [MXTools presence:presenceResponse.presence];
     }
     return presenceResponse;
 }
@@ -365,7 +365,8 @@ NSString *const kMXPushRuleConditionStringRoomMemberCount       = @"room_member_
 
 + (NSArray *)modelsFromJSON:(NSArray *)JSONDictionaries withScope:(NSString *)scope andKind:(MXPushRuleKind)kind
 {
-    NSArray <MXPushRule*> *pushRules = [self modelsFromJSON:JSONDictionaries];
+    NSArray <MXPushRule*> *pushRules;
+    MXJSONModelSetMXJSONModelArray(pushRules, self.class, JSONDictionaries);
 
     for (MXPushRule *pushRule in pushRules)
     {
@@ -381,11 +382,11 @@ NSString *const kMXPushRuleConditionStringRoomMemberCount       = @"room_member_
     MXPushRule *pushRule = [[MXPushRule alloc] init];
     if (pushRule)
     {
-        pushRule.ruleId = JSONDictionary[@"rule_id"];
-        pushRule.isDefault = [((NSNumber*)JSONDictionary[@"default"]) boolValue];
-        pushRule.enabled = [((NSNumber*)JSONDictionary[@"enabled"]) boolValue];
-        pushRule.pattern = JSONDictionary[@"pattern"];
-        pushRule.conditions = [MXPushRuleCondition modelsFromJSON:JSONDictionary[@"conditions"]];
+        MXJSONModelSetString(pushRule.ruleId, JSONDictionary[@"rule_id"]);
+        MXJSONModelSetBoolean(pushRule.isDefault, JSONDictionary[@"default"]);
+        MXJSONModelSetBoolean(pushRule.enabled, JSONDictionary[@"enabled"]);
+        MXJSONModelSetString(pushRule.pattern, JSONDictionary[@"pattern"]);
+        MXJSONModelSetMXJSONModelArray(pushRule.conditions, MXPushRuleCondition, JSONDictionary[@"conditions"]);
 
         // Decode actions
         NSMutableArray *actions = [NSMutableArray array];
@@ -458,7 +459,7 @@ NSString *const kMXPushRuleConditionStringRoomMemberCount       = @"room_member_
     MXPushRuleCondition *condition = [[MXPushRuleCondition alloc] init];
     if (condition)
     {
-        condition.kind = JSONDictionary[@"kind"];
+        MXJSONModelSetString(condition.kind, JSONDictionary[@"kind"]);
 
         // MXPushRuleCondition.parameters are all other JSON objects which keys is not `kind`
         NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:JSONDictionary];
@@ -552,7 +553,10 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXPushRulesResponse *pushRulesResponse = [[MXPushRulesResponse alloc] init];
     if (pushRulesResponse)
     {
-        pushRulesResponse.global = [MXPushRulesSet modelFromJSON:JSONDictionary[kMXPushRuleScopeStringGlobal] withScope:kMXPushRuleScopeStringGlobal];
+        if ([JSONDictionary[kMXPushRuleScopeStringGlobal] isKindOfClass:NSDictionary.class])
+        {
+            pushRulesResponse.global = [MXPushRulesSet modelFromJSON:JSONDictionary[kMXPushRuleScopeStringGlobal] withScope:kMXPushRuleScopeStringGlobal];
+        }
 
         // TODO support device rules
     }
@@ -573,8 +577,8 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXSearchUserProfile *searchUserProfile = [[MXSearchUserProfile alloc] init];
     if (searchUserProfile)
     {
-        searchUserProfile.avatarUrl = JSONDictionary[@"avatar_url"];
-        searchUserProfile.displayName = JSONDictionary[@"displayname"];
+        MXJSONModelSetString(searchUserProfile.avatarUrl, JSONDictionary[@"avatar_url"]);
+        MXJSONModelSetString(searchUserProfile.displayName, JSONDictionary[@"displayname"]);
     }
 
     return searchUserProfile;
@@ -589,16 +593,16 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXSearchEventContext *searchEventContext = [[MXSearchEventContext alloc] init];
     if (searchEventContext)
     {
-        searchEventContext.start = JSONDictionary[@"start"];
-        searchEventContext.end = JSONDictionary[@"end"];
+        MXJSONModelSetString(searchEventContext.start, JSONDictionary[@"start"]);
+        MXJSONModelSetString(searchEventContext.end, JSONDictionary[@"end"]);
 
-        searchEventContext.eventsBefore = [MXEvent modelsFromJSON:JSONDictionary[@"events_before"]];
-        searchEventContext.eventsAfter = [MXEvent modelsFromJSON:JSONDictionary[@"events_after"]];
+        MXJSONModelSetMXJSONModelArray(searchEventContext.eventsBefore, MXEvent, JSONDictionary[@"events_before"]);
+        MXJSONModelSetMXJSONModelArray(searchEventContext.eventsAfter, MXEvent, JSONDictionary[@"events_after"]);
 
         NSMutableDictionary<NSString*, MXSearchUserProfile*> *profileInfo = [NSMutableDictionary dictionary];
         for (NSString *userId in JSONDictionary[@"profile_info"])
         {
-            profileInfo[userId] = [MXSearchUserProfile modelFromJSON:JSONDictionary[@"profile_info"][userId]];
+            MXJSONModelSetMXJSONModel(profileInfo[userId], MXSearchUserProfile, JSONDictionary[@"profile_info"][userId]);
         }
         searchEventContext.profileInfo = profileInfo;
     }
@@ -615,9 +619,9 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXSearchResult *searchResult = [[MXSearchResult alloc] init];
     if (searchResult)
     {
-        searchResult.result = [MXEvent modelFromJSON:JSONDictionary[@"result"]];
-        searchResult.rank = [((NSNumber*)JSONDictionary[@"rank"]) integerValue];
-        searchResult.context = [MXSearchEventContext modelFromJSON:JSONDictionary[@"context"]];
+        MXJSONModelSetMXJSONModel(searchResult.result, MXEvent, JSONDictionary[@"result"]);
+        MXJSONModelSetInteger(searchResult.rank, JSONDictionary[@"rank"]);
+        MXJSONModelSetMXJSONModel(searchResult.context, MXSearchEventContext, JSONDictionary[@"context"]);
     }
 
     return searchResult;
@@ -632,10 +636,10 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXSearchGroupContent *searchGroupContent = [[MXSearchGroupContent alloc] init];
     if (searchGroupContent)
     {
-        searchGroupContent.order = [((NSNumber*)JSONDictionary[@"order"]) integerValue];
+        MXJSONModelSetInteger(searchGroupContent.order, JSONDictionary[@"order"]);
         NSAssert(NO, @"What is results?");
         searchGroupContent.results = nil;   // TODO_SEARCH
-        searchGroupContent.nextBatch = JSONDictionary[@"next_batch"];
+        MXJSONModelSetString(searchGroupContent.nextBatch, JSONDictionary[@"next_batch"]);
     }
 
     return searchGroupContent;
@@ -653,7 +657,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         NSMutableDictionary<NSString*, MXSearchGroupContent*> *group = [NSMutableDictionary dictionary];
         for (NSString *key in JSONDictionary[@"state"])
         {
-            group[key] = [MXSearchGroupContent modelFromJSON: JSONDictionary[@"key"][key]];
+            MXJSONModelSetMXJSONModel(group[key], MXSearchGroupContent, JSONDictionary[@"key"][key]);
         }
         searchGroup.group = group;
     }
@@ -670,21 +674,21 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXSearchRoomEventResults *searchRoomEventResults = [[MXSearchRoomEventResults alloc] init];
     if (searchRoomEventResults)
     {
-        searchRoomEventResults.count = [((NSNumber*)JSONDictionary[@"count"]) unsignedIntegerValue];
-        searchRoomEventResults.results = [MXSearchResult modelsFromJSON:JSONDictionary[@"results"]];
-        searchRoomEventResults.nextBatch = JSONDictionary[@"next_batch"];
+        MXJSONModelSetUInteger(searchRoomEventResults.count, JSONDictionary[@"count"]);
+        MXJSONModelSetMXJSONModelArray(searchRoomEventResults.results, MXSearchResult, JSONDictionary[@"results"]);
+        MXJSONModelSetString(searchRoomEventResults.nextBatch, JSONDictionary[@"next_batch"]);
 
         NSMutableDictionary<NSString*, MXSearchGroup*> *groups = [NSMutableDictionary dictionary];
         for (NSString *groupId in JSONDictionary[@"groups"])
         {
-            groups[groupId] = [MXSearchGroup modelFromJSON: JSONDictionary[@"groups"][groupId]];
+            MXJSONModelSetMXJSONModel(groups[groupId], MXSearchGroup, JSONDictionary[@"groups"][groupId]);
         }
         searchRoomEventResults.groups = groups;
 
         NSMutableDictionary<NSString*, NSArray<MXEvent*> *> *state = [NSMutableDictionary dictionary];
         for (NSString *roomId in JSONDictionary[@"state"])
         {
-            state[roomId] = [MXEvent modelsFromJSON: JSONDictionary[@"state"][roomId]];
+            MXJSONModelSetMXJSONModelArray(state[roomId], MXEvent, JSONDictionary[@"state"][roomId]);
         }
         searchRoomEventResults.state = state;
     }
@@ -701,7 +705,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXSearchCategories *searchCategories = [[MXSearchCategories alloc] init];
     if (searchCategories)
     {
-        searchCategories.roomEvents = [MXSearchRoomEventResults modelFromJSON:JSONDictionary[@"room_events"]];
+        MXJSONModelSetMXJSONModel(searchCategories.roomEvents, MXSearchRoomEventResults, JSONDictionary[@"room_events"]);
     }
 
     return searchCategories;
@@ -717,8 +721,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     if (searchResponse)
     {
         NSDictionary *sanitisedJSONDictionary = [MXJSONModel removeNullValuesInJSON:JSONDictionary];
-
-        searchResponse.searchCategories = [MXSearchCategories modelFromJSON:sanitisedJSONDictionary[@"search_categories"]];
+        MXJSONModelSetMXJSONModel(searchResponse.searchCategories, MXSearchCategories, sanitisedJSONDictionary[@"search_categories"]);
     }
 
     return searchResponse;
@@ -737,19 +740,16 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXRoomInitialSync *initialSync = [[MXRoomInitialSync alloc] init];
     if (initialSync)
     {
-        initialSync.roomId = JSONDictionary[@"room_id"];
-        initialSync.messages = [MXPaginationResponse modelFromJSON:JSONDictionary[@"messages"]];
-        initialSync.state = [MXEvent modelsFromJSON:JSONDictionary[@"state"]];
-        initialSync.accountData = [MXEvent modelsFromJSON:JSONDictionary[@"account_data"]];
-        initialSync.membership = JSONDictionary[@"membership"];
-        initialSync.visibility = JSONDictionary[@"visibility"];
-        initialSync.inviter = JSONDictionary[@"inviter"];
-        if (JSONDictionary[@"invite"])
-        {
-            initialSync.invite = [MXEvent modelFromJSON:JSONDictionary[@"invite"]];
-        }
-        initialSync.presence = [MXEvent modelsFromJSON:JSONDictionary[@"presence"]];
-        initialSync.receipts = [MXEvent modelsFromJSON:JSONDictionary[@"receipts"]];
+        MXJSONModelSetString(initialSync.roomId, JSONDictionary[@"room_id"]);
+        MXJSONModelSetMXJSONModel(initialSync.messages, MXPaginationResponse, JSONDictionary[@"messages"]);
+        MXJSONModelSetMXJSONModelArray(initialSync.state, MXEvent, JSONDictionary[@"state"]);
+        MXJSONModelSetMXJSONModelArray(initialSync.accountData, MXEvent, JSONDictionary[@"account_data"]);
+        MXJSONModelSetString(initialSync.membership, JSONDictionary[@"membership"]);
+        MXJSONModelSetString(initialSync.visibility, JSONDictionary[@"visibility"]);
+        MXJSONModelSetString(initialSync.inviter, JSONDictionary[@"inviter"]);
+        MXJSONModelSetMXJSONModel(initialSync.invite, MXEvent, JSONDictionary[@"invite"]);
+        MXJSONModelSetMXJSONModelArray(initialSync.presence, MXEvent, JSONDictionary[@"presence"]);
+        MXJSONModelSetMXJSONModelArray(initialSync.receipts, MXEvent, JSONDictionary[@"receipts"]);
     }
 
     return initialSync;
@@ -764,10 +764,10 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXInitialSyncResponse *initialSyncResponse = [[MXInitialSyncResponse alloc] init];
     if (initialSyncResponse)
     {
-        initialSyncResponse.rooms = [MXRoomInitialSync modelsFromJSON:JSONDictionary[@"rooms"]];
-        initialSyncResponse.presence = [MXEvent modelsFromJSON:JSONDictionary[@"presence"]];
-        initialSyncResponse.receipts = [MXEvent modelsFromJSON:JSONDictionary[@"receipts"]];
-        initialSyncResponse.end = JSONDictionary[@"end"];
+        MXJSONModelSetMXJSONModelArray(initialSyncResponse.rooms, MXRoomInitialSync, JSONDictionary[@"rooms"]);
+        MXJSONModelSetMXJSONModelArray(initialSyncResponse.presence, MXEvent, JSONDictionary[@"presence"]);
+        MXJSONModelSetMXJSONModelArray(initialSyncResponse.receipts, MXEvent, JSONDictionary[@"receipts"]);
+        MXJSONModelSetString(initialSyncResponse.end, JSONDictionary[@"end"]);
     }
 
     return initialSyncResponse;
@@ -786,7 +786,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXRoomSyncState *roomSyncState = [[MXRoomSyncState alloc] init];
     if (roomSyncState)
     {
-        roomSyncState.events = [MXEvent modelsFromJSON:JSONDictionary[@"events"]];
+        MXJSONModelSetMXJSONModelArray(roomSyncState.events, MXEvent, JSONDictionary[@"events"]);
     }
     return roomSyncState;
 }
@@ -800,9 +800,9 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXRoomSyncTimeline *roomSyncTimeline = [[MXRoomSyncTimeline alloc] init];
     if (roomSyncTimeline)
     {
-        roomSyncTimeline.events = [MXEvent modelsFromJSON:JSONDictionary[@"events"]];
-        roomSyncTimeline.limited = [((NSNumber*)JSONDictionary[@"limited"]) boolValue];
-        roomSyncTimeline.prevBatch = JSONDictionary[@"prev_batch"];
+        MXJSONModelSetMXJSONModelArray(roomSyncTimeline.events, MXEvent, JSONDictionary[@"events"]);
+        MXJSONModelSetBoolean(roomSyncTimeline.limited , JSONDictionary[@"limited"]);
+        MXJSONModelSetString(roomSyncTimeline.prevBatch, JSONDictionary[@"prev_batch"]);
     }
     return roomSyncTimeline;
 }
@@ -816,7 +816,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXRoomSyncEphemeral *roomSyncEphemeral = [[MXRoomSyncEphemeral alloc] init];
     if (roomSyncEphemeral)
     {
-        roomSyncEphemeral.events = [MXEvent modelsFromJSON:JSONDictionary[@"events"]];
+        MXJSONModelSetMXJSONModelArray(roomSyncEphemeral.events, MXEvent, JSONDictionary[@"events"]);
     }
     return roomSyncEphemeral;
 }
@@ -830,7 +830,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXRoomSyncAccountData *roomSyncAccountData = [[MXRoomSyncAccountData alloc] init];
     if (roomSyncAccountData)
     {
-        roomSyncAccountData.events = [MXEvent modelsFromJSON:JSONDictionary[@"events"]];
+        MXJSONModelSetMXJSONModelArray(roomSyncAccountData.events, MXEvent, JSONDictionary[@"events"]);
     }
     return roomSyncAccountData;
 }
@@ -844,7 +844,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXRoomInviteState *roomInviteState = [[MXRoomInviteState alloc] init];
     if (roomInviteState)
     {
-        roomInviteState.events = [MXEvent modelsFromJSON:JSONDictionary[@"events"]];
+        MXJSONModelSetMXJSONModelArray(roomInviteState.events, MXEvent, JSONDictionary[@"events"]);
     }
     return roomInviteState;
 }
@@ -858,10 +858,10 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXRoomSync *roomSync = [[MXRoomSync alloc] init];
     if (roomSync)
     {
-        roomSync.state = [MXRoomSyncState modelFromJSON:JSONDictionary[@"state"]];
-        roomSync.timeline = [MXRoomSyncTimeline modelFromJSON:JSONDictionary[@"timeline"]];
-        roomSync.ephemeral = [MXRoomSyncEphemeral modelFromJSON:JSONDictionary[@"ephemeral"]];
-        roomSync.accountData = [MXRoomSyncAccountData modelFromJSON:JSONDictionary[@"account_data"]];
+        MXJSONModelSetMXJSONModel(roomSync.state, MXRoomSyncState, JSONDictionary[@"state"]);
+        MXJSONModelSetMXJSONModel(roomSync.timeline, MXRoomSyncTimeline, JSONDictionary[@"timeline"]);
+        MXJSONModelSetMXJSONModel(roomSync.ephemeral, MXRoomSyncEphemeral, JSONDictionary[@"ephemeral"]);
+        MXJSONModelSetMXJSONModel(roomSync.accountData, MXRoomSyncAccountData, JSONDictionary[@"account_data"]);
     }
     return roomSync;
 }
@@ -875,7 +875,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXInvitedRoomSync *invitedRoomSync = [[MXInvitedRoomSync alloc] init];
     if (invitedRoomSync)
     {
-        invitedRoomSync.inviteState = [MXRoomInviteState modelFromJSON:JSONDictionary[@"invite_state"]];
+        MXJSONModelSetMXJSONModel(invitedRoomSync.inviteState, MXRoomInviteState, JSONDictionary[@"invite_state"]);
     }
     return invitedRoomSync;
 }
@@ -889,7 +889,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXPresenceSyncResponse *presenceSyncResponse = [[MXPresenceSyncResponse alloc] init];
     if (presenceSyncResponse)
     {
-        presenceSyncResponse.events = [MXEvent modelsFromJSON:JSONDictionary[@"events"]];
+        MXJSONModelSetMXJSONModelArray(presenceSyncResponse.events, MXEvent, JSONDictionary[@"events"]);
     }
     return presenceSyncResponse;
 }
@@ -909,21 +909,21 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         NSMutableDictionary *mxJoin = [NSMutableDictionary dictionary];
         for (NSString *roomId in JSONDictionary[@"join"])
         {
-            mxJoin[roomId] = [MXRoomSync modelFromJSON:JSONDictionary[@"join"][roomId]];
+            MXJSONModelSetMXJSONModel(mxJoin[roomId], MXRoomSync, JSONDictionary[@"join"][roomId]);
         }
         roomsSync.join = mxJoin;
         
         NSMutableDictionary *mxInvite = [NSMutableDictionary dictionary];
         for (NSString *roomId in JSONDictionary[@"invite"])
         {
-            mxInvite[roomId] = [MXInvitedRoomSync modelFromJSON:JSONDictionary[@"invite"][roomId]];
+            MXJSONModelSetMXJSONModel(mxInvite[roomId], MXInvitedRoomSync, JSONDictionary[@"invite"][roomId]);
         }
         roomsSync.invite = mxInvite;
         
         NSMutableDictionary *mxLeave = [NSMutableDictionary dictionary];
         for (NSString *roomId in JSONDictionary[@"leave"])
         {
-            mxLeave[roomId] = [MXRoomSync modelFromJSON:JSONDictionary[@"leave"][roomId]];
+            MXJSONModelSetMXJSONModel(mxLeave[roomId], MXRoomSync, JSONDictionary[@"leave"][roomId]);
         }
         roomsSync.leave = mxLeave;
     }
@@ -940,9 +940,9 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXSyncResponse *syncResponse = [[MXSyncResponse alloc] init];
     if (syncResponse)
     {
-        syncResponse.nextBatch = JSONDictionary[@"next_batch"];
-        syncResponse.presence = [MXPresenceSyncResponse modelFromJSON:JSONDictionary[@"presence"]];
-        syncResponse.rooms = [MXRoomsSyncResponse modelFromJSON:JSONDictionary[@"rooms"]];
+        MXJSONModelSetString(syncResponse.nextBatch, JSONDictionary[@"next_batch"]);
+        MXJSONModelSetMXJSONModel(syncResponse.presence, MXPresenceSyncResponse, JSONDictionary[@"presence"]);
+        MXJSONModelSetMXJSONModel(syncResponse.rooms, MXRoomsSyncResponse, JSONDictionary[@"rooms"]);
     }
 
     return syncResponse;
@@ -960,8 +960,8 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXCallSessionDescription *callSessionDescription = [[MXCallSessionDescription alloc] init];
     if (callSessionDescription)
     {
-        callSessionDescription.type = JSONDictionary[@"type"];
-        callSessionDescription.sdp = JSONDictionary[@"sdp"];
+        MXJSONModelSetString(callSessionDescription.type, JSONDictionary[@"type"]);
+        MXJSONModelSetString(callSessionDescription.sdp, JSONDictionary[@"sdp"]);
     }
 
     return callSessionDescription;
@@ -976,10 +976,10 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXCallInviteEventContent *callInviteEventContent = [[MXCallInviteEventContent alloc] init];
     if (callInviteEventContent)
     {
-        callInviteEventContent.callId = JSONDictionary[@"call_id"];
-        callInviteEventContent.offer = [MXCallSessionDescription modelFromJSON:JSONDictionary[@"offer"]];
-        callInviteEventContent.version = [((NSNumber*)JSONDictionary[@"version"]) unsignedIntegerValue];
-        callInviteEventContent.lifetime = [((NSNumber*)JSONDictionary[@"lifetime"]) unsignedIntegerValue];
+        MXJSONModelSetString(callInviteEventContent.callId, JSONDictionary[@"call_id"]);
+        MXJSONModelSetMXJSONModel(callInviteEventContent.offer, MXCallSessionDescription, JSONDictionary[@"offer"]);
+        MXJSONModelSetUInteger(callInviteEventContent.version, JSONDictionary[@"version"]);
+        MXJSONModelSetUInteger(callInviteEventContent.lifetime, JSONDictionary[@"lifetime"]);
     }
 
     return callInviteEventContent;
@@ -994,9 +994,9 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXCallCandidate *callCandidate = [[MXCallCandidate alloc] init];
     if (callCandidate)
     {
-        callCandidate.sdpMid = JSONDictionary[@"sdpMid"];
-        callCandidate.sdpMLineIndex = [((NSNumber*)JSONDictionary[@"sdpMLineIndex"]) unsignedIntegerValue];
-        callCandidate.candidate = JSONDictionary[@"candidate"];
+        MXJSONModelSetString(callCandidate.sdpMid, JSONDictionary[@"sdpMid"]);
+        MXJSONModelSetUInteger(callCandidate.sdpMLineIndex, JSONDictionary[@"sdpMLineIndex"]);
+        MXJSONModelSetString(callCandidate.candidate, JSONDictionary[@"candidate"]);
     }
 
     return callCandidate;
@@ -1011,9 +1011,9 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXCallCandidatesEventContent *callCandidatesEventContent = [[MXCallCandidatesEventContent alloc] init];
     if (callCandidatesEventContent)
     {
-        callCandidatesEventContent.callId = JSONDictionary[@"call_id"];
-        callCandidatesEventContent.version = [((NSNumber*)JSONDictionary[@"version"]) unsignedIntegerValue];
-        callCandidatesEventContent.candidates = [MXCallCandidate modelsFromJSON:JSONDictionary[@"candidates"]];
+        MXJSONModelSetString(callCandidatesEventContent.callId, JSONDictionary[@"call_id"]);
+        MXJSONModelSetUInteger(callCandidatesEventContent.version, JSONDictionary[@"version"]);
+        MXJSONModelSetMXJSONModelArray(callCandidatesEventContent.candidates, MXCallCandidate, JSONDictionary[@"candidates"]);
     }
 
     return callCandidatesEventContent;
@@ -1028,9 +1028,9 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXCallAnswerEventContent *callAnswerEventContent = [[MXCallAnswerEventContent alloc] init];
     if (callAnswerEventContent)
     {
-        callAnswerEventContent.callId = JSONDictionary[@"call_id"];
-        callAnswerEventContent.version = [((NSNumber*)JSONDictionary[@"version"]) unsignedIntegerValue];
-        callAnswerEventContent.answer = [MXCallSessionDescription modelFromJSON:JSONDictionary[@"answer"]];
+        MXJSONModelSetString(callAnswerEventContent.callId, JSONDictionary[@"call_id"]);
+        MXJSONModelSetUInteger(callAnswerEventContent.version, JSONDictionary[@"version"]);
+        MXJSONModelSetMXJSONModel(callAnswerEventContent.answer, MXCallSessionDescription, JSONDictionary[@"answer"]);
     }
 
     return callAnswerEventContent;
@@ -1045,8 +1045,8 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXCallHangupEventContent *callHangupEventContent = [[MXCallHangupEventContent alloc] init];
     if (callHangupEventContent)
     {
-        callHangupEventContent.callId = JSONDictionary[@"call_id"];
-        callHangupEventContent.version = [((NSNumber*)JSONDictionary[@"version"]) unsignedIntegerValue];
+        MXJSONModelSetString(callHangupEventContent.callId, JSONDictionary[@"call_id"]);
+        MXJSONModelSetUInteger(callHangupEventContent.version, JSONDictionary[@"version"]);
     }
 
     return callHangupEventContent;
@@ -1061,10 +1061,10 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXTurnServerResponse *turnServerResponse = [[MXTurnServerResponse alloc] init];
     if (turnServerResponse)
     {
-        turnServerResponse.username = JSONDictionary[@"username"];
-        turnServerResponse.password = JSONDictionary[@"password"];
-        turnServerResponse.uris = JSONDictionary[@"uris"];
-        turnServerResponse.ttl = [((NSNumber*)JSONDictionary[@"ttl"]) unsignedIntegerValue];
+        MXJSONModelSetString(turnServerResponse.username, JSONDictionary[@"username"]);
+        MXJSONModelSetString(turnServerResponse.password, JSONDictionary[@"password"]);
+        MXJSONModelSetArray(turnServerResponse.uris, JSONDictionary[@"uris"]);
+        MXJSONModelSetUInteger(turnServerResponse.ttl, JSONDictionary[@"ttl"]);
     }
 
     return turnServerResponse;
