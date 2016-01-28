@@ -408,9 +408,8 @@ MXAuthAction;
                                  success:(void (^)())success
                                  failure:(void (^)(NSError *))failure
 {
-    
     // sanity check
-    if (!pushkey || !kind || !appDisplayName || !deviceDisplayName || !profileTag || !lang || !data || !append)
+    if (!pushkey || !kind || !appDisplayName || !deviceDisplayName || !profileTag || !lang || !data)
     {
         NSError* error = [NSError errorWithDomain:@"Invalid params" code:500 userInfo:nil];
         
