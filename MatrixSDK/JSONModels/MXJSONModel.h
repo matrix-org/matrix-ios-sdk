@@ -84,7 +84,7 @@
     if (value) \
     { \
         if ([value isKindOfClass:class]) var = value; \
-        else MXJSONModelSetLogError(class, value);  \
+        else MXJSONModelSetLogError(class, value)  \
     }
 
 /**
@@ -113,7 +113,7 @@
     if (value) \
     { \
         if ([value isKindOfClass:NSNumber.class]) var = [((NSNumber*)value) method]; \
-        else MXJSONModelSetLogError(NSNumber.class, value);  \
+        else MXJSONModelSetLogError(NSNumber.class, value)  \
     }
 
 /**
@@ -127,7 +127,7 @@
     if (value) \
     { \
         if ([value isKindOfClass:NSDictionary.class]) var = [MXJSONModelClass modelFromJSON:value]; \
-        else MXJSONModelSetLogError(NSDictionary.class, value);  \
+        else MXJSONModelSetLogError(NSDictionary.class, value)  \
     }
 
 /**
@@ -141,13 +141,15 @@
     if (values) \
     { \
         if ([values isKindOfClass:NSArray.class]) var = [MXJSONModelClass modelsFromJSON:values]; \
-        else MXJSONModelSetLogError(NSArray.class, values);  \
+        else MXJSONModelSetLogError(NSArray.class, values)  \
     }
 
 /**
  Log a validation error.
  */
 #define MXJSONModelSetLogError(theClass, value) \
-    NSLog(@"[MXJSONModelSet] Error: Unexpected type for parsing at %@:%d. Expected: %@. Got: %@ (%@)", \
+    { \
+        NSLog(@"[MXJSONModelSet] Error: Unexpected type for parsing at %@:%d. Expected: %@. Got: %@ (%@)", \
             @(__FILE__).lastPathComponent, __LINE__, theClass, value, NSStringFromClass([value class])); \
-    NSAssert(NO, @"")
+        NSAssert(NO, @""); \
+    }
