@@ -1,3 +1,14 @@
+Changes in Matrix iOS SDK in 0.6.1 (2016-01-29)
+===============================================
+
+Improvements:
+ * Remove Mantle dependency (to improve performances).
+ * JSON validation: Log errors (break only in DEBUG build).
+
+Bug fixes:
+ * SYIOS-203: iOS crashes on non numeric power levels.
+ * MXRestClient: set APNS pusher failed on invalid params.
+
 Changes in Matrix iOS SDK in 0.6.0 (2016-01-22)
 ===============================================
 
