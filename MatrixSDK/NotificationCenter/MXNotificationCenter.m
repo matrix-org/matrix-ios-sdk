@@ -164,7 +164,7 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
                 
                 if (!JSONDictionary)
                 {
-                    JSONDictionary = event.originalDictionary;
+                    JSONDictionary = event.JSONDictionary;
                 }
                 
                 BOOL conditionsOk = YES;

@@ -419,6 +419,16 @@ typedef enum : NSUInteger
      */
     @property (nonatomic) NSString *scope;
 
+    /**
+     Override [MXJSONModel modelsFromJSON] by adding scope and kind to all decoded `MXPushRule` objects.
+
+     @param JSONDictionaries the JSON data array.
+     @param scope the rule scope (global, device).
+     @param kind the rule kind (override, content, ...).
+     @return the newly created instances.
+     */
+    + (NSArray *)modelsFromJSON:(NSArray *)JSONDictionaries withScope:(NSString*)scope andKind:(MXPushRuleKind)kind;
+
 @end
 
 /**
@@ -562,6 +572,14 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleConditionStringRoomMemberCount;
      */
     @property (nonatomic) NSArray *underride;
 
+    /**
+     Override [MXJSONModel modelFromJSON] by adding scope all decoded `MXPushRule` objects.
+
+     @param JSONDictionaries the JSON data array.
+     @param scope the rule scope (global, device).
+     @return the newly created instances.
+     */
+    + (id)modelFromJSON:(NSDictionary *)JSONDictionary withScope:(NSString*)scope;
 @end
 
 /**

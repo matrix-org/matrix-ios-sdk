@@ -17,60 +17,13 @@
 #import "MXJSONModel.h"
 
 @implementation MXJSONModel
-{
-    NSMutableDictionary *others;
-}
 
-/**
- * The JSONKeyPathsByPropertyKey dictionnaries for all subclasses of MXJSONModel.
- * The key is the child class name. The value, the JSONKeyPathsByPropertyKey dictionnary of the child class.
- */
-static NSMutableDictionary *JSONKeyPathsByPropertyKeyByClass;
 
-+ (void)initialize
-{
-    @synchronized(JSONKeyPathsByPropertyKeyByClass)
-    {
-        if (!JSONKeyPathsByPropertyKeyByClass)
-        {
-            JSONKeyPathsByPropertyKeyByClass = [NSMutableDictionary dictionary];
-        }
-
-        // Compute the JSONKeyPathsByPropertyKey for this subclass
-        NSMutableDictionary *JSONKeyPathsByPropertyKey = [NSMutableDictionary dictionary];
-
-        NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"(?<=[a-z])([A-Z])|([A-Z])(?=[a-z])" options:0 error:nil];
-
-        // List all properties defined by the class
-        NSSet *propertyKeys = [self.class propertyKeys];
-        for (NSString *propertyKey in propertyKeys)
-        {
-            // Manage camel-cased properties
-            // Home server uses underscore-separated compounds keys like "event_id". ObjC properties name trend is more camelCase like "eventId".
-            NSString *underscoredString = [[regex stringByReplacingMatchesInString:propertyKey options:0 range:NSMakeRange(0, propertyKey.length) withTemplate:@"_$1$2"] lowercaseString];
-            JSONKeyPathsByPropertyKey[propertyKey] = underscoredString;
-        }
-
-        JSONKeyPathsByPropertyKeyByClass[NSStringFromClass(self.class)] = JSONKeyPathsByPropertyKey;
-    }
-}
-
-+ (NSDictionary *)JSONKeyPathsByPropertyKey
-{
-    return JSONKeyPathsByPropertyKeyByClass[NSStringFromClass(self.class)];
-}
-
+#pragma mark - Class methods
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    // Use Mantle 
-    id model = [MTLJSONAdapter modelOfClass:[self class]
-                     fromJSONDictionary:JSONDictionary
-                                  error:nil];
-    
-    // Put JSON keys not defined as class properties under the others dict
-    [model setOthers:JSONDictionary];
-    
-    return model;
+    NSAssert(NO, @"%@ must implement modelFromJSON", self);
+    return nil;
 }
 
 + (NSArray *)modelsFromJSON:(NSArray *)JSONDictionaries
@@ -173,47 +126,39 @@ static NSMutableDictionary *JSONKeyPathsByPropertyKeyByClass;
     }
 }
 
-- (void)setOthers:(NSDictionary *)JSONDictionary
+
+#pragma mark - Instance methods
+- (NSDictionary *)JSONDictionary
 {
-    // Store non declared JSON keys into the others property
-    NSArray *modelJSONKeys = [[self.class JSONKeyPathsByPropertyKey] allValues];
-    for (NSString *key in JSONDictionary)
-    {
-        if (![modelJSONKeys containsObject:key])
-        {
-            if (nil == others)
-            {
-                others = [NSMutableDictionary dictionary];
-            }
-            others[key] = JSONDictionary[key];
-        }
-    }
+    NSAssert(NO, @"%@ does not implement JSONDictionary", self.class);
+    return nil;
 }
 
--(NSDictionary *)others
+- (NSDictionary *)others
 {
-    return others;
+    NSAssert(NO, @"%@ does not implement others", self.class);
+    return nil;
 }
 
-- (NSDictionary *)originalDictionary
+
+#pragma mark - NSCopying
+- (id)copyWithZone:(NSZone *)zone
 {
-    NSMutableDictionary * originalDictionary = [NSMutableDictionary dictionary];
+    NSAssert(NO, @"%@ does not implement NSCopying", self.class);
+    return nil;
+}
 
-    NSDictionary *JSONKeyPathsByPropertyKey = [self.class JSONKeyPathsByPropertyKey];
-    NSDictionary *dictValue = self.dictionaryValue;
-    
-    for (NSString *key in dictValue)
-    {
-        // Ignore NSNull values introduced by dictionaryWithValuesForKeys use in 'dictionaryValue' getter.
-        if (![dictValue[key] isKindOfClass:[NSNull class]])
-        {
-            // Convert back camelCased property names (ex:roomId) to underscored names (ex:room_id)
-            // Thus, we store events as they come from the home server.
-            originalDictionary[JSONKeyPathsByPropertyKey[key]] = dictValue[key];
-        }
-    }
 
-    return originalDictionary;
+#pragma mark - NSCoding
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
+    NSAssert(NO, @"%@ does not implement NSCoding", self.class);
+    return nil;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    NSAssert(NO, @"%@ does not implement NSCoding", self.class);
 }
 
 @end

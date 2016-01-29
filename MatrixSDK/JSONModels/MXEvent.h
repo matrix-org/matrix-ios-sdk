@@ -240,12 +240,6 @@ Contains the fully-qualified ID of the user who sent this event (deprecated sinc
 - (BOOL)isState;
 
 /**
- Returns all MXEvent properties into a dictionary.
- Unlike [MXJSONModel originalDictionary], it returns also properties computed by the SDK.
- */
-- (NSDictionary *)dictionary;
-
-/**
  Returns the event IDs for which a read receipt is defined in this event.
  
  This property is relevant only for events with 'kMXEventTypeStringReceipt' type.

@@ -19,6 +19,25 @@
 #import "MXTools.h"
 
 @implementation MXRoomPowerLevels
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXRoomPowerLevels *roomPowerLevels = [[MXRoomPowerLevels alloc] init];
+    if (roomPowerLevels)
+    {
+        MXJSONModelSetDictionary(roomPowerLevels.users, JSONDictionary[@"users"]);
+        MXJSONModelSetUInteger(roomPowerLevels.usersDefault, JSONDictionary[@"users_default"]);
+        MXJSONModelSetUInteger(roomPowerLevels.ban, JSONDictionary[@"ban"]);
+        MXJSONModelSetUInteger(roomPowerLevels.kick, JSONDictionary[@"kick"]);
+        MXJSONModelSetUInteger(roomPowerLevels.redact, JSONDictionary[@"redact"]);
+        MXJSONModelSetUInteger(roomPowerLevels.invite, JSONDictionary[@"invite"]);
+        MXJSONModelSetDictionary(roomPowerLevels.events, JSONDictionary[@"events"]);
+        MXJSONModelSetUInteger(roomPowerLevels.eventsDefault, JSONDictionary[@"events_default"]);
+        MXJSONModelSetUInteger(roomPowerLevels.stateDefault, JSONDictionary[@"state_default"]);
+    }
+    return roomPowerLevels;
+}
+
 - (instancetype)init
 {
     self = [super init];
@@ -39,7 +58,8 @@
     // By default, use usersDefault
     NSUInteger userPowerLevel = _usersDefault;
 
-    NSNumber *powerLevel = _users[userId];
+    NSNumber *powerLevel;
+    MXJSONModelSetNumber(powerLevel, _users[userId]);
     if (powerLevel)
     {
         userPowerLevel = [powerLevel unsignedIntegerValue];
@@ -72,7 +92,8 @@
 {
     NSUInteger minimumPowerLevel;
 
-    NSNumber *powerLevel = _events[eventTypeString];
+    NSNumber *powerLevel;
+    MXJSONModelSetNumber(powerLevel, _events[eventTypeString]);
     if (powerLevel)
     {
         minimumPowerLevel = [powerLevel unsignedIntegerValue];
@@ -84,6 +105,41 @@
     }
 
     return minimumPowerLevel;
+}
+
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
+
+    JSONDictionary[@"users"] = _users;
+    JSONDictionary[@"usersDefault"] = @(_usersDefault);
+    JSONDictionary[@"ban"] = @(_ban);
+    JSONDictionary[@"kick"] = @(_kick);
+    JSONDictionary[@"redact"] = @(_redact);
+    JSONDictionary[@"invite"] = @(_invite);
+    JSONDictionary[@"events"] = _events;
+    JSONDictionary[@"eventsDefault"] = @(_eventsDefault);
+    JSONDictionary[@"stateDefault"] = @(_stateDefault);
+
+    return JSONDictionary;
+}
+
+#pragma mark - NSCopying
+- (id)copyWithZone:(NSZone *)zone
+{
+    MXRoomPowerLevels *roomPowerLevelsCopy = [[MXRoomPowerLevels allocWithZone:zone] init];
+
+    roomPowerLevelsCopy.users = [_users copyWithZone:zone];
+    roomPowerLevelsCopy.usersDefault = _usersDefault;
+    roomPowerLevelsCopy.ban = _ban;
+    roomPowerLevelsCopy.kick = _kick;
+    roomPowerLevelsCopy.redact = _redact;
+    roomPowerLevelsCopy.invite = _invite;
+    roomPowerLevelsCopy.events = [_events copyWithZone:zone];
+    roomPowerLevelsCopy.eventsDefault = _eventsDefault;
+    roomPowerLevelsCopy.stateDefault = _stateDefault;
+
+    return roomPowerLevelsCopy;
 }
 
 @end

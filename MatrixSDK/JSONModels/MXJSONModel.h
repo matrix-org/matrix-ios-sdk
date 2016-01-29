@@ -16,27 +16,23 @@
 
 #import <Foundation/Foundation.h>
 
-#import <Mantle/Mantle.h>
 
 /**
- A class that inherits from `MXJSONModel` represents the response to a request to a Matrix home server.
+ A class that inherits from `MXJSONModel` represents the response to a request
+ to a Matrix home server.
  
- Matrix home server responses are a JSON string. The `MXJSONModel` class maps the members in the JSON object to the properties declared in the class that inherits from MXJSONModel
+ Matrix home server responses are JSON strings. `MXJSONModel` derived classes map
+ the members of the JSON object into their properties.
+ 
+ Some of the methods below are pure virtual methods in C++ definition and must be
+ implemented by the derived class if they are used by the code.
  */
-@interface MXJSONModel : MTLModel <MTLJSONSerializing>
+@interface MXJSONModel : NSObject <NSCopying, NSCoding>
 
-/**
- This dictionary contains keys/values that have been in the JSON source object.
- */
-- (NSDictionary *)others;
 
+#pragma mark - Class methods
 /**
- Rebuild the original JSON dictionary
- */
-- (NSDictionary *)originalDictionary;
-
-/**
- Create a model instance from a JSON dictionary
+ Create a model instance from a JSON dictionary.
  
  @param JSONDictionary the JSON data.
  @return the newly created instance.
@@ -59,4 +55,101 @@
  */
 + (NSDictionary *)removeNullValuesInJSON:(NSDictionary *)JSONDictionary;
 
+
+#pragma mark - Instance methods
+/**
+ Rebuild the original JSON dictionary
+ */
+- (NSDictionary *)JSONDictionary;
+
+/**
+ This dictionary contains keys/values that have been in the JSON source object
+ but not decoded.
+ TODO: To implement so that app can manage custom events or paramaters.
+ */
+- (NSDictionary *)others;
+
 @end
+
+
+#pragma mark - Validation methods
+/**
+ Validate then set the value into the variable.
+ 
+ @param var the variable to set the value to.
+ @param class the expected class.
+ @param value the value to set.
+ */
+#define MXJSONModelSet(var, class, value) \
+    if (value) \
+    { \
+        if ([value isKindOfClass:class]) var = value; \
+        else MXJSONModelSetLogError(class, value)  \
+    }
+
+/**
+ Typed declinations of MXJSONModelSet.
+
+ @param var the variable to set the value to.
+ @param value the value to set.
+ */
+#define MXJSONModelSetArray(var, value)         MXJSONModelSet(var, NSArray.class, value)
+#define MXJSONModelSetDictionary(var, value)    MXJSONModelSet(var, NSDictionary.class, value)
+#define MXJSONModelSetString(var, value)        MXJSONModelSet(var, NSString.class, value)
+#define MXJSONModelSetNumber(var, value)        MXJSONModelSet(var, NSNumber.class, value)
+
+/**
+ Validate then set a numerical value into the variable.
+
+ @param var the variable to set the value to.
+ @param value the value to set.
+ */
+#define MXJSONModelSetBoolean(var, value)       MXJSONModelSetNumberValue(var, boolValue, value)
+#define MXJSONModelSetInteger(var, value)       MXJSONModelSetNumberValue(var, integerValue, value)
+#define MXJSONModelSetUInteger(var, value)      MXJSONModelSetNumberValue(var, unsignedIntegerValue, value)
+#define MXJSONModelSetUInt64(var, value)        MXJSONModelSetNumberValue(var, unsignedLongLongValue, value)
+
+#define MXJSONModelSetNumberValue(var, method, value)  \
+    if (value) \
+    { \
+        if ([value isKindOfClass:NSNumber.class]) var = [((NSNumber*)value) method]; \
+        else MXJSONModelSetLogError(NSNumber.class, value)  \
+    }
+
+/**
+ Validate, decode the MXJSONModel object in 'value', then set it into the variable.
+
+ @param var the variable to set the value to.
+ @param MXJSONModelClass the class to use to decode 'value'.
+ @param value the value to decode, then set.
+ */
+#define MXJSONModelSetMXJSONModel(var, MXJSONModelClass, value) \
+    if (value) \
+    { \
+        if ([value isKindOfClass:NSDictionary.class]) var = [MXJSONModelClass modelFromJSON:value]; \
+        else MXJSONModelSetLogError(NSDictionary.class, value)  \
+    }
+
+/**
+ Same as 'MXJSONModelSetMXJSONModel' but for array of MXJSONModel objects.
+
+ @param var the variable to set the value to.
+ @param MXJSONModelClass the class to use to decode 'values'.
+ @param values the values to decode, then set.
+ */
+#define MXJSONModelSetMXJSONModelArray(var, MXJSONModelClass, values) \
+    if (values) \
+    { \
+        if ([values isKindOfClass:NSArray.class]) var = [MXJSONModelClass modelsFromJSON:values]; \
+        else MXJSONModelSetLogError(NSArray.class, values)  \
+    }
+
+/**
+ Log a validation error.
+ */
+#define MXJSONModelSetLogError(theClass, value) \
+    { \
+        NSLog(@"[MXJSONModelSet] Error: Unexpected type for parsing at %@:%d. Expected: %@. Got: %@ (%@)", \
+            @(__FILE__).lastPathComponent, __LINE__, theClass, value, NSStringFromClass([value class])); \
+        NSAssert(NO, @""); \
+    }

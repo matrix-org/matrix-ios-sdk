@@ -31,7 +31,7 @@
 
 #pragma mark - Constants definitions
 
-const NSString *MatrixSDKVersion = @"0.6.0";
+const NSString *MatrixSDKVersion = @"0.6.1";
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
@@ -312,8 +312,13 @@ typedef void (^MXOnResumeDone)();
                 {
                     for (MXEvent *userPresenceEvent in userPresenceEvents)
                     {
-                        MXUser *user = [self getOrCreateUser:userPresenceEvent.content[@"user_id"]];
-                        [user updateWithPresenceEvent:userPresenceEvent];
+                        NSString *userId;
+                        MXJSONModelSetString(userId, userPresenceEvent.content[@"user_id"]);
+                        if (userId)
+                        {
+                            MXUser *user = [self getOrCreateUser:userId];
+                            [user updateWithPresenceEvent:userPresenceEvent];
+                        }
                     }
                 }
 
