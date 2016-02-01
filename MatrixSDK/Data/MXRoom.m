@@ -528,9 +528,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 }
 
 - (MXHTTPOperation*)paginateBackMessages:(NSUInteger)numItems
-                           onlyFromStore:(BOOL)onlyFromStore
-                                complete:(void (^)())complete
-                                 failure:(void (^)(NSError *error))failure
+                    complete:(void (^)())complete
+                     failure:(void (^)(NSError *error))failure
 {
     MXHTTPOperation *operation;
 
@@ -560,14 +559,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             
             numItems -= messagesFromStoreCount;
         }
-    }
-
-    if (onlyFromStore && messagesFromStoreCount)
-    {
-        complete();
-
-        NSLog(@"[MXRoom] paginateBackMessages : is done from the store");
-        return nil;
     }
 
     if (0 < numItems && NO == [mxSession.store hasReachedHomeServerPaginationEndForRoom:_state.roomId])
