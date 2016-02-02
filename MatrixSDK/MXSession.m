@@ -342,8 +342,6 @@ typedef void (^MXOnResumeDone)();
             NSDate *startDate2 = [NSDate date];
             [self resume:^{
                 NSLog(@"[MXSession] Events stream resumed in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
-
-                [self setState:MXSessionStateRunning];
                 onServerSyncDone();
             }];
         };
@@ -465,22 +463,24 @@ typedef void (^MXOnResumeDone)();
                 }
             }
             
-            // the event stream is running by now
+            // The event stream is running by now
+            // CAUTION: Update the session state before calling the onResumeDone block (if any).
+            // Indeed if a Pause is pending, it will be applied on this state change.
             [self setState:MXSessionStateRunning];
 
             // If we are resuming inform the app that it received the last uptodate data
             if (onResumeDone)
             {
                 NSLog(@"[MXSession] Events stream resumed with %tu new events", events.count);
-
+                
                 onResumeDone();
                 onResumeDone = nil;
-
-                // Check SDK user did not called [MXSession close] in onResumeDone
-                if (nil == _myUser)
-                {
-                    return;
-                }
+            }
+            
+            // Check SDK user did not called [MXSession close] or [MXSession pause]
+            if (nil == _myUser || _state == MXSessionStatePaused)
+            {
+                return;
             }
 
             // Go streaming from the returned token
@@ -1006,6 +1006,7 @@ typedef void (^MXOnResumeDone)();
         [self streamEventsFromToken:_store.eventStreamToken withLongPoll:YES];
         
         [self setState:MXSessionStateRunning];
+        
         onServerSyncDone();
         
     } failure:^(NSError *error) {
@@ -1181,6 +1182,11 @@ typedef void (^MXOnResumeDone)();
             }
         }
         
+        // The event stream is running by now
+        // CAUTION: Update the session state before calling the onResumeDone block (if any).
+        // Indeed if a Pause is pending, it will be applied on this state change.
+        [self setState:MXSessionStateRunning];
+        
         // If we are resuming inform the app that it received the last uptodate data
         if (onResumeDone)
         {
@@ -1188,16 +1194,13 @@ typedef void (^MXOnResumeDone)();
             
             onResumeDone();
             onResumeDone = nil;
-            
-            // Check SDK user did not called [MXSession close] in onResumeDone
-            if (nil == _myUser)
-            {
-                return;
-            }
         }
         
-        // the event stream is running by now
-        [self setState:MXSessionStateRunning];
+        // Check SDK user did not called [MXSession close] or [MXSession pause]
+        if (nil == _myUser || _state == MXSessionStatePaused)
+        {
+            return;
+        }
         
         // Pursue live events listening (long polling)
         [self serverSyncWithServerTimeout:SERVER_TIMEOUT_MS success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
