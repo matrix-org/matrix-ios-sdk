@@ -336,6 +336,19 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
                        failure:(void (^)(NSError *error))failure;
 
 /**
+ Invite a user to a room based on their email address to this room.
+
+ @param email the user email.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)inviteUserByEmail:(NSString*)email
+                              success:(void (^)())success
+                              failure:(void (^)(NSError *error))failure;
+
+/**
  Kick a user from this room.
 
  @param userId the user id.
