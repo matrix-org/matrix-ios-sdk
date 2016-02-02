@@ -72,6 +72,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                                       kMXEventTypeStringRoomMessage,
                                       kMXEventTypeStringRoomMessageFeedback,
                                       kMXEventTypeStringRoomRedaction,
+                                      kMXEventTypeStringRoomThirdPartyInvite,
                                       kMXEventTypeStringCallInvite,
                                       kMXEventTypeStringCallCandidates,
                                       kMXEventTypeStringCallAnswer,

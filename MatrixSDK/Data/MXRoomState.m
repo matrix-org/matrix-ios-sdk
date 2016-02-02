@@ -447,6 +447,11 @@
 
             break;
         }
+        case MXEventTypeRoomThirdPartyInvite:
+        {
+            // TODO
+            break;
+        }
         case MXEventTypeRoomPowerLevels:
         {
             powerLevels = [MXRoomPowerLevels modelFromJSON:[self contentOfEvent:event]];

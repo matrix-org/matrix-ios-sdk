@@ -52,7 +52,7 @@
 /**
  A copy of the list of room members (actually MXRoomMember instances).
  */
-@property (nonatomic, readonly) NSArray *members;
+@property (nonatomic, readonly) NSArray<MXRoomMember*> *members;
 
 /**
  The power level of room members
@@ -131,7 +131,7 @@
  */
 - (id)initWithRoomId:(NSString*)roomId
     andMatrixSession:(MXSession*)matrixSession
-         andInitialSync:(MXRoomInitialSync*)initialSync
+      andInitialSync:(MXRoomInitialSync*)initialSync
         andDirection:(BOOL)isLive;
 
 /**
