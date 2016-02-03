@@ -178,6 +178,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  The retrieved events will be sent to registered listeners.
  
  @param numItems the number of items to get.
+ @param onlyFromStore if YES, return available events from the store, do not make a pagination request to the homeserver.
  @param complete A block object called when the operation is complete.
  @param failure A block object called when the operation fails.
  
@@ -185,8 +186,9 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
          if no request to the home server is required.
  */
 - (MXHTTPOperation*)paginateBackMessages:(NSUInteger)numItems
-                    complete:(void (^)())complete
-                     failure:(void (^)(NSError *error))failure;
+                           onlyFromStore:(BOOL)onlyFromStore
+                                complete:(void (^)())complete
+                                 failure:(void (^)(NSError *error))failure;
 
 
 /**
