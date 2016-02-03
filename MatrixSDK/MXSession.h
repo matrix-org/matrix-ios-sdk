@@ -251,8 +251,8 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  Resume the session events stream.
  
  @param resumeDone A block called when the SDK has been successfully resumed and the app
-                   has received uptodate data/events. The live event listening (long polling)
-                   is not launched yet.
+                   has received uptodate data/events. The live event listening
+                   (long polling) is not launched yet.
                    CAUTION The session state is updated (to MXSessionStateRunning) after
                    calling this block. It MUST not be modified by this block.
  */
