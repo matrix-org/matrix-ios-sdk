@@ -254,7 +254,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
                    has received uptodate data/events. The live event listening
                    (long polling) is not launched yet.
                    CAUTION The session state is updated (to MXSessionStateRunning) after
-                   calling this block. It MUST not be modified by this block.
+                   calling this block. It SHOULD not be modified by this block.
  */
 - (void)resume:(void (^)())resumeDone;
 

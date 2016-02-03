@@ -446,7 +446,11 @@ typedef void (^MXOnResumeDone)();
             if (onBackgroundSyncDone)
             {
                 NSLog(@"[MXSession] background Sync with %tu new events", events.count);
-                onBackgroundSyncDone();
+                
+                // Operations on session may occur during this block. For example, [MXSession close] may be triggered.
+                // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
+                MXOnBackgroundSyncDone onBackgroundSyncDoneCpy = [onBackgroundSyncDone copy];
+                onBackgroundSyncDoneCpy();
                 onBackgroundSyncDone = nil;
                 
                 // check that the application was not resumed while catching up
@@ -468,8 +472,17 @@ typedef void (^MXOnResumeDone)();
             {
                 NSLog(@"[MXSession] Events stream resumed with %tu new events", events.count);
                 
-                onResumeDone();
+                // Operations on session may occur during this block. For example, [MXSession close] or [MXSession pause] may be triggered.
+                // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
+                MXOnResumeDone onResumeDoneCpy = [onResumeDone copy];
+                onResumeDoneCpy();
                 onResumeDone = nil;
+                
+                // Stop here if [MXSession close] or [MXSession pause] has been triggered during onResumeDone block.
+                if (nil == _myUser || _state == MXSessionStatePaused)
+                {
+                    return;
+                }
             }
             
             // The event stream is running by now
@@ -496,7 +509,10 @@ typedef void (^MXOnResumeDone)();
         {
             NSLog(@"[MXSession] background Sync fails %@", error);
             
-            onBackgroundSyncFail(error);
+            // Operations on session may occur during this block. For example, [MXSession close] may be triggered.
+            // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
+            MXOnBackgroundSyncFail onBackgroundSyncFailCpy = [onBackgroundSyncFail copy];
+            onBackgroundSyncFailCpy(error);
             onBackgroundSyncFail = nil;
             
             // check that the application was not resumed while catching up in background
@@ -1163,7 +1179,11 @@ typedef void (^MXOnResumeDone)();
         if (onBackgroundSyncDone)
         {
             NSLog(@"[MXSession] Events stream background Sync succeeded");
-            onBackgroundSyncDone();
+            
+            // Operations on session may occur during this block. For example, [MXSession close] may be triggered.
+            // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
+            MXOnBackgroundSyncDone onBackgroundSyncDoneCpy = [onBackgroundSyncDone copy];
+            onBackgroundSyncDoneCpy();
             onBackgroundSyncDone = nil;
             
             // check that the application was not resumed while catching up in background
@@ -1185,8 +1205,17 @@ typedef void (^MXOnResumeDone)();
         {
             NSLog(@"[MXSession] Events stream resumed");
             
-            onResumeDone();
+            // Operations on session may occur during this block. For example, [MXSession close] or [MXSession pause] may be triggered.
+            // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
+            MXOnResumeDone onResumeDoneCpy = [onResumeDone copy];
+            onResumeDoneCpy();
             onResumeDone = nil;
+            
+            // Stop here if [MXSession close] or [MXSession pause] has been triggered during onResumeDone block.
+            if (nil == _myUser || _state == MXSessionStatePaused)
+            {
+                return;
+            }
         }
         
         // The event stream is running by now
@@ -1224,7 +1253,10 @@ typedef void (^MXOnResumeDone)();
         {
             NSLog(@"[MXSession] background Sync fails %@", error);
             
-            onBackgroundSyncFail(error);
+            // Operations on session may occur during this block. For example, [MXSession close] may be triggered.
+            // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
+            MXOnBackgroundSyncFail onBackgroundSyncFailCpy = [onBackgroundSyncFail copy];
+            onBackgroundSyncFailCpy(error);
             onBackgroundSyncFail = nil;
             
             // check that the application was not resumed while catching up in background
