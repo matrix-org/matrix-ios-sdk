@@ -27,8 +27,13 @@
     
     NSMutableDictionary *stateEvents;
     NSMutableDictionary *members;
+
+    /**
+     The third party invites. The key is the token provided by the homeserver.
+     */
+    NSMutableDictionary<NSString*, MXRoomThirdPartyInvite*> *thirdPartyInvites;
     
-    /*
+    /**
      Additional and optional metadata got from initialSync
      */
     MXMembership membership;
@@ -71,6 +76,7 @@
         stateEvents = [NSMutableDictionary dictionary];
         members = [NSMutableDictionary dictionary];
         membersNamesCache = [NSMutableDictionary dictionary];
+        thirdPartyInvites = [NSMutableDictionary dictionary];
     }
     return self;
 }
@@ -146,12 +152,24 @@
     {
         [state addObject:roomMember.originalEvent];
     }
+
+    // Third party invites are state events too
+    for (MXRoomThirdPartyInvite *thirdPartyInvite in self.thirdPartyInvites)
+    {
+        [state addObject:thirdPartyInvite.originalEvent];
+    }
+
     return state;
 }
 
 - (NSArray *)members
 {
     return [members allValues];
+}
+
+- (NSArray<MXRoomThirdPartyInvite *> *)thirdPartyInvites
+{
+    return [thirdPartyInvites allValues];
 }
 
 - (void)setIsPublic:(BOOL)isPublicValue
@@ -449,7 +467,21 @@
         }
         case MXEventTypeRoomThirdPartyInvite:
         {
-            // TODO
+            // The content and the prev_content of a m.room.third_party_invite event are the same.
+            // So, use isLive to know if the invite must be added or removed (case of back state).
+            if (_isLive)
+            {
+                MXRoomThirdPartyInvite *thirdPartyInvite = [[MXRoomThirdPartyInvite alloc] initWithMXEvent:event];
+                if (thirdPartyInvite)
+                {
+                    thirdPartyInvites[thirdPartyInvite.token] = thirdPartyInvite;
+                }
+            }
+            else
+            {
+                // Note: the 3pid invite token is stored in the event state key
+                [thirdPartyInvites removeObjectForKey:event.stateKey];
+            }
             break;
         }
         case MXEventTypeRoomPowerLevels:
@@ -595,6 +627,8 @@
     // the sdk receives room member event, even if it is an update of an existing member like a
     // membership change (ex: "invited" -> "joined")
     stateCopy->members = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:members];
+
+    stateCopy->thirdPartyInvites = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:thirdPartyInvites];
 
     if (visibility)
     {

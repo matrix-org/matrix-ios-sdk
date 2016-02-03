@@ -19,6 +19,7 @@
 #import "MXEvent.h"
 #import "MXJSONModels.h"
 #import "MXRoomMember.h"
+#import "MXRoomThirdPartyInvite.h"
 #import "MXRoomPowerLevels.h"
 
 @class MXSession;
@@ -53,6 +54,11 @@
  A copy of the list of room members (actually MXRoomMember instances).
  */
 @property (nonatomic, readonly) NSArray<MXRoomMember*> *members;
+
+/**
+A copy of the list of third party invites (actually MXRoomThirdPartyInvite instances).
+*/
+@property (nonatomic, readonly) NSArray<MXRoomThirdPartyInvite*> *thirdPartyInvites;
 
 /**
  The power level of room members
