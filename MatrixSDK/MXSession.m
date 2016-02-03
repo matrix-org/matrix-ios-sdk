@@ -462,11 +462,6 @@ typedef void (^MXOnResumeDone)();
                     NSLog(@"[MXSession] resume after a background Sync ");
                 }
             }
-            
-            // The event stream is running by now
-            // CAUTION: Update the session state before calling the onResumeDone block (if any).
-            // Indeed if a Pause is pending, it will be applied on this state change.
-            [self setState:MXSessionStateRunning];
 
             // If we are resuming inform the app that it received the last uptodate data
             if (onResumeDone)
@@ -477,7 +472,10 @@ typedef void (^MXOnResumeDone)();
                 onResumeDone = nil;
             }
             
-            // Check SDK user did not called [MXSession close] or [MXSession pause]
+            // The event stream is running by now
+            [self setState:MXSessionStateRunning];
+            
+            // Check SDK user did not called [MXSession close] or [MXSession pause] during the session state change notification handling.
             if (nil == _myUser || _state == MXSessionStatePaused)
             {
                 return;
@@ -1182,11 +1180,6 @@ typedef void (^MXOnResumeDone)();
             }
         }
         
-        // The event stream is running by now
-        // CAUTION: Update the session state before calling the onResumeDone block (if any).
-        // Indeed if a Pause is pending, it will be applied on this state change.
-        [self setState:MXSessionStateRunning];
-        
         // If we are resuming inform the app that it received the last uptodate data
         if (onResumeDone)
         {
@@ -1196,7 +1189,10 @@ typedef void (^MXOnResumeDone)();
             onResumeDone = nil;
         }
         
-        // Check SDK user did not called [MXSession close] or [MXSession pause]
+        // The event stream is running by now
+        [self setState:MXSessionStateRunning];
+        
+        // Check SDK user did not called [MXSession close] or [MXSession pause] during the session state change notification handling.
         if (nil == _myUser || _state == MXSessionStatePaused)
         {
             return;
