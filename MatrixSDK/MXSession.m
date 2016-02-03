@@ -342,8 +342,6 @@ typedef void (^MXOnResumeDone)();
             NSDate *startDate2 = [NSDate date];
             [self resume:^{
                 NSLog(@"[MXSession] Events stream resumed in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
-
-                [self setState:MXSessionStateRunning];
                 onServerSyncDone();
             }];
         };
@@ -448,7 +446,11 @@ typedef void (^MXOnResumeDone)();
             if (onBackgroundSyncDone)
             {
                 NSLog(@"[MXSession] background Sync with %tu new events", events.count);
-                onBackgroundSyncDone();
+                
+                // Operations on session may occur during this block. For example, [MXSession close] may be triggered.
+                // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
+                MXOnBackgroundSyncDone onBackgroundSyncDoneCpy = [onBackgroundSyncDone copy];
+                onBackgroundSyncDoneCpy();
                 onBackgroundSyncDone = nil;
                 
                 // check that the application was not resumed while catching up
@@ -464,23 +466,32 @@ typedef void (^MXOnResumeDone)();
                     NSLog(@"[MXSession] resume after a background Sync ");
                 }
             }
-            
-            // the event stream is running by now
-            [self setState:MXSessionStateRunning];
 
             // If we are resuming inform the app that it received the last uptodate data
             if (onResumeDone)
             {
                 NSLog(@"[MXSession] Events stream resumed with %tu new events", events.count);
-
-                onResumeDone();
+                
+                // Operations on session may occur during this block. For example, [MXSession close] or [MXSession pause] may be triggered.
+                // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
+                MXOnResumeDone onResumeDoneCpy = [onResumeDone copy];
+                onResumeDoneCpy();
                 onResumeDone = nil;
-
-                // Check SDK user did not called [MXSession close] in onResumeDone
-                if (nil == _myUser)
+                
+                // Stop here if [MXSession close] or [MXSession pause] has been triggered during onResumeDone block.
+                if (nil == _myUser || _state == MXSessionStatePaused)
                 {
                     return;
                 }
+            }
+            
+            // The event stream is running by now
+            [self setState:MXSessionStateRunning];
+            
+            // Check SDK user did not called [MXSession close] or [MXSession pause] during the session state change notification handling.
+            if (nil == _myUser || _state == MXSessionStatePaused)
+            {
+                return;
             }
 
             // Go streaming from the returned token
@@ -498,7 +509,10 @@ typedef void (^MXOnResumeDone)();
         {
             NSLog(@"[MXSession] background Sync fails %@", error);
             
-            onBackgroundSyncFail(error);
+            // Operations on session may occur during this block. For example, [MXSession close] may be triggered.
+            // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
+            MXOnBackgroundSyncFail onBackgroundSyncFailCpy = [onBackgroundSyncFail copy];
+            onBackgroundSyncFailCpy(error);
             onBackgroundSyncFail = nil;
             
             // check that the application was not resumed while catching up in background
@@ -1006,6 +1020,7 @@ typedef void (^MXOnResumeDone)();
         [self streamEventsFromToken:_store.eventStreamToken withLongPoll:YES];
         
         [self setState:MXSessionStateRunning];
+        
         onServerSyncDone();
         
     } failure:^(NSError *error) {
@@ -1164,7 +1179,11 @@ typedef void (^MXOnResumeDone)();
         if (onBackgroundSyncDone)
         {
             NSLog(@"[MXSession] Events stream background Sync succeeded");
-            onBackgroundSyncDone();
+            
+            // Operations on session may occur during this block. For example, [MXSession close] may be triggered.
+            // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
+            MXOnBackgroundSyncDone onBackgroundSyncDoneCpy = [onBackgroundSyncDone copy];
+            onBackgroundSyncDoneCpy();
             onBackgroundSyncDone = nil;
             
             // check that the application was not resumed while catching up in background
@@ -1186,18 +1205,27 @@ typedef void (^MXOnResumeDone)();
         {
             NSLog(@"[MXSession] Events stream resumed");
             
-            onResumeDone();
+            // Operations on session may occur during this block. For example, [MXSession close] or [MXSession pause] may be triggered.
+            // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
+            MXOnResumeDone onResumeDoneCpy = [onResumeDone copy];
+            onResumeDoneCpy();
             onResumeDone = nil;
             
-            // Check SDK user did not called [MXSession close] in onResumeDone
-            if (nil == _myUser)
+            // Stop here if [MXSession close] or [MXSession pause] has been triggered during onResumeDone block.
+            if (nil == _myUser || _state == MXSessionStatePaused)
             {
                 return;
             }
         }
         
-        // the event stream is running by now
+        // The event stream is running by now
         [self setState:MXSessionStateRunning];
+        
+        // Check SDK user did not called [MXSession close] or [MXSession pause] during the session state change notification handling.
+        if (nil == _myUser || _state == MXSessionStatePaused)
+        {
+            return;
+        }
         
         // Pursue live events listening (long polling)
         [self serverSyncWithServerTimeout:SERVER_TIMEOUT_MS success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
@@ -1225,7 +1253,10 @@ typedef void (^MXOnResumeDone)();
         {
             NSLog(@"[MXSession] background Sync fails %@", error);
             
-            onBackgroundSyncFail(error);
+            // Operations on session may occur during this block. For example, [MXSession close] may be triggered.
+            // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
+            MXOnBackgroundSyncFail onBackgroundSyncFailCpy = [onBackgroundSyncFail copy];
+            onBackgroundSyncFailCpy(error);
             onBackgroundSyncFail = nil;
             
             // check that the application was not resumed while catching up in background
