@@ -192,7 +192,7 @@ MXAuthAction;
 
 - (NSString*)registerFallback;
 {
-    return [[NSURL URLWithString:@"_matrix/static/client/register" relativeToURL:[NSURL URLWithString:homeserver]] absoluteString];
+    return [[NSURL URLWithString:@"_matrix/static/client/register/" relativeToURL:[NSURL URLWithString:homeserver]] absoluteString];
 }
 
 #pragma mark - Login operations
@@ -218,7 +218,7 @@ MXAuthAction;
 
 - (NSString*)loginFallback;
 {
-    return [[NSURL URLWithString:@"/_matrix/static/client/login" relativeToURL:[NSURL URLWithString:homeserver]] absoluteString];
+    return [[NSURL URLWithString:@"/_matrix/static/client/login/" relativeToURL:[NSURL URLWithString:homeserver]] absoluteString];
 }
 
 
