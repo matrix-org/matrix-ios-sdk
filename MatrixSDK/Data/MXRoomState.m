@@ -54,7 +54,13 @@
      The key is the user id. The value, the member name to display.
      This cache is resetted when there is new room member event.
      */
-    NSMutableDictionary *membersNamesCache;
+    NSMutableDictionary<NSString*, NSString*> *membersNamesCache;
+
+    /**
+     Cache for [self memberWithThirdPartyInviteToken].
+     The key is the 3pid invite token.
+     */
+    NSMutableDictionary<NSString*, MXRoomMember*>  *membersWithThirdPartyInviteTokenCache;
 }
 @end
 
@@ -75,8 +81,9 @@
         
         stateEvents = [NSMutableDictionary dictionary];
         members = [NSMutableDictionary dictionary];
-        membersNamesCache = [NSMutableDictionary dictionary];
         thirdPartyInvites = [NSMutableDictionary dictionary];
+        membersNamesCache = [NSMutableDictionary dictionary];
+        membersWithThirdPartyInviteTokenCache = [NSMutableDictionary dictionary];
     }
     return self;
 }
@@ -444,6 +451,12 @@
                     // Force to use an identicon url
                     roomMember.avatarUrl = [mxSession.matrixRestClient urlOfIdenticon:roomMember.userId];
                 }
+
+                // Cache room member event that is successor of a third party invite event
+                if (roomMember.thirdPartyInviteToken)
+                {
+                    membersWithThirdPartyInviteTokenCache[roomMember.thirdPartyInviteToken] = roomMember;
+                }
             }
             else
             {
@@ -514,6 +527,16 @@
 - (MXRoomMember*)memberWithUserId:(NSString *)userId
 {
     return members[userId];
+}
+
+- (MXRoomMember *)memberWithThirdPartyInviteToken:(NSString *)thirdPartyInviteToken
+{
+    return membersWithThirdPartyInviteTokenCache[thirdPartyInviteToken];
+}
+
+- (MXRoomThirdPartyInvite *)thirdPartyInviteWithToken:(NSString *)thirdPartyInviteToken
+{
+    return thirdPartyInvites[thirdPartyInviteToken];
 }
 
 - (NSString*)memberName:(NSString*)userId

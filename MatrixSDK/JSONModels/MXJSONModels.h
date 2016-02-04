@@ -209,6 +209,12 @@ FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeRecaptcha;
      */
     @property (nonatomic) NSString *membership;
 
+    /**
+     If the m.room.member event is the successor of a m.room.third_party_invite event,
+     'thirdPartyInviteToken' is the token of this event. Else, nil.
+     */
+    @property (nonatomic) NSString *thirdPartyInviteToken;
+
 @end
 
 

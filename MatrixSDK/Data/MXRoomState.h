@@ -165,6 +165,27 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
 - (MXRoomMember*)memberWithUserId:(NSString*)userId;
 
 /**
+ Return the member who was invited by a 3pid medium with the given token.
+ 
+ When invited by a 3pid medium like email, the not-yet-registered-to-matrix user is indicated
+ in the room state by a m.room.third_party_invite event.
+ Once he registers, the homeserver adds a m.room.membership event to the room state.
+ This event then contains the token of the previous m.room.third_party_invite event.
+
+ @param thirdPartyInviteToken the m.room.third_party_invite token to look for.
+ @return the room member.
+ */
+- (MXRoomMember*)memberWithThirdPartyInviteToken:(NSString*)thirdPartyInviteToken;
+
+/**
+ Return 3pid invite with the given token.
+
+ @param thirdPartyInviteToken the m.room.third_party_invite token to look for.
+ @return the 3pid invite.
+ */
+- (MXRoomThirdPartyInvite*)thirdPartyInviteWithToken:(NSString*)thirdPartyInviteToken;
+
+/**
  Return a display name for a member.
  It is his displayname member or, if nil, his userId
  */
