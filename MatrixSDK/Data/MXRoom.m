@@ -72,6 +72,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                                       kMXEventTypeStringRoomMessage,
                                       kMXEventTypeStringRoomMessageFeedback,
                                       kMXEventTypeStringRoomRedaction,
+                                      kMXEventTypeStringRoomThirdPartyInvite,
                                       kMXEventTypeStringCallInvite,
                                       kMXEventTypeStringCallCandidates,
                                       kMXEventTypeStringCallAnswer,
@@ -729,6 +730,13 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                        failure:(void (^)(NSError *error))failure
 {
     return [mxSession.matrixRestClient inviteUser:userId toRoom:_state.roomId success:success failure:failure];
+}
+
+- (MXHTTPOperation*)inviteUserByEmail:(NSString*)email
+                              success:(void (^)())success
+                              failure:(void (^)(NSError *error))failure
+{
+    return [mxSession.matrixRestClient inviteUserByEmail:email toRoom:_state.roomId success:success failure:failure];
 }
 
 - (MXHTTPOperation*)kickUser:(NSString*)userId

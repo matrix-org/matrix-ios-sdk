@@ -173,6 +173,11 @@ NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
         MXJSONModelSetString(roomMemberEventContent.displayname, JSONDictionary[@"displayname"]);
         MXJSONModelSetString(roomMemberEventContent.avatarUrl, JSONDictionary[@"avatar_url"]);
         MXJSONModelSetString(roomMemberEventContent.membership, JSONDictionary[@"membership"]);
+
+        if (JSONDictionary[@"third_party_invite"] && JSONDictionary[@"third_party_invite"][@"signed"])
+        {
+            MXJSONModelSetString(roomMemberEventContent.thirdPartyInviteToken, JSONDictionary[@"third_party_invite"][@"signed"][@"token"]);
+        }
     }
 
     return roomMemberEventContent;

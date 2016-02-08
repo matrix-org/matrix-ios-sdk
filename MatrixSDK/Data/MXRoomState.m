@@ -27,8 +27,13 @@
     
     NSMutableDictionary *stateEvents;
     NSMutableDictionary *members;
+
+    /**
+     The third party invites. The key is the token provided by the homeserver.
+     */
+    NSMutableDictionary<NSString*, MXRoomThirdPartyInvite*> *thirdPartyInvites;
     
-    /*
+    /**
      Additional and optional metadata got from initialSync
      */
     MXMembership membership;
@@ -49,7 +54,13 @@
      The key is the user id. The value, the member name to display.
      This cache is resetted when there is new room member event.
      */
-    NSMutableDictionary *membersNamesCache;
+    NSMutableDictionary<NSString*, NSString*> *membersNamesCache;
+
+    /**
+     Cache for [self memberWithThirdPartyInviteToken].
+     The key is the 3pid invite token.
+     */
+    NSMutableDictionary<NSString*, MXRoomMember*> *membersWithThirdPartyInviteTokenCache;
 }
 @end
 
@@ -70,7 +81,9 @@
         
         stateEvents = [NSMutableDictionary dictionary];
         members = [NSMutableDictionary dictionary];
+        thirdPartyInvites = [NSMutableDictionary dictionary];
         membersNamesCache = [NSMutableDictionary dictionary];
+        membersWithThirdPartyInviteTokenCache = [NSMutableDictionary dictionary];
     }
     return self;
 }
@@ -146,12 +159,24 @@
     {
         [state addObject:roomMember.originalEvent];
     }
+
+    // Third party invites are state events too
+    for (MXRoomThirdPartyInvite *thirdPartyInvite in self.thirdPartyInvites)
+    {
+        [state addObject:thirdPartyInvite.originalEvent];
+    }
+
     return state;
 }
 
 - (NSArray *)members
 {
     return [members allValues];
+}
+
+- (NSArray<MXRoomThirdPartyInvite *> *)thirdPartyInvites
+{
+    return [thirdPartyInvites allValues];
 }
 
 - (void)setIsPublic:(BOOL)isPublicValue
@@ -426,6 +451,12 @@
                     // Force to use an identicon url
                     roomMember.avatarUrl = [mxSession.matrixRestClient urlOfIdenticon:roomMember.userId];
                 }
+
+                // Cache room member event that is successor of a third party invite event
+                if (roomMember.thirdPartyInviteToken)
+                {
+                    membersWithThirdPartyInviteTokenCache[roomMember.thirdPartyInviteToken] = roomMember;
+                }
             }
             else
             {
@@ -445,6 +476,25 @@
                 }
             }
 
+            break;
+        }
+        case MXEventTypeRoomThirdPartyInvite:
+        {
+            // The content and the prev_content of a m.room.third_party_invite event are the same.
+            // So, use isLive to know if the invite must be added or removed (case of back state).
+            if (_isLive)
+            {
+                MXRoomThirdPartyInvite *thirdPartyInvite = [[MXRoomThirdPartyInvite alloc] initWithMXEvent:event];
+                if (thirdPartyInvite)
+                {
+                    thirdPartyInvites[thirdPartyInvite.token] = thirdPartyInvite;
+                }
+            }
+            else
+            {
+                // Note: the 3pid invite token is stored in the event state key
+                [thirdPartyInvites removeObjectForKey:event.stateKey];
+            }
             break;
         }
         case MXEventTypeRoomPowerLevels:
@@ -477,6 +527,16 @@
 - (MXRoomMember*)memberWithUserId:(NSString *)userId
 {
     return members[userId];
+}
+
+- (MXRoomMember *)memberWithThirdPartyInviteToken:(NSString *)thirdPartyInviteToken
+{
+    return membersWithThirdPartyInviteTokenCache[thirdPartyInviteToken];
+}
+
+- (MXRoomThirdPartyInvite *)thirdPartyInviteWithToken:(NSString *)thirdPartyInviteToken
+{
+    return thirdPartyInvites[thirdPartyInviteToken];
 }
 
 - (NSString*)memberName:(NSString*)userId
@@ -590,6 +650,10 @@
     // the sdk receives room member event, even if it is an update of an existing member like a
     // membership change (ex: "invited" -> "joined")
     stateCopy->members = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:members];
+
+    stateCopy->thirdPartyInvites = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:thirdPartyInvites];
+
+    stateCopy->membersWithThirdPartyInviteTokenCache= [[NSMutableDictionary allocWithZone:zone] initWithDictionary:membersWithThirdPartyInviteTokenCache];
 
     if (visibility)
     {
