@@ -879,7 +879,7 @@ NSString *const kMXReceiptsFolder = @"receipts";
         
         if (receiptsDict)
         {
-            NSLog(@"   - %@: %@", roomId, receiptsDict);
+            NSLog(@"   - %@: %tu", roomId, receiptsDict.count);
             
             [receiptsByRoomId setObject:receiptsDict forKey:roomId];
         }
