@@ -60,7 +60,7 @@
      Cache for [self memberWithThirdPartyInviteToken].
      The key is the 3pid invite token.
      */
-    NSMutableDictionary<NSString*, MXRoomMember*>  *membersWithThirdPartyInviteTokenCache;
+    NSMutableDictionary<NSString*, MXRoomMember*> *membersWithThirdPartyInviteTokenCache;
 }
 @end
 
@@ -652,6 +652,8 @@
     stateCopy->members = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:members];
 
     stateCopy->thirdPartyInvites = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:thirdPartyInvites];
+
+    stateCopy->membersWithThirdPartyInviteTokenCache= [[NSMutableDictionary allocWithZone:zone] initWithDictionary:membersWithThirdPartyInviteTokenCache];
 
     if (visibility)
     {
