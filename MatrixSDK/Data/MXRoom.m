@@ -72,6 +72,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                                       kMXEventTypeStringRoomMessage,
                                       kMXEventTypeStringRoomMessageFeedback,
                                       kMXEventTypeStringRoomRedaction,
+                                      kMXEventTypeStringRoomThirdPartyInvite,
                                       kMXEventTypeStringCallInvite,
                                       kMXEventTypeStringCallCandidates,
                                       kMXEventTypeStringCallAnswer,
@@ -528,8 +529,9 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 }
 
 - (MXHTTPOperation*)paginateBackMessages:(NSUInteger)numItems
-                    complete:(void (^)())complete
-                     failure:(void (^)(NSError *error))failure
+                           onlyFromStore:(BOOL)onlyFromStore
+                                complete:(void (^)())complete
+                                 failure:(void (^)(NSError *error))failure
 {
     MXHTTPOperation *operation;
 
@@ -559,6 +561,14 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             
             numItems -= messagesFromStoreCount;
         }
+    }
+
+    if (onlyFromStore && messagesFromStoreCount)
+    {
+        complete();
+
+        NSLog(@"[MXRoom] paginateBackMessages : is done from the store");
+        return nil;
     }
 
     if (0 < numItems && NO == [mxSession.store hasReachedHomeServerPaginationEndForRoom:_state.roomId])
@@ -720,6 +730,13 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                        failure:(void (^)(NSError *error))failure
 {
     return [mxSession.matrixRestClient inviteUser:userId toRoom:_state.roomId success:success failure:failure];
+}
+
+- (MXHTTPOperation*)inviteUserByEmail:(NSString*)email
+                              success:(void (^)())success
+                              failure:(void (^)(NSError *error))failure
+{
+    return [mxSession.matrixRestClient inviteUserByEmail:email toRoom:_state.roomId success:success failure:failure];
 }
 
 - (MXHTTPOperation*)kickUser:(NSString*)userId

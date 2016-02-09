@@ -20,7 +20,7 @@
 
 #import "MXFileStoreMetaData.h"
 
-NSUInteger const kMXFileVersion = 18;
+NSUInteger const kMXFileVersion = 19;
 
 NSString *const kMXFileStoreFolder = @"MXFileStore";
 NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -879,7 +879,7 @@ NSString *const kMXReceiptsFolder = @"receipts";
         
         if (receiptsDict)
         {
-            NSLog(@"   - %@: %@", roomId, receiptsDict);
+            NSLog(@"   - %@: %tu", roomId, receiptsDict.count);
             
             [receiptsByRoomId setObject:receiptsDict forKey:roomId];
         }

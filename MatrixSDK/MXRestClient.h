@@ -589,6 +589,37 @@ typedef enum : NSUInteger
                     toRoom:(NSString*)roomId
                    success:(void (^)())success
                    failure:(void (^)(NSError *error))failure;
+/**
+ Invite a user to a room based on their email address.
+
+ @param email the user email.
+ @param roomId the id of the room.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)inviteUserByEmail:(NSString*)email
+                               toRoom:(NSString*)roomId
+                              success:(void (^)())success
+                              failure:(void (^)(NSError *error))failure;
+
+/**
+ Invite a user to a room based on a third-party identifier.
+
+ @param medium the medium to invite the user e.g. "email".
+ @param medium address the address for the specified medium.
+ @param roomId the id of the room.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)inviteByThreePid:(NSString*)medium
+                             address:(NSString*)address
+                               toRoom:(NSString*)roomId
+                              success:(void (^)())success
+                              failure:(void (^)(NSError *error))failure;
 
 /**
  Kick a user from a room.
@@ -636,6 +667,7 @@ typedef enum : NSUInteger
                    inRoom:(NSString*)roomId
                   success:(void (^)())success
                   failure:(void (^)(NSError *error))failure;
+
 
 /**
  Create a room.

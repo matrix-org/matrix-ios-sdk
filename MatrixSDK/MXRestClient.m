@@ -18,6 +18,7 @@
 
 #import "MXJSONModel.h"
 #import "MXTools.h"
+#import "MXError.h"
 
 #pragma mark - Constants definitions
 /**
@@ -192,7 +193,7 @@ MXAuthAction;
 
 - (NSString*)registerFallback;
 {
-    return [[NSURL URLWithString:@"_matrix/static/client/register" relativeToURL:[NSURL URLWithString:homeserver]] absoluteString];
+    return [[NSURL URLWithString:@"_matrix/static/client/register/" relativeToURL:[NSURL URLWithString:homeserver]] absoluteString];
 }
 
 #pragma mark - Login operations
@@ -218,7 +219,7 @@ MXAuthAction;
 
 - (NSString*)loginFallback;
 {
-    return [[NSURL URLWithString:@"/_matrix/static/client/login" relativeToURL:[NSURL URLWithString:homeserver]] absoluteString];
+    return [[NSURL URLWithString:@"/_matrix/static/client/login/" relativeToURL:[NSURL URLWithString:homeserver]] absoluteString];
 }
 
 
@@ -1025,6 +1026,75 @@ MXAuthAction;
                              success:success failure:failure];
 }
 
+- (MXHTTPOperation*)inviteUserByEmail:(NSString*)email
+                               toRoom:(NSString*)roomId
+                              success:(void (^)())success
+                              failure:(void (^)(NSError *error))failure
+{
+    return [self inviteByThreePid:@"email"
+                          address:email
+                           toRoom:roomId
+                          success:success failure:failure];
+}
+
+- (MXHTTPOperation*)inviteByThreePid:(NSString*)medium
+                             address:(NSString*)address
+                              toRoom:(NSString*)roomId
+                             success:(void (^)())success
+                             failure:(void (^)(NSError *error))failure
+{
+    // The identity server must be defined
+    if (!_identityServer)
+    {
+        if (failure)
+        {
+            MXError *error = [[MXError alloc] initWithErrorCode:kMXSDKErrCodeStringMissingParameters error:@"No supplied identity server URL"];
+            failure([error createNSError]);
+        }
+        return nil;
+    }
+
+    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/invite", roomId];
+
+    // This request must not have the protocol part
+    NSString *identityServer = _identityServer;
+    if ([identityServer hasPrefix:@"http://"] || [identityServer hasPrefix:@"https://"])
+    {
+        identityServer = [identityServer substringFromIndex:[identityServer rangeOfString:@"://"].location + 3];
+    }
+
+    NSDictionary *parameters = @{
+                                 @"id_server": identityServer,
+                                 @"medium": medium,
+                                 @"address": address
+                                 };
+
+    return [httpClient requestWithMethod:@"POST"
+                                    path:path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success)
+                                     {
+                                         // Use here the processing queue in order to keep the server response order
+                                         dispatch_async(processingQueue, ^{
+
+                                             dispatch_async(dispatch_get_main_queue(), ^{
+
+                                                 success(JSONResponse);
+
+                                             });
+
+                                         });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                 }];
+}
+
 - (MXHTTPOperation*)kickUser:(NSString*)userId
                     fromRoom:(NSString*)roomId
                       reason:(NSString*)reason
@@ -1624,7 +1694,7 @@ MXAuthAction;
         userId = credentials.userId;
     }
     
-    NSString *path = [NSString stringWithFormat:@"api/v1/profile/%@/avatarUrl", userId];
+    NSString *path = [NSString stringWithFormat:@"api/v1/profile/%@/avatar_url", userId];
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil

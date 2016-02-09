@@ -50,6 +50,7 @@
         // We ignore non mxc avatar url
         _avatarUrl = ([roomMemberContent.avatarUrl hasPrefix:kMXContentUriScheme] ? roomMemberContent.avatarUrl : nil);
         _membership = [MXTools membership:roomMemberContent.membership];
+        _thirdPartyInviteToken = roomMemberContent.thirdPartyInviteToken;
         _originalEvent = roomMemberEvent;
 
         // Set who is this member
