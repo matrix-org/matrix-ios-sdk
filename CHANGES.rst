@@ -1,3 +1,14 @@
+Changes in Matrix iOS SDK in 0.6.2 (2016-02-09)
+===============================================
+
+Improvements:
+ * MXRoom: Add an argument to limit the pagination to the messages from the store.
+ * MXRoom: Support email invitation.
+
+Bug fixes:
+ * App crashes on resume if a pause is pending.
+ * Account creation: reCaptcha is missing in registration fallback.
+
 Changes in Matrix iOS SDK in 0.6.1 (2016-01-29)
 ===============================================
 

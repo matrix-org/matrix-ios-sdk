@@ -1694,7 +1694,7 @@ MXAuthAction;
         userId = credentials.userId;
     }
     
-    NSString *path = [NSString stringWithFormat:@"api/v1/profile/%@/avatarUrl", userId];
+    NSString *path = [NSString stringWithFormat:@"api/v1/profile/%@/avatar_url", userId];
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
