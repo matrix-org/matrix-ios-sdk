@@ -461,6 +461,7 @@
             else
             {
                 // The user is no more part of the room. Remove him.
+                // This case happens during back pagination: we remove here users when they are not in the room yet.
                 [members removeObjectForKey:event.stateKey];
             }
 
