@@ -1911,108 +1911,7 @@ MXAuthAction;
 }
 
 
-#pragma mark - Event operations
-- (MXHTTPOperation*)initialSyncWithLimit:(NSInteger)limit
-                                 success:(void (^)(MXInitialSyncResponse *))success
-                                 failure:(void (^)(NSError *))failure
-{
-    return [httpClient requestWithMethod:@"GET"
-                                    path:@"api/v1/initialSync"
-                              parameters:@{
-                                           @"limit": [NSNumber numberWithInteger:limit]
-                                           }
-                                 success:^(NSDictionary *JSONResponse) {
-                                     if (success)
-                                     {
-                                         // Create model from JSON dictionary on the processing queue
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             MXInitialSyncResponse *initialSync = [MXInitialSyncResponse modelFromJSON:JSONResponse];
-
-                                             dispatch_async(dispatch_get_main_queue(), ^{
-                                                 
-                                                 success(initialSync);
-                                                 
-                                             });
-                                             
-                                         });
-                                         
-                                     }
-                                 }
-                                 failure:^(NSError *error) {
-                                     if (failure)
-                                     {
-                                         failure(error);
-                                     }
-                                 }];
-}
-
-- (MXHTTPOperation *)eventsFromToken:(NSString*)token
-                       serverTimeout:(NSUInteger)serverTimeout
-                       clientTimeout:(NSUInteger)clientTimeout
-                             success:(void (^)(MXPaginationResponse *paginatedResponse))success
-                             failure:(void (^)(NSError *error))failure
-{
-    
-    // All query parameters are optional. Fill the request parameters on demand
-    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
-    
-    if (token)
-    {
-        parameters[@"from"] = token;
-    }
-    if (-1 != serverTimeout)
-    {
-        parameters[@"timeout"] = [NSNumber numberWithInteger:serverTimeout];
-    }
-    
-    NSTimeInterval clientTimeoutInSeconds = clientTimeout;
-    if (-1 != clientTimeoutInSeconds)
-    {
-        // If the Internet connection is lost, this timeout is used to be able to
-        // cancel the current request and notify the client so that it can retry with a new request.
-        clientTimeoutInSeconds = clientTimeoutInSeconds / 1000;
-    }
-    
-    MXHTTPOperation *operation = [httpClient requestWithMethod:@"GET"
-                                                          path:@"api/v1/events"
-                                                    parameters:parameters timeout:clientTimeoutInSeconds
-                                                       success:^(NSDictionary *JSONResponse)
-                                  {
-                                      if (success)
-                                      {
-                                          // Create model from JSON dictionary on the processing queue
-                                          dispatch_async(processingQueue, ^{
-                                              
-                                              MXPaginationResponse *paginatedResponse = [MXPaginationResponse modelFromJSON:JSONResponse];
-                                              
-                                              dispatch_async(dispatch_get_main_queue(), ^{
-                                                  
-                                                  success(paginatedResponse);
-                                                  
-                                              });
-                                              
-                                          });
-                                      }
-                                  }
-                                                       failure:^(NSError *error)
-                                  {
-                                      if (failure)
-                                      {
-                                          failure(error);
-                                      }
-                                  }];
-    
-    // Disable retry because it interferes with clientTimeout
-    // Let the client manage retries on events streams
-    operation.maxNumberOfTries = 1;
-    
-    return operation;
-}
-
-/**
- server sync v2
- */
+#pragma mark - Sync
 - (MXHTTPOperation *)syncFromToken:(NSString*)token
                      serverTimeout:(NSUInteger)serverTimeout
                      clientTimeout:(NSUInteger)clientTimeout
@@ -2083,40 +1982,6 @@ MXAuthAction;
     return operation;
 }
 
-- (MXHTTPOperation*)publicRooms:(void (^)(NSArray *rooms))success
-                        failure:(void (^)(NSError *error))failure
-{
-    return [httpClient requestWithMethod:@"GET"
-                                    path:@"api/v1/publicRooms"
-                              parameters:nil
-                                 success:^(NSDictionary *JSONResponse) {
-                                     if (success)
-                                     {
-                                         @autoreleasepool
-                                         {
-                                             // Create public rooms array from JSON on processing queue
-                                             dispatch_async(processingQueue, ^{
-                                                 
-                                                 NSArray *publicRooms;
-                                                 MXJSONModelSetMXJSONModelArray(publicRooms, MXPublicRoom, JSONResponse[@"chunk"]);
-                                                 
-                                                 dispatch_async(dispatch_get_main_queue(), ^{
-                                                     
-                                                     success(publicRooms);
-                                                     
-                                                 });
-                                                 
-                                             });
-                                         }
-                                     }
-                                 }
-                                 failure:^(NSError *error) {
-                                     if (failure)
-                                     {
-                                         failure(error);
-                                     }
-                                 }];
-}
 
 #pragma mark - read receipts
 /**
@@ -2161,6 +2026,41 @@ MXAuthAction;
 }
 
 #pragma mark - Directory operations
+- (MXHTTPOperation*)publicRooms:(void (^)(NSArray *rooms))success
+                        failure:(void (^)(NSError *error))failure
+{
+    return [httpClient requestWithMethod:@"GET"
+                                    path:@"api/v1/publicRooms"
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success)
+                                     {
+                                         @autoreleasepool
+                                         {
+                                             // Create public rooms array from JSON on processing queue
+                                             dispatch_async(processingQueue, ^{
+
+                                                 NSArray *publicRooms;
+                                                 MXJSONModelSetMXJSONModelArray(publicRooms, MXPublicRoom, JSONResponse[@"chunk"]);
+
+                                                 dispatch_async(dispatch_get_main_queue(), ^{
+
+                                                     success(publicRooms);
+
+                                                 });
+
+                                             });
+                                         }
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                 }];
+}
+
 - (MXHTTPOperation*)roomIDForRoomAlias:(NSString*)roomAlias
                                success:(void (^)(NSString *roomId))success
                                failure:(void (^)(NSError *error))failure

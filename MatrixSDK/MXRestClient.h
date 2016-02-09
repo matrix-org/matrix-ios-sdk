@@ -946,54 +946,7 @@ typedef enum : NSUInteger
                          failure:(void (^)(NSError *error))failure;
 
 
-#pragma mark - Event operations
-/**
- Get this user's current state.
- Get all the current information for all rooms (including messages and state events) and
- presence of the users he has interaction with
- 
- @param limit the maximum number of messages to return.
- 
- @param success A block object called when the operation succeeds.
- @param failure A block object called when the operation fails.
-
- @return a MXHTTPOperation instance.
- */
-- (MXHTTPOperation*)initialSyncWithLimit:(NSInteger)limit
-                             success:(void (^)(MXInitialSyncResponse *initialSyncResponse))success
-                             failure:(void (^)(NSError *error))failure;
-
-/**
- Get the list of public rooms hosted by the home server.
- 
- @param success A block object called when the operation succeeds. rooms is an array of MXPublicRoom objects
- @param failure A block object called when the operation fails.
-
- @return a MXHTTPOperation instance.
- */
-- (MXHTTPOperation*)publicRooms:(void (^)(NSArray *rooms))success
-                    failure:(void (^)(NSError *error))failure;
-
-/**
- Get events from the given token.
- 
- @param token the token to stream from.
- @param serverTimeout the maximum time in ms to wait for an event.
- @param clientTimeout the maximum time in ms the SDK must wait for the server response.
- 
- @param success A block object called when the operation succeeds. It provides a `MXPaginationResponse` object.
- @param failure A block object called when the operation fails.
- 
- @return a MXHTTPOperation instance.
-
- @return a MXHTTPOperation instance.
- */
-- (MXHTTPOperation *)eventsFromToken:(NSString*)token
-                   serverTimeout:(NSUInteger)serverTimeout
-                   clientTimeout:(NSUInteger)clientTimeout
-                         success:(void (^)(MXPaginationResponse *paginatedResponse))success
-                         failure:(void (^)(NSError *error))failure;
-
+#pragma mark - Sync
 /**
  Synchronise the client's state and receive new messages. Based on server sync C-S v2 API.
  
@@ -1024,7 +977,19 @@ typedef enum : NSUInteger
                            success:(void (^)(MXSyncResponse *syncResponse))success
                            failure:(void (^)(NSError *error))failure;
 
+
 #pragma mark - Directory operations
+/**
+ Get the list of public rooms hosted by the home server.
+
+ @param success A block object called when the operation succeeds. rooms is an array of MXPublicRoom objects
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)publicRooms:(void (^)(NSArray *rooms))success
+                        failure:(void (^)(NSError *error))failure;
+
 /**
  Get the room ID corresponding to this room alias
  
