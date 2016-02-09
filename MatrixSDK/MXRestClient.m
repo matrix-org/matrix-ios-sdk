@@ -274,15 +274,7 @@ MXAuthAction;
     NSString *authActionPath = @"api/v1/login";
     if (MXAuthActionRegister == authAction)
     {
-        // TODO GFO server register v2 is not available yet (use C-S v1 by default)
-//        if (preferredAPIVersion == MXRestClientAPIVersion2)
-//        {
-//            authActionPath = @"v2_alpha/register";
-//        }
-//        else
-        {
-            authActionPath = @"api/v1/register";
-        }
+        authActionPath = @"v2_alpha/register";
     }
     return authActionPath;
 }
@@ -293,15 +285,15 @@ MXAuthAction;
     NSString *httpMethod = @"GET";
     NSDictionary *parameters = nil;
     
-    // TODO GFO server register v2 is not available yet (use C-S v1 by default)
-//    if ((MXAuthActionRegister == authAction) && (preferredAPIVersion == MXRestClientAPIVersion2))
-//    {
-//        // C-S API v2: use POST with no params to get the login mechanism to use when registering
-//        // The request will failed with Unauthorized status code, but the login mechanism will be available in response data.
-//        httpMethod = @"POST";
-//        parameters = @{};
-//    }
-    
+
+    if (MXAuthActionRegister == authAction)
+    {
+        // For registration, use POST with no params to get the login mechanism to use
+        // The request will failed with Unauthorized status code, but the login mechanism will be available in response data.
+        httpMethod = @"POST";
+        parameters = @{};
+    }
+
     return [httpClient requestWithMethod:httpMethod
                                     path:[self authActionPath:authAction]
                               parameters:parameters
