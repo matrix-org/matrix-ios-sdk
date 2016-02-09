@@ -1040,16 +1040,7 @@ typedef void (^MXOnResumeDone)();
     NSDate *startDate = [NSDate date];
     NSLog(@"[MXSession] Do a server sync");
     
-    // *** PATCH SYNC V2 ***
-    NSString *inlineFilter;
-    if (_store.eventStreamToken)
-    {
-        // We increase the limit for catch-up syncs so that we get more of the v1 behaviour until v2 /sync performance improves
-        inlineFilter = @"{\"room\":{\"timeline\":{\"limit\":250}}}";
-    }
-    // *** PATCH SYNC V2 ***
-    
-    eventStreamRequest = [matrixRestClient syncFromToken:_store.eventStreamToken serverTimeout:serverTimeout clientTimeout:clientTimeout setPresence:setPresence filter:inlineFilter success:^(MXSyncResponse *syncResponse) {
+    eventStreamRequest = [matrixRestClient syncFromToken:_store.eventStreamToken serverTimeout:serverTimeout clientTimeout:clientTimeout setPresence:setPresence filter:nil success:^(MXSyncResponse *syncResponse) {
         
         // Make sure [MXSession close] or [MXSession pause] has not been called before the server response
         if (!eventStreamRequest)
