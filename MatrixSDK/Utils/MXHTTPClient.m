@@ -192,6 +192,7 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
 
 #if DEBUG
         NSLog(@"[MXHTTPClient] Request %p failed for path: %@ - HTTP code: %ld", mxHTTPOperation, path, (long)operation.response.statusCode);
+        NSLog(@"[MXHTTPClient] error: %@", error);
 #else
         // Hide access token in printed path
         NSMutableString *printedPath = [NSMutableString stringWithString:path];
@@ -204,6 +205,15 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
             }
         }
         NSLog(@"[MXHTTPClient] Request %p failed for path: %@ - HTTP code: %ld", mxHTTPOperation, printedPath, (long)operation.response.statusCode);
+        
+        if (error.userInfo[NSLocalizedDescriptionKey])
+        {
+            NSLog(@"[MXHTTPClient] error domain: %@, code:%zd, description: %@", error.domain, error.code, error.userInfo[NSLocalizedDescriptionKey]);
+        }
+        else
+        {
+            NSLog(@"[MXHTTPClient] error domain: %@, code:%zd", error.domain, error.code);
+        }
 #endif
 
         if (operation.responseData)
