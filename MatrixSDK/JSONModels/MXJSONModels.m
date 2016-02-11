@@ -735,7 +735,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 @end
 
 
-#pragma mark - Server sync v1 response
+#pragma mark - Server sync
 #pragma mark -
 
 @implementation MXRoomInitialSync
@@ -761,28 +761,6 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 }
 
 @end
-
-@implementation MXInitialSyncResponse
-
-+ (id)modelFromJSON:(NSDictionary *)JSONDictionary
-{
-    MXInitialSyncResponse *initialSyncResponse = [[MXInitialSyncResponse alloc] init];
-    if (initialSyncResponse)
-    {
-        MXJSONModelSetMXJSONModelArray(initialSyncResponse.rooms, MXRoomInitialSync, JSONDictionary[@"rooms"]);
-        MXJSONModelSetMXJSONModelArray(initialSyncResponse.presence, MXEvent, JSONDictionary[@"presence"]);
-        MXJSONModelSetMXJSONModelArray(initialSyncResponse.receipts, MXEvent, JSONDictionary[@"receipts"]);
-        MXJSONModelSetString(initialSyncResponse.end, JSONDictionary[@"end"]);
-    }
-
-    return initialSyncResponse;
-}
-
-@end
-
-
-#pragma mark - Server sync v2 response
-#pragma mark -
 
 @implementation MXRoomSyncState
 

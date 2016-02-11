@@ -783,7 +783,7 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @end
 
 
-#pragma mark - Server sync v1 response
+#pragma mark - Server sync
 #pragma mark -
 
 /**
@@ -842,36 +842,6 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
     @property (nonatomic) NSArray<MXEvent*> *receipts;
 
 @end
-
-/**
- `MXInitialSyncResponse` represents the request response for server initial sync v1. @see http://matrix.org/docs/api/client-server/#!/-events/initial_sync
- */
-@interface MXInitialSyncResponse : MXJSONModel
-
-    /**
-     List of rooms.
-     */
-    @property (nonatomic) NSArray<MXRoomInitialSync*> *rooms;
-
-    /**
-     The presence status of other users.
-     */
-    @property (nonatomic) NSArray<MXEvent*> *presence;
-
-    /**
-     The read receipts.
-     */
-    @property (nonatomic) NSArray<MXEvent*> *receipts;
-
-    /**
-     The opaque token for the end.
-     */
-    @property (nonatomic) NSString *end;
-
-@end
-
-#pragma mark - Server sync v2 response
-#pragma mark -
 
 /**
  `MXRoomSyncState` represents the state updates for a room during server sync v2.
