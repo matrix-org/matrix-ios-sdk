@@ -361,11 +361,29 @@ MXAuthAction;
 - (MXHTTPOperation*)registerOrLoginWithUser:(MXAuthAction)authAction user:(NSString *)user andPassword:(NSString *)password
                                     success:(void (^)(MXCredentials *))success failure:(void (^)(NSError *))failure
 {
-    NSDictionary *parameters = @{
-                                 @"type": kMXLoginFlowTypePassword,
-                                 @"user": user,
-                                 @"password": password
-                                 };
+    // Is it an email or a username?
+    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"^\\S+@\\S+\\.\\S+$" options:NSRegularExpressionCaseInsensitive error:nil];
+    BOOL isEmailAddress = (nil != [regex firstMatchInString:user options:0 range:NSMakeRange(0, user.length)]);
+    
+    NSDictionary *parameters;
+    
+    if (isEmailAddress)
+    {
+        parameters = @{
+                       @"type": kMXLoginFlowTypePassword,
+                       @"medium": @"email",
+                       @"address": user,
+                       @"password": password
+                       };
+    }
+    else
+    {
+        parameters = @{
+                      @"type": kMXLoginFlowTypePassword,
+                      @"user": user,
+                      @"password": password
+                      };
+    }
     
     return [self registerOrLogin:authAction
                       parameters:parameters
