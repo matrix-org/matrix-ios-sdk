@@ -1789,45 +1789,6 @@ MXAuthAction;
                                  }];
 }
 
-- (MXHTTPOperation*)allUsersPresence:(void (^)(NSArray *userPresenceEvents))success
-                             failure:(void (^)(NSError *error))failure
-{
-    // In C-S API v1, the only way to get all user presence is to make
-    // a global initialSync
-    // @TODO: Change it with C-S API v2 new APIs
-    return [httpClient requestWithMethod:@"GET"
-                                    path:[NSString stringWithFormat:@"%@/initialSync", apiPathPrefix]
-                              parameters:@{
-                                           @"limit": [NSNumber numberWithInteger:0]
-                                           }
-                                 success:^(NSDictionary *JSONResponse) {
-                                     if (success)
-                                     {
-                                         // Create model from JSON dictionary on the processing queue
-                                         dispatch_async(processingQueue, ^{
-
-                                             // Parse only events from the `presence` field of the response.
-                                             // There is no interest to parse all JSONResponse with the MXInitialSyncResponse model,
-                                             // which is CPU expensive due to the possible high number of rooms states events.
-                                             NSArray<MXEvent*> *presence;
-                                             MXJSONModelSetMXJSONModelArray(presence, MXEvent, JSONResponse[@"presence"]);
-
-                                             dispatch_async(dispatch_get_main_queue(), ^{
-
-                                                 success(presence);
-
-                                             });
-                                        });
-                                     }
-                                 }
-                                 failure:^(NSError *error) {
-                                     if (failure)
-                                     {
-                                         failure(error);
-                                     }
-                                 }];
-}
-
 - (MXHTTPOperation*)presenceList:(void (^)(MXPresenceResponse *presence))success
                          failure:(void (^)(NSError *error))failure
 {
