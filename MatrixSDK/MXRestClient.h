@@ -24,9 +24,14 @@
 
 #pragma mark - Constants definitions
 /**
- Prefix used in path of home server API requests.
+ A constant representing the URI path for release 0 of the Client-Server HTTP API.
  */
-FOUNDATION_EXPORT NSString *const kMXAPIPrefixPath;
+FOUNDATION_EXPORT NSString *const kMXAPIPrefixPathR0;
+
+/**
+ A constant representing tthe URI path for as-yet unspecified of the Client-Server HTTP API.
+ */
+FOUNDATION_EXPORT NSString *const kMXAPIPrefixPathUnstable;
 
 /**
  Prefix used in path of identity server API requests.
@@ -111,17 +116,6 @@ typedef enum : NSUInteger
 @interface MXRestClient : NSObject
 
 /**
- The preferred Client-Server API version. This value is applied to each new MXRestClient instance
- during initialisation step (see 'preferredAPIVersion' property).
- By default the C-S API v2 is considered.
- 
- CAUTION: Change of the preferred version impacts only the new MXRestClient instances.
- 
- @param preferredAPIVersion the preferred C-S API version.
- */
-+ (void)registerPreferredAPIVersion:(MXRestClientAPIVersion)preferredAPIVersion;
-
-/**
  The homeserver.
  */
 @property (nonatomic, readonly) NSString *homeserver;
@@ -137,11 +131,10 @@ typedef enum : NSUInteger
 @property (nonatomic, readonly) NSString *homeserverSuffix;
 
 /**
- The preferred Client-Server API version. This version is used during server requests insofar as it is supported.
- A prior version is used in case the preferred one is not supported yet.
- It is set during initialisation according to the registered value (see [registerPreferredAPIVersion:]).
+ The Client-Server API prefix to use.
+ By default, it is '/_matrix/client/r0'. See kMXAPIPrefixPathR0 and kMXAPIPrefixPathUnstable for constants.
  */
-@property (nonatomic, readonly) MXRestClientAPIVersion preferredAPIVersion;
+@property (nonatomic) NSString *apiPathPrefix;
 
 /**
  The identity server.
