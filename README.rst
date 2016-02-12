@@ -313,7 +313,7 @@ MatrixSDKTests scheme and click on the "Test" action.
 Known issues
 ============
 
-Cocoapods may fail to install on OSX 10.8.x with "i18n requires Ruby version 
+CocoaPods may fail to install on OSX 10.8.x with "i18n requires Ruby version 
 >= 1.9.3.".  This is a known problem similar to
 https://github.com/CocoaPods/CocoaPods/issues/2458 that needs to be raised with
 the cocoapods team.
