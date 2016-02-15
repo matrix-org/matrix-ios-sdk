@@ -200,7 +200,7 @@
 
         // First make a call to paginateBackMessages that will make a request to the server
         [room resetBackState];
-        [room paginateBackMessages:100 complete:^{
+        [room paginateBackMessages:100 onlyFromStore:NO complete:^{
 
             XCTAssertEqual(firstEventInTheRoom.eventType, MXEventTypeRoomCreate, @"First event in a room is always m.room.create");
 
@@ -216,7 +216,7 @@
             }];
 
             [room resetBackState];
-            [room paginateBackMessages:100 complete:^{
+            [room paginateBackMessages:100 onlyFromStore:NO complete:^{
 
                 XCTAssertEqual(eventCount, eventCount2);
                 XCTAssertEqual(firstEventInTheRoom2.eventType, MXEventTypeRoomCreate, @"First event in a room is always m.room.create");
@@ -253,7 +253,7 @@
         }];
 
         [room resetBackState];
-        [room paginateBackMessages:8 complete:^() {
+        [room paginateBackMessages:8 onlyFromStore:NO complete:^() {
 
             [room removeAllListeners];
 
@@ -284,11 +284,11 @@
 
             // The several paginations
             [room resetBackState];
-            [room paginateBackMessages:2 complete:^() {
+            [room paginateBackMessages:2 onlyFromStore:NO complete:^() {
 
-                [room paginateBackMessages:5 complete:^() {
+                [room paginateBackMessages:5 onlyFromStore:NO complete:^() {
 
-                    [room paginateBackMessages:100 complete:^() {
+                    [room paginateBackMessages:100 onlyFromStore:NO complete:^() {
 
                         // Now, compare the result with the reference
                         XCTAssertEqual(roomEvents.count, 8);
@@ -346,7 +346,7 @@
     [self doTestWithMXMemoryStore:^(MXRoom *room) {
 
         [room resetBackState];
-        [room paginateBackMessages:8 complete:^() {
+        [room paginateBackMessages:8 onlyFromStore:NO complete:^() {
 
             MXEvent *lastMessage = [room lastMessageWithTypeIn:nil];
             XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);

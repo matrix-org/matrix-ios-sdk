@@ -254,7 +254,7 @@
     }];
 
     [room resetBackState];
-    [room paginateBackMessages:5 complete:^() {
+    [room paginateBackMessages:5 onlyFromStore:NO complete:^() {
 
         XCTAssertEqual(eventCount, 5, @"We should get as many messages as requested");
 
@@ -287,7 +287,7 @@
     }];
 
     [room resetBackState];
-    [room paginateBackMessages:100 complete:^() {
+    [room paginateBackMessages:100 onlyFromStore:NO complete:^() {
 
         XCTAssert(eventCount, "We should have received events in registerEventListenerForTypes");
 
@@ -319,7 +319,7 @@
     }];
 
     [room resetBackState];
-    [room paginateBackMessages:100 complete:^() {
+    [room paginateBackMessages:100 onlyFromStore:NO complete:^() {
 
         XCTAssertNotEqual(prev_ts, -1, "We should have received events in registerEventListenerForTypes");
 
@@ -343,7 +343,7 @@
     }];
 
     [room resetBackState];
-    [room paginateBackMessages:100 complete:^() {
+    [room paginateBackMessages:100 onlyFromStore:NO complete:^() {
 
         XCTAssert(eventCount, "We should have received events in registerEventListenerForTypes");
 
@@ -367,7 +367,7 @@
     }];
 
     [room resetBackState];
-    [room paginateBackMessages:100 complete:^() {
+    [room paginateBackMessages:100 onlyFromStore:NO complete:^() {
 
         // Use another MXRoom instance to do pagination in several times
         MXRoom *room2 = [[MXRoom alloc] initWithRoomId:room.state.roomId andMatrixSession:mxSession];
@@ -386,16 +386,16 @@
             XCTAssertGreaterThanOrEqual(room2.remainingMessagesForPaginationInStore, 7);
         }
 
-        [room2 paginateBackMessages:2 complete:^() {
+        [room2 paginateBackMessages:2 onlyFromStore:NO complete:^() {
 
             if (mxSession.store.isPermanent)
             {
                 XCTAssertGreaterThanOrEqual(room2.remainingMessagesForPaginationInStore, 5);
             }
 
-            [room2 paginateBackMessages:5 complete:^() {
+            [room2 paginateBackMessages:5 onlyFromStore:NO complete:^() {
 
-                [room2 paginateBackMessages:100 complete:^() {
+                [room2 paginateBackMessages:100 onlyFromStore:NO complete:^() {
 
                     [self assertNoDuplicate:room2Events text:@"events got one by one with testSeveralPaginateBacks"];
 
@@ -465,7 +465,7 @@
                     XCTAssertGreaterThanOrEqual(room2.remainingMessagesForPaginationInStore, 7);
                 }
 
-                [room2 paginateBackMessages:2 complete:^() {
+                [room2 paginateBackMessages:2 onlyFromStore:NO complete:^() {
 
                     if (mxSession.store.isPermanent)
                     {
@@ -483,9 +483,9 @@
             }
             else if (3 == liveEvents)
 
-                [room2 paginateBackMessages:5 complete:^() {
+                [room2 paginateBackMessages:5 onlyFromStore:NO complete:^() {
 
-                    [room2 paginateBackMessages:100 complete:^() {
+                    [room2 paginateBackMessages:100 onlyFromStore:NO complete:^() {
 
                         [self assertNoDuplicate:room2Events text:@"events got one by one with testSeveralPaginateBacks"];
 
@@ -520,7 +520,7 @@
 
     // Take a snapshot of all room history
     [room resetBackState];
-    [room paginateBackMessages:100 complete:^{
+    [room paginateBackMessages:100 onlyFromStore:NO complete:^{
 
         // Messages are now in the cache
         // Start checking pagination from the cache
@@ -540,7 +540,7 @@
     [room resetBackState];
     XCTAssertTrue(room.canPaginate, @"We can always paginate at the beginning");
 
-    [room paginateBackMessages:100 complete:^() {
+    [room paginateBackMessages:100 onlyFromStore:NO complete:^() {
 
         XCTAssertFalse(room.canPaginate, @"We must have reached the end of the pagination");
 
@@ -557,7 +557,7 @@
     [room resetBackState];
     XCTAssertTrue(room.canPaginate, @"We can always paginate at the beginning");
 
-    [room paginateBackMessages:100 complete:^() {
+    [room paginateBackMessages:100 onlyFromStore:NO complete:^() {
 
         XCTAssertFalse(room.canPaginate, @"We must have reached the end of the pagination");
 
@@ -578,7 +578,7 @@
     MXEvent *lastMessage2 = [room lastMessageWithTypeIn:nil];
     XCTAssertEqualObjects(lastMessage2.eventId, lastMessage.eventId,  @"The last message should stay the same");
 
-    [room paginateBackMessages:100 complete:^() {
+    [room paginateBackMessages:100 onlyFromStore:NO complete:^() {
 
         MXEvent *lastMessage3 = [room lastMessageWithTypeIn:nil];
         XCTAssertEqualObjects(lastMessage3.eventId, lastMessage.eventId,  @"The last message should stay the same");
@@ -632,7 +632,7 @@
                             }];
 
                             [room2 resetBackState];
-                            [room2 paginateBackMessages:100 complete:^{
+                            [room2 paginateBackMessages:100 onlyFromStore:NO complete:^{
 
                                 XCTAssertEqual(events.count, 5, "The room should contain only 5 messages (the last message sent while the user is not in the room is not visible)");
                                 [expectation fulfill];
@@ -692,7 +692,7 @@
 
     // First count how many messages to retrieve
     [room resetBackState];
-    [room paginateBackMessages:100 complete:^() {
+    [room paginateBackMessages:100 onlyFromStore:NO complete:^() {
 
         // Paginate for the exact number of events in the room
         NSUInteger pagEnd = eventCount;
@@ -700,7 +700,7 @@
         [mxSession.store deleteRoom:room.state.roomId];
         [room resetBackState];
 
-        [room paginateBackMessages:pagEnd complete:^{
+        [room paginateBackMessages:pagEnd onlyFromStore:NO complete:^{
 
             XCTAssertEqual(eventCount, pagEnd, @"We should get as many messages as requested");
 
@@ -708,7 +708,7 @@
 
             // Try to load more messages
             eventCount = 0;
-            [room paginateBackMessages:1 complete:^{
+            [room paginateBackMessages:1 onlyFromStore:NO complete:^{
 
                 XCTAssertEqual(eventCount, 0, @"There must be no more event");
                 XCTAssertFalse(room.canPaginate, @"SDK must now indicate there is no more event to paginate");
@@ -1079,7 +1079,7 @@
 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
                 [room resetBackState];
-                [room paginateBackMessages:10 complete:^{
+                [room paginateBackMessages:10 onlyFromStore:NO complete:^{
 
                     NSString *roomPaginationToken = [store paginationTokenOfRoom:roomId];
                     XCTAssert(roomPaginationToken, @"The room must have a pagination after a pagination");

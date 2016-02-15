@@ -159,7 +159,7 @@
                 }];
                 
                 [room resetBackState];
-                [room paginateBackMessages:10 complete:^{
+                [room paginateBackMessages:10 onlyFromStore:NO complete:^{
                     
                     XCTAssertGreaterThan(eventCount, 4, @"We must have received events");
                     
