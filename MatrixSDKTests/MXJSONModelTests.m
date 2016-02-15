@@ -107,7 +107,7 @@
         
         // Use publicRooms JSON response to check modelFromJSON
         [httpClient requestWithMethod:@"GET"
-                                 path:@"api/v1/publicRooms"
+                                 path:[NSString stringWithFormat:@"%@/publicRooms", kMXAPIPrefixPathR0]
                            parameters:nil
                               success:^(NSDictionary *JSONResponse)
          {
