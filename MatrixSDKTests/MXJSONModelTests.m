@@ -61,7 +61,7 @@
 {
     [super setUp];
 
-    httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", kMXTestsHomeServerURL, kMXAPIPrefixPath]
+    httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", kMXTestsHomeServerURL, kMXAPIPrefixPathR0]
                      andOnUnrecognizedCertificateBlock:nil];
 }
 
@@ -78,7 +78,7 @@
         
         // Use publicRooms JSON response to check modelFromJSON
         [httpClient requestWithMethod:@"GET"
-                                 path:@"api/v1/publicRooms"
+                                 path:@"publicRooms"
                            parameters:nil
                               success:^(NSDictionary *JSONResponse)
          {
