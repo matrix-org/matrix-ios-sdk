@@ -26,9 +26,6 @@
 #import "MXMemoryStore.h"
 #import "MXFileStore.h"
 
-// FIXME SYNCV2 Enable server sync v2
-#define MXSESSION_ENABLE_SERVER_SYNC_V2
-
 #pragma mark - Constants definitions
 
 const NSString *MatrixSDKVersion = @"0.6.2";
@@ -289,87 +286,13 @@ typedef void (^MXOnResumeDone)();
     // Can we resume from data available in the cache
     if (_store.isPermanent && _store.eventStreamToken && 0 < _store.rooms.count)
     {
-        // Note since server sync v2, we don't need to handle presence separately.
-        // TODO: the following code should be cleaned when sync v1 will be deprecated by removing 'loadPresence' function.
-        
-        // In sync v1, MXSession.loadPresenceBeforeCompletingSessionStart leads 2 scenarios to load presence.
-        // Cut the actions into blocks to realize them
-        void (^loadPresence) (void (^onPresenceDone)(), void (^onPresenceError)(NSError *error)) = ^void(void (^onPresenceDone)(), void (^onPresenceError)(NSError *error)) {
-            NSDate *startDate = [NSDate date];
-            [matrixRestClient allUsersPresence:^(NSArray *userPresenceEvents) {
-
-                // Make sure [MXSession close] has not been called before the server response
-                if (nil == _myUser)
-                {
-                    return;
-                }
-
-                NSLog(@"[MXSession] Got presence of %tu users in %.0fms", userPresenceEvents.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
-
-                NSDate *t0 = [NSDate date];
-                
-                @autoreleasepool
-                {
-                    for (MXEvent *userPresenceEvent in userPresenceEvents)
-                    {
-                        NSString *userId;
-                        MXJSONModelSetString(userId, userPresenceEvent.content[@"user_id"]);
-                        if (userId)
-                        {
-                            MXUser *user = [self getOrCreateUser:userId];
-                            [user updateWithPresenceEvent:userPresenceEvent];
-                        }
-                    }
-                }
-
-                if (onPresenceDone)
-                {
-                    onPresenceDone();
-                }
-                
-                NSLog(@"[MXSession] Presences proceeded in %.0fms", [[NSDate date] timeIntervalSinceDate:t0] * 1000);
-                
-            } failure:^(NSError *error) {
-                if (onPresenceError)
-                {
-                    onPresenceError(error);
-                }
-            }];
-        };
-
-        void (^resumeEventsStream) () = ^void() {
-            NSLog(@"[MXSession] Resuming the events stream from %@...", _store.eventStreamToken);
-            NSDate *startDate2 = [NSDate date];
-            [self resume:^{
-                NSLog(@"[MXSession] Events stream resumed in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
-                onServerSyncDone();
-            }];
-        };
-        
-#ifdef MXSESSION_ENABLE_SERVER_SYNC_V2
-        if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
-        {
-            // Resume the stream (presence will be retrieved durng server sync)
-            resumeEventsStream();
-        }
-        else
-#endif
-        {
-            // Then, apply
-            if (_loadPresenceBeforeCompletingSessionStart)
-            {
-                // Load presence before resuming the stream
-                loadPresence(^() {
-                    resumeEventsStream();
-                }, failure);
-            }
-            else
-            {
-                // Resume the stream and load presence in parralel
-                resumeEventsStream();
-                loadPresence(nil, nil);
-            }
-        }
+        // Resume the stream (presence will be retrieved during server sync)
+        NSLog(@"[MXSession] Resuming the events stream from %@...", _store.eventStreamToken);
+        NSDate *startDate2 = [NSDate date];
+        [self resume:^{
+            NSLog(@"[MXSession] Events stream resumed in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+            onServerSyncDone();
+        }];
     }
     else
     {
@@ -388,18 +311,8 @@ typedef void (^MXOnResumeDone)();
                 // Additional step: load push rules from the home server
                 [_notificationCenter refreshRules:^{
                     
-                    // Initial server sync - Check the supported C-S version.
-#ifdef MXSESSION_ENABLE_SERVER_SYNC_V2
-                    if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
-                    {
-                        [self serverSyncWithServerTimeout:0 success:onServerSyncDone failure:failure clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
-                    }
-                    else
-#endif
-                    {
-                        // sync based on API v1 (Legacy)
-                        [self initialServerSync:onServerSyncDone failure:failure];
-                    }
+                    // Initial server sync
+                    [self serverSyncWithServerTimeout:0 success:onServerSyncDone failure:failure clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
                     
                 } failure:^(NSError *error) {
                     [self setState:MXSessionStateHomeserverNotReachable];
@@ -414,190 +327,6 @@ typedef void (^MXOnResumeDone)();
             failure(error);
         }];
     }
-}
-
-- (void)streamEventsFromToken:(NSString*)token withLongPoll:(BOOL)longPoll
-{
-    [self streamEventsFromToken:token withLongPoll:longPoll serverTimeOut:(longPoll ? SERVER_TIMEOUT_MS : 0) clientTimeout:CLIENT_TIMEOUT_MS];
-}
-
-- (void)streamEventsFromToken:(NSString*)token withLongPoll:(BOOL)longPoll serverTimeOut:(NSUInteger)serverTimeout clientTimeout:(NSUInteger)clientTimeout
-{
-    eventStreamRequest = [matrixRestClient eventsFromToken:token serverTimeout:serverTimeout clientTimeout:clientTimeout success:^(MXPaginationResponse *paginatedResponse) {
-
-        // eventStreamRequest is nil when the event stream has been paused
-        if (eventStreamRequest)
-        {
-            // Convert chunk array into an array of MXEvents
-            NSArray *events = paginatedResponse.chunk;
-
-            // And handle them
-            [self handleLiveEvents:events];
-
-            _store.eventStreamToken = paginatedResponse.end;
-            
-            // Commit store changes
-            if ([_store respondsToSelector:@selector(commit)])
-            {
-                [_store commit];
-            }
-            
-            // there is a pending backgroundSync
-            if (onBackgroundSyncDone)
-            {
-                NSLog(@"[MXSession] background Sync with %tu new events", events.count);
-                
-                // Operations on session may occur during this block. For example, [MXSession close] may be triggered.
-                // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
-                MXOnBackgroundSyncDone onBackgroundSyncDoneCpy = [onBackgroundSyncDone copy];
-                onBackgroundSyncDoneCpy();
-                onBackgroundSyncDone = nil;
-                
-                // check that the application was not resumed while catching up
-                if (_state == MXSessionStateBackgroundSyncInProgress)
-                {
-                    NSLog(@"[MXSession] go to paused ");
-                    eventStreamRequest = nil;
-                    [self setState:MXSessionStatePaused];
-                    return;
-                }
-                else
-                {
-                    NSLog(@"[MXSession] resume after a background Sync ");
-                }
-            }
-
-            // If we are resuming inform the app that it received the last uptodate data
-            if (onResumeDone)
-            {
-                NSLog(@"[MXSession] Events stream resumed with %tu new events", events.count);
-                
-                // Operations on session may occur during this block. For example, [MXSession close] or [MXSession pause] may be triggered.
-                // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
-                MXOnResumeDone onResumeDoneCpy = [onResumeDone copy];
-                onResumeDoneCpy();
-                onResumeDone = nil;
-                
-                // Stop here if [MXSession close] or [MXSession pause] has been triggered during onResumeDone block.
-                if (nil == _myUser || _state == MXSessionStatePaused)
-                {
-                    return;
-                }
-            }
-            
-            // The event stream is running by now
-            [self setState:MXSessionStateRunning];
-            
-            // Check SDK user did not called [MXSession close] or [MXSession pause] during the session state change notification handling.
-            if (nil == _myUser || _state == MXSessionStatePaused)
-            {
-                return;
-            }
-
-            // Go streaming from the returned token
-            [self streamEventsFromToken:paginatedResponse.end withLongPoll:YES];
-            
-            // Broadcast that a server sync has been processed.
-            [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidSyncNotification
-                                                                object:self
-                                                              userInfo:nil];
-        }
-
-    } failure:^(NSError *error) {
-
-        if (onBackgroundSyncFail)
-        {
-            NSLog(@"[MXSession] background Sync fails %@", error);
-            
-            // Operations on session may occur during this block. For example, [MXSession close] may be triggered.
-            // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
-            MXOnBackgroundSyncFail onBackgroundSyncFailCpy = [onBackgroundSyncFail copy];
-            onBackgroundSyncFailCpy(error);
-            onBackgroundSyncFail = nil;
-            
-            // check that the application was not resumed while catching up in background
-            if (_state == MXSessionStateBackgroundSyncInProgress)
-            {
-                NSLog(@"[MXSession] go to paused ");
-                eventStreamRequest = nil;
-                [self setState:MXSessionStatePaused];
-                return;
-            }
-            else
-            {
-                NSLog(@"[MXSession] resume after a background Sync");
-            }
-        }
-        
-        if (eventStreamRequest)
-        {
-            // on 64 bits devices, the error codes are huge integers.
-            int32_t code = (int32_t)error.code;
-            
-            if (code == kCFURLErrorCancelled)
-            {
-                NSLog(@"[MXSession] The connection has been cancelled.");
-            }
-            // timeout case : the request has been triggerd with a timeout value
-            // but there is no data to retrieve
-            else if ((code == kCFURLErrorTimedOut) && !longPoll)
-            {
-                NSLog(@"[MXSession] The connection has been timeout.");
-                
-                [eventStreamRequest cancel];
-                eventStreamRequest = nil;
-                
-                // Broadcast that a server sync is processed.
-                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidSyncNotification
-                                                                    object:self
-                                                                  userInfo:nil];
-                
-                // switch back to the long poll management
-                [self streamEventsFromToken:token withLongPoll:YES];
-            }
-            else
-            {
-                // Inform the app there is a problem with the connection to the homeserver
-                [self setState:MXSessionStateHomeserverNotReachable];
-
-                // Check if it is a network connectivity issue
-                AFNetworkReachabilityManager *networkReachabilityManager = [AFNetworkReachabilityManager sharedManager];
-                NSLog(@"[MXSession] events stream broken. Network reachability: %d", networkReachabilityManager.isReachable);
-
-                if (networkReachabilityManager.isReachable)
-                {
-                    // The problem is not the network
-                    // Relaunch the request in a random near futur.
-                    // Random time it used to avoid all Matrix clients to retry all in the same time
-                    // if there is server side issue like server restart
-                     dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, [MXHTTPClient jitterTimeForRetry] * NSEC_PER_MSEC);
-                     dispatch_after(delayTime, dispatch_get_main_queue(), ^(void) {
-
-                         if (eventStreamRequest)
-                         {
-                             NSLog(@"[MXSession] Retry resuming events stream");
-                             [self streamEventsFromToken:token withLongPoll:longPoll];
-                         }
-                     });
-                }
-                else
-                {
-                    // The device is not connected to the internet, wait for the connection to be up again before retrying
-                    __block __weak id reachabilityObserver =
-                    [[NSNotificationCenter defaultCenter] addObserverForName:AFNetworkingReachabilityDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
-
-                        if (networkReachabilityManager.isReachable && eventStreamRequest)
-                        {
-                            [[NSNotificationCenter defaultCenter] removeObserver:reachabilityObserver];
-
-                            NSLog(@"[MXSession] Retry resuming events stream");
-                            [self streamEventsFromToken:token withLongPoll:longPoll];
-                        }
-                    }];
-                }
-            }
-        }
-    }];
 }
 
 - (void)handleLiveEvents:(NSArray*)events
@@ -772,18 +501,8 @@ typedef void (^MXOnResumeDone)();
         
         if (!eventStreamRequest)
         {
-            // Relaunch live events stream (long polling) - Check supported C-S version
-#ifdef MXSESSION_ENABLE_SERVER_SYNC_V2
-            if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
-            {
-                [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
-            }
-            else
-#endif
-            {
-                // sync based on API v1 (Legacy)
-                [self streamEventsFromToken:_store.eventStreamToken withLongPoll:NO];
-            }
+            // Relaunch live events stream (long polling)
+            [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
         }
     }
 }
@@ -808,19 +527,8 @@ typedef void (^MXOnResumeDone)();
             // BackgroundSync from the latest known token
             onBackgroundSyncDone = backgroundSyncDone;
             onBackgroundSyncFail = backgroundSyncfails;
-            
-            // Check supported C-S version
-#ifdef MXSESSION_ENABLE_SERVER_SYNC_V2
-            if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
-            {
-                [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:timeout setPresence:@"offline"];
-            }
-            else
-#endif
-            {
-                // sync based on API v1 (Legacy)
-                [self streamEventsFromToken:_store.eventStreamToken withLongPoll:NO serverTimeOut:0 clientTimeout:timeout];
-            }
+
+            [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:timeout setPresence:@"offline"];
         }
     }
 }
@@ -835,19 +543,7 @@ typedef void (^MXOnResumeDone)();
         
         // retrieve the available data asap
         // disable the long poll to get the available data asap
-        
-        // Check supported C-S version
-#ifdef MXSESSION_ENABLE_SERVER_SYNC_V2
-        if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
-        {
-            [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:10 setPresence:nil];
-        }
-        else
-#endif
-        {
-            // sync based on API v1 (Legacy)
-            [self streamEventsFromToken:_store.eventStreamToken withLongPoll:NO serverTimeOut:0 clientTimeout:10];
-        }
+        [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:10 setPresence:nil];
         
         return YES;
     }
@@ -908,125 +604,6 @@ typedef void (^MXOnResumeDone)();
     matrixRestClient = nil;
 
     [self setState:MXSessionStateClosed];
-}
-
-#pragma mark - Internals
-
-- (void)initialServerSync:(void (^)())onServerSyncDone
-                  failure:(void (^)(NSError *error))failure
-{
-    NSDate *startDate = [NSDate date];
-    NSLog(@"[MXSession] Do a global initialSync");
-    
-    // Then, we can do the global sync
-    [matrixRestClient initialSyncWithLimit:initialSyncMessagesLimit success:^(MXInitialSyncResponse *initialSync) {
-        
-        // Make sure [MXSession close] has not been called before the server response
-        if (nil == _myUser)
-        {
-            return;
-        }
-        
-        NSMutableArray * roomids = [[NSMutableArray alloc] init];
-        
-        NSLog(@"[MXSession] Received %tu rooms in %.3fms", initialSync.rooms.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
-
-        NSDate *startDate2 = [NSDate date];
-        
-        for (MXRoomInitialSync* roomInitialSync in initialSync.rooms)
-        {
-            @autoreleasepool
-            {
-                MXRoom *room = [self getOrCreateRoom:roomInitialSync.roomId withInitialSync:roomInitialSync notify:NO];
-                [roomids addObject:room.state.roomId];
-                
-                if (roomInitialSync.messages)
-                {
-                    [room handleMessages:roomInitialSync.messages
-                               direction:MXEventDirectionBackwards isTimeOrdered:YES];
-                    
-                    // Uncomment the following lines when SYN-482 will be fixed
-//                    // If the initialSync returns less messages than requested, we got all history from the home server
-//                    if (roomInitialSync.messages.chunk.count < initialSyncMessagesLimit)
-//                    {
-//                        [_store storeHasReachedHomeServerPaginationEndForRoom:room.state.roomId andValue:YES];
-//                    }
-                }
-                if (roomInitialSync.state)
-                {
-                    [room handleStateEvents:roomInitialSync.state direction:MXEventDirectionSync];
-                    
-                    if (!room.state.isPublic && room.state.members.count == 2)
-                    {
-                        // Update one-to-one room dictionary
-                        [self handleOneToOneRoom:room];
-                    }
-                }
-                if (roomInitialSync.accountData)
-                {
-                    [room handleAccounDataEvents:roomInitialSync.accountData  direction:MXEventDirectionSync];
-                }
-                
-                // Notify that room has been sync'ed
-                [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomInitialSyncNotification
-                                                                    object:room
-                                                                  userInfo:nil];
-            }
-        }
-        
-        // Manage presence
-        @autoreleasepool
-        {
-            for (MXEvent *presenceEvent in initialSync.presence)
-            {
-                [self handlePresenceEvent:presenceEvent direction:MXEventDirectionSync];
-            }
-        }
-        
-        // Manage receipts
-        @autoreleasepool
-        {
-            for (MXEvent *receiptEvent in initialSync.receipts)
-            {
-                MXRoom *room = [self roomWithRoomId:receiptEvent.roomId];
-                
-                if (room)
-                {
-                    [room handleReceiptEvent:receiptEvent direction:MXEventDirectionSync];
-                }
-            }
-        }
-        
-//        // init the receips to the latest received one.
-//        // else the unread messages counter will not be properly managed.
-//        for (MXRoomInitialSync* roomInitialSync in initialSync.rooms)
-//        {
-//            MXRoom *room = [self roomWithRoomId:roomInitialSync.roomId];
-//            [room acknowledgeLatestEvent:NO];
-//        }
-        
-        // Start listening to live events
-        _store.eventStreamToken = initialSync.end;
-        
-        // Commit store changes done in [room handleMessages]
-        if ([_store respondsToSelector:@selector(commit)])
-        {
-            [_store commit];
-        }
-
-        NSLog(@"[MXSession] InitialSync events processed and stored in %.3fms", [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
-
-        // Resume from the last known token
-        [self streamEventsFromToken:_store.eventStreamToken withLongPoll:YES];
-        
-        [self setState:MXSessionStateRunning];
-        
-        onServerSyncDone();
-        
-    } failure:^(NSError *error) {
-        [self setState:MXSessionStateHomeserverNotReachable];
-        failure(error);
-    }];
 }
 
 #pragma mark - server sync v2
@@ -1384,19 +961,10 @@ typedef void (^MXOnResumeDone)();
                                                                          kMXSessionNotificationRoomIdKey: room.state.roomId,
                                                                          }];
         }
-        
-#ifdef MXSESSION_ENABLE_SERVER_SYNC_V2
-        if (matrixRestClient.preferredAPIVersion == MXRestClientAPIVersion2)
+
+        if (success)
         {
-            if (success)
-            {
-                success(room);
-            }
-        }
-        else
-#endif
-        {
-            [self initialSyncOfRoom:theRoomId withLimit:initialSyncMessagesLimit success:success failure:failure];
+            success(room);
         }
 
     } failure:failure];

@@ -1039,14 +1039,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 }
 
 - (BOOL)acknowledgeLatestEvent:(BOOL)sendReceipt;
-{
-    // Sanity check on supported C-S version
-    if (mxSession.matrixRestClient.preferredAPIVersion < MXRestClientAPIVersion2)
-    {
-        NSLog(@"[MXRoom] acknowledgeLatestEvent failed: read receipts are not supported on C-S v1 API");
-        return NO;
-    }
-    
+{    
     MXEvent* event =[mxSession.store lastMessageOfRoom:_state.roomId withTypeIn:_acknowledgableEventTypes];
     // Sanity check on event id: Do not send read receipt on event without id
     if (event.eventId && ([event.eventId hasPrefix:kMXRoomInviteStateEventIdPrefix] == NO))
