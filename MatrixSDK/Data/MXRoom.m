@@ -173,6 +173,9 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     // Note: We consider it is not required to clone the existing room state here, because no notification is posted for these events.
     for (MXEvent *event in roomSync.state.events)
     {
+        // Report the room id in the event as it is skipped in /sync response
+        event.roomId = _state.roomId;
+
         [self handleStateEvent:event direction:MXEventDirectionSync];
     }
     
@@ -189,6 +192,9 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         // They will be added at the end of the stored events, so we keep the chronologinal order.
         for (MXEvent *event in roomSync.timeline.events)
         {
+            // Report the room id in the event as it is skipped in /sync response
+            event.roomId = _state.roomId;
+
             // Make room data digest the live event
             [self handleLiveEvent:event];
         }
@@ -212,6 +218,9 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         // They will be added at the end of the stored events, so we keep the chronologinal order.
         for (MXEvent *event in roomSync.timeline.events)
         {
+            // Report the room id in the event as it is skipped in /sync response
+            event.roomId = _state.roomId;
+
             // Make room data digest the live event
             [self handleLiveEvent:event];
         }
@@ -242,6 +251,9 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     // Handle here ephemeral events (if any)
     for (MXEvent *event in roomSync.ephemeral.events)
     {
+        // Report the room id in the event as it is skipped in /sync response
+        event.roomId = _state.roomId;
+
         [self handleLiveEvent:event];
     }
     
@@ -260,12 +272,9 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             event.eventId = [NSString stringWithFormat:@"%@%@", kMXRoomInviteStateEventIdPrefix, [[NSProcessInfo processInfo] globallyUniqueString]];
         }
         
-        // Report the room id if not defined
-        if (!event.roomId)
-        {
-            event.roomId = _state.roomId;
-        }
-        
+        // Report the room id in the event as it is skipped in /sync response
+        event.roomId = _state.roomId;
+
         [self handleLiveEvent:event];
     }
 }

@@ -20,7 +20,7 @@
 
 #import "MXFileStoreMetaData.h"
 
-NSUInteger const kMXFileVersion = 19;
+NSUInteger const kMXFileVersion = 20;
 
 NSString *const kMXFileStoreFolder = @"MXFileStore";
 NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
