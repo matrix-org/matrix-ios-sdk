@@ -51,6 +51,9 @@
 - (void)createTestAccount:(void (^)())onReady
 {
     // Register the user
+    // @TODO: Update the registration code to support r0 registration and
+    // remove this patch that redirects the registration to a deprecated CS API.
+    mxRestClient.apiPathPrefix = @"/_matrix/client/api/v1";
     [mxRestClient registerWithUser:MXTESTS_USER andPassword:MXTESTS_PWD
                          success:^(MXCredentials *credentials) {
                              
@@ -68,6 +71,7 @@
                                  NSAssert(NO, @"Cannot create the test account");
                              }
                          }];
+    mxRestClient.apiPathPrefix = kMXAPIPrefixPathR0;
 }
 
 - (void)testInit

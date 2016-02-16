@@ -86,6 +86,9 @@ NSMutableArray *roomsToClean;
     else
     {
         // First, try register the user
+        // @TODO: Update the registration code to support r0 registration and
+        // remove this patch that redirects the registration to a deprecated CS API.
+        mxRestClient.apiPathPrefix = @"/_matrix/client/api/v1";
         [mxRestClient registerWithUser:MXTESTS_BOB andPassword:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
             
             _bobCredentials = credentials;
@@ -97,6 +100,7 @@ NSMutableArray *roomsToClean;
             {
                 // The user already exists. This error is normal.
                 // Log Bob in to get his keys
+                mxRestClient.apiPathPrefix = @"/_matrix/client/api/v1";
                 [mxRestClient loginWithUser:MXTESTS_BOB andPassword:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
                     
                     _bobCredentials = credentials;
@@ -105,12 +109,14 @@ NSMutableArray *roomsToClean;
                 } failure:^(NSError *error) {
                     NSAssert(NO, @"Cannot log mxBOB in");
                 }];
+                mxRestClient.apiPathPrefix = kMXAPIPrefixPathR0;
             }
             else
             {
                 NSAssert(NO, @"Cannot create mxBOB account. Make sure the homeserver at %@ is running", mxRestClient.homeserver);
             }
         }];
+        mxRestClient.apiPathPrefix = kMXAPIPrefixPathR0;
     }
 }
 
@@ -436,6 +442,9 @@ NSMutableArray *roomsToClean;
     }
     else
     {
+        // @TODO: Update the registration code to support r0 registration and
+        // remove this patch that redirects the registration to a deprecated CS API.
+        mxRestClient.apiPathPrefix = @"/_matrix/client/api/v1";
         // First, try register the user
         [mxRestClient registerWithUser:MXTESTS_ALICE andPassword:MXTESTS_ALICE_PWD success:^(MXCredentials *credentials) {
             
@@ -448,6 +457,7 @@ NSMutableArray *roomsToClean;
             {
                 // The user already exists. This error is normal.
                 // Log Bob in to get his keys
+        		mxRestClient.apiPathPrefix = @"/_matrix/client/api/v1";
                 [mxRestClient loginWithUser:MXTESTS_ALICE andPassword:MXTESTS_ALICE_PWD success:^(MXCredentials *credentials) {
                     
                     _aliceCredentials = credentials;
@@ -456,12 +466,14 @@ NSMutableArray *roomsToClean;
                 } failure:^(NSError *error) {
                     NSAssert(NO, @"Cannot log mxAlice in");
                 }];
+                mxRestClient.apiPathPrefix = kMXAPIPrefixPathR0;
             }
             else
             {
                 NSAssert(NO, @"Cannot create mxAlice account");
             }
         }];
+        mxRestClient.apiPathPrefix = kMXAPIPrefixPathR0;
     }
 }
 
