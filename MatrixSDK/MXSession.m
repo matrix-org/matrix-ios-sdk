@@ -962,10 +962,7 @@ typedef void (^MXOnResumeDone)();
                                                                          }];
         }
 
-        if (success)
-        {
-            success(room);
-        }
+        [self initialSyncOfRoom:theRoomId withLimit:initialSyncMessagesLimit success:success failure:failure];
 
     } failure:failure];
 }
