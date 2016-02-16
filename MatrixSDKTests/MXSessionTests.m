@@ -230,13 +230,18 @@
         
         // Listen to m.room.message only
         // We should not see events coming before (m.room.create, and all state events)
+        __block NSInteger messagesCount = 0;
         [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage]
                                             onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
             
             if (MXEventDirectionForwards == direction)
             {
                 XCTAssertEqual(event.eventType, MXEventTypeRoomMessage, @"We must receive only m.room.message event - Event: %@", event);
-                [expectation fulfill];
+
+                if (++messagesCount == 5)
+                {
+                    [expectation fulfill];
+                }
             }
             
         }];
