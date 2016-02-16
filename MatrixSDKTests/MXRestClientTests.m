@@ -892,23 +892,6 @@
     }];
 }
 
-- (void)testUserNotNilAvatarUrl
-{
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
-
-        [bobRestClient avatarUrlForUser:nil success:^(NSString *avatarUrl) {
-
-            XCTAssert([avatarUrl hasPrefix:@"mxc://"], @"mxBob has no avatar defined. So the home server should have allocated one on the Matrix content repository");
-            [expectation fulfill];
-
-        } failure:^(NSError *error) {
-            XCTFail(@"The request should not fail - NSError: %@", error);
-            [expectation fulfill];
-        }];
-
-    }];
-}
-
 
 #pragma mark - Presence operations
 - (void)testUserPresence
