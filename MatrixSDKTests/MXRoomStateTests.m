@@ -534,24 +534,27 @@
                         newRoom = [mxSession roomWithRoomId:roomId];
                         
                         XCTAssertNotNil(newRoom);
-                        
-                        XCTAssertEqual(newRoom.state.membership, MXMembershipInvite);
 
-                        XCTAssertEqualObjects(newRoom.state.name, @"Invite test");
-                        
-                        // The room must have only one member: Alice who has been invited by Bob.
-                        // While Alice does not join the room, we cannot get more information
-                        XCTAssertEqual(newRoom.state.members.count, 1);
-                        
-                        MXRoomMember *alice = [newRoom.state memberWithUserId:aliceRestClient.credentials.userId];
-                        XCTAssertNotNil(alice);
-                        XCTAssertEqual(alice.membership, MXMembershipInvite);
-                        XCTAssert([alice.originUserId isEqualToString:bobRestClient.credentials.userId], @"Wrong inviter: %@", alice.originUserId);
+                        if (newRoom.state.membership != MXMembershipUnknown)
+                        {
+                            XCTAssertEqual(newRoom.state.membership, MXMembershipInvite);
 
-                        // The last message should be an invite m.room.member
-                        MXEvent *lastMessage = [newRoom lastMessageWithTypeIn:nil];
-                        XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMember, @"The last message should be an invite m.room.member");
-                        XCTAssertLessThan([[NSDate date] timeIntervalSince1970] * 1000 - lastMessage.originServerTs, 3000);
+                            XCTAssertEqualObjects(newRoom.state.name, @"Invite test");
+
+                            // The room must have only one member: Alice who has been invited by Bob.
+                            // While Alice does not join the room, we cannot get more information
+                            XCTAssertEqual(newRoom.state.members.count, 1);
+
+                            MXRoomMember *alice = [newRoom.state memberWithUserId:aliceRestClient.credentials.userId];
+                            XCTAssertNotNil(alice);
+                            XCTAssertEqual(alice.membership, MXMembershipInvite);
+                            XCTAssert([alice.originUserId isEqualToString:bobRestClient.credentials.userId], @"Wrong inviter: %@", alice.originUserId);
+
+                            // The last message should be an invite m.room.member
+                            MXEvent *lastMessage = [newRoom lastMessageWithTypeIn:nil];
+                            XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMember, @"The last message should be an invite m.room.member");
+                            XCTAssertLessThan([[NSDate date] timeIntervalSince1970] * 1000 - lastMessage.originServerTs, 3000);
+                        }
                     }
                     
                 }];
