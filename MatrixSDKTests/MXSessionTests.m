@@ -599,13 +599,19 @@
             XCTAssertEqual(MXSessionStatePaused, mxSession.state);
 
             [mxSession resume:^{
-                XCTAssertEqual(MXSessionStateRunning, mxSession.state);
 
-                [mxSession close];
-                XCTAssertEqual(MXSessionStateClosed, mxSession.state);
+                // As advertised the session state will be updated after the call of this block
+                dispatch_async(dispatch_get_main_queue(), ^{
 
-                mxSession = nil;
-                [expectation fulfill];
+                    XCTAssertEqual(MXSessionStateRunning, mxSession.state);
+
+                    [mxSession close];
+                    XCTAssertEqual(MXSessionStateClosed, mxSession.state);
+
+                    mxSession = nil;
+                    [expectation fulfill];
+                });
+
             }];
 
             XCTAssertEqual(MXSessionStateSyncInProgress, mxSession.state);
@@ -1101,7 +1107,6 @@
                     XCTAssertEqual(invitedRooms.count, prevInviteCount + 1);
 
                     XCTAssertNotEqual([invitedRooms indexOfObject:impactedRoom], NSNotFound, @"The room must be in the invitation list");
-                    XCTAssertNotNil(event.inviteRoomState, @"The event must be an invite");
 
                     testState++;
 
@@ -1127,7 +1132,7 @@
         }];
 
         // Make Alice invite Bob in a room
-        [aliceRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
+        [aliceRestClient createRoom:@"A room name" visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
 
             testRoomId = response.roomId;
 
