@@ -894,12 +894,12 @@
 
 - (void)testRoomByTagsOrderWithFloatTagOrder
 {
-    [self doRoomByTagsOrderTest:self withOrder1:@"0.2" order2:@"0.9" order3:nil];
+    [self doRoomByTagsOrderTest:self withOrder1:nil order2:@"0.2" order3:@"0.9"];
 }
 
 - (void)testRoomByTagsOrderWithFloatAndStringTagOrder
 {
-    [self doRoomByTagsOrderTest:self withOrder1:@"0.9" order2:@"apples" order3:nil];
+    [self doRoomByTagsOrderTest:self withOrder1:nil order2:@"0.9" order3:@"apples"];
 }
 
 - (void)testTagRoomsWithSameOrder

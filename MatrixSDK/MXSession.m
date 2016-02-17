@@ -1603,11 +1603,11 @@ typedef void (^MXOnResumeDone)();
     }
     else if (tag1.order)
     {
-        result = NSOrderedAscending;
+        result = NSOrderedDescending;
     }
     else if (tag2.order)
     {
-        result = NSOrderedDescending;
+        result = NSOrderedAscending;
     }
 
     // In case of same order, order rooms by their last event
