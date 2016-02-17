@@ -211,30 +211,27 @@ NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
 
 + (NSDictionary<NSString *,MXRoomTag *> *)roomTagsWithTagEvent:(MXEvent *)event
 {
-    NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
-    [formatter setMaximumFractionDigits:16];
-    [formatter setMinimumFractionDigits:0];
-    [formatter setDecimalSeparator:@"."];
-    [formatter setGroupingSeparator:@""];
-    
     NSMutableDictionary *tags = [NSMutableDictionary dictionary];
     for (NSString *tagName in event.content[@"tags"])
     {
-        NSString *order;
+        NSString *order = event.content[@"tags"][tagName][@"order"];
 
         // Be robust if the server sends an integer tag order
-        if ([event.content[@"tags"][tagName][@"order"] isKindOfClass:NSNumber.class])
+        // Do some cleaning if the order is a number (and do nothing if the order is a string)
+        if ([order isKindOfClass:NSNumber.class])
         {
-            NSLog(@"[MXRoomTag] Warning: the room tag order is an integer value not a string in this event: %@", event);
+            NSLog(@"[MXRoomTag] Warning: the room tag order is an number value not a string in this event: %@", event);
+
+            NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
+            [formatter setMaximumFractionDigits:16];
+            [formatter setMinimumFractionDigits:0];
+            [formatter setDecimalSeparator:@"."];
+            [formatter setGroupingSeparator:@""];
+
             order = [formatter stringFromNumber:event.content[@"tags"][tagName][@"order"]];
-        }
-        else
-        {
-            order = event.content[@"tags"][tagName][@"order"];
-            
+
             if (order)
             {
-                // Do some cleaning if the order is a number (and do nothing if the order is a string)
                 NSNumber *value = [formatter numberFromString:order];
                 if (!value)
                 {
@@ -243,7 +240,7 @@ NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
                     value = [formatter numberFromString:order];
                     [formatter setDecimalSeparator:@"."];
                 }
-                
+
                 if (value)
                 {
                     // remove trailing 0
