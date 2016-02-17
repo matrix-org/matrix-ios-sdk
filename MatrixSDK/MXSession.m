@@ -699,6 +699,11 @@ typedef void (^MXOnResumeDone)();
                 MXRoom *room = [self roomWithRoomId:roomId];
                 if (room)
                 {
+                    // FIXME SYNCV2: While 'handleArchivedRoomSync' is not available,
+                    // use 'handleJoinedRoomSync' to pass the last events to the room before leaving it.
+                    // The room will then able to notify its listeners.
+                    [room handleJoinedRoomSync:leftRoomSync];
+
                     // Look for the last room member event
                     MXEvent *roomMemberEvent;
                     NSInteger index = leftRoomSync.timeline.events.count;
