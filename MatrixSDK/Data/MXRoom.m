@@ -154,7 +154,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     || ![mxSession.store hasReachedHomeServerPaginationEndForRoom:_state.roomId];
 }
 
-#pragma mark - sync v2
+#pragma mark - Sync
 
 - (void)handleJoinedRoomSync:(MXRoomSync *)roomSync
 {

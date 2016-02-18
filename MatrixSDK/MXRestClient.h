@@ -88,22 +88,6 @@ typedef enum : NSUInteger
     MXThumbnailingMethodCrop
 } MXThumbnailingMethod;
 
-/**
- `MXRestClientAPIVersion` lists the existing C-S API versions.
- */
-typedef enum : NSUInteger
-{
-    /**
-     C-S API V1.
-     */
-    MXRestClientAPIVersion1,
-    
-    /**
-     C-S API V2.
-     */
-    MXRestClientAPIVersion2
-    
-} MXRestClientAPIVersion;
 
 /**
  `MXRestClient` makes requests to Matrix servers.
@@ -778,7 +762,7 @@ typedef enum : NSUInteger
  @param limit the maximum number of messages to return.
  
  @param success A block object called when the operation succeeds. It provides the model created from
-                the home server JSON response. @see http://matrix.org/docs/api/client-server/#!/-rooms/get_room_sync_data)
+                the home server JSON response. @see http://matrix.org/docs/api/client-server/#!/-rooms/get_room_sync_data
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
@@ -930,7 +914,7 @@ typedef enum : NSUInteger
 
 #pragma mark - Sync
 /**
- Synchronise the client's state and receive new messages. Based on server sync C-S v2 API.
+ Synchronise the client's state and receive new messages.
  
  Synchronise the client's state with the latest state on the server.
  Client's use this API when they first log in to get an initial snapshot
@@ -1154,7 +1138,7 @@ typedef enum : NSUInteger
 
 #pragma mark - read receipts
 /**
- Send a read receipt (available only on C-S v2).
+ Send a read receipt.
  
  @param roomId the id of the room.
  @param eventId the id of the event.

@@ -38,7 +38,7 @@
 FOUNDATION_EXPORT NSString *const kMXRoomInitialSyncNotification;
 
 /**
- Posted when a limited timeline is observed for an existing room during server sync v2.
+ Posted when a limited timeline is observed for an existing room during server sync.
  All the existing messages have been removed from the room storage. Only the messages received during this sync are available.
  The token where to start back pagination has been updated.
  
@@ -120,17 +120,17 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 
 - (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession andStateEvents:(NSArray*)stateEvents andAccountData:(MXRoomAccountData*)accountData;
 
-#pragma mark - server sync v2
+#pragma mark - server sync
 
 /**
- Update room data according to the provided sync response (since API v2)
+ Update room data according to the provided sync response.
  
  @param roomSync information to sync the room with the home server data
  */
 - (void)handleJoinedRoomSync:(MXRoomSync*)roomSync;
 
 /**
- Update the invited room state according to the provided data (since API v2)
+ Update the invited room state according to the provided data.
  
  @param invitedRoom information to update the room state.
  */

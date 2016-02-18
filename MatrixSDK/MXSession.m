@@ -473,7 +473,7 @@ typedef void (^MXOnResumeDone)();
     [self setState:MXSessionStateClosed];
 }
 
-#pragma mark - server sync v2
+#pragma mark - Server sync
 
 - (void)serverSyncWithServerTimeout:(NSUInteger)serverTimeout
                       success:(void (^)())success
