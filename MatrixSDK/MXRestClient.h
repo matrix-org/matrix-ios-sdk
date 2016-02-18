@@ -762,7 +762,7 @@ typedef enum : NSUInteger
  @param limit the maximum number of messages to return.
  
  @param success A block object called when the operation succeeds. It provides the model created from
-                the home server JSON response. @see http://matrix.org/docs/api/client-server/#!/-rooms/get_room_sync_data
+                the homeserver JSON response. @see http://matrix.org/docs/api/client-server/#!/-rooms/get_room_sync_data
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
@@ -771,6 +771,28 @@ typedef enum : NSUInteger
                         withLimit:(NSInteger)limit
                           success:(void (^)(MXRoomInitialSync *roomInitialSync))success
                           failure:(void (^)(NSError *error))failure;
+
+
+/**
+ Get the context surrounding an event.
+ 
+ This API returns a number of events that happened just before and after the specified event.
+
+ @param eventId the id of the event to get context around.
+ @param roomId the id of the room to get events from.
+ @param limit the maximum number of messages to return.
+
+ @param success A block object called when the operation succeeds. It provides the model created from
+                the homeserver JSON response.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)contextOfEvent:(NSString*)eventId
+                            inRoom:(NSString*)roomId
+                            limit:(NSUInteger)limit
+                              success:(void (^)(MXEventContext *eventContext))success
+                              failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Room tags operations

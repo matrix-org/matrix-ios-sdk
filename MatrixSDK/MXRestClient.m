@@ -1478,6 +1478,44 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation*)contextOfEvent:(NSString*)eventId
+                            inRoom:(NSString*)roomId
+                             limit:(NSUInteger)limit
+                           success:(void (^)(MXEventContext *eventContext))success
+                           failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/context/%@", apiPathPrefix, roomId, eventId];
+
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:@{
+                                           @"limit": [NSNumber numberWithInteger:limit]
+                                           }
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success)
+                                     {
+                                         // Create model from JSON dictionary on the processing queue
+                                         dispatch_async(processingQueue, ^{
+
+                                             MXEventContext *eventContext = [MXEventContext modelFromJSON:JSONResponse];
+
+                                             dispatch_async(dispatch_get_main_queue(), ^{
+
+                                                 success(eventContext);
+
+                                             });
+
+                                         });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                 }];
+}
+
 
 #pragma mark - Room tags operations
 - (MXHTTPOperation*)tagsOfRoom:(NSString*)roomId

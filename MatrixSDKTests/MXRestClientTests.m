@@ -529,6 +529,42 @@
     }];
 }
 
+- (void)testContextOfEvent
+{
+    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        [bobRestClient initialSyncOfRoom:roomId withLimit:10 success:^(MXRoomInitialSync *roomInitialSync) {
+
+            // Pick an message event in the middle of created ones
+            MXEvent *event = roomInitialSync.messages.chunk[5];
+
+            MXEvent *eventBefore = roomInitialSync.messages.chunk[4];
+            MXEvent *eventAfter = roomInitialSync.messages.chunk[6];
+
+            // Get the context around it
+            [bobRestClient contextOfEvent:event.eventId inRoom:roomId limit:10 success:^(MXEventContext *eventContext) {
+
+                XCTAssertNotNil(eventContext);
+                XCTAssertNotNil(eventContext.start);
+                XCTAssertNotNil(eventContext.end);
+                XCTAssertGreaterThanOrEqual(eventContext.state.count, 0);
+
+                XCTAssertEqualObjects(eventBefore.eventId, eventContext.eventsBefore[0].eventId);
+                XCTAssertEqualObjects(eventAfter.eventId, eventContext.eventsAfter[0].eventId);
+
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
 // Remove the `age` field from a dictionary and all its sub dictionaries
 - (void) removeAgeField:(MXRoomInitialSync*)roomInitialSync
 {
