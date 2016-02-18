@@ -127,9 +127,6 @@ typedef void (^MXOnResumeDone)();
         oneToOneRooms = [NSMutableDictionary dictionary];
         globalEventListeners = [NSMutableArray array];
         _notificationCenter = [[MXNotificationCenter alloc] initWithMatrixSession:self];
-
-        // By default, load presence data in parallel if a full initialSync is not required
-        _loadPresenceBeforeCompletingSessionStart = NO;
         
         [self setState:MXSessionStateInitialised];
     }
