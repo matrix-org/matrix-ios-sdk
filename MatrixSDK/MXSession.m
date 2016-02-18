@@ -844,7 +844,7 @@ typedef void (^MXOnResumeDone)();
 {
     return [matrixRestClient joinRoom:roomIdOrAlias success:^(NSString *theRoomId) {
 
-        MXRoom *room = [self getOrCreateRoom:theRoomId withInitialSync:nil notify:YES];
+        MXRoom *room = [self getOrCreateRoom:theRoomId notify:YES];
         
         // check if the room is in the invited rooms list
         if ([self removeInvitedRoom:room])
@@ -960,19 +960,19 @@ typedef void (^MXOnResumeDone)();
     return nil;
 }
 
-- (MXRoom *)getOrCreateRoom:(NSString *)roomId withInitialSync:(MXRoomInitialSync*)initialSync notify:(BOOL)notify
+- (MXRoom *)getOrCreateRoom:(NSString *)roomId notify:(BOOL)notify
 {
     MXRoom *room = [self roomWithRoomId:roomId];
     if (nil == room)
     {
-        room = [self createRoom:roomId withInitialSync:initialSync notify:notify];
+        room = [self createRoom:roomId notify:notify];
     }
     return room;
 }
 
-- (MXRoom *)createRoom:(NSString *)roomId withInitialSync:(MXRoomInitialSync*)initialSync notify:(BOOL)notify
+- (MXRoom *)createRoom:(NSString *)roomId notify:(BOOL)notify
 {
-    MXRoom *room = [[MXRoom alloc] initWithRoomId:roomId andMatrixSession:self andInitialSync:initialSync];
+    MXRoom *room = [[MXRoom alloc] initWithRoomId:roomId andMatrixSession:self];
     
     [self addRoom:room notify:notify];
     return room;
