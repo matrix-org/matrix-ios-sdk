@@ -107,11 +107,6 @@ typedef void (^MXOnResumeDone)();
     MXOnBackgroundSyncFail onBackgroundSyncFail;
 
     /**
-     The list of rooms ids where a room initialSync is in progress (made by [self initialSyncOfRoom])
-     */
-    NSMutableArray *roomsInInitialSyncing;
-
-    /**
      The maintained list of rooms where the user has a pending invitation.
      */
     NSMutableArray<MXRoom *> *invitedRooms;
@@ -131,7 +126,6 @@ typedef void (^MXOnResumeDone)();
         users = [NSMutableDictionary dictionary];
         oneToOneRooms = [NSMutableDictionary dictionary];
         globalEventListeners = [NSMutableArray array];
-        roomsInInitialSyncing = [NSMutableArray array];
         _notificationCenter = [[MXNotificationCenter alloc] initWithMatrixSession:self];
 
         // By default, load presence data in parallel if a full initialSync is not required
@@ -461,10 +455,6 @@ typedef void (^MXOnResumeDone)();
     [users removeAllObjects];
     
     [oneToOneRooms removeAllObjects];
-
-    // Clean list of rooms being sync'ed
-    [roomsInInitialSyncing removeAllObjects];
-    roomsInInitialSyncing = nil;
 
     // Clean notification center
     [_notificationCenter removeAllListeners];
@@ -821,7 +811,32 @@ typedef void (^MXOnResumeDone)();
 {
     return [matrixRestClient createRoom:name visibility:visibility roomAlias:roomAlias topic:topic success:^(MXCreateRoomResponse *response) {
 
-        [self initialSyncOfRoom:response.roomId withLimit:initialSyncMessagesLimit success:success failure:failure];
+        // Wait to receive data from /sync about this room before returning
+        if (success)
+        {
+            MXRoom *room = [self roomWithRoomId:response.roomId];
+            if (room)
+            {
+                // The first /sync response for this room may have happened before the
+                // homeserver answer to the createRoom request.
+                success(room);
+            }
+            else
+            {
+                // Else, just wait for the corresponding kMXRoomInitialSyncNotification
+                // that will be fired from MXRoom.
+                __block id initialSyncObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomInitialSyncNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                    MXRoom *room = note.object;
+
+                    if ([room.state.roomId isEqualToString:response.roomId])
+                    {
+                        success(room);
+                        [[NSNotificationCenter defaultCenter] removeObserver:initialSyncObserver];
+                    }
+                }];
+            }
+        }
 
     } failure:failure];
 }
@@ -844,7 +859,31 @@ typedef void (^MXOnResumeDone)();
                                                                          }];
         }
 
-        [self initialSyncOfRoom:theRoomId withLimit:initialSyncMessagesLimit success:success failure:failure];
+        // Wait to receive data from /sync about this room before returning
+        if (success)
+        {
+            if (room.state.membership == MXMembershipJoin)
+            {
+                // The /sync corresponding to this join fmay have happened before the
+                // homeserver answer to the joinRoom request.
+                success(room);
+            }
+            else
+            {
+                // Else, just wait for the corresponding kMXRoomInitialSyncNotification
+                // that will be fired from MXRoom.
+                __block id initialSyncObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomInitialSyncNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                    MXRoom *syncedRoom = note.object;
+
+                    if (syncedRoom == room)
+                    {
+                        success(room);
+                        [[NSNotificationCenter defaultCenter] removeObserver:initialSyncObserver];
+                    }
+                }];
+            }
+        }
 
     } failure:failure];
 }
@@ -881,114 +920,6 @@ typedef void (^MXOnResumeDone)();
         }
 
     } failure:failure];
-}
-
-
-#pragma mark - Initial sync per room
-- (MXHTTPOperation*)initialSyncOfRoom:(NSString*)roomId
-                            withLimit:(NSInteger)limit
-                              success:(void (^)(MXRoom *room))success
-                              failure:(void (^)(NSError *error))failure
-{
-    [roomsInInitialSyncing addObject:roomId];
-
-    // Do an initial sync to get state and messages in the room
-    return [matrixRestClient initialSyncOfRoom:roomId withLimit:limit success:^(MXRoomInitialSync *roomInitialSync) {
-
-        if (MXSessionStateClosed == _state)
-        {
-            // Do not go further if the session is closed
-            return;
-        }
-
-        NSString *theRoomId = roomInitialSync.roomId;
-        
-        // Clean the store for this room
-        if (![_store respondsToSelector:@selector(rooms)] || [_store.rooms indexOfObject:theRoomId] != NSNotFound)
-        {
-            NSLog(@"[MXSession] initialSyncOfRoom clean the store (%@).", theRoomId);
-            [_store deleteRoom:theRoomId];
-        }
-        
-        // Retrieve an existing room or create a new one.
-        MXRoom *room = [self getOrCreateRoom:theRoomId withInitialSync:roomInitialSync notify:YES];
-
-        // Manage room messages
-        if (roomInitialSync.messages)
-        {
-            [room handleMessages:roomInitialSync.messages direction:MXEventDirectionSync isTimeOrdered:YES];
-
-            // Uncomment the following lines when SYN-482 will be fixed
-//            // If the initialSync returns less messages than requested, we got all history from the home server
-//            if (roomInitialSync.messages.chunk.count < limit)
-//            {
-//                [_store storeHasReachedHomeServerPaginationEndForRoom:room.state.roomId andValue:YES];
-//            }
-        }
-
-        // Manage room state
-        if (roomInitialSync.state)
-        {
-            [room handleStateEvents:roomInitialSync.state direction:MXEventDirectionSync];
-            
-            if (!room.state.isPublic && room.state.members.count == 2)
-            {
-                // Update one-to-one room dictionary
-                [self handleOneToOneRoom:room];
-            }
-        }
-
-        // Manage the private data that this user has attached to this room
-        if (roomInitialSync.accountData)
-        {
-            [room handleAccounDataEvents:roomInitialSync.accountData direction:MXEventDirectionForwards];
-        }
-
-        // Manage presence provided by this API
-        for (MXEvent *presenceEvent in roomInitialSync.presence)
-        {
-            [self handlePresenceEvent:presenceEvent direction:MXEventDirectionSync];
-        }
-        
-        // Manage receipts provided by this API
-        for (MXEvent *receiptEvent in roomInitialSync.receipts)
-        {
-            [room handleReceiptEvent:receiptEvent direction:MXEventDirectionSync];
-        }
-        
-//        // init the receips to the latest received one.
-//        [room acknowledgeLatestEvent:NO];
-
-        // Commit store changes done in [room handleMessages]
-        if ([_store respondsToSelector:@selector(commit)])
-        {
-            [_store commit];
-        }
-
-        [roomsInInitialSyncing removeObject:roomId];
-
-        // Notify that room has been sync'ed
-        [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomInitialSyncNotification
-                                                            object:room
-                                                          userInfo:nil];
-        if (success)
-        {
-            success(room);
-        }
-
-    } failure:^(NSError *error) {
-        NSLog(@"[MXSession] initialSyncOfRoom failed for room %@. Error: %@", roomId, error);
-
-        if (failure)
-        {
-            failure(error);
-        }
-    }];
-}
-
-- (BOOL)isRoomInitialSyncing:(NSString*)roomId
-{
-    return (NSNotFound != [roomsInInitialSyncing indexOfObject:roomId]);
 }
 
 
