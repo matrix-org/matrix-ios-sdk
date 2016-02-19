@@ -136,35 +136,6 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  */
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync;
 
-#pragma mark - handle events
-
-/**
- Handle bunch of events received in case of back pagination, global initial sync or room initial sync.
- 
- @param roomMessages the response in which events are stored.
- @param direction the process direction: MXEventDirectionBackwards or MXEventDirectionSync. MXEventDirectionForwards is not supported here.
- @param isTimeOrdered tell whether the events are in chronological order.
- */
-- (void)handleMessages:(MXPaginationResponse*)roomMessages
-             direction:(MXEventDirection)direction
-         isTimeOrdered:(BOOL)isTimeOrdered;
-
-- (void)handleStateEvents:(NSArray<MXEvent*>*)roomStateEvents direction:(MXEventDirection)direction;
-
-/**
- Handle an event (message or state) that comes from the events streaming.
- 
- @param event the event to handle.
- */
-- (void)handleLiveEvent:(MXEvent*)event;
-
-/**
- Handle private user data events.
- 
- @param accounDataEvents the events to handle.
- @param direction the process direction: MXEventDirectionSync or MXEventDirectionForwards. MXEventDirectionBackwards is not applicable here.
- */
-- (void)handleAccounDataEvents:(NSArray<MXEvent*>*)accounDataEvents direction:(MXEventDirection)direction;
 
 #pragma mark - Back pagination
 /**

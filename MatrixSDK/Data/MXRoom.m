@@ -280,6 +280,13 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 }
 
 #pragma mark - Messages handling
+/**
+ Handle bunch of events received in case of back pagination, global initial sync or room initial sync.
+
+ @param roomMessages the response in which events are stored.
+ @param direction the process direction: MXEventDirectionBackwards or MXEventDirectionSync. MXEventDirectionForwards is not supported here.
+ @param isTimeOrdered tell whether the events are in chronological order.
+ */
 - (void)handleMessages:(MXPaginationResponse*)roomMessages
              direction:(MXEventDirection)direction
          isTimeOrdered:(BOOL)isTimeOrdered
@@ -395,28 +402,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     }
 }
 
-- (void)handleStateEvents:(NSArray<MXEvent*>*)roomStateEvents direction:(MXEventDirection)direction
-{
-    // check if there is something to do
-    if (!roomStateEvents || (roomStateEvents.count == 0))
-    {
-        return;
-    }
-    
-    [self cloneState:direction];
-    
-    for (MXEvent *event in roomStateEvents)
-    {
-        [self handleStateEvent:event direction:direction];
-    }
-
-    // Update store with new room state only when all state event have been processed
-    if ([mxSession.store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
-    {
-        [mxSession.store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
-    }
-}
-
 - (void)handleStateEvent:(MXEvent*)event direction:(MXEventDirection)direction
 {
    // Update the room state
@@ -469,6 +454,11 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 #pragma mark - Handle live event
 
+/**
+ Handle an event (message or state) that comes from the events streaming.
+
+ @param event the event to handle.
+ */
 - (void)handleLiveEvent:(MXEvent*)event
 {
     // Handle first typing notifications
@@ -509,6 +499,12 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 
 #pragma mark - Room private account data handling
+/**
+ Handle private user data events.
+
+ @param accounDataEvents the events to handle.
+ @param direction the process direction: MXEventDirectionSync or MXEventDirectionForwards. MXEventDirectionBackwards is not applicable here.
+ */
 - (void)handleAccounDataEvents:(NSArray<MXEvent*>*)accounDataEvents direction:(MXEventDirection)direction
 {
     for (MXEvent *event in accounDataEvents)
