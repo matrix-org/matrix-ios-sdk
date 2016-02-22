@@ -21,7 +21,7 @@
 
 #import "MXError.h"
 
-NSString *const kMXRoomInviteStateEventIdPrefix2 = @"invite-";
+NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 @interface MXEventTimeLine ()
 {
@@ -338,7 +338,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix2 = @"invite-";
         // Add a fake event id if none in order to be able to store the event
         if (!event.eventId)
         {
-            event.eventId = [NSString stringWithFormat:@"%@%@", kMXRoomInviteStateEventIdPrefix2, [[NSProcessInfo processInfo] globallyUniqueString]];
+            event.eventId = [NSString stringWithFormat:@"%@%@", kMXRoomInviteStateEventIdPrefix, [[NSProcessInfo processInfo] globallyUniqueString]];
         }
 
         // Report the room id in the event as it is skipped in /sync response

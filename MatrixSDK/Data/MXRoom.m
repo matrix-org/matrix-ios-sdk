@@ -24,8 +24,6 @@
 NSString *const kMXRoomSyncWithLimitedTimelineNotification = @"kMXRoomSyncWithLimitedTimelineNotification";
 NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotification";
 
-NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
-
 @interface MXRoom ()
 {
 }

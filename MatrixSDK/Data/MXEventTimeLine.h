@@ -24,6 +24,11 @@
 #import "MXHTTPOperation.h"
 
 /**
+ Prefix used to build fake invite event.
+ */
+FOUNDATION_EXPORT NSString *const kMXRoomInviteStateEventIdPrefix;
+
+/**
  Block called when an event of the registered types has been handled in the timeline.
  This is a specialisation of the `MXOnEvent` block.
 
