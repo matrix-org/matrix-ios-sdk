@@ -55,6 +55,15 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 - (id)initWithRoom:(MXRoom*)room andRoomId:(NSString*)roomId initialEventId:(NSString*)initialEventId;
 
 
+#pragma mark - Initialisation
+/**
+ Process a state event in order to update the room state.
+
+ @param event the state event.
+ */
+- (void)handleStateEvent:(MXEvent*)event direction:(MXEventDirection)direction;
+
+
 #pragma mark - Pagination
 /**
  Check if this timelime can be extended

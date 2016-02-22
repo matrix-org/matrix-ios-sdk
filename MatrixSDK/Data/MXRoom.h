@@ -94,11 +94,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomSyncWithLimitedTimelineNotification;
 - (MXEvent*)lastMessageWithTypeIn:(NSArray*)type;
 
 /**
- Flag indicating if there are still events (in the past) to get with paginateBackMessages.
- */
-@property (nonatomic, readonly) BOOL canPaginate;
-
-/**
  The unread events.
  They are filtered by acknowledgableEventTypes.
  */
@@ -112,9 +107,8 @@ FOUNDATION_EXPORT NSString *const kMXRoomSyncWithLimitedTimelineNotification;
 
 - (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession;
 
-//- (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession andInitialSync:(MXRoomInitialSync*)initialSync;
-
 - (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession andStateEvents:(NSArray*)stateEvents andAccountData:(MXRoomAccountData*)accountData;
+
 
 #pragma mark - server sync
 
@@ -134,6 +128,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomSyncWithLimitedTimelineNotification;
 
 
 #pragma mark - Back pagination
+/**
+ Flag indicating if there are still events (in the past) to get with paginateBackMessages.
+ */
+@property (nonatomic, readonly) BOOL canPaginate;
+
 /**
  Reset the back state so that future calls to paginate start over from live.
  Must be called when opening a room if interested in history.

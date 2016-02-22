@@ -81,15 +81,14 @@ NSString *const kMXRoomInviteStateEventIdPrefix2 = @"invite-";
 {
     BOOL canPaginate = NO;
 
-        if (direction == MXEventDirectionBackwards)
-        {
-            // canPaginate depends on two things:
-            //  - did we end to paginate from the local MXStore?
-            //  - did we reach the top of the pagination in our requests to the home server
-            canPaginate = (0 < [store remainingMessagesForPaginationInRoom:_state.roomId])
-            || ![store hasReachedHomeServerPaginationEndForRoom:_state.roomId];
-
-        }
+    if (direction == MXEventDirectionBackwards)
+    {
+        // canPaginate depends on two things:
+        //  - did we end to paginate from the local MXStore?
+        //  - did we reach the top of the pagination in our requests to the home server
+        canPaginate = (0 < [store remainingMessagesForPaginationInRoom:_state.roomId])
+                        || ![store hasReachedHomeServerPaginationEndForRoom:_state.roomId];
+    }
     else
     {
         if (self.isLiveTimeLine)
@@ -104,6 +103,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix2 = @"invite-";
 
     return canPaginate;
 }
+
 
 #pragma mark - Back pagination
 - (void)resetBackState
@@ -480,8 +480,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix2 = @"invite-";
     }
     else
     {
-        // Forwards and initialSync events update the current state of the room
-
+        // Forwards events update the current state of the room
         [_state handleStateEvent:event];
 
         // Special handling for presence
