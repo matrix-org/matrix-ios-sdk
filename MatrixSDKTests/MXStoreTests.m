@@ -248,7 +248,7 @@
                                          ];
 
     __block NSUInteger eventCount = 0;
-    [room listenToEventsOfTypes:eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+    [room.liveTimeLine listenToEventsOfTypes:eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
 
         eventCount++;
     }];
@@ -276,7 +276,7 @@
                                          ];
 
     __block NSUInteger eventCount = 0;
-    [room listenToEventsOfTypes:eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+    [room.liveTimeLine listenToEventsOfTypes:eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
 
         eventCount++;
 
@@ -309,7 +309,7 @@
                                          ];
 
     __block uint64_t prev_ts = -1;
-    [room listenToEventsOfTypes:eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+    [room.liveTimeLine listenToEventsOfTypes:eventsFilterForMessages onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
 
         XCTAssert(event.originServerTs, @"The event should have an attempt: %@", event);
 
@@ -335,7 +335,7 @@
 {
     __block NSUInteger eventCount = 0;
     __block NSMutableArray *events = [NSMutableArray array];
-    [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+    [room.liveTimeLine listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
 
         eventCount++;
 
@@ -361,7 +361,7 @@
 - (void)checkSeveralPaginateBacks:(MXRoom*)room
 {
     __block NSMutableArray *roomEvents = [NSMutableArray array];
-    [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+    [room.liveTimeLine listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
 
         [roomEvents addObject:event];
     }];
@@ -373,7 +373,7 @@
         MXRoom *room2 = [[MXRoom alloc] initWithRoomId:room.state.roomId andMatrixSession:mxSession];
 
         __block NSMutableArray *room2Events = [NSMutableArray array];
-        [room2 listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+        [room2.liveTimeLine listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
 
             [room2Events addObject:event];
         }];
@@ -443,7 +443,7 @@
     MXRoom *room2 = [[MXRoom alloc] initWithRoomId:room.state.roomId andMatrixSession:mxSession];
 
     __block NSMutableArray *room2Events = [NSMutableArray array];
-    [room2 listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+    [room2.liveTimeLine listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
 
         if (MXEventDirectionForwards != direction)
         {
@@ -452,7 +452,7 @@
     }];
 
     __block NSUInteger liveEvents = 0;
-    [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+    [room.liveTimeLine listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
 
         if (MXEventDirectionForwards == direction)
         {
@@ -619,7 +619,7 @@
                         [room2 join:^{
 
                             NSMutableArray *events = [NSMutableArray array];
-                            [room2 listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+                            [room2.liveTimeLine listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
 
                                 if (0 == events.count)
                                 {
@@ -685,7 +685,7 @@
 - (void)checkPaginateWhenReachingTheExactBeginningOfTheRoom:(MXRoom*)room
 {
     __block NSUInteger eventCount = 0;
-    [room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+    [room.liveTimeLine listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
 
         eventCount++;
     }];
@@ -735,7 +735,7 @@
 {
     __block NSString *messageEventId;
 
-    [room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+    [room.liveTimeLine listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
 
         if (MXEventTypeRoomMessage == event.eventType)
         {

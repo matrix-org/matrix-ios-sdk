@@ -24,6 +24,7 @@
 #import "MXRoomAccountData.h"
 #import "MXHTTPOperation.h"
 #import "MXCall.h"
+#import "MXEventTimeLine.h"
 
 @class MXRoom;
 @class MXSession;
@@ -47,16 +48,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomInitialSyncNotification;
 FOUNDATION_EXPORT NSString *const kMXRoomSyncWithLimitedTimelineNotification;
 
 /**
- Block called when an event of the registered types has been handled by the `MXRoom` instance.
- This is a specialisation of the `MXOnEvent` block.
- 
- @param event the new event.
- @param direction the origin of the event.
- @param roomState the room state right before the event
- */
-typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoomState *roomState);
-
-/**
  `MXRoom` is the class
  */
 @interface MXRoom : NSObject
@@ -67,7 +58,12 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 @property (nonatomic, readonly) MXSession *mxSession;
 
 /**
- The uptodate state of the room.
+ The live events timeline.
+ */
+@property (nonatomic, readonly) MXEventTimeLine *liveTimeLine;
+
+/**
+ The up-to-date state of the room.
  */
 @property (nonatomic, readonly) MXRoomState *state;
 
@@ -116,7 +112,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 
 - (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession;
 
-- (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession andInitialSync:(MXRoomInitialSync*)initialSync;
+//- (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession andInitialSync:(MXRoomInitialSync*)initialSync;
 
 - (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession andStateEvents:(NSArray*)stateEvents andAccountData:(MXRoomAccountData*)accountData;
 
@@ -136,35 +132,6 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  */
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync;
 
-#pragma mark - handle events
-
-/**
- Handle bunch of events received in case of back pagination, global initial sync or room initial sync.
- 
- @param roomMessages the response in which events are stored.
- @param direction the process direction: MXEventDirectionBackwards or MXEventDirectionSync. MXEventDirectionForwards is not supported here.
- @param isTimeOrdered tell whether the events are in chronological order.
- */
-- (void)handleMessages:(MXPaginationResponse*)roomMessages
-             direction:(MXEventDirection)direction
-         isTimeOrdered:(BOOL)isTimeOrdered;
-
-- (void)handleStateEvents:(NSArray<MXEvent*>*)roomStateEvents direction:(MXEventDirection)direction;
-
-/**
- Handle an event (message or state) that comes from the events streaming.
- 
- @param event the event to handle.
- */
-- (void)handleLiveEvent:(MXEvent*)event;
-
-/**
- Handle private user data events.
- 
- @param accounDataEvents the events to handle.
- @param direction the process direction: MXEventDirectionSync or MXEventDirectionForwards. MXEventDirectionBackwards is not applicable here.
- */
-- (void)handleAccounDataEvents:(NSArray<MXEvent*>*)accounDataEvents direction:(MXEventDirection)direction;
 
 #pragma mark - Back pagination
 /**
@@ -537,36 +504,6 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  */
 - (MXCall*)placeCallWithVideo:(BOOL)video;
 
-
-#pragma mark - Events listeners
-/**
- Register a listener to events of this room.
- 
- @param onEvent the block that will called once a new event has been handled.
- @return a reference to use to unregister the listener
- */
-- (id)listenToEvents:(MXOnRoomEvent)onEvent;
-
-/**
- Register a listener for some types of events.
- 
- @param types an array of event types strings (MXEventTypeString) to listen to.
- @param onEvent the block that will called once a new event has been handled.
- @return a reference to use to unregister the listener
- */
-- (id)listenToEventsOfTypes:(NSArray*)types onEvent:(MXOnRoomEvent)onEvent;
-
-/**
- Unregister a listener.
- 
- @param listener the reference of the listener to remove.
- */
-- (void)removeListener:(id)listener;
-
-/**
- Unregister all listeners.
- */
-- (void)removeAllListeners;
 
 #pragma mark - Receipts management
 
