@@ -542,9 +542,17 @@
 
     [room paginateBackMessages:100 onlyFromStore:NO complete:^() {
 
-        XCTAssertFalse(room.canPaginate, @"We must have reached the end of the pagination");
+        // Due to SPEC-319, we need to paginate twice to be sure to hit the limit
+        [room paginateBackMessages:100 onlyFromStore:NO complete:^() {
 
-        [expectation fulfill];
+            XCTAssertFalse(room.canPaginate, @"We must have reached the end of the pagination");
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
 
     } failure:^(NSError *error) {
         XCTFail(@"The request should not fail - NSError: %@", error);
