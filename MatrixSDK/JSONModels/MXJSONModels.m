@@ -569,6 +569,30 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 @end
 
 
+#pragma mark - Context
+#pragma mark -
+/**
+ `MXEventContext` represents to the response to the /context request.
+ */
+@implementation MXEventContext
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXEventContext *eventContext = [[MXEventContext alloc] init];
+    if (eventContext)
+    {
+        MXJSONModelSetString(eventContext.start, JSONDictionary[@"start"]);
+        MXJSONModelSetMXJSONModelArray(eventContext.eventsBefore, MXEvent, JSONDictionary[@"events_before"]);
+        MXJSONModelSetMXJSONModelArray(eventContext.eventsAfter, MXEvent, JSONDictionary[@"events_after"]);
+        MXJSONModelSetString(eventContext.end, JSONDictionary[@"end"]);
+        MXJSONModelSetMXJSONModelArray(eventContext.state, MXEvent, JSONDictionary[@"state"]);
+    }
+
+    return eventContext;
+}
+@end
+
+
 #pragma mark - Search
 #pragma mark -
 

@@ -612,6 +612,43 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @end
 
 
+#pragma mark - Context
+#pragma mark -
+/**
+ `MXEventContext` represents to the response to the /context request.
+ */
+@interface MXEventContext : MXJSONModel
+
+    /**
+     A token that can be used to paginate backwards with.
+     */
+    @property (nonatomic) NSString *start;
+
+    /**
+     A list of room events that happened just before the requested event.
+     The order is antichronological.
+     */
+    @property (nonatomic) NSArray<MXEvent*> *eventsBefore;
+
+    /**
+     A list of room events that happened just after the requested event.
+     The order is chronological.
+     */
+    @property (nonatomic) NSArray<MXEvent*> *eventsAfter;
+
+    /**
+     A token that can be used to paginate forwards with.
+     */
+    @property (nonatomic) NSString *end;
+
+    /**
+     The state of the room at the last event returned.
+     */
+    @property (nonatomic) NSArray<MXEvent*> *state;
+
+@end
+
+
 #pragma mark - Search
 #pragma mark -
 
