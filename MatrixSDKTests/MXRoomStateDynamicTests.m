@@ -107,7 +107,7 @@
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
                 
                 __block NSUInteger eventCount = 0;
-                [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+                [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
                     
                     // Check each expected event and their roomState contect
                     // Events are received in the reverse order
@@ -158,8 +158,8 @@
                     
                 }];
                 
-                [room resetBackState];
-                [room paginateBackMessages:10 onlyFromStore:NO complete:^{
+                [room.liveTimeline resetPagination];
+                [room.liveTimeline paginate:10 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^{
                     
                     XCTAssertGreaterThan(eventCount, 4, @"We must have received events");
                     
@@ -191,7 +191,7 @@
             MXRoom *room = [mxSession roomWithRoomId:roomId];
             
             __block NSUInteger eventCount = 0;
-            [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
                 
                 // Check each expected event and their roomState contect
                 // Events are live. Then comes in order
@@ -514,8 +514,8 @@
                     
                 }];
                 
-                [room resetBackState];
-                [room paginateBackMessages:20 complete:^{
+                [room.liveTimeline resetPagination];
+                [room.liveTimeline paginate:2 direction:MXEventDirectionBackwards0 complete:^{
                     
                     XCTAssertGreaterThan(eventCount, 8, @"We must have received events");
                     

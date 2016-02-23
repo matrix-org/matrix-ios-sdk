@@ -119,7 +119,7 @@
             XCTAssertNil(room.state.topic, @"There must be no room topic yet. Found: %@", room.state.topic);
             
             // Listen to live event. We should receive only one: a m.room.topic event
-            [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
                 
                 XCTAssertEqual(event.eventType, MXEventTypeRoomTopic);
                 
@@ -192,7 +192,7 @@
             XCTAssertNil(room.state.avatar, @"There must be no room avatar yet. Found: %@", room.state.avatar);
 
             // Listen to live event. We should receive only one: a m.room.avatar event
-            [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
 
                 XCTAssertEqual(event.eventType, MXEventTypeRoomAvatar);
 
@@ -264,7 +264,7 @@
             XCTAssertNil(room.state.name, @"There must be no room name yet. Found: %@", room.state.name);
             
             // Listen to live event. We should receive only one: a m.room.name event
-            [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
                 
                 XCTAssertEqual(event.eventType, MXEventTypeRoomName);
                 
@@ -594,7 +594,7 @@
                     
                     MXRoom *newRoom = [mxSession roomWithRoomId:roomId];
                     
-                    [newRoom listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+                    [newRoom.liveTimeline listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
                         if (MXEventDirectionForwards == event)
                         {
                             // We should receive only join events in live

@@ -116,7 +116,7 @@
 - (void)testMXNoStoreCanPaginateFromMXStore
 {
     // Preload more messages than the room history counts so that all messages are already loaded
-    // room.canPaginate will use [MXStore canPaginateInRoom]
+    // room.liveTimeline.canPaginate will use [MXStore canPaginateInRoom]
     [self doTestWithMXNoStoreAndMessagesLimit:100 readyToTest:^(MXRoom *room) {
         [self checkCanPaginateFromMXStore:room];
     }];
