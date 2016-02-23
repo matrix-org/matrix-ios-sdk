@@ -113,7 +113,7 @@
                 
             }];
             
-            [room.liveTimeline resetBackState];
+            [room.liveTimeline resetPagination];
             [room.liveTimeline paginate:100 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^() {
                 
                 XCTAssertGreaterThan(eventCount, 0, "We should have received events in registerEventListenerForTypes");

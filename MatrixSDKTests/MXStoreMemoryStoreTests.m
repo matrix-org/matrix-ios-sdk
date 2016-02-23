@@ -199,7 +199,7 @@
         }];
 
         // First make a call to paginateBackMessages that will make a request to the server
-        [room.liveTimeline resetBackState];
+        [room.liveTimeline resetPagination];
         [room.liveTimeline paginate:100 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^{
 
             XCTAssertEqual(firstEventInTheRoom.eventType, MXEventTypeRoomCreate, @"First event in a room is always m.room.create");
@@ -215,7 +215,7 @@
                 firstEventInTheRoom2 = event;
             }];
 
-            [room.liveTimeline resetBackState];
+            [room.liveTimeline resetPagination];
             [room.liveTimeline paginate:100 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^{
 
                 XCTAssertEqual(eventCount, eventCount2);
@@ -252,7 +252,7 @@
             [roomEvents addObject:event];
         }];
 
-        [room.liveTimeline resetBackState];
+        [room.liveTimeline resetPagination];
         [room.liveTimeline paginate:8 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^() {
 
             [room.liveTimeline removeAllListeners];
@@ -283,7 +283,7 @@
             XCTAssertTrue([room.liveTimeline canPaginate:MXEventDirectionBackwards], @"There is still at least one event to retrieve from the server");
 
             // The several paginations
-            [room.liveTimeline resetBackState];
+            [room.liveTimeline resetPagination];
             [room.liveTimeline paginate:2 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^() {
 
                 [room.liveTimeline paginate:5 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^() {
@@ -305,7 +305,7 @@
 
                         XCTAssertFalse([room.liveTimeline canPaginate:MXEventDirectionBackwards], @"We reach the beginning of the history");
 
-                        [room.liveTimeline resetBackState];
+                        [room.liveTimeline resetPagination];
                         XCTAssertTrue([room.liveTimeline canPaginate:MXEventDirectionBackwards], @"We must be able to paginate again");
 
                         [expectation fulfill];
@@ -345,7 +345,7 @@
 {
     [self doTestWithMXMemoryStore:^(MXRoom *room) {
 
-        [room.liveTimeline resetBackState];
+        [room.liveTimeline resetPagination];
         [room.liveTimeline paginate:8 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^() {
 
             MXEvent *lastMessage = [room lastMessageWithTypeIn:nil];

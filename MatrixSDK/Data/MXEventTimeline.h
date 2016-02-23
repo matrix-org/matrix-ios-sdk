@@ -110,10 +110,10 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 - (BOOL)canPaginate:(MXEventDirection)direction;
 
 /**
- Reset the back state so that future calls to paginate start over from live or 
+ Reset the pagination so that future calls to paginate start over from live or
  from the `initialEventId`.
  */
-- (void)resetBackState; // @TODO: Rename
+- (void)resetPagination;
 
 /**
  Get more messages.

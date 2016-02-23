@@ -276,7 +276,7 @@
 
             }];
 
-            [room.liveTimeline resetBackState];
+            [room.liveTimeline resetPagination];
             MXHTTPOperation *pagination = [room.liveTimeline paginate:100 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^() {
 
                 XCTFail(@"The cancelled operation must not complete");

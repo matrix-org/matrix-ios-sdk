@@ -116,7 +116,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 
 #pragma mark - Back pagination
-- (void)resetBackState
+- (void)resetPagination
 {
     // Reset the back state to the current room state
     backState = [[MXRoomState alloc] initBackStateWith:_state];
@@ -129,7 +129,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 {
     MXHTTPOperation *operation;
 
-    NSAssert(nil != backState, @"[MXEventTimeline] paginate: resetBackState must be called before starting the back pagination");
+    NSAssert(nil != backState, @"[MXEventTimeline] paginate: resetPagination must be called before starting the back pagination");
 
     if (direction == MXEventDirectionBackwards)
     {
