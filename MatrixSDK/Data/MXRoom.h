@@ -53,6 +53,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomSyncWithLimitedTimelineNotification;
 @interface MXRoom : NSObject
 
 /**
+ The Matrix id of the room.
+ */
+@property (nonatomic, readonly) NSString *roomId;
+
+/**
  The related matrix session.
  */
 @property (nonatomic, readonly) MXSession *mxSession;

@@ -79,11 +79,10 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  Create a timeline instance for a room.
 
  @param room the room associated to the timeline
- @param roomId @TODO: remove.
  @param initialEventId the initial event for the timeline. A nil value will create a live timeline.
  @return a MXEventTimeline instance.
  */
-- (id)initWithRoom:(MXRoom*)room andRoomId:(NSString*)roomId initialEventId:(NSString*)initialEventId;
+- (id)initWithRoom:(MXRoom*)room andInitialEventId:(NSString*)initialEventId;
 
 /**
  Initialise the room evenTimeline state.

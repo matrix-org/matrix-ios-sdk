@@ -37,9 +37,10 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     self = [super init];
     if (self)
     {
+        _roomId = roomId;
         mxSession = mxSession2;
 
-        _liveTimeline = [[MXEventTimeline alloc] initWithRoom:self andRoomId:roomId initialEventId:nil];
+        _liveTimeline = [[MXEventTimeline alloc] initWithRoom:self andInitialEventId:nil];
 
         _accountData = [[MXRoomAccountData alloc] init];
 

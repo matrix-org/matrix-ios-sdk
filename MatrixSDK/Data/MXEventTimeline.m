@@ -48,7 +48,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 @implementation MXEventTimeline
 
 #pragma mark - Initialisation
-- (id)initWithRoom:(MXRoom*)room2 andRoomId:(NSString*)roomId initialEventId:(NSString*)initialEventId
+- (id)initWithRoom:(MXRoom*)room2 andInitialEventId:(NSString*)initialEventId
 {
     self = [super init];
     if (self)
@@ -57,7 +57,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         room = room2;
         eventListeners = [NSMutableArray array];
 
-        _state = [[MXRoomState alloc] initWithRoomId:roomId andMatrixSession:room.mxSession andDirection:YES];
+        _state = [[MXRoomState alloc] initWithRoomId:room.roomId andMatrixSession:room.mxSession andDirection:YES];
 
         // Is it a past or live timeline?
         if (_initialEventId)
