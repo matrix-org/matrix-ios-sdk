@@ -53,7 +53,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 
     - past timelines: they start in the past from an `initialEventId`. They are filled
       with events on calls of [MXEventTimeline paginate] in backwards or forwards direction.
-      Events are stored in a in-memory store (MXMemoryStore). So, they are not permanent.
+      Events are stored in a in-memory store (MXMemoryStore) (@TODO: To be confirmed once they will be implemented). So, they are not permanent.
  */
 @interface MXEventTimeline : NSObject
 
