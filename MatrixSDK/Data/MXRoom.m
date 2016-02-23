@@ -428,7 +428,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 }
 
 
-#pragma mark - Receipts management
+#pragma mark - Read receipts management
 
 - (BOOL)handleReceiptEvent:(MXEvent *)event direction:(MXEventDirection)direction
 {
@@ -472,26 +472,6 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     return managedEvents;
 }
 
-- (BOOL)setReadReceiptToken:(NSString*)token ts:(long)ts
-{
-    MXReceiptData *data = [[MXReceiptData alloc] init];
-    
-    data.userId = mxSession.myUser.userId;
-    data.eventId = token;
-    data.ts = ts;
-    
-    if ([mxSession.store storeReceipt:data roomId:self.state.roomId])
-    {
-        if ([mxSession.store respondsToSelector:@selector(commit)])
-        {
-            [mxSession.store commit];
-        }
-        return YES;
-    }
-    
-    return NO;
-}
-
 - (BOOL)acknowledgeLatestEvent:(BOOL)sendReceipt;
 {    
     MXEvent* event =[mxSession.store lastMessageOfRoom:self.state.roomId withTypeIn:_acknowledgableEventTypes];
@@ -525,11 +505,6 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     }
     
     return NO;
-}
-
-- (NSComparisonResult)compareOriginServerTs:(MXRoom *)otherRoom
-{
-    return [[otherRoom lastMessageWithTypeIn:nil] compareOriginServerTs:[self lastMessageWithTypeIn:nil]];
 }
 
 -(NSArray*) unreadEvents
@@ -567,6 +542,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     }
     
     return receipts;
+}
+
+
+#pragma mark - Utils
+- (NSComparisonResult)compareOriginServerTs:(MXRoom *)otherRoom
+{
+    return [[otherRoom lastMessageWithTypeIn:nil] compareOriginServerTs:[self lastMessageWithTypeIn:nil]];
 }
 
 - (NSString *)description

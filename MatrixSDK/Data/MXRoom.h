@@ -470,10 +470,10 @@ FOUNDATION_EXPORT NSString *const kMXRoomSyncWithLimitedTimelineNotification;
 - (MXCall*)placeCallWithVideo:(BOOL)video;
 
 
-#pragma mark - Receipts management
+#pragma mark - Read receipts management
 
 /**
- Handle a receipt event
+ Handle a receipt event.
  
  @param event the event to handle.
  @param the direction
@@ -482,29 +482,26 @@ FOUNDATION_EXPORT NSString *const kMXRoomSyncWithLimitedTimelineNotification;
 - (BOOL)handleReceiptEvent:(MXEvent *)event direction:(MXEventDirection)direction;
 
 /**
- Update the read receipt token.
- @param token the new token
- @param ts the token ts
-@return true if the token is refreshed
- */
-- (BOOL)setReadReceiptToken:(NSString*)token ts:(long)ts;
-
-/**
  Acknowlegde the latest event of type defined in acknowledgableEventTypes.
  Put sendReceipt YES to send a receipt event if the latest event was not yet acknowledged.
+ This is will indicate to the homeserver that the user has read up to this event.
+
  @param sendReceipt YES to send a receipt event if required
  @return true if there is an update
  */
 - (BOOL)acknowledgeLatestEvent:(BOOL)sendReceipt;
 
 /**
- Returns the receipts list for an event, excluding the receipt from the current user.
+ Returns the read receipts list for an event, excluding the read receipt from the current user.
+
  @param eventId The event Id.
  @param sort YES to sort them from the latest to the oldest.
  @return the receipts for an event in a dedicated room.
  */
 - (NSArray*)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort;
 
+
+#pragma mark - Utils
 /**
  Comparator to use to order array of rooms by their lastest originServerTs value.
  
