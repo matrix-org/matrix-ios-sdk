@@ -119,22 +119,22 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         // Report the room id in the event as it is skipped in /sync response
         event.roomId = self.state.roomId;
 
-            // Handle first typing notifications
-            if (event.eventType == MXEventTypeTypingNotification)
-            {
-                // Typing notifications events are not room messages nor room state events
-                // They are just volatile information
-                MXJSONModelSetArray(_typingUsers, event.content[@"user_ids"]);
-        
-                // Notify listeners
-                [_liveTimeline notifyListeners:event direction:MXEventDirectionForwards];
-            }
-            else if (event.eventType == MXEventTypeReceipt)
-            {
-                [self handleReceiptEvent:event direction:MXEventDirectionForwards];
-            }
+        // Handle first typing notifications
+        if (event.eventType == MXEventTypeTypingNotification)
+        {
+            // Typing notifications events are not room messages nor room state events
+            // They are just volatile information
+            MXJSONModelSetArray(_typingUsers, event.content[@"user_ids"]);
+
+            // Notify listeners
+            [_liveTimeline notifyListeners:event direction:MXEventDirectionForwards];
+        }
+        else if (event.eventType == MXEventTypeReceipt)
+        {
+            [self handleReceiptEvent:event direction:MXEventDirectionForwards];
+        }
     }
-    
+
     // Handle account data events (if any)
     [self handleAccounDataEvents:roomSync.accountData.events direction:MXEventDirectionForwards];
 }

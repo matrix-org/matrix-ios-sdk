@@ -533,39 +533,22 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
  */
 - (void)handleLiveEvent:(MXEvent*)event
 {
-    // Handle first typing notifications
-    if (event.eventType == MXEventTypeTypingNotification)
+    // Make sure we have not processed this event yet
+    if (![store eventExistsWithEventId:event.eventId inRoom:_state.roomId])
     {
-        // Typing notifications events are not room messages nor room state events
-        // They are just volatile information
-        //MXJSONModelSetArray(_typingUsers, event.content[@"user_ids"]);
-
-        // Notify listeners
-        [self notifyListeners:event direction:MXEventDirectionForwards];
-    }
-    else if (event.eventType == MXEventTypeReceipt)
-    {
-        //[self handleReceiptEvent:event direction:MXEventDirectionForwards];
-    }
-    else
-    {
-        // Make sure we have not processed this event yet
-        if (![store eventExistsWithEventId:event.eventId inRoom:_state.roomId])
+        // Handle here redaction event from live event stream
+        if (event.eventType == MXEventTypeRoomRedaction)
         {
-            // Handle here redaction event from live event stream
-            if (event.eventType == MXEventTypeRoomRedaction)
-            {
-                //[self handleRedaction:event];
-            }
-
-            [self handleMessage:event direction:MXEventDirectionForwards];
-
-            // Store the event
-            [store storeEventForRoom:_state.roomId event:event direction:MXEventDirectionForwards];
-
-            // And notify listeners
-            [self notifyListeners:event direction:MXEventDirectionForwards];
+            //[self handleRedaction:event];
         }
+
+        [self handleMessage:event direction:MXEventDirectionForwards];
+
+        // Store the event
+        [store storeEventForRoom:_state.roomId event:event direction:MXEventDirectionForwards];
+
+        // And notify listeners
+        [self notifyListeners:event direction:MXEventDirectionForwards];
     }
 }
 
