@@ -175,31 +175,6 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 }
 
 
-#pragma mark - Back pagination
-- (BOOL)canPaginate
-{
-    return [_liveTimeline canPaginate:MXEventDirectionBackwards];
-}
-
-- (void)resetBackState
-{
-    [_liveTimeline resetBackState];
-}
-
-- (MXHTTPOperation*)paginateBackMessages:(NSUInteger)numItems
-                           onlyFromStore:(BOOL)onlyFromStore
-                                complete:(void (^)())complete
-                                 failure:(void (^)(NSError *error))failure
-{
-    return [_liveTimeline paginate:numItems direction:MXEventDirectionBackwards onlyFromStore:onlyFromStore complete:complete failure:failure];
-}
-
-- (NSUInteger)remainingMessagesForPaginationInStore
-{
-    return [mxSession.store remainingMessagesForPaginationInRoom:self.state.roomId];
-}
-
-
 #pragma mark - Room operations
 - (MXHTTPOperation*)sendEventOfType:(MXEventTypeString)eventTypeString
                             content:(NSDictionary*)content

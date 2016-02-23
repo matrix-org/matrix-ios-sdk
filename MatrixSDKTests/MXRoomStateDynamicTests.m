@@ -158,8 +158,8 @@
                     
                 }];
                 
-                [room resetBackState];
-                [room paginateBackMessages:10 onlyFromStore:NO complete:^{
+                [room.liveTimeline resetBackState];
+                [room.liveTimeline paginate:10 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^{
                     
                     XCTAssertGreaterThan(eventCount, 4, @"We must have received events");
                     
@@ -514,8 +514,8 @@
                     
                 }];
                 
-                [room resetBackState];
-                [room paginateBackMessages:20 complete:^{
+                [room.liveTimeline resetBackState];
+                [room.liveTimeline paginate:2 direction:MXEventDirectionBackwards0 complete:^{
                     
                     XCTAssertGreaterThan(eventCount, 8, @"We must have received events");
                     

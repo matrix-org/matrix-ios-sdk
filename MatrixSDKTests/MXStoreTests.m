@@ -253,8 +253,8 @@
         eventCount++;
     }];
 
-    [room resetBackState];
-    [room paginateBackMessages:5 onlyFromStore:NO complete:^() {
+    [room.liveTimeline resetBackState];
+    [room.liveTimeline paginate:5 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^() {
 
         XCTAssertEqual(eventCount, 5, @"We should get as many messages as requested");
 
@@ -286,8 +286,8 @@
 
     }];
 
-    [room resetBackState];
-    [room paginateBackMessages:100 onlyFromStore:NO complete:^() {
+    [room.liveTimeline resetBackState];
+    [room.liveTimeline paginate:100 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^() {
 
         XCTAssert(eventCount, "We should have received events in registerEventListenerForTypes");
 
@@ -318,8 +318,8 @@
 
     }];
 
-    [room resetBackState];
-    [room paginateBackMessages:100 onlyFromStore:NO complete:^() {
+    [room.liveTimeline resetBackState];
+    [room.liveTimeline paginate:100 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^() {
 
         XCTAssertNotEqual(prev_ts, -1, "We should have received events in registerEventListenerForTypes");
 
@@ -342,8 +342,8 @@
         [events addObject:event];
     }];
 
-    [room resetBackState];
-    [room paginateBackMessages:100 onlyFromStore:NO complete:^() {
+    [room.liveTimeline resetBackState];
+    [room.liveTimeline paginate:100 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^() {
 
         XCTAssert(eventCount, "We should have received events in registerEventListenerForTypes");
 
@@ -366,8 +366,8 @@
         [roomEvents addObject:event];
     }];
 
-    [room resetBackState];
-    [room paginateBackMessages:100 onlyFromStore:NO complete:^() {
+    [room.liveTimeline resetBackState];
+    [room.liveTimeline paginate:100 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^() {
 
         // Use another MXRoom instance to do pagination in several times
         MXRoom *room2 = [[MXRoom alloc] initWithRoomId:room.state.roomId andMatrixSession:mxSession];
@@ -379,23 +379,23 @@
         }];
 
         // The several paginations
-        [room2 resetBackState];
+        [room2.liveTimeline resetBackState];
 
         if (mxSession.store.isPermanent)
         {
-            XCTAssertGreaterThanOrEqual(room2.remainingMessagesForPaginationInStore, 7);
+            XCTAssertGreaterThanOrEqual(room2.liveTimeline.remainingMessagesForBackPaginationInStore, 7);
         }
 
-        [room2 paginateBackMessages:2 onlyFromStore:NO complete:^() {
+        [room2.liveTimeline paginate:2 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^() {
 
             if (mxSession.store.isPermanent)
             {
-                XCTAssertGreaterThanOrEqual(room2.remainingMessagesForPaginationInStore, 5);
+                XCTAssertGreaterThanOrEqual(room2.liveTimeline.remainingMessagesForBackPaginationInStore, 5);
             }
 
-            [room2 paginateBackMessages:5 onlyFromStore:NO complete:^() {
+            [room2.liveTimeline paginate:5 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^() {
 
-                [room2 paginateBackMessages:100 onlyFromStore:NO complete:^() {
+                [room2.liveTimeline paginate:100 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^() {
 
                     [self assertNoDuplicate:room2Events text:@"events got one by one with testSeveralPaginateBacks"];
 
@@ -462,14 +462,14 @@
             {
                 if (mxSession.store.isPermanent)
                 {
-                    XCTAssertGreaterThanOrEqual(room2.remainingMessagesForPaginationInStore, 7);
+                    XCTAssertGreaterThanOrEqual(room2.liveTimeline.remainingMessagesForBackPaginationInStore, 7);
                 }
 
-                [room2 paginateBackMessages:2 onlyFromStore:NO complete:^() {
+                [room2.liveTimeline paginate:2 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^() {
 
                     if (mxSession.store.isPermanent)
                     {
-                        XCTAssertGreaterThanOrEqual(room2.remainingMessagesForPaginationInStore, 5);
+                        XCTAssertGreaterThanOrEqual(room2.liveTimeline.remainingMessagesForBackPaginationInStore, 5);
                     }
 
                     // Try with 2 more live events
@@ -483,9 +483,9 @@
             }
             else if (3 == liveEvents)
 
-                [room2 paginateBackMessages:5 onlyFromStore:NO complete:^() {
+                [room2.liveTimeline paginate:5 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^() {
 
-                    [room2 paginateBackMessages:100 onlyFromStore:NO complete:^() {
+                    [room2.liveTimeline paginate:100 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^() {
 
                         [self assertNoDuplicate:room2Events text:@"events got one by one with testSeveralPaginateBacks"];
 
@@ -519,12 +519,12 @@
     }];
 
     // Take a snapshot of all room history
-    [room resetBackState];
-    [room paginateBackMessages:100 onlyFromStore:NO complete:^{
+    [room.liveTimeline resetBackState];
+    [room.liveTimeline paginate:100 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^{
 
         // Messages are now in the cache
         // Start checking pagination from the cache
-        [room2 resetBackState];
+        [room2.liveTimeline resetBackState];
 
         [room sendTextMessage:@"How is the pagination #1?" success:nil failure:nil];
 
@@ -537,15 +537,15 @@
 
 - (void)checkCanPaginateFromHomeServer:(MXRoom*)room
 {
-    [room resetBackState];
-    XCTAssertTrue(room.canPaginate, @"We can always paginate at the beginning");
+    [room.liveTimeline resetBackState];
+    XCTAssertTrue([room.liveTimeline canPaginate:MXEventDirectionBackwards], @"We can always paginate at the beginning");
 
-    [room paginateBackMessages:100 onlyFromStore:NO complete:^() {
+    [room.liveTimeline paginate:100 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^() {
 
         // Due to SPEC-319, we need to paginate twice to be sure to hit the limit
-        [room paginateBackMessages:100 onlyFromStore:NO complete:^() {
+        [room.liveTimeline paginate:100 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^() {
 
-            XCTAssertFalse(room.canPaginate, @"We must have reached the end of the pagination");
+            XCTAssertFalse([room.liveTimeline canPaginate:MXEventDirectionBackwards], @"We must have reached the end of the pagination");
 
             [expectation fulfill];
 
@@ -562,12 +562,12 @@
 
 - (void)checkCanPaginateFromMXStore:(MXRoom*)room
 {
-    [room resetBackState];
-    XCTAssertTrue(room.canPaginate, @"We can always paginate at the beginning");
+    [room.liveTimeline resetBackState];
+    XCTAssertTrue([room.liveTimeline canPaginate:MXEventDirectionBackwards], @"We can always paginate at the beginning");
 
-    [room paginateBackMessages:100 onlyFromStore:NO complete:^() {
+    [room.liveTimeline paginate:100 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^() {
 
-        XCTAssertFalse(room.canPaginate, @"We must have reached the end of the pagination");
+        XCTAssertFalse([room.liveTimeline canPaginate:MXEventDirectionBackwards], @"We must have reached the end of the pagination");
 
         [expectation fulfill];
 
@@ -582,11 +582,11 @@
     MXEvent *lastMessage = [room lastMessageWithTypeIn:nil];
     XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
 
-    [room resetBackState];
+    [room.liveTimeline resetBackState];
     MXEvent *lastMessage2 = [room lastMessageWithTypeIn:nil];
     XCTAssertEqualObjects(lastMessage2.eventId, lastMessage.eventId,  @"The last message should stay the same");
 
-    [room paginateBackMessages:100 onlyFromStore:NO complete:^() {
+    [room.liveTimeline paginate:100 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^() {
 
         MXEvent *lastMessage3 = [room lastMessageWithTypeIn:nil];
         XCTAssertEqualObjects(lastMessage3.eventId, lastMessage.eventId,  @"The last message should stay the same");
@@ -639,8 +639,8 @@
 
                             }];
 
-                            [room2 resetBackState];
-                            [room2 paginateBackMessages:100 onlyFromStore:NO complete:^{
+                            [room2.liveTimeline resetBackState];
+                            [room2.liveTimeline paginate:100 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^{
 
                                 XCTAssertEqual(events.count, 5, "The room should contain only 5 messages (the last message sent while the user is not in the room is not visible)");
                                 [expectation fulfill];
@@ -699,27 +699,27 @@
     }];
 
     // First count how many messages to retrieve
-    [room resetBackState];
-    [room paginateBackMessages:100 onlyFromStore:NO complete:^() {
+    [room.liveTimeline resetBackState];
+    [room.liveTimeline paginate:100 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^() {
 
         // Paginate for the exact number of events in the room
         NSUInteger pagEnd = eventCount;
         eventCount = 0;
         [mxSession.store deleteRoom:room.state.roomId];
-        [room resetBackState];
+        [room.liveTimeline resetBackState];
 
-        [room paginateBackMessages:pagEnd onlyFromStore:NO complete:^{
+        [room.liveTimeline paginate:pagEnd direction:MXEventDirectionBackwards onlyFromStore:NO complete:^{
 
             XCTAssertEqual(eventCount, pagEnd, @"We should get as many messages as requested");
 
-            XCTAssert(room.canPaginate, @"At this point the SDK cannot know it reaches the beginning of the history");
+            XCTAssert([room.liveTimeline canPaginate:MXEventDirectionBackwards], @"At this point the SDK cannot know it reaches the beginning of the history");
 
             // Try to load more messages
             eventCount = 0;
-            [room paginateBackMessages:1 onlyFromStore:NO complete:^{
+            [room.liveTimeline paginate:1 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^{
 
                 XCTAssertEqual(eventCount, 0, @"There must be no more event");
-                XCTAssertFalse(room.canPaginate, @"SDK must now indicate there is no more event to paginate");
+                XCTAssertFalse([room.liveTimeline canPaginate:MXEventDirectionBackwards], @"SDK must now indicate there is no more event to paginate");
 
                 [expectation fulfill];
 
@@ -1086,8 +1086,8 @@
             [mxSession start:^{
 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
-                [room resetBackState];
-                [room paginateBackMessages:10 onlyFromStore:NO complete:^{
+                [room.liveTimeline resetBackState];
+                [room.liveTimeline paginate:10 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^{
 
                     NSString *roomPaginationToken = [store paginationTokenOfRoom:roomId];
                     XCTAssert(roomPaginationToken, @"The room must have a pagination after a pagination");

@@ -235,6 +235,11 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     return operation;
 }
 
+- (NSUInteger)remainingMessagesForBackPaginationInStore
+{
+    return [store remainingMessagesForPaginationInRoom:_state.roomId];
+}
+
 
 #pragma mark - Server sync
 - (void)handleJoinedRoomSync:(MXRoomSync *)roomSync

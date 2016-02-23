@@ -79,7 +79,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  this time.
 
  @param direction MXEventDirectionBackwards to check if we can paginate backwards.
- MXEventDirectionForwards to check if we can go forwards
+                  MXEventDirectionForwards to check if we can go forwards
  @return true if we can paginate in the given direction
  */
 - (BOOL)canPaginate:(MXEventDirection)direction;
@@ -108,6 +108,14 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
                onlyFromStore:(BOOL)onlyFromStore
                     complete:(void (^)())complete
                      failure:(void (^)(NSError *error))failure;
+
+/**
+ Get the number of messages we can still back paginate from the store.
+ It provides the count of events available without making a request to the home server.
+
+ @return the count of remaining messages in store.
+ */
+- (NSUInteger)remainingMessagesForBackPaginationInStore;
 
 
 #pragma mark - Server sync

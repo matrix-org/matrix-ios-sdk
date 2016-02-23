@@ -127,45 +127,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomSyncWithLimitedTimelineNotification;
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync;
 
 
-#pragma mark - Back pagination
-/**
- Flag indicating if there are still events (in the past) to get with paginateBackMessages.
- */
-@property (nonatomic, readonly) BOOL canPaginate;
-
-/**
- Reset the back state so that future calls to paginate start over from live.
- Must be called when opening a room if interested in history.
- */
-- (void)resetBackState;
-    
-/**
- Get more messages from the past.
- The retrieved events will be sent to registered listeners.
- 
- @param numItems the number of items to get.
- @param onlyFromStore if YES, return available events from the store, do not make a pagination request to the homeserver.
- @param complete A block object called when the operation is complete.
- @param failure A block object called when the operation fails.
- 
- @return a MXHTTPOperation instance. This instance can be nil
-         if no request to the home server is required.
- */
-- (MXHTTPOperation*)paginateBackMessages:(NSUInteger)numItems
-                           onlyFromStore:(BOOL)onlyFromStore
-                                complete:(void (^)())complete
-                                 failure:(void (^)(NSError *error))failure;
-
-
-/**
- Get the number of messages we can still paginate from the store.
- It provides the count of events available without making a request to the home server.
-
- @return the count of remaining messages in store.
- */
-- (NSUInteger)remainingMessagesForPaginationInStore;
-
-
 #pragma mark - Room operations
 /**
  Send a generic non state event to a room.
