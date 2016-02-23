@@ -46,13 +46,6 @@ NSString *const kMXSessionNoRoomTag = @"m.recent";  // Use the same value as mat
 #define CLIENT_TIMEOUT_MS 120000
 
 
-/**
- The number of messages to get at the initialSync.
- This number should be big enough to be able to pick at least one message from the downloaded ones
- that matches the type requested for `recentsWithTypeIn` but this depends on the app.
- */
-#define DEFAULT_INITIALSYNC_MESSAGES_NUMBER 10
-
 // Block called when MSSession resume is complete
 typedef void (^MXOnResumeDone)();
 
@@ -87,9 +80,10 @@ typedef void (^MXOnResumeDone)();
     NSMutableArray *globalEventListeners;
 
     /**
-     The limit value to use when doing initialSync.
+     The limit value to use when doing /sync requests.
+     -1, the default value, let the homeserver use its default value.
      */
-    NSUInteger initialSyncMessagesLimit;
+    NSInteger syncMessagesLimit;
 
     /** 
      The block to call when MSSession resume is complete.
@@ -126,6 +120,7 @@ typedef void (^MXOnResumeDone)();
         users = [NSMutableDictionary dictionary];
         oneToOneRooms = [NSMutableDictionary dictionary];
         globalEventListeners = [NSMutableArray array];
+        syncMessagesLimit = -1;
         _notificationCenter = [[MXNotificationCenter alloc] initWithMatrixSession:self];
         
         [self setState:MXSessionStateInitialised];
@@ -246,7 +241,7 @@ typedef void (^MXOnResumeDone)();
 - (void)start:(void (^)())onServerSyncDone
       failure:(void (^)(NSError *error))failure
 {
-    [self startWithMessagesLimit:DEFAULT_INITIALSYNC_MESSAGES_NUMBER onServerSyncDone:onServerSyncDone failure:failure];
+    [self startWithMessagesLimit:-1 onServerSyncDone:onServerSyncDone failure:failure];
 }
 
 - (void)startWithMessagesLimit:(NSUInteger)messagesLimit
@@ -272,7 +267,7 @@ typedef void (^MXOnResumeDone)();
     [self setState:MXSessionStateSyncInProgress];
 
     // Store the passed limit to reuse it when initialSyncing per room
-    initialSyncMessagesLimit = messagesLimit;
+    syncMessagesLimit = messagesLimit;
 
     // Can we resume from data available in the cache
     if (_store.isPermanent && _store.eventStreamToken && 0 < _store.rooms.count)
@@ -480,8 +475,15 @@ typedef void (^MXOnResumeDone)();
 {
     NSDate *startDate = [NSDate date];
     NSLog(@"[MXSession] Do a server sync");
-    
-    eventStreamRequest = [matrixRestClient syncFromToken:_store.eventStreamToken serverTimeout:serverTimeout clientTimeout:clientTimeout setPresence:setPresence filter:nil success:^(MXSyncResponse *syncResponse) {
+
+    NSString *inlineFilter;
+    if (-1 != syncMessagesLimit)
+    {
+        // If requested by the app, use a limit for /sync.
+        inlineFilter = [NSString stringWithFormat:@"{\"room\":{\"timeline\":{\"limit\":%tu}}}", syncMessagesLimit];
+    }
+
+    eventStreamRequest = [matrixRestClient syncFromToken:_store.eventStreamToken serverTimeout:serverTimeout clientTimeout:clientTimeout setPresence:setPresence filter:inlineFilter success:^(MXSyncResponse *syncResponse) {
         
         // Make sure [MXSession close] or [MXSession pause] has not been called before the server response
         if (!eventStreamRequest)
