@@ -539,7 +539,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         // Handle here redaction event from live event stream
         if (event.eventType == MXEventTypeRoomRedaction)
         {
-            //[self handleRedaction:event];
+            [self handleRedaction:event];
         }
 
         [self handleMessage:event direction:MXEventDirectionForwards];
@@ -552,6 +552,24 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     }
 }
 
+- (void)handleRedaction:(MXEvent*)redactionEvent
+{
+    // Check whether the redacted event has been already processed
+    MXEvent *redactedEvent = [store eventWithEventId:redactionEvent.redacts inRoom:_state.roomId];
+    if (redactedEvent)
+    {
+        // Redact the stored event
+        redactedEvent = [redactedEvent prune];
+        redactedEvent.redactedBecause = redactionEvent.JSONDictionary;
+
+        if (redactedEvent.isState) {
+            // FIXME: The room state must be refreshed here since this redacted event.
+        }
+
+        // Store the event
+        [store replaceEvent:redactedEvent inRoom:_state.roomId];
+    }
+}
 
 #pragma mark - Events listeners
 - (id)listenToEvents:(MXOnRoomEvent)onEvent
