@@ -85,14 +85,12 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  */
 - (id)initWithRoom:(MXRoom*)room andRoomId:(NSString*)roomId initialEventId:(NSString*)initialEventId;
 
-
 /**
- @TODO: Change to initialiseState
- Process a state event in order to update the room state.
+ Initialise the room evenTimeline state.
 
- @param event the state event.
+ @param stateEvents the state event.
  */
-- (void)handleStateEvent:(MXEvent*)event direction:(MXEventDirection)direction;
+- (void)initialiseState:(NSArray<MXEvent*> *)stateEvents;
 
 
 #pragma mark - Pagination

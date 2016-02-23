@@ -75,11 +75,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     {
         @autoreleasepool
         {
-            for (MXEvent *event in stateEvents)
-            {
-                [_liveTimeline handleStateEvent:event direction:MXEventDirectionSync];
-            }
-
+            [_liveTimeline initialiseState:stateEvents];
             _accountData = accountData;
         }
     }

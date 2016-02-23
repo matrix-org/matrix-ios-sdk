@@ -47,6 +47,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 @implementation MXEventTimeline
 
+#pragma mark - Initialisation
 - (id)initWithRoom:(MXRoom*)room2 andRoomId:(NSString*)roomId initialEventId:(NSString*)initialEventId
 {
     self = [super init];
@@ -68,15 +69,19 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         else
         {
             // Live: store events in the session store
+            _isLiveTimeline = YES;
             store = room.mxSession.store;
         }
     }
     return self;
 }
 
-- (BOOL)isLiveTimeline
+- (void)initialiseState:(NSArray<MXEvent *> *)stateEvents
 {
-    return !_initialEventId;
+    for (MXEvent *event in stateEvents)
+    {
+        [self handleStateEvent:event direction:MXEventDirectionSync];
+    }
 }
 
 
@@ -95,7 +100,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     }
     else
     {
-        if (self.isLiveTimeline)
+        if (_isLiveTimeline)
         {
             // Matrix is not yet able to guess the future
             canPaginate = NO;
@@ -239,7 +244,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             NSLog(@"[MXEventTimeline] paginate: is done");
         }
     }
-    else if (!self.isLiveTimeline)
+    else if (!_isLiveTimeline)
     {
         NSAssert(NO, @"TODO: paginate forwards is not yet supported");
     }
