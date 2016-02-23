@@ -39,7 +39,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     {
         mxSession = mxSession2;
 
-        _liveTimeLine = [[MXEventTimeLine alloc] initWithRoom:self andRoomId:roomId initialEventId:nil];
+        _liveTimeline = [[MXEventTimeline alloc] initWithRoom:self andRoomId:roomId initialEventId:nil];
 
         _accountData = [[MXRoomAccountData alloc] init];
 
@@ -77,7 +77,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         {
             for (MXEvent *event in stateEvents)
             {
-                [_liveTimeLine handleStateEvent:event direction:MXEventDirectionSync];
+                [_liveTimeline handleStateEvent:event direction:MXEventDirectionSync];
             }
 
             _accountData = accountData;
@@ -89,7 +89,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 #pragma mark - Properties implementation
 - (MXRoomState *)state
 {
-    return _liveTimeLine.state;
+    return _liveTimeline.state;
 }
 
 - (void)setPartialTextMessage:(NSString *)partialTextMessage
@@ -115,7 +115,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 - (void)handleJoinedRoomSync:(MXRoomSync *)roomSync
 {
     // Let the live timeline handle live events
-    [_liveTimeLine handleJoinedRoomSync:roomSync];
+    [_liveTimeline handleJoinedRoomSync:roomSync];
 
     // Handle here ephemeral events (if any)
     for (MXEvent *event in roomSync.ephemeral.events)
@@ -131,7 +131,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 MXJSONModelSetArray(_typingUsers, event.content[@"user_ids"]);
         
                 // Notify listeners
-                [_liveTimeLine notifyListeners:event direction:MXEventDirectionForwards];
+                [_liveTimeline notifyListeners:event direction:MXEventDirectionForwards];
             }
             else if (event.eventType == MXEventTypeReceipt)
             {
@@ -146,7 +146,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync
 {
     // Let the live timeline handle live events
-    [_liveTimeLine handleInvitedRoomSync:invitedRoomSync];
+    [_liveTimeline handleInvitedRoomSync:invitedRoomSync];
 }
 
 
@@ -170,7 +170,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         }
 
         // And notify listeners
-        [_liveTimeLine notifyListeners:event direction:direction];
+        [_liveTimeline notifyListeners:event direction:direction];
     }
 }
 
@@ -178,12 +178,12 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 #pragma mark - Back pagination
 - (BOOL)canPaginate
 {
-    return [_liveTimeLine canPaginate:MXEventDirectionBackwards];
+    return [_liveTimeline canPaginate:MXEventDirectionBackwards];
 }
 
 - (void)resetBackState
 {
-    [_liveTimeLine resetBackState];
+    [_liveTimeline resetBackState];
 }
 
 - (MXHTTPOperation*)paginateBackMessages:(NSUInteger)numItems
@@ -191,7 +191,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                                 complete:(void (^)())complete
                                  failure:(void (^)(NSError *error))failure
 {
-    return [_liveTimeLine paginate:numItems direction:MXEventDirectionBackwards onlyFromStore:onlyFromStore complete:complete failure:failure];
+    return [_liveTimeline paginate:numItems direction:MXEventDirectionBackwards onlyFromStore:onlyFromStore complete:complete failure:failure];
 }
 
 - (NSUInteger)remainingMessagesForPaginationInStore
@@ -494,7 +494,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     if (managedEvents)
     {
         // Notify listeners
-        [_liveTimeLine notifyListeners:event direction:direction];
+        [_liveTimeline notifyListeners:event direction:direction];
     }
     
     return managedEvents;

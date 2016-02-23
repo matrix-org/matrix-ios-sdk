@@ -41,14 +41,14 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 @class MXRoom;
 
 /**
- A `MXEventTimeLine` instance represents a contiguous sequence of events in a room.
+ A `MXEventTimeline` instance represents a contiguous sequence of events in a room.
  */
 
-@interface MXEventTimeLine : NSObject
+@interface MXEventTimeline : NSObject
 
 @property (nonatomic, readonly) NSString *initialEventId;
 
-@property (nonatomic, readonly) BOOL isLiveTimeLine;
+@property (nonatomic, readonly) BOOL isLiveTimeline;
 
 
 /**

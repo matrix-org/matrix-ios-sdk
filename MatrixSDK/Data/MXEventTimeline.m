@@ -14,7 +14,7 @@
  limitations under the License.
  */
 
-#import "MXEventTimeLine.h"
+#import "MXEventTimeline.h"
 
 #import "MXSession.h"
 #import "MXMemoryStore.h"
@@ -23,7 +23,7 @@
 
 NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
-@interface MXEventTimeLine ()
+@interface MXEventTimeline ()
 {
     // The list of event listeners (`MXEventListener`) of this timeline
     NSMutableArray *eventListeners;
@@ -43,7 +43,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 }
 @end
 
-@implementation MXEventTimeLine
+@implementation MXEventTimeline
 
 - (id)initWithRoom:(MXRoom*)room2 andRoomId:(NSString*)roomId initialEventId:(NSString*)initialEventId
 {
@@ -70,7 +70,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     return self;
 }
 
-- (BOOL)isLiveTimeLine
+- (BOOL)isLiveTimeline
 {
     return !_initialEventId;
 }
@@ -91,7 +91,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     }
     else
     {
-        if (self.isLiveTimeLine)
+        if (self.isLiveTimeline)
         {
             canPaginate = NO;
         }

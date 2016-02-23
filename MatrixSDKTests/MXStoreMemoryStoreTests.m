@@ -191,7 +191,7 @@
 
         __block NSUInteger eventCount = 0;
         __block MXEvent *firstEventInTheRoom;
-        [room.liveTimeLine listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+        [room.liveTimeline listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
 
             eventCount++;
 
@@ -204,11 +204,11 @@
 
             XCTAssertEqual(firstEventInTheRoom.eventType, MXEventTypeRoomCreate, @"First event in a room is always m.room.create");
 
-            [room.liveTimeLine removeAllListeners];
+            [room.liveTimeline removeAllListeners];
 
             __block NSUInteger eventCount2 = 0;
             __block MXEvent *firstEventInTheRoom2;
-            [room.liveTimeLine listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+            [room.liveTimeline listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
 
                 eventCount2++;
 
@@ -245,7 +245,7 @@
         __block NSInteger paginateBackMessagesCallCount = 0;
 
         __block NSMutableArray *roomEvents = [NSMutableArray array];
-        [room.liveTimeLine listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+        [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
 
             XCTAssertEqual(paginateBackMessagesCallCount, 1, @"Messages must asynchronously come");
 
@@ -255,10 +255,10 @@
         [room resetBackState];
         [room paginateBackMessages:8 onlyFromStore:NO complete:^() {
 
-            [room.liveTimeLine removeAllListeners];
+            [room.liveTimeline removeAllListeners];
 
             __block NSMutableArray *room2Events = [NSMutableArray array];
-            [room.liveTimeLine listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
 
                 [room2Events addObject:event];
 

@@ -24,7 +24,7 @@
 #import "MXRoomAccountData.h"
 #import "MXHTTPOperation.h"
 #import "MXCall.h"
-#import "MXEventTimeLine.h"
+#import "MXEventTimeline.h"
 
 @class MXRoom;
 @class MXSession;
@@ -60,7 +60,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSyncWithLimitedTimelineNotification;
 /**
  The live events timeline.
  */
-@property (nonatomic, readonly) MXEventTimeLine *liveTimeLine;
+@property (nonatomic, readonly) MXEventTimeline *liveTimeline;
 
 /**
  The up-to-date state of the room.

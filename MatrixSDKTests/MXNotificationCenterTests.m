@@ -145,7 +145,7 @@
         mxSession = bobSession;
 
         MXRoom *room = [mxSession roomWithRoomId:roomId];
-        [room.liveTimeLine listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+        [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
 
             [bobSession.notificationCenter listenToNotifications:^(MXEvent *event, MXRoomState *roomState, MXPushRule *rule) {
 
@@ -181,7 +181,7 @@
         mxSession = bobSession;
 
         MXRoom *room = [mxSession roomWithRoomId:roomId];
-        [room.liveTimeLine listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+        [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
 
             NSString *messageFromAlice = @"mxBob: you should be notified for this message";
 
