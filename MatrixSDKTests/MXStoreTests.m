@@ -567,9 +567,17 @@
 
     [room.liveTimeline paginate:100 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^() {
 
-        XCTAssertFalse([room.liveTimeline canPaginate:MXEventDirectionBackwards], @"We must have reached the end of the pagination");
+        // Do one more round trip so that SDK detect the limit
+        [room.liveTimeline paginate:1 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^{
 
-        [expectation fulfill];
+            XCTAssertFalse([room.liveTimeline canPaginate:MXEventDirectionBackwards], @"We must have reached the end of the pagination");
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
 
     } failure:^(NSError *error) {
         XCTFail(@"The request should not fail - NSError: %@", error);

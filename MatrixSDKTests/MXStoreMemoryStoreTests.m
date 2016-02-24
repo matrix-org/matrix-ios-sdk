@@ -303,12 +303,22 @@
                             XCTAssertTrue([event2.eventId isEqualToString:event.eventId], @"Events mismatch: %@ - %@", event, event2);
                         }
 
-                        XCTAssertFalse([room.liveTimeline canPaginate:MXEventDirectionBackwards], @"We reach the beginning of the history");
+                        // Do one more round trip so that SDK detect the limit
+                        [room.liveTimeline paginate:1 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^{
 
-                        [room.liveTimeline resetPagination];
-                        XCTAssertTrue([room.liveTimeline canPaginate:MXEventDirectionBackwards], @"We must be able to paginate again");
+                            XCTAssertEqual(roomEvents.count, 8, @"We should have not received more events");
 
-                        [expectation fulfill];
+                            XCTAssertFalse([room.liveTimeline canPaginate:MXEventDirectionBackwards], @"We reach the beginning of the history");
+
+                            [room.liveTimeline resetPagination];
+                            XCTAssertTrue([room.liveTimeline canPaginate:MXEventDirectionBackwards], @"We must be able to paginate again");
+
+                            [expectation fulfill];
+
+                        } failure:^(NSError *error) {
+                            XCTFail(@"The request should not fail - NSError: %@", error);
+                            [expectation fulfill];
+                        }];
 
                     } failure:^(NSError *error) {
                         XCTFail(@"The request should not fail - NSError: %@", error);
