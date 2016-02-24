@@ -183,14 +183,14 @@
         MXRoom *room = [mxSession roomWithRoomId:roomId];
         [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
 
-            NSString *messageFromAlice = @"mxBob: you should be notified for this message";
+            NSString *messageFromAlice = [NSString stringWithFormat:@"%@: you should be notified for this message", bobSession.matrixRestClient.credentials.userId];
 
             [bobSession.notificationCenter listenToNotifications:^(MXEvent *event, MXRoomState *roomState, MXPushRule *rule) {
 
                 // We must be alerted by the default content HS rule on "mxBob"
                 XCTAssertEqual(rule.kind, MXPushRuleKindContent);
                 XCTAssert(rule.isDefault, @"The rule must be the server default rule. Rule: %@", rule);
-                XCTAssertEqualObjects(rule.pattern, @"mxBob", @"As content rule, the pattern must be define. Rule: %@", rule);
+                XCTAssert([rule.pattern hasPrefix:@"mxBob"], @"As content rule, the pattern must be define. Rule: %@", rule);
 
                 // Check the right event has been notified
                 XCTAssertEqualObjects(event.content[@"body"], messageFromAlice, @"The wrong messsage has been caught. event: %@", event);

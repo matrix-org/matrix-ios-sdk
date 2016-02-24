@@ -30,7 +30,7 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
 
 @interface MatrixSDKTestsData : NSObject
 
-+ (id)sharedData;
++ (MatrixSDKTestsData *)sharedData;
 
 #pragma mark - mxBob
 // Credentials for the user mxBob on the home server located at kMXTestsHomeServerURL
@@ -82,6 +82,9 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
                    readyToTest:(void (^)(MXRestClient *aliceRestClient, XCTestExpectation *expectation))readyToTest;
 
 #pragma mark - both
+// The alias used for the public room created with *ThePublicRoom* methods
+@property (nonatomic,readonly) NSString *thePublicRoomAlias;
+
 - (void)doMXRestClientTestWithBobAndAliceInARoom:(XCTestCase*)testCase
                                      readyToTest:(void (^)(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest;
 

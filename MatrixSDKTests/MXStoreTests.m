@@ -612,6 +612,9 @@
 
                 __block NSString *aliceTextEventId;
 
+                // Make sure bob joins back the room only once
+                __block BOOL joinedRequestMade = NO;
+
                 // Listen for the invitation by Alice
                 [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
 
@@ -620,10 +623,11 @@
 
                     XCTAssertNotNil(room2);
 
-                    if (direction == MXEventDirectionForwards && MXMembershipInvite == room2.state.membership)
+                    if (direction == MXEventDirectionForwards && MXMembershipInvite == room2.state.membership && !joinedRequestMade)
                     {
                         // Join the room on the invitation and check we can paginate all expected text messages
                         // By default the last Alice's message (sent while Bob is not in the room) is not visible.
+                        joinedRequestMade = YES;
                         [room2 join:^{
 
                             NSMutableArray *events = [NSMutableArray array];
@@ -643,15 +647,19 @@
                             [room2.liveTimeline paginate:100 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^{
 
                                 XCTAssertEqual(events.count, 5, "The room should contain only 5 messages (the last message sent while the user is not in the room is not visible)");
+
+                                [mxSession close];
                                 [expectation fulfill];
 
                             } failure:^(NSError *error) {
                                 XCTFail(@"The request should not fail - NSError: %@", error);
+                                [mxSession close];
                                 [expectation fulfill];
                             }];
 
                         } failure:^(NSError *error) {
                             XCTFail(@"The request should not fail - NSError: %@", error);
+                            [mxSession close];
                             [expectation fulfill];
                         }];
                     }

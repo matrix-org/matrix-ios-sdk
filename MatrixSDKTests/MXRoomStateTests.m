@@ -367,7 +367,7 @@
         
         NSString *alias = room.state.aliases[0];
         
-        XCTAssertTrue([alias hasPrefix:@"#mxPublic:"]);
+        XCTAssertTrue([alias hasPrefix:@"#mxPublic"]);
         
         [expectation fulfill];
     }];
@@ -381,7 +381,7 @@
         mxSession = mxSession2;
 
         XCTAssertNotNil(room.state.displayname);
-        XCTAssertTrue([room.state.displayname hasPrefix:@"MX Public Room test (#mxPublic:"], @"We must retrieve the #mxPublic room settings");
+        XCTAssertTrue([room.state.displayname hasPrefix:@"MX Public Room test (#mxPublic"], @"We must retrieve the #mxPublic room settings");
         
         [expectation fulfill];
     }];

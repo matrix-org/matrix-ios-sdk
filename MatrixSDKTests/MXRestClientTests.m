@@ -172,9 +172,7 @@
 {
     [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndThePublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
-        NSString *mxPublicAlias = [NSString stringWithFormat:@"#mxPublic:%@", @"localhost:8480"];
-
-        [bobRestClient joinRoom:mxPublicAlias success:^(NSString *theRoomId) {
+        [bobRestClient joinRoom:[MatrixSDKTestsData sharedData].thePublicRoomAlias success:^(NSString *theRoomId) {
 
             XCTAssertEqualObjects(roomId, theRoomId);
             [expectation fulfill];
@@ -971,6 +969,7 @@
 
                                                       XCTAssertNil(roomEventResults.nextBatch, @"The result contains all matching events");
 
+                                                      [mxSession close];
                                                       [expectation fulfill];
                                                       
                                                   } failure:^(NSError *error) {
