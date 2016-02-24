@@ -44,7 +44,10 @@
 {
     credentials = someCredentials;
     // Nothing to do
-    onComplete();
+    if (onComplete)
+    {
+        onComplete();
+    }
 }
 
 - (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXEventDirection)direction

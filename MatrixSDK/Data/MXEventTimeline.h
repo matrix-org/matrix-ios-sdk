@@ -91,6 +91,19 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  */
 - (void)initialiseState:(NSArray<MXEvent*> *)stateEvents;
 
+/**
+ Initialise a timelime by loading the context around its `initialEventId`.
+ 
+ @param limit the maximum number of messages to return.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)loadContextWithLimit:(NSUInteger)limit
+                                 success:(void(^)())success
+                                 failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Pagination
 /**

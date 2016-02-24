@@ -343,7 +343,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSyncWithLimitedTimelineNotification;
 
  @param typing Use YES if the user is currently typing.
  @param timeout the length of time until the user should be treated as no longer typing,
- in milliseconds. Can be ommited (set to -1) if they are no longer typing.
+                in milliseconds. Can be ommited (set to -1) if they are no longer typing.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
@@ -370,6 +370,34 @@ FOUNDATION_EXPORT NSString *const kMXRoomSyncWithLimitedTimelineNotification;
                          reason:(NSString*)reason
                         success:(void (^)())success
                         failure:(void (^)(NSError *error))failure;
+
+
+#pragma mark - Events timeline
+/**
+ Open a new `MXEventTimeline` instance around the passed event.
+
+ @param eventId the id of the event.
+ @param limit the maximum number of messages to preload.
+
+ @param success A block object called when the operation succeeds.
+                It passes the newly `MXEventTimeline` created instance.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+
+- (MXHTTPOperation*)openTimelineOnEvent:(NSString*)eventId
+                              withLimit:(NSUInteger)limit
+                                success:(void(^)(MXEventTimeline *eventTimeline))success
+                                failure:(void (^)(NSError *error))failure;
+
+/**
+ Close a `MXEventTimeline` instance.
+ All attached listeners are unregitered.
+
+ @param eventTimeline the timeline to close.
+ */
+- (void)closeTimeline:(MXEventTimeline*)eventTimeline;
 
 
 #pragma mark - Outgoing events management

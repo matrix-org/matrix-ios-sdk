@@ -84,6 +84,30 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     }
 }
 
+- (MXHTTPOperation *)loadContextWithLimit:(NSUInteger)limit success:(void (^)())success failure:(void (^)(NSError *))failure
+{
+    NSAssert(_initialEventId, @"[MXEventTimeline] loadContextWithLimit cannot be called on live timeline");
+
+    // Get the context around the initial event
+    return [room.mxSession.matrixRestClient contextOfEvent:_initialEventId inRoom:room.roomId limit:limit success:^(MXEventContext *eventContext) {
+
+        // And fill the timelime with received data
+        [self initialiseState:eventContext.state];
+
+        for (MXEvent *event in eventContext.eventsBefore)
+        {
+            [self handleMessage:event direction:MXEventDirectionBackwards];
+        }
+
+        for (MXEvent *event in eventContext.eventsAfter)
+        {
+            [self handleLiveEvent:event];
+        }
+
+        success();
+    } failure:failure];
+}
+
 
 #pragma mark - Pagination
 - (BOOL)canPaginate:(MXEventDirection)direction

@@ -313,6 +313,24 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 }
 
 
+#pragma mark - Events timeline
+- (MXHTTPOperation *)openTimelineOnEvent:(NSString *)eventId withLimit:(NSUInteger)limit success:(void (^)(MXEventTimeline *))success failure:(void (^)(NSError *))failure
+{
+    // Create and preload the event timeline
+    MXEventTimeline *eventTimeline = [[MXEventTimeline alloc] initWithRoom:self andInitialEventId:eventId];
+    [eventTimeline loadContextWithLimit:limit success:^{
+        success(eventTimeline);
+    } failure:failure];
+
+    return nil;
+}
+
+-(void)closeTimeline:(MXEventTimeline *)eventTimeline
+{
+    // @TODO
+}
+
+
 #pragma mark - Outgoing events management
 - (void)storeOutgoingMessage:(MXEvent*)outgoingMessage
 {
