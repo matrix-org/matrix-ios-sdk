@@ -128,6 +128,7 @@ NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
     if (createRoomResponse)
     {
         MXJSONModelSetString(createRoomResponse.roomId, JSONDictionary[@"room_id"]);
+        MXJSONModelSetString(createRoomResponse.roomAlias, JSONDictionary[@"room_alias"]);
     }
 
     return createRoomResponse;
