@@ -135,7 +135,7 @@
 
         }];
 
-        [aliceRestClient sendTextMessageToRoom:roomId text:@"A message to update my last active ago" success:^(NSString *eventId) {
+        [aliceRestClient setPresence:MXPresenceOnline andStatusMessage:@"" success:^{
 
         } failure:^(NSError *error) {
             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
