@@ -1093,7 +1093,7 @@
         // Do a 1st [mxSession start] to fill the store
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         [mxSession setStore:store success:^{
-            [mxSession start:^{
+            [mxSession startWithMessagesLimit:5 onServerSyncDone:^{
 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
                 [room.liveTimeline resetPagination];
