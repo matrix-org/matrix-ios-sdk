@@ -638,27 +638,30 @@
                     if (direction == MXEventDirectionForwards && MXMembershipInvite == room2.state.membership && !joinedRequestMade)
                     {
                         // Join the room on the invitation and check we can paginate all expected text messages
-                        // By default the last Alice's message (sent while Bob is not in the room) is not visible.
+                        // By default the last Alice's message (sent while Bob is not in the room) must be visible.
                         joinedRequestMade = YES;
                         [room2 join:^{
 
                             NSMutableArray *events = [NSMutableArray array];
                             [room2.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
 
-                                if (0 == events.count)
+                                if (direction == MXEventDirectionBackwards)
                                 {
-                                    // The most recent message must not be "Hi bob" sent by Alice
-                                    XCTAssertNotEqualObjects(aliceTextEventId, event.eventId);
-                                }
+                                    if (0 == events.count)
+                                    {
+                                        // The most recent message must be "Hi bob" sent by Alice
+                                        XCTAssertEqualObjects(aliceTextEventId, event.eventId);
+                                    }
 
-                                [events addObject:event];
+                                    [events addObject:event];
+                                }
 
                             }];
 
                             [room2.liveTimeline resetPagination];
                             [room2.liveTimeline paginate:100 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^{
 
-                                XCTAssertEqual(events.count, 5, "The room should contain only 5 messages (the last message sent while the user is not in the room is not visible)");
+                                XCTAssertEqual(events.count, 6, "The room should contain only 6 messages (the last message sent while the user is not in the room must be visible)");
 
                                 [mxSession close];
                                 [expectation fulfill];
