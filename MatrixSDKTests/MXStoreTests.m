@@ -98,10 +98,9 @@
         testCase = nil;
     }
 
-    MatrixSDKTestsData *sharedData = matrixSDKTestsData;
-    [sharedData doMXRestClientTestWithBobAndAliceInARoom:testCase readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation2) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndAliceInARoom:testCase readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation2) {
 
-        [sharedData for:bobRestClient andRoom:roomId sendMessages:5 success:^{
+        [matrixSDKTestsData for:bobRestClient andRoom:roomId sendMessages:5 success:^{
 
             if (!expectation)
             {
@@ -187,9 +186,7 @@
 
 - (void)checkEventExistsWithEventIdOfStore:(id<MXStore>)store
 {
-    MatrixSDKTestsData *sharedData = matrixSDKTestsData;
-
-    [sharedData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation2) {
+    [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation2) {
 
         expectation = expectation2;
 
@@ -218,9 +215,7 @@
 
 - (void)checkEventWithEventIdOfStore:(id<MXStore>)store
 {
-    MatrixSDKTestsData *sharedData = matrixSDKTestsData;
-
-    [sharedData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation2) {
+    [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation2) {
 
         expectation = expectation2;
 
@@ -822,14 +817,12 @@
 #pragma mark - Tests on MXStore optional methods
 - (void)checkUserDisplaynameAndAvatarUrl:(Class)mxStoreClass
 {
-    MatrixSDKTestsData *sharedData = matrixSDKTestsData;
-
-    [sharedData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+    [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
 
         expectation = expectation2;
 
         id<MXStore> store = [[mxStoreClass alloc] init];
-        [store openWithCredentials:sharedData.aliceCredentials onComplete:^{
+        [store openWithCredentials:matrixSDKTestsData.aliceCredentials onComplete:^{
 
             [store deleteAllData];
 
@@ -856,7 +849,7 @@
 
                     // Check user information is permanent
                     id<MXStore> store2 = [[mxStoreClass alloc] init];
-                    [store2 openWithCredentials:sharedData.aliceCredentials onComplete:^{
+                    [store2 openWithCredentials:matrixSDKTestsData.aliceCredentials onComplete:^{
 
                         XCTAssertEqualObjects(store2.userDisplayname, kMXTestsAliceDisplayName);
                         XCTAssertEqualObjects(store2.userAvatarUrl, kMXTestsAliceAvatarURL);
@@ -886,15 +879,13 @@
 
 - (void)checkMXSessionOnStoreDataReady:(Class)mxStoreClass
 {
-    MatrixSDKTestsData *sharedData = matrixSDKTestsData;
-
-    [sharedData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
 
         expectation = expectation2;
 
 
         id<MXStore> store = [[mxStoreClass alloc] init];
-        [store openWithCredentials:sharedData.bobCredentials onComplete:^{
+        [store openWithCredentials:matrixSDKTestsData.bobCredentials onComplete:^{
 
             // Make sure to start from an empty store
             [store deleteAllData];
@@ -985,9 +976,7 @@
 
 - (void)checkRoomDeletion:(Class)mxStoreClass
 {
-    MatrixSDKTestsData *sharedData = matrixSDKTestsData;
-
-    [sharedData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
 
         expectation = expectation2;
 
@@ -1009,7 +998,7 @@
 
                     // Reload the store, to be sure the room is no more here
                     id<MXStore> store2 = [[mxStoreClass alloc] init];
-                    [store2 openWithCredentials:sharedData.bobCredentials onComplete:^{
+                    [store2 openWithCredentials:matrixSDKTestsData.bobCredentials onComplete:^{
 
                         XCTAssertEqual(NSNotFound, [store2.rooms indexOfObject:roomId], @"The room %@ must be no more in the store", roomId);
 
@@ -1041,9 +1030,7 @@
 // Check that MXEvent.age and MXEvent.ageLocalTs are consistent after being stored.
 - (void)checkEventAge:(Class)mxStoreClass
 {
-    MatrixSDKTestsData *sharedData = matrixSDKTestsData;
-
-    [sharedData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
 
         expectation = expectation2;
 
@@ -1065,7 +1052,7 @@
                     [store close];
                 }
 
-                [store openWithCredentials:sharedData.bobCredentials onComplete:^{
+                [store openWithCredentials:matrixSDKTestsData.bobCredentials onComplete:^{
 
                     MXEvent *sameEvent = [store eventWithEventId:event.eventId inRoom:roomId];
                     XCTAssertNotNil(sameEvent);
@@ -1097,9 +1084,7 @@
 // Check the pagination token is valid after reloading the store
 - (void)checkMXRoomPaginationToken:(Class)mxStoreClass
 {
-    MatrixSDKTestsData *sharedData = matrixSDKTestsData;
-
-    [sharedData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
 
         expectation = expectation2;
 
@@ -1154,9 +1139,7 @@
 
 - (void)checkMultiAccount:(Class)mxStoreClass
 {
-    MatrixSDKTestsData *sharedData = matrixSDKTestsData;
-
-    [sharedData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation2) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation2) {
 
         expectation = expectation2;
 
@@ -1170,13 +1153,13 @@
                 mxSession = nil;
 
                 id<MXStore> bobStore2 = [[mxStoreClass alloc] init];
-                [bobStore2 openWithCredentials:sharedData.bobCredentials onComplete:^{
+                [bobStore2 openWithCredentials:matrixSDKTestsData.bobCredentials onComplete:^{
 
                     id<MXStore> aliceStore = [[mxStoreClass alloc] init];
-                    [aliceStore openWithCredentials:sharedData.aliceCredentials onComplete:^{
+                    [aliceStore openWithCredentials:matrixSDKTestsData.aliceCredentials onComplete:^{
 
                         id<MXStore> bobStore3 = [[mxStoreClass alloc] init];
-                        [bobStore3 openWithCredentials:sharedData.bobCredentials onComplete:^{
+                        [bobStore3 openWithCredentials:matrixSDKTestsData.bobCredentials onComplete:^{
 
                             XCTAssertEqual(bobStore2.rooms.count, bobStore3.rooms.count);
 
@@ -1207,9 +1190,7 @@
 
 - (void)checkRoomAccountDataTags:(Class)mxStoreClass
 {
-    MatrixSDKTestsData *sharedData = matrixSDKTestsData;
-
-    [sharedData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation2) {
+    [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation2) {
 
         expectation = expectation2;
 
@@ -1232,7 +1213,7 @@
 
                                 // Do the test
                                 id<MXStore> store = [[mxStoreClass alloc] init];
-                                [store openWithCredentials:sharedData.bobCredentials onComplete:^{
+                                [store openWithCredentials:matrixSDKTestsData.bobCredentials onComplete:^{
 
                                     // Make sure to start from an empty store
                                     [store deleteAllData];

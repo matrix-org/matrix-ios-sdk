@@ -294,12 +294,10 @@
 - (void)createScenario2:(MXRestClient*)bobRestClient inRoom:(NSString*)roomId onComplete:(void(^)(MXRestClient *aliceRestClient))onComplete
 {
     [bobRestClient sendTextMessageToRoom:roomId text:@"Hello world" success:^(NSString *eventId) {
-        
-        MatrixSDKTestsData *sharedData = matrixSDKTestsData;
-        
-        [sharedData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+
+        [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
             
-            [bobRestClient inviteUser:sharedData.aliceCredentials.userId toRoom:roomId success:^{
+            [bobRestClient inviteUser:matrixSDKTestsData.aliceCredentials.userId toRoom:roomId success:^{
                 
                 [bobRestClient sendTextMessageToRoom:roomId text:@"I wait for Alice" success:^(NSString *eventId) {
                     
@@ -542,9 +540,7 @@
 
 - (void)testLiveEventsForScenario2
 {
-    MatrixSDKTestsData *sharedData = matrixSDKTestsData;
-    
-    [sharedData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         
@@ -555,8 +551,8 @@
             __block NSUInteger eventCount = 0;
             [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
                 
-                MXRoomMember *beforeEventAliceMember = [roomState memberWithUserId:sharedData.aliceCredentials.userId];
-                MXRoomMember *aliceMember = [room.state memberWithUserId:sharedData.aliceCredentials.userId];
+                MXRoomMember *beforeEventAliceMember = [roomState memberWithUserId:matrixSDKTestsData.aliceCredentials.userId];
+                MXRoomMember *aliceMember = [room.state memberWithUserId:matrixSDKTestsData.aliceCredentials.userId];
                 
                 // Check each expected event and their roomState contect
                 // Events are live. Then comes in order

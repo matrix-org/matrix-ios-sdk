@@ -405,9 +405,7 @@
 
 - (void)testCloseWithMXMemoryStore
 {
-    MatrixSDKTestsData *sharedData = matrixSDKTestsData;
-
-    [sharedData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         MXMemoryStore *store = [[MXMemoryStore alloc] init];
 
@@ -818,9 +816,7 @@
 #pragma mark rooms tags
 - (void)doRoomByTagsOrderTest:(XCTestCase*)testCase withOrder1:(NSString*)order1 order2:(NSString*)order2 order3:(NSString*)order3
 {
-    MatrixSDKTestsData *sharedData = matrixSDKTestsData;
-
-    [sharedData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
 
         // Create rooms with the same tag but with the passed orders
         // Use the room topic to define the expected order
@@ -908,9 +904,7 @@
 
 - (void)testTagRoomsWithSameOrder
 {
-    MatrixSDKTestsData *sharedData = matrixSDKTestsData;
-
-    [sharedData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
 
         // Create 2 rooms with the same tag and same order
         NSString *tag = [[NSProcessInfo processInfo] globallyUniqueString];
@@ -957,9 +951,7 @@
 
 - (void)testRoomByTagsAndNoRoomTag
 {
-    MatrixSDKTestsData *sharedData = matrixSDKTestsData;
-
-    [sharedData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
 
         // Create a tagged room
         [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:@"Tagged" success:^(MXCreateRoomResponse *response) {
@@ -1007,9 +999,7 @@
 
 - (void)testTagOrderToBeAtIndex
 {
-    MatrixSDKTestsData *sharedData = matrixSDKTestsData;
-
-    [sharedData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
 
         // Create 2 rooms with the same tag but different order
         NSString *tag = [[NSProcessInfo processInfo] globallyUniqueString];
@@ -1085,9 +1075,7 @@
 
 - (void)testInvitedRooms
 {
-    MatrixSDKTestsData *sharedData = matrixSDKTestsData;
-
-    [sharedData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         mxSession = bobSession;
 
