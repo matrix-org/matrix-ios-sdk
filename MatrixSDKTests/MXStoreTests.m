@@ -26,18 +26,27 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-retain-cycles"
 
+@interface MXStoreTests ()
+{
+    MatrixSDKTestsData *matrixSDKTestsData;
+}
+
+@end
+
 @implementation MXStoreTests
 
 - (void)setUp
 {
     [super setUp];
+    
+    matrixSDKTestsData = [[MatrixSDKTestsData alloc] init];
 }
 
 - (void)tearDown
 {
     if (mxSession)
     {
-        [[MatrixSDKTestsData sharedData] closeMXSession:mxSession];
+        [matrixSDKTestsData closeMXSession:mxSession];
         mxSession = nil;
     }
     [super tearDown];
@@ -53,7 +62,7 @@
         testCase = nil;
     }
 
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:testCase readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoomWithMessages:testCase readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
 
         if (!expectation)
         {
@@ -89,7 +98,7 @@
         testCase = nil;
     }
 
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+    MatrixSDKTestsData *sharedData = matrixSDKTestsData;
     [sharedData doMXRestClientTestWithBobAndAliceInARoom:testCase readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation2) {
 
         [sharedData for:bobRestClient andRoom:roomId sendMessages:5 success:^{
@@ -130,7 +139,7 @@
         testCase = nil;
     }
 
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:testCase readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoomWithMessages:testCase readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
 
         if (!expectation)
         {
@@ -178,7 +187,7 @@
 
 - (void)checkEventExistsWithEventIdOfStore:(id<MXStore>)store
 {
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+    MatrixSDKTestsData *sharedData = matrixSDKTestsData;
 
     [sharedData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation2) {
 
@@ -209,7 +218,7 @@
 
 - (void)checkEventWithEventIdOfStore:(id<MXStore>)store
 {
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+    MatrixSDKTestsData *sharedData = matrixSDKTestsData;
 
     [sharedData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation2) {
 
@@ -609,7 +618,7 @@
 
 - (void)checkPaginateWhenJoiningAgainAfterLeft:(MXRoom*)room
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+    [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
 
         [mxSession.matrixRestClient inviteUser:aliceRestClient.credentials.userId toRoom:room.state.roomId success:^{
 
@@ -813,7 +822,7 @@
 #pragma mark - Tests on MXStore optional methods
 - (void)checkUserDisplaynameAndAvatarUrl:(Class)mxStoreClass
 {
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+    MatrixSDKTestsData *sharedData = matrixSDKTestsData;
 
     [sharedData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
 
@@ -877,7 +886,7 @@
 
 - (void)checkMXSessionOnStoreDataReady:(Class)mxStoreClass
 {
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+    MatrixSDKTestsData *sharedData = matrixSDKTestsData;
 
     [sharedData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
 
@@ -976,7 +985,7 @@
 
 - (void)checkRoomDeletion:(Class)mxStoreClass
 {
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+    MatrixSDKTestsData *sharedData = matrixSDKTestsData;
 
     [sharedData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
 
@@ -1032,7 +1041,7 @@
 // Check that MXEvent.age and MXEvent.ageLocalTs are consistent after being stored.
 - (void)checkEventAge:(Class)mxStoreClass
 {
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+    MatrixSDKTestsData *sharedData = matrixSDKTestsData;
 
     [sharedData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
 
@@ -1088,7 +1097,7 @@
 // Check the pagination token is valid after reloading the store
 - (void)checkMXRoomPaginationToken:(Class)mxStoreClass
 {
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+    MatrixSDKTestsData *sharedData = matrixSDKTestsData;
 
     [sharedData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
 
@@ -1145,7 +1154,7 @@
 
 - (void)checkMultiAccount:(Class)mxStoreClass
 {
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+    MatrixSDKTestsData *sharedData = matrixSDKTestsData;
 
     [sharedData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation2) {
 
@@ -1198,7 +1207,7 @@
 
 - (void)checkRoomAccountDataTags:(Class)mxStoreClass
 {
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+    MatrixSDKTestsData *sharedData = matrixSDKTestsData;
 
     [sharedData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation2) {
 

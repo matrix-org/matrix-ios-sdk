@@ -38,6 +38,8 @@
 
 
 @interface MXPushRuleTests : XCTestCase
+{
+}
 
 @end
 

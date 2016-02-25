@@ -65,17 +65,6 @@ NSMutableArray *roomsToClean;
     return self;
 }
 
-+ (id)sharedData
-{
-    static MatrixSDKTestsData *sharedData = nil;
-    @synchronized(self) {
-        if (sharedData == nil)
-            sharedData = [[self alloc] init];
-    }
-    return sharedData;
-}
-
-
 - (void)getBobCredentials:(void (^)())success
 {
     if (self.bobCredentials)
@@ -143,10 +132,8 @@ NSMutableArray *roomsToClean;
     {
         expectation = [testCase expectationWithDescription:@"asyncTest"];
     }
-    
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-    
-    [sharedData getBobCredentials:^{
+
+    [self getBobCredentials:^{
         
         MXRestClient *restClient = [[MXRestClient alloc] initWithCredentials:self.bobCredentials
                                            andOnUnrecognizedCertificateBlock:nil];
@@ -217,24 +204,32 @@ NSMutableArray *roomsToClean;
 - (void)doMXRestClientTestWithBobAndThePublicRoom:(XCTestCase*)testCase
                                    readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest
 {
-    [self doMXRestClientTestWithBob:testCase
-                     readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+    [self doMXRestClientTestWithBob:testCase readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
 
-        // Create a public room starting with #mxPublic
-        _thePublicRoomAlias = [NSString stringWithFormat:@"mxPublic-%@", [[NSUUID UUID] UUIDString]];
+        if (_thePublicRoomId)
+        {
+            readyToTest(bobRestClient, _thePublicRoomId, expectation);
+        }
+        else
+        {
+            // Create a public room starting with #mxPublic
+            _thePublicRoomAlias = [NSString stringWithFormat:@"mxPublic-%@", [[NSUUID UUID] UUIDString]];
 
-        [bobRestClient createRoom:@"MX Public Room test"
-                       visibility:kMXRoomVisibilityPublic
-                        roomAlias:_thePublicRoomAlias
-                            topic:@"The public room used by SDK tests"
-                          success:^(MXCreateRoomResponse *response) {
+            [bobRestClient createRoom:@"MX Public Room test"
+                           visibility:kMXRoomVisibilityPublic
+                            roomAlias:_thePublicRoomAlias
+                                topic:@"The public room used by SDK tests"
+                              success:^(MXCreateRoomResponse *response) {
 
-            _thePublicRoomAlias = response.roomAlias;
-            readyToTest(bobRestClient, response.roomId, expectation);
-            
-        } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot create the public room - error: %@", error);
-        }];
+                                  _thePublicRoomId = response.roomId;
+                                  _thePublicRoomAlias = response.roomAlias;
+                                  readyToTest(bobRestClient, response.roomId, expectation);
+
+                              } failure:^(NSError *error) {
+                                  NSAssert(NO, @"Cannot create the public room - error: %@", error);
+                              }];
+        }
+
     }];
 }
 
@@ -247,10 +242,8 @@ NSMutableArray *roomsToClean;
     {
         expectation = [testCase expectationWithDescription:@"asyncTest"];
     }
-
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
     
-    [sharedData getBobMXRestClient:^(MXRestClient *bobRestClient) {
+    [self getBobMXRestClient:^(MXRestClient *bobRestClient) {
         // Create a random room to use
         [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
 
@@ -300,12 +293,10 @@ NSMutableArray *roomsToClean;
         expectation = [testCase expectationWithDescription:@"asyncTest"];
     }
     
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-    
-    [sharedData getBobMXRestClient:^(MXRestClient *bobRestClient) {
+    [self getBobMXRestClient:^(MXRestClient *bobRestClient) {
         
         // Fill Bob's account with 5 rooms of 3 messages
-        [sharedData for:bobRestClient createRooms:5 withMessages:3 success:^{
+        [self for:bobRestClient createRooms:5 withMessages:3 success:^{
             readyToTest(bobRestClient, expectation);
         }];
     }];

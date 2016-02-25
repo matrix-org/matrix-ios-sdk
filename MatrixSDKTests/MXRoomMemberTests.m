@@ -22,7 +22,9 @@
 #import "MXRoomMember.h"
 
 @interface MXRoomMemberTests : XCTestCase
-
+{
+    MatrixSDKTestsData *matrixSDKTestsData;
+}
 @end
 
 @implementation MXRoomMemberTests
@@ -30,18 +32,18 @@
 - (void)setUp
 {
     [super setUp];
-    // Put setup code here. This method is called before the invocation of each test method in the class.
+
+    matrixSDKTestsData = [[MatrixSDKTestsData alloc] init];
 }
 
 - (void)tearDown
 {
-    // Put teardown code here. This method is called after the invocation of each test method in the class.
     [super tearDown];
 }
 
 - (void)testKickedMember
 {
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+    MatrixSDKTestsData *sharedData = matrixSDKTestsData;
     
     [sharedData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
