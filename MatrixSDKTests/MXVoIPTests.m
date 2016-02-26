@@ -95,7 +95,7 @@
                                   };
 
 
-        [mxSession listenToEventsOfTypes:@[kMXEventTypeStringCallInvite] onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
+        [mxSession listenToEventsOfTypes:@[kMXEventTypeStringCallInvite] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
 
             MXCall *call = [mxSession.callManager callWithCallId:callId];
 

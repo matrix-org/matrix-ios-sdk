@@ -57,7 +57,7 @@
     onComplete();
 }
 
-- (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXEventDirection)direction
+- (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXTimelineDirection)direction
 {
     // Store nothing in the MXNoStore except the last message
     if (nil == lastMessages[roomId])
@@ -65,7 +65,7 @@
         // If there not yet a last message, store anything
         lastMessages[roomId] = event;
     }
-    else if (MXEventDirectionForwards == direction)
+    else if (MXTimelineDirectionForwards == direction)
     {
         // Else keep always the latest one
         lastMessages[roomId] = event;

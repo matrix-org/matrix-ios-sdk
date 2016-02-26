@@ -45,7 +45,7 @@
     if (![roomEventListeners objectForKey:room.state.roomId])
     {
         roomEventListeners[room.state.roomId] =
-        [room.liveTimeline listenToEventsOfTypes:self.eventTypes onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+        [room.liveTimeline listenToEventsOfTypes:self.eventTypes onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
             self.listenerBlock(event, direction, roomState);
         }];
     }

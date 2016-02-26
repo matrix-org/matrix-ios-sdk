@@ -47,7 +47,7 @@
     onComplete();
 }
 
-- (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXEventDirection)direction
+- (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXTimelineDirection)direction
 {
     MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
     [roomStore storeEvent:event direction:direction];

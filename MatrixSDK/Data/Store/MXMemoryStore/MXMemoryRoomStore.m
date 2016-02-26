@@ -39,9 +39,9 @@
     return self;
 }
 
-- (void)storeEvent:(MXEvent *)event direction:(MXEventDirection)direction
+- (void)storeEvent:(MXEvent *)event direction:(MXTimelineDirection)direction
 {
-    if (MXEventDirectionForwards == direction)
+    if (MXTimelineDirectionForwards == direction)
     {
         [messages addObject:event];
     }

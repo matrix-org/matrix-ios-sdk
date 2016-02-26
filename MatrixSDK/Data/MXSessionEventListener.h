@@ -30,7 +30,7 @@
  @param customObject additional contect for the event. In case of room event, customObject is a
                      RoomState instance. In the case of a presence, customObject is nil.
  */
-typedef void (^MXOnSessionEvent)(MXEvent *event, MXEventDirection direction, id customObject);
+typedef void (^MXOnSessionEvent)(MXEvent *event, MXTimelineDirection direction, id customObject);
 
 /**
  The `MXSessionEventListener` class stores information about a listener to MXSession events

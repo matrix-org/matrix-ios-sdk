@@ -88,9 +88,9 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
 
 
         // Catch all live events sent from other users to check if we need to notify them
-        [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
+        [mxSession listenToEvents:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
 
-            if (MXEventDirectionForwards == direction
+            if (MXTimelineDirectionForwards == direction
                 && NO == [event.sender isEqualToString:mxSession.matrixRestClient.credentials.userId])
             {
                 [self shouldNotify:event roomState:customObject];

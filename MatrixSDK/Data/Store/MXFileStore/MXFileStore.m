@@ -230,7 +230,7 @@ NSString *const kMXReceiptsFolder = @"receipts";
 
 
 #pragma mark - MXStore
-- (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXEventDirection)direction
+- (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXTimelineDirection)direction
 {
     [super storeEventForRoom:roomId event:event direction:direction];
 

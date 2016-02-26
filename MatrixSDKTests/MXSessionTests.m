@@ -177,9 +177,9 @@
         __block NSString *eventsRoomId;
         __block BOOL testDone = NO;
 
-        [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
+        [mxSession listenToEvents:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
 
-            if (MXEventDirectionForwards == direction)
+            if (MXTimelineDirectionForwards == direction)
             {
                 if (event.roomId && event.eventId)
                 {
@@ -237,9 +237,9 @@
         // We should not see events coming before (m.room.create, and all state events)
         __block NSInteger messagesCount = 0;
         [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage]
-                                            onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
+                                            onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
             
-            if (MXEventDirectionForwards == direction)
+            if (MXTimelineDirectionForwards == direction)
             {
                 XCTAssertEqual(event.eventType, MXEventTypeRoomMessage, @"We must receive only m.room.message event - Event: %@", event);
 
@@ -264,35 +264,6 @@
     }];
 }
 
-- (void)testListenerForSyncEvents
-{
-    [matrixSDKTestsData doMXRestClientTestWihBobAndSeveralRoomsAndMessages:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
-        
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
-        
-        __block NSUInteger eventCount = 0;
-        
-        // Listen to events received during rooms state sync
-        [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
-                                     
-                                     eventCount++;
-                                     
-                                     XCTAssertEqual(direction, MXEventDirectionSync);
-                                     
-                                 }];
-        
-        
-        // Create a room with messages in parallel
-        [mxSession startWithMessagesLimit:0 onServerSyncDone:^{
-            
-            XCTAssertGreaterThan(eventCount, 0);
-            [expectation fulfill];
-            
-        } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
-        }];
-    }];
-}
 
 /* Disabled as lastActiveAgo events sent by the HS are less accurate than before
 - (void)testListenerForPresence
@@ -306,9 +277,9 @@
         __block NSUInteger lastAliceActivity = -1;
         
         // Listen to m.presence only
-        [mxSession listenToEventsOfTypes:@[kMXEventTypeStringPresence] onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
+        [mxSession listenToEventsOfTypes:@[kMXEventTypeStringPresence] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
 
-            if (MXEventDirectionForwards == direction)
+            if (MXTimelineDirectionForwards == direction)
             {
                 XCTAssertEqual(event.eventType, MXEventTypePresence, @"We must receive only m.presence - Event: %@", event);
 
@@ -360,13 +331,13 @@
 
         [mxSession start:^{
 
-            [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
+            [mxSession listenToEvents:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
                 XCTFail(@"We should not receive events after closing the session. Received: %@", event);
             }];
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
             XCTAssert(room);
-            [room.liveTimeline listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+            [room.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                 XCTFail(@"We should not receive events after closing the session. Received: %@", event);
             }];
 
@@ -461,13 +432,13 @@
                 __block BOOL paused = NO;
                 __block NSInteger eventCount = 0;
 
-                [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
+                [mxSession listenToEvents:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
                     eventCount++;
                     XCTAssertFalse(paused, @"We should not receive events when paused. Received: %@", event);
                 }];
 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
-                [room.liveTimeline listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+                [room.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                     eventCount++;
                     XCTAssertFalse(paused, @"We should not receive events when paused. Received: %@", event);
                 }];
@@ -528,13 +499,13 @@
                 __block BOOL paused = NO;
                 __block NSInteger eventCount = 0;
 
-                [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
+                [mxSession listenToEvents:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
                     eventCount++;
                     XCTAssertFalse(paused, @"We should not receive events when paused. Received: %@", event);
                 }];
 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
-                [room.liveTimeline listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+                [room.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                     eventCount++;
                     XCTAssertFalse(paused, @"We should not receive events when paused. Received: %@", event);
                 }];

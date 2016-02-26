@@ -111,7 +111,7 @@
             
             
             __block NSUInteger eventCount = 0;
-            [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+            [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                 
                 eventCount++;
                 XCTAssertFalse(event.isState, "Room messages are not states. message: %@", event);
@@ -119,7 +119,7 @@
             }];
             
             [room.liveTimeline resetPagination];
-            [room.liveTimeline paginate:100 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^() {
+            [room.liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
                 
                 XCTAssertGreaterThan(eventCount, 0, "We should have received events in registerEventListenerForTypes");
                 

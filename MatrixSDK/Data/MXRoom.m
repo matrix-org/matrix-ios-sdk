@@ -128,16 +128,16 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             MXJSONModelSetArray(_typingUsers, event.content[@"user_ids"]);
 
             // Notify listeners
-            [_liveTimeline notifyListeners:event direction:MXEventDirectionForwards];
+            [_liveTimeline notifyListeners:event direction:MXTimelineDirectionForwards];
         }
         else if (event.eventType == MXEventTypeReceipt)
         {
-            [self handleReceiptEvent:event direction:MXEventDirectionForwards];
+            [self handleReceiptEvent:event direction:MXTimelineDirectionForwards];
         }
     }
 
     // Handle account data events (if any)
-    [self handleAccounDataEvents:roomSync.accountData.events direction:MXEventDirectionForwards];
+    [self handleAccounDataEvents:roomSync.accountData.events direction:MXTimelineDirectionForwards];
 }
 
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync
@@ -152,9 +152,9 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
  Handle private user data events.
 
  @param accounDataEvents the events to handle.
- @param direction the process direction: MXEventDirectionSync or MXEventDirectionForwards. MXEventDirectionBackwards is not applicable here.
+ @param direction the process direction: MXTimelineDirectionSync or MXTimelineDirectionForwards. MXTimelineDirectionBackwards is not applicable here.
  */
-- (void)handleAccounDataEvents:(NSArray<MXEvent*>*)accounDataEvents direction:(MXEventDirection)direction
+- (void)handleAccounDataEvents:(NSArray<MXEvent*>*)accounDataEvents direction:(MXTimelineDirection)direction
 {
     for (MXEvent *event in accounDataEvents)
     {
@@ -430,7 +430,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 #pragma mark - Read receipts management
 
-- (BOOL)handleReceiptEvent:(MXEvent *)event direction:(MXEventDirection)direction
+- (BOOL)handleReceiptEvent:(MXEvent *)event direction:(MXTimelineDirection)direction
 {
     BOOL managedEvents = false;
     
