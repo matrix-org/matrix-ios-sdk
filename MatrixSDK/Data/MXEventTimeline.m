@@ -94,15 +94,19 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         // And fill the timelime with received data
         [self initialiseState:eventContext.state];
 
+        [self addEvent:eventContext.event direction:MXTimelineDirectionForwards fromStore:NO notify:NO];
+
         for (MXEvent *event in eventContext.eventsBefore)
         {
-            [self handleMessage:event direction:MXEventDirectionBackwards];
+            [self addEvent:event direction:MXTimelineDirectionBackwards fromStore:NO notify:NO];
         }
 
         for (MXEvent *event in eventContext.eventsAfter)
         {
-            [self handleLiveEvent:event];
+            [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO notify:NO];
         }
+
+        [store storePaginationTokenOfRoom:room.roomId andToken:eventContext.start];
 
         success();
     } failure:failure];

@@ -22,6 +22,8 @@
 
 @interface MXEventTimelineTests : XCTestCase
 {
+    MatrixSDKTestsData *matrixSDKTestsData;
+
     MXSession *mxSession;
 }
 @end
@@ -31,34 +33,52 @@
 - (void)setUp
 {
     [super setUp];
+
+    matrixSDKTestsData = [[MatrixSDKTestsData alloc] init];
 }
 
 - (void)tearDown
 {
     if (mxSession)
     {
-        [[MatrixSDKTestsData sharedData] closeMXSession:mxSession];
+        [matrixSDKTestsData closeMXSession:mxSession];
         mxSession = nil;
+        matrixSDKTestsData = nil;
     }
     [super tearDown];
 }
 
 - (void)testPaginateOnContextTimeline
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         mxSession = mxSession2;
 
         // Add 20 messages to the room
-        [[MatrixSDKTestsData sharedData] for:mxSession.matrixRestClient andRoom:room.roomId sendMessages:20 success:^{
+        [matrixSDKTestsData for:mxSession.matrixRestClient andRoom:room.roomId sendMessages:20 success:^{
 
             [room sendTextMessage:@"The initial timelime event" success:^(NSString *eventId) {
 
                 // Add 20 more messages
-                [[MatrixSDKTestsData sharedData] for:mxSession.matrixRestClient andRoom:room.roomId sendMessages:20 success:^{
+                [matrixSDKTestsData for:mxSession.matrixRestClient andRoom:room.roomId sendMessages:20 success:^{
 
                     [room openTimelineOnEvent:eventId withLimit:10 success:^(MXEventTimeline *eventTimeline) {
 
-                        [expectation fulfill];
+                        [eventTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                            NSLog(@"### %@", event);
+
+                        }];
+
+                        [eventTimeline resetPagination];
+                        [eventTimeline paginate:1 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+
+
+                            [expectation fulfill];
+
+                        } failure:^(NSError *error) {
+                            XCTFail(@"The operation should not fail - NSError: %@", error);
+                            [expectation fulfill];
+                        }];
 
                     } failure:^(NSError *error) {
                         XCTFail(@"The operation should not fail - NSError: %@", error);
