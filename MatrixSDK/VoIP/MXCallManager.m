@@ -65,9 +65,9 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
                                                                 kMXEventTypeStringCallAnswer,
                                                                 kMXEventTypeStringCallHangup
                                                                 ]
-                                                      onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
+                                                      onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
 
-            if (MXEventDirectionForwards == direction)
+            if (MXTimelineDirectionForwards == direction)
             {
                 switch (event.eventType)
                 {

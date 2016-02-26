@@ -111,7 +111,7 @@
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
                 
                 __block NSUInteger eventCount = 0;
-                [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+                [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                     
                     // Check each expected event and their roomState contect
                     // Events are received in the reverse order
@@ -163,7 +163,7 @@
                 }];
                 
                 [room.liveTimeline resetPagination];
-                [room.liveTimeline paginate:10 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^{
+                [room.liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
                     
                     XCTAssertGreaterThan(eventCount, 4, @"We must have received events");
                     
@@ -195,7 +195,7 @@
             MXRoom *room = [mxSession roomWithRoomId:roomId];
             
             __block NSUInteger eventCount = 0;
-            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                 
                 // Check each expected event and their roomState contect
                 // Events are live. Then comes in order
@@ -371,7 +371,7 @@
                 NSAssert(room, @"The room is required");
 
                 __block NSUInteger eventCount = 0;
-                [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+                [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                     NSLog(@"eventCount: %tu - %@", eventCount, event);
                     
@@ -517,7 +517,7 @@
                 }];
                 
                 [room.liveTimeline resetPagination];
-                [room.liveTimeline paginate:2 direction:MXEventDirectionBackwards0 complete:^{
+                [room.liveTimeline paginate:2 direction:MXTimelineDirectionBackwards0 complete:^{
                     
                     XCTAssertGreaterThan(eventCount, 8, @"We must have received events");
                     
@@ -549,7 +549,7 @@
             MXRoom *room = [mxSession roomWithRoomId:roomId];
             
             __block NSUInteger eventCount = 0;
-            [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+            [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                 
                 MXRoomMember *beforeEventAliceMember = [roomState memberWithUserId:matrixSDKTestsData.aliceCredentials.userId];
                 MXRoomMember *aliceMember = [room.state memberWithUserId:matrixSDKTestsData.aliceCredentials.userId];

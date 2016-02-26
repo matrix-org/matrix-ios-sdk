@@ -942,7 +942,7 @@
         NSString *message = [[NSProcessInfo processInfo] globallyUniqueString];
         __block NSString *messageEventId;
 
-        [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
+        [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
 
             [mxSession.matrixRestClient searchMessageText:message
                                                   inRooms:nil

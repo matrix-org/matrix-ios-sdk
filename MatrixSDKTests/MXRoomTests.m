@@ -74,9 +74,9 @@
         };
         
         // Register the listener
-        [room.liveTimeline listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+        [room.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
             
-            XCTAssertEqual(direction, MXEventDirectionForwards);
+            XCTAssertEqual(direction, MXTimelineDirectionForwards);
             
             XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
             
@@ -129,9 +129,9 @@
         
         // Register the listener for m.room.message.only
         [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage]
-                                          onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+                                          onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
             
-            XCTAssertEqual(direction, MXEventDirectionForwards);
+            XCTAssertEqual(direction, MXTimelineDirectionForwards);
             
             XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
                                               
@@ -170,7 +170,7 @@
         NSString *roomId = room.state.roomId;
 
         __block MXMembership lastKnownMembership = MXMembershipUnknown;
-        [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+        [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
             lastKnownMembership = room.state.membership;
         }];
@@ -242,7 +242,7 @@
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
-            [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomPowerLevels] onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+            [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomPowerLevels] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                 XCTAssertEqual([room.state.powerLevels powerLevelOfUserWithUserID:aliceRestClient.credentials.userId], 36);
 
@@ -273,7 +273,7 @@
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
             __block NSUInteger eventCount = 0;
-            [room.liveTimeline listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+            [room.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                 eventCount++;
                 XCTFail(@"We should not receive events. Received: %@", event);
@@ -281,7 +281,7 @@
             }];
 
             [room.liveTimeline resetPagination];
-            MXHTTPOperation *pagination = [room.liveTimeline paginate:100 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^() {
+            MXHTTPOperation *pagination = [room.liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 
                 XCTFail(@"The cancelled operation must not complete");
                 [expectation fulfill];
@@ -313,7 +313,7 @@
 
             XCTAssertEqual(room.typingUsers.count, 0);
 
-            [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringTypingNotification] onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+            [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringTypingNotification] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                 XCTAssertEqual(room.typingUsers.count, 1);
                 XCTAssertEqualObjects(room.typingUsers[0], bobRestClient.credentials.userId);
@@ -345,7 +345,7 @@
         __block NSUInteger tagEventUpdata = 0;
 
         // Wait for the m.tag event to get the room tags update
-        [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomTag] onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+        [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomTag] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
             if (++tagEventUpdata == 1)
             {
@@ -391,7 +391,7 @@
         NSString *newTagOrder = nil;
 
         // Wait for the m.tag event that corresponds to "newTag"
-        [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomTag] onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+        [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomTag] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
             MXRoomTag *newRoomTag = room.accountData.tags[newTag];
             if (newRoomTag)

@@ -16,6 +16,7 @@
 
 #import "MXJSONModels.h"
 #import "MXEvent.h"
+#import "MXEventTimeline.h"
 #import "MXReceiptData.h"
 #import "MXRoomAccountData.h"
 
@@ -49,7 +50,7 @@
  @param event the MXEvent object to store.
  @param direction the origin of the event. Live or past events.
  */
-- (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXEventDirection)direction;
+- (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXTimelineDirection)direction;
 
 /**
  Replace a room event (in case of redaction for example).

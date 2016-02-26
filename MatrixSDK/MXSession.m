@@ -315,7 +315,7 @@ typedef void (^MXOnResumeDone)();
     }
 }
 
-- (void)handlePresenceEvent:(MXEvent *)event direction:(MXEventDirection)direction
+- (void)handlePresenceEvent:(MXEvent *)event direction:(MXTimelineDirection)direction
 {
     // Update MXUser with presence data
     NSString *userId = event.sender;
@@ -602,7 +602,7 @@ typedef void (^MXOnResumeDone)();
         // Handle presence of other users
         for (MXEvent *presenceEvent in syncResponse.presence.events)
         {
-            [self handlePresenceEvent:presenceEvent direction:MXEventDirectionForwards];
+            [self handlePresenceEvent:presenceEvent direction:MXTimelineDirectionForwards];
         }
         
         // Update live event stream token
@@ -1262,9 +1262,9 @@ typedef void (^MXOnResumeDone)();
         [invitedRooms sortUsingSelector:@selector(compareOriginServerTs:)];
 
         // Add a listener in order to update the app about invitation list change
-        [self listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
+        [self listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
 
-            // in some race conditions the oneself join event is received during the sync instead of MXEventDirectionSync
+            // in some race conditions the oneself join event is received during the sync instead of MXTimelineDirectionSync
             //
             // standard case
             // 1 - send a join request
@@ -1276,7 +1276,7 @@ typedef void (^MXOnResumeDone)();
             // 2 - perform an initial sync when the join method call the success callback
             // 3 - receive the join event in the live stream -> this method is not called because the event has already been stored in the step 2
             // so, we need to manage the sync direction
-            if (MXEventDirectionForwards == direction)
+            if (MXTimelineDirectionForwards == direction)
             {
                 BOOL notify = NO;
                 MXRoomState *roomPrevState = (MXRoomState *)customObject;
@@ -1539,7 +1539,7 @@ typedef void (^MXOnResumeDone)();
     }
 }
 
-- (void)notifyListeners:(MXEvent*)event direction:(MXEventDirection)direction
+- (void)notifyListeners:(MXEvent*)event direction:(MXTimelineDirection)direction
 {
     // Notify all listeners
     // The SDK client may remove a listener while calling them by enumeration

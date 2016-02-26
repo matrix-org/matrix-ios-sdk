@@ -123,7 +123,7 @@
             XCTAssertNil(room.state.topic, @"There must be no room topic yet. Found: %@", room.state.topic);
             
             // Listen to live event. We should receive only one: a m.room.topic event
-            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                 
                 XCTAssertEqual(event.eventType, MXEventTypeRoomTopic);
                 
@@ -196,7 +196,7 @@
             XCTAssertNil(room.state.avatar, @"There must be no room avatar yet. Found: %@", room.state.avatar);
 
             // Listen to live event. We should receive only one: a m.room.avatar event
-            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                 XCTAssertEqual(event.eventType, MXEventTypeRoomAvatar);
 
@@ -268,7 +268,7 @@
             XCTAssertNil(room.state.name, @"There must be no room name yet. Found: %@", room.state.name);
             
             // Listen to live event. We should receive only one: a m.room.name event
-            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                 
                 XCTAssertEqual(event.eventType, MXEventTypeRoomName);
                 
@@ -523,7 +523,7 @@
                 
                 __block MXRoom *newRoom;
                 
-                [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
+                [mxSession listenToEvents:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
                     
                     if ([event.roomId isEqualToString:roomId])
                     {
@@ -588,8 +588,8 @@
                     
                     MXRoom *newRoom = [mxSession roomWithRoomId:roomId];
                     
-                    [newRoom.liveTimeline listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
-                        if (MXEventDirectionForwards == event)
+                    [newRoom.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                        if (MXTimelineDirectionForwards == event)
                         {
                             // We should receive only join events in live
                             XCTAssertEqual(event.eventType, MXEventTypeRoomMember);
@@ -599,9 +599,9 @@
                         }
                     }];
                     
-                    [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
+                    [mxSession listenToEvents:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
                         // Except presence, we should receive only join events in live
-                        if (MXEventDirectionForwards == event && MXEventTypePresence != event.eventType)
+                        if (MXTimelineDirectionForwards == event && MXEventTypePresence != event.eventType)
                         {
                             XCTAssertEqual(event.eventType, MXEventTypeRoomMember);
                             
@@ -761,9 +761,9 @@
 
             __block NSString *newRoomId;
             NSMutableArray *receivedMessages = [NSMutableArray array];
-            [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
+            [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
 
-                if (MXEventDirectionForwards == direction && [event.roomId isEqualToString:newRoomId])
+                if (MXTimelineDirectionForwards == direction && [event.roomId isEqualToString:newRoomId])
                 {
                     [receivedMessages addObject:event];
                 }

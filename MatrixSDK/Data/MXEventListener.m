@@ -37,7 +37,7 @@
     return self;
 }
 
-- (void)notify:(MXEvent*)event direction:(MXEventDirection)direction andCustomObject:(id)customObject
+- (void)notify:(MXEvent*)event direction:(MXTimelineDirection)direction andCustomObject:(id)customObject
 {
     // Check if the event match with eventTypes
     BOOL match = NO;

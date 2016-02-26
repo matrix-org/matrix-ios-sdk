@@ -149,7 +149,7 @@
         mxSession = bobSession;
 
         MXRoom *room = [mxSession roomWithRoomId:roomId];
-        [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+        [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
             [bobSession.notificationCenter listenToNotifications:^(MXEvent *event, MXRoomState *roomState, MXPushRule *rule) {
 
@@ -185,7 +185,7 @@
         mxSession = bobSession;
 
         MXRoom *room = [mxSession roomWithRoomId:roomId];
-        [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+        [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
             NSString *messageFromAlice = [NSString stringWithFormat:@"%@: you should be notified for this message", bobSession.matrixRestClient.credentials.userId];
 
@@ -346,9 +346,9 @@
 
                 NSString *messageFromBob = @"Aalliiccee: where are you?";
 
-                [aliceSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
+                [aliceSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
 
-                    if (MXEventDirectionForwards == direction)
+                    if (MXTimelineDirectionForwards == direction)
                     {
                         MXPushRule *rule = [aliceSession.notificationCenter ruleMatchingEvent:event];
 
