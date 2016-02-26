@@ -278,14 +278,12 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     // Handle now timeline.events, the room state is updated during this step too (Note: timeline events are in chronological order)
     if (isRoomInitialSync)
     {
-        // Here the events are handled in forward direction (see [handleLiveEvent:]).
-        // They will be added at the end of the stored events, so we keep the chronologinal order.
         for (MXEvent *event in roomSync.timeline.events)
         {
             // Report the room id in the event as it is skipped in /sync response
             event.roomId = _state.roomId;
 
-            // Make room data digest the live event
+            // Add the event to the end of the timeline
             [self addEvent:event direction:MXEventDirectionForwards fromStore:NO notify:YES];
         }
 
@@ -304,14 +302,12 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             [store deleteAllMessagesInRoom:_state.roomId];
         }
 
-        // Here the events are handled in forward direction (see [handleLiveEvent:]).
-        // They will be added at the end of the stored events, so we keep the chronologinal order.
         for (MXEvent *event in roomSync.timeline.events)
         {
             // Report the room id in the event as it is skipped in /sync response
             event.roomId = _state.roomId;
 
-            // Make room data digest the live event
+            // Add the event to the end of the timeline
             [self addEvent:event direction:MXEventDirectionForwards fromStore:NO notify:YES];
         }
     }
@@ -341,7 +337,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync
 {
-    // Handle the state events as live events (the room state will be updated, and the listeners (if any) will be notified).
+    // Handle the state events forwardly (the room state will be updated, and the listeners (if any) will be notified).
     for (MXEvent *event in invitedRoomSync.inviteState.events)
     {
         // Add a fake event id if none in order to be able to store the event
@@ -416,24 +412,23 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         }
     }
 
-    // Handle here redaction event from live event stream
-    if (direction == MXEventDirectionForwards)
+    // Events going forwards on the live timeline come from /sync.
+    // They are assimilated to live events.
+    if (_isLiveTimeline && direction == MXEventDirectionForwards)
     {
+        // Handle here live redaction
         if (event.eventType == MXEventTypeRoomRedaction)
         {
             [self handleRedaction:event];
         }
 
-        if (_isLiveTimeline)
-        {
-            // Consider that a message sent by a user has been read by him
-            MXReceiptData* data = [[MXReceiptData alloc] init];
-            data.userId = event.sender;
-            data.eventId = event.eventId;
-            data.ts = event.originServerTs;
+        // Consider that a message sent by a user has been read by him
+        MXReceiptData* data = [[MXReceiptData alloc] init];
+        data.userId = event.sender;
+        data.eventId = event.eventId;
+        data.ts = event.originServerTs;
 
-            [store storeReceipt:data roomId:_state.roomId];
-        }
+        [store storeReceipt:data roomId:_state.roomId];
     }
 
     // Store the event
