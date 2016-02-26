@@ -131,13 +131,7 @@ typedef enum : NSUInteger
     MXEventDirectionForwards,
 
     // Backwards for old events requested through pagination
-    MXEventDirectionBackwards,
-
-    // Sync for events coming from an initialSync API request to the home server
-    // The SDK internally makes such requests when the app call [MXSession start],
-    // [MXSession joinRoom] and [MXRoom join].
-    MXEventDirectionSync
-
+    MXEventDirectionBackwards
 } MXEventDirection;
 
 

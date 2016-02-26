@@ -602,7 +602,7 @@ typedef void (^MXOnResumeDone)();
         // Handle presence of other users
         for (MXEvent *presenceEvent in syncResponse.presence.events)
         {
-            [self handlePresenceEvent:presenceEvent direction:MXEventDirectionSync];
+            [self handlePresenceEvent:presenceEvent direction:MXEventDirectionForwards];
         }
         
         // Update live event stream token
@@ -1276,7 +1276,7 @@ typedef void (^MXOnResumeDone)();
             // 2 - perform an initial sync when the join method call the success callback
             // 3 - receive the join event in the live stream -> this method is not called because the event has already been stored in the step 2
             // so, we need to manage the sync direction
-            if ((MXEventDirectionForwards == direction) || (MXEventDirectionSync == direction))
+            if (MXEventDirectionForwards == direction)
             {
                 BOOL notify = NO;
                 MXRoomState *roomPrevState = (MXRoomState *)customObject;
