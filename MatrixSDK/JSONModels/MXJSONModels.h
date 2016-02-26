@@ -615,9 +615,14 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 #pragma mark - Context
 #pragma mark -
 /**
- `MXEventContext` represents to the response to the /context request.
+ `MXEventContext` represents the response to the /context request.
  */
 @interface MXEventContext : MXJSONModel
+
+    /**
+     The event on which /context has been requested.
+     */
+    @property (nonatomic) MXEvent *event;
 
     /**
      A token that can be used to paginate backwards with.
