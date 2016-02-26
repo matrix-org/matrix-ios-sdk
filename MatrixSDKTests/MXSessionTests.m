@@ -264,35 +264,6 @@
     }];
 }
 
-- (void)testListenerForSyncEvents
-{
-    [matrixSDKTestsData doMXRestClientTestWihBobAndSeveralRoomsAndMessages:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
-        
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
-        
-        __block NSUInteger eventCount = 0;
-        
-        // Listen to events received during rooms state sync
-        [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
-                                     
-                                     eventCount++;
-                                     
-                                     XCTAssertEqual(direction, MXEventDirectionSync);
-                                     
-                                 }];
-        
-        
-        // Create a room with messages in parallel
-        [mxSession startWithMessagesLimit:0 onServerSyncDone:^{
-            
-            XCTAssertGreaterThan(eventCount, 0);
-            [expectation fulfill];
-            
-        } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
-        }];
-    }];
-}
 
 /* Disabled as lastActiveAgo events sent by the HS are less accurate than before
 - (void)testListenerForPresence
