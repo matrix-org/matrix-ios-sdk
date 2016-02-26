@@ -20,7 +20,7 @@
 
 #import "MXFileStoreMetaData.h"
 
-NSUInteger const kMXFileVersion = 21;
+NSUInteger const kMXFileVersion = 22;
 
 NSString *const kMXFileStoreFolder = @"MXFileStore";
 NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -230,7 +230,7 @@ NSString *const kMXReceiptsFolder = @"receipts";
 
 
 #pragma mark - MXStore
-- (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXEventDirection)direction
+- (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXTimelineDirection)direction
 {
     [super storeEventForRoom:roomId event:event direction:direction];
 

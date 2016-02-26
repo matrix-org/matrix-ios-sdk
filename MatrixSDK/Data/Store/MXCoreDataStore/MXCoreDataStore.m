@@ -183,7 +183,7 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 
 
 #pragma mark - MXStore
-- (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXEventDirection)direction
+- (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXTimelineDirection)direction
 {
     //NSDate *startDate = [NSDate date];
 

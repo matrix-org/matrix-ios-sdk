@@ -23,6 +23,8 @@
 
 @interface MXRoomStateDynamicTests : XCTestCase
 {
+    MatrixSDKTestsData *matrixSDKTestsData;
+
     MXSession *mxSession;
 }
 @end
@@ -32,13 +34,15 @@
 - (void)setUp
 {
     [super setUp];
+
+    matrixSDKTestsData = [[MatrixSDKTestsData alloc] init];
 }
 
 - (void)tearDown
 {
     if (mxSession)
     {
-        [[MatrixSDKTestsData sharedData] closeMXSession:mxSession];
+        [matrixSDKTestsData closeMXSession:mxSession];
         mxSession = nil;
     }
     [super tearDown];
@@ -96,7 +100,7 @@
 
 - (void)testBackPaginationForScenario1
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         [self createScenario1:bobRestClient inRoom:roomId onComplete:^{
             
@@ -107,7 +111,7 @@
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
                 
                 __block NSUInteger eventCount = 0;
-                [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+                [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                     
                     // Check each expected event and their roomState contect
                     // Events are received in the reverse order
@@ -159,7 +163,7 @@
                 }];
                 
                 [room.liveTimeline resetPagination];
-                [room.liveTimeline paginate:10 direction:MXEventDirectionBackwards onlyFromStore:NO complete:^{
+                [room.liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
                     
                     XCTAssertGreaterThan(eventCount, 4, @"We must have received events");
                     
@@ -182,7 +186,7 @@
 
 - (void)testLiveEventsForScenario1
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         
@@ -191,7 +195,7 @@
             MXRoom *room = [mxSession roomWithRoomId:roomId];
             
             __block NSUInteger eventCount = 0;
-            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                 
                 // Check each expected event and their roomState contect
                 // Events are live. Then comes in order
@@ -290,12 +294,10 @@
 - (void)createScenario2:(MXRestClient*)bobRestClient inRoom:(NSString*)roomId onComplete:(void(^)(MXRestClient *aliceRestClient))onComplete
 {
     [bobRestClient sendTextMessageToRoom:roomId text:@"Hello world" success:^(NSString *eventId) {
-        
-        MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-        
-        [sharedData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+
+        [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
             
-            [bobRestClient inviteUser:sharedData.aliceCredentials.userId toRoom:roomId success:^{
+            [bobRestClient inviteUser:matrixSDKTestsData.aliceCredentials.userId toRoom:roomId success:^{
                 
                 [bobRestClient sendTextMessageToRoom:roomId text:@"I wait for Alice" success:^(NSString *eventId) {
                     
@@ -356,7 +358,7 @@
 /*
 - (void)testBackPaginationForScenario2
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         [self createScenario2:bobRestClient inRoom:roomId onComplete:^(MXRestClient *aliceRestClient) {
             
@@ -369,7 +371,7 @@
                 NSAssert(room, @"The room is required");
 
                 __block NSUInteger eventCount = 0;
-                [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+                [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                     NSLog(@"eventCount: %tu - %@", eventCount, event);
                     
@@ -515,7 +517,7 @@
                 }];
                 
                 [room.liveTimeline resetPagination];
-                [room.liveTimeline paginate:2 direction:MXEventDirectionBackwards0 complete:^{
+                [room.liveTimeline paginate:2 direction:MXTimelineDirectionBackwards0 complete:^{
                     
                     XCTAssertGreaterThan(eventCount, 8, @"We must have received events");
                     
@@ -538,9 +540,7 @@
 
 - (void)testLiveEventsForScenario2
 {
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-    
-    [sharedData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         
@@ -549,10 +549,10 @@
             MXRoom *room = [mxSession roomWithRoomId:roomId];
             
             __block NSUInteger eventCount = 0;
-            [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+            [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                 
-                MXRoomMember *beforeEventAliceMember = [roomState memberWithUserId:sharedData.aliceCredentials.userId];
-                MXRoomMember *aliceMember = [room.state memberWithUserId:sharedData.aliceCredentials.userId];
+                MXRoomMember *beforeEventAliceMember = [roomState memberWithUserId:matrixSDKTestsData.aliceCredentials.userId];
+                MXRoomMember *aliceMember = [room.state memberWithUserId:matrixSDKTestsData.aliceCredentials.userId];
                 
                 // Check each expected event and their roomState contect
                 // Events are live. Then comes in order

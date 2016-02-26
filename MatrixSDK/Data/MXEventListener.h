@@ -17,6 +17,7 @@
 #import <Foundation/Foundation.h>
 
 #import "MXEvent.h"
+#import "MXEventTimeline.h"
 
 /**
  Block called when an event of the registered types has been handled by the Matrix SDK.
@@ -26,7 +27,7 @@
  @param customObject additional contect for the event. In case of room event, customObject is a
  RoomState instance.
  */
-typedef void (^MXOnEvent)(MXEvent *event, MXEventDirection direction, id customObject);
+typedef void (^MXOnEvent)(MXEvent *event, MXTimelineDirection direction, id customObject);
 
 /**
  The `MXEventListener` class stores information about a listener to MXEvents that
@@ -46,7 +47,7 @@ typedef void (^MXOnEvent)(MXEvent *event, MXEventDirection direction, id customO
  @param event the new event.
  @param direction the origin of the event.
  */
-- (void)notify:(MXEvent*)event direction:(MXEventDirection)direction andCustomObject:(id)customObject;
+- (void)notify:(MXEvent*)event direction:(MXTimelineDirection)direction andCustomObject:(id)customObject;
 
 @property (nonatomic, readonly) id sender;
 @property (nonatomic, readonly) NSArray* eventTypes;

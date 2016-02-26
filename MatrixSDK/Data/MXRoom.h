@@ -507,7 +507,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSyncWithLimitedTimelineNotification;
  @param the direction
  @param
  */
-- (BOOL)handleReceiptEvent:(MXEvent *)event direction:(MXEventDirection)direction;
+- (BOOL)handleReceiptEvent:(MXEvent *)event direction:(MXTimelineDirection)direction;
 
 /**
  Acknowlegde the latest event of type defined in acknowledgableEventTypes.

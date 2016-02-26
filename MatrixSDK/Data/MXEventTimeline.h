@@ -18,10 +18,22 @@
 
 #import "MXEvent.h"
 #import "MXJSONModels.h"
-#import "MXRoomMember.h"
-#import "MXEventListener.h"
 #import "MXRoomState.h"
 #import "MXHTTPOperation.h"
+
+/**
+ The direction of an event in the timeline.
+ */
+typedef enum : NSUInteger
+{
+    // Forwards when the event is added to the end of the timeline.
+    // These events come from the /sync stream or from forwards pagination.
+    MXTimelineDirectionForwards,
+
+    // Backwards when the event is added to the start of the timeline.
+    // These events come from a back pagination.
+    MXTimelineDirectionBackwards
+} MXTimelineDirection;
 
 /**
  Prefix used to build fake invite event.
@@ -36,7 +48,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomInviteStateEventIdPrefix;
  @param direction the origin of the event.
  @param roomState the room state right before the event.
  */
-typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoomState *roomState);
+typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState);
 
 @class MXRoom;
 
@@ -115,11 +127,11 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  
  canPaginate in forward direction has no meaning for a live timeline.
 
- @param direction MXEventDirectionBackwards to check if we can paginate backwards.
-                  MXEventDirectionForwards to check if we can go forwards.
+ @param direction MXTimelineDirectionBackwards to check if we can paginate backwards.
+                  MXTimelineDirectionForwards to check if we can go forwards.
  @return true if we can paginate in the given direction.
  */
-- (BOOL)canPaginate:(MXEventDirection)direction;
+- (BOOL)canPaginate:(MXTimelineDirection)direction;
 
 /**
  Reset the pagination so that future calls to paginate start over from live or
@@ -134,7 +146,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  It is not possible to paginate forwards on a live timeline.
 
  @param numItems the number of items to get.
- @param direction `MXEventDirectionForwards` or `MXEventDirectionBackwards`
+ @param direction `MXTimelineDirectionForwards` or `MXTimelineDirectionBackwards`
  @param onlyFromStore if YES, return available events from the store, do not make
                       a pagination request to the homeserver.
 
@@ -145,7 +157,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
          to the homeserver is required.
  */
 - (MXHTTPOperation*)paginate:(NSUInteger)numItems
-                   direction:(MXEventDirection)direction
+                   direction:(MXTimelineDirection)direction
                onlyFromStore:(BOOL)onlyFromStore
                     complete:(void (^)())complete
                      failure:(void (^)(NSError *error))failure;
@@ -211,6 +223,6 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
  @param event the event to notify.
  @param the event direction.
  */
-- (void)notifyListeners:(MXEvent*)event direction:(MXEventDirection)direction;
+- (void)notifyListeners:(MXEvent*)event direction:(MXTimelineDirection)direction;
 
 @end

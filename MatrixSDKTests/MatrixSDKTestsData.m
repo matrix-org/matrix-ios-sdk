@@ -65,17 +65,6 @@ NSMutableArray *roomsToClean;
     return self;
 }
 
-+ (id)sharedData
-{
-    static MatrixSDKTestsData *sharedData = nil;
-    @synchronized(self) {
-        if (sharedData == nil)
-            sharedData = [[self alloc] init];
-    }
-    return sharedData;
-}
-
-
 - (void)getBobCredentials:(void (^)())success
 {
     if (self.bobCredentials)
@@ -85,11 +74,14 @@ NSMutableArray *roomsToClean;
     }
     else
     {
+        // Use a different Bob each time so that tests are independent
+        NSString *bobUniqueUser = [NSString stringWithFormat:@"%@-%@", MXTESTS_BOB, [[NSUUID UUID] UUIDString]];
+
         // First, try register the user
         // @TODO: Update the registration code to support r0 registration and
         // remove this patch that redirects the registration to a deprecated CS API.
         mxRestClient.apiPathPrefix = @"/_matrix/client/api/v1";
-        [mxRestClient registerWithUser:MXTESTS_BOB andPassword:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
+        [mxRestClient registerWithUser:bobUniqueUser andPassword:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
             
             _bobCredentials = credentials;
             success();
@@ -101,7 +93,7 @@ NSMutableArray *roomsToClean;
                 // The user already exists. This error is normal.
                 // Log Bob in to get his keys
                 mxRestClient.apiPathPrefix = @"/_matrix/client/api/v1";
-                [mxRestClient loginWithUser:MXTESTS_BOB andPassword:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
+                [mxRestClient loginWithUser:bobUniqueUser andPassword:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
                     
                     _bobCredentials = credentials;
                     success();
@@ -140,10 +132,8 @@ NSMutableArray *roomsToClean;
     {
         expectation = [testCase expectationWithDescription:@"asyncTest"];
     }
-    
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-    
-    [sharedData getBobCredentials:^{
+
+    [self getBobCredentials:^{
         
         MXRestClient *restClient = [[MXRestClient alloc] initWithCredentials:self.bobCredentials
                                            andOnUnrecognizedCertificateBlock:nil];
@@ -214,39 +204,32 @@ NSMutableArray *roomsToClean;
 - (void)doMXRestClientTestWithBobAndThePublicRoom:(XCTestCase*)testCase
                                    readyToTest:(void (^)(MXRestClient *bobRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest
 {
-    [self doMXRestClientTestWithBob:testCase
-                     readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
-                         
-        // Create THE allocated public room: #mxPublic
-        [bobRestClient createRoom:@"MX Public Room test"
-                       visibility:kMXRoomVisibilityPublic
-                        roomAlias:@"mxPublic"
-                            topic:@"The public room used by SDK tests"
-                          success:^(MXCreateRoomResponse *response) {
-            
-            readyToTest(bobRestClient, response.roomId, expectation);
-            
-        } failure:^(NSError *error) {
-            if ([MXError isMXError:error])
-            {
-                // @TODO: Workaround for HS weird behavior: it returns a buggy alias "#mxPublic:localhost:8480"
-                //NSString *mxPublicAlias = [NSString stringWithFormat:@"#mxPublic:%@", self.bobCredentials.home_server];
-                NSString *mxPublicAlias = [NSString stringWithFormat:@"#mxPublic:%@", @"localhost:8480"];
-                
-                // The room may already exist, try to retrieve its room id
-                [bobRestClient roomIDForRoomAlias:mxPublicAlias success:^(NSString *roomId) {
-                    
-                    readyToTest(bobRestClient, roomId, expectation);
-                    
-                } failure:^(NSError *error) {
-                    NSAssert(NO, @"Cannot retrieve mxPublic from its alias - error: %@", error);
-                }];
-            }
-            else
-            {
-                NSAssert(NO, @"Cannot create a room - error: %@", error);
-            }
-        }];
+    [self doMXRestClientTestWithBob:testCase readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+
+        if (_thePublicRoomId)
+        {
+            readyToTest(bobRestClient, _thePublicRoomId, expectation);
+        }
+        else
+        {
+            // Create a public room starting with #mxPublic
+            _thePublicRoomAlias = [NSString stringWithFormat:@"mxPublic-%@", [[NSUUID UUID] UUIDString]];
+
+            [bobRestClient createRoom:@"MX Public Room test"
+                           visibility:kMXRoomVisibilityPublic
+                            roomAlias:_thePublicRoomAlias
+                                topic:@"The public room used by SDK tests"
+                              success:^(MXCreateRoomResponse *response) {
+
+                                  _thePublicRoomId = response.roomId;
+                                  _thePublicRoomAlias = response.roomAlias;
+                                  readyToTest(bobRestClient, response.roomId, expectation);
+
+                              } failure:^(NSError *error) {
+                                  NSAssert(NO, @"Cannot create the public room - error: %@", error);
+                              }];
+        }
+
     }];
 }
 
@@ -259,10 +242,8 @@ NSMutableArray *roomsToClean;
     {
         expectation = [testCase expectationWithDescription:@"asyncTest"];
     }
-
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
     
-    [sharedData getBobMXRestClient:^(MXRestClient *bobRestClient) {
+    [self getBobMXRestClient:^(MXRestClient *bobRestClient) {
         // Create a random room to use
         [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
 
@@ -312,12 +293,10 @@ NSMutableArray *roomsToClean;
         expectation = [testCase expectationWithDescription:@"asyncTest"];
     }
     
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-    
-    [sharedData getBobMXRestClient:^(MXRestClient *bobRestClient) {
+    [self getBobMXRestClient:^(MXRestClient *bobRestClient) {
         
         // Fill Bob's account with 5 rooms of 3 messages
-        [sharedData for:bobRestClient createRooms:5 withMessages:3 success:^{
+        [self for:bobRestClient createRooms:5 withMessages:3 success:^{
             readyToTest(bobRestClient, expectation);
         }];
     }];
@@ -442,11 +421,14 @@ NSMutableArray *roomsToClean;
     }
     else
     {
+        // Use a different Alice each time so that tests are independent
+        NSString *aliceUniqueUser = [NSString stringWithFormat:@"%@-%@", MXTESTS_ALICE, [[NSUUID UUID] UUIDString]];
+
         // @TODO: Update the registration code to support r0 registration and
         // remove this patch that redirects the registration to a deprecated CS API.
         mxRestClient.apiPathPrefix = @"/_matrix/client/api/v1";
         // First, try register the user
-        [mxRestClient registerWithUser:MXTESTS_ALICE andPassword:MXTESTS_ALICE_PWD success:^(MXCredentials *credentials) {
+        [mxRestClient registerWithUser:aliceUniqueUser andPassword:MXTESTS_ALICE_PWD success:^(MXCredentials *credentials) {
             
             _aliceCredentials = credentials;
             success();
@@ -458,7 +440,7 @@ NSMutableArray *roomsToClean;
                 // The user already exists. This error is normal.
                 // Log Bob in to get his keys
         		mxRestClient.apiPathPrefix = @"/_matrix/client/api/v1";
-                [mxRestClient loginWithUser:MXTESTS_ALICE andPassword:MXTESTS_ALICE_PWD success:^(MXCredentials *credentials) {
+                [mxRestClient loginWithUser:aliceUniqueUser andPassword:MXTESTS_ALICE_PWD success:^(MXCredentials *credentials) {
                     
                     _aliceCredentials = credentials;
                     success();

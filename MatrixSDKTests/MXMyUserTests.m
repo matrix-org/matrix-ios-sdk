@@ -25,6 +25,8 @@
 
 @interface MXMyUserTests : XCTestCase
 {
+    MatrixSDKTestsData *matrixSDKTestsData;
+
     MXSession *mxSession;
 }
 @end
@@ -34,13 +36,16 @@
 - (void)setUp
 {
     [super setUp];
+
+    matrixSDKTestsData = [[MatrixSDKTestsData alloc] init];
 }
 
 - (void)tearDown
 {
     if (mxSession)
     {
-        [[MatrixSDKTestsData sharedData] closeMXSession:mxSession];
+        [matrixSDKTestsData closeMXSession:mxSession];
+        matrixSDKTestsData = nil;
         mxSession = nil;
     }
     [super tearDown];
@@ -48,7 +53,7 @@
 
 - (void)testMXSessionMyUser
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
 
         mxSession = mxSession2;
 
@@ -63,7 +68,7 @@
 
 - (void)testSetDisplayName
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
 
@@ -99,7 +104,7 @@
 
 - (void)testSetAvatarURL
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
 
@@ -134,7 +139,7 @@
 
 - (void)testSetPresence
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
 
@@ -170,14 +175,14 @@
 
 - (void)testIdenticon
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
 
         mxSession = mxSession2;
 
         MXUser *myUser = [mxSession userWithUserId:mxSession.matrixRestClient.credentials.userId];
 
         NSString *identiconURL = [mxSession.matrixRestClient urlOfIdenticon:myUser.userId];
-        XCTAssertEqualObjects(identiconURL, @"http://localhost:8080/_matrix/media/v1/identicon/%40mxBob%3Alocalhost%3A8480");
+        XCTAssert([identiconURL hasPrefix:@"http://localhost:8080/_matrix/media/v1/identicon/%40mxBob"]);
 
         [expectation fulfill];
     }];

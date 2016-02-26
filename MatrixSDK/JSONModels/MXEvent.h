@@ -123,25 +123,6 @@ FOUNDATION_EXPORT uint64_t const kMXUndefinedTimestamp;
 
 
 /**
- The direction from which an incoming event is considered.
- */
-typedef enum : NSUInteger
-{
-    // Forwards for events coming down the live event stream
-    MXEventDirectionForwards,
-
-    // Backwards for old events requested through pagination
-    MXEventDirectionBackwards,
-
-    // Sync for events coming from an initialSync API request to the home server
-    // The SDK internally makes such requests when the app call [MXSession start],
-    // [MXSession joinRoom] and [MXRoom join].
-    MXEventDirectionSync
-
-} MXEventDirection;
-
-
-/**
  `MXEvent` is the generic model of events received from the home server.
 
  It contains all possible keys an event can contain. Thus, all events can be resolved 
