@@ -48,7 +48,7 @@
     [super tearDown];
 }
 
-- (void)testPaginateOnContextTimeline
+- (void)testResetPaginationAroundInitialEventWithLimit
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         mxSession = mxSession2;
@@ -80,13 +80,25 @@
                         {
                             [events insertObject:event atIndex:0];
                         }
-                        NSLog(@"### %@", event);
 
                     }];
 
                     [eventTimeline resetPaginationAroundInitialEventWithLimit:10 success:^{
 
                         XCTAssertEqual(events.count, 11, @"1 + 10 = 11");
+
+                        // Check events order
+                        uint64_t prev_ts = 0;
+                        for (MXEvent *event in events)
+                        {
+                            XCTAssertNotNil(event.eventId, @"The event must have an eventId to be valid");
+
+                            if (event.originServerTs)
+                            {
+                                XCTAssertGreaterThanOrEqual(event.originServerTs, prev_ts, @"The events order is wrong");
+                                prev_ts = event.originServerTs;
+                            }
+                        }
 
                         [expectation fulfill];
 
