@@ -103,7 +103,7 @@ NSString *theInitialEventMessage = @"The initial timelime event";
 
         [eventTimeline resetPaginationAroundInitialEventWithLimit:10 success:^{
 
-            XCTAssertEqual(events.count, 11, @"1 + 10 = 11");
+            XCTAssertEqual(events.count, 11, @"5 + 1 + 5 = 11");
 
             // Check events order
             uint64_t prev_ts = 0;
@@ -114,7 +114,7 @@ NSString *theInitialEventMessage = @"The initial timelime event";
             }
 
             XCTAssert([eventTimeline canPaginate:MXTimelineDirectionBackwards]);
-            // XCTAssert([eventTimeline canPaginate:MXTimelineDirectionForwards]); // @TODO
+            XCTAssert([eventTimeline canPaginate:MXTimelineDirectionForwards]);
 
             [expectation fulfill];
 
@@ -154,13 +154,13 @@ NSString *theInitialEventMessage = @"The initial timelime event";
 
         [eventTimeline resetPaginationAroundInitialEventWithLimit:10 success:^{
 
-            XCTAssertEqual(events.count, 11, @"1 + 10 = 11");
+            XCTAssertEqual(events.count, 11, @"5 + 1 + 5 = 11");
 
             [events removeAllObjects];
 
             [eventTimeline resetPaginationAroundInitialEventWithLimit:10 success:^{
 
-                XCTAssertEqual(events.count, 11, @"1 + 10 = 11. Calling resetPaginationAroundInitialEventWithLimit must lead to the same reset state");
+                XCTAssertEqual(events.count, 11, @"5 + 1 + 5 = 11. Calling resetPaginationAroundInitialEventWithLimit must lead to the same reset state");
 
                 // Check events order
                 uint64_t prev_ts = 0;
@@ -171,7 +171,7 @@ NSString *theInitialEventMessage = @"The initial timelime event";
                 }
 
                 XCTAssert([eventTimeline canPaginate:MXTimelineDirectionBackwards]);
-                // XCTAssert([eventTimeline canPaginate:MXTimelineDirectionForwards]); // @TODO
+                XCTAssert([eventTimeline canPaginate:MXTimelineDirectionForwards]);
 
                 [expectation fulfill];
 
@@ -216,13 +216,13 @@ NSString *theInitialEventMessage = @"The initial timelime event";
 
         [eventTimeline resetPaginationAroundInitialEventWithLimit:10 success:^{
 
-            XCTAssertEqual(events.count, 11, @"1 + 10 = 11");
+            XCTAssertEqual(events.count, 11, @"5 + 1 + 5 = 11");
 
             // Get some messages in the past
             [eventTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
 
                 // @TODO: Note: this test fails because of https://matrix.org/jira/browse/SYN-641
-                //XCTAssertEqual(events.count, 21, @"1 + 10 + 10 = 21");
+                XCTAssertEqual(events.count, 21, @"10 + 5 + 1 + 5 = 21");
 
                 // Check events order
                 uint64_t prev_ts = 0;
@@ -233,18 +233,27 @@ NSString *theInitialEventMessage = @"The initial timelime event";
                 }
 
                 XCTAssert([eventTimeline canPaginate:MXTimelineDirectionBackwards]);
-                // XCTAssert([eventTimeline canPaginate:MXTimelineDirectionForwards]); // @TODO
+                XCTAssert([eventTimeline canPaginate:MXTimelineDirectionForwards]);
 
                 // Get all past messages
                 [eventTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
 
-                    XCTAssertEqual(events.count, 31, @"1 + 20 + 10 = 31");
+                    // @TODO: Note: this test fails because of https://matrix.org/jira/browse/SYN-641
+                    XCTAssertEqual(events.count, 26, @"20 + 1 + 5 = 26");
 
                     // Do one more request to test end
                     [eventTimeline paginate:1 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
 
+                        // Check events order
+                        uint64_t prev_ts = 0;
+                        for (MXEvent *event in events)
+                        {
+                            XCTAssertGreaterThanOrEqual(event.originServerTs, prev_ts, @"The events order is wrong");
+                            prev_ts = event.originServerTs;
+                        }
+
                         XCTAssertFalse([eventTimeline canPaginate:MXTimelineDirectionBackwards]);
-                        // XCTAssert([eventTimeline canPaginate:MXTimelineDirectionForwards]); // @TODO
+                        XCTAssert([eventTimeline canPaginate:MXTimelineDirectionForwards]);
 
                         [expectation fulfill];
 
@@ -272,5 +281,95 @@ NSString *theInitialEventMessage = @"The initial timelime event";
 
 }
 
+- (void)testForwardPaginationOnPastTimeline
+{
+    [self doTestWithARoomOf41Messages:self readyToTest:^(MXRoom *room, XCTestExpectation *expectation, NSString *initialEventId) {
+
+        MXEventTimeline *eventTimeline = [room openTimelineOnEvent:initialEventId];
+
+        NSMutableArray *events = [NSMutableArray array];
+        [eventTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+            if (events.count == 0)
+            {
+                XCTAssertEqualObjects(event.eventId, initialEventId, @"The first returned event must be the initial event");
+                XCTAssertEqualObjects(event.content[@"body"], theInitialEventMessage);
+            }
+
+            if (direction == MXTimelineDirectionForwards)
+            {
+                [events addObject:event];
+            }
+            else
+            {
+                [events insertObject:event atIndex:0];
+            }
+
+        }];
+
+        [eventTimeline resetPaginationAroundInitialEventWithLimit:10 success:^{
+
+            XCTAssertEqual(events.count, 11, @"5 + 1 + 5 = 11");
+
+            // Get some messages in the past
+            [eventTimeline paginate:10 direction:MXTimelineDirectionForwards onlyFromStore:NO complete:^{
+
+                XCTAssertEqual(events.count, 21, @"5 + 1 + 5 + 10 = 21");
+
+                // Check events order
+                uint64_t prev_ts = 0;
+                for (MXEvent *event in events)
+                {
+                    XCTAssertGreaterThanOrEqual(event.originServerTs, prev_ts, @"The events order is wrong");
+                    prev_ts = event.originServerTs;
+                }
+
+                XCTAssert([eventTimeline canPaginate:MXTimelineDirectionBackwards]);
+                XCTAssert([eventTimeline canPaginate:MXTimelineDirectionForwards]);
+
+                // Get all past messages
+                [eventTimeline paginate:100 direction:MXTimelineDirectionForwards onlyFromStore:NO complete:^{
+
+                    XCTAssertEqual(events.count, 26, @"5 + 1 + 20 = 26");
+
+                    // Do one more request to test end
+                    [eventTimeline paginate:1 direction:MXTimelineDirectionForwards onlyFromStore:NO complete:^{
+
+                        // Check events order
+                        uint64_t prev_ts = 0;
+                        for (MXEvent *event in events)
+                        {
+                            XCTAssertGreaterThanOrEqual(event.originServerTs, prev_ts, @"The events order is wrong");
+                            prev_ts = event.originServerTs;
+                        }
+
+                        XCTAssert([eventTimeline canPaginate:MXTimelineDirectionBackwards]);
+                        XCTAssertFalse([eventTimeline canPaginate:MXTimelineDirectionForwards]);
+
+                        [expectation fulfill];
+
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The operation should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The operation should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The operation should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        
+    }];
+    
+}
 
 @end
