@@ -377,19 +377,9 @@ FOUNDATION_EXPORT NSString *const kMXRoomSyncWithLimitedTimelineNotification;
  Open a new `MXEventTimeline` instance around the passed event.
 
  @param eventId the id of the event.
- @param limit the maximum number of messages to preload.
-
- @param success A block object called when the operation succeeds.
-                It passes the newly `MXEventTimeline` created instance.
- @param failure A block object called when the operation fails.
-
- @return a MXHTTPOperation instance.
+ @return a new `MXEventTimeline` instance.
  */
-
-- (MXHTTPOperation*)openTimelineOnEvent:(NSString*)eventId
-                              withLimit:(NSUInteger)limit
-                                success:(void(^)(MXEventTimeline *eventTimeline))success
-                                failure:(void (^)(NSError *error))failure;
+- (MXEventTimeline*)openTimelineOnEvent:(NSString*)eventId;
 
 /**
  Close a `MXEventTimeline` instance.

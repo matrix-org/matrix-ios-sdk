@@ -84,34 +84,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     }
 }
 
-- (MXHTTPOperation *)loadContextWithLimit:(NSUInteger)limit success:(void (^)())success failure:(void (^)(NSError *))failure
-{
-    NSAssert(_initialEventId, @"[MXEventTimeline] loadContextWithLimit cannot be called on live timeline");
-
-    // Get the context around the initial event
-    return [room.mxSession.matrixRestClient contextOfEvent:_initialEventId inRoom:room.roomId limit:limit success:^(MXEventContext *eventContext) {
-
-        // And fill the timelime with received data
-        [self initialiseState:eventContext.state];
-
-        [self addEvent:eventContext.event direction:MXTimelineDirectionForwards fromStore:NO notify:NO];
-
-        for (MXEvent *event in eventContext.eventsBefore)
-        {
-            [self addEvent:event direction:MXTimelineDirectionBackwards fromStore:NO notify:NO];
-        }
-
-        for (MXEvent *event in eventContext.eventsAfter)
-        {
-            [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO notify:NO];
-        }
-
-        [store storePaginationTokenOfRoom:room.roomId andToken:eventContext.start];
-
-        success();
-    } failure:failure];
-}
-
 
 #pragma mark - Pagination
 - (BOOL)canPaginate:(MXTimelineDirection)direction
@@ -142,8 +114,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     return canPaginate;
 }
 
-
-#pragma mark - Back pagination
 - (void)resetPagination
 {
     // Reset the back state to the current room state
@@ -152,6 +122,38 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     // Reset store pagination
     [store resetPaginationOfRoom:_state.roomId];
 }
+
+- (MXHTTPOperation *)resetPaginationAroundInitialEventWithLimit:(NSUInteger)limit success:(void (^)())success failure:(void (^)(NSError *))failure
+{
+    NSAssert(_initialEventId, @"[MXEventTimeline] resetPaginationAroundInitialEventWithLimit cannot be called on live timeline");
+
+    // Reset the store
+    [store deleteAllData];
+
+    // Get the context around the initial event
+    return [room.mxSession.matrixRestClient contextOfEvent:_initialEventId inRoom:room.roomId limit:limit success:^(MXEventContext *eventContext) {
+
+        // And fill the timelime with received data
+        [self initialiseState:eventContext.state];
+
+        [self addEvent:eventContext.event direction:MXTimelineDirectionForwards fromStore:NO notify:YES];
+
+        for (MXEvent *event in eventContext.eventsBefore)
+        {
+            [self addEvent:event direction:MXTimelineDirectionBackwards fromStore:NO notify:YES];
+        }
+
+        for (MXEvent *event in eventContext.eventsAfter)
+        {
+            [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO notify:YES];
+        }
+
+        [store storePaginationTokenOfRoom:room.roomId andToken:eventContext.start];
+
+        success();
+    } failure:failure];
+}
+
 
 - (MXHTTPOperation *)paginate:(NSUInteger)numItems direction:(MXTimelineDirection)direction onlyFromStore:(BOOL)onlyFromStore complete:(void (^)())complete failure:(void (^)(NSError *))failure
 {

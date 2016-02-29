@@ -103,19 +103,6 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
  */
 - (void)initialiseState:(NSArray<MXEvent*> *)stateEvents;
 
-/**
- Initialise a timelime by loading the context around its `initialEventId`.
- 
- @param limit the maximum number of messages to return.
-
- @param success A block object called when the operation succeeds.
- @param failure A block object called when the operation fails.
-
- @return a MXHTTPOperation instance.
- */
-- (MXHTTPOperation*)loadContextWithLimit:(NSUInteger)limit
-                                 success:(void(^)())success
-                                 failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Pagination
 /**
@@ -134,16 +121,31 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
 - (BOOL)canPaginate:(MXTimelineDirection)direction;
 
 /**
- Reset the pagination so that future calls to paginate start over from live or
- from the `initialEventId`.
+ Reset the pagination so that future calls to paginate start from the most recent
+ event of the timeline.
  */
 - (void)resetPagination;
+
+/**
+ Reset the pagination timelime and start loading the context around its `initialEventId`.
+ The retrieved (backwards and forwards) events will be sent to registered listeners.
+
+ @param limit the maximum number of messages to get around the initial event.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)resetPaginationAroundInitialEventWithLimit:(NSUInteger)limit
+                                                       success:(void(^)())success
+                                                       failure:(void (^)(NSError *error))failure;
 
 /**
  Get more messages.
  The retrieved events will be sent to registered listeners.
  
- It is not possible to paginate forwards on a live timeline.
+ Note it is not possible to paginate forwards on a live timeline.
 
  @param numItems the number of items to get.
  @param direction `MXTimelineDirectionForwards` or `MXTimelineDirectionBackwards`

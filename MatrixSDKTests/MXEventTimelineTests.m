@@ -56,35 +56,45 @@
         // Add 20 messages to the room
         [matrixSDKTestsData for:mxSession.matrixRestClient andRoom:room.roomId sendMessages:20 success:^{
 
-            [room sendTextMessage:@"The initial timelime event" success:^(NSString *eventId) {
+            NSString *theMessage = @"The initial timelime event";
+            [room sendTextMessage:theMessage success:^(NSString *eventId) {
 
                 // Add 20 more messages
                 [matrixSDKTestsData for:mxSession.matrixRestClient andRoom:room.roomId sendMessages:20 success:^{
 
-                    [room openTimelineOnEvent:eventId withLimit:10 success:^(MXEventTimeline *eventTimeline) {
+                    MXEventTimeline *eventTimeline = [room openTimelineOnEvent:eventId];
 
-                        [eventTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                    NSMutableArray *events = [NSMutableArray array];
+                    [eventTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                            NSLog(@"### %@", event);
+                        if (events.count == 0)
+                        {
+                            XCTAssertEqualObjects(event.content[@"body"], theMessage, @"The first returned event must be the initial event");
+                        }
 
-                        }];
+                        if (direction == MXTimelineDirectionForwards)
+                        {
+                            [events addObject:event];
+                        }
+                        else
+                        {
+                            [events insertObject:event atIndex:0];
+                        }
+                        NSLog(@"### %@", event);
 
-                        [eventTimeline resetPagination];
-                        [eventTimeline paginate:1 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+                    }];
 
+                    [eventTimeline resetPaginationAroundInitialEventWithLimit:10 success:^{
 
-                            [expectation fulfill];
+                        XCTAssertEqual(events.count, 11, @"1 + 10 = 11");
 
-                        } failure:^(NSError *error) {
-                            XCTFail(@"The operation should not fail - NSError: %@", error);
-                            [expectation fulfill];
-                        }];
+                        [expectation fulfill];
 
                     } failure:^(NSError *error) {
                         XCTFail(@"The operation should not fail - NSError: %@", error);
                         [expectation fulfill];
                     }];
-
+                    
                 }];
                 
             } failure:^(NSError *error) {
