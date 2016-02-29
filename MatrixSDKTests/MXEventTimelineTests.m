@@ -28,6 +28,8 @@
 }
 @end
 
+NSString *theInitialEventMessage = @"The initial timelime event";
+
 @implementation MXEventTimelineTests
 
 - (void)setUp
@@ -48,7 +50,7 @@
     [super tearDown];
 }
 
-- (void)testResetPaginationAroundInitialEventWithLimit
+- (void)doTestWithARoomOf41Messages:(XCTestCase*)testCase readyToTest:(void (^)(MXRoom *room, XCTestExpectation *expectation, NSString *initialEventId))readyToTest
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         mxSession = mxSession2;
@@ -56,49 +58,193 @@
         // Add 20 messages to the room
         [matrixSDKTestsData for:mxSession.matrixRestClient andRoom:room.roomId sendMessages:20 success:^{
 
-            NSString *theMessage = @"The initial timelime event";
-            [room sendTextMessage:theMessage success:^(NSString *eventId) {
+            // Add a text message that will be used as initial event
+            [room sendTextMessage:theInitialEventMessage success:^(NSString *eventId) {
 
                 // Add 20 more messages
                 [matrixSDKTestsData for:mxSession.matrixRestClient andRoom:room.roomId sendMessages:20 success:^{
 
-                    MXEventTimeline *eventTimeline = [room openTimelineOnEvent:eventId];
+                    readyToTest(room, expectation, eventId);
 
-                    NSMutableArray *events = [NSMutableArray array];
-                    [eventTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                }];
 
-                        if (events.count == 0)
-                        {
-                            XCTAssertEqualObjects(event.content[@"body"], theMessage, @"The first returned event must be the initial event");
-                        }
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+        }];
+    }];
+}
 
-                        if (direction == MXTimelineDirectionForwards)
-                        {
-                            [events addObject:event];
-                        }
-                        else
-                        {
-                            [events insertObject:event atIndex:0];
-                        }
+- (void)testResetPaginationAroundInitialEventWithLimit
+{
+    [self doTestWithARoomOf41Messages:self readyToTest:^(MXRoom *room, XCTestExpectation *expectation, NSString *initialEventId) {
 
-                    }];
+        MXEventTimeline *eventTimeline = [room openTimelineOnEvent:initialEventId];
 
-                    [eventTimeline resetPaginationAroundInitialEventWithLimit:10 success:^{
+        NSMutableArray *events = [NSMutableArray array];
+        [eventTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                        XCTAssertEqual(events.count, 11, @"1 + 10 = 11");
+            if (events.count == 0)
+            {
+                XCTAssertEqualObjects(event.eventId, initialEventId, @"The first returned event must be the initial event");
+                XCTAssertEqualObjects(event.content[@"body"], theInitialEventMessage);
+            }
 
-                        // Check events order
-                        uint64_t prev_ts = 0;
-                        for (MXEvent *event in events)
-                        {
-                            XCTAssertNotNil(event.eventId, @"The event must have an eventId to be valid");
+            if (direction == MXTimelineDirectionForwards)
+            {
+                [events addObject:event];
+            }
+            else
+            {
+                [events insertObject:event atIndex:0];
+            }
 
-                            if (event.originServerTs)
-                            {
-                                XCTAssertGreaterThanOrEqual(event.originServerTs, prev_ts, @"The events order is wrong");
-                                prev_ts = event.originServerTs;
-                            }
-                        }
+        }];
+
+        [eventTimeline resetPaginationAroundInitialEventWithLimit:10 success:^{
+
+            XCTAssertEqual(events.count, 11, @"1 + 10 = 11");
+
+            // Check events order
+            uint64_t prev_ts = 0;
+            for (MXEvent *event in events)
+            {
+                XCTAssertGreaterThanOrEqual(event.originServerTs, prev_ts, @"The events order is wrong");
+                prev_ts = event.originServerTs;
+            }
+
+            XCTAssert([eventTimeline canPaginate:MXTimelineDirectionBackwards]);
+            // XCTAssert([eventTimeline canPaginate:MXTimelineDirectionForwards]); // @TODO
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+    }];
+}
+
+- (void)testDoubleResetPaginationAroundInitialEventWithLimit
+{
+    [self doTestWithARoomOf41Messages:self readyToTest:^(MXRoom *room, XCTestExpectation *expectation, NSString *initialEventId) {
+
+        MXEventTimeline *eventTimeline = [room openTimelineOnEvent:initialEventId];
+
+        NSMutableArray *events = [NSMutableArray array];
+        [eventTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+            if (events.count == 0)
+            {
+                XCTAssertEqualObjects(event.eventId, initialEventId, @"The first returned event must be the initial event");
+                XCTAssertEqualObjects(event.content[@"body"], theInitialEventMessage);
+            }
+
+            if (direction == MXTimelineDirectionForwards)
+            {
+                [events addObject:event];
+            }
+            else
+            {
+                [events insertObject:event atIndex:0];
+            }
+
+        }];
+
+        [eventTimeline resetPaginationAroundInitialEventWithLimit:10 success:^{
+
+            XCTAssertEqual(events.count, 11, @"1 + 10 = 11");
+
+            [events removeAllObjects];
+
+            [eventTimeline resetPaginationAroundInitialEventWithLimit:10 success:^{
+
+                XCTAssertEqual(events.count, 11, @"1 + 10 = 11. Calling resetPaginationAroundInitialEventWithLimit must lead to the same reset state");
+
+                // Check events order
+                uint64_t prev_ts = 0;
+                for (MXEvent *event in events)
+                {
+                    XCTAssertGreaterThanOrEqual(event.originServerTs, prev_ts, @"The events order is wrong");
+                    prev_ts = event.originServerTs;
+                }
+
+                XCTAssert([eventTimeline canPaginate:MXTimelineDirectionBackwards]);
+                // XCTAssert([eventTimeline canPaginate:MXTimelineDirectionForwards]); // @TODO
+
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The operation should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        
+    }];
+}
+
+- (void)testBackPaginationOnPastTimeline
+{
+    [self doTestWithARoomOf41Messages:self readyToTest:^(MXRoom *room, XCTestExpectation *expectation, NSString *initialEventId) {
+
+        MXEventTimeline *eventTimeline = [room openTimelineOnEvent:initialEventId];
+
+        NSMutableArray *events = [NSMutableArray array];
+        [eventTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+            if (events.count == 0)
+            {
+                XCTAssertEqualObjects(event.eventId, initialEventId, @"The first returned event must be the initial event");
+                XCTAssertEqualObjects(event.content[@"body"], theInitialEventMessage);
+            }
+
+            if (direction == MXTimelineDirectionForwards)
+            {
+                [events addObject:event];
+            }
+            else
+            {
+                [events insertObject:event atIndex:0];
+            }
+
+        }];
+
+        [eventTimeline resetPaginationAroundInitialEventWithLimit:10 success:^{
+
+            XCTAssertEqual(events.count, 11, @"1 + 10 = 11");
+
+            // Get some messages in the past
+            [eventTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+
+                // @TODO: Note: this test fails because of https://matrix.org/jira/browse/SYN-641
+                //XCTAssertEqual(events.count, 21, @"1 + 10 + 10 = 21");
+
+                // Check events order
+                uint64_t prev_ts = 0;
+                for (MXEvent *event in events)
+                {
+                    XCTAssertGreaterThanOrEqual(event.originServerTs, prev_ts, @"The events order is wrong");
+                    prev_ts = event.originServerTs;
+                }
+
+                XCTAssert([eventTimeline canPaginate:MXTimelineDirectionBackwards]);
+                // XCTAssert([eventTimeline canPaginate:MXTimelineDirectionForwards]); // @TODO
+
+                // Get all past messages
+                [eventTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+
+                    XCTAssertEqual(events.count, 31, @"1 + 20 + 10 = 31");
+
+                    // Do one more request to test end
+                    [eventTimeline paginate:1 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+
+                        XCTAssertFalse([eventTimeline canPaginate:MXTimelineDirectionBackwards]);
+                        // XCTAssert([eventTimeline canPaginate:MXTimelineDirectionForwards]); // @TODO
 
                         [expectation fulfill];
 
@@ -106,16 +252,24 @@
                         XCTFail(@"The operation should not fail - NSError: %@", error);
                         [expectation fulfill];
                     }];
-                    
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The operation should not fail - NSError: %@", error);
+                    [expectation fulfill];
                 }];
-                
+
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                XCTFail(@"The operation should not fail - NSError: %@", error);
+                [expectation fulfill];
             }];
 
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
         }];
 
     }];
+
 }
 
 

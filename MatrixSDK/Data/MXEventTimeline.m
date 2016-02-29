@@ -136,6 +136,9 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         // And fill the timelime with received data
         [self initialiseState:eventContext.state];
 
+        // Reset pagination state from here
+        [self resetPagination];
+
         [self addEvent:eventContext.event direction:MXTimelineDirectionForwards fromStore:NO notify:YES];
 
         for (MXEvent *event in eventContext.eventsBefore)
