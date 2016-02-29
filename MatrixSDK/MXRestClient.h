@@ -19,6 +19,7 @@
 
 #import "MXHTTPClient.h"
 #import "MXEvent.h"
+#import "MXEventTimeline.h"
 #import "MXJSONModels.h"
 
 
@@ -670,8 +671,8 @@ typedef enum : NSUInteger
  Get a list of messages for this room.
  
  @param roomId the id of the room.
- @param from (optional) the token to start getting results from.
- @param to (optional)the token to stop getting results at.
+ @param from the token to start getting results from.
+ @param direction `MXTimelineDirectionForwards` or `MXTimelineDirectionBackwards`
  @param limit (optional, use -1 to not defined this value) the maximum nuber of messages to return.
  
  @param success A block object called when the operation succeeds. It provides a `MXPaginationResponse` object.
@@ -681,7 +682,7 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)messagesForRoom:(NSString*)roomId
                            from:(NSString*)from
-                             to:(NSString*)to
+                      direction:(MXTimelineDirection)direction
                           limit:(NSUInteger)limit
                         success:(void (^)(MXPaginationResponse *paginatedResponse))success
                         failure:(void (^)(NSError *error))failure;

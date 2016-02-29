@@ -1226,7 +1226,7 @@ MXAuthAction;
 
 - (MXHTTPOperation*)messagesForRoom:(NSString*)roomId
                                from:(NSString*)from
-                                 to:(NSString*)to
+                          direction:(MXTimelineDirection)direction
                               limit:(NSUInteger)limit
                             success:(void (^)(MXPaginationResponse *paginatedResponse))success
                             failure:(void (^)(NSError *error))failure
@@ -1235,22 +1235,21 @@ MXAuthAction;
     
     // All query parameters are optional. Fill the request parameters on demand
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
-    
-    if (from)
+
+    parameters[@"from"] = from;
+
+    if (direction == MXTimelineDirectionForwards)
     {
-        parameters[@"from"] = from;
+        parameters[@"dir"] = @"f";
     }
-    if (to)
+    else
     {
-        parameters[@"to"] = to;
+        parameters[@"dir"] = @"b";
     }
     if (-1 != limit)
     {
         parameters[@"limit"] = [NSNumber numberWithUnsignedInteger:limit];
     }
-    
-    // List messages in backward order to make the API answer
-    parameters[@"dir"] = @"b";
     
     return [httpClient requestWithMethod:@"GET"
                                     path:path
