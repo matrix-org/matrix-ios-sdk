@@ -89,6 +89,15 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     }
 }
 
+- (void)destroy
+{
+    if (!_isLiveTimeline)
+    {
+        // Release past timeline events stored in memory
+        [store deleteAllData];
+    }
+}
+
 
 #pragma mark - Pagination
 - (BOOL)canPaginate:(MXTimelineDirection)direction

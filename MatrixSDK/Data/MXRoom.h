@@ -379,15 +379,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSyncWithLimitedTimelineNotification;
  @param eventId the id of the event.
  @return a new `MXEventTimeline` instance.
  */
-- (MXEventTimeline*)openTimelineOnEvent:(NSString*)eventId;
-
-/**
- Close a `MXEventTimeline` instance.
- All attached listeners are unregitered.
-
- @param eventTimeline the timeline to close.
- */
-- (void)closeTimeline:(MXEventTimeline*)eventTimeline;
+- (MXEventTimeline*)timelineOnEvent:(NSString*)eventId;
 
 
 #pragma mark - Outgoing events management

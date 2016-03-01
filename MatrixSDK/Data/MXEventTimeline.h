@@ -103,6 +103,11 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
  */
 - (void)initialiseState:(NSArray<MXEvent*> *)stateEvents;
 
+/**
+ Release RAM memory used by the timeline.
+ */
+- (void)destroy;
+
 
 #pragma mark - Pagination
 /**

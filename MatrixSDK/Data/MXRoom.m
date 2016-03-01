@@ -314,14 +314,9 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 
 #pragma mark - Events timeline
-- (MXEventTimeline*)openTimelineOnEvent:(NSString*)eventId;
+- (MXEventTimeline*)timelineOnEvent:(NSString*)eventId;
 {
     return [[MXEventTimeline alloc] initWithRoom:self andInitialEventId:eventId];
-}
-
--(void)closeTimeline:(MXEventTimeline *)eventTimeline
-{
-    // @TODO
 }
 
 

@@ -79,7 +79,7 @@ NSString *theInitialEventMessage = @"The initial timelime event";
 {
     [self doTestWithARoomOf41Messages:self readyToTest:^(MXRoom *room, XCTestExpectation *expectation, NSString *initialEventId) {
 
-        MXEventTimeline *eventTimeline = [room openTimelineOnEvent:initialEventId];
+        MXEventTimeline *eventTimeline = [room timelineOnEvent:initialEventId];
 
         NSMutableArray *events = [NSMutableArray array];
         [eventTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
@@ -130,7 +130,7 @@ NSString *theInitialEventMessage = @"The initial timelime event";
 {
     [self doTestWithARoomOf41Messages:self readyToTest:^(MXRoom *room, XCTestExpectation *expectation, NSString *initialEventId) {
 
-        MXEventTimeline *eventTimeline = [room openTimelineOnEvent:initialEventId];
+        MXEventTimeline *eventTimeline = [room timelineOnEvent:initialEventId];
 
         NSMutableArray *events = [NSMutableArray array];
         [eventTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
@@ -192,7 +192,7 @@ NSString *theInitialEventMessage = @"The initial timelime event";
 {
     [self doTestWithARoomOf41Messages:self readyToTest:^(MXRoom *room, XCTestExpectation *expectation, NSString *initialEventId) {
 
-        MXEventTimeline *eventTimeline = [room openTimelineOnEvent:initialEventId];
+        MXEventTimeline *eventTimeline = [room timelineOnEvent:initialEventId];
 
         NSMutableArray *events = [NSMutableArray array];
         [eventTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
@@ -285,7 +285,7 @@ NSString *theInitialEventMessage = @"The initial timelime event";
 {
     [self doTestWithARoomOf41Messages:self readyToTest:^(MXRoom *room, XCTestExpectation *expectation, NSString *initialEventId) {
 
-        MXEventTimeline *eventTimeline = [room openTimelineOnEvent:initialEventId];
+        MXEventTimeline *eventTimeline = [room timelineOnEvent:initialEventId];
 
         NSMutableArray *events = [NSMutableArray array];
         [eventTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
