@@ -147,16 +147,16 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         // Reset pagination state from here
         [self resetPagination];
 
-        [self addEvent:eventContext.event direction:MXTimelineDirectionForwards fromStore:NO notify:YES];
+        [self addEvent:eventContext.event direction:MXTimelineDirectionForwards fromStore:NO];
 
         for (MXEvent *event in eventContext.eventsBefore)
         {
-            [self addEvent:event direction:MXTimelineDirectionBackwards fromStore:NO notify:YES];
+            [self addEvent:event direction:MXTimelineDirectionBackwards fromStore:NO];
         }
 
         for (MXEvent *event in eventContext.eventsAfter)
         {
-            [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO notify:YES];
+            [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO];
         }
 
         [store storePaginationTokenOfRoom:room.roomId andToken:eventContext.start];
@@ -197,7 +197,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                 for (NSInteger i = messagesFromStoreCount - 1; i >= 0; i--)
                 {
                     MXEvent *event = messagesFromStore[i];
-                    [self addEvent:event direction:MXTimelineDirectionBackwards fromStore:YES notify:YES];
+                    [self addEvent:event direction:MXTimelineDirectionBackwards fromStore:YES];
                 }
 
                 numItems -= messagesFromStoreCount;
@@ -333,7 +333,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             event.roomId = _state.roomId;
 
             // Add the event to the end of the timeline
-            [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO notify:YES];
+            [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO];
         }
 
         // Check whether we got all history from the home server
@@ -357,7 +357,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             event.roomId = _state.roomId;
 
             // Add the event to the end of the timeline
-            [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO notify:YES];
+            [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO];
         }
     }
 
@@ -398,7 +398,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         // Report the room id in the event as it is skipped in /sync response
         event.roomId = _state.roomId;
 
-        [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO notify:YES];
+        [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO];
     }
 }
 
@@ -422,7 +422,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     for (MXEvent *event in paginatedResponse.chunk)
     {
         // Make sure we have not processed this event yet
-		[self addEvent:event direction:direction fromStore:NO notify:YES];
+		[self addEvent:event direction:direction fromStore:NO];
     }
 
     // And update pagination tokens
@@ -451,9 +451,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
  @param direction the direction indicates if the event must added to the start or to the end of the timeline.
  @param fromStore YES if the messages have been loaded from the store. In this case, there is no need to store
                   it again in the store
- @param notify YES to notify listeners.
  */
-- (void)addEvent:(MXEvent*)event direction:(MXTimelineDirection)direction fromStore:(BOOL)fromStore notify:(BOOL)notify
+- (void)addEvent:(MXEvent*)event direction:(MXTimelineDirection)direction fromStore:(BOOL)fromStore
 {
     // Make sure we have not processed this event yet
     if (fromStore == NO && [store eventExistsWithEventId:event.eventId inRoom:room.roomId])
@@ -501,10 +500,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     }
 
     // Notify listeners
-    if (notify)
-    {
-        [self notifyListeners:event direction:direction];
-    }
+    [self notifyListeners:event direction:direction];
 }
 
 #pragma mark - Specific events Handling
