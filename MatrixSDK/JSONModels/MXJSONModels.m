@@ -582,6 +582,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXEventContext *eventContext = [[MXEventContext alloc] init];
     if (eventContext)
     {
+        MXJSONModelSetMXJSONModel(eventContext.event, MXEvent, JSONDictionary[@"event"]);
         MXJSONModelSetString(eventContext.start, JSONDictionary[@"start"]);
         MXJSONModelSetMXJSONModelArray(eventContext.eventsBefore, MXEvent, JSONDictionary[@"events_before"]);
         MXJSONModelSetMXJSONModelArray(eventContext.eventsAfter, MXEvent, JSONDictionary[@"events_after"]);

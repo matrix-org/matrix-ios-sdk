@@ -42,6 +42,11 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
     // The store to store events,
     id<MXStore> store;
+
+    // MXStore does only back pagination. So, the forward pagination token for
+    // past timelines is managed locally.
+    NSString *forwardsPaginationToken;
+    BOOL hasReachedHomeServerForwardsPaginationEnd;
 }
 @end
 
@@ -84,6 +89,15 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     }
 }
 
+- (void)destroy
+{
+    if (!_isLiveTimeline)
+    {
+        // Release past timeline events stored in memory
+        [store deleteAllData];
+    }
+}
+
 
 #pragma mark - Pagination
 - (BOOL)canPaginate:(MXTimelineDirection)direction
@@ -107,15 +121,13 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         }
         else
         {
-            NSAssert(NO, @"TODO: canPaginate forwards is not yet supported");
+            canPaginate = !hasReachedHomeServerForwardsPaginationEnd;
         }
     }
 
     return canPaginate;
 }
 
-
-#pragma mark - Back pagination
 - (void)resetPagination
 {
     // Reset the back state to the current room state
@@ -125,16 +137,59 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     [store resetPaginationOfRoom:_state.roomId];
 }
 
+- (MXHTTPOperation *)resetPaginationAroundInitialEventWithLimit:(NSUInteger)limit success:(void (^)())success failure:(void (^)(NSError *))failure
+{
+    NSParameterAssert(success);
+    NSAssert(_initialEventId, @"[MXEventTimeline] resetPaginationAroundInitialEventWithLimit cannot be called on live timeline");
+
+    // Reset the store
+    [store deleteAllData];
+
+    forwardsPaginationToken = nil;
+    hasReachedHomeServerForwardsPaginationEnd = NO;
+
+    // Get the context around the initial event
+    return [room.mxSession.matrixRestClient contextOfEvent:_initialEventId inRoom:room.roomId limit:limit success:^(MXEventContext *eventContext) {
+
+        // And fill the timelime with received data
+        [self initialiseState:eventContext.state];
+
+        // Reset pagination state from here
+        [self resetPagination];
+
+        [self addEvent:eventContext.event direction:MXTimelineDirectionForwards fromStore:NO];
+
+        for (MXEvent *event in eventContext.eventsBefore)
+        {
+            [self addEvent:event direction:MXTimelineDirectionBackwards fromStore:NO];
+        }
+
+        for (MXEvent *event in eventContext.eventsAfter)
+        {
+            [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO];
+        }
+
+        [store storePaginationTokenOfRoom:room.roomId andToken:eventContext.start];
+        forwardsPaginationToken = eventContext.end;
+
+        success();
+    } failure:failure];
+}
+
+
 - (MXHTTPOperation *)paginate:(NSUInteger)numItems direction:(MXTimelineDirection)direction onlyFromStore:(BOOL)onlyFromStore complete:(void (^)())complete failure:(void (^)(NSError *))failure
 {
     MXHTTPOperation *operation;
 
-    NSAssert(nil != backState, @"[MXEventTimeline] paginate: resetPagination must be called before starting the back pagination");
+    NSAssert(nil != backState, @"[MXEventTimeline] paginate: resetPagination or resetPaginationAroundInitialEventWithLimit must be called before starting the back pagination");
+
+    NSAssert(!(_isLiveTimeline && direction == MXTimelineDirectionForwards), @"Cannot paginate forwards on a live timeline");
+    
+    NSUInteger messagesFromStoreCount = 0;
 
     if (direction == MXTimelineDirectionBackwards)
     {
-        // Return messages from the store first
-        NSUInteger messagesFromStoreCount = 0;
+        // For back pagination, try to get messages from the store first
         NSArray *messagesFromStore = [store paginateRoom:_state.roomId numMessages:numItems];
         if (messagesFromStore)
         {
@@ -152,7 +207,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                 for (NSInteger i = messagesFromStoreCount - 1; i >= 0; i--)
                 {
                     MXEvent *event = messagesFromStore[i];
-                    [self addEvent:event direction:MXTimelineDirectionBackwards fromStore:YES notify:YES];
+                    [self addEvent:event direction:MXTimelineDirectionBackwards fromStore:YES];
                 }
 
                 numItems -= messagesFromStoreCount;
@@ -167,73 +222,87 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             return nil;
         }
 
-        if (0 < numItems && NO == [store hasReachedHomeServerPaginationEndForRoom:_state.roomId])
-        {
-            // Not enough messages: make a pagination request to the home server
-            // from last known token
-            NSString *paginationToken = [store paginationTokenOfRoom:_state.roomId];
-            if (nil == paginationToken) {
-                paginationToken = @"END";
-            }
-
-            NSLog(@"[MXEventTimeline] paginate : request %tu messages from the server", numItems);
-
-            operation = [room.mxSession.matrixRestClient messagesForRoom:_state.roomId
-                                                                    from:paginationToken
-                                                                      to:nil
-                                                                   limit:numItems
-                                                                 success:^(MXPaginationResponse *paginatedResponse) {
-
-                                                                     NSLog(@"[MXEventTimeline] paginate : get %tu messages from the server", paginatedResponse.chunk.count);
-
-                                                                    [self handlePaginationResponse:paginatedResponse];
-                                                                     
-                                                                     // Inform the method caller
-                                                                     complete();
-                                                                     
-                                                                     NSLog(@"[MXEventTimeline] paginate: is done");
-
-                                                                 } failure:^(NSError *error) {
-                                                                     // Check whether the pagination end is reached
-                                                                     MXError *mxError = [[MXError alloc] initWithNSError:error];
-                                                                     if (mxError && [mxError.error isEqualToString:kMXErrorStringInvalidToken])
-                                                                     {
-                                                                         // We run out of items
-                                                                         [store storeHasReachedHomeServerPaginationEndForRoom:_state.roomId andValue:YES];
-                                                                         
-                                                                         NSLog(@"[MXEventTimeline] paginate: pagination end has been reached");
-                                                                         
-                                                                         // Ignore the error
-                                                                         complete();
-                                                                         return;
-                                                                     }
-                                                                     
-                                                                     NSLog(@"[MXEventTimeline] paginate error: %@", error);
-                                                                     failure(error);
-                                                                 }];
-            
-            if (messagesFromStoreCount)
-            {
-                // Disable retry to let the caller handle messages from store without delay.
-                // The caller will trigger a new pagination if need.
-                operation.maxNumberOfTries = 1;
-            }
-        }
-        else
+        if (0 == numItems || YES == [store hasReachedHomeServerPaginationEndForRoom:_state.roomId])
         {
             // Nothing more to do
             complete();
-            
+
             NSLog(@"[MXEventTimeline] paginate: is done");
+            return nil;
         }
     }
-    else if (!_isLiveTimeline)
+
+    // Do not try to paginate forward if end has been reached
+    if (direction == MXTimelineDirectionForwards && YES == hasReachedHomeServerForwardsPaginationEnd)
     {
-        NSAssert(NO, @"TODO: paginate forwards is not yet supported");
+        // Nothing more to do
+        complete();
+
+        NSLog(@"[MXEventTimeline] paginate: is done");
+        return nil;
+    }
+
+    // Not enough messages: make a pagination request to the home server
+    // from last known token
+    NSString *paginationToken;
+
+    if (direction == MXTimelineDirectionBackwards)
+    {
+        paginationToken = [store paginationTokenOfRoom:_state.roomId];
+        if (nil == paginationToken)
+        {
+            paginationToken = @"END";
+        }
     }
     else
     {
-        NSAssert(NO, @"Cannot paginate forwards on a live timeline");
+        paginationToken = forwardsPaginationToken;
+    }
+
+    NSLog(@"[MXEventTimeline] paginate : request %tu messages from the server", numItems);
+
+    operation = [room.mxSession.matrixRestClient messagesForRoom:_state.roomId from:paginationToken direction:direction limit:numItems success:^(MXPaginationResponse *paginatedResponse) {
+
+        NSLog(@"[MXEventTimeline] paginate : get %tu messages from the server", paginatedResponse.chunk.count);
+
+        [self handlePaginationResponse:paginatedResponse direction:direction];
+
+        // Inform the method caller
+        complete();
+
+        NSLog(@"[MXEventTimeline] paginate: is done");
+
+    } failure:^(NSError *error) {
+        // Check whether the pagination end is reached
+        MXError *mxError = [[MXError alloc] initWithNSError:error];
+        if (mxError && [mxError.error isEqualToString:kMXErrorStringInvalidToken])
+        {
+            // Store the fact we run out of items
+            if (direction == MXTimelineDirectionBackwards)
+            {
+                [store storeHasReachedHomeServerPaginationEndForRoom:_state.roomId andValue:YES];
+            }
+            else
+            {
+                hasReachedHomeServerForwardsPaginationEnd = YES;
+            }
+
+            NSLog(@"[MXEventTimeline] paginate: pagination end has been reached");
+
+            // Ignore the error
+            complete();
+            return;
+        }
+
+        NSLog(@"[MXEventTimeline] paginate error: %@", error);
+        failure(error);
+    }];
+
+    if (messagesFromStoreCount)
+    {
+        // Disable retry to let the caller handle messages from store without delay.
+        // The caller will trigger a new pagination if need.
+        operation.maxNumberOfTries = 1;
     }
 
     return operation;
@@ -284,7 +353,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             event.roomId = _state.roomId;
 
             // Add the event to the end of the timeline
-            [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO notify:YES];
+            [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO];
         }
 
         // Check whether we got all history from the home server
@@ -308,7 +377,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             event.roomId = _state.roomId;
 
             // Add the event to the end of the timeline
-            [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO notify:YES];
+            [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO];
         }
     }
 
@@ -349,28 +418,42 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         // Report the room id in the event as it is skipped in /sync response
         event.roomId = _state.roomId;
 
-        [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO notify:YES];
+        [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO];
     }
 }
 
-- (void)handlePaginationResponse:(MXPaginationResponse*)paginatedResponse
+- (void)handlePaginationResponse:(MXPaginationResponse*)paginatedResponse direction:(MXTimelineDirection)direction
 {
     // Check pagination end - @see SPEC-319 ticket
     if (paginatedResponse.chunk.count == 0 && [paginatedResponse.start isEqualToString:paginatedResponse.end])
     {
-        // We run out of items
-        [store storeHasReachedHomeServerPaginationEndForRoom:_state.roomId andValue:YES];
+        // Store the fact we run out of items
+        if (direction == MXTimelineDirectionBackwards)
+        {
+            [store storeHasReachedHomeServerPaginationEndForRoom:_state.roomId andValue:YES];
+        }
+        else
+        {
+            hasReachedHomeServerForwardsPaginationEnd = YES;
+        }
     }
 
     // Process received events
     for (MXEvent *event in paginatedResponse.chunk)
     {
         // Make sure we have not processed this event yet
-		[self addEvent:event direction:MXTimelineDirectionBackwards fromStore:NO notify:YES];
+		[self addEvent:event direction:direction fromStore:NO];
     }
 
     // And update pagination tokens
-    [store storePaginationTokenOfRoom:_state.roomId andToken:paginatedResponse.end];
+    if (direction == MXTimelineDirectionBackwards)
+    {
+        [store storePaginationTokenOfRoom:_state.roomId andToken:paginatedResponse.end];
+    }
+    else
+    {
+        forwardsPaginationToken = paginatedResponse.end;
+    }
 
     // Commit store changes
     if ([store respondsToSelector:@selector(commit)])
@@ -388,9 +471,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
  @param direction the direction indicates if the event must added to the start or to the end of the timeline.
  @param fromStore YES if the messages have been loaded from the store. In this case, there is no need to store
                   it again in the store
- @param notify YES to notify listeners.
  */
-- (void)addEvent:(MXEvent*)event direction:(MXTimelineDirection)direction fromStore:(BOOL)fromStore notify:(BOOL)notify
+- (void)addEvent:(MXEvent*)event direction:(MXTimelineDirection)direction fromStore:(BOOL)fromStore
 {
     // Make sure we have not processed this event yet
     if (fromStore == NO && [store eventExistsWithEventId:event.eventId inRoom:room.roomId])
@@ -438,10 +520,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     }
 
     // Notify listeners
-    if (notify)
-    {
-        [self notifyListeners:event direction:direction];
-    }
+    [self notifyListeners:event direction:direction];
 }
 
 #pragma mark - Specific events Handling

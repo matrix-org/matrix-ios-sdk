@@ -313,6 +313,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 }
 
 
+#pragma mark - Events timeline
+- (MXEventTimeline*)timelineOnEvent:(NSString*)eventId;
+{
+    return [[MXEventTimeline alloc] initWithRoom:self andInitialEventId:eventId];
+}
+
+
 #pragma mark - Outgoing events management
 - (void)storeOutgoingMessage:(MXEvent*)outgoingMessage
 {
