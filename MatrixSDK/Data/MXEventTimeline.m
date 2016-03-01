@@ -139,6 +139,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 - (MXHTTPOperation *)resetPaginationAroundInitialEventWithLimit:(NSUInteger)limit success:(void (^)())success failure:(void (^)(NSError *))failure
 {
+    NSParameterAssert(success);
     NSAssert(_initialEventId, @"[MXEventTimeline] resetPaginationAroundInitialEventWithLimit cannot be called on live timeline");
 
     // Reset the store
@@ -229,6 +230,16 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             NSLog(@"[MXEventTimeline] paginate: is done");
             return nil;
         }
+    }
+
+    // Do not try to paginate forward if end has been reached
+    if (direction == MXTimelineDirectionForwards && YES == hasReachedHomeServerForwardsPaginationEnd)
+    {
+        // Nothing more to do
+        complete();
+
+        NSLog(@"[MXEventTimeline] paginate: is done");
+        return nil;
     }
 
     // Not enough messages: make a pagination request to the home server
