@@ -857,6 +857,21 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 
 @end
 
+@implementation MXRoomSyncUnreadNotifications
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXRoomSyncUnreadNotifications *roomSyncUnreadNotifications = [[MXRoomSyncUnreadNotifications alloc] init];
+    if (roomSyncUnreadNotifications)
+    {
+        MXJSONModelSetUInteger(roomSyncUnreadNotifications.notificationCount, JSONDictionary[@"notification_count"]);
+        MXJSONModelSetUInteger(roomSyncUnreadNotifications.highlightCount, JSONDictionary[@"highlight_count"]);
+    }
+    return roomSyncUnreadNotifications;
+}
+
+@end
+
 @implementation MXRoomSync
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
@@ -868,6 +883,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         MXJSONModelSetMXJSONModel(roomSync.timeline, MXRoomSyncTimeline, JSONDictionary[@"timeline"]);
         MXJSONModelSetMXJSONModel(roomSync.ephemeral, MXRoomSyncEphemeral, JSONDictionary[@"ephemeral"]);
         MXJSONModelSetMXJSONModel(roomSync.accountData, MXRoomSyncAccountData, JSONDictionary[@"account_data"]);
+        MXJSONModelSetMXJSONModel(roomSync.unreadNotifications, MXRoomSyncUnreadNotifications, JSONDictionary[@"unread_notifications"]);
     }
     return roomSync;
 }

@@ -220,7 +220,7 @@
     return false;
 }
 
-- (NSArray*)unreadEvents:(NSString*)roomId withTypeIn:(NSArray*)types
+- (BOOL)hasUnreadEvents:(NSString*)roomId withTypeIn:(NSArray*)types
 {
     MXMemoryRoomStore* store = [roomStores valueForKey:roomId];
     NSMutableDictionary* receipsByUserId = [receiptsByRoomId objectForKey:roomId];
@@ -231,13 +231,13 @@
         
         if (data)
         {
-            // ignore oneself events
-            // assume you read what you wrote
-            return [store eventsAfter:data.eventId except:credentials.userId withTypeIn:[NSSet setWithArray:types]];
+            // Check the current stored events (by ignoring oneself events)
+            NSArray *array = [store eventsAfter:data.eventId except:credentials.userId withTypeIn:[NSSet setWithArray:types]];
+            return (array.count != 0);
         }
     }
    
-    return nil;
+    return NO;
 }
 
 - (BOOL)isPermanent

@@ -956,6 +956,23 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @end
 
 /**
+ `MXRoomSyncUnreadNotifications` represents the unread counts for a room.
+ */
+@interface MXRoomSyncUnreadNotifications : MXJSONModel
+
+    /**
+     The number of unread messages that match the push notification rules.
+     */
+    @property (nonatomic) NSUInteger notificationCount;
+
+    /**
+     The number of highlighted unread messages (subset of notifications).
+     */
+    @property (nonatomic) NSUInteger highlightCount;
+
+@end
+
+/**
  `MXRoomSync` represents the response for a room during server sync.
  */
 @interface MXRoomSync : MXJSONModel
@@ -979,6 +996,11 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
      The account data events for the room (e.g. tags).
      */
     @property (nonatomic) MXRoomSyncAccountData *accountData;
+
+    /**
+     The notification counts for the room.
+     */
+    @property (nonatomic) MXRoomSyncUnreadNotifications *unreadNotifications;
 
 @end
 
