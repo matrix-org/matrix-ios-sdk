@@ -99,10 +99,22 @@ FOUNDATION_EXPORT NSString *const kMXRoomSyncWithLimitedTimelineNotification;
 - (MXEvent*)lastMessageWithTypeIn:(NSArray*)type;
 
 /**
- The unread events.
- They are filtered by acknowledgableEventTypes.
+ Tell whether the room has unread events.
+ This value depends on acknowledgableEventTypes.
  */
-@property (nonatomic, readonly) NSArray* unreadEvents;
+@property (nonatomic, readonly) BOOL hasUnreadEvents;
+
+/**
+ The number of unread messages that match the push notification rules.
+ It is based on the notificationCount field in /sync response.
+ */
+@property (nonatomic, readonly) NSUInteger notificationCount;
+
+/**
+ The number of highlighted unread messages (subset of notifications).
+ It is based on the notificationCount field in /sync response.
+ */
+@property (nonatomic, readonly) NSUInteger highlightCount;
 
 /**
  * An array of event types strings (MXEventTypeString).

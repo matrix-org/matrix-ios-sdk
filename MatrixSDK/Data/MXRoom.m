@@ -135,6 +135,10 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             [self handleReceiptEvent:event direction:MXTimelineDirectionForwards];
         }
     }
+    
+    // Update bing counts from the notificationCount field in /sync response
+    _notificationCount = roomSync.unreadNotifications.notificationCount;
+    _highlightCount = roomSync.unreadNotifications.highlightCount;
 
     // Handle account data events (if any)
     [self handleAccounDataEvents:roomSync.accountData.events direction:MXTimelineDirectionForwards];
@@ -514,9 +518,15 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     return NO;
 }
 
--(NSArray*) unreadEvents
+- (BOOL)hasUnreadEvents
 {
-    return [mxSession.store unreadEvents:self.state.roomId withTypeIn:_acknowledgableEventTypes];
+    if (_notificationCount)
+    {
+        return YES;
+    }
+    
+    // Else check for unread events in store
+    return [mxSession.store hasUnreadEvents:self.state.roomId withTypeIn:_acknowledgableEventTypes];
 }
 
 - (NSArray*)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort
