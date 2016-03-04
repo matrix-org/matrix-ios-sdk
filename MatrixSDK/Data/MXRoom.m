@@ -520,12 +520,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 - (BOOL)hasUnreadEvents
 {
-    if (_notificationCount)
-    {
-        return YES;
-    }
-    
-    // Else check for unread events in store
+    // Check for unread events in store
     return [mxSession.store hasUnreadEvents:self.state.roomId withTypeIn:_acknowledgableEventTypes];
 }
 
