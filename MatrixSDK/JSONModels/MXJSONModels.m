@@ -1024,6 +1024,17 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     return callCandidate;
 }
 
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
+    
+    JSONDictionary[@"sdpMid"] = _sdpMid;
+    JSONDictionary[@"sdpMLineIndex"] = @(_sdpMLineIndex);
+    JSONDictionary[@"candidate"] = _candidate;
+    
+    return JSONDictionary;
+}
+
 @end
 
 @implementation MXCallCandidatesEventContent

@@ -181,9 +181,9 @@
             MXCallCandidatesEventContent *content = [MXCallCandidatesEventContent modelFromJSON:event.content];
 
             NSLog(@"[MXCall] handleCallCandidates: %@", content.candidates);
-            for (NSDictionary *canditate in content.candidates)
+            for (MXCallCandidate *canditate in content.candidates)
             {
-                [callStackCall handleRemoteCandidate:canditate];
+                [callStackCall handleRemoteCandidate:canditate.JSONDictionary];
             }
             break;
         }
