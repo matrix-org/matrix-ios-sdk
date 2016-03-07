@@ -1,3 +1,23 @@
+Changes in Matrix iOS SDK in 0.6.3 (2016-03-07)
+===============================================
+
+Improvements:
+ * Moving to r0 API: Replace calls to v1 and v2_alpha apis by r0, which is configurable via MXRestClient.apiPathPrefix.
+ * MXEventContext: Add C-S API to handle event context.
+ * MXEventTimeline: Created MXEventTimeline to manage a list of continuous events. MXRoom has now a liveTimeline property that manages live events and state of the room. MXEventTimeline is able to manage live events and events that will come from the event context API.
+ * MXEventDirection* has been renamed to MXTimelineDirection*.
+ * MXEventTimeline: Support backward/forward pagination around a past event.
+ * MXRestClient: the messagesForRoom method has been updated to conform r0 C-S API. The "to" parameter has been replaced by the "direction" parameter.
+ * MXRoom: Replace the inaccurate 'unreadEvents' array with a boolean flag 'hasUnreadEvents'.
+ * MXRoom: Add 'notificationCount' and 'highlightCount' based on the notificationCount field in /sync response.
+ * SDK Tests: Update and fix tests.
+
+Bug fixes:
+ * Support email login.
+ * Room ordering: a tagged room with no order value must have higher priority than the tagged rooms with order value.
+ * SYIOS-208: [MXSession startWithMessagesLimit]: if defined, the limit argument is now passed to /sync request.
+ * SYIOS-207: Removed MXEventDirectionSync which became useless.
+
 Changes in Matrix iOS SDK in 0.6.2 (2016-02-09)
 ===============================================
 
