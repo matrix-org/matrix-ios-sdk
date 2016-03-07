@@ -19,14 +19,20 @@
 
 #import "MXHTTPClient.h"
 #import "MXEvent.h"
+#import "MXEventTimeline.h"
 #import "MXJSONModels.h"
 
 
 #pragma mark - Constants definitions
 /**
- Prefix used in path of home server API requests.
+ A constant representing the URI path for release 0 of the Client-Server HTTP API.
  */
-FOUNDATION_EXPORT NSString *const kMXAPIPrefixPath;
+FOUNDATION_EXPORT NSString *const kMXAPIPrefixPathR0;
+
+/**
+ A constant representing tthe URI path for as-yet unspecified of the Client-Server HTTP API.
+ */
+FOUNDATION_EXPORT NSString *const kMXAPIPrefixPathUnstable;
 
 /**
  Prefix used in path of identity server API requests.
@@ -83,22 +89,6 @@ typedef enum : NSUInteger
     MXThumbnailingMethodCrop
 } MXThumbnailingMethod;
 
-/**
- `MXRestClientAPIVersion` lists the existing C-S API versions.
- */
-typedef enum : NSUInteger
-{
-    /**
-     C-S API V1.
-     */
-    MXRestClientAPIVersion1,
-    
-    /**
-     C-S API V2.
-     */
-    MXRestClientAPIVersion2
-    
-} MXRestClientAPIVersion;
 
 /**
  `MXRestClient` makes requests to Matrix servers.
@@ -109,17 +99,6 @@ typedef enum : NSUInteger
     - the specified Matrix identity server
  */
 @interface MXRestClient : NSObject
-
-/**
- The preferred Client-Server API version. This value is applied to each new MXRestClient instance
- during initialisation step (see 'preferredAPIVersion' property).
- By default the C-S API v2 is considered.
- 
- CAUTION: Change of the preferred version impacts only the new MXRestClient instances.
- 
- @param preferredAPIVersion the preferred C-S API version.
- */
-+ (void)registerPreferredAPIVersion:(MXRestClientAPIVersion)preferredAPIVersion;
 
 /**
  The homeserver.
@@ -137,11 +116,10 @@ typedef enum : NSUInteger
 @property (nonatomic, readonly) NSString *homeserverSuffix;
 
 /**
- The preferred Client-Server API version. This version is used during server requests insofar as it is supported.
- A prior version is used in case the preferred one is not supported yet.
- It is set during initialisation according to the registered value (see [registerPreferredAPIVersion:]).
+ The Client-Server API prefix to use.
+ By default, it is '/_matrix/client/r0'. See kMXAPIPrefixPathR0 and kMXAPIPrefixPathUnstable for constants.
  */
-@property (nonatomic, readonly) MXRestClientAPIVersion preferredAPIVersion;
+@property (nonatomic) NSString *apiPathPrefix;
 
 /**
  The identity server.
@@ -693,8 +671,8 @@ typedef enum : NSUInteger
  Get a list of messages for this room.
  
  @param roomId the id of the room.
- @param from (optional) the token to start getting results from.
- @param to (optional)the token to stop getting results at.
+ @param from the token to start getting results from.
+ @param direction `MXTimelineDirectionForwards` or `MXTimelineDirectionBackwards`
  @param limit (optional, use -1 to not defined this value) the maximum nuber of messages to return.
  
  @param success A block object called when the operation succeeds. It provides a `MXPaginationResponse` object.
@@ -704,7 +682,7 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)messagesForRoom:(NSString*)roomId
                            from:(NSString*)from
-                             to:(NSString*)to
+                      direction:(MXTimelineDirection)direction
                           limit:(NSUInteger)limit
                         success:(void (^)(MXPaginationResponse *paginatedResponse))success
                         failure:(void (^)(NSError *error))failure;
@@ -785,7 +763,7 @@ typedef enum : NSUInteger
  @param limit the maximum number of messages to return.
  
  @param success A block object called when the operation succeeds. It provides the model created from
-                the home server JSON response. @see http://matrix.org/docs/api/client-server/#!/-rooms/get_room_sync_data)
+                the homeserver JSON response. @see http://matrix.org/docs/api/client-server/#!/-rooms/get_room_sync_data
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
@@ -794,6 +772,28 @@ typedef enum : NSUInteger
                         withLimit:(NSInteger)limit
                           success:(void (^)(MXRoomInitialSync *roomInitialSync))success
                           failure:(void (^)(NSError *error))failure;
+
+
+/**
+ Get the context surrounding an event.
+ 
+ This API returns a number of events that happened just before and after the specified event.
+
+ @param eventId the id of the event to get context around.
+ @param roomId the id of the room to get events from.
+ @param limit the maximum number of messages to return.
+
+ @param success A block object called when the operation succeeds. It provides the model created from
+                the homeserver JSON response.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)contextOfEvent:(NSString*)eventId
+                            inRoom:(NSString*)roomId
+                            limit:(NSUInteger)limit
+                              success:(void (^)(MXEventContext *eventContext))success
+                              failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Room tags operations
@@ -934,68 +934,10 @@ typedef enum : NSUInteger
                  success:(void (^)(MXPresenceResponse *presence))success
                  failure:(void (^)(NSError *error))failure;
 
+
+#pragma mark - Sync
 /**
- Get the presence for all of the user's friends.
-
- @param success A block object called when the operation succeeds. It provides an array of presence events.
- @param failure A block object called when the operation fails.
-
- @return a MXHTTPOperation instance.
- */
-- (MXHTTPOperation*)allUsersPresence:(void (^)(NSArray *userPresenceEvents))success
-                         failure:(void (^)(NSError *error))failure;
-
-
-#pragma mark - Event operations
-/**
- Get this user's current state.
- Get all the current information for all rooms (including messages and state events) and
- presence of the users he has interaction with
- 
- @param limit the maximum number of messages to return.
- 
- @param success A block object called when the operation succeeds.
- @param failure A block object called when the operation fails.
-
- @return a MXHTTPOperation instance.
- */
-- (MXHTTPOperation*)initialSyncWithLimit:(NSInteger)limit
-                             success:(void (^)(MXInitialSyncResponse *initialSyncResponse))success
-                             failure:(void (^)(NSError *error))failure;
-
-/**
- Get the list of public rooms hosted by the home server.
- 
- @param success A block object called when the operation succeeds. rooms is an array of MXPublicRoom objects
- @param failure A block object called when the operation fails.
-
- @return a MXHTTPOperation instance.
- */
-- (MXHTTPOperation*)publicRooms:(void (^)(NSArray *rooms))success
-                    failure:(void (^)(NSError *error))failure;
-
-/**
- Get events from the given token.
- 
- @param token the token to stream from.
- @param serverTimeout the maximum time in ms to wait for an event.
- @param clientTimeout the maximum time in ms the SDK must wait for the server response.
- 
- @param success A block object called when the operation succeeds. It provides a `MXPaginationResponse` object.
- @param failure A block object called when the operation fails.
- 
- @return a MXHTTPOperation instance.
-
- @return a MXHTTPOperation instance.
- */
-- (MXHTTPOperation *)eventsFromToken:(NSString*)token
-                   serverTimeout:(NSUInteger)serverTimeout
-                   clientTimeout:(NSUInteger)clientTimeout
-                         success:(void (^)(MXPaginationResponse *paginatedResponse))success
-                         failure:(void (^)(NSError *error))failure;
-
-/**
- Synchronise the client's state and receive new messages. Based on server sync C-S v2 API.
+ Synchronise the client's state and receive new messages.
  
  Synchronise the client's state with the latest state on the server.
  Client's use this API when they first log in to get an initial snapshot
@@ -1024,7 +966,19 @@ typedef enum : NSUInteger
                            success:(void (^)(MXSyncResponse *syncResponse))success
                            failure:(void (^)(NSError *error))failure;
 
+
 #pragma mark - Directory operations
+/**
+ Get the list of public rooms hosted by the home server.
+
+ @param success A block object called when the operation succeeds. rooms is an array of MXPublicRoom objects
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)publicRooms:(void (^)(NSArray *rooms))success
+                        failure:(void (^)(NSError *error))failure;
+
 /**
  Get the room ID corresponding to this room alias
  
@@ -1207,7 +1161,7 @@ typedef enum : NSUInteger
 
 #pragma mark - read receipts
 /**
- Send a read receipt (available only on C-S v2).
+ Send a read receipt.
  
  @param roomId the id of the room.
  @param eventId the id of the event.

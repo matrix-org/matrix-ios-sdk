@@ -128,6 +128,7 @@ NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
     if (createRoomResponse)
     {
         MXJSONModelSetString(createRoomResponse.roomId, JSONDictionary[@"room_id"]);
+        MXJSONModelSetString(createRoomResponse.roomAlias, JSONDictionary[@"room_alias"]);
     }
 
     return createRoomResponse;
@@ -211,30 +212,27 @@ NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
 
 + (NSDictionary<NSString *,MXRoomTag *> *)roomTagsWithTagEvent:(MXEvent *)event
 {
-    NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
-    [formatter setMaximumFractionDigits:16];
-    [formatter setMinimumFractionDigits:0];
-    [formatter setDecimalSeparator:@"."];
-    [formatter setGroupingSeparator:@""];
-    
     NSMutableDictionary *tags = [NSMutableDictionary dictionary];
     for (NSString *tagName in event.content[@"tags"])
     {
-        NSString *order;
+        NSString *order = event.content[@"tags"][tagName][@"order"];
 
         // Be robust if the server sends an integer tag order
-        if ([event.content[@"tags"][tagName][@"order"] isKindOfClass:NSNumber.class])
+        // Do some cleaning if the order is a number (and do nothing if the order is a string)
+        if ([order isKindOfClass:NSNumber.class])
         {
-            NSLog(@"[MXRoomTag] Warning: the room tag order is an integer value not a string in this event: %@", event);
+            NSLog(@"[MXRoomTag] Warning: the room tag order is an number value not a string in this event: %@", event);
+
+            NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
+            [formatter setMaximumFractionDigits:16];
+            [formatter setMinimumFractionDigits:0];
+            [formatter setDecimalSeparator:@"."];
+            [formatter setGroupingSeparator:@""];
+
             order = [formatter stringFromNumber:event.content[@"tags"][tagName][@"order"]];
-        }
-        else
-        {
-            order = event.content[@"tags"][tagName][@"order"];
-            
+
             if (order)
             {
-                // Do some cleaning if the order is a number (and do nothing if the order is a string)
                 NSNumber *value = [formatter numberFromString:order];
                 if (!value)
                 {
@@ -243,7 +241,7 @@ NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
                     value = [formatter numberFromString:order];
                     [formatter setDecimalSeparator:@"."];
                 }
-                
+
                 if (value)
                 {
                     // remove trailing 0
@@ -572,6 +570,31 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 @end
 
 
+#pragma mark - Context
+#pragma mark -
+/**
+ `MXEventContext` represents to the response to the /context request.
+ */
+@implementation MXEventContext
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXEventContext *eventContext = [[MXEventContext alloc] init];
+    if (eventContext)
+    {
+        MXJSONModelSetMXJSONModel(eventContext.event, MXEvent, JSONDictionary[@"event"]);
+        MXJSONModelSetString(eventContext.start, JSONDictionary[@"start"]);
+        MXJSONModelSetMXJSONModelArray(eventContext.eventsBefore, MXEvent, JSONDictionary[@"events_before"]);
+        MXJSONModelSetMXJSONModelArray(eventContext.eventsAfter, MXEvent, JSONDictionary[@"events_after"]);
+        MXJSONModelSetString(eventContext.end, JSONDictionary[@"end"]);
+        MXJSONModelSetMXJSONModelArray(eventContext.state, MXEvent, JSONDictionary[@"state"]);
+    }
+
+    return eventContext;
+}
+@end
+
+
 #pragma mark - Search
 #pragma mark -
 
@@ -735,7 +758,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 @end
 
 
-#pragma mark - Server sync v1 response
+#pragma mark - Server sync
 #pragma mark -
 
 @implementation MXRoomInitialSync
@@ -761,28 +784,6 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 }
 
 @end
-
-@implementation MXInitialSyncResponse
-
-+ (id)modelFromJSON:(NSDictionary *)JSONDictionary
-{
-    MXInitialSyncResponse *initialSyncResponse = [[MXInitialSyncResponse alloc] init];
-    if (initialSyncResponse)
-    {
-        MXJSONModelSetMXJSONModelArray(initialSyncResponse.rooms, MXRoomInitialSync, JSONDictionary[@"rooms"]);
-        MXJSONModelSetMXJSONModelArray(initialSyncResponse.presence, MXEvent, JSONDictionary[@"presence"]);
-        MXJSONModelSetMXJSONModelArray(initialSyncResponse.receipts, MXEvent, JSONDictionary[@"receipts"]);
-        MXJSONModelSetString(initialSyncResponse.end, JSONDictionary[@"end"]);
-    }
-
-    return initialSyncResponse;
-}
-
-@end
-
-
-#pragma mark - Server sync v2 response
-#pragma mark -
 
 @implementation MXRoomSyncState
 
@@ -856,6 +857,21 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 
 @end
 
+@implementation MXRoomSyncUnreadNotifications
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXRoomSyncUnreadNotifications *roomSyncUnreadNotifications = [[MXRoomSyncUnreadNotifications alloc] init];
+    if (roomSyncUnreadNotifications)
+    {
+        MXJSONModelSetUInteger(roomSyncUnreadNotifications.notificationCount, JSONDictionary[@"notification_count"]);
+        MXJSONModelSetUInteger(roomSyncUnreadNotifications.highlightCount, JSONDictionary[@"highlight_count"]);
+    }
+    return roomSyncUnreadNotifications;
+}
+
+@end
+
 @implementation MXRoomSync
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
@@ -867,6 +883,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         MXJSONModelSetMXJSONModel(roomSync.timeline, MXRoomSyncTimeline, JSONDictionary[@"timeline"]);
         MXJSONModelSetMXJSONModel(roomSync.ephemeral, MXRoomSyncEphemeral, JSONDictionary[@"ephemeral"]);
         MXJSONModelSetMXJSONModel(roomSync.accountData, MXRoomSyncAccountData, JSONDictionary[@"account_data"]);
+        MXJSONModelSetMXJSONModel(roomSync.unreadNotifications, MXRoomSyncUnreadNotifications, JSONDictionary[@"unread_notifications"]);
     }
     return roomSync;
 }
@@ -1005,6 +1022,17 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     }
 
     return callCandidate;
+}
+
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
+    
+    JSONDictionary[@"sdpMid"] = _sdpMid;
+    JSONDictionary[@"sdpMLineIndex"] = @(_sdpMLineIndex);
+    JSONDictionary[@"candidate"] = _candidate;
+    
+    return JSONDictionary;
 }
 
 @end

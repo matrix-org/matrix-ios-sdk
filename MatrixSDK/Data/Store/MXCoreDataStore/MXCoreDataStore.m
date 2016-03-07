@@ -183,7 +183,7 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 
 
 #pragma mark - MXStore
-- (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXEventDirection)direction
+- (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXTimelineDirection)direction
 {
     //NSDate *startDate = [NSDate date];
 
@@ -336,10 +336,10 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     return NO;
 }
 
-- (NSArray*)unreadEvents:(NSString*)roomId withTypeIn:(NSArray*)types
+- (BOOL)hasUnreadEvents:(NSString*)roomId withTypeIn:(NSArray*)types
 {
     // TODO
-    return nil;
+    return NO;
 }
 
 - (BOOL)isPermanent

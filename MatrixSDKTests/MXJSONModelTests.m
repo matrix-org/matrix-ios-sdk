@@ -31,14 +31,6 @@
 
 @end
 
-@interface MXJSONModelTestClass2 : MXJSONModel
-
-@property (nonatomic) NSString *foo;
-
-@end
-@implementation MXJSONModelTestClass2
-
-@end
 
 @interface MXJSONModelTestClass64Bits : MXJSONModel
 
@@ -47,10 +39,23 @@
 @end
 @implementation MXJSONModelTestClass64Bits
 
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXJSONModelTestClass64Bits *o = [[MXJSONModelTestClass64Bits alloc] init];
+    if (o)
+    {
+        MXJSONModelSetUInt64(o.ts, JSONDictionary[@"ts"]);
+    }
+
+    return o;
+}
+
 @end
 
 @interface MXJSONModelTests : XCTestCase
 {
+    MatrixSDKTestsData *matrixSDKTestsData;
+    
     MXHTTPClient *httpClient;
 }
 @end
@@ -61,7 +66,9 @@
 {
     [super setUp];
 
-    httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", kMXTestsHomeServerURL, kMXAPIPrefixPath]
+    matrixSDKTestsData = [[MatrixSDKTestsData alloc] init];
+
+    httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", kMXTestsHomeServerURL, kMXAPIPrefixPathR0]
                      andOnUnrecognizedCertificateBlock:nil];
 }
 
@@ -74,11 +81,11 @@
 
 - (void)testModelFromJSON
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndThePublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndThePublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         // Use publicRooms JSON response to check modelFromJSON
         [httpClient requestWithMethod:@"GET"
-                                 path:@"api/v1/publicRooms"
+                                 path:@"publicRooms"
                            parameters:nil
                               success:^(NSDictionary *JSONResponse)
          {
@@ -100,11 +107,11 @@
 
 - (void)testModelsFromJSON
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndThePublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndThePublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         // Use publicRooms JSON response to check modelFromJSON
         [httpClient requestWithMethod:@"GET"
-                                 path:@"api/v1/publicRooms"
+                                 path:[NSString stringWithFormat:@"%@/publicRooms", kMXAPIPrefixPathR0]
                            parameters:nil
                               success:^(NSDictionary *JSONResponse)
          {
@@ -140,17 +147,6 @@
     XCTAssertNotNil(cleanDict[@"John"], @"JSON null value must be removed. Found: %@", cleanDict[@"John"]);
     XCTAssertNil(cleanDict[@"toons"][@"Pluto"], @"JSON null value must be removed. Found: %@", cleanDict[@"toons"][@"Pluto"]);
     XCTAssert(((NSDictionary*)cleanDict[@"dict1"][@"dict2"]).count == 0, @"JSON null value must be removed. Found: %@", cleanDict[@"dict1"][@"dict2"]);
-}
-
-- (void)testNullValue
-{
-    NSDictionary *JSONDict = @{
-                               @"foo" : [NSNull null]
-                               };
-    
-    MXJSONModelTestClass2 *model = [MXJSONModelTestClass2 modelFromJSON:JSONDict];
-    
-    XCTAssertNil(model.foo, @"JSON null value must be converted to nil. Found: %@", model.foo);
 }
 
 - (void)test64BitsValue

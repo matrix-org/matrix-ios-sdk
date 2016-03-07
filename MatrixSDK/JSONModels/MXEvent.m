@@ -96,7 +96,6 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
         MXJSONModelSetString(event.type, JSONDictionary[@"type"]);
         MXJSONModelSetString(event.roomId, JSONDictionary[@"room_id"]);
         MXJSONModelSetString(event.sender, JSONDictionary[@"sender"]);
-        MXJSONModelSetString(event.userId, JSONDictionary[@"user_id"]);
         MXJSONModelSetDictionary(event.content, JSONDictionary[@"content"]);
         MXJSONModelSetString(event.stateKey, JSONDictionary[@"state_key"]);
         MXJSONModelSetUInt64(event.originServerTs, JSONDictionary[@"origin_server_ts"]);
@@ -154,11 +153,6 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
             self.sender = self.content[@"user_id"];
         }
     }
-    else if (nil == self.sender)
-    {
-        // Catch up the legacy field user_id (deprecated in v2)
-        self.sender = self.userId;
-    }
 
     // Clean JSON data by removing all null values
     _content = [MXJSONModel removeNullValuesInJSON:_content];
@@ -206,7 +200,6 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
         JSONDictionary[@"type"] = _type;
         JSONDictionary[@"room_id"] = _roomId;
         JSONDictionary[@"sender"] = _sender;
-        JSONDictionary[@"user_id"] = _userId;
         JSONDictionary[@"content"] = _content;
         JSONDictionary[@"state_key"] = _stateKey;
         JSONDictionary[@"origin_server_ts"] = @(_originServerTs);

@@ -23,6 +23,8 @@
 
 @interface MXEventTests : XCTestCase
 {
+    MatrixSDKTestsData *matrixSDKTestsData;
+
     MXSession *mxSession;
 }
 
@@ -30,15 +32,18 @@
 
 @implementation MXEventTests
 
-- (void)setUp {
+- (void)setUp
+{
     [super setUp];
-    // Put setup code here. This method is called before the invocation of each test method in the class.
+
+    matrixSDKTestsData =[[MatrixSDKTestsData alloc] init];
 }
 
-- (void)tearDown {
+- (void)tearDown
+{
     if (mxSession)
     {
-        [[MatrixSDKTestsData sharedData] closeMXSession:mxSession];
+        [matrixSDKTestsData closeMXSession:mxSession];
         mxSession = nil;
     }
     [super tearDown];
@@ -46,9 +51,9 @@
 
 - (void)doTestWithMXEvents:(void (^)(MXRestClient *bobRestClient, NSString* roomId, NSArray *events, XCTestExpectation *expectation))readyToTest
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
-        [bobRestClient messagesForRoom:roomId from:nil to:nil limit:100 success:^(MXPaginationResponse *paginatedResponse) {
+        [bobRestClient messagesForRoom:roomId from:nil direction:MXTimelineDirectionBackwards limit:100 success:^(MXPaginationResponse *paginatedResponse) {
 
             NSAssert(0 < paginatedResponse.chunk.count, @"Cannot set up intial test conditions");
 
@@ -91,7 +96,7 @@
 
 - (void)testIsState
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
@@ -106,15 +111,15 @@
             
             
             __block NSUInteger eventCount = 0;
-            [room listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+            [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                 
                 eventCount++;
                 XCTAssertFalse(event.isState, "Room messages are not states. message: %@", event);
                 
             }];
             
-            [room resetBackState];
-            [room paginateBackMessages:100 complete:^() {
+            [room.liveTimeline resetPagination];
+            [room.liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
                 
                 XCTAssertGreaterThan(eventCount, 0, "We should have received events in registerEventListenerForTypes");
                 

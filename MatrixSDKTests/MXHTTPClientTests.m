@@ -43,13 +43,13 @@
 
 - (void)testMainThread {
     
-    MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", kMXTestsHomeServerURL, kMXAPIPrefixPath]
+    MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", kMXTestsHomeServerURL, kMXAPIPrefixPathR0]
                                    andOnUnrecognizedCertificateBlock:nil];
 
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
     
     [httpClient requestWithMethod:@"GET"
-                             path:@"api/v1/publicRooms"
+                             path:@"publicRooms"
                        parameters:nil
                           success:^(NSDictionary *JSONResponse) {
                               XCTAssertTrue([NSThread isMainThread], @"The block callback must be called from the main thread");
@@ -66,13 +66,13 @@
 
 - (void)testMXError {
     
-    MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", kMXTestsHomeServerURL, kMXAPIPrefixPath]
+    MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", kMXTestsHomeServerURL, kMXAPIPrefixPathR0]
                                    andOnUnrecognizedCertificateBlock:nil];
     
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
     
     [httpClient requestWithMethod:@"GET"
-                             path:@"api/v1/notExistingAPI"
+                             path:@"notExistingAPI"
                        parameters:nil
                           success:^(NSDictionary *JSONResponse) {
                               XCTFail(@"The request must fail as the API path does not exist");

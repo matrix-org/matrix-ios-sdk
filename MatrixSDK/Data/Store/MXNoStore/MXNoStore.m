@@ -57,7 +57,7 @@
     onComplete();
 }
 
-- (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXEventDirection)direction
+- (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXTimelineDirection)direction
 {
     // Store nothing in the MXNoStore except the last message
     if (nil == lastMessages[roomId])
@@ -65,7 +65,7 @@
         // If there not yet a last message, store anything
         lastMessages[roomId] = event;
     }
-    else if (MXEventDirectionForwards == direction)
+    else if (MXTimelineDirectionForwards == direction)
     {
         // Else keep always the latest one
         lastMessages[roomId] = event;
@@ -211,26 +211,14 @@
     return nil;
 }
 
-/**
- * Store the receipt for an user in a room
- * @param receipt The event
- * @param roomId The roomId
- * @return true if the receipt has been stored
- */
 - (BOOL)storeReceipt:(MXReceiptData*)receipt roomId:(NSString*)roomId
 {
     return NO;
 }
 
-/**
- * Provides the unread events list.
- * @param roomId the room id.
- * @param types an array of event types strings (MXEventTypeString).
- * @return the unread events list.
- */
-- (NSArray*)unreadEvents:(NSString*)roomId withTypeIn:(NSArray*)types
+- (BOOL)hasUnreadEvents:(NSString*)roomId withTypeIn:(NSArray*)types
 {
-    return nil;
+    return NO;
 }
 
 

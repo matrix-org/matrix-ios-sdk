@@ -29,6 +29,8 @@
 
 @interface MXRoomStateTests : XCTestCase
 {
+    MatrixSDKTestsData *matrixSDKTestsData;
+
     MXSession *mxSession;
 }
 @end
@@ -38,13 +40,15 @@
 - (void)setUp
 {
     [super setUp];
+
+    matrixSDKTestsData = [[MatrixSDKTestsData alloc] init];
 }
 
 - (void)tearDown
 {
     if (mxSession)
     {
-        [[MatrixSDKTestsData sharedData] closeMXSession:mxSession];
+        [matrixSDKTestsData closeMXSession:mxSession];
         mxSession = nil;
     }
     [super tearDown];
@@ -52,7 +56,7 @@
 
 - (void)testIsPublic
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
 
         mxSession = mxSession2;
 
@@ -64,7 +68,7 @@
 
 - (void)testIsPublicForAPrivateRoom
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
         mxSession = mxSession2;
 
@@ -76,7 +80,7 @@
 
 - (void)testRoomTopicProvidedByInitialSync
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
         
         MXRestClient *bobRestClient2 = bobRestClient;
         
@@ -107,7 +111,7 @@
 
 - (void)testRoomTopicLive
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
         
         MXRestClient *bobRestClient2 = bobRestClient;
         
@@ -119,7 +123,7 @@
             XCTAssertNil(room.state.topic, @"There must be no room topic yet. Found: %@", room.state.topic);
             
             // Listen to live event. We should receive only one: a m.room.topic event
-            [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                 
                 XCTAssertEqual(event.eventType, MXEventTypeRoomTopic);
                 
@@ -149,7 +153,7 @@
 
 - (void)testRoomAvatarProvidedByInitialSync
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
 
         MXRestClient *bobRestClient2 = bobRestClient;
 
@@ -180,7 +184,7 @@
 
 - (void)testRoomAvatarLive
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
 
         MXRestClient *bobRestClient2 = bobRestClient;
 
@@ -192,7 +196,7 @@
             XCTAssertNil(room.state.avatar, @"There must be no room avatar yet. Found: %@", room.state.avatar);
 
             // Listen to live event. We should receive only one: a m.room.avatar event
-            [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                 XCTAssertEqual(event.eventType, MXEventTypeRoomAvatar);
 
@@ -221,7 +225,7 @@
 
 - (void)testRoomNameProvidedByInitialSync
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
         
         MXRestClient *bobRestClient2 = bobRestClient;
         
@@ -252,7 +256,7 @@
 
 - (void)testRoomNameLive
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
         
         MXRestClient *bobRestClient2 = bobRestClient;
         
@@ -264,7 +268,7 @@
             XCTAssertNil(room.state.name, @"There must be no room name yet. Found: %@", room.state.name);
             
             // Listen to live event. We should receive only one: a m.room.name event
-            [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                 
                 XCTAssertEqual(event.eventType, MXEventTypeRoomName);
                 
@@ -294,7 +298,7 @@
 
 - (void)testMembers
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
         
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         [mxSession start:^{
@@ -325,13 +329,11 @@
 
 - (void)testMemberName
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
         mxSession = mxSession2;
 
-        MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-        
-        NSString *bobUserId = sharedData.bobCredentials.userId;
+        NSString *bobUserId = matrixSDKTestsData.bobCredentials.userId;
         NSString *bobMemberName = [room.state  memberName:bobUserId];
         
         XCTAssertNotNil(bobMemberName);
@@ -345,7 +347,7 @@
 
 - (void)testStateEvents
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
         mxSession = mxSession2;
 
@@ -358,7 +360,7 @@
 
 - (void)testAliases
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
         mxSession = mxSession2;
 
@@ -367,7 +369,7 @@
         
         NSString *alias = room.state.aliases[0];
         
-        XCTAssertTrue([alias hasPrefix:@"#mxPublic:"]);
+        XCTAssertTrue([alias hasPrefix:@"#mxPublic"]);
         
         [expectation fulfill];
     }];
@@ -376,12 +378,12 @@
 // Test the room display name formatting: "roomName (roomAlias)"
 - (void)testDisplayName1
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
         mxSession = mxSession2;
 
         XCTAssertNotNil(room.state.displayname);
-        XCTAssertTrue([room.state.displayname hasPrefix:@"MX Public Room test (#mxPublic:"], @"We must retrieve the #mxPublic room settings");
+        XCTAssertTrue([room.state.displayname hasPrefix:@"MX Public Room test (#mxPublic"], @"We must retrieve the #mxPublic room settings");
         
         [expectation fulfill];
     }];
@@ -390,7 +392,7 @@
 // Test the room display name formatting: "userID" (self chat)
 - (void)testDisplayName2
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
         mxSession = mxSession2;
         
@@ -425,13 +427,11 @@
 
             [bobRestClient setRoomTopic:roomId topic:@"We test room invitation here" success:^{
 
-                MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-
-                [sharedData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+                [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
 
                     if (inviteAlice)
                     {
-                        [bobRestClient2 inviteUser:sharedData.aliceCredentials.userId toRoom:roomId success:^{
+                        [bobRestClient2 inviteUser:matrixSDKTestsData.aliceCredentials.userId toRoom:roomId success:^{
 
                             [bobRestClient2 sendTextMessageToRoom:roomId text:@"I wait for Alice" success:^(NSString *eventId) {
 
@@ -466,13 +466,11 @@
 
 - (void)testInviteByOtherInInitialSync
 {
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-    
-    [sharedData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         [self createInviteByUserScenario:bobRestClient inRoom:roomId inviteAlice:YES onComplete:^{
             
-            [sharedData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+            [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
                 
                 mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
                 
@@ -515,11 +513,9 @@
 
 - (void)testInviteByOtherInLive
 {
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-    
-    [sharedData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [sharedData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+        [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
             
             mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
             
@@ -527,31 +523,34 @@
                 
                 __block MXRoom *newRoom;
                 
-                [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
+                [mxSession listenToEvents:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
                     
                     if ([event.roomId isEqualToString:roomId])
                     {
                         newRoom = [mxSession roomWithRoomId:roomId];
                         
                         XCTAssertNotNil(newRoom);
-                        
-                        XCTAssertEqual(newRoom.state.membership, MXMembershipInvite);
 
-                        XCTAssertEqualObjects(newRoom.state.name, @"Invite test");
-                        
-                        // The room must have only one member: Alice who has been invited by Bob.
-                        // While Alice does not join the room, we cannot get more information
-                        XCTAssertEqual(newRoom.state.members.count, 1);
-                        
-                        MXRoomMember *alice = [newRoom.state memberWithUserId:aliceRestClient.credentials.userId];
-                        XCTAssertNotNil(alice);
-                        XCTAssertEqual(alice.membership, MXMembershipInvite);
-                        XCTAssert([alice.originUserId isEqualToString:bobRestClient.credentials.userId], @"Wrong inviter: %@", alice.originUserId);
+                        if (newRoom.state.membership != MXMembershipUnknown)
+                        {
+                            XCTAssertEqual(newRoom.state.membership, MXMembershipInvite);
 
-                        // The last message should be an invite m.room.member
-                        MXEvent *lastMessage = [newRoom lastMessageWithTypeIn:nil];
-                        XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMember, @"The last message should be an invite m.room.member");
-                        XCTAssertLessThan([[NSDate date] timeIntervalSince1970] * 1000 - lastMessage.originServerTs, 3000);
+                            XCTAssertEqualObjects(newRoom.state.name, @"Invite test");
+
+                            // The room must have only one member: Alice who has been invited by Bob.
+                            // While Alice does not join the room, we cannot get more information
+                            XCTAssertEqual(newRoom.state.members.count, 1);
+
+                            MXRoomMember *alice = [newRoom.state memberWithUserId:aliceRestClient.credentials.userId];
+                            XCTAssertNotNil(alice);
+                            XCTAssertEqual(alice.membership, MXMembershipInvite);
+                            XCTAssert([alice.originUserId isEqualToString:bobRestClient.credentials.userId], @"Wrong inviter: %@", alice.originUserId);
+
+                            // The last message should be an invite m.room.member
+                            MXEvent *lastMessage = [newRoom lastMessageWithTypeIn:nil];
+                            XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMember, @"The last message should be an invite m.room.member");
+                            XCTAssertLessThan([[NSDate date] timeIntervalSince1970] * 1000 - lastMessage.originServerTs, 3000);
+                        }
                     }
                     
                 }];
@@ -577,13 +576,11 @@
 
 - (void)testMXRoomJoin
 {
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-    
-    [sharedData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         [self createInviteByUserScenario:bobRestClient inRoom:roomId inviteAlice:YES onComplete:^{
             
-            [sharedData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+            [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
                 
                 mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
                 
@@ -591,8 +588,8 @@
                     
                     MXRoom *newRoom = [mxSession roomWithRoomId:roomId];
                     
-                    [newRoom listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
-                        if (MXEventDirectionForwards == event)
+                    [newRoom.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                        if (MXTimelineDirectionForwards == event)
                         {
                             // We should receive only join events in live
                             XCTAssertEqual(event.eventType, MXEventTypeRoomMember);
@@ -602,9 +599,9 @@
                         }
                     }];
                     
-                    [mxSession listenToEvents:^(MXEvent *event, MXEventDirection direction, id customObject) {
+                    [mxSession listenToEvents:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
                         // Except presence, we should receive only join events in live
-                        if (MXEventDirectionForwards == event && MXEventTypePresence != event.eventType)
+                        if (MXTimelineDirectionForwards == event && MXEventTypePresence != event.eventType)
                         {
                             XCTAssertEqual(event.eventType, MXEventTypeRoomMember);
                             
@@ -645,13 +642,11 @@
 
 - (void)testMXSessionJoinOnPublicRoom
 {
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-    
-    [sharedData doMXRestClientTestWithBobAndAPublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndAPublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         [self createInviteByUserScenario:bobRestClient inRoom:roomId inviteAlice:NO onComplete:^{
             
-            [sharedData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+            [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
                 
                 mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
                 
@@ -698,7 +693,7 @@
 
 - (void)testPowerLevels
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
@@ -759,16 +754,16 @@
 // Test for https://matrix.org/jira/browse/SYIOS-105
 - (void)testRoomStateWhenARoomHasBeenJoinedOnAnotherMatrixClient
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
         [mxSession start:^{
 
             __block NSString *newRoomId;
             NSMutableArray *receivedMessages = [NSMutableArray array];
-            [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
+            [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
 
-                if (MXEventDirectionForwards == direction && [event.roomId isEqualToString:newRoomId])
+                if (MXTimelineDirectionForwards == direction && [event.roomId isEqualToString:newRoomId])
                 {
                     [receivedMessages addObject:event];
                 }
@@ -786,7 +781,7 @@
             }];
 
             // Create a conversation on another MXRestClient. For the current `mxSession`, this other MXRestClient behaves like another device.
-            [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndAliceInARoom:nil readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+            [matrixSDKTestsData doMXRestClientTestWithBobAndAliceInARoom:nil readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
                 newRoomId = roomId;
 
@@ -810,7 +805,7 @@
 
 // Test for https://matrix.org/jira/browse/SYIOS-105 using notifications
 - (void)testRoomStateWhenARoomHasBeenJoinedOnAnotherMatrixClientAndNotifications {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
         [mxSession start:^{
@@ -848,7 +843,7 @@
             }];
 
             // Create a conversation on another MXRestClient. For the current `mxSession`, this other MXRestClient behaves like another device.
-            [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndAliceInARoom:nil readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+            [matrixSDKTestsData doMXRestClientTestWithBobAndAliceInARoom:nil readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
             }];
             
         } failure:^(NSError *error) {

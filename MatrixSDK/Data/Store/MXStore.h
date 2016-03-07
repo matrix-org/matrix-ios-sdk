@@ -16,6 +16,7 @@
 
 #import "MXJSONModels.h"
 #import "MXEvent.h"
+#import "MXEventTimeline.h"
 #import "MXReceiptData.h"
 #import "MXRoomAccountData.h"
 
@@ -49,7 +50,7 @@
  @param event the MXEvent object to store.
  @param direction the origin of the event. Live or past events.
  */
-- (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXEventDirection)direction;
+- (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXTimelineDirection)direction;
 
 /**
  Replace a room event (in case of redaction for example).
@@ -189,12 +190,12 @@
 - (BOOL)storeReceipt:(MXReceiptData*)receipt roomId:(NSString*)roomId;
 
 /**
- * Provides the unread events list.
+ * Check whether a room has some unread events.
  * @param roomId the room id.
  * @param types an array of event types strings (MXEventTypeString).
- * @return the unread events list.
+ * @return YES if at least one stored event has its type listed in provided array.
  */
-- (NSArray*)unreadEvents:(NSString*)roomId withTypeIn:(NSArray*)types;
+- (BOOL)hasUnreadEvents:(NSString*)roomId withTypeIn:(NSArray*)types;
 
 /**
  Indicate if the MXStore implementation stores data permanently.

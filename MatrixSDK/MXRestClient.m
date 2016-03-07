@@ -24,7 +24,8 @@
 /**
  Prefix used in path of home server API requests.
  */
-NSString *const kMXAPIPrefixPath = @"/_matrix/client";
+NSString *const kMXAPIPrefixPathR0 = @"/_matrix/client/r0";
+NSString *const kMXAPIPrefixPathUnstable = @"/_matrix/client/unstable";
 
 /**
  Prefix used in path of identity server API requests.
@@ -54,9 +55,6 @@ NSString *const kMX3PIDMediumMSISDN = @"msisdn";
  MXRestClient error domain
  */
 NSString *const kMXRestClientErrorDomain = @"kMXRestClientErrorDomain";
-
-// Increase this preferred API version when new version is available
-static MXRestClientAPIVersion _currentPreferredAPIVersion = MXRestClientAPIVersion2;
 
 /**
  Authentication flow: register or login
@@ -91,12 +89,7 @@ MXAuthAction;
 @end
 
 @implementation MXRestClient
-@synthesize homeserver, homeserverSuffix, credentials, preferredAPIVersion;
-
-+ (void)registerPreferredAPIVersion:(MXRestClientAPIVersion)inPreferredAPIVersion
-{
-    _currentPreferredAPIVersion = inPreferredAPIVersion;
-}
+@synthesize homeserver, homeserverSuffix, credentials, apiPathPrefix;
 
 -(id)initWithHomeServer:(NSString *)inHomeserver andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
 {
@@ -104,9 +97,9 @@ MXAuthAction;
     if (self)
     {
         homeserver = inHomeserver;
-        preferredAPIVersion = _currentPreferredAPIVersion;
+        apiPathPrefix = kMXAPIPrefixPathR0;
         
-        httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", homeserver, kMXAPIPrefixPath]
+        httpClient = [[MXHTTPClient alloc] initWithBaseURL:homeserver
                                                accessToken:nil
                          andOnUnrecognizedCertificateBlock:onUnrecognizedCertBlock];
         
@@ -124,10 +117,10 @@ MXAuthAction;
     if (self)
     {
         homeserver = inCredentials.homeServer;
-        preferredAPIVersion = _currentPreferredAPIVersion;
+         apiPathPrefix = kMXAPIPrefixPathR0;
         self.credentials = inCredentials;
         
-        httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", homeserver, kMXAPIPrefixPath]
+        httpClient = [[MXHTTPClient alloc] initWithBaseURL:homeserver
                                                accessToken:credentials.accessToken
                          andOnUnrecognizedCertificateBlock:onUnrecognizedCertBlock];
         
@@ -248,7 +241,7 @@ MXAuthAction;
                                  };
     
     return [httpClient requestWithMethod:@"POST"
-                                    path:@"v2_alpha/account/password"
+                                    path:[NSString stringWithFormat:@"%@/account/password", apiPathPrefix]
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
                                      success();
@@ -271,20 +264,12 @@ MXAuthAction;
  */
 - (NSString*)authActionPath:(MXAuthAction)authAction
 {
-    NSString *authActionPath = @"api/v1/login";
+    NSString *authActionPath = @"login";
     if (MXAuthActionRegister == authAction)
     {
-        // TODO GFO server register v2 is not available yet (use C-S v1 by default)
-//        if (preferredAPIVersion == MXRestClientAPIVersion2)
-//        {
-//            authActionPath = @"v2_alpha/register";
-//        }
-//        else
-        {
-            authActionPath = @"api/v1/register";
-        }
+        authActionPath = @"register";
     }
-    return authActionPath;
+    return [NSString stringWithFormat:@"%@/%@", apiPathPrefix, authActionPath];
 }
 
 - (MXHTTPOperation*)getRegisterOrLoginFlow:(MXAuthAction)authAction
@@ -293,15 +278,15 @@ MXAuthAction;
     NSString *httpMethod = @"GET";
     NSDictionary *parameters = nil;
     
-    // TODO GFO server register v2 is not available yet (use C-S v1 by default)
-//    if ((MXAuthActionRegister == authAction) && (preferredAPIVersion == MXRestClientAPIVersion2))
-//    {
-//        // C-S API v2: use POST with no params to get the login mechanism to use when registering
-//        // The request will failed with Unauthorized status code, but the login mechanism will be available in response data.
-//        httpMethod = @"POST";
-//        parameters = @{};
-//    }
-    
+
+    if (MXAuthActionRegister == authAction)
+    {
+        // For registration, use POST with no params to get the login mechanism to use
+        // The request will failed with Unauthorized status code, but the login mechanism will be available in response data.
+        httpMethod = @"POST";
+        parameters = @{};
+    }
+
     return [httpClient requestWithMethod:httpMethod
                                     path:[self authActionPath:authAction]
                               parameters:parameters
@@ -361,11 +346,29 @@ MXAuthAction;
 - (MXHTTPOperation*)registerOrLoginWithUser:(MXAuthAction)authAction user:(NSString *)user andPassword:(NSString *)password
                                     success:(void (^)(MXCredentials *))success failure:(void (^)(NSError *))failure
 {
-    NSDictionary *parameters = @{
-                                 @"type": kMXLoginFlowTypePassword,
-                                 @"user": user,
-                                 @"password": password
-                                 };
+    // Is it an email or a username?
+    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"^\\S+@\\S+\\.\\S+$" options:NSRegularExpressionCaseInsensitive error:nil];
+    BOOL isEmailAddress = (nil != [regex firstMatchInString:user options:0 range:NSMakeRange(0, user.length)]);
+    
+    NSDictionary *parameters;
+    
+    if (isEmailAddress)
+    {
+        parameters = @{
+                       @"type": kMXLoginFlowTypePassword,
+                       @"medium": @"email",
+                       @"address": user,
+                       @"password": password
+                       };
+    }
+    else
+    {
+        parameters = @{
+                      @"type": kMXLoginFlowTypePassword,
+                      @"user": user,
+                      @"password": password
+                      };
+    }
     
     return [self registerOrLogin:authAction
                       parameters:parameters
@@ -433,7 +436,7 @@ MXAuthAction;
                                  };
     
     return [httpClient requestWithMethod:@"POST"
-                                    path:@"api/v1/pushers/set"
+                                    path:[NSString stringWithFormat:@"%@/pushers/set", apiPathPrefix]
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
                                      success();
@@ -446,7 +449,7 @@ MXAuthAction;
 - (MXHTTPOperation *)pushRules:(void (^)(MXPushRulesResponse *pushRules))success failure:(void (^)(NSError *))failure
 {
     return [httpClient requestWithMethod:@"GET"
-                                    path:@"api/v1/pushrules/"
+                                    path:[NSString stringWithFormat:@"%@/pushrules/", apiPathPrefix]
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
                                      @autoreleasepool
@@ -492,7 +495,7 @@ MXAuthAction;
     NSString *enabled = enable ? @"true": @"false";
     
     return [httpClient requestWithMethod:@"PUT"
-                                    path:[NSString stringWithFormat:@"api/v1/pushrules/%@/%@/%@/enabled", scope, kindString, ruleId]
+                                    path:[NSString stringWithFormat:@"%@/pushrules/%@/%@/%@/enabled", apiPathPrefix, scope, kindString, ruleId]
                               parameters:nil
                                     data:[enabled dataUsingEncoding:NSUTF8StringEncoding]
                                  headers:headers
@@ -539,7 +542,7 @@ MXAuthAction;
     }
     
     return [httpClient requestWithMethod:@"DELETE"
-                                    path:[NSString stringWithFormat:@"api/v1/pushrules/%@/%@/%@", scope, kindString, ruleId]
+                                    path:[NSString stringWithFormat:@"%@/pushrules/%@/%@/%@", apiPathPrefix, scope, kindString, ruleId]
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
                                      if (success)
@@ -597,7 +600,7 @@ MXAuthAction;
     if (content)
     {
         return [httpClient requestWithMethod:@"PUT"
-                                        path:[NSString stringWithFormat:@"api/v1/pushrules/%@/%@/%@", scope, kindString, ruleId]
+                                        path:[NSString stringWithFormat:@"%@/pushrules/%@/%@/%@", apiPathPrefix, scope, kindString, ruleId]
                                   parameters:content
                                      success:^(NSDictionary *JSONResponse) {
                                          if (success)
@@ -630,7 +633,7 @@ MXAuthAction;
                             failure:(void (^)(NSError *error))failure
 {
     // Prepare the path by adding a random transaction id (This id is used to prevent duplicated event).
-    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/send/%@/%tu", roomId, eventTypeString, arc4random_uniform(INT32_MAX)];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/send/%@/%tu", apiPathPrefix, roomId, eventTypeString, arc4random_uniform(INT32_MAX)];
     
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
@@ -668,7 +671,7 @@ MXAuthAction;
                                  success:(void (^)(NSString *eventId))success
                                  failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/state/%@", roomId, eventTypeString];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state/%@", apiPathPrefix, roomId, eventTypeString];
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:content
@@ -730,7 +733,7 @@ MXAuthAction;
                                 success:(void (^)())success
                                 failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/%@", roomId, membership];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/%@", apiPathPrefix, roomId, membership];
     
     // A body is required even if empty
     if (nil == parameters)
@@ -769,7 +772,7 @@ MXAuthAction;
                          success:(void (^)())success
                          failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/state/m.room.topic", roomId];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state/m.room.topic", apiPathPrefix, roomId];
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:@{
@@ -802,7 +805,7 @@ MXAuthAction;
                         success:(void (^)(NSString *topic))success
                         failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/state/m.room.topic", roomId];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state/m.room.topic", apiPathPrefix, roomId];
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
@@ -837,7 +840,7 @@ MXAuthAction;
                            success:(void (^)())success
                            failure:(void (^)(NSError *))failure
 {
-    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/state/m.room.avatar", roomId];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state/m.room.avatar", apiPathPrefix, roomId];
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:@{
@@ -870,7 +873,7 @@ MXAuthAction;
                           success:(void (^)(NSString *))success
                           failure:(void (^)(NSError *))failure
 {
-    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/state/m.room.avatar", roomId];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state/m.room.avatar", apiPathPrefix, roomId];
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
@@ -904,7 +907,7 @@ MXAuthAction;
                         success:(void (^)())success
                         failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/state/m.room.name", roomId];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state/m.room.name", apiPathPrefix, roomId];
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:@{
@@ -937,7 +940,7 @@ MXAuthAction;
                        success:(void (^)(NSString *name))success
                        failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/state/m.room.name", roomId];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state/m.room.name", apiPathPrefix, roomId];
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
@@ -971,7 +974,7 @@ MXAuthAction;
                      failure:(void (^)(NSError *error))failure
 {
     // Characters in a room alias need to be escaped in the URL
-    NSString *path = [NSString stringWithFormat:@"api/v1/join/%@", [roomIdOrAlias stringByAddingPercentEscapesUsingEncoding:NSASCIIStringEncoding]];
+    NSString *path = [NSString stringWithFormat:@"%@/join/%@", apiPathPrefix, [roomIdOrAlias stringByAddingPercentEscapesUsingEncoding:NSASCIIStringEncoding]];
     return [httpClient requestWithMethod:@"POST"
                                     path:path
                               parameters:nil
@@ -1054,7 +1057,7 @@ MXAuthAction;
         return nil;
     }
 
-    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/invite", roomId];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/invite", apiPathPrefix, roomId];
 
     // This request must not have the protocol part
     NSString *identityServer = _identityServer;
@@ -1101,7 +1104,7 @@ MXAuthAction;
                      success:(void (^)())success
                      failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/state/m.room.member/%@", roomId, userId];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state/m.room.member/%@", apiPathPrefix, roomId, userId];
     
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     parameters[@"membership"] = @"leave";
@@ -1194,7 +1197,7 @@ MXAuthAction;
     }
     
     return [httpClient requestWithMethod:@"POST"
-                                    path:@"api/v1/createRoom"
+                                    path:[NSString stringWithFormat:@"%@/createRoom", apiPathPrefix]
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
                                      if (success)
@@ -1223,31 +1226,30 @@ MXAuthAction;
 
 - (MXHTTPOperation*)messagesForRoom:(NSString*)roomId
                                from:(NSString*)from
-                                 to:(NSString*)to
+                          direction:(MXTimelineDirection)direction
                               limit:(NSUInteger)limit
                             success:(void (^)(MXPaginationResponse *paginatedResponse))success
                             failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/messages", roomId];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/messages", apiPathPrefix, roomId];
     
     // All query parameters are optional. Fill the request parameters on demand
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
-    
-    if (from)
+
+    parameters[@"from"] = from;
+
+    if (direction == MXTimelineDirectionForwards)
     {
-        parameters[@"from"] = from;
+        parameters[@"dir"] = @"f";
     }
-    if (to)
+    else
     {
-        parameters[@"to"] = to;
+        parameters[@"dir"] = @"b";
     }
     if (-1 != limit)
     {
         parameters[@"limit"] = [NSNumber numberWithUnsignedInteger:limit];
     }
-    
-    // List messages in backward order to make the API answer
-    parameters[@"dir"] = @"b";
     
     return [httpClient requestWithMethod:@"GET"
                                     path:path
@@ -1281,7 +1283,7 @@ MXAuthAction;
                           success:(void (^)(NSArray *roomMemberEvents))success
                           failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/members", roomId];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/members", apiPathPrefix, roomId];
     
     return [httpClient requestWithMethod:@"GET"
                                     path:path
@@ -1321,7 +1323,7 @@ MXAuthAction;
                         success:(void (^)(NSDictionary *JSONData))success
                         failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/state", roomId];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state", apiPathPrefix, roomId];
     
     return [httpClient requestWithMethod:@"GET"
                                     path:path
@@ -1355,7 +1357,7 @@ MXAuthAction;
                                          success:(void (^)())success
                                          failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/typing/%@", roomId, self.credentials.userId];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/typing/%@", apiPathPrefix, roomId, self.credentials.userId];
     
     // Fill the request parameters on demand
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
@@ -1403,7 +1405,7 @@ MXAuthAction;
                         success:(void (^)())success
                         failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/redact/%@", roomId, eventId];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/redact/%@", apiPathPrefix, roomId, eventId];
     
     // All query parameters are optional. Fill the request parameters on demand
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
@@ -1443,7 +1445,7 @@ MXAuthAction;
                               success:(void (^)(MXRoomInitialSync *roomInitialSync))success
                               failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"api/v1/rooms/%@/initialSync", roomId];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/initialSync", apiPathPrefix, roomId];
     
     return [httpClient requestWithMethod:@"GET"
                                     path:path
@@ -1475,13 +1477,51 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation*)contextOfEvent:(NSString*)eventId
+                            inRoom:(NSString*)roomId
+                             limit:(NSUInteger)limit
+                           success:(void (^)(MXEventContext *eventContext))success
+                           failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/context/%@", apiPathPrefix, roomId, eventId];
+
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:@{
+                                           @"limit": [NSNumber numberWithInteger:limit]
+                                           }
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success)
+                                     {
+                                         // Create model from JSON dictionary on the processing queue
+                                         dispatch_async(processingQueue, ^{
+
+                                             MXEventContext *eventContext = [MXEventContext modelFromJSON:JSONResponse];
+
+                                             dispatch_async(dispatch_get_main_queue(), ^{
+
+                                                 success(eventContext);
+
+                                             });
+
+                                         });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                 }];
+}
+
 
 #pragma mark - Room tags operations
 - (MXHTTPOperation*)tagsOfRoom:(NSString*)roomId
                        success:(void (^)(NSArray<MXRoomTag*> *tags))success
                        failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"v2_alpha/user/%@/rooms/%@/tags", credentials.userId, roomId];
+    NSString *path = [NSString stringWithFormat:@"%@/user/%@/rooms/%@/tags", apiPathPrefix, credentials.userId, roomId];
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
@@ -1527,7 +1567,7 @@ MXAuthAction;
         parameters[@"order"] = order;
     }
 
-    NSString *path = [NSString stringWithFormat:@"v2_alpha/user/%@/rooms/%@/tags/%@", credentials.userId, roomId, tag];
+    NSString *path = [NSString stringWithFormat:@"%@/user/%@/rooms/%@/tags/%@", apiPathPrefix, credentials.userId, roomId, tag];
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:parameters
@@ -1559,7 +1599,7 @@ MXAuthAction;
                       success:(void (^)())success
                       failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"v2_alpha/user/%@/rooms/%@/tags/%@", credentials.userId, roomId, tag];
+    NSString *path = [NSString stringWithFormat:@"%@/user/%@/rooms/%@/tags/%@", apiPathPrefix, credentials.userId, roomId, tag];
     return [httpClient requestWithMethod:@"DELETE"
                                     path:path
                               parameters:nil
@@ -1583,7 +1623,7 @@ MXAuthAction;
                            success:(void (^)())success
                            failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"api/v1/profile/%@/displayname", credentials.userId];
+    NSString *path = [NSString stringWithFormat:@"%@/profile/%@/displayname", apiPathPrefix, credentials.userId];
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:@{
@@ -1621,7 +1661,7 @@ MXAuthAction;
         userId = credentials.userId;
     }
     
-    NSString *path = [NSString stringWithFormat:@"api/v1/profile/%@/displayname", userId];
+    NSString *path = [NSString stringWithFormat:@"%@/profile/%@/displayname", apiPathPrefix, userId];
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
@@ -1656,7 +1696,7 @@ MXAuthAction;
                          success:(void (^)())success
                          failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"api/v1/profile/%@/avatar_url", credentials.userId];
+    NSString *path = [NSString stringWithFormat:@"%@/profile/%@/avatar_url", apiPathPrefix, credentials.userId];
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:@{
@@ -1694,7 +1734,7 @@ MXAuthAction;
         userId = credentials.userId;
     }
     
-    NSString *path = [NSString stringWithFormat:@"api/v1/profile/%@/avatar_url", userId];
+    NSString *path = [NSString stringWithFormat:@"%@/profile/%@/avatar_url", apiPathPrefix, userId];
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
@@ -1731,7 +1771,7 @@ MXAuthAction;
                         success:(void (^)())success
                         failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"api/v1/presence/%@/status", credentials.userId];
+    NSString *path = [NSString stringWithFormat:@"%@/presence/%@/status", apiPathPrefix, credentials.userId];
     
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     parameters[@"presence"] = [MXTools presenceString:presence];
@@ -1775,7 +1815,7 @@ MXAuthAction;
         userId = credentials.userId;
     }
     
-    NSString *path = [NSString stringWithFormat:@"api/v1/presence/%@/status", userId];
+    NSString *path = [NSString stringWithFormat:@"%@/presence/%@/status", apiPathPrefix, userId];
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
@@ -1804,49 +1844,10 @@ MXAuthAction;
                                  }];
 }
 
-- (MXHTTPOperation*)allUsersPresence:(void (^)(NSArray *userPresenceEvents))success
-                             failure:(void (^)(NSError *error))failure
-{
-    // In C-S API v1, the only way to get all user presence is to make
-    // a global initialSync
-    // @TODO: Change it with C-S API v2 new APIs
-    return [httpClient requestWithMethod:@"GET"
-                                    path:@"api/v1/initialSync"
-                              parameters:@{
-                                           @"limit": [NSNumber numberWithInteger:0]
-                                           }
-                                 success:^(NSDictionary *JSONResponse) {
-                                     if (success)
-                                     {
-                                         // Create model from JSON dictionary on the processing queue
-                                         dispatch_async(processingQueue, ^{
-
-                                             // Parse only events from the `presence` field of the response.
-                                             // There is no interest to parse all JSONResponse with the MXInitialSyncResponse model,
-                                             // which is CPU expensive due to the possible high number of rooms states events.
-                                             NSArray<MXEvent*> *presence;
-                                             MXJSONModelSetMXJSONModelArray(presence, MXEvent, JSONResponse[@"presence"]);
-
-                                             dispatch_async(dispatch_get_main_queue(), ^{
-
-                                                 success(presence);
-
-                                             });
-                                        });
-                                     }
-                                 }
-                                 failure:^(NSError *error) {
-                                     if (failure)
-                                     {
-                                         failure(error);
-                                     }
-                                 }];
-}
-
 - (MXHTTPOperation*)presenceList:(void (^)(MXPresenceResponse *presence))success
                          failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"api/v1/presence/list/%@", credentials.userId];
+    NSString *path = [NSString stringWithFormat:@"%@/presence/list/%@", apiPathPrefix, credentials.userId];
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
@@ -1879,7 +1880,7 @@ MXAuthAction;
                                  success:(void (^)())success
                                  failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"api/v1/presence/list/%@", credentials.userId];
+    NSString *path = [NSString stringWithFormat:@"%@/presence/list/%@", apiPathPrefix, credentials.userId];
     
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     parameters[@"invite"] = users;
@@ -1911,108 +1912,7 @@ MXAuthAction;
 }
 
 
-#pragma mark - Event operations
-- (MXHTTPOperation*)initialSyncWithLimit:(NSInteger)limit
-                                 success:(void (^)(MXInitialSyncResponse *))success
-                                 failure:(void (^)(NSError *))failure
-{
-    return [httpClient requestWithMethod:@"GET"
-                                    path:@"api/v1/initialSync"
-                              parameters:@{
-                                           @"limit": [NSNumber numberWithInteger:limit]
-                                           }
-                                 success:^(NSDictionary *JSONResponse) {
-                                     if (success)
-                                     {
-                                         // Create model from JSON dictionary on the processing queue
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             MXInitialSyncResponse *initialSync = [MXInitialSyncResponse modelFromJSON:JSONResponse];
-
-                                             dispatch_async(dispatch_get_main_queue(), ^{
-                                                 
-                                                 success(initialSync);
-                                                 
-                                             });
-                                             
-                                         });
-                                         
-                                     }
-                                 }
-                                 failure:^(NSError *error) {
-                                     if (failure)
-                                     {
-                                         failure(error);
-                                     }
-                                 }];
-}
-
-- (MXHTTPOperation *)eventsFromToken:(NSString*)token
-                       serverTimeout:(NSUInteger)serverTimeout
-                       clientTimeout:(NSUInteger)clientTimeout
-                             success:(void (^)(MXPaginationResponse *paginatedResponse))success
-                             failure:(void (^)(NSError *error))failure
-{
-    
-    // All query parameters are optional. Fill the request parameters on demand
-    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
-    
-    if (token)
-    {
-        parameters[@"from"] = token;
-    }
-    if (-1 != serverTimeout)
-    {
-        parameters[@"timeout"] = [NSNumber numberWithInteger:serverTimeout];
-    }
-    
-    NSTimeInterval clientTimeoutInSeconds = clientTimeout;
-    if (-1 != clientTimeoutInSeconds)
-    {
-        // If the Internet connection is lost, this timeout is used to be able to
-        // cancel the current request and notify the client so that it can retry with a new request.
-        clientTimeoutInSeconds = clientTimeoutInSeconds / 1000;
-    }
-    
-    MXHTTPOperation *operation = [httpClient requestWithMethod:@"GET"
-                                                          path:@"api/v1/events"
-                                                    parameters:parameters timeout:clientTimeoutInSeconds
-                                                       success:^(NSDictionary *JSONResponse)
-                                  {
-                                      if (success)
-                                      {
-                                          // Create model from JSON dictionary on the processing queue
-                                          dispatch_async(processingQueue, ^{
-                                              
-                                              MXPaginationResponse *paginatedResponse = [MXPaginationResponse modelFromJSON:JSONResponse];
-                                              
-                                              dispatch_async(dispatch_get_main_queue(), ^{
-                                                  
-                                                  success(paginatedResponse);
-                                                  
-                                              });
-                                              
-                                          });
-                                      }
-                                  }
-                                                       failure:^(NSError *error)
-                                  {
-                                      if (failure)
-                                      {
-                                          failure(error);
-                                      }
-                                  }];
-    
-    // Disable retry because it interferes with clientTimeout
-    // Let the client manage retries on events streams
-    operation.maxNumberOfTries = 1;
-    
-    return operation;
-}
-
-/**
- server sync v2
- */
+#pragma mark - Sync
 - (MXHTTPOperation *)syncFromToken:(NSString*)token
                      serverTimeout:(NSUInteger)serverTimeout
                      clientTimeout:(NSUInteger)clientTimeout
@@ -2050,7 +1950,7 @@ MXAuthAction;
     }
     
     MXHTTPOperation *operation = [httpClient requestWithMethod:@"GET"
-                                                          path:@"v2_alpha/sync"
+                                                          path:[NSString stringWithFormat:@"%@/sync", apiPathPrefix]
                                                     parameters:parameters timeout:clientTimeoutInSeconds
                                                        success:^(NSDictionary *JSONResponse) {
                                                            if (success)
@@ -2083,60 +1983,15 @@ MXAuthAction;
     return operation;
 }
 
-- (MXHTTPOperation*)publicRooms:(void (^)(NSArray *rooms))success
-                        failure:(void (^)(NSError *error))failure
-{
-    return [httpClient requestWithMethod:@"GET"
-                                    path:@"api/v1/publicRooms"
-                              parameters:nil
-                                 success:^(NSDictionary *JSONResponse) {
-                                     if (success)
-                                     {
-                                         @autoreleasepool
-                                         {
-                                             // Create public rooms array from JSON on processing queue
-                                             dispatch_async(processingQueue, ^{
-                                                 
-                                                 NSArray *publicRooms;
-                                                 MXJSONModelSetMXJSONModelArray(publicRooms, MXPublicRoom, JSONResponse[@"chunk"]);
-                                                 
-                                                 dispatch_async(dispatch_get_main_queue(), ^{
-                                                     
-                                                     success(publicRooms);
-                                                     
-                                                 });
-                                                 
-                                             });
-                                         }
-                                     }
-                                 }
-                                 failure:^(NSError *error) {
-                                     if (failure)
-                                     {
-                                         failure(error);
-                                     }
-                                 }];
-}
 
 #pragma mark - read receipts
-/**
- Send a read receipt (available only on C-S v2).
- 
- @param roomId the id of the room.
- @param eventId the id of the event.
- @param success A block object called when the operation succeeds. It returns
- the event id of the event generated on the home server
- @param failure A block object called when the operation fails.
- 
- @return a MXHTTPOperation instance.
- */
 - (MXHTTPOperation*)sendReadReceipts:(NSString*)roomId
                              eventId:(NSString*)eventId
                              success:(void (^)(NSString *eventId))success
                              failure:(void (^)(NSError *error))failure
 {
     return [httpClient requestWithMethod:@"POST"
-                                    path: [NSString stringWithFormat:@"v2_alpha/rooms/%@/receipt/m.read/%@", roomId, eventId]
+                                    path: [NSString stringWithFormat:@"%@/rooms/%@/receipt/m.read/%@", apiPathPrefix, roomId, eventId]
                               parameters:[[NSDictionary alloc] init]
                                  success:^(NSDictionary *JSONResponse) {
                                      
@@ -2161,12 +2016,47 @@ MXAuthAction;
 }
 
 #pragma mark - Directory operations
+- (MXHTTPOperation*)publicRooms:(void (^)(NSArray *rooms))success
+                        failure:(void (^)(NSError *error))failure
+{
+    return [httpClient requestWithMethod:@"GET"
+                                    path:[NSString stringWithFormat:@"%@/publicRooms", apiPathPrefix]
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success)
+                                     {
+                                         @autoreleasepool
+                                         {
+                                             // Create public rooms array from JSON on processing queue
+                                             dispatch_async(processingQueue, ^{
+
+                                                 NSArray *publicRooms;
+                                                 MXJSONModelSetMXJSONModelArray(publicRooms, MXPublicRoom, JSONResponse[@"chunk"]);
+
+                                                 dispatch_async(dispatch_get_main_queue(), ^{
+
+                                                     success(publicRooms);
+
+                                                 });
+
+                                             });
+                                         }
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                 }];
+}
+
 - (MXHTTPOperation*)roomIDForRoomAlias:(NSString*)roomAlias
                                success:(void (^)(NSString *roomId))success
                                failure:(void (^)(NSError *error))failure
 {
     // Note: characters in a room alias need to be escaped in the URL
-    NSString *path = [NSString stringWithFormat:@"api/v1/directory/room/%@", [roomAlias stringByAddingPercentEscapesUsingEncoding:NSASCIIStringEncoding]];
+    NSString *path = [NSString stringWithFormat:@"%@/directory/room/%@", apiPathPrefix, [roomAlias stringByAddingPercentEscapesUsingEncoding:NSASCIIStringEncoding]];
     
     return [httpClient requestWithMethod:@"GET"
                                     path:path
@@ -2473,7 +2363,7 @@ MXAuthAction;
                         failure:(void (^)(NSError *))failure
 {
     return [httpClient requestWithMethod:@"GET"
-                                    path:@"api/v1/voip/turnServer"
+                                    path:[NSString stringWithFormat:@"%@/voip/turnServer", apiPathPrefix]
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
                                      if (success)
@@ -2524,7 +2414,7 @@ MXAuthAction;
                    success:(void (^)(MXSearchRoomEventResults *roomEventResults))success
                    failure:(void (^)(NSError *error))failure
 {
-    NSString *path = @"api/v1/search";
+    NSString *path = [NSString stringWithFormat:@"%@/search", apiPathPrefix];
     if (nextBatch)
     {
         path = [NSString stringWithFormat:@"%@?next_batch=%@", path, nextBatch];

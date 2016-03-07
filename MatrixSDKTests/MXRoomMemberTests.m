@@ -22,7 +22,9 @@
 #import "MXRoomMember.h"
 
 @interface MXRoomMemberTests : XCTestCase
-
+{
+    MatrixSDKTestsData *matrixSDKTestsData;
+}
 @end
 
 @implementation MXRoomMemberTests
@@ -30,22 +32,20 @@
 - (void)setUp
 {
     [super setUp];
-    // Put setup code here. This method is called before the invocation of each test method in the class.
+
+    matrixSDKTestsData = [[MatrixSDKTestsData alloc] init];
 }
 
 - (void)tearDown
 {
-    // Put teardown code here. This method is called after the invocation of each test method in the class.
     [super tearDown];
 }
 
 - (void)testKickedMember
 {
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-    
-    [sharedData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [bobRestClient kickUser:sharedData.aliceCredentials.userId fromRoom:roomId reason:@"No particular reason" success:^{
+        [bobRestClient kickUser:matrixSDKTestsData.aliceCredentials.userId fromRoom:roomId reason:@"No particular reason" success:^{
             
             // Check room actual members
             [bobRestClient membersOfRoom:roomId success:^(NSArray *roomMemberEvents) {
@@ -54,13 +54,13 @@
                 {
                     MXRoomMember *member = [[MXRoomMember alloc] initWithMXEvent:roomMemberEvent];
                     
-                    if ([member.userId isEqualToString:sharedData.aliceCredentials.userId])
+                    if ([member.userId isEqualToString:matrixSDKTestsData.aliceCredentials.userId])
                     {
                         XCTAssertEqual(member.membership, MXMembershipLeave, @"A kicked user membership is leave, not %tu", member.membership);
                         // rooms/<room_id>/members does not return prev-content anymore - we comment the related test
                         //XCTAssertEqual(member.prevMembership, MXMembershipJoin, @"The previous membership of a kicked user must be join, not %tu", member.prevMembership);
                         
-                        XCTAssert([member.originUserId isEqualToString:sharedData.bobCredentials.userId], @"This is Bob who kicked Alice, not %@", member.originUserId);
+                        XCTAssert([member.originUserId isEqualToString:matrixSDKTestsData.bobCredentials.userId], @"This is Bob who kicked Alice, not %@", member.originUserId);
                     }
                 }
                 

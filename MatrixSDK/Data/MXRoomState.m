@@ -38,12 +38,6 @@
      */
     MXMembership membership;
     
-    // The visibility flag in JSON metadata deprecated in API v2
-    MXRoomVisibility visibility;
-    
-    // YES when the property 'isPublic' has been defined.
-    BOOL isVisibilityKnown;
-    
     /**
      Maximum power level observed in power level list
      */
@@ -99,10 +93,6 @@
         // Store optional metadata
         if (initialSync)
         {
-            if (initialSync.visibility)
-            {
-                visibility = initialSync.visibility;
-            }
             if (initialSync.membership)
             {
                 membership = [MXTools membership:initialSync.membership];
@@ -179,48 +169,21 @@
     return [thirdPartyInvites allValues];
 }
 
-- (void)setIsPublic:(BOOL)isPublicValue
-{
-    isPublic = isPublicValue;
-    isVisibilityKnown = YES;
-}
-
 - (BOOL)isPublic
 {
-    if (isVisibilityKnown)
+    // The information is in the join_rule state event
+    isPublic = NO;
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomJoinRules];
+    if (event && [self contentOfEvent:event])
     {
-        return isPublic;
-    }
-    
-    // Check the legacy visibility metadata
-    if (visibility)
-    {
-        if ([visibility isEqualToString:kMXRoomVisibilityPublic])
+        NSString *join_rule;
+        MXJSONModelSetString(join_rule, [self contentOfEvent:event][@"join_rule"]);
+        if ([join_rule isEqualToString:kMXRoomVisibilityPublic])
         {
-            self.isPublic = YES;
-        }
-        else
-        {
-            self.isPublic = NO;
+            isPublic = YES;
         }
     }
-    else
-    {
-        isPublic = NO;
-        
-        // Check this in the room state events
-        MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomJoinRules];
-        if (event && [self contentOfEvent:event])
-        {
-            NSString *join_rule;
-            MXJSONModelSetString(join_rule, [self contentOfEvent:event][@"join_rule"]);
-            if ([join_rule isEqualToString:kMXRoomVisibilityPublic])
-            {
-                isPublic = YES;
-            }
-        }
-    }
-    
+
     return isPublic;
 }
 
@@ -461,6 +424,7 @@
             else
             {
                 // The user is no more part of the room. Remove him.
+                // This case happens during back pagination: we remove here users when they are not in the room yet.
                 [members removeObjectForKey:event.stateKey];
             }
 
@@ -654,12 +618,6 @@
     stateCopy->thirdPartyInvites = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:thirdPartyInvites];
 
     stateCopy->membersWithThirdPartyInviteTokenCache= [[NSMutableDictionary allocWithZone:zone] initWithDictionary:membersWithThirdPartyInviteTokenCache];
-
-    if (visibility)
-    {
-        stateCopy->visibility = [visibility copyWithZone:zone];
-    }
-    stateCopy->isVisibilityKnown = isVisibilityKnown;
     
     stateCopy->isPublic = isPublic;
     stateCopy->membership = membership;

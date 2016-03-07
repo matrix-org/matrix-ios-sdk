@@ -303,21 +303,6 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
          failure:(void (^)(NSError *error))failure;
 
 /**
- This property is used only in case of server sync v1. It is deprecated for server sync v2 and later.
- 
- When the SDK starts on data stored in MXStore, this option indicates if it must load
- users presences information before calling the `onServerSyncDone` block of [MXSession start].
-
- This requires to make a request to the home server which can be useless for some applications.
-
- If `loadPresenceBeforeCompletingSessionStart` is set to NO, the request will be done but it parralel
- with the call of the `onServerSyncDone` block.
-
- Default is NO.
- */
-@property (nonatomic) BOOL loadPresenceBeforeCompletingSessionStart;
-
-/**
  Enable VoIP by setting the external VoIP stack to use.
  
  @param callStack the VoIP call stack to use.

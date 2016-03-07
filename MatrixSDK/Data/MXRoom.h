@@ -24,6 +24,7 @@
 #import "MXRoomAccountData.h"
 #import "MXHTTPOperation.h"
 #import "MXCall.h"
+#import "MXEventTimeline.h"
 
 @class MXRoom;
 @class MXSession;
@@ -38,7 +39,7 @@
 FOUNDATION_EXPORT NSString *const kMXRoomInitialSyncNotification;
 
 /**
- Posted when a limited timeline is observed for an existing room during server sync v2.
+ Posted when a limited timeline is observed for an existing room during server sync.
  All the existing messages have been removed from the room storage. Only the messages received during this sync are available.
  The token where to start back pagination has been updated.
  
@@ -47,19 +48,14 @@ FOUNDATION_EXPORT NSString *const kMXRoomInitialSyncNotification;
 FOUNDATION_EXPORT NSString *const kMXRoomSyncWithLimitedTimelineNotification;
 
 /**
- Block called when an event of the registered types has been handled by the `MXRoom` instance.
- This is a specialisation of the `MXOnEvent` block.
- 
- @param event the new event.
- @param direction the origin of the event.
- @param roomState the room state right before the event
- */
-typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoomState *roomState);
-
-/**
  `MXRoom` is the class
  */
 @interface MXRoom : NSObject
+
+/**
+ The Matrix id of the room.
+ */
+@property (nonatomic, readonly) NSString *roomId;
 
 /**
  The related matrix session.
@@ -67,7 +63,12 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 @property (nonatomic, readonly) MXSession *mxSession;
 
 /**
- The uptodate state of the room.
+ The live events timeline.
+ */
+@property (nonatomic, readonly) MXEventTimeline *liveTimeline;
+
+/**
+ The up-to-date state of the room.
  */
 @property (nonatomic, readonly) MXRoomState *state;
 
@@ -98,15 +99,22 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 - (MXEvent*)lastMessageWithTypeIn:(NSArray*)type;
 
 /**
- Flag indicating if there are still events (in the past) to get with paginateBackMessages.
+ Tell whether the room has unread events.
+ This value depends on acknowledgableEventTypes.
  */
-@property (nonatomic, readonly) BOOL canPaginate;
+@property (nonatomic, readonly) BOOL hasUnreadEvents;
 
 /**
- The unread events.
- They are filtered by acknowledgableEventTypes.
+ The number of unread messages that match the push notification rules.
+ It is based on the notificationCount field in /sync response.
  */
-@property (nonatomic, readonly) NSArray* unreadEvents;
+@property (nonatomic, readonly) NSUInteger notificationCount;
+
+/**
+ The number of highlighted unread messages (subset of notifications).
+ It is based on the notificationCount field in /sync response.
+ */
+@property (nonatomic, readonly) NSUInteger highlightCount;
 
 /**
  * An array of event types strings (MXEventTypeString).
@@ -116,88 +124,24 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 
 - (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession;
 
-- (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession andInitialSync:(MXRoomInitialSync*)initialSync;
-
 - (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession andStateEvents:(NSArray*)stateEvents andAccountData:(MXRoomAccountData*)accountData;
 
-#pragma mark - server sync v2
+
+#pragma mark - server sync
 
 /**
- Update room data according to the provided sync response (since API v2)
+ Update room data according to the provided sync response.
  
  @param roomSync information to sync the room with the home server data
  */
 - (void)handleJoinedRoomSync:(MXRoomSync*)roomSync;
 
 /**
- Update the invited room state according to the provided data (since API v2)
+ Update the invited room state according to the provided data.
  
  @param invitedRoom information to update the room state.
  */
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync;
-
-#pragma mark - handle events
-
-/**
- Handle bunch of events received in case of back pagination, global initial sync or room initial sync.
- 
- @param roomMessages the response in which events are stored.
- @param direction the process direction: MXEventDirectionBackwards or MXEventDirectionSync. MXEventDirectionForwards is not supported here.
- @param isTimeOrdered tell whether the events are in chronological order.
- */
-- (void)handleMessages:(MXPaginationResponse*)roomMessages
-             direction:(MXEventDirection)direction
-         isTimeOrdered:(BOOL)isTimeOrdered;
-
-- (void)handleStateEvents:(NSArray<MXEvent*>*)roomStateEvents direction:(MXEventDirection)direction;
-
-/**
- Handle an event (message or state) that comes from the events streaming.
- 
- @param event the event to handle.
- */
-- (void)handleLiveEvent:(MXEvent*)event;
-
-/**
- Handle private user data events.
- 
- @param accounDataEvents the events to handle.
- @param direction the process direction: MXEventDirectionSync or MXEventDirectionForwards. MXEventDirectionBackwards is not applicable here.
- */
-- (void)handleAccounDataEvents:(NSArray<MXEvent*>*)accounDataEvents direction:(MXEventDirection)direction;
-
-#pragma mark - Back pagination
-/**
- Reset the back state so that future calls to paginate start over from live.
- Must be called when opening a room if interested in history.
- */
-- (void)resetBackState;
-    
-/**
- Get more messages from the past.
- The retrieved events will be sent to registered listeners.
- 
- @param numItems the number of items to get.
- @param onlyFromStore if YES, return available events from the store, do not make a pagination request to the homeserver.
- @param complete A block object called when the operation is complete.
- @param failure A block object called when the operation fails.
- 
- @return a MXHTTPOperation instance. This instance can be nil
-         if no request to the home server is required.
- */
-- (MXHTTPOperation*)paginateBackMessages:(NSUInteger)numItems
-                           onlyFromStore:(BOOL)onlyFromStore
-                                complete:(void (^)())complete
-                                 failure:(void (^)(NSError *error))failure;
-
-
-/**
- Get the number of messages we can still paginate from the store.
- It provides the count of events available without making a request to the home server.
-
- @return the count of remaining messages in store.
- */
-- (NSUInteger)remainingMessagesForPaginationInStore;
 
 
 #pragma mark - Room operations
@@ -411,7 +355,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 
  @param typing Use YES if the user is currently typing.
  @param timeout the length of time until the user should be treated as no longer typing,
- in milliseconds. Can be ommited (set to -1) if they are no longer typing.
+                in milliseconds. Can be ommited (set to -1) if they are no longer typing.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
@@ -438,6 +382,16 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
                          reason:(NSString*)reason
                         success:(void (^)())success
                         failure:(void (^)(NSError *error))failure;
+
+
+#pragma mark - Events timeline
+/**
+ Open a new `MXEventTimeline` instance around the passed event.
+
+ @param eventId the id of the event.
+ @return a new `MXEventTimeline` instance.
+ */
+- (MXEventTimeline*)timelineOnEvent:(NSString*)eventId;
 
 
 #pragma mark - Outgoing events management
@@ -538,71 +492,38 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXEventDirection direction, MXRoom
 - (MXCall*)placeCallWithVideo:(BOOL)video;
 
 
-#pragma mark - Events listeners
-/**
- Register a listener to events of this room.
- 
- @param onEvent the block that will called once a new event has been handled.
- @return a reference to use to unregister the listener
- */
-- (id)listenToEvents:(MXOnRoomEvent)onEvent;
+#pragma mark - Read receipts management
 
 /**
- Register a listener for some types of events.
- 
- @param types an array of event types strings (MXEventTypeString) to listen to.
- @param onEvent the block that will called once a new event has been handled.
- @return a reference to use to unregister the listener
- */
-- (id)listenToEventsOfTypes:(NSArray*)types onEvent:(MXOnRoomEvent)onEvent;
-
-/**
- Unregister a listener.
- 
- @param listener the reference of the listener to remove.
- */
-- (void)removeListener:(id)listener;
-
-/**
- Unregister all listeners.
- */
-- (void)removeAllListeners;
-
-#pragma mark - Receipts management
-
-/**
- Handle a receipt event
+ Handle a receipt event.
  
  @param event the event to handle.
  @param the direction
  @param
  */
-- (BOOL)handleReceiptEvent:(MXEvent *)event direction:(MXEventDirection)direction;
-
-/**
- Update the read receipt token.
- @param token the new token
- @param ts the token ts
-@return true if the token is refreshed
- */
-- (BOOL)setReadReceiptToken:(NSString*)token ts:(long)ts;
+- (BOOL)handleReceiptEvent:(MXEvent *)event direction:(MXTimelineDirection)direction;
 
 /**
  Acknowlegde the latest event of type defined in acknowledgableEventTypes.
  Put sendReceipt YES to send a receipt event if the latest event was not yet acknowledged.
+ This is will indicate to the homeserver that the user has read up to this event.
+
  @param sendReceipt YES to send a receipt event if required
  @return true if there is an update
  */
 - (BOOL)acknowledgeLatestEvent:(BOOL)sendReceipt;
 
 /**
- Returns the receipts list for an event, excluding the receipt from the current user.
+ Returns the read receipts list for an event, excluding the read receipt from the current user.
+
  @param eventId The event Id.
  @param sort YES to sort them from the latest to the oldest.
  @return the receipts for an event in a dedicated room.
  */
 - (NSArray*)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort;
 
+
+#pragma mark - Utils
 /**
  Comparator to use to order array of rooms by their lastest originServerTs value.
  

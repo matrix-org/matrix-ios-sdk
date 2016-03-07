@@ -45,7 +45,7 @@
     if (![roomEventListeners objectForKey:room.state.roomId])
     {
         roomEventListeners[room.state.roomId] =
-        [room listenToEventsOfTypes:self.eventTypes onEvent:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+        [room.liveTimeline listenToEventsOfTypes:self.eventTypes onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
             self.listenerBlock(event, direction, roomState);
         }];
     }
@@ -56,7 +56,7 @@
 {
     if ([roomEventListeners objectForKey:room.state.roomId])
     {
-        [room removeListener:roomEventListeners[room.state.roomId]];
+        [room.liveTimeline removeListener:roomEventListeners[room.state.roomId]];
         [roomEventListeners removeObjectForKey:room.state.roomId];
     }
 }
@@ -69,8 +69,7 @@
     for (NSString *roomId in roomEventListeners)
     {
         MXRoom *room = [mxSession roomWithRoomId:roomId];
-        [room removeListener:roomEventListeners[room.state.roomId]];
-        
+        [room.liveTimeline removeListener:roomEventListeners[room.state.roomId]];
     }
     [roomEventListeners removeAllObjects];
 }

@@ -40,7 +40,7 @@
     return self;
 }
 
-- (void)storeEvent:(MXEvent *)event direction:(MXEventDirection)direction
+- (void)storeEvent:(MXEvent *)event direction:(MXTimelineDirection)direction
 {
 	// Convert Mantle MXEvent object to MXCoreDataEvent
     MXCoreDataEvent *cdEvent = [self coreDataEventFromEvent:event];
@@ -50,7 +50,7 @@
     // from working
     //cdEvent.room = self;
 
-    if (MXEventDirectionForwards == direction)
+    if (MXTimelineDirectionForwards == direction)
     {
         [self addMessagesObject:cdEvent];
     }

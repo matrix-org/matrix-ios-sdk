@@ -26,30 +26,34 @@
 #pragma clang diagnostic ignored "-Warc-retain-cycles"
 
 @interface MXRestClientTests : XCTestCase
+{
+    MatrixSDKTestsData *matrixSDKTestsData;
+}
 
 @end
 
 @implementation MXRestClientTests
 
-- (void)setUp {
+- (void)setUp
+{
     [super setUp];
-    // Put setup code here. This method is called before the invocation of each test method in the class.
+
+    matrixSDKTestsData = [[MatrixSDKTestsData alloc] init];
 }
 
-- (void)tearDown {
+- (void)tearDown
+{
     // Put teardown code here. This method is called after the invocation of each test method in the class.
     [super tearDown];
 }
 
 - (void)testInit
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
-        
-        MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-        
+    [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+
         XCTAssertTrue([bobRestClient.homeserver isEqualToString:kMXTestsHomeServerURL], "bobRestClient.homeserver(%@) is wrong", bobRestClient.homeserver);
-        XCTAssertTrue([bobRestClient.credentials.userId isEqualToString:sharedData.bobCredentials.userId], "bobRestClient.userId(%@) is wrong", bobRestClient.credentials.userId);
-        XCTAssertTrue([bobRestClient.credentials.accessToken isEqualToString:sharedData.bobCredentials.accessToken], "bobRestClient.accessToken(%@) is wrong", bobRestClient.credentials.accessToken);
+        XCTAssertTrue([bobRestClient.credentials.userId isEqualToString:matrixSDKTestsData.bobCredentials.userId], "bobRestClient.userId(%@) is wrong", bobRestClient.credentials.userId);
+        XCTAssertTrue([bobRestClient.credentials.accessToken isEqualToString:matrixSDKTestsData.bobCredentials.accessToken], "bobRestClient.accessToken(%@) is wrong", bobRestClient.credentials.accessToken);
         
         [expectation fulfill];
     }];
@@ -59,7 +63,7 @@
 - (void)testSendTextMessage
 {
     // This test on sendTextMessage validates sendMessage and sendEvent too
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         [bobRestClient sendTextMessageToRoom:roomId text:@"This is text message" success:^(NSString *eventId) {
             
@@ -76,7 +80,7 @@
 
 - (void)testRoomTopic
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         __block MXRestClient *bobRestClient2 = bobRestClient;
         [bobRestClient setRoomTopic:roomId topic:@"Topic setter and getter functions are tested here" success:^{
@@ -102,7 +106,7 @@
 
 - (void)testRoomAvatar
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         __block MXRestClient *bobRestClient2 = bobRestClient;
         [bobRestClient setRoomAvatar:roomId avatar:@"http://matrix.org/matrix.png" success:^{
@@ -128,7 +132,7 @@
 
 - (void)testRoomName
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         __block MXRestClient *bobRestClient2 = bobRestClient;
         [bobRestClient setRoomName:roomId name:@"My room name" success:^{
@@ -154,7 +158,7 @@
 
 - (void)testJoinRoomWithRoomId
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         [bobRestClient joinRoom:roomId success:^(NSString *theRoomId) {
             
@@ -170,11 +174,9 @@
 
 - (void)testJoinRoomWithRoomAlias
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndThePublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndThePublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
-        NSString *mxPublicAlias = [NSString stringWithFormat:@"#mxPublic:%@", @"localhost:8480"];
-
-        [bobRestClient joinRoom:mxPublicAlias success:^(NSString *theRoomId) {
+        [bobRestClient joinRoom:matrixSDKTestsData.thePublicRoomAlias success:^(NSString *theRoomId) {
 
             XCTAssertEqualObjects(roomId, theRoomId);
             [expectation fulfill];
@@ -189,7 +191,7 @@
 
 - (void)testLeaveRoom
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         [bobRestClient leaveRoom:roomId success:^{
             
@@ -205,14 +207,12 @@
 
 - (void)testInviteUserToRoom
 {
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-    
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [sharedData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+        [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
             
             // Do the test
-            [bobRestClient inviteUser:sharedData.aliceCredentials.userId toRoom:roomId success:^{
+            [bobRestClient inviteUser:matrixSDKTestsData.aliceCredentials.userId toRoom:roomId success:^{
                 
                 // Check room actual members
                 [bobRestClient membersOfRoom:roomId success:^(NSArray *roomMemberEvents) {
@@ -223,14 +223,14 @@
                     {
                         MXRoomMember *member = [[MXRoomMember alloc] initWithMXEvent:roomMemberEvent];
                         
-                        if ([member.userId isEqualToString:sharedData.aliceCredentials.userId])
+                        if ([member.userId isEqualToString:matrixSDKTestsData.aliceCredentials.userId])
                         {
                             XCTAssertEqual(member.membership, MXMembershipInvite, @"A invited user membership is invite, not %tu", member.membership);
                         }
                         else
                         {
                             // The other user is Bob
-                            XCTAssert([member.userId isEqualToString:sharedData.bobCredentials.userId], @"Unexpected member: %@", member);
+                            XCTAssert([member.userId isEqualToString:matrixSDKTestsData.bobCredentials.userId], @"Unexpected member: %@", member);
                         }
                     }
                     
@@ -252,11 +252,9 @@
 
 - (void)testKickUserFromRoom
 {
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-    
-    [sharedData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [bobRestClient kickUser:sharedData.aliceCredentials.userId fromRoom:roomId reason:@"No particular reason" success:^{
+        [bobRestClient kickUser:matrixSDKTestsData.aliceCredentials.userId fromRoom:roomId reason:@"No particular reason" success:^{
             
             // Check room actual members
             [bobRestClient membersOfRoom:roomId success:^(NSArray *roomMemberEvents) {
@@ -267,14 +265,14 @@
                 {
                     MXRoomMember *member = [[MXRoomMember alloc] initWithMXEvent:roomMemberEvent];
                     
-                    if ([member.userId isEqualToString:sharedData.aliceCredentials.userId])
+                    if ([member.userId isEqualToString:matrixSDKTestsData.aliceCredentials.userId])
                     {
                         XCTAssertEqual(member.membership, MXMembershipLeave, @"A kicked user membership is leave, not %tu", member.membership);
                     }
                     else
                     {
                         // The other user is Bob
-                        XCTAssert([member.userId isEqualToString:sharedData.bobCredentials.userId], @"Unexpected member: %@", member);
+                        XCTAssert([member.userId isEqualToString:matrixSDKTestsData.bobCredentials.userId], @"Unexpected member: %@", member);
                     }
                 }
                 
@@ -294,11 +292,9 @@
 
 - (void)testBanUserInRoom
 {
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-    
-    [sharedData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [bobRestClient banUser:sharedData.aliceCredentials.userId inRoom:roomId reason:@"No particular reason" success:^{
+        [bobRestClient banUser:matrixSDKTestsData.aliceCredentials.userId inRoom:roomId reason:@"No particular reason" success:^{
             
             // Check room actual members
             [bobRestClient membersOfRoom:roomId success:^(NSArray *roomMemberEvents) {
@@ -309,14 +305,14 @@
                 {
                     MXRoomMember *member = [[MXRoomMember alloc] initWithMXEvent:roomMemberEvent];
                     
-                    if ([member.userId isEqualToString:sharedData.aliceCredentials.userId])
+                    if ([member.userId isEqualToString:matrixSDKTestsData.aliceCredentials.userId])
                     {
                         XCTAssertEqual(member.membership, MXMembershipBan, @"A banned user membership is ban, not %tu", member.membership);
                     }
                     else
                     {
                         // The other user is Bob
-                        XCTAssert([member.userId isEqualToString:sharedData.bobCredentials.userId], @"Unexpected member: %@", member);
+                        XCTAssert([member.userId isEqualToString:matrixSDKTestsData.bobCredentials.userId], @"Unexpected member: %@", member);
                     }
                 }
                 
@@ -336,7 +332,7 @@
 
 - (void)testCreateRoom
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
         
         // Create a random room with no params
         [bobRestClient createRoom:nil visibility:nil roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
@@ -357,9 +353,9 @@
 
 - (void)testMessagesWithNoParams
 {
-    [[MatrixSDKTestsData sharedData]  doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData  doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [bobRestClient messagesForRoom:roomId from:nil to:nil limit:-1 success:^(MXPaginationResponse *paginatedResponse) {
+        [bobRestClient messagesForRoom:roomId from:nil direction:MXTimelineDirectionBackwards limit:-1 success:^(MXPaginationResponse *paginatedResponse) {
             
             XCTAssertNotNil(paginatedResponse);
             XCTAssertNotNil(paginatedResponse.start);
@@ -379,9 +375,9 @@
 
 - (void)testMessagesWithOneParam
 {
-    [[MatrixSDKTestsData sharedData]  doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData  doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
-        [bobRestClient messagesForRoom:roomId from:nil to:nil limit:100 success:^(MXPaginationResponse *paginatedResponse) {
+        [bobRestClient messagesForRoom:roomId from:nil direction:MXTimelineDirectionBackwards limit:100 success:^(MXPaginationResponse *paginatedResponse) {
 
             XCTAssertNotNil(paginatedResponse);
             XCTAssertNotNil(paginatedResponse.start);
@@ -401,7 +397,7 @@
 
 - (void)testMembers
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         [bobRestClient membersOfRoom:roomId success:^(NSArray *roomMemberEvents) {
             
@@ -422,7 +418,7 @@
 
 - (void)testStateOfRoom
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         [bobRestClient stateOfRoom:roomId success:^(NSDictionary *JSONData) {
             
@@ -452,7 +448,7 @@
 
 - (void)testSendTypingNotification
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         [bobRestClient sendTypingNotificationInRoom:roomId typing:YES timeout:30000 success:^{
 
@@ -474,7 +470,7 @@
 
 - (void)testRedactEvent
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         [bobRestClient sendTextMessageToRoom:roomId text:@"This is text message" success:^(NSString *eventId) {
 
@@ -495,7 +491,7 @@
 
 - (void)testInitialSyncOfRoom
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         [bobRestClient initialSyncOfRoom:roomId withLimit:3 success:^(MXRoomInitialSync *roomInitialSync) {
             
@@ -529,6 +525,42 @@
     }];
 }
 
+- (void)testContextOfEvent
+{
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        [bobRestClient initialSyncOfRoom:roomId withLimit:10 success:^(MXRoomInitialSync *roomInitialSync) {
+
+            // Pick an message event in the middle of created ones
+            MXEvent *event = roomInitialSync.messages.chunk[5];
+
+            MXEvent *eventBefore = roomInitialSync.messages.chunk[4];
+            MXEvent *eventAfter = roomInitialSync.messages.chunk[6];
+
+            // Get the context around it
+            [bobRestClient contextOfEvent:event.eventId inRoom:roomId limit:10 success:^(MXEventContext *eventContext) {
+
+                XCTAssertNotNil(eventContext);
+                XCTAssertNotNil(eventContext.start);
+                XCTAssertNotNil(eventContext.end);
+                XCTAssertGreaterThanOrEqual(eventContext.state.count, 0);
+
+                XCTAssertEqualObjects(eventBefore.eventId, eventContext.eventsBefore[0].eventId);
+                XCTAssertEqualObjects(eventAfter.eventId, eventContext.eventsAfter[0].eventId);
+
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
 // Remove the `age` field from a dictionary and all its sub dictionaries
 - (void) removeAgeField:(MXRoomInitialSync*)roomInitialSync
 {
@@ -543,153 +575,9 @@
     }
 }
 
-// Compare the result of initialSyncOfRoom with the data retrieved from a global initialSync
-- (void)testInitialSyncOfRoomAndGlobalInitialSync
-{
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
-
-        [bobRestClient initialSyncWithLimit:3 success:^(MXInitialSyncResponse *initialSyncResponse) {
-
-            MXRoomInitialSync *roomDataInGlobal;
-
-            for (MXRoomInitialSync *roomSync in initialSyncResponse.rooms)
-            {
-                if ([roomId isEqualToString:roomSync.roomId])
-                {
-                    roomDataInGlobal = roomSync;
-                }
-            }
-
-            XCTAssertNotNil(roomDataInGlobal);
-
-            [bobRestClient initialSyncOfRoom:roomId withLimit:3 success:^(MXRoomInitialSync *roomInitialSync) {
-
-                XCTAssertNotNil(roomInitialSync);
-
-                // Do some cleaning before comparison
-                // Remove presence from initialSyncOfRoom result
-                roomInitialSync.presence = nil;
-
-                // Remove new added field receipts from initialSyncOfRoom result
-                roomInitialSync.receipts = nil;
-
-                // Remove visibility from global initialSync
-                roomDataInGlobal.visibility = nil;
-
-                // Remove the `age` field which is time dynamic
-                [self removeAgeField:roomDataInGlobal];
-                [self removeAgeField:roomInitialSync];
-
-                // Do the comparison
-                XCTAssertEqualObjects(roomDataInGlobal, roomInitialSync);
-
-                [expectation fulfill];
-
-            } failure:^(NSError *error) {
-                XCTFail(@"The request should not fail - NSError: %@", error);
-                [expectation fulfill];
-            }];
-
-        } failure:^(NSError *error) {
-            XCTFail(@"The request should not fail - NSError: %@", error);
-            [expectation fulfill];
-        }];
-    }];
-}
-
-- (void)testInitialSyncOfRoomAndGlobalInitialSyncOnRoomWithTwoUsers
-{
-    MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
-    [sharedData doMXRestClientTestWithBobAndAliceInARoom:self
- readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
-
-        [sharedData for:bobRestClient andRoom:roomId sendMessages:5 success:^{
-            [bobRestClient leaveRoom:roomId success:^{
-                [aliceRestClient sendTextMessageToRoom:roomId text:@"Hi bob"  success:^(NSString *eventId) {
-                    [aliceRestClient inviteUser:bobRestClient.credentials.userId toRoom:roomId success:^{
-                        [bobRestClient joinRoom:roomId success:^(NSString *theRoomId) {
-
-                            [bobRestClient initialSyncWithLimit:10 success:^(MXInitialSyncResponse *initialSyncResponse) {
-
-                                MXRoomInitialSync *roomDataInGlobal;
-                                
-                                for (MXRoomInitialSync *roomSync in initialSyncResponse.rooms)
-                                {
-                                    if ([roomId isEqualToString:roomSync.roomId])
-                                    {
-                                        roomDataInGlobal = roomSync;
-                                    }
-                                }
-                                
-                                XCTAssertNotNil(roomDataInGlobal);
-
-                                [bobRestClient initialSyncOfRoom:roomId withLimit:10 success:^(MXRoomInitialSync *roomInitialSync) {
-
-                                    XCTAssertNotNil(roomInitialSync);
-
-                                    // Do some cleaning before comparison
-                                    // Remove presence from initialSyncOfRoom result
-                                    roomInitialSync.presence = nil;
-
-                                    // Remove new added field receipts from initialSyncOfRoom result
-                                    roomInitialSync.receipts = nil;
-
-                                    // Remove visibility from global initialSync
-                                    roomDataInGlobal.visibility = nil;
-
-                                    // Remove the `age` field which is time dynamic
-                                    [self removeAgeField:roomDataInGlobal];
-                                    [self removeAgeField:roomInitialSync];
-
-                                    // Do the comparison
-                                    XCTAssertEqualObjects(roomDataInGlobal, roomInitialSync);
-
-                                    //[expectation fulfill];
-
-                                    [bobRestClient messagesForRoom:roomId from:roomDataInGlobal.messages.start to:nil limit:1 success:^(MXPaginationResponse *paginatedResponse) {
-
-                                        //NSLog(@"%@", JSONData[@"messages"][@"chunk"]);
-                                        NSLog(@"%@", roomDataInGlobal.messages.chunk);
-                                        NSLog(@"-------");
-                                        NSLog(@"%@", paginatedResponse.chunk);
-
-                                        [expectation fulfill];
-
-                                    } failure:^(NSError *error) {
-                                        XCTFail(@"The request should not fail - NSError: %@", error);
-                                        [expectation fulfill];
-                                    }];
-
-                                } failure:^(NSError *error) {
-                                    XCTFail(@"The request should not fail - NSError: %@", error);
-                                    [expectation fulfill];
-                                }];
-                                
-                            } failure:^(NSError *error) {
-                                XCTFail(@"The request should not fail - NSError: %@", error);
-                                [expectation fulfill];
-                            }];
-
-                        } failure:^(NSError *error) {
-                            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
-                        }];
-                    } failure:^(NSError *error) {
-                        NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
-                    }];
-                }failure:^(NSError *error) {
-                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
-                }];
-            } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
-            }];
-        }];
-    }];
-}
-
-
 - (void)testMXRoomMemberEventContent
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         [bobRestClient membersOfRoom:roomId success:^(NSArray *roomMemberEvents) {
             for (MXEvent *roomMemberEvent in roomMemberEvents)
@@ -715,7 +603,7 @@
 #pragma mark - #pragma mark - Room tags operations
 - (void)testAddAndRemoveTag
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         // Add a new tag
         [bobRestClient addTag:@"aTag" withOrder:nil toRoom:roomId success:^{
 
@@ -758,7 +646,7 @@
 #pragma mark - Profile operations
 - (void)testUserDisplayName
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
         
         __block MXRestClient *aliceRestClient2 = aliceRestClient;
         
@@ -786,18 +674,16 @@
 
 - (void)testOtherUserDisplayName
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
         
         // Set the name
         __block NSString *newDisplayName = @"mxAlice2";
         [aliceRestClient setDisplayName:newDisplayName success:^{
             
-            [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBob:nil readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation2) {
-                
-                MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+            [matrixSDKTestsData doMXRestClientTestWithBob:nil readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation2) {
                 
                 // Then retrieve it from a Bob restClient
-                [bobRestClient displayNameForUser:sharedData.aliceCredentials.userId success:^(NSString *displayname) {
+                [bobRestClient displayNameForUser:matrixSDKTestsData.aliceCredentials.userId success:^(NSString *displayname) {
                     
                     XCTAssertTrue([displayname isEqualToString:newDisplayName], @"Must retrieved the set string: %@ - %@", displayname, newDisplayName);
                     [expectation fulfill];
@@ -817,7 +703,7 @@
 
 - (void)testUserNilDisplayName
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
 
         [bobRestClient displayNameForUser:nil success:^(NSString *displayname) {
 
@@ -835,7 +721,7 @@
 
 - (void)testUserAvatarUrl
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
         
         __block MXRestClient *aliceRestClient2 = aliceRestClient;
         
@@ -863,18 +749,16 @@
 
 - (void)testOtherUserAvatarUrl
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
         
         // Set the avatar url
         __block NSString *newAvatarUrl = @"http://matrix.org/matrix2.png";
         [aliceRestClient setAvatarUrl:newAvatarUrl success:^{
             
-            [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBob:nil readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation2) {
-                
-                MatrixSDKTestsData *sharedData = [MatrixSDKTestsData sharedData];
+            [matrixSDKTestsData doMXRestClientTestWithBob:nil readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation2) {
                 
                 // Then retrieve it from a Bob restClient
-                [bobRestClient avatarUrlForUser:sharedData.aliceCredentials.userId success:^(NSString *avatarUrl) {
+                [bobRestClient avatarUrlForUser:matrixSDKTestsData.aliceCredentials.userId success:^(NSString *avatarUrl) {
                     
                     XCTAssertTrue([avatarUrl isEqualToString:newAvatarUrl], @"Must retrieved the set string: %@ - %@", avatarUrl, newAvatarUrl);
                     [expectation fulfill];
@@ -892,29 +776,12 @@
     }];
 }
 
-- (void)testUserNotNilAvatarUrl
-{
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
-
-        [bobRestClient avatarUrlForUser:nil success:^(NSString *avatarUrl) {
-
-            XCTAssert([avatarUrl hasPrefix:@"mxc://"], @"mxBob has no avatar defined. So the home server should have allocated one on the Matrix content repository");
-            [expectation fulfill];
-
-        } failure:^(NSError *error) {
-            XCTFail(@"The request should not fail - NSError: %@", error);
-            [expectation fulfill];
-        }];
-
-    }];
-}
-
 
 #pragma mark - Presence operations
 - (void)testUserPresence
 {
     // Make sure the test is valid once the bug is fixed server side
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
         
         __block MXRestClient *aliceRestClient2 = aliceRestClient;
         
@@ -942,66 +809,6 @@
             [expectation fulfill];
         }];
         
-    }];
-}
-
-
-#pragma mark - Event operations
-- (void)testEventsFromTokenServerTimeout
-{
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
-
-        // Delay the test to filter out Bob presence events the HS can send due to requests made in doMXRestClientTestWithBob
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-
-            NSDate *refDate = [NSDate date];
-            [bobRestClient eventsFromToken:@"END" serverTimeout:1000 clientTimeout:40000 success:^(MXPaginationResponse *paginatedResponse) {
-
-                XCTAssertNotNil(paginatedResponse);
-
-                // Check expected response params
-                XCTAssertNotNil(paginatedResponse.start);
-                XCTAssertNotNil(paginatedResponse.end);
-                XCTAssertNotNil(paginatedResponse.chunk);
-                XCTAssertEqual(paginatedResponse.chunk.count, 0, @"Events should not come in this short stream time (1s)");
-
-                if (paginatedResponse.chunk.count) {
-                    NSLog(@"####");
-                }
-
-                NSDate *now  = [NSDate date];
-                XCTAssertLessThanOrEqual([now timeIntervalSinceDate:refDate], 2, @"The HS did not timeout as expected");    // Give 2s for the HS to timeout
-
-                [expectation fulfill];
-
-            } failure:^(NSError *error) {
-                XCTFail(@"The request should not fail - NSError: %@", error);
-                [expectation fulfill];
-            }];
-        });
-    }];
-}
-
-- (void)testEventsFromTokenClientTimeout
-{
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
-        
-        NSDate *refDate = [NSDate date];
-        
-        [bobRestClient eventsFromToken:@"END" serverTimeout:5000 clientTimeout:1000 success:^(MXPaginationResponse *paginatedResponse) {
-            
-            XCTFail(@"The request must fail. The client timeout should have fired");
-            [expectation fulfill];
-            
-        } failure:^(NSError *error) {
-            
-            XCTAssertEqual(error.code, NSURLErrorTimedOut);
-            
-            NSDate *now  = [NSDate date];
-            XCTAssertLessThanOrEqual([now timeIntervalSinceDate:refDate], 2, @"The SDK did not timeout as expected");    // Give 2s for the SDK MXRestClient to timeout
-
-            [expectation fulfill];
-        }];
     }];
 }
 
@@ -1039,7 +846,7 @@
 // The test must be updated if those HS default rules change.
 - (void)testPushRules
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
 
         [bobRestClient pushRules:^(MXPushRulesResponse *pushRules) {
 
@@ -1098,7 +905,7 @@
 #pragma mark - Search
 - (void)testSearchText
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         [bobRestClient searchMessageText:@"Fake message"
                                  inRooms:@[roomId]
@@ -1130,12 +937,12 @@
 
 - (void)testSearchUniqueTextAcrossRooms
 {
-    [[MatrixSDKTestsData sharedData] doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
         NSString *message = [[NSProcessInfo processInfo] globallyUniqueString];
         __block NSString *messageEventId;
 
-        [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXEventDirection direction, id customObject) {
+        [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
 
             [mxSession.matrixRestClient searchMessageText:message
                                                   inRooms:nil
@@ -1156,6 +963,7 @@
 
                                                       XCTAssertNil(roomEventResults.nextBatch, @"The result contains all matching events");
 
+                                                      [mxSession close];
                                                       [expectation fulfill];
                                                       
                                                   } failure:^(NSError *error) {
@@ -1172,10 +980,10 @@
 
 - (void)testSearchPaginate
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         // Add 50 messages to the room
-        [[MatrixSDKTestsData sharedData] for:bobRestClient andRoom:roomId sendMessages:20 success:^{
+        [matrixSDKTestsData for:bobRestClient andRoom:roomId sendMessages:20 success:^{
 
             [bobRestClient searchMessageText:@"Fake message"
                                      inRooms:@[roomId]

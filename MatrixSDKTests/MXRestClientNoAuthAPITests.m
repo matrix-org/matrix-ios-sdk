@@ -27,6 +27,8 @@
 
 @interface MXRestClientNoAuthAPITests : XCTestCase
 {
+    MatrixSDKTestsData *matrixSDKTestsData;
+
     MXRestClient *mxRestClient;
 }
 
@@ -34,8 +36,11 @@
 
 @implementation MXRestClientNoAuthAPITests
 
-- (void)setUp {
+- (void)setUp
+{
     [super setUp];
+
+    matrixSDKTestsData = [[MatrixSDKTestsData alloc] init];
 
     mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL
                           andOnUnrecognizedCertificateBlock:nil];
@@ -51,6 +56,9 @@
 - (void)createTestAccount:(void (^)())onReady
 {
     // Register the user
+    // @TODO: Update the registration code to support r0 registration and
+    // remove this patch that redirects the registration to a deprecated CS API.
+    mxRestClient.apiPathPrefix = @"/_matrix/client/api/v1";
     [mxRestClient registerWithUser:MXTESTS_USER andPassword:MXTESTS_PWD
                          success:^(MXCredentials *credentials) {
                              
@@ -68,6 +76,7 @@
                                  NSAssert(NO, @"Cannot create the test account");
                              }
                          }];
+    mxRestClient.apiPathPrefix = kMXAPIPrefixPathR0;
 }
 
 - (void)testInit
@@ -329,7 +338,7 @@
 #pragma mark - Event operations
 - (void)testPublicRooms
 {
-    [[MatrixSDKTestsData sharedData] doMXRestClientTestWithBobAndThePublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXRestClientTestWithBobAndThePublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         [mxRestClient publicRooms:^(NSArray *rooms) {
             

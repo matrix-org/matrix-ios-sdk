@@ -40,7 +40,7 @@
  @param event the MXEvent object to store.
  @param direction the origin of the event. Live or past events.
  */
-- (void)storeEvent:(MXEvent*)event direction:(MXEventDirection)direction;
+- (void)storeEvent:(MXEvent*)event direction:(MXTimelineDirection)direction;
 
 /**
  Replace room event (used in case of redaction for example).

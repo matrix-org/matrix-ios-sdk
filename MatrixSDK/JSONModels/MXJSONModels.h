@@ -612,6 +612,48 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @end
 
 
+#pragma mark - Context
+#pragma mark -
+/**
+ `MXEventContext` represents the response to the /context request.
+ */
+@interface MXEventContext : MXJSONModel
+
+    /**
+     The event on which /context has been requested.
+     */
+    @property (nonatomic) MXEvent *event;
+
+    /**
+     A token that can be used to paginate backwards with.
+     */
+    @property (nonatomic) NSString *start;
+
+    /**
+     A list of room events that happened just before the requested event.
+     The order is antichronological.
+     */
+    @property (nonatomic) NSArray<MXEvent*> *eventsBefore;
+
+    /**
+     A list of room events that happened just after the requested event.
+     The order is chronological.
+     */
+    @property (nonatomic) NSArray<MXEvent*> *eventsAfter;
+
+    /**
+     A token that can be used to paginate forwards with.
+     */
+    @property (nonatomic) NSString *end;
+
+    /**
+     The state of the room at the last event returned.
+     */
+    @property (nonatomic) NSArray<MXEvent*> *state;
+
+@end
+
+
 #pragma mark - Search
 #pragma mark -
 
@@ -783,7 +825,7 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @end
 
 
-#pragma mark - Server sync v1 response
+#pragma mark - Server sync
 #pragma mark -
 
 /**
@@ -844,37 +886,7 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @end
 
 /**
- `MXInitialSyncResponse` represents the request response for server initial sync v1. @see http://matrix.org/docs/api/client-server/#!/-events/initial_sync
- */
-@interface MXInitialSyncResponse : MXJSONModel
-
-    /**
-     List of rooms.
-     */
-    @property (nonatomic) NSArray<MXRoomInitialSync*> *rooms;
-
-    /**
-     The presence status of other users.
-     */
-    @property (nonatomic) NSArray<MXEvent*> *presence;
-
-    /**
-     The read receipts.
-     */
-    @property (nonatomic) NSArray<MXEvent*> *receipts;
-
-    /**
-     The opaque token for the end.
-     */
-    @property (nonatomic) NSString *end;
-
-@end
-
-#pragma mark - Server sync v2 response
-#pragma mark -
-
-/**
- `MXRoomSyncState` represents the state updates for a room during server sync v2.
+ `MXRoomSyncState` represents the state updates for a room during server sync.
  */
 @interface MXRoomSyncState : MXJSONModel
 
@@ -886,7 +898,7 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @end
 
 /**
- `MXRoomSyncTimeline` represents the timeline of messages and state changes for a room during server sync v2.
+ `MXRoomSyncTimeline` represents the timeline of messages and state changes for a room during server sync.
  */
 @interface MXRoomSyncTimeline : MXJSONModel
 
@@ -944,7 +956,24 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @end
 
 /**
- `MXRoomSync` represents the response for a room during server sync v2.
+ `MXRoomSyncUnreadNotifications` represents the unread counts for a room.
+ */
+@interface MXRoomSyncUnreadNotifications : MXJSONModel
+
+    /**
+     The number of unread messages that match the push notification rules.
+     */
+    @property (nonatomic) NSUInteger notificationCount;
+
+    /**
+     The number of highlighted unread messages (subset of notifications).
+     */
+    @property (nonatomic) NSUInteger highlightCount;
+
+@end
+
+/**
+ `MXRoomSync` represents the response for a room during server sync.
  */
 @interface MXRoomSync : MXJSONModel
 
@@ -968,10 +997,15 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
      */
     @property (nonatomic) MXRoomSyncAccountData *accountData;
 
+    /**
+     The notification counts for the room.
+     */
+    @property (nonatomic) MXRoomSyncUnreadNotifications *unreadNotifications;
+
 @end
 
 /**
- `MXInvitedRoomSync` represents a room invitation during server sync v2.
+ `MXInvitedRoomSync` represents a room invitation during server sync.
  */
 @interface MXInvitedRoomSync : MXJSONModel
 
@@ -987,7 +1021,7 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @end
 
 /**
- `MXRoomsSyncResponse` represents the rooms list in server sync v2 response.
+ `MXRoomsSyncResponse` represents the rooms list in server sync response.
  */
 @interface MXRoomsSyncResponse : MXJSONModel
 
@@ -1009,7 +1043,7 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @end
 
 /**
- `MXPresenceSyncResponse` represents the updates to the presence status of other users during server sync v2.
+ `MXPresenceSyncResponse` represents the updates to the presence status of other users during server sync.
  */
 @interface MXPresenceSyncResponse : MXJSONModel
 
@@ -1021,7 +1055,7 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @end
 
 /**
- `MXSyncResponse` represents the request response for server sync v2.
+ `MXSyncResponse` represents the request response for server sync.
  */
 @interface MXSyncResponse : MXJSONModel
 
