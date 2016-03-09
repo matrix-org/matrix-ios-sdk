@@ -505,6 +505,12 @@
 
 - (NSString*)memberName:(NSString*)userId
 {
+    // Sanity check
+    if (!userId.length)
+    {
+        return nil;
+    }
+    
     // First, lookup in the cache
     NSString *displayName = membersNamesCache[userId];
 
