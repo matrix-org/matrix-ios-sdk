@@ -100,7 +100,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSyncWithLimitedTimelineNotification;
 
 /**
  Tell whether the room has unread events.
- This value depends on acknowledgableEventTypes.
+ This value depends on unreadEventTypes.
  */
 @property (nonatomic, readonly) BOOL hasUnreadEvents;
 
@@ -117,10 +117,16 @@ FOUNDATION_EXPORT NSString *const kMXRoomSyncWithLimitedTimelineNotification;
 @property (nonatomic, readonly) NSUInteger highlightCount;
 
 /**
- An array of event types strings (MXEventTypeString).
+ An array of event types strings ('MXEventTypeString').
  By default any event type except the typing, the receipts and the presence ones.
  */
 @property (nonatomic) NSArray* acknowledgableEventTypes;
+
+/**
+ The list of event types ('MXEventTypeString') considered to check the presence of some unread events.
+ By default [m.room.name, m.room.topic, m.room.message, m.call.invite].
+ */
+@property (nonatomic) NSArray* unreadEventTypes;
 
 - (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession;
 

@@ -64,6 +64,12 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                                       kMXEventTypeStringCallAnswer,
                                       kMXEventTypeStringCallHangup
                                       ];
+        
+        _unreadEventTypes = @[kMXEventTypeStringRoomName,
+                              kMXEventTypeStringRoomTopic,
+                              kMXEventTypeStringRoomMessage,
+                              kMXEventTypeStringCallInvite
+                              ];
     }
     
     return self;
@@ -521,7 +527,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 - (BOOL)hasUnreadEvents
 {
     // Check for unread events in store
-    return [mxSession.store hasUnreadEvents:self.state.roomId withTypeIn:_acknowledgableEventTypes];
+    return [mxSession.store hasUnreadEvents:self.state.roomId withTypeIn:_unreadEventTypes];
 }
 
 - (NSArray*)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort

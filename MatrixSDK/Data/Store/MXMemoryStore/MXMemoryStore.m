@@ -250,7 +250,16 @@
         {
             // Check the current stored events (by ignoring oneself events)
             NSArray *array = [store eventsAfter:data.eventId except:credentials.userId withTypeIn:[NSSet setWithArray:types]];
-            return (array.count != 0);
+            
+            // Check whether these unread events have not been redacted.
+            for (MXEvent *event in array)
+            {
+                if (event.redactedBecause == nil)
+                {
+                    // There is at least one unread event - Done
+                    return YES;
+                }
+            }
         }
     }
    
