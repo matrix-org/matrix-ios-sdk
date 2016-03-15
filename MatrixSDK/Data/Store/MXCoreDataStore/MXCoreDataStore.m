@@ -330,10 +330,16 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     return nil;
 }
 
-- (BOOL)storeReceipt:(MXReceiptData*)receipt roomId:(NSString*)roomId
+- (BOOL)storeReceipt:(MXReceiptData*)receipt inRoom:(NSString*)roomId
 {
     // TODO
     return NO;
+}
+
+- (MXReceiptData *)getReceiptInRoom:(NSString*)roomId forUserId:(NSString*)userId
+{
+    // TODO
+    return nil;
 }
 
 - (BOOL)hasUnreadEvents:(NSString*)roomId withTypeIn:(NSArray*)types

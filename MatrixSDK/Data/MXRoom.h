@@ -117,15 +117,14 @@ FOUNDATION_EXPORT NSString *const kMXRoomSyncWithLimitedTimelineNotification;
 @property (nonatomic, readonly) NSUInteger highlightCount;
 
 /**
- * An array of event types strings (MXEventTypeString).
- * By default any event type except the typing, the receipts and the presence ones.
+ An array of event types strings (MXEventTypeString).
+ By default any event type except the typing, the receipts and the presence ones.
  */
 @property (nonatomic) NSArray* acknowledgableEventTypes;
 
 - (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession;
 
 - (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession andStateEvents:(NSArray*)stateEvents andAccountData:(MXRoomAccountData*)accountData;
-
 
 #pragma mark - server sync
 
@@ -524,6 +523,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSyncWithLimitedTimelineNotification;
 
 
 #pragma mark - Utils
+
 /**
  Comparator to use to order array of rooms by their lastest originServerTs value.
  

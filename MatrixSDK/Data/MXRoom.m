@@ -467,7 +467,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                     data.eventId = eventId;
                     data.ts = ((NSNumber*)[params objectForKey:@"ts"]).longLongValue;
                     
-                    managedEvents |= [mxSession.store storeReceipt:data roomId:self.state.roomId];
+                    managedEvents |= [mxSession.store storeReceipt:data inRoom:self.state.roomId];
                 }
             }
         }
@@ -495,7 +495,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         data.eventId = event.eventId;
         data.ts = (uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000);
         
-        if ([mxSession.store storeReceipt:data roomId:self.state.roomId])
+        if ([mxSession.store storeReceipt:data inRoom:self.state.roomId])
         {
             if ([mxSession.store respondsToSelector:@selector(commit)])
             {

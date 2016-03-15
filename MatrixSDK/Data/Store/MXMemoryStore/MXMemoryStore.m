@@ -198,7 +198,7 @@
     return receipts;
 }
 
-- (BOOL)storeReceipt:(MXReceiptData*)receipt roomId:(NSString*)roomId
+- (BOOL)storeReceipt:(MXReceiptData*)receipt inRoom:(NSString*)roomId
 {
     NSMutableDictionary* receiptsByUserId = [receiptsByRoomId objectForKey:roomId];
     
@@ -218,6 +218,23 @@
     }
     
     return false;
+}
+
+- (MXReceiptData *)getReceiptInRoom:(NSString*)roomId forUserId:(NSString*)userId
+{
+    MXMemoryRoomStore* store = [roomStores valueForKey:roomId];
+    NSMutableDictionary* receipsByUserId = [receiptsByRoomId objectForKey:roomId];
+    
+    if (store && receipsByUserId)
+    {
+        MXReceiptData* data = [receipsByUserId objectForKey:userId];
+        if (data)
+        {
+            return [data copy];
+        }
+    }
+    
+    return nil;
 }
 
 - (BOOL)hasUnreadEvents:(NSString*)roomId withTypeIn:(NSArray*)types
