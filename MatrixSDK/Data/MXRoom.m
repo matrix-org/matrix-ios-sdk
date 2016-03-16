@@ -287,7 +287,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     return [mxSession.matrixRestClient unbanUser:userId inRoom:self.state.roomId success:success failure:failure];
 }
 
-- (MXHTTPOperation*)setPowerLevelOfUserWithUserID:(NSString *)userId powerLevel:(NSUInteger)powerLevel
+- (MXHTTPOperation*)setPowerLevelOfUserWithUserID:(NSString *)userId powerLevel:(NSInteger)powerLevel
                                           success:(void (^)())success
                                           failure:(void (^)(NSError *))failure
 {
@@ -296,7 +296,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     NSMutableDictionary *newPowerLevelsEventContent = [NSMutableDictionary dictionaryWithDictionary:self.state.powerLevels.JSONDictionary];
 
     NSMutableDictionary *newPowerLevelsEventContentUsers = [NSMutableDictionary dictionaryWithDictionary:newPowerLevelsEventContent[@"users"]];
-    newPowerLevelsEventContentUsers[userId] = [NSNumber numberWithUnsignedInteger:powerLevel];
+    newPowerLevelsEventContentUsers[userId] = [NSNumber numberWithInteger:powerLevel];
 
     newPowerLevelsEventContent[@"users"] = newPowerLevelsEventContentUsers;
 

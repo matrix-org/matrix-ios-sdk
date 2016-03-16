@@ -37,7 +37,7 @@
 /**
  The default power level for users not listed in `users`.
  */
-@property (nonatomic) NSUInteger usersDefault;
+@property (nonatomic) NSInteger usersDefault;
 
 /**
  Helper to get the power level of a member of the room.
@@ -45,29 +45,29 @@
  @param userId the id of the user.
  @return his power level.
  */
-- (NSUInteger)powerLevelOfUserWithUserID:(NSString*)userId;
+- (NSInteger)powerLevelOfUserWithUserID:(NSString*)userId;
 
 
 #pragma mark - minimum power level for actions
 /**
  The minimum power level to ban someone.
  */
-@property (nonatomic) NSUInteger ban;
+@property (nonatomic) NSInteger ban;
 
 /**
  The minimum power level to kick someone.
  */
-@property (nonatomic) NSUInteger kick;
+@property (nonatomic) NSInteger kick;
 
 /**
  The minimum power level to redact an event.
  */
-@property (nonatomic) NSUInteger redact;
+@property (nonatomic) NSInteger redact;
 
 /**
  The minimum power level to invite someone.
  */
-@property (nonatomic) NSUInteger invite;
+@property (nonatomic) NSInteger invite;
 
 
 #pragma mark - minimum power level for sending events
@@ -81,13 +81,13 @@
  The default minimum power level to send an event as a message when its event type is not
  defined in `events`.
  */
-@property (nonatomic) NSUInteger eventsDefault;
+@property (nonatomic) NSInteger eventsDefault;
 
 /**
  The default minimum power level to send an event as a state event when its event
  type is not defined in `events`.
  */
-@property (nonatomic) NSUInteger stateDefault;
+@property (nonatomic) NSInteger stateDefault;
 
 /**
  Helper to get the minimum power level the user must have to send an event of the given type 
@@ -96,7 +96,7 @@
  @param eventTypeString the type of event.
  @return the required minimum power level.
  */
-- (NSUInteger)minimumPowerLevelForSendingEventAsMessage:(MXEventTypeString)eventTypeString;
+- (NSInteger)minimumPowerLevelForSendingEventAsMessage:(MXEventTypeString)eventTypeString;
 
 /**
  Helper to get the minimum power level the user must have to send an event of the given type
@@ -105,6 +105,6 @@
  @param eventTypeString the type of event.
  @return the required minimum power level.
  */
-- (NSUInteger)minimumPowerLevelForSendingEventAsStateEvent:(MXEventTypeString)eventTypeString;
+- (NSInteger)minimumPowerLevelForSendingEventAsStateEvent:(MXEventTypeString)eventTypeString;
 
 @end
