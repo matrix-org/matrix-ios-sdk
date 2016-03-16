@@ -83,7 +83,10 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         @autoreleasepool
         {
             [_liveTimeline initialiseState:stateEvents];
-            _accountData = accountData;
+
+            // Report the provided accountData.
+            // Allocate a new instance if none, in order to handle room tag events for this room.
+            _accountData = accountData ? accountData : [[MXRoomAccountData alloc] init];
         }
     }
     return self;
