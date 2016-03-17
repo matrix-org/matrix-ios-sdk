@@ -100,7 +100,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSyncWithLimitedTimelineNotification;
 
 /**
  Tell whether the room has unread events.
- This value depends on acknowledgableEventTypes.
+ This value depends on unreadEventTypes.
  */
 @property (nonatomic, readonly) BOOL hasUnreadEvents;
 
@@ -117,15 +117,20 @@ FOUNDATION_EXPORT NSString *const kMXRoomSyncWithLimitedTimelineNotification;
 @property (nonatomic, readonly) NSUInteger highlightCount;
 
 /**
- * An array of event types strings (MXEventTypeString).
- * By default any event type except the typing, the receipts and the presence ones.
+ An array of event types strings ('MXEventTypeString').
+ By default any event type except the typing, the receipts and the presence ones.
  */
 @property (nonatomic) NSArray* acknowledgableEventTypes;
+
+/**
+ The list of event types ('MXEventTypeString') considered to check the presence of some unread events.
+ By default [m.room.name, m.room.topic, m.room.message, m.call.invite].
+ */
+@property (nonatomic) NSArray* unreadEventTypes;
 
 - (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession;
 
 - (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession andStateEvents:(NSArray*)stateEvents andAccountData:(MXRoomAccountData*)accountData;
-
 
 #pragma mark - server sync
 
@@ -346,7 +351,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSyncWithLimitedTimelineNotification;
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)setPowerLevelOfUserWithUserID:(NSString*)userId powerLevel:(NSUInteger)powerLevel
+- (MXHTTPOperation*)setPowerLevelOfUserWithUserID:(NSString*)userId powerLevel:(NSInteger)powerLevel
                                           success:(void (^)())success
                                           failure:(void (^)(NSError *error))failure;
 
@@ -524,6 +529,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSyncWithLimitedTimelineNotification;
 
 
 #pragma mark - Utils
+
 /**
  Comparator to use to order array of rooms by their lastest originServerTs value.
  

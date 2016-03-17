@@ -822,6 +822,9 @@
                                     MXRoom *room2 = roomByTags[tag][1];
                                     MXRoom *room3 = roomByTags[tag][2];
 
+                                    // Room ordering: a tagged room with no order value must have higher priority
+                                    // than the tagged rooms with order value.
+
                                     XCTAssertEqualObjects(room1.state.topic, @"1", "The order is wrong");
                                     XCTAssertEqualObjects(room2.state.topic, @"2", "The order is wrong");
                                     XCTAssertEqualObjects(room3.state.topic, @"3", "The order is wrong");
@@ -861,7 +864,7 @@
 
 - (void)testRoomByTagsOrderWithStringTagOrder
 {
-    [self doRoomByTagsOrderTest:self withOrder1:@"apples" order2:@"oranges" order3:nil];
+    [self doRoomByTagsOrderTest:self withOrder1:nil order2:@"apples" order3:@"oranges"];
 }
 
 - (void)testRoomByTagsOrderWithFloatTagOrder

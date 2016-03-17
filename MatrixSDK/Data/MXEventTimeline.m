@@ -510,7 +510,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         data.eventId = event.eventId;
         data.ts = event.originServerTs;
 
-        [store storeReceipt:data roomId:_state.roomId];
+        [store storeReceipt:data inRoom:_state.roomId];
     }
 
     // Store the event

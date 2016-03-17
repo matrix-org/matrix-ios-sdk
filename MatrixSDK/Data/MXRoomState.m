@@ -41,7 +41,7 @@
     /**
      Maximum power level observed in power level list
      */
-    NSUInteger maxPowerLevel;
+    NSInteger maxPowerLevel;
 
     /**
      Disambiguate members names in big rooms takes time. So, cache computed data.
@@ -469,8 +469,8 @@
             NSArray *array = powerLevels.users.allValues;
             for (NSNumber *powerLevel in array)
             {
-                NSUInteger level = 0;
-                MXJSONModelSetUInteger(level, powerLevel);
+                NSInteger level = 0;
+                MXJSONModelSetInteger(level, powerLevel);
                 if (level > maxPowerLevel)
                 {
                     maxPowerLevel = level;
@@ -505,6 +505,12 @@
 
 - (NSString*)memberName:(NSString*)userId
 {
+    // Sanity check
+    if (!userId.length)
+    {
+        return nil;
+    }
+    
     // First, lookup in the cache
     NSString *displayName = membersNamesCache[userId];
 

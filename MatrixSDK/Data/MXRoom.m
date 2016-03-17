@@ -64,6 +64,12 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                                       kMXEventTypeStringCallAnswer,
                                       kMXEventTypeStringCallHangup
                                       ];
+        
+        _unreadEventTypes = @[kMXEventTypeStringRoomName,
+                              kMXEventTypeStringRoomTopic,
+                              kMXEventTypeStringRoomMessage,
+                              kMXEventTypeStringCallInvite
+                              ];
     }
     
     return self;
@@ -77,7 +83,10 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         @autoreleasepool
         {
             [_liveTimeline initialiseState:stateEvents];
-            _accountData = accountData;
+
+            // Report the provided accountData.
+            // Allocate a new instance if none, in order to handle room tag events for this room.
+            _accountData = accountData ? accountData : [[MXRoomAccountData alloc] init];
         }
     }
     return self;
@@ -281,7 +290,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     return [mxSession.matrixRestClient unbanUser:userId inRoom:self.state.roomId success:success failure:failure];
 }
 
-- (MXHTTPOperation*)setPowerLevelOfUserWithUserID:(NSString *)userId powerLevel:(NSUInteger)powerLevel
+- (MXHTTPOperation*)setPowerLevelOfUserWithUserID:(NSString *)userId powerLevel:(NSInteger)powerLevel
                                           success:(void (^)())success
                                           failure:(void (^)(NSError *))failure
 {
@@ -290,7 +299,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     NSMutableDictionary *newPowerLevelsEventContent = [NSMutableDictionary dictionaryWithDictionary:self.state.powerLevels.JSONDictionary];
 
     NSMutableDictionary *newPowerLevelsEventContentUsers = [NSMutableDictionary dictionaryWithDictionary:newPowerLevelsEventContent[@"users"]];
-    newPowerLevelsEventContentUsers[userId] = [NSNumber numberWithUnsignedInteger:powerLevel];
+    newPowerLevelsEventContentUsers[userId] = [NSNumber numberWithInteger:powerLevel];
 
     newPowerLevelsEventContent[@"users"] = newPowerLevelsEventContentUsers;
 
@@ -467,7 +476,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                     data.eventId = eventId;
                     data.ts = ((NSNumber*)[params objectForKey:@"ts"]).longLongValue;
                     
-                    managedEvents |= [mxSession.store storeReceipt:data roomId:self.state.roomId];
+                    managedEvents |= [mxSession.store storeReceipt:data inRoom:self.state.roomId];
                 }
             }
         }
@@ -495,7 +504,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         data.eventId = event.eventId;
         data.ts = (uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000);
         
-        if ([mxSession.store storeReceipt:data roomId:self.state.roomId])
+        if ([mxSession.store storeReceipt:data inRoom:self.state.roomId])
         {
             if ([mxSession.store respondsToSelector:@selector(commit)])
             {
@@ -521,7 +530,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 - (BOOL)hasUnreadEvents
 {
     // Check for unread events in store
-    return [mxSession.store hasUnreadEvents:self.state.roomId withTypeIn:_acknowledgableEventTypes];
+    return [mxSession.store hasUnreadEvents:self.state.roomId withTypeIn:_unreadEventTypes];
 }
 
 - (NSArray*)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort

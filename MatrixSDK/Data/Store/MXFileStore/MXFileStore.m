@@ -835,9 +835,10 @@ NSString *const kMXReceiptsFolder = @"receipts";
  * @param receipt The event
  * @param roomId The roomId
  */
-- (BOOL)storeReceipt:(MXReceiptData*)receipt roomId:(NSString*)roomId
+- (BOOL)storeReceipt:(MXReceiptData*)receipt inRoom:(NSString*)roomId
 {
-    if ([super storeReceipt:receipt roomId:roomId]) {
+    if ([super storeReceipt:receipt inRoom:roomId])
+    {
         if (NSNotFound == [roomsToCommitForReceipts indexOfObject:roomId])
         {
             [roomsToCommitForReceipts addObject:roomId];

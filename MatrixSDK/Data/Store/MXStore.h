@@ -172,28 +172,40 @@
 
 
 /**
- * Returns the receipts list for an event in a dedicated room.
- * if sort is set to YES, they are sorted from the latest to the oldest ones.
- * @param roomId The room Id.
- * @param eventId The event Id.
- * @param sort to sort them from the latest to the oldest
- * @return the receipts for an event in a dedicated room.
+ Returns the receipts list for an event in a dedicated room.
+ if sort is set to YES, they are sorted from the latest to the oldest ones.
+ 
+ @param roomId The room Id.
+ @param eventId The event Id.
+ @param sort to sort them from the latest to the oldest
+ @return the receipts for an event in a dedicated room.
  */
 - (NSArray*)getEventReceipts:(NSString*)roomId eventId:(NSString*)eventId sorted:(BOOL)sort;
 
 /**
- * Store the receipt for an user in a room
- * @param receipt The event
- * @param roomId The roomId
- * @return true if the receipt has been stored
+ Store the receipt for a user in a room
+ 
+ @param receipt The event
+ @param roomId The roomId
+ @return true if the receipt has been stored
  */
-- (BOOL)storeReceipt:(MXReceiptData*)receipt roomId:(NSString*)roomId;
+- (BOOL)storeReceipt:(MXReceiptData*)receipt inRoom:(NSString*)roomId;
 
 /**
- * Check whether a room has some unread events.
- * @param roomId the room id.
- * @param types an array of event types strings (MXEventTypeString).
- * @return YES if at least one stored event has its type listed in provided array.
+ Retrieve the receipt for a user in a room
+ 
+ @param roomId The roomId
+ @param userId The user identifier
+ @return the current stored receipt (nil by default).
+ */
+- (MXReceiptData *)getReceiptInRoom:(NSString*)roomId forUserId:(NSString*)userId;
+
+/**
+ Check whether a room has some unread events.
+ 
+ @param roomId the room id.
+ @param types an array of event types strings (MXEventTypeString).
+ @return YES if at least one stored event has its type listed in provided array.
  */
 - (BOOL)hasUnreadEvents:(NSString*)roomId withTypeIn:(NSArray*)types;
 

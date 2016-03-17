@@ -198,7 +198,7 @@
     return receipts;
 }
 
-- (BOOL)storeReceipt:(MXReceiptData*)receipt roomId:(NSString*)roomId
+- (BOOL)storeReceipt:(MXReceiptData*)receipt inRoom:(NSString*)roomId
 {
     NSMutableDictionary* receiptsByUserId = [receiptsByRoomId objectForKey:roomId];
     
@@ -220,6 +220,23 @@
     return false;
 }
 
+- (MXReceiptData *)getReceiptInRoom:(NSString*)roomId forUserId:(NSString*)userId
+{
+    MXMemoryRoomStore* store = [roomStores valueForKey:roomId];
+    NSMutableDictionary* receipsByUserId = [receiptsByRoomId objectForKey:roomId];
+    
+    if (store && receipsByUserId)
+    {
+        MXReceiptData* data = [receipsByUserId objectForKey:userId];
+        if (data)
+        {
+            return [data copy];
+        }
+    }
+    
+    return nil;
+}
+
 - (BOOL)hasUnreadEvents:(NSString*)roomId withTypeIn:(NSArray*)types
 {
     MXMemoryRoomStore* store = [roomStores valueForKey:roomId];
@@ -233,7 +250,16 @@
         {
             // Check the current stored events (by ignoring oneself events)
             NSArray *array = [store eventsAfter:data.eventId except:credentials.userId withTypeIn:[NSSet setWithArray:types]];
-            return (array.count != 0);
+            
+            // Check whether these unread events have not been redacted.
+            for (MXEvent *event in array)
+            {
+                if (event.redactedBecause == nil)
+                {
+                    // There is at least one unread event - Done
+                    return YES;
+                }
+            }
         }
     }
    

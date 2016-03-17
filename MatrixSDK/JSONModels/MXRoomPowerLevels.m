@@ -26,14 +26,14 @@
     if (roomPowerLevels)
     {
         MXJSONModelSetDictionary(roomPowerLevels.users, JSONDictionary[@"users"]);
-        MXJSONModelSetUInteger(roomPowerLevels.usersDefault, JSONDictionary[@"users_default"]);
-        MXJSONModelSetUInteger(roomPowerLevels.ban, JSONDictionary[@"ban"]);
-        MXJSONModelSetUInteger(roomPowerLevels.kick, JSONDictionary[@"kick"]);
-        MXJSONModelSetUInteger(roomPowerLevels.redact, JSONDictionary[@"redact"]);
-        MXJSONModelSetUInteger(roomPowerLevels.invite, JSONDictionary[@"invite"]);
+        MXJSONModelSetInteger(roomPowerLevels.usersDefault, JSONDictionary[@"users_default"]);
+        MXJSONModelSetInteger(roomPowerLevels.ban, JSONDictionary[@"ban"]);
+        MXJSONModelSetInteger(roomPowerLevels.kick, JSONDictionary[@"kick"]);
+        MXJSONModelSetInteger(roomPowerLevels.redact, JSONDictionary[@"redact"]);
+        MXJSONModelSetInteger(roomPowerLevels.invite, JSONDictionary[@"invite"]);
         MXJSONModelSetDictionary(roomPowerLevels.events, JSONDictionary[@"events"]);
-        MXJSONModelSetUInteger(roomPowerLevels.eventsDefault, JSONDictionary[@"events_default"]);
-        MXJSONModelSetUInteger(roomPowerLevels.stateDefault, JSONDictionary[@"state_default"]);
+        MXJSONModelSetInteger(roomPowerLevels.eventsDefault, JSONDictionary[@"events_default"]);
+        MXJSONModelSetInteger(roomPowerLevels.stateDefault, JSONDictionary[@"state_default"]);
     }
     return roomPowerLevels;
 }
@@ -53,29 +53,29 @@
     return self;
 }
 
-- (NSUInteger)powerLevelOfUserWithUserID:(NSString *)userId
+- (NSInteger)powerLevelOfUserWithUserID:(NSString *)userId
 {
     // By default, use usersDefault
-    NSUInteger userPowerLevel = _usersDefault;
+    NSInteger userPowerLevel = _usersDefault;
 
     NSNumber *powerLevel;
     MXJSONModelSetNumber(powerLevel, _users[userId]);
     if (powerLevel)
     {
-        userPowerLevel = [powerLevel unsignedIntegerValue];
+        userPowerLevel = [powerLevel integerValue];
     }
 
     return userPowerLevel;
 }
 
-- (NSUInteger)minimumPowerLevelForSendingEventAsMessage:(MXEventTypeString)eventTypeString
+- (NSInteger)minimumPowerLevelForSendingEventAsMessage:(MXEventTypeString)eventTypeString
 {
-    NSUInteger minimumPowerLevel;
+    NSInteger minimumPowerLevel;
 
     NSNumber *powerLevel = _events[eventTypeString];
     if (powerLevel)
     {
-        minimumPowerLevel = [powerLevel unsignedIntegerValue];
+        minimumPowerLevel = [powerLevel integerValue];
     }
 
     // Use the default value for sending event as message
@@ -88,15 +88,15 @@
 }
 
 
-- (NSUInteger)minimumPowerLevelForSendingEventAsStateEvent:(MXEventTypeString)eventTypeString
+- (NSInteger)minimumPowerLevelForSendingEventAsStateEvent:(MXEventTypeString)eventTypeString
 {
-    NSUInteger minimumPowerLevel;
+    NSInteger minimumPowerLevel;
 
     NSNumber *powerLevel;
     MXJSONModelSetNumber(powerLevel, _events[eventTypeString]);
     if (powerLevel)
     {
-        minimumPowerLevel = [powerLevel unsignedIntegerValue];
+        minimumPowerLevel = [powerLevel integerValue];
     }
     else
     {
