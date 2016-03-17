@@ -1,3 +1,15 @@
+Changes in Matrix iOS SDK in 0.6.4 (2016-03-17)
+===============================================
+
+Improvements:
+ * MXRoom: Update unread events handling (ignore m.room.member events and redacted events).
+ * MXRoomPowerLevels: power level values are signed.
+ * MXStore: Retrieve the receipt for a user in a room.
+
+Bug fixes:
+ * App crashes on redacted event handling.
+ * The account data changes are ignored (Favorites section is not refreshed correctly).
+
 Changes in Matrix iOS SDK in 0.6.3 (2016-03-07)
 ===============================================
 
