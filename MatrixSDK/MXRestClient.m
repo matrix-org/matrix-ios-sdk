@@ -163,8 +163,8 @@ MXAuthAction;
 }
 
 #pragma mark - Registration operations
-- (MXHTTPOperation*)getRegisterFlow:(void (^)(NSDictionary *JSONResponse))success
-                            failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)getRegisterSession:(void (^)(MXAuthenticationSession *authSession))success
+                               failure:(void (^)(NSError *error))failure
 {
     return [self getRegisterOrLoginFlow:MXAuthActionRegister success:success failure:failure];
 }
@@ -190,8 +190,8 @@ MXAuthAction;
 }
 
 #pragma mark - Login operations
-- (MXHTTPOperation*)getLoginFlow:(void (^)(NSDictionary *JSONResponse))success
-                         failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)getLoginSession:(void (^)(MXAuthenticationSession *authSession))success
+                            failure:(void (^)(NSError *error))failure
 {
     return [self getRegisterOrLoginFlow:MXAuthActionLogin success:success failure:failure];
 }
@@ -273,7 +273,7 @@ MXAuthAction;
 }
 
 - (MXHTTPOperation*)getRegisterOrLoginFlow:(MXAuthAction)authAction
-                                   success:(void (^)(NSDictionary *JSONResponse))success failure:(void (^)(NSError *error))failure
+                                   success:(void (^)(MXAuthenticationSession *authSession))success failure:(void (^)(NSError *error))failure
 {
     NSString *httpMethod = @"GET";
     NSDictionary *parameters = nil;
@@ -295,7 +295,7 @@ MXAuthAction;
                                      // sanity check
                                      if (success)
                                      {
-                                         success(JSONResponse);
+                                         success([MXAuthenticationSession modelFromJSON:JSONResponse]);
                                      }
 
                                  }
@@ -312,7 +312,7 @@ MXAuthAction;
                                      {
                                          if (success)
                                          {
-                                             success(JSONResponse);
+                                             success([MXAuthenticationSession modelFromJSON:JSONResponse]);
                                          }
                                      }
                                      else if (failure)

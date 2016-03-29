@@ -91,6 +91,24 @@ NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
 
 @end
 
+@implementation MXAuthenticationSession
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXAuthenticationSession *authSession = [[MXAuthenticationSession alloc] init];
+    if (authSession)
+    {
+        MXJSONModelSetString(authSession.session, JSONDictionary[@"session"]);
+        MXJSONModelSetDictionary(authSession.params, JSONDictionary[@"params"]);
+        
+        authSession.flows = [MXLoginFlow modelsFromJSON:JSONDictionary[@"flows"]];
+    }
+    
+    return authSession;
+}
+
+@end
+
 @implementation MXCredentials
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
