@@ -347,8 +347,7 @@ MXAuthAction;
                                     success:(void (^)(MXCredentials *))success failure:(void (^)(NSError *))failure
 {
     // Is it an email or a username?
-    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"^\\S+@\\S+\\.\\S+$" options:NSRegularExpressionCaseInsensitive error:nil];
-    BOOL isEmailAddress = (nil != [regex firstMatchInString:user options:0 range:NSMakeRange(0, user.length)]);
+    BOOL isEmailAddress = [MXTools isEmailAddress:user];
     
     NSDictionary *parameters;
     
