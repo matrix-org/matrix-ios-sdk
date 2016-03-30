@@ -58,6 +58,12 @@
 + (void)logCrashes:(BOOL)logCrashes;
 
 /**
+ Set the app build version.
+ It will be reported in crash report.
+ */
++ (void)setBuildVersion:(NSString*)buildVersion;
+
+/**
  If any, get the file containing the last application crash log.
  
  Only one crash log is stored at a time. The best moment for the app to handle it is the 
