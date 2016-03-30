@@ -144,7 +144,8 @@ static void handleUncaughtException(NSException *exception)
     NSString *model = [[UIDevice currentDevice] model];
     NSString *version = [[UIDevice currentDevice] systemVersion];
     NSArray  *backtrace = [exception callStackSymbols];
-    NSString *description = [NSString stringWithFormat:@"[%@]\n%@\nApplication: %@ (%@)\nApplication version: %@\nMatrix SDK version: %@\nBuild: %@\n%@ %@\n%@\n",
+    NSString *description = [NSString stringWithFormat:@"%tu - %@\n%@\nApplication: %@ (%@)\nApplication version: %@\nMatrix SDK version: %@\nBuild: %@\n%@ %@\n%@\n",
+                             [[NSDate date] timeIntervalSince1970],
                              [NSDate date],
                              exception.description,
                              app, appId,
