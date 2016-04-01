@@ -129,6 +129,11 @@ typedef enum : NSUInteger
 @property (nonatomic) NSString *identityServer;
 
 /**
+ The current trusted certificate (if any).
+ */
+@property (nonatomic, readonly) NSData* allowedCertificate;
+
+/**
  Create an instance based on homeserver url.
  
  @param homeserver the homeserver URL.

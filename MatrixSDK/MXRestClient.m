@@ -162,6 +162,11 @@ MXAuthAction;
     }
 }
 
+- (NSData*)allowedCertificate
+{
+    return httpClient.allowedCertificate;
+}
+
 #pragma mark - Registration operations
 - (MXHTTPOperation*)getRegisterSession:(void (^)(MXAuthenticationSession *authSession))success
                                failure:(void (^)(NSError *error))failure
@@ -329,6 +334,7 @@ MXAuthAction;
                                     path:[self authActionPath:authAction]
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     
                                      if (success)
                                      {
                                          success(JSONResponse);
@@ -336,10 +342,12 @@ MXAuthAction;
                                      
                                  }
                                  failure:^(NSError *error) {
+                                     
                                      if (failure)
                                      {
                                          failure(error);
                                      }
+                                     
                                  }];
 }
 
@@ -2291,7 +2299,7 @@ MXAuthAction;
                                              if (success)
                                              {
                                                  NSString *sid;
-                                                 MXJSONModelSetString(sid, JSONResponse[@"sid"]);
+                                                 MXJSONModelSetNumber(sid, JSONResponse[@"sid"]);
                                                  success(sid);
                                              }
                                          }

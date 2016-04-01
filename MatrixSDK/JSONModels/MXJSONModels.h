@@ -103,9 +103,9 @@ FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeRecaptcha;
     @property (nonatomic) NSString *type;
 
     /**
-     The list of stages to proceed the login or the registration. This is an array of NSStrings
+     The list of stages to proceed the login or the registration.
      */
-    @property (nonatomic) NSArray *stages;
+    @property (nonatomic) NSArray<MXLoginFlowType> *stages;
 
 @end
 
@@ -113,6 +113,11 @@ FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeRecaptcha;
  `MXAuthenticationSession` represents an authentication session returned by the home server.
  */
 @interface MXAuthenticationSession : MXJSONModel
+
+    /**
+     The list of stages the client has completed successfully.
+     */
+    @property (nonatomic) NSArray<MXLoginFlowType> *completed;
 
     /**
      The session identifier that the client must pass back to the home server, if one is provided,
