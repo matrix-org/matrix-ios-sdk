@@ -951,8 +951,11 @@ NSString *const kMXReceiptsFolder = @"receipts";
                 {
                     NSString *receiptsFile = [storeReceiptsPath stringByAppendingPathComponent:roomId];
                     NSUInteger filesize = [[[[NSFileManager defaultManager] attributesOfItemAtPath:receiptsFile error:nil] objectForKey:NSFileSize] intValue];
-                    
-                    [NSKeyedArchiver archiveRootObject:receiptsByUserId toFile:receiptsFile];
+
+                    @synchronized (receiptsByUserId)
+                    {
+                        [NSKeyedArchiver archiveRootObject:receiptsByUserId toFile:receiptsFile];
+                    }
                     
                     deltaCacheSize += [[[[NSFileManager defaultManager] attributesOfItemAtPath:receiptsFile error:nil] objectForKey:NSFileSize] intValue] - filesize;
                 }
