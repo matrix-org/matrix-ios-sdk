@@ -120,6 +120,24 @@ NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
 
 @end
 
+@implementation MXThirdPartyIdentifier
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXThirdPartyIdentifier *thirdPartyIdentifier = [[MXThirdPartyIdentifier alloc] init];
+    if (thirdPartyIdentifier)
+    {
+        MXJSONModelSetString(thirdPartyIdentifier.medium, JSONDictionary[@"medium"]);
+        MXJSONModelSetString(thirdPartyIdentifier.address, JSONDictionary[@"address"]);
+        MXJSONModelSetUInt64(thirdPartyIdentifier.validatedAt, JSONDictionary[@"validated_at"]);
+        MXJSONModelSetUInt64(thirdPartyIdentifier.addedAt, JSONDictionary[@"added_at"]);
+    }
+
+    return thirdPartyIdentifier;
+}
+
+@end
+
 @implementation MXCreateRoomResponse
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
