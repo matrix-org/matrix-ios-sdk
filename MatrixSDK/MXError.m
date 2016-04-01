@@ -30,6 +30,8 @@ NSString *const kMXErrCodeStringLimitExceeded   = @"M_LIMIT_EXCEEDED";
 NSString *const kMXErrCodeStringUserInUse       = @"M_USER_IN_USE";
 NSString *const kMXErrCodeStringRoomInUse       = @"M_ROOM_IN_USE";
 NSString *const kMXErrCodeStringBadPagination   = @"M_BAD_PAGINATION";
+NSString *const kMXErrCodeStringUnauthorized    = @"M_UNAUTHORIZED";
+NSString *const kMXErrCodeStringLoginEmailURLNotYet = @"M_LOGIN_EMAIL_URL_NOT_YET";
 
 NSString *const kMXErrorStringInvalidToken      = @"Invalid token";
 
