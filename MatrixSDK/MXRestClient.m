@@ -306,7 +306,7 @@ MXAuthAction;
                                  }
                                  failure:^(NSError *error) {
 
-                                     // C-S API v2: The login mechanism should be available in response data in case of unauthorized request.
+                                     // The login mechanism should be available in response data in case of unauthorized request.
                                      NSDictionary *JSONResponse = nil;
                                      if (error.userInfo[MXHTTPClientErrorResponseDataKey])
                                      {
