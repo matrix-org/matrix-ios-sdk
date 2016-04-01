@@ -2292,7 +2292,15 @@ MXAuthAction;
                                              if (success)
                                              {
                                                  NSString *sid;
-                                                 MXJSONModelSetString(sid, JSONResponse[@"sid"]);
+                                                 // Temporary workaround for https://matrix.org/jira/browse/SYD-17
+                                                 if ([JSONResponse[@"sid"] isKindOfClass:NSNumber.class])
+                                                 {
+                                                     sid = [(NSNumber*)JSONResponse[@"sid"] stringValue];
+                                                 }
+                                                 else
+                                                 {
+                                                     MXJSONModelSetString(sid, JSONResponse[@"sid"]);
+                                                 }
                                                  success(sid);
                                              }
                                          }
