@@ -1111,7 +1111,9 @@ typedef enum : NSUInteger
 /**
  Request the validation of an email address.
 
- The identity server will send a validation token to this email.
+ The identity server will send an email to this address. The end user
+ will have to click on the link it contains to validate the address.
+
  Use the returned sid to complete operations that require authenticated email
  like [MXRestClient add3PID:].
 
