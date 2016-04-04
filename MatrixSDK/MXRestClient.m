@@ -168,6 +168,24 @@ MXAuthAction;
 }
 
 #pragma mark - Registration operations
+- (MXHTTPOperation*)isUserNameInUse:(NSString*)username
+                           callback:(void (^)(BOOL isUserNameInUse))callback
+{
+    // Trigger a fake registration to know whether the user id is available or not.
+    return [self registerOrLogin:MXAuthActionRegister
+                      parameters:@{@"username": username,
+                                   @"password": @"azerty"}
+                         success:nil
+                         failure:^(NSError *error) {
+                             
+                             NSDictionary* dict = error.userInfo;
+                             BOOL isUserNameInUse = ([[dict valueForKey:@"errcode"] isEqualToString:kMXErrCodeStringUserInUse]);
+                             
+                             callback(isUserNameInUse);
+                             
+                         }];
+}
+
 - (MXHTTPOperation*)getRegisterSession:(void (^)(MXAuthenticationSession *authSession))success
                                failure:(void (^)(NSError *error))failure
 {

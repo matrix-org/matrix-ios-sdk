@@ -155,6 +155,16 @@ typedef enum : NSUInteger
 
 #pragma mark - Registration operations
 /**
+ Check whether a username is already in use.
+ 
+ @username the user identifier to test (This value must not be nil).
+ @param callback A block object called when the operation is completed.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)isUserNameInUse:(NSString*)username
+                           callback:(void (^)(BOOL isUserNameInUse))callback;
+/**
  Get the list of register flows supported by the home server.
  
  @param success A block object called when the operation succeeds. It provides the server response
