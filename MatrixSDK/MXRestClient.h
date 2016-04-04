@@ -121,6 +121,11 @@ typedef enum : NSUInteger
 @property (nonatomic) NSString *identityServer;
 
 /**
+ The current trusted certificate (if any).
+ */
+@property (nonatomic, readonly) NSData* allowedCertificate;
+
+/**
  Create an instance based on homeserver url.
  
  @param homeserver the homeserver URL.
@@ -144,14 +149,14 @@ typedef enum : NSUInteger
 /**
  Get the list of register flows supported by the home server.
  
- @param success A block object called when the operation succeeds. It provides the raw JSON response
- from the server.
+ @param success A block object called when the operation succeeds. It provides the server response
+ as an MXAuthenticationSession instance.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)getRegisterFlow:(void (^)(NSDictionary *JSONResponse))success
-                        failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)getRegisterSession:(void (^)(MXAuthenticationSession *authSession))success
+                               failure:(void (^)(NSError *error))failure;
 
 /**
  Generic registration action request.
@@ -204,14 +209,14 @@ typedef enum : NSUInteger
 /**
  Get the list of login flows supported by the home server.
  
- @param success A block object called when the operation succeeds. It provides the raw JSON response
- from the server.
+ @param success A block object called when the operation succeeds. It provides the server response
+ as an MXAuthenticationSession instance.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)getLoginFlow:(void (^)(NSDictionary *JSONResponse))success
-                     failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)getLoginSession:(void (^)(MXAuthenticationSession *authSession))success
+                             failure:(void (^)(NSError *error))failure;
 
 /**
  Generic login action request.

@@ -36,4 +36,11 @@
  */
 + (NSString*)generateSecret;
 
+/**
+ Check whether a string is formatted as an email address.
+ 
+ @return YES if the provided string is formatted as an email.
+ */
++ (BOOL)isEmailAddress:(NSString *)inputString;
+
 @end

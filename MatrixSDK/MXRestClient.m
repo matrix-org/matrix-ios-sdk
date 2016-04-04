@@ -162,9 +162,14 @@ MXAuthAction;
     }
 }
 
+- (NSData*)allowedCertificate
+{
+    return httpClient.allowedCertificate;
+}
+
 #pragma mark - Registration operations
-- (MXHTTPOperation*)getRegisterFlow:(void (^)(NSDictionary *JSONResponse))success
-                            failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)getRegisterSession:(void (^)(MXAuthenticationSession *authSession))success
+                               failure:(void (^)(NSError *error))failure
 {
     return [self getRegisterOrLoginFlow:MXAuthActionRegister success:success failure:failure];
 }
@@ -190,8 +195,8 @@ MXAuthAction;
 }
 
 #pragma mark - Login operations
-- (MXHTTPOperation*)getLoginFlow:(void (^)(NSDictionary *JSONResponse))success
-                         failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)getLoginSession:(void (^)(MXAuthenticationSession *authSession))success
+                            failure:(void (^)(NSError *error))failure
 {
     return [self getRegisterOrLoginFlow:MXAuthActionLogin success:success failure:failure];
 }
@@ -273,7 +278,7 @@ MXAuthAction;
 }
 
 - (MXHTTPOperation*)getRegisterOrLoginFlow:(MXAuthAction)authAction
-                                   success:(void (^)(NSDictionary *JSONResponse))success failure:(void (^)(NSError *error))failure
+                                   success:(void (^)(MXAuthenticationSession *authSession))success failure:(void (^)(NSError *error))failure
 {
     NSString *httpMethod = @"GET";
     NSDictionary *parameters = nil;
@@ -295,13 +300,13 @@ MXAuthAction;
                                      // sanity check
                                      if (success)
                                      {
-                                         success(JSONResponse);
+                                         success([MXAuthenticationSession modelFromJSON:JSONResponse]);
                                      }
 
                                  }
                                  failure:^(NSError *error) {
 
-                                     // C-S API v2: The login mechanism should be available in response data in case of unauthorized request.
+                                     // The login mechanism should be available in response data in case of unauthorized request.
                                      NSDictionary *JSONResponse = nil;
                                      if (error.userInfo[MXHTTPClientErrorResponseDataKey])
                                      {
@@ -312,7 +317,7 @@ MXAuthAction;
                                      {
                                          if (success)
                                          {
-                                             success(JSONResponse);
+                                             success([MXAuthenticationSession modelFromJSON:JSONResponse]);
                                          }
                                      }
                                      else if (failure)
@@ -329,6 +334,7 @@ MXAuthAction;
                                     path:[self authActionPath:authAction]
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     
                                      if (success)
                                      {
                                          success(JSONResponse);
@@ -336,10 +342,12 @@ MXAuthAction;
                                      
                                  }
                                  failure:^(NSError *error) {
+                                     
                                      if (failure)
                                      {
                                          failure(error);
                                      }
+                                     
                                  }];
 }
 
@@ -347,8 +355,7 @@ MXAuthAction;
                                     success:(void (^)(MXCredentials *))success failure:(void (^)(NSError *))failure
 {
     // Is it an email or a username?
-    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"^\\S+@\\S+\\.\\S+$" options:NSRegularExpressionCaseInsensitive error:nil];
-    BOOL isEmailAddress = (nil != [regex firstMatchInString:user options:0 range:NSMakeRange(0, user.length)]);
+    BOOL isEmailAddress = [MXTools isEmailAddress:user];
     
     NSDictionary *parameters;
     
