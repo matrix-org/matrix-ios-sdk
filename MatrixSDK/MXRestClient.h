@@ -157,7 +157,7 @@ typedef enum : NSUInteger
 /**
  Check whether a username is already in use.
  
- @username the user identifier to test (This value must not be nil).
+ @username the user name to test (This value must not be nil).
  @param callback A block object called when the operation is completed.
  
  @return a MXHTTPOperation instance.

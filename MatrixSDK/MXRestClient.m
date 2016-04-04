@@ -171,7 +171,7 @@ MXAuthAction;
 - (MXHTTPOperation*)isUserNameInUse:(NSString*)username
                            callback:(void (^)(BOOL isUserNameInUse))callback
 {
-    // Trigger a fake registration to know whether the user id is available or not.
+    // Trigger a fake registration to know whether the user name is available or not.
     return [self registerOrLogin:MXAuthActionRegister
                       parameters:@{@"username": username,
                                    @"password": @"azerty"}
