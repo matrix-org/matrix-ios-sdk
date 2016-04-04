@@ -906,7 +906,7 @@ typedef enum : NSUInteger
  @param sid the id provided during the 3PID validation session ([MXRestClient requestEmailValidation:]).
  @param clientSecret the same secret key used in the validation session.
  @param bind whether the homeserver should also bind this third party identifier
-        to the account's Matrix ID with the passed identity server.
+        to the account's Matrix ID with the identity server.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
