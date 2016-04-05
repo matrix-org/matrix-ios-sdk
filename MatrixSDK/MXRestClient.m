@@ -173,8 +173,7 @@ MXAuthAction;
 {
     // Trigger a fake registration to know whether the user name is available or not.
     return [self registerOrLogin:MXAuthActionRegister
-                      parameters:@{@"username": username,
-                                   @"password": @"azerty"}
+                      parameters:@{@"username": username}
                          success:nil
                          failure:^(NSError *error) {
                              
