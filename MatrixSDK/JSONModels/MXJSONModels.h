@@ -28,6 +28,14 @@
  */
 
 /**
+ Types of third party media.
+ The list is not exhautive and depends on the Identity server capabilities.
+ */
+typedef NSString* MX3PIDMedium;
+FOUNDATION_EXPORT NSString *const kMX3PIDMediumEmail;
+FOUNDATION_EXPORT NSString *const kMX3PIDMediumMSISDN;
+
+/**
   `MXPublicRoom` represents a public room returned by the publicRoom request
  */
 @interface MXPublicRoom : MXJSONModel
@@ -175,6 +183,34 @@ FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeRecaptcha;
     - (instancetype)initWithHomeServer:(NSString*)homeServer
                                 userId:(NSString*)userId
                            accessToken:(NSString*)accessToken;
+
+@end
+
+
+/**
+ `MXThirdPartyIdentifier` represents the response to /account/3pid GET request.
+ */
+@interface MXThirdPartyIdentifier : MXJSONModel
+
+    /**
+     The medium of the third party identifier.
+     */
+    @property (nonatomic) MX3PIDMedium medium;
+
+    /**
+     The third party identifier address.
+     */
+    @property (nonatomic) NSString *address;
+
+    /**
+     The timestamp in milliseconds when this 3PID has been validated.
+    */
+    @property (nonatomic) uint64_t validatedAt;
+
+    /**
+     The timestamp in milliseconds when this 3PID has been added to the user account.
+     */
+    @property (nonatomic) uint64_t addedAt;
 
 @end
 

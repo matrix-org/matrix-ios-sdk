@@ -139,6 +139,45 @@ NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
 
 @end
 
+@implementation MXThirdPartyIdentifier
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXThirdPartyIdentifier *thirdPartyIdentifier = [[MXThirdPartyIdentifier alloc] init];
+    if (thirdPartyIdentifier)
+    {
+        MXJSONModelSetString(thirdPartyIdentifier.medium, JSONDictionary[@"medium"]);
+        MXJSONModelSetString(thirdPartyIdentifier.address, JSONDictionary[@"address"]);
+        MXJSONModelSetUInt64(thirdPartyIdentifier.validatedAt, JSONDictionary[@"validated_at"]);
+        MXJSONModelSetUInt64(thirdPartyIdentifier.addedAt, JSONDictionary[@"added_at"]);
+    }
+
+    return thirdPartyIdentifier;
+}
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super init];
+    if (self)
+    {
+        _medium = [aDecoder decodeObjectForKey:@"medium"];
+        _address = [aDecoder decodeObjectForKey:@"address"];
+        _validatedAt = [((NSNumber*)[aDecoder decodeObjectForKey:@"validatedAt"]) unsignedLongLongValue];
+        _addedAt = [((NSNumber*)[aDecoder decodeObjectForKey:@"addedAt"]) unsignedLongLongValue];
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    [aCoder encodeObject:_medium forKey:@"medium"];
+    [aCoder encodeObject:_address forKey:@"address"];
+    [aCoder encodeObject:@(_validatedAt) forKey:@"validatedAt"];
+    [aCoder encodeObject:@(_addedAt) forKey:@"addedAt"];
+}
+
+@end
+
 @implementation MXCreateRoomResponse
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary

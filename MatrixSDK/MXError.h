@@ -35,6 +35,7 @@ FOUNDATION_EXPORT NSString *const kMXErrCodeStringRoomInUse;
 FOUNDATION_EXPORT NSString *const kMXErrCodeStringBadPagination;
 FOUNDATION_EXPORT NSString *const kMXErrCodeStringUnauthorized;
 FOUNDATION_EXPORT NSString *const kMXErrCodeStringLoginEmailURLNotYet;
+FOUNDATION_EXPORT NSString *const kMXErrCodeStringThreePIDAuthFailed;
 
 FOUNDATION_EXPORT NSString *const kMXErrorStringInvalidToken;
 
