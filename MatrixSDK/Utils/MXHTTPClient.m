@@ -326,30 +326,43 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
                 // The device is not connected to the internet, wait for the connection to be up again before retrying
                 __weak __typeof(self)weakSelf = self;
                 id networkComeBackObserver = [self addObserverForNetworkComeBack:^{
+                    
                     __strong __typeof(weakSelf)strongSelf = weakSelf;
 
                     NSLog(@"[MXHTTPClient] Network is back for request %p", mxHTTPOperation);
 
                     // Flag this request as retried
                     lastError = nil;
-
-                    NSLog(@"[MXHTTPClient] Retry request %p. Try #%tu/%tu. Age: %tums. Max retries time: %tums", mxHTTPOperation, mxHTTPOperation.numberOfTries + 1, mxHTTPOperation.maxNumberOfTries, mxHTTPOperation.age, mxHTTPOperation.maxRetriesTime);
-
-                    [strongSelf tryRequest:mxHTTPOperation method:httpMethod path:path parameters:parameters data:data headers:headers timeout:timeoutInSeconds uploadProgress:uploadProgress success:^(NSDictionary *JSONResponse) {
-
-                        NSLog(@"[MXHTTPClient] Request %p finally succeeded after %tu tries and %tums", mxHTTPOperation, mxHTTPOperation.numberOfTries, mxHTTPOperation.age);
-
-                        success(JSONResponse);
-
+                    
+                    // Check whether the pending operation was not cancelled.
+                    if (mxHTTPOperation.maxNumberOfTries)
+                    {
+                        NSLog(@"[MXHTTPClient] Retry request %p. Try #%tu/%tu. Age: %tums. Max retries time: %tums", mxHTTPOperation, mxHTTPOperation.numberOfTries + 1, mxHTTPOperation.maxNumberOfTries, mxHTTPOperation.age, mxHTTPOperation.maxRetriesTime);
+                        
+                        [strongSelf tryRequest:mxHTTPOperation method:httpMethod path:path parameters:parameters data:data headers:headers timeout:timeoutInSeconds uploadProgress:uploadProgress success:^(NSDictionary *JSONResponse) {
+                            
+                            NSLog(@"[MXHTTPClient] Request %p finally succeeded after %tu tries and %tums", mxHTTPOperation, mxHTTPOperation.numberOfTries, mxHTTPOperation.age);
+                            
+                            success(JSONResponse);
+                            
+                            // The request is complete, managed the next one
+                            [strongSelf wakeUpNextReachabilityServer];
+                            
+                        } failure:^(NSError *error) {
+                            failure(error);
+                            
+                            // The request is complete, managed the next one
+                            [strongSelf wakeUpNextReachabilityServer];
+                        }];
+                    }
+                    else
+                    {
+                        NSLog(@"[MXHTTPClient] The request %p has been cancelled", mxHTTPOperation);
+                        
                         // The request is complete, managed the next one
                         [strongSelf wakeUpNextReachabilityServer];
-
-                    } failure:^(NSError *error) {
-                        failure(error);
-
-                        // The request is complete, managed the next one
-                        [strongSelf wakeUpNextReachabilityServer];
-                    }];
+                    }
+                    
                 }];
 
                 // Wait for a limit of time. After that the request is considered expired
