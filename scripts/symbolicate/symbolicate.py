@@ -43,7 +43,10 @@ def symbolicate(crashLogData):
         
     # Find the version of the app that generated the crash
     app = crashLogData.split("Application: ")[1] .split(" ", 1)[0]
-    buildVersion = crashLogData.split("Build: ")[1] .split("\n", 1)[0].replace(" ", "")
+    buildVersion = crashLogData.split("Build: ")[1] .split("\n", 1)[0]
+    
+    # Remove any white characters
+    buildVersion = re.sub("\s", "", buildVersion)
 
     # Check the symbols FILE is here
     dSYMSFile = os.path.join("symbols", app, buildVersion, app)
