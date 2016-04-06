@@ -167,13 +167,17 @@ def download_xcarchive_tar_gz(app, url, destination, appVersion=""):
 
 if __name__ == "__main__":
 
+    if not len(glob.glob("*.log")):
+        print "Error: No .log files found in current folder"
+        exit(-1)
+
     # Clean output dir
     if os.path.exists("output"):
         os.system("rm -rf output")
     os.mkdir("output")
 
-    # Process every crash dump (all txt files of this directory)
-    for sFile in glob.glob("*.txt"):
+    # Process every crash dump (all log files of this directory)
+    for sFile in glob.glob("*.log"):
         print "# Processing %s" % sFile
 
         oFile = open(sFile)
