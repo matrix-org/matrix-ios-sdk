@@ -936,6 +936,24 @@ typedef void (^MXOnResumeDone)();
     }
 }
 
+- (MXRoom *)roomWithAlias:(NSString *)alias
+{
+    MXRoom *theRoom;
+
+    if (alias)
+    {
+        for (MXRoom *room in rooms.allValues)
+        {
+            if (room.state.aliases && NSNotFound != [room.state.aliases indexOfObject:alias])
+            {
+                theRoom = room;
+                break;
+            }
+        }
+    }
+    return theRoom;
+}
+
 - (NSArray *)rooms
 {
     return [rooms allValues];
