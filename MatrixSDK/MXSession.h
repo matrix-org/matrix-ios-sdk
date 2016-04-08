@@ -373,6 +373,15 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (MXRoom *)roomWithRoomId:(NSString*)roomId;
 
 /**
+ Get the MXRoom instance of the room that owns the passed room alias.
+
+ @param roomId The room alias to look for.
+
+ @return the MXRoom instance.
+ */
+- (MXRoom *)roomWithAlias:(NSString*)alias;
+
+/**
  Get the list of all rooms data.
  
  @return an array of MXRooms.

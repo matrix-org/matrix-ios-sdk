@@ -55,6 +55,37 @@
 }
 
 
+- (void)testRoomWithAlias
+{
+    [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+
+        NSString *alias = [[NSProcessInfo processInfo] globallyUniqueString];
+
+        // Room with a tag with "oranges" order
+        [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:alias topic:nil success:^(MXCreateRoomResponse *response) {
+
+            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+            [mxSession start:^{
+
+                MXRoom *room = [mxSession roomWithAlias:response.roomAlias];
+
+                XCTAssertNotNil(room);
+                XCTAssertEqual(room.state.aliases.count, 1);
+                XCTAssertEqualObjects(room.state.aliases[0], response.roomAlias);
+
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
 - (void)testRecents
 {
     [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {

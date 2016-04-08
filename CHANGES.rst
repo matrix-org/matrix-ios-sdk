@@ -1,3 +1,18 @@
+Changes in Matrix iOS SDK in 0.6.5 (2016-04-08)
+===============================================
+
+Improvements:
+ * MXJSONModels: Registration Support - Define MXAunthenticationSession class. This class is used to store the server response on supported flows during the login or the registration.
+ * MXRestClient: New email binding - validateEmail and bind3PID has been removed. add3PID and treePIDs has been added.
+ * MXRestClient: Registration Support - Add API to check user id availability.
+ * MXSession: Added roomWithAlias method.
+ * MXTools: Add method to validate email address.
+
+Bug fixes:
+ * User profile: user settings may be modified during pagination in past timeline.
+ * Fixed crash in [MXFileStore saveReceipts]. There was a race condition.
+ * Cancel correctly pending operations.
+
 Changes in Matrix iOS SDK in 0.6.4 (2016-03-17)
 ===============================================
 

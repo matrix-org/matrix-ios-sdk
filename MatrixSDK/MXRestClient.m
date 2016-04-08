@@ -162,9 +162,31 @@ MXAuthAction;
     }
 }
 
+- (NSData*)allowedCertificate
+{
+    return httpClient.allowedCertificate;
+}
+
 #pragma mark - Registration operations
-- (MXHTTPOperation*)getRegisterFlow:(void (^)(NSDictionary *JSONResponse))success
-                            failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)isUserNameInUse:(NSString*)username
+                           callback:(void (^)(BOOL isUserNameInUse))callback
+{
+    // Trigger a fake registration to know whether the user name is available or not.
+    return [self registerOrLogin:MXAuthActionRegister
+                      parameters:@{@"username": username}
+                         success:nil
+                         failure:^(NSError *error) {
+                             
+                             NSDictionary* dict = error.userInfo;
+                             BOOL isUserNameInUse = ([[dict valueForKey:@"errcode"] isEqualToString:kMXErrCodeStringUserInUse]);
+                             
+                             callback(isUserNameInUse);
+                             
+                         }];
+}
+
+- (MXHTTPOperation*)getRegisterSession:(void (^)(MXAuthenticationSession *authSession))success
+                               failure:(void (^)(NSError *error))failure
 {
     return [self getRegisterOrLoginFlow:MXAuthActionRegister success:success failure:failure];
 }
@@ -190,8 +212,8 @@ MXAuthAction;
 }
 
 #pragma mark - Login operations
-- (MXHTTPOperation*)getLoginFlow:(void (^)(NSDictionary *JSONResponse))success
-                         failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)getLoginSession:(void (^)(MXAuthenticationSession *authSession))success
+                            failure:(void (^)(NSError *error))failure
 {
     return [self getRegisterOrLoginFlow:MXAuthActionLogin success:success failure:failure];
 }
@@ -273,7 +295,7 @@ MXAuthAction;
 }
 
 - (MXHTTPOperation*)getRegisterOrLoginFlow:(MXAuthAction)authAction
-                                   success:(void (^)(NSDictionary *JSONResponse))success failure:(void (^)(NSError *error))failure
+                                   success:(void (^)(MXAuthenticationSession *authSession))success failure:(void (^)(NSError *error))failure
 {
     NSString *httpMethod = @"GET";
     NSDictionary *parameters = nil;
@@ -295,13 +317,13 @@ MXAuthAction;
                                      // sanity check
                                      if (success)
                                      {
-                                         success(JSONResponse);
+                                         success([MXAuthenticationSession modelFromJSON:JSONResponse]);
                                      }
 
                                  }
                                  failure:^(NSError *error) {
 
-                                     // C-S API v2: The login mechanism should be available in response data in case of unauthorized request.
+                                     // The login mechanism should be available in response data in case of unauthorized request.
                                      NSDictionary *JSONResponse = nil;
                                      if (error.userInfo[MXHTTPClientErrorResponseDataKey])
                                      {
@@ -312,7 +334,7 @@ MXAuthAction;
                                      {
                                          if (success)
                                          {
-                                             success(JSONResponse);
+                                             success([MXAuthenticationSession modelFromJSON:JSONResponse]);
                                          }
                                      }
                                      else if (failure)
@@ -329,6 +351,7 @@ MXAuthAction;
                                     path:[self authActionPath:authAction]
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     
                                      if (success)
                                      {
                                          success(JSONResponse);
@@ -336,10 +359,12 @@ MXAuthAction;
                                      
                                  }
                                  failure:^(NSError *error) {
+                                     
                                      if (failure)
                                      {
                                          failure(error);
                                      }
+                                     
                                  }];
 }
 
@@ -347,8 +372,7 @@ MXAuthAction;
                                     success:(void (^)(MXCredentials *))success failure:(void (^)(NSError *))failure
 {
     // Is it an email or a username?
-    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"^\\S+@\\S+\\.\\S+$" options:NSRegularExpressionCaseInsensitive error:nil];
-    BOOL isEmailAddress = (nil != [regex firstMatchInString:user options:0 range:NSMakeRange(0, user.length)]);
+    BOOL isEmailAddress = [MXTools isEmailAddress:user];
     
     NSDictionary *parameters;
     
@@ -1765,6 +1789,72 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation*)add3PID:(NSString*)sid
+               clientSecret:(NSString*)clientSecret
+                       bind:(BOOL)bind
+                    success:(void (^)())success
+                    failure:(void (^)(NSError *error))failure
+{
+    NSURL *identityServerURL = [NSURL URLWithString:_identityServer];
+    NSDictionary *parameters = @{
+                                 @"three_pid_creds": @{
+                                         @"id_server": identityServerURL.host,
+                                         @"sid": sid,
+                                         @"client_secret": clientSecret
+                                         },
+                                 @"bind": @(bind)
+                                 };
+
+    NSString *path = [NSString stringWithFormat:@"%@/account/3pid", apiPathPrefix];
+    return [httpClient requestWithMethod:@"POST"
+                                    path:path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success)
+                                     {
+                                         success();
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                 }];
+}
+
+- (MXHTTPOperation*)threePIDs:(void (^)(NSArray<MXThirdPartyIdentifier*> *threePIDs))success
+                      failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/account/3pid", apiPathPrefix];
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success)
+                                     {
+                                         // Use here the processing queue in order to keep the server response order
+                                         dispatch_async(processingQueue, ^{
+
+                                             dispatch_async(dispatch_get_main_queue(), ^{
+
+                                                 NSArray<MXThirdPartyIdentifier*> *threePIDs;
+                                                 MXJSONModelSetMXJSONModelArray(threePIDs, MXThirdPartyIdentifier, JSONResponse[@"threepids"]);
+                                                 success(threePIDs);
+
+                                             });
+
+                                         });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                 }];
+}
+
 
 #pragma mark - Presence operations
 - (MXHTTPOperation*)setPresence:(MXPresence)presence andStatusMessage:(NSString*)statusMessage
@@ -2292,7 +2382,15 @@ MXAuthAction;
                                              if (success)
                                              {
                                                  NSString *sid;
-                                                 MXJSONModelSetString(sid, JSONResponse[@"sid"]);
+                                                 // Temporary workaround for https://matrix.org/jira/browse/SYD-17
+                                                 if ([JSONResponse[@"sid"] isKindOfClass:NSNumber.class])
+                                                 {
+                                                     sid = [(NSNumber*)JSONResponse[@"sid"] stringValue];
+                                                 }
+                                                 else
+                                                 {
+                                                     MXJSONModelSetString(sid, JSONResponse[@"sid"]);
+                                                 }
                                                  success(sid);
                                              }
                                          }
@@ -2304,58 +2402,6 @@ MXAuthAction;
                                          }];
 }
 
-- (MXHTTPOperation*)validateEmail:(NSString*)sid
-                  validationToken:(NSString*)validationToken
-                     clientSecret:(NSString*)clientSecret
-                          success:(void (^)(BOOL success))success
-                          failure:(void (^)(NSError *error))failure
-{
-    // The identity server expects params in the URL
-    NSString *path = [NSString stringWithFormat:@"validate/email/submitToken?token=%@&sid=%@&clientSecret=%@", validationToken, sid, clientSecret];
-    return [identityHttpClient requestWithMethod:@"POST"
-                                            path:path
-                                      parameters:nil
-                                         success:^(NSDictionary *JSONResponse) {
-                                             if (success)
-                                             {
-                                                 BOOL succeeded = false;
-                                                 MXJSONModelSetBoolean(succeeded, JSONResponse[@"success"]);
-                                                 success(succeeded);
-                                             }
-                                         }
-                                         failure:^(NSError *error) {
-                                             if (failure)
-                                             {
-                                                 failure(error);
-                                             }
-                                         }];
-}
-
-- (MXHTTPOperation*)bind3PID:(NSString*)userId
-                         sid:(NSString*)sid
-                clientSecret:(NSString*)clientSecret
-                     success:(void (^)(NSDictionary *JSONResponse))success
-                     failure:(void (^)(NSError *error))failure
-{
-    // The identity server expects params in the URL
-    NSString *path = [NSString stringWithFormat:@"3pid/bind?mxid=%@&sid=%@&clientSecret=%@", userId, sid, clientSecret];
-    return [identityHttpClient requestWithMethod:@"POST"
-                                            path:path
-                                      parameters:nil
-                                         success:^(NSDictionary *JSONResponse) {
-                                             if (success)
-                                             {
-                                                 // For now, provide the JSON response as is
-                                                 success(JSONResponse);
-                                             }
-                                         }
-                                         failure:^(NSError *error) {
-                                             if (failure)
-                                             {
-                                                 failure(error);
-                                             }
-                                         }];
-}
 
 
 #pragma mark - VoIP API

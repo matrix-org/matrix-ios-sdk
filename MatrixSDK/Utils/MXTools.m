@@ -162,4 +162,11 @@
     return [[NSProcessInfo processInfo] globallyUniqueString];
 }
 
++ (BOOL)isEmailAddress:(NSString *)inputString
+{
+    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}$" options:NSRegularExpressionCaseInsensitive error:nil];
+    
+    return (nil != [regex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
+}
+
 @end

@@ -56,14 +56,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPublic;
 FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
 
 /**
- Types of third party media.
- The list is not exhautive and depends on the Identity server capabilities.
- */
-typedef NSString* MX3PIDMedium;
-FOUNDATION_EXPORT NSString *const kMX3PIDMediumEmail;
-FOUNDATION_EXPORT NSString *const kMX3PIDMediumMSISDN;
-
-/**
  MXRestClient error domain
  */
 FOUNDATION_EXPORT NSString *const kMXRestClientErrorDomain;
@@ -129,6 +121,11 @@ typedef enum : NSUInteger
 @property (nonatomic) NSString *identityServer;
 
 /**
+ The current trusted certificate (if any).
+ */
+@property (nonatomic, readonly) NSData* allowedCertificate;
+
+/**
  Create an instance based on homeserver url.
  
  @param homeserver the homeserver URL.
@@ -150,16 +147,26 @@ typedef enum : NSUInteger
 
 #pragma mark - Registration operations
 /**
+ Check whether a username is already in use.
+ 
+ @username the user name to test (This value must not be nil).
+ @param callback A block object called when the operation is completed.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)isUserNameInUse:(NSString*)username
+                           callback:(void (^)(BOOL isUserNameInUse))callback;
+/**
  Get the list of register flows supported by the home server.
  
- @param success A block object called when the operation succeeds. It provides the raw JSON response
- from the server.
+ @param success A block object called when the operation succeeds. It provides the server response
+ as an MXAuthenticationSession instance.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)getRegisterFlow:(void (^)(NSDictionary *JSONResponse))success
-                        failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)getRegisterSession:(void (^)(MXAuthenticationSession *authSession))success
+                               failure:(void (^)(NSError *error))failure;
 
 /**
  Generic registration action request.
@@ -212,14 +219,14 @@ typedef enum : NSUInteger
 /**
  Get the list of login flows supported by the home server.
  
- @param success A block object called when the operation succeeds. It provides the raw JSON response
- from the server.
+ @param success A block object called when the operation succeeds. It provides the server response
+ as an MXAuthenticationSession instance.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)getLoginFlow:(void (^)(NSDictionary *JSONResponse))success
-                     failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)getLoginSession:(void (^)(MXAuthenticationSession *authSession))success
+                             failure:(void (^)(NSError *error))failure;
 
 /**
  Generic login action request.
@@ -903,6 +910,36 @@ typedef enum : NSUInteger
                          success:(void (^)(NSString *avatarUrl))success
                          failure:(void (^)(NSError *error))failure;
 
+/**
+ Link an authenticated 3rd party id to the Matrix user.
+
+ @param sid the id provided during the 3PID validation session ([MXRestClient requestEmailValidation:]).
+ @param clientSecret the same secret key used in the validation session.
+ @param bind whether the homeserver should also bind this third party identifier
+        to the account's Matrix ID with the identity server.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)add3PID:(NSString*)sid
+               clientSecret:(NSString*)clientSecret
+                       bind:(BOOL)bind
+                    success:(void (^)())success
+                    failure:(void (^)(NSError *error))failure;
+
+/**
+ List all 3PIDs linked to the Matrix user account.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)threePIDs:(void (^)(NSArray<MXThirdPartyIdentifier*> *threePIDs))success
+                    failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - Presence operations
 /**
@@ -1058,9 +1095,9 @@ typedef enum : NSUInteger
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)lookup3pid:(NSString*)address
-                 forMedium:(MX3PIDMedium)medium
-                   success:(void (^)(NSString *userId))success
-                   failure:(void (^)(NSError *error))failure;
+                     forMedium:(MX3PIDMedium)medium
+                       success:(void (^)(NSString *userId))success
+                       failure:(void (^)(NSError *error))failure;
 
 /**
  Retrieve user matrix ids from a list of 3rd party ids.
@@ -1082,11 +1119,13 @@ typedef enum : NSUInteger
             failure:(void (^)(NSError *error))failure;
 
 /**
- Start the validation process of an email address.
+ Request the validation of an email address.
 
- The identity server will send a validation token to this email.
- This validation token must be then send back to the identity server with [MXRestClient validateEmail] 
- in order to complete the email authentication.
+ The identity server will send an email to this address. The end user
+ will have to click on the link it contains to validate the address.
+
+ Use the returned sid to complete operations that require authenticated email
+ like [MXRestClient add3PID:].
 
  @param email the email address to validate.
  @param clientSecret a secret key generated by the client. ([MXTools generateSecret] creates such key)
@@ -1095,7 +1134,7 @@ typedef enum : NSUInteger
                     failed.
 
  @param success A block object called when the operation succeeds. It provides the id of the
-                email validation session. It must be then passed to [MXRestClient validateEmail].
+                email validation session.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
@@ -1105,44 +1144,6 @@ typedef enum : NSUInteger
                            sendAttempt:(NSUInteger)sendAttempt
                                success:(void (^)(NSString *sid))success
                                failure:(void (^)(NSError *error))failure;
-
-/**
- Complete the email validation by sending the validation token the user received by email.
-
- @param sid the id of the email validation session.
- @param validationToken the validation token the user received by email.
- @param clientSecret the same secret key used in [MXRestClient requestEmailValidation].
-
- @param success A block object called when the operation succeeds. It indicates if the
-                validation has succeeded.
- @param failure A block object called when the operation fails.
-
- @return a MXHTTPOperation instance.
- */
-- (MXHTTPOperation*)validateEmail:(NSString*)sid
-              validationToken:(NSString*)validationToken
-                 clientSecret:(NSString*)clientSecret
-                      success:(void (^)(BOOL success))success
-                      failure:(void (^)(NSError *error))failure;
-
-/**
- Link an authenticated 3rd party id to a Matrix user id.
-
- @param userId the Matrix user id to link the 3PID with.
- @param sid the id provided during the 3PID validation session.
- @param clientSecret the same secret key used in the validation session.
-
- @param success A block object called when the operation succeeds. It provides the raw
-                server response.
- @param failure A block object called when the operation fails.
-
- @return a MXHTTPOperation instance.
- */
-- (MXHTTPOperation*)bind3PID:(NSString*)userId
-                     sid:(NSString*)sid
-            clientSecret:(NSString*)clientSecret
-                 success:(void (^)(NSDictionary *JSONResponse))success
-                 failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - VoIP API

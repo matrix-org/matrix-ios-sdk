@@ -574,7 +574,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         [_state handleStateEvent:event];
 
         // Special handling for presence
-        if (MXEventTypeRoomMember == event.eventType)
+        if (_isLiveTimeline && MXEventTypeRoomMember == event.eventType)
         {
             // Update MXUser data
             MXUser *user = [room.mxSession getOrCreateUser:event.sender];

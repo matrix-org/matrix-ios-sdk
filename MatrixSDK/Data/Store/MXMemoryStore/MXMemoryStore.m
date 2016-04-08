@@ -213,7 +213,10 @@
     // not yet defined or a new event
     if (!curReceipt || (![receipt.eventId isEqualToString:curReceipt.eventId] && (receipt.ts > curReceipt.ts)))
     {
-        [receiptsByUserId setObject:receipt forKey:receipt.userId];
+        @synchronized (receiptsByUserId)
+        {
+            [receiptsByUserId setObject:receipt forKey:receipt.userId];
+        }
         return true;
     }
     

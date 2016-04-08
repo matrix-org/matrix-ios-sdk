@@ -21,6 +21,8 @@
 // stderr so it can be restored
 int stderrSave = 0;
 
+static NSString *buildVersion;
+
 #define MXLOGGER_CRASH_LOG @"crash.log"
 
 @implementation MXLogger
@@ -142,12 +144,14 @@ static void handleUncaughtException(NSException *exception)
     NSString *model = [[UIDevice currentDevice] model];
     NSString *version = [[UIDevice currentDevice] systemVersion];
     NSArray  *backtrace = [exception callStackSymbols];
-    NSString *description = [NSString stringWithFormat:@"[%@]\n%@\nApplication: %@ (%@)\nApplication version: %@\nMatrix SDK version: %@\n%@ %@\n%@\n",
+    NSString *description = [NSString stringWithFormat:@"%tu - %@\n%@\nApplication: %@ (%@)\nApplication version: %@\nMatrix SDK version: %@\nBuild: %@\n%@ %@\n%@\n",
+                             [[NSDate date] timeIntervalSince1970],
                              [NSDate date],
                              exception.description,
                              app, appId,
                              appVersion,
                              MatrixSDKVersion,
+                             buildVersion,
                              model, version,
                              backtrace];
 
@@ -195,6 +199,12 @@ static void handleSignal(int signalValue)
         signal(SIGBUS, SIG_DFL);
     }
 }
+
++ (void)setBuildVersion:(NSString *)buildVersion2
+{
+    buildVersion = buildVersion2;
+}
+
 // Return the path of the crash log file
 static NSString* crashLogPath(void)
 {

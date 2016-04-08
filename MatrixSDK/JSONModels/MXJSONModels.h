@@ -28,6 +28,14 @@
  */
 
 /**
+ Types of third party media.
+ The list is not exhautive and depends on the Identity server capabilities.
+ */
+typedef NSString* MX3PIDMedium;
+FOUNDATION_EXPORT NSString *const kMX3PIDMediumEmail;
+FOUNDATION_EXPORT NSString *const kMX3PIDMediumMSISDN;
+
+/**
   `MXPublicRoom` represents a public room returned by the publicRoom request
  */
 @interface MXPublicRoom : MXJSONModel
@@ -103,12 +111,41 @@ FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeRecaptcha;
     @property (nonatomic) NSString *type;
 
     /**
-     The list of stages to proceed the login. This is an array of NSStrings
+     The list of stages to proceed the login or the registration.
      */
-    @property (nonatomic) NSArray *stages;
+    @property (nonatomic) NSArray<MXLoginFlowType> *stages;
 
 @end
 
+/**
+ `MXAuthenticationSession` represents an authentication session returned by the home server.
+ */
+@interface MXAuthenticationSession : MXJSONModel
+
+    /**
+     The list of stages the client has completed successfully.
+     */
+    @property (nonatomic) NSArray<MXLoginFlowType> *completed;
+
+    /**
+     The session identifier that the client must pass back to the home server, if one is provided,
+     in subsequent attempts to authenticate in the same API call.
+     */
+    @property (nonatomic) NSString *session;
+
+    /**
+     The list of supported flows
+     */
+    @property (nonatomic) NSArray<MXLoginFlow*> *flows;
+
+    /**
+     The information that the client will need to know in order to use a given type of authentication.
+     For each login stage type presented, that type may be present as a key in this dictionary.
+     For example, the public key of reCAPTCHA stage could be given here.
+     */
+    @property (nonatomic) NSDictionary *params;
+
+@end
 
 /**
  `MXCredentials` represents the response to a login or a register request.
@@ -146,6 +183,34 @@ FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeRecaptcha;
     - (instancetype)initWithHomeServer:(NSString*)homeServer
                                 userId:(NSString*)userId
                            accessToken:(NSString*)accessToken;
+
+@end
+
+
+/**
+ `MXThirdPartyIdentifier` represents the response to /account/3pid GET request.
+ */
+@interface MXThirdPartyIdentifier : MXJSONModel
+
+    /**
+     The medium of the third party identifier.
+     */
+    @property (nonatomic) MX3PIDMedium medium;
+
+    /**
+     The third party identifier address.
+     */
+    @property (nonatomic) NSString *address;
+
+    /**
+     The timestamp in milliseconds when this 3PID has been validated.
+    */
+    @property (nonatomic) uint64_t validatedAt;
+
+    /**
+     The timestamp in milliseconds when this 3PID has been added to the user account.
+     */
+    @property (nonatomic) uint64_t addedAt;
 
 @end
 
