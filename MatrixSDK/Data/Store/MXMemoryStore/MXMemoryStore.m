@@ -78,6 +78,7 @@
     MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
     [roomStore removeAllMessages];
     roomStore.paginationToken = nil;
+    roomStore.hasReachedHomeServerPaginationEnd = NO;
 }
 
 - (void)deleteRoom:(NSString *)roomId

@@ -232,6 +232,8 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     [bgManagedObjectContext performBlock:^{
         MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
         [room removeAllMessages];
+        room.paginationToken = nil;
+        room.hasReachedHomeServerPaginationEnd = @(NO);
     }];
 }
 
