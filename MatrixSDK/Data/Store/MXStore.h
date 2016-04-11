@@ -83,6 +83,7 @@
 
 /**
  Remove all existing messages in a room.
+ This operation resets the pagination token, and the flag indicating that the SDK has reached the end of pagination.
  
  @param roomId the id of the room.
  */
