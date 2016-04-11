@@ -25,6 +25,8 @@ NSUInteger const kMXFileVersion = 22;
 NSString *const kMXFileStoreFolder = @"MXFileStore";
 NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
 
+NSString *const kMXFileStoreSavingMarker = @"savingMarker";
+
 NSString *const kMXFileStoreRoomsMessagesFolder = @"messages";
 NSString *const kMXFileStoreRoomsStateFolder = @"state";
 NSString *const kMXFileStoreRoomsAccountDataFolder = @"accountData";
@@ -47,6 +49,9 @@ NSString *const kMXReceiptsFolder = @"receipts";
 
     // The path of the MXFileStore folder
     NSString *storePath;
+    
+    // The path of the temporary file created during saving process.
+    NSString *savingMarkerFile;
 
     // The path of rooms messages folder
     NSString *storeRoomsMessagesPath;
@@ -115,6 +120,7 @@ NSString *const kMXReceiptsFolder = @"receipts";
 
     credentials = someCredentials;
     storePath = [[cachePath stringByAppendingPathComponent:kMXFileStoreFolder] stringByAppendingPathComponent:credentials.userId];
+    savingMarkerFile = [storePath stringByAppendingPathComponent:kMXFileStoreSavingMarker];
     storeRoomsMessagesPath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsMessagesFolder];
     storeRoomsStatePath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsStateFolder];
     storeRoomsAccountDataPath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsAccountDataFolder];
@@ -163,17 +169,12 @@ NSString *const kMXReceiptsFolder = @"receipts";
             }
 
             // If metaData is still defined, we can load rooms data
-            if (metaData)
+            if (metaData && [self checkStorageValidity])
             {
                 [self loadRoomsMessages];
                 [self preloadRoomsStates];
                 [self preloadRoomsAccountData];
-            }
-            
-            if (metaData)
-            {
                 [self loadReceipts];
-
             }
             
             // Else, if credentials is valid, create and store it
@@ -519,6 +520,9 @@ NSString *const kMXReceiptsFolder = @"receipts";
     // Save data only if metaData exists
     if (metaData)
     {
+        // Create a temporary file which will live during all the data saving
+        [[NSFileManager defaultManager] createFileAtPath:savingMarkerFile contents:nil attributes:nil];
+        
         [self saveRoomsMessages];
         [self saveRoomsState];
         [self saveRoomsAccountData];
@@ -529,6 +533,9 @@ NSString *const kMXReceiptsFolder = @"receipts";
         // If there is a crash during the commit operation, we will be able to retrieve non
         // stored data thanks to the old eventStreamToken stored at the previous commit.
         [self saveMetaData];
+        
+        // The data saving is completed: remove the temporary file.
+        [[NSFileManager defaultManager] removeItemAtPath:savingMarkerFile error:nil];
     }
 }
 
@@ -552,6 +559,21 @@ NSString *const kMXReceiptsFolder = @"receipts";
         roomStores[roomId] = roomStore;
     }
     return roomStore;
+}
+
+#pragma mark - Storage validity
+- (BOOL)checkStorageValidity
+{
+    // Check whether the previous saving was interrupted or not.
+    if ([[NSFileManager defaultManager] fileExistsAtPath:savingMarkerFile])
+    {
+        NSLog(@"[MXFileStore] Warning: The previous saving was interrupted. MXFileStore has been reset to prevent file corruption.");
+        [self deleteAllData];
+        
+        return NO;
+    }
+    
+    return YES;
 }
 
 #pragma mark - Rooms messages
@@ -592,7 +614,7 @@ NSString *const kMXReceiptsFolder = @"receipts";
         }
     }
 
-    NSLog(@"[MXFileStore] Loaded room messages of %lu rooms in %.0fms", (unsigned long)roomStores.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXFileStore] Loaded room messages of %tu rooms in %.0fms", roomStores.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (void)saveRoomsMessages
@@ -864,69 +886,42 @@ NSString *const kMXReceiptsFolder = @"receipts";
     NSDate *startDate = [NSDate date];
     NSLog(@"[MXFileStore] loadReceipts:");
     
-    for (NSString *roomId in roomIDArray)
+    // Sanity check: check whether there are as much receipts files as room data files.
+    if (roomIDArray.count != roomStores.allKeys.count)
     {
-        NSString *roomFile = [storeReceiptsPath stringByAppendingPathComponent:roomId];
-        
-        NSMutableDictionary *receiptsDict = NULL;
-        @try
-        {
-            receiptsDict =[NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
-        }
-        @catch (NSException *exception)
-        {
-            NSLog(@"[loadReceipts] Warning: loadReceipts file for room %@ has been corrupted", roomId);
-        }
-        
-        if (receiptsDict)
-        {
-            NSLog(@"   - %@: %tu", roomId, receiptsDict.count);
-            
-            [receiptsByRoomId setObject:receiptsDict forKey:roomId];
-        }
-        else
-        {
-            NSLog(@"[MXFileStore] Warning: MXFileStore has been reset due to receipts file corruption. Room id: %@", roomId);
-            [self deleteAllData];
-            break;
-        }
+        NSLog(@"[MXFileStore] Warning: MXFileStore has been reset due to file corruption (%tu receipts files vs %tu rooms)", roomIDArray.count, roomStores.allKeys.count);
+        [self deleteAllData];
     }
-    
-    // check if the user has a default read receipt value
-    // else the unread message counters will never been updated.
-    // backward compliancy (it should be done in any known room)
-    roomIDArray = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsMessagesPath error:nil];
-    
-    for (NSString *roomId in roomIDArray)
+    else
     {
-        NSMutableDictionary *receiptsDict = [receiptsByRoomId objectForKey:roomId];
-    
-        if (!receiptsDict)
+        for (NSString *roomId in roomIDArray)
         {
-            receiptsDict = [[NSMutableDictionary alloc] init];
-            [receiptsByRoomId setObject:receiptsDict forKey:roomId];
-        }
-        
-        if (![receiptsDict objectForKey:credentials.userId])
-        {
-            MXMemoryRoomStore* store = roomStores[roomId];
-            MXEvent* event = [store lastMessageWithTypeIn: NULL];
+            NSString *roomFile = [storeReceiptsPath stringByAppendingPathComponent:roomId];
             
-            if (event)
+            NSMutableDictionary *receiptsDict = NULL;
+            @try
             {
-                MXReceiptData *data = [[MXReceiptData alloc] init];
-                data.userId = credentials.userId;
-                data.eventId = event.eventId;
-                data.ts = (uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000);
-                
-                [receiptsDict setObject:data forKey:credentials.userId];
+                receiptsDict =[NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+            }
+            @catch (NSException *exception)
+            {
+                NSLog(@"[loadReceipts] Warning: loadReceipts file for room %@ has been corrupted", roomId);
             }
             
-            [roomsToCommitForReceipts addObject:roomId];
+            if (receiptsDict)
+            {
+                NSLog(@"   - %@: %tu", roomId, receiptsDict.count);
+                
+                [receiptsByRoomId setObject:receiptsDict forKey:roomId];
+            }
+            else
+            {
+                NSLog(@"[MXFileStore] Warning: MXFileStore has been reset due to receipts file corruption. Room id: %@", roomId);
+                [self deleteAllData];
+                break;
+            }
         }
     }
-    
-    [self saveReceipts];
     
     NSLog(@"[MXFileStore] Loaded receipts of %lu rooms in %.0fms", (unsigned long)roomStores.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
