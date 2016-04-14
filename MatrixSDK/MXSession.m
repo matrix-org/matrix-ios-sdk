@@ -840,49 +840,71 @@ typedef void (^MXOnResumeDone)();
     } failure:failure];
 }
 
+- (void)onJoinedRoom:(NSString*)roomId success:(void (^)(MXRoom *room))success
+{
+    MXRoom *room = [self getOrCreateRoom:roomId notify:YES];
+
+    // check if the room is in the invited rooms list
+    if ([self removeInvitedRoom:room])
+    {
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionInvitedRoomsDidChangeNotification
+                                                            object:self
+                                                          userInfo:@{
+                                                                     kMXSessionNotificationRoomIdKey: room.state.roomId,
+                                                                     }];
+    }
+
+    // Wait to receive data from /sync about this room before returning
+    if (success)
+    {
+        if (room.state.membership == MXMembershipJoin)
+        {
+            // The /sync corresponding to this join fmay have happened before the
+            // homeserver answer to the joinRoom request.
+            success(room);
+        }
+        else
+        {
+            // Else, just wait for the corresponding kMXRoomInitialSyncNotification
+            // that will be fired from MXRoom.
+            __block id initialSyncObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomInitialSyncNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                MXRoom *syncedRoom = note.object;
+
+                if (syncedRoom == room)
+                {
+                    success(room);
+                    [[NSNotificationCenter defaultCenter] removeObserver:initialSyncObserver];
+                }
+            }];
+        }
+    }
+
+}
+
 - (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
                      success:(void (^)(MXRoom *room))success
                      failure:(void (^)(NSError *error))failure
 {
     return [matrixRestClient joinRoom:roomIdOrAlias success:^(NSString *theRoomId) {
 
-        MXRoom *room = [self getOrCreateRoom:theRoomId notify:YES];
-        
-        // check if the room is in the invited rooms list
-        if ([self removeInvitedRoom:room])
-        {            
-            [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionInvitedRoomsDidChangeNotification
-                                                                object:self
-                                                              userInfo:@{
-                                                                         kMXSessionNotificationRoomIdKey: room.state.roomId,
-                                                                         }];
-        }
+        [self onJoinedRoom:theRoomId success:success];
 
-        // Wait to receive data from /sync about this room before returning
-        if (success)
-        {
-            if (room.state.membership == MXMembershipJoin)
-            {
-                // The /sync corresponding to this join fmay have happened before the
-                // homeserver answer to the joinRoom request.
-                success(room);
-            }
-            else
-            {
-                // Else, just wait for the corresponding kMXRoomInitialSyncNotification
-                // that will be fired from MXRoom.
-                __block id initialSyncObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomInitialSyncNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+    } failure:failure];
+}
 
-                    MXRoom *syncedRoom = note.object;
+- (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
+                 withSignUrl:(NSString*)signUrl
+                     success:(void (^)(MXRoom *room))success
+                     failure:(void (^)(NSError *error))failure
+{
+    return [matrixRestClient signUrl:signUrl success:^(NSDictionary *thirdPartySigned) {
 
-                    if (syncedRoom == room)
-                    {
-                        success(room);
-                        [[NSNotificationCenter defaultCenter] removeObserver:initialSyncObserver];
-                    }
-                }];
-            }
-        }
+        [matrixRestClient joinRoom:roomIdOrAlias withThirdPartySigned:thirdPartySigned success:^(NSString *theRoomId) {
+
+            [self onJoinedRoom:theRoomId success:success];
+
+        } failure:failure];
 
     } failure:failure];
 }
