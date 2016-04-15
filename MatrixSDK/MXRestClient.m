@@ -997,11 +997,27 @@ MXAuthAction;
                      success:(void (^)(NSString *theRoomId))success
                      failure:(void (^)(NSError *error))failure
 {
+    return [self joinRoom:roomIdOrAlias withThirdPartySigned:nil success:success failure:failure];
+}
+
+- (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
+    withThirdPartySigned:(NSDictionary*)thirdPartySigned
+                     success:(void (^)(NSString *theRoomId))success
+                     failure:(void (^)(NSError *error))failure
+{
+    NSDictionary *parameters;
+    if (thirdPartySigned)
+    {
+        parameters = @{
+                       @"third_party_signed":thirdPartySigned
+                       };
+    }
+
     // Characters in a room alias need to be escaped in the URL
     NSString *path = [NSString stringWithFormat:@"%@/join/%@", apiPathPrefix, [roomIdOrAlias stringByAddingPercentEscapesUsingEncoding:NSASCIIStringEncoding]];
     return [httpClient requestWithMethod:@"POST"
                                     path:path
-                              parameters:nil
+                              parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
                                      if (success)
                                      {
@@ -2402,6 +2418,36 @@ MXAuthAction;
                                          }];
 }
 
+- (MXHTTPOperation*)signUrl:(NSString*)signUrl
+                    success:(void (^)(NSDictionary *thirdPartySigned))success
+                    failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@&mxid=%@", signUrl, credentials.userId];
+
+    return [identityHttpClient requestWithMethod:@"POST"
+                                            path:path
+                                      parameters:nil
+                                         success:^(NSDictionary *JSONResponse) {
+                                             if (success)
+                                             {
+                                                 // Use here the processing queue in order to keep the server response order
+                                                 dispatch_async(processingQueue, ^{
+
+                                                     dispatch_async(dispatch_get_main_queue(), ^{
+
+                                                         success(JSONResponse);
+
+                                                     });
+                                                     
+                                                 });
+                                             }                                         }
+                                         failure:^(NSError *error) {
+                                             if (failure)
+                                             {
+                                                 failure(error);
+                                             }
+                                         }];
+}
 
 
 #pragma mark - VoIP API

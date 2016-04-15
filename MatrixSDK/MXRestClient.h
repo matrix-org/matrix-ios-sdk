@@ -544,8 +544,24 @@ typedef enum : NSUInteger
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
-                 success:(void (^)(NSString *theRoomId))success
-                 failure:(void (^)(NSError *error))failure;
+                     success:(void (^)(NSString *theRoomId))success
+                     failure:(void (^)(NSError *error))failure;
+
+/**
+ Join a room where the user has been invited by a 3PID invitation.
+
+ @param roomIdOrAlias the id or an alias of the room to join.
+ @param thirdPartySigned the signed data obtained by the validation of the 3PID invitation.
+                         The valisation is made by [self signUrl].
+ @param success A block object called when the operation succeeds. It provides the room id.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
+        withThirdPartySigned:(NSDictionary*)thirdPartySigned
+                     success:(void (^)(NSString *theRoomId))success
+                     failure:(void (^)(NSError *error))failure;
 
 /**
  Leave a room.
@@ -1145,6 +1161,20 @@ typedef enum : NSUInteger
                                success:(void (^)(NSString *sid))success
                                failure:(void (^)(NSError *error))failure;
 
+
+/**
+ Sign a 3PID URL.
+
+ @param signUrl the URL that will be called for signing.
+ @param success A block object called when the operation succeeds. It provides the signed data.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+
+- (MXHTTPOperation*)signUrl:(NSString*)signUrl
+                    success:(void (^)(NSDictionary *thirdPartySigned))success
+                    failure:(void (^)(NSError *error))failure;
 
 #pragma mark - VoIP API
 /**
