@@ -43,4 +43,13 @@
  */
 + (BOOL)isEmailAddress:(NSString *)inputString;
 
+/**
+ Removing new line characters from NSString.
+ The new line characters are replaced with a space character.
+ Only one space is used to replace successive new line characters spaced or not.
+ 
+ @return the resulting string.
+ */
++ (NSString*)stripNewlineCharacters:(NSString *)inputString;
+
 @end
