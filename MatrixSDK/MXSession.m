@@ -898,7 +898,8 @@ typedef void (^MXOnResumeDone)();
                      success:(void (^)(MXRoom *room))success
                      failure:(void (^)(NSError *error))failure
 {
-    MXHTTPOperation *httpOperation = [matrixRestClient signUrl:signUrl success:^(NSDictionary *thirdPartySigned) {
+    MXHTTPOperation *httpOperation;
+    httpOperation = [matrixRestClient signUrl:signUrl success:^(NSDictionary *thirdPartySigned) {
 
         MXHTTPOperation *httpOperation2 = [matrixRestClient joinRoom:roomIdOrAlias withThirdPartySigned:thirdPartySigned success:^(NSString *theRoomId) {
 
@@ -908,7 +909,10 @@ typedef void (^MXOnResumeDone)();
 
         // Transfer the new AFHTTPRequestOperation to the returned MXHTTPOperation
         // So that user has hand on it
-        httpOperation.operation = httpOperation2.operation;
+        if (httpOperation)
+        {
+            httpOperation.operation = httpOperation2.operation;
+        }
 
     } failure:failure];
 
