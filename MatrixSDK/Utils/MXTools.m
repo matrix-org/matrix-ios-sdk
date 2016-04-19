@@ -169,4 +169,9 @@
     return (nil != [regex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
 }
 
++ (NSString*)stripNewlineCharacters:(NSString *)inputString
+{
+    return [inputString stringByReplacingOccurrencesOfString:@" *[\n\r]+[\n\r ]*" withString:@" " options:NSRegularExpressionSearch range:NSMakeRange(0, [inputString length])];
+}
+
 @end
