@@ -72,6 +72,8 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
 
 @implementation MXHTTPClient
 
+
+#pragma mark - Public methods
 -(id)initWithBaseURL:(NSString *)baseURL andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
 {
     return [self initWithBaseURL:baseURL accessToken:nil andOnUnrecognizedCertificateBlock:onUnrecognizedCertBlock];
@@ -99,8 +101,8 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
         
         onUnrecognizedCertificateBlock = onUnrecognizedCertBlock;
         
-        // Send requests parameters in JSON format 
-        httpManager.requestSerializer = [AFJSONRequestSerializer serializer];
+        // Send requests parameters in JSON format by default
+        self.requestParametersInJSON = YES;
 
         [self setUpNetworkReachibility];
     }
@@ -485,6 +487,22 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
     NSUInteger jitter = arc4random_uniform(MXHTTPCLIENT_RETRY_JITTER_MS);
     return  (MXHTTPCLIENT_RETRY_AFTER_MS + jitter);
 }
+
+
+#pragma mark - Configuration
+- (void)setRequestParametersInJSON:(BOOL)requestParametersInJSON
+{
+    _requestParametersInJSON = requestParametersInJSON;
+    if (_requestParametersInJSON)
+    {
+        httpManager.requestSerializer = [AFJSONRequestSerializer serializer];
+    }
+    else
+    {
+        httpManager.requestSerializer = [AFHTTPRequestSerializer serializer];
+    }
+}
+
 
 #pragma mark - Private methods
 - (void)setUpNetworkReachibility
