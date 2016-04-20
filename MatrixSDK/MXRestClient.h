@@ -1148,6 +1148,7 @@ typedef enum : NSUInteger
  @param sendAttempt the number of the attempt for the validation request. Increment this value to make the
                     identity server resend the email. Keep it to retry the request in case the previous request
                     failed.
+ @param nextLink the link the validation page will automatically open. Can be nil
 
  @param success A block object called when the operation succeeds. It provides the id of the
                 email validation session.
@@ -1158,6 +1159,7 @@ typedef enum : NSUInteger
 - (MXHTTPOperation*)requestEmailValidation:(NSString*)email
                           clientSecret:(NSString*)clientSecret
                            sendAttempt:(NSUInteger)sendAttempt
+                                  nextLink:(NSString*)nextLink
                                success:(void (^)(NSString *sid))success
                                failure:(void (^)(NSError *error))failure;
 

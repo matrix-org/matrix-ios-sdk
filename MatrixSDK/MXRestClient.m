@@ -2296,6 +2296,9 @@ MXAuthAction;
     _identityServer = [identityServer copy];
     identityHttpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", identityServer, kMXIdentityAPIPrefixPath]
                              andOnUnrecognizedCertificateBlock:nil];
+
+    // The identity server accepts parameters in form data form not in JSON
+    identityHttpClient.requestParametersInJSON = NO;
 }
 
 - (MXHTTPOperation*)lookup3pid:(NSString*)address
@@ -2386,14 +2389,24 @@ MXAuthAction;
 - (MXHTTPOperation*)requestEmailValidation:(NSString*)email
                               clientSecret:(NSString*)clientSecret
                                sendAttempt:(NSUInteger)sendAttempt
+                                  nextLink:(NSString *)nextLink
                                    success:(void (^)(NSString *sid))success
                                    failure:(void (^)(NSError *error))failure
 {
-    // The identity server expects params in the URL
-    NSString *path = [NSString stringWithFormat:@"validate/email/requestToken?clientSecret=%@&email=%@&sendAttempt=%tu", clientSecret, email, sendAttempt];
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{
+                                                                                      @"email": email,
+                                                                                      @"client_secret": clientSecret,
+                                                                                      @"send_attempt" : @(sendAttempt)
+                                                                                      }];
+
+    if (nextLink)
+    {
+        parameters[@"next_link"] = nextLink;
+    }
+
     return [identityHttpClient requestWithMethod:@"POST"
-                                            path:path
-                                      parameters:nil
+                                            path:@"validate/email/requestToken"
+                                      parameters:parameters
                                          success:^(NSDictionary *JSONResponse) {
                                              if (success)
                                              {
