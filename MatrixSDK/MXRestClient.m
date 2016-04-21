@@ -188,7 +188,43 @@ MXAuthAction;
 - (MXHTTPOperation*)getRegisterSession:(void (^)(MXAuthenticationSession *authSession))success
                                failure:(void (^)(NSError *error))failure
 {
-    return [self getRegisterOrLoginFlow:MXAuthActionRegister success:success failure:failure];
+    // For registration, use POST with no params to get the login mechanism to use
+    // The request will failed with Unauthorized status code, but the login mechanism will be available in response data.
+    
+    return [httpClient requestWithMethod:@"POST"
+                                    path:[self authActionPath:MXAuthActionRegister]
+                              parameters:@{}
+                                 success:^(NSDictionary *JSONResponse) {
+                                     
+                                     // sanity check
+                                     if (success)
+                                     {
+                                         success([MXAuthenticationSession modelFromJSON:JSONResponse]);
+                                     }
+                                     
+                                 }
+                                 failure:^(NSError *error) {
+                                     
+                                     // The login mechanism should be available in response data in case of unauthorized request.
+                                     NSDictionary *JSONResponse = nil;
+                                     if (error.userInfo[MXHTTPClientErrorResponseDataKey])
+                                     {
+                                         JSONResponse = error.userInfo[MXHTTPClientErrorResponseDataKey];
+                                     }
+                                     
+                                     if (JSONResponse)
+                                     {
+                                         if (success)
+                                         {
+                                             success([MXAuthenticationSession modelFromJSON:JSONResponse]);
+                                         }
+                                     }
+                                     else if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                     
+                                 }];
 }
 
 - (MXHTTPOperation*)registerWithParameters:(NSDictionary*)parameters
@@ -215,7 +251,25 @@ MXAuthAction;
 - (MXHTTPOperation*)getLoginSession:(void (^)(MXAuthenticationSession *authSession))success
                             failure:(void (^)(NSError *error))failure
 {
-    return [self getRegisterOrLoginFlow:MXAuthActionLogin success:success failure:failure];
+    return [httpClient requestWithMethod:@"GET"
+                                    path:[self authActionPath:MXAuthActionLogin]
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     
+                                     if (success)
+                                     {
+                                         success([MXAuthenticationSession modelFromJSON:JSONResponse]);
+                                     }
+                                     
+                                 }
+                                 failure:^(NSError *error) {
+                                     
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                     
+                                 }];
 }
 
 - (MXHTTPOperation*)login:(NSDictionary*)parameters
@@ -292,57 +346,6 @@ MXAuthAction;
         authActionPath = @"register";
     }
     return [NSString stringWithFormat:@"%@/%@", apiPathPrefix, authActionPath];
-}
-
-- (MXHTTPOperation*)getRegisterOrLoginFlow:(MXAuthAction)authAction
-                                   success:(void (^)(MXAuthenticationSession *authSession))success failure:(void (^)(NSError *error))failure
-{
-    NSString *httpMethod = @"GET";
-    NSDictionary *parameters = nil;
-    
-
-    if (MXAuthActionRegister == authAction)
-    {
-        // For registration, use POST with no params to get the login mechanism to use
-        // The request will failed with Unauthorized status code, but the login mechanism will be available in response data.
-        httpMethod = @"POST";
-        parameters = @{};
-    }
-
-    return [httpClient requestWithMethod:httpMethod
-                                    path:[self authActionPath:authAction]
-                              parameters:parameters
-                                 success:^(NSDictionary *JSONResponse) {
-
-                                     // sanity check
-                                     if (success)
-                                     {
-                                         success([MXAuthenticationSession modelFromJSON:JSONResponse]);
-                                     }
-
-                                 }
-                                 failure:^(NSError *error) {
-
-                                     // The login mechanism should be available in response data in case of unauthorized request.
-                                     NSDictionary *JSONResponse = nil;
-                                     if (error.userInfo[MXHTTPClientErrorResponseDataKey])
-                                     {
-                                         JSONResponse = error.userInfo[MXHTTPClientErrorResponseDataKey];
-                                     }
-
-                                     if (JSONResponse)
-                                     {
-                                         if (success)
-                                         {
-                                             success([MXAuthenticationSession modelFromJSON:JSONResponse]);
-                                         }
-                                     }
-                                     else if (failure)
-                                     {
-                                         failure(error);
-                                     }
-
-                                 }];
 }
 
 - (MXHTTPOperation*)registerOrLogin:(MXAuthAction)authAction parameters:(NSDictionary *)parameters success:(void (^)(NSDictionary *JSONResponse))success failure:(void (^)(NSError *))failure
