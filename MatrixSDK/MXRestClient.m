@@ -189,7 +189,7 @@ MXAuthAction;
                                failure:(void (^)(NSError *error))failure
 {
     // For registration, use POST with no params to get the login mechanism to use
-    // The request will failed with Unauthorized status code, but the login mechanism will be available in response data.
+    // The request will fail with Unauthorized status code, but the login mechanism will be available in response data.
     
     return [httpClient requestWithMethod:@"POST"
                                     path:[self authActionPath:MXAuthActionRegister]
