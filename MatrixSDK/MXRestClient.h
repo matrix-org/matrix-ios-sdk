@@ -1157,12 +1157,31 @@ typedef enum : NSUInteger
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)requestEmailValidation:(NSString*)email
-                          clientSecret:(NSString*)clientSecret
-                           sendAttempt:(NSUInteger)sendAttempt
+                              clientSecret:(NSString*)clientSecret
+                               sendAttempt:(NSUInteger)sendAttempt
                                   nextLink:(NSString*)nextLink
-                               success:(void (^)(NSString *sid))success
-                               failure:(void (^)(NSError *error))failure;
+                                   success:(void (^)(NSString *sid))success
+                                   failure:(void (^)(NSError *error))failure;
 
+/**
+ Submit a token received by an email after the call of [self requestEmailValidation].
+
+ In case of success, the email has been validated.
+
+ @param token the token received in the email.
+ @param clientSecret the clientSecret in the email.
+ @param sid the email validation session id in the email.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)submitEmailValidationToken:(NSString*)token
+                                  clientSecret:(NSString*)clientSecret
+                                           sid:(NSString*)sid
+                                       success:(void (^)())success
+                                       failure:(void (^)(NSError *error))failure;
 
 /**
  Sign a 3PID URL.

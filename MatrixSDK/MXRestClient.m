@@ -2434,6 +2434,46 @@ MXAuthAction;
                                          }];
 }
 
+- (MXHTTPOperation *)submitEmailValidationToken:(NSString *)token
+                                   clientSecret:(NSString *)clientSecret
+                                            sid:(NSString *)sid
+                                        success:(void (^)())success
+                                        failure:(void (^)(NSError *))failure
+{
+    return [identityHttpClient requestWithMethod:@"POST"
+                                            path:@"validate/email/submitToken"
+                                      parameters:@{
+                                                   @"token": token,
+                                                   @"client_secret": clientSecret,
+                                                   @"sid": sid
+                                                   }
+                                         success:^(NSDictionary *JSONResponse) {
+
+                                             if (!JSONResponse[@"errcode"])
+                                             {
+                                                 if (success)
+                                                 {
+                                                     success();
+                                                 }
+                                             }
+                                             else
+                                             {
+                                                 // Build the error from the JSON data
+                                                 if (failure && JSONResponse[@"errcode"] && JSONResponse[@"error"])
+                                                 {
+                                                     MXError *error = [[MXError alloc] initWithErrorCode:JSONResponse[@"errcode"] error:JSONResponse[@"error"]];
+                                                     failure([error createNSError]);
+                                                 }
+                                             }
+                                         }
+                                         failure:^(NSError *error) {
+                                             if (failure)
+                                             {
+                                                 failure(error);
+                                             }
+                                         }];
+}
+
 - (MXHTTPOperation*)signUrl:(NSString*)signUrl
                     success:(void (^)(NSDictionary *thirdPartySigned))success
                     failure:(void (^)(NSError *error))failure
