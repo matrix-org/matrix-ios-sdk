@@ -23,11 +23,10 @@
     self = [self init];
     if (self)
     {
-        NSDictionary *dict = [aDecoder decodeObjectForKey:@"dict"];
-        _eventId = dict[@"eventId"];
-        _userId = dict[@"userId"];
-        
-        NSNumber* tsAsNumber =dict[@"ts"];
+        _eventId = [aDecoder decodeObjectForKey:@"eventId"];
+        _userId = [aDecoder decodeObjectForKey:@"userId"];
+
+        NSNumber *tsAsNumber = [aDecoder decodeObjectForKey:@"ts"];
         _ts = [tsAsNumber unsignedLongLongValue];
     }
     return self;
@@ -36,15 +35,11 @@
 -(void)encodeWithCoder:(NSCoder *)aCoder
 {
     // All properties are mandatory except eventStreamToken
-    NSMutableDictionary *dict =[NSMutableDictionary dictionaryWithDictionary:
-                                @{
-                                  @"eventId": _eventId,
-                                  @"userId": _userId,
-                                  @"ts": [NSNumber numberWithUnsignedLongLong:_ts]
-                                  }];
-    // TODO need some new fields
+    [aCoder encodeObject:_eventId forKey:@"eventId"];
+    [aCoder encodeObject:_userId forKey:@"userId"];
+    [aCoder encodeObject:@(_ts) forKey:@"ts"];
     
-    [aCoder encodeObject:dict forKey:@"dict"];
+    // TODO need some new fields
 }
 
 - (id)copyWithZone:(NSZone *)zone
