@@ -668,10 +668,14 @@ NSString *const kMXReceiptsFolder = @"receipts";
  */
 - (void)preloadRoomsStates
 {
+    NSDate *startDate = [NSDate date];
+
     for (NSString *roomId in roomStores)
     {
         preloadedRoomsStates[roomId] = [self stateOfRoom:roomId];
     }
+
+    NSLog(@"[MXFileStore] Loaded room states of %tu rooms in %.0fms", roomStores.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (void)saveRoomsState
@@ -722,10 +726,14 @@ NSString *const kMXReceiptsFolder = @"receipts";
  */
 - (void)preloadRoomsAccountData
 {
+    NSDate *startDate = [NSDate date];
+
     for (NSString *roomId in roomStores)
     {
         preloadedRoomAccountData[roomId] = [self accountDataOfRoom:roomId];
     }
+
+    NSLog(@"[MXFileStore] Loaded rooms account data of %tu rooms in %.0fms", roomStores.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (void)saveRoomsAccountData
@@ -923,7 +931,7 @@ NSString *const kMXReceiptsFolder = @"receipts";
         }
     }
     
-    NSLog(@"[MXFileStore] Loaded receipts of %lu rooms in %.0fms", (unsigned long)roomStores.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXFileStore] Loaded read receipts of %lu rooms in %.0fms", (unsigned long)roomStores.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (void)saveReceipts
@@ -949,7 +957,11 @@ NSString *const kMXReceiptsFolder = @"receipts";
 
                     @synchronized (receiptsByUserId)
                     {
-                        [NSKeyedArchiver archiveRootObject:receiptsByUserId toFile:receiptsFile];
+                        BOOL success = [NSKeyedArchiver archiveRootObject:receiptsByUserId toFile:receiptsFile];
+                        if (!success)
+                        {
+                             NSLog(@"[MXFileStore] Error: Failed to store read receipts for room %@", roomId);
+                        }
                     }
                     
                     deltaCacheSize += [[[[NSFileManager defaultManager] attributesOfItemAtPath:receiptsFile error:nil] objectForKey:NSFileSize] intValue] - filesize;
