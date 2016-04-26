@@ -48,6 +48,13 @@ FOUNDATION_EXPORT NSString *const kMXRoomInitialSyncNotification;
 FOUNDATION_EXPORT NSString *const kMXRoomSyncWithLimitedTimelineNotification;
 
 /**
+ Posted when the number of unread notifications ('notificationCount' and 'highlightCount' properties) are updated.
+ 
+ The notification object is the concerned room (MXRoom instance).
+ */
+FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
+
+/**
  `MXRoom` is the class
  */
 @interface MXRoom : NSObject
@@ -107,12 +114,14 @@ FOUNDATION_EXPORT NSString *const kMXRoomSyncWithLimitedTimelineNotification;
 /**
  The number of unread messages that match the push notification rules.
  It is based on the notificationCount field in /sync response.
+ (kMXRoomDidUpdateUnreadNotification is posted when this property is updated)
  */
 @property (nonatomic, readonly) NSUInteger notificationCount;
 
 /**
  The number of highlighted unread messages (subset of notifications).
  It is based on the notificationCount field in /sync response.
+ (kMXRoomDidUpdateUnreadNotification is posted when this property is updated)
  */
 @property (nonatomic, readonly) NSUInteger highlightCount;
 

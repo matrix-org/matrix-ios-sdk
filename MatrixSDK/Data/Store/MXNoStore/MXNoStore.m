@@ -20,6 +20,11 @@
 {
     // key: roomId, value: the pagination token
     NSMutableDictionary *paginationTokens;
+    
+    // key: roomId, value: the unread notification count
+    NSMutableDictionary *notificationCounts;
+    // key: roomId, value: the unread highlighted count
+    NSMutableDictionary *highlightCounts;
 
     // key: roomId, value: the bool value
     NSMutableDictionary *hasReachedHomeServerPaginations;
@@ -44,6 +49,8 @@
     if (self)
     {
         paginationTokens = [NSMutableDictionary dictionary];
+        notificationCounts = [NSMutableDictionary dictionary];
+        highlightCounts = [NSMutableDictionary dictionary];
         hasReachedHomeServerPaginations = [NSMutableDictionary dictionary];
         lastMessages = [NSMutableDictionary dictionary];
         partialTextMessages = [NSMutableDictionary dictionary];
@@ -107,6 +114,14 @@
     {
         [paginationTokens removeObjectForKey:roomId];
     }
+    if (notificationCounts[roomId])
+    {
+        [notificationCounts removeObjectForKey:roomId];
+    }
+    if (highlightCounts[roomId])
+    {
+        [highlightCounts removeObjectForKey:roomId];
+    }
     if (hasReachedHomeServerPaginations[roomId])
     {
         [hasReachedHomeServerPaginations removeObjectForKey:roomId];
@@ -124,6 +139,8 @@
 - (void)deleteAllData
 {
     [paginationTokens removeAllObjects];
+    [notificationCounts removeAllObjects];
+    [highlightCounts removeAllObjects];
     [hasReachedHomeServerPaginations removeAllObjects];
     [lastMessages removeAllObjects];
     [partialTextMessages removeAllObjects];
@@ -138,6 +155,25 @@
     return paginationTokens[roomId];
 }
 
+- (void)storeNotificationCountOfRoom:(NSString*)roomId count:(NSUInteger)notificationCount
+{
+    notificationCounts[roomId] = @(notificationCount);
+}
+
+- (NSUInteger)notificationCountOfRoom:(NSString*)roomId
+{
+    return notificationCounts[roomId];
+}
+
+- (void)storeHighlightCountOfRoom:(NSString*)roomId count:(NSUInteger)highlightCount
+{
+    highlightCounts[roomId] = @(highlightCount);
+}
+
+- (NSUInteger)highlightCountOfRoom:(NSString*)roomId
+{
+    return highlightCounts[roomId];
+}
 
 - (void)storeHasReachedHomeServerPaginationEndForRoom:(NSString*)roomId andValue:(BOOL)value
 {

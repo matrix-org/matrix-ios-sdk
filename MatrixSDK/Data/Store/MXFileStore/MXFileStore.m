@@ -385,6 +385,26 @@ NSString *const kMXReceiptsFolder = @"receipts";
     }
 }
 
+- (void)storeNotificationCountOfRoom:(NSString *)roomId count:(NSUInteger)notificationCount
+{
+    [super storeNotificationCountOfRoom:roomId count:notificationCount];
+    
+    if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
+    {
+        [roomsToCommitForMessages addObject:roomId];
+    }
+}
+
+- (void)storeHighlightCountOfRoom:(NSString *)roomId count:(NSUInteger)highlightCount
+{
+    [super storeHighlightCountOfRoom:roomId count:highlightCount];
+    
+    if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
+    {
+        [roomsToCommitForMessages addObject:roomId];
+    }
+}
+
 - (void)storeHasReachedHomeServerPaginationEndForRoom:(NSString *)roomId andValue:(BOOL)value
 {
     [super storeHasReachedHomeServerPaginationEndForRoom:roomId andValue:value];

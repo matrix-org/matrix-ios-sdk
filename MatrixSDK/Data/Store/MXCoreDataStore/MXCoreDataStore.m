@@ -288,6 +288,28 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     return room.paginationToken;
 }
 
+- (void)storeNotificationCountOfRoom:(NSString*)roomId count:(NSUInteger)notificationCount
+{
+    // TODO
+}
+
+- (NSUInteger)notificationCountOfRoom:(NSString*)roomId
+{
+    // TODO
+    return 0;
+}
+
+- (void)storeHighlightCountOfRoom:(NSString*)roomId count:(NSUInteger)highlightCount
+{
+    // TODO
+}
+
+- (NSUInteger)highlightCountOfRoom:(NSString*)roomId
+{
+    // TODO
+    return 0;
+}
+
 - (void)storeHasReachedHomeServerPaginationEndForRoom:(NSString *)roomId andValue:(BOOL)value
 {
     [bgManagedObjectContext performBlock:^{
