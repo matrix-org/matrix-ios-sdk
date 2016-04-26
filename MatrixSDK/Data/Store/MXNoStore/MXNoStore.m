@@ -19,12 +19,12 @@
 @interface MXNoStore ()
 {
     // key: roomId, value: the pagination token
-    NSMutableDictionary *paginationTokens;
+    NSMutableDictionary<NSString*, NSString*> *paginationTokens;
     
     // key: roomId, value: the unread notification count
-    NSMutableDictionary *notificationCounts;
+    NSMutableDictionary<NSString*, NSNumber*> *notificationCounts;
     // key: roomId, value: the unread highlighted count
-    NSMutableDictionary *highlightCounts;
+    NSMutableDictionary<NSString*, NSNumber*> *highlightCounts;
 
     // key: roomId, value: the bool value
     NSMutableDictionary *hasReachedHomeServerPaginations;
@@ -162,7 +162,7 @@
 
 - (NSUInteger)notificationCountOfRoom:(NSString*)roomId
 {
-    return notificationCounts[roomId];
+    return [notificationCounts[roomId] unsignedIntegerValue];
 }
 
 - (void)storeHighlightCountOfRoom:(NSString*)roomId count:(NSUInteger)highlightCount
@@ -172,7 +172,7 @@
 
 - (NSUInteger)highlightCountOfRoom:(NSString*)roomId
 {
-    return highlightCounts[roomId];
+    return [highlightCounts[roomId] unsignedIntegerValue];
 }
 
 - (void)storeHasReachedHomeServerPaginationEndForRoom:(NSString*)roomId andValue:(BOOL)value
