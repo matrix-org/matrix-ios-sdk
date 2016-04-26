@@ -544,8 +544,24 @@ typedef enum : NSUInteger
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
-                 success:(void (^)(NSString *theRoomId))success
-                 failure:(void (^)(NSError *error))failure;
+                     success:(void (^)(NSString *theRoomId))success
+                     failure:(void (^)(NSError *error))failure;
+
+/**
+ Join a room where the user has been invited by a 3PID invitation.
+
+ @param roomIdOrAlias the id or an alias of the room to join.
+ @param thirdPartySigned the signed data obtained by the validation of the 3PID invitation.
+                         The valisation is made by [self signUrl].
+ @param success A block object called when the operation succeeds. It provides the room id.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
+        withThirdPartySigned:(NSDictionary*)thirdPartySigned
+                     success:(void (^)(NSString *theRoomId))success
+                     failure:(void (^)(NSError *error))failure;
 
 /**
  Leave a room.
@@ -1132,6 +1148,7 @@ typedef enum : NSUInteger
  @param sendAttempt the number of the attempt for the validation request. Increment this value to make the
                     identity server resend the email. Keep it to retry the request in case the previous request
                     failed.
+ @param nextLink the link the validation page will automatically open. Can be nil
 
  @param success A block object called when the operation succeeds. It provides the id of the
                 email validation session.
@@ -1140,11 +1157,45 @@ typedef enum : NSUInteger
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)requestEmailValidation:(NSString*)email
-                          clientSecret:(NSString*)clientSecret
-                           sendAttempt:(NSUInteger)sendAttempt
-                               success:(void (^)(NSString *sid))success
-                               failure:(void (^)(NSError *error))failure;
+                              clientSecret:(NSString*)clientSecret
+                               sendAttempt:(NSUInteger)sendAttempt
+                                  nextLink:(NSString*)nextLink
+                                   success:(void (^)(NSString *sid))success
+                                   failure:(void (^)(NSError *error))failure;
 
+/**
+ Submit a token received by an email after the call of [self requestEmailValidation].
+
+ In case of success, the email has been validated.
+
+ @param token the token received in the email.
+ @param clientSecret the clientSecret in the email.
+ @param sid the email validation session id in the email.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)submitEmailValidationToken:(NSString*)token
+                                  clientSecret:(NSString*)clientSecret
+                                           sid:(NSString*)sid
+                                       success:(void (^)())success
+                                       failure:(void (^)(NSError *error))failure;
+
+/**
+ Sign a 3PID URL.
+
+ @param signUrl the URL that will be called for signing.
+ @param success A block object called when the operation succeeds. It provides the signed data.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+
+- (MXHTTPOperation*)signUrl:(NSString*)signUrl
+                    success:(void (^)(NSDictionary *thirdPartySigned))success
+                    failure:(void (^)(NSError *error))failure;
 
 #pragma mark - VoIP API
 /**

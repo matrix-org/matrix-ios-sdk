@@ -232,6 +232,8 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     [bgManagedObjectContext performBlock:^{
         MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
         [room removeAllMessages];
+        room.paginationToken = nil;
+        room.hasReachedHomeServerPaginationEnd = @(NO);
     }];
 }
 
@@ -284,6 +286,28 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
 {
     MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
     return room.paginationToken;
+}
+
+- (void)storeNotificationCountOfRoom:(NSString*)roomId count:(NSUInteger)notificationCount
+{
+    // TODO
+}
+
+- (NSUInteger)notificationCountOfRoom:(NSString*)roomId
+{
+    // TODO
+    return 0;
+}
+
+- (void)storeHighlightCountOfRoom:(NSString*)roomId count:(NSUInteger)highlightCount
+{
+    // TODO
+}
+
+- (NSUInteger)highlightCountOfRoom:(NSString*)roomId
+{
+    // TODO
+    return 0;
 }
 
 - (void)storeHasReachedHomeServerPaginationEndForRoom:(NSString *)roomId andValue:(BOOL)value

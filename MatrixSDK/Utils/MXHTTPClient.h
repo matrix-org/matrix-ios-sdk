@@ -38,11 +38,23 @@ typedef BOOL (^MXHTTPClientOnUnrecognizedCertificate)(NSData *certificate);
 */
 @interface MXHTTPClient : NSObject
 
+
+#pragma mark - Configuration
+/**
+ `requestParametersInJSON` indicates if parameters passed in [self requestWithMethod:..] methods
+ must be serialised in JSON.
+ Else, they will be send in form data.
+ Default is YES.
+ */
+@property (nonatomic) BOOL requestParametersInJSON;
+
 /**
  The current trusted certificate (if any).
  */
 @property (nonatomic, readonly) NSData* allowedCertificate;
 
+
+#pragma mark - Public methods
 /**
  Create an instance to make requests to the server.
 

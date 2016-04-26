@@ -23,6 +23,7 @@
 
 NSString *const kMXRoomSyncWithLimitedTimelineNotification = @"kMXRoomSyncWithLimitedTimelineNotification";
 NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotification";
+NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNotification";
 
 @interface MXRoom ()
 {
@@ -145,9 +146,14 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         }
     }
     
-    // Update bing counts from the notificationCount field in /sync response
-    _notificationCount = roomSync.unreadNotifications.notificationCount;
-    _highlightCount = roomSync.unreadNotifications.highlightCount;
+    // Store notification counts from unreadNotifications field in /sync response
+    [mxSession.store storeNotificationCountOfRoom:self.state.roomId count:roomSync.unreadNotifications.notificationCount];
+    [mxSession.store storeHighlightCountOfRoom:self.state.roomId count:roomSync.unreadNotifications.highlightCount];
+    
+    // Notify that unread counts have been sync'ed
+    [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomDidUpdateUnreadNotification
+                                                        object:self
+                                                      userInfo:nil];
 
     // Handle account data events (if any)
     [self handleAccounDataEvents:roomSync.accountData.events direction:MXTimelineDirectionForwards];
@@ -531,6 +537,16 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 {
     // Check for unread events in store
     return [mxSession.store hasUnreadEvents:self.state.roomId withTypeIn:_unreadEventTypes];
+}
+
+- (NSUInteger)notificationCount
+{
+    return [mxSession.store notificationCountOfRoom:self.state.roomId];
+}
+
+- (NSUInteger)highlightCount
+{
+    return [mxSession.store highlightCountOfRoom:self.state.roomId];
 }
 
 - (NSArray*)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort

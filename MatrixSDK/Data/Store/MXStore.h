@@ -83,6 +83,7 @@
 
 /**
  Remove all existing messages in a room.
+ This operation resets the pagination token, and the flag indicating that the SDK has reached the end of pagination.
  
  @param roomId the id of the room.
  */
@@ -105,6 +106,18 @@
  */
 - (void)storePaginationTokenOfRoom:(NSString*)roomId andToken:(NSString*)token;
 - (NSString*)paginationTokenOfRoom:(NSString*)roomId;
+
+/**
+ Store/retrieve the current number of unread messages that match the push notification rules of a room.
+ */
+- (void)storeNotificationCountOfRoom:(NSString*)roomId count:(NSUInteger)notificationCount;
+- (NSUInteger)notificationCountOfRoom:(NSString*)roomId;
+
+/**
+ Store/retrieve the current number of highlighted unread messages (subset of notifications) of a room.
+ */
+- (void)storeHighlightCountOfRoom:(NSString*)roomId count:(NSUInteger)highlightCount;
+- (NSUInteger)highlightCountOfRoom:(NSString*)roomId;
 
 /**
  Store/retrieve the flag indicating that the SDK has reached the end of pagination

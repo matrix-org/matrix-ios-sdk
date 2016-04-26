@@ -188,7 +188,43 @@ MXAuthAction;
 - (MXHTTPOperation*)getRegisterSession:(void (^)(MXAuthenticationSession *authSession))success
                                failure:(void (^)(NSError *error))failure
 {
-    return [self getRegisterOrLoginFlow:MXAuthActionRegister success:success failure:failure];
+    // For registration, use POST with no params to get the login mechanism to use
+    // The request will fail with Unauthorized status code, but the login mechanism will be available in response data.
+    
+    return [httpClient requestWithMethod:@"POST"
+                                    path:[self authActionPath:MXAuthActionRegister]
+                              parameters:@{}
+                                 success:^(NSDictionary *JSONResponse) {
+                                     
+                                     // sanity check
+                                     if (success)
+                                     {
+                                         success([MXAuthenticationSession modelFromJSON:JSONResponse]);
+                                     }
+                                     
+                                 }
+                                 failure:^(NSError *error) {
+                                     
+                                     // The login mechanism should be available in response data in case of unauthorized request.
+                                     NSDictionary *JSONResponse = nil;
+                                     if (error.userInfo[MXHTTPClientErrorResponseDataKey])
+                                     {
+                                         JSONResponse = error.userInfo[MXHTTPClientErrorResponseDataKey];
+                                     }
+                                     
+                                     if (JSONResponse)
+                                     {
+                                         if (success)
+                                         {
+                                             success([MXAuthenticationSession modelFromJSON:JSONResponse]);
+                                         }
+                                     }
+                                     else if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                     
+                                 }];
 }
 
 - (MXHTTPOperation*)registerWithParameters:(NSDictionary*)parameters
@@ -215,7 +251,25 @@ MXAuthAction;
 - (MXHTTPOperation*)getLoginSession:(void (^)(MXAuthenticationSession *authSession))success
                             failure:(void (^)(NSError *error))failure
 {
-    return [self getRegisterOrLoginFlow:MXAuthActionLogin success:success failure:failure];
+    return [httpClient requestWithMethod:@"GET"
+                                    path:[self authActionPath:MXAuthActionLogin]
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     
+                                     if (success)
+                                     {
+                                         success([MXAuthenticationSession modelFromJSON:JSONResponse]);
+                                     }
+                                     
+                                 }
+                                 failure:^(NSError *error) {
+                                     
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                     
+                                 }];
 }
 
 - (MXHTTPOperation*)login:(NSDictionary*)parameters
@@ -292,57 +346,6 @@ MXAuthAction;
         authActionPath = @"register";
     }
     return [NSString stringWithFormat:@"%@/%@", apiPathPrefix, authActionPath];
-}
-
-- (MXHTTPOperation*)getRegisterOrLoginFlow:(MXAuthAction)authAction
-                                   success:(void (^)(MXAuthenticationSession *authSession))success failure:(void (^)(NSError *error))failure
-{
-    NSString *httpMethod = @"GET";
-    NSDictionary *parameters = nil;
-    
-
-    if (MXAuthActionRegister == authAction)
-    {
-        // For registration, use POST with no params to get the login mechanism to use
-        // The request will failed with Unauthorized status code, but the login mechanism will be available in response data.
-        httpMethod = @"POST";
-        parameters = @{};
-    }
-
-    return [httpClient requestWithMethod:httpMethod
-                                    path:[self authActionPath:authAction]
-                              parameters:parameters
-                                 success:^(NSDictionary *JSONResponse) {
-
-                                     // sanity check
-                                     if (success)
-                                     {
-                                         success([MXAuthenticationSession modelFromJSON:JSONResponse]);
-                                     }
-
-                                 }
-                                 failure:^(NSError *error) {
-
-                                     // The login mechanism should be available in response data in case of unauthorized request.
-                                     NSDictionary *JSONResponse = nil;
-                                     if (error.userInfo[MXHTTPClientErrorResponseDataKey])
-                                     {
-                                         JSONResponse = error.userInfo[MXHTTPClientErrorResponseDataKey];
-                                     }
-
-                                     if (JSONResponse)
-                                     {
-                                         if (success)
-                                         {
-                                             success([MXAuthenticationSession modelFromJSON:JSONResponse]);
-                                         }
-                                     }
-                                     else if (failure)
-                                     {
-                                         failure(error);
-                                     }
-
-                                 }];
 }
 
 - (MXHTTPOperation*)registerOrLogin:(MXAuthAction)authAction parameters:(NSDictionary *)parameters success:(void (^)(NSDictionary *JSONResponse))success failure:(void (^)(NSError *))failure
@@ -997,11 +1000,27 @@ MXAuthAction;
                      success:(void (^)(NSString *theRoomId))success
                      failure:(void (^)(NSError *error))failure
 {
+    return [self joinRoom:roomIdOrAlias withThirdPartySigned:nil success:success failure:failure];
+}
+
+- (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
+    withThirdPartySigned:(NSDictionary*)thirdPartySigned
+                     success:(void (^)(NSString *theRoomId))success
+                     failure:(void (^)(NSError *error))failure
+{
+    NSDictionary *parameters;
+    if (thirdPartySigned)
+    {
+        parameters = @{
+                       @"third_party_signed":thirdPartySigned
+                       };
+    }
+
     // Characters in a room alias need to be escaped in the URL
     NSString *path = [NSString stringWithFormat:@"%@/join/%@", apiPathPrefix, [roomIdOrAlias stringByAddingPercentEscapesUsingEncoding:NSASCIIStringEncoding]];
     return [httpClient requestWithMethod:@"POST"
                                     path:path
-                              parameters:nil
+                              parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
                                      if (success)
                                      {
@@ -2280,6 +2299,9 @@ MXAuthAction;
     _identityServer = [identityServer copy];
     identityHttpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", identityServer, kMXIdentityAPIPrefixPath]
                              andOnUnrecognizedCertificateBlock:nil];
+
+    // The identity server accepts parameters in form data form not in JSON
+    identityHttpClient.requestParametersInJSON = NO;
 }
 
 - (MXHTTPOperation*)lookup3pid:(NSString*)address
@@ -2370,14 +2392,24 @@ MXAuthAction;
 - (MXHTTPOperation*)requestEmailValidation:(NSString*)email
                               clientSecret:(NSString*)clientSecret
                                sendAttempt:(NSUInteger)sendAttempt
+                                  nextLink:(NSString *)nextLink
                                    success:(void (^)(NSString *sid))success
                                    failure:(void (^)(NSError *error))failure
 {
-    // The identity server expects params in the URL
-    NSString *path = [NSString stringWithFormat:@"validate/email/requestToken?clientSecret=%@&email=%@&sendAttempt=%tu", clientSecret, email, sendAttempt];
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{
+                                                                                      @"email": email,
+                                                                                      @"client_secret": clientSecret,
+                                                                                      @"send_attempt" : @(sendAttempt)
+                                                                                      }];
+
+    if (nextLink)
+    {
+        parameters[@"next_link"] = nextLink;
+    }
+
     return [identityHttpClient requestWithMethod:@"POST"
-                                            path:path
-                                      parameters:nil
+                                            path:@"validate/email/requestToken"
+                                      parameters:parameters
                                          success:^(NSDictionary *JSONResponse) {
                                              if (success)
                                              {
@@ -2402,6 +2434,76 @@ MXAuthAction;
                                          }];
 }
 
+- (MXHTTPOperation *)submitEmailValidationToken:(NSString *)token
+                                   clientSecret:(NSString *)clientSecret
+                                            sid:(NSString *)sid
+                                        success:(void (^)())success
+                                        failure:(void (^)(NSError *))failure
+{
+    return [identityHttpClient requestWithMethod:@"POST"
+                                            path:@"validate/email/submitToken"
+                                      parameters:@{
+                                                   @"token": token,
+                                                   @"client_secret": clientSecret,
+                                                   @"sid": sid
+                                                   }
+                                         success:^(NSDictionary *JSONResponse) {
+
+                                             if (!JSONResponse[@"errcode"])
+                                             {
+                                                 if (success)
+                                                 {
+                                                     success();
+                                                 }
+                                             }
+                                             else
+                                             {
+                                                 // Build the error from the JSON data
+                                                 if (failure && JSONResponse[@"errcode"] && JSONResponse[@"error"])
+                                                 {
+                                                     MXError *error = [[MXError alloc] initWithErrorCode:JSONResponse[@"errcode"] error:JSONResponse[@"error"]];
+                                                     failure([error createNSError]);
+                                                 }
+                                             }
+                                         }
+                                         failure:^(NSError *error) {
+                                             if (failure)
+                                             {
+                                                 failure(error);
+                                             }
+                                         }];
+}
+
+- (MXHTTPOperation*)signUrl:(NSString*)signUrl
+                    success:(void (^)(NSDictionary *thirdPartySigned))success
+                    failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@&mxid=%@", signUrl, credentials.userId];
+
+    return [identityHttpClient requestWithMethod:@"POST"
+                                            path:path
+                                      parameters:nil
+                                         success:^(NSDictionary *JSONResponse) {
+                                             if (success)
+                                             {
+                                                 // Use here the processing queue in order to keep the server response order
+                                                 dispatch_async(processingQueue, ^{
+
+                                                     dispatch_async(dispatch_get_main_queue(), ^{
+
+                                                         success(JSONResponse);
+
+                                                     });
+                                                     
+                                                 });
+                                             }                                         }
+                                         failure:^(NSError *error) {
+                                             if (failure)
+                                             {
+                                                 failure(error);
+                                             }
+                                         }];
+}
 
 
 #pragma mark - VoIP API

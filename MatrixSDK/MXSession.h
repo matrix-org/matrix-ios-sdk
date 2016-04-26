@@ -347,6 +347,22 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                      failure:(void (^)(NSError *error))failure;
 
 /**
+ Join a room where the user has been invited by a 3PID invitation.
+
+ @param roomIdOrAlias the id or an alias of the room to join.
+ @param signUrl the url provided in the invitation.
+ @param success A block object called when the operation succeeds. It provides the MXRoom
+        instance of the joined room.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
+                 withSignUrl:(NSString*)signUrl
+                     success:(void (^)(MXRoom *room))success
+                     failure:(void (^)(NSError *error))failure;
+
+/**
  Leave a room.
  
  The room will be removed from the rooms list.
