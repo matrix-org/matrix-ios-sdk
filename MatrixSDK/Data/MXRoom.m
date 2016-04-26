@@ -148,6 +148,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     // Update bing counts from the notificationCount field in /sync response
     _notificationCount = roomSync.unreadNotifications.notificationCount;
     _highlightCount = roomSync.unreadNotifications.highlightCount;
+    
+    NSLog(@"[MXRoom] %@ update unread notifications: %tu, %tu ", self.state.roomId, _notificationCount, _highlightCount);
 
     // Handle account data events (if any)
     [self handleAccounDataEvents:roomSync.accountData.events direction:MXTimelineDirectionForwards];
