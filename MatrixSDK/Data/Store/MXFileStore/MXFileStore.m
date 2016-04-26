@@ -555,7 +555,10 @@ NSString *const kMXReceiptsFolder = @"receipts";
         [self saveMetaData];
         
         // The data saving is completed: remove the temporary file.
-        [[NSFileManager defaultManager] removeItemAtPath:savingMarkerFile error:nil];
+        // Do it on the same GCD queue
+        dispatch_async(dispatchQueue, ^(void){
+            [[NSFileManager defaultManager] removeItemAtPath:savingMarkerFile error:nil];
+        });
     }
 }
 
@@ -979,7 +982,7 @@ NSString *const kMXReceiptsFolder = @"receipts";
         dispatch_async(dispatchQueue, ^(void){
 
             NSUInteger messageDirSize = [[[[NSFileManager defaultManager] attributesOfItemAtPath:storeReceiptsPath error:nil] objectForKey:NSFileSize] intValue];
-            NSUInteger deltaCacheSize = 0;
+            NSInteger deltaCacheSize = 0;
             
             // Save rooms where there was changes
             for (NSString *roomId in roomsToCommit)
