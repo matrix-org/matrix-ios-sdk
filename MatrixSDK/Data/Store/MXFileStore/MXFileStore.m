@@ -897,7 +897,22 @@ NSString *const kMXReceiptsFolder = @"receipts";
     // Sanity check: check whether there are as much receipts files as room data files.
     if (roomIDArray.count != roomStores.allKeys.count)
     {
-        NSLog(@"[MXFileStore] Warning: MXFileStore has been reset due to file corruption (%tu receipts files vs %tu rooms)", roomIDArray.count, roomStores.allKeys.count);
+        NSLog(@"[MXFileStore] Error: MXFileStore has been reset due to file corruption (%tu read receipts files vs %tu rooms)", roomIDArray.count, roomStores.allKeys.count);
+
+        // Log the faulty rooms
+        NSMutableArray *roomDiff;
+        if (roomIDArray.count > roomStores.allKeys.count)
+        {
+            roomDiff = [NSMutableArray arrayWithArray:roomIDArray];
+            [roomDiff removeObjectsInArray:roomStores.allKeys];
+        }
+        else
+        {
+            roomDiff = [NSMutableArray arrayWithArray:roomStores.allKeys];
+            [roomDiff removeObjectsInArray:roomIDArray];
+        }
+        NSLog(@"Rooms that are missing: %@", roomDiff);
+
         [self deleteAllData];
     }
     else
