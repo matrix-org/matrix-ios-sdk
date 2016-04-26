@@ -1,3 +1,19 @@
+Changes in Matrix iOS SDK in 0.6.6 (2016-04-26)
+===============================================
+
+Improvements:
+ * MXSession/MXRestClient: Add [self join:withSignUrl:] to join a room where the user has been invited by a 3PID invitation.
+ * MXHTTPClient: Add an option to serialise input parameters as form data instead of JSON, which is still the default behavior.
+ * MXRestClient: Update requestEmailValidation (set params in body, replace camelCase params keys by their underscore name, add the nextLink param).
+ * MXRestClient: Add submitEmailValidationToken to validate an email.
+ * MXFileStore: Improve storage and loading of read receipts.
+ * MXTools: Add method to remove new line characters from NSString.
+
+Bug fixes:
+ * Cannot paginate to the origin of the room.
+ * Store - Detect and remove corrupted room data.
+ * The application icon badge number is wrong.
+
 Changes in Matrix iOS SDK in 0.6.5 (2016-04-08)
 ===============================================
 
