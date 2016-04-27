@@ -384,7 +384,11 @@ NSString *const kMXPresenceHidden = @"hidden";
         MXJSONModelSetUInteger(presenceEventContent.lastActiveAgo, JSONDictionary[@"last_active_ago"]);
         MXJSONModelSetString(presenceEventContent.presence, JSONDictionary[@"presence"]);
         MXJSONModelSetString(presenceEventContent.statusMsg, JSONDictionary[@"status_msg"]);
-        
+        if (JSONDictionary[@"currently_active"])
+        {
+            MXJSONModelSetBoolean(presenceEventContent.currentlyActive, JSONDictionary[@"currently_active"]);
+        }
+
         presenceEventContent.presenceStatus = [MXTools presence:presenceEventContent.presence];
     }
     return presenceEventContent;

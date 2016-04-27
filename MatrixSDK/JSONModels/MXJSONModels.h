@@ -378,8 +378,16 @@ FOUNDATION_EXPORT NSString *const kMXPresenceHidden;
 
     /**
      The timestamp of the last time the user has been active.
+     It is NOT accurate if self.currentlyActive is YES.
+     Zero means unknown.
      */
     @property (nonatomic) NSUInteger lastActiveAgo;
+
+    /**
+     Whether the user is currently active.
+     If YES, lastActiveAgo is an approximation and "Now" should be shown instead.
+     */
+    @property (nonatomic) BOOL currentlyActive;
 
     /**
      The presence status string as provided by the home server.

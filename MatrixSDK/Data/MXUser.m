@@ -118,6 +118,7 @@
     _presence = presenceContent.presenceStatus;
     
     lastActiveLocalTS = [[NSDate date] timeIntervalSince1970] * 1000 - presenceContent.lastActiveAgo;
+    _isCurrentlyActive = presenceContent.currentlyActive;
 
     [self notifyListeners:presenceEvent];
 }
