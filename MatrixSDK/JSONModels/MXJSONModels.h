@@ -341,9 +341,7 @@ typedef enum : NSUInteger
     MXPresenceUnknown,    // The home server did not provide the information
     MXPresenceOnline,
     MXPresenceUnavailable,
-    MXPresenceOffline,
-    MXPresenceFreeForChat,
-    MXPresenceHidden
+    MXPresenceOffline
 } MXPresence;
 
 /**
@@ -353,8 +351,6 @@ typedef NSString* MXPresenceString;
 FOUNDATION_EXPORT NSString *const kMXPresenceOnline;
 FOUNDATION_EXPORT NSString *const kMXPresenceUnavailable;
 FOUNDATION_EXPORT NSString *const kMXPresenceOffline;
-FOUNDATION_EXPORT NSString *const kMXPresenceFreeForChat;
-FOUNDATION_EXPORT NSString *const kMXPresenceHidden;
 
 /**
  `MXPresenceEventContent` represents the content of a presence event.

@@ -368,8 +368,6 @@ NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
 NSString *const kMXPresenceOnline = @"online";
 NSString *const kMXPresenceUnavailable = @"unavailable";
 NSString *const kMXPresenceOffline = @"offline";
-NSString *const kMXPresenceFreeForChat = @"free_for_chat";
-NSString *const kMXPresenceHidden = @"hidden";
 
 @implementation MXPresenceEventContent
 
