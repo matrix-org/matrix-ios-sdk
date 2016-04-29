@@ -66,7 +66,7 @@
 /**
  The time since the last activity by the user.
  This value in milliseconds is recomputed at each property reading.
- It is NOT accurate if isCurrentlyActive is YES.
+ It is NOT accurate if currentlyActive is YES.
  Zero means unknown.
  */
 @property (nonatomic, readonly) NSUInteger lastActiveAgo;
