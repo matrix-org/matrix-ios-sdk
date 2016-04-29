@@ -75,7 +75,7 @@
  Whether the user is currently active.
  If YES, lastActiveAgo is an approximation and "Now" should be shown instead.
  */
-@property (nonatomic, readonly) BOOL isCurrentlyActive;
+@property (nonatomic, readonly) BOOL currentlyActive;
 
 /**
  Create an instance for an user ID.
