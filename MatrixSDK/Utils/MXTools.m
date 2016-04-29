@@ -112,14 +112,6 @@
     {
         presence = MXPresenceOffline;
     }
-    else if ([presenceString isEqualToString:kMXPresenceFreeForChat])
-    {
-        presence = MXPresenceFreeForChat;
-    }
-    else if ([presenceString isEqualToString:kMXPresenceHidden])
-    {
-        presence = MXPresenceHidden;
-    }
     
     return presence;
 }
@@ -140,14 +132,6 @@
             
         case MXPresenceOffline:
             presenceString = kMXPresenceOffline;
-            break;
-            
-        case MXPresenceFreeForChat:
-            presenceString = kMXPresenceFreeForChat;
-            break;
-            
-        case MXPresenceHidden:
-            presenceString = kMXPresenceHidden;
             break;
             
         default:

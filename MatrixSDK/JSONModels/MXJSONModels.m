@@ -368,8 +368,6 @@ NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
 NSString *const kMXPresenceOnline = @"online";
 NSString *const kMXPresenceUnavailable = @"unavailable";
 NSString *const kMXPresenceOffline = @"offline";
-NSString *const kMXPresenceFreeForChat = @"free_for_chat";
-NSString *const kMXPresenceHidden = @"hidden";
 
 @implementation MXPresenceEventContent
 
@@ -384,7 +382,11 @@ NSString *const kMXPresenceHidden = @"hidden";
         MXJSONModelSetUInteger(presenceEventContent.lastActiveAgo, JSONDictionary[@"last_active_ago"]);
         MXJSONModelSetString(presenceEventContent.presence, JSONDictionary[@"presence"]);
         MXJSONModelSetString(presenceEventContent.statusMsg, JSONDictionary[@"status_msg"]);
-        
+        if (JSONDictionary[@"currently_active"])
+        {
+            MXJSONModelSetBoolean(presenceEventContent.currentlyActive, JSONDictionary[@"currently_active"]);
+        }
+
         presenceEventContent.presenceStatus = [MXTools presence:presenceEventContent.presence];
     }
     return presenceEventContent;
