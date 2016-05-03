@@ -1210,6 +1210,22 @@ typedef void (^MXOnResumeDone)();
     return user;
 }
 
+- (MXHTTPOperation*)ignoreUser:(NSString*)userId
+                       success:(void (^)())success
+                       failure:(void (^)(NSError *error))failure
+{
+    return [matrixRestClient ignoreUser:userId success:^{
+
+        // TODO: Do we have something to clean?
+
+        if (success)
+        {
+            success();
+        }
+
+    } failure:failure];
+}
+
 
 #pragma mark - User's recents
 - (NSArray<MXEvent*>*)recentsWithTypeIn:(NSArray<MXEventTypeString>*)types

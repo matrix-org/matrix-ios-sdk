@@ -793,6 +793,27 @@ typedef enum : NSUInteger
                     failure:(void (^)(NSError *error))failure;
 
 /**
+ Report an event.
+
+ @param eventId the id of the event event.
+ @param roomId the id of the room.
+ @param score the metric to let the user rate the severity of the abuse.  
+               It ranges from -100 “most offensive” to 0 “inoffensive”.
+ @param reason the redaction reason (optional).
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)reportEvent:(NSString*)eventId
+                         inRoom:(NSString*)roomId
+                          score:(NSInteger)score
+                         reason:(NSString*)reason
+                        success:(void (^)())success
+                        failure:(void (^)(NSError *error))failure;
+
+/**
  Get all the current information for this room, including messages and state events.
  
  @param roomId the id of the room.
@@ -968,6 +989,19 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)threePIDs:(void (^)(NSArray<MXThirdPartyIdentifier*> *threePIDs))success
                     failure:(void (^)(NSError *error))failure;
+
+/**
+ Ignore a user.
+
+ @param userId the user id.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)ignoreUser:(NSString*)userId
+                       success:(void (^)())success
+                       failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Presence operations

@@ -1507,6 +1507,24 @@ MXAuthAction;
                                  }];
 }
 
+-(MXHTTPOperation *)reportEvent:(NSString *)eventId
+                         inRoom:(NSString *)roomId
+                          score:(NSInteger)score
+                         reason:(NSString *)reason
+                        success:(void (^)())success
+                        failure:(void (^)(NSError *))failure
+{
+    // TODO
+    if (success)
+    {
+        dispatch_async(processingQueue, ^{
+            dispatch_async(dispatch_get_main_queue(), ^{
+                success();
+            });
+        });
+    }
+}
+
 - (MXHTTPOperation*)initialSyncOfRoom:(NSString*)roomId
                             withLimit:(NSInteger)limit
                               success:(void (^)(MXRoomInitialSync *roomInitialSync))success
@@ -1898,6 +1916,18 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation *)ignoreUser:(NSString *)userId success:(void (^)())success failure:(void (^)(NSError *))failure
+{
+    // TODO
+    if (success)
+    {
+        dispatch_async(processingQueue, ^{
+            dispatch_async(dispatch_get_main_queue(), ^{
+                success();
+            });
+        });
+    }
+}
 
 #pragma mark - Presence operations
 - (MXHTTPOperation*)setPresence:(MXPresence)presence andStatusMessage:(NSString*)statusMessage
