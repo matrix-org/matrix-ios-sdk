@@ -1523,6 +1523,8 @@ MXAuthAction;
             });
         });
     }
+
+    return nil;
 }
 
 - (MXHTTPOperation*)initialSyncOfRoom:(NSString*)roomId
@@ -1927,6 +1929,8 @@ MXAuthAction;
             });
         });
     }
+
+    return nil;
 }
 
 #pragma mark - Presence operations
