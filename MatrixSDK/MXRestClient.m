@@ -294,6 +294,30 @@ MXAuthAction;
 
 #pragma mark - password update operation
 
+- (MXHTTPOperation*)resetPasswordWithParameters:(NSDictionary*)parameters
+                           success:(void (^)())success
+                           failure:(void (^)(NSError *error))failure
+{
+    // sanity check
+    if (!parameters)
+    {
+        NSError* error = [NSError errorWithDomain:@"Invalid params" code:500 userInfo:nil];
+        
+        failure(error);
+        return nil;
+    }
+    
+    return [httpClient requestWithMethod:@"POST"
+                                    path:[NSString stringWithFormat:@"%@/account/password", apiPathPrefix]
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     success();
+                                 }
+                                 failure:^(NSError *error) {
+                                     failure(error);
+                                 }];
+}
+
 - (MXHTTPOperation*)changePassword:(NSString*)oldPassword with:(NSString*)newPassword
                            success:(void (^)())success
                            failure:(void (^)(NSError *error))failure

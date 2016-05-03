@@ -272,6 +272,19 @@ typedef enum : NSUInteger
 - (NSString*)loginFallback;
 
 /**
+ Reset the account password.
+ 
+ @param parameters a set of parameters containing a threepid credentials and the new password.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)resetPasswordWithParameters:(NSDictionary*)parameters
+                                        success:(void (^)())success
+                                        failure:(void (^)(NSError *error))failure;
+
+/**
  Replace the account password.
  
  @param oldPassword the current password to update.
