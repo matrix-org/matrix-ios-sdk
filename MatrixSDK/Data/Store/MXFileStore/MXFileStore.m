@@ -20,7 +20,7 @@
 
 #import "MXFileStoreMetaData.h"
 
-NSUInteger const kMXFileVersion = 24;
+NSUInteger const kMXFileVersion = 25;
 
 NSString *const kMXFileStoreFolder = @"MXFileStore";
 NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -533,6 +533,20 @@ NSString *const kMXReceiptsFolder = @"receipts";
 - (NSString *)userAvatarUrl
 {
     return metaData.userAvatarUrl;
+}
+
+- (void)setUserAccountData:(NSDictionary *)userAccountData
+{
+    if (metaData)
+    {
+        metaData.userAccountData = userAccountData;
+        metaDataHasChanged = YES;
+    }
+}
+
+- (NSDictionary *)userAccountData
+{
+    return metaData.userAccountData;
 }
 
 - (void)commit

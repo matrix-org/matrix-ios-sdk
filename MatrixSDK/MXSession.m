@@ -181,7 +181,10 @@ typedef void (^MXOnResumeDone)();
                 _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId andDisplayname:_store.userDisplayname andAvatarUrl:_store.userAvatarUrl andMatrixSession:self];
                 // And store him as a common MXUser
                 users[matrixRestClient.credentials.userId] = _myUser;
-                
+
+                // Load user account data
+                _ignoredUsers = [self ignoredUsersFromAccountData:_store.userAccountData];
+
                 // Create MXRooms from their states stored in the store
                 NSDate *startDate2 = [NSDate date];
                 for (NSString *roomId in _store.rooms)
@@ -608,20 +611,17 @@ typedef void (^MXOnResumeDone)();
         // Handle top-level account data
         if (syncResponse.accountData)
         {
-            for (NSDictionary *event in syncResponse.accountData[@"events"])
+            // Well, manage only the ignored users list for now
+            NSArray *newIgnoredUsers =  [self ignoredUsersFromAccountData:syncResponse.accountData];
+            if (newIgnoredUsers)
             {
-                // Well, manage only the ignored users list for now
-                if ([event[@"type"] isEqualToString:kMXAccountDataTypeIgnoredUserList])
-                {
-                    _ignoredUsers = [event[@"content"][kMXAccountDataKeyIgnoredUser] allKeys];
+                _ignoredUsers = newIgnoredUsers;
 
-                    // TODO: Post a notification about this update
-
-                    NSLog(@"##### _ignoredUsers: %@", _ignoredUsers);
-                }
+                // TODO: Post a notification about this update
             }
 
-            // TODO: Store it
+            // Store it
+            _store.userAccountData = syncResponse.accountData;
         }
         
         // Update live event stream token
@@ -1315,6 +1315,27 @@ typedef void (^MXOnResumeDone)();
         }
 
     } failure:failure];
+}
+
+/**
+ Extract the ignored users list from the account data dictionary.
+ 
+ @param accountData the account data dictionary.
+ @return the ignored users list. nil if there is nothing.
+ */
+- (NSArray*)ignoredUsersFromAccountData:(NSDictionary*)accountData
+{
+    NSArray *ignoredUsers;
+
+    for (NSDictionary *event in accountData[@"events"])
+    {
+        if ([event[@"type"] isEqualToString:kMXAccountDataTypeIgnoredUserList])
+        {
+            ignoredUsers = [event[@"content"][kMXAccountDataKeyIgnoredUser] allKeys];
+        }
+    }
+
+    return ignoredUsers;
 }
 
 
