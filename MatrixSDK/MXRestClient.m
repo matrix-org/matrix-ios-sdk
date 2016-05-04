@@ -45,6 +45,16 @@ NSString *const kMXRoomVisibilityPublic  = @"public";
 NSString *const kMXRoomVisibilityPrivate = @"private";
 
 /**
+ Account data types
+ */
+NSString *const kMXAccountDataTypeIgnoredUserList = @"m.ignored_user_list";
+
+/**
+ Account data keys
+ */
+NSString *const kMXAccountDataKeyIgnoredUser = @"ignored_users";
+
+/**
  Types of third party media.
  The list is not exhautive and depends on the Identity server capabilities.
  */
@@ -447,6 +457,45 @@ MXAuthAction;
                                  failure(error);
                              }
                          }];
+}
+
+
+#pragma mark - Account data
+- (MXHTTPOperation*)setAccountData:(NSDictionary*)data
+                           forType:(NSString*)type
+                           success:(void (^)())success
+                           failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/user/%@/account_data/%@", apiPathPrefix, credentials.userId, type];
+
+    return [httpClient requestWithMethod:@"PUT"
+                                    path:path
+                              parameters:data
+                                 success:^(NSDictionary *JSONResponse) {
+
+                                     if (success)
+                                     {
+                                         // Use here the processing queue in order to keep the server response order
+                                         dispatch_async(processingQueue, ^{
+
+                                             dispatch_async(dispatch_get_main_queue(), ^{
+
+                                                 NSString *eventId;
+                                                 MXJSONModelSetString(eventId, JSONResponse[@"event_id"]);
+                                                 success(eventId);
+
+                                             });
+
+                                         });
+                                     }
+
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                 }];
 }
 
 
@@ -1496,6 +1545,50 @@ MXAuthAction;
                                                  
                                              });
                                              
+                                         });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                 }];
+}
+
+-(MXHTTPOperation *)reportEvent:(NSString *)eventId
+                         inRoom:(NSString *)roomId
+                          score:(NSInteger)score
+                         reason:(NSString *)reason
+                        success:(void (^)())success
+                        failure:(void (^)(NSError *))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/report/%@", apiPathPrefix, roomId, eventId];
+
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{
+                                                                                      @"score": @(score)
+                                                                                      }];
+    // Reason is optional
+    if (reason)
+    {
+        parameters[@"reason"] = reason;
+    }
+
+    return [httpClient requestWithMethod:@"POST"
+                                    path:path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success)
+                                     {
+                                         // Use here the processing queue in order to keep the server response order
+                                         dispatch_async(processingQueue, ^{
+
+                                             dispatch_async(dispatch_get_main_queue(), ^{
+
+                                                 success();
+
+                                             });
+
                                          });
                                      }
                                  }

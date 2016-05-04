@@ -348,4 +348,9 @@
  */
 @property (nonatomic) NSString *userAvatarUrl;
 
+/**
+ Store/retrieve the user account data.
+ */
+@property (nonatomic) NSDictionary *userAccountData;
+
 @end

@@ -397,6 +397,25 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
                         success:(void (^)())success
                         failure:(void (^)(NSError *error))failure;
 
+/**
+ Report an event in this room.
+
+ @param eventId the id of the event event.
+ @param score the metric to let the user rate the severity of the abuse.
+              It ranges from -100 “most offensive” to 0 “inoffensive”.
+ @param reason the redaction reason (optional).
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)reportEvent:(NSString*)eventId
+                          score:(NSInteger)score
+                         reason:(NSString*)reason
+                        success:(void (^)())success
+                        failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - Events timeline
 /**

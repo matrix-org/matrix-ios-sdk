@@ -140,6 +140,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationRoomIdKey;
  */
 FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
 
+/**
+ Posted when MXSession has detected a change in the `ignoredUsers` property.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionIgnoredUsersDidChangeNotification;
+
 
 #pragma mark - Other constants
 /**
@@ -438,6 +443,47 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @return an array of MXUsers.
  */
 - (NSArray*)users;
+
+/**
+ The list of ignored users.
+
+ @return an array of user ids. nil if the list has not been yet fetched from the homeserver.
+ */
+@property (nonatomic, readonly) NSArray<NSString*> *ignoredUsers;
+
+/**
+ Indicate if a user is in the ignored list
+ 
+ @param userId the id of the user.
+ @return YES if the user is ignored.
+ */
+- (BOOL)isUserIgnored:(NSString*)userId;
+
+/**
+ Ignore a list of users.
+
+ @param userIds a list of users ids
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)ignoreUsers:(NSArray<NSString*>*)userIds
+                        success:(void (^)())success
+                        failure:(void (^)(NSError *error))failure;
+
+/**
+ Unignore a list of users.
+
+ @param userIds a list of users ids
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)unIgnoreUsers:(NSArray<NSString*>*)userIds
+                        success:(void (^)())success
+                        failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - User's recents
