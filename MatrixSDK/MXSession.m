@@ -615,9 +615,13 @@ typedef void (^MXOnResumeDone)();
                 {
                     _ignoredUsers = [event[@"content"][kMXAccountDataKeyIgnoredUser] allKeys];
 
+                    // TODO: Post a notification about this update
+
                     NSLog(@"##### _ignoredUsers: %@", _ignoredUsers);
                 }
             }
+
+            // TODO: Store it
         }
         
         // Update live event stream token
@@ -1235,6 +1239,7 @@ typedef void (^MXOnResumeDone)();
                        failure:(void (^)(NSError *error))failure
 {
     // Create the new account data subset for m.ignored_user_list
+    // by adding userIds
     NSMutableDictionary *ignoredUsersDict = [NSMutableDictionary dictionary];
     for (NSString *userId in _ignoredUsers)
     {
@@ -1260,6 +1265,43 @@ typedef void (^MXOnResumeDone)();
                 [newIgnoredUsers addObject:userId];
             }
         }
+        _ignoredUsers = newIgnoredUsers;
+
+        if (success)
+        {
+            success();
+        }
+
+    } failure:failure];
+}
+
+- (MXHTTPOperation *)unIgnoreUsers:(NSArray<NSString *> *)userIds success:(void (^)())success failure:(void (^)(NSError *))failure
+{
+    // Create the new account data subset for m.ignored_user_list
+    // by substracting userIds
+    NSMutableDictionary *ignoredUsersDict = [NSMutableDictionary dictionary];
+    for (NSString *userId in _ignoredUsers)
+    {
+        ignoredUsersDict[userId] = @{};
+    }
+    for (NSString *userId in userIds)
+    {
+        [ignoredUsersDict removeObjectForKey:userId];
+    }
+
+    // And make the request
+    NSDictionary *data = @{
+                           kMXAccountDataKeyIgnoredUser: ignoredUsersDict
+                           };
+    return [matrixRestClient setAccountData:data forType:kMXAccountDataTypeIgnoredUserList success:^{
+
+        // Update self.ignoredUsers right now
+        NSMutableArray *newIgnoredUsers = [NSMutableArray arrayWithArray:_ignoredUsers];
+        for (NSString *userId in userIds)
+        {
+            [newIgnoredUsers removeObject:userId];
+        }
+        _ignoredUsers = newIgnoredUsers;
 
         if (success)
         {
