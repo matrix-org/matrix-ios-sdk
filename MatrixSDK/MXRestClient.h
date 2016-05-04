@@ -56,6 +56,16 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPublic;
 FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
 
 /**
+ Account data types
+ */
+FOUNDATION_EXPORT NSString *const kMXAccountDataTypeIgnoredUserList;
+
+/**
+ Account data keys
+ */
+FOUNDATION_EXPORT NSString *const kMXAccountDataKeyIgnoredUser;
+
+/**
  MXRestClient error domain
  */
 FOUNDATION_EXPORT NSString *const kMXRestClientErrorDomain;
@@ -272,6 +282,19 @@ typedef enum : NSUInteger
 - (NSString*)loginFallback;
 
 /**
+ Reset the account password.
+ 
+ @param parameters a set of parameters containing a threepid credentials and the new password.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)resetPasswordWithParameters:(NSDictionary*)parameters
+                                        success:(void (^)())success
+                                        failure:(void (^)(NSError *error))failure;
+
+/**
  Replace the account password.
  
  @param oldPassword the current password to update.
@@ -284,6 +307,25 @@ typedef enum : NSUInteger
 - (MXHTTPOperation*)changePassword:(NSString*)oldPassword with:(NSString*)newPassword
                           success:(void (^)())success
                           failure:(void (^)(NSError *error))failure;
+
+
+#pragma mark - Account data
+/**
+ Set some account_data for the client.
+
+ @param data the new data to set for this event type.
+ @param type The event type of the account_data to set (@see kMXAccountDataType* strings)
+            Custom types should be namespaced to avoid clashes.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setAccountData:(NSDictionary*)data
+                           forType:(NSString*)type
+                           success:(void (^)())success
+                           failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - Push Notifications
 /**
@@ -778,6 +820,27 @@ typedef enum : NSUInteger
                      reason:(NSString*)reason
                     success:(void (^)())success
                     failure:(void (^)(NSError *error))failure;
+
+/**
+ Report an event.
+
+ @param eventId the id of the event event.
+ @param roomId the id of the room.
+ @param score the metric to let the user rate the severity of the abuse.  
+               It ranges from -100 “most offensive” to 0 “inoffensive”.
+ @param reason the redaction reason (optional).
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)reportEvent:(NSString*)eventId
+                         inRoom:(NSString*)roomId
+                          score:(NSInteger)score
+                         reason:(NSString*)reason
+                        success:(void (^)())success
+                        failure:(void (^)(NSError *error))failure;
 
 /**
  Get all the current information for this room, including messages and state events.

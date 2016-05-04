@@ -341,9 +341,7 @@ typedef enum : NSUInteger
     MXPresenceUnknown,    // The home server did not provide the information
     MXPresenceOnline,
     MXPresenceUnavailable,
-    MXPresenceOffline,
-    MXPresenceFreeForChat,
-    MXPresenceHidden
+    MXPresenceOffline
 } MXPresence;
 
 /**
@@ -353,8 +351,6 @@ typedef NSString* MXPresenceString;
 FOUNDATION_EXPORT NSString *const kMXPresenceOnline;
 FOUNDATION_EXPORT NSString *const kMXPresenceUnavailable;
 FOUNDATION_EXPORT NSString *const kMXPresenceOffline;
-FOUNDATION_EXPORT NSString *const kMXPresenceFreeForChat;
-FOUNDATION_EXPORT NSString *const kMXPresenceHidden;
 
 /**
  `MXPresenceEventContent` represents the content of a presence event.
@@ -378,8 +374,16 @@ FOUNDATION_EXPORT NSString *const kMXPresenceHidden;
 
     /**
      The timestamp of the last time the user has been active.
+     It is NOT accurate if self.currentlyActive is YES.
+     Zero means unknown.
      */
     @property (nonatomic) NSUInteger lastActiveAgo;
+
+    /**
+     Whether the user is currently active.
+     If YES, lastActiveAgo is an approximation and "Now" should be shown instead.
+     */
+    @property (nonatomic) BOOL currentlyActive;
 
     /**
      The presence status string as provided by the home server.
@@ -1123,6 +1127,11 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
  `MXSyncResponse` represents the request response for server sync.
  */
 @interface MXSyncResponse : MXJSONModel
+
+    /**
+     The user private data.
+     */
+    @property (nonatomic) NSDictionary *accountData;
 
     /**
      The opaque token for the end.

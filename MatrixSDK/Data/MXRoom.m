@@ -331,6 +331,15 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     return [mxSession.matrixRestClient redactEvent:eventId inRoom:self.state.roomId reason:reason success:success failure:failure];
 }
 
+- (MXHTTPOperation *)reportEvent:(NSString *)eventId
+                           score:(NSInteger)score
+                          reason:(NSString *)reason
+                         success:(void (^)())success
+                         failure:(void (^)(NSError *))failure
+{
+    return [mxSession.matrixRestClient reportEvent:eventId inRoom:self.state.roomId score:score reason:reason success:success failure:failure];
+}
+
 
 #pragma mark - Events timeline
 - (MXEventTimeline*)timelineOnEvent:(NSString*)eventId;
