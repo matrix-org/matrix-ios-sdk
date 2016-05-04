@@ -1,3 +1,10 @@
+Changes in Matrix iOS SDK in 0.6.7 (2016-05-04)
+===============================================
+
+Improvements:
+ * Presence: Manage the currently_active parameter.
+ * MXRestClient: Add API to reset the account password.
+
 Changes in Matrix iOS SDK in 0.6.6 (2016-04-26)
 ===============================================
 
