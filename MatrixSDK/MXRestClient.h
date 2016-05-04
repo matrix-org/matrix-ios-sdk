@@ -56,6 +56,16 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPublic;
 FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
 
 /**
+ Account data types
+ */
+FOUNDATION_EXPORT NSString *const kMXAccountDataTypeIgnoredUserList;
+
+/**
+ Account data keys
+ */
+FOUNDATION_EXPORT NSString *const kMXAccountDataKeyIgnoredUser;
+
+/**
  MXRestClient error domain
  */
 FOUNDATION_EXPORT NSString *const kMXRestClientErrorDomain;
@@ -297,6 +307,25 @@ typedef enum : NSUInteger
 - (MXHTTPOperation*)changePassword:(NSString*)oldPassword with:(NSString*)newPassword
                           success:(void (^)())success
                           failure:(void (^)(NSError *error))failure;
+
+
+#pragma mark - Account data
+/**
+ Set some account_data for the client.
+
+ @param data the new data to set for this event type.
+ @param type The event type of the account_data to set (@see kMXAccountDataType* strings)
+            Custom types should be namespaced to avoid clashes.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setAccountData:(NSDictionary*)data
+                           forType:(NSString*)type
+                           success:(void (^)())success
+                           failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - Push Notifications
 /**
@@ -989,19 +1018,6 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)threePIDs:(void (^)(NSArray<MXThirdPartyIdentifier*> *threePIDs))success
                     failure:(void (^)(NSError *error))failure;
-
-/**
- Ignore a user.
-
- @param userId the user id.
- @param success A block object called when the operation succeeds.
- @param failure A block object called when the operation fails.
-
- @return a MXHTTPOperation instance.
- */
-- (MXHTTPOperation*)ignoreUser:(NSString*)userId
-                       success:(void (^)())success
-                       failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Presence operations
