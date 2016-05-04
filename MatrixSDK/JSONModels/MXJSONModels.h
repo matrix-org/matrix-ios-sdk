@@ -1129,6 +1129,11 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @interface MXSyncResponse : MXJSONModel
 
     /**
+     The user private data.
+     */
+    @property (nonatomic) NSDictionary *accountData;
+
+    /**
      The opaque token for the end.
      */
     @property (nonatomic) NSString *nextBatch;

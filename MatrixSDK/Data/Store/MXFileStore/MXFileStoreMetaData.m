@@ -30,6 +30,7 @@
         _eventStreamToken = dict[@"eventStreamToken"];
         _userDisplayName = dict[@"userDisplayName"];
         _userAvatarUrl = dict[@"userAvatarUrl"];
+        _userAccountData = dict[@"userAccountData"];
 
         NSNumber *version = dict[@"version"];
         _version = [version unsignedIntegerValue];
@@ -60,6 +61,10 @@
     {
         dict[@"userAvatarUrl"] = _userAvatarUrl;
     }
+    if (_userAccountData)
+    {
+        dict[@"userAccountData"] = _userAccountData;
+    }
 
     [aCoder encodeObject:dict forKey:@"dict"];
 }
@@ -75,6 +80,7 @@
     metaData->_eventStreamToken = [_eventStreamToken copyWithZone:zone];
     metaData->_userDisplayName = [_userDisplayName copyWithZone:zone];
     metaData->_userAvatarUrl = [_userAvatarUrl copyWithZone:zone];
+    metaData->_userAccountData = [_userAccountData copyWithZone:zone];
 
     return metaData;
 }
