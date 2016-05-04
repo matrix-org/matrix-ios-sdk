@@ -455,17 +455,17 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (BOOL)isUserIgnored:(NSString*)userId;
 
 /**
- Ignore a user.
+ Ignore a list of users.
 
- @param userId the user id.
+ @param userIds a list of users ids
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)ignoreUser:(NSString*)userId
-                       success:(void (^)())success
-                       failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)ignoreUsers:(NSArray<NSString*>*)userIds
+                        success:(void (^)())success
+                        failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - User's recents

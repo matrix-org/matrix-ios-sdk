@@ -614,6 +614,8 @@ typedef void (^MXOnResumeDone)();
                 if ([event[@"type"] isEqualToString:kMXAccountDataTypeIgnoredUserList])
                 {
                     _ignoredUsers = [event[@"content"][kMXAccountDataKeyIgnoredUser] allKeys];
+
+                    NSLog(@"##### _ignoredUsers: %@", _ignoredUsers);
                 }
             }
         }
@@ -1228,18 +1230,36 @@ typedef void (^MXOnResumeDone)();
     return _ignoredUsers && (NSNotFound != [_ignoredUsers indexOfObject:userId]);
 }
 
-- (MXHTTPOperation*)ignoreUser:(NSString*)userId
+- (MXHTTPOperation*)ignoreUsers:(NSArray<NSString*>*)userIds
                        success:(void (^)())success
                        failure:(void (^)(NSError *error))failure
 {
+    // Create the new account data subset for m.ignored_user_list
+    NSMutableDictionary *ignoredUsersDict = [NSMutableDictionary dictionary];
+    for (NSString *userId in _ignoredUsers)
+    {
+        ignoredUsersDict[userId] = @{};
+    }
+    for (NSString *userId in userIds)
+    {
+        ignoredUsersDict[userId] = @{};
+    }
+
+    // And make the request
     NSDictionary *data = @{
-                           @"ignored_users":@{
-                                   userId: @{}
-                                   }
+                           kMXAccountDataKeyIgnoredUser: ignoredUsersDict
                            };
     return [matrixRestClient setAccountData:data forType:kMXAccountDataTypeIgnoredUserList success:^{
 
-        // TODO: Do we have something to clean?
+        // Update self.ignoredUsers right now
+        NSMutableArray *newIgnoredUsers = [NSMutableArray arrayWithArray:_ignoredUsers];
+        for (NSString *userId in userIds)
+        {
+            if (NSNotFound == [newIgnoredUsers indexOfObject:userId])
+            {
+                [newIgnoredUsers addObject:userId];
+            }
+        }
 
         if (success)
         {
