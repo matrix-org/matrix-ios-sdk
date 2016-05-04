@@ -440,6 +440,21 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (NSArray*)users;
 
 /**
+ The list of ignored users.
+
+ @return an array of user ids. nil if the list has not been yet fetched from the homeserver.
+ */
+@property (nonatomic, readonly) NSArray<NSString*> *ignoredUsers;
+
+/**
+ Indicate if a user is in the ignored list
+ 
+ @param userId the id of the user.
+ @return YES if the user is ignored.
+ */
+- (BOOL)isUserIgnored:(NSString*)userId;
+
+/**
  Ignore a user.
 
  @param userId the user id.

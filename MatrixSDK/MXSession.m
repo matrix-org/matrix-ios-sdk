@@ -604,6 +604,19 @@ typedef void (^MXOnResumeDone)();
         {
             [self handlePresenceEvent:presenceEvent direction:MXTimelineDirectionForwards];
         }
+
+        // Handle top-level account data
+        if (syncResponse.accountData)
+        {
+            for (NSDictionary *event in syncResponse.accountData[@"events"])
+            {
+                // Well, manage only the ignored users list for now
+                if ([event[@"type"] isEqualToString:kMXAccountDataTypeIgnoredUserList])
+                {
+                    _ignoredUsers = [event[@"content"][kMXAccountDataKeyIgnoredUser] allKeys];
+                }
+            }
+        }
         
         // Update live event stream token
         _store.eventStreamToken = syncResponse.nextBatch;
@@ -1210,11 +1223,21 @@ typedef void (^MXOnResumeDone)();
     return user;
 }
 
+- (BOOL)isUserIgnored:(NSString *)userId
+{
+    return _ignoredUsers && (NSNotFound != [_ignoredUsers indexOfObject:userId]);
+}
+
 - (MXHTTPOperation*)ignoreUser:(NSString*)userId
                        success:(void (^)())success
                        failure:(void (^)(NSError *error))failure
 {
-    return [matrixRestClient ignoreUser:userId success:^{
+    NSDictionary *data = @{
+                           @"ignored_users":@{
+                                   userId: @{}
+                                   }
+                           };
+    return [matrixRestClient setAccountData:data forType:kMXAccountDataTypeIgnoredUserList success:^{
 
         // TODO: Do we have something to clean?
 
