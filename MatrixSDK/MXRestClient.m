@@ -1514,17 +1514,41 @@ MXAuthAction;
                         success:(void (^)())success
                         failure:(void (^)(NSError *))failure
 {
-    // TODO
-    if (success)
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/report/%@", apiPathPrefix, roomId, eventId];
+
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{
+                                                                                      @"score": @(score)
+                                                                                      }];
+    // Reason is optional
+    if (reason)
     {
-        dispatch_async(processingQueue, ^{
-            dispatch_async(dispatch_get_main_queue(), ^{
-                success();
-            });
-        });
+        parameters[@"reason"] = reason;
     }
 
-    return nil;
+    return [httpClient requestWithMethod:@"POST"
+                                    path:path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success)
+                                     {
+                                         // Use here the processing queue in order to keep the server response order
+                                         dispatch_async(processingQueue, ^{
+
+                                             dispatch_async(dispatch_get_main_queue(), ^{
+
+                                                 success();
+
+                                             });
+
+                                         });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                 }];
 }
 
 - (MXHTTPOperation*)initialSyncOfRoom:(NSString*)roomId
