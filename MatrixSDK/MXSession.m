@@ -1254,10 +1254,13 @@ typedef void (^MXOnResumeDone)();
     NSDictionary *data = @{
                            kMXAccountDataKeyIgnoredUser: ignoredUsersDict
                            };
+    __weak __typeof(self)weakSelf = self;
     return [matrixRestClient setAccountData:data forType:kMXAccountDataTypeIgnoredUserList success:^{
 
+        __strong __typeof(weakSelf)strongSelf = weakSelf;
+
         // Update self.ignoredUsers right now
-        NSMutableArray *newIgnoredUsers = [NSMutableArray arrayWithArray:_ignoredUsers];
+        NSMutableArray *newIgnoredUsers = [NSMutableArray arrayWithArray:strongSelf->_ignoredUsers];
         for (NSString *userId in userIds)
         {
             if (NSNotFound == [newIgnoredUsers indexOfObject:userId])
@@ -1265,7 +1268,7 @@ typedef void (^MXOnResumeDone)();
                 [newIgnoredUsers addObject:userId];
             }
         }
-        _ignoredUsers = newIgnoredUsers;
+        strongSelf->_ignoredUsers = newIgnoredUsers;
 
         if (success)
         {
@@ -1293,15 +1296,18 @@ typedef void (^MXOnResumeDone)();
     NSDictionary *data = @{
                            kMXAccountDataKeyIgnoredUser: ignoredUsersDict
                            };
+    __weak __typeof(self)weakSelf = self;
     return [matrixRestClient setAccountData:data forType:kMXAccountDataTypeIgnoredUserList success:^{
 
+        __strong __typeof(weakSelf)strongSelf = weakSelf;
+
         // Update self.ignoredUsers right now
-        NSMutableArray *newIgnoredUsers = [NSMutableArray arrayWithArray:_ignoredUsers];
+        NSMutableArray *newIgnoredUsers = [NSMutableArray arrayWithArray:strongSelf->_ignoredUsers];
         for (NSString *userId in userIds)
         {
             [newIgnoredUsers removeObject:userId];
         }
-        _ignoredUsers = newIgnoredUsers;
+        strongSelf->_ignoredUsers = newIgnoredUsers;
 
         if (success)
         {

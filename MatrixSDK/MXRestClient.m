@@ -47,12 +47,12 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
 /**
  Account data types
  */
-FOUNDATION_EXPORT NSString *const kMXAccountDataTypeIgnoredUserList = @"m.ignored_user_list";
+NSString *const kMXAccountDataTypeIgnoredUserList = @"m.ignored_user_list";
 
 /**
  Account data keys
  */
-FOUNDATION_EXPORT NSString *const kMXAccountDataKeyIgnoredUser = @"ignored_users";
+NSString *const kMXAccountDataKeyIgnoredUser = @"ignored_users";
 
 /**
  Types of third party media.
