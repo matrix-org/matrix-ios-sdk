@@ -140,6 +140,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationRoomIdKey;
  */
 FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
 
+/**
+ Posted when MXSession has detected a change in the `ignoredUsers` property.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionIgnoredUsersDidChangeNotification;
+
 
 #pragma mark - Other constants
 /**

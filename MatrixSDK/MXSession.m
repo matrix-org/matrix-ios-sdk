@@ -37,6 +37,7 @@ NSString *const kMXSessionDidSyncNotification = @"kMXSessionDidSyncNotification"
 NSString *const kMXSessionInvitedRoomsDidChangeNotification = @"kMXSessionInvitedRoomsDidChangeNotification";
 NSString *const kMXSessionNotificationRoomIdKey = @"roomId";
 NSString *const kMXSessionNotificationEventKey = @"event";
+NSString *const kMXSessionIgnoredUsersDidChangeNotification = @"kMXSessionIgnoredUsersDidChangeNotification";
 NSString *const kMXSessionNoRoomTag = @"m.recent";  // Use the same value as matrix-react-sdk
 
 /**
@@ -615,9 +616,22 @@ typedef void (^MXOnResumeDone)();
             NSArray *newIgnoredUsers =  [self ignoredUsersFromAccountData:syncResponse.accountData];
             if (newIgnoredUsers)
             {
+                // Check the array changes whatever the order
+                NSCountedSet *set1 = [NSCountedSet setWithArray:_ignoredUsers];
+                NSCountedSet *set2 = [NSCountedSet setWithArray:newIgnoredUsers];
+
+                // Testing _ignoredUsers allow to filter first /sync
+                BOOL notify = _ignoredUsers && ![set1 isEqualToSet:set2];
+
                 _ignoredUsers = newIgnoredUsers;
 
-                // TODO: Post a notification about this update
+                // Report the change
+                if (notify)
+                {
+                    [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionIgnoredUsersDidChangeNotification
+                                                                        object:self
+                                                                      userInfo:nil];
+                }
             }
 
             // Store it
@@ -1254,21 +1268,22 @@ typedef void (^MXOnResumeDone)();
     NSDictionary *data = @{
                            kMXAccountDataKeyIgnoredUser: ignoredUsersDict
                            };
-    __weak __typeof(self)weakSelf = self;
+//    __weak __typeof(self)weakSelf = self;
     return [matrixRestClient setAccountData:data forType:kMXAccountDataTypeIgnoredUserList success:^{
 
-        __strong __typeof(weakSelf)strongSelf = weakSelf;
+//        __strong __typeof(weakSelf)strongSelf = weakSelf;
 
         // Update self.ignoredUsers right now
-        NSMutableArray *newIgnoredUsers = [NSMutableArray arrayWithArray:strongSelf->_ignoredUsers];
-        for (NSString *userId in userIds)
-        {
-            if (NSNotFound == [newIgnoredUsers indexOfObject:userId])
-            {
-                [newIgnoredUsers addObject:userId];
-            }
-        }
-        strongSelf->_ignoredUsers = newIgnoredUsers;
+// Commented as it created race condition with /sync response handling
+//        NSMutableArray *newIgnoredUsers = [NSMutableArray arrayWithArray:strongSelf->_ignoredUsers];
+//        for (NSString *userId in userIds)
+//        {
+//            if (NSNotFound == [newIgnoredUsers indexOfObject:userId])
+//            {
+//                [newIgnoredUsers addObject:userId];
+//            }
+//        }
+//        strongSelf->_ignoredUsers = newIgnoredUsers;
 
         if (success)
         {
@@ -1296,18 +1311,19 @@ typedef void (^MXOnResumeDone)();
     NSDictionary *data = @{
                            kMXAccountDataKeyIgnoredUser: ignoredUsersDict
                            };
-    __weak __typeof(self)weakSelf = self;
+//    __weak __typeof(self)weakSelf = self;
     return [matrixRestClient setAccountData:data forType:kMXAccountDataTypeIgnoredUserList success:^{
 
-        __strong __typeof(weakSelf)strongSelf = weakSelf;
+//        __strong __typeof(weakSelf)strongSelf = weakSelf;
 
         // Update self.ignoredUsers right now
-        NSMutableArray *newIgnoredUsers = [NSMutableArray arrayWithArray:strongSelf->_ignoredUsers];
-        for (NSString *userId in userIds)
-        {
-            [newIgnoredUsers removeObject:userId];
-        }
-        strongSelf->_ignoredUsers = newIgnoredUsers;
+// Commented as it created race condition with /sync response handling
+//        NSMutableArray *newIgnoredUsers = [NSMutableArray arrayWithArray:strongSelf->_ignoredUsers];
+//        for (NSString *userId in userIds)
+//        {
+//            [newIgnoredUsers removeObject:userId];
+//        }
+//        strongSelf->_ignoredUsers = newIgnoredUsers;
 
         if (success)
         {
