@@ -620,13 +620,13 @@ typedef void (^MXOnResumeDone)();
                 NSCountedSet *set1 = [NSCountedSet setWithArray:_ignoredUsers];
                 NSCountedSet *set2 = [NSCountedSet setWithArray:newIgnoredUsers];
 
-                // Testing _ignoredUsers allow to filter first /sync
-                BOOL notify = _ignoredUsers && ![set1 isEqualToSet:set2];
+                // Do not notify for the first /sync
+                BOOL notify = !isInitialSync && ![set1 isEqualToSet:set2];
 
                 _ignoredUsers = newIgnoredUsers;
 
                 // Report the change
-                if (notify)
+                if (!isInitialSync)
                 {
                     [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionIgnoredUsersDidChangeNotification
                                                                         object:self
