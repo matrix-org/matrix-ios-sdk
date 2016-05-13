@@ -259,12 +259,18 @@ typedef void (^MXOnResumeDone)();
 
         // Set the store before going further
         __weak typeof(self) weakSelf = self;
+
         [self setStore:store success:^{
 
             // Then, start again
             [weakSelf startWithMessagesLimit:messagesLimit onServerSyncDone:onServerSyncDone failure:failure];
 
-        } failure:failure];
+        } failure:^(NSError *error) {
+            
+            [self setState:MXSessionStateInitialSyncFailed];
+            failure(error);
+            
+        }];
         return;
     }
 
@@ -302,19 +308,30 @@ typedef void (^MXOnResumeDone)();
                 [_notificationCenter refreshRules:^{
                     
                     // Initial server sync
-                    [self serverSyncWithServerTimeout:0 success:onServerSyncDone failure:failure clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+                    [self serverSyncWithServerTimeout:0 success:onServerSyncDone failure:^(NSError *error) {
+                        
+                        [self setState:MXSessionStateInitialSyncFailed];
+                        failure(error);
+                        
+                    } clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
                     
                 } failure:^(NSError *error) {
-                    [self setState:MXSessionStateHomeserverNotReachable];
+                    
+                    [self setState:MXSessionStateInitialSyncFailed];
                     failure(error);
+                    
                 }];
             } failure:^(NSError *error) {
-                [self setState:MXSessionStateHomeserverNotReachable];
+                
+                [self setState:MXSessionStateInitialSyncFailed];
                 failure(error);
+                
             }];
         } failure:^(NSError *error) {
-            [self setState:MXSessionStateHomeserverNotReachable];
+            
+            [self setState:MXSessionStateInitialSyncFailed];
             failure(error);
+            
         }];
     }
 }
@@ -748,9 +765,6 @@ typedef void (^MXOnResumeDone)();
         // Check whether the caller wants to handle error himself
         if (failure)
         {
-            // Inform the app there is a problem with the connection to the homeserver
-            [self setState:MXSessionStateHomeserverNotReachable];
-            
             failure(error);
         }
         else
@@ -799,6 +813,7 @@ typedef void (^MXOnResumeDone)();
                         if (eventStreamRequest)
                         {
                             NSLog(@"[MXSession] Retry resuming events stream");
+                            [self setState:MXSessionStateSyncInProgress];
                             [self serverSyncWithServerTimeout:serverTimeout success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
                         }
                     });
@@ -814,6 +829,7 @@ typedef void (^MXOnResumeDone)();
                             [[NSNotificationCenter defaultCenter] removeObserver:reachabilityObserver];
                             
                             NSLog(@"[MXSession] Retry resuming events stream");
+                            [self setState:MXSessionStateSyncInProgress];
                             [self serverSyncWithServerTimeout:serverTimeout success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
                         }
                     }];
