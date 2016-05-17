@@ -263,11 +263,13 @@ typedef void (^MXOnResumeDone)();
         [self setStore:store success:^{
 
             // Then, start again
-            [weakSelf startWithMessagesLimit:messagesLimit onServerSyncDone:onServerSyncDone failure:failure];
+            __strong __typeof(weakSelf)strongSelf = weakSelf;
+            [strongSelf startWithMessagesLimit:messagesLimit onServerSyncDone:onServerSyncDone failure:failure];
 
         } failure:^(NSError *error) {
             
-            [self setState:MXSessionStateInitialSyncFailed];
+            __strong __typeof(weakSelf)strongSelf = weakSelf;
+            [strongSelf setState:MXSessionStateInitialSyncFailed];
             failure(error);
             
         }];
