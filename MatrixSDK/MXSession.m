@@ -645,7 +645,7 @@ typedef void (^MXOnResumeDone)();
                 _ignoredUsers = newIgnoredUsers;
 
                 // Report the change
-                if (!isInitialSync)
+                if (notify)
                 {
                     [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionIgnoredUsersDidChangeNotification
                                                                         object:self
