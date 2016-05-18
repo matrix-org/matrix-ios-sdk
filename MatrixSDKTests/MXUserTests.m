@@ -155,12 +155,15 @@
 
         [mxAlice listenToUserUpdate:^(MXEvent *event) {
 
-            XCTAssertEqual(event.eventType, MXEventTypePresence);
+            XCTAssert(event.eventType == MXEventTypePresence || event.eventType == MXEventTypeRoomMember, @"%@", event);
 
-            XCTAssert([mxAlice.displayname isEqualToString:@"ALICE"]);
-            XCTAssert([mxAlice.avatarUrl isEqualToString:kMXTestsAliceAvatarURL]);
+            if (event.eventType == MXEventTypePresence)
+            {
+                XCTAssert([mxAlice.displayname isEqualToString:@"ALICE"]);
+                XCTAssert([mxAlice.avatarUrl isEqualToString:kMXTestsAliceAvatarURL]);
 
-            [expectation fulfill];
+                [expectation fulfill];
+            }
 
         }];
 
@@ -261,7 +264,7 @@
 
             [mxSession.myUser listenToUserUpdate:^(MXEvent *event) {
 
-                XCTAssertEqual(event.eventType, MXEventTypePresence);
+                XCTAssert(event.eventType == MXEventTypePresence || event.eventType == MXEventTypeRoomMember, @"%@", event);
 
                 XCTAssertEqualObjects(mxSession.myUser.displayname, @"ALICE");
                 XCTAssertEqualObjects(mxSession.myUser.avatarUrl, kMXTestsAliceAvatarURL);
