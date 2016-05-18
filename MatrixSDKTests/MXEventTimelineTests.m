@@ -69,7 +69,8 @@ NSString *theInitialEventMessage = @"The initial timelime event";
                 }];
 
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
             }];
         }];
     }];

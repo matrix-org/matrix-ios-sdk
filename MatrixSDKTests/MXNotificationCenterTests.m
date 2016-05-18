@@ -72,7 +72,8 @@
             [expectation fulfill];
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
     }];
 }
@@ -86,6 +87,7 @@
         [mxSession.notificationCenter listenToNotifications:^(MXEvent *event, MXRoomState *roomState, MXPushRule *rule) {
 
             XCTFail(@"Events from the user should not be notified. event: %@\n rule: %@", event, rule);
+            [expectation fulfill];
 
         }];
 
@@ -99,7 +101,8 @@
             });
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
     }];
 }
@@ -129,11 +132,13 @@
                 });
 
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
             }];
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
         
     }];
@@ -163,7 +168,8 @@
             [aliceRestClient sendTextMessageToRoom:roomId text:@"a message" success:^(NSString *eventId) {
 
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
             }];
 
         }];
@@ -173,7 +179,8 @@
         [room inviteUser:carolId success:^{
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
     }];
 };
@@ -206,7 +213,8 @@
             [aliceRestClient sendTextMessageToRoom:roomId text:messageFromAlice success:^(NSString *eventId) {
 
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
             }];
         }];
 
@@ -215,7 +223,8 @@
         [room inviteUser:carolId success:^{
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
         
     }];
@@ -253,15 +262,18 @@
                 [roomBobSide sendTextMessage:messageFromBob success:^(NSString *eventId) {
 
                 } failure:^(NSError *error) {
-                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
                 }];
 
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
             }];
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
 
     }];
@@ -294,7 +306,8 @@
         [aliceRestClient sendTextMessageToRoom:roomId text:messageFromAlice success:^(NSString *eventId) {
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
         
     }];
@@ -326,7 +339,8 @@
             });
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
         
     }];
@@ -371,15 +385,18 @@
                 [roomBobSide sendTextMessage:messageFromBob success:^(NSString *eventId) {
 
                 } failure:^(NSError *error) {
-                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
                 }];
 
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
             }];
             
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
         
     }];

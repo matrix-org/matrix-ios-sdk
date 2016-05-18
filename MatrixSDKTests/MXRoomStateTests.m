@@ -417,7 +417,7 @@
  5 - Bob invites Alice
  6 - Bob: "I wait for Alice"
  */
-- (void)createInviteByUserScenario:(MXRestClient*)bobRestClient inRoom:(NSString*)roomId inviteAlice:(BOOL)inviteAlice onComplete:(void(^)())onComplete
+- (void)createInviteByUserScenario:(MXRestClient*)bobRestClient inRoom:(NSString*)roomId inviteAlice:(BOOL)inviteAlice expectation:(XCTestExpectation*)expectation onComplete:(void(^)())onComplete
 {
     [bobRestClient sendTextMessageToRoom:roomId text:@"Hello world" success:^(NSString *eventId) {
 
@@ -438,11 +438,13 @@
                                 onComplete();
 
                             } failure:^(NSError *error) {
-                                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                [expectation fulfill];
                             }];
 
                         } failure:^(NSError *error) {
-                            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                            [expectation fulfill];
                         }];
                     }
                     else
@@ -452,15 +454,18 @@
                 }];
 
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
             }];
             
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
         
     } failure:^(NSError *error) {
-        NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+        [expectation fulfill];
     }];
 }
 
@@ -468,7 +473,7 @@
 {
     [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [self createInviteByUserScenario:bobRestClient inRoom:roomId inviteAlice:YES onComplete:^{
+        [self createInviteByUserScenario:bobRestClient inRoom:roomId inviteAlice:YES expectation:expectation onComplete:^{
             
             [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
                 
@@ -555,7 +560,7 @@
                     
                 }];
                 
-                [self createInviteByUserScenario:bobRestClient inRoom:roomId inviteAlice:YES onComplete:^{
+                [self createInviteByUserScenario:bobRestClient inRoom:roomId inviteAlice:YES expectation:expectation onComplete:^{
                     
                     // Make sure we have tested something
                     XCTAssertNotNil(newRoom);
@@ -578,7 +583,7 @@
 {
     [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [self createInviteByUserScenario:bobRestClient inRoom:roomId inviteAlice:YES onComplete:^{
+        [self createInviteByUserScenario:bobRestClient inRoom:roomId inviteAlice:YES expectation:expectation onComplete:^{
             
             [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
                 
@@ -644,7 +649,7 @@
 {
     [matrixSDKTestsData doMXRestClientTestWithBobAndAPublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [self createInviteByUserScenario:bobRestClient inRoom:roomId inviteAlice:NO onComplete:^{
+        [self createInviteByUserScenario:bobRestClient inRoom:roomId inviteAlice:NO expectation:expectation onComplete:^{
             
             [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
                 
@@ -790,15 +795,18 @@
                     [bobRestClient sendTextMessageToRoom:roomId text:@"Hi Alice 2!" success:^(NSString *eventId) {
 
                     } failure:^(NSError *error) {
-                        NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
                     }];
                 } failure:^(NSError *error) {
-                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
                 }];
             }];
             
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
     }];
 }
@@ -847,7 +855,8 @@
             }];
             
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
     }];
 }

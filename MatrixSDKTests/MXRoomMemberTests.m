@@ -67,7 +67,7 @@
                 [expectation fulfill];
                 
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot check test result - error: %@", error);
+                XCTFail(@"Cannot check test result - error: %@", error);
                 [expectation fulfill];
             }];
             
