@@ -237,7 +237,7 @@
                     [expectation fulfill];
                     
                 } failure:^(NSError *error) {
-                    NSAssert(NO, @"Cannot check test result - error: %@", error);
+                    XCTFail(@"Cannot check test result - error: %@", error);
                     [expectation fulfill];
                 }];
                 
@@ -279,7 +279,7 @@
                 [expectation fulfill];
             }
                         failure:^(NSError *error) {
-                            NSAssert(NO, @"Cannot check test result - error: %@", error);
+                            XCTFail(@"Cannot check test result - error: %@", error);
                             [expectation fulfill];
                         }];
             
@@ -319,7 +319,7 @@
                 [expectation fulfill];
             }
                            failure:^(NSError *error) {
-                               NSAssert(NO, @"Cannot check test result - error: %@", error);
+                               XCTFail(@"Cannot check test result - error: %@", error);
                                [expectation fulfill];
                            }];
             
@@ -484,7 +484,8 @@
             }];
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
     }];
 }
@@ -556,7 +557,8 @@
             }];
             
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
     }];
 }

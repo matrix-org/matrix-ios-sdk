@@ -73,7 +73,7 @@
                              }
                              else
                              {
-                                 NSAssert(NO, @"Cannot create the test account");
+                                 XCTFail(@"Cannot create the test account");
                              }
                          }];
     mxRestClient.apiPathPrefix = kMXAPIPrefixPathR0;
