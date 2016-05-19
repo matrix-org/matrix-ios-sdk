@@ -85,7 +85,17 @@ typedef enum : NSUInteger
      @discussion
      The Matrix session will stay in this state until a new call of [MXSession start:failure:].
      */
-    MXSessionStateInitialSyncFailed
+    MXSessionStateInitialSyncFailed,
+
+    /**
+     The access token is no more valid.
+
+     @discussion
+     This can happen when the user made a forget password request for example.
+     The Matrix session is no more usable. The user must log in again.
+     */
+    MXSessionStateUnknownToken
+
 } MXSessionState;
 
 
