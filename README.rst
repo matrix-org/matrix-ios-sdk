@@ -38,17 +38,17 @@ Matrix API level
 ----------------
 :``MXRestClient``:
     Exposes the Matrix Client-Server API as specified by the Matrix standard to
-    make requests to a Home Server. 
+    make requests to a homeserver. 
 
 
 Business logic and data model
 -----------------------------
-These classes are higher level tools to handle responses from a Home Server.
+These classes are higher level tools to handle responses from a homeserver.
 They contain logic to maintain consistent chat room data.
 
 :``MXSession``:
-    This class handles all data arriving from the Home Server. It uses a
-    MXRestClient instance to fetch data from the home server, forwarding it to
+    This class handles all data arriving from the homeserver. It uses a
+    MXRestClient instance to fetch data from the homeserver, forwarding it to
     MXRoom, MXRoomState, MXRoomMember and MXUser objects.
 
 :``MXRoom``:
@@ -70,7 +70,7 @@ They contain logic to maintain consistent chat room data.
 Usage
 =====
 
-The sample app (https://github.com/matrix-org/matrix-ios-sdk/tree/master/samples/matrixConsole)
+The sample app (https://github.com/matrix-org/matrix-ios-console)
 demonstrates how to build a chat app on top of Matrix. You can refer to it,
 play with it, hack it to understand the full integration of the Matrix SDK.
 This section comes back to the basics with sample codes for basic use cases.
@@ -79,7 +79,7 @@ One file to import::
 
       #import <MatrixSDK/MatrixSDK.h>
   
-Use case #1: Get public rooms of an home server
+Use case #1: Get public rooms of an homeserver
 -----------------------------------------------
 This API does not require the user to be authenticated. So, MXRestClient
 instantiated with initWithHomeServer does the job::
@@ -112,7 +112,7 @@ out::
     // Create a matrix session
     MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:mxRestClient];
     
-    // Launch mxSession: it will first make an initial sync with the home server
+    // Launch mxSession: it will first make an initial sync with the homeserver
     // Then it will listen to new coming events and update its data
     [mxSession start:^{
         
@@ -122,6 +122,43 @@ out::
         
     } failure:^(NSError *error) {
     }];
+    
+    
+Use case #2 (bis): Get the rooms the user has interacted with (using a permanent MXStore)
+-----------------------------------------------------------------------------------------
+We use the same code as below but we add a MXFileStore that will be in charge of
+storing user's data on the file system. This will avoid to do a full sync with the 
+homeserver each time the app is resumed. The app will be able to resume quickly.
+Plus, it will be able to run in offline mode while syncing with the homeserver::
+
+    MXCredentials *credentials = [[MXCredentials alloc] initWithHomeServer:@"http://matrix.org"
+                                                                    userId:@"@your_user_id:matrix.org"
+                                                               accessToken:@"your_access_tokem"];
+
+    // Create a matrix session
+    MXRestClient *mxRestClient = [[MXRestClient alloc] initWithCredentials:credentials];
+
+    // Create a matrix session
+    MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:mxRestClient];
+
+    // Make the matrix session open the file store
+    // This will preload user's messages and other data
+    MXFileStore *store = [[MXFileStore alloc] init];
+    [mxSession setStore:store success:^{
+    
+        // Launch mxSession: it will sync with the homeserver from the last stored data
+        // Then it will listen to new coming events and update its data
+        [mxSession start:^{
+    
+            // mxSession is ready to be used
+            // Now we can get all rooms with:
+            mxSession.rooms;
+    
+        } failure:^(NSError *error) {
+        }];
+    } failure:^(NSError *error) {
+    }];
+
 
     
 Use case #3: Get messages of a room
@@ -167,7 +204,7 @@ MXRestClient directly::
         
         // event_id is for reference
         // If you have registered events listener like in the previous use case, you will get
-        // a notification for this event coming down from the home server events stream and
+        // a notification for this event coming down from the homeserver events stream and
         // now handled by MXSession.
         
     } failure:^(NSError *error) {
@@ -177,7 +214,7 @@ MXRestClient directly::
 Push Notifications
 ==================
 
-In Matrix, a Home Server can send notifications out to a user when events
+In Matrix, a homeserver can send notifications out to a user when events
 arrive for them. However in APNS, only you, the app developer, can send APNS
 notifications because doing so requires your APNS private key. Matrix
 therefore requires a seperate server decoupled from the homeserver to send
@@ -248,7 +285,7 @@ encoding for APNS tokens (as this is what sygnal uses)::
         ];
     }
 
-When you call setPusherWithPushkey, this creates a pusher on the Home Server
+When you call setPusherWithPushkey, this creates a pusher on the homeserver
 that your session is logged in to. This will send HTTP notifications to a URL
 you supply as the 'url' key in the 'data' argument to setPusherWithPushkey.
 
@@ -258,7 +295,7 @@ little more information about some of these parameters is included below:
 
 appId
   This has two purposes: firstly to form the namespace in which your pushkeys
-  exist on a Home Server, which means you should use something unique to your
+  exist on a homeserver, which means you should use something unique to your
   application: a reverse-DNS style identifier is strongly recommended. Its
   second purpose is to identify your application to your Push Gateway, such that
   your Push Gateway knows which private key and certificate to use when talking
@@ -298,7 +335,7 @@ Tests
 =====
 The tests in the SDK Xcode project are both unit and integration tests.
 
-Out of the box, the tests use one of the home servers (located at
+Out of the box, the tests use one of the homeservers (located at
 http://localhost:8080) of the "Demo Federation of Homeservers"
 (https://github.com/matrix-org/synapse#running-a-demo-federation-of-homeservers)
 . You have to start them from your local Synapse folder::
@@ -321,12 +358,12 @@ the cocoapods team.
 Registration
 ------------
 The SDK currently manages only login-password type registration.
-This type of registration is not accepted by the home server hosted at
+This type of registration is not accepted by the homeserver hosted at
 matrix.org. It has been disabled for security and spamming reasons.
 So, for now, you will be not be able to register a new account with the SDK on
-such home server. But you can login an existing user.
+such homeserver. But you can login an existing user.
 
-If you run your own home server, the default launch parameters enables the
+If you run your own homeserver, the default launch parameters enables the
 login-password type registration and you will be able to register a new user to
 it.
 
