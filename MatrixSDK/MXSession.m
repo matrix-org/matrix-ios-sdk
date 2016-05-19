@@ -26,6 +26,8 @@
 #import "MXMemoryStore.h"
 #import "MXFileStore.h"
 
+#import "MXAccountData.h"
+
 #pragma mark - Constants definitions
 
 const NSString *MatrixSDKVersion = @"0.6.7";
@@ -105,6 +107,11 @@ typedef void (^MXOnResumeDone)();
      The maintained list of rooms where the user has a pending invitation.
      */
     NSMutableArray<MXRoom *> *invitedRooms;
+
+    /**
+     The account data.
+     */
+    MXAccountData *accountData;
 }
 @end
 
@@ -123,6 +130,7 @@ typedef void (^MXOnResumeDone)();
         globalEventListeners = [NSMutableArray array];
         syncMessagesLimit = -1;
         _notificationCenter = [[MXNotificationCenter alloc] initWithMatrixSession:self];
+        accountData = [[MXAccountData alloc] init];
         
         [self setState:MXSessionStateInitialised];
     }
@@ -173,54 +181,37 @@ typedef void (^MXOnResumeDone)();
         // Can we start on data from the MXStore?
         if (_store.isPermanent && _store.eventStreamToken && 0 < _store.rooms.count)
         {
-            // Define here a method to load data from store
-            void (^loadStoreData) () = ^void() {
-                // Mount data from the permanent store
-                NSLog(@"[MXSession] Loading room state events to build MXRoom objects...");
-                
-                // Create the user's profile from the store
-                _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId andDisplayname:_store.userDisplayname andAvatarUrl:_store.userAvatarUrl andMatrixSession:self];
-                // And store him as a common MXUser
-                users[matrixRestClient.credentials.userId] = _myUser;
+            // Mount data from the permanent store
+            NSLog(@"[MXSession] Loading room state events to build MXRoom objects...");
 
-                // Load user account data
-                _ignoredUsers = [self ignoredUsersFromAccountData:_store.userAccountData];
+            // Create the user's profile from the store
+            _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId andDisplayname:_store.userDisplayname andAvatarUrl:_store.userAvatarUrl andMatrixSession:self];
+            // And store him as a common MXUser
+            users[matrixRestClient.credentials.userId] = _myUser;
 
-                // Create MXRooms from their states stored in the store
-                NSDate *startDate2 = [NSDate date];
-                for (NSString *roomId in _store.rooms)
+            // Load user account data
+            [self handleAccountData:_store.userAccountData];
+
+            // Create MXRooms from their states stored in the store
+            NSDate *startDate2 = [NSDate date];
+            for (NSString *roomId in _store.rooms)
+            {
+                @autoreleasepool
                 {
-                    @autoreleasepool
-                    {
-                        NSArray *stateEvents = [_store stateOfRoom:roomId];
-                        MXRoomAccountData *roomAccountData = [_store accountDataOfRoom:roomId];
-                        [self createRoom:roomId withStateEvents:stateEvents andAccountData:roomAccountData notify:NO];
-                    }
+                    NSArray *stateEvents = [_store stateOfRoom:roomId];
+                    MXRoomAccountData *roomAccountData = [_store accountDataOfRoom:roomId];
+                    [self createRoom:roomId withStateEvents:stateEvents andAccountData:roomAccountData notify:NO];
                 }
-                
-                NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
-                
-                NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
-                
-                [self setState:MXSessionStateStoreDataReady];
-                
-                // The SDK client can use this data
-                onStoreDataReady();
-            };
-            
-            // Reload first the push rules to display correctly bing events.
-            // The store data are loaded even if this operation failed to let the app run in offline mode.
-            NSLog(@"[MXSession] Reload push rules from the home server...");
-            MXHTTPOperation *operation = [_notificationCenter refreshRules:^{
-                loadStoreData();
-            } failure:^(NSError *error) {
-                loadStoreData();
-            }];
+            }
 
-            // Attempt to retrieve them only once: if there is no network,
-            // we do not want to be blocked by the MXHTTPClient that will wait
-            // for the network to be back before retry internally.
-            operation.maxNumberOfTries = 1;
+            NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+
+            NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+
+            [self setState:MXSessionStateStoreDataReady];
+
+            // The SDK client can use this data
+            onStoreDataReady();
         }
         else
         {
@@ -305,24 +296,15 @@ typedef void (^MXOnResumeDone)();
 
                 // And store him as a common MXUser
                 users[matrixRestClient.credentials.userId] = _myUser;
+                    
+                // Initial server sync
+                [self serverSyncWithServerTimeout:0 success:onServerSyncDone failure:^(NSError *error) {
 
-                // Additional step: load push rules from the home server
-                [_notificationCenter refreshRules:^{
-                    
-                    // Initial server sync
-                    [self serverSyncWithServerTimeout:0 success:onServerSyncDone failure:^(NSError *error) {
-                        
-                        [self setState:MXSessionStateInitialSyncFailed];
-                        failure(error);
-                        
-                    } clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
-                    
-                } failure:^(NSError *error) {
-                    
                     [self setState:MXSessionStateInitialSyncFailed];
                     failure(error);
-                    
-                }];
+
+                } clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+
             } failure:^(NSError *error) {
                 
                 [self setState:MXSessionStateInitialSyncFailed];
@@ -336,19 +318,6 @@ typedef void (^MXOnResumeDone)();
             
         }];
     }
-}
-
-- (void)handlePresenceEvent:(MXEvent *)event direction:(MXTimelineDirection)direction
-{
-    // Update MXUser with presence data
-    NSString *userId = event.sender;
-    if (userId)
-    {
-        MXUser *user = [self getOrCreateUser:userId];
-        [user updateWithPresenceEvent:event];
-    }
-    
-    [self notifyListeners:event direction:direction];
 }
 
 - (void)pause
@@ -375,11 +344,6 @@ typedef void (^MXOnResumeDone)();
     // Check whether no request is already in progress
     if (!eventStreamRequest || (_state == MXSessionStateBackgroundSyncInProgress))
     {
-        // Force reload of push rules now.
-        // The spec, @see SPEC-106 ticket, does not allow to be notified when there was a change
-        // of push rules server side. Reload them when resuming the SDK is a good time
-        [_notificationCenter refreshRules:nil failure:nil];
-        
         [self setState:MXSessionStateSyncInProgress];
         
         // Resume from the last known token
@@ -631,30 +595,7 @@ typedef void (^MXOnResumeDone)();
         // Handle top-level account data
         if (syncResponse.accountData)
         {
-            // Well, manage only the ignored users list for now
-            NSArray *newIgnoredUsers =  [self ignoredUsersFromAccountData:syncResponse.accountData];
-            if (newIgnoredUsers)
-            {
-                // Check the array changes whatever the order
-                NSCountedSet *set1 = [NSCountedSet setWithArray:_ignoredUsers];
-                NSCountedSet *set2 = [NSCountedSet setWithArray:newIgnoredUsers];
-
-                // Do not notify for the first /sync
-                BOOL notify = !isInitialSync && ![set1 isEqualToSet:set2];
-
-                _ignoredUsers = newIgnoredUsers;
-
-                // Report the change
-                if (notify)
-                {
-                    [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionIgnoredUsersDidChangeNotification
-                                                                        object:self
-                                                                      userInfo:nil];
-                }
-            }
-
-            // Store it
-            _store.userAccountData = syncResponse.accountData;
+            [self handleAccountData:syncResponse.accountData];
         }
         
         // Update live event stream token
@@ -839,6 +780,69 @@ typedef void (^MXOnResumeDone)();
             }
         }
     }];
+}
+
+- (void)handlePresenceEvent:(MXEvent *)event direction:(MXTimelineDirection)direction
+{
+    // Update MXUser with presence data
+    NSString *userId = event.sender;
+    if (userId)
+    {
+        MXUser *user = [self getOrCreateUser:userId];
+        [user updateWithPresenceEvent:event];
+    }
+
+    [self notifyListeners:event direction:direction];
+}
+
+- (void)handleAccountData:(NSDictionary*)accountDataUpdate
+{
+    if (accountDataUpdate && accountDataUpdate[@"events"])
+    {
+        for (NSDictionary *event in accountDataUpdate[@"events"])
+        {
+            if ([event[@"type"] isEqualToString:kMXAccountDataPushRules])
+            {
+                // Handle push rules
+                MXPushRulesResponse *pushRules = [MXPushRulesResponse modelFromJSON:event[@"content"]];
+
+                if (![_notificationCenter.rules.JSONDictionary isEqualToDictionary:event[@"content"]])
+                {
+                    [_notificationCenter handlePushRulesResponse:pushRules];
+                }
+            }
+            else if ([event[@"type"] isEqualToString:kMXAccountDataTypeIgnoredUserList])
+            {
+                // Handle the ignored users list
+                NSArray *newIgnoredUsers = [event[@"content"][kMXAccountDataKeyIgnoredUser] allKeys];
+                if (newIgnoredUsers)
+                {
+                    // Check the array changes whatever the order
+                    NSCountedSet *set1 = [NSCountedSet setWithArray:_ignoredUsers];
+                    NSCountedSet *set2 = [NSCountedSet setWithArray:newIgnoredUsers];
+
+                    // Do not notify for the first /sync
+                    BOOL isInitialSync = !_store.eventStreamToken;
+                    BOOL notify = !isInitialSync && ![set1 isEqualToSet:set2];
+
+                    _ignoredUsers = newIgnoredUsers;
+
+                    // Report the change
+                    if (notify)
+                    {
+                        [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionIgnoredUsersDidChangeNotification
+                                                                            object:self
+                                                                          userInfo:nil];
+                    }
+                }
+            }
+
+            // Update the corresponding part of account data
+            [accountData updateWithEvent:event];
+        }
+
+        _store.userAccountData = accountData.accountData;
+    }
 }
 
 #pragma mark - Options
@@ -1349,27 +1353,6 @@ typedef void (^MXOnResumeDone)();
         }
 
     } failure:failure];
-}
-
-/**
- Extract the ignored users list from the account data dictionary.
- 
- @param accountData the account data dictionary.
- @return the ignored users list. nil if there is nothing.
- */
-- (NSArray*)ignoredUsersFromAccountData:(NSDictionary*)accountData
-{
-    NSArray *ignoredUsers;
-
-    for (NSDictionary *event in accountData[@"events"])
-    {
-        if ([event[@"type"] isEqualToString:kMXAccountDataTypeIgnoredUserList])
-        {
-            ignoredUsers = [event[@"content"][kMXAccountDataKeyIgnoredUser] allKeys];
-        }
-    }
-
-    return ignoredUsers;
 }
 
 

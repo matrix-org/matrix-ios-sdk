@@ -606,6 +606,12 @@ NSString *const kMXPushRuleConditionStringRoomMemberCount       = @"room_member_
 
 @end
 
+@interface MXPushRulesResponse ()
+{
+    // The dictionary sent by the homeserver.
+    NSDictionary *JSONDictionary;
+}
+@end
 @implementation MXPushRulesResponse
 
 NSString *const kMXPushRuleScopeStringGlobal = @"global";
@@ -622,9 +628,16 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         }
 
         // TODO support device rules
+
+        pushRulesResponse->JSONDictionary = JSONDictionary;
     }
 
     return pushRulesResponse;
+}
+
+- (NSDictionary *)JSONDictionary
+{
+    return JSONDictionary;
 }
 
 @end
