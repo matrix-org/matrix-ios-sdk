@@ -799,6 +799,8 @@ typedef void (^MXOnResumeDone)();
 {
     if (accountDataUpdate && accountDataUpdate[@"events"])
     {
+        BOOL isInitialSync = !_store.eventStreamToken;
+
         for (NSDictionary *event in accountDataUpdate[@"events"])
         {
             if ([event[@"type"] isEqualToString:kMXAccountDataPushRules])
@@ -809,6 +811,14 @@ typedef void (^MXOnResumeDone)();
                 if (![_notificationCenter.rules.JSONDictionary isEqualToDictionary:event[@"content"]])
                 {
                     [_notificationCenter handlePushRulesResponse:pushRules];
+
+                    // Report the change
+                    if (!isInitialSync)
+                    {
+                        [[NSNotificationCenter defaultCenter] postNotificationName:kMXNotificationCenterDidUpdateRules
+                                                                            object:_notificationCenter
+                                                                          userInfo:nil];
+                    }
                 }
             }
             else if ([event[@"type"] isEqualToString:kMXAccountDataTypeIgnoredUserList])
@@ -822,7 +832,6 @@ typedef void (^MXOnResumeDone)();
                     NSCountedSet *set2 = [NSCountedSet setWithArray:newIgnoredUsers];
 
                     // Do not notify for the first /sync
-                    BOOL isInitialSync = !_store.eventStreamToken;
                     BOOL notify = !isInitialSync && ![set1 isEqualToSet:set2];
 
                     _ignoredUsers = newIgnoredUsers;
