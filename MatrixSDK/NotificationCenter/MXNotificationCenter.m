@@ -104,23 +104,7 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
 {
     return [mxSession.matrixRestClient pushRules:^(MXPushRulesResponse *pushRules) {
 
-        _rules = pushRules;
-        
-        @synchronized(self)
-        {
-            flatRules = [NSMutableArray array];
-            
-            // Add rules by their priority
-            
-            // @TODO: manage device rules
-            
-            // Global rules
-            [flatRules addObjectsFromArray:pushRules.global.override];
-            [flatRules addObjectsFromArray:pushRules.global.content];
-            [flatRules addObjectsFromArray:pushRules.global.room];
-            [flatRules addObjectsFromArray:pushRules.global.sender];
-            [flatRules addObjectsFromArray:pushRules.global.underride];
-        }
+        [self handlePushRulesResponse:pushRules];
 
         if (success)
         {
@@ -135,6 +119,27 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
             failure(error);
         }
     }];
+}
+
+- (void)handlePushRulesResponse:(MXPushRulesResponse*)pushRules
+{
+    _rules = pushRules;
+
+    @synchronized(self)
+    {
+        flatRules = [NSMutableArray array];
+
+        // Add rules by their priority
+
+        // @TODO: manage device rules
+
+        // Global rules
+        [flatRules addObjectsFromArray:pushRules.global.override];
+        [flatRules addObjectsFromArray:pushRules.global.content];
+        [flatRules addObjectsFromArray:pushRules.global.room];
+        [flatRules addObjectsFromArray:pushRules.global.sender];
+        [flatRules addObjectsFromArray:pushRules.global.underride];
+    }
 }
 
 - (void)setChecker:(id<MXPushRuleConditionChecker>)checker forConditionKind:(MXPushRuleConditionString)conditionKind
