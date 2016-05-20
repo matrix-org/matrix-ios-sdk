@@ -679,6 +679,20 @@ typedef void (^MXOnResumeDone)();
         {
             return;
         }
+
+        if ([MXError isMXError:error])
+        {
+            // Detect invalidated access token
+            // This can happen when the user made a forget password request for example
+            MXError *mxError = [[MXError alloc] initWithNSError:error];
+            if ([mxError.errcode isEqualToString:kMXErrCodeStringUnknownToken])
+            {
+                [self setState:MXSessionStateUnknownToken];
+
+                // Do nothing more because without a valid access_token, the session is useless
+                return;
+            }
+        }
         
         // Handle failure during catch up first
         if (onBackgroundSyncFail)
