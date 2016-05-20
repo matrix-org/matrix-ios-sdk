@@ -1197,6 +1197,11 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
      */
     @property (nonatomic) NSUInteger lifetime;
 
+    /**
+     Indicate whether the invitation is for a video call.
+     */
+    - (BOOL)isVideoCall;
+
 @end
 
 /**
