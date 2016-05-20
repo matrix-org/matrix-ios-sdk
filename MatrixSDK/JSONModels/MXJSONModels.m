@@ -1081,6 +1081,11 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     return callInviteEventContent;
 }
 
+- (BOOL)isVideoCall
+{
+    return (NSNotFound != [self.offer.sdp rangeOfString:@"m=video"].location);
+}
+
 @end
 
 @implementation MXCallCandidate
