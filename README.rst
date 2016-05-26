@@ -364,7 +364,17 @@ So, for now, you will be not be able to register a new account with the SDK on
 such homeserver. But you can login an existing user.
 
 If you run your own homeserver, the default launch parameters enables the
-login-password type registration and you will be able to register a new user to
-it.
+login-password type registration and you will be able to register a new user to it.
+
+Copyright & License
+==================
+
+Copyright (c) 2014-2016 OpenMarket Ltd
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this work except in compliance with the License. You may obtain a copy of the License in the LICENSE file, or at:
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 
