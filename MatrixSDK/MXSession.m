@@ -1109,9 +1109,9 @@ typedef void (^MXOnResumeDone)();
     return room;
 }
 
-- (MXRoom *)createRoom:(NSString *)roomId withStateEvents:(NSArray*)stateEvents andAccountData:(MXRoomAccountData*)accountData notify:(BOOL)notify
+- (MXRoom *)createRoom:(NSString *)roomId withStateEvents:(NSArray*)stateEvents andAccountData:(MXRoomAccountData*)theAccountData notify:(BOOL)notify
 {
-    MXRoom *room = [[MXRoom alloc] initWithRoomId:roomId andMatrixSession:self andStateEvents:stateEvents andAccountData:accountData];
+    MXRoom *room = [[MXRoom alloc] initWithRoomId:roomId andMatrixSession:self andStateEvents:stateEvents andAccountData:theAccountData];
 
     [self addRoom:room notify:notify];
     return room;
