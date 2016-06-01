@@ -518,35 +518,37 @@
     {
         // Get the user display name from the member list of the room
         MXRoomMember *member = [self memberWithUserId:userId];
-
-        // Do not consider null displayname
-        if (member && member.displayname.length)
+        
+        if (!member)
+        {
+            // The user may not have joined the room yet. So try to resolve display name from presence data
+            // Note: This data may not be available
+            MXUser* user = [mxSession userWithUserId:userId];
+            if (user && user.displayname.length)
+            {
+                displayName = user.displayname;
+            }
+        }
+        else if (member.displayname.length)
         {
             displayName = member.displayname;
+        }
 
+        // Do not consider null displayname
+        if (displayName)
+        {
             // Disambiguate users who have the same displayname in the room
             for (MXRoomMember* member in members.allValues)
             {
                 if ([member.displayname isEqualToString:displayName] && ![member.userId isEqualToString:userId])
                 {
-                    displayName = [NSString stringWithFormat:@"%@(%@)", displayName, userId];
+                    displayName = [NSString stringWithFormat:@"%@ (%@)", displayName, userId];
                     break;
                 }
             }
         }
-
-        // The user may not have joined the room yet. So try to resolve display name from presence data
-        // Note: This data may not be available
-        if (!displayName)
+        else
         {
-            MXUser* user = [mxSession userWithUserId:userId];
-
-            if (user) {
-                displayName = user.displayname;
-            }
-        }
-        
-        if (!displayName) {
             // By default, use the user ID
             displayName = userId;
         }

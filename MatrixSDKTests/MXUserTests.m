@@ -65,15 +65,18 @@
                     readyToTest(bobRestClient, aliceRestClient, roomId, expectation);
 
                 } failure:^(NSError *error) {
-                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
                 }];
 
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
             }];
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
     }];
 }
@@ -138,7 +141,8 @@
         [aliceRestClient setPresence:MXPresenceOnline andStatusMessage:@"" success:^{
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
     }];
 }
@@ -151,19 +155,23 @@
 
         [mxAlice listenToUserUpdate:^(MXEvent *event) {
 
-            XCTAssertEqual(event.eventType, MXEventTypePresence);
+            XCTAssert(event.eventType == MXEventTypePresence || event.eventType == MXEventTypeRoomMember, @"%@", event);
 
-            XCTAssert([mxAlice.displayname isEqualToString:@"ALICE"]);
-            XCTAssert([mxAlice.avatarUrl isEqualToString:kMXTestsAliceAvatarURL]);
+            if (event.eventType == MXEventTypePresence)
+            {
+                XCTAssert([mxAlice.displayname isEqualToString:@"ALICE"]);
+                XCTAssert([mxAlice.avatarUrl isEqualToString:kMXTestsAliceAvatarURL]);
 
-            [expectation fulfill];
+                [expectation fulfill];
+            }
 
         }];
 
         [aliceRestClient setDisplayName:@"ALICE" success:^{
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
     }];
 }
@@ -192,7 +200,8 @@
         [aliceRestClient setPresence:MXPresenceUnavailable andStatusMessage:@"in Wonderland" success:^{
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
     }];
 }
@@ -215,7 +224,8 @@
             [expectation fulfill];
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
     }];
 }
@@ -235,7 +245,8 @@
         [bobRestClient sendTextMessageToRoom:roomId text:@"A message to update my last active ago" success:^(NSString *eventId) {
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
     }];
 }
@@ -253,7 +264,7 @@
 
             [mxSession.myUser listenToUserUpdate:^(MXEvent *event) {
 
-                XCTAssertEqual(event.eventType, MXEventTypePresence);
+                XCTAssert(event.eventType == MXEventTypePresence || event.eventType == MXEventTypeRoomMember, @"%@", event);
 
                 XCTAssertEqualObjects(mxSession.myUser.displayname, @"ALICE");
                 XCTAssertEqualObjects(mxSession.myUser.avatarUrl, kMXTestsAliceAvatarURL);
@@ -265,11 +276,13 @@
             [aliceRestClient setDisplayName:@"ALICE" success:^{
 
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
             }];
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
     }];
 }
@@ -305,11 +318,13 @@
             [aliceRestClient setPresence:MXPresenceUnavailable andStatusMessage:@"in Wonderland" success:^{
 
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
             }];
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
 
     }];

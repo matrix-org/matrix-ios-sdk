@@ -50,7 +50,7 @@ typedef enum : NSUInteger
      @discussion
      It is either doing a global initialSync or restarting the events stream from the previous
      known position. This position is provided by the store for a cold start or by the `MXSession`
-     itself when [MXSession resume] is called.
+     itself when [MXSession resume:] is called.
      */
     MXSessionStateSyncInProgress,
     
@@ -77,7 +77,25 @@ typedef enum : NSUInteger
     /**
      The session has been paused.
      */
-    MXSessionStatePaused
+    MXSessionStatePaused,
+    
+    /**
+     The initial sync failed.
+     
+     @discussion
+     The Matrix session will stay in this state until a new call of [MXSession start:failure:].
+     */
+    MXSessionStateInitialSyncFailed,
+
+    /**
+     The access token is no more valid.
+
+     @discussion
+     This can happen when the user made a forget password request for example.
+     The Matrix session is no more usable. The user must log in again.
+     */
+    MXSessionStateUnknownToken
+
 } MXSessionState;
 
 
@@ -225,7 +243,8 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  will resume the events streaming from where it had been stopped the time before.
 
  @param onServerSyncDone A block object called when the data is up-to-date with the server.
- @param failure A block object called when the operation fails.
+ @param failure A block object called when the operation fails. In case of failure during the
+ initial sync the session state is MXSessionStateInitialSyncFailed.
  */
 - (void)start:(void (^)())onServerSyncDone
       failure:(void (^)(NSError *error))failure;

@@ -58,6 +58,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
 /**
  Account data types
  */
+FOUNDATION_EXPORT NSString *const kMXAccountDataPushRules;
 FOUNDATION_EXPORT NSString *const kMXAccountDataTypeIgnoredUserList;
 
 /**

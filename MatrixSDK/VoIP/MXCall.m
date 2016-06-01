@@ -111,11 +111,8 @@
                 _callerId = event.sender;
                 _isIncoming = YES;
 
-                // Determine if it is voice or video call
-                if (NSNotFound != [callInviteEventContent.offer.sdp rangeOfString:@"m=video"].location)
-                {
-                    _isVideoCall = YES;
-                }
+                // Store if it is voice or video call
+                _isVideoCall = callInviteEventContent.isVideoCall;
                 
                 [callStackCall startCapturingMediaWithVideo:self.isVideoCall success:^{
                     [callStackCall handleOffer:callInviteEventContent.offer.sdp];

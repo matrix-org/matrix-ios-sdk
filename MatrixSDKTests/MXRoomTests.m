@@ -100,7 +100,8 @@
                 checkEventIDs();
                 
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
             }];
         }];
         
@@ -154,7 +155,8 @@
                 checkEventIDs();
                 
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
             }];
         }];
         
@@ -223,11 +225,13 @@
 
 
                 } failure:^(NSError *error) {;
-                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
                 }];
 
             } failure:^(NSError *error) {
-               NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
             }];
         }];
     }];
@@ -257,7 +261,8 @@
             }];
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
     }];
 }
@@ -277,6 +282,7 @@
 
                 eventCount++;
                 XCTFail(@"We should not receive events. Received: %@", event);
+                [expectation fulfill];
 
             }];
 
@@ -329,7 +335,8 @@
             }];
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
     }];
 }
@@ -413,7 +420,8 @@
                 [expectation fulfill];
             }];
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
     }];
 }

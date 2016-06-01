@@ -48,6 +48,7 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
  Account data types
  */
 NSString *const kMXAccountDataTypeIgnoredUserList = @"m.ignored_user_list";
+NSString *const kMXAccountDataPushRules = @"m.push_rules";
 
 /**
  Account data keys

@@ -187,7 +187,8 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
 
 /**
  Return a display name for a member.
- It is his displayname member or, if nil, his userId
+ It is his displayname member or, if nil, his userId.
+ Disambiguate members who have the same displayname in the room by adding his userId.
  */
 - (NSString*)memberName:(NSString*)userId;
 

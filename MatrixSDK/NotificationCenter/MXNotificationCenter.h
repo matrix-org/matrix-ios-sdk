@@ -125,6 +125,14 @@ extern NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID;
 - (MXHTTPOperation *)refreshRules:(void (^)())success
              failure:(void (^)(NSError *error))failure;
 
+
+/**
+ Handle an update of the push rules.
+
+ @param pushRules the new push rules.
+ */
+- (void)handlePushRulesResponse:(MXPushRulesResponse*)pushRules;
+
 /**
  Set a push rule condition checker for a kind of condition.
  This method allows the SDK client to handle custom types of condtions.

@@ -1,3 +1,17 @@
+Changes in Matrix iOS SDK in 0.6.8 (2016-06-01)
+===============================================
+
+Improvements:
+ * Push rules update: Listen to account_data to get push rules updates.
+ * SDK Tests improvements: Prevent the test suite from breaking because one test fails.
+ * MXRoomState: disambiguate the display name for the invited room member too.
+
+Bug fixes:
+ * Ignored users: kMXSessionIgnoredUsersDidChangeNotification was sometimes not sent.
+ * Recents: All blank after upgrade.
+ * Fixed implementation of userAccountData in MXMemoryStore and MXNoStore.
+ * MXSession: Detect when the access token is no more valid.
+
 Changes in Matrix iOS SDK in 0.6.7 (2016-05-04)
 ===============================================
 

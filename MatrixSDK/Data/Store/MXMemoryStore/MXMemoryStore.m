@@ -27,7 +27,7 @@
 
 @implementation MXMemoryStore
 
-@synthesize eventStreamToken;
+@synthesize eventStreamToken, userAccountData;
 
 - (instancetype)init
 {
