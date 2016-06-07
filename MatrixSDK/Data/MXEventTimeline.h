@@ -51,7 +51,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomInviteStateEventIdPrefix;
 typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState);
 
 @class MXRoom;
-
+@protocol MXStore;
 
 /**
  A `MXEventTimeline` instance represents a contiguous sequence of events in a room.
@@ -95,6 +95,16 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
  @return a MXEventTimeline instance.
  */
 - (id)initWithRoom:(MXRoom*)room andInitialEventId:(NSString*)initialEventId;
+
+/**
+ Create a timeline instance for a room.
+
+ @param room the room associated to the timeline
+ @param initialEventId the initial event for the timeline. A nil value will create a live timeline.
+ @param store the store to use to store the live timeline events.
+ @return a MXEventTimeline instance.
+ */
+- (id)initWithRoom:(MXRoom*)room initialEventId:(NSString*)initialEventId andStore:(id<MXStore>)store;
 
 /**
  Initialise the room evenTimeline state.

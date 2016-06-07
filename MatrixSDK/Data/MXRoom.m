@@ -33,16 +33,11 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 @implementation MXRoom
 @synthesize mxSession;
 
-- (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession2
+- (instancetype)init
 {
     self = [super init];
     if (self)
     {
-        _roomId = roomId;
-        mxSession = mxSession2;
-
-        _liveTimeline = [[MXEventTimeline alloc] initWithRoom:self andInitialEventId:nil];
-
         _accountData = [[MXRoomAccountData alloc] init];
 
         _typingUsers = [NSArray array];
@@ -76,6 +71,11 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     return self;
 }
 
+- (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession2
+{
+    return [self initWithRoomId:roomId matrixSession:mxSession2 andStore:nil];
+}
+
 - (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession2 andStateEvents:(NSArray *)stateEvents andAccountData:(MXRoomAccountData*)accountData
 {
     self = [self initWithRoomId:roomId andMatrixSession:mxSession2];
@@ -88,6 +88,27 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
             // Report the provided accountData.
             // Allocate a new instance if none, in order to handle room tag events for this room.
             _accountData = accountData ? accountData : [[MXRoomAccountData alloc] init];
+        }
+    }
+    return self;
+}
+
+- (id)initWithRoomId:(NSString *)roomId matrixSession:(MXSession *)mxSession2 andStore:(id<MXStore>)store
+{
+    self = [self init];
+    if (self)
+    {
+        _roomId = roomId;
+        mxSession = mxSession2;
+
+        if (store)
+        {
+            _liveTimeline = [[MXEventTimeline alloc] initWithRoom:self initialEventId:nil andStore:store];
+        }
+        else
+        {
+            // Let the timeline use the session store
+            _liveTimeline = [[MXEventTimeline alloc] initWithRoom:self andInitialEventId:nil];
         }
     }
     return self;

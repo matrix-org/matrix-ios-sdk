@@ -141,6 +141,8 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 
 - (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession andStateEvents:(NSArray*)stateEvents andAccountData:(MXRoomAccountData*)accountData;
 
+- (id)initWithRoomId:(NSString *)roomId matrixSession:(MXSession *)mxSession andStore:(id<MXStore>)store;
+
 #pragma mark - server sync
 
 /**
