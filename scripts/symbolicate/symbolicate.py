@@ -53,7 +53,7 @@ def symbolicate(crashLogData):
     if not os.path.exists(dSYMSFile):
 
         # No, get it from the Matrix Jenkins
-        if app == "Console":
+        if app == "matrixConsole":
              if "develop" in buildVersion:
                   jenkinsJob = "MatrixConsoleiOSDevelop"
              else:
