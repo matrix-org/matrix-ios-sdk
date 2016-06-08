@@ -1091,7 +1091,7 @@ MXAuthAction;
     }
 
     // Characters in a room alias need to be escaped in the URL
-    NSString *path = [NSString stringWithFormat:@"%@/join/%@", apiPathPrefix, [roomIdOrAlias stringByAddingPercentEscapesUsingEncoding:NSASCIIStringEncoding]];
+    NSString *path = [NSString stringWithFormat:@"%@/join/%@", apiPathPrefix, [roomIdOrAlias stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
     return [httpClient requestWithMethod:@"POST"
                                     path:path
                               parameters:parameters
@@ -2283,7 +2283,7 @@ MXAuthAction;
                                failure:(void (^)(NSError *error))failure
 {
     // Note: characters in a room alias need to be escaped in the URL
-    NSString *path = [NSString stringWithFormat:@"%@/directory/room/%@", apiPathPrefix, [roomAlias stringByAddingPercentEscapesUsingEncoding:NSASCIIStringEncoding]];
+    NSString *path = [NSString stringWithFormat:@"%@/directory/room/%@", apiPathPrefix, [roomAlias stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
     
     return [httpClient requestWithMethod:@"GET"
                                     path:path
