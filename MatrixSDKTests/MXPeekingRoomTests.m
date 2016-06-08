@@ -49,28 +49,26 @@
     [super tearDown];
 }
 
-- (void)testRoomPreview
+- (void)testPeeking
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
 
         // TODO: Set the room history_visibility to world_readable
 
-        [matrixSDKTestsData doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
+        [matrixSDKTestsData doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
 
             mxSession = aliceSession;
 
             XCTAssertEqual(mxSession.rooms.count, 0);
 
-            MXPeekingRoom *previewRoom = [[MXPeekingRoom alloc] initWithRoomId:room.roomId andMatrixSession:mxSession];
-
-            XCTAssertEqual(previewRoom.state.members.count, 0, @"The true MXPeekingRoom state is available only after [MXPeekingRoom startWithMessagesLimit]");
-
-            [previewRoom startWithMessagesLimit:10 onServerSyncDone:^{
+            [mxSession peekInRoomWithRoomId:room.roomId success:^(MXPeekingRoom *peekingRoom) {
 
                 XCTAssertEqual(mxSession.rooms.count, 1, @"MXPeekingRoom must not be listed by mxSession.rooms");
-                XCTAssertEqual(previewRoom.roomId, room.roomId);
+                XCTAssertEqual(peekingRoom.roomId, room.roomId);
 
-                XCTAssertEqual(previewRoom.state.members.count, 1, @"The MXPeekingRoom state must be known now");
+                XCTAssertEqual(peekingRoom.state.members.count, 1, @"The MXPeekingRoom state must be known now");
+
+                [mxSession stopPeeking:peekingRoom];
 
                 [expectation fulfill];
 
@@ -78,12 +76,34 @@
                 XCTFail(@"The operation should not fail - NSError: %@", error);
                 [expectation fulfill];
             }];
-
         }];
     }];
 }
 
-- (void)testRoomPreviewWithRoomMember
+- (void)testPeekingOnNonWorldReadable
+{
+    [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+
+        [matrixSDKTestsData doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
+
+            mxSession = aliceSession;
+
+            XCTAssertEqual(mxSession.rooms.count, 0);
+
+            [mxSession peekInRoomWithRoomId:room.roomId success:^(MXPeekingRoom *peekingRoom) {
+
+                XCTFail(@"Peeking on non world_readable room must fail");
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+
+                [expectation fulfill];
+            }];
+        }];
+    }];
+}
+
+- (void)testPeekingWithMemberAlreadyInRoom
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
 
@@ -92,16 +112,14 @@
         XCTAssertEqual(mxSession.rooms.count, 1);
         XCTAssertEqual(room.state.members.count, 1);
 
-        MXPeekingRoom *previewRoom = [[MXPeekingRoom alloc] initWithRoomId:room.roomId andMatrixSession:mxSession];
-
-        XCTAssertEqual(previewRoom.state.members.count, 0, @"The true MXPeekingRoom state is available only after [MXPeekingRoom startWithMessagesLimit]");
-
-        [previewRoom startWithMessagesLimit:10 onServerSyncDone:^{
+        [mxSession peekInRoomWithRoomId:room.roomId success:^(MXPeekingRoom *peekingRoom) {
 
             XCTAssertEqual(mxSession.rooms.count, 1, @"MXPeekingRoom must not be listed by mxSession.rooms");
-            XCTAssertEqual(previewRoom.roomId, room.roomId);
+            XCTAssertEqual(peekingRoom.roomId, room.roomId);
 
-            XCTAssertEqual(previewRoom.state.members.count, 1, @"The MXPeekingRoom state must be known now");
+            XCTAssertEqual(peekingRoom.state.members.count, 1, @"The MXPeekingRoom state must be known now");
+
+            [mxSession stopPeeking:peekingRoom];
 
             [expectation fulfill];
 
@@ -111,6 +129,5 @@
         }];
     }];
 }
-
 
 @end
