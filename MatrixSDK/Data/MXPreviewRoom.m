@@ -19,11 +19,21 @@
 #import "MXMemoryStore.h"
 #import "MXSession.h"
 
+@interface MXPreviewRoom ()
+{
+    /**
+     The current request of the event stream.
+     */
+    MXHTTPOperation *eventStreamRequest;
+}
+
+@end
+
 @implementation MXPreviewRoom
 
 - (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession
 {
-    // Do not store the data  we will from the hs to the store of the session
+    // Do not store the data we will get from the hs to the session store
     // but to an ephemeral store
     MXMemoryStore *memoryStore = [[MXMemoryStore alloc] init];
     [memoryStore openWithCredentials:mxSession.matrixRestClient.credentials onComplete:nil failure:nil];
@@ -31,18 +41,35 @@
     return [self initWithRoomId:roomId matrixSession:mxSession andStore:memoryStore];
 }
 
-- (MXHTTPOperation *)initialSync:(void (^)())success failure:(void (^)(NSError *))failure
+- (void)startWithMessagesLimit:(NSUInteger)messagesLimit onServerSyncDone:(void (^)())onServerSyncDone failure:(void (^)(NSError *error))failure
 {
     // Make an /initialSync request to get data
-    return [self.mxSession.matrixRestClient initialSyncOfRoom:self.roomId withLimit:0 success:^(MXRoomInitialSync *roomInitialSync) {
+    eventStreamRequest =  [self.mxSession.matrixRestClient initialSyncOfRoom:self.roomId withLimit:messagesLimit success:^(MXRoomInitialSync *roomInitialSync) {
+        
+        if (!eventStreamRequest)
+        {
+            return;
+        }
+        eventStreamRequest = nil;
 
         [self.liveTimeline initialiseState:roomInitialSync.state];
 
-        // @TODO: get events
+        // @TODO: digest received events
+        // @TODO: start the events stream
 
-        success();
+        onServerSyncDone();
 
     } failure:failure];
+}
+
+- (void)close
+{
+    // Cancel the current server request (if any)
+    [eventStreamRequest cancel];
+    eventStreamRequest = nil;
+
+    // Clean MXRoom
+    [self.liveTimeline removeAllListeners];
 }
 
 @end

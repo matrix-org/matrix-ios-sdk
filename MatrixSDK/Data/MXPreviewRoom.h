@@ -17,19 +17,51 @@
 #import "MXRoom.h"
 
 /**
- A `MXPreviewRoom` instance allows to get data from a room the user has not necessarly joined.
+ A `MXPreviewRoom` instance allows to get data from a room the user has not necessarly
+ joined.
 
+ Thus, an end user can peek into a public room without joining it.
+
+ A `MXPreviewRoom` instance retrieves data by its own means: it firstly makes an
+ /initialSync  request then it starts an events stream (/events long poll requests).
+
+ So, `MXPreviewRoom` instances get their data apart from the MXSession /sync mechanism.
+ They are not listed in [MXSession rooms].
  */
 @interface MXPreviewRoom : MXRoom
 
 /**
- Get room data by doing an initial sync from the homeserver.
+ Start getting room data from the homeserver and keep sync'ed with it.
  
- @param success A block object called when the operation succeeds.
+ Use [MXPreviewRoom close] to stop syncing with the homeserver.
+
+ TODO: The live events stream is not yet started.
+
+ @param messagesLimit the number of messages to retrieve in each room.
+ @param onServerSyncDone A block object called when the room data (last messages and state)
+                         is up-to-date with the homeserver.
  @param failure A block object called when the operation fails.
- @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)initialSync:(void (^)())success
-                        failure:(void (^)(NSError *error))failure;
+- (void)startWithMessagesLimit:(NSUInteger)messagesLimit
+              onServerSyncDone:(void (^)())onServerSyncDone
+                       failure:(void (^)(NSError *error))failure;
+
+/**
+ Close the preview of the room.
+
+ No more data is retrieved from the homeserver.
+*/
+- (void)close;
+
+/**
+ Pause the events stream of this room.
+ */
+- (void)pause;
+
+/**
+ Resume the events stream of this room.
+ */
+- (void)resume;
+
 
 @end
