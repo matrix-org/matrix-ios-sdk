@@ -36,7 +36,7 @@
  
  Use [MXPeekingRoom close] to stop syncing with the homeserver.
 
- TODO: The live events stream is not yet started.
+ TODO: The live events stream is not yet implemented.
 
  @param onServerSyncDone A block object called when the room data (last messages and state)
                          is up-to-date with the homeserver.
@@ -61,6 +61,5 @@
  Resume the events stream of this room.
  */
 - (void)resume;
-
 
 @end

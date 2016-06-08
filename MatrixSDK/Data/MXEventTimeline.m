@@ -58,7 +58,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     // Is it a past or live timeline?
     if (initialEventId)
     {
-        // Events for a past timeline are store in memory
+        // Events for a past timeline are stored in memory
         MXMemoryStore *memoryStore = [[MXMemoryStore alloc] init];
         [memoryStore openWithCredentials:room2.mxSession.matrixRestClient.credentials onComplete:nil failure:nil];
 

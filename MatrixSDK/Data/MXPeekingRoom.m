@@ -22,9 +22,9 @@
 @interface MXPeekingRoom ()
 {
     /**
-     The current request of the event stream.
+     The current pending request.
      */
-    MXHTTPOperation *eventStreamRequest;
+    MXHTTPOperation *httpOperation;
 }
 
 @end
@@ -49,13 +49,13 @@
     //    - MXEventTimeline does not have methods to handle /initialSync responses
     // So, avoid to write temparary code and let the user uses [MXEventTimeline paginate]
     // to get room messages.
-    eventStreamRequest = [self.mxSession.matrixRestClient initialSyncOfRoom:self.roomId withLimit:0 success:^(MXRoomInitialSync *roomInitialSync) {
+    httpOperation = [self.mxSession.matrixRestClient initialSyncOfRoom:self.roomId withLimit:0 success:^(MXRoomInitialSync *roomInitialSync) {
         
-        if (!eventStreamRequest)
+        if (!httpOperation)
         {
             return;
         }
-        eventStreamRequest = nil;
+        httpOperation = nil;
 
         [self.liveTimeline initialiseState:roomInitialSync.state];
 
@@ -69,8 +69,8 @@
 - (void)close
 {
     // Cancel the current server request (if any)
-    [eventStreamRequest cancel];
-    eventStreamRequest = nil;
+    [httpOperation cancel];
+    httpOperation = nil;
 
     // Clean MXRoom
     [self.liveTimeline removeAllListeners];
