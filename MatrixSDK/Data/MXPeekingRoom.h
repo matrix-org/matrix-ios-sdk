@@ -17,24 +17,24 @@
 #import "MXRoom.h"
 
 /**
- A `MXPreviewRoom` instance allows to get data from a room the user has not necessarly
+ A `MXPeekingRoom` instance allows to get data from a room the user has not necessarly
  joined.
 
  Thus, an end user can peek into a room without joining it.
  This only works if the history visibility for the room is world_readable.
 
- A `MXPreviewRoom` instance retrieves data by its own means: it firstly makes an
+ A `MXPeekingRoom` instance retrieves data by its own means: it firstly makes an
  /initialSync  request then it starts an events stream (/events long poll requests).
 
- So, `MXPreviewRoom` instances get their data apart from the MXSession /sync mechanism.
+ So, `MXPeekingRoom` instances get their data apart from the MXSession /sync mechanism.
  They are not listed in [MXSession rooms].
  */
-@interface MXPreviewRoom : MXRoom
+@interface MXPeekingRoom : MXRoom
 
 /**
  Start getting room data from the homeserver and keep sync'ed with it.
  
- Use [MXPreviewRoom close] to stop syncing with the homeserver.
+ Use [MXPeekingRoom close] to stop syncing with the homeserver.
 
  TODO: The live events stream is not yet started.
 

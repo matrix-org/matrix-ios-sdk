@@ -14,12 +14,12 @@
  limitations under the License.
  */
 
-#import "MXPreviewRoom.h"
+#import "MXPeekingRoom.h"
 
 #import "MXMemoryStore.h"
 #import "MXSession.h"
 
-@interface MXPreviewRoom ()
+@interface MXPeekingRoom ()
 {
     /**
      The current request of the event stream.
@@ -29,7 +29,7 @@
 
 @end
 
-@implementation MXPreviewRoom
+@implementation MXPeekingRoom
 
 - (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession
 {

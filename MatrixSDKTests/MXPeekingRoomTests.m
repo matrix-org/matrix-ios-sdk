@@ -19,9 +19,9 @@
 #import "MatrixSDKTestsData.h"
 
 #import "MXSession.h"
-#import "MXPreviewRoom.h"
+#import "MXPeekingRoom.h"
 
-@interface MXPreviewRoomTests : XCTestCase
+@interface MXPeekingRoomTests : XCTestCase
 {
     MatrixSDKTestsData *matrixSDKTestsData;
 
@@ -29,7 +29,7 @@
 }
 @end
 
-@implementation MXPreviewRoomTests
+@implementation MXPeekingRoomTests
 
 - (void)setUp
 {
@@ -61,16 +61,16 @@
 
             XCTAssertEqual(mxSession.rooms.count, 0);
 
-            MXPreviewRoom *previewRoom = [[MXPreviewRoom alloc] initWithRoomId:room.roomId andMatrixSession:mxSession];
+            MXPeekingRoom *previewRoom = [[MXPeekingRoom alloc] initWithRoomId:room.roomId andMatrixSession:mxSession];
 
-            XCTAssertEqual(previewRoom.state.members.count, 0, @"The true MXPreviewRoom state is available only after [MXPreviewRoom startWithMessagesLimit]");
+            XCTAssertEqual(previewRoom.state.members.count, 0, @"The true MXPeekingRoom state is available only after [MXPeekingRoom startWithMessagesLimit]");
 
             [previewRoom startWithMessagesLimit:10 onServerSyncDone:^{
 
-                XCTAssertEqual(mxSession.rooms.count, 1, @"MXPreviewRoom must not be listed by mxSession.rooms");
+                XCTAssertEqual(mxSession.rooms.count, 1, @"MXPeekingRoom must not be listed by mxSession.rooms");
                 XCTAssertEqual(previewRoom.roomId, room.roomId);
 
-                XCTAssertEqual(previewRoom.state.members.count, 1, @"The MXPreviewRoom state must be known now");
+                XCTAssertEqual(previewRoom.state.members.count, 1, @"The MXPeekingRoom state must be known now");
 
                 [expectation fulfill];
 
@@ -92,16 +92,16 @@
         XCTAssertEqual(mxSession.rooms.count, 1);
         XCTAssertEqual(room.state.members.count, 1);
 
-        MXPreviewRoom *previewRoom = [[MXPreviewRoom alloc] initWithRoomId:room.roomId andMatrixSession:mxSession];
+        MXPeekingRoom *previewRoom = [[MXPeekingRoom alloc] initWithRoomId:room.roomId andMatrixSession:mxSession];
 
-        XCTAssertEqual(previewRoom.state.members.count, 0, @"The true MXPreviewRoom state is available only after [MXPreviewRoom startWithMessagesLimit]");
+        XCTAssertEqual(previewRoom.state.members.count, 0, @"The true MXPeekingRoom state is available only after [MXPeekingRoom startWithMessagesLimit]");
 
         [previewRoom startWithMessagesLimit:10 onServerSyncDone:^{
 
-            XCTAssertEqual(mxSession.rooms.count, 1, @"MXPreviewRoom must not be listed by mxSession.rooms");
+            XCTAssertEqual(mxSession.rooms.count, 1, @"MXPeekingRoom must not be listed by mxSession.rooms");
             XCTAssertEqual(previewRoom.roomId, room.roomId);
 
-            XCTAssertEqual(previewRoom.state.members.count, 1, @"The MXPreviewRoom state must be known now");
+            XCTAssertEqual(previewRoom.state.members.count, 1, @"The MXPeekingRoom state must be known now");
 
             [expectation fulfill];
 
