@@ -20,6 +20,7 @@
 
 #import "MXSession.h"
 #import "MXPeekingRoom.h"
+#import "MXError.h"
 
 @interface MXPeekingRoomTests : XCTestCase
 {
@@ -96,6 +97,9 @@
                 [expectation fulfill];
 
             } failure:^(NSError *error) {
+
+                MXError *mxError = [[MXError alloc] initWithNSError:error];
+                XCTAssertEqualObjects(mxError.errcode, kMXErrCodeStringGuestAccessForbidden);
 
                 [expectation fulfill];
             }];
