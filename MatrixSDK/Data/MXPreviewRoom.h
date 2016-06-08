@@ -20,7 +20,8 @@
  A `MXPreviewRoom` instance allows to get data from a room the user has not necessarly
  joined.
 
- Thus, an end user can peek into a public room without joining it.
+ Thus, an end user can peek into a room without joining it.
+ This only works if the history visibility for the room is world_readable.
 
  A `MXPreviewRoom` instance retrieves data by its own means: it firstly makes an
  /initialSync  request then it starts an events stream (/events long poll requests).
@@ -37,7 +38,6 @@
 
  TODO: The live events stream is not yet started.
 
- @param messagesLimit the number of messages to retrieve in each room.
  @param onServerSyncDone A block object called when the room data (last messages and state)
                          is up-to-date with the homeserver.
  @param failure A block object called when the operation fails.

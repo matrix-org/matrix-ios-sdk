@@ -72,4 +72,14 @@
     [self.liveTimeline removeAllListeners];
 }
 
+- (void)pause
+{
+    // @TODO
+}
+
+- (void)resume
+{
+    // @TODO
+}
+
 @end
