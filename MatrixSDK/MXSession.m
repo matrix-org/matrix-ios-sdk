@@ -1297,7 +1297,7 @@ typedef void (^MXOnResumeDone)();
     MXPeekingRoom *peekingRoom = [[MXPeekingRoom alloc] initWithRoomId:roomId andMatrixSession:self];
     [peekingRooms addObject:peekingRoom];
 
-    [peekingRoom startWithMessagesLimit:0 onServerSyncDone:^{
+    [peekingRoom start:^{
 
         success(peekingRoom);
 

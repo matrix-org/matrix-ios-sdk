@@ -41,10 +41,15 @@
     return [self initWithRoomId:roomId matrixSession:mxSession andStore:memoryStore];
 }
 
-- (void)startWithMessagesLimit:(NSUInteger)messagesLimit onServerSyncDone:(void (^)())onServerSyncDone failure:(void (^)(NSError *error))failure
+- (void)start:(void (^)())onServerSyncDone failure:(void (^)(NSError *error))failure
 {
     // Make an /initialSync request to get data
-    eventStreamRequest =  [self.mxSession.matrixRestClient initialSyncOfRoom:self.roomId withLimit:messagesLimit success:^(MXRoomInitialSync *roomInitialSync) {
+    // Use a 0 messages limit for now because:
+    //    - /initialSync is marked as obsolete in the spec
+    //    - MXEventTimeline does not have methods to handle /initialSync responses
+    // So, avoid to write temparary code and let the user uses [MXEventTimeline paginate]
+    // to get room messages.
+    eventStreamRequest = [self.mxSession.matrixRestClient initialSyncOfRoom:self.roomId withLimit:0 success:^(MXRoomInitialSync *roomInitialSync) {
         
         if (!eventStreamRequest)
         {
@@ -54,7 +59,6 @@
 
         [self.liveTimeline initialiseState:roomInitialSync.state];
 
-        // @TODO: digest received events
         // @TODO: start the events stream
 
         onServerSyncDone();

@@ -42,9 +42,8 @@
                          is up-to-date with the homeserver.
  @param failure A block object called when the operation fails.
  */
-- (void)startWithMessagesLimit:(NSUInteger)messagesLimit
-              onServerSyncDone:(void (^)())onServerSyncDone
-                       failure:(void (^)(NSError *error))failure;
+- (void)start:(void (^)())onServerSyncDone
+      failure:(void (^)(NSError *error))failure;
 
 /**
  Close the preview of the room.
