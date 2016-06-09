@@ -20,24 +20,25 @@
 
 #pragma mark - Constants definitions
 
-NSString *const kMXEventTypeStringRoomName            = @"m.room.name";
-NSString *const kMXEventTypeStringRoomTopic           = @"m.room.topic";
-NSString *const kMXEventTypeStringRoomAvatar          = @"m.room.avatar";
-NSString *const kMXEventTypeStringRoomMember          = @"m.room.member";
-NSString *const kMXEventTypeStringRoomCreate          = @"m.room.create";
-NSString *const kMXEventTypeStringRoomJoinRules       = @"m.room.join_rules";
-NSString *const kMXEventTypeStringRoomPowerLevels     = @"m.room.power_levels";
-NSString *const kMXEventTypeStringRoomAliases         = @"m.room.aliases";
-NSString *const kMXEventTypeStringRoomCanonicalAlias  = @"m.room.canonical_alias";
-NSString *const kMXEventTypeStringRoomMessage         = @"m.room.message";
-NSString *const kMXEventTypeStringRoomMessageFeedback = @"m.room.message.feedback";
-NSString *const kMXEventTypeStringRoomRedaction       = @"m.room.redaction";
-NSString *const kMXEventTypeStringRoomThirdPartyInvite= @"m.room.third_party_invite";
-NSString *const kMXEventTypeStringRoomTag             = @"m.tag";
-NSString *const kMXEventTypeStringPresence            = @"m.presence";
-NSString *const kMXEventTypeStringTypingNotification  = @"m.typing";
-NSString *const kMXEventTypeStringReceipt             = @"m.receipt";
-NSString *const kMXEventTypeStringRead                = @"m.read";
+NSString *const kMXEventTypeStringRoomName              = @"m.room.name";
+NSString *const kMXEventTypeStringRoomTopic             = @"m.room.topic";
+NSString *const kMXEventTypeStringRoomAvatar            = @"m.room.avatar";
+NSString *const kMXEventTypeStringRoomMember            = @"m.room.member";
+NSString *const kMXEventTypeStringRoomCreate            = @"m.room.create";
+NSString *const kMXEventTypeStringRoomJoinRules         = @"m.room.join_rules";
+NSString *const kMXEventTypeStringRoomPowerLevels       = @"m.room.power_levels";
+NSString *const kMXEventTypeStringRoomAliases           = @"m.room.aliases";
+NSString *const kMXEventTypeStringRoomCanonicalAlias    = @"m.room.canonical_alias";
+NSString *const kMXEventTypeStringRoomHistoryVisibility = @"m.room.history_visibility";
+NSString *const kMXEventTypeStringRoomMessage           = @"m.room.message";
+NSString *const kMXEventTypeStringRoomMessageFeedback   = @"m.room.message.feedback";
+NSString *const kMXEventTypeStringRoomRedaction         = @"m.room.redaction";
+NSString *const kMXEventTypeStringRoomThirdPartyInvite  = @"m.room.third_party_invite";
+NSString *const kMXEventTypeStringRoomTag               = @"m.tag";
+NSString *const kMXEventTypeStringPresence              = @"m.presence";
+NSString *const kMXEventTypeStringTypingNotification    = @"m.typing";
+NSString *const kMXEventTypeStringReceipt               = @"m.receipt";
+NSString *const kMXEventTypeStringRead                  = @"m.read";
 
 NSString *const kMXEventTypeStringCallInvite          = @"m.call.invite";
 NSString *const kMXEventTypeStringCallCandidates      = @"m.call.candidates";
