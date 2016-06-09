@@ -49,11 +49,47 @@ FOUNDATION_EXPORT NSString *const kMXContentUriScheme;
 FOUNDATION_EXPORT NSString *const kMXContentPrefixPath;
 
 /**
- Room visibility
+ Room visibility.
+ A nil value is interpreted as private by the homeserver.
  */
 typedef NSString* MXRoomVisibility;
 FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPublic;
 FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
+
+/**
+ Room history visibility.
+ It controls whether a user can see the events that happened in a room from before they
+ joined.
+ A nil value is interpreted as @TODO by the homeserver.
+ */
+typedef NSString* MXRoomHistoryVisibility;
+
+/**
+ All events while this is the m.room.history_visibility value may be shared by any
+ participating homeserver with anyone, regardless of whether they have ever joined
+ the room.
+ */
+FOUNDATION_EXPORT NSString *const MXRoomHistoryVisibilityWorldReadable;
+
+/**
+ Previous events are always accessible to newly joined members. All events in the
+ room are accessible, even those sent when the member was not a part of the room.
+ */
+FOUNDATION_EXPORT NSString *const MXRoomHistoryVisibilityShared;
+
+/**
+ Events are accessible to newly joined members from the point they were invited onwards.
+ Events stop being accessible when the member's state changes to something other than
+ invite or join.
+ */
+FOUNDATION_EXPORT NSString *const MXRoomHistoryVisibilityInvited;
+
+/**
+ Events are accessible to newly joined members from the point they joined the room
+ onwards. Events stop being accessible when the member's state changes to something
+ other than join.
+ */
+FOUNDATION_EXPORT NSString *const MXRoomHistoryVisibilityJoined;
 
 /**
  Account data types
@@ -578,6 +614,34 @@ typedef enum : NSUInteger
                    failure:(void (^)(NSError *error))failure;
 
 /**
+ Set the history visibility of a room.
+
+ @param roomId the id of the room.
+ @param historyVisibility the visibily to set.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setHistoryVisibility:(NSString*)roomId
+                       historyVisibility:(MXRoomHistoryVisibility)historyVisibility
+                                 success:(void (^)())success
+                                 failure:(void (^)(NSError *error))failure;
+
+/**
+ Get the history visibility of a room.
+
+ @param roomId the id of the room.
+ @param success A block object called when the operation succeeds. It provides the room name.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)historyVisibilityOfRoom:(NSString*)roomId
+                                    success:(void (^)(MXRoomHistoryVisibility historyVisibility))success
+                                    failure:(void (^)(NSError *error))failure;
+
+/**
  Join a room.
  
  @param roomIdOrAlias the id or an alias of the room to join.
@@ -727,11 +791,11 @@ typedef enum : NSUInteger
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)createRoom:(NSString*)name
-                visibility:(MXRoomVisibility)visibility
-                 roomAlias:(NSString*)roomAlias
-                     topic:(NSString*)topic
-                   success:(void (^)(MXCreateRoomResponse *response))success
-                   failure:(void (^)(NSError *error))failure;
+                    visibility:(MXRoomVisibility)visibility
+                     roomAlias:(NSString*)roomAlias
+                         topic:(NSString*)topic
+                       success:(void (^)(MXCreateRoomResponse *response))success
+                       failure:(void (^)(NSError *error))failure;
 
 /**
  Get a list of messages for this room.

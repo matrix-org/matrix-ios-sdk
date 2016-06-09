@@ -45,6 +45,14 @@ NSString *const kMXRoomVisibilityPublic  = @"public";
 NSString *const kMXRoomVisibilityPrivate = @"private";
 
 /**
+ Room history visibility.
+ */
+NSString *const MXRoomHistoryVisibilityWorldReadable= @"world_readable";
+NSString *const MXRoomHistoryVisibilityShared       = @"shared";
+NSString *const MXRoomHistoryVisibilityInvited      = @"invited";
+NSString *const MXRoomHistoryVisibilityJoined       = @"joined";
+
+/**
  Account data types
  */
 NSString *const kMXAccountDataTypeIgnoredUserList = @"m.ignored_user_list";
@@ -1031,6 +1039,34 @@ MXAuthAction;
 
                                NSString *name;
                                MXJSONModelSetString(name, JSONResponse[@"name"]);
+                               success(name);
+
+                           } failure:failure];
+}
+
+- (MXHTTPOperation *)setHistoryVisibility:(NSString *)roomId
+                        historyVisibility:(MXRoomHistoryVisibility)historyVisibility
+                                  success:(void (^)())success
+                                  failure:(void (^)(NSError *))failure
+{
+    return [self updateStateEvent:kMXEventTypeStringRoomHistoryVisibility
+                        withValue:@{
+                                    @"history_visibility": historyVisibility
+                                    }
+                           inRoom:roomId
+                          success:success failure:failure];
+}
+
+- (MXHTTPOperation *)historyVisibilityOfRoom:(NSString *)roomId
+                                     success:(void (^)(MXRoomHistoryVisibility))success
+                                     failure:(void (^)(NSError *))failure
+{
+    return [self valueOfStateEvent:kMXEventTypeStringRoomHistoryVisibility
+                            inRoom:roomId
+                           success:^(NSDictionary *JSONResponse) {
+
+                               NSString *name;
+                               MXJSONModelSetString(name, JSONResponse[@"history_visibility"]);
                                success(name);
 
                            } failure:failure];
