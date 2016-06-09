@@ -137,9 +137,35 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  */
 @property (nonatomic) NSArray* unreadEventTypes;
 
+/**
+ Create a `MXRoom` instance.
+
+ @param roomId the id of the room.
+ @param mxSession the session to use.
+ @return the new instance.
+ */
 - (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession;
 
+/**
+ Create a `MXRoom` instance from room state and account data already available.
+
+ @param roomId the id of the room.
+ @param mxSession the session to use.
+ @param stateEvents the state events of the room.
+ @param accountData the account data for the room.
+ @return the new instance.
+ */
 - (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession andStateEvents:(NSArray*)stateEvents andAccountData:(MXRoomAccountData*)accountData;
+
+/**
+ Create a `MXRoom` instance by specifying the store the live timeline must use.
+
+ @param roomId the id of the room.
+ @param mxSession the session to use.
+ @param store the store to use to store live timeline events.
+ @return the new instance.
+ */
+- (id)initWithRoomId:(NSString *)roomId matrixSession:(MXSession *)mxSession andStore:(id<MXStore>)store;
 
 #pragma mark - server sync
 

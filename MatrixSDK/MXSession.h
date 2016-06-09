@@ -18,6 +18,7 @@
 
 #import "MXRestClient.h"
 #import "MXRoom.h"
+#import "MXPeekingRoom.h"
 #import "MXMyUser.h"
 #import "MXSessionEventListener.h"
 #import "MXStore.h"
@@ -426,7 +427,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  
  @return an array of MXRooms.
  */
-- (NSArray*)rooms;
+- (NSArray<MXRoom*>*)rooms;
 
 /**
  Get the existing private OneToOne room with this user.
@@ -434,6 +435,27 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @return the MXRoom instance (nil if the room does not exist yet).
  */
 - (MXRoom *)privateOneToOneRoomWithUserId:(NSString*)userId;
+
+
+#pragma mark - Room peeking
+/**
+ Start peeking a room.
+
+ The operation succeeds only if the history visibility for the room is world_readable.
+
+ @param roomId The room id to the room.
+ @param success A block object called when the operation succeeds. It provides the
+                MXPeekingRoom instance to be used to get the room data.
+ @param failure A block object called when the operation fails.
+ */
+- (void)peekInRoomWithRoomId:(NSString*)roomId
+                     success:(void (^)(MXPeekingRoom *peekingRoom))success
+                     failure:(void (^)(NSError *error))failure;
+
+/**
+ Stop peeking a room.
+ */
+- (void)stopPeeking:(MXPeekingRoom*)peekingRoom;
 
 
 #pragma mark - Matrix users

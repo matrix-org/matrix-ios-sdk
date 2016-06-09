@@ -112,6 +112,11 @@ typedef void (^MXOnResumeDone)();
      The account data.
      */
     MXAccountData *accountData;
+
+    /**
+     The rooms being peeked.
+     */
+    NSMutableArray<MXPeekingRoom *> *peekingRooms;
 }
 @end
 
@@ -131,6 +136,7 @@ typedef void (^MXOnResumeDone)();
         syncMessagesLimit = -1;
         _notificationCenter = [[MXNotificationCenter alloc] initWithMatrixSession:self];
         accountData = [[MXAccountData alloc] init];
+        peekingRooms = [NSMutableArray array];
         
         [self setState:MXSessionStateInitialised];
     }
@@ -334,7 +340,12 @@ typedef void (^MXOnResumeDone)();
         // Cancel the current request managing the event stream
         [eventStreamRequest cancel];
         eventStreamRequest = nil;
-        
+
+        for (MXPeekingRoom *peekingRoom in peekingRooms)
+        {
+            [peekingRoom pause];
+        }
+
         [self setState:MXSessionStatePaused];
     }
 }
@@ -354,6 +365,11 @@ typedef void (^MXOnResumeDone)();
             // Relaunch live events stream (long polling)
             [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
         }
+    }
+
+    for (MXPeekingRoom *peekingRoom in peekingRooms)
+    {
+        [peekingRoom resume];
     }
 }
 
@@ -432,7 +448,14 @@ typedef void (^MXOnResumeDone)();
         [user removeAllListeners];
     }
     [users removeAllObjects];
-    
+
+    // Clean peeking rooms
+    for (MXPeekingRoom *peekingRoom in peekingRooms)
+    {
+        [peekingRoom close];
+    }
+    [peekingRooms removeAllObjects];
+
     [oneToOneRooms removeAllObjects];
 
     // Clean notification center
@@ -1265,6 +1288,35 @@ typedef void (^MXOnResumeDone)();
     }
 }
 
+
+#pragma mark - Room peeking
+- (void)peekInRoomWithRoomId:(NSString*)roomId
+                     success:(void (^)(MXPeekingRoom *peekingRoom))success
+                     failure:(void (^)(NSError *error))failure
+{
+    MXPeekingRoom *peekingRoom = [[MXPeekingRoom alloc] initWithRoomId:roomId andMatrixSession:self];
+    [peekingRooms addObject:peekingRoom];
+
+    [peekingRoom start:^{
+
+        success(peekingRoom);
+
+    } failure:^(NSError *error) {
+
+        // The room is not peekable, release the object
+        [peekingRooms removeObject:peekingRoom];
+        [peekingRoom close];
+
+        failure(error);
+
+    }];
+}
+
+- (void)stopPeeking:(MXPeekingRoom*)peekingRoom
+{
+    [peekingRooms removeObject:peekingRoom];
+    [peekingRoom close];
+}
 
 #pragma mark - Matrix users
 - (MXUser *)userWithUserId:(NSString *)userId

@@ -33,6 +33,7 @@ NSString *const kMXErrCodeStringBadPagination       = @"M_BAD_PAGINATION";
 NSString *const kMXErrCodeStringUnauthorized        = @"M_UNAUTHORIZED";
 NSString *const kMXErrCodeStringLoginEmailURLNotYet = @"M_LOGIN_EMAIL_URL_NOT_YET";
 NSString *const kMXErrCodeStringThreePIDAuthFailed  = @"M_THREEPID_AUTH_FAILED";
+NSString *const kMXErrCodeStringGuestAccessForbidden= @"M_GUEST_ACCESS_FORBIDDEN";
 
 NSString *const kMXErrorStringInvalidToken      = @"Invalid token";
 
