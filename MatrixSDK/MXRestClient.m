@@ -868,27 +868,37 @@ MXAuthAction;
                                  }];
 }
 
-- (MXHTTPOperation*)setRoomTopic:(NSString*)roomId
-                           topic:(NSString*)topic
-                         success:(void (^)())success
-                         failure:(void (^)(NSError *error))failure
+/**
+ Generic method to set the value of a state event of a room.
+
+ @param eventType the type of the state event.
+ @param roomId the id of the room.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)updateStateEvent:(MXEventTypeString)eventType
+                        withValue:(NSDictionary*)value
+                           inRoom:(NSString*)roomId
+                          success:(void (^)())success
+                          failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state/m.room.topic", apiPathPrefix, roomId];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state/%@", apiPathPrefix, roomId, eventType];
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
-                              parameters:@{
-                                           @"topic": topic
-                                           }
+                              parameters:value
                                  success:^(NSDictionary *JSONResponse) {
+
                                      if (success)
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
-                                             
+
                                              dispatch_async(dispatch_get_main_queue(), ^{
-                                                 
+
                                                  success();
-                                                 
+
                                              });
                                              
                                          });
@@ -902,30 +912,36 @@ MXAuthAction;
                                  }];
 }
 
-- (MXHTTPOperation*)topicOfRoom:(NSString*)roomId
-                        success:(void (^)(NSString *topic))success
-                        failure:(void (^)(NSError *error))failure
+/**
+ Generic method to get the value of a state event of a room.
+ 
+ @param eventType the type of the state event.
+ @param roomId the id of the room.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)valueOfStateEvent:(MXEventTypeString)eventType
+                              inRoom:(NSString*)roomId
+                             success:(void (^)(NSDictionary *JSONResponse))success
+                             failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state/m.room.topic", apiPathPrefix, roomId];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state/%@", apiPathPrefix, roomId, eventType];
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
-                                     {
-                                         // Use here the processing queue in order to keep the server response order
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             dispatch_async(dispatch_get_main_queue(), ^{
-                                                 
-                                                 NSString *topic;
-                                                 MXJSONModelSetString(topic, JSONResponse[@"topic"]);
-                                                 success(topic);
-                                                 
-                                             });
-                                             
+                                     // Use here the processing queue in order to keep the server response order
+                                     dispatch_async(processingQueue, ^{
+
+                                         dispatch_async(dispatch_get_main_queue(), ^{
+
+                                             success(JSONResponse);
+
                                          });
-                                     }
+                                         
+                                     });
                                  }
                                  failure:^(NSError *error) {
                                      if (failure)
@@ -933,6 +949,34 @@ MXAuthAction;
                                          failure(error);
                                      }
                                  }];
+}
+
+- (MXHTTPOperation*)setRoomTopic:(NSString*)roomId
+                           topic:(NSString*)topic
+                         success:(void (^)())success
+                         failure:(void (^)(NSError *error))failure
+{
+    return [self updateStateEvent:kMXEventTypeStringRoomTopic
+                        withValue:@{
+                                    @"topic": topic
+                                    }
+                           inRoom:roomId
+                          success:success failure:failure];
+}
+
+- (MXHTTPOperation*)topicOfRoom:(NSString*)roomId
+                        success:(void (^)(NSString *topic))success
+                        failure:(void (^)(NSError *error))failure
+{
+    return [self valueOfStateEvent:kMXEventTypeStringRoomTopic
+                            inRoom:roomId
+                           success:^(NSDictionary *JSONResponse) {
+
+                               NSString *topic;
+                               MXJSONModelSetString(topic, JSONResponse[@"topic"]);
+                               success(topic);
+
+                           } failure:failure];
 }
 
 
@@ -941,66 +985,27 @@ MXAuthAction;
                            success:(void (^)())success
                            failure:(void (^)(NSError *))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state/m.room.avatar", apiPathPrefix, roomId];
-    return [httpClient requestWithMethod:@"PUT"
-                                    path:path
-                              parameters:@{
-                                           @"url": avatar
-                                           }
-                                 success:^(NSDictionary *JSONResponse) {
-                                     if (success)
-                                     {
-                                         // Use here the processing queue in order to keep the server response order
-                                         dispatch_async(processingQueue, ^{
-
-                                             dispatch_async(dispatch_get_main_queue(), ^{
-
-                                                 success();
-
-                                             });
-
-                                         });
-                                     }
-                                 }
-                                 failure:^(NSError *error) {
-                                     if (failure)
-                                     {
-                                         failure(error);
-                                     }
-                                 }];
+    return [self updateStateEvent:kMXEventTypeStringRoomAvatar
+                        withValue:@{
+                                    @"url": avatar
+                                    }
+                           inRoom:roomId
+                          success:success failure:failure];
 }
 
 - (MXHTTPOperation *)avatarOfRoom:(NSString *)roomId
                           success:(void (^)(NSString *))success
                           failure:(void (^)(NSError *))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state/m.room.avatar", apiPathPrefix, roomId];
-    return [httpClient requestWithMethod:@"GET"
-                                    path:path
-                              parameters:nil
-                                 success:^(NSDictionary *JSONResponse) {
-                                     if (success)
-                                     {
-                                         // Use here the processing queue in order to keep the server response order
-                                         dispatch_async(processingQueue, ^{
+    return [self valueOfStateEvent:kMXEventTypeStringRoomAvatar
+                            inRoom:roomId
+                           success:^(NSDictionary *JSONResponse) {
 
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                               NSString *url;
+                               MXJSONModelSetString(url, JSONResponse[@"url"]);
+                               success(url);
 
-                                                 NSString *url;
-                                                 MXJSONModelSetString(url, JSONResponse[@"url"]);
-                                                 success(url);
-
-                                             });
-
-                                         });
-                                     }
-                                 }
-                                 failure:^(NSError *error) {
-                                     if (failure)
-                                     {
-                                         failure(error);
-                                     }
-                                 }];
+                           } failure:failure];
 }
 
 - (MXHTTPOperation*)setRoomName:(NSString*)roomId
@@ -1008,66 +1013,27 @@ MXAuthAction;
                         success:(void (^)())success
                         failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state/m.room.name", apiPathPrefix, roomId];
-    return [httpClient requestWithMethod:@"PUT"
-                                    path:path
-                              parameters:@{
-                                           @"name": name
-                                           }
-                                 success:^(NSDictionary *JSONResponse) {
-                                     if (success)
-                                     {
-                                         // Use here the processing queue in order to keep the server response order
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             dispatch_async(dispatch_get_main_queue(), ^{
-                                                 
-                                                 success();
-                                                 
-                                             });
-                                             
-                                         });
-                                     }
-                                 }
-                                 failure:^(NSError *error) {
-                                     if (failure)
-                                     {
-                                         failure(error);
-                                     }
-                                 }];
+    return [self updateStateEvent:kMXEventTypeStringRoomName
+                        withValue:@{
+                                    @"name": name
+                                    }
+                           inRoom:roomId
+                          success:success failure:failure];
 }
 
 - (MXHTTPOperation*)nameOfRoom:(NSString*)roomId
                        success:(void (^)(NSString *name))success
                        failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state/m.room.name", apiPathPrefix, roomId];
-    return [httpClient requestWithMethod:@"GET"
-                                    path:path
-                              parameters:nil
-                                 success:^(NSDictionary *JSONResponse) {
-                                     if (success)
-                                     {
-                                         // Use here the processing queue in order to keep the server response order
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             dispatch_async(dispatch_get_main_queue(), ^{
-                                                 
-                                                 NSString *name;
-                                                 MXJSONModelSetString(name, JSONResponse[@"name"]);
-                                                 success(name);
-                                                 
-                                             });
-                                             
-                                         });
-                                     }
-                                 }
-                                 failure:^(NSError *error) {
-                                     if (failure)
-                                     {
-                                         failure(error);
-                                     }
-                                 }];
+    return [self valueOfStateEvent:kMXEventTypeStringRoomName
+                            inRoom:roomId
+                           success:^(NSDictionary *JSONResponse) {
+
+                               NSString *name;
+                               MXJSONModelSetString(name, JSONResponse[@"name"]);
+                               success(name);
+
+                           } failure:failure];
 }
 
 - (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
