@@ -73,6 +73,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 
 - (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession2
 {
+    // Let's the live MXEventTimeline use its default store.
     return [self initWithRoomId:roomId matrixSession:mxSession2 andStore:nil];
 }
 
