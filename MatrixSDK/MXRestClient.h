@@ -651,8 +651,37 @@ typedef enum : NSUInteger
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)guestAccessOfRoom:(NSString*)roomId
-                           success:(void (^)(MXRoomGuestAccess guestAccess))success
-                           failure:(void (^)(NSError *error))failure;
+                              success:(void (^)(MXRoomGuestAccess guestAccess))success
+                              failure:(void (^)(NSError *error))failure;
+
+/**
+ Set the directory visibility of a room on the current homeserver.
+
+ @param roomId the id of the room.
+ @param directoryVisibility the directory visibility to set.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setRoomDirectoryVisibility:(NSString*)roomId
+                           directoryVisibility:(MXRoomDirectoryVisibility)directoryVisibility
+                                       success:(void (^)())success
+                                       failure:(void (^)(NSError *error))failure;
+
+/**
+ Get the guest access of a room on the current homeserver.
+
+ @param roomId the id of the room.
+ @param success A block object called when the operation succeeds. It provides the room directory visibility.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)directoryVisibilityOfRoom:(NSString*)roomId
+                              success:(void (^)(MXRoomDirectoryVisibility directoryVisibility))success
+                              failure:(void (^)(NSError *error))failure;
+
 
 /**
  Join a room.

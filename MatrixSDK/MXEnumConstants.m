@@ -43,3 +43,9 @@ NSString *const kMXRoomJoinRuleKnock   = @"knock";
  */
 NSString *const kMXRoomGuestAccessCanJoin   = @"can_join";
 NSString *const kMXRoomGuestAccessForbidden = @"forbidden";
+
+/**
+ Room visibility in the homeserver directory.
+ */
+NSString *const kMXRoomDirectoryVisibilityPrivate   = @"private";
+NSString *const kMXRoomDirectoryVisibilityPublic    = @"public";

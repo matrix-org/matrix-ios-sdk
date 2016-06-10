@@ -1044,16 +1044,16 @@ MXAuthAction;
 }
 
 - (MXHTTPOperation *)historyVisibilityOfRoom:(NSString *)roomId
-                                     success:(void (^)(MXRoomHistoryVisibility))success
+                                     success:(void (^)(MXRoomHistoryVisibility historyVisibility))success
                                      failure:(void (^)(NSError *))failure
 {
     return [self valueOfStateEvent:kMXEventTypeStringRoomHistoryVisibility
                             inRoom:roomId
                            success:^(NSDictionary *JSONResponse) {
 
-                               NSString *name;
-                               MXJSONModelSetString(name, JSONResponse[@"history_visibility"]);
-                               success(name);
+                               NSString *historyVisibility;
+                               MXJSONModelSetString(historyVisibility, JSONResponse[@"history_visibility"]);
+                               success(historyVisibility);
 
                            } failure:failure];
 }
@@ -1079,7 +1079,7 @@ MXAuthAction;
                             inRoom:roomId
                            success:^(NSDictionary *JSONResponse) {
 
-                               NSString *joinRule;
+                               MXRoomJoinRule joinRule;
                                MXJSONModelSetString(joinRule, JSONResponse[@"join_rule"]);
                                success(joinRule);
 
@@ -1107,12 +1107,79 @@ MXAuthAction;
                             inRoom:roomId
                            success:^(NSDictionary *JSONResponse) {
 
-                               NSString *guestAccess;
+                               MXRoomGuestAccess guestAccess;
                                MXJSONModelSetString(guestAccess, JSONResponse[@"guest_access"]);
                                success(guestAccess);
 
                            } failure:failure];
 }
+
+- (MXHTTPOperation*)setRoomDirectoryVisibility:(NSString*)roomId
+                           directoryVisibility:(MXRoomDirectoryVisibility)directoryVisibility
+                                       success:(void (^)())success
+                                       failure:(void (^)(NSError *error))failure
+{
+    
+    NSString *path = [NSString stringWithFormat:@"%@/directory/list/room/%@", apiPathPrefix, roomId];
+    return [httpClient requestWithMethod:@"PUT"
+                                    path:path
+                              parameters:@{
+                                           @"visibility": directoryVisibility
+                                           }
+                                 success:^(NSDictionary *JSONResponse) {
+
+                                     if (success)
+                                     {
+                                         // Use here the processing queue in order to keep the server response order
+                                         dispatch_async(processingQueue, ^{
+
+                                             dispatch_async(dispatch_get_main_queue(), ^{
+
+                                                 success();
+
+                                             });
+
+                                         });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                 }];
+}
+
+- (MXHTTPOperation*)directoryVisibilityOfRoom:(NSString*)roomId
+                                      success:(void (^)(MXRoomDirectoryVisibility directoryVisibility))success
+                                      failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/directory/list/room/%@", apiPathPrefix, roomId];
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     // Use here the processing queue in order to keep the server response order
+                                     dispatch_async(processingQueue, ^{
+
+                                         dispatch_async(dispatch_get_main_queue(), ^{
+
+                                             MXRoomDirectoryVisibility directoryVisibility;
+                                             MXJSONModelSetString(directoryVisibility, JSONResponse[@"visibility"]);
+                                             success(directoryVisibility);
+
+                                         });
+
+                                     });
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                 }];
+}
+
 
 - (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
                      success:(void (^)(NSString *theRoomId))success

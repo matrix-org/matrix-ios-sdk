@@ -110,6 +110,23 @@ FOUNDATION_EXPORT NSString *const kMXRoomGuestAccessForbidden;
 
 
 /**
+ Room visibility in the current homeserver directory.
+ The default homeserver value is private.
+ */
+typedef NSString* MXRoomDirectoryVisibility;
+
+/**
+ The room is not listed in the homeserver directory.
+ */
+FOUNDATION_EXPORT NSString *const kMXRoomDirectoryVisibilityPrivate;
+
+/**
+ The room is listed in the homeserver directory.
+ */
+FOUNDATION_EXPORT NSString *const kMXRoomDirectoryVisibilityPublic;
+
+
+/**
  The direction of an event in the timeline.
  */
 typedef enum : NSUInteger

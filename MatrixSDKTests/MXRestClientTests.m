@@ -234,6 +234,32 @@
     }];
 }
 
+- (void)testRoomDirectoryVisibility
+{
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        __block MXRestClient *bobRestClient2 = bobRestClient;
+        [bobRestClient setRoomDirectoryVisibility:roomId directoryVisibility:kMXRoomDirectoryVisibilityPublic success:^{
+
+            [bobRestClient2 directoryVisibilityOfRoom:roomId success:^(MXRoomDirectoryVisibility directoryVisibility) {
+
+                XCTAssertNotNil(directoryVisibility);
+                XCTAssertNotEqual(directoryVisibility.length, 0);
+                XCTAssertEqualObjects(directoryVisibility, kMXRoomDirectoryVisibilityPublic, @"Room directory visibility is wrong");
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 - (void)testJoinRoomWithRoomId
 {
     [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
