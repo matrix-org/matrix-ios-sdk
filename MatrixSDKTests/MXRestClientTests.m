@@ -187,7 +187,7 @@
     [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         __block MXRestClient *bobRestClient2 = bobRestClient;
-        [bobRestClient setJoinRule:roomId joinRule:kMXRoomJoinRulePublic success:^{
+        [bobRestClient setRoomJoinRule:roomId joinRule:kMXRoomJoinRulePublic success:^{
 
             [bobRestClient2 joinRuleOfRoom:roomId success:^(MXRoomJoinRule joinRule) {
 

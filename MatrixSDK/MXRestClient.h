@@ -608,10 +608,10 @@ typedef enum : NSUInteger
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)setJoinRule:(NSString*)roomId
-                        joinRule:(MXRoomJoinRule)joinRule
-                         success:(void (^)())success
-                         failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)setRoomJoinRule:(NSString*)roomId
+                           joinRule:(MXRoomJoinRule)joinRule
+                            success:(void (^)())success
+                            failure:(void (^)(NSError *error))failure;
 
 /**
  Get the join rule of a room.

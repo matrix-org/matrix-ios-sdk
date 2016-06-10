@@ -374,7 +374,7 @@
 
         MXRestClient *bobRestClient2 = bobRestClient;
 
-        [bobRestClient setJoinRule:roomId joinRule:kMXRoomJoinRulePublic success:^{
+        [bobRestClient setRoomJoinRule:roomId joinRule:kMXRoomJoinRulePublic success:^{
 
             mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
             [mxSession start:^{
