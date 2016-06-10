@@ -59,7 +59,7 @@
 @end
 
 @implementation MXRoomState
-@synthesize powerLevels, isPublic;
+@synthesize powerLevels;
 
 - (id)initWithRoomId:(NSString*)roomId
     andMatrixSession:(MXSession*)matrixSession
@@ -169,24 +169,6 @@
     return [thirdPartyInvites allValues];
 }
 
-- (BOOL)isPublic
-{
-    // The information is in the join_rule state event
-    isPublic = NO;
-    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomJoinRules];
-    if (event && [self contentOfEvent:event])
-    {
-        NSString *join_rule;
-        MXJSONModelSetString(join_rule, [self contentOfEvent:event][@"join_rule"]);
-        if ([join_rule isEqualToString:kMXRoomDirectoryVisibilityPublic])
-        {
-            isPublic = YES;
-        }
-    }
-
-    return isPublic;
-}
-
 - (NSArray *)aliases
 {
     NSArray *aliases;
@@ -283,6 +265,11 @@
         joinRule = [joinRule copy];
     }
     return joinRule;
+}
+
+- (BOOL)isJoinRulePublic
+{
+    return [self.joinRule isEqualToString:kMXRoomJoinRulePublic];
 }
 
 - (MXRoomGuestAccess)guestAccess
@@ -669,7 +656,6 @@
 
     stateCopy->membersWithThirdPartyInviteTokenCache= [[NSMutableDictionary allocWithZone:zone] initWithDictionary:membersWithThirdPartyInviteTokenCache];
     
-    stateCopy->isPublic = isPublic;
     stateCopy->membership = membership;
 
     stateCopy->membersNamesCache = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:membersNamesCache copyItems:YES];

@@ -582,7 +582,7 @@ NSMutableArray *roomsToClean;
         roomsToClean = [NSMutableArray array];
         for (MXRoom *room in mxSession.rooms)
         {
-            if (NO == room.state.isPublic && MXMembershipJoin == room.state.membership)
+            if (NO == room.state.isJoinRulePublic && MXMembershipJoin == room.state.membership)
             {
                 [roomsToClean addObject:room.state.roomId];
             }

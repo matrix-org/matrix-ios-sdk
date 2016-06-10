@@ -67,11 +67,6 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
 @property (nonatomic, readonly) MXRoomPowerLevels *powerLevels;
 
 /**
- The visibility of the room: public or, else, private
- */
-@property (nonatomic) BOOL isPublic;
-
-/**
  The aliases of this room.
  */
 @property (nonatomic, readonly) NSArray *aliases;
@@ -105,6 +100,11 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
  The join rule of the room.
  */
 @property (nonatomic, readonly) MXRoomJoinRule joinRule;
+
+/**
+ Shortcut to check if the self.joinRule is public.
+ */
+@property (nonatomic, readonly) BOOL isJoinRulePublic;
 
 /**
  The guest access of the room.

@@ -54,25 +54,25 @@
     [super tearDown];
 }
 
-- (void)testIsPublic
+- (void)testIsJoinRulePublic
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
 
         mxSession = mxSession2;
 
-        XCTAssertTrue(room.state.isPublic, @"The room must be public");
+        XCTAssertTrue(room.state.isJoinRulePublic, @"The room join rule must be public");
         
         [expectation fulfill];
     }];
 }
 
-- (void)testIsPublicForAPrivateRoom
+- (void)testIsJoinRulePublicForAPrivateRoom
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
         mxSession = mxSession2;
 
-        XCTAssertFalse(room.state.isPublic, @"This room must be private");
+        XCTAssertFalse(room.state.isJoinRulePublic, @"This room join rule must be private");
         
         [expectation fulfill];
     }];
@@ -887,7 +887,7 @@
                         
                         // Now, we must have more information about the room
                         // Check its new state
-                        XCTAssertEqual(newRoom.state.isPublic, YES);
+                        XCTAssertEqual(newRoom.state.isJoinRulePublic, YES);
                         XCTAssertEqual(newRoom.state.members.count, 2);
                         XCTAssert([newRoom.state.topic isEqualToString:@"We test room invitation here"], @"Wrong topic. Found: %@", newRoom.state.topic);
                         
