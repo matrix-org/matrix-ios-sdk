@@ -670,7 +670,7 @@ typedef enum : NSUInteger
                                        failure:(void (^)(NSError *error))failure;
 
 /**
- Get the guest access of a room on the current homeserver.
+ Get the visibility of a room in the current HS's room directory.
 
  @param roomId the id of the room.
  @param success A block object called when the operation succeeds. It provides the room directory visibility.

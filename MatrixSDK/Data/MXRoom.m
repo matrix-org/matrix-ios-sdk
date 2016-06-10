@@ -288,6 +288,19 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     return [mxSession.matrixRestClient setRoomGuestAccess:self.state.roomId guestAccess:guestAccess success:success failure:failure];
 }
 
+- (MXHTTPOperation*)setDirectoryVisibility:(MXRoomDirectoryVisibility)directoryVisibility
+                                   success:(void (^)())success
+                                   failure:(void (^)(NSError *error))failure
+{
+    return [mxSession.matrixRestClient setRoomDirectoryVisibility:self.state.roomId directoryVisibility:directoryVisibility success:success failure:failure];
+}
+
+- (MXHTTPOperation*)directoryVisibility:(void (^)(MXRoomDirectoryVisibility directoryVisibility))success
+                                failure:(void (^)(NSError *error))failure
+{
+    return [mxSession.matrixRestClient directoryVisibilityOfRoom:self.state.roomId success:success failure:failure];
+}
+
 - (MXHTTPOperation*)join:(void (^)())success
                  failure:(void (^)(NSError *error))failure
 {

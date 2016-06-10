@@ -326,6 +326,35 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
                            failure:(void (^)(NSError *error))failure;
 
 /**
+ Set the visbility of the room in the current HS's room directory.
+
+ @param directoryVisibility the directory visibility to set.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setDirectoryVisibility:(MXRoomDirectoryVisibility)directoryVisibility
+                                   success:(void (^)())success
+                                   failure:(void (^)(NSError *error))failure;
+
+/**
+ Get the visibility of the room in the current HS's room directory.
+ 
+ Note: This information is not part of the room state because it is related
+ to the current homeserver.
+ There is currently no way to be updated on directory visibility change. That's why a
+ request must be issued everytime.
+
+ @param success A block object called when the operation succeeds. It provides the room directory visibility.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)directoryVisibility:(void (^)(MXRoomDirectoryVisibility directoryVisibility))success
+                                failure:(void (^)(NSError *error))failure;
+
+/**
  Join this room where the user has been invited.
  
  @param success A block object called when the operation is complete.
