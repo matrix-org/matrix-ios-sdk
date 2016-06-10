@@ -904,7 +904,7 @@ typedef void (^MXOnResumeDone)();
 
 #pragma mark - Rooms operations
 - (MXHTTPOperation*)createRoom:(NSString*)name
-                    visibility:(MXRoomVisibility)visibility
+                    visibility:(MXRoomDirectoryVisibility)visibility
                      roomAlias:(NSString*)roomAlias
                          topic:(NSString*)topic
                        success:(void (^)(MXRoom *room))success

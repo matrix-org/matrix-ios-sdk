@@ -823,7 +823,7 @@ typedef enum : NSUInteger
  Create a room.
  
  @param name (optional) the room name.
- @param visibility (optional) the visibility of the room (kMXRoomVisibilityPublic or kMXRoomVisibilityPrivate).
+ @param visibility (optional) the visibility of the room in the current HS's room directory.
  @param roomAlias (optional) the room alias on the home server the room will be created.
  @param topic (optional) the room topic.
 
@@ -833,7 +833,7 @@ typedef enum : NSUInteger
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)createRoom:(NSString*)name
-                    visibility:(MXRoomVisibility)visibility
+                    visibility:(MXRoomDirectoryVisibility)visibility
                      roomAlias:(NSString*)roomAlias
                          topic:(NSString*)topic
                        success:(void (^)(MXCreateRoomResponse *response))success

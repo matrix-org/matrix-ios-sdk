@@ -22,14 +22,21 @@
  It is supposed to solve cross dependency issues.
  */
 
+/**
+ Room visibility in the current homeserver directory.
+ The default homeserver value is private.
+ */
+typedef NSString* MXRoomDirectoryVisibility;
 
 /**
- Room visibility.
- A nil value is interpreted as private by the homeserver.
+ The room is not listed in the homeserver directory.
  */
-typedef NSString* MXRoomVisibility;
-FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPublic;
-FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
+FOUNDATION_EXPORT NSString *const kMXRoomDirectoryVisibilityPrivate;
+
+/**
+ The room is listed in the homeserver directory.
+ */
+FOUNDATION_EXPORT NSString *const kMXRoomDirectoryVisibilityPublic;
 
 
 /**
@@ -107,23 +114,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomGuestAccessCanJoin;
  Guest access is forbidden.
  */
 FOUNDATION_EXPORT NSString *const kMXRoomGuestAccessForbidden;
-
-
-/**
- Room visibility in the current homeserver directory.
- The default homeserver value is private.
- */
-typedef NSString* MXRoomDirectoryVisibility;
-
-/**
- The room is not listed in the homeserver directory.
- */
-FOUNDATION_EXPORT NSString *const kMXRoomDirectoryVisibilityPrivate;
-
-/**
- The room is listed in the homeserver directory.
- */
-FOUNDATION_EXPORT NSString *const kMXRoomDirectoryVisibilityPublic;
 
 
 /**

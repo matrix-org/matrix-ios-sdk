@@ -929,7 +929,7 @@
                     mxSession = nil;
 
                     // Create another random room to create more data server side
-                    [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
+                    [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
 
                         [bobRestClient sendTextMessageToRoom:response.roomId text:@"A Message" success:^(NSString *eventId) {
 
@@ -1238,15 +1238,15 @@
         NSString *tag2 = [[NSProcessInfo processInfo] globallyUniqueString];
 
         // Room #1
-        [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:@"2" success:^(MXCreateRoomResponse *response) {
+        [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:@"2" success:^(MXCreateRoomResponse *response) {
             [bobRestClient addTag:tag1 withOrder:@"0.2"  toRoom:response.roomId success:^{
 
                 // Room #2
-                [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:@"1" success:^(MXCreateRoomResponse *response) {
+                [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:@"1" success:^(MXCreateRoomResponse *response) {
                     [bobRestClient addTag:tag1 withOrder:@"0.1" toRoom:response.roomId success:^{
 
                         // Room #3
-                        [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:@"the only one" success:^(MXCreateRoomResponse *response) {
+                        [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:@"the only one" success:^(MXCreateRoomResponse *response) {
                             [bobRestClient addTag:tag2 withOrder:@"0.1" toRoom:response.roomId success:^{
 
 

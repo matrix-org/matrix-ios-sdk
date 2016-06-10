@@ -178,7 +178,7 @@
     {
         NSString *join_rule;
         MXJSONModelSetString(join_rule, [self contentOfEvent:event][@"join_rule"]);
-        if ([join_rule isEqualToString:kMXRoomVisibilityPublic])
+        if ([join_rule isEqualToString:kMXRoomDirectoryVisibilityPublic])
         {
             isPublic = YES;
         }

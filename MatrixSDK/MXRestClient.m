@@ -1398,7 +1398,7 @@ MXAuthAction;
 }
 
 - (MXHTTPOperation*)createRoom:(NSString*)name
-                    visibility:(MXRoomVisibility)visibility
+                    visibility:(MXRoomDirectoryVisibility)visibility
                      roomAlias:(NSString*)roomAlias
                          topic:(NSString*)topic
                        success:(void (^)(MXCreateRoomResponse *response))success
