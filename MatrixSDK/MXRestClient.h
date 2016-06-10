@@ -49,13 +49,6 @@ FOUNDATION_EXPORT NSString *const kMXContentUriScheme;
 FOUNDATION_EXPORT NSString *const kMXContentPrefixPath;
 
 /**
- Room visibility
- */
-typedef NSString* MXRoomVisibility;
-FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPublic;
-FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
-
-/**
  Account data types
  */
 FOUNDATION_EXPORT NSString *const kMXAccountDataPushRules;
@@ -578,6 +571,119 @@ typedef enum : NSUInteger
                    failure:(void (^)(NSError *error))failure;
 
 /**
+ Set the history visibility of a room.
+
+ @param roomId the id of the room.
+ @param historyVisibility the visibily to set.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setRoomHistoryVisibility:(NSString*)roomId
+                           historyVisibility:(MXRoomHistoryVisibility)historyVisibility
+                                     success:(void (^)())success
+                                     failure:(void (^)(NSError *error))failure;
+
+/**
+ Get the history visibility of a room.
+
+ @param roomId the id of the room.
+ @param success A block object called when the operation succeeds. It provides the room history visibility.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)historyVisibilityOfRoom:(NSString*)roomId
+                                    success:(void (^)(MXRoomHistoryVisibility historyVisibility))success
+                                    failure:(void (^)(NSError *error))failure;
+
+/**
+ Set the join rule of a room.
+
+ @param roomId the id of the room.
+ @param joinRule the rule to set.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setRoomJoinRule:(NSString*)roomId
+                           joinRule:(MXRoomJoinRule)joinRule
+                            success:(void (^)())success
+                            failure:(void (^)(NSError *error))failure;
+
+/**
+ Get the join rule of a room.
+
+ @param roomId the id of the room.
+ @param success A block object called when the operation succeeds. It provides the room join rule.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)joinRuleOfRoom:(NSString*)roomId
+                            success:(void (^)(MXRoomJoinRule joinRule))success
+                            failure:(void (^)(NSError *error))failure;
+
+/**
+ Set the guest access of a room.
+
+ @param roomId the id of the room.
+ @param guestAccess the guest access to set.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setRoomGuestAccess:(NSString*)roomId
+                           guestAccess:(MXRoomGuestAccess)guestAccess
+                               success:(void (^)())success
+                               failure:(void (^)(NSError *error))failure;
+
+/**
+ Get the guest access of a room.
+
+ @param roomId the id of the room.
+ @param success A block object called when the operation succeeds. It provides the room guest access.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)guestAccessOfRoom:(NSString*)roomId
+                              success:(void (^)(MXRoomGuestAccess guestAccess))success
+                              failure:(void (^)(NSError *error))failure;
+
+/**
+ Set the directory visibility of a room on the current homeserver.
+
+ @param roomId the id of the room.
+ @param directoryVisibility the directory visibility to set.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setRoomDirectoryVisibility:(NSString*)roomId
+                           directoryVisibility:(MXRoomDirectoryVisibility)directoryVisibility
+                                       success:(void (^)())success
+                                       failure:(void (^)(NSError *error))failure;
+
+/**
+ Get the visibility of a room in the current HS's room directory.
+
+ @param roomId the id of the room.
+ @param success A block object called when the operation succeeds. It provides the room directory visibility.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)directoryVisibilityOfRoom:(NSString*)roomId
+                              success:(void (^)(MXRoomDirectoryVisibility directoryVisibility))success
+                              failure:(void (^)(NSError *error))failure;
+
+
+/**
  Join a room.
  
  @param roomIdOrAlias the id or an alias of the room to join.
@@ -717,7 +823,7 @@ typedef enum : NSUInteger
  Create a room.
  
  @param name (optional) the room name.
- @param visibility (optional) the visibility of the room (kMXRoomVisibilityPublic or kMXRoomVisibilityPrivate).
+ @param visibility (optional) the visibility of the room in the current HS's room directory.
  @param roomAlias (optional) the room alias on the home server the room will be created.
  @param topic (optional) the room topic.
 
@@ -727,11 +833,11 @@ typedef enum : NSUInteger
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)createRoom:(NSString*)name
-                visibility:(MXRoomVisibility)visibility
-                 roomAlias:(NSString*)roomAlias
-                     topic:(NSString*)topic
-                   success:(void (^)(MXCreateRoomResponse *response))success
-                   failure:(void (^)(NSError *error))failure;
+                    visibility:(MXRoomDirectoryVisibility)visibility
+                     roomAlias:(NSString*)roomAlias
+                         topic:(NSString*)topic
+                       success:(void (^)(MXCreateRoomResponse *response))success
+                       failure:(void (^)(NSError *error))failure;
 
 /**
  Get a list of messages for this room.

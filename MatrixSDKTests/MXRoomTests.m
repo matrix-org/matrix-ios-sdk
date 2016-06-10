@@ -426,6 +426,94 @@
     }];
 }
 
+- (void)testRoomDirectoryVisibilityProvidedByInitialSync
+{
+    [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
+
+        MXRestClient *bobRestClient2 = bobRestClient;
+
+        [bobRestClient setRoomDirectoryVisibility:roomId directoryVisibility:kMXRoomDirectoryVisibilityPublic success:^{
+
+            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+            [mxSession start:^{
+
+                MXRoom *room = [mxSession roomWithRoomId:roomId];
+
+                [room directoryVisibility:^(MXRoomDirectoryVisibility directoryVisibility) {
+
+                    XCTAssertNotNil(directoryVisibility);
+                    XCTAssertEqualObjects(directoryVisibility, kMXRoomDirectoryVisibilityPublic, @"The room directory visibility is wrong");
+
+                    [expectation fulfill];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+    }];
+}
+
+- (void)tesRoomDirectoryVisibilityLive
+{
+    [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
+
+        MXRestClient *bobRestClient2 = bobRestClient;
+
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+        [mxSession start:^{
+
+            MXRoom *room = [mxSession roomWithRoomId:roomId];
+
+            [room directoryVisibility:^(MXRoomDirectoryVisibility directoryVisibility) {
+
+                XCTAssertNotNil(directoryVisibility);
+                XCTAssertEqualObjects(directoryVisibility, kMXRoomDirectoryVisibilityPrivate, @"The room directory visibility is wrong");
+
+
+                // Change the directory visibility
+                [bobRestClient setRoomDirectoryVisibility:roomId directoryVisibility:kMXRoomDirectoryVisibilityPublic success:^{
+
+                    [room directoryVisibility:^(MXRoomDirectoryVisibility directoryVisibility) {
+
+                        XCTAssertNotNil(directoryVisibility);
+                        XCTAssertEqualObjects(directoryVisibility, kMXRoomDirectoryVisibilityPublic, @"The room directory visibility is wrong");
+
+                        [expectation fulfill];
+
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The request should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop

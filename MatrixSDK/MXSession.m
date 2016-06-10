@@ -524,13 +524,13 @@ typedef void (^MXOnResumeDone)();
                 }
                 else
                 {
-                    isOneToOneRoom = (!room.state.isPublic && room.state.members.count == 2);
+                    isOneToOneRoom = (!room.state.isJoinRulePublic && room.state.members.count == 2);
                 }
                 
                 // Sync room
                 [room handleJoinedRoomSync:roomSync];
 
-                if (isOneToOneRoom || (!room.state.isPublic && room.state.members.count == 2))
+                if (isOneToOneRoom || (!room.state.isJoinRulePublic && room.state.members.count == 2))
                 {
                     // Update one-to-one room dictionary
                     [self handleOneToOneRoom:room];
@@ -904,7 +904,7 @@ typedef void (^MXOnResumeDone)();
 
 #pragma mark - Rooms operations
 - (MXHTTPOperation*)createRoom:(NSString*)name
-                    visibility:(MXRoomVisibility)visibility
+                    visibility:(MXRoomDirectoryVisibility)visibility
                      roomAlias:(NSString*)roomAlias
                          topic:(NSString*)topic
                        success:(void (^)(MXRoom *room))success
@@ -1151,7 +1151,7 @@ typedef void (^MXOnResumeDone)();
     [rooms setObject:room forKey:room.state.roomId];
     
     // We store one-to-one room in a second dictionary to ease their reuse.
-    if (!room.state.isPublic && room.state.members.count == 2)
+    if (!room.state.isJoinRulePublic && room.state.members.count == 2)
     {
         [self handleOneToOneRoom:room];
     }
@@ -1183,7 +1183,7 @@ typedef void (^MXOnResumeDone)();
         [_store deleteRoom:roomId];
         
         // Clean one-to-one room dictionary
-        if (!room.state.isPublic && room.state.members.count == 2)
+        if (!room.state.isJoinRulePublic && room.state.members.count == 2)
         {
             [self removeOneToOneRoom:room];
         }

@@ -22,20 +22,6 @@
 #import "MXHTTPOperation.h"
 
 /**
- The direction of an event in the timeline.
- */
-typedef enum : NSUInteger
-{
-    // Forwards when the event is added to the end of the timeline.
-    // These events come from the /sync stream or from forwards pagination.
-    MXTimelineDirectionForwards,
-
-    // Backwards when the event is added to the start of the timeline.
-    // These events come from a back pagination.
-    MXTimelineDirectionBackwards
-} MXTimelineDirection;
-
-/**
  Prefix used to build fake invite event.
  */
 FOUNDATION_EXPORT NSString *const kMXRoomInviteStateEventIdPrefix;

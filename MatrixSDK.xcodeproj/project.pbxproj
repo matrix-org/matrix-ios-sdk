@@ -132,6 +132,8 @@
 		32E226A71D06AC9F00E6CA54 /* MXPeekingRoom.m in Sources */ = {isa = PBXBuildFile; fileRef = 32E226A51D06AC9F00E6CA54 /* MXPeekingRoom.m */; };
 		32E226A91D081CE200E6CA54 /* MXPeekingRoomTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32E226A81D081CE200E6CA54 /* MXPeekingRoomTests.m */; };
 		32FCAB4D19E578860049C555 /* MXRestClientTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32FCAB4C19E578860049C555 /* MXRestClientTests.m */; };
+		32FE41361D0AB7070060835E /* MXEnumConstants.h in Headers */ = {isa = PBXBuildFile; fileRef = 32FE41341D0AB7070060835E /* MXEnumConstants.h */; };
+		32FE41371D0AB7070060835E /* MXEnumConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = 32FE41351D0AB7070060835E /* MXEnumConstants.m */; };
 		71DE22E01BC7C51200284153 /* MXReceiptData.m in Sources */ = {isa = PBXBuildFile; fileRef = 71DE22DC1BC7C51200284153 /* MXReceiptData.m */; };
 		71DE22E11BC7C51200284153 /* MXReceiptData.h in Headers */ = {isa = PBXBuildFile; fileRef = 71DE22DD1BC7C51200284153 /* MXReceiptData.h */; };
 		A23A8594855481FEFA0E9A22 /* libPods-MatrixSDK.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E1674C6FF8BBF074E7F76059 /* libPods-MatrixSDK.a */; };
@@ -295,6 +297,8 @@
 		32E226A81D081CE200E6CA54 /* MXPeekingRoomTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXPeekingRoomTests.m; sourceTree = "<group>"; };
 		32F1FE9AF82A426C2EAED587 /* Pods-MatrixSDK.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDK.release.xcconfig"; path = "Pods/Target Support Files/Pods-MatrixSDK/Pods-MatrixSDK.release.xcconfig"; sourceTree = "<group>"; };
 		32FCAB4C19E578860049C555 /* MXRestClientTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = MXRestClientTests.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
+		32FE41341D0AB7070060835E /* MXEnumConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXEnumConstants.h; sourceTree = "<group>"; };
+		32FE41351D0AB7070060835E /* MXEnumConstants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXEnumConstants.m; sourceTree = "<group>"; };
 		71DE22DC1BC7C51200284153 /* MXReceiptData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXReceiptData.m; sourceTree = "<group>"; };
 		71DE22DD1BC7C51200284153 /* MXReceiptData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXReceiptData.h; sourceTree = "<group>"; };
 		E1674C6FF8BBF074E7F76059 /* libPods-MatrixSDK.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MatrixSDK.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -513,8 +517,6 @@
 				32DC15CA1A8CF7AE006F9AD3 /* NotificationCenter */,
 				320DFDD619DD99B60068622A /* Utils */,
 				3245A74B1AF7B2930001D8A7 /* VoIP */,
-				F0C34CB91C18C80000C36F09 /* MXSDKOptions.h */,
-				F0C34CBA1C18C93700C36F09 /* MXSDKOptions.m */,
 				32C6F93219DD814400EA4E9C /* MatrixSDK.h */,
 				320DFDD419DD99B60068622A /* MXRestClient.h */,
 				320DFDD519DD99B60068622A /* MXRestClient.m */,
@@ -522,6 +524,10 @@
 				320DFDD119DD99B60068622A /* MXSession.m */,
 				320DFDD219DD99B60068622A /* MXError.h */,
 				320DFDD319DD99B60068622A /* MXError.m */,
+				32FE41341D0AB7070060835E /* MXEnumConstants.h */,
+				32FE41351D0AB7070060835E /* MXEnumConstants.m */,
+				F0C34CB91C18C80000C36F09 /* MXSDKOptions.h */,
+				F0C34CBA1C18C93700C36F09 /* MXSDKOptions.m */,
 				32C6F93019DD814400EA4E9C /* Supporting Files */,
 			);
 			path = MatrixSDK;
@@ -666,6 +672,7 @@
 				3220094519EFBF30008DE41D /* MXSessionEventListener.h in Headers */,
 				32BED28F1B00A23F00E668FE /* MXCallStack.h in Headers */,
 				3264DB911CEC528D00B99881 /* MXAccountData.h in Headers */,
+				32FE41361D0AB7070060835E /* MXEnumConstants.h in Headers */,
 				32E226A61D06AC9F00E6CA54 /* MXPeekingRoom.h in Headers */,
 				323B2AF81BCE8AC800B11F34 /* MXCoreDataRoom.h in Headers */,
 				329FB1751A0A3A1600A5E88E /* MXRoomMember.h in Headers */,
@@ -854,6 +861,7 @@
 				71DE22E01BC7C51200284153 /* MXReceiptData.m in Sources */,
 				327E37B71A974F75007F026F /* MXLogger.m in Sources */,
 				320DFDE719DD99B60068622A /* MXHTTPClient.m in Sources */,
+				32FE41371D0AB7070060835E /* MXEnumConstants.m in Sources */,
 				320DFDE119DD99B60068622A /* MXSession.m in Sources */,
 				F0C34CBB1C18C93700C36F09 /* MXSDKOptions.m in Sources */,
 				320DFDDC19DD99B60068622A /* MXRoom.m in Sources */,

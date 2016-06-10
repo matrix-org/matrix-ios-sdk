@@ -171,7 +171,7 @@ NSMutableArray *roomsToClean;
     [self doMXRestClientTestWithBob:testCase
                      readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
         // Create a random room to use
-        [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
+        [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
 
             NSLog(@"Created room %@ for %@", response.roomId, testCase.name);
             
@@ -189,7 +189,7 @@ NSMutableArray *roomsToClean;
     [self doMXRestClientTestWithBob:testCase
                         readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
                             // Create a random room to use
-                            [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPublic roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
+                            [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPublic roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
 
                                 NSLog(@"Created public room %@ for %@", response.roomId, testCase.name);
 
@@ -216,7 +216,7 @@ NSMutableArray *roomsToClean;
             _thePublicRoomAlias = [NSString stringWithFormat:@"mxPublic-%@", [[NSUUID UUID] UUIDString]];
 
             [bobRestClient createRoom:@"MX Public Room test"
-                           visibility:kMXRoomVisibilityPublic
+                           visibility:kMXRoomDirectoryVisibilityPublic
                             roomAlias:_thePublicRoomAlias
                                 topic:@"The public room used by SDK tests"
                               success:^(MXCreateRoomResponse *response) {
@@ -245,7 +245,7 @@ NSMutableArray *roomsToClean;
     
     [self getBobMXRestClient:^(MXRestClient *bobRestClient) {
         // Create a random room to use
-        [bobRestClient createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
+        [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
 
             NSLog(@"Created room %@ for %@", response.roomId, testCase.name);
 
@@ -340,7 +340,7 @@ NSMutableArray *roomsToClean;
     else
     {
         // Create the room
-        [mxRestClient2 createRoom:nil visibility:kMXRoomVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
+        [mxRestClient2 createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
 
             NSLog(@"Created room %@ in createRooms", response.roomId);
 
@@ -582,7 +582,7 @@ NSMutableArray *roomsToClean;
         roomsToClean = [NSMutableArray array];
         for (MXRoom *room in mxSession.rooms)
         {
-            if (NO == room.state.isPublic && MXMembershipJoin == room.state.membership)
+            if (NO == room.state.isJoinRulePublic && MXMembershipJoin == room.state.membership)
             {
                 [roomsToClean addObject:room.state.roomId];
             }

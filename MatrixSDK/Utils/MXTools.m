@@ -35,6 +35,8 @@
                  kMXEventTypeStringRoomPowerLevels: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomPowerLevels],
                  kMXEventTypeStringRoomAliases: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomAliases],
                  kMXEventTypeStringRoomCanonicalAlias: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomCanonicalAlias],
+                 kMXEventTypeStringRoomHistoryVisibility: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomHistoryVisibility],
+                 kMXEventTypeStringRoomGuestAccess: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomGuestAccess],
                  kMXEventTypeStringRoomMessage: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMessage],
                  kMXEventTypeStringRoomMessageFeedback: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMessageFeedback],
                  kMXEventTypeStringRoomRedaction: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomRedaction],

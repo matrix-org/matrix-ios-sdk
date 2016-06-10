@@ -59,7 +59,7 @@
 @end
 
 @implementation MXRoomState
-@synthesize powerLevels, isPublic;
+@synthesize powerLevels;
 
 - (id)initWithRoomId:(NSString*)roomId
     andMatrixSession:(MXSession*)matrixSession
@@ -169,24 +169,6 @@
     return [thirdPartyInvites allValues];
 }
 
-- (BOOL)isPublic
-{
-    // The information is in the join_rule state event
-    isPublic = NO;
-    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomJoinRules];
-    if (event && [self contentOfEvent:event])
-    {
-        NSString *join_rule;
-        MXJSONModelSetString(join_rule, [self contentOfEvent:event][@"join_rule"]);
-        if ([join_rule isEqualToString:kMXRoomVisibilityPublic])
-        {
-            isPublic = YES;
-        }
-    }
-
-    return isPublic;
-}
-
 - (NSArray *)aliases
 {
     NSArray *aliases;
@@ -255,6 +237,53 @@
         avatar = [avatar copy];
     }
     return avatar;
+}
+
+- (MXRoomHistoryVisibility)historyVisibility
+{
+    MXRoomHistoryVisibility historyVisibility = kMXRoomHistoryVisibilityShared;
+
+    // Check it from the state events
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomHistoryVisibility];
+    if (event && [self contentOfEvent:event])
+    {
+        MXJSONModelSetString(historyVisibility, [self contentOfEvent:event][@"history_visibility"]);
+        historyVisibility = [historyVisibility copy];
+    }
+    return historyVisibility;
+}
+
+- (MXRoomJoinRule)joinRule
+{
+    MXRoomJoinRule joinRule = kMXRoomJoinRuleInvite;
+
+    // Check it from the state events
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomJoinRules];
+    if (event && [self contentOfEvent:event])
+    {
+        MXJSONModelSetString(joinRule, [self contentOfEvent:event][@"join_rule"]);
+        joinRule = [joinRule copy];
+    }
+    return joinRule;
+}
+
+- (BOOL)isJoinRulePublic
+{
+    return [self.joinRule isEqualToString:kMXRoomJoinRulePublic];
+}
+
+- (MXRoomGuestAccess)guestAccess
+{
+    MXRoomGuestAccess guestAccess = kMXRoomGuestAccessForbidden;
+
+    // Check it from the state events
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomGuestAccess];
+    if (event && [self contentOfEvent:event])
+    {
+        MXJSONModelSetString(guestAccess, [self contentOfEvent:event][@"guest_access"]);
+        guestAccess = [guestAccess copy];
+    }
+    return guestAccess;
 }
 
 - (NSString *)displayname
@@ -627,7 +656,6 @@
 
     stateCopy->membersWithThirdPartyInviteTokenCache= [[NSMutableDictionary allocWithZone:zone] initWithDictionary:membersWithThirdPartyInviteTokenCache];
     
-    stateCopy->isPublic = isPublic;
     stateCopy->membership = membership;
 
     stateCopy->membersNamesCache = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:membersNamesCache copyItems:YES];

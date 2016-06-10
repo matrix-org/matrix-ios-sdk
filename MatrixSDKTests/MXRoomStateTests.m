@@ -54,25 +54,25 @@
     [super tearDown];
 }
 
-- (void)testIsPublic
+- (void)testIsJoinRulePublic
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
 
         mxSession = mxSession2;
 
-        XCTAssertTrue(room.state.isPublic, @"The room must be public");
+        XCTAssertTrue(room.state.isJoinRulePublic, @"The room join rule must be public");
         
         [expectation fulfill];
     }];
 }
 
-- (void)testIsPublicForAPrivateRoom
+- (void)testIsJoinRulePublicForAPrivateRoom
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
         mxSession = mxSession2;
 
-        XCTAssertFalse(room.state.isPublic, @"This room must be private");
+        XCTAssertFalse(room.state.isJoinRulePublic, @"This room join rule must be private");
         
         [expectation fulfill];
     }];
@@ -282,6 +282,223 @@
             // Change the topic
             [bobRestClient2 setRoomName:roomId name:@"My room name" success:^{
                 
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        
+    }];
+}
+
+- (void)testRoomHistoryVisibilityProvidedByInitialSync
+{
+    [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
+
+        MXRestClient *bobRestClient2 = bobRestClient;
+
+        [bobRestClient setRoomHistoryVisibility:roomId historyVisibility:kMXRoomHistoryVisibilityWorldReadable success:^{
+
+            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+            [mxSession start:^{
+
+                MXRoom *room = [mxSession roomWithRoomId:roomId];
+
+                XCTAssertNotNil(room.state.historyVisibility);
+                XCTAssertEqualObjects(room.state.historyVisibility, kMXRoomHistoryVisibilityWorldReadable, @"The room history visibility is wrong");
+
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+    }];
+}
+
+- (void)testRoomHistoryVisibilityLive
+{
+    [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
+
+        MXRestClient *bobRestClient2 = bobRestClient;
+
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+        [mxSession start:^{
+
+            MXRoom *room = [mxSession roomWithRoomId:roomId];
+
+            XCTAssertEqualObjects(room.state.historyVisibility, kMXRoomHistoryVisibilityShared, @"The default room history visibility should be shared");
+
+            // Listen to live event. We should receive only one: a m.room.name event
+            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                XCTAssertEqual(event.eventType, MXEventTypeRoomHistoryVisibility);
+
+                XCTAssertNotNil(room.state.historyVisibility);
+                XCTAssertEqualObjects(room.state.historyVisibility, kMXRoomHistoryVisibilityInvited, @"The room history visibility is wrong");
+;
+
+                [expectation fulfill];
+
+            }];
+
+            // Change the history visibility
+            [room setHistoryVisibility:kMXRoomHistoryVisibilityInvited success:^{
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+    }];
+}
+
+- (void)testRoomJoinRuleProvidedByInitialSync
+{
+    [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
+
+        MXRestClient *bobRestClient2 = bobRestClient;
+
+        [bobRestClient setRoomJoinRule:roomId joinRule:kMXRoomJoinRulePublic success:^{
+
+            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+            [mxSession start:^{
+
+                MXRoom *room = [mxSession roomWithRoomId:roomId];
+
+                XCTAssertNotNil(room.state.joinRule);
+                XCTAssertEqualObjects(room.state.joinRule, kMXRoomJoinRulePublic, @"The room join rule is wrong");
+
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+    }];
+}
+
+- (void)testRoomJoinRuleLive
+{
+    [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
+
+        MXRestClient *bobRestClient2 = bobRestClient;
+
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+        [mxSession start:^{
+
+            MXRoom *room = [mxSession roomWithRoomId:roomId];
+
+            XCTAssertEqualObjects(room.state.joinRule, kMXRoomJoinRuleInvite, @"The default room join rule should be invite");
+
+            // Listen to live event. We should receive only one: a m.room.name event
+            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                XCTAssertEqual(event.eventType, MXEventTypeRoomJoinRules);
+
+                XCTAssertNotNil(room.state.joinRule);
+                XCTAssertEqualObjects(room.state.joinRule, kMXRoomJoinRulePublic, @"The room join rule is wrong");
+
+                [expectation fulfill];
+
+            }];
+
+            // Change the join rule
+            [room setJoinRule:kMXRoomJoinRulePublic success:^{
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        
+    }];
+}
+
+- (void)testRoomGuestAccessProvidedByInitialSync
+{
+    [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
+
+        MXRestClient *bobRestClient2 = bobRestClient;
+
+        [bobRestClient setRoomGuestAccess:roomId guestAccess:kMXRoomGuestAccessCanJoin success:^{
+
+            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+            [mxSession start:^{
+
+                MXRoom *room = [mxSession roomWithRoomId:roomId];
+
+                XCTAssertNotNil(room.state.joinRule);
+                XCTAssertEqualObjects(room.state.guestAccess, kMXRoomGuestAccessCanJoin, @"The room guest access is wrong");
+
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+    }];
+}
+
+- (void)testRoomGuestAccessLive
+{
+    [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
+
+        MXRestClient *bobRestClient2 = bobRestClient;
+
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+        [mxSession start:^{
+
+            MXRoom *room = [mxSession roomWithRoomId:roomId];
+
+            XCTAssertEqualObjects(room.state.guestAccess, kMXRoomGuestAccessForbidden, @"The default room guest access should be forbidden");
+
+            // Listen to live event. We should receive only one: a m.room.name event
+            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                XCTAssertEqual(event.eventType, MXEventTypeRoomGuestAccess);
+
+                XCTAssertNotNil(room.state.guestAccess);
+                XCTAssertEqualObjects(room.state.guestAccess, kMXRoomGuestAccessCanJoin, @"The room guest access is wrong");
+
+                [expectation fulfill];
+
+            }];
+
+            // Change the guest access
+            [room setGuestAccess:kMXRoomGuestAccessCanJoin success:^{
+
             } failure:^(NSError *error) {
                 XCTFail(@"The request should not fail - NSError: %@", error);
                 [expectation fulfill];
@@ -670,7 +887,7 @@
                         
                         // Now, we must have more information about the room
                         // Check its new state
-                        XCTAssertEqual(newRoom.state.isPublic, YES);
+                        XCTAssertEqual(newRoom.state.isJoinRulePublic, YES);
                         XCTAssertEqual(newRoom.state.members.count, 2);
                         XCTAssert([newRoom.state.topic isEqualToString:@"We test room invitation here"], @"Wrong topic. Found: %@", newRoom.state.topic);
                         
