@@ -25,8 +25,8 @@ NSString *const kMXRoomVisibilityPrivate = @"private";
 /**
  Room history visibility.
  */
-NSString *const MXRoomHistoryVisibilityWorldReadable= @"world_readable";
-NSString *const MXRoomHistoryVisibilityShared       = @"shared";
-NSString *const MXRoomHistoryVisibilityInvited      = @"invited";
-NSString *const MXRoomHistoryVisibilityJoined       = @"joined";
+NSString *const kMXRoomHistoryVisibilityWorldReadable= @"world_readable";
+NSString *const kMXRoomHistoryVisibilityShared       = @"shared";
+NSString *const kMXRoomHistoryVisibilityInvited      = @"invited";
+NSString *const kMXRoomHistoryVisibilityJoined       = @"joined";
 

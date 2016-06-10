@@ -43,27 +43,27 @@ typedef NSString* MXRoomHistoryVisibility;
  participating homeserver with anyone, regardless of whether they have ever joined
  the room.
  */
-FOUNDATION_EXPORT NSString *const MXRoomHistoryVisibilityWorldReadable;
+FOUNDATION_EXPORT NSString *const kMXRoomHistoryVisibilityWorldReadable;
 
 /**
  Previous events are always accessible to newly joined members. All events in the
  room are accessible, even those sent when the member was not a part of the room.
  */
-FOUNDATION_EXPORT NSString *const MXRoomHistoryVisibilityShared;
+FOUNDATION_EXPORT NSString *const kMXRoomHistoryVisibilityShared;
 
 /**
  Events are accessible to newly joined members from the point they were invited onwards.
  Events stop being accessible when the member's state changes to something other than
  invite or join.
  */
-FOUNDATION_EXPORT NSString *const MXRoomHistoryVisibilityInvited;
+FOUNDATION_EXPORT NSString *const kMXRoomHistoryVisibilityInvited;
 
 /**
  Events are accessible to newly joined members from the point they joined the room
  onwards. Events stop being accessible when the member's state changes to something
  other than join.
  */
-FOUNDATION_EXPORT NSString *const MXRoomHistoryVisibilityJoined;
+FOUNDATION_EXPORT NSString *const kMXRoomHistoryVisibilityJoined;
 
 /**
  The direction of an event in the timeline.

@@ -257,6 +257,20 @@
     return avatar;
 }
 
+- (MXRoomHistoryVisibility)historyVisibility
+{
+    NSString *historyVisibility = kMXRoomHistoryVisibilityShared;
+
+    // Check it from the state events
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomHistoryVisibility];
+    if (event && [self contentOfEvent:event])
+    {
+        MXJSONModelSetString(historyVisibility, [self contentOfEvent:event][@"history_visibility"]);
+        historyVisibility = [historyVisibility copy];
+    }
+    return historyVisibility;
+}
+
 - (NSString *)displayname
 {
     // Reuse the Synapse web client algo

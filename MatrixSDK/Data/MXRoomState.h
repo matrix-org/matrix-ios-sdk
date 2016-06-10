@@ -21,6 +21,7 @@
 #import "MXRoomMember.h"
 #import "MXRoomThirdPartyInvite.h"
 #import "MXRoomPowerLevels.h"
+#import "MXEnumConstants.h"
 
 @class MXSession;
 
@@ -94,6 +95,11 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
  The avatar url of the room.
  */
 @property (nonatomic, readonly) NSString *avatar;
+
+/**
+ The history visibility of the room.
+ */
+@property (nonatomic, readonly) MXRoomHistoryVisibility historyVisibility;
 
 /**
  The display name of the room.
