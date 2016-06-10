@@ -295,6 +295,80 @@
     }];
 }
 
+- (void)testRoomHistoryVisibilityProvidedByInitialSync
+{
+    [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
+
+        MXRestClient *bobRestClient2 = bobRestClient;
+
+        [bobRestClient setHistoryVisibility:roomId historyVisibility:kMXRoomHistoryVisibilityWorldReadable success:^{
+
+            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+            [mxSession start:^{
+
+                MXRoom *room = [mxSession roomWithRoomId:roomId];
+
+                XCTAssertNotNil(room.state.historyVisibility);
+                XCTAssertEqualObjects(room.state.historyVisibility, kMXRoomHistoryVisibilityWorldReadable, @"The room history visibility is wrong");
+
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+    }];
+}
+
+- (void)testRoomHistoryVisibilityLive
+{
+    [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
+
+        MXRestClient *bobRestClient2 = bobRestClient;
+
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+        [mxSession start:^{
+
+            MXRoom *room = [mxSession roomWithRoomId:roomId];
+
+            XCTAssertEqualObjects(room.state.historyVisibility, kMXRoomHistoryVisibilityShared, @"The default room history visibility should be shared");
+
+            // Listen to live event. We should receive only one: a m.room.name event
+            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                XCTAssertEqual(event.eventType, MXEventTypeRoomHistoryVisibility);
+
+                XCTAssertNotNil(room.state.historyVisibility);
+                XCTAssertEqualObjects(room.state.historyVisibility, kMXRoomHistoryVisibilityInvited, @"The room history visibility is wrong");
+;
+
+                [expectation fulfill];
+
+            }];
+
+            // Change the history visibility
+            [room setHistoryVisibility:kMXRoomHistoryVisibilityInvited success:^{
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+    }];
+}
+
+
 
 - (void)testMembers
 {

@@ -156,6 +156,32 @@
     }];
 }
 
+- (void)testRoomHistoryVisibility
+{
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        __block MXRestClient *bobRestClient2 = bobRestClient;
+        [bobRestClient setHistoryVisibility:roomId historyVisibility:kMXRoomHistoryVisibilityInvited success:^{
+
+            [bobRestClient2 historyVisibilityOfRoom:roomId success:^(MXRoomHistoryVisibility historyVisibility) {
+
+                XCTAssertNotNil(historyVisibility);
+                XCTAssertNotEqual(historyVisibility.length, 0);
+                XCTAssertEqualObjects(historyVisibility, kMXRoomHistoryVisibilityInvited, @"Room history visibility is wrong");
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 - (void)testJoinRoomWithRoomId
 {
     [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {

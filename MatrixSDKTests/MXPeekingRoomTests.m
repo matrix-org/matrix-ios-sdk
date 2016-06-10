@@ -22,6 +22,10 @@
 #import "MXPeekingRoom.h"
 #import "MXError.h"
 
+// Do not bother with retain cycles warnings in tests
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-retain-cycles"
+
 @interface MXPeekingRoomTests : XCTestCase
 {
     MatrixSDKTestsData *matrixSDKTestsData;
@@ -54,30 +58,37 @@
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
 
-        // TODO: Set the room history_visibility to world_readable
+        [room setHistoryVisibility:kMXRoomHistoryVisibilityWorldReadable success:^{
 
-        [matrixSDKTestsData doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
+            [matrixSDKTestsData doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
 
-            mxSession = aliceSession;
+                mxSession = aliceSession;
 
-            XCTAssertEqual(mxSession.rooms.count, 0);
+                XCTAssertEqual(mxSession.rooms.count, 0);
 
-            [mxSession peekInRoomWithRoomId:room.roomId success:^(MXPeekingRoom *peekingRoom) {
+                [mxSession peekInRoomWithRoomId:room.roomId success:^(MXPeekingRoom *peekingRoom) {
 
-                XCTAssertEqual(mxSession.rooms.count, 1, @"MXPeekingRoom must not be listed by mxSession.rooms");
-                XCTAssertEqual(peekingRoom.roomId, room.roomId);
+                    XCTAssertEqual(mxSession.rooms.count, 0, @"MXPeekingRoom must not be listed by mxSession.rooms");
+                    XCTAssertEqual(peekingRoom.roomId, room.roomId);
 
-                XCTAssertEqual(peekingRoom.state.members.count, 1, @"The MXPeekingRoom state must be known now");
+                    XCTAssertEqual(peekingRoom.state.members.count, 1, @"The MXPeekingRoom state must be known now");
 
-                [mxSession stopPeeking:peekingRoom];
+                    [mxSession stopPeeking:peekingRoom];
 
-                [expectation fulfill];
+                    [expectation fulfill];
 
-            } failure:^(NSError *error) {
-                XCTFail(@"The operation should not fail - NSError: %@", error);
-                [expectation fulfill];
+                } failure:^(NSError *error) {
+                    XCTFail(@"The operation should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
             }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
+
+
     }];
 }
 
@@ -135,3 +146,5 @@
 }
 
 @end
+
+#pragma clang diagnostic pop
