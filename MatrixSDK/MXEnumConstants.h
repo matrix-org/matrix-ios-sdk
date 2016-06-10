@@ -22,6 +22,7 @@
  It is supposed to solve cross dependency issues.
  */
 
+
 /**
  Room visibility.
  A nil value is interpreted as private by the homeserver.
@@ -29,6 +30,7 @@
 typedef NSString* MXRoomVisibility;
 FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPublic;
 FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
+
 
 /**
  Room history visibility.
@@ -64,6 +66,31 @@ FOUNDATION_EXPORT NSString *const kMXRoomHistoryVisibilityInvited;
  other than join.
  */
 FOUNDATION_EXPORT NSString *const kMXRoomHistoryVisibilityJoined;
+
+
+/**
+ Room join rule.
+ A nil value is interpreted as invite by the homeserver.
+ */
+typedef NSString* MXRoomJoinRule;
+
+/**
+ Anyone can join the room without any prior action.
+ */
+FOUNDATION_EXPORT NSString *const kMXRoomJoinRulePublic;
+
+/**
+ A user who wishes to join the room must first receive an invite to the room from someone 
+ already inside of the room.
+ */
+FOUNDATION_EXPORT NSString *const kMXRoomJoinRuleInvite;
+
+/**
+ Reeserved keywords which are not implemented by homeservers.
+ */
+FOUNDATION_EXPORT NSString *const kMXRoomJoinRulePrivate;
+FOUNDATION_EXPORT NSString *const kMXRoomJoinRuleKnock;
+
 
 /**
  The direction of an event in the timeline.

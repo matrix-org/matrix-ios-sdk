@@ -1058,6 +1058,35 @@ MXAuthAction;
                            } failure:failure];
 }
 
+- (MXHTTPOperation*)setJoinRule:(NSString*)roomId
+                       joinRule:(MXRoomJoinRule)joinRule
+                        success:(void (^)())success
+                        failure:(void (^)(NSError *error))failure
+{
+    return [self updateStateEvent:kMXEventTypeStringRoomJoinRules
+                        withValue:@{
+                                    @"join_rule": joinRule
+                                    }
+                           inRoom:roomId
+                          success:success failure:failure];
+}
+
+- (MXHTTPOperation*)joinRuleOfRoom:(NSString*)roomId
+                           success:(void (^)(MXRoomJoinRule joinRule))success
+                           failure:(void (^)(NSError *error))failure
+{
+    return [self valueOfStateEvent:kMXEventTypeStringRoomJoinRules
+                            inRoom:roomId
+                           success:^(NSDictionary *JSONResponse) {
+
+                               NSString *joinRule;
+                               MXJSONModelSetString(joinRule, JSONResponse[@"join_rule"]);
+                               success(joinRule);
+
+                           } failure:failure];
+}
+
+
 - (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
                      success:(void (^)(NSString *theRoomId))success
                      failure:(void (^)(NSError *error))failure

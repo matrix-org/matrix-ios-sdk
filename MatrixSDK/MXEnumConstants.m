@@ -30,3 +30,11 @@ NSString *const kMXRoomHistoryVisibilityShared       = @"shared";
 NSString *const kMXRoomHistoryVisibilityInvited      = @"invited";
 NSString *const kMXRoomHistoryVisibilityJoined       = @"joined";
 
+/**
+ Room join rule.
+ */
+NSString *const kMXRoomJoinRulePublic  = @"public";
+NSString *const kMXRoomJoinRuleInvite  = @"invite";
+NSString *const kMXRoomJoinRulePrivate = @"private";
+NSString *const kMXRoomJoinRuleKnock   = @"knock";
+

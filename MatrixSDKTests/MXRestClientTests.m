@@ -182,6 +182,32 @@
     }];
 }
 
+- (void)testRoomJoinRule
+{
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        __block MXRestClient *bobRestClient2 = bobRestClient;
+        [bobRestClient setJoinRule:roomId joinRule:kMXRoomJoinRulePublic success:^{
+
+            [bobRestClient2 joinRuleOfRoom:roomId success:^(MXRoomJoinRule joinRule) {
+
+                XCTAssertNotNil(joinRule);
+                XCTAssertNotEqual(joinRule.length, 0);
+                XCTAssertEqualObjects(joinRule, kMXRoomJoinRulePublic, @"Room join rule is wrong");
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 - (void)testJoinRoomWithRoomId
 {
     [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {

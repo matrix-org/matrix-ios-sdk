@@ -589,7 +589,7 @@ typedef enum : NSUInteger
  Get the history visibility of a room.
 
  @param roomId the id of the room.
- @param success A block object called when the operation succeeds. It provides the room name.
+ @param success A block object called when the operation succeeds. It provides the room history visibility.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
@@ -597,6 +597,34 @@ typedef enum : NSUInteger
 - (MXHTTPOperation*)historyVisibilityOfRoom:(NSString*)roomId
                                     success:(void (^)(MXRoomHistoryVisibility historyVisibility))success
                                     failure:(void (^)(NSError *error))failure;
+
+/**
+ Set the join rule of a room.
+
+ @param roomId the id of the room.
+ @param joinRule the rule to set.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setJoinRule:(NSString*)roomId
+                        joinRule:(MXRoomJoinRule)joinRule
+                         success:(void (^)())success
+                         failure:(void (^)(NSError *error))failure;
+
+/**
+ Get the join rule of a room.
+
+ @param roomId the id of the room.
+ @param success A block object called when the operation succeeds. It provides the room join rule.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)joinRuleOfRoom:(NSString*)roomId
+                            success:(void (^)(MXRoomJoinRule joinRule))success
+                            failure:(void (^)(NSError *error))failure;
 
 /**
  Join a room.
