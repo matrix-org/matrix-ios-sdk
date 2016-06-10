@@ -1086,6 +1086,33 @@ MXAuthAction;
                            } failure:failure];
 }
 
+- (MXHTTPOperation*)setRoomGuestAccess:(NSString*)roomId
+                           guestAccess:(MXRoomGuestAccess)guestAccess
+                               success:(void (^)())success
+                               failure:(void (^)(NSError *error))failure
+{
+    return [self updateStateEvent:kMXEventTypeStringRoomGuestAccess
+                        withValue:@{
+                                    @"guest_access": guestAccess
+                                    }
+                           inRoom:roomId
+                          success:success failure:failure];
+}
+
+- (MXHTTPOperation*)guestAccessOfRoom:(NSString*)roomId
+                              success:(void (^)(MXRoomGuestAccess guestAccess))success
+                              failure:(void (^)(NSError *error))failure
+{
+    return [self valueOfStateEvent:kMXEventTypeStringRoomGuestAccess
+                            inRoom:roomId
+                           success:^(NSDictionary *JSONResponse) {
+
+                               NSString *guestAccess;
+                               MXJSONModelSetString(guestAccess, JSONResponse[@"guest_access"]);
+                               success(guestAccess);
+
+                           } failure:failure];
+}
 
 - (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
                      success:(void (^)(NSString *theRoomId))success

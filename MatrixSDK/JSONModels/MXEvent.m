@@ -29,6 +29,7 @@ NSString *const kMXEventTypeStringRoomJoinRules         = @"m.room.join_rules";
 NSString *const kMXEventTypeStringRoomPowerLevels       = @"m.room.power_levels";
 NSString *const kMXEventTypeStringRoomAliases           = @"m.room.aliases";
 NSString *const kMXEventTypeStringRoomCanonicalAlias    = @"m.room.canonical_alias";
+NSString *const kMXEventTypeStringRoomGuestAccess       = @"m.room.guest_access";
 NSString *const kMXEventTypeStringRoomHistoryVisibility = @"m.room.history_visibility";
 NSString *const kMXEventTypeStringRoomMessage           = @"m.room.message";
 NSString *const kMXEventTypeStringRoomMessageFeedback   = @"m.room.message.feedback";

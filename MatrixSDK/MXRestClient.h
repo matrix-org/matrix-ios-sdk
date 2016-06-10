@@ -627,6 +627,34 @@ typedef enum : NSUInteger
                             failure:(void (^)(NSError *error))failure;
 
 /**
+ Set the guest access of a room.
+
+ @param roomId the id of the room.
+ @param guestAccess the guest access to set.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setRoomGuestAccess:(NSString*)roomId
+                           guestAccess:(MXRoomGuestAccess)guestAccess
+                               success:(void (^)())success
+                               failure:(void (^)(NSError *error))failure;
+
+/**
+ Get the guest access of a room.
+
+ @param roomId the id of the room.
+ @param success A block object called when the operation succeeds. It provides the room guest access.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)guestAccessOfRoom:(NSString*)roomId
+                           success:(void (^)(MXRoomGuestAccess guestAccess))success
+                           failure:(void (^)(NSError *error))failure;
+
+/**
  Join a room.
  
  @param roomIdOrAlias the id or an alias of the room to join.

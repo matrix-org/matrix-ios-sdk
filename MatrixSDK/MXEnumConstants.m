@@ -38,3 +38,8 @@ NSString *const kMXRoomJoinRuleInvite  = @"invite";
 NSString *const kMXRoomJoinRulePrivate = @"private";
 NSString *const kMXRoomJoinRuleKnock   = @"knock";
 
+/**
+ Room guest access.
+ */
+NSString *const kMXRoomGuestAccessCanJoin   = @"can_join";
+NSString *const kMXRoomGuestAccessForbidden = @"forbidden";

@@ -36,7 +36,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
  Room history visibility.
  It controls whether a user can see the events that happened in a room from before they
  joined.
- A nil value is interpreted as @TODO by the homeserver.
+ The default homeserver value is shared.
  */
 typedef NSString* MXRoomHistoryVisibility;
 
@@ -70,7 +70,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomHistoryVisibilityJoined;
 
 /**
  Room join rule.
- A nil value is interpreted as invite by the homeserver.
+ The default homeserver value is invite.
  */
 typedef NSString* MXRoomJoinRule;
 
@@ -86,10 +86,27 @@ FOUNDATION_EXPORT NSString *const kMXRoomJoinRulePublic;
 FOUNDATION_EXPORT NSString *const kMXRoomJoinRuleInvite;
 
 /**
- Reeserved keywords which are not implemented by homeservers.
+ Reserved keywords which are not implemented by homeservers.
  */
 FOUNDATION_EXPORT NSString *const kMXRoomJoinRulePrivate;
 FOUNDATION_EXPORT NSString *const kMXRoomJoinRuleKnock;
+
+
+/**
+ Room guest access.
+ The default homeserver value is forbidden.
+ */
+typedef NSString* MXRoomGuestAccess;
+
+/**
+ Guests can join the room.
+ */
+FOUNDATION_EXPORT NSString *const kMXRoomGuestAccessCanJoin;
+
+/**
+ Guest access is forbidden.
+ */
+FOUNDATION_EXPORT NSString *const kMXRoomGuestAccessForbidden;
 
 
 /**

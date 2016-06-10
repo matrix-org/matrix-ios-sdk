@@ -208,6 +208,32 @@
     }];
 }
 
+- (void)testRoomGuestAccess
+{
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        __block MXRestClient *bobRestClient2 = bobRestClient;
+        [bobRestClient setRoomGuestAccess:roomId guestAccess:kMXRoomGuestAccessCanJoin success:^{
+
+            [bobRestClient2 guestAccessOfRoom:roomId success:^(MXRoomGuestAccess guestAccess) {
+
+                XCTAssertNotNil(guestAccess);
+                XCTAssertNotEqual(guestAccess.length, 0);
+                XCTAssertEqualObjects(guestAccess, kMXRoomGuestAccessCanJoin, @"Room guest access is wrong");
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 - (void)testJoinRoomWithRoomId
 {
     [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
