@@ -866,6 +866,7 @@ MXAuthAction;
  Generic method to set the value of a state event of a room.
 
  @param eventType the type of the state event.
+ @param value the value to set.
  @param roomId the id of the room.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
