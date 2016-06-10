@@ -25,6 +25,7 @@
 #import "MXHTTPOperation.h"
 #import "MXCall.h"
 #import "MXEventTimeline.h"
+#import "MXRestClient.h"
 
 @class MXRoom;
 @class MXSession;
@@ -285,6 +286,19 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 - (MXHTTPOperation*)setName:(NSString*)name
                     success:(void (^)())success
                     failure:(void (^)(NSError *error))failure;
+
+/**
+ Set the history visibility of the room.
+
+ @param historyVisibility the visibily to set.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setHistoryVisibility:(MXRoomHistoryVisibility)historyVisibility
+                                 success:(void (^)())success
+                                 failure:(void (^)(NSError *error))failure;
 
 /**
  Join this room where the user has been invited.
