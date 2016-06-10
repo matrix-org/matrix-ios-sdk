@@ -39,20 +39,6 @@ NSString *const kMXContentUriScheme  = @"mxc://";
 NSString *const kMXContentPrefixPath = @"/_matrix/media/v1";
 
 /**
- Room visibility
- */
-NSString *const kMXRoomVisibilityPublic  = @"public";
-NSString *const kMXRoomVisibilityPrivate = @"private";
-
-/**
- Room history visibility.
- */
-NSString *const MXRoomHistoryVisibilityWorldReadable= @"world_readable";
-NSString *const MXRoomHistoryVisibilityShared       = @"shared";
-NSString *const MXRoomHistoryVisibilityInvited      = @"invited";
-NSString *const MXRoomHistoryVisibilityJoined       = @"joined";
-
-/**
  Account data types
  */
 NSString *const kMXAccountDataTypeIgnoredUserList = @"m.ignored_user_list";

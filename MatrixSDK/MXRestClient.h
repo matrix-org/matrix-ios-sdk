@@ -49,49 +49,6 @@ FOUNDATION_EXPORT NSString *const kMXContentUriScheme;
 FOUNDATION_EXPORT NSString *const kMXContentPrefixPath;
 
 /**
- Room visibility.
- A nil value is interpreted as private by the homeserver.
- */
-typedef NSString* MXRoomVisibility;
-FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPublic;
-FOUNDATION_EXPORT NSString *const kMXRoomVisibilityPrivate;
-
-/**
- Room history visibility.
- It controls whether a user can see the events that happened in a room from before they
- joined.
- A nil value is interpreted as @TODO by the homeserver.
- */
-typedef NSString* MXRoomHistoryVisibility;
-
-/**
- All events while this is the m.room.history_visibility value may be shared by any
- participating homeserver with anyone, regardless of whether they have ever joined
- the room.
- */
-FOUNDATION_EXPORT NSString *const MXRoomHistoryVisibilityWorldReadable;
-
-/**
- Previous events are always accessible to newly joined members. All events in the
- room are accessible, even those sent when the member was not a part of the room.
- */
-FOUNDATION_EXPORT NSString *const MXRoomHistoryVisibilityShared;
-
-/**
- Events are accessible to newly joined members from the point they were invited onwards.
- Events stop being accessible when the member's state changes to something other than
- invite or join.
- */
-FOUNDATION_EXPORT NSString *const MXRoomHistoryVisibilityInvited;
-
-/**
- Events are accessible to newly joined members from the point they joined the room
- onwards. Events stop being accessible when the member's state changes to something
- other than join.
- */
-FOUNDATION_EXPORT NSString *const MXRoomHistoryVisibilityJoined;
-
-/**
  Account data types
  */
 FOUNDATION_EXPORT NSString *const kMXAccountDataPushRules;

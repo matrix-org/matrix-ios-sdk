@@ -25,7 +25,6 @@
 #import "MXHTTPOperation.h"
 #import "MXCall.h"
 #import "MXEventTimeline.h"
-#import "MXRestClient.h"
 
 @class MXRoom;
 @class MXSession;
