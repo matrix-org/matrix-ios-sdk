@@ -274,6 +274,13 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     return [mxSession.matrixRestClient setHistoryVisibility:self.state.roomId historyVisibility:historyVisibility success:success failure:failure];
 }
 
+- (MXHTTPOperation*)setJoinRule:(MXRoomJoinRule)joinRule
+                        success:(void (^)())success
+                        failure:(void (^)(NSError *error))failure
+{
+    return [mxSession.matrixRestClient setJoinRule:self.state.roomId joinRule:joinRule success:success failure:failure];
+}
+
 - (MXHTTPOperation*)join:(void (^)())success
                  failure:(void (^)(NSError *error))failure
 {

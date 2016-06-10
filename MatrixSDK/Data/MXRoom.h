@@ -289,7 +289,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 /**
  Set the history visibility of the room.
 
- @param historyVisibility the visibily to set.
+ @param historyVisibility the history visibility to set.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
 
@@ -298,6 +298,19 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 - (MXHTTPOperation*)setHistoryVisibility:(MXRoomHistoryVisibility)historyVisibility
                                  success:(void (^)())success
                                  failure:(void (^)(NSError *error))failure;
+
+/**
+ Set the join rule of the room.
+
+ @param joinRule the join rule to set.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setJoinRule:(MXRoomJoinRule)joinRule
+                        success:(void (^)())success
+                        failure:(void (^)(NSError *error))failure;
 
 /**
  Join this room where the user has been invited.

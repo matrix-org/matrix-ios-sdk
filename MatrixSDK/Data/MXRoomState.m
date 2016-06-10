@@ -259,7 +259,7 @@
 
 - (MXRoomHistoryVisibility)historyVisibility
 {
-    NSString *historyVisibility = kMXRoomHistoryVisibilityShared;
+    MXRoomHistoryVisibility historyVisibility = kMXRoomHistoryVisibilityShared;
 
     // Check it from the state events
     MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomHistoryVisibility];
@@ -269,6 +269,20 @@
         historyVisibility = [historyVisibility copy];
     }
     return historyVisibility;
+}
+
+- (MXRoomJoinRule)joinRule
+{
+    MXRoomJoinRule joinRule = kMXRoomJoinRuleInvite;
+
+    // Check it from the state events
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomJoinRules];
+    if (event && [self contentOfEvent:event])
+    {
+        MXJSONModelSetString(joinRule, [self contentOfEvent:event][@"join_rule"]);
+        joinRule = [joinRule copy];
+    }
+    return joinRule;
 }
 
 - (NSString *)displayname
