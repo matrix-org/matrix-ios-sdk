@@ -580,10 +580,10 @@ typedef enum : NSUInteger
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)setHistoryVisibility:(NSString*)roomId
-                       historyVisibility:(MXRoomHistoryVisibility)historyVisibility
-                                 success:(void (^)())success
-                                 failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)setRoomHistoryVisibility:(NSString*)roomId
+                           historyVisibility:(MXRoomHistoryVisibility)historyVisibility
+                                     success:(void (^)())success
+                                     failure:(void (^)(NSError *error))failure;
 
 /**
  Get the history visibility of a room.

@@ -1030,10 +1030,10 @@ MXAuthAction;
                            } failure:failure];
 }
 
-- (MXHTTPOperation *)setHistoryVisibility:(NSString *)roomId
-                        historyVisibility:(MXRoomHistoryVisibility)historyVisibility
-                                  success:(void (^)())success
-                                  failure:(void (^)(NSError *))failure
+- (MXHTTPOperation *)setRoomHistoryVisibility:(NSString *)roomId
+                            historyVisibility:(MXRoomHistoryVisibility)historyVisibility
+                                      success:(void (^)())success
+                                      failure:(void (^)(NSError *))failure
 {
     return [self updateStateEvent:kMXEventTypeStringRoomHistoryVisibility
                         withValue:@{

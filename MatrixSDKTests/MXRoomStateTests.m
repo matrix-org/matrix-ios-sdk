@@ -301,7 +301,7 @@
 
         MXRestClient *bobRestClient2 = bobRestClient;
 
-        [bobRestClient setHistoryVisibility:roomId historyVisibility:kMXRoomHistoryVisibilityWorldReadable success:^{
+        [bobRestClient setRoomHistoryVisibility:roomId historyVisibility:kMXRoomHistoryVisibilityWorldReadable success:^{
 
             mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
             [mxSession start:^{

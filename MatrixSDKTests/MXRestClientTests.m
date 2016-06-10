@@ -161,7 +161,7 @@
     [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         __block MXRestClient *bobRestClient2 = bobRestClient;
-        [bobRestClient setHistoryVisibility:roomId historyVisibility:kMXRoomHistoryVisibilityInvited success:^{
+        [bobRestClient setRoomHistoryVisibility:roomId historyVisibility:kMXRoomHistoryVisibilityInvited success:^{
 
             [bobRestClient2 historyVisibilityOfRoom:roomId success:^(MXRoomHistoryVisibility historyVisibility) {
 
