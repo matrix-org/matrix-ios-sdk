@@ -313,6 +313,19 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
                         failure:(void (^)(NSError *error))failure;
 
 /**
+ Set the guest access of the room.
+
+ @param guestAccess the guest access to set.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setGuestAccess:(MXRoomGuestAccess)guestAccess
+                           success:(void (^)())success
+                           failure:(void (^)(NSError *error))failure;
+
+/**
  Join this room where the user has been invited.
  
  @param success A block object called when the operation is complete.

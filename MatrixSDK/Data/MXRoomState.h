@@ -107,6 +107,11 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
 @property (nonatomic, readonly) MXRoomJoinRule joinRule;
 
 /**
+ The guest access of the room.
+ */
+@property (nonatomic, readonly) MXRoomGuestAccess guestAccess;
+
+/**
  The display name of the room.
  It is computed from information retrieved so far.
  */

@@ -285,6 +285,20 @@
     return joinRule;
 }
 
+- (MXRoomGuestAccess)guestAccess
+{
+    MXRoomGuestAccess guestAccess = kMXRoomGuestAccessForbidden;
+
+    // Check it from the state events
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomGuestAccess];
+    if (event && [self contentOfEvent:event])
+    {
+        MXJSONModelSetString(guestAccess, [self contentOfEvent:event][@"guest_access"]);
+        guestAccess = [guestAccess copy];
+    }
+    return guestAccess;
+}
+
 - (NSString *)displayname
 {
     // Reuse the Synapse web client algo

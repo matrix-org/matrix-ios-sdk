@@ -440,6 +440,78 @@
     }];
 }
 
+- (void)testRoomGuestAccessProvidedByInitialSync
+{
+    [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
+
+        MXRestClient *bobRestClient2 = bobRestClient;
+
+        [bobRestClient setRoomGuestAccess:roomId guestAccess:kMXRoomGuestAccessCanJoin success:^{
+
+            mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+            [mxSession start:^{
+
+                MXRoom *room = [mxSession roomWithRoomId:roomId];
+
+                XCTAssertNotNil(room.state.joinRule);
+                XCTAssertEqualObjects(room.state.guestAccess, kMXRoomGuestAccessCanJoin, @"The room guest access is wrong");
+
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+    }];
+}
+
+- (void)testRoomGuestAccessLive
+{
+    [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
+
+        MXRestClient *bobRestClient2 = bobRestClient;
+
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+        [mxSession start:^{
+
+            MXRoom *room = [mxSession roomWithRoomId:roomId];
+
+            XCTAssertEqualObjects(room.state.guestAccess, kMXRoomGuestAccessForbidden, @"The default room guest access should be forbidden");
+
+            // Listen to live event. We should receive only one: a m.room.name event
+            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                XCTAssertEqual(event.eventType, MXEventTypeRoomGuestAccess);
+
+                XCTAssertNotNil(room.state.guestAccess);
+                XCTAssertEqualObjects(room.state.guestAccess, kMXRoomGuestAccessCanJoin, @"The room guest access is wrong");
+
+                [expectation fulfill];
+
+            }];
+
+            // Change the guest access
+            [room setGuestAccess:kMXRoomGuestAccessCanJoin success:^{
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        
+    }];
+}
+
 
 - (void)testMembers
 {
