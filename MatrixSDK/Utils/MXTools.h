@@ -44,6 +44,20 @@
 + (BOOL)isEmailAddress:(NSString *)inputString;
 
 /**
+ Check whether a string is formatted as a matrix room alias.
+ 
+ @return YES if the provided string is formatted as a matrix room alias.
+ */
++ (BOOL)isMatrixRoomAlias:(NSString *)inputString;
+
+/**
+ Check whether a string is formatted as a matrix room identifier.
+ 
+ @return YES if the provided string is formatted as a matrix room identifier.
+ */
++ (BOOL)isMatrixRoomIdentifier:(NSString *)inputString;
+
+/**
  Removing new line characters from NSString.
  The new line characters are replaced with a space character.
  Only one space is used to replace successive new line characters spaced or not.
