@@ -1306,6 +1306,8 @@ typedef void (^MXOnResumeDone)();
         // The room is not peekable, release the object
         [peekingRooms removeObject:peekingRoom];
         [peekingRoom close];
+        
+        NSLog(@"[MXSession] The room is not peekable");
 
         failure(error);
 
