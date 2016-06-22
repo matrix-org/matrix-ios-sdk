@@ -44,6 +44,13 @@
 + (BOOL)isEmailAddress:(NSString *)inputString;
 
 /**
+ Check whether a string is formatted as a matrix user identifier.
+ 
+ @return YES if the provided string is formatted as a matrix user id.
+ */
++ (BOOL)isMatrixUserIdentifier:(NSString *)inputString;
+
+/**
  Check whether a string is formatted as a matrix room alias.
  
  @return YES if the provided string is formatted as a matrix room alias.
