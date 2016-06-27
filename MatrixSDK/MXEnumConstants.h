@@ -117,6 +117,12 @@ FOUNDATION_EXPORT NSString *const kMXRoomGuestAccessForbidden;
 
 
 /**
+ Format for room message event with a "formatted_body" using the "org.matrix.custom.html" format.
+ */
+FOUNDATION_EXPORT NSString *const kMXRoomMessageFormatHTML;
+
+
+/**
  The direction of an event in the timeline.
  */
 typedef enum : NSUInteger

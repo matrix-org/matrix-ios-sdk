@@ -44,3 +44,5 @@ NSString *const kMXRoomJoinRuleKnock   = @"knock";
 NSString *const kMXRoomGuestAccessCanJoin   = @"can_join";
 NSString *const kMXRoomGuestAccessForbidden = @"forbidden";
 
+NSString *const kMXRoomMessageFormatHTML = @"org.matrix.custom.html";
+
