@@ -58,7 +58,7 @@
         if (!regex)
         {
             // defined it.
-            regex = [NSRegularExpression regularExpressionWithPattern:[self globToRegex:pattern] options:0 error:nil];
+            regex = [NSRegularExpression regularExpressionWithPattern:[self globToRegex:pattern] options:NSRegularExpressionCaseInsensitive error:nil];
             [regExByPatternDict setObject:regex forKey:pattern];
         }
            
