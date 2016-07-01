@@ -1,3 +1,20 @@
+Changes in Matrix iOS SDK in 0.6.9 (2016-07-01)
+===============================================
+
+Improvements:
+ * MXPeekingRoom (New): This class allows to get data from a room the user has not joined yet.
+ * MXRoom: Add API to change room settings: history visibility, join rule, guest access, directory visibility.
+ * MXTools: Add isMatrixRoomAlias, isMatrixRoomIdentifier and isMatrixUserIdentifier methods.
+
+Bug fixes:
+ * MXRestClient: can't join rooms with utf-8 alias (https://github.com/vector-im/vector-ios/issues/374)
+ * Push rules: strings comparisons are now case insensitive (https://github.com/vector-im/vector-ios/issues/410)
+ 
+Breaks:
+ * kMXRoomVisibility* consts have been renamed to kMXRoomDirectoryVisibility*
+ * MXRoom: isPublic has been replaced by isJoinRulePublic
+ 
+ 
 Changes in Matrix iOS SDK in 0.6.8 (2016-06-01)
 ===============================================
 

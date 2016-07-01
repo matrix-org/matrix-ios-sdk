@@ -55,28 +55,39 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 #pragma mark - Initialisation
 - (id)initWithRoom:(MXRoom*)room2 andInitialEventId:(NSString*)initialEventId
 {
+    // Is it a past or live timeline?
+    if (initialEventId)
+    {
+        // Events for a past timeline are stored in memory
+        MXMemoryStore *memoryStore = [[MXMemoryStore alloc] init];
+        [memoryStore openWithCredentials:room2.mxSession.matrixRestClient.credentials onComplete:nil failure:nil];
+
+        self = [self initWithRoom:room2 initialEventId:initialEventId andStore:memoryStore];
+    }
+    else
+    {
+        // Live: store events in the session store
+        self = [self initWithRoom:room2 initialEventId:initialEventId andStore:room2.mxSession.store];
+    }
+    return self;
+}
+
+- (id)initWithRoom:(MXRoom*)room2 initialEventId:(NSString*)initialEventId andStore:(id<MXStore>)store2
+{
     self = [super init];
     if (self)
     {
         _initialEventId = initialEventId;
         room = room2;
+        store = store2;
         eventListeners = [NSMutableArray array];
 
-        _state = [[MXRoomState alloc] initWithRoomId:room.roomId andMatrixSession:room.mxSession andDirection:YES];
-
-        // Is it a past or live timeline?
-        if (_initialEventId)
+        if (!initialEventId)
         {
-            // Events for a past timeline are store in memory
-            store = [[MXMemoryStore alloc] init];
-            [store openWithCredentials:room.mxSession.matrixRestClient.credentials onComplete:nil failure:nil];
-        }
-        else
-        {
-            // Live: store events in the session store
             _isLiveTimeline = YES;
-            store = room.mxSession.store;
         }
+
+        _state = [[MXRoomState alloc] initWithRoomId:room.roomId andMatrixSession:room.mxSession andDirection:YES];
     }
     return self;
 }

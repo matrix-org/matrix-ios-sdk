@@ -26,14 +26,55 @@
     if (roomPowerLevels)
     {
         MXJSONModelSetDictionary(roomPowerLevels.users, JSONDictionary[@"users"]);
-        MXJSONModelSetInteger(roomPowerLevels.usersDefault, JSONDictionary[@"users_default"]);
         MXJSONModelSetInteger(roomPowerLevels.ban, JSONDictionary[@"ban"]);
         MXJSONModelSetInteger(roomPowerLevels.kick, JSONDictionary[@"kick"]);
         MXJSONModelSetInteger(roomPowerLevels.redact, JSONDictionary[@"redact"]);
         MXJSONModelSetInteger(roomPowerLevels.invite, JSONDictionary[@"invite"]);
         MXJSONModelSetDictionary(roomPowerLevels.events, JSONDictionary[@"events"]);
-        MXJSONModelSetInteger(roomPowerLevels.eventsDefault, JSONDictionary[@"events_default"]);
-        MXJSONModelSetInteger(roomPowerLevels.stateDefault, JSONDictionary[@"state_default"]);
+        
+        // Read here default value by supporting the legacy CamelCase keys
+        if (JSONDictionary[@"users_default"])
+        {
+            MXJSONModelSetInteger(roomPowerLevels.usersDefault, JSONDictionary[@"users_default"]);
+        }
+        else if (JSONDictionary[@"usersDefault"])
+        {
+            MXJSONModelSetInteger(roomPowerLevels.usersDefault, JSONDictionary[@"usersDefault"]);
+        }
+        else
+        {
+            // It is assumed to be 0
+            roomPowerLevels.usersDefault = 0;
+        }
+        
+        if (JSONDictionary[@"events_default"])
+        {
+            MXJSONModelSetInteger(roomPowerLevels.eventsDefault, JSONDictionary[@"events_default"]);
+        }
+        else if (JSONDictionary[@"eventsDefault"])
+        {
+            MXJSONModelSetInteger(roomPowerLevels.eventsDefault, JSONDictionary[@"eventsDefault"]);
+        }
+        else
+        {
+            // It is assumed to be 0
+            roomPowerLevels.eventsDefault = 0;
+        }
+        
+        if (JSONDictionary[@"state_default"])
+        {
+            MXJSONModelSetInteger(roomPowerLevels.stateDefault, JSONDictionary[@"state_default"]);
+        }
+        else if (JSONDictionary[@"stateDefault"])
+        {
+            MXJSONModelSetInteger(roomPowerLevels.stateDefault, JSONDictionary[@"stateDefault"]);
+        }
+        else
+        {
+            // state_default defaults to 50 if there is a power level event but no states_default key.
+            roomPowerLevels.stateDefault = 50;
+        }
+        
     }
     return roomPowerLevels;
 }
@@ -46,9 +87,9 @@
         // Filled default values as specified by the doc
         _usersDefault = 0;
 
-        // @TODO: are the following values still true as the doc is currently obsolete?
-        _eventsDefault = 50;
-        _stateDefault = 50;
+        // If the room contains no power_levels event, the state_default is 0. The events_default is 0 in either of these cases.
+        _eventsDefault = 0;
+        _stateDefault = 0;
     }
     return self;
 }
@@ -112,14 +153,14 @@
     NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
 
     JSONDictionary[@"users"] = _users;
-    JSONDictionary[@"usersDefault"] = @(_usersDefault);
+    JSONDictionary[@"users_default"] = @(_usersDefault);
     JSONDictionary[@"ban"] = @(_ban);
     JSONDictionary[@"kick"] = @(_kick);
     JSONDictionary[@"redact"] = @(_redact);
     JSONDictionary[@"invite"] = @(_invite);
     JSONDictionary[@"events"] = _events;
-    JSONDictionary[@"eventsDefault"] = @(_eventsDefault);
-    JSONDictionary[@"stateDefault"] = @(_stateDefault);
+    JSONDictionary[@"events_default"] = @(_eventsDefault);
+    JSONDictionary[@"state_default"] = @(_stateDefault);
 
     return JSONDictionary;
 }

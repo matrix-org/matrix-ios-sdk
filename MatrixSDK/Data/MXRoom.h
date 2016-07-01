@@ -137,9 +137,35 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  */
 @property (nonatomic) NSArray* unreadEventTypes;
 
+/**
+ Create a `MXRoom` instance.
+
+ @param roomId the id of the room.
+ @param mxSession the session to use.
+ @return the new instance.
+ */
 - (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession;
 
+/**
+ Create a `MXRoom` instance from room state and account data already available.
+
+ @param roomId the id of the room.
+ @param mxSession the session to use.
+ @param stateEvents the state events of the room.
+ @param accountData the account data for the room.
+ @return the new instance.
+ */
 - (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession andStateEvents:(NSArray*)stateEvents andAccountData:(MXRoomAccountData*)accountData;
+
+/**
+ Create a `MXRoom` instance by specifying the store the live timeline must use.
+
+ @param roomId the id of the room.
+ @param mxSession the session to use.
+ @param store the store to use to store live timeline events.
+ @return the new instance.
+ */
+- (id)initWithRoomId:(NSString *)roomId matrixSession:(MXSession *)mxSession andStore:(id<MXStore>)store;
 
 #pragma mark - server sync
 
@@ -259,6 +285,74 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 - (MXHTTPOperation*)setName:(NSString*)name
                     success:(void (^)())success
                     failure:(void (^)(NSError *error))failure;
+
+/**
+ Set the history visibility of the room.
+
+ @param historyVisibility the history visibility to set.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setHistoryVisibility:(MXRoomHistoryVisibility)historyVisibility
+                                 success:(void (^)())success
+                                 failure:(void (^)(NSError *error))failure;
+
+/**
+ Set the join rule of the room.
+
+ @param joinRule the join rule to set.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setJoinRule:(MXRoomJoinRule)joinRule
+                        success:(void (^)())success
+                        failure:(void (^)(NSError *error))failure;
+
+/**
+ Set the guest access of the room.
+
+ @param guestAccess the guest access to set.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setGuestAccess:(MXRoomGuestAccess)guestAccess
+                           success:(void (^)())success
+                           failure:(void (^)(NSError *error))failure;
+
+/**
+ Set the visbility of the room in the current HS's room directory.
+
+ @param directoryVisibility the directory visibility to set.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setDirectoryVisibility:(MXRoomDirectoryVisibility)directoryVisibility
+                                   success:(void (^)())success
+                                   failure:(void (^)(NSError *error))failure;
+
+/**
+ Get the visibility of the room in the current HS's room directory.
+ 
+ Note: This information is not part of the room state because it is related
+ to the current homeserver.
+ There is currently no way to be updated on directory visibility change. That's why a
+ request must be issued everytime.
+
+ @param success A block object called when the operation succeeds. It provides the room directory visibility.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)directoryVisibility:(void (^)(MXRoomDirectoryVisibility directoryVisibility))success
+                                failure:(void (^)(NSError *error))failure;
 
 /**
  Join this room where the user has been invited.

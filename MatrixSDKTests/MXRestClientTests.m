@@ -156,6 +156,110 @@
     }];
 }
 
+- (void)testRoomHistoryVisibility
+{
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        __block MXRestClient *bobRestClient2 = bobRestClient;
+        [bobRestClient setRoomHistoryVisibility:roomId historyVisibility:kMXRoomHistoryVisibilityInvited success:^{
+
+            [bobRestClient2 historyVisibilityOfRoom:roomId success:^(MXRoomHistoryVisibility historyVisibility) {
+
+                XCTAssertNotNil(historyVisibility);
+                XCTAssertNotEqual(historyVisibility.length, 0);
+                XCTAssertEqualObjects(historyVisibility, kMXRoomHistoryVisibilityInvited, @"Room history visibility is wrong");
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testRoomJoinRule
+{
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        __block MXRestClient *bobRestClient2 = bobRestClient;
+        [bobRestClient setRoomJoinRule:roomId joinRule:kMXRoomJoinRulePublic success:^{
+
+            [bobRestClient2 joinRuleOfRoom:roomId success:^(MXRoomJoinRule joinRule) {
+
+                XCTAssertNotNil(joinRule);
+                XCTAssertNotEqual(joinRule.length, 0);
+                XCTAssertEqualObjects(joinRule, kMXRoomJoinRulePublic, @"Room join rule is wrong");
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testRoomGuestAccess
+{
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        __block MXRestClient *bobRestClient2 = bobRestClient;
+        [bobRestClient setRoomGuestAccess:roomId guestAccess:kMXRoomGuestAccessCanJoin success:^{
+
+            [bobRestClient2 guestAccessOfRoom:roomId success:^(MXRoomGuestAccess guestAccess) {
+
+                XCTAssertNotNil(guestAccess);
+                XCTAssertNotEqual(guestAccess.length, 0);
+                XCTAssertEqualObjects(guestAccess, kMXRoomGuestAccessCanJoin, @"Room guest access is wrong");
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testRoomDirectoryVisibility
+{
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        __block MXRestClient *bobRestClient2 = bobRestClient;
+        [bobRestClient setRoomDirectoryVisibility:roomId directoryVisibility:kMXRoomDirectoryVisibilityPublic success:^{
+
+            [bobRestClient2 directoryVisibilityOfRoom:roomId success:^(MXRoomDirectoryVisibility directoryVisibility) {
+
+                XCTAssertNotNil(directoryVisibility);
+                XCTAssertNotEqual(directoryVisibility.length, 0);
+                XCTAssertEqualObjects(directoryVisibility, kMXRoomDirectoryVisibilityPublic, @"Room directory visibility is wrong");
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 - (void)testJoinRoomWithRoomId
 {
     [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {

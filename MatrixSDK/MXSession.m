@@ -30,7 +30,7 @@
 
 #pragma mark - Constants definitions
 
-const NSString *MatrixSDKVersion = @"0.6.8";
+const NSString *MatrixSDKVersion = @"0.6.9";
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
@@ -112,6 +112,11 @@ typedef void (^MXOnResumeDone)();
      The account data.
      */
     MXAccountData *accountData;
+
+    /**
+     The rooms being peeked.
+     */
+    NSMutableArray<MXPeekingRoom *> *peekingRooms;
 }
 @end
 
@@ -131,6 +136,7 @@ typedef void (^MXOnResumeDone)();
         syncMessagesLimit = -1;
         _notificationCenter = [[MXNotificationCenter alloc] initWithMatrixSession:self];
         accountData = [[MXAccountData alloc] init];
+        peekingRooms = [NSMutableArray array];
         
         [self setState:MXSessionStateInitialised];
     }
@@ -334,7 +340,12 @@ typedef void (^MXOnResumeDone)();
         // Cancel the current request managing the event stream
         [eventStreamRequest cancel];
         eventStreamRequest = nil;
-        
+
+        for (MXPeekingRoom *peekingRoom in peekingRooms)
+        {
+            [peekingRoom pause];
+        }
+
         [self setState:MXSessionStatePaused];
     }
 }
@@ -354,6 +365,11 @@ typedef void (^MXOnResumeDone)();
             // Relaunch live events stream (long polling)
             [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
         }
+    }
+
+    for (MXPeekingRoom *peekingRoom in peekingRooms)
+    {
+        [peekingRoom resume];
     }
 }
 
@@ -432,7 +448,14 @@ typedef void (^MXOnResumeDone)();
         [user removeAllListeners];
     }
     [users removeAllObjects];
-    
+
+    // Clean peeking rooms
+    for (MXPeekingRoom *peekingRoom in peekingRooms)
+    {
+        [peekingRoom close];
+    }
+    [peekingRooms removeAllObjects];
+
     [oneToOneRooms removeAllObjects];
 
     // Clean notification center
@@ -501,13 +524,13 @@ typedef void (^MXOnResumeDone)();
                 }
                 else
                 {
-                    isOneToOneRoom = (!room.state.isPublic && room.state.members.count == 2);
+                    isOneToOneRoom = (!room.state.isJoinRulePublic && room.state.members.count == 2);
                 }
                 
                 // Sync room
                 [room handleJoinedRoomSync:roomSync];
 
-                if (isOneToOneRoom || (!room.state.isPublic && room.state.members.count == 2))
+                if (isOneToOneRoom || (!room.state.isJoinRulePublic && room.state.members.count == 2))
                 {
                     // Update one-to-one room dictionary
                     [self handleOneToOneRoom:room];
@@ -881,7 +904,7 @@ typedef void (^MXOnResumeDone)();
 
 #pragma mark - Rooms operations
 - (MXHTTPOperation*)createRoom:(NSString*)name
-                    visibility:(MXRoomVisibility)visibility
+                    visibility:(MXRoomDirectoryVisibility)visibility
                      roomAlias:(NSString*)roomAlias
                          topic:(NSString*)topic
                        success:(void (^)(MXRoom *room))success
@@ -1128,7 +1151,7 @@ typedef void (^MXOnResumeDone)();
     [rooms setObject:room forKey:room.state.roomId];
     
     // We store one-to-one room in a second dictionary to ease their reuse.
-    if (!room.state.isPublic && room.state.members.count == 2)
+    if (!room.state.isJoinRulePublic && room.state.members.count == 2)
     {
         [self handleOneToOneRoom:room];
     }
@@ -1160,7 +1183,7 @@ typedef void (^MXOnResumeDone)();
         [_store deleteRoom:roomId];
         
         // Clean one-to-one room dictionary
-        if (!room.state.isPublic && room.state.members.count == 2)
+        if (!room.state.isJoinRulePublic && room.state.members.count == 2)
         {
             [self removeOneToOneRoom:room];
         }
@@ -1265,6 +1288,37 @@ typedef void (^MXOnResumeDone)();
     }
 }
 
+
+#pragma mark - Room peeking
+- (void)peekInRoomWithRoomId:(NSString*)roomId
+                     success:(void (^)(MXPeekingRoom *peekingRoom))success
+                     failure:(void (^)(NSError *error))failure
+{
+    MXPeekingRoom *peekingRoom = [[MXPeekingRoom alloc] initWithRoomId:roomId andMatrixSession:self];
+    [peekingRooms addObject:peekingRoom];
+
+    [peekingRoom start:^{
+
+        success(peekingRoom);
+
+    } failure:^(NSError *error) {
+
+        // The room is not peekable, release the object
+        [peekingRooms removeObject:peekingRoom];
+        [peekingRoom close];
+        
+        NSLog(@"[MXSession] The room is not peekable");
+
+        failure(error);
+
+    }];
+}
+
+- (void)stopPeeking:(MXPeekingRoom*)peekingRoom
+{
+    [peekingRooms removeObject:peekingRoom];
+    [peekingRoom close];
+}
 
 #pragma mark - Matrix users
 - (MXUser *)userWithUserId:(NSString *)userId

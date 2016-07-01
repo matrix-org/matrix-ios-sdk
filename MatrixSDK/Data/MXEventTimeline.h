@@ -22,20 +22,6 @@
 #import "MXHTTPOperation.h"
 
 /**
- The direction of an event in the timeline.
- */
-typedef enum : NSUInteger
-{
-    // Forwards when the event is added to the end of the timeline.
-    // These events come from the /sync stream or from forwards pagination.
-    MXTimelineDirectionForwards,
-
-    // Backwards when the event is added to the start of the timeline.
-    // These events come from a back pagination.
-    MXTimelineDirectionBackwards
-} MXTimelineDirection;
-
-/**
  Prefix used to build fake invite event.
  */
 FOUNDATION_EXPORT NSString *const kMXRoomInviteStateEventIdPrefix;
@@ -51,7 +37,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomInviteStateEventIdPrefix;
 typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState);
 
 @class MXRoom;
-
+@protocol MXStore;
 
 /**
  A `MXEventTimeline` instance represents a contiguous sequence of events in a room.
@@ -90,11 +76,24 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
 /**
  Create a timeline instance for a room.
 
+ If the timeline is live, the events will be stored to the MXSession instance store.
+ Else, they will be only stored in memory and released on [MXEventTimeline destroy].
+
  @param room the room associated to the timeline
  @param initialEventId the initial event for the timeline. A nil value will create a live timeline.
  @return a MXEventTimeline instance.
  */
 - (id)initWithRoom:(MXRoom*)room andInitialEventId:(NSString*)initialEventId;
+
+/**
+ Create a timeline instance for a room and force it to use the given MXStore to store events.
+
+ @param room the room associated to the timeline
+ @param initialEventId the initial event for the timeline. A nil value will create a live timeline.
+ @param store the store to use to store timeline events.
+ @return a MXEventTimeline instance.
+ */
+- (id)initWithRoom:(MXRoom*)room initialEventId:(NSString*)initialEventId andStore:(id<MXStore>)store;
 
 /**
  Initialise the room evenTimeline state.
