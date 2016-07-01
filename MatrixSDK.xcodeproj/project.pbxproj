@@ -1119,8 +1119,8 @@
 					"$(inherited)",
 				);
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
 					"$(inherited)",
+					"DEBUG=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1130,7 +1130,6 @@
 				);
 				INFOPLIST_FILE = MatrixSDKTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PODS_ROOT = "${SRCROOT}/Pods";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -1143,7 +1142,7 @@
 					"$(SDKROOT)/Developer/Library/Frameworks",
 					"$(inherited)",
 				);
-				GCC_PREPROCESSOR_DEFINITIONS = "";
+				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
@@ -1152,7 +1151,6 @@
 				);
 				INFOPLIST_FILE = MatrixSDKTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PODS_ROOT = "${SRCROOT}/Pods";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
