@@ -7,7 +7,7 @@ Improvements:
  * MXTools: Add isMatrixRoomAlias, isMatrixRoomIdentifier and isMatrixUserIdentifier methods.
 
 Bug fixes:
- * MXRestClient: can't join rooms with utf-8 alias (https://github.com/vector-im/vector-ios/vector-im/vector-ios#374)
+ * MXRestClient: can't join rooms with utf-8 alias (https://github.com/vector-im/vector-ios/issues/374)
  * Push rules: strings comparisons are now case insensitive (https://github.com/vector-im/vector-ios/issues/410)
  
 Breaks:
