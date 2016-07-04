@@ -703,8 +703,6 @@
                     XCTAssertNotNil(newRoom);
                     
                     XCTAssertEqual(newRoom.state.membership, MXMembershipInvite);
-
-                    XCTAssertEqualObjects(newRoom.state.name, @"Invite test");
                     
                     // The room must have only one member: Alice who has been invited by Bob.
                     // While Alice does not join the room, we cannot get more information
@@ -757,9 +755,7 @@
                         {
                             XCTAssertEqual(newRoom.state.membership, MXMembershipInvite);
 
-                            XCTAssertEqualObjects(newRoom.state.name, @"Invite test");
-
-                            // The room must have only one member: Alice who has been invited by Bob.
+                             // The room must have only one member: Alice who has been invited by Bob.
                             // While Alice does not join the room, we cannot get more information
                             XCTAssertEqual(newRoom.state.members.count, 1);
 
