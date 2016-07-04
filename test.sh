@@ -9,8 +9,12 @@ pod update
 git -C synapse pull || git clone https://github.com/matrix-org/synapse
 [ -d venv ] || virtualenv venv
 . venv/bin/activate
+
 #pip install --process-dependency-links synapse/
-python synapse/synapse/python_dependencies.py | xargs -n1 pip install
+#python synapse/synapse/python_dependencies.py | xargs -n1 pip install
+
+pip install --upgrade pip
+pip install --upgrade --process-dependency-links https://github.com/matrix-org/synapse/tarball/master
 
 basedir=`pwd`
 function cleanup {
