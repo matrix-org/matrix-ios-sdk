@@ -149,6 +149,10 @@
                                  @"password": MXTESTS_PWD
                                  };
 
+    // @TODO: Update the registration code to support r0 registration and
+    // remove this patch that redirects the registration to a deprecated CS API.
+    mxRestClient.apiPathPrefix = @"/_matrix/client/api/v1";
+
     [mxRestClient registerWithParameters:parameters success:^(NSDictionary *JSONResponse) {
 
         XCTAssertNotNil(JSONResponse[@"access_token"], @"password-based registration flow is complete in one stage. We must get the access token.");
@@ -166,7 +170,11 @@
 - (void)testRegisterPasswordBased
 {
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
-    
+
+    // @TODO: Update the registration code to support r0 registration and
+    // remove this patch that redirects the registration to a deprecated CS API.
+    mxRestClient.apiPathPrefix = @"/_matrix/client/api/v1";
+
     // Provide an empty string as user, the HS will provide one for us
     [mxRestClient registerWithUser:@"" andPassword:MXTESTS_PWD
                          success:^(MXCredentials *credentials) {
@@ -191,6 +199,11 @@
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
     
     [self createTestAccount:^{
+        
+        // @TODO: Update the registration code to support r0 registration and
+        // remove this patch that redirects the registration to a deprecated CS API.
+        mxRestClient.apiPathPrefix = @"/_matrix/client/api/v1";
+
         // Register the same user
         [mxRestClient registerWithUser:MXTESTS_USER andPassword:MXTESTS_PWD
                              success:^(MXCredentials *credentials) {
