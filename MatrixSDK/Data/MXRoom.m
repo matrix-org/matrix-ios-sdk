@@ -51,6 +51,8 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                                       kMXEventTypeStringRoomPowerLevels,
                                       kMXEventTypeStringRoomAliases,
                                       kMXEventTypeStringRoomCanonicalAlias,
+                                      kMXEventTypeStringRoomGuestAccess,
+                                      kMXEventTypeStringRoomHistoryVisibility,
                                       kMXEventTypeStringRoomMessage,
                                       kMXEventTypeStringRoomMessageFeedback,
                                       kMXEventTypeStringRoomRedaction,
