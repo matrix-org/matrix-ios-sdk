@@ -624,70 +624,70 @@
 
             NSString *roomId = room.state.roomId;
 
-            // Leave the room
-            [room leave:^{
+            __block NSString *aliceTextEventId;
 
-                __block NSString *aliceTextEventId;
+            // Make sure bob joins back the room only once
+            __block BOOL joinedRequestMade = NO;
 
-                // Make sure bob joins back the room only once
-                __block BOOL joinedRequestMade = NO;
+            // Listen for the invitation by Alice
+            [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
 
-                // Listen for the invitation by Alice
-                [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
+                // Join the room again
+                MXRoom *room2 = [mxSession roomWithRoomId:roomId];
 
-                    // Join the room again
-                    MXRoom *room2 = [mxSession roomWithRoomId:roomId];
+                XCTAssertNotNil(room2);
 
-                    XCTAssertNotNil(room2);
+                if (direction == MXTimelineDirectionForwards && MXMembershipInvite == room2.state.membership && !joinedRequestMade)
+                {
+                    // Join the room on the invitation and check we can paginate all expected text messages
+                    // By default the last Alice's message (sent while Bob is not in the room) must be visible.
+                    joinedRequestMade = YES;
+                    [room2 join:^{
 
-                    if (direction == MXTimelineDirectionForwards && MXMembershipInvite == room2.state.membership && !joinedRequestMade)
-                    {
-                        // Join the room on the invitation and check we can paginate all expected text messages
-                        // By default the last Alice's message (sent while Bob is not in the room) must be visible.
-                        joinedRequestMade = YES;
-                        [room2 join:^{
+                        NSMutableArray *events = [NSMutableArray array];
+                        [room2.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                            NSMutableArray *events = [NSMutableArray array];
-                            [room2.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-
-                                if (direction == MXTimelineDirectionBackwards)
+                            if (direction == MXTimelineDirectionBackwards)
+                            {
+                                if (0 == events.count)
                                 {
-                                    if (0 == events.count)
-                                    {
-                                        // The most recent message must be "Hi bob" sent by Alice
-                                        XCTAssertEqualObjects(aliceTextEventId, event.eventId);
-                                    }
-
-                                    [events addObject:event];
+                                    // The most recent message must be "Hi bob" sent by Alice
+                                    XCTAssertEqualObjects(aliceTextEventId, event.eventId);
                                 }
 
-                            }];
+                                [events addObject:event];
+                            }
 
-                            [room2.liveTimeline resetPagination];
-                            [room2.liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+                        }];
 
-                                XCTAssertEqual(events.count, 6, "The room should contain only 6 messages (the last message sent while the user is not in the room must be visible)");
+                        [room2.liveTimeline resetPagination];
+                        [room2.liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
 
-                                [mxSession close];
-                                [expectation fulfill];
+                            XCTAssertEqual(events.count, 6, "The room should contain only 6 messages (the last message sent while the user is not in the room must be visible)");
 
-                            } failure:^(NSError *error) {
-                                XCTFail(@"The request should not fail - NSError: %@", error);
-                                [mxSession close];
-                                [expectation fulfill];
-                            }];
+                            [mxSession close];
+                            [expectation fulfill];
 
                         } failure:^(NSError *error) {
                             XCTFail(@"The request should not fail - NSError: %@", error);
                             [mxSession close];
                             [expectation fulfill];
                         }];
-                    }
-                }];
 
-                // Make Alice send text message while Bob is not in the room.
-                // Then, invite him.
-                [aliceRestClient joinRoom:roomId success:^(NSString *roomName){
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The request should not fail - NSError: %@", error);
+                        [mxSession close];
+                        [expectation fulfill];
+                    }];
+                }
+            }];
+
+            // Make Alice send text message while Bob is not in the room.
+            // Then, invite him.
+            [aliceRestClient joinRoom:roomId success:^(NSString *roomName){
+
+                // Make Bob the room
+                [room leave:^{
 
                     [aliceRestClient sendTextMessageToRoom:roomId text:@"Hi bob"  success:^(NSString *eventId) {
 
