@@ -41,7 +41,8 @@
 }
 
 
-- (void)testMainThread {
+- (void)testMainThread
+{
     
     MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", kMXTestsHomeServerURL, kMXAPIPrefixPathR0]
                                    andOnUnrecognizedCertificateBlock:nil];
@@ -63,9 +64,31 @@
     [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
+- (void)testCancel
+{
+    MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", kMXTestsHomeServerURL, kMXAPIPrefixPathR0]
+                                   andOnUnrecognizedCertificateBlock:nil];
 
-- (void)testMXError {
-    
+    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
+
+    MXHTTPOperation *operation = [httpClient requestWithMethod:@"GET"
+                             path:@"publicRooms"
+                       parameters:nil
+                          success:^(NSDictionary *JSONResponse) {
+                              XCTFail(@"A canceled request should not complete");
+                              [expectation fulfill];
+                          }
+                          failure:^(NSError *error) {
+                              [expectation fulfill];
+                          }];
+
+    [operation cancel];
+
+    [self waitForExpectationsWithTimeout:10 handler:nil];
+}
+
+- (void)testMXError
+{
     MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", kMXTestsHomeServerURL, kMXAPIPrefixPathR0]
                                    andOnUnrecognizedCertificateBlock:nil];
     
@@ -89,8 +112,8 @@
     [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
-- (void)testNSError {
-    
+- (void)testNSError
+{
     MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@/non-existing-path", kMXTestsHomeServerURL]
                                    andOnUnrecognizedCertificateBlock:nil];
     
