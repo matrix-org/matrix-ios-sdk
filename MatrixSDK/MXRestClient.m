@@ -2433,7 +2433,7 @@ MXAuthAction;
                            timeout:(NSTimeInterval)timeoutInSeconds
                            success:(void (^)(NSString *url))success
                            failure:(void (^)(NSError *error))failure
-                    uploadProgress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))uploadProgress
+                    uploadProgress:(void (^)(NSProgress *uploadProgress))uploadProgress
 {
     // Define an absolute path based on Matrix content respository path instead of the base url
     NSString* path = [NSString stringWithFormat:@"%@/upload", kMXContentPrefixPath];
