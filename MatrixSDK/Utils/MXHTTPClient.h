@@ -135,7 +135,7 @@ typedef BOOL (^MXHTTPClientOnUnrecognizedCertificate)(NSData *certificate);
                              data:(NSData *)data
                           headers:(NSDictionary*)headers
                           timeout:(NSTimeInterval)timeoutInSeconds
-                   uploadProgress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))uploadProgress
+                   uploadProgress:(void (^)(NSProgress *uploadProgress))uploadProgress
                           success:(void (^)(NSDictionary *JSONResponse))success
                           failure:(void (^)(NSError *error))failure;
 
