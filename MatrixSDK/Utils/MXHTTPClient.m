@@ -208,7 +208,7 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
 
         if (uploadProgress)
         {
-            // theUploadProgress is not called from an AFNetworking thread. So, switch to the UI one
+            // theUploadProgress is called from an AFNetworking thread. So, switch to the UI one
             dispatch_async(dispatch_get_main_queue(), ^{
                 uploadProgress(theUploadProgress);
             });
