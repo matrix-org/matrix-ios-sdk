@@ -240,7 +240,7 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
                     [printedPath replaceCharactersInRange:range withString:@"..."];
                 }
             }
-            NSLog(@"[MXHTTPClient] Request %p failed for path: %@ - HTTP code: %ld", mxHTTPOperation, printedPath, (long)operation.response.statusCode);
+            NSLog(@"[MXHTTPClient] Request %p failed for path: %@ - HTTP code: %@", mxHTTPOperation, printedPath, @(response.statusCode));
 
             if (error.userInfo[NSLocalizedDescriptionKey])
             {
