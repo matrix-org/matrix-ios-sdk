@@ -214,7 +214,7 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
             });
         }
         
-    } downloadProgress:nil completionHandler:^(NSURLResponse * _Nonnull response, NSDictionary *JSONResponse, NSError * _Nullable error) {
+    } downloadProgress:nil completionHandler:^(NSURLResponse * _Nonnull theResponse, NSDictionary *JSONResponse, NSError * _Nullable error) {
 
         mxHTTPOperation.operation = nil;
         
@@ -224,8 +224,10 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
         }
         else
         {
+            NSHTTPURLResponse *response = (NSHTTPURLResponse*)theResponse;
+
 #if DEBUG
-            NSLog(@"[MXHTTPClient] Request %p failed for path: %@ - HTTP code: %tu", mxHTTPOperation, path, ((NSHTTPURLResponse*)response).statusCode);
+            NSLog(@"[MXHTTPClient] Request %p failed for path: %@ - HTTP code: %@", mxHTTPOperation, path, response ? @(response.statusCode) : @"none");
             NSLog(@"[MXHTTPClient] error: %@", error);
 #else
             // Hide access token in printed path
@@ -250,7 +252,7 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
             }
 #endif
 
-            if (JSONResponse)
+            if (response)
             {
                 // If the home server (or any other Matrix server) sent data, it may contain 'errcode' and 'error'.
                 // In this case, we return an NSError which encapsulates MXError information.
@@ -410,11 +412,11 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
                 }
                 error = nil;
             }
-            
-            if (error)
-            {
-                failure(error);
-            }
+        }
+
+        if (error)
+        {
+            failure(error);
         }
 
         // Delay the call of 'cleanupBackgroundTask' in order to let httpManager.tasks.count
