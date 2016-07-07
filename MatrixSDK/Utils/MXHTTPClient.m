@@ -67,6 +67,11 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
      Unrecognized Certificate handler
      */
     MXHTTPClientOnUnrecognizedCertificate onUnrecognizedCertificateBlock;
+
+    /**
+     The current background task id if any.
+     */
+    UIBackgroundTaskIdentifier backgroundTaskIdentifier;
 }
 @end
 
@@ -86,10 +91,7 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
     {
         accessToken = access_token;
 
-         // Make requests continue in background
-        NSURLSessionConfiguration *backgroundSessionConfiguration = [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:@"org.matrix.sdk.MXHTTPClient"];
-        
-        httpManager = [[AFHTTPSessionManager alloc] initWithBaseURL:[NSURL URLWithString:baseURL] sessionConfiguration:backgroundSessionConfiguration];
+        httpManager = [[AFHTTPSessionManager alloc] initWithBaseURL:[NSURL URLWithString:baseURL]];
         
         // If some certificates are included in app bundle, we enable the AFNetworking pinning mode based on certificate 'AFSSLPinningModeCertificate'.
         // These certificates will be handled as pinned certificates, the app allows them without prompting the user.
@@ -103,6 +105,7 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
         }
         
         onUnrecognizedCertificateBlock = onUnrecognizedCertBlock;
+        backgroundTaskIdentifier = UIBackgroundTaskInvalid;
         
         // Send requests parameters in JSON format by default
         self.requestParametersInJSON = YES;
@@ -111,6 +114,18 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
         [self setUpSSLCertificatesHandler];
     }
     return self;
+}
+
+- (void)dealloc
+{
+    [self cancel];
+
+    if (backgroundTaskIdentifier != UIBackgroundTaskInvalid)
+    {
+        [self cleanupBackgroundTask];
+    }
+
+    httpManager = nil;
 }
 
 - (MXHTTPOperation*)requestWithMethod:(NSString *)httpMethod
@@ -402,7 +417,22 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
             }
         }
 
+        // Delay the call of 'cleanupBackgroundTask' in order to let httpManager.tasks.count
+        // decrease.
+        // Note that if one of the callbacks of 'tryRequest' makes a new request, the bg
+        // task will persist until the end of this new request.
+        // The basic use case is the sending of a media which consists in two requests:
+        //     - the upload of the media
+        //     - then, the sending of the message event associated to this media
+        // When backgrounding the app while sending the media, the user expects that the two
+        // requests complete.
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self cleanupBackgroundTask];
+        });
     }];
+
+    // Make request continues when app goes in background
+    [self startBackgroundTask];
 
     [mxHTTPOperation.operation resume];
 }
@@ -429,7 +459,55 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
 }
 
 
+#pragma - Background task
+/**
+ Engage a background task.
+ 
+ The bg task will be ended by the call of 'cleanupBackgroundTask' when the request completes.
+ The goal of these methods is to mimic the behavior of 'setShouldExecuteAsBackgroundTaskWithExpirationHandler'
+ in AFNetworking < 3.0.
+ */
+- (void)startBackgroundTask
+{
+    // Create the bg task if it does not exist yet
+    if (backgroundTaskIdentifier == UIBackgroundTaskInvalid)
+    {
+        UIApplication *application = [UIApplication sharedApplication];
+        __weak __typeof(self)weakSelf = self;
+
+        backgroundTaskIdentifier = [application beginBackgroundTaskWithExpirationHandler:^{
+
+            __strong __typeof(weakSelf)strongSelf = weakSelf;
+            if (strongSelf)
+            {
+                [strongSelf cancel];
+                [self cleanupBackgroundTask];
+            }
+        }];
+    }
+}
+
+/**
+ End the background task.
+
+ The tast will be stopped only if there is no more http request in progress.
+ */
+- (void)cleanupBackgroundTask
+{
+    if (backgroundTaskIdentifier != UIBackgroundTaskInvalid && httpManager.tasks.count == 0)
+    {
+        [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
+        backgroundTaskIdentifier = UIBackgroundTaskInvalid;
+    }
+}
+
+
 #pragma mark - Private methods
+- (void)cancel
+{
+    [httpManager invalidateSessionCancelingTasks:YES];
+}
+
 - (void)setUpNetworkReachibility
 {
     // Start monitoring reachibility to get its status and change notifications
@@ -479,63 +557,70 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
 
 - (void)setUpSSLCertificatesHandler
 {
+    __weak __typeof(self)weakSelf = self;
+
     // Handle SSL certificates
     [httpManager setSessionDidReceiveAuthenticationChallengeBlock:^NSURLSessionAuthChallengeDisposition(NSURLSession * _Nonnull session, NSURLAuthenticationChallenge * _Nonnull challenge, NSURLCredential *__autoreleasing  _Nullable * _Nullable credential) {
 
-        NSURLProtectionSpace *protectionSpace = [challenge protectionSpace];
+        __strong __typeof(weakSelf)strongSelf = weakSelf;
 
-        if ([protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust])
+        if (strongSelf)
         {
-            if ([httpManager.securityPolicy evaluateServerTrust:protectionSpace.serverTrust forDomain:protectionSpace.host])
-            {
-                *credential = [NSURLCredential credentialForTrust:protectionSpace.serverTrust];
-                return NSURLSessionAuthChallengeUseCredential;
-            }
-            else
-            {
-                NSLog(@"[MXHTTPClient] Shall we trust %@?", protectionSpace.host);
+            NSURLProtectionSpace *protectionSpace = [challenge protectionSpace];
 
-                if (onUnrecognizedCertificateBlock)
+            if ([protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust])
+            {
+                if ([strongSelf->httpManager.securityPolicy evaluateServerTrust:protectionSpace.serverTrust forDomain:protectionSpace.host])
                 {
-                    SecTrustRef trust = [protectionSpace serverTrust];
+                    *credential = [NSURLCredential credentialForTrust:protectionSpace.serverTrust];
+                    return NSURLSessionAuthChallengeUseCredential;
+                }
+                else
+                {
+                    NSLog(@"[MXHTTPClient] Shall we trust %@?", protectionSpace.host);
 
-                    if (SecTrustGetCertificateCount(trust) > 0)
+                    if (strongSelf->onUnrecognizedCertificateBlock)
                     {
-                        // Consider here the leaf certificate (the one at index 0).
-                        SecCertificateRef certif = SecTrustGetCertificateAtIndex(trust, 0);
+                        SecTrustRef trust = [protectionSpace serverTrust];
 
-                        NSData *certifData = (__bridge NSData*)SecCertificateCopyData(certif);
-                        if (onUnrecognizedCertificateBlock(certifData))
+                        if (SecTrustGetCertificateCount(trust) > 0)
                         {
-                            NSLog(@"[MXHTTPClient] Yes, the user trusts its certificate");
+                            // Consider here the leaf certificate (the one at index 0).
+                            SecCertificateRef certif = SecTrustGetCertificateAtIndex(trust, 0);
 
-                            _allowedCertificate = certifData;
-
-                            // Update http manager security policy with this trusted certificate.
-                            AFSecurityPolicy *securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeCertificate];
-                            securityPolicy.pinnedCertificates = [NSSet setWithObjects:certifData, nil];
-                            securityPolicy.allowInvalidCertificates = YES;
-                            // Disable the domain validation for this certificate trusted by the user.
-                            securityPolicy.validatesDomainName = NO;
-                            httpManager.securityPolicy = securityPolicy;
-
-                            // Evaluate again server security
-                            if ([httpManager.securityPolicy evaluateServerTrust:protectionSpace.serverTrust forDomain:protectionSpace.host])
+                            NSData *certifData = (__bridge NSData*)SecCertificateCopyData(certif);
+                            if (strongSelf->onUnrecognizedCertificateBlock(certifData))
                             {
-                                *credential = [NSURLCredential credentialForTrust:protectionSpace.serverTrust];
-                                return NSURLSessionAuthChallengeUseCredential;
-                            }
+                                NSLog(@"[MXHTTPClient] Yes, the user trusts its certificate");
 
-                            // Here pin certificate failed
-                            NSLog(@"[MXHTTPClient] Failed to pin certificate for %@", protectionSpace.host);
-                            return NSURLSessionAuthChallengePerformDefaultHandling;
+                                _allowedCertificate = certifData;
+
+                                // Update http manager security policy with this trusted certificate.
+                                AFSecurityPolicy *securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeCertificate];
+                                securityPolicy.pinnedCertificates = [NSSet setWithObjects:certifData, nil];
+                                securityPolicy.allowInvalidCertificates = YES;
+                                // Disable the domain validation for this certificate trusted by the user.
+                                securityPolicy.validatesDomainName = NO;
+                                strongSelf->httpManager.securityPolicy = securityPolicy;
+
+                                // Evaluate again server security
+                                if ([strongSelf->httpManager.securityPolicy evaluateServerTrust:protectionSpace.serverTrust forDomain:protectionSpace.host])
+                                {
+                                    *credential = [NSURLCredential credentialForTrust:protectionSpace.serverTrust];
+                                    return NSURLSessionAuthChallengeUseCredential;
+                                }
+
+                                // Here pin certificate failed
+                                NSLog(@"[MXHTTPClient] Failed to pin certificate for %@", protectionSpace.host);
+                                return NSURLSessionAuthChallengePerformDefaultHandling;
+                            }
                         }
                     }
+                    
+                    // Here we don't trust the certificate
+                    NSLog(@"[MXHTTPClient] No, the user doesn't trust it");
+                    return NSURLSessionAuthChallengeCancelAuthenticationChallenge;
                 }
-
-                // Here we don't trust the certificate
-                NSLog(@"[MXHTTPClient] No, the user doesn't trust it");
-                return NSURLSessionAuthChallengeCancelAuthenticationChallenge;
             }
         }
 
