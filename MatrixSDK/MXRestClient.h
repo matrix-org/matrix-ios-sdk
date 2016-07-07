@@ -1239,7 +1239,7 @@ typedef enum : NSUInteger
                           timeout:(NSTimeInterval)timeoutInSeconds
                           success:(void (^)(NSString *url))success
                           failure:(void (^)(NSError *error))failure
-                   uploadProgress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))uploadProgress;
+                   uploadProgress:(void (^)(NSProgress *uploadProgress))uploadProgress;
 
 /**
  Resolve a Matrix media content URI (in the form of "mxc://...") into an HTTP URL.

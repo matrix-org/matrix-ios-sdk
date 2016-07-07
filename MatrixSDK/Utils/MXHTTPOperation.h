@@ -30,7 +30,7 @@
  The underlying HTTP request.
  The reference changes in case of retries.
  */
-@property (nonatomic) AFHTTPRequestOperation *operation;
+@property (nonatomic) NSURLSessionDataTask *operation;
 
 /**
  The age in milliseconds of the instance.
