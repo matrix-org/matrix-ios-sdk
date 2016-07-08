@@ -682,6 +682,61 @@ typedef enum : NSUInteger
                                       success:(void (^)(MXRoomDirectoryVisibility directoryVisibility))success
                                       failure:(void (^)(NSError *error))failure;
 
+/**
+ Create a new mapping from room alias to room ID.
+ 
+ @param roomId the id of the room.
+ @param roomAlias the alias to add.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)addRoomAlias:(NSString*)roomId
+                           alias:(NSString*)roomAlias
+                         success:(void (^)())success
+                         failure:(void (^)(NSError *error))failure;
+
+/**
+ Remove a mapping of room alias to room ID.
+ 
+ @param roomAlias the alias to remove.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)removeRoomAlias:(NSString*)roomAlias
+                            success:(void (^)())success
+                            failure:(void (^)(NSError *error))failure;
+
+/**
+ Set the canonical alias of the room.
+ 
+ @param roomId the id of the room.
+ @param canonicalAlias the canonical alias to set.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setRoomCanonicalAlias:(NSString*)roomId
+                           canonicalAlias:(NSString *)canonicalAlias
+                           success:(void (^)())success
+                           failure:(void (^)(NSError *error))failure;
+
+/**
+ Get the canonical alias.
+ 
+ @param roomId the id of the room.
+ @param success A block object called when the operation succeeds. It provides the canonical alias.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)canonicalAliasOfRoom:(NSString*)roomId
+                          success:(void (^)(NSString *canonicalAlias))success
+                          failure:(void (^)(NSError *error))failure;
 
 /**
  Join a room.
