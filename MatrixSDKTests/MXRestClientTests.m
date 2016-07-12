@@ -260,6 +260,158 @@
     }];
 }
 
+- (void)testRoomAddAlias
+{
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+        
+        NSString *globallyUniqueString = [[NSProcessInfo processInfo] globallyUniqueString];
+        NSString *wrongAlias = [NSString stringWithFormat:@"#%@", globallyUniqueString];
+        NSString *correctAlias = [NSString stringWithFormat:@"#%@%@", globallyUniqueString, bobRestClient.homeserverSuffix];
+        
+        __block MXRestClient *bobRestClient2 = bobRestClient;
+        
+        // Test with an invalid alias
+        [bobRestClient addRoomAlias:roomId alias:wrongAlias success:^{
+            
+            XCTFail(@"The request should not succeed");
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            
+            // The request should fail
+            XCTAssertNotNil(error);
+            
+            // Test with a valid alias
+            [bobRestClient2 addRoomAlias:roomId alias:correctAlias success:^{
+                
+                [bobRestClient2 roomIDForRoomAlias:correctAlias success:^(NSString *roomId2) {
+                    
+                    XCTAssertNotNil(roomId2);
+                    XCTAssertNotEqual(roomId2.length, 0);
+                    XCTAssertEqualObjects(roomId2, roomId, @"Mapping from room alias to room ID is wrong");
+                    
+                    // Test with a valid alias which already exists
+                    [bobRestClient2 addRoomAlias:roomId alias:correctAlias success:^{
+                        
+                        XCTFail(@"The request should not succeed");
+                        [expectation fulfill];
+                        
+                    } failure:^(NSError *error) {
+                        
+                        // The request should fail
+                        XCTAssertNotNil(error);
+                        [expectation fulfill];
+                        
+                    }];
+                    
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        }];
+    }];
+}
+
+- (void)testRoomRemoveAlias
+{
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+        
+        NSString *globallyUniqueString = [[NSProcessInfo processInfo] globallyUniqueString];
+        NSString *roomAlias = [NSString stringWithFormat:@"#%@%@", globallyUniqueString, bobRestClient.homeserverSuffix];
+        
+        __block MXRestClient *bobRestClient2 = bobRestClient;
+        
+        // Set a room alias
+        [bobRestClient addRoomAlias:roomId alias:roomAlias success:^{
+            
+            // Remove this alias
+            [bobRestClient2 removeRoomAlias:roomAlias success:^{
+                
+                // Check whether it has been removed correctly
+                [bobRestClient2 roomIDForRoomAlias:roomAlias success:^(NSString *roomId2) {
+                    
+                    XCTFail(@"The request should not succeed");
+                    [expectation fulfill];
+                    
+                } failure:^(NSError *error) {
+                    
+                    // The request should fail
+                    XCTAssertNotNil(error);
+                    [expectation fulfill];
+                }];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testRoomCanonicalAlias
+{
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+        
+        NSString *globallyUniqueString = [[NSProcessInfo processInfo] globallyUniqueString];
+        NSString *roomAlias = [NSString stringWithFormat:@"#%@%@", globallyUniqueString, bobRestClient.homeserverSuffix];
+        
+        __block MXRestClient *bobRestClient2 = bobRestClient;
+        
+        // This operation should failed because the room alias does not exist yet
+        [bobRestClient setRoomCanonicalAlias:roomId canonicalAlias:roomAlias success:^{
+            
+            XCTFail(@"The request should not succeed");
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            
+            // The request should fail
+            XCTAssertNotNil(error);
+            
+            // Create first a room alias
+            [bobRestClient2 addRoomAlias:roomId alias:roomAlias success:^{
+                
+                // Use this alias as the canonical alias
+                [bobRestClient2 setRoomCanonicalAlias:roomId canonicalAlias:roomAlias success:^{
+                    
+                    [bobRestClient2 canonicalAliasOfRoom:roomId success:^(NSString *canonicalAlias) {
+                        
+                        XCTAssertNotNil(canonicalAlias);
+                        XCTAssertNotEqual(canonicalAlias.length, 0);
+                        XCTAssertEqualObjects(canonicalAlias, roomAlias, @"Room canonical alias is wrong");
+                        [expectation fulfill];
+                        
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The request should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+                    
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        }];
+        
+    }];
+}
+
+
 - (void)testJoinRoomWithRoomId
 {
     [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {

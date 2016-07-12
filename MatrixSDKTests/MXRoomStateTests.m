@@ -512,6 +512,117 @@
     }];
 }
 
+- (void)testRoomCanonicalAliasProvidedByInitialSync
+{
+    [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
+        
+        NSString *globallyUniqueString = [[NSProcessInfo processInfo] globallyUniqueString];
+        NSString *roomAlias = [NSString stringWithFormat:@"#%@%@", globallyUniqueString, bobRestClient.homeserverSuffix];
+        
+        MXRestClient *bobRestClient2 = bobRestClient;
+        
+        // Create first a room alias
+        [bobRestClient addRoomAlias:roomId alias:roomAlias success:^{
+            
+            // Use this alias as the canonical alias
+            [bobRestClient2 setRoomCanonicalAlias:roomId canonicalAlias:roomAlias success:^{
+                
+                mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+                [mxSession start:^{
+                    
+                    MXRoom *room = [mxSession roomWithRoomId:roomId];
+                    
+                    XCTAssertNotNil(room.state.aliases);
+                    XCTAssertEqual(room.state.aliases.count, 1);
+                    XCTAssertEqualObjects(room.state.aliases.firstObject, roomAlias, @"The room alias is wrong");
+                    
+                    XCTAssertNotNil(room.state.canonicalAlias);
+                    XCTAssertNotEqual(room.state.canonicalAlias.length, 0);
+                    XCTAssertEqualObjects(room.state.canonicalAlias, roomAlias, @"The room canonical alias is wrong");
+                    
+                    [expectation fulfill];
+                    
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        
+    }];
+}
+
+- (void)testRoomCanonicalAliasLive
+{
+    [matrixSDKTestsData doMXRestClientTestInABobRoomAndANewTextMessage:self newTextMessage:@"This is a text message for recents" onReadyToTest:^(MXRestClient *bobRestClient, NSString *roomId, NSString *new_text_message_eventId, XCTestExpectation *expectation) {
+        
+        MXRestClient *bobRestClient2 = bobRestClient;
+        
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+        [mxSession start:^{
+            
+            MXRoom *room = [mxSession roomWithRoomId:roomId];
+            
+            NSString *globallyUniqueString = [[NSProcessInfo processInfo] globallyUniqueString];
+            NSString *roomAlias = [NSString stringWithFormat:@"#%@%@", globallyUniqueString, bobRestClient.homeserverSuffix];
+            
+            XCTAssertNil(room.state.aliases);
+            XCTAssertNil(room.state.canonicalAlias);
+            
+            // Listen to live event. We should receive only: a m.room.aliases and m.room.canonical_alias events
+            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                
+                if(event.eventType == MXEventTypeRoomAliases)
+                {
+                    XCTAssertNotNil(room.state.aliases);
+                    XCTAssertEqual(room.state.aliases.count, 1);
+                    XCTAssertEqualObjects(room.state.aliases.firstObject, roomAlias, @"The room alias is wrong");
+                }
+                else if (event.eventType == MXEventTypeRoomCanonicalAlias)
+                {
+                    XCTAssertNotNil(room.state.canonicalAlias);
+                    XCTAssertNotEqual(room.state.canonicalAlias.length, 0);
+                    XCTAssertEqualObjects(room.state.canonicalAlias, roomAlias, @"The room canonical alias is wrong");
+                    
+                    [expectation fulfill];
+                }
+                else
+                {
+                    XCTFail(@"The event type is unexpected - type: %@", event.type);
+                }
+                
+            }];
+            
+            // Set room alias
+            [room addAlias:roomAlias success:^{
+                
+                [room setCanonicalAlias:roomAlias success:^{
+                    
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        
+    }];
+}
 
 - (void)testMembers
 {
