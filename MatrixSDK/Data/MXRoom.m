@@ -297,6 +297,27 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     return [mxSession.matrixRestClient setRoomDirectoryVisibility:self.state.roomId directoryVisibility:directoryVisibility success:success failure:failure];
 }
 
+- (MXHTTPOperation*)addAlias:(NSString *)roomAlias
+                     success:(void (^)())success
+                     failure:(void (^)(NSError *error))failure
+{
+    return [mxSession.matrixRestClient addRoomAlias:self.state.roomId alias:roomAlias success:success failure:failure];
+}
+
+- (MXHTTPOperation*)removeAlias:(NSString *)roomAlias
+                     success:(void (^)())success
+                     failure:(void (^)(NSError *error))failure
+{
+    return [mxSession.matrixRestClient removeRoomAlias:roomAlias success:success failure:failure];
+}
+
+- (MXHTTPOperation*)setCanonicalAlias:(NSString *)canonicalAlias
+                              success:(void (^)())success
+                              failure:(void (^)(NSError *error))failure
+{
+    return [mxSession.matrixRestClient setRoomCanonicalAlias:self.state.roomId canonicalAlias:canonicalAlias success:success failure:failure];
+}
+
 - (MXHTTPOperation*)directoryVisibility:(void (^)(MXRoomDirectoryVisibility directoryVisibility))success
                                 failure:(void (^)(NSError *error))failure
 {
