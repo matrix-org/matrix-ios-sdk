@@ -339,6 +339,45 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
                                    failure:(void (^)(NSError *error))failure;
 
 /**
+ Add a room alias
+ 
+ @param roomAlias the room alias to add.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)addAlias:(NSString *)roomAlias
+                     success:(void (^)())success
+                     failure:(void (^)(NSError *error))failure;
+
+/**
+ Remove a room alias
+ 
+ @param roomAlias the room alias to remove.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)removeAlias:(NSString *)roomAlias
+                        success:(void (^)())success
+                        failure:(void (^)(NSError *error))failure;
+
+/**
+ Set the canonical alias of the room.
+ 
+ @param canonicalAlias the canonical alias to set.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setCanonicalAlias:(NSString *)canonicalAlias
+                              success:(void (^)())success
+                              failure:(void (^)(NSError *error))failure;
+
+/**
  Get the visibility of the room in the current HS's room directory.
  
  Note: This information is not part of the room state because it is related

@@ -1181,6 +1181,103 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation*)addRoomAlias:(NSString*)roomId
+                           alias:(NSString*)roomAlias
+                         success:(void (^)())success
+                         failure:(void (^)(NSError *error))failure
+{
+    // Note: characters in a room alias need to be escaped in the URL
+    NSString *path = [NSString stringWithFormat:@"%@/directory/room/%@", apiPathPrefix, [roomAlias stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    
+    return [httpClient requestWithMethod:@"PUT"
+                                    path:path
+                              parameters:@{
+                                           @"room_id": roomId
+                                           }
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success)
+                                     {
+                                         // Use here the processing queue in order to keep the server response order
+                                         dispatch_async(processingQueue, ^{
+                                             
+                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                                 
+                                                 success();
+                                                 
+                                             });
+                                             
+                                         });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                 }];
+}
+
+- (MXHTTPOperation*)removeRoomAlias:(NSString*)roomAlias
+                            success:(void (^)())success
+                            failure:(void (^)(NSError *error))failure
+{
+    // Note: characters in a room alias need to be escaped in the URL
+    NSString *path = [NSString stringWithFormat:@"%@/directory/room/%@", apiPathPrefix, [roomAlias stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    
+    return [httpClient requestWithMethod:@"DELETE"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success)
+                                     {
+                                         // Use here the processing queue in order to keep the server response order
+                                         dispatch_async(processingQueue, ^{
+                                             
+                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                                 
+                                                 success();
+                                                 
+                                             });
+                                             
+                                         });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                 }];
+}
+
+- (MXHTTPOperation*)setRoomCanonicalAlias:(NSString*)roomId
+                           canonicalAlias:(NSString *)canonicalAlias
+                                  success:(void (^)())success
+                                  failure:(void (^)(NSError *error))failure
+{
+    return [self updateStateEvent:kMXEventTypeStringRoomCanonicalAlias
+                        withValue:@{
+                                    @"alias": canonicalAlias
+                                    }
+                           inRoom:roomId
+                          success:success failure:failure];
+}
+
+- (MXHTTPOperation*)canonicalAliasOfRoom:(NSString*)roomId
+                                 success:(void (^)(NSString *canonicalAlias))success
+                                 failure:(void (^)(NSError *error))failure
+{
+    return [self valueOfStateEvent:kMXEventTypeStringRoomCanonicalAlias
+                            inRoom:roomId
+                           success:^(NSDictionary *JSONResponse) {
+                               
+                               NSString * alias;
+                               MXJSONModelSetString(alias, JSONResponse[@"alias"]);
+                               success(alias);
+                               
+                           } failure:failure];
+}
+
 
 - (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
                      success:(void (^)(NSString *theRoomId))success
@@ -2433,7 +2530,7 @@ MXAuthAction;
                            timeout:(NSTimeInterval)timeoutInSeconds
                            success:(void (^)(NSString *url))success
                            failure:(void (^)(NSError *error))failure
-                    uploadProgress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))uploadProgress
+                    uploadProgress:(void (^)(NSProgress *uploadProgress))uploadProgress
 {
     // Define an absolute path based on Matrix content respository path instead of the base url
     NSString* path = [NSString stringWithFormat:@"%@/upload", kMXContentPrefixPath];

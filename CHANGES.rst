@@ -1,3 +1,18 @@
+Changes in Matrix iOS SDK in 0.6.10 (2016-07-15)
+===============================================
+
+Improvements:
+ * MXRestClient: Add API to add/remove a room alias.
+ * MXRestClient: Add API to set the room canonical alias.
+ * Update AFNetworking: Move to 3.1.0 version.
+ * SDK Tests: Update and improve tests. 
+
+Bug fixes:
+ * MXRoom: Read receipts can now be posted on room history visibility or guest access change.
+ 
+Breaks:
+ * MXRestClient: uploadContent signature has been changed.
+
 Changes in Matrix iOS SDK in 0.6.9 (2016-07-01)
 ===============================================
 

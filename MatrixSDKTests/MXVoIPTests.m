@@ -112,29 +112,29 @@
 
 
 #pragma mark - Tests with a call stack mock
-- (void)testMXRoomCall
-{
-    [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
-
-        mxSession = bobSession;
-        MXRoom *room = [mxSession roomWithRoomId:roomId];
-
-        // Set up the mock
-        MXMockCallStack *callStackMock = [[MXMockCallStack alloc] init];
-        mxSession.callManager.callStack = callStackMock;
-
-        MXCall *call = [room placeCallWithVideo:NO];
-
-        XCTAssert(call, @"MXCall must be created on [room placeCallWithVideo:]");
-        XCTAssertNotNil(call.callId);
-        XCTAssertEqual(call.state, MXCallStateWaitLocalMedia);
-
-        MXCall *callInRoom = [mxSession.callManager callInRoom:roomId];
-        XCTAssertEqual(call, callInRoom, @"[MXCallManager callInRoom:] must retrieve the same call");
-
-        [expectation fulfill];
-    }];
-}
+//- (void)testMXRoomCall
+//{
+//    [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+//
+//        mxSession = bobSession;
+//        MXRoom *room = [mxSession roomWithRoomId:roomId];
+//
+//        // Set up the mock
+//        MXMockCallStack *callStackMock = [[MXMockCallStack alloc] init];
+//        mxSession.callManager.callStack = callStackMock;
+//
+//        MXCall *call = [room placeCallWithVideo:NO];
+//
+//        XCTAssert(call, @"MXCall must be created on [room placeCallWithVideo:]");
+//        XCTAssertNotNil(call.callId);
+//        XCTAssertEqual(call.state, MXCallStateWaitLocalMedia);
+//
+//        MXCall *callInRoom = [mxSession.callManager callInRoom:roomId];
+//        XCTAssertEqual(call, callInRoom, @"[MXCallManager callInRoom:] must retrieve the same call");
+//
+//        [expectation fulfill];
+//    }];
+//}
 
 
 

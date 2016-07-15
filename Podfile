@@ -4,7 +4,7 @@
 source 'https://github.com/CocoaPods/Specs.git'
 
 target "MatrixSDK" do
-pod 'AFNetworking', '~> 2.6.0'
+pod 'AFNetworking', '~> 3.1.0'
 end
 
 target "MatrixSDKTests" do

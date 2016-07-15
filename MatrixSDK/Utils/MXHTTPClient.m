@@ -46,7 +46,7 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
     /**
      Use AFNetworking as HTTP client.
      */
-    AFHTTPRequestOperationManager *httpManager;
+    AFHTTPSessionManager *httpManager;
 
     /**
      If defined, append it to the requested URL.
@@ -67,6 +67,11 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
      Unrecognized Certificate handler
      */
     MXHTTPClientOnUnrecognizedCertificate onUnrecognizedCertificateBlock;
+
+    /**
+     The current background task id if any.
+     */
+    UIBackgroundTaskIdentifier backgroundTaskIdentifier;
 }
 @end
 
@@ -85,8 +90,8 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
     if (self)
     {
         accessToken = access_token;
-        
-        httpManager = [[AFHTTPRequestOperationManager alloc] initWithBaseURL:[NSURL URLWithString:baseURL]];
+
+        httpManager = [[AFHTTPSessionManager alloc] initWithBaseURL:[NSURL URLWithString:baseURL]];
         
         // If some certificates are included in app bundle, we enable the AFNetworking pinning mode based on certificate 'AFSSLPinningModeCertificate'.
         // These certificates will be handled as pinned certificates, the app allows them without prompting the user.
@@ -100,13 +105,27 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
         }
         
         onUnrecognizedCertificateBlock = onUnrecognizedCertBlock;
+        backgroundTaskIdentifier = UIBackgroundTaskInvalid;
         
         // Send requests parameters in JSON format by default
         self.requestParametersInJSON = YES;
 
         [self setUpNetworkReachibility];
+        [self setUpSSLCertificatesHandler];
     }
     return self;
+}
+
+- (void)dealloc
+{
+    [self cancel];
+
+    if (backgroundTaskIdentifier != UIBackgroundTaskInvalid)
+    {
+        [self cleanupBackgroundTask];
+    }
+
+    httpManager = nil;
 }
 
 - (MXHTTPOperation*)requestWithMethod:(NSString *)httpMethod
@@ -134,7 +153,7 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
                    data:(NSData *)data
                 headers:(NSDictionary*)headers
                 timeout:(NSTimeInterval)timeoutInSeconds
-         uploadProgress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))uploadProgress
+         uploadProgress:(void (^)(NSProgress *uploadProgress))uploadProgress
                 success:(void (^)(NSDictionary *JSONResponse))success
                 failure:(void (^)(NSError *error))failure
 {
@@ -152,7 +171,7 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
               data:(NSData *)data
            headers:(NSDictionary*)headers
            timeout:(NSTimeInterval)timeoutInSeconds
-    uploadProgress:(void (^)(NSUInteger bytesWritten, long long totalBytesWritten, long long totalBytesExpectedToWrite))uploadProgress
+    uploadProgress:(void (^)(NSProgress *uploadProgress))uploadProgress
            success:(void (^)(NSDictionary *JSONResponse))success
            failure:(void (^)(NSError *error))failure
 {
@@ -185,301 +204,239 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
     }
 
     mxHTTPOperation.numberOfTries++;
-    mxHTTPOperation.operation = [httpManager HTTPRequestOperationWithRequest:request success:^(AFHTTPRequestOperation *operation, NSDictionary *JSONResponse) {
-        mxHTTPOperation.operation = nil;
-        success(JSONResponse);
-    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+    mxHTTPOperation.operation = [httpManager dataTaskWithRequest:request uploadProgress:^(NSProgress * _Nonnull theUploadProgress) {
 
-        mxHTTPOperation.operation = nil;
-
-#if DEBUG
-        NSLog(@"[MXHTTPClient] Request %p failed for path: %@ - HTTP code: %ld", mxHTTPOperation, path, (long)operation.response.statusCode);
-        NSLog(@"[MXHTTPClient] error: %@", error);
-#else
-        // Hide access token in printed path
-        NSMutableString *printedPath = [NSMutableString stringWithString:path];
-        if (accessToken)
+        if (uploadProgress)
         {
-            NSRange range = [path rangeOfString:accessToken];
-            if (range.location != NSNotFound)
-            {
-                [printedPath replaceCharactersInRange:range withString:@"..."];
-            }
+            // theUploadProgress is called from an AFNetworking thread. So, switch to the UI one
+            dispatch_async(dispatch_get_main_queue(), ^{
+                uploadProgress(theUploadProgress);
+            });
         }
-        NSLog(@"[MXHTTPClient] Request %p failed for path: %@ - HTTP code: %ld", mxHTTPOperation, printedPath, (long)operation.response.statusCode);
         
-        if (error.userInfo[NSLocalizedDescriptionKey])
+    } downloadProgress:nil completionHandler:^(NSURLResponse * _Nonnull theResponse, NSDictionary *JSONResponse, NSError * _Nullable error) {
+
+        mxHTTPOperation.operation = nil;
+        
+        if (!error)
         {
-            NSLog(@"[MXHTTPClient] error domain: %@, code:%zd, description: %@", error.domain, error.code, error.userInfo[NSLocalizedDescriptionKey]);
+            success(JSONResponse);
         }
         else
         {
-            NSLog(@"[MXHTTPClient] error domain: %@, code:%zd", error.domain, error.code);
-        }
+            NSHTTPURLResponse *response = (NSHTTPURLResponse*)theResponse;
+
+#if DEBUG
+            NSLog(@"[MXHTTPClient] Request %p failed for path: %@ - HTTP code: %@", mxHTTPOperation, path, response ? @(response.statusCode) : @"none");
+            NSLog(@"[MXHTTPClient] error: %@", error);
+#else
+            // Hide access token in printed path
+            NSMutableString *printedPath = [NSMutableString stringWithString:path];
+            if (accessToken)
+            {
+                NSRange range = [path rangeOfString:accessToken];
+                if (range.location != NSNotFound)
+                {
+                    [printedPath replaceCharactersInRange:range withString:@"..."];
+                }
+            }
+            NSLog(@"[MXHTTPClient] Request %p failed for path: %@ - HTTP code: %@", mxHTTPOperation, printedPath, @(response.statusCode));
+
+            if (error.userInfo[NSLocalizedDescriptionKey])
+            {
+                NSLog(@"[MXHTTPClient] error domain: %@, code:%zd, description: %@", error.domain, error.code, error.userInfo[NSLocalizedDescriptionKey]);
+            }
+            else
+            {
+                NSLog(@"[MXHTTPClient] error domain: %@, code:%zd", error.domain, error.code);
+            }
 #endif
 
-        if (operation.responseData)
-        {
-            // If the home server (or any other Matrix server) sent data, it may contain 'errcode' and 'error'.
-            // In this case, we return an NSError which encapsulates MXError information.
-            // When neither 'errcode' nor 'error' are present the received data are reported in NSError userInfo thanks to 'MXHTTPClientErrorResponseDataKey' key.
-            NSError *serializationError = nil;
-            NSDictionary *JSONResponse = [httpManager.responseSerializer responseObjectForResponse:operation.response
-                                                                                              data:operation.responseData
-                                                                                             error:&serializationError];
-            
-            if (JSONResponse)
+            if (response)
             {
-                NSLog(@"[MXHTTPClient] Error JSONResponse: %@", JSONResponse);
-                
-                if (JSONResponse[@"errcode"] || JSONResponse[@"error"])
+                // If the home server (or any other Matrix server) sent data, it may contain 'errcode' and 'error'.
+                // In this case, we return an NSError which encapsulates MXError information.
+                // When neither 'errcode' nor 'error' are present, the received data are reported in NSError userInfo thanks to 'MXHTTPClientErrorResponseDataKey' key.
+                if (JSONResponse)
                 {
-                    // Extract values from the home server JSON response
-                    MXError *mxError = [[MXError alloc] initWithErrorCode:JSONResponse[@"errcode"]
-                                                                    error:JSONResponse[@"error"]];
-                    
-                    if ([mxError.errcode isEqualToString:kMXErrCodeStringLimitExceeded])
+                    NSLog(@"[MXHTTPClient] Error JSONResponse: %@", JSONResponse);
+
+                    if (JSONResponse[@"errcode"] || JSONResponse[@"error"])
                     {
-                        // Wait and retry if we have not retried too much
-                        if (mxHTTPOperation.age < MXHTTPCLIENT_RATE_LIMIT_MAX_MS)
+                        // Extract values from the home server JSON response
+                        MXError *mxError = [[MXError alloc] initWithErrorCode:JSONResponse[@"errcode"]
+                                                                        error:JSONResponse[@"error"]];
+
+                        if ([mxError.errcode isEqualToString:kMXErrCodeStringLimitExceeded])
                         {
-                            NSString *retryAfterMsString = JSONResponse[@"retry_after_ms"];
-                            if (retryAfterMsString)
+                            // Wait and retry if we have not retried too much
+                            if (mxHTTPOperation.age < MXHTTPCLIENT_RATE_LIMIT_MAX_MS)
                             {
-                                error = nil;
-                                
-                                NSLog(@"[MXHTTPClient] Request %p reached rate limiting. Wait for %@ms", mxHTTPOperation, retryAfterMsString);
-                                
-                                // Wait for the time provided by the server before retrying
-                                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, [retryAfterMsString intValue] * USEC_PER_SEC), dispatch_get_main_queue(), ^{
-                                    
-                                    NSLog(@"[MXHTTPClient] Retry rate limited request %p", mxHTTPOperation);
-                                    
-                                    [self tryRequest:mxHTTPOperation method:httpMethod path:path parameters:parameters data:data headers:headers timeout:timeoutInSeconds uploadProgress:uploadProgress success:^(NSDictionary *JSONResponse) {
-                                        
-                                        NSLog(@"[MXHTTPClient] Success of rate limited request %p after %tu tries", mxHTTPOperation, mxHTTPOperation.numberOfTries);
-                                        
-                                        success(JSONResponse);
-                                        
-                                    } failure:^(NSError *error) {
-                                        failure(error);
-                                    }];
-                                });
+                                NSString *retryAfterMsString = JSONResponse[@"retry_after_ms"];
+                                if (retryAfterMsString)
+                                {
+                                    error = nil;
+
+                                    NSLog(@"[MXHTTPClient] Request %p reached rate limiting. Wait for %@ms", mxHTTPOperation, retryAfterMsString);
+
+                                    // Wait for the time provided by the server before retrying
+                                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, [retryAfterMsString intValue] * USEC_PER_SEC), dispatch_get_main_queue(), ^{
+
+                                        NSLog(@"[MXHTTPClient] Retry rate limited request %p", mxHTTPOperation);
+
+                                        [self tryRequest:mxHTTPOperation method:httpMethod path:path parameters:parameters data:data headers:headers timeout:timeoutInSeconds uploadProgress:uploadProgress success:^(NSDictionary *JSONResponse) {
+
+                                            NSLog(@"[MXHTTPClient] Success of rate limited request %p after %tu tries", mxHTTPOperation, mxHTTPOperation.numberOfTries);
+
+                                            success(JSONResponse);
+
+                                        } failure:^(NSError *error) {
+                                            failure(error);
+                                        }];
+                                    });
+                                }
+                            }
+                            else
+                            {
+                                NSLog(@"[MXHTTPClient] Giving up rate limited request %p: spent too long retrying.", mxHTTPOperation);
                             }
                         }
                         else
                         {
-                            NSLog(@"[MXHTTPClient] Giving up rate limited request %p: spent too long retrying.", mxHTTPOperation);
+                            error = [mxError createNSError];
                         }
                     }
                     else
                     {
-                        error = [mxError createNSError];
+                        // Report the received data in userInfo dictionary
+                        NSMutableDictionary *userInfo;
+                        if (error.userInfo)
+                        {
+                            userInfo = [NSMutableDictionary dictionaryWithDictionary:error.userInfo];
+                        }
+                        else
+                        {
+                            userInfo = [NSMutableDictionary dictionary];
+                        }
+
+                        [userInfo setObject:JSONResponse forKey:MXHTTPClientErrorResponseDataKey];
+
+                        error = [NSError errorWithDomain:error.domain code:error.code userInfo:userInfo];
                     }
+                }
+            }
+            else if (mxHTTPOperation.numberOfTries < mxHTTPOperation.maxNumberOfTries && mxHTTPOperation.age < mxHTTPOperation.maxRetriesTime)
+            {
+                // Check if it is a network connectivity issue
+                AFNetworkReachabilityManager *networkReachabilityManager = [AFNetworkReachabilityManager sharedManager];
+                NSLog(@"[MXHTTPClient] request %p. Network reachability: %d", mxHTTPOperation, networkReachabilityManager.isReachable);
+
+                if (networkReachabilityManager.isReachable)
+                {
+                    // The problem is not the network, do simple retry later
+                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, [MXHTTPClient jitterTimeForRetry] * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
+
+                        NSLog(@"[MXHTTPClient] Retry request %p. Try #%tu/%tu. Age: %tums. Max retries time: %tums", mxHTTPOperation, mxHTTPOperation.numberOfTries + 1, mxHTTPOperation.maxNumberOfTries, mxHTTPOperation.age, mxHTTPOperation.maxRetriesTime);
+
+                        [self tryRequest:mxHTTPOperation method:httpMethod path:path parameters:parameters data:data headers:headers timeout:timeoutInSeconds uploadProgress:uploadProgress success:^(NSDictionary *JSONResponse) {
+
+                            NSLog(@"[MXHTTPClient] Request %p finally succeeded after %tu tries and %tums", mxHTTPOperation, mxHTTPOperation.numberOfTries, mxHTTPOperation.age);
+
+                            success(JSONResponse);
+
+                        } failure:^(NSError *error) {
+                            failure(error);
+                        }];
+
+                    });
                 }
                 else
                 {
-                    // Report the received data in userInfo dictionary
-                    NSMutableDictionary *userInfo;
-                    if (error.userInfo)
-                    {
-                        userInfo = [NSMutableDictionary dictionaryWithDictionary:error.userInfo];
-                    }
-                    else
-                    {
-                        userInfo = [NSMutableDictionary dictionary];
-                    }
-                    
-                    [userInfo setObject:JSONResponse forKey:MXHTTPClientErrorResponseDataKey];
-                    
-                    error = [NSError errorWithDomain:error.domain code:error.code userInfo:userInfo];
-                }
-            }
-        }
-        else if (mxHTTPOperation.numberOfTries < mxHTTPOperation.maxNumberOfTries && mxHTTPOperation.age < mxHTTPOperation.maxRetriesTime)
-        {
-            // Check if it is a network connectivity issue
-            AFNetworkReachabilityManager *networkReachabilityManager = [AFNetworkReachabilityManager sharedManager];
-            NSLog(@"[MXHTTPClient] request %p. Network reachability: %d", mxHTTPOperation, networkReachabilityManager.isReachable);
+                    __block NSError *lastError = error;
 
-            if (networkReachabilityManager.isReachable)
-            {
-                // The problem is not the network, do simple retry later
-                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, [MXHTTPClient jitterTimeForRetry] * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
+                    // The device is not connected to the internet, wait for the connection to be up again before retrying
+                    __weak __typeof(self)weakSelf = self;
+                    id networkComeBackObserver = [self addObserverForNetworkComeBack:^{
 
-                    NSLog(@"[MXHTTPClient] Retry request %p. Try #%tu/%tu. Age: %tums. Max retries time: %tums", mxHTTPOperation, mxHTTPOperation.numberOfTries + 1, mxHTTPOperation.maxNumberOfTries, mxHTTPOperation.age, mxHTTPOperation.maxRetriesTime);
+                        __strong __typeof(weakSelf)strongSelf = weakSelf;
 
-                    [self tryRequest:mxHTTPOperation method:httpMethod path:path parameters:parameters data:data headers:headers timeout:timeoutInSeconds uploadProgress:uploadProgress success:^(NSDictionary *JSONResponse) {
+                        NSLog(@"[MXHTTPClient] Network is back for request %p", mxHTTPOperation);
 
-                        NSLog(@"[MXHTTPClient] Request %p finally succeeded after %tu tries and %tums", mxHTTPOperation, mxHTTPOperation.numberOfTries, mxHTTPOperation.age);
+                        // Flag this request as retried
+                        lastError = nil;
 
-                        success(JSONResponse);
+                        // Check whether the pending operation was not cancelled.
+                        if (mxHTTPOperation.maxNumberOfTries)
+                        {
+                            NSLog(@"[MXHTTPClient] Retry request %p. Try #%tu/%tu. Age: %tums. Max retries time: %tums", mxHTTPOperation, mxHTTPOperation.numberOfTries + 1, mxHTTPOperation.maxNumberOfTries, mxHTTPOperation.age, mxHTTPOperation.maxRetriesTime);
 
-                    } failure:^(NSError *error) {
-                        failure(error);
+                            [strongSelf tryRequest:mxHTTPOperation method:httpMethod path:path parameters:parameters data:data headers:headers timeout:timeoutInSeconds uploadProgress:uploadProgress success:^(NSDictionary *JSONResponse) {
+
+                                NSLog(@"[MXHTTPClient] Request %p finally succeeded after %tu tries and %tums", mxHTTPOperation, mxHTTPOperation.numberOfTries, mxHTTPOperation.age);
+
+                                success(JSONResponse);
+
+                                // The request is complete, managed the next one
+                                [strongSelf wakeUpNextReachabilityServer];
+
+                            } failure:^(NSError *error) {
+                                failure(error);
+
+                                // The request is complete, managed the next one
+                                [strongSelf wakeUpNextReachabilityServer];
+                            }];
+                        }
+                        else
+                        {
+                            NSLog(@"[MXHTTPClient] The request %p has been cancelled", mxHTTPOperation);
+
+                            // The request is complete, managed the next one
+                            [strongSelf wakeUpNextReachabilityServer];
+                        }
+
                     }];
-
-                });
-            }
-            else
-            {
-                __block NSError *lastError = error;
-
-                // The device is not connected to the internet, wait for the connection to be up again before retrying
-                __weak __typeof(self)weakSelf = self;
-                id networkComeBackObserver = [self addObserverForNetworkComeBack:^{
                     
-                    __strong __typeof(weakSelf)strongSelf = weakSelf;
-
-                    NSLog(@"[MXHTTPClient] Network is back for request %p", mxHTTPOperation);
-
-                    // Flag this request as retried
-                    lastError = nil;
-                    
-                    // Check whether the pending operation was not cancelled.
-                    if (mxHTTPOperation.maxNumberOfTries)
-                    {
-                        NSLog(@"[MXHTTPClient] Retry request %p. Try #%tu/%tu. Age: %tums. Max retries time: %tums", mxHTTPOperation, mxHTTPOperation.numberOfTries + 1, mxHTTPOperation.maxNumberOfTries, mxHTTPOperation.age, mxHTTPOperation.maxRetriesTime);
+                    // Wait for a limit of time. After that the request is considered expired
+                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (mxHTTPOperation.maxRetriesTime - mxHTTPOperation.age) * USEC_PER_SEC), dispatch_get_main_queue(), ^{
+                        __strong __typeof(weakSelf)strongSelf = weakSelf;
                         
-                        [strongSelf tryRequest:mxHTTPOperation method:httpMethod path:path parameters:parameters data:data headers:headers timeout:timeoutInSeconds uploadProgress:uploadProgress success:^(NSDictionary *JSONResponse) {
+                        // If the request has not been retried yet, consider we are in error
+                        if (lastError)
+                        {
+                            NSLog(@"[MXHTTPClient] Give up retry for request %p. Time expired.", mxHTTPOperation);
                             
-                            NSLog(@"[MXHTTPClient] Request %p finally succeeded after %tu tries and %tums", mxHTTPOperation, mxHTTPOperation.numberOfTries, mxHTTPOperation.age);
-                            
-                            success(JSONResponse);
-                            
-                            // The request is complete, managed the next one
-                            [strongSelf wakeUpNextReachabilityServer];
-                            
-                        } failure:^(NSError *error) {
-                            failure(error);
-                            
-                            // The request is complete, managed the next one
-                            [strongSelf wakeUpNextReachabilityServer];
-                        }];
-                    }
-                    else
-                    {
-                        NSLog(@"[MXHTTPClient] The request %p has been cancelled", mxHTTPOperation);
-                        
-                        // The request is complete, managed the next one
-                        [strongSelf wakeUpNextReachabilityServer];
-                    }
-                    
-                }];
-
-                // Wait for a limit of time. After that the request is considered expired
-                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (mxHTTPOperation.maxRetriesTime - mxHTTPOperation.age) * USEC_PER_SEC), dispatch_get_main_queue(), ^{
-                    __strong __typeof(weakSelf)strongSelf = weakSelf;
-
-                    // If the request has not been retried yet, consider we are in error
-                    if (lastError)
-                    {
-                        NSLog(@"[MXHTTPClient] Give up retry for request %p. Time expired.", mxHTTPOperation);
-
-                        [strongSelf removeObserverForNetworkComeBack:networkComeBackObserver];
-                        failure(lastError);
-                    }
-                });
+                            [strongSelf removeObserverForNetworkComeBack:networkComeBackObserver];
+                            failure(lastError);
+                        }
+                    });
+                }
+                error = nil;
             }
-            error = nil;
         }
 
         if (error)
         {
             failure(error);
         }
-    }];
-    
-    // Handle SSL certificates
-    [mxHTTPOperation.operation setWillSendRequestForAuthenticationChallengeBlock:^(NSURLConnection *connection, NSURLAuthenticationChallenge *challenge) {
-        
-        NSURLProtectionSpace *protectionSpace = [challenge protectionSpace];
-        
-        if ([protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust])
-        {
-            if ([httpManager.securityPolicy evaluateServerTrust:protectionSpace.serverTrust forDomain:protectionSpace.host])
-            {
-                NSURLCredential *credential = [NSURLCredential credentialForTrust:protectionSpace.serverTrust];
-                [[challenge sender] useCredential:credential forAuthenticationChallenge:challenge];
-            }
-            else
-            {
-                NSLog(@"[MXHTTPClient] Shall we trust %@?", protectionSpace.host);
-                
-                if (onUnrecognizedCertificateBlock)
-                {
-                    SecTrustRef trust = [protectionSpace serverTrust];
-                    
-                    if (SecTrustGetCertificateCount(trust) > 0)
-                    {
-                        // Consider here the leaf certificate (the one at index 0).
-                        SecCertificateRef certif = SecTrustGetCertificateAtIndex(trust, 0);
-                        
-                        NSData *certifData = (__bridge NSData*)SecCertificateCopyData(certif);
-                        if (onUnrecognizedCertificateBlock(certifData))
-                        {
-                            NSLog(@"[MXHTTPClient] Yes, the user trusts its certificate");
-                            
-                            _allowedCertificate = certifData;
-                            
-                            // Update http manager security policy with this trusted certificate.
-                            AFSecurityPolicy *securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeCertificate];
-                            securityPolicy.pinnedCertificates = @[certifData];
-                            securityPolicy.allowInvalidCertificates = YES;
-                            // Disable the domain validation for this certificate trusted by the user.
-                            securityPolicy.validatesDomainName = NO;
-                            httpManager.securityPolicy = securityPolicy;
-                            
-                            // Evaluate again server security
-                            if ([httpManager.securityPolicy evaluateServerTrust:protectionSpace.serverTrust forDomain:protectionSpace.host])
-                            {
-                                NSURLCredential *credential = [NSURLCredential credentialForTrust:protectionSpace.serverTrust];
-                                [[challenge sender] useCredential:credential forAuthenticationChallenge:challenge];
-                                return;
-                            }
-                            
-                            // Here pin certificate failed
-                            NSLog(@"[MXHTTPClient] Failed to pin certificate for %@", protectionSpace.host);
-                            [[challenge sender] continueWithoutCredentialForAuthenticationChallenge:challenge];
-                            return;
-                        }
-                    }
-                }
-                
-                // Here we don't trust the certificate
-                NSLog(@"[MXHTTPClient] No, the user doesn't trust it");
-                [[challenge sender] cancelAuthenticationChallenge:challenge];
-            }
-        }
-        else
-        {
-            if ([challenge previousFailureCount] == 0)
-            {
-                if (httpManager.credential)
-                {
-                    [[challenge sender] useCredential:httpManager.credential forAuthenticationChallenge:challenge];
-                }
-                else
-                {
-                    [[challenge sender] continueWithoutCredentialForAuthenticationChallenge:challenge];
-                }
-            }
-            else
-            {
-                [[challenge sender] continueWithoutCredentialForAuthenticationChallenge:challenge];
-            }
-        }
+
+        // Delay the call of 'cleanupBackgroundTask' in order to let httpManager.tasks.count
+        // decrease.
+        // Note that if one of the callbacks of 'tryRequest' makes a new request, the bg
+        // task will persist until the end of this new request.
+        // The basic use case is the sending of a media which consists in two requests:
+        //     - the upload of the media
+        //     - then, the sending of the message event associated to this media
+        // When backgrounding the app while sending the media, the user expects that the two
+        // requests complete.
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self cleanupBackgroundTask];
+        });
     }];
 
-    // Make the request continue in background
-    [mxHTTPOperation.operation setShouldExecuteAsBackgroundTaskWithExpirationHandler:nil];
+    // Make request continues when app goes in background
+    [self startBackgroundTask];
 
-    if (uploadProgress)
-    {
-        [mxHTTPOperation.operation setUploadProgressBlock:uploadProgress];
-    }
-
-    [httpManager.operationQueue addOperation:mxHTTPOperation.operation];
+    [mxHTTPOperation.operation resume];
 }
 
 + (NSUInteger)jitterTimeForRetry
@@ -504,7 +461,55 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
 }
 
 
+#pragma - Background task
+/**
+ Engage a background task.
+ 
+ The bg task will be ended by the call of 'cleanupBackgroundTask' when the request completes.
+ The goal of these methods is to mimic the behavior of 'setShouldExecuteAsBackgroundTaskWithExpirationHandler'
+ in AFNetworking < 3.0.
+ */
+- (void)startBackgroundTask
+{
+    // Create the bg task if it does not exist yet
+    if (backgroundTaskIdentifier == UIBackgroundTaskInvalid)
+    {
+        UIApplication *application = [UIApplication sharedApplication];
+        __weak __typeof(self)weakSelf = self;
+
+        backgroundTaskIdentifier = [application beginBackgroundTaskWithExpirationHandler:^{
+
+            __strong __typeof(weakSelf)strongSelf = weakSelf;
+            if (strongSelf)
+            {
+                [strongSelf cancel];
+                [self cleanupBackgroundTask];
+            }
+        }];
+    }
+}
+
+/**
+ End the background task.
+
+ The tast will be stopped only if there is no more http request in progress.
+ */
+- (void)cleanupBackgroundTask
+{
+    if (backgroundTaskIdentifier != UIBackgroundTaskInvalid && httpManager.tasks.count == 0)
+    {
+        [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
+        backgroundTaskIdentifier = UIBackgroundTaskInvalid;
+    }
+}
+
+
 #pragma mark - Private methods
+- (void)cancel
+{
+    [httpManager invalidateSessionCancelingTasks:YES];
+}
+
 - (void)setUpNetworkReachibility
 {
     // Start monitoring reachibility to get its status and change notifications
@@ -550,6 +555,79 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
 - (void)removeObserverForNetworkComeBack:(id)observer
 {
     [reachabilityObservers removeObject:observer];
+}
+
+- (void)setUpSSLCertificatesHandler
+{
+    __weak __typeof(self)weakSelf = self;
+
+    // Handle SSL certificates
+    [httpManager setSessionDidReceiveAuthenticationChallengeBlock:^NSURLSessionAuthChallengeDisposition(NSURLSession * _Nonnull session, NSURLAuthenticationChallenge * _Nonnull challenge, NSURLCredential *__autoreleasing  _Nullable * _Nullable credential) {
+
+        __strong __typeof(weakSelf)strongSelf = weakSelf;
+
+        if (strongSelf)
+        {
+            NSURLProtectionSpace *protectionSpace = [challenge protectionSpace];
+
+            if ([protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust])
+            {
+                if ([strongSelf->httpManager.securityPolicy evaluateServerTrust:protectionSpace.serverTrust forDomain:protectionSpace.host])
+                {
+                    *credential = [NSURLCredential credentialForTrust:protectionSpace.serverTrust];
+                    return NSURLSessionAuthChallengeUseCredential;
+                }
+                else
+                {
+                    NSLog(@"[MXHTTPClient] Shall we trust %@?", protectionSpace.host);
+
+                    if (strongSelf->onUnrecognizedCertificateBlock)
+                    {
+                        SecTrustRef trust = [protectionSpace serverTrust];
+
+                        if (SecTrustGetCertificateCount(trust) > 0)
+                        {
+                            // Consider here the leaf certificate (the one at index 0).
+                            SecCertificateRef certif = SecTrustGetCertificateAtIndex(trust, 0);
+
+                            NSData *certifData = (__bridge NSData*)SecCertificateCopyData(certif);
+                            if (strongSelf->onUnrecognizedCertificateBlock(certifData))
+                            {
+                                NSLog(@"[MXHTTPClient] Yes, the user trusts its certificate");
+
+                                _allowedCertificate = certifData;
+
+                                // Update http manager security policy with this trusted certificate.
+                                AFSecurityPolicy *securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeCertificate];
+                                securityPolicy.pinnedCertificates = [NSSet setWithObjects:certifData, nil];
+                                securityPolicy.allowInvalidCertificates = YES;
+                                // Disable the domain validation for this certificate trusted by the user.
+                                securityPolicy.validatesDomainName = NO;
+                                strongSelf->httpManager.securityPolicy = securityPolicy;
+
+                                // Evaluate again server security
+                                if ([strongSelf->httpManager.securityPolicy evaluateServerTrust:protectionSpace.serverTrust forDomain:protectionSpace.host])
+                                {
+                                    *credential = [NSURLCredential credentialForTrust:protectionSpace.serverTrust];
+                                    return NSURLSessionAuthChallengeUseCredential;
+                                }
+
+                                // Here pin certificate failed
+                                NSLog(@"[MXHTTPClient] Failed to pin certificate for %@", protectionSpace.host);
+                                return NSURLSessionAuthChallengePerformDefaultHandling;
+                            }
+                        }
+                    }
+                    
+                    // Here we don't trust the certificate
+                    NSLog(@"[MXHTTPClient] No, the user doesn't trust it");
+                    return NSURLSessionAuthChallengeCancelAuthenticationChallenge;
+                }
+            }
+        }
+
+        return NSURLSessionAuthChallengePerformDefaultHandling;
+    }];
 }
 
 @end
