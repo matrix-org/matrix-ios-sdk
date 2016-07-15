@@ -39,13 +39,13 @@
 FOUNDATION_EXPORT NSString *const kMXRoomInitialSyncNotification;
 
 /**
- Posted when a limited timeline is observed for an existing room during server sync.
- All the existing messages have been removed from the room storage. Only the messages received during this sync are available.
+ Posted when the messages of an existing room has been flushed during server sync.
+ This flush may be due to a limited timeline in the room sync, or the redaction of a state event.
  The token where to start back pagination has been updated.
  
  The notification object is the concerned room (MXRoom instance).
  */
-FOUNDATION_EXPORT NSString *const kMXRoomSyncWithLimitedTimelineNotification;
+FOUNDATION_EXPORT NSString *const kMXRoomDidFlushMessagesNotification;
 
 /**
  Posted when the number of unread notifications ('notificationCount' and 'highlightCount' properties) are updated.

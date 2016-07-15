@@ -19,6 +19,8 @@
 #import "MXSession.h"
 #import "MXMemoryStore.h"
 
+#import "MXEvent+MatrixKit.h"
+
 #import "MXError.h"
 
 NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
@@ -47,6 +49,11 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     // past timelines is managed locally.
     NSString *forwardsPaginationToken;
     BOOL hasReachedHomeServerForwardsPaginationEnd;
+    
+    /**
+     The current pending request.
+     */
+    MXHTTPOperation *httpOperation;
 }
 @end
 
@@ -102,6 +109,13 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 - (void)destroy
 {
+    if (httpOperation)
+    {
+        // Cancel the current server request
+        [httpOperation cancel];
+        httpOperation = nil;
+    }
+    
     if (!_isLiveTimeline)
     {
         // Release past timeline events stored in memory
@@ -409,7 +423,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     else if (roomSync.timeline.limited)
     {
         // The room has been resync with a limited timeline - Post notification
-        [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomSyncWithLimitedTimelineNotification
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomDidFlushMessagesNotification
                                                             object:room
                                                           userInfo:nil];
     }
@@ -537,7 +551,9 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 #pragma mark - Specific events Handling
 - (void)handleRedaction:(MXEvent*)redactionEvent
 {
-    // Check whether the redacted event has been already processed
+    NSLog(@"[MXEventTimeline] handle an event redaction");
+    
+    // Check whether the redacted event is stored in room messages
     MXEvent *redactedEvent = [store eventWithEventId:redactionEvent.redacts inRoom:_state.roomId];
     if (redactedEvent)
     {
@@ -545,15 +561,133 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         redactedEvent = [redactedEvent prune];
         redactedEvent.redactedBecause = redactionEvent.JSONDictionary;
 
-        if (redactedEvent.isState) {
-            // FIXME: The room state must be refreshed here since this redacted event.
-        }
-
-        // Store the event
+        // Store the updated event
         [store replaceEvent:redactedEvent inRoom:_state.roomId];
+    }
+    
+    // Check whether the current room state depends on this redacted event.
+    if (!redactedEvent || redactedEvent.isState)
+    {
+        // FIXME: Is @autoreleasepool block required or not here?
+        NSArray *stateEvents = _state.stateEvents;
+        
+        for (MXEvent *stateEvent in stateEvents)
+        {
+            if ([stateEvent.eventId isEqualToString:redactionEvent.redacts])
+            {
+                NSLog(@"[MXEventTimeline] the current room state has been modified by the event redaction.");
+                
+                // Redact the stored event
+                redactedEvent = [stateEvent prune];
+                redactedEvent.redactedBecause = redactionEvent.JSONDictionary;
+                
+                // Reset the room state. //FIXME: is it possible to handle only the redacted event?
+                _state = [[MXRoomState alloc] initWithRoomId:room.roomId andMatrixSession:room.mxSession andDirection:YES];
+                [self initialiseState:stateEvents];
+                
+                // Update store with new room state when all state event have been processed
+                if ([store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
+                {
+                    [store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
+                }
+                
+                // Reset the current pagination
+                // FIXME: Shall we let the kMXRoomStateHasBeenRedactedNotification listener trigger this reset? (like [MXKRoomDataSource reload] do)
+                [self resetPagination];
+                
+                // Notify that room history has been flushed
+                [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomDidFlushMessagesNotification
+                                                                    object:room
+                                                                  userInfo:nil];
+                return;
+            }
+        }
+    }
+    
+    // Re-sync the room in case of redacted state event from the past.
+    // Indeed, redacted information shouldn't spontaneously appear when you backpaginate...
+    if (!redactedEvent)
+    {
+        // Use a /context request to check whether the redacted event is a state event or not.
+        httpOperation = [room.mxSession.matrixRestClient contextOfEvent:redactionEvent.redacts inRoom:room.roomId limit:1 success:^(MXEventContext *eventContext) {
+            
+            if (!httpOperation)
+            {
+                return;
+            }
+            httpOperation = nil;
+            
+            if (eventContext.event.isState)
+            {
+                NSLog(@"[MXEventTimeline] the redacted event is a state event from the past");
+                [self forceRoomServerSync];
+            }
+            
+        } failure:^(NSError *error) {
+            
+            if (!httpOperation)
+            {
+                return;
+            }
+            httpOperation = nil;
+            
+            NSLog(@"[MXEventTimeline] handleRedaction: failed to retrieved the redacted event");
+            [self forceRoomServerSync];
+        }];
+    }
+    else if (redactedEvent.isState)
+    {
+        NSLog(@"[MXEventTimeline] the redacted event is a former state event");
+        [self forceRoomServerSync];
     }
 }
 
+- (void)forceRoomServerSync
+{
+    // Reset the storage of this room. Re-sync it from the server
+    NSLog(@"[MXEventTimeline] re-sync room (%@) from the server.", room.roomId);
+    [store deleteRoom:room.roomId];
+    
+    // Make an /initialSync request to get data
+    // Use a 0 messages limit for now because:
+    //    - /initialSync is marked as obsolete in the spec
+    //    - MXEventTimeline does not have methods to handle /initialSync responses
+    // So, avoid to write temparary code and let the user uses [MXEventTimeline paginate]
+    // to get room messages.
+    httpOperation = [room.mxSession.matrixRestClient initialSyncOfRoom:room.roomId withLimit:0 success:^(MXRoomInitialSync *roomInitialSync) {
+        
+        if (!httpOperation)
+        {
+            return;
+        }
+        httpOperation = nil;
+        
+        _state = [[MXRoomState alloc] initWithRoomId:room.roomId andMatrixSession:room.mxSession andDirection:YES];
+        [self initialiseState:roomInitialSync.state];
+        
+        // Update store with new room state when all state event have been processed
+        if ([store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
+        {
+            [store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
+        }
+        
+        [self resetPagination];
+        
+        // Notify that room history has been flushed
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomDidFlushMessagesNotification
+                                                            object:room
+                                                          userInfo:nil];
+        
+    } failure:^(NSError *error) {
+        
+        NSLog(@"[MXEventTimeline] forceRoomServerSync failed.");
+        
+        // FIXME: Reload entirely the app?
+//        [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionIgnoredUsersDidChangeNotification
+//                                                            object:room.mxSession
+//                                                          userInfo:nil];
+    }];
+}
 
 #pragma mark - State events handling
 - (void)cloneState:(MXTimelineDirection)direction
@@ -584,8 +718,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         // Forwards events update the current state of the room
         [_state handleStateEvent:event];
 
-        // Special handling for presence
-        if (_isLiveTimeline && MXEventTypeRoomMember == event.eventType)
+        // Special handling for presence (CAUTION: ignore redacted state event here)
+        if (_isLiveTimeline && MXEventTypeRoomMember == event.eventType && !event.isRedactedEvent)
         {
             // Update MXUser data
             MXUser *user = [room.mxSession getOrCreateUser:event.sender];
