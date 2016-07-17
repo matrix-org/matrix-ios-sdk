@@ -569,10 +569,12 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     if (!redactedEvent || redactedEvent.isState)
     {
         // FIXME: Is @autoreleasepool block required or not here?
-        NSArray *stateEvents = _state.stateEvents;
+        NSMutableArray *stateEvents = [NSMutableArray arrayWithArray:_state.stateEvents];
         
-        for (MXEvent *stateEvent in stateEvents)
+        for (NSInteger index = 0; index < stateEvents.count; index++)
         {
+            MXEvent *stateEvent = stateEvents[index];
+            
             if ([stateEvent.eventId isEqualToString:redactionEvent.redacts])
             {
                 NSLog(@"[MXEventTimeline] the current room state has been modified by the event redaction.");
@@ -580,6 +582,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                 // Redact the stored event
                 redactedEvent = [stateEvent prune];
                 redactedEvent.redactedBecause = redactionEvent.JSONDictionary;
+                
+                [stateEvents replaceObjectAtIndex:index withObject:redactedEvent];
                 
                 // Reset the room state. //FIXME: is it possible to handle only the redacted event?
                 _state = [[MXRoomState alloc] initWithRoomId:room.roomId andMatrixSession:room.mxSession andDirection:YES];

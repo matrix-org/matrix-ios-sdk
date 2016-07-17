@@ -450,7 +450,8 @@
                     membersWithThirdPartyInviteTokenCache[roomMember.thirdPartyInviteToken] = roomMember;
                 }
             }
-            else
+            else// FIXME: In case of redacted membership event (prev_content is missing see SYN-724),
+                // the room member is then nil: the client considers by mistake the user is no more part of the room...
             {
                 // The user is no more part of the room. Remove him.
                 // This case happens during back pagination: we remove here users when they are not in the room yet.
@@ -550,13 +551,17 @@
         
         if (!member)
         {
-            // The user may not have joined the room yet. So try to resolve display name from presence data
-            // Note: This data may not be available
-            MXUser* user = [mxSession userWithUserId:userId];
-            if (user && user.displayname.length)
-            {
-                displayName = user.displayname;
-            }
+            // FIXME: In case of redacted membership event (prev_content is missing see SYN-724),
+            // the client considers by mistake that some users are no more part of the room.
+            // PATCH: we comment the following, else some redacted information re-appear spontaneously.
+            
+//            // The user may not have joined the room yet. So try to resolve display name from presence data
+//            // Note: This data may not be available
+//            MXUser* user = [mxSession userWithUserId:userId];
+//            if (user && user.displayname.length)
+//            {
+//                displayName = user.displayname;
+//            }
         }
         else if (member.displayname.length)
         {
