@@ -65,8 +65,6 @@
     void (^onHandleAnswerSuccess)();
 }
 
-@property (nonatomic, readwrite, retain) NSString *answer;
-
 @end
 
 @implementation MXJingleCallStackCall
@@ -147,16 +145,22 @@
 #pragma mark - Incoming call
 - (void)handleOffer:(NSString *)sdpOffer
 {
-    // @TODO
+    RTCSessionDescription *sessionDescription = [[RTCSessionDescription alloc] initWithType:@"offer" sdp:sdpOffer];
+    [peerConnection setRemoteDescriptionWithDelegate:self sessionDescription:sessionDescription];
 }
 
 - (void)createAnswer:(void (^)(NSString *))success failure:(void (^)(NSError *))failure
 {
-    if (self.answer) {
-        success(self.answer);
-    } else {
-        onCreateAnswerSuccess = success;
-    }
+    onCreateAnswerSuccess = success;
+
+    RTCMediaConstraints  *constraints =
+    [[RTCMediaConstraints alloc] initWithMandatoryConstraints:@[
+                                                                [[RTCPair alloc] initWithKey:@"OfferToReceiveAudio" value:@"true"],
+                                                                [[RTCPair alloc] initWithKey:@"OfferToReceiveVideo" value:@"false"]    // @TODO
+                                                                ]
+                                          optionalConstraints:nil];
+
+    [peerConnection createAnswerWithDelegate:self constraints:constraints];
 }
 
 
@@ -165,14 +169,14 @@
 {
     onCreateOfferSuccess = success;
 
-    RTCMediaConstraints  *audioConstraints =
+    RTCMediaConstraints  *constraints =
     [[RTCMediaConstraints alloc] initWithMandatoryConstraints:@[
                                                                 [[RTCPair alloc] initWithKey:@"OfferToReceiveAudio" value:@"true"],
                                                                 [[RTCPair alloc] initWithKey:@"OfferToReceiveVideo" value:@"false"]    // @TODO
                                                                 ]
                                           optionalConstraints:nil];
 
-    [peerConnection createOfferWithDelegate:self constraints:audioConstraints];
+    [peerConnection createOfferWithDelegate:self constraints:constraints];
 }
 
 - (void)handleAnswer:(NSString *)sdp success:(void (^)())success failure:(void (^)(NSError *))failure
@@ -280,14 +284,14 @@
 {
     NSLog(@"### didCreateSessionDescription: %@", sdp);
 
-    // Report the created offed back to libjingle
+    // Report the created offer or answer back to libjingle
     [thePeerConnection setLocalDescriptionWithDelegate:self sessionDescription:sdp];
  }
 
 // Called when setting a local or remote description.
 - (void)peerConnection:(RTCPeerConnection *)thePeerConnection didSetSessionDescriptionWithError:(NSError *)error
 {
-    NSLog(@"### didSetSessionDescriptionWithError: %@", error);
+    NSLog(@"### didSetSessionDescription: signalingState:%@ - error:%@", @(thePeerConnection.signalingState), error);
 
     if (thePeerConnection.signalingState == RTCSignalingHaveLocalOffer)
     {
@@ -298,6 +302,18 @@
             {
                 onCreateOfferSuccess(thePeerConnection.localDescription.description);
                 onCreateOfferSuccess = nil;
+            }
+        });
+    }
+    else if (thePeerConnection.signalingState == RTCSignalingStable)
+    {
+        // The created answer has been acknowleged by libjingle.
+        // Send it to the other peer through Matrix.
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (onCreateAnswerSuccess)
+            {
+                onCreateAnswerSuccess(thePeerConnection.localDescription.description);
+                onCreateAnswerSuccess = nil;
             }
         });
     }
