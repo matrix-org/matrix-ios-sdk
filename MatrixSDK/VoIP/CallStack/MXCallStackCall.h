@@ -147,6 +147,16 @@
 @protocol MXCallStackCallDelegate <NSObject>
 
 /**
+ Informed the delegate that a local ICE candidate has been discovered.
+
+ @param callStackCall the corresponding instance.
+ @param sdpMid the media stream identifier.
+ @param sdpMLineIndex the index of m-line in the SDP.
+ @param sdp the candidate SDP.
+ */
+- (void)callStackCall:(id<MXCallStackCall>)callStackCall onICECandidateWithSdpMid:(NSString*)sdpMid sdpMLineIndex:(NSInteger)sdpMLineIndex sdp:(NSString*)sdp;
+
+/**
  Tells the delegate an error occured.
 
  @param callStackCall the corresponding instance.

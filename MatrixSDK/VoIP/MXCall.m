@@ -50,6 +50,11 @@
      Timer to expire an invite.
      */
     NSTimer *inviteExpirationTimer;
+
+    /**
+     A queue of gathered local ICE candidates waiting to be sent to the other peer.
+     */
+    NSMutableArray<NSDictionary*> *localICECandidates;
 }
 
 @end
@@ -69,6 +74,8 @@
         _callerId = callManager.mxSession.myUser.userId;
 
         _state = MXCallStateFledgling;
+
+        localICECandidates = [NSMutableArray array];
 
         callStackCall = [callManager.callStack createCall];
         if (nil == callStackCall)
@@ -382,7 +389,41 @@
 
 
 #pragma mark - MXCallStackCallDelegate
--(void)callStackCall:(id<MXCallStackCall>)callStackCall onError:(NSError *)error
+- (void)callStackCall:(id<MXCallStackCall>)callStackCall onICECandidateWithSdpMid:(NSString *)sdpMid sdpMLineIndex:(NSInteger)sdpMLineIndex sdp:(NSString *)sdp
+{
+    // Candidates are sent in a special way because we try to amalgamate
+    // them into one message
+    // No need for locking data as we assume everything is running on the main thread
+    [localICECandidates addObject:@{
+                                    @"sdpMid": sdpMid,
+                                    @"sdpMLineIndex": @(sdpMLineIndex),
+                                    @"sdp":sdp
+                                    }
+     ];
+
+    // Send candidates every 100ms max. This value gives enough time to the underlaying call stack
+    // to gather several ICE candidates
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(100 * NSEC_PER_MSEC)), dispatch_get_main_queue(), ^{
+
+        if (localICECandidates.count)
+        {
+            NSLog(@"MXCall] onICECandidate: Send %tu candidates", localICECandidates.count);
+
+            NSDictionary *content = @{
+                                      @"candidates:": localICECandidates
+                                      };
+
+            [_room sendEventOfType:kMXEventTypeStringCallCandidates content:content success:nil failure:^(NSError *error) {
+                NSLog(@"[MXCall] onICECandidate: ERROR: Cannot send m.call.candidates event. Error: %@", error);
+                [self didEncounterError:error];
+            }];
+
+            [localICECandidates removeAllObjects];
+        }
+    });
+}
+
+- (void)callStackCall:(id<MXCallStackCall>)callStackCall onError:(NSError *)error
 {
     NSLog(@"[MXCall] callStackCall didEncounterError: %@", error);
     [self didEncounterError:error];
