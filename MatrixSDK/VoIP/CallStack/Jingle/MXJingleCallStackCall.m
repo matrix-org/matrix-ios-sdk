@@ -227,46 +227,7 @@
     dispatch_async(dispatch_get_main_queue(), ^{
 
         // Use self.remoteVideoView as a container of a RTCEAGLVideoView
-        RTCEAGLVideoView *renderView = [[RTCEAGLVideoView alloc] initWithFrame:self.remoteVideoView.frame];
-
-        renderView.translatesAutoresizingMaskIntoConstraints = NO;
-        [self.remoteVideoView addSubview:renderView];
-
-
-        // Make sure renderView follow self.remoteVideoView size
-        NSLayoutConstraint *width =[NSLayoutConstraint
-                                    constraintWithItem:renderView
-                                    attribute:NSLayoutAttributeWidth
-                                    relatedBy:0
-                                    toItem:self.remoteVideoView
-                                    attribute:NSLayoutAttributeWidth
-                                    multiplier:1.0
-                                    constant:0];
-        NSLayoutConstraint *height =[NSLayoutConstraint
-                                     constraintWithItem:renderView
-                                     attribute:NSLayoutAttributeHeight
-                                     relatedBy:0
-                                     toItem:self.remoteVideoView
-                                     attribute:NSLayoutAttributeHeight
-                                     multiplier:1.0
-                                     constant:0];
-        NSLayoutConstraint *top = [NSLayoutConstraint
-                                   constraintWithItem:renderView
-                                   attribute:NSLayoutAttributeTop
-                                   relatedBy:NSLayoutRelationEqual
-                                   toItem:self.remoteVideoView
-                                   attribute:NSLayoutAttributeTop
-                                   multiplier:1.0f
-                                   constant:0.f];
-        NSLayoutConstraint *leading = [NSLayoutConstraint
-                                       constraintWithItem:renderView
-                                       attribute:NSLayoutAttributeLeading
-                                       relatedBy:NSLayoutRelationEqual
-                                       toItem:self.remoteVideoView
-                                       attribute:NSLayoutAttributeLeading
-                                       multiplier:1.0f
-                                       constant:0.f];
-        [NSLayoutConstraint activateConstraints:@[width, height, top, leading]];
+        RTCEAGLVideoView *renderView = [self createRTCVideoRendererInView:self.remoteVideoView];
 
         [remoteVideoTrack addRenderer:renderView];
     });
@@ -457,14 +418,17 @@
         // Create a video track and add it to the media stream
         if (device)
         {
-            RTCVideoSource *videoSource;
             RTCVideoCapturer *capturer = [RTCVideoCapturer capturerWithDeviceName:device.localizedName];
-            videoSource = [peerConnectionFactory videoSourceWithCapturer:capturer constraints:nil];
+            RTCVideoSource *localVideoSource = [peerConnectionFactory videoSourceWithCapturer:capturer constraints:nil];
             
-            RTCVideoTrack *videoTrack = [peerConnectionFactory videoTrackWithID:@"ARDAMSv0" source:videoSource];
-            [localStream addVideoTrack:videoTrack];
+            RTCVideoTrack *localVideoTrack = [peerConnectionFactory videoTrackWithID:@"ARDAMSv0" source:localVideoSource];
+            [localStream addVideoTrack:localVideoTrack];
 
-            NSLog(@"----- %@", videoTrack);
+            // Display the self view
+            // Use selfVideoView as a container of a RTCEAGLVideoView
+            RTCEAGLVideoView *renderView = [self createRTCVideoRendererInView:self.selfVideoView];
+            
+            [localVideoTrack addRenderer:renderView];
         }
     }
 
@@ -486,6 +450,51 @@
 
         [self createLocalMediaStream];
     }
+}
+
+- (RTCEAGLVideoView*)createRTCVideoRendererInView:(UIView*)view
+{
+    // Use 'view' as a container of a RTCEAGLVideoView
+    RTCEAGLVideoView *renderView = [[RTCEAGLVideoView alloc] initWithFrame:self.remoteVideoView.frame];
+    renderView.translatesAutoresizingMaskIntoConstraints = NO;
+    [view addSubview:renderView];
+
+    // Make sure renderView follow 'view' size
+    NSLayoutConstraint *width =[NSLayoutConstraint
+                                constraintWithItem:renderView
+                                attribute:NSLayoutAttributeWidth
+                                relatedBy:0
+                                toItem:view
+                                attribute:NSLayoutAttributeWidth
+                                multiplier:1.0
+                                constant:0];
+    NSLayoutConstraint *height =[NSLayoutConstraint
+                                 constraintWithItem:renderView
+                                 attribute:NSLayoutAttributeHeight
+                                 relatedBy:0
+                                 toItem:view
+                                 attribute:NSLayoutAttributeHeight
+                                 multiplier:1.0
+                                 constant:0];
+    NSLayoutConstraint *top = [NSLayoutConstraint
+                               constraintWithItem:renderView
+                               attribute:NSLayoutAttributeTop
+                               relatedBy:NSLayoutRelationEqual
+                               toItem:view
+                               attribute:NSLayoutAttributeTop
+                               multiplier:1.0f
+                               constant:0.f];
+    NSLayoutConstraint *leading = [NSLayoutConstraint
+                                   constraintWithItem:renderView
+                                   attribute:NSLayoutAttributeLeading
+                                   relatedBy:NSLayoutRelationEqual
+                                   toItem:view
+                                   attribute:NSLayoutAttributeLeading
+                                   multiplier:1.0f
+                                   constant:0.f];
+    [NSLayoutConstraint activateConstraints:@[width, height, top, leading]];
+
+    return renderView;
 }
 
 @end
