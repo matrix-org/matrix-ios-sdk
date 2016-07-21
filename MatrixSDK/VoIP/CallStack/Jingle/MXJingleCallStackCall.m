@@ -211,14 +211,14 @@
 - (void)peerConnection:(RTCPeerConnection *)peerConnection
  signalingStateChanged:(RTCSignalingState)stateChanged
 {
-    NSLog(@"### signalingStateChanged: %@", @(stateChanged));
+    NSLog(@"[MXJingleCallStackCall] signalingStateChanged: %tu", stateChanged);
 }
 
 // Triggered when media is received on a new stream from remote peer.
 - (void)peerConnection:(RTCPeerConnection *)peerConnection
            addedStream:(RTCMediaStream *)stream
 {
-    NSLog(@"### addedStream");
+    NSLog(@"[MXJingleCallStackCall] addedStream");
 
     // This is mandatory to keep a reference on the video track
     // Else the video does not display in self.remoteVideoView
@@ -237,37 +237,53 @@
 - (void)peerConnection:(RTCPeerConnection *)peerConnection
          removedStream:(RTCMediaStream *)stream
 {
-    NSLog(@"### removedStream");
+    NSLog(@"[MXJingleCallStackCall] removedStream");
 }
 
 // Triggered when renegotiation is needed, for example the ICE has restarted.
 - (void)peerConnectionOnRenegotiationNeeded:(RTCPeerConnection *)peerConnection
 {
-    NSLog(@"### peerConnectionOnRenegotiationNeeded");
+    NSLog(@"[MXJingleCallStackCall] peerConnectionOnRenegotiationNeeded");
 }
 
 // Called any time the ICEConnectionState changes.
 - (void)peerConnection:(RTCPeerConnection *)peerConnection
   iceConnectionChanged:(RTCICEConnectionState)newState
 {
-    NSLog(@"### iceConnectionChanged: %@", @(newState));
+    NSLog(@"[MXJingleCallStackCall] iceConnectionChanged: %@", @(newState));
 
-    if (newState == RTCICEConnectionConnected)
+    switch (newState)
     {
-        // The call is now established. Report it
-        if (onHandleAnswerSuccess)
+        case RTCICEConnectionConnected:
+            // The call is now established. Report it
+            if (onHandleAnswerSuccess)
+            {
+                onHandleAnswerSuccess();
+                onHandleAnswerSuccess = nil;
+            }
+            break;
+
+        case RTCICEConnectionFailed:
         {
-            onHandleAnswerSuccess();
-            onHandleAnswerSuccess = nil;
+            // ICE discovery has failed or the connection has dropped
+            dispatch_async(dispatch_get_main_queue(), ^{
+
+                [delegate callStackCall:self onError:nil];
+            });
+            break;
         }
+
+        default:
+            break;
     }
+
 }
 
 // Called any time the ICEGatheringState changes.
 - (void)peerConnection:(RTCPeerConnection *)peerConnection
    iceGatheringChanged:(RTCICEGatheringState)newState
 {
-    NSLog(@"### iceGatheringChanged: %@", @(newState));
+    NSLog(@"[MXJingleCallStackCall] iceGatheringChanged: %@", @(newState));
 }
 
 // New Ice candidate have been found.
@@ -284,7 +300,7 @@
 - (void)peerConnection:(RTCPeerConnection*)peerConnection
     didOpenDataChannel:(RTCDataChannel*)dataChannel
 {
-    NSLog(@"### didOpenDataChannel");
+    NSLog(@"[MXJingleCallStackCall] didOpenDataChannel");
 }
 
 
@@ -294,7 +310,7 @@
 - (void)peerConnection:(RTCPeerConnection *)thePeerConnection didCreateSessionDescription:(RTCSessionDescription *)sdp
                  error:(NSError *)error
 {
-    NSLog(@"### didCreateSessionDescription: %@", sdp);
+    NSLog(@"[MXJingleCallStackCall] didCreateSessionDescription: %@", sdp);
 
     // Report the created offer or answer back to libjingle
     [thePeerConnection setLocalDescriptionWithDelegate:self sessionDescription:sdp];
@@ -303,7 +319,7 @@
 // Called when setting a local or remote description.
 - (void)peerConnection:(RTCPeerConnection *)thePeerConnection didSetSessionDescriptionWithError:(NSError *)error
 {
-    NSLog(@"### didSetSessionDescription: signalingState:%@ - error:%@", @(thePeerConnection.signalingState), error);
+    NSLog(@"[MXJingleCallStackCall] didSetSessionDescription: signalingState:%@ - error:%@", @(thePeerConnection.signalingState), error);
 
     if (thePeerConnection.signalingState == RTCSignalingHaveLocalOffer)
     {
@@ -335,7 +351,6 @@
 #pragma mark - Properties
 - (UIDeviceOrientation)selfOrientation
 {
-    // @TODO
     UIDeviceOrientation selfOrientation;
  
     switch ([[UIDevice currentDevice] orientation]) {
@@ -361,26 +376,7 @@
 
 - (void)setSelfOrientation:(UIDeviceOrientation)selfOrientation
 {
-    NSInteger orientation;
-    switch ([[UIDevice currentDevice] orientation]) {
-        case UIDeviceOrientationLandscapeLeft:
-            orientation = 180;
-            break;
-        case UIDeviceOrientationLandscapeRight:
-            orientation = 0;
-            break;
-        case UIDeviceOrientationPortrait:
-            orientation = 90;
-            break;
-        case UIDeviceOrientationPortraitUpsideDown:
-            orientation = 270;
-            break;
-        default:
-            orientation = 0;
-            break;
-    };
-
-    //@TODO
+    // Do nothing as the RTCPeerConnection do CVO automatically
 }
 
 #pragma mark - Private methods
