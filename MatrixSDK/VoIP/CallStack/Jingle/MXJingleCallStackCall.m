@@ -18,6 +18,10 @@
 
 #ifdef MX_CALL_STACK_JINGLE
 
+#import <UIKit/UIKit.h>
+#import <AVFoundation/AVCaptureDevice.h>
+#import <AVFoundation/AVMediaFormat.h>
+
 #import "RTCICEServer.h"
 #import "RTCICECandidate.h"
 #import "RTCMediaConstraints.h"
@@ -27,8 +31,10 @@
 #import "RTCPeerConnectionDelegate.h"
 #import "RTCSessionDescription.h"
 #import "RTCSessionDescriptionDelegate.h"
+#import "RTCVideoCapturer.h"
 #import "RTCVideoRenderer.h"
 #import "RTCVideoTrack.h"
+#import "RTCEAGLVideoView.h"
 #import "RTCPair.h"
 
 
@@ -43,6 +49,16 @@
      The libjingle object handling the call.
      */
     RTCPeerConnection *peerConnection;
+
+    /**
+     The remote video track.
+     */
+    RTCVideoTrack *remoteVideoTrack;
+
+    /**
+     Flag indicating if this is a video call.
+     */
+    BOOL isVideoCall;
 
     /**
      Success block for the async `startCapturingMediaWithVideo` method.
@@ -83,11 +99,12 @@
 - (void)startCapturingMediaWithVideo:(BOOL)video success:(void (^)())success failure:(void (^)(NSError *))failure
 {
     onStartCapturingMediaWithVideoSuccess = success;
+    isVideoCall = video;
 
     // Video requires views to render to before calling startGetCaptureSourcesForAudio
     if (NO == video || (selfVideoView && remoteVideoView))
     {
-        [self createLocalMediaStreamWithVideo:video];
+        [self createLocalMediaStream];
     }
     else
     {
@@ -152,15 +169,7 @@
 - (void)createAnswer:(void (^)(NSString *))success failure:(void (^)(NSError *))failure
 {
     onCreateAnswerSuccess = success;
-
-    RTCMediaConstraints  *constraints =
-    [[RTCMediaConstraints alloc] initWithMandatoryConstraints:@[
-                                                                [[RTCPair alloc] initWithKey:@"OfferToReceiveAudio" value:@"true"],
-                                                                [[RTCPair alloc] initWithKey:@"OfferToReceiveVideo" value:@"false"]    // @TODO
-                                                                ]
-                                          optionalConstraints:nil];
-
-    [peerConnection createAnswerWithDelegate:self constraints:constraints];
+    [peerConnection createAnswerWithDelegate:self constraints:self.mediaConstraints];
 }
 
 
@@ -168,15 +177,7 @@
 - (void)createOffer:(void (^)(NSString *sdp))success failure:(void (^)(NSError *))failure
 {
     onCreateOfferSuccess = success;
-
-    RTCMediaConstraints  *constraints =
-    [[RTCMediaConstraints alloc] initWithMandatoryConstraints:@[
-                                                                [[RTCPair alloc] initWithKey:@"OfferToReceiveAudio" value:@"true"],
-                                                                [[RTCPair alloc] initWithKey:@"OfferToReceiveVideo" value:@"false"]    // @TODO
-                                                                ]
-                                          optionalConstraints:nil];
-
-    [peerConnection createOfferWithDelegate:self constraints:constraints];
+    [peerConnection createOfferWithDelegate:self constraints:self.mediaConstraints];
 }
 
 - (void)handleAnswer:(NSString *)sdp success:(void (^)())success failure:(void (^)(NSError *))failure
@@ -218,6 +219,57 @@
            addedStream:(RTCMediaStream *)stream
 {
     NSLog(@"### addedStream");
+
+    // This is mandatory to keep a reference on the video track
+    // Else the video does not display in self.remoteVideoView
+    remoteVideoTrack = stream.videoTracks.lastObject;
+
+    dispatch_async(dispatch_get_main_queue(), ^{
+
+        // Use self.remoteVideoView as a container of a RTCEAGLVideoView
+        RTCEAGLVideoView *renderView = [[RTCEAGLVideoView alloc] initWithFrame:self.remoteVideoView.frame];
+
+        renderView.translatesAutoresizingMaskIntoConstraints = NO;
+        [self.remoteVideoView addSubview:renderView];
+
+
+        // Make sure renderView follow self.remoteVideoView size
+        NSLayoutConstraint *width =[NSLayoutConstraint
+                                    constraintWithItem:renderView
+                                    attribute:NSLayoutAttributeWidth
+                                    relatedBy:0
+                                    toItem:self.remoteVideoView
+                                    attribute:NSLayoutAttributeWidth
+                                    multiplier:1.0
+                                    constant:0];
+        NSLayoutConstraint *height =[NSLayoutConstraint
+                                     constraintWithItem:renderView
+                                     attribute:NSLayoutAttributeHeight
+                                     relatedBy:0
+                                     toItem:self.remoteVideoView
+                                     attribute:NSLayoutAttributeHeight
+                                     multiplier:1.0
+                                     constant:0];
+        NSLayoutConstraint *top = [NSLayoutConstraint
+                                   constraintWithItem:renderView
+                                   attribute:NSLayoutAttributeTop
+                                   relatedBy:NSLayoutRelationEqual
+                                   toItem:self.remoteVideoView
+                                   attribute:NSLayoutAttributeTop
+                                   multiplier:1.0f
+                                   constant:0.f];
+        NSLayoutConstraint *leading = [NSLayoutConstraint
+                                       constraintWithItem:renderView
+                                       attribute:NSLayoutAttributeLeading
+                                       relatedBy:NSLayoutRelationEqual
+                                       toItem:self.remoteVideoView
+                                       attribute:NSLayoutAttributeLeading
+                                       multiplier:1.0f
+                                       constant:0.f];
+        [NSLayoutConstraint activateConstraints:@[width, height, top, leading]];
+
+        [remoteVideoTrack addRenderer:renderView];
+    });
 }
 
 // Triggered when a remote peer close a stream.
@@ -231,7 +283,6 @@
 - (void)peerConnectionOnRenegotiationNeeded:(RTCPeerConnection *)peerConnection
 {
     NSLog(@"### peerConnectionOnRenegotiationNeeded");
-
 }
 
 // Called any time the ICEConnectionState changes.
@@ -372,30 +423,52 @@
 }
 
 #pragma mark - Private methods
-- (void)createLocalMediaStreamWithVideo:(BOOL)video
+
+- (RTCMediaConstraints*)mediaConstraints
+{
+    return [[RTCMediaConstraints alloc] initWithMandatoryConstraints:@[
+                                                                       [[RTCPair alloc] initWithKey:@"OfferToReceiveAudio" value:@"true"],
+                                                                       [[RTCPair alloc] initWithKey:@"OfferToReceiveVideo" value:(isVideoCall ? @"true" : @"false")]
+                                                                       ]
+                                                 optionalConstraints:nil];
+}
+
+- (void)createLocalMediaStream
 {
     RTCMediaStream* localStream = [peerConnectionFactory mediaStreamWithLabel:@"ARDAMS"];
 
-//    Filters used by Android
-//    @TODO: is it possible to use them on iOS?
-//    RTCMediaConstraints  *audioConstraints =
-//    [[RTCMediaConstraints alloc] initWithMandatoryConstraints:@[
-//                                                                [[RTCPair alloc] initWithKey:@"googEchoCancellation" value:@"true"],
-//                                                                [[RTCPair alloc] initWithKey:@"googEchoCancellation2" value:@"true"],
-//                                                                [[RTCPair alloc] initWithKey:@"googDAEchoCancellation" value:@"true"],
-//                                                                [[RTCPair alloc] initWithKey:@"googTypingNoiseDetection" value:@"true"],
-//                                                                [[RTCPair alloc] initWithKey:@"googAutoGainControl" value:@"true"],
-//                                                                [[RTCPair alloc] initWithKey:@"googAutoGainControl2" value:@"true"],
-//                                                                [[RTCPair alloc] initWithKey:@"googNoiseSuppression" value:@"true"],
-//                                                                [[RTCPair alloc] initWithKey:@"googNoiseSuppression2" value:@"true"],
-//                                                                [[RTCPair alloc] initWithKey:@"googAudioMirroring" value:@"false"],
-//                                                                [[RTCPair alloc] initWithKey:@"googHighpassFilter" value:@"true"],
-//                                                                [[RTCPair alloc] initWithKey:@"RtpDataChannels" value:@"true"]
-//                                                                ]
-//                                          optionalConstraints:nil];
-
+    // Set up audio
     [localStream addAudioTrack:[peerConnectionFactory audioTrackWithID:@"ARDAMSa0"]];
 
+    // And video
+    if (isVideoCall)
+    {
+        // Find the device that is the front facing camera
+        AVCaptureDevice *device;
+        for (AVCaptureDevice *captureDevice in [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo])
+        {
+            if (captureDevice.position == AVCaptureDevicePositionFront)
+            {
+                device = captureDevice;
+                break;
+            }
+        }
+
+        // Create a video track and add it to the media stream
+        if (device)
+        {
+            RTCVideoSource *videoSource;
+            RTCVideoCapturer *capturer = [RTCVideoCapturer capturerWithDeviceName:device.localizedName];
+            videoSource = [peerConnectionFactory videoSourceWithCapturer:capturer constraints:nil];
+            
+            RTCVideoTrack *videoTrack = [peerConnectionFactory videoTrackWithID:@"ARDAMSv0" source:videoSource];
+            [localStream addVideoTrack:videoTrack];
+
+            NSLog(@"----- %@", videoTrack);
+        }
+    }
+
+    // Wire the streams to the call
     [peerConnection addStream:localStream];
 
     if (onStartCapturingMediaWithVideoSuccess)
@@ -411,7 +484,7 @@
     {
         NSLog(@"[MXJingleCallStackCall] selfVideoView and remoteVideoView are set. Call startGetCaptureSourcesForAudio");
 
-        // @TODO
+        [self createLocalMediaStream];
     }
 }
 
