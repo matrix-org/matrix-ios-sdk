@@ -37,6 +37,7 @@
 #import "RTCEAGLVideoView.h"
 #import "RTCPair.h"
 
+#import "MXJingleVideoView.h"
 
 @interface MXJingleCallStackCall ()
 {
@@ -233,8 +234,7 @@
         dispatch_async(dispatch_get_main_queue(), ^{
 
             // Use self.remoteVideoView as a container of a RTCEAGLVideoView
-            RTCEAGLVideoView *renderView = [self createRTCVideoRendererInView:self.remoteVideoView];
-
+            MXJingleVideoView *renderView = [[MXJingleVideoView alloc] initWithContainerView:self.remoteVideoView];
             [remoteVideoTrack addRenderer:renderView];
         });
     }
@@ -432,8 +432,7 @@
 
             // Display the self view
             // Use selfVideoView as a container of a RTCEAGLVideoView
-            RTCEAGLVideoView *renderView = [self createRTCVideoRendererInView:self.selfVideoView];
-            
+            MXJingleVideoView *renderView = [[MXJingleVideoView alloc] initWithContainerView:self.selfVideoView];
             [localVideoTrack addRenderer:renderView];
         }
     }
@@ -456,51 +455,6 @@
 
         [self createLocalMediaStream];
     }
-}
-
-- (RTCEAGLVideoView*)createRTCVideoRendererInView:(UIView*)view
-{
-    // Use 'view' as a container of a RTCEAGLVideoView
-    RTCEAGLVideoView *renderView = [[RTCEAGLVideoView alloc] initWithFrame:self.remoteVideoView.frame];
-    renderView.translatesAutoresizingMaskIntoConstraints = NO;
-    [view addSubview:renderView];
-
-    // Make sure renderView follow 'view' size
-    NSLayoutConstraint *width =[NSLayoutConstraint
-                                constraintWithItem:renderView
-                                attribute:NSLayoutAttributeWidth
-                                relatedBy:0
-                                toItem:view
-                                attribute:NSLayoutAttributeWidth
-                                multiplier:1.0
-                                constant:0];
-    NSLayoutConstraint *height =[NSLayoutConstraint
-                                 constraintWithItem:renderView
-                                 attribute:NSLayoutAttributeHeight
-                                 relatedBy:0
-                                 toItem:view
-                                 attribute:NSLayoutAttributeHeight
-                                 multiplier:1.0
-                                 constant:0];
-    NSLayoutConstraint *top = [NSLayoutConstraint
-                               constraintWithItem:renderView
-                               attribute:NSLayoutAttributeTop
-                               relatedBy:NSLayoutRelationEqual
-                               toItem:view
-                               attribute:NSLayoutAttributeTop
-                               multiplier:1.0f
-                               constant:0.f];
-    NSLayoutConstraint *leading = [NSLayoutConstraint
-                                   constraintWithItem:renderView
-                                   attribute:NSLayoutAttributeLeading
-                                   relatedBy:NSLayoutRelationEqual
-                                   toItem:view
-                                   attribute:NSLayoutAttributeLeading
-                                   multiplier:1.0f
-                                   constant:0.f];
-    [NSLayoutConstraint activateConstraints:@[width, height, top, leading]];
-
-    return renderView;
 }
 
 @end

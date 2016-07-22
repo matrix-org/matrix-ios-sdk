@@ -49,6 +49,8 @@
 		323B2B001BCE9B6700B11F34 /* MXCoreDataEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 323B2AFC1BCE9B6700B11F34 /* MXCoreDataEvent.h */; };
 		323B2B011BCE9B6700B11F34 /* MXCoreDataEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 323B2AFD1BCE9B6700B11F34 /* MXCoreDataEvent.m */; };
 		323C5A081A70E53500FB0549 /* MXToolsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 323C5A071A70E53500FB0549 /* MXToolsTests.m */; };
+		323D299A1D426F7000A80BE4 /* MXJingleVideoView.h in Headers */ = {isa = PBXBuildFile; fileRef = 323D29981D426F7000A80BE4 /* MXJingleVideoView.h */; };
+		323D299B1D426F7000A80BE4 /* MXJingleVideoView.m in Sources */ = {isa = PBXBuildFile; fileRef = 323D29991D426F7000A80BE4 /* MXJingleVideoView.m */; };
 		323E0C571A2F6E7D00A31D73 /* MXRoomPowerLevels.h in Headers */ = {isa = PBXBuildFile; fileRef = 323E0C551A2F6E7D00A31D73 /* MXRoomPowerLevels.h */; };
 		323E0C581A2F6E7D00A31D73 /* MXRoomPowerLevels.m in Sources */ = {isa = PBXBuildFile; fileRef = 323E0C561A2F6E7D00A31D73 /* MXRoomPowerLevels.m */; };
 		323E0C5B1A306D7A00A31D73 /* MXEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 323E0C591A306D7A00A31D73 /* MXEvent.h */; };
@@ -211,6 +213,8 @@
 		323B2AFC1BCE9B6700B11F34 /* MXCoreDataEvent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MXCoreDataEvent.h; path = MatrixSDK/Data/Store/MXCoreDataStore/MXCoreDataEvent.h; sourceTree = SOURCE_ROOT; };
 		323B2AFD1BCE9B6700B11F34 /* MXCoreDataEvent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MXCoreDataEvent.m; path = MatrixSDK/Data/Store/MXCoreDataStore/MXCoreDataEvent.m; sourceTree = SOURCE_ROOT; };
 		323C5A071A70E53500FB0549 /* MXToolsTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXToolsTests.m; sourceTree = "<group>"; };
+		323D29981D426F7000A80BE4 /* MXJingleVideoView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXJingleVideoView.h; sourceTree = "<group>"; };
+		323D29991D426F7000A80BE4 /* MXJingleVideoView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXJingleVideoView.m; sourceTree = "<group>"; };
 		323E0C551A2F6E7D00A31D73 /* MXRoomPowerLevels.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRoomPowerLevels.h; sourceTree = "<group>"; };
 		323E0C561A2F6E7D00A31D73 /* MXRoomPowerLevels.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRoomPowerLevels.m; sourceTree = "<group>"; };
 		323E0C591A306D7A00A31D73 /* MXEvent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXEvent.h; sourceTree = "<group>"; };
@@ -512,6 +516,8 @@
 				329B2ABC1D3FB01D002D546F /* MXJingleCallStack.m */,
 				329B2ABD1D3FB01D002D546F /* MXJingleCallStackCall.h */,
 				329B2ABE1D3FB01D002D546F /* MXJingleCallStackCall.m */,
+				323D29981D426F7000A80BE4 /* MXJingleVideoView.h */,
+				323D29991D426F7000A80BE4 /* MXJingleVideoView.m */,
 			);
 			path = Jingle;
 			sourceTree = "<group>";
@@ -681,6 +687,7 @@
 				3264E2A21BDF8D1500F89A86 /* MXCoreDataRoomState.h in Headers */,
 				3291D4D41A68FFEB00C3BA41 /* MXFileRoomStore.h in Headers */,
 				32C6F93319DD814400EA4E9C /* MatrixSDK.h in Headers */,
+				323D299A1D426F7000A80BE4 /* MXJingleVideoView.h in Headers */,
 				323E0C571A2F6E7D00A31D73 /* MXRoomPowerLevels.h in Headers */,
 				3245A7501AF7B2930001D8A7 /* MXCall.h in Headers */,
 				32114A851A262CE000FF2EC4 /* MXStore.h in Headers */,
@@ -950,6 +957,7 @@
 				32169AA11BD4D0E30077868B /* MXCoreDataStore.xcdatamodeld in Sources */,
 				323B2AF91BCE8AC900B11F34 /* MXCoreDataRoom.m in Sources */,
 				3220093919EFA4C9008DE41D /* MXEventListener.m in Sources */,
+				323D299B1D426F7000A80BE4 /* MXJingleVideoView.m in Sources */,
 				32DC15D11A8CF7AE006F9AD3 /* MXNotificationCenter.m in Sources */,
 				329FB17A1A0A74B100A5E88E /* MXTools.m in Sources */,
 				323B2AE01BCD4CB600B11F34 /* MXCoreDataAccount+CoreDataProperties.m in Sources */,
