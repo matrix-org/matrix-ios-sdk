@@ -311,6 +311,7 @@
 }
 
 
+#pragma mark -
 #pragma mark RTCSessionDescriptionDelegate
 
 // Called when creating a session.
@@ -358,7 +359,8 @@
 #pragma mark - Properties
 - (UIDeviceOrientation)selfOrientation
 {
-    return UIDevice.currentDevice.orientation;
+    // @TODO: Hmm
+    return UIDeviceOrientationUnknown;
 }
 
 - (void)setSelfOrientation:(UIDeviceOrientation)selfOrientation
