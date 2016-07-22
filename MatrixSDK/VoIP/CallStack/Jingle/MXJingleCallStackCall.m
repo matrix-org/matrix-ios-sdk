@@ -295,7 +295,7 @@
 {
     // Forward found ICE candidates
     dispatch_async(dispatch_get_main_queue(), ^{
-        [delegate callStackCall:self onICECandidateWithSdpMid:candidate.sdpMid sdpMLineIndex:candidate.sdpMLineIndex sdp:candidate.sdp];
+        [delegate callStackCall:self onICECandidateWithSdpMid:candidate.sdpMid sdpMLineIndex:candidate.sdpMLineIndex candidate:candidate.sdp];
     });
 }
 

@@ -182,12 +182,15 @@
 
         case MXEventTypeCallCandidates:
         {
-            MXCallCandidatesEventContent *content = [MXCallCandidatesEventContent modelFromJSON:event.content];
-
-            NSLog(@"[MXCall] handleCallCandidates: %@", content.candidates);
-            for (MXCallCandidate *canditate in content.candidates)
+            if (NO == [event.sender isEqualToString:_room.mxSession.myUser.userId])
             {
-                [callStackCall handleRemoteCandidate:canditate.JSONDictionary];
+                MXCallCandidatesEventContent *content = [MXCallCandidatesEventContent modelFromJSON:event.content];
+
+                NSLog(@"[MXCall] handleCallCandidates: %@", content.candidates);
+                for (MXCallCandidate *canditate in content.candidates)
+                {
+                    [callStackCall handleRemoteCandidate:canditate.JSONDictionary];
+                }
             }
             break;
         }
@@ -280,7 +283,8 @@
                                       @"version": @(0),
                                       };
             [_room sendEventOfType:kMXEventTypeStringCallAnswer content:content success:^(NSString *eventId) {
-                
+
+                // @TODO: This is false
                 [self setState:MXCallStateConnected reason:nil];
                 
             } failure:^(NSError *error) {
@@ -389,7 +393,7 @@
 
 
 #pragma mark - MXCallStackCallDelegate
-- (void)callStackCall:(id<MXCallStackCall>)callStackCall onICECandidateWithSdpMid:(NSString *)sdpMid sdpMLineIndex:(NSInteger)sdpMLineIndex sdp:(NSString *)sdp
+- (void)callStackCall:(id<MXCallStackCall>)callStackCall onICECandidateWithSdpMid:(NSString *)sdpMid sdpMLineIndex:(NSInteger)sdpMLineIndex candidate:(NSString *)candidate
 {
     // Candidates are sent in a special way because we try to amalgamate
     // them into one message
@@ -397,7 +401,7 @@
     [localICECandidates addObject:@{
                                     @"sdpMid": sdpMid,
                                     @"sdpMLineIndex": @(sdpMLineIndex),
-                                    @"sdp":sdp
+                                    @"candidate":candidate
                                     }
      ];
 
@@ -410,7 +414,9 @@
             NSLog(@"MXCall] onICECandidate: Send %tu candidates", localICECandidates.count);
 
             NSDictionary *content = @{
-                                      @"candidates:": localICECandidates
+                                      @"version": @(0),
+                                      @"call_id": _callId,
+                                      @"candidates": localICECandidates
                                       };
 
             [_room sendEventOfType:kMXEventTypeStringCallCandidates content:content success:nil failure:^(NSError *error) {

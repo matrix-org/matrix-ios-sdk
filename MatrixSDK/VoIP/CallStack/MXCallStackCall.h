@@ -152,9 +152,9 @@
  @param callStackCall the corresponding instance.
  @param sdpMid the media stream identifier.
  @param sdpMLineIndex the index of m-line in the SDP.
- @param sdp the candidate SDP.
+ @param candidate the candidate SDP.
  */
-- (void)callStackCall:(id<MXCallStackCall>)callStackCall onICECandidateWithSdpMid:(NSString*)sdpMid sdpMLineIndex:(NSInteger)sdpMLineIndex sdp:(NSString*)sdp;
+- (void)callStackCall:(id<MXCallStackCall>)callStackCall onICECandidateWithSdpMid:(NSString*)sdpMid sdpMLineIndex:(NSInteger)sdpMLineIndex candidate:(NSString*)candidate;
 
 /**
  Tells the delegate an error occured.
