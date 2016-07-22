@@ -44,7 +44,8 @@ typedef enum : NSUInteger
     MXCallStateConnected,
     MXCallStateEnded,
 
-    MXCallStateInviteExpired
+    MXCallStateInviteExpired,
+    MXCallStateAnsweredElseWhere
 } MXCallState;
 
 
@@ -135,6 +136,16 @@ typedef enum : NSUInteger
  on the other peer device.
  */
 @property (nonatomic) UIDeviceOrientation selfOrientation;
+
+/**
+ Mute state of the audio.
+ */
+@property (nonatomic) BOOL audioMuted;
+
+/**
+ Mute state of the video.
+ */
+@property (nonatomic) BOOL videoMuted;
 
 /**
  The call duration in milliseconds.

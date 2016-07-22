@@ -1114,6 +1114,11 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     return JSONDictionary;
 }
 
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"<MXCallCandidate: %p> %@ - %tu - %@", self, _sdpMid, _sdpMLineIndex, _candidate];
+}
+
 @end
 
 @implementation MXCallCandidatesEventContent
