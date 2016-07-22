@@ -138,6 +138,16 @@ typedef enum : NSUInteger
 @property (nonatomic) UIDeviceOrientation selfOrientation;
 
 /**
+ Mute state of the audio.
+ */
+@property (nonatomic) BOOL audioMuted;
+
+/**
+ Mute state of the video.
+ */
+@property (nonatomic) BOOL videoMuted;
+
+/**
  The call duration in milliseconds.
  */
 @property (nonatomic, readonly) NSUInteger duration;

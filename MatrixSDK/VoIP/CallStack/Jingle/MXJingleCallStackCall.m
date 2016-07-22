@@ -29,6 +29,7 @@
 #import "RTCPeerConnection.h"
 #import "RTCPeerConnectionFactory.h"
 #import "RTCSessionDescription.h"
+#import "RTCSessionDescriptionDelegate.h"
 #import "RTCAudioTrack.h"
 #import "RTCVideoCapturer.h"
 #import "RTCVideoRenderer.h"
@@ -53,6 +54,10 @@
      The remote video track.
      */
     RTCVideoTrack *remoteVideoTrack;
+
+    RTCAudioTrack *localAudioTrack;
+    RTCVideoTrack *localVideoTrack;
+
 
     /**
      Flag indicating if this is a video call.
@@ -361,6 +366,26 @@
     // Do nothing as the RTCPeerConnection do CVO automatically
 }
 
+- (BOOL)audioMuted
+{
+    return !localAudioTrack.isEnabled;
+}
+
+- (void)setAudioMuted:(BOOL)audioMuted
+{
+    localAudioTrack.enabled = !audioMuted;
+}
+
+- (BOOL)videoMuted
+{
+    return !localVideoTrack.isEnabled;
+}
+
+- (void)setVideoMuted:(BOOL)videoMuted
+{
+    localVideoTrack.enabled = !videoMuted;
+}
+
 #pragma mark - Private methods
 
 - (RTCMediaConstraints*)mediaConstraints
@@ -377,7 +402,8 @@
     RTCMediaStream* localStream = [peerConnectionFactory mediaStreamWithLabel:@"ARDAMS"];
 
     // Set up audio
-    [localStream addAudioTrack:[peerConnectionFactory audioTrackWithID:@"ARDAMSa0"]];
+    localAudioTrack = [peerConnectionFactory audioTrackWithID:@"ARDAMSa0"];
+    [localStream addAudioTrack:localAudioTrack];
 
     // And video
     if (isVideoCall)
@@ -399,7 +425,7 @@
             RTCVideoCapturer *capturer = [RTCVideoCapturer capturerWithDeviceName:device.localizedName];
             RTCVideoSource *localVideoSource = [peerConnectionFactory videoSourceWithCapturer:capturer constraints:nil];
             
-            RTCVideoTrack *localVideoTrack = [peerConnectionFactory videoTrackWithID:@"ARDAMSv0" source:localVideoSource];
+            localVideoTrack = [peerConnectionFactory videoTrackWithID:@"ARDAMSv0" source:localVideoSource];
             [localStream addVideoTrack:localVideoTrack];
 
             // Display the self view

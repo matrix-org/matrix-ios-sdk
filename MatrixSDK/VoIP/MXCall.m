@@ -386,6 +386,26 @@
     }
 }
 
+- (BOOL)audioMuted
+{
+    return callStackCall.audioMuted;
+}
+
+- (void)setAudioMuted:(BOOL)audioMuted
+{
+    callStackCall.audioMuted = audioMuted;
+}
+
+- (BOOL)videoMuted
+{
+    return callStackCall.videoMuted;
+}
+
+- (void)setVideoMuted:(BOOL)videoMuted
+{
+    callStackCall.videoMuted = videoMuted;
+}
+
 - (NSUInteger)duration
 {
     NSUInteger duration = 0;
