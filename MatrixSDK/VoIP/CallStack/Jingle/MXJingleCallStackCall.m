@@ -52,13 +52,16 @@
     RTCPeerConnection *peerConnection;
 
     /**
-     The remote video track.
+     The media tracks.
      */
-    RTCVideoTrack *remoteVideoTrack;
-
     RTCAudioTrack *localAudioTrack;
     RTCVideoTrack *localVideoTrack;
+    RTCVideoTrack *remoteVideoTrack;
 
+    /**
+     The view that displays the remote video.
+     */
+    MXJingleVideoView *remoteJingleVideoView;
 
     /**
      Flag indicating if this is a video call.
@@ -234,8 +237,8 @@
         dispatch_async(dispatch_get_main_queue(), ^{
 
             // Use self.remoteVideoView as a container of a RTCEAGLVideoView
-            MXJingleVideoView *renderView = [[MXJingleVideoView alloc] initWithContainerView:self.remoteVideoView];
-            [remoteVideoTrack addRenderer:renderView];
+            remoteJingleVideoView = [[MXJingleVideoView alloc] initWithContainerView:self.remoteVideoView];
+            [remoteVideoTrack addRenderer:remoteJingleVideoView];
         });
     }
 }
@@ -283,7 +286,6 @@
         default:
             break;
     }
-
 }
 
 // Called any time the ICEGatheringState changes.
@@ -365,7 +367,8 @@
 
 - (void)setSelfOrientation:(UIDeviceOrientation)selfOrientation
 {
-    // Do nothing as the RTCPeerConnection do CVO automatically
+    // Force recomputing of the remote video aspect ratio
+    [remoteJingleVideoView setNeedsLayout];
 }
 
 - (BOOL)audioMuted
