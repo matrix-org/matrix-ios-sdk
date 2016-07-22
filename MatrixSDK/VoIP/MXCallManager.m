@@ -224,23 +224,26 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
     if (event.age < content.lifetime)
     {
         // If it is an invite from the peer, we need to create the MXCall
-        MXCall *call = [self callWithCallId:content.callId];
-        if (nil == call)
+        if (NO == [event.sender isEqualToString:_mxSession.myUser.userId])
         {
-            call = [[MXCall alloc] initWithRoomId:event.roomId andCallManager:self];
-            if (call)
+            MXCall *call = [self callWithCallId:content.callId];
+            if (nil == call)
             {
-                [calls addObject:call];
+                call = [[MXCall alloc] initWithRoomId:event.roomId andCallManager:self];
+                if (call)
+                {
+                    [calls addObject:call];
 
-                [call handleCallEvent:event];
+                    [call handleCallEvent:event];
 
-                // Broadcast the incoming call
-                [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerNewCall object:call userInfo:nil];
+                    // Broadcast the incoming call
+                    [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerNewCall object:call userInfo:nil];
+                }
             }
-        }
-        else
-        {
-            [call handleCallEvent:event];
+            else
+            {
+                [call handleCallEvent:event];
+            }
         }
     }
 }
