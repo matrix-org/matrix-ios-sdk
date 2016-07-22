@@ -22,9 +22,10 @@
 
 #import "MXCallStackCall.h"
 
+#import "RTCPeerConnectionDelegate.h"
+#import "RTCSessionDescriptionDelegate.h"
+
 @class RTCPeerConnectionFactory;
-@protocol RTCPeerConnectionDelegate;
-@protocol RTCSessionDescriptionDelegate;
 
 /**
  `MXJingleCallStack` is the implementation of the `MXCallStack` protocol using

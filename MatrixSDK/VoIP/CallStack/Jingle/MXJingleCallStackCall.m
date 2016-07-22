@@ -28,9 +28,8 @@
 #import "RTCMediaStream.h"
 #import "RTCPeerConnection.h"
 #import "RTCPeerConnectionFactory.h"
-#import "RTCPeerConnectionDelegate.h"
 #import "RTCSessionDescription.h"
-#import "RTCSessionDescriptionDelegate.h"
+#import "RTCAudioTrack.h"
 #import "RTCVideoCapturer.h"
 #import "RTCVideoRenderer.h"
 #import "RTCVideoTrack.h"
@@ -354,27 +353,7 @@
 #pragma mark - Properties
 - (UIDeviceOrientation)selfOrientation
 {
-    UIDeviceOrientation selfOrientation;
- 
-    switch ([[UIDevice currentDevice] orientation]) {
-        case 180:
-            selfOrientation = UIDeviceOrientationLandscapeLeft;
-            break;
-        case 0:
-            selfOrientation = UIDeviceOrientationLandscapeRight;
-            break;
-        case 90:
-            selfOrientation = UIDeviceOrientationPortrait;
-            break;
-        case 270:
-            selfOrientation = UIDeviceOrientationPortraitUpsideDown;
-            break;
-        default:
-            selfOrientation = 0;
-            break;
-    };
-
-    return selfOrientation;
+    return UIDevice.currentDevice.orientation;
 }
 
 - (void)setSelfOrientation:(UIDeviceOrientation)selfOrientation
