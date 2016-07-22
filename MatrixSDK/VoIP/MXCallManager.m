@@ -252,9 +252,8 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
 {
     MXCallAnswerEventContent *content = [MXCallAnswerEventContent modelFromJSON:event.content];
 
-    // Listen to answer event only for call we are making, not receiving
     MXCall *call = [self callWithCallId:content.callId];
-    if (call && NO == call.isIncoming)
+    if (call)
     {
         [call handleCallEvent:event];
     }

@@ -148,26 +148,36 @@
 
         case MXEventTypeCallAnswer:
         {
-            // MXCall receives this event only when it placed a call
-            MXCallAnswerEventContent *content = [MXCallAnswerEventContent modelFromJSON:event.content];
-
-            // The peer accepted our outgoing call
-            if (inviteExpirationTimer)
+            // Listen to answer event only for call we are making, not receiving
+            if (NO == _isIncoming)
             {
-                [inviteExpirationTimer invalidate];
-                inviteExpirationTimer = nil;
+                // MXCall receives this event only when it placed a call
+                MXCallAnswerEventContent *content = [MXCallAnswerEventContent modelFromJSON:event.content];
+
+                // The peer accepted our outgoing call
+                if (inviteExpirationTimer)
+                {
+                    [inviteExpirationTimer invalidate];
+                    inviteExpirationTimer = nil;
+                }
+
+                // Let's the stack finalise the connection
+                [callStackCall handleAnswer:content.answer.sdp success:^{
+
+                    // Call is up
+                    [self setState:MXCallStateConnected reason:event];
+
+                } failure:^(NSError *error) {
+                    NSLog(@"[MXCall] handleCallEvent: ERROR: Cannot send handle answer. Error: %@\nEvent: %@", error, event);
+                    [self didEncounterError:error];
+                }];
             }
-
-            // Let's the stack finalise the connection
-            [callStackCall handleAnswer:content.answer.sdp success:^{
-
-                // Call is up
-                [self setState:MXCallStateConnected reason:event];
-
-            } failure:^(NSError *error) {
-                NSLog(@"[MXCall] handleCallEvent: ERROR: Cannot send handle answer. Error: %@\nEvent: %@", error, event);
-                [self didEncounterError:error];
-            }];
+            else if (_state == MXCallStateRinging)
+            {
+                // Else this event means that the call has been answered by the user from
+                // another device
+                [self onCallAnsweredElsewhere];
+            }
             break;
         }
 
@@ -480,6 +490,18 @@
         // The call manager can now ignore this call
         [callManager removeCall:self];
     }
+}
+
+- (void)onCallAnsweredElsewhere
+{
+    // Send the notif that the call has been answered from another device to the app
+    [self setState:MXCallStateAnsweredElseWhere reason:nil];
+
+    // And set the final state: MXCallStateEnded
+    [self setState:MXCallStateEnded reason:nil];
+
+    // The call manager can now ignore this call
+    [callManager removeCall:self];
 }
 
 @end
