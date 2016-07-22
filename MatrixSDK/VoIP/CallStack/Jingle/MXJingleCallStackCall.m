@@ -224,13 +224,16 @@
     // Else the video does not display in self.remoteVideoView
     remoteVideoTrack = stream.videoTracks.lastObject;
 
-    dispatch_async(dispatch_get_main_queue(), ^{
+    if (remoteVideoTrack)
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
 
-        // Use self.remoteVideoView as a container of a RTCEAGLVideoView
-        RTCEAGLVideoView *renderView = [self createRTCVideoRendererInView:self.remoteVideoView];
+            // Use self.remoteVideoView as a container of a RTCEAGLVideoView
+            RTCEAGLVideoView *renderView = [self createRTCVideoRendererInView:self.remoteVideoView];
 
-        [remoteVideoTrack addRenderer:renderView];
-    });
+            [remoteVideoTrack addRenderer:renderView];
+        });
+    }
 }
 
 // Triggered when a remote peer close a stream.
