@@ -1,5 +1,20 @@
+Changes in Matrix iOS SDK in 0.6.11 (2016-07-26)
+================================================
+
+Improvements:
+ * MXCall: Added audioMuted and videoMuted properties.
+ * Call: the SDK is now able to send local ICE candidates.
+ * Integration of libjingle/PeerConnection call stack (see MXJingleCall).
+ 
+Bug fixes:
+ * MXCallManager: Do not show the call screen when the call is initiated by the same user but from another device.
+ * MXCallManager: Hide the call screen when the user answers an incoming call from another device.
+
+Breaks:
+ * MXCallStackCall: two new properties (audioMuted and videoMuted) and one new delegate method (onICECandidateWithSdpMid).
+
 Changes in Matrix iOS SDK in 0.6.10 (2016-07-15)
-===============================================
+================================================
 
 Improvements:
  * MXRestClient: Add API to add/remove a room alias.
