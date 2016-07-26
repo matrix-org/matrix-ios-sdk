@@ -50,6 +50,11 @@
      Timer to expire an invite.
      */
     NSTimer *inviteExpirationTimer;
+
+    /**
+     A queue of gathered local ICE candidates waiting to be sent to the other peer.
+     */
+    NSMutableArray<NSDictionary*> *localICECandidates;
 }
 
 @end
@@ -69,6 +74,8 @@
         _callerId = callManager.mxSession.myUser.userId;
 
         _state = MXCallStateFledgling;
+
+        localICECandidates = [NSMutableArray array];
 
         callStackCall = [callManager.callStack createCall];
         if (nil == callStackCall)
@@ -141,26 +148,36 @@
 
         case MXEventTypeCallAnswer:
         {
-            // MXCall receives this event only when it placed a call
-            MXCallAnswerEventContent *content = [MXCallAnswerEventContent modelFromJSON:event.content];
-
-            // The peer accepted our outgoing call
-            if (inviteExpirationTimer)
+            // Listen to answer event only for call we are making, not receiving
+            if (NO == _isIncoming)
             {
-                [inviteExpirationTimer invalidate];
-                inviteExpirationTimer = nil;
+                // MXCall receives this event only when it placed a call
+                MXCallAnswerEventContent *content = [MXCallAnswerEventContent modelFromJSON:event.content];
+
+                // The peer accepted our outgoing call
+                if (inviteExpirationTimer)
+                {
+                    [inviteExpirationTimer invalidate];
+                    inviteExpirationTimer = nil;
+                }
+
+                // Let's the stack finalise the connection
+                [callStackCall handleAnswer:content.answer.sdp success:^{
+
+                    // Call is up
+                    [self setState:MXCallStateConnected reason:event];
+
+                } failure:^(NSError *error) {
+                    NSLog(@"[MXCall] handleCallEvent: ERROR: Cannot send handle answer. Error: %@\nEvent: %@", error, event);
+                    [self didEncounterError:error];
+                }];
             }
-
-            // Let's the stack finalise the connection
-            [callStackCall handleAnswer:content.answer.sdp success:^{
-
-                // Call is up
-                [self setState:MXCallStateConnected reason:event];
-
-            } failure:^(NSError *error) {
-                NSLog(@"[MXCall] handleCallEvent: ERROR: Cannot send handle answer. Error: %@\nEvent: %@", error, event);
-                [self didEncounterError:error];
-            }];
+            else if (_state == MXCallStateRinging)
+            {
+                // Else this event means that the call has been answered by the user from
+                // another device
+                [self onCallAnsweredElsewhere];
+            }
             break;
         }
 
@@ -175,12 +192,15 @@
 
         case MXEventTypeCallCandidates:
         {
-            MXCallCandidatesEventContent *content = [MXCallCandidatesEventContent modelFromJSON:event.content];
-
-            NSLog(@"[MXCall] handleCallCandidates: %@", content.candidates);
-            for (MXCallCandidate *canditate in content.candidates)
+            if (NO == [event.sender isEqualToString:_room.mxSession.myUser.userId])
             {
-                [callStackCall handleRemoteCandidate:canditate.JSONDictionary];
+                MXCallCandidatesEventContent *content = [MXCallCandidatesEventContent modelFromJSON:event.content];
+
+                NSLog(@"[MXCall] handleCallCandidates: %@", content.candidates);
+                for (MXCallCandidate *canditate in content.candidates)
+                {
+                    [callStackCall handleRemoteCandidate:canditate.JSONDictionary];
+                }
             }
             break;
         }
@@ -273,7 +293,8 @@
                                       @"version": @(0),
                                       };
             [_room sendEventOfType:kMXEventTypeStringCallAnswer content:content success:^(NSString *eventId) {
-                
+
+                // @TODO: This is false
                 [self setState:MXCallStateConnected reason:nil];
                 
             } failure:^(NSError *error) {
@@ -365,6 +386,26 @@
     }
 }
 
+- (BOOL)audioMuted
+{
+    return callStackCall.audioMuted;
+}
+
+- (void)setAudioMuted:(BOOL)audioMuted
+{
+    callStackCall.audioMuted = audioMuted;
+}
+
+- (BOOL)videoMuted
+{
+    return callStackCall.videoMuted;
+}
+
+- (void)setVideoMuted:(BOOL)videoMuted
+{
+    callStackCall.videoMuted = videoMuted;
+}
+
 - (NSUInteger)duration
 {
     NSUInteger duration = 0;
@@ -382,7 +423,43 @@
 
 
 #pragma mark - MXCallStackCallDelegate
--(void)callStackCall:(id<MXCallStackCall>)callStackCall onError:(NSError *)error
+- (void)callStackCall:(id<MXCallStackCall>)callStackCall onICECandidateWithSdpMid:(NSString *)sdpMid sdpMLineIndex:(NSInteger)sdpMLineIndex candidate:(NSString *)candidate
+{
+    // Candidates are sent in a special way because we try to amalgamate
+    // them into one message
+    // No need for locking data as we assume everything is running on the main thread
+    [localICECandidates addObject:@{
+                                    @"sdpMid": sdpMid,
+                                    @"sdpMLineIndex": @(sdpMLineIndex),
+                                    @"candidate":candidate
+                                    }
+     ];
+
+    // Send candidates every 100ms max. This value gives enough time to the underlaying call stack
+    // to gather several ICE candidates
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(100 * NSEC_PER_MSEC)), dispatch_get_main_queue(), ^{
+
+        if (localICECandidates.count)
+        {
+            NSLog(@"MXCall] onICECandidate: Send %tu candidates", localICECandidates.count);
+
+            NSDictionary *content = @{
+                                      @"version": @(0),
+                                      @"call_id": _callId,
+                                      @"candidates": localICECandidates
+                                      };
+
+            [_room sendEventOfType:kMXEventTypeStringCallCandidates content:content success:nil failure:^(NSError *error) {
+                NSLog(@"[MXCall] onICECandidate: ERROR: Cannot send m.call.candidates event. Error: %@", error);
+                [self didEncounterError:error];
+            }];
+
+            [localICECandidates removeAllObjects];
+        }
+    });
+}
+
+- (void)callStackCall:(id<MXCallStackCall>)callStackCall onError:(NSError *)error
 {
     NSLog(@"[MXCall] callStackCall didEncounterError: %@", error);
     [self didEncounterError:error];
@@ -433,6 +510,18 @@
         // The call manager can now ignore this call
         [callManager removeCall:self];
     }
+}
+
+- (void)onCallAnsweredElsewhere
+{
+    // Send the notif that the call has been answered from another device to the app
+    [self setState:MXCallStateAnsweredElseWhere reason:nil];
+
+    // And set the final state: MXCallStateEnded
+    [self setState:MXCallStateEnded reason:nil];
+
+    // The call manager can now ignore this call
+    [callManager removeCall:self];
 }
 
 @end
