@@ -237,13 +237,44 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
                     [call handleCallEvent:event];
 
                     // Broadcast the incoming call
-                    [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerNewCall object:call userInfo:nil];
+                    [self notifyCallInvite:call.callId];
                 }
             }
             else
             {
                 [call handleCallEvent:event];
             }
+        }
+    }
+}
+
+- (void)notifyCallInvite:(NSString*)callId
+{
+    MXCall *call = [self callWithCallId:callId];
+
+    if (call)
+    {
+        // If the app is resuming, wait for the complete end of the session resume in order
+        // to check if the invite is still valid
+        if (_mxSession.state != MXSessionStateRunning)
+        {
+            // The dispatch  on the main thread should be enough.
+            // It means that the sync response that contained the invite (and possibly its end
+            // of validity) has been fully parsed.
+            __weak typeof(self) weakSelf = self;
+            dispatch_async(dispatch_get_main_queue(), ^{
+
+                __strong __typeof(weakSelf)strongSelf = weakSelf;
+                if (strongSelf)
+                {
+                    [strongSelf notifyCallInvite:callId];
+                }
+            });
+        }
+        else if (call.state < MXCallStateConnected)
+        {
+            // If the call is still in ringing state, notify the app
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerNewCall object:call userInfo:nil];
         }
     }
 }
