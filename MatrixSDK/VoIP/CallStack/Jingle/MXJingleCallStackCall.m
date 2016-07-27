@@ -136,19 +136,34 @@
     // Translate servers information into RTCICEServer objects
     for (NSString *uri in uris)
     {
-        [ICEServers addObject:[[RTCICEServer alloc] initWithURI:[NSURL URLWithString:uri]
-                                                       username:username
-                                                       password:password]];
+        RTCICEServer *ICEServer = [[RTCICEServer alloc] initWithURI:[NSURL URLWithString:uri]
+                                                           username:username
+                                                           password:password];
+        if (ICEServer)
+        {
+            [ICEServers addObject:ICEServer];
+        }
+        else
+        {
+            NSLog(@"[MXJingleCallStackCall] addTURNServerUris: Warning: Failed to create RTCICEServer for %@ - %@: %@", uri, username, password);
+        }
     }
 
     // Define at least one server
     if (ICEServers.count == 0)
     {
-        [ICEServers addObject:[[RTCICEServer alloc] initWithURI:[NSURL URLWithString:@"stun:stun.l.google.com:19302"]
-                                                       username:@""
-                                                       password:@""]];
+        RTCICEServer *ICEServer = [[RTCICEServer alloc] initWithURI:[NSURL URLWithString:@"stun:stun.l.google.com:19302"]
+                                                           username:@""
+                                                           password:@""];
+        if (ICEServer)
+        {
+            [ICEServers addObject:ICEServer];
+        }
+        else
+        {
+            NSLog(@"[MXJingleCallStackCall] addTURNServerUris: Warning: Failed to create fallback RTCICEServer");
+        }
     }
-
 
     RTCMediaConstraints  *constraints =
     [[RTCMediaConstraints alloc] initWithMandatoryConstraints:nil
