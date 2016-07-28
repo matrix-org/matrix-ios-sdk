@@ -164,6 +164,19 @@
     return [members allValues];
 }
 
+- (NSArray<MXRoomMember *> *)joinedMembers
+{
+    NSMutableArray *joinedMembers = [NSMutableArray array];
+    for (MXRoomMember *roomMember in members.allValues)
+    {
+        if (roomMember.membership == MXMembershipJoin)
+        {
+            [joinedMembers addObject:roomMember];
+        }
+    }
+    return joinedMembers;
+}
+
 - (NSArray<MXRoomThirdPartyInvite *> *)thirdPartyInvites
 {
     return [thirdPartyInvites allValues];

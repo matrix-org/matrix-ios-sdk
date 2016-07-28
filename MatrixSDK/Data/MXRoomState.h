@@ -52,9 +52,14 @@
 @property (nonatomic, readonly) NSArray *stateEvents;
 
 /**
- A copy of the list of room members (actually MXRoomMember instances).
+ A copy of the list of room members.
  */
 @property (nonatomic, readonly) NSArray<MXRoomMember*> *members;
+
+/**
+ A copy of the list of joined room members.
+ */
+@property (nonatomic, readonly) NSArray<MXRoomMember*> *joinedMembers;
 
 /**
 A copy of the list of third party invites (actually MXRoomThirdPartyInvite instances).
