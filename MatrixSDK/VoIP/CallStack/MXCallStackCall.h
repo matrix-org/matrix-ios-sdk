@@ -138,14 +138,22 @@
 @property (nonatomic) UIDeviceOrientation selfOrientation;
 
 /**
- Mute state of the audio.
+ Mute state of the outbound audio.
  */
 @property (nonatomic) BOOL audioMuted;
 
 /**
-Mute state of the video.
-*/
+ Mute state of the outbound video.
+ */
 @property (nonatomic) BOOL videoMuted;
+
+/**
+ If YES, the inbound audio is sent to the main speaker, else it is routed to the
+ ear speaker.
+ By default, video calls are routed to the main speaker and voice call, to the ear
+ speaker.
+ */
+@property (nonatomic) BOOL audioToSpeaker;
 
 @end
 

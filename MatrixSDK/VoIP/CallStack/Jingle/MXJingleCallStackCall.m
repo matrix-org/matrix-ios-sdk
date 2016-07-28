@@ -21,6 +21,7 @@
 #import <UIKit/UIKit.h>
 #import <AVFoundation/AVCaptureDevice.h>
 #import <AVFoundation/AVMediaFormat.h>
+#import <AVFoundation/AVAudioSession.h>
 
 #import "RTCICEServer.h"
 #import "RTCICECandidate.h"
@@ -92,7 +93,7 @@
 @end
 
 @implementation MXJingleCallStackCall
-@synthesize selfVideoView, remoteVideoView, delegate;
+@synthesize selfVideoView, remoteVideoView, audioToSpeaker, delegate;
 
 - (instancetype)initWithFactory:(RTCPeerConnectionFactory *)factory
 {
@@ -406,6 +407,20 @@
     localVideoTrack.enabled = !videoMuted;
 }
 
+- (void)setAudioToSpeaker:(BOOL)theAudioToSpeaker
+{
+    audioToSpeaker = theAudioToSpeaker;
+
+    if (audioToSpeaker)
+    {
+        [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:nil];
+    }
+    else
+    {
+        [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:nil];
+    }
+}
+
 #pragma mark - Private methods
 
 - (RTCMediaConstraints*)mediaConstraints
@@ -454,6 +469,9 @@
             [localVideoTrack addRenderer:renderView];
         }
     }
+
+    // Set the audio route
+    self.audioToSpeaker = audioToSpeaker;
 
     // Wire the streams to the call
     [peerConnection addStream:localStream];

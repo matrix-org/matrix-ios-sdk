@@ -125,6 +125,9 @@
 
                 // Store if it is voice or video call
                 _isVideoCall = callInviteEventContent.isVideoCall;
+
+                // Set up the default audio route for this call type
+                callStackCall.audioToSpeaker = _isVideoCall;
                 
                 [callStackCall startCapturingMediaWithVideo:self.isVideoCall success:^{
                     [callStackCall handleOffer:callInviteEventContent.offer.sdp];
@@ -226,6 +229,9 @@
     _isVideoCall = video;
 
     [self setState:MXCallStateWaitLocalMedia reason:nil];
+
+    // Set up the default audio route for this call type
+    callStackCall.audioToSpeaker = video;
 
     [callStackCall startCapturingMediaWithVideo:video success:^() {
 
@@ -409,6 +415,16 @@
 - (void)setVideoMuted:(BOOL)videoMuted
 {
     callStackCall.videoMuted = videoMuted;
+}
+
+- (BOOL)audioToSpeaker
+{
+    return callStackCall.audioToSpeaker;
+}
+
+- (void)setAudioToSpeaker:(BOOL)audioToSpeaker
+{
+    callStackCall.audioToSpeaker = audioToSpeaker;
 }
 
 - (NSUInteger)duration

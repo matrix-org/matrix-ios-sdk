@@ -148,6 +148,14 @@ typedef enum : NSUInteger
 @property (nonatomic) BOOL videoMuted;
 
 /**
+ If YES, the inbound audio is sent to the main speaker, else it is routed to the
+ ear speaker.
+ By default, video calls are routed to the main speaker and voice call, to the ear
+ speaker.
+ */
+@property (nonatomic) BOOL audioToSpeaker;
+
+/**
  The call duration in milliseconds.
  */
 @property (nonatomic, readonly) NSUInteger duration;
