@@ -55,6 +55,11 @@
      A queue of gathered local ICE candidates waiting to be sent to the other peer.
      */
     NSMutableArray<NSDictionary*> *localICECandidates;
+
+    /**
+     Timer for sending local ICE candidates.
+     */
+    NSTimer *localIceGatheringTimer;
 }
 
 @end
@@ -427,7 +432,7 @@
 {
     // Candidates are sent in a special way because we try to amalgamate
     // them into one message
-    // No need for locking data as we assume everything is running on the main thread
+    // No need for locking data as everything is running on the main thread
     [localICECandidates addObject:@{
                                     @"sdpMid": sdpMid,
                                     @"sdpMLineIndex": @(sdpMLineIndex),
@@ -437,26 +442,30 @@
 
     // Send candidates every 100ms max. This value gives enough time to the underlaying call stack
     // to gather several ICE candidates
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(100 * NSEC_PER_MSEC)), dispatch_get_main_queue(), ^{
+    [localIceGatheringTimer invalidate];
+    localIceGatheringTimer = [NSTimer scheduledTimerWithTimeInterval:0.1 target:self selector:@selector(sendLocalIceCandidates) userInfo:self repeats:NO];
+}
 
-        if (localICECandidates.count)
-        {
-            NSLog(@"MXCall] onICECandidate: Send %tu candidates", localICECandidates.count);
+- (void)sendLocalIceCandidates
+{
+    localIceGatheringTimer = nil;
 
-            NSDictionary *content = @{
-                                      @"version": @(0),
-                                      @"call_id": _callId,
-                                      @"candidates": localICECandidates
-                                      };
+    if (localICECandidates.count)
+    {
+        NSLog(@"MXCall] onICECandidate: Send %tu candidates", localICECandidates.count);
 
-            [_room sendEventOfType:kMXEventTypeStringCallCandidates content:content success:nil failure:^(NSError *error) {
-                NSLog(@"[MXCall] onICECandidate: ERROR: Cannot send m.call.candidates event. Error: %@", error);
-                [self didEncounterError:error];
-            }];
+        NSDictionary *content = @{
+                                  @"version": @(0),
+                                  @"call_id": _callId,
+                                  @"candidates": localICECandidates
+                                  };
 
-            [localICECandidates removeAllObjects];
-        }
-    });
+        [_room sendEventOfType:kMXEventTypeStringCallCandidates content:content success:nil failure:^(NSError *error) {
+            NSLog(@"[MXCall] onICECandidate: Warning: Cannot send m.call.candidates event. Error: %@", error);
+        }];
+
+        [localICECandidates removeAllObjects];
+    }
 }
 
 - (void)callStackCall:(id<MXCallStackCall>)callStackCall onError:(NSError *)error
@@ -474,6 +483,10 @@
         [inviteExpirationTimer invalidate];
         inviteExpirationTimer = nil;
     }
+
+    // Do not refresh TURN servers config anymore
+    [localIceGatheringTimer invalidate];
+    localIceGatheringTimer = nil;
 
     // Terminate the call at the stack level
     [callStackCall end];
