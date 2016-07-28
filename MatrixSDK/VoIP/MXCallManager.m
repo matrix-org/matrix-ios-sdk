@@ -149,7 +149,7 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
 
     MXRoom *room = [_mxSession roomWithRoomId:roomId];
 
-    if (room && 2 == room.state.members.count)
+    if (room && 2 == room.state.joinedMembers.count)
     {
         call = [[MXCall alloc] initWithRoomId:roomId andCallManager:self];
         if (call)
@@ -164,7 +164,7 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
     }
     else
     {
-        NSLog(@"[MXCallManager] placeCallInRoom: ERROR: Cannot place call in %@. Members count: %tu", roomId, room.state.members.count);
+        NSLog(@"[MXCallManager] placeCallInRoom: ERROR: Cannot place call in %@. Members count: %tu", roomId, room.state.joinedMembers.count);
     }
 
     return call;
