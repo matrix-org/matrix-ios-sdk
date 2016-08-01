@@ -112,6 +112,13 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
 
         [self setUpNetworkReachibility];
         [self setUpSSLCertificatesHandler];
+
+        // Track potential expected session invalidation (seen on iOS10 beta)
+        [httpManager setSessionDidBecomeInvalidBlock:^(NSURLSession * _Nonnull session, NSError * _Nonnull error) {
+
+            // TODO: Do something like instantiate a new httpManager
+            NSLog(@"[MXHTTPClient] ERROR: SessionDidBecomeInvalid: %@: %@", session, error);
+        }];
     }
     return self;
 }
@@ -507,6 +514,7 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
 #pragma mark - Private methods
 - (void)cancel
 {
+    NSLog(@"[MXHTTPClient] cancel");
     [httpManager invalidateSessionCancelingTasks:YES];
 }
 
