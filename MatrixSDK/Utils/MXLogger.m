@@ -144,7 +144,7 @@ static void handleUncaughtException(NSException *exception)
     NSString *model = [[UIDevice currentDevice] model];
     NSString *version = [[UIDevice currentDevice] systemVersion];
     NSArray  *backtrace = [exception callStackSymbols];
-    NSString *description = [NSString stringWithFormat:@"%tu - %@\n%@\nApplication: %@ (%@)\nApplication version: %@\nMatrix SDK version: %@\nBuild: %@\n%@ %@\n%@\n",
+    NSString *description = [NSString stringWithFormat:@"%tu - %@\n%@\nApplication: %@ (%@)\nApplication version: %@\nMatrix SDK version: %@\nBuild: %@\n%@ %@\n\nMain thread: %@\n%@\n",
                              [[NSDate date] timeIntervalSince1970],
                              [NSDate date],
                              exception.description,
@@ -153,6 +153,7 @@ static void handleUncaughtException(NSException *exception)
                              MatrixSDKVersion,
                              buildVersion,
                              model, version,
+                             [NSThread isMainThread] ? @"YES" : @"NO",
                              backtrace];
 
     // Write to the crash log file
