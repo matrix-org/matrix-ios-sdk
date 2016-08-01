@@ -1,3 +1,16 @@
+Changes in Matrix iOS SDK in 0.6.12 (2016-08-01)
+================================================
+
+Improvements:
+ * MXCallManager: Better handle call invites when the app resumes.
+ * MXCall: Improve the sending of local ICE candidates to avoid HTTP 429(Too Many Requests) response
+ * MXCall: Added the audioToSpeaker property to choose between the main and the ear speaker.
+ * MXRoomState: Added the joinedMembers property.
+ * MXLogger: Added the isMainThread information in crash logs.
+ 
+Bug fixes:
+ * MXJingleCallStackCall: Added sanity check on creation of RTCICEServer objects as crashes have been reported.
+
 Changes in Matrix iOS SDK in 0.6.11 (2016-07-26)
 ================================================
 
