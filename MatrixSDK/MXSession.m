@@ -837,7 +837,7 @@ typedef void (^MXOnResumeDone)();
 {
     if (accountDataUpdate && accountDataUpdate[@"events"])
     {
-        BOOL isInitialSync = !_store.eventStreamToken;
+        BOOL isInitialSync = !_store.eventStreamToken || _state == MXSessionStateInitialised;
 
         for (NSDictionary *event in accountDataUpdate[@"events"])
         {
