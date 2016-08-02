@@ -226,4 +226,12 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
  */
 - (float)memberNormalizedPowerLevel:(NSString*)userId;
 
+/**
+ Return the list of members with a given membership.
+ 
+ @param membership the membership to look for.
+ @return an array of MXRoomMember objects.
+ */
+- (NSArray<MXRoomMember*>*)membersWithMembership:(MXMembership)membership;
+
 @end

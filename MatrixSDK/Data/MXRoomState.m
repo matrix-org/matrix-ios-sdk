@@ -166,15 +166,7 @@
 
 - (NSArray<MXRoomMember *> *)joinedMembers
 {
-    NSMutableArray *joinedMembers = [NSMutableArray array];
-    for (MXRoomMember *roomMember in members.allValues)
-    {
-        if (roomMember.membership == MXMembershipJoin)
-        {
-            [joinedMembers addObject:roomMember];
-        }
-    }
-    return joinedMembers;
+    return [self membersWithMembership:MXMembershipJoin];
 }
 
 - (NSArray<MXRoomThirdPartyInvite *> *)thirdPartyInvites
@@ -645,6 +637,19 @@
     }
     
     return powerLevel;
+}
+
+- (NSArray<MXRoomMember*>*)membersWithMembership:(MXMembership)membership
+{
+    NSMutableArray *membersWithMembership = [NSMutableArray array];
+    for (MXRoomMember *roomMember in members.allValues)
+    {
+        if (roomMember.membership == membership)
+        {
+            [membersWithMembership addObject:roomMember];
+        }
+    }
+    return membersWithMembership;
 }
 
 #pragma mark - NSCopying
