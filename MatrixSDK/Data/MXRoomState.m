@@ -639,12 +639,12 @@
     return powerLevel;
 }
 
-- (NSArray<MXRoomMember*>*)membersWithMembership:(MXMembership)membership
+- (NSArray<MXRoomMember*>*)membersWithMembership:(MXMembership)theMembership
 {
     NSMutableArray *membersWithMembership = [NSMutableArray array];
     for (MXRoomMember *roomMember in members.allValues)
     {
-        if (roomMember.membership == membership)
+        if (roomMember.membership == theMembership)
         {
             [membersWithMembership addObject:roomMember];
         }
