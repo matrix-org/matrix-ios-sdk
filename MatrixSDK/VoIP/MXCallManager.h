@@ -71,9 +71,12 @@ extern NSString *const kMXCallManagerNewCall;
  
  @param roomId the room id where to place the call.
  @param video YES to make a video call.
- @result a `MXKCall` object representing the call. Nil if the operation cannot be done.
+ @param success A block object called when the operation succeeds. It provides the created MXCall instance.
+ @param failure A block object called when the operation fails.
  */
-- (MXCall*)placeCallInRoom:(NSString*)roomId withVideo:(BOOL)video;
+- (void)placeCallInRoom:(NSString*)roomId withVideo:(BOOL)video
+                success:(void (^)(MXCall *call))success
+                failure:(void (^)(NSError *error))failure;
 
 /**
  Make the call manager forget a call.

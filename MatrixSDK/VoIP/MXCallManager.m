@@ -134,7 +134,7 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
     MXCall *theCall;
     for (MXCall *call in calls)
     {
-        if ([call.room.state.roomId isEqualToString:roomId])
+        if ([call.callSignalingRoom.state.roomId isEqualToString:roomId])
         {
             theCall = call;
             break;
@@ -143,7 +143,9 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
     return theCall;
 }
 
-- (MXCall *)placeCallInRoom:(NSString *)roomId withVideo:(BOOL)video
+- (void)placeCallInRoom:(NSString*)roomId withVideo:(BOOL)video
+                success:(void (^)(MXCall *call))success
+                failure:(void (^)(NSError *error))failure
 {
     MXCall *call;
 
@@ -161,13 +163,22 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
             // Broadcast the new outgoing call
             [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerNewCall object:call userInfo:nil];
         }
+
+        if (success)
+        {
+            success(call);
+        }
     }
     else
     {
         NSLog(@"[MXCallManager] placeCallInRoom: ERROR: Cannot place call in %@. Members count: %tu", roomId, room.state.joinedMembers.count);
-    }
 
-    return call;
+        if (failure)
+        {
+            // @TODO: Provide an error
+            failure(nil);
+        }
+    }
 }
 
 - (void)removeCall:(MXCall *)call
