@@ -66,14 +66,21 @@
 
 @implementation MXCall
 
-- (instancetype)initWithRoomId:(NSString *)roomId andCallManager:(MXCallManager *)callManager2
+- (instancetype)initWithRoomId:(NSString *)roomId andCallManager:(MXCallManager *)theCallManager
+{
+    // For 1:1 call, use the room as the call signaling room
+    return [self initWithRoomId:roomId callSignalingRoomId:roomId andCallManager:theCallManager];
+}
+
+- (instancetype)initWithRoomId:(NSString*)roomId callSignalingRoomId:(NSString*)callSignalingRoomId andCallManager:(MXCallManager*)theCallManager;
 {
     self = [super init];
     if (self)
     {
-        callManager = callManager2;
+        callManager = theCallManager;
 
         _room = [callManager.mxSession roomWithRoomId:roomId];
+        _callSignalingRoom = [callManager.mxSession roomWithRoomId:callSignalingRoomId];
 
         _callId = [[NSUUID UUID] UUIDString];
         _callerId = callManager.mxSession.myUser.userId;
@@ -115,7 +122,7 @@
         {
             callInviteEventContent = [MXCallInviteEventContent modelFromJSON:event.content];
 
-            if (NO == [event.sender isEqualToString:_room.mxSession.myUser.userId])
+            if (NO == [event.sender isEqualToString:_callSignalingRoom.mxSession.myUser.userId])
             {
                 // Incoming call
 
@@ -200,7 +207,7 @@
 
         case MXEventTypeCallCandidates:
         {
-            if (NO == [event.sender isEqualToString:_room.mxSession.myUser.userId])
+            if (NO == [event.sender isEqualToString:_callSignalingRoom.mxSession.myUser.userId])
             {
                 MXCallCandidatesEventContent *content = [MXCallCandidatesEventContent modelFromJSON:event.content];
 
@@ -251,7 +258,7 @@
                                       @"version": @(0),
                                       @"lifetime": @(callManager.inviteLifetime)
                                       };
-            [_room sendEventOfType:kMXEventTypeStringCallInvite content:content success:^(NSString *eventId) {
+            [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallInvite content:content success:^(NSString *eventId) {
 
                 [self setState:MXCallStateInviteSent reason:nil];
 
@@ -303,7 +310,7 @@
                                               },
                                       @"version": @(0),
                                       };
-            [_room sendEventOfType:kMXEventTypeStringCallAnswer content:content success:^(NSString *eventId) {
+            [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallAnswer content:content success:^(NSString *eventId) {
 
                 // @TODO: This is false
                 [self setState:MXCallStateConnected reason:nil];
@@ -335,7 +342,7 @@
                                   @"call_id": _callId,
                                   @"version": @(0)
                                   };
-        [_room sendEventOfType:kMXEventTypeStringCallHangup content:content success:nil failure:^(NSError *error) {
+        [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallHangup content:content success:nil failure:^(NSError *error) {
             NSLog(@"[MXCall] hangup: ERROR: Cannot send m.call.hangup event. Error: %@", error);
             [self didEncounterError:error];
         }];
@@ -476,7 +483,7 @@
                                   @"candidates": localICECandidates
                                   };
 
-        [_room sendEventOfType:kMXEventTypeStringCallCandidates content:content success:nil failure:^(NSError *error) {
+        [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallCandidates content:content success:nil failure:^(NSError *error) {
             NSLog(@"[MXCall] onICECandidate: Warning: Cannot send m.call.candidates event. Error: %@", error);
         }];
 
