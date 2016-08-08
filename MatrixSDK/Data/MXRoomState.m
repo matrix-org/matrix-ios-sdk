@@ -430,6 +430,12 @@
     return result;
 }
 
+- (BOOL)isConferenceUserRoom
+{
+    // Let MXCallManager manages its business
+    return [MXCallManager isConferenceUserRoom:self];
+}
+
 #pragma mark - State events handling
 - (void)handleStateEvent:(MXEvent*)event
 {

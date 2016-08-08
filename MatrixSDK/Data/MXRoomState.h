@@ -131,6 +131,12 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
 @property (nonatomic, readonly) MXMembership membership;
 
 /**
+ Flag indicating if the room is a 1:1 room with a call conference user.
+ In this case, the room is used as a call signaling room and does not need to be
+ */
+@property (nonatomic, readonly) BOOL isConferenceUserRoom;
+
+/**
  Create a `MXRoomState` instance.
  
  @param roomId the room id to the room.

@@ -21,6 +21,7 @@
 #import "MXJSONModels.h"
 
 @class MXSession;
+@class MXRoomState;
 
 /**
  Posted when a new `MXCall` instance has been created. It happens on an incoming
@@ -130,5 +131,13 @@ extern NSString *const kMXCallManagerNewCall;
  @return YES if the id is reserved to a conference user.
  */
 + (BOOL)isConferenceUser:(NSString*)userId;
+
+/**
+ Check if the passed room state describes a room with a conference user
+
+ @param roomState the state of the room.
+ @return YES if the room is a conference user room.
+ */
++ (BOOL)isConferenceUserRoom:(MXRoomState*)roomState;
 
 @end
