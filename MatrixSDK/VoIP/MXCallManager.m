@@ -448,9 +448,6 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
                                     success(room);
 
                                 } failure:failure];
-        [_mxSession createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil success:^(MXRoom *room) {
-
-        } failure:failure];
     }
 }
 
