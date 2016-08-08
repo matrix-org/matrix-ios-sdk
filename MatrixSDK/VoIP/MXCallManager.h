@@ -112,4 +112,23 @@ extern NSString *const kMXCallManagerNewCall;
  */
 @property (nonatomic) NSString *fallbackSTUNServer;
 
+
+#pragma mark - Conference call
+
+/**
+ Return the id of the conference user dedicated for the passed room.
+
+ @param roomId the room id.
+ @return the conference user id.
+ */
++ (NSString*)conferenceUserIdForRoom:(NSString*)roomId;
+
+/**
+ Check if the passed user id corresponds to the a conference user.
+ 
+ @param userId the user id to check.
+ @return YES if the id is reserved to a conference user.
+ */
++ (BOOL)isConferenceUser:(NSString*)userId;
+
 @end

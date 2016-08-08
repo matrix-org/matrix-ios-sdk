@@ -17,6 +17,7 @@
 #import "MXCallManager.h"
 
 #import "MXSession.h"
+#import "MXTools.h"
 
 #pragma mark - Constants definitions
 NSString *const kMXCallManagerNewCall = @"kMXCallManagerNewCall";
@@ -368,24 +369,42 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
 // This is bad because it prevents people running their own ASes from being used.
 // This isn't permanent and will be customisable in the future: see the proposal
 // at docs/conferencing.md for more info.
-#define USER_PREFIX @"fs_"
+#define USER_PREFIX @"@fs_"
 #define DOMAIN      @"matrix.org"
 
-/**
- Return the id of the conference user dedicated for the passed room.
 
- @param roomId the room id.
- @return the conference user id.
- */
 + (NSString*)conferenceUserIdForRoom:(NSString*)roomId
 {
     // Apply the same algo as other matrix clients
     NSString *base64RoomId = [[roomId dataUsingEncoding:NSUTF8StringEncoding] base64EncodedStringWithOptions:0];
     base64RoomId = [base64RoomId stringByReplacingOccurrencesOfString:@"=" withString:@""];
 
-    return [NSString stringWithFormat:@"@%@%@:%@", USER_PREFIX, base64RoomId, DOMAIN];
+    return [NSString stringWithFormat:@"%@%@:%@", USER_PREFIX, base64RoomId, DOMAIN];
 }
 
++ (BOOL)isConferenceUser:(NSString *)userId
+{
+    BOOL isConferenceUser = NO;
+
+    if ([userId hasPrefix:USER_PREFIX])
+    {
+        NSString *base64part = [userId substringWithRange:NSMakeRange(4, [userId rangeOfString:@":"].location - 4)];
+        if (base64part)
+        {
+            NSData *decodedData = [[NSData alloc] initWithBase64EncodedString:base64part options:0];
+            if (decodedData)
+            {
+                NSString *decoded = [[NSString alloc] initWithData:decodedData encoding:NSUTF8StringEncoding];
+                if (decoded)
+                {
+                    isConferenceUser = [MXTools isMatrixRoomIdentifier:decoded];
+                }
+            }
+        }
+    }
+
+    return isConferenceUser;
+}
 
 /**
  Make sure the conference user is in the passed room.
