@@ -17,10 +17,14 @@
 #import "MXCallManager.h"
 
 #import "MXSession.h"
+#import "MXRoomMember.h"
+
 #import "MXTools.h"
 
 #pragma mark - Constants definitions
-NSString *const kMXCallManagerNewCall = @"kMXCallManagerNewCall";
+NSString *const kMXCallManagerNewCall           = @"kMXCallManagerNewCall";
+NSString *const kMXCallManagerConferenceStarted = @"kMXCallManagerConferenceStarted";
+NSString *const kMXCallManagerConferenceFinished= @"kMXCallManagerConferenceFinished";
 
 // Use Google STUN server as fallback
 NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:19302";
@@ -372,6 +376,22 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
 #define USER_PREFIX @"@fs_"
 #define DOMAIN      @"matrix.org"
 
+- (void)handleConferenceUserUpdate:(MXRoomMember *)conferenceUserMember inRoom:(NSString *)roomId
+{
+    if (_mxSession.state == MXSessionStateRunning)
+    {
+        if (conferenceUserMember.membership == MXMembershipJoin)
+        {
+            // Broadcast the ongoing conference call
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerConferenceStarted object:roomId userInfo:nil];
+        }
+        else if (conferenceUserMember.membership == MXMembershipLeave)
+        {
+            // Broadcast the end of the ongoing conference call
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerConferenceFinished object:roomId userInfo:nil];
+        }
+    }
+}
 
 + (NSString*)conferenceUserIdForRoom:(NSString*)roomId
 {

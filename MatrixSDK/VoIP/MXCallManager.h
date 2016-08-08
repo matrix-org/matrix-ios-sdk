@@ -22,6 +22,7 @@
 
 @class MXSession;
 @class MXRoomState;
+@class MXRoomMember;
 
 /**
  Posted when a new `MXCall` instance has been created. It happens on an incoming
@@ -29,6 +30,18 @@
  The notification object is the `MXKCall` object representing the call.
  */
 extern NSString *const kMXCallManagerNewCall;
+
+/**
+ Posted when a call conference has been started.
+ The notification object is the id of the room where call conference occurs.
+ */
+extern NSString *const kMXCallManagerConferenceStarted;
+
+/**
+ Posted when a call conference has been finished.
+ The notification object is the id of the room where call conference occurs.
+ */
+extern NSString *const kMXCallManagerConferenceFinished;
 
 /**
  The `MXCallManager` object manages calls for a given Matrix session.
@@ -115,6 +128,14 @@ extern NSString *const kMXCallManagerNewCall;
 
 
 #pragma mark - Conference call
+
+/**
+ Handle a membership change of conference user in a room where there is conference call.
+
+ @param conferenceUserMember the member object of the conference user.
+ @param roomId the room where there is conference call.
+ */
+- (void)handleConferenceUserUpdate:(MXRoomMember*)conferenceUserMember inRoom:(NSString *)roomId;
 
 /**
  Return the id of the conference user dedicated for the passed room.

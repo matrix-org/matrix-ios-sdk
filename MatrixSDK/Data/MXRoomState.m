@@ -20,6 +20,7 @@
 
 #import "MXSession.h"
 #import "MXTools.h"
+#import "MXCallManager.h"
 
 @interface MXRoomState ()
 {
@@ -478,6 +479,11 @@
                 {
                     [self handleStateEvent:inviteRoomStateEvent];
                 }
+            }
+            else if (_isLive && self.membership == MXMembershipJoin members.count > 2 && [MXCallManager isConferenceUser:roomMember.userId])
+            {
+                // Forward the change of the conference user membership to the call manager 
+                [mxSession.callManager handleConferenceUserUpdate:roomMember inRoom:_roomId];
             }
 
             break;
