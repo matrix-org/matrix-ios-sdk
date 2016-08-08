@@ -66,6 +66,16 @@ typedef enum : NSUInteger
 - (instancetype)initWithRoomId:(NSString*)roomId andCallManager:(MXCallManager*)callManager;
 
 /**
+ Create a `MXCall` instance in order to place a call using a conference server.
+
+ @param roomId the id of the room where to place the call.
+ @param callSignalingRoomId the id of the room where call signaling is managed with the conference server.
+ @param callManager the manager of all MXCall objects.
+ @return the newly created MXCall instance.
+ */
+- (instancetype)initWithRoomId:(NSString*)roomId callSignalingRoomId:(NSString*)callSignalingRoomId andCallManager:(MXCallManager*)callManager;
+
+/**
  Handle call event.
 
  @param event the call event coming from the event stream.
@@ -97,9 +107,21 @@ typedef enum : NSUInteger
 @property (readonly, nonatomic) MXRoom *room;
 
 /**
+ The room where the signaling of the call is managed.
+ It is same value as 'room' in case of 1:1 call.
+ It is a private room with the conference user in case of conference call.
+ */
+@property (readonly, nonatomic) MXRoom *callSignalingRoom;
+
+/**
  The id of the call.
  */
 @property (readonly, nonatomic) NSString *callId;
+
+/**
+ Flag indicating this is a conference call;
+ */
+@property (readonly, nonatomic) BOOL isConferenceCall;
 
 /**
  Flag indicating if this is an incoming call.

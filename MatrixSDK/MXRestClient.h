@@ -896,6 +896,20 @@ typedef enum : NSUInteger
                        failure:(void (^)(NSError *error))failure;
 
 /**
+ Create a room.
+
+ @param parameters the parameters. Refer to the matrix specification for details.
+
+ @param success A block object called when the operation succeeds. It provides a MXCreateRoomResponse object.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)createRoom:(NSDictionary*)parameters
+                       success:(void (^)(MXCreateRoomResponse *response))success
+                       failure:(void (^)(NSError *error))failure;
+
+/**
  Get a list of messages for this room.
 
  @param roomId the id of the room.

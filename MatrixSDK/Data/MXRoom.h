@@ -649,13 +649,17 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 
 
 #pragma mark - Voice over IP
+
 /**
  Place a voice or a video call into the room.
 
  @param video YES to make a video call.
- @result a `MXKCall` object representing the call. Nil if the operation cannot be done.
+ @param success A block object called when the operation succeeds. It provides the created MXCall instance.
+ @param failure A block object called when the operation fails.
  */
-- (MXCall*)placeCallWithVideo:(BOOL)video;
+- (void)placeCallWithVideo:(BOOL)video
+                   success:(void (^)(MXCall *call))success
+                   failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Read receipts management

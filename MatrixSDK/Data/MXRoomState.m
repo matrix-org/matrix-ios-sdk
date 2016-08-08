@@ -20,6 +20,7 @@
 
 #import "MXSession.h"
 #import "MXTools.h"
+#import "MXCallManager.h"
 
 @interface MXRoomState ()
 {
@@ -430,6 +431,25 @@
     return result;
 }
 
+- (BOOL)isOngoingConferenceCall
+{
+    BOOL isOngoingConferenceCall = NO;
+
+    MXRoomMember *conferenceUserMember = [self memberWithUserId:[MXCallManager conferenceUserIdForRoom:_roomId]];
+    if (conferenceUserMember)
+    {
+        isOngoingConferenceCall = conferenceUserMember.membership == MXMembershipJoin;
+    }
+
+    return isOngoingConferenceCall;
+}
+
+- (BOOL)isConferenceUserRoom
+{
+    // Let MXCallManager manages its business
+    return [MXCallManager isConferenceUserRoom:self];
+}
+
 #pragma mark - State events handling
 - (void)handleStateEvent:(MXEvent*)event
 {
@@ -472,6 +492,11 @@
                 {
                     [self handleStateEvent:inviteRoomStateEvent];
                 }
+            }
+            else if (_isLive && self.membership == MXMembershipJoin && members.count > 2 && [MXCallManager isConferenceUser:roomMember.userId])
+            {
+                // Forward the change of the conference user membership to the call manager 
+                [mxSession.callManager handleConferenceUserUpdate:roomMember inRoom:_roomId];
             }
 
             break;
