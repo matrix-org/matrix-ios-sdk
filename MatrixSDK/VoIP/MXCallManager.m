@@ -139,7 +139,7 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
     MXCall *theCall;
     for (MXCall *call in calls)
     {
-        if ([call.callSignalingRoom.state.roomId isEqualToString:roomId])
+        if ([call.room.state.roomId isEqualToString:roomId])
         {
             theCall = call;
             break;
