@@ -87,6 +87,9 @@
 
         _state = MXCallStateFledgling;
 
+        // Consider we are using a conference call when there are more than 2 users
+        _isConferenceCall = (2 <= _room.state.joinedMembers);
+
         localICECandidates = [NSMutableArray array];
 
         callStackCall = [callManager.callStack createCall];
