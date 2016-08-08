@@ -431,6 +431,19 @@
     return result;
 }
 
+- (BOOL)isOngoingConferenceCall
+{
+    BOOL isOngoingConferenceCall = NO;
+
+    MXRoomMember *conferenceUserMember = [self memberWithUserId:[MXCallManager conferenceUserIdForRoom:_roomId]];
+    if (conferenceUserMember)
+    {
+        isOngoingConferenceCall = conferenceUserMember.membership == MXMembershipJoin;
+    }
+
+    return isOngoingConferenceCall;
+}
+
 - (BOOL)isConferenceUserRoom
 {
     // Let MXCallManager manages its business
@@ -480,7 +493,7 @@
                     [self handleStateEvent:inviteRoomStateEvent];
                 }
             }
-            else if (_isLive && self.membership == MXMembershipJoin members.count > 2 && [MXCallManager isConferenceUser:roomMember.userId])
+            else if (_isLive && self.membership == MXMembershipJoin && members.count > 2 && [MXCallManager isConferenceUser:roomMember.userId])
             {
                 // Forward the change of the conference user membership to the call manager 
                 [mxSession.callManager handleConferenceUserUpdate:roomMember inRoom:_roomId];
