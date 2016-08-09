@@ -48,6 +48,11 @@ typedef enum : NSUInteger
     MXCallStateAnsweredElseWhere
 } MXCallState;
 
+/**
+ Posted when a `MXCall` object has changed its state.
+ The notification object is the `MXKCall` object representing the call.
+ */
+extern NSString *const kMXCallStateDidChange;
 
 @protocol MXCallDelegate;
 

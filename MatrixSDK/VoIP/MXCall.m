@@ -19,6 +19,9 @@
 #import "MXSession.h"
 #import "MXCallStackCall.h"
 
+#pragma mark - Constants definitions
+NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
+
 @interface MXCall ()
 {
     /**
@@ -374,6 +377,9 @@
     {
         [_delegate call:self stateDidChange:_state reason:event];
     }
+
+    // Broadcast the new call state
+    [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallStateDidChange object:self userInfo:nil];
 }
 
 - (void)setSelfVideoView:(UIView *)selfVideoView
