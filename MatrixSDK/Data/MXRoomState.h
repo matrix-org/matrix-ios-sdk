@@ -142,6 +142,11 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
 @property (nonatomic, readonly) BOOL isConferenceUserRoom;
 
 /**
+ The id of the conference user responsible for handling the conference call in this room.
+ */
+@property (nonatomic, readonly) NSString *conferenceUserId;
+
+/**
  Create a `MXRoomState` instance.
  
  @param roomId the room id to the room.
@@ -244,5 +249,21 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
  @return an array of MXRoomMember objects.
  */
 - (NSArray<MXRoomMember*>*)membersWithMembership:(MXMembership)membership;
+
+
+# pragma mark - Conference call
+/**
+ A copy of the list of room members excluding the conference user.
+ */
+- (NSArray<MXRoomMember*>*)membersWithoutConferenceUser;
+
+/**
+ Return the list of members with a given membership with or without the conference user.
+
+ @param membership the membership to look for.
+ @param includeConferenceUser NO to filter the conference user.
+ @return an array of MXRoomMember objects.
+ */
+- (NSArray<MXRoomMember*>*)membersWithMembership:(MXMembership)membership includeConferenceUser:(BOOL)includeConferenceUser;
 
 @end

@@ -56,6 +56,11 @@
      The key is the 3pid invite token.
      */
     NSMutableDictionary<NSString*, MXRoomMember*> *membersWithThirdPartyInviteTokenCache;
+
+    /**
+     The cache for the conference user id.
+     */
+    NSString *conferenceUserId;
 }
 @end
 
@@ -435,10 +440,10 @@
 {
     BOOL isOngoingConferenceCall = NO;
 
-    MXRoomMember *conferenceUserMember = [self memberWithUserId:[MXCallManager conferenceUserIdForRoom:_roomId]];
+    MXRoomMember *conferenceUserMember = [self memberWithUserId:self.conferenceUserId];
     if (conferenceUserMember)
     {
-        isOngoingConferenceCall = conferenceUserMember.membership == MXMembershipJoin;
+        isOngoingConferenceCall = (conferenceUserMember.membership == MXMembershipJoin);
     }
 
     return isOngoingConferenceCall;
@@ -448,6 +453,15 @@
 {
     // Let MXCallManager manages its business
     return [MXCallManager isConferenceUserRoom:self];
+}
+
+- (NSString *)conferenceUserId
+{
+    if (!conferenceUserId)
+    {
+        conferenceUserId = [MXCallManager conferenceUserIdForRoom:_roomId];
+    }
+    return conferenceUserId;
 }
 
 #pragma mark - State events handling
@@ -493,7 +507,7 @@
                     [self handleStateEvent:inviteRoomStateEvent];
                 }
             }
-            else if (_isLive && self.membership == MXMembershipJoin && members.count > 2 && [MXCallManager isConferenceUser:roomMember.userId])
+            else if (_isLive && self.membership == MXMembershipJoin && members.count > 2 && [roomMember.userId isEqualToString:self.conferenceUserId])
             {
                 // Forward the change of the conference user membership to the call manager 
                 [mxSession.callManager handleConferenceUserUpdate:roomMember inRoom:_roomId];
@@ -677,6 +691,68 @@
     return membersWithMembership;
 }
 
+- (NSArray<MXRoomMember *> *)membersWithoutConferenceUser
+{
+    NSArray *membersWithoutConferenceUser;
+
+    if (self.isConferenceUserRoom)
+    {
+        // Show everyone in a 1:1 room with a conference user
+        membersWithoutConferenceUser = self.members;
+    }
+    else if (![self memberWithUserId:self.conferenceUserId])
+    {
+        // There is no conference user. No need to filter
+        membersWithoutConferenceUser = self.members;
+    }
+    else
+    {
+        // Filter the conference user from the list
+        NSMutableDictionary *membersWithoutConferenceUserDict = [NSMutableDictionary dictionaryWithDictionary:members];
+        [membersWithoutConferenceUserDict removeObjectForKey:self.conferenceUserId];
+        membersWithoutConferenceUser = membersWithoutConferenceUserDict.allValues;
+    }
+
+    return membersWithoutConferenceUser;
+}
+
+- (NSArray<MXRoomMember *> *)membersWithMembership:(MXMembership)theMembership includeConferenceUser:(BOOL)includeConferenceUser
+{
+    NSArray *membersWithMembership;
+
+    if (includeConferenceUser || self.isConferenceUserRoom)
+    {
+        // Show everyone in a 1:1 room with a conference user
+        membersWithMembership = [self membersWithMembership:theMembership];
+    }
+    else
+    {
+        MXRoomMember *conferenceUserMember = [self memberWithUserId:self.conferenceUserId];
+        if (!conferenceUserMember || conferenceUserMember.membership != theMembership)
+        {
+            // The conference user is not in list of members with the passed  membership
+            membersWithMembership = [self membersWithMembership:theMembership];
+        }
+        else
+        {
+            NSMutableDictionary *membersWithMembershipDict = [NSMutableDictionary dictionaryWithCapacity:members.count];
+            for (MXRoomMember *roomMember in members.allValues)
+            {
+                if (roomMember.membership == theMembership)
+                {
+                    membersWithMembershipDict[roomMember.userId] = roomMember;
+                }
+            }
+
+            [membersWithMembershipDict removeObjectForKey:self.conferenceUserId];
+            membersWithMembership = membersWithMembershipDict.allValues;
+        }
+    }
+
+    return membersWithMembership;
+}
+
+
 #pragma mark - NSCopying
 - (id)copyWithZone:(NSZone *)zone
 {
@@ -705,6 +781,11 @@
     
     stateCopy->powerLevels = [powerLevels copy];
     stateCopy->maxPowerLevel = maxPowerLevel;
+
+    if (conferenceUserId)
+    {
+        stateCopy->conferenceUserId = [conferenceUserId copyWithZone:zone];
+    }
 
     return stateCopy;
 }
