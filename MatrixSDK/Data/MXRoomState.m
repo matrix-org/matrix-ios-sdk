@@ -436,33 +436,6 @@
     return result;
 }
 
-- (BOOL)isOngoingConferenceCall
-{
-    BOOL isOngoingConferenceCall = NO;
-
-    MXRoomMember *conferenceUserMember = [self memberWithUserId:self.conferenceUserId];
-    if (conferenceUserMember)
-    {
-        isOngoingConferenceCall = (conferenceUserMember.membership == MXMembershipJoin);
-    }
-
-    return isOngoingConferenceCall;
-}
-
-- (BOOL)isConferenceUserRoom
-{
-    // Let MXCallManager manages its business
-    return [MXCallManager isConferenceUserRoom:self];
-}
-
-- (NSString *)conferenceUserId
-{
-    if (!conferenceUserId)
-    {
-        conferenceUserId = [MXCallManager conferenceUserIdForRoom:_roomId];
-    }
-    return conferenceUserId;
-}
 
 #pragma mark - State events handling
 - (void)handleStateEvent:(MXEvent*)event
@@ -689,6 +662,36 @@
         }
     }
     return membersWithMembership;
+}
+
+
+# pragma mark - Conference call
+- (BOOL)isOngoingConferenceCall
+{
+    BOOL isOngoingConferenceCall = NO;
+
+    MXRoomMember *conferenceUserMember = [self memberWithUserId:self.conferenceUserId];
+    if (conferenceUserMember)
+    {
+        isOngoingConferenceCall = (conferenceUserMember.membership == MXMembershipJoin);
+    }
+
+    return isOngoingConferenceCall;
+}
+
+- (BOOL)isConferenceUserRoom
+{
+    // Let MXCallManager manages its business
+    return [MXCallManager isConferenceUserRoom:self];
+}
+
+- (NSString *)conferenceUserId
+{
+    if (!conferenceUserId)
+    {
+        conferenceUserId = [MXCallManager conferenceUserIdForRoom:_roomId];
+    }
+    return conferenceUserId;
 }
 
 - (NSArray<MXRoomMember *> *)membersWithoutConferenceUser

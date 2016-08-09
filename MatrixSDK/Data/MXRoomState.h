@@ -131,22 +131,6 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
 @property (nonatomic, readonly) MXMembership membership;
 
 /**
- Flag indicating there is conference call ongoing in the room.
- */
-@property (nonatomic, readonly) BOOL isOngoingConferenceCall;
-
-/**
- Flag indicating if the room is a 1:1 room with a call conference user.
- In this case, the room is used as a call signaling room and does not need to be
- */
-@property (nonatomic, readonly) BOOL isConferenceUserRoom;
-
-/**
- The id of the conference user responsible for handling the conference call in this room.
- */
-@property (nonatomic, readonly) NSString *conferenceUserId;
-
-/**
  Create a `MXRoomState` instance.
  
  @param roomId the room id to the room.
@@ -252,6 +236,22 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
 
 
 # pragma mark - Conference call
+/**
+ Flag indicating there is conference call ongoing in the room.
+ */
+@property (nonatomic, readonly) BOOL isOngoingConferenceCall;
+
+/**
+ Flag indicating if the room is a 1:1 room with a call conference user.
+ In this case, the room is used as a call signaling room and does not need to be
+ */
+@property (nonatomic, readonly) BOOL isConferenceUserRoom;
+
+/**
+ The id of the conference user responsible for handling the conference call in this room.
+ */
+@property (nonatomic, readonly) NSString *conferenceUserId;
+
 /**
  A copy of the list of room members excluding the conference user.
  */
