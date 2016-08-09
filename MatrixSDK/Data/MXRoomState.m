@@ -681,8 +681,22 @@
 
 - (BOOL)isConferenceUserRoom
 {
-    // Let MXCallManager manages its business
-    return [MXCallManager isConferenceUserRoom:self];
+    BOOL isConferenceUserRoom = NO;
+
+    // A conference user room is a 1:1 room with a conference user
+    if (members.count == 2)
+    {
+        for (NSString *memberUserId in members)
+        {
+            if ([MXCallManager isConferenceUser:memberUserId])
+            {
+                isConferenceUserRoom = YES;
+                break;
+            }
+        }
+    }
+
+    return isConferenceUserRoom;
 }
 
 - (NSString *)conferenceUserId

@@ -17,7 +17,6 @@
 #import "MXCallManager.h"
 
 #import "MXSession.h"
-#import "MXRoomMember.h"
 
 #import "MXTools.h"
 
@@ -424,27 +423,6 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
     }
 
     return isConferenceUser;
-}
-
-+ (BOOL)isConferenceUserRoom:(MXRoomState *)roomState
-{
-    BOOL isConferenceUserRoom = NO;
-
-    // A conference user room is a 1:1 room with a conference user
-    NSArray<MXRoomMember*> *roomMembers = roomState.joinedMembers;
-    if (roomMembers.count == 2)
-    {
-        for (MXRoomMember *roomMember in roomMembers)
-        {
-            if ([MXCallManager isConferenceUser:roomMember.userId])
-            {
-                isConferenceUserRoom = YES;
-                break;
-            }
-        }
-    }
-
-    return isConferenceUserRoom;
 }
 
 /**
