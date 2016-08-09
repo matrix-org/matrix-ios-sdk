@@ -167,11 +167,18 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
 
                 // Broadcast the new outgoing call
                 [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerNewCall object:call userInfo:nil];
-            }
 
-            if (success)
+                if (success)
+                {
+                    success(call);
+                }
+            }
+            else
             {
-                success(call);
+                if (failure)
+                {
+                    failure(nil);
+                }
             }
         }
         else
@@ -372,8 +379,8 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
 // This is bad because it prevents people running their own ASes from being used.
 // This isn't permanent and will be customisable in the future: see the proposal
 // at docs/conferencing.md for more info.
-#define USER_PREFIX @"@fs_"
-#define DOMAIN      @"matrix.org"
+NSString *const kMXCallManagerConferenceUserPrefix  = @"@fs_";
+NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
 
 - (void)handleConferenceUserUpdate:(MXRoomMember *)conferenceUserMember inRoom:(NSString *)roomId
 {
@@ -398,14 +405,14 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
     NSString *base64RoomId = [[roomId dataUsingEncoding:NSUTF8StringEncoding] base64EncodedStringWithOptions:0];
     base64RoomId = [base64RoomId stringByReplacingOccurrencesOfString:@"=" withString:@""];
 
-    return [NSString stringWithFormat:@"%@%@:%@", USER_PREFIX, base64RoomId, DOMAIN];
+    return [NSString stringWithFormat:@"%@%@:%@", kMXCallManagerConferenceUserPrefix, base64RoomId, kMXCallManagerConferenceUserDomain];
 }
 
 + (BOOL)isConferenceUser:(NSString *)userId
 {
     BOOL isConferenceUser = NO;
 
-    if ([userId hasPrefix:USER_PREFIX])
+    if ([userId hasPrefix:kMXCallManagerConferenceUserPrefix])
     {
         NSString *base64part = [userId substringWithRange:NSMakeRange(4, [userId rangeOfString:@":"].location - 4)];
         if (base64part)
