@@ -168,6 +168,33 @@
 
 
 #pragma mark - MXFileStore specific tests
+- (void)testDiskUsage
+{
+    [self doTestWithMXFileStore:^(MXRoom *room) {
+
+        MXFileStore *fileStore = mxSession.store;
+
+        NSUInteger diskUsage1 = fileStore.diskUsage;
+
+        [mxSession createRoom:nil visibility:nil roomAlias:nil topic:nil success:^(MXRoom *room) {
+
+            NSUInteger diskUsage2 = fileStore.diskUsage;
+            XCTAssertGreaterThan(diskUsage2, diskUsage1);
+
+            [fileStore deleteAllData];
+
+            NSUInteger diskUsage3 = fileStore.diskUsage;
+            XCTAssertLessThan(diskUsage3, diskUsage2);
+            
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 - (void)testMXFileStoreUserDisplaynameAndAvatarUrl
 {
     [self checkUserDisplaynameAndAvatarUrl:MXFileStore.class];
