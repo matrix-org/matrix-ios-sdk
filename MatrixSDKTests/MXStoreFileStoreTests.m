@@ -174,24 +174,33 @@
 
         MXFileStore *fileStore = mxSession.store;
 
-        NSUInteger diskUsage1 = fileStore.diskUsage;
+        [fileStore diskUsageWithBlock:^(NSUInteger diskUsage1) {
 
-        [mxSession createRoom:nil visibility:nil roomAlias:nil topic:nil success:^(MXRoom *room) {
+            XCTAssertTrue([NSThread isMainThread], @"The block must be called from the main thread");
 
-            NSUInteger diskUsage2 = fileStore.diskUsage;
-            XCTAssertGreaterThan(diskUsage2, diskUsage1);
+            [mxSession createRoom:nil visibility:nil roomAlias:nil topic:nil success:^(MXRoom *room) {
 
-            [fileStore deleteAllData];
+                [fileStore diskUsageWithBlock:^(NSUInteger diskUsage2) {
 
-            NSUInteger diskUsage3 = fileStore.diskUsage;
-            XCTAssertLessThan(diskUsage3, diskUsage2);
-            
-            [expectation fulfill];
+                    XCTAssertGreaterThan(diskUsage2, diskUsage1);
 
-        } failure:^(NSError *error) {
-            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-            [expectation fulfill];
+                    [fileStore deleteAllData];
+
+                    [fileStore diskUsageWithBlock:^(NSUInteger diskUsage3) {
+
+                        XCTAssertLessThan(diskUsage3, diskUsage2);
+
+                        [expectation fulfill];
+                    }];
+                }];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
         }];
+
+
     }];
 }
 

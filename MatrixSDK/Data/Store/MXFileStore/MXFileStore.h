@@ -40,7 +40,11 @@
 
 /**
  The disk space in bytes used by the store.
+
+ The operation is asynchronous because the value can take time to compute.
+ 
+ @param block the block called when the operation completes.
  */
-@property (nonatomic, readonly) NSUInteger diskUsage;
+- (void)diskUsageWithBlock:(void(^)(NSUInteger diskUsage))block;
 
 @end

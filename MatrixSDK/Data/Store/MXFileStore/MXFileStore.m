@@ -197,6 +197,30 @@ NSString *const kMXReceiptsFolder = @"receipts";
     });
 }
 
+- (void)diskUsageWithBlock:(void (^)(NSUInteger))block
+{
+    // The operation can take hundreds of milliseconds. Do it on a sepearate thread
+    dispatch_async(dispatchQueue, ^(void){
+
+        NSUInteger diskUsage = 0;
+
+        NSArray *contents = [[NSFileManager defaultManager] subpathsOfDirectoryAtPath:storePath error:nil];
+        NSEnumerator *contentsEnumurator = [contents objectEnumerator];
+
+        NSString *file;
+        while (file = [contentsEnumurator nextObject])
+        {
+            NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:[storePath stringByAppendingPathComponent:file] error:nil];
+            diskUsage += [[fileAttributes objectForKey:NSFileSize] intValue];
+        }
+
+        // Return the result on the main thread
+        dispatch_async(dispatch_get_main_queue(), ^(void){
+            block(diskUsage);
+        });
+    });
+}
+
 - (NSUInteger)diskUsage
 {
     NSUInteger diskUsage = 0;

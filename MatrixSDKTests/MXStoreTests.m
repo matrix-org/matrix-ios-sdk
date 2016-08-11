@@ -1199,7 +1199,12 @@
 
                             if ([bobStore2 isKindOfClass:[MXFileStore class]])
                             {
-                                XCTAssertEqual(((MXFileStore*)bobStore2).diskUsage, ((MXFileStore*)bobStore3).diskUsage, @"Bob's store must still have the same content");
+                                [((MXFileStore*)bobStore2) diskUsageWithBlock:^(NSUInteger diskUsage2) {
+                                    [((MXFileStore*)bobStore3) diskUsageWithBlock:^(NSUInteger diskUsage3) {
+
+                                        XCTAssertEqual(diskUsage2, diskUsage3, @"Bob's store must still have the same content");
+                                    }];
+                                }];
                             }
 
                             [expectation fulfill];
