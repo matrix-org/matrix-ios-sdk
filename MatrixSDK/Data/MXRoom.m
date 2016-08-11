@@ -536,9 +536,11 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 
 
 #pragma mark - Voice over IP
-- (MXCall *)placeCallWithVideo:(BOOL)video
+- (void)placeCallWithVideo:(BOOL)video
+                   success:(void (^)(MXCall *call))success
+                   failure:(void (^)(NSError *error))failure
 {
-    return [mxSession.callManager placeCallInRoom:self.state.roomId withVideo:video];
+    [mxSession.callManager placeCallInRoom:self.state.roomId withVideo:video success:success failure:failure];
 }
 
 

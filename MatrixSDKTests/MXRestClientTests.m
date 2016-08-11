@@ -59,6 +59,40 @@
     }];
 }
 
+- (void)testClose
+{
+    // This test on sendTextMessage validates sendMessage and sendEvent too
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        [bobRestClient sendTextMessageToRoom:roomId text:@"This is text message" success:^(NSString *eventId) {
+
+            XCTAssertNotNil(eventId);
+
+            [bobRestClient close];
+
+            MXHTTPOperation *operation = [bobRestClient sendTextMessageToRoom:roomId text:@"This is text message" success:^(NSString *eventId) {
+
+                XCTFail(@"The request should have not been sent");
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+
+                XCTFail(@"The request should have not been sent");
+                [expectation fulfill];
+
+            }];
+
+            XCTAssertNil(operation);
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+
 #pragma mark - Room operations
 - (void)testSendTextMessage
 {

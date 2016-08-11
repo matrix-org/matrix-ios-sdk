@@ -358,6 +358,21 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                        failure:(void (^)(NSError *error))failure;
 
 /**
+ Create a room.
+
+ @param parameters the parameters. Refer to the matrix specification for details.
+
+ @param success A block object called when the operation succeeds. It provides the MXRoom
+                instance of the joined room.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)createRoom:(NSDictionary*)parameters
+                       success:(void (^)(MXRoom *room))success
+                       failure:(void (^)(NSError *error))failure;
+
+/**
  Join a room.
  
  @param roomIdOrAlias the id or an alias of the room to join.

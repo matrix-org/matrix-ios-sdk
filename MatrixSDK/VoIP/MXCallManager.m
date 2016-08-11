@@ -18,8 +18,12 @@
 
 #import "MXSession.h"
 
+#import "MXTools.h"
+
 #pragma mark - Constants definitions
-NSString *const kMXCallManagerNewCall = @"kMXCallManagerNewCall";
+NSString *const kMXCallManagerNewCall           = @"kMXCallManagerNewCall";
+NSString *const kMXCallManagerConferenceStarted = @"kMXCallManagerConferenceStarted";
+NSString *const kMXCallManagerConferenceFinished= @"kMXCallManagerConferenceFinished";
 
 // Use Google STUN server as fallback
 NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:19302";
@@ -143,31 +147,82 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
     return theCall;
 }
 
-- (MXCall *)placeCallInRoom:(NSString *)roomId withVideo:(BOOL)video
+- (void)placeCallInRoom:(NSString*)roomId withVideo:(BOOL)video
+                success:(void (^)(MXCall *call))success
+                failure:(void (^)(NSError *error))failure
 {
-    MXCall *call;
-
     MXRoom *room = [_mxSession roomWithRoomId:roomId];
 
-    if (room && 2 == room.state.members.count)
+    if (room && 1 < room.state.joinedMembers.count)
     {
-        call = [[MXCall alloc] initWithRoomId:roomId andCallManager:self];
-        if (call)
+        if (2 == room.state.joinedMembers.count)
         {
-            [calls addObject:call];
+            // Do a peer to peer, one to one call
+            MXCall *call = [[MXCall alloc] initWithRoomId:roomId andCallManager:self];
+            if (call)
+            {
+                [calls addObject:call];
 
-            [call callWithVideo:video];
+                [call callWithVideo:video];
 
-            // Broadcast the new outgoing call
-            [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerNewCall object:call userInfo:nil];
+                // Broadcast the new outgoing call
+                [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerNewCall object:call userInfo:nil];
+
+                if (success)
+                {
+                    success(call);
+                }
+            }
+            else
+            {
+                if (failure)
+                {
+                    failure(nil);
+                }
+            }
+        }
+        else
+        {
+            // Use the conference server bot to manage the conf call
+            // There are 2 steps:
+            //    - invite the conference user (the bot) into the room
+            //    - set up a separated private room with the conference user to manage
+            //      the conf call in 'room'
+            [self inviteConferenceUserToRoom:room success:^{
+
+                [self conferenceUserRoomForRoom:roomId success:^(MXRoom *conferenceUserRoom) {
+
+                    // The call can now be created
+                    MXCall *call = [[MXCall alloc] initWithRoomId:roomId callSignalingRoomId:conferenceUserRoom.roomId andCallManager:self];
+                    if (call)
+                    {
+                        [calls addObject:call];
+
+                        [call callWithVideo:video];
+
+                        // Broadcast the new outgoing call
+                        [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerNewCall object:call userInfo:nil];
+                    }
+
+                    if (success)
+                    {
+                        success(call);
+                    }
+                } failure:failure];
+
+            } failure:failure];
         }
     }
     else
     {
-        NSLog(@"[MXCallManager] placeCallInRoom: ERROR: Cannot place call in %@. Members count: %tu", roomId, room.state.members.count);
-    }
+        NSLog(@"[MXCallManager] placeCallInRoom: ERROR: Cannot place call in %@. Members count: %tu", roomId, room.state.joinedMembers.count);
 
-    return call;
+        if (failure)
+        {
+            // @TODO: Provide an error
+            failure(nil);
+        }
+    }
 }
 
 - (void)removeCall:(MXCall *)call
@@ -224,23 +279,57 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
     if (event.age < content.lifetime)
     {
         // If it is an invite from the peer, we need to create the MXCall
-        MXCall *call = [self callWithCallId:content.callId];
-        if (nil == call)
+        if (NO == [event.sender isEqualToString:_mxSession.myUser.userId])
         {
-            call = [[MXCall alloc] initWithRoomId:event.roomId andCallManager:self];
-            if (call)
+            MXCall *call = [self callWithCallId:content.callId];
+            if (nil == call)
             {
-                [calls addObject:call];
+                call = [[MXCall alloc] initWithRoomId:event.roomId andCallManager:self];
+                if (call)
+                {
+                    [calls addObject:call];
 
+                    [call handleCallEvent:event];
+
+                    // Broadcast the incoming call
+                    [self notifyCallInvite:call.callId];
+                }
+            }
+            else
+            {
                 [call handleCallEvent:event];
-
-                // Broadcast the incoming call
-                [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerNewCall object:call userInfo:nil];
             }
         }
-        else
+    }
+}
+
+- (void)notifyCallInvite:(NSString*)callId
+{
+    MXCall *call = [self callWithCallId:callId];
+
+    if (call)
+    {
+        // If the app is resuming, wait for the complete end of the session resume in order
+        // to check if the invite is still valid
+        if (_mxSession.state != MXSessionStateRunning)
         {
-            [call handleCallEvent:event];
+            // The dispatch  on the main thread should be enough.
+            // It means that the sync response that contained the invite (and possibly its end
+            // of validity) has been fully parsed.
+            __weak typeof(self) weakSelf = self;
+            dispatch_async(dispatch_get_main_queue(), ^{
+
+                __strong __typeof(weakSelf)strongSelf = weakSelf;
+                if (strongSelf)
+                {
+                    [strongSelf notifyCallInvite:callId];
+                }
+            });
+        }
+        else if (call.state < MXCallStateConnected)
+        {
+            // If the call is still in ringing state, notify the app
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerNewCall object:call userInfo:nil];
         }
     }
 }
@@ -249,9 +338,8 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
 {
     MXCallAnswerEventContent *content = [MXCallAnswerEventContent modelFromJSON:event.content];
 
-    // Listen to answer event only for call we are making, not receiving
     MXCall *call = [self callWithCallId:content.callId];
-    if (call && NO == call.isIncoming)
+    if (call)
     {
         [call handleCallEvent:event];
     }
@@ -281,6 +369,130 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
     if (call)
     {
         [call handleCallEvent:event];
+    }
+}
+
+#pragma mark - Conference call
+
+// Copied from vector-web:
+// FIXME: This currently forces Vector to try to hit the matrix.org AS for conferencing.
+// This is bad because it prevents people running their own ASes from being used.
+// This isn't permanent and will be customisable in the future: see the proposal
+// at docs/conferencing.md for more info.
+NSString *const kMXCallManagerConferenceUserPrefix  = @"@fs_";
+NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
+
+- (void)handleConferenceUserUpdate:(MXRoomMember *)conferenceUserMember inRoom:(NSString *)roomId
+{
+    if (_mxSession.state == MXSessionStateRunning)
+    {
+        if (conferenceUserMember.membership == MXMembershipJoin)
+        {
+            // Broadcast the ongoing conference call
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerConferenceStarted object:roomId userInfo:nil];
+        }
+        else if (conferenceUserMember.membership == MXMembershipLeave)
+        {
+            // Broadcast the end of the ongoing conference call
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerConferenceFinished object:roomId userInfo:nil];
+        }
+    }
+}
+
++ (NSString*)conferenceUserIdForRoom:(NSString*)roomId
+{
+    // Apply the same algo as other matrix clients
+    NSString *base64RoomId = [[roomId dataUsingEncoding:NSUTF8StringEncoding] base64EncodedStringWithOptions:0];
+    base64RoomId = [base64RoomId stringByReplacingOccurrencesOfString:@"=" withString:@""];
+
+    return [NSString stringWithFormat:@"%@%@:%@", kMXCallManagerConferenceUserPrefix, base64RoomId, kMXCallManagerConferenceUserDomain];
+}
+
++ (BOOL)isConferenceUser:(NSString *)userId
+{
+    BOOL isConferenceUser = NO;
+
+    if ([userId hasPrefix:kMXCallManagerConferenceUserPrefix])
+    {
+        NSString *base64part = [userId substringWithRange:NSMakeRange(4, [userId rangeOfString:@":"].location - 4)];
+        if (base64part)
+        {
+            NSData *decodedData = [[NSData alloc] initWithBase64EncodedString:base64part options:0];
+            if (decodedData)
+            {
+                NSString *decoded = [[NSString alloc] initWithData:decodedData encoding:NSUTF8StringEncoding];
+                if (decoded)
+                {
+                    isConferenceUser = [MXTools isMatrixRoomIdentifier:decoded];
+                }
+            }
+        }
+    }
+
+    return isConferenceUser;
+}
+
+/**
+ Make sure the conference user is in the passed room.
+
+ It is mandatory before starting the conference call.
+
+ @param room the room.
+ @return the conference user id.
+ */
+- (void)inviteConferenceUserToRoom:(MXRoom*)room
+                           success:(void (^)())success
+                           failure:(void (^)(NSError *error))failure
+{
+    NSString *conferenceUserId = [MXCallManager conferenceUserIdForRoom:room.roomId];
+
+    MXRoomMember *conferenceUserMember = [room.state memberWithUserId:conferenceUserId];
+    if (conferenceUserMember && conferenceUserMember.membership == MXMembershipJoin)
+    {
+        success();
+    }
+    else
+    {
+        [room inviteUser:conferenceUserId success:success failure:failure];
+    }
+}
+
+/**
+ Get the room with the conference user dedicated for the passed room.
+
+ @param roomId the room id.
+ @return the private room with conference user.
+ */
+- (void)conferenceUserRoomForRoom:(NSString*)roomId
+                          success:(void (^)(MXRoom *conferenceUserRoom))success
+                          failure:(void (^)(NSError *error))failure
+{
+    NSString *conferenceUserId = [MXCallManager conferenceUserIdForRoom:roomId];
+
+    // Use an existing 1:1 with the conference user; else make one
+    MXRoom *conferenceUserRoom;
+    for (MXRoom *room in _mxSession.rooms)
+    {
+        if (room.state.members.count == 2 && [room.state memberWithUserId:conferenceUserId])
+        {
+            conferenceUserRoom = room;
+        }
+    }
+
+    if (conferenceUserRoom)
+    {
+        success(conferenceUserRoom);
+    }
+    else
+    {
+        [_mxSession createRoom:@{
+                                 @"preset": @"private_chat",
+                                 @"invite": @[conferenceUserId]
+                                } success:^(MXRoom *room) {
+
+                                    success(room);
+
+                                } failure:failure];
     }
 }
 

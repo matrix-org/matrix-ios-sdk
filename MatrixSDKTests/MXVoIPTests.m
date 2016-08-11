@@ -63,11 +63,15 @@
         // Make sure there is no VoIP stack
         mxSession.callManager.callStack = nil;
 
-        MXCall *call = [room placeCallWithVideo:NO];
+        [room placeCallWithVideo:NO success:^(MXCall *call) {
 
-        XCTAssertNil(call, @"MXCall cannot be created if there is no VoIP stack");
+            XCTAssertNil(@"MXCall cannot be created if there is no VoIP stack");
+            [expectation fulfill];
 
-        [expectation fulfill];
+        } failure:^(NSError *error) {
+            [expectation fulfill];
+        }];
+
     }];
 }
 

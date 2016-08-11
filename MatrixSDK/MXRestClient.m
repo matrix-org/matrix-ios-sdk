@@ -1504,7 +1504,7 @@ MXAuthAction;
 {
     // All parameters are optional. Fill the request parameters on demand
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
-    
+
     if (name)
     {
         parameters[@"name"] = name;
@@ -1521,7 +1521,14 @@ MXAuthAction;
     {
         parameters[@"topic"] = topic;
     }
-    
+
+    return [self createRoom:parameters success:success failure:failure];
+}
+
+- (MXHTTPOperation*)createRoom:(NSDictionary*)parameters
+                       success:(void (^)(MXCreateRoomResponse *response))success
+                       failure:(void (^)(NSError *error))failure;
+{
     return [httpClient requestWithMethod:@"POST"
                                     path:[NSString stringWithFormat:@"%@/createRoom", apiPathPrefix]
                               parameters:parameters

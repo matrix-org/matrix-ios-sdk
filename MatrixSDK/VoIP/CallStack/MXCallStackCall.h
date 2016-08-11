@@ -137,6 +137,24 @@
  */
 @property (nonatomic) UIDeviceOrientation selfOrientation;
 
+/**
+ Mute state of the outbound audio.
+ */
+@property (nonatomic) BOOL audioMuted;
+
+/**
+ Mute state of the outbound video.
+ */
+@property (nonatomic) BOOL videoMuted;
+
+/**
+ If YES, the inbound audio is sent to the main speaker, else it is routed to the
+ ear speaker.
+ By default, video calls are routed to the main speaker and voice call, to the ear
+ speaker.
+ */
+@property (nonatomic) BOOL audioToSpeaker;
+
 @end
 
 
@@ -145,6 +163,16 @@
  Delegate for `MXCallStackCal` object
 */
 @protocol MXCallStackCallDelegate <NSObject>
+
+/**
+ Informed the delegate that a local ICE candidate has been discovered.
+
+ @param callStackCall the corresponding instance.
+ @param sdpMid the media stream identifier.
+ @param sdpMLineIndex the index of m-line in the SDP.
+ @param candidate the candidate SDP.
+ */
+- (void)callStackCall:(id<MXCallStackCall>)callStackCall onICECandidateWithSdpMid:(NSString*)sdpMid sdpMLineIndex:(NSInteger)sdpMLineIndex candidate:(NSString*)candidate;
 
 /**
  Tells the delegate an error occured.
