@@ -161,9 +161,17 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
 
 /**
  Posted when MXSession has detected a change in the `ignoredUsers` property.
+ 
+ The notification object is the concerned session (MXSession instance).
  */
 FOUNDATION_EXPORT NSString *const kMXSessionIgnoredUsersDidChangeNotification;
 
+/**
+ Posted when MXSession data have been corrupted. The listener must reload the session data with a full server sync.
+ 
+ The notification object is the concerned session (MXSession instance).
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionDidCorruptDataNotification;
 
 #pragma mark - Other constants
 /**

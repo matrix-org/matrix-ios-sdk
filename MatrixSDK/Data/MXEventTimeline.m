@@ -568,7 +568,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     // Check whether the current room state depends on this redacted event.
     if (!redactedEvent || redactedEvent.isState)
     {
-        // FIXME: Is @autoreleasepool block required or not here?
         NSMutableArray *stateEvents = [NSMutableArray arrayWithArray:_state.stateEvents];
         
         for (NSInteger index = 0; index < stateEvents.count; index++)
@@ -585,7 +584,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                 
                 [stateEvents replaceObjectAtIndex:index withObject:redactedEvent];
                 
-                // Reset the room state. //FIXME: is it possible to handle only the redacted event?
+                // Reset the room state.
                 _state = [[MXRoomState alloc] initWithRoomId:room.roomId andMatrixSession:room.mxSession andDirection:YES];
                 [self initialiseState:stateEvents];
                 
@@ -596,7 +595,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                 }
                 
                 // Reset the current pagination
-                // FIXME: Shall we let the kMXRoomStateHasBeenRedactedNotification listener trigger this reset? (like [MXKRoomDataSource reload] do)
+                // FIXME: Shall we let the kMXRoomDidFlushMessagesNotification listener trigger this reset? (like [MXKRoomDataSource reload] do)
                 [self resetPagination];
                 
                 // Notify that room history has been flushed
@@ -686,10 +685,10 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         
         NSLog(@"[MXEventTimeline] forceRoomServerSync failed.");
         
-        // FIXME: Reload entirely the app?
-//        [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionIgnoredUsersDidChangeNotification
-//                                                            object:room.mxSession
-//                                                          userInfo:nil];
+        // Reload entirely the app
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidCorruptDataNotification
+                                                            object:room.mxSession
+                                                          userInfo:nil];
     }];
 }
 
