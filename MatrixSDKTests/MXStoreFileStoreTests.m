@@ -168,6 +168,42 @@
 
 
 #pragma mark - MXFileStore specific tests
+- (void)testDiskUsage
+{
+    [self doTestWithMXFileStore:^(MXRoom *room) {
+
+        MXFileStore *fileStore = mxSession.store;
+
+        [fileStore diskUsageWithBlock:^(NSUInteger diskUsage1) {
+
+            XCTAssertTrue([NSThread isMainThread], @"The block must be called from the main thread");
+
+            [mxSession createRoom:nil visibility:nil roomAlias:nil topic:nil success:^(MXRoom *room) {
+
+                [fileStore diskUsageWithBlock:^(NSUInteger diskUsage2) {
+
+                    XCTAssertGreaterThan(diskUsage2, diskUsage1);
+
+                    [fileStore deleteAllData];
+
+                    [fileStore diskUsageWithBlock:^(NSUInteger diskUsage3) {
+
+                        XCTAssertLessThan(diskUsage3, diskUsage2);
+
+                        [expectation fulfill];
+                    }];
+                }];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+        }];
+
+
+    }];
+}
+
 - (void)testMXFileStoreUserDisplaynameAndAvatarUrl
 {
     [self checkUserDisplaynameAndAvatarUrl:MXFileStore.class];
