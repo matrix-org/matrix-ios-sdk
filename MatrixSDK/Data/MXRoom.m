@@ -540,7 +540,14 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                    success:(void (^)(MXCall *call))success
                    failure:(void (^)(NSError *error))failure
 {
-    [mxSession.callManager placeCallInRoom:self.state.roomId withVideo:video success:success failure:failure];
+    if (mxSession.callManager)
+    {
+        [mxSession.callManager placeCallInRoom:self.state.roomId withVideo:video success:success failure:failure];
+    }
+    else if (failure)
+    {
+        failure(nil);
+    }
 }
 
 
