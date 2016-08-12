@@ -26,14 +26,18 @@
  + NSCachesDirectory
     + MXFileStore
         + Matrix user id (one folder per account)
-            + messages : The messages. One file per room
-                L roomId1
-                L roomId2
-                L ...
-            + state : The state events. One file per room
-                L roomId1
-                L roomId2
-                L ...
+            + rooms
+                + roomId1
+                    L messages: The room messages
+                    L state: The room state events
+                    L accountData: The account data for this room
+                    L receipts: The read receipts for this room
+                + roomId2
+                    L messages
+                    L state
+                    L accountData
+                    L receipts
+                + ...
             L MXFileStore : Information about the stored data
  */
 @interface MXFileStore : MXMemoryStore
