@@ -615,8 +615,19 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
                 MXFileRoomStore *roomStore = roomStores[roomId];
                 if (roomStore)
                 {
+                    NSString *file = [self messagesFileForRoom:roomId forBackup:NO];
+                    NSString *backupFile = [self messagesFileForRoom:roomId forBackup:YES];
+
+                    // Backup the file
+                    if ([[NSFileManager defaultManager] fileExistsAtPath:file])
+                    {
+                        [self checkFolderExistenceForRoom:roomId forBackup:YES];
+                        [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
+                    }
+
+                    // Store new data
                     [self checkFolderExistenceForRoom:roomId forBackup:NO];
-                    [NSKeyedArchiver archiveRootObject:roomStore toFile:[self messagesFileForRoom:roomId forBackup:NO]];
+                    [NSKeyedArchiver archiveRootObject:roomStore toFile:file];
                 }
             }
 
@@ -658,8 +669,19 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
             {
                 NSArray *stateEvents = roomsToCommit[roomId];
 
+                NSString *file = [self stateFileForRoom:roomId forBackup:NO];
+                NSString *backupFile = [self stateFileForRoom:roomId forBackup:YES];
+
+                // Backup the file
+                if ([[NSFileManager defaultManager] fileExistsAtPath:file])
+                {
+                    [self checkFolderExistenceForRoom:roomId forBackup:YES];
+                    [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
+                }
+
+                // Store new data
                 [self checkFolderExistenceForRoom:roomId forBackup:NO];
-                [NSKeyedArchiver archiveRootObject:stateEvents toFile:[self stateFileForRoom:roomId forBackup:NO]];
+                [NSKeyedArchiver archiveRootObject:stateEvents toFile:file];
             }
         });
     }
@@ -698,8 +720,19 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
             {
                 MXRoomAccountData *roomAccountData = roomsToCommit[roomId];
 
+                NSString *file = [self accountDataFileForRoom:roomId forBackup:NO];
+                NSString *backupFile = [self accountDataFileForRoom:roomId forBackup:YES];
+
+                // Backup the file
+                if ([[NSFileManager defaultManager] fileExistsAtPath:file])
+                {
+                    [self checkFolderExistenceForRoom:roomId forBackup:YES];
+                    [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
+                }
+
+                // Store new data
                 [self checkFolderExistenceForRoom:roomId forBackup:NO];
-                [NSKeyedArchiver archiveRootObject:roomAccountData toFile:[self accountDataFileForRoom:roomId forBackup:NO]];
+                [NSKeyedArchiver archiveRootObject:roomAccountData toFile:file];
             }
         });
     }
@@ -878,12 +911,19 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
                 {
                     @synchronized (receiptsByUserId)
                     {
-                        [self checkFolderExistenceForRoom:roomId forBackup:NO];
-                        BOOL success = [NSKeyedArchiver archiveRootObject:receiptsByUserId toFile:[self readReceiptsFileForRoom:roomId forBackup:NO]];
-                        if (!success)
+                        NSString *file = [self readReceiptsFileForRoom:roomId forBackup:NO];
+                        NSString *backupFile = [self readReceiptsFileForRoom:roomId forBackup:YES];
+
+                        // Backup the file
+                        if ([[NSFileManager defaultManager] fileExistsAtPath:file])
                         {
-                             NSLog(@"[MXFileStore] Error: Failed to store read receipts for room %@", roomId);
+                            [self checkFolderExistenceForRoom:roomId forBackup:YES];
+                            [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
                         }
+
+                        // Store new data
+                        [self checkFolderExistenceForRoom:roomId forBackup:NO];
+                        [NSKeyedArchiver archiveRootObject:receiptsByUserId toFile:file];
                     }
                 }
             }
