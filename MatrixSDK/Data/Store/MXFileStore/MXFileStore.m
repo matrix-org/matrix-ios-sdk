@@ -28,6 +28,7 @@ NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
 NSString *const kMXFileStoreSavingMarker = @"savingMarker";
 
 NSString *const kMXFileStoreRoomsFolder = @"rooms";
+NSString *const kMXFileStoreRoomsBackupFolder = @"roomsBackup";
 NSString *const kMXFileStoreRoomMessagesFile = @"messages";
 NSString *const kMXFileStoreRoomStateFile = @"state";
 NSString *const kMXFileStoreRoomAccountDataFile = @"accountData";
@@ -56,6 +57,9 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
     // The path of the rooms folder
     NSString *storeRoomsPath;
+
+    // The path of the rooms backup folder
+    NSString *storeRoomsBackupPath;
 
     // Flag to indicate metaData needs to be store
     BOOL metaDataHasChanged;
@@ -107,6 +111,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     storePath = [[cachePath stringByAppendingPathComponent:kMXFileStoreFolder] stringByAppendingPathComponent:credentials.userId];
     savingMarkerFile = [storePath stringByAppendingPathComponent:kMXFileStoreSavingMarker];
     storeRoomsPath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsFolder];
+    storeRoomsBackupPath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsBackupFolder];
 
     /*
     Mount data corresponding to the account credentials.
@@ -233,10 +238,10 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     NSError *error;
 
     // Remove room messages and read receipts from file system. Keep room state
-    [[NSFileManager defaultManager] removeItemAtPath:[self messagesFileForRoom:roomId] error:&error];
+    [[NSFileManager defaultManager] removeItemAtPath:[self messagesFileForRoom:roomId forBackup:NO] error:&error];
 
     // Remove Read receipts
-    [[NSFileManager defaultManager] removeItemAtPath:[self readReceiptsFileForRoom:roomId] error:&error];
+    [[NSFileManager defaultManager] removeItemAtPath:[self readReceiptsFileForRoom:roomId forBackup:NO] error:&error];
     
     if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
     {
@@ -248,10 +253,8 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 {
     [super deleteRoom:roomId];
 
-    NSError *error;
-
     // Remove the room folder from file system
-    [[NSFileManager defaultManager] removeItemAtPath:[self folderForRoom:roomId] error:&error];
+    [[NSFileManager defaultManager] removeItemAtPath:[self folderForRoom:roomId forBackup:NO] error:nil];
 }
 
 - (void)deleteAllData
@@ -356,7 +359,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
     if (!stateEvents)
     {
-        stateEvents =[NSKeyedUnarchiver unarchiveObjectWithFile:[self stateFileForRoom:roomId]];
+        stateEvents =[NSKeyedUnarchiver unarchiveObjectWithFile:[self stateFileForRoom:roomId forBackup:NO]];
 
         if (NO == [NSThread isMainThread])
         {
@@ -386,7 +389,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
     if (!roomUserdData)
     {
-        roomUserdData =[NSKeyedUnarchiver unarchiveObjectWithFile:[self accountDataFileForRoom:roomId]];
+        roomUserdData =[NSKeyedUnarchiver unarchiveObjectWithFile:[self accountDataFileForRoom:roomId forBackup:NO]];
 
         if (NO == [NSThread isMainThread])
         {
@@ -497,38 +500,45 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
 
 #pragma mark - Private methods
-- (NSString*)folderForRoom:(NSString*)roomId
+- (NSString*)folderForRoom:(NSString*)roomId forBackup:(BOOL)backup
 {
-    return [storeRoomsPath stringByAppendingPathComponent:roomId];
+    if (!backup)
+    {
+        return [storeRoomsPath stringByAppendingPathComponent:roomId];
+    }
+    else
+    {
+        return [[storeRoomsBackupPath stringByAppendingPathComponent:self.eventStreamToken] stringByAppendingPathComponent:roomId];
+    }
 }
 
-- (void)checkFolderExistenceForRoom:(NSString*)roomId
+- (void)checkFolderExistenceForRoom:(NSString*)roomId forBackup:(BOOL)backup
 {
-    NSString *roomFolder = [self folderForRoom:roomId];
+    NSString *roomFolder = [self folderForRoom:roomId forBackup:backup];
     if (![NSFileManager.defaultManager fileExistsAtPath:roomFolder])
     {
         [[NSFileManager defaultManager] createDirectoryAtPath:roomFolder withIntermediateDirectories:YES attributes:nil error:nil];
     }
 }
 
-- (NSString*)messagesFileForRoom:(NSString*)roomId
+- (NSString*)messagesFileForRoom:(NSString*)roomId forBackup:(BOOL)backup
 {
-    return [[storeRoomsPath stringByAppendingPathComponent:roomId] stringByAppendingPathComponent:kMXFileStoreRoomMessagesFile];
+    return [[self folderForRoom:roomId forBackup:backup] stringByAppendingPathComponent:kMXFileStoreRoomMessagesFile];
 }
 
-- (NSString*)stateFileForRoom:(NSString*)roomId
+- (NSString*)stateFileForRoom:(NSString*)roomId forBackup:(BOOL)backup
 {
-    return [[storeRoomsPath stringByAppendingPathComponent:roomId] stringByAppendingPathComponent:kMXFileStoreRoomStateFile];
+    return [[self folderForRoom:roomId forBackup:backup] stringByAppendingPathComponent:kMXFileStoreRoomStateFile];
 }
 
-- (NSString*)accountDataFileForRoom:(NSString*)roomId
+- (NSString*)accountDataFileForRoom:(NSString*)roomId forBackup:(BOOL)backup
 {
-    return [[storeRoomsPath stringByAppendingPathComponent:roomId] stringByAppendingPathComponent:kMXFileStoreRoomAccountDataFile];
+    return [[self folderForRoom:roomId forBackup:backup] stringByAppendingPathComponent:kMXFileStoreRoomAccountDataFile];
 }
 
-- (NSString*)readReceiptsFileForRoom:(NSString*)roomId
+- (NSString*)readReceiptsFileForRoom:(NSString*)roomId forBackup:(BOOL)backup
 {
-    return [[storeRoomsPath stringByAppendingPathComponent:roomId] stringByAppendingPathComponent:kMXFileStoreRoomReadReceiptsFile];
+    return [[self folderForRoom:roomId forBackup:backup] stringByAppendingPathComponent:kMXFileStoreRoomReadReceiptsFile];
 }
 
 
@@ -558,7 +568,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
     for (NSString *roomId in roomIDArray)  {
 
-        NSString *roomFile = [self messagesFileForRoom:roomId];
+        NSString *roomFile = [self messagesFileForRoom:roomId forBackup:NO];
 
         MXFileRoomStore *roomStore;
         @try
@@ -605,8 +615,8 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
                 MXFileRoomStore *roomStore = roomStores[roomId];
                 if (roomStore)
                 {
-                    [self checkFolderExistenceForRoom:roomId];
-                    [NSKeyedArchiver archiveRootObject:roomStore toFile:[self messagesFileForRoom:roomId]];
+                    [self checkFolderExistenceForRoom:roomId forBackup:NO];
+                    [NSKeyedArchiver archiveRootObject:roomStore toFile:[self messagesFileForRoom:roomId forBackup:NO]];
                 }
             }
 
@@ -648,8 +658,8 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
             {
                 NSArray *stateEvents = roomsToCommit[roomId];
 
-                [self checkFolderExistenceForRoom:roomId];
-                [NSKeyedArchiver archiveRootObject:stateEvents toFile:[self stateFileForRoom:roomId]];
+                [self checkFolderExistenceForRoom:roomId forBackup:NO];
+                [NSKeyedArchiver archiveRootObject:stateEvents toFile:[self stateFileForRoom:roomId forBackup:NO]];
             }
         });
     }
@@ -688,8 +698,8 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
             {
                 MXRoomAccountData *roomAccountData = roomsToCommit[roomId];
 
-                [self checkFolderExistenceForRoom:roomId];
-                [NSKeyedArchiver archiveRootObject:roomAccountData toFile:[self accountDataFileForRoom:roomId]];
+                [self checkFolderExistenceForRoom:roomId forBackup:NO];
+                [NSKeyedArchiver archiveRootObject:roomAccountData toFile:[self accountDataFileForRoom:roomId forBackup:NO]];
             }
         });
     }
@@ -821,7 +831,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     {
         for (NSString *roomId in roomIDArray)
         {
-            NSString *roomFile = [self readReceiptsFileForRoom:roomId];
+            NSString *roomFile = [self readReceiptsFileForRoom:roomId forBackup:NO];
             
             NSMutableDictionary *receiptsDict = NULL;
             @try
@@ -868,8 +878,8 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
                 {
                     @synchronized (receiptsByUserId)
                     {
-                        [self checkFolderExistenceForRoom:roomId];
-                        BOOL success = [NSKeyedArchiver archiveRootObject:receiptsByUserId toFile:[self readReceiptsFileForRoom:roomId]];
+                        [self checkFolderExistenceForRoom:roomId forBackup:NO];
+                        BOOL success = [NSKeyedArchiver archiveRootObject:receiptsByUserId toFile:[self readReceiptsFileForRoom:roomId forBackup:NO]];
                         if (!success)
                         {
                              NSLog(@"[MXFileStore] Error: Failed to store read receipts for room %@", roomId);

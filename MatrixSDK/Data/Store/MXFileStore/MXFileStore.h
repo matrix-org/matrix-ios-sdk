@@ -27,17 +27,25 @@
     + MXFileStore
         + Matrix user id (one folder per account)
             + rooms
-                + roomId1
+                + {roomId1}
                     L messages: The room messages
                     L state: The room state events
                     L accountData: The account data for this room
                     L receipts: The read receipts for this room
-                + roomId2
+                + {roomId2}
                     L messages
                     L state
                     L accountData
                     L receipts
                 + ...
+            + roomsBackup: This folder contains backup of room files that are modified
+                  during the commit process. It is flushed when the commit completes.
+                  This allows to rollback to previous data if the commit process was
+                  interrupted.
+                + {syncToken} : the token that corresponds to the backup data
+                    + {roomIdA}
+                    + {roomIdB}
+                    + ...
             L MXFileStore : Information about the stored data
  */
 @interface MXFileStore : MXMemoryStore
