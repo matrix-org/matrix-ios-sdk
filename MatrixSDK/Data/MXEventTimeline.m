@@ -19,8 +19,6 @@
 #import "MXSession.h"
 #import "MXMemoryStore.h"
 
-#import "MXEvent+MatrixKit.h"
-
 #import "MXError.h"
 
 NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
@@ -423,7 +421,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     else if (roomSync.timeline.limited)
     {
         // The room has been resync with a limited timeline - Post notification
-        [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomDidFlushMessagesNotification
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomDidFlushDataNotification
                                                             object:room
                                                           userInfo:nil];
     }
@@ -595,11 +593,10 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                 }
                 
                 // Reset the current pagination
-                // FIXME: Shall we let the kMXRoomDidFlushMessagesNotification listener trigger this reset? (like [MXKRoomDataSource reload] do)
                 [self resetPagination];
                 
                 // Notify that room history has been flushed
-                [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomDidFlushMessagesNotification
+                [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomDidFlushDataNotification
                                                                     object:room
                                                                   userInfo:nil];
                 return;
@@ -677,7 +674,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         [self resetPagination];
         
         // Notify that room history has been flushed
-        [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomDidFlushMessagesNotification
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomDidFlushDataNotification
                                                             object:room
                                                           userInfo:nil];
         
@@ -721,10 +718,10 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         // Forwards events update the current state of the room
         [_state handleStateEvent:event];
 
-        // Special handling for presence (CAUTION: ignore redacted state event here)
+        // Special handling for presence: update MXUser data in case of membership event.
+        // CAUTION: ignore here redacted state event, the redaction concerns only the context of the event room.
         if (_isLiveTimeline && MXEventTypeRoomMember == event.eventType && !event.isRedactedEvent)
         {
-            // Update MXUser data
             MXUser *user = [room.mxSession getOrCreateUser:event.sender];
 
             MXRoomMember *roomMember = [_state memberWithUserId:event.sender];

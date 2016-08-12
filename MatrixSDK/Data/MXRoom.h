@@ -45,7 +45,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomInitialSyncNotification;
  
  The notification object is the concerned room (MXRoom instance).
  */
-FOUNDATION_EXPORT NSString *const kMXRoomDidFlushMessagesNotification;
+FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 
 /**
  Posted when the number of unread notifications ('notificationCount' and 'highlightCount' properties) are updated.

@@ -225,6 +225,25 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     return (nil != self.stateKey);
 }
 
+- (BOOL)isRedactedEvent
+{
+    // The event is redacted if its redactedBecause is filed (with a redaction event id)
+    return (self.redactedBecause != nil);
+}
+
+- (BOOL)isEmote
+{
+    if (self.eventType == MXEventTypeRoomMessage)
+    {
+        NSString *msgtype = self.content[@"msgtype"];
+        if ([msgtype isEqualToString:kMXMessageTypeEmote])
+        {
+            return YES;
+        }
+    }
+    return NO;
+}
+
 - (NSArray *)readReceiptEventIds
 {
     NSMutableArray* list = nil;

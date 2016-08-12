@@ -21,7 +21,7 @@
 
 #import "MXError.h"
 
-NSString *const kMXRoomDidFlushMessagesNotification = @"kMXRoomDidFlushMessagesNotification";
+NSString *const kMXRoomDidFlushDataNotification = @"kMXRoomDidFlushDataNotification";
 NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotification";
 NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNotification";
 
