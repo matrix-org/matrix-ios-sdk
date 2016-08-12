@@ -38,15 +38,17 @@
                     L accountData
                     L receipts
                 + ...
-            + roomsBackup: This folder contains backup of room files that are modified
-                  during the commit process. It is flushed when the commit completes.
+            L MXFileStore : Information about the stored data
+            + backup : This folder contains backup of files that are modified during
+                  the commit process. It is flushed when the commit completes.
                   This allows to rollback to previous data if the commit process was
                   interrupted.
                 + {syncToken} : the token that corresponds to the backup data
-                    + {roomIdA}
-                    + {roomIdB}
-                    + ...
-            L MXFileStore : Information about the stored data
+                    + rooms
+                        + {roomIdA}
+                        + {roomIdB}
+                        + ...
+                    L MXFileStore
  */
 @interface MXFileStore : MXMemoryStore
 

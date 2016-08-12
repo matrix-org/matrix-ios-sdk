@@ -24,11 +24,11 @@ NSUInteger const kMXFileVersion = 29;
 
 NSString *const kMXFileStoreFolder = @"MXFileStore";
 NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
+NSString *const kMXFileStoreBackupFolder = @"backup";
 
 NSString *const kMXFileStoreSavingMarker = @"savingMarker";
 
 NSString *const kMXFileStoreRoomsFolder = @"rooms";
-NSString *const kMXFileStoreRoomsBackupFolder = @"roomsBackup";
 NSString *const kMXFileStoreRoomMessagesFile = @"messages";
 NSString *const kMXFileStoreRoomStateFile = @"state";
 NSString *const kMXFileStoreRoomAccountDataFile = @"accountData";
@@ -51,6 +51,9 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
     // The path of the MXFileStore folder
     NSString *storePath;
+
+    // The path of the backup folder
+    NSString *storeBackupPath;
 
     // The path of the temporary file created during saving process.
     NSString *savingMarkerFile;
@@ -111,7 +114,9 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     storePath = [[cachePath stringByAppendingPathComponent:kMXFileStoreFolder] stringByAppendingPathComponent:credentials.userId];
     savingMarkerFile = [storePath stringByAppendingPathComponent:kMXFileStoreSavingMarker];
     storeRoomsPath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsFolder];
-    storeRoomsBackupPath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsBackupFolder];
+
+    storeBackupPath = [storePath stringByAppendingPathComponent:kMXFileStoreBackupFolder];
+    storeRoomsBackupPath = [storeBackupPath stringByAppendingPathComponent:kMXFileStoreRoomsFolder];
 
     /*
     Mount data corresponding to the account credentials.
@@ -541,6 +546,18 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     return [[self folderForRoom:roomId forBackup:backup] stringByAppendingPathComponent:kMXFileStoreRoomReadReceiptsFile];
 }
 
+- (NSString*)metaDataFileForBackup:(BOOL)backup
+{
+    if (!backup)
+    {
+        return [storePath stringByAppendingPathComponent:kMXFileStoreMedaDataFile];
+    }
+    else
+    {
+        return [storeBackupPath stringByAppendingPathComponent:kMXFileStoreMedaDataFile];
+    }
+}
+
 
 #pragma mark - Storage validity
 - (BOOL)checkStorageValidity
@@ -802,9 +819,18 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         MXFileStoreMetaData *metaData2 = [metaData copy];
 
         dispatch_async(dispatchQueue, ^(void){
-    
-            NSString *metaDataFile = [storePath stringByAppendingPathComponent:kMXFileStoreMedaDataFile];
-            [NSKeyedArchiver archiveRootObject:metaData2 toFile:metaDataFile];
+
+            NSString *file = [self metaDataFileForBackup:NO];
+            NSString *backupFile = [self metaDataFileForBackup:YES];
+
+            // Backup the file
+            if ([[NSFileManager defaultManager] fileExistsAtPath:file])
+            {
+                [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
+            }
+
+            // Store new data
+            [NSKeyedArchiver archiveRootObject:metaData2 toFile:file];
         });
     }
 }
