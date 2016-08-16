@@ -49,6 +49,8 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     
     NSMutableArray *roomsToCommitForReceipts;
 
+    NSMutableArray *roomsToCommitForDeletion;
+
     // The path of the MXFileStore folder
     NSString *storePath;
 
@@ -94,6 +96,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         roomsToCommitForState = [NSMutableDictionary dictionary];
         roomsToCommitForAccountData = [NSMutableDictionary dictionary];
         roomsToCommitForReceipts = [NSMutableArray array];
+        roomsToCommitForDeletion = [NSMutableArray array];
         preloadedRoomsStates = [NSMutableDictionary dictionary];
         preloadedRoomAccountData = [NSMutableDictionary dictionary];
 
@@ -240,14 +243,6 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 - (void)deleteAllMessagesInRoom:(NSString *)roomId
 {
     [super deleteAllMessagesInRoom:roomId];
-
-    NSError *error;
-
-    // Remove room messages and read receipts from file system. Keep room state
-    [[NSFileManager defaultManager] removeItemAtPath:[self messagesFileForRoom:roomId forBackup:NO] error:&error];
-
-    // Remove Read receipts
-    [[NSFileManager defaultManager] removeItemAtPath:[self readReceiptsFileForRoom:roomId forBackup:NO] error:&error];
     
     if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
     {
@@ -259,8 +254,10 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 {
     [super deleteRoom:roomId];
 
-    // Remove the room folder from file system
-    [[NSFileManager defaultManager] removeItemAtPath:[self folderForRoom:roomId forBackup:NO] error:nil];
+    if (NSNotFound == [roomsToCommitForDeletion indexOfObject:roomId])
+    {
+        [roomsToCommitForDeletion addObject:roomId];
+    }
 }
 
 - (void)deleteAllData
@@ -465,6 +462,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
             backupEventStreamToken = self.eventStreamToken;
         });
 
+        [self saveRoomsDeletion];
         [self saveRoomsMessages];
         [self saveRoomsState];
         [self saveRoomsAccountData];
@@ -517,10 +515,21 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     }
     else
     {
-        return [[[storeBackupPath stringByAppendingPathComponent:backupEventStreamToken]
-                 stringByAppendingPathComponent:kMXFileStoreRoomsFolder]
-                stringByAppendingPathComponent:roomId];
+        return [self.storeBackupRoomsPath stringByAppendingPathComponent:roomId];
     }
+}
+
+- (NSString*)storeBackupRoomsPath
+{
+    NSString *storeBackupRoomsPath;
+
+    if (backupEventStreamToken)
+    {
+        storeBackupRoomsPath = [[storeBackupPath stringByAppendingPathComponent:backupEventStreamToken]
+                                stringByAppendingPathComponent:kMXFileStoreRoomsFolder];
+    }
+
+    return backupEventStreamToken;
 }
 
 - (void)checkFolderExistenceForRoom:(NSString*)roomId forBackup:(BOOL)backup
@@ -810,6 +819,29 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
                 // Store new data
                 [self checkFolderExistenceForRoom:roomId forBackup:NO];
                 [NSKeyedArchiver archiveRootObject:roomAccountData toFile:file];
+            }
+        });
+    }
+}
+
+
+#pragma mark - Rooms deletion
+- (void)saveRoomsDeletion
+{
+    if (roomsToCommitForDeletion.count)
+    {
+        NSArray *roomsToCommit = [[NSArray alloc] initWithArray:roomsToCommitForDeletion copyItems:YES];
+        [roomsToCommitForDeletion removeAllObjects];
+
+        dispatch_async(dispatchQueue, ^(void){
+
+            // Delete rooms folders from the file system
+            for (NSString *roomId in roomsToCommit)
+            {
+                NSString *folder = [self folderForRoom:roomId forBackup:NO];
+
+                // Remove the room folder by trashing it into the backup folder
+                [[NSFileManager defaultManager] moveItemAtPath:folder toPath:self.storeBackupRoomsPath error:nil];
             }
         });
     }
