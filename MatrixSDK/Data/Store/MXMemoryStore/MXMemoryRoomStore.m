@@ -116,17 +116,21 @@
     return paginationPosition;
 }
 
-- (MXEvent*)lastMessageWithTypeIn:(NSArray*)types
+- (MXEvent*)lastMessageWithTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
 {
     MXEvent *lastMessage = [messages lastObject];
+    
     for (NSInteger i = messages.count - 1; 0 <= i; i--)
     {
         MXEvent *event = messages[i];
 
         if (event.eventId && (!types || (NSNotFound != [types indexOfObject:event.type])))
         {
-            lastMessage = event;
-            break;
+            if (!ignoreProfileChanges || !event.isUserProfileChange)
+            {
+                lastMessage = event;
+                break;
+            }
         }
     }
     

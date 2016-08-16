@@ -212,7 +212,7 @@
 }
 
 
-- (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types
+- (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
 {
     // MXNoStore stores only the last event whatever its type
     NSLog(@"[MXNoStore] Warning: MXNoStore implementation of lastMessageOfRoom is limited");

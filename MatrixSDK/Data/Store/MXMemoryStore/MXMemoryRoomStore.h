@@ -109,15 +109,17 @@
  The last message of the room.
  
  An optional array of event types may be provided to filter room events. When this array is not nil,
- the type of the returned last event matches with one of the provided types.
+ the type of the returned last event should match with one of the provided types.
  
  CAUTION: All rooms must have a last message. If no event matches with the provided event types, the 
- first event is returned whatever its type.
+ last event is returned whatever its type. The returned event may then be a profile change even if
+ it should be ignored.
  
  @param types an array of event types strings (MXEventTypeString) to filter room's events.
+ @param ignoreProfileChanges tell whether the profile changes should be ignored.
  @return a MXEvent instance.
  */
-- (MXEvent*)lastMessageWithTypeIn:(NSArray*)types;
+- (MXEvent*)lastMessageWithTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
 
 /**
  Get all events newer than the event with the passed id.

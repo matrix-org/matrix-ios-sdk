@@ -231,6 +231,11 @@ FOUNDATION_EXPORT uint64_t const kMXUndefinedTimestamp;
 - (BOOL)isEmote;
 
 /**
+ Return YES when the event corresponds to a user profile change.
+ */
+- (BOOL)isUserProfileChange;
+
+/**
  Returns the event IDs for which a read receipt is defined in this event.
  
  This property is relevant only for events with 'kMXEventTypeStringReceipt' type.

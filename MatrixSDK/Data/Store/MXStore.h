@@ -159,13 +159,13 @@
  The last message of a room.
 
  @param roomId the id of the room.
- @param types an array of event types strings (MXEventTypeString). The last message
-        type should be among `types`. If no event matches `type`, the implementation
-        must return the true last event of the room whatever its type is.
- @return the MXEvent object corresponding to the last message.
+ @param types an array of event types strings (MXEventTypeString).
+        The last message type should be among `types`.
+ @param ignoreProfileChanges tell whether the profile changes should be ignored.
+ @return the MXEvent object corresponding to the last message. A room must have a last message. If no event matches `type`, the implementation
+ must return the true last event of the room whatever its type is. Even if it is an ignored profile change.
  */
-- (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types;
-
+- (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
 
 /**
  Store the text message partially typed by the user but not yet sent.

@@ -169,10 +169,10 @@
 }
 
 
-- (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types
+- (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
 {
     MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    return [roomStore lastMessageWithTypeIn:types];
+    return [roomStore lastMessageWithTypeIn:types ignoreMemberProfileChanges:ignoreProfileChanges];
 }
 
 
