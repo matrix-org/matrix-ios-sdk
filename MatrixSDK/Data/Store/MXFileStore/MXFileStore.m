@@ -57,9 +57,6 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     // The path of the backup folder
     NSString *storeBackupPath;
 
-    // The path of the temporary file created during saving process.
-    NSString *savingMarkerFile;
-
     // The path of the rooms folder
     NSString *storeRoomsPath;
 
@@ -467,11 +464,6 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         [self saveRoomsState];
         [self saveRoomsAccountData];
         [self saveReceipts];
-
-        // Save meta data only at the end because it is critical to save the eventStreamToken
-        // after everything else.
-        // If there is a crash during the commit operation, we will be able to retrieve non
-        // stored data thanks to the old eventStreamToken stored at the previous commit.
         [self saveMetaData];
         
         // The data saving is completed: remove the backuped data.
@@ -529,7 +521,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
                                 stringByAppendingPathComponent:kMXFileStoreRoomsFolder];
     }
 
-    return backupEventStreamToken;
+    return storeBackupRoomsPath;
 }
 
 - (void)checkFolderExistenceForRoom:(NSString*)roomId forBackup:(BOOL)backup
