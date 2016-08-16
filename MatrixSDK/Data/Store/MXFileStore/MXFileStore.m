@@ -697,7 +697,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
                     NSString *backupFile = [self messagesFileForRoom:roomId forBackup:YES];
 
                     // Backup the file
-                    if ([[NSFileManager defaultManager] fileExistsAtPath:file])
+                    if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
                     {
                         [self checkFolderExistenceForRoom:roomId forBackup:YES];
                         [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
@@ -751,7 +751,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
                 NSString *backupFile = [self stateFileForRoom:roomId forBackup:YES];
 
                 // Backup the file
-                if ([[NSFileManager defaultManager] fileExistsAtPath:file])
+                if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
                 {
                     [self checkFolderExistenceForRoom:roomId forBackup:YES];
                     [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
@@ -802,7 +802,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
                 NSString *backupFile = [self accountDataFileForRoom:roomId forBackup:YES];
 
                 // Backup the file
-                if ([[NSFileManager defaultManager] fileExistsAtPath:file])
+                if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
                 {
                     [self checkFolderExistenceForRoom:roomId forBackup:YES];
                     [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
@@ -831,9 +831,20 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
             for (NSString *roomId in roomsToCommit)
             {
                 NSString *folder = [self folderForRoom:roomId forBackup:NO];
+                NSString *backupFolder = [self folderForRoom:roomId forBackup:YES];
 
-                // Remove the room folder by trashing it into the backup folder
-                [[NSFileManager defaultManager] moveItemAtPath:folder toPath:self.storeBackupRoomsPath error:nil];
+                if (backupFolder && [NSFileManager.defaultManager fileExistsAtPath:folder])
+                {
+                    // Make sure the backup folder exists
+                    if (![NSFileManager.defaultManager fileExistsAtPath:self.storeBackupRoomsPath])
+                    {
+                        [[NSFileManager defaultManager] createDirectoryAtPath:self.storeBackupRoomsPath withIntermediateDirectories:YES attributes:nil error:nil];
+                    }
+
+                    // Remove the room folder by trashing it into the backup folder
+                    [[NSFileManager defaultManager] moveItemAtPath:folder toPath:backupFolder error:nil];
+                }
+
             }
         });
     }
@@ -908,7 +919,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
             NSString *backupFile = [self metaDataFileForBackup:YES];
 
             // Backup the file
-            if ([[NSFileManager defaultManager] fileExistsAtPath:file])
+            if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
             {
                 [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
             }
@@ -1025,7 +1036,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
                         NSString *backupFile = [self readReceiptsFileForRoom:roomId forBackup:YES];
 
                         // Backup the file
-                        if ([[NSFileManager defaultManager] fileExistsAtPath:file])
+                        if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
                         {
                             [self checkFolderExistenceForRoom:roomId forBackup:YES];
                             [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
@@ -1067,7 +1078,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         NSNumber *isDirectory = nil;
 
         // List only files
-        if ([url getResourceValue:&isDirectory forKey:NSURLIsDirectoryKey error:nil] && ![isDirectory boolValue])
+        if ([url getResourceValue:&isDirectory forKey:NSURLIsDirectoryKey error:nil])// && ![isDirectory boolValue])
         {
             // Return a file path relative to 'path'
             NSRange range = [url.absoluteString rangeOfString:path];
