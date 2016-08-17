@@ -165,10 +165,15 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
             // If metaData is still defined, we can load rooms data
             if (metaData)
             {
+                NSDate *startDate = [NSDate date];
+                NSLog(@"[MXFileStore] Start data loading from files");
+
                 [self loadRoomsMessages];
                 [self preloadRoomsStates];
                 [self preloadRoomsAccountData];
                 [self loadReceipts];
+
+                NSLog(@"[MXFileStore] Data loaded from files in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
             }
             
             // Else, if credentials is valid, create and store it
@@ -642,7 +647,6 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     NSArray *roomIDArray = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsPath error:nil];
 
     NSDate *startDate = [NSDate date];
-    NSLog(@"[MXFileStore] loadRoomsData:");
 
     for (NSString *roomId in roomIDArray)  {
 
@@ -660,7 +664,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
         if (roomStore)
         {
-            NSLog(@"   - %@: %@", roomId, roomStore);
+            //NSLog(@"   - %@: %@", roomId, roomStore);
             roomStores[roomId] = roomStore;
 
             // @TODO: Check the state file  of this room exists
@@ -958,7 +962,6 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     NSArray *roomIDArray = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsPath error:nil];
     
     NSDate *startDate = [NSDate date];
-    NSLog(@"[MXFileStore] loadReceipts:");
     
     // Sanity check: check whether there are as much receipts files as room data files.
     if (roomIDArray.count != roomStores.allKeys.count)
@@ -994,12 +997,12 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
             }
             @catch (NSException *exception)
             {
-                NSLog(@"[loadReceipts] Warning: loadReceipts file for room %@ has been corrupted", roomId);
+                NSLog(@"[MXFileStore] Warning: loadReceipts file for room %@ has been corrupted", roomId);
             }
             
             if (receiptsDict)
             {
-                NSLog(@"   - %@: %tu", roomId, receiptsDict.count);
+                //NSLog(@"   - %@: %tu", roomId, receiptsDict.count);
                 
                 [receiptsByRoomId setObject:receiptsDict forKey:roomId];
             }
