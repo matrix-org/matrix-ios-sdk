@@ -666,8 +666,6 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         {
             //NSLog(@"   - %@: %@", roomId, roomStore);
             roomStores[roomId] = roomStore;
-
-            // @TODO: Check the state file  of this room exists
         }
         else
         {
@@ -959,62 +957,43 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 // Load the data store in files
 - (void)loadReceipts
 {
-    NSArray *roomIDArray = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsPath error:nil];
-    
     NSDate *startDate = [NSDate date];
-    
-    // Sanity check: check whether there are as much receipts files as room data files.
-    if (roomIDArray.count != roomStores.allKeys.count)
-    {
-        NSLog(@"[MXFileStore] Error: MXFileStore has been reset due to file corruption (%tu read receipts files vs %tu rooms)", roomIDArray.count, roomStores.allKeys.count);
 
-        // Log the faulty rooms
-        NSMutableArray *roomDiff;
-        if (roomIDArray.count > roomStores.allKeys.count)
+    for (NSString *roomId in roomStores)
+    {
+        NSString *roomFile = [self readReceiptsFileForRoom:roomId forBackup:NO];
+
+        NSMutableDictionary *receiptsDict;
+        @try
         {
-            roomDiff = [NSMutableArray arrayWithArray:roomIDArray];
-            [roomDiff removeObjectsInArray:roomStores.allKeys];
+            receiptsDict =[NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+        }
+        @catch (NSException *exception)
+        {
+            NSLog(@"[MXFileStore] Warning: loadReceipts file for room %@ has been corrupted", roomId);
+        }
+
+        if (receiptsDict)
+        {
+            //NSLog(@"   - %@: %tu", roomId, receiptsDict.count);
+            receiptsByRoomId[roomId] = receiptsDict;
         }
         else
         {
-            roomDiff = [NSMutableArray arrayWithArray:roomStores.allKeys];
-            [roomDiff removeObjectsInArray:roomIDArray];
-        }
-        NSLog(@"Rooms that are missing: %@", roomDiff);
+            NSLog(@"[MXFileStore] Warning: MXFileStore has no receipts file for room %@", roomId);
 
-        [self deleteAllData];
-    }
-    else
-    {
-        for (NSString *roomId in roomIDArray)
-        {
-            NSString *roomFile = [self readReceiptsFileForRoom:roomId forBackup:NO];
-            
-            NSMutableDictionary *receiptsDict = NULL;
-            @try
-            {
-                receiptsDict =[NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
-            }
-            @catch (NSException *exception)
-            {
-                NSLog(@"[MXFileStore] Warning: loadReceipts file for room %@ has been corrupted", roomId);
-            }
-            
-            if (receiptsDict)
-            {
-                //NSLog(@"   - %@: %tu", roomId, receiptsDict.count);
-                
-                [receiptsByRoomId setObject:receiptsDict forKey:roomId];
-            }
-            else
-            {
-                NSLog(@"[MXFileStore] Warning: MXFileStore has been reset due to receipts file corruption. Room id: %@", roomId);
-                [self deleteAllData];
-                break;
-            }
+            // We used to reset the store and force a full initial sync but this makes the app
+            // start very slowly.
+            // So, avoid this reset by considering there is no read receipts for this room which
+            // is not probably true.
+            // TODO: Can we live with that?
+            //[self deleteAllData];
+
+            receiptsByRoomId[roomId] = [NSMutableDictionary dictionary];
+            break;
         }
     }
-    
+
     NSLog(@"[MXFileStore] Loaded read receipts of %lu rooms in %.0fms", (unsigned long)roomStores.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
