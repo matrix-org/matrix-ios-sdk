@@ -23,20 +23,6 @@
 #import <AVFoundation/AVMediaFormat.h>
 #import <AVFoundation/AVAudioSession.h>
 
-#import "RTCICEServer.h"
-#import "RTCICECandidate.h"
-#import "RTCMediaConstraints.h"
-#import "RTCMediaStream.h"
-#import "RTCPeerConnection.h"
-#import "RTCPeerConnectionFactory.h"
-#import "RTCSessionDescription.h"
-#import "RTCSessionDescriptionDelegate.h"
-#import "RTCAudioTrack.h"
-#import "RTCVideoCapturer.h"
-#import "RTCVideoRenderer.h"
-#import "RTCVideoTrack.h"
-#import "RTCEAGLVideoView.h"
-#import "RTCPair.h"
 
 #import "MXJingleVideoView.h"
 
@@ -93,7 +79,7 @@
 @end
 
 @implementation MXJingleCallStackCall
-@synthesize selfVideoView, remoteVideoView, audioToSpeaker, delegate;
+@synthesize selfVideoView, remoteVideoView, audioToSpeaker, cameraPosition, delegate;
 
 - (instancetype)initWithFactory:(RTCPeerConnectionFactory *)factory
 {
@@ -101,6 +87,7 @@
     if (self)
     {
         peerConnectionFactory = factory;
+        cameraPosition = AVCaptureDevicePositionBack;
     }
     return self;
 }
@@ -135,27 +122,33 @@
     NSMutableArray *ICEServers = [NSMutableArray array];
 
     // Translate servers information into RTCICEServer objects
-    for (NSString *uri in uris)
+    //for (NSString *uri in uris)
     {
-        RTCICEServer *ICEServer = [[RTCICEServer alloc] initWithURI:[NSURL URLWithString:uri]
-                                                           username:username
-                                                           password:password];
+//        //RTCIceServer *ICEServer = [[RTCIceServer alloc] initWithURI:[NSURL URLWithString:uri]
+//                                                           username:username
+//                                                           password:password];
+
+        RTCIceServer *ICEServer = [[RTCIceServer alloc] initWithURLStrings:uris
+                                                                  username:username
+                                                                credential:password];
         if (ICEServer)
         {
             [ICEServers addObject:ICEServer];
         }
         else
         {
-            NSLog(@"[MXJingleCallStackCall] addTURNServerUris: Warning: Failed to create RTCICEServer for %@ - %@: %@", uri, username, password);
+ //           NSLog(@"[MXJingleCallStackCall] addTURNServerUris: Warning: Failed to create RTCICEServer for %@ - %@: %@", uri, username, password);
         }
     }
 
     // Define at least one server
     if (ICEServers.count == 0)
     {
-        RTCICEServer *ICEServer = [[RTCICEServer alloc] initWithURI:[NSURL URLWithString:@"stun:stun.l.google.com:19302"]
-                                                           username:@""
-                                                           password:@""];
+//        RTCIceServer *ICEServer = [[RTCIceServer alloc] initWithURI:[NSURL URLWithString:@"stun:stun.l.google.com:19302"]
+//                                                           username:@""
+//                                                           password:@""];
+
+        RTCIceServer *ICEServer = [[RTCIceServer alloc] initWithURLStrings:@[@"stun:stun.l.google.com:19302"]];
         if (ICEServer)
         {
             [ICEServers addObject:ICEServer];
@@ -168,48 +161,89 @@
 
     RTCMediaConstraints  *constraints =
     [[RTCMediaConstraints alloc] initWithMandatoryConstraints:nil
-                                          optionalConstraints:@[
-                                                                [[RTCPair alloc] initWithKey:@"RtpDataChannels" value:@"true"]
-                                                                ]];
+                                          optionalConstraints:@{
+                                                                @"RtpDataChannels": @"true"
+                                                                }];
+
+    RTCConfiguration *configuration = [[RTCConfiguration alloc] init];
+    configuration.iceServers = ICEServers;
+
 
     // The libjingle call object can now be created
-    peerConnection = [peerConnectionFactory peerConnectionWithICEServers:ICEServers constraints:constraints delegate:self];
+    peerConnection = [peerConnectionFactory peerConnectionWithConfiguration:configuration constraints:constraints delegate:self];
 }
 
 - (void)handleRemoteCandidate:(NSDictionary *)candidate
 {
-    RTCICECandidate *iceCandidate = [[RTCICECandidate alloc] initWithMid:candidate[@"sdpMid"] index:[(NSNumber*)candidate[@"sdpMLineIndex"] integerValue] sdp:candidate[@"candidate"]];
-    [peerConnection addICECandidate:iceCandidate];
+    RTCIceCandidate *iceCandidate = [[RTCIceCandidate alloc] initWithSdp:candidate[@"candidate"] sdpMLineIndex:[(NSNumber*)candidate[@"sdpMLineIndex"] intValue] sdpMid:candidate[@"sdpMid"]];
+    [peerConnection addIceCandidate:iceCandidate];
 }
 
 
 #pragma mark - Incoming call
 - (void)handleOffer:(NSString *)sdpOffer
 {
-    RTCSessionDescription *sessionDescription = [[RTCSessionDescription alloc] initWithType:@"offer" sdp:sdpOffer];
-    [peerConnection setRemoteDescriptionWithDelegate:self sessionDescription:sessionDescription];
+    RTCSessionDescription *sessionDescription = [[RTCSessionDescription alloc] initWithType:RTCSdpTypeOffer sdp:sdpOffer];
+
+    __weak typeof(self) weakSelf = self;
+    [peerConnection setRemoteDescription:sessionDescription completionHandler:^(NSError * _Nullable error) {
+
+        NSLog(@"##### setRemoteDescription");
+
+        __strong __typeof(weakSelf)strongSelf = weakSelf;
+
+        //[strongSelf peerConnection:strongSelf->peerConnection didSetSessionDescriptionWithError:error];
+    }];
 }
+
 
 - (void)createAnswer:(void (^)(NSString *))success failure:(void (^)(NSError *))failure
 {
-    onCreateAnswerSuccess = success;
-    [peerConnection createAnswerWithDelegate:self constraints:self.mediaConstraints];
+    [peerConnection answerForConstraints:self.mediaConstraints completionHandler:^(RTCSessionDescription * _Nullable sdp, NSError * _Nullable error) {
+
+        if (!error)
+        {
+            success(sdp.description);
+        }
+        else
+        {
+            failure(error);
+        }
+    }];
 }
 
 
 #pragma mark - Outgoing call
 - (void)createOffer:(void (^)(NSString *sdp))success failure:(void (^)(NSError *))failure
 {
-    onCreateOfferSuccess = success;
-    [peerConnection createOfferWithDelegate:self constraints:self.mediaConstraints];
+    [peerConnection offerForConstraints:self.mediaConstraints completionHandler:^(RTCSessionDescription * _Nullable sdp, NSError * _Nullable error) {
+
+        if (!error)
+        {
+            success(sdp.description);
+        }
+        else
+        {
+            failure(error);
+        }
+    }];
 }
 
 - (void)handleAnswer:(NSString *)sdp success:(void (^)())success failure:(void (^)(NSError *))failure
 {
-    onHandleAnswerSuccess = success;
+    RTCSessionDescription *sessionDescription = [[RTCSessionDescription alloc] initWithType:RTCSdpTypeAnswer sdp:sdp];
     
-    RTCSessionDescription *sessionDescription = [[RTCSessionDescription alloc] initWithType:@"answer" sdp:sdp];
-    [peerConnection setRemoteDescriptionWithDelegate:self sessionDescription:sessionDescription];
+    [peerConnection setRemoteDescription:sessionDescription completionHandler:^(NSError * _Nullable error) {
+
+        if (!error)
+        {
+            success();
+        }
+        else
+        {
+            failure(error);
+        }
+    }];
 }
 
 
@@ -233,16 +267,17 @@
 
 // Triggered when the SignalingState changed.
 - (void)peerConnection:(RTCPeerConnection *)peerConnection
- signalingStateChanged:(RTCSignalingState)stateChanged
+ didChangeSignalingState:(RTCSignalingState)stateChanged
+
 {
-    NSLog(@"[MXJingleCallStackCall] signalingStateChanged: %tu", stateChanged);
+    NSLog(@"[MXJingleCallStackCall] didChangeSignalingState: %tu", stateChanged);
 }
 
 // Triggered when media is received on a new stream from remote peer.
 - (void)peerConnection:(RTCPeerConnection *)peerConnection
-           addedStream:(RTCMediaStream *)stream
+          didAddStream:(RTCMediaStream *)stream
 {
-    NSLog(@"[MXJingleCallStackCall] addedStream");
+    NSLog(@"[MXJingleCallStackCall] didAddStream");
 
     // This is mandatory to keep a reference on the video track
     // Else the video does not display in self.remoteVideoView
@@ -261,26 +296,26 @@
 
 // Triggered when a remote peer close a stream.
 - (void)peerConnection:(RTCPeerConnection *)peerConnection
-         removedStream:(RTCMediaStream *)stream
+       didRemoveStream:(RTCMediaStream *)stream
 {
-    NSLog(@"[MXJingleCallStackCall] removedStream");
+    NSLog(@"[MXJingleCallStackCall] didRemoveStream");
 }
 
 // Triggered when renegotiation is needed, for example the ICE has restarted.
-- (void)peerConnectionOnRenegotiationNeeded:(RTCPeerConnection *)peerConnection
+- (void)peerConnectionShouldNegotiate:(RTCPeerConnection *)peerConnection
 {
-    NSLog(@"[MXJingleCallStackCall] peerConnectionOnRenegotiationNeeded");
+    NSLog(@"[MXJingleCallStackCall] peerConnectionShouldNegotiate");
 }
 
 // Called any time the ICEConnectionState changes.
 - (void)peerConnection:(RTCPeerConnection *)peerConnection
-  iceConnectionChanged:(RTCICEConnectionState)newState
+didChangeIceConnectionState:(RTCIceConnectionState)newState
 {
-    NSLog(@"[MXJingleCallStackCall] iceConnectionChanged: %@", @(newState));
+    NSLog(@"[MXJingleCallStackCall] didChangeIceConnectionState: %@", @(newState));
 
     switch (newState)
     {
-        case RTCICEConnectionConnected:
+        case RTCIceConnectionStateConnected:
             // The call is now established. Report it
             if (onHandleAnswerSuccess)
             {
@@ -289,7 +324,7 @@
             }
             break;
 
-        case RTCICEConnectionFailed:
+        case RTCIceConnectionStateFailed:
         {
             // ICE discovery has failed or the connection has dropped
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -306,19 +341,27 @@
 
 // Called any time the ICEGatheringState changes.
 - (void)peerConnection:(RTCPeerConnection *)peerConnection
-   iceGatheringChanged:(RTCICEGatheringState)newState
+didChangeIceGatheringState:(RTCIceGatheringState)newState
 {
-    NSLog(@"[MXJingleCallStackCall] iceGatheringChanged: %@", @(newState));
+    NSLog(@"[MXJingleCallStackCall] didChangeIceGatheringState: %@", @(newState));
 }
 
 // New Ice candidate have been found.
 - (void)peerConnection:(RTCPeerConnection *)peerConnection
-       gotICECandidate:(RTCICECandidate *)candidate
+didGenerateIceCandidate:(RTCIceCandidate *)candidate
 {
     // Forward found ICE candidates
     dispatch_async(dispatch_get_main_queue(), ^{
         [delegate callStackCall:self onICECandidateWithSdpMid:candidate.sdpMid sdpMLineIndex:candidate.sdpMLineIndex candidate:candidate.sdp];
     });
+}
+
+// Called when a group of local Ice candidates have been removed.
+- (void)peerConnection:(RTCPeerConnection *)peerConnection
+didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
+{
+    NSLog(@"[MXJingleCallStackCall] didRemoveIceCandidates");
+
 }
 
 // New data channel has been opened.
@@ -332,6 +375,7 @@
 #pragma mark -
 #pragma mark RTCSessionDescriptionDelegate
 
+/* TODO RTCSessionDescriptionDelegate is dead
 // Called when creating a session.
 - (void)peerConnection:(RTCPeerConnection *)thePeerConnection didCreateSessionDescription:(RTCSessionDescription *)sdp
                  error:(NSError *)error
@@ -372,6 +416,7 @@
         });
     }
 }
+ */
 
 
 #pragma mark - Properties
@@ -394,7 +439,7 @@
 
 - (void)setAudioMuted:(BOOL)audioMuted
 {
-    localAudioTrack.enabled = !audioMuted;
+    localAudioTrack.isEnabled = !audioMuted;
 }
 
 - (BOOL)videoMuted
@@ -404,7 +449,7 @@
 
 - (void)setVideoMuted:(BOOL)videoMuted
 {
-    localVideoTrack.enabled = !videoMuted;
+    localVideoTrack.isEnabled = !videoMuted;
 }
 
 - (void)setAudioToSpeaker:(BOOL)theAudioToSpeaker
@@ -421,33 +466,49 @@
     }
 }
 
+- (void)setCameraPosition:(AVCaptureDevicePosition)theCameraPosition
+{
+    cameraPosition = theCameraPosition;
+
+    if (localVideoTrack)
+    {
+        // @TODO: test
+        RTCVideoSource* source = localVideoTrack.source;
+        if ([source isKindOfClass:[RTCAVFoundationVideoSource class]])
+        {
+            RTCAVFoundationVideoSource* avSource = (RTCAVFoundationVideoSource*)source;
+            avSource.useBackCamera = (cameraPosition == AVCaptureDevicePositionBack) ? YES : NO;
+        }
+    }
+}
+
 #pragma mark - Private methods
 
 - (RTCMediaConstraints*)mediaConstraints
 {
-    return [[RTCMediaConstraints alloc] initWithMandatoryConstraints:@[
-                                                                       [[RTCPair alloc] initWithKey:@"OfferToReceiveAudio" value:@"true"],
-                                                                       [[RTCPair alloc] initWithKey:@"OfferToReceiveVideo" value:(isVideoCall ? @"true" : @"false")]
-                                                                       ]
+    return [[RTCMediaConstraints alloc] initWithMandatoryConstraints:@{
+                                                                       @"OfferToReceiveAudio": @"true",
+                                                                       @"OfferToReceiveVideo": (isVideoCall ? @"true" : @"false")
+                                                                       }
                                                  optionalConstraints:nil];
 }
 
 - (void)createLocalMediaStream
 {
-    RTCMediaStream* localStream = [peerConnectionFactory mediaStreamWithLabel:@"ARDAMS"];
+    RTCMediaStream* localStream = [peerConnectionFactory mediaStreamWithStreamId:@"ARDAMS"];
 
     // Set up audio
-    localAudioTrack = [peerConnectionFactory audioTrackWithID:@"ARDAMSa0"];
+    localAudioTrack = [peerConnectionFactory audioTrackWithTrackId:@"ARDAMSa0"];
     [localStream addAudioTrack:localAudioTrack];
 
     // And video
     if (isVideoCall)
     {
-        // Find the device that is the front facing camera
+        // Find the device that corresponds to self.cameraPosition
         AVCaptureDevice *device;
         for (AVCaptureDevice *captureDevice in [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo])
         {
-            if (captureDevice.position == AVCaptureDevicePositionFront)
+            if (captureDevice.position == cameraPosition)
             {
                 device = captureDevice;
                 break;
@@ -457,10 +518,18 @@
         // Create a video track and add it to the media stream
         if (device)
         {
-            RTCVideoCapturer *capturer = [RTCVideoCapturer capturerWithDeviceName:device.localizedName];
-            RTCVideoSource *localVideoSource = [peerConnectionFactory videoSourceWithCapturer:capturer constraints:nil];
-            
-            localVideoTrack = [peerConnectionFactory videoTrackWithID:@"ARDAMSv0" source:localVideoSource];
+            //RTCVideoCapturer *capturer = [RTCVideoCapturer capturerWithDeviceName:device.localizedName];
+            //RTCVideoSource *localVideoSource = [peerConnectionFactory videoSourceWithCapturer:capturer constraints:nil];
+
+            // @TODO
+            // RTCAVFoundationVideoSource localVideoSource = [[RTCAVFoundationVideoSource alloc] initWithFactory:peerConnectionFactory constraints:nil];
+            // [peerConnectionFactory videoSourceWithCapturer:capturer constraints:nil];
+            //localVideoSource.useBackCamera = YES;
+
+            RTCAVFoundationVideoSource *localVideoSource = [peerConnectionFactory avFoundationVideoSourceWithConstraints:nil];
+
+
+            localVideoTrack = [peerConnectionFactory videoTrackWithSource:localVideoSource trackId:@"ARDAMSv0"];
             [localStream addVideoTrack:localVideoTrack];
 
             // Display the self view
