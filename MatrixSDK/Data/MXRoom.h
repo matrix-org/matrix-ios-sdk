@@ -99,9 +99,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 
 /**
  The last message of the requested types.
+ This value depends on mxSession.ignoreProfileChangesDuringLastMessageProcessing.
 
  @param types an array of event types strings (MXEventTypeString).
  @return the last event of the requested types or the true last event if no event of the requested type is found.
+ (CAUTION: All rooms must have a last message. For this reason, the returned event may be a profile change even if it should be ignored).
  */
 - (MXEvent*)lastMessageWithTypeIn:(NSArray*)type;
 
@@ -697,6 +699,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 
 /**
  Comparator to use to order array of rooms by their lastest originServerTs value.
+ This sorting is based on the last message of the room.
  
  Arrays are then sorting so that the oldest room is set at position 0.
  

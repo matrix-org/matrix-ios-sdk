@@ -93,7 +93,7 @@ NS_ASSUME_NONNULL_BEGIN
  The last message of the room.
 
  An optional array of event types may be provided to filter room events. When this array is not nil,
- the type of the returned last event matches with one of the provided types.
+ the type of the returned last event should match with one of the provided types.
 
  CAUTION: All rooms must have a last message. If no event matches with the provided event types, the
  first event is returned whatever its type.

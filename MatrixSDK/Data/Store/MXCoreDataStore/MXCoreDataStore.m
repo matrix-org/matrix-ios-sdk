@@ -342,9 +342,11 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     return [room remainingMessagesForPagination];
 }
 
-- (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types;
+- (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
 {
     MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
+    
+    // TODO handle ignoreProfileChanges flag
     return [room lastMessageWithTypeIn:types];
 }
 

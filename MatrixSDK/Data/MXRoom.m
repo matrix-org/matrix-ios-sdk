@@ -139,7 +139,8 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 
 - (MXEvent *)lastMessageWithTypeIn:(NSArray*)types
 {
-    return [mxSession.store lastMessageOfRoom:self.state.roomId withTypeIn:types];
+    // Retrieve the last message from the store by considering the mxSession settings.
+    return [mxSession.store lastMessageOfRoom:self.state.roomId withTypeIn:types ignoreMemberProfileChanges:mxSession.ignoreProfileChangesDuringLastMessageProcessing];
 }
 
 #pragma mark - Sync
@@ -597,7 +598,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 
 - (BOOL)acknowledgeLatestEvent:(BOOL)sendReceipt;
 {    
-    MXEvent* event =[mxSession.store lastMessageOfRoom:self.state.roomId withTypeIn:_acknowledgableEventTypes];
+    MXEvent* event =[mxSession.store lastMessageOfRoom:self.state.roomId withTypeIn:_acknowledgableEventTypes ignoreMemberProfileChanges:NO];
     // Sanity check on event id: Do not send read receipt on event without id
     if (event.eventId && ([event.eventId hasPrefix:kMXRoomInviteStateEventIdPrefix] == NO))
     {
