@@ -203,7 +203,14 @@
 
         if (!error)
         {
-            success(sdp.description);
+            // Report this sdp back to libjingle
+            [peerConnection setLocalDescription:sdp completionHandler:^(NSError * _Nullable error) {
+
+                if (!error)
+                {
+                    success(sdp.sdp);
+                }
+            }];
         }
         else
         {
@@ -220,7 +227,14 @@
 
         if (!error)
         {
-            success(sdp.description);
+            // Report this sdp back to libjingle
+            [peerConnection setLocalDescription:sdp completionHandler:^(NSError * _Nullable error) {
+
+                if (!error)
+                {
+                    success(sdp.sdp);
+                }
+            }];
         }
         else
         {
