@@ -15,6 +15,7 @@
  */
 
 #import <UIKit/UIKit.h>
+#import <AVFoundation/AVCaptureDevice.h>
 
 @protocol MXCallStackCallDelegate;
 
@@ -154,6 +155,12 @@
  speaker.
  */
 @property (nonatomic) BOOL audioToSpeaker;
+
+/**
+ The camera to use.
+ Default is AVCaptureDevicePositionFront.
+ */
+@property (nonatomic) AVCaptureDevicePosition cameraPosition;
 
 @end
 

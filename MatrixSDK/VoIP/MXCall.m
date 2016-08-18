@@ -443,6 +443,19 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     callStackCall.audioToSpeaker = audioToSpeaker;
 }
 
+- (AVCaptureDevicePosition)cameraPosition
+{
+    return callStackCall.cameraPosition;
+}
+
+- (void)setCameraPosition:(AVCaptureDevicePosition)cameraPosition
+{
+    if (cameraPosition != callStackCall.cameraPosition)
+    {
+        callStackCall.cameraPosition = cameraPosition;
+    }
+}
+
 - (NSUInteger)duration
 {
     NSUInteger duration = 0;

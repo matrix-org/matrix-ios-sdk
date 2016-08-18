@@ -183,6 +183,12 @@ extern NSString *const kMXCallStateDidChange;
 @property (nonatomic) BOOL audioToSpeaker;
 
 /**
+ The camera to use.
+ Default is AVCaptureDevicePositionFront.
+ */
+@property (nonatomic) AVCaptureDevicePosition cameraPosition;
+
+/**
  The call duration in milliseconds.
  */
 @property (nonatomic, readonly) NSUInteger duration;
