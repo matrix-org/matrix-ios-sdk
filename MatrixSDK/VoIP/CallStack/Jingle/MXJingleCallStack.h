@@ -25,7 +25,7 @@
 
  The application can use the libjingle build pod provided by webrtc.org at
  https://github.com/Anakros/WebRTC-iOS.git :
-     pod 'WebRTC', '~> 13613.0.ad34dbe'
+     pod 'WebRTC', '1.0.13807'
  */
 
 #if __has_include(<WebRTC/RTCPeerConnection.h>)
