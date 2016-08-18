@@ -20,7 +20,7 @@
 
 #import "MXFileStoreMetaData.h"
 
-NSUInteger const kMXFileVersion = 29;
+NSUInteger const kMXFileVersion = 30;
 
 NSString *const kMXFileStoreFolder = @"MXFileStore";
 NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -590,6 +590,8 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
             NSLog(@"[MXFileStore] Restore data from sync token: %@", prevSyncToken);
 
+            NSDate *startDate = [NSDate date];
+
             NSString *backupFolder = [storeBackupPath stringByAppendingPathComponent:prevSyncToken];
 
             NSArray *backupFiles = [self filesAtPath:backupFolder];
@@ -615,7 +617,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
             if (checkStorageValidity)
             {
-                NSLog(@"MXFileStore] Restore data: %tu files have been successfully restored", backupFiles.count);
+                NSLog(@"[MXFileStore] Restore data: %tu files have been successfully restored in %.0fms", backupFiles.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
                 self.eventStreamToken = prevSyncToken;
 
@@ -1060,7 +1062,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         NSNumber *isDirectory = nil;
 
         // List only files
-        if ([url getResourceValue:&isDirectory forKey:NSURLIsDirectoryKey error:nil])// && ![isDirectory boolValue])
+        if ([url getResourceValue:&isDirectory forKey:NSURLIsDirectoryKey error:nil] && ![isDirectory boolValue])
         {
             // Return a file path relative to 'path'
             NSRange range = [url.absoluteString rangeOfString:path];
