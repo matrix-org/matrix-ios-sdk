@@ -597,7 +597,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
             {
                 NSError *error;
 
-                // Restore the backup file (overwrite the current file if necessary
+                // Restore the backup file (overwrite the current file if necessary)
                 if ([fileManager fileExistsAtPath:[storePath stringByAppendingString:file]])
                 {
                     [fileManager removeItemAtPath:[storePath stringByAppendingString:file] error:nil];
