@@ -59,21 +59,6 @@
      Success block for the async `startCapturingMediaWithVideo` method.
      */
     void (^onStartCapturingMediaWithVideoSuccess)();
-
-    /**
-     Success block for the async `createAnswer` method.
-     */
-    void (^onCreateAnswerSuccess)(NSString *sdpAnswer);
-
-    /**
-     Success block for the async `createOffer` method.
-     */
-    void (^onCreateOfferSuccess)();
-
-    /**
-     Success block for the async `handleAnswer` method.
-     */
-    void (^onHandleAnswerSuccess)();
 }
 
 @end
@@ -125,10 +110,9 @@
 
     if (!ICEServer)
     {
+        NSLog(@"[MXJingleCallStackCall] addTURNServerUris: Warning: Failed to create RTCICEServer with credentials %@: %@ for:\n%@", username, password, uris);
+
         // Define at least one server
-
-        NSLog(@"[MXJingleCallStackCall] addTURNServerUris: Warning: Failed to create fallback RTCICEServer");
-
         ICEServer = [[RTCIceServer alloc] initWithURLStrings:@[@"stun:stun.l.google.com:19302"]];
         if (!ICEServer)
         {
@@ -303,15 +287,6 @@ didChangeIceConnectionState:(RTCIceConnectionState)newState
 
     switch (newState)
     {
-        case RTCIceConnectionStateConnected:
-            // The call is now established. Report it
-            if (onHandleAnswerSuccess)
-            {
-                onHandleAnswerSuccess();
-                onHandleAnswerSuccess = nil;
-            }
-            break;
-
         case RTCIceConnectionStateFailed:
         {
             // ICE discovery has failed or the connection has dropped
@@ -458,7 +433,7 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
         // Create a video track and add it to the media stream
         if (device)
         {
-            // Use RTCAVFoundationVideoSource to be able
+            // Use RTCAVFoundationVideoSource to be able to switch the camera
             RTCAVFoundationVideoSource *localVideoSource = [peerConnectionFactory avFoundationVideoSourceWithConstraints:nil];
 
             localVideoTrack = [peerConnectionFactory videoTrackWithSource:localVideoSource trackId:@"ARDAMSv0"];
