@@ -119,58 +119,37 @@
 
 - (void)addTURNServerUris:(NSArray *)uris withUsername:(NSString *)username password:(NSString *)password
 {
-    NSMutableArray *ICEServers = [NSMutableArray array];
+    RTCIceServer *ICEServer = [[RTCIceServer alloc] initWithURLStrings:uris
+                                                              username:username
+                                                            credential:password];
 
-    // Translate servers information into RTCICEServer objects
-    //for (NSString *uri in uris)
+    if (!ICEServer)
     {
-//        //RTCIceServer *ICEServer = [[RTCIceServer alloc] initWithURI:[NSURL URLWithString:uri]
-//                                                           username:username
-//                                                           password:password];
+        // Define at least one server
 
-        RTCIceServer *ICEServer = [[RTCIceServer alloc] initWithURLStrings:uris
-                                                                  username:username
-                                                                credential:password];
-        if (ICEServer)
-        {
-            [ICEServers addObject:ICEServer];
-        }
-        else
-        {
- //           NSLog(@"[MXJingleCallStackCall] addTURNServerUris: Warning: Failed to create RTCICEServer for %@ - %@: %@", uri, username, password);
-        }
-    }
+        NSLog(@"[MXJingleCallStackCall] addTURNServerUris: Warning: Failed to create fallback RTCICEServer");
 
-    // Define at least one server
-    if (ICEServers.count == 0)
-    {
-//        RTCIceServer *ICEServer = [[RTCIceServer alloc] initWithURI:[NSURL URLWithString:@"stun:stun.l.google.com:19302"]
-//                                                           username:@""
-//                                                           password:@""];
-
-        RTCIceServer *ICEServer = [[RTCIceServer alloc] initWithURLStrings:@[@"stun:stun.l.google.com:19302"]];
-        if (ICEServer)
-        {
-            [ICEServers addObject:ICEServer];
-        }
-        else
+        ICEServer = [[RTCIceServer alloc] initWithURLStrings:@[@"stun:stun.l.google.com:19302"]];
+        if (!ICEServer)
         {
             NSLog(@"[MXJingleCallStackCall] addTURNServerUris: Warning: Failed to create fallback RTCICEServer");
         }
     }
 
-    RTCMediaConstraints  *constraints =
-    [[RTCMediaConstraints alloc] initWithMandatoryConstraints:nil
-                                          optionalConstraints:@{
-                                                                @"RtpDataChannels": @"true"
-                                                                }];
+    if (ICEServer)
+    {
+        RTCMediaConstraints  *constraints =
+        [[RTCMediaConstraints alloc] initWithMandatoryConstraints:nil
+                                              optionalConstraints:@{
+                                                                    @"RtpDataChannels": @"true"
+                                                                    }];
 
-    RTCConfiguration *configuration = [[RTCConfiguration alloc] init];
-    configuration.iceServers = ICEServers;
+        RTCConfiguration *configuration = [[RTCConfiguration alloc] init];
+        configuration.iceServers = @[ICEServer];
 
-
-    // The libjingle call object can now be created
-    peerConnection = [peerConnectionFactory peerConnectionWithConfiguration:configuration constraints:constraints delegate:self];
+        // The libjingle call object can now be created
+        peerConnection = [peerConnectionFactory peerConnectionWithConfiguration:configuration constraints:constraints delegate:self];
+    }
 }
 
 - (void)handleRemoteCandidate:(NSDictionary *)candidate
@@ -188,11 +167,7 @@
     __weak typeof(self) weakSelf = self;
     [peerConnection setRemoteDescription:sessionDescription completionHandler:^(NSError * _Nullable error) {
 
-        NSLog(@"##### setRemoteDescription");
-
-        __strong __typeof(weakSelf)strongSelf = weakSelf;
-
-        //[strongSelf peerConnection:strongSelf->peerConnection didSetSessionDescriptionWithError:error];
+        NSLog(@"[MXJingleCallStackCall] setRemoteDescription: error: %@", error);
     }];
 }
 
@@ -246,7 +221,6 @@
 - (void)handleAnswer:(NSString *)sdp success:(void (^)())success failure:(void (^)(NSError *))failure
 {
     RTCSessionDescription *sessionDescription = [[RTCSessionDescription alloc] initWithType:RTCSdpTypeAnswer sdp:sdp];
-    
     [peerConnection setRemoteDescription:sessionDescription completionHandler:^(NSError * _Nullable error) {
 
         if (!error)
@@ -386,53 +360,6 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
 }
 
 
-#pragma mark -
-#pragma mark RTCSessionDescriptionDelegate
-
-/* TODO RTCSessionDescriptionDelegate is dead
-// Called when creating a session.
-- (void)peerConnection:(RTCPeerConnection *)thePeerConnection didCreateSessionDescription:(RTCSessionDescription *)sdp
-                 error:(NSError *)error
-{
-    NSLog(@"[MXJingleCallStackCall] didCreateSessionDescription: %@", sdp);
-
-    // Report the created offer or answer back to libjingle
-    [thePeerConnection setLocalDescriptionWithDelegate:self sessionDescription:sdp];
- }
-
-// Called when setting a local or remote description.
-- (void)peerConnection:(RTCPeerConnection *)thePeerConnection didSetSessionDescriptionWithError:(NSError *)error
-{
-    NSLog(@"[MXJingleCallStackCall] didSetSessionDescription: signalingState:%@ - error:%@", @(thePeerConnection.signalingState), error);
-
-    if (thePeerConnection.signalingState == RTCSignalingHaveLocalOffer)
-    {
-        // The created offer has been acknowleged by libjingle.
-        // Send it to the other peer through Matrix.
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (onCreateOfferSuccess)
-            {
-                onCreateOfferSuccess(thePeerConnection.localDescription.description);
-                onCreateOfferSuccess = nil;
-            }
-        });
-    }
-    else if (thePeerConnection.signalingState == RTCSignalingStable)
-    {
-        // The created answer has been acknowleged by libjingle.
-        // Send it to the other peer through Matrix.
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (onCreateAnswerSuccess)
-            {
-                onCreateAnswerSuccess(thePeerConnection.localDescription.description);
-                onCreateAnswerSuccess = nil;
-            }
-        });
-    }
-}
- */
-
-
 #pragma mark - Properties
 - (UIDeviceOrientation)selfOrientation
 {
@@ -486,7 +413,6 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
 
     if (localVideoTrack)
     {
-        // @TODO: test
         RTCVideoSource* source = localVideoTrack.source;
         if ([source isKindOfClass:[RTCAVFoundationVideoSource class]])
         {
@@ -496,8 +422,8 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
     }
 }
 
-#pragma mark - Private methods
 
+#pragma mark - Private methods
 - (RTCMediaConstraints*)mediaConstraints
 {
     return [[RTCMediaConstraints alloc] initWithMandatoryConstraints:@{
@@ -532,16 +458,8 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
         // Create a video track and add it to the media stream
         if (device)
         {
-            //RTCVideoCapturer *capturer = [RTCVideoCapturer capturerWithDeviceName:device.localizedName];
-            //RTCVideoSource *localVideoSource = [peerConnectionFactory videoSourceWithCapturer:capturer constraints:nil];
-
-            // @TODO
-            // RTCAVFoundationVideoSource localVideoSource = [[RTCAVFoundationVideoSource alloc] initWithFactory:peerConnectionFactory constraints:nil];
-            // [peerConnectionFactory videoSourceWithCapturer:capturer constraints:nil];
-            //localVideoSource.useBackCamera = YES;
-
+            // Use RTCAVFoundationVideoSource to be able
             RTCAVFoundationVideoSource *localVideoSource = [peerConnectionFactory avFoundationVideoSourceWithConstraints:nil];
-
 
             localVideoTrack = [peerConnectionFactory videoTrackWithSource:localVideoSource trackId:@"ARDAMSv0"];
             [localStream addVideoTrack:localVideoTrack];

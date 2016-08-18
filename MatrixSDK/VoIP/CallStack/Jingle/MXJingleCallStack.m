@@ -20,8 +20,6 @@
 
 #import "MXJingleCallStackCall.h"
 
-#import "RTCPeerConnectionFactory.h"
-
 @interface MXJingleCallStack ()
 {
     RTCPeerConnectionFactory *peerConnectionFactory;
@@ -36,8 +34,6 @@
     self = [super init];
     if (self)
     {
-        [RTCPeerConnectionFactory initializeSSL];
-
         peerConnectionFactory = [[RTCPeerConnectionFactory alloc] init];
     }
     return self;

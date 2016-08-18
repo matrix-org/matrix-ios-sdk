@@ -22,8 +22,7 @@
 
 #import "MXCallStackCall.h"
 
-#import "RTCPeerConnectionDelegate.h"
-#import "RTCSessionDescriptionDelegate.h"
+#import <WebRTC/WebRTC.h>
 
 @class RTCPeerConnectionFactory;
 
@@ -33,7 +32,7 @@
 
  @see https://developers.google.com/talk/libjingle/developer_guide
  */
-@interface MXJingleCallStackCall : NSObject <MXCallStackCall, RTCPeerConnectionDelegate, RTCSessionDescriptionDelegate>
+@interface MXJingleCallStackCall : NSObject <MXCallStackCall, RTCPeerConnectionDelegate>
 
 - (instancetype)initWithFactory:(RTCPeerConnectionFactory*)factory;
 

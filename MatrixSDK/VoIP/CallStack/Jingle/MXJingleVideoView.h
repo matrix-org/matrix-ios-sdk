@@ -19,7 +19,7 @@
 
 #ifdef MX_CALL_STACK_JINGLE
 
-#import "RTCEAGLVideoView.h"
+#import <WebRTC/WebRTC.h>
 
 /**
  `MXJingleVideoView` is responsible for rendering RTCEAGLVideoView into
