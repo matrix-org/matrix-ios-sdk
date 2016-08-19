@@ -432,6 +432,30 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
     return isConferenceUser;
 }
 
++ (BOOL)canPlaceConferenceCallInRoom:(MXRoom *)room
+{
+    BOOL canPlaceConferenceCallInRoom = NO;
+
+    if (room.state.isOngoingConferenceCall)
+    {
+        // All room members can join an existing conference call
+        canPlaceConferenceCallInRoom = YES;
+    }
+    else
+    {
+        MXRoomPowerLevels *powerLevels = room.state.powerLevels;
+        NSInteger oneSelfPowerLevel = [powerLevels powerLevelOfUserWithUserID:room.mxSession.myUser.userId];
+
+        // Only member with invite power level can create a conference call
+        if (oneSelfPowerLevel >= powerLevels.invite)
+        {
+            canPlaceConferenceCallInRoom = YES;
+        }
+    }
+
+    return canPlaceConferenceCallInRoom;
+}
+
 /**
  Make sure the conference user is in the passed room.
 

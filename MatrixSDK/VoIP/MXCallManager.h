@@ -152,4 +152,15 @@ extern NSString *const kMXCallManagerConferenceFinished;
  */
 + (BOOL)isConferenceUser:(NSString*)userId;
 
+/**
+ Check if the user can place a conference call in a given room.
+ 
+ All room members can join an existing conference call but only member with
+ invite power level can create a conference call.
+
+ @param room the room to check.
+ @return YES if the user can.
+ */
++ (BOOL)canPlaceConferenceCallInRoom:(MXRoom*)room;
+
 @end
