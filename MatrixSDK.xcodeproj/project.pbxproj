@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		320BBF2C1D672EEC0079890E /* MXStoreEventsEnumerator.h in Headers */ = {isa = PBXBuildFile; fileRef = 320BBF2B1D672EEC0079890E /* MXStoreEventsEnumerator.h */; };
+		320BBF2F1D6738420079890E /* MXMemoryRoomStoreEventsEnumerator.h in Headers */ = {isa = PBXBuildFile; fileRef = 320BBF2D1D6738420079890E /* MXMemoryRoomStoreEventsEnumerator.h */; };
+		320BBF301D6738420079890E /* MXMemoryRoomStoreEventsEnumerator.m in Sources */ = {isa = PBXBuildFile; fileRef = 320BBF2E1D6738420079890E /* MXMemoryRoomStoreEventsEnumerator.m */; };
 		320DFDDB19DD99B60068622A /* MXRoom.h in Headers */ = {isa = PBXBuildFile; fileRef = 320DFDCA19DD99B60068622A /* MXRoom.h */; };
 		320DFDDC19DD99B60068622A /* MXRoom.m in Sources */ = {isa = PBXBuildFile; fileRef = 320DFDCB19DD99B60068622A /* MXRoom.m */; };
 		320DFDE019DD99B60068622A /* MXSession.h in Headers */ = {isa = PBXBuildFile; fileRef = 320DFDD019DD99B60068622A /* MXSession.h */; };
@@ -172,6 +175,9 @@
 /* Begin PBXFileReference section */
 		0BCFBADF157F3C8C43112BD6 /* Pods-MatrixSDKTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDKTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-MatrixSDKTests/Pods-MatrixSDKTests.release.xcconfig"; sourceTree = "<group>"; };
 		2BF02FACC417CA3368671024 /* Pods-MatrixSDK.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDK.debug.xcconfig"; path = "Pods/Target Support Files/Pods-MatrixSDK/Pods-MatrixSDK.debug.xcconfig"; sourceTree = "<group>"; };
+		320BBF2B1D672EEC0079890E /* MXStoreEventsEnumerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXStoreEventsEnumerator.h; sourceTree = "<group>"; };
+		320BBF2D1D6738420079890E /* MXMemoryRoomStoreEventsEnumerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXMemoryRoomStoreEventsEnumerator.h; sourceTree = "<group>"; };
+		320BBF2E1D6738420079890E /* MXMemoryRoomStoreEventsEnumerator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXMemoryRoomStoreEventsEnumerator.m; sourceTree = "<group>"; };
 		320DFDCA19DD99B60068622A /* MXRoom.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRoom.h; sourceTree = "<group>"; };
 		320DFDCB19DD99B60068622A /* MXRoom.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = MXRoom.m; sourceTree = "<group>"; };
 		320DFDD019DD99B60068622A /* MXSession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = MXSession.h; sourceTree = "<group>"; };
@@ -405,6 +411,7 @@
 			isa = PBXGroup;
 			children = (
 				32114A841A262CE000FF2EC4 /* MXStore.h */,
+				320BBF2B1D672EEC0079890E /* MXStoreEventsEnumerator.h */,
 				32114A861A262E5200FF2EC4 /* MXNoStore */,
 				32D7767A1A2785CE00FC4AA2 /* MXMemoryStore */,
 				3233606C1A403A0D0071A488 /* MXFileStore */,
@@ -629,6 +636,8 @@
 				32D776801A27877300FC4AA2 /* MXMemoryRoomStore.m */,
 				71DE22DD1BC7C51200284153 /* MXReceiptData.h */,
 				71DE22DC1BC7C51200284153 /* MXReceiptData.m */,
+				320BBF2D1D6738420079890E /* MXMemoryRoomStoreEventsEnumerator.h */,
+				320BBF2E1D6738420079890E /* MXMemoryRoomStoreEventsEnumerator.m */,
 			);
 			path = MXMemoryStore;
 			sourceTree = "<group>";
@@ -714,6 +723,7 @@
 				323B2ACF1BCD3EF000B11F34 /* MXCoreDataStore.h in Headers */,
 				329B2ABF1D3FB01D002D546F /* MXJingleCallStack.h in Headers */,
 				320DFDE019DD99B60068622A /* MXSession.h in Headers */,
+				320BBF2F1D6738420079890E /* MXMemoryRoomStoreEventsEnumerator.h in Headers */,
 				324095221AFA432F00D81C97 /* MXCallStackCall.h in Headers */,
 				3233606F1A403A0D0071A488 /* MXFileStore.h in Headers */,
 				326056851C76FDF2009D44AD /* MXEventTimeline.h in Headers */,
@@ -727,6 +737,7 @@
 				327E37B61A974F75007F026F /* MXLogger.h in Headers */,
 				323B2AF61BCE8AC800B11F34 /* MXCoreDataRoom+CoreDataProperties.h in Headers */,
 				320DFDE619DD99B60068622A /* MXHTTPClient.h in Headers */,
+				320BBF2C1D672EEC0079890E /* MXStoreEventsEnumerator.h in Headers */,
 				320DFDDB19DD99B60068622A /* MXRoom.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -912,6 +923,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				323B2AF71BCE8AC800B11F34 /* MXCoreDataRoom+CoreDataProperties.m in Sources */,
+				320BBF301D6738420079890E /* MXMemoryRoomStoreEventsEnumerator.m in Sources */,
 				32481A851C03572900782AD3 /* MXRoomAccountData.m in Sources */,
 				322360531A8E610500A3CA81 /* MXPushRuleDisplayNameCondtionChecker.m in Sources */,
 				323E0C581A2F6E7D00A31D73 /* MXRoomPowerLevels.m in Sources */,
