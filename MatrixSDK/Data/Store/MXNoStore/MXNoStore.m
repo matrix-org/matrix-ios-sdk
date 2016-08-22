@@ -193,22 +193,13 @@
     return hasReachedHomeServerPaginationEnd;
 }
 
-- (void)resetPaginationOfRoom:(NSString*)roomId
+- (id<MXStoreEventsEnumerator>)messagesEnumeratorForRoom:(NSString *)roomId
 {
     // As the back pagination is based on the HS back pagination API, reset data about it
     [self storePaginationTokenOfRoom:roomId andToken:@"END"];
     [self storeHasReachedHomeServerPaginationEndForRoom:roomId andValue:NO];
-}
 
-- (NSArray*)paginateRoom:(NSString*)roomId numMessages:(NSUInteger)numMessages
-{
     return nil;
-}
-
-- (NSUInteger)remainingMessagesForPaginationInRoom:(NSString *)roomId
-{
-    // There is nothing to paginate here
-    return 0;
 }
 
 

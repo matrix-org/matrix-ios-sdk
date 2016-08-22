@@ -14,11 +14,13 @@
  limitations under the License.
  */
 
+#import "MXEnumConstants.h"
 #import "MXJSONModels.h"
 #import "MXEvent.h"
-#import "MXEventTimeline.h"
 #import "MXReceiptData.h"
 #import "MXRoomAccountData.h"
+
+#import "MXStoreEventsEnumerator.h"
 
 /**
  The `MXStore` protocol defines an interface that must be implemented in order to store
@@ -127,33 +129,12 @@
 - (BOOL)hasReachedHomeServerPaginationEndForRoom:(NSString*)roomId;
 
 /**
- Reset pagination mechanism in a room.
-
- Events are retrieved from the MXStore by an enumeration mechanism. `resetPaginationOfRoom` initialises
- the enumeration.
- The start point is the most recent events of a room.
- Events are then continously enumerated by chunk via `paginateRoom`.
-
+ Get an events enumerator on all messages of a room.
+ 
  @param roomId the id of the room.
+ @return an events enumerator.
  */
-- (void)resetPaginationOfRoom:(NSString*)roomId;
-
-/**
- Get more messages in the room from the current pagination point.
-
- @param roomId the id of the room.
- @param numMessages the number or messages to get.
- @return an array of time-ordered MXEvent objects. nil if no more are available.
- */
-- (NSArray*)paginateRoom:(NSString*)roomId numMessages:(NSUInteger)numMessages;
-
-/**
- Get the number of events that still remain to paginate from the MXStore.
-
- @return the count of stored events we can still paginate.
- */
-- (NSUInteger)remainingMessagesForPaginationInRoom:(NSString*)roomId;
-
+- (id<MXStoreEventsEnumerator>)messagesEnumeratorForRoom:(NSString*)roomId;
 
 /**
  The last message of a room.

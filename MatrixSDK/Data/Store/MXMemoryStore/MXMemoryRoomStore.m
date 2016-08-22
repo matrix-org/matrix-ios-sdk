@@ -16,6 +16,8 @@
 
 #import "MXMemoryRoomStore.h"
 
+#import "MXMemoryRoomStoreEventsEnumerator.h"
+
 @interface MXMemoryRoomStore ()
 {
     // This is the position from the end
@@ -81,6 +83,11 @@
 {
     [messages removeAllObjects];
     [messagesByEventIds removeAllObjects];
+}
+
+- (id<MXStoreEventsEnumerator>)messagesEnumerator
+{
+    return [[MXMemoryRoomStoreEventsEnumerator alloc] initWithMessages:messages];
 }
 
 - (void)resetPagination

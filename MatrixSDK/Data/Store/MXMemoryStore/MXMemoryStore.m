@@ -150,24 +150,11 @@
 }
 
 
-- (void)resetPaginationOfRoom:(NSString*)roomId
+- (id<MXStoreEventsEnumerator>)messagesEnumeratorForRoom:(NSString *)roomId
 {
     MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    [roomStore resetPagination];
+    return roomStore.messagesEnumerator;
 }
-
-- (NSArray*)paginateRoom:(NSString*)roomId numMessages:(NSUInteger)numMessages
-{
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    return [roomStore paginate:numMessages];
-}
-
-- (NSUInteger)remainingMessagesForPaginationInRoom:(NSString *)roomId
-{
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    return [roomStore remainingMessagesForPagination];
-}
-
 
 - (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
 {

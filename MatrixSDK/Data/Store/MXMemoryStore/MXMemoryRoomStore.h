@@ -16,7 +16,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXEventListener.h"
+#import "MXStore.h"
 
 @interface MXMemoryRoomStore : NSObject
 {
@@ -86,24 +86,9 @@
 - (void)removeAllMessages;
 
 /**
- Reset pagination mechanism in the room.
+ The enumerator on all messages of the room downloaded so far.
  */
-- (void)resetPagination;
-
-/**
- Get more messages in the room from the current pagination point.
-
- @param numMessages the number or messages to get.
- @return an array of time-ordered MXEvent objects. nil if no more are available.
- */
-- (NSArray*)paginate:(NSUInteger)numMessages;
-
-/**
- Get the number of events that still remain to paginate from the MXStore.
-
- @return the count of stored events we can still paginate.
- */
-- (NSUInteger)remainingMessagesForPagination;
+@property (nonatomic, readonly) id<MXStoreEventsEnumerator>messagesEnumerator;
 
 /**
  The last message of the room.

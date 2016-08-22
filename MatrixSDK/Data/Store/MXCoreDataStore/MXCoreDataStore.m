@@ -324,24 +324,11 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     return [room.hasReachedHomeServerPaginationEnd boolValue];
 }
 
-- (void)resetPaginationOfRoom:(NSString*)roomId
+- (id<MXStoreEventsEnumerator>)messagesEnumeratorForRoom:(NSString *)roomId
 {
-    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
-    [room resetPagination];
+    // TODO
+    return nil;
 }
-
-- (NSArray*)paginateRoom:(NSString*)roomId numMessages:(NSUInteger)numMessages
-{
-    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
-    return [room paginate:numMessages];
-}
-
-- (NSUInteger)remainingMessagesForPaginationInRoom:(NSString *)roomId
-{
-    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
-    return [room remainingMessagesForPagination];
-}
-
 - (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
 {
     MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
