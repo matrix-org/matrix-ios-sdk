@@ -65,6 +65,18 @@
     return batch;
 }
 
+- (MXEvent *)nextEvent
+{
+    MXEvent *nextEvent = nil;
+
+    NSArray *nextEventsBatch = [self nextEventsBatch:1];
+    if (nextEventsBatch.count == 1)
+    {
+        nextEvent = nextEventsBatch[0];
+    }
+    return nextEvent;
+}
+
 - (NSUInteger)remaining
 {
     return paginationPosition;

@@ -32,9 +32,15 @@
  Return next events in the enumerator.
  
  @eventsCount the number of events to get.
- @return an array of events in chronological order.
+ @return an array of events in chronological order. Nil if there is no more events.
  */
 - (NSArray<MXEvent*>*)nextEventsBatch:(NSUInteger)eventsCount;
+
+/**
+ The next event in the enumerator.
+ Nil if there is no more events.
+ */
+@property (nonatomic, readonly) MXEvent *nextEvent;
 
 /**
  The current number of events that still remain to get from the enumerator.

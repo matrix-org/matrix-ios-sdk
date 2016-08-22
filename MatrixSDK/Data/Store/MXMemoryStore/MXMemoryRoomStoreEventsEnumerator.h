@@ -18,7 +18,7 @@
 
 #import "MXStore.h"
 
-@interface MXMemoryRoomStoreEventsEnumerator : NSObject < MXStoreEventsEnumerator>
+@interface MXMemoryRoomStoreEventsEnumerator : NSObject <MXStoreEventsEnumerator>
 
 /**
  Construct an enumerator based on a mutable events array.
