@@ -329,12 +329,11 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     // TODO
     return nil;
 }
-- (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
+
+- (id<MXStoreEventsEnumerator>)messagesEnumeratorForRoom:(NSString*)roomId withTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
 {
-    MXCoreDataRoom *room = [self getOrCreateRoomEntity:roomId];
-    
-    // TODO handle ignoreProfileChanges flag
-    return [room lastMessageWithTypeIn:types];
+    // TODO
+    return nil;
 }
 
 - (NSArray*)getEventReceipts:(NSString*)roomId eventId:(NSString*)eventId sorted:(BOOL)sort

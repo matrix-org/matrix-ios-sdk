@@ -202,13 +202,15 @@
     return nil;
 }
 
-
-- (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
+- (id<MXStoreEventsEnumerator>)messagesEnumeratorForRoom:(NSString *)roomId withTypeIn:(NSArray *)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
 {
-    // MXNoStore stores only the last event whatever its type
-    NSLog(@"[MXNoStore] Warning: MXNoStore implementation of lastMessageOfRoom is limited");
+    // TODO: Repair code used by lastMessageOfRoom:
+    //    // MXNoStore stores only the last event whatever its type
+    //    NSLog(@"[MXNoStore] Warning: MXNoStore implementation of lastMessageOfRoom is limited");
+    //
+    //    return lastMessages[roomId];
 
-    return lastMessages[roomId];
+    return nil;
 }
 
 - (void)storePartialTextMessageForRoom:(NSString *)roomId partialTextMessage:(NSString *)partialTextMessage

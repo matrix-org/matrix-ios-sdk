@@ -17,11 +17,10 @@
 #import "MXMemoryRoomStore.h"
 
 #import "MXMemoryRoomStoreEventsEnumerator.h"
+#import "MXMemoryRoomStoreEventsByTypesEnumerator.h"
 
 @interface MXMemoryRoomStore ()
 {
-    // This is the position from the end
-    NSInteger paginationPosition;
 }
 
 @end
@@ -90,58 +89,9 @@
     return [[MXMemoryRoomStoreEventsEnumerator alloc] initWithMessages:messages];
 }
 
-- (void)resetPagination
+- (id<MXStoreEventsEnumerator>)enumeratorForMessagesWithTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
 {
-    paginationPosition = messages.count;
-}
-
-- (NSArray *)paginate:(NSUInteger)numMessages
-{
-    NSArray *paginatedMessages;
-
-    if (0 < paginationPosition)
-    {
-        if (numMessages < paginationPosition)
-        {
-            // Return a slice of messages
-            paginatedMessages = [messages subarrayWithRange:NSMakeRange(paginationPosition - numMessages, numMessages)];
-            paginationPosition -= numMessages;
-        }
-        else
-        {
-            // Return the last slice of messages
-            paginatedMessages = [messages subarrayWithRange:NSMakeRange(0, paginationPosition)];
-            paginationPosition = 0;
-        }
-    }
-
-    return paginatedMessages;
-}
-
-- (NSUInteger)remainingMessagesForPagination
-{
-    return paginationPosition;
-}
-
-- (MXEvent*)lastMessageWithTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
-{
-    MXEvent *lastMessage = [messages lastObject];
-    
-    for (NSInteger i = messages.count - 1; 0 <= i; i--)
-    {
-        MXEvent *event = messages[i];
-
-        if (event.eventId && (!types || (NSNotFound != [types indexOfObject:event.type])))
-        {
-            if (!ignoreProfileChanges || !event.isUserProfileChange)
-            {
-                lastMessage = event;
-                break;
-            }
-        }
-    }
-    
-    return lastMessage;
+    return [[MXMemoryRoomStoreEventsByTypesEnumerator alloc] initWithMessages:messages andTypesIn:types ignoreMemberProfileChanges:ignoreProfileChanges];
 }
 
 - (NSArray*)eventsAfter:(NSString *)eventId except:(NSString*)userId withTypeIn:(NSSet*)types

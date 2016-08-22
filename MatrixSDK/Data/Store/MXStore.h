@@ -132,21 +132,23 @@
  Get an events enumerator on all messages of a room.
  
  @param roomId the id of the room.
- @return an events enumerator.
+ @return the events enumerator.
  */
 - (id<MXStoreEventsEnumerator>)messagesEnumeratorForRoom:(NSString*)roomId;
 
 /**
- The last message of a room.
+ Get an events enumerator on messages of a room with a filter on the events types.
 
  @param roomId the id of the room.
  @param types an array of event types strings (MXEventTypeString).
-        The last message type should be among `types`.
  @param ignoreProfileChanges tell whether the profile changes should be ignored.
+ @return the events enumerator.
+
+ // TODO: Check that this nonnilness requirement:
  @return the MXEvent object corresponding to the last message. A room must have a last message. If no event matches `type`, the implementation
  must return the true last event of the room whatever its type is. Even if it is an ignored profile change.
  */
-- (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
+- (id<MXStoreEventsEnumerator>)messagesEnumeratorForRoom:(NSString*)roomId withTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
 
 /**
  Store the text message partially typed by the user but not yet sent.

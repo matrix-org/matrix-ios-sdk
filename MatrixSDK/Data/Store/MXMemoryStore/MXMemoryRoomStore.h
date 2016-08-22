@@ -91,20 +91,22 @@
 @property (nonatomic, readonly) id<MXStoreEventsEnumerator>messagesEnumerator;
 
 /**
- The last message of the room.
+ Get an events enumerator on messages of the room with a filter on the events types.
  
  An optional array of event types may be provided to filter room events. When this array is not nil,
  the type of the returned last event should match with one of the provided types.
  
- CAUTION: All rooms must have a last message. If no event matches with the provided event types, the 
+ TODO: Check this:
+ CAUTION: All rooms must have a last message. If no event matches with the provided event types, the
  last event is returned whatever its type. The returned event may then be a profile change even if
  it should be ignored.
- 
- @param types an array of event types strings (MXEventTypeString) to filter room's events.
+
+ @param roomId the id of the room.
+ @param types an array of event types strings (MXEventTypeString).
  @param ignoreProfileChanges tell whether the profile changes should be ignored.
- @return a MXEvent instance.
+ @return the events enumerator.
  */
-- (MXEvent*)lastMessageWithTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
+- (id<MXStoreEventsEnumerator>)enumeratorForMessagesWithTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
 
 /**
  Get all events newer than the event with the passed id.

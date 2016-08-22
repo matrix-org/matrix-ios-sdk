@@ -10,6 +10,8 @@
 		320BBF2C1D672EEC0079890E /* MXStoreEventsEnumerator.h in Headers */ = {isa = PBXBuildFile; fileRef = 320BBF2B1D672EEC0079890E /* MXStoreEventsEnumerator.h */; };
 		320BBF2F1D6738420079890E /* MXMemoryRoomStoreEventsEnumerator.h in Headers */ = {isa = PBXBuildFile; fileRef = 320BBF2D1D6738420079890E /* MXMemoryRoomStoreEventsEnumerator.h */; };
 		320BBF301D6738420079890E /* MXMemoryRoomStoreEventsEnumerator.m in Sources */ = {isa = PBXBuildFile; fileRef = 320BBF2E1D6738420079890E /* MXMemoryRoomStoreEventsEnumerator.m */; };
+		320BBF341D6B56510079890E /* MXMemoryRoomStoreEventsByTypesEnumerator.h in Headers */ = {isa = PBXBuildFile; fileRef = 320BBF321D6B56510079890E /* MXMemoryRoomStoreEventsByTypesEnumerator.h */; };
+		320BBF351D6B56510079890E /* MXMemoryRoomStoreEventsByTypesEnumerator.m in Sources */ = {isa = PBXBuildFile; fileRef = 320BBF331D6B56510079890E /* MXMemoryRoomStoreEventsByTypesEnumerator.m */; };
 		320DFDDB19DD99B60068622A /* MXRoom.h in Headers */ = {isa = PBXBuildFile; fileRef = 320DFDCA19DD99B60068622A /* MXRoom.h */; };
 		320DFDDC19DD99B60068622A /* MXRoom.m in Sources */ = {isa = PBXBuildFile; fileRef = 320DFDCB19DD99B60068622A /* MXRoom.m */; };
 		320DFDE019DD99B60068622A /* MXSession.h in Headers */ = {isa = PBXBuildFile; fileRef = 320DFDD019DD99B60068622A /* MXSession.h */; };
@@ -178,6 +180,8 @@
 		320BBF2B1D672EEC0079890E /* MXStoreEventsEnumerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXStoreEventsEnumerator.h; sourceTree = "<group>"; };
 		320BBF2D1D6738420079890E /* MXMemoryRoomStoreEventsEnumerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXMemoryRoomStoreEventsEnumerator.h; sourceTree = "<group>"; };
 		320BBF2E1D6738420079890E /* MXMemoryRoomStoreEventsEnumerator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXMemoryRoomStoreEventsEnumerator.m; sourceTree = "<group>"; };
+		320BBF321D6B56510079890E /* MXMemoryRoomStoreEventsByTypesEnumerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXMemoryRoomStoreEventsByTypesEnumerator.h; sourceTree = "<group>"; };
+		320BBF331D6B56510079890E /* MXMemoryRoomStoreEventsByTypesEnumerator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXMemoryRoomStoreEventsByTypesEnumerator.m; sourceTree = "<group>"; };
 		320DFDCA19DD99B60068622A /* MXRoom.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRoom.h; sourceTree = "<group>"; };
 		320DFDCB19DD99B60068622A /* MXRoom.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = MXRoom.m; sourceTree = "<group>"; };
 		320DFDD019DD99B60068622A /* MXSession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = MXSession.h; sourceTree = "<group>"; };
@@ -638,6 +642,8 @@
 				71DE22DC1BC7C51200284153 /* MXReceiptData.m */,
 				320BBF2D1D6738420079890E /* MXMemoryRoomStoreEventsEnumerator.h */,
 				320BBF2E1D6738420079890E /* MXMemoryRoomStoreEventsEnumerator.m */,
+				320BBF321D6B56510079890E /* MXMemoryRoomStoreEventsByTypesEnumerator.h */,
+				320BBF331D6B56510079890E /* MXMemoryRoomStoreEventsByTypesEnumerator.m */,
 			);
 			path = MXMemoryStore;
 			sourceTree = "<group>";
@@ -733,6 +739,7 @@
 				71DE22E11BC7C51200284153 /* MXReceiptData.h in Headers */,
 				32DC15D01A8CF7AE006F9AD3 /* MXNotificationCenter.h in Headers */,
 				329FB17F1A0B665800A5E88E /* MXUser.h in Headers */,
+				320BBF341D6B56510079890E /* MXMemoryRoomStoreEventsByTypesEnumerator.h in Headers */,
 				320DFDE219DD99B60068622A /* MXError.h in Headers */,
 				327E37B61A974F75007F026F /* MXLogger.h in Headers */,
 				323B2AF61BCE8AC800B11F34 /* MXCoreDataRoom+CoreDataProperties.h in Headers */,
@@ -932,6 +939,7 @@
 				3245A7511AF7B2930001D8A7 /* MXCall.m in Sources */,
 				327F8DB31C6112BA00581CA3 /* MXRoomThirdPartyInvite.m in Sources */,
 				323B2AE21BCD4CB600B11F34 /* MXCoreDataAccount.m in Sources */,
+				320BBF351D6B56510079890E /* MXMemoryRoomStoreEventsByTypesEnumerator.m in Sources */,
 				3264E2A51BDF8D1500F89A86 /* MXCoreDataRoomState+CoreDataProperties.m in Sources */,
 				329FB1761A0A3A1600A5E88E /* MXRoomMember.m in Sources */,
 				323360701A403A0D0071A488 /* MXFileStore.m in Sources */,
