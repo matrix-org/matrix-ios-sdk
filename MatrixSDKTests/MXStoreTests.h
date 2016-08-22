@@ -47,6 +47,7 @@
 - (void)checkCanPaginateFromMXStore:(MXRoom*)room;
 - (void)checkLastMessageAfterPaginate:(MXRoom*)room;
 - (void)checkPaginateWhenJoiningAgainAfterLeft:(MXRoom*)room;
+- (void)checkLastMessageProfileChange:(MXRoom*)room;
 - (void)checkPaginateWhenReachingTheExactBeginningOfTheRoom:(MXRoom*)room;  // Test for https://matrix.org/jira/browse/SYN-162
 - (void)checkRedactEvent:(MXRoom*)room;
 

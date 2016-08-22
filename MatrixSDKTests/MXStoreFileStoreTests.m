@@ -135,6 +135,13 @@
     }];
 }
 
+- (void)testMXFileStoreLastMessageProfileChange
+{
+    [self doTestWithMXFileStore:^(MXRoom *room) {
+        [self checkLastMessageProfileChange:room];
+    }];
+}
+
 - (void)testMXFileStorePaginateWhenJoiningAgainAfterLeft
 {
     [self doTestWithMXFileStoreAndMessagesLimit:100 readyToTest:^(MXRoom *room) {
