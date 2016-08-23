@@ -129,13 +129,6 @@
     }];
 }
 
-- (void)testMXNoStoreLastMessageProfileChange
-{
-    [self doTestWithMXNoStore:^(MXRoom *room) {
-        [self checkLastMessageProfileChange:room];
-    }];
-}
-
 - (void)testMXNoStorePaginateWhenJoiningAgainAfterLeft
 {
     [self doTestWithMXNoStoreAndMessagesLimit:10 readyToTest:^(MXRoom *room) {

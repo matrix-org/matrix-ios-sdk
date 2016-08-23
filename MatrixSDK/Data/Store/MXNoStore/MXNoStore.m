@@ -16,6 +16,8 @@
 
 #import "MXNoStore.h"
 
+#import "MXMemoryRoomStoreEventsEnumerator.h"
+
 @interface MXNoStore ()
 {
     // key: roomId, value: the pagination token
@@ -199,18 +201,19 @@
     [self storePaginationTokenOfRoom:roomId andToken:@"END"];
     [self storeHasReachedHomeServerPaginationEndForRoom:roomId andValue:NO];
 
-    return nil;
+    // [MXStore messagesEnumeratorForRoom:] is used for pagination but the goal
+    // of MXNoStore is to not store messages so that all paginations are made
+    // via requests to the homeserver.
+    // So, return an empty enumerator.
+    return [[MXMemoryRoomStoreEventsEnumerator alloc] initWithMessages:@[]];
 }
 
 - (id<MXStoreEventsEnumerator>)messagesEnumeratorForRoom:(NSString *)roomId withTypeIn:(NSArray *)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
 {
-    // TODO: Repair code used by lastMessageOfRoom:
-    //    // MXNoStore stores only the last event whatever its type
-    //    NSLog(@"[MXNoStore] Warning: MXNoStore implementation of lastMessageOfRoom is limited");
-    //
-    //    return lastMessages[roomId];
-
-    return nil;
+    // [MXStore messagesEnumeratorForRoom: withTypeIn: ignoreMemberProfileChanges:] is used
+    // to get the last message of the room which must not be nil.
+    // So return an enumerator with the last message we have without caring of its type.
+    return [[MXMemoryRoomStoreEventsEnumerator alloc] initWithMessages:@[lastMessages[roomId]]];
 }
 
 - (void)storePartialTextMessageForRoom:(NSString *)roomId partialTextMessage:(NSString *)partialTextMessage
