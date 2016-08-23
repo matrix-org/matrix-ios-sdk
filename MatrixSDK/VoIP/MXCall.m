@@ -139,8 +139,8 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                 // Store if it is voice or video call
                 _isVideoCall = callInviteEventContent.isVideoCall;
 
-                // Set up the default audio route for this call type
-                callStackCall.audioToSpeaker = _isVideoCall;
+                // Set up the default audio route
+                callStackCall.audioToSpeaker = NO;
                 
                 [callStackCall startCapturingMediaWithVideo:self.isVideoCall success:^{
                     [callStackCall handleOffer:callInviteEventContent.offer.sdp];
@@ -243,8 +243,8 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
     [self setState:MXCallStateWaitLocalMedia reason:nil];
 
-    // Set up the default audio route for this call type
-    callStackCall.audioToSpeaker = video;
+    // Set up the default audio route
+    callStackCall.audioToSpeaker = NO;
 
     [callStackCall startCapturingMediaWithVideo:video success:^() {
 
