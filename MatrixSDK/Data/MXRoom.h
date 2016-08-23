@@ -25,6 +25,7 @@
 #import "MXHTTPOperation.h"
 #import "MXCall.h"
 #import "MXEventTimeline.h"
+#import "MXStoreEventsEnumerator.h"
 
 @class MXRoom;
 @class MXSession;
@@ -98,16 +99,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 @property (nonatomic, readonly) NSArray *typingUsers;
 
 /**
- The last message of the requested types.
- This value depends on mxSession.ignoreProfileChangesDuringLastMessageProcessing.
-
- @param types an array of event types strings (MXEventTypeString).
- @return the last event of the requested types or the true last event if no event of the requested type is found.
- (CAUTION: All rooms must have a last message. For this reason, the returned event may be a profile change even if it should be ignored).
- */
-- (MXEvent*)lastMessageWithTypeIn:(NSArray*)type;
-
-/**
  Tell whether the room has unread events.
  This value depends on unreadEventTypes.
  */
@@ -169,7 +160,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  */
 - (id)initWithRoomId:(NSString *)roomId matrixSession:(MXSession *)mxSession andStore:(id<MXStore>)store;
 
-#pragma mark - server sync
+#pragma mark - Server sync
 
 /**
  Update room data according to the provided sync response.
@@ -184,6 +175,36 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  @param invitedRoom information to update the room state.
  */
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync;
+
+
+#pragma mark - Stored messages enumerator
+/**
+ Get an enumerator on all messages of the room downloaded so far.
+ */
+@property (nonatomic, readonly) id<MXStoreEventsEnumerator> enumeratorForStoredMessages;
+
+/**
+ Get an events enumerator on messages of the room with a filter on the events types.
+
+ An optional array of event types may be provided to filter room events. When this array is not nil,
+ the type of the returned last event should match with one of the provided types.
+
+ @param roomId the id of the room.
+ @param types an array of event types strings (MXEventTypeString).
+ @param ignoreProfileChanges tell whether the profile changes should be ignored.
+ @return the events enumerator.
+ */
+- (id<MXStoreEventsEnumerator>)enumeratorForStoredMessagesWithTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
+
+/**
+ The last message of the requested types.
+ This value depends on mxSession.ignoreProfileChangesDuringLastMessageProcessing.
+
+ @param types an array of event types strings (MXEventTypeString).
+ @return the last event of the requested types or the true last event if no event of the requested type is found.
+ (CAUTION: All rooms must have a last message. For this reason, the returned event may be a profile change even if it should be ignored).
+ */
+- (MXEvent*)lastMessageWithTypeIn:(NSArray*)type;
 
 
 #pragma mark - Room operations
