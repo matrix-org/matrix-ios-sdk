@@ -212,19 +212,19 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 
 
 #pragma mark - Stored messages enumerator
-- (id<MXStoreEventsEnumerator>)enumeratorForStoredMessages
+- (id<MXEventsEnumerator>)enumeratorForStoredMessages
 {
     return [mxSession.store messagesEnumeratorForRoom:self.roomId];
 }
 
-- (id<MXStoreEventsEnumerator>)enumeratorForStoredMessagesWithTypeIn:(NSArray *)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
+- (id<MXEventsEnumerator>)enumeratorForStoredMessagesWithTypeIn:(NSArray *)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
 {
     return [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:types ignoreMemberProfileChanges:mxSession.ignoreProfileChangesDuringLastMessageProcessing];
 }
 
 - (MXEvent *)lastMessageWithTypeIn:(NSArray*)types
 {
-    id<MXStoreEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:types ignoreMemberProfileChanges:mxSession.ignoreProfileChangesDuringLastMessageProcessing];
+    id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:types ignoreMemberProfileChanges:mxSession.ignoreProfileChangesDuringLastMessageProcessing];
     MXEvent *lastMessage = messagesEnumerator.nextEvent;
 
     if (!lastMessage)
@@ -619,7 +619,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 
 - (BOOL)acknowledgeLatestEvent:(BOOL)sendReceipt;
 {    
-    id<MXStoreEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:_acknowledgableEventTypes ignoreMemberProfileChanges:NO];
+    id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:_acknowledgableEventTypes ignoreMemberProfileChanges:NO];
 
     // Acknowledge the lastest valid event
     MXEvent *event;

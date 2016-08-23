@@ -84,12 +84,12 @@
     [messagesByEventIds removeAllObjects];
 }
 
-- (id<MXStoreEventsEnumerator>)messagesEnumerator
+- (id<MXEventsEnumerator>)messagesEnumerator
 {
     return [[MXMemoryRoomStoreEventsEnumerator alloc] initWithMessages:messages];
 }
 
-- (id<MXStoreEventsEnumerator>)enumeratorForMessagesWithTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
+- (id<MXEventsEnumerator>)enumeratorForMessagesWithTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
 {
     return [[MXMemoryRoomStoreEventsByTypesEnumerator alloc] initWithMessages:messages andTypesIn:types ignoreMemberProfileChanges:ignoreProfileChanges];
 }

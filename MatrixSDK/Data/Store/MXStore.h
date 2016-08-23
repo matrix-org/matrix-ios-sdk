@@ -20,7 +20,7 @@
 #import "MXReceiptData.h"
 #import "MXRoomAccountData.h"
 
-#import "MXStoreEventsEnumerator.h"
+#import "MXEventsEnumerator.h"
 
 /**
  The `MXStore` protocol defines an interface that must be implemented in order to store
@@ -134,7 +134,7 @@
  @param roomId the id of the room.
  @return the events enumerator.
  */
-- (id<MXStoreEventsEnumerator>)messagesEnumeratorForRoom:(NSString*)roomId;
+- (id<MXEventsEnumerator>)messagesEnumeratorForRoom:(NSString*)roomId;
 
 /**
  Get an events enumerator on messages of a room with a filter on the events types.
@@ -144,7 +144,7 @@
  @param ignoreProfileChanges tell whether the profile changes should be ignored.
  @return the events enumerator.
  */
-- (id<MXStoreEventsEnumerator>)messagesEnumeratorForRoom:(NSString*)roomId withTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
+- (id<MXEventsEnumerator>)messagesEnumeratorForRoom:(NSString*)roomId withTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
 
 /**
  Store the text message partially typed by the user but not yet sent.

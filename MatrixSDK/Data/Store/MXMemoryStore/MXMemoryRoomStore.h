@@ -88,7 +88,7 @@
 /**
  The enumerator on all messages of the room downloaded so far.
  */
-@property (nonatomic, readonly) id<MXStoreEventsEnumerator>messagesEnumerator;
+@property (nonatomic, readonly) id<MXEventsEnumerator>messagesEnumerator;
 
 /**
  Get an events enumerator on messages of the room with a filter on the events types.
@@ -101,7 +101,7 @@
  @param ignoreProfileChanges tell whether the profile changes should be ignored.
  @return the events enumerator.
  */
-- (id<MXStoreEventsEnumerator>)enumeratorForMessagesWithTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
+- (id<MXEventsEnumerator>)enumeratorForMessagesWithTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
 
 /**
  Get all events newer than the event with the passed id.

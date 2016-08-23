@@ -23,7 +23,7 @@
  The `MXStoreEventsEnumerator` implementation must start the iteration on the most recent
  events of the list.
  */
-@protocol MXStoreEventsEnumerator <NSObject>
+@protocol MXEventsEnumerator <NSObject>
 
 /**
  Return next events in the enumerator.

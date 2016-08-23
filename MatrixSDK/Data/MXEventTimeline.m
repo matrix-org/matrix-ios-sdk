@@ -46,7 +46,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     id<MXStore> store;
 
     // The events enumerator to paginate messages from the store.
-    id<MXStoreEventsEnumerator> storeMessagesEnumerator;
+    id<MXEventsEnumerator> storeMessagesEnumerator;
  
     // MXStore does only back pagination. So, the forward pagination token for
     // past timelines is managed locally.

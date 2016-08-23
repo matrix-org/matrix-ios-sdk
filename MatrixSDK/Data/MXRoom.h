@@ -25,7 +25,7 @@
 #import "MXHTTPOperation.h"
 #import "MXCall.h"
 #import "MXEventTimeline.h"
-#import "MXStoreEventsEnumerator.h"
+#import "MXEventsEnumerator.h"
 
 @class MXRoom;
 @class MXSession;
@@ -181,7 +181,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 /**
  Get an enumerator on all messages of the room downloaded so far.
  */
-@property (nonatomic, readonly) id<MXStoreEventsEnumerator> enumeratorForStoredMessages;
+@property (nonatomic, readonly) id<MXEventsEnumerator> enumeratorForStoredMessages;
 
 /**
  Get an events enumerator on messages of the room with a filter on the events types.
@@ -194,7 +194,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  @param ignoreProfileChanges tell whether the profile changes should be ignored.
  @return the events enumerator.
  */
-- (id<MXStoreEventsEnumerator>)enumeratorForStoredMessagesWithTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
+- (id<MXEventsEnumerator>)enumeratorForStoredMessagesWithTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
 
 /**
  The last message of the requested types.

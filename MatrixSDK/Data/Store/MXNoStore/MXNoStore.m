@@ -195,7 +195,7 @@
     return hasReachedHomeServerPaginationEnd;
 }
 
-- (id<MXStoreEventsEnumerator>)messagesEnumeratorForRoom:(NSString *)roomId
+- (id<MXEventsEnumerator>)messagesEnumeratorForRoom:(NSString *)roomId
 {
     // As the back pagination is based on the HS back pagination API, reset data about it
     [self storePaginationTokenOfRoom:roomId andToken:@"END"];
@@ -208,7 +208,7 @@
     return [[MXMemoryRoomStoreEventsEnumerator alloc] initWithMessages:@[]];
 }
 
-- (id<MXStoreEventsEnumerator>)messagesEnumeratorForRoom:(NSString *)roomId withTypeIn:(NSArray *)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
+- (id<MXEventsEnumerator>)messagesEnumeratorForRoom:(NSString *)roomId withTypeIn:(NSArray *)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
 {
     // [MXStore messagesEnumeratorForRoom: withTypeIn: ignoreMemberProfileChanges:] is used
     // to get the last message of the room which must not be nil.
