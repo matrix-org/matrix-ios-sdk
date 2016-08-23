@@ -23,7 +23,10 @@
 /**
  Construct an enumerator based on a mutable events array.
 
- @param messages the list of messages to enumerate.
+ @param messages the list of messages to enumerate on.
+ @param types an array of event types strings (MXEventTypeString).
+ @param ignoreProfileChanges tell whether the profile changes should be ignored.
+
  @return the newly created instance.
  */
 - (instancetype)initWithMessages:(NSMutableArray<MXEvent*> *)messages andTypesIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;

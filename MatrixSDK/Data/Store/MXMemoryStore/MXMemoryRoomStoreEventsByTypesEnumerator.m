@@ -20,10 +20,16 @@
 
 @interface MXMemoryRoomStoreEventsByTypesEnumerator ()
 {
-    NSArray *types;
-    BOOL ignoreMemberProfileChanges;
-
+    // The all-messages enumerator
+    // Note: it would be much quicker to process directly `messages` but
+    // the all-messages enumerator make this enumerator easy to implement.
     MXMemoryRoomStoreEventsEnumerator *allMessagesEnumerator;
+
+    // The event types to filter in
+    NSArray *types;
+
+    // Tell whether the profile changes should be ignored
+    BOOL ignoreMemberProfileChanges;
 }
 
 @end
@@ -48,10 +54,12 @@
     NSMutableArray *nextEvents;
     MXEvent *event;
 
+    // Feed the array with matching events
     while ((event = self.nextEvent) && (nextEvents.count != eventsCount))
     {
         if (!nextEvents)
         {
+            // Create the array only if there are events to return
             nextEvents = [NSMutableArray arrayWithCapacity:eventsCount];
         }
 
@@ -64,10 +72,10 @@
 - (MXEvent *)nextEvent
 {
     MXEvent *event, *nextEvent;
+
+    // Loop until an event matches the criteria
     while ((event = [allMessagesEnumerator nextEvent]))
     {
-
-
         if (event.eventId && (!types || (NSNotFound != [types indexOfObject:event.type])))
         {
             if (!ignoreMemberProfileChanges || !event.isUserProfileChange)
@@ -83,7 +91,8 @@
 
 - (NSUInteger)remaining
 {
-    // We are in the case of fil
+    // We are in the case of a filtered result, we can return NSUIntegerMax
+    // because it would take too much time to compute.
     return NSUIntegerMax;
 }
 
