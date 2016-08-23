@@ -149,10 +149,8 @@
 @property (nonatomic) BOOL videoMuted;
 
 /**
- If YES, the inbound audio is sent to the main speaker, else it is routed to the
- ear speaker.
- By default, video calls are routed to the main speaker and voice call, to the ear
- speaker.
+ NO by default, the inbound audio is then routed to the default audio outputs.
+ If YES, the inbound audio is sent to the main speaker.
  */
 @property (nonatomic) BOOL audioToSpeaker;
 

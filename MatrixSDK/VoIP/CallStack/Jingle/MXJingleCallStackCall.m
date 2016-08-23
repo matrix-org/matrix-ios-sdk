@@ -165,15 +165,30 @@
             // Report this sdp back to libjingle
             [peerConnection setLocalDescription:sdp completionHandler:^(NSError * _Nullable error) {
 
-                if (!error)
-                {
-                    success(sdp.sdp);
-                }
+                // Return on main thread
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    
+                    if (!error)
+                    {
+                        success(sdp.sdp);
+                    }
+                    else
+                    {
+                        failure(error);
+                    }
+                    
+                });
+                
             }];
         }
         else
         {
-            failure(error);
+            // Return on main thread
+            dispatch_async(dispatch_get_main_queue(), ^{
+                
+                failure(error);
+                
+            });
         }
     }];
 }
@@ -189,15 +204,29 @@
             // Report this sdp back to libjingle
             [peerConnection setLocalDescription:sdp completionHandler:^(NSError * _Nullable error) {
 
-                if (!error)
-                {
-                    success(sdp.sdp);
-                }
+                // Return on main thread
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    
+                    if (!error)
+                    {
+                        success(sdp.sdp);
+                    }
+                    else
+                    {
+                        failure(error);
+                    }
+                    
+                });
             }];
         }
         else
         {
-            failure(error);
+            // Return on main thread
+            dispatch_async(dispatch_get_main_queue(), ^{
+                
+                failure(error);
+                
+            });
         }
     }];
 }
@@ -207,14 +236,20 @@
     RTCSessionDescription *sessionDescription = [[RTCSessionDescription alloc] initWithType:RTCSdpTypeAnswer sdp:sdp];
     [peerConnection setRemoteDescription:sessionDescription completionHandler:^(NSError * _Nullable error) {
 
-        if (!error)
-        {
-            success();
-        }
-        else
-        {
-            failure(error);
-        }
+        // Return on main thread
+        dispatch_async(dispatch_get_main_queue(), ^{
+            
+            if (!error)
+            {
+                success();
+            }
+            else
+            {
+                failure(error);
+            }
+            
+        });
+        
     }];
 }
 
@@ -293,6 +328,7 @@ didChangeIceConnectionState:(RTCIceConnectionState)newState
             dispatch_async(dispatch_get_main_queue(), ^{
 
                 [delegate callStackCall:self onError:nil];
+                
             });
             break;
         }
@@ -315,7 +351,9 @@ didGenerateIceCandidate:(RTCIceCandidate *)candidate
 {
     // Forward found ICE candidates
     dispatch_async(dispatch_get_main_queue(), ^{
+        
         [delegate callStackCall:self onICECandidateWithSdpMid:candidate.sdpMid sdpMLineIndex:candidate.sdpMLineIndex candidate:candidate.sdp];
+        
     });
 }
 
