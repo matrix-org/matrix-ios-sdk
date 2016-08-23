@@ -95,11 +95,6 @@
  
  An optional array of event types may be provided to filter room events. When this array is not nil,
  the type of the returned last event should match with one of the provided types.
- 
- TODO: Check this:
- CAUTION: All rooms must have a last message. If no event matches with the provided event types, the
- last event is returned whatever its type. The returned event may then be a profile change even if
- it should be ignored.
 
  @param roomId the id of the room.
  @param types an array of event types strings (MXEventTypeString).

@@ -212,7 +212,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 
 
 #pragma mark - Stored messages enumerator
-- (id<MXStoreEventsEnumerator>)enumeratorOfEnumeratorForStoredMessages
+- (id<MXStoreEventsEnumerator>)enumeratorForStoredMessages
 {
     return [mxSession.store messagesEnumeratorForRoom:self.roomId];
 }
@@ -225,7 +225,15 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 - (MXEvent *)lastMessageWithTypeIn:(NSArray*)types
 {
     id<MXStoreEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:types ignoreMemberProfileChanges:mxSession.ignoreProfileChangesDuringLastMessageProcessing];
-    return messagesEnumerator.nextEvent;
+    MXEvent *lastMessage = messagesEnumerator.nextEvent;
+
+    if (!lastMessage)
+    {
+        // If no messages match the filter contraints, return the last whatever is its type
+        lastMessage = self.enumeratorForStoredMessages.nextEvent;
+    }
+    
+    return lastMessage;
 }
 
 

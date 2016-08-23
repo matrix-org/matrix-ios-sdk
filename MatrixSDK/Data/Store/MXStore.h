@@ -143,10 +143,6 @@
  @param types an array of event types strings (MXEventTypeString).
  @param ignoreProfileChanges tell whether the profile changes should be ignored.
  @return the events enumerator.
-
- // TODO: Check that this nonnilness requirement:
- @return the MXEvent object corresponding to the last message. A room must have a last message. If no event matches `type`, the implementation
- must return the true last event of the room whatever its type is. Even if it is an ignored profile change.
  */
 - (id<MXStoreEventsEnumerator>)messagesEnumeratorForRoom:(NSString*)roomId withTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
 
