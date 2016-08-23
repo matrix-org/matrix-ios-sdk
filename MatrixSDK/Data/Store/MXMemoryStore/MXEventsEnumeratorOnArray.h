@@ -16,12 +16,15 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXStore.h"
-
-@interface MXMemoryRoomStoreEventsEnumerator : NSObject <MXEventsEnumerator>
+#import "MXEventsEnumerator.h"
 
 /**
- Construct an enumerator based on a mutable events array.
+ Generic events enumerator on an array of events.
+ */
+@interface MXEventsEnumeratorOnArray : NSObject <MXEventsEnumerator>
+
+/**
+ Construct an enumerator based on a events array.
  
  @param messages the list of messages to enumerate.
  @return the newly created instance.

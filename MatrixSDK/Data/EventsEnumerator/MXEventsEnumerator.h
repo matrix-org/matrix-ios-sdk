@@ -19,6 +19,9 @@
 /**
  The `MXStoreEventsEnumerator` protocol defines an interface that must be implemented 
  in order to iterate on a list of events.
+ 
+ This interface is used in the MXStore to manage the results of requests on the store
+ database.
 
  The `MXStoreEventsEnumerator` implementation must start the iteration on the most recent
  events of the list.

@@ -16,7 +16,7 @@
 
 #import "MXNoStore.h"
 
-#import "MXMemoryRoomStoreEventsEnumerator.h"
+#import "MXEventsEnumeratorOnArray.h"
 
 @interface MXNoStore ()
 {
@@ -205,7 +205,7 @@
     // of MXNoStore is to not store messages so that all paginations are made
     // via requests to the homeserver.
     // So, return an empty enumerator.
-    return [[MXMemoryRoomStoreEventsEnumerator alloc] initWithMessages:@[]];
+    return [[MXEventsEnumeratorOnArray alloc] initWithMessages:@[]];
 }
 
 - (id<MXEventsEnumerator>)messagesEnumeratorForRoom:(NSString *)roomId withTypeIn:(NSArray *)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
@@ -213,7 +213,7 @@
     // [MXStore messagesEnumeratorForRoom: withTypeIn: ignoreMemberProfileChanges:] is used
     // to get the last message of the room which must not be nil.
     // So return an enumerator with the last message we have without caring of its type.
-    return [[MXMemoryRoomStoreEventsEnumerator alloc] initWithMessages:@[lastMessages[roomId]]];
+    return [[MXEventsEnumeratorOnArray alloc] initWithMessages:@[lastMessages[roomId]]];
 }
 
 - (void)storePartialTextMessageForRoom:(NSString *)roomId partialTextMessage:(NSString *)partialTextMessage

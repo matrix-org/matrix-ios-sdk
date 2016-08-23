@@ -16,15 +16,18 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXStore.h"
-
-@interface MXMemoryRoomStoreEventsByTypesEnumerator : NSObject <MXEventsEnumerator>
+#import "MXEventsEnumerator.h"
 
 /**
- Construct an enumerator based on a mutable events array.
+ Generic events enumerator on an array of events with a filter on events types.
+ */
+@interface MXEventsByTypesEnumeratorOnArray : NSObject <MXEventsEnumerator>
+
+/**
+ Construct an enumerator based on a events array.
 
  @param messages the list of messages to enumerate on.
- @param types an array of event types strings (MXEventTypeString).
+ @param types an array of event types strings to use as a filter filter.
  @param ignoreProfileChanges tell whether the profile changes should be ignored.
 
  @return the newly created instance.

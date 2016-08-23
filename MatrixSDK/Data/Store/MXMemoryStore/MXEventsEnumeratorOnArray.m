@@ -14,9 +14,9 @@
  limitations under the License.
  */
 
-#import "MXMemoryRoomStoreEventsEnumerator.h"
+#import "MXEventsEnumeratorOnArray.h"
 
-@interface MXMemoryRoomStoreEventsEnumerator ()
+@interface MXEventsEnumeratorOnArray ()
 {
     // The list of events to enumerate on.
     // The order is chronological: the first item is the oldest message.
@@ -28,7 +28,7 @@
 
 @end
 
-@implementation MXMemoryRoomStoreEventsEnumerator
+@implementation MXEventsEnumeratorOnArray
 
 - (instancetype)initWithMessages:(NSArray<MXEvent*> *)theMessages
 {

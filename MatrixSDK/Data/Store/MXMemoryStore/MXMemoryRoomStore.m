@@ -16,8 +16,8 @@
 
 #import "MXMemoryRoomStore.h"
 
-#import "MXMemoryRoomStoreEventsEnumerator.h"
-#import "MXMemoryRoomStoreEventsByTypesEnumerator.h"
+#import "MXEventsEnumeratorOnArray.h"
+#import "MXEventsByTypesEnumeratorOnArray.h"
 
 @interface MXMemoryRoomStore ()
 {
@@ -86,12 +86,12 @@
 
 - (id<MXEventsEnumerator>)messagesEnumerator
 {
-    return [[MXMemoryRoomStoreEventsEnumerator alloc] initWithMessages:messages];
+    return [[MXEventsEnumeratorOnArray alloc] initWithMessages:messages];
 }
 
 - (id<MXEventsEnumerator>)enumeratorForMessagesWithTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
 {
-    return [[MXMemoryRoomStoreEventsByTypesEnumerator alloc] initWithMessages:messages andTypesIn:types ignoreMemberProfileChanges:ignoreProfileChanges];
+    return [[MXEventsByTypesEnumeratorOnArray alloc] initWithMessages:messages andTypesIn:types ignoreMemberProfileChanges:ignoreProfileChanges];
 }
 
 - (NSArray*)eventsAfter:(NSString *)eventId except:(NSString*)userId withTypeIn:(NSSet*)types

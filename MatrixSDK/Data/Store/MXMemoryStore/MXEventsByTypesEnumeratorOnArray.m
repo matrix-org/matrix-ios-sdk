@@ -14,16 +14,16 @@
  limitations under the License.
  */
 
-#import "MXMemoryRoomStoreEventsByTypesEnumerator.h"
+#import "MXEventsByTypesEnumeratorOnArray.h"
 
-#import "MXMemoryRoomStoreEventsEnumerator.h"
+#import "MXEventsEnumeratorOnArray.h"
 
-@interface MXMemoryRoomStoreEventsByTypesEnumerator ()
+@interface MXEventsByTypesEnumeratorOnArray ()
 {
     // The all-messages enumerator
     // Note: it would be much quicker to process directly `messages` but
     // the all-messages enumerator make this enumerator easy to implement.
-    MXMemoryRoomStoreEventsEnumerator *allMessagesEnumerator;
+    MXEventsEnumeratorOnArray *allMessagesEnumerator;
 
     // The event types to filter in
     NSArray *types;
@@ -34,7 +34,7 @@
 
 @end
 
-@implementation MXMemoryRoomStoreEventsByTypesEnumerator
+@implementation MXEventsByTypesEnumeratorOnArray
 
 - (instancetype)initWithMessages:(NSMutableArray<MXEvent *> *)messages andTypesIn:(NSArray *)theTypes ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
 {
@@ -43,7 +43,7 @@
     {
         types = theTypes;
         ignoreMemberProfileChanges = ignoreProfileChanges;
-        allMessagesEnumerator = [[MXMemoryRoomStoreEventsEnumerator alloc] initWithMessages:messages];
+        allMessagesEnumerator = [[MXEventsEnumeratorOnArray alloc] initWithMessages:messages];
     }
 
     return self;

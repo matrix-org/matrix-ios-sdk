@@ -21,7 +21,7 @@
 
 #import "MXError.h"
 
-#import "MXMemoryRoomStoreEventsEnumerator.h"
+#import "MXEventsEnumeratorOnArray.h"
 
 NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
