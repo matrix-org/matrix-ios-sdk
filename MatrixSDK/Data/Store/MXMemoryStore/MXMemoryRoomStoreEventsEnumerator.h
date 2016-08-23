@@ -26,6 +26,6 @@
  @param messages the list of messages to enumerate.
  @return the newly created instance.
  */
-- (instancetype)initWithMessages:(NSMutableArray<MXEvent*> *)messages;
+- (instancetype)initWithMessages:(NSArray<MXEvent*> *)messages;
 
 @end

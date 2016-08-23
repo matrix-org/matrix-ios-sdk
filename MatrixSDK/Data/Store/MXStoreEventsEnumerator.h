@@ -20,11 +20,8 @@
  The `MXStoreEventsEnumerator` protocol defines an interface that must be implemented 
  in order to iterate on a list of events.
 
- The `MXStoreEventsEnumerator` implementation must follow the following rules:
-     - The enumerator starts on the most recent events of the list
-     - The enumarated list of events is mutable: the enumerator must be able to provide
-       events that have been added at the head of the events list after the enumerator
-       creation
+ The `MXStoreEventsEnumerator` implementation must start the iteration on the most recent
+ events of the list.
  */
 @protocol MXStoreEventsEnumerator <NSObject>
 
@@ -43,12 +40,12 @@
 @property (nonatomic, readonly) MXEvent *nextEvent;
 
 /**
- The current number of events that still remain to get from the enumerator.
+ The number of events that still remain to get from this enumerator.
  
  @discussion
  For performance reason, the value may be not garanteed when the enumarator is done on a 
  filtered list of events.
- In this case, the implemtation must return NSUIntegerMax.
+ In this case, the implementation returns NSUIntegerMax.
  */
 @property (nonatomic, readonly) NSUInteger remaining;
 

@@ -19,9 +19,8 @@
 @interface MXMemoryRoomStoreEventsEnumerator ()
 {
     // The list of events to enumerate on.
-    // The enumerator does not have the ownership. Its
     // The order is chronological: the first item is the oldest message.
-    NSMutableArray<MXEvent*> *messages;
+    NSArray<MXEvent*> *messages;
 
     // This is the position from the end
     NSInteger paginationPosition;
@@ -31,12 +30,15 @@
 
 @implementation MXMemoryRoomStoreEventsEnumerator
 
-- (instancetype)initWithMessages:(NSMutableArray<MXEvent*> *)theMessages
+- (instancetype)initWithMessages:(NSArray<MXEvent*> *)theMessages
 {
     self = [super init];
     if (self)
     {
-        messages = theMessages;
+        // Copy the array of events references to be protected against mutation of
+        // theMessages.
+        // No need of a deep copy as the events it contains are immutable.
+        messages = [theMessages copy];
         paginationPosition = messages.count;
     }
     return self;
