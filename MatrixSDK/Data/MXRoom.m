@@ -236,6 +236,13 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     return lastMessage;
 }
 
+- (NSUInteger)storedMessagesCount
+{
+    // Note: For performance, it may worth to have a dedicated MXStore method to get
+    // this value
+    return self.enumeratorForStoredMessages.remaining;
+}
+
 
 #pragma mark - Room operations
 - (MXHTTPOperation*)sendEventOfType:(MXEventTypeString)eventTypeString

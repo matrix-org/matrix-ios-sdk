@@ -206,6 +206,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  */
 - (MXEvent*)lastMessageWithTypeIn:(NSArray*)type;
 
+/**
+ The count of stored messages for this room.
+ */
+@property (nonatomic, readonly) NSUInteger storedMessagesCount;
+
 
 #pragma mark - Room operations
 /**
