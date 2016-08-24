@@ -26,15 +26,7 @@
      The view in which MXJingleVideoView is displayed.
      */
     UIView *containerView;
-
-    /**
-     The contraints to display it with a keep fill aspect ratio.
-     */
-    NSLayoutConstraint *topConstraint;
-    NSLayoutConstraint *leftConstraint;
-    NSLayoutConstraint *bottomConstraint;
-    NSLayoutConstraint *rightConstraint;
-
+    
     /**
      The original size of the rendered video.
      */
@@ -51,48 +43,11 @@
     if (self)
     {
         containerView = theContainerView;
+        
         videoSize = containerView.frame.size;
-
+        
         // Use 'containerView' as the container of a RTCEAGLVideoView
-        self.translatesAutoresizingMaskIntoConstraints = NO;
-
         [containerView addSubview:self];
-
-        // Make sure self follow 'containerView' size
-        topConstraint = [NSLayoutConstraint
-                         constraintWithItem:self
-                         attribute:NSLayoutAttributeTop
-                         relatedBy:NSLayoutRelationEqual
-                         toItem:containerView
-                         attribute:NSLayoutAttributeTop
-                         multiplier:1.0f
-                         constant:0];
-        leftConstraint = [NSLayoutConstraint
-                          constraintWithItem:self
-                          attribute:NSLayoutAttributeLeft
-                          relatedBy:NSLayoutRelationEqual
-                          toItem:containerView
-                          attribute:NSLayoutAttributeLeft
-                          multiplier:1.0f
-                          constant:0];
-        bottomConstraint =[NSLayoutConstraint
-                           constraintWithItem:self
-                           attribute:NSLayoutAttributeBottom
-                           relatedBy:0
-                           toItem:containerView
-                           attribute:NSLayoutAttributeBottom
-                           multiplier:1.0
-                           constant:0];
-        rightConstraint =[NSLayoutConstraint
-                          constraintWithItem:self
-                          attribute:NSLayoutAttributeRight
-                          relatedBy:0
-                          toItem:containerView
-                          attribute:NSLayoutAttributeRight
-                          multiplier:1.0
-                          constant:0];
-
-        [NSLayoutConstraint activateConstraints:@[topConstraint, leftConstraint, bottomConstraint, rightConstraint]];
     }
 
     self.delegate = self;
@@ -111,15 +66,44 @@
 - (void)videoView:(RTCEAGLVideoView *)videoView didChangeVideoSize:(CGSize)size
 {
     videoSize = size;
-
-    // Compute the frame size to keep the aspect ratio in containerView
-    CGRect videoFrame = AVMakeRectWithAspectRatioInsideRect(videoSize, containerView.frame);
-
-    // Apply constraint so that the video is still  centered in containerView
-    topConstraint.constant = (containerView.frame.size.height - videoFrame.size.height) / 2;
-    bottomConstraint.constant = -topConstraint.constant;
-    leftConstraint.constant = (containerView.frame.size.width - videoFrame.size.width) / 2;
-    rightConstraint.constant = -leftConstraint.constant;
+    
+    CGSize containerFrameSize = containerView.frame.size;
+    BOOL isLandscapeContainer = (containerFrameSize.height < containerFrameSize.width);
+    
+    BOOL isLandscapeVideo = (videoSize.height < videoSize.width);
+    
+    // Check whether the video source is in the same orientation than its container
+    if (isLandscapeVideo == isLandscapeContainer)
+    {
+        CGFloat ratioX, ratioY;
+        CGFloat scale;
+        CGSize  scaledVideoSize = CGSizeMake(videoSize.width, videoSize.height);
+        
+        ratioX = containerFrameSize.width  / videoSize.width;
+        ratioY = containerFrameSize.height / videoSize.height;
+        
+        scale = MAX(ratioX, ratioY);
+        
+        scaledVideoSize.width  *= scale;
+        scaledVideoSize.height *= scale;
+        
+        // padding
+        scaledVideoSize.width  = floorf(scaledVideoSize.width  / 2) * 2;
+        scaledVideoSize.height = floorf(scaledVideoSize.height / 2) * 2;
+        
+        CGRect frame = self.frame;
+        frame.size = scaledVideoSize;
+        frame.origin = CGPointMake((containerFrameSize.width - scaledVideoSize.width) / 2, (containerFrameSize.height - scaledVideoSize.height) / 2);
+        self.frame = frame;
+    }
+    else
+    {
+        CGRect containerFrame = containerView.frame;
+        containerFrame.origin = CGPointZero;
+        
+        // Compute the frame size to keep the aspect ratio in containerView
+        self.frame = AVMakeRectWithAspectRatioInsideRect(videoSize, containerFrame);
+    }
 }
 
 @end
