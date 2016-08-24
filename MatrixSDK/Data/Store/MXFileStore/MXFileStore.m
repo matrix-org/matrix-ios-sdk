@@ -14,6 +14,8 @@
  limitations under the License.
  */
 
+#import <UIKit/UIKit.h>
+
 #import "MXFileStore.h"
 
 #import "MXFileRoomStore.h"
@@ -78,7 +80,10 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     dispatch_queue_t dispatchQueue;
 
     // The evenst stream token that corresponds to the data being backed up.
-     NSString *backupEventStreamToken;
+    NSString *backupEventStreamToken;
+
+    // The current background task id if any.
+    UIBackgroundTaskIdentifier backgroundTaskIdentifier;
 }
 @end
 
@@ -100,6 +105,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         metaDataHasChanged = NO;
 
         dispatchQueue = dispatch_queue_create("MXFileStoreDispatchQueue", DISPATCH_QUEUE_SERIAL);
+        backgroundTaskIdentifier = UIBackgroundTaskInvalid;
     }
     return self;
 }
@@ -115,6 +121,14 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     storeRoomsPath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsFolder];
 
     storeBackupPath = [storePath stringByAppendingPathComponent:kMXFileStoreBackupFolder];
+
+    // Load the data even if the app goes in background
+    backgroundTaskIdentifier = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
+
+        NSLog(@"[MXFileStore] Background task is going to expire in openWithCredentials");
+        [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
+        backgroundTaskIdentifier = UIBackgroundTaskInvalid;
+    }];
 
     /*
     Mount data corresponding to the account credentials.
@@ -190,6 +204,10 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         }
         
         dispatch_async(dispatch_get_main_queue(), ^{
+
+            [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
+            backgroundTaskIdentifier = UIBackgroundTaskInvalid;
+
             onComplete();
         });
 
@@ -459,6 +477,14 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     // Save data only if metaData exists
     if (metaData)
     {
+        // Commit the data even if the app goes in background
+        backgroundTaskIdentifier = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
+
+            NSLog(@"[MXFileStore] Background task is going to expire in commit");
+            [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
+            backgroundTaskIdentifier = UIBackgroundTaskInvalid;
+        }];
+
         // Make sure the data will be backed up with the right events stream token
         dispatch_async(dispatchQueue, ^(void){
             backupEventStreamToken = self.eventStreamToken;
@@ -476,6 +502,12 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         dispatch_async(dispatchQueue, ^(void){
             [[NSFileManager defaultManager] removeItemAtPath:storeBackupPath error:nil];
             backupEventStreamToken = nil;
+
+            // Release the background task
+            dispatch_sync(dispatchQueue, ^(void){
+                [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
+                backgroundTaskIdentifier = UIBackgroundTaskInvalid;
+            });
         });
     }
 }
@@ -485,6 +517,13 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     // Do a dummy sync dispatch on the queue
     // Once done, we are sure pending operations blocks are complete
     dispatch_sync(dispatchQueue, ^(void){
+
+        // Release the background task if any
+        if (backgroundTaskIdentifier != UIBackgroundTaskInvalid)
+        {
+            [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
+            backgroundTaskIdentifier = UIBackgroundTaskInvalid;
+        }
     });
 }
 
