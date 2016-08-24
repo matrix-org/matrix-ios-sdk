@@ -14,11 +14,13 @@
  limitations under the License.
  */
 
+#import "MXEnumConstants.h"
 #import "MXJSONModels.h"
 #import "MXEvent.h"
-#import "MXEventTimeline.h"
 #import "MXReceiptData.h"
 #import "MXRoomAccountData.h"
+
+#import "MXEventsEnumerator.h"
 
 /**
  The `MXStore` protocol defines an interface that must be implemented in order to store
@@ -127,45 +129,22 @@
 - (BOOL)hasReachedHomeServerPaginationEndForRoom:(NSString*)roomId;
 
 /**
- Reset pagination mechanism in a room.
-
- Events are retrieved from the MXStore by an enumeration mechanism. `resetPaginationOfRoom` initialises
- the enumeration.
- The start point is the most recent events of a room.
- Events are then continously enumerated by chunk via `paginateRoom`.
-
+ Get an events enumerator on all messages of a room.
+ 
  @param roomId the id of the room.
+ @return the events enumerator.
  */
-- (void)resetPaginationOfRoom:(NSString*)roomId;
+- (id<MXEventsEnumerator>)messagesEnumeratorForRoom:(NSString*)roomId;
 
 /**
- Get more messages in the room from the current pagination point.
-
- @param roomId the id of the room.
- @param numMessages the number or messages to get.
- @return an array of time-ordered MXEvent objects. nil if no more are available.
- */
-- (NSArray*)paginateRoom:(NSString*)roomId numMessages:(NSUInteger)numMessages;
-
-/**
- Get the number of events that still remain to paginate from the MXStore.
-
- @return the count of stored events we can still paginate.
- */
-- (NSUInteger)remainingMessagesForPaginationInRoom:(NSString*)roomId;
-
-
-/**
- The last message of a room.
+ Get an events enumerator on messages of a room with a filter on the events types.
 
  @param roomId the id of the room.
  @param types an array of event types strings (MXEventTypeString).
-        The last message type should be among `types`.
  @param ignoreProfileChanges tell whether the profile changes should be ignored.
- @return the MXEvent object corresponding to the last message. A room must have a last message. If no event matches `type`, the implementation
- must return the true last event of the room whatever its type is. Even if it is an ignored profile change.
+ @return the events enumerator.
  */
-- (MXEvent*)lastMessageOfRoom:(NSString*)roomId withTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
+- (id<MXEventsEnumerator>)messagesEnumeratorForRoom:(NSString*)roomId withTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
 
 /**
  Store the text message partially typed by the user but not yet sent.

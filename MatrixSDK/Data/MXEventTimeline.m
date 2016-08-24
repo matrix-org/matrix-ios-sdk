@@ -21,6 +21,8 @@
 
 #import "MXError.h"
 
+#import "MXEventsEnumeratorOnArray.h"
+
 NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 @interface MXEventTimeline ()
@@ -43,6 +45,9 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     // The store to store events,
     id<MXStore> store;
 
+    // The events enumerator to paginate messages from the store.
+    id<MXEventsEnumerator> storeMessagesEnumerator;
+ 
     // MXStore does only back pagination. So, the forward pagination token for
     // past timelines is managed locally.
     NSString *forwardsPaginationToken;
@@ -132,8 +137,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         // canPaginate depends on two things:
         //  - did we end to paginate from the MXStore?
         //  - did we reach the top of the pagination in our requests to the home server?
-        canPaginate = (0 < [store remainingMessagesForPaginationInRoom:_state.roomId])
-                        || ![store hasReachedHomeServerPaginationEndForRoom:_state.roomId];
+        canPaginate = (0 < storeMessagesEnumerator.remaining)
+            || ![store hasReachedHomeServerPaginationEndForRoom:_state.roomId];
     }
     else
     {
@@ -157,7 +162,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     backState = [[MXRoomState alloc] initBackStateWith:_state];
 
     // Reset store pagination
-    [store resetPaginationOfRoom:_state.roomId];
+    storeMessagesEnumerator = [store messagesEnumeratorForRoom:_state.roomId];
 }
 
 - (MXHTTPOperation *)resetPaginationAroundInitialEventWithLimit:(NSUInteger)limit success:(void (^)())success failure:(void (^)(NSError *))failure
@@ -213,7 +218,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     if (direction == MXTimelineDirectionBackwards)
     {
         // For back pagination, try to get messages from the store first
-        NSArray *messagesFromStore = [store paginateRoom:_state.roomId numMessages:numItems];
+        NSArray *messagesFromStore = [storeMessagesEnumerator nextEventsBatch:numItems];
+
         if (messagesFromStore)
         {
             messagesFromStoreCount = messagesFromStore.count;
@@ -333,7 +339,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 - (NSUInteger)remainingMessagesForBackPaginationInStore
 {
-    return [store remainingMessagesForPaginationInRoom:_state.roomId];
+    return storeMessagesEnumerator.remaining;
 }
 
 

@@ -137,11 +137,6 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     return [mxSession.store partialTextMessageOfRoom:self.state.roomId];
 }
 
-- (MXEvent *)lastMessageWithTypeIn:(NSArray*)types
-{
-    // Retrieve the last message from the store by considering the mxSession settings.
-    return [mxSession.store lastMessageOfRoom:self.state.roomId withTypeIn:types ignoreMemberProfileChanges:mxSession.ignoreProfileChangesDuringLastMessageProcessing];
-}
 
 #pragma mark - Sync
 - (void)handleJoinedRoomSync:(MXRoomSync *)roomSync
@@ -213,6 +208,39 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         // And notify listeners
         [_liveTimeline notifyListeners:event direction:direction];
     }
+}
+
+
+#pragma mark - Stored messages enumerator
+- (id<MXEventsEnumerator>)enumeratorForStoredMessages
+{
+    return [mxSession.store messagesEnumeratorForRoom:self.roomId];
+}
+
+- (id<MXEventsEnumerator>)enumeratorForStoredMessagesWithTypeIn:(NSArray *)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
+{
+    return [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:types ignoreMemberProfileChanges:mxSession.ignoreProfileChangesDuringLastMessageProcessing];
+}
+
+- (MXEvent *)lastMessageWithTypeIn:(NSArray*)types
+{
+    id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:types ignoreMemberProfileChanges:mxSession.ignoreProfileChangesDuringLastMessageProcessing];
+    MXEvent *lastMessage = messagesEnumerator.nextEvent;
+
+    if (!lastMessage)
+    {
+        // If no messages match the filter contraints, return the last whatever is its type
+        lastMessage = self.enumeratorForStoredMessages.nextEvent;
+    }
+    
+    return lastMessage;
+}
+
+- (NSUInteger)storedMessagesCount
+{
+    // Note: For performance, it may worth to have a dedicated MXStore method to get
+    // this value
+    return self.enumeratorForStoredMessages.remaining;
 }
 
 
@@ -598,36 +626,43 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 
 - (BOOL)acknowledgeLatestEvent:(BOOL)sendReceipt;
 {    
-    MXEvent* event =[mxSession.store lastMessageOfRoom:self.state.roomId withTypeIn:_acknowledgableEventTypes ignoreMemberProfileChanges:NO];
-    // Sanity check on event id: Do not send read receipt on event without id
-    if (event.eventId && ([event.eventId hasPrefix:kMXRoomInviteStateEventIdPrefix] == NO))
-    {
-        MXReceiptData *data = [[MXReceiptData alloc] init];
-        
-        data.userId = mxSession.myUser.userId;
-        data.eventId = event.eventId;
-        data.ts = (uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000);
-        
-        if ([mxSession.store storeReceipt:data inRoom:self.state.roomId])
-        {
-            if ([mxSession.store respondsToSelector:@selector(commit)])
-            {
-                [mxSession.store commit];
-            }
+    id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:_acknowledgableEventTypes ignoreMemberProfileChanges:NO];
 
-            if (sendReceipt)
+    // Acknowledge the lastest valid event
+    MXEvent *event;
+    while ((event = messagesEnumerator.nextEvent))
+    {
+        // Sanity check on event id: Do not send read receipt on event without id
+        if (event.eventId && ([event.eventId hasPrefix:kMXRoomInviteStateEventIdPrefix] == NO))
+        {
+            MXReceiptData *data = [[MXReceiptData alloc] init];
+
+            data.userId = mxSession.myUser.userId;
+            data.eventId = event.eventId;
+            data.ts = (uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000);
+
+            if ([mxSession.store storeReceipt:data inRoom:self.state.roomId])
             {
-                [mxSession.matrixRestClient sendReadReceipts:self.state.roomId eventId:event.eventId success:^(NSString *eventId) {
-                    
-                } failure:^(NSError *error) {
-                    
-                }];
+                if ([mxSession.store respondsToSelector:@selector(commit)])
+                {
+                    [mxSession.store commit];
+                }
+
+                if (sendReceipt)
+                {
+                    [mxSession.matrixRestClient sendReadReceipts:self.state.roomId eventId:event.eventId success:^(NSString *eventId) {
+
+                    } failure:^(NSError *error) {
+
+                    }];
+                }
+                
+                return YES;
             }
-            
-            return YES;
         }
+        
     }
-    
+
     return NO;
 }
 

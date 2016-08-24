@@ -135,6 +135,13 @@
     }];
 }
 
+- (void)testMXMemoryStoreLastMessageProfileChange
+{
+    [self doTestWithMXMemoryStore:^(MXRoom *room) {
+        [self checkLastMessageProfileChange:room];
+    }];
+}
+
 - (void)testMXMemoryStorePaginateWhenJoiningAgainAfterLeft
 {
     [self doTestWithMXMemoryStoreAndMessagesLimit:100 readyToTest:^(MXRoom *room) {
