@@ -504,7 +504,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
             backupEventStreamToken = nil;
 
             // Release the background task
-            dispatch_sync(dispatchQueue, ^(void){
+            dispatch_sync(dispatch_get_main_queue(), ^(void){
                 [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
                 backgroundTaskIdentifier = UIBackgroundTaskInvalid;
             });
@@ -517,13 +517,6 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     // Do a dummy sync dispatch on the queue
     // Once done, we are sure pending operations blocks are complete
     dispatch_sync(dispatchQueue, ^(void){
-
-        // Release the background task if any
-        if (backgroundTaskIdentifier != UIBackgroundTaskInvalid)
-        {
-            [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
-            backgroundTaskIdentifier = UIBackgroundTaskInvalid;
-        }
     });
 }
 
