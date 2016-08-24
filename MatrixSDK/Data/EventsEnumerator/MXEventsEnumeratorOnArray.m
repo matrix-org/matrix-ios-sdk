@@ -71,11 +71,12 @@
 {
     MXEvent *nextEvent = nil;
 
-    NSArray *nextEventsBatch = [self nextEventsBatch:1];
-    if (nextEventsBatch.count == 1)
+    if (0 < paginationPosition)
     {
-        nextEvent = nextEventsBatch[0];
+        nextEvent = messages[paginationPosition - 1];
+        paginationPosition--;
     }
+
     return nextEvent;
 }
 
