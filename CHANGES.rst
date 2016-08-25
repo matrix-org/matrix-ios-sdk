@@ -1,3 +1,37 @@
+Changes in Matrix iOS SDK in 0.6.13 (2016-08-25)
+================================================
+
+Improvements:
+ * Add conference call support.
+ * Call: Update the libjingle lib version.
+ * Repair MXFileStore in case of interrupted commit (https://github.com/vector-im/vector-ios/issues/376).
+ * Speed up MXFileStore loading.
+ * Allow MXFileStore to run when the app is backgrounded.
+ * Change the MXStore API to be able to run several paginations in parallel.
+ 
+API improvements:
+ * Add MXEventsEnumerator to enumerate sets of events like those returned by the MXStore API.
+ * MXRoomState: Added - (NSArray*)membersWithMembership:(MXMembership)membership.
+ * MXSession & MXRestClient: Add createRoom with a parameters dictionary to manage all fields available in Matrix spec.
+ * MXCall: Add cameraPosition property to switch the camera.
+ * MXMyUser: Allow nil callback blocks in setter methods.
+ * SDK Tests: Add a test on [MXRestClient close].
+ * SDK Tests: Add a test on [MXFileStore diskUsage].
+ 
+Bug fixes:
+ * Redacting membership events should immediately reset the displayname & avatar of room members (https://github.com/vector-im/vector-ios/issues/443).
+ * Profile changes shouldn't reorder the room list (https://github.com/vector-im/vector-ios/issues/494).
+ * When the last message is redacted, [MXKRecentCellData update] makes paginations loops (https://github.com/vector-im/vector-ios/issues/520).
+ * MXSession: Do not send kMXSessionIgnoredUsersDidChangeNotification when the session loads the data from the store (https://github.com/vector-im/vector-ios/issues/491).
+ * MXHTTPClient: Fix crash: "Task created in a session that has been invalidated" (https://github.com/vector-im/vector-ios/issues/490).
+ * Call: the remote and local video are not scaled to fill the video container (https://github.com/vector-im/vector-ios/issues/537).
+
+API Breaks:
+ * Rename "kMXRoomSyncWithLimitedTimelineNotification" with "kMXRoomDidFlushMessagesNotification"
+ * MXRoom: Make placeCall: asynchronous.
+ * MXFileStore: Replace 'diskUsage' property by an async non blocking method: [self diskUsageWithBlock:].
+ * MXStore: Replace [MXStore resetPaginationOfRoom:], [MXStore paginateRoom:numMessages:] and [MXStore remainingMessagesForPaginationInRoom:] methods by [MXStore messagesEnumeratorForRoom:]
+
 Changes in Matrix iOS SDK in 0.6.12 (2016-08-01)
 ================================================
 
