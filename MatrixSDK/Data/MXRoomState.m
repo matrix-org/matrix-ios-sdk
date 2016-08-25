@@ -28,6 +28,11 @@
     
     NSMutableDictionary *stateEvents;
     NSMutableDictionary *members;
+    
+    /**
+     The room aliases. The key is the domain.
+     */
+    NSMutableDictionary<NSString*, MXEvent*> *roomAliases;
 
     /**
      The third party invites. The key is the token provided by the homeserver.
@@ -81,6 +86,7 @@
         
         stateEvents = [NSMutableDictionary dictionary];
         members = [NSMutableDictionary dictionary];
+        roomAliases = [NSMutableDictionary dictionary];
         thirdPartyInvites = [NSMutableDictionary dictionary];
         membersNamesCache = [NSMutableDictionary dictionary];
         membersWithThirdPartyInviteTokenCache = [NSMutableDictionary dictionary];
@@ -155,6 +161,12 @@
     {
         [state addObject:roomMember.originalEvent];
     }
+    
+    // Add room aliases stored by domain
+    for (MXEvent *event in roomAliases.allValues)
+    {
+        [state addObject:event];
+    }
 
     // Third party invites are state events too
     for (MXRoomThirdPartyInvite *thirdPartyInvite in self.thirdPartyInvites)
@@ -182,15 +194,20 @@
 
 - (NSArray *)aliases
 {
-    NSArray *aliases;
+    NSMutableArray *aliases = [NSMutableArray array];
     
-    // Get it from the state events
-    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomAliases];
-    if (event && [self contentOfEvent:event])
+    // Merge here all the bunches of aliases (one bunch by domain)
+    for (MXEvent *event in roomAliases.allValues)
     {
-        MXJSONModelSetArray(aliases, [self contentOfEvent:event][@"aliases"]);
-        aliases = [aliases copy];
+        NSDictionary *eventContent = [self contentOfEvent:event];
+        NSArray *aliasesBunch = eventContent[@"aliases"];
+        
+        if (aliasesBunch.count)
+        {
+            [aliases addObjectsFromArray:aliasesBunch];
+        }
     }
+    
     return aliases;
 }
 
@@ -507,6 +524,16 @@
             }
             break;
         }
+        case MXEventTypeRoomAliases:
+        {
+            // Sanity check
+            if (event.stateKey.length)
+            {
+                // Store the bunch of aliases for the domain (which is the state_key)
+                roomAliases[event.stateKey] = event;
+            }
+            break;
+        }
         case MXEventTypeRoomPowerLevels:
         {
             powerLevels = [MXRoomPowerLevels modelFromJSON:[self contentOfEvent:event]];
@@ -787,6 +814,8 @@
     // the sdk receives room member event, even if it is an update of an existing member like a
     // membership change (ex: "invited" -> "joined")
     stateCopy->members = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:members];
+    
+    stateCopy->roomAliases = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:roomAliases];
 
     stateCopy->thirdPartyInvites = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:thirdPartyInvites];
 
