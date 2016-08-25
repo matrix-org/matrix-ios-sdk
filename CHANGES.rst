@@ -3,7 +3,7 @@ Changes in Matrix iOS SDK in 0.6.13 (2016-08-25)
 
 Improvements:
  * Add conference call support.
- * Call: Update the libjingle lib version.
+ * Call: Update the libjingle lib to its latest version. That implied a major refactoring of MXJingleCallStack.
  * Repair MXFileStore in case of interrupted commit (https://github.com/vector-im/vector-ios/issues/376).
  * Speed up MXFileStore loading.
  * Allow MXFileStore to run when the app is backgrounded.
