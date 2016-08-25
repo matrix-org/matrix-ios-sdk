@@ -16,10 +16,11 @@
 
 #import "MXMemoryRoomStore.h"
 
+#import "MXEventsEnumeratorOnArray.h"
+#import "MXEventsByTypesEnumeratorOnArray.h"
+
 @interface MXMemoryRoomStore ()
 {
-    // This is the position from the end
-    NSInteger paginationPosition;
 }
 
 @end
@@ -83,54 +84,14 @@
     [messagesByEventIds removeAllObjects];
 }
 
-- (void)resetPagination
+- (id<MXEventsEnumerator>)messagesEnumerator
 {
-    paginationPosition = messages.count;
+    return [[MXEventsEnumeratorOnArray alloc] initWithMessages:messages];
 }
 
-- (NSArray *)paginate:(NSUInteger)numMessages
+- (id<MXEventsEnumerator>)enumeratorForMessagesWithTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
 {
-    NSArray *paginatedMessages;
-
-    if (0 < paginationPosition)
-    {
-        if (numMessages < paginationPosition)
-        {
-            // Return a slice of messages
-            paginatedMessages = [messages subarrayWithRange:NSMakeRange(paginationPosition - numMessages, numMessages)];
-            paginationPosition -= numMessages;
-        }
-        else
-        {
-            // Return the last slice of messages
-            paginatedMessages = [messages subarrayWithRange:NSMakeRange(0, paginationPosition)];
-            paginationPosition = 0;
-        }
-    }
-
-    return paginatedMessages;
-}
-
-- (NSUInteger)remainingMessagesForPagination
-{
-    return paginationPosition;
-}
-
-- (MXEvent*)lastMessageWithTypeIn:(NSArray*)types
-{
-    MXEvent *lastMessage = [messages lastObject];
-    for (NSInteger i = messages.count - 1; 0 <= i; i--)
-    {
-        MXEvent *event = messages[i];
-
-        if (event.eventId && (!types || (NSNotFound != [types indexOfObject:event.type])))
-        {
-            lastMessage = event;
-            break;
-        }
-    }
-    
-    return lastMessage;
+    return [[MXEventsByTypesEnumeratorOnArray alloc] initWithMessages:messages andTypesIn:types ignoreMemberProfileChanges:ignoreProfileChanges];
 }
 
 - (NSArray*)eventsAfter:(NSString *)eventId except:(NSString*)userId withTypeIn:(NSSet*)types

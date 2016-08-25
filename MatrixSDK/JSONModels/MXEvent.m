@@ -225,6 +225,43 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     return (nil != self.stateKey);
 }
 
+- (BOOL)isRedactedEvent
+{
+    // The event is redacted if its redactedBecause is filed (with a redaction event id)
+    return (self.redactedBecause != nil);
+}
+
+- (BOOL)isEmote
+{
+    if (self.eventType == MXEventTypeRoomMessage)
+    {
+        NSString *msgtype;
+        MXJSONModelSetString(msgtype, self.content[@"msgtype"]);
+        
+        if (msgtype && [msgtype isEqualToString:kMXMessageTypeEmote])
+        {
+            return YES;
+        }
+    }
+    return NO;
+}
+
+- (BOOL)isUserProfileChange
+{
+    // Retrieve membership
+    NSString* membership;
+    MXJSONModelSetString(membership, self.content[@"membership"]);
+    
+    NSString *prevMembership = nil;
+    if (self.prevContent)
+    {
+        MXJSONModelSetString(prevMembership, self.prevContent[@"membership"]);
+    }
+    
+    // Check whether the sender has updated his profile (the membership is then unchanged)
+    return (prevMembership && membership && [membership isEqualToString:prevMembership]);
+}
+
 - (NSArray *)readReceiptEventIds
 {
     NSMutableArray* list = nil;

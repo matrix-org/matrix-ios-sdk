@@ -616,6 +616,30 @@
     }];
 }
 
+- (void)checkLastMessageProfileChange:(MXRoom*)room
+{
+    MXEvent *lastMessage = [room lastMessageWithTypeIn:nil];
+    XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
+
+    [room.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+        MXEvent *lastMessage2 = [room lastMessageWithTypeIn:nil];
+        XCTAssertEqual(lastMessage2.eventType, MXEventTypeRoomMember);
+
+        room.mxSession.ignoreProfileChangesDuringLastMessageProcessing = YES;
+        MXEvent *lastMessage3 = [room lastMessageWithTypeIn:nil];
+        XCTAssertEqualObjects(lastMessage3.eventId, lastMessage.eventId);
+
+        [expectation fulfill];
+
+    }];
+
+    [room.mxSession.myUser setDisplayName:@"Toto" success:nil failure:^(NSError *error) {
+        XCTFail(@"The request should not fail - NSError: %@", error);
+        [expectation fulfill];
+    }];
+}
+
 - (void)checkPaginateWhenJoiningAgainAfterLeft:(MXRoom*)room
 {
     [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
@@ -1199,7 +1223,12 @@
 
                             if ([bobStore2 isKindOfClass:[MXFileStore class]])
                             {
-                                XCTAssertEqual(((MXFileStore*)bobStore2).diskUsage, ((MXFileStore*)bobStore3).diskUsage, @"Bob's store must still have the same content");
+                                [((MXFileStore*)bobStore2) diskUsageWithBlock:^(NSUInteger diskUsage2) {
+                                    [((MXFileStore*)bobStore3) diskUsageWithBlock:^(NSUInteger diskUsage3) {
+
+                                        XCTAssertEqual(diskUsage2, diskUsage3, @"Bob's store must still have the same content");
+                                    }];
+                                }];
                             }
 
                             [expectation fulfill];

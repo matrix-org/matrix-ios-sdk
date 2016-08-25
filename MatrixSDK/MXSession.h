@@ -161,9 +161,17 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
 
 /**
  Posted when MXSession has detected a change in the `ignoredUsers` property.
+ 
+ The notification object is the concerned session (MXSession instance).
  */
 FOUNDATION_EXPORT NSString *const kMXSessionIgnoredUsersDidChangeNotification;
 
+/**
+ Posted when MXSession data have been corrupted. The listener must reload the session data with a full server sync.
+ 
+ The notification object is the concerned session (MXSession instance).
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionDidCorruptDataNotification;
 
 #pragma mark - Other constants
 /**
@@ -328,6 +336,17 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
          failure:(void (^)(NSError *error))failure;
 
 /**
+ Tell whether the profiles changes of the room members should be ignored in the last message processing.
+ NO by default.
+ 
+ @discussion An event (with MXEventTypeRoomMember type) is added in room history each time a room member changes his profile.
+ This event replaces the last message of all the rooms to which the member belongs.
+ This impacts the rooms ordering based on their last message.
+ Ignoring the profile changes in last message handling prevents an irrelevant reordering of the room list.
+ */
+@property (nonatomic) BOOL ignoreProfileChangesDuringLastMessageProcessing;
+
+/**
  Enable VoIP by setting the external VoIP stack to use.
  
  @param callStack the VoIP call stack to use.
@@ -354,6 +373,21 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                     visibility:(MXRoomDirectoryVisibility)visibility
                      roomAlias:(NSString*)roomAlias
                          topic:(NSString*)topic
+                       success:(void (^)(MXRoom *room))success
+                       failure:(void (^)(NSError *error))failure;
+
+/**
+ Create a room.
+
+ @param parameters the parameters. Refer to the matrix specification for details.
+
+ @param success A block object called when the operation succeeds. It provides the MXRoom
+                instance of the joined room.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)createRoom:(NSDictionary*)parameters
                        success:(void (^)(MXRoom *room))success
                        failure:(void (^)(NSError *error))failure;
 

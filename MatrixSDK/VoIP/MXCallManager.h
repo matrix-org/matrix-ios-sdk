@@ -21,6 +21,7 @@
 #import "MXJSONModels.h"
 
 @class MXSession;
+@class MXRoomMember;
 
 /**
  Posted when a new `MXCall` instance has been created. It happens on an incoming
@@ -28,6 +29,18 @@
  The notification object is the `MXKCall` object representing the call.
  */
 extern NSString *const kMXCallManagerNewCall;
+
+/**
+ Posted when a call conference has been started.
+ The notification object is the id of the room where call conference occurs.
+ */
+extern NSString *const kMXCallManagerConferenceStarted;
+
+/**
+ Posted when a call conference has been finished.
+ The notification object is the id of the room where call conference occurs.
+ */
+extern NSString *const kMXCallManagerConferenceFinished;
 
 /**
  The `MXCallManager` object manages calls for a given Matrix session.
@@ -71,9 +84,12 @@ extern NSString *const kMXCallManagerNewCall;
  
  @param roomId the room id where to place the call.
  @param video YES to make a video call.
- @result a `MXKCall` object representing the call. Nil if the operation cannot be done.
+ @param success A block object called when the operation succeeds. It provides the created MXCall instance.
+ @param failure A block object called when the operation fails.
  */
-- (MXCall*)placeCallInRoom:(NSString*)roomId withVideo:(BOOL)video;
+- (void)placeCallInRoom:(NSString*)roomId withVideo:(BOOL)video
+                success:(void (^)(MXCall *call))success
+                failure:(void (^)(NSError *error))failure;
 
 /**
  Make the call manager forget a call.
@@ -108,5 +124,43 @@ extern NSString *const kMXCallManagerNewCall;
  STUN server used if the homeserver does not provide TURN/STUN servers.
  */
 @property (nonatomic) NSString *fallbackSTUNServer;
+
+
+#pragma mark - Conference call
+
+/**
+ Handle a membership change of conference user in a room where there is conference call.
+
+ @param conferenceUserMember the member object of the conference user.
+ @param roomId the room where there is conference call.
+ */
+- (void)handleConferenceUserUpdate:(MXRoomMember*)conferenceUserMember inRoom:(NSString *)roomId;
+
+/**
+ Return the id of the conference user dedicated for the passed room.
+
+ @param roomId the room id.
+ @return the conference user id.
+ */
++ (NSString*)conferenceUserIdForRoom:(NSString*)roomId;
+
+/**
+ Check if the passed user id corresponds to the a conference user.
+ 
+ @param userId the user id to check.
+ @return YES if the id is reserved to a conference user.
+ */
++ (BOOL)isConferenceUser:(NSString*)userId;
+
+/**
+ Check if the user can place a conference call in a given room.
+ 
+ All room members can join an existing conference call but only member with
+ invite power level can create a conference call.
+
+ @param room the room to check.
+ @return YES if the user can.
+ */
++ (BOOL)canPlaceConferenceCallInRoom:(MXRoom*)room;
 
 @end

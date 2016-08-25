@@ -25,6 +25,7 @@
 #import "MXHTTPOperation.h"
 #import "MXCall.h"
 #import "MXEventTimeline.h"
+#import "MXEventsEnumerator.h"
 
 @class MXRoom;
 @class MXSession;
@@ -39,13 +40,13 @@
 FOUNDATION_EXPORT NSString *const kMXRoomInitialSyncNotification;
 
 /**
- Posted when a limited timeline is observed for an existing room during server sync.
- All the existing messages have been removed from the room storage. Only the messages received during this sync are available.
+ Posted when the messages of an existing room has been flushed during server sync.
+ This flush may be due to a limited timeline in the room sync, or the redaction of a state event.
  The token where to start back pagination has been updated.
  
  The notification object is the concerned room (MXRoom instance).
  */
-FOUNDATION_EXPORT NSString *const kMXRoomSyncWithLimitedTimelineNotification;
+FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 
 /**
  Posted when the number of unread notifications ('notificationCount' and 'highlightCount' properties) are updated.
@@ -96,14 +97,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  This array is updated on each received m.typing event (MXEventTypeTypingNotification).
  */
 @property (nonatomic, readonly) NSArray *typingUsers;
-
-/**
- The last message of the requested types.
-
- @param types an array of event types strings (MXEventTypeString).
- @return the last event of the requested types or the true last event if no event of the requested type is found.
- */
-- (MXEvent*)lastMessageWithTypeIn:(NSArray*)type;
 
 /**
  Tell whether the room has unread events.
@@ -167,7 +160,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  */
 - (id)initWithRoomId:(NSString *)roomId matrixSession:(MXSession *)mxSession andStore:(id<MXStore>)store;
 
-#pragma mark - server sync
+#pragma mark - Server sync
 
 /**
  Update room data according to the provided sync response.
@@ -182,6 +175,41 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  @param invitedRoom information to update the room state.
  */
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync;
+
+
+#pragma mark - Stored messages enumerator
+/**
+ Get an enumerator on all messages of the room downloaded so far.
+ */
+@property (nonatomic, readonly) id<MXEventsEnumerator> enumeratorForStoredMessages;
+
+/**
+ Get an events enumerator on messages of the room with a filter on the events types.
+
+ An optional array of event types may be provided to filter room events. When this array is not nil,
+ the type of the returned last event should match with one of the provided types.
+
+ @param roomId the id of the room.
+ @param types an array of event types strings (MXEventTypeString).
+ @param ignoreProfileChanges tell whether the profile changes should be ignored.
+ @return the events enumerator.
+ */
+- (id<MXEventsEnumerator>)enumeratorForStoredMessagesWithTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
+
+/**
+ The last message of the requested types.
+ This value depends on mxSession.ignoreProfileChangesDuringLastMessageProcessing.
+
+ @param types an array of event types strings (MXEventTypeString).
+ @return the last event of the requested types or the true last event if no event of the requested type is found.
+ (CAUTION: All rooms must have a last message. For this reason, the returned event may be a profile change even if it should be ignored).
+ */
+- (MXEvent*)lastMessageWithTypeIn:(NSArray*)type;
+
+/**
+ The count of stored messages for this room.
+ */
+@property (nonatomic, readonly) NSUInteger storedMessagesCount;
 
 
 #pragma mark - Room operations
@@ -649,13 +677,17 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 
 
 #pragma mark - Voice over IP
+
 /**
  Place a voice or a video call into the room.
 
  @param video YES to make a video call.
- @result a `MXKCall` object representing the call. Nil if the operation cannot be done.
+ @param success A block object called when the operation succeeds. It provides the created MXCall instance.
+ @param failure A block object called when the operation fails.
  */
-- (MXCall*)placeCallWithVideo:(BOOL)video;
+- (void)placeCallWithVideo:(BOOL)video
+                   success:(void (^)(MXCall *call))success
+                   failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Read receipts management
@@ -693,6 +725,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 
 /**
  Comparator to use to order array of rooms by their lastest originServerTs value.
+ This sorting is based on the last message of the room.
  
  Arrays are then sorting so that the oldest room is set at position 0.
  

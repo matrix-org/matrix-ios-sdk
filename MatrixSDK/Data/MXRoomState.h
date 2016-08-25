@@ -226,4 +226,44 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
  */
 - (float)memberNormalizedPowerLevel:(NSString*)userId;
 
+/**
+ Return the list of members with a given membership.
+ 
+ @param membership the membership to look for.
+ @return an array of MXRoomMember objects.
+ */
+- (NSArray<MXRoomMember*>*)membersWithMembership:(MXMembership)membership;
+
+
+# pragma mark - Conference call
+/**
+ Flag indicating there is conference call ongoing in the room.
+ */
+@property (nonatomic, readonly) BOOL isOngoingConferenceCall;
+
+/**
+ Flag indicating if the room is a 1:1 room with a call conference user.
+ In this case, the room is used as a call signaling room and does not need to be
+ */
+@property (nonatomic, readonly) BOOL isConferenceUserRoom;
+
+/**
+ The id of the conference user responsible for handling the conference call in this room.
+ */
+@property (nonatomic, readonly) NSString *conferenceUserId;
+
+/**
+ A copy of the list of room members excluding the conference user.
+ */
+- (NSArray<MXRoomMember*>*)membersWithoutConferenceUser;
+
+/**
+ Return the list of members with a given membership with or without the conference user.
+
+ @param membership the membership to look for.
+ @param includeConferenceUser NO to filter the conference user.
+ @return an array of MXRoomMember objects.
+ */
+- (NSArray<MXRoomMember*>*)membersWithMembership:(MXMembership)membership includeConferenceUser:(BOOL)includeConferenceUser;
+
 @end

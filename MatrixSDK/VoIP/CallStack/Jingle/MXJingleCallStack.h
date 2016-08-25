@@ -23,16 +23,18 @@
  That means that MXJingleCallStack will be automatically built if the application that uses
  MatrixSDK embeds libjingle.
 
- The application can use the libjingle build pod provided by pristine.io at
- https://github.com/pristineio/webrtc-build-scripts:
-     pod 'libjingle_peerconnection'
+ The application can use the libjingle build pod provided by webrtc.org at
+ https://github.com/Anakros/WebRTC-iOS.git :
+     pod 'WebRTC', '1.0.13807'
  */
 
-#if __has_include("RTCPeerConnection.h")
+#if __has_include(<WebRTC/RTCPeerConnection.h>)
 #define MX_CALL_STACK_JINGLE
 #endif
 
 #ifdef MX_CALL_STACK_JINGLE
+
+#import <WebRTC/WebRTC.h>
 
 #import "MXCallStack.h"
 

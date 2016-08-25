@@ -40,10 +40,17 @@
 
         // Update the information right now
         self.displayname = [displayname copy];
-        success();
+
+        if (success)
+        {
+            success();
+        }
 
     } failure:^(NSError *error) {
-        failure(error);
+        if (failure)
+        {
+            failure(error);
+        }
     }];
 }
 
@@ -53,10 +60,17 @@
 
         // Update the information right now
         self.avatarUrl = [avatarUrl copy];
-        success();
+
+        if (success)
+        {
+            success();
+        }
 
     } failure:^(NSError *error) {
-        failure(error);
+        if (failure)
+        {
+            failure(error);
+        }
     }];
 }
 
@@ -67,10 +81,17 @@
         // Update the information right now
         _presence = presence;
         _statusMsg = [statusMessage copy];
-        success();
+
+        if (success)
+        {
+            success();
+        }
 
     } failure:^(NSError *error) {
-        failure(error);
+        if (failure)
+        {
+            failure(error);
+        }
     }];
 }
 

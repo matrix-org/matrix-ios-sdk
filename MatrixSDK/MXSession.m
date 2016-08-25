@@ -30,7 +30,7 @@
 
 #pragma mark - Constants definitions
 
-const NSString *MatrixSDKVersion = @"0.6.12";
+const NSString *MatrixSDKVersion = @"0.6.13";
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
@@ -40,6 +40,7 @@ NSString *const kMXSessionInvitedRoomsDidChangeNotification = @"kMXSessionInvite
 NSString *const kMXSessionNotificationRoomIdKey = @"roomId";
 NSString *const kMXSessionNotificationEventKey = @"event";
 NSString *const kMXSessionIgnoredUsersDidChangeNotification = @"kMXSessionIgnoredUsersDidChangeNotification";
+NSString *const kMXSessionDidCorruptDataNotification = @"kMXSessionDidCorruptDataNotification";
 NSString *const kMXSessionNoRoomTag = @"m.recent";  // Use the same value as matrix-react-sdk
 
 /**
@@ -837,7 +838,7 @@ typedef void (^MXOnResumeDone)();
 {
     if (accountDataUpdate && accountDataUpdate[@"events"])
     {
-        BOOL isInitialSync = !_store.eventStreamToken;
+        BOOL isInitialSync = !_store.eventStreamToken || _state == MXSessionStateInitialised;
 
         for (NSDictionary *event in accountDataUpdate[@"events"])
         {
@@ -903,6 +904,37 @@ typedef void (^MXOnResumeDone)();
 
 
 #pragma mark - Rooms operations
+
+- (void)onCreatedRoom:(MXCreateRoomResponse*)response success:(void (^)(MXRoom *room))success
+{
+    // Wait to receive data from /sync about this room before returning
+    if (success)
+    {
+        MXRoom *room = [self roomWithRoomId:response.roomId];
+        if (room)
+        {
+            // The first /sync response for this room may have happened before the
+            // homeserver answer to the createRoom request.
+            success(room);
+        }
+        else
+        {
+            // Else, just wait for the corresponding kMXRoomInitialSyncNotification
+            // that will be fired from MXRoom.
+            __block id initialSyncObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomInitialSyncNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                MXRoom *room = note.object;
+
+                if ([room.state.roomId isEqualToString:response.roomId])
+                {
+                    success(room);
+                    [[NSNotificationCenter defaultCenter] removeObserver:initialSyncObserver];
+                }
+            }];
+        }
+    }
+}
+
 - (MXHTTPOperation*)createRoom:(NSString*)name
                     visibility:(MXRoomDirectoryVisibility)visibility
                      roomAlias:(NSString*)roomAlias
@@ -912,32 +944,18 @@ typedef void (^MXOnResumeDone)();
 {
     return [matrixRestClient createRoom:name visibility:visibility roomAlias:roomAlias topic:topic success:^(MXCreateRoomResponse *response) {
 
-        // Wait to receive data from /sync about this room before returning
-        if (success)
-        {
-            MXRoom *room = [self roomWithRoomId:response.roomId];
-            if (room)
-            {
-                // The first /sync response for this room may have happened before the
-                // homeserver answer to the createRoom request.
-                success(room);
-            }
-            else
-            {
-                // Else, just wait for the corresponding kMXRoomInitialSyncNotification
-                // that will be fired from MXRoom.
-                __block id initialSyncObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomInitialSyncNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        [self onCreatedRoom:response success:success];
 
-                    MXRoom *room = note.object;
+    } failure:failure];
+}
 
-                    if ([room.state.roomId isEqualToString:response.roomId])
-                    {
-                        success(room);
-                        [[NSNotificationCenter defaultCenter] removeObserver:initialSyncObserver];
-                    }
-                }];
-            }
-        }
+- (MXHTTPOperation*)createRoom:(NSDictionary*)parameters
+                       success:(void (^)(MXRoom *room))success
+                       failure:(void (^)(NSError *error))failure
+{
+    return [matrixRestClient createRoom:parameters success:^(MXCreateRoomResponse *response) {
+
+        [self onCreatedRoom:response success:success];
 
     } failure:failure];
 }

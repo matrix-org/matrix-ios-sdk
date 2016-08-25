@@ -16,7 +16,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXEventListener.h"
+#import "MXStore.h"
 
 @interface MXMemoryRoomStore : NSObject
 {
@@ -86,38 +86,22 @@
 - (void)removeAllMessages;
 
 /**
- Reset pagination mechanism in the room.
+ The enumerator on all messages of the room downloaded so far.
  */
-- (void)resetPagination;
+@property (nonatomic, readonly) id<MXEventsEnumerator>messagesEnumerator;
 
 /**
- Get more messages in the room from the current pagination point.
-
- @param numMessages the number or messages to get.
- @return an array of time-ordered MXEvent objects. nil if no more are available.
- */
-- (NSArray*)paginate:(NSUInteger)numMessages;
-
-/**
- Get the number of events that still remain to paginate from the MXStore.
-
- @return the count of stored events we can still paginate.
- */
-- (NSUInteger)remainingMessagesForPagination;
-
-/**
- The last message of the room.
+ Get an events enumerator on messages of the room with a filter on the events types.
  
  An optional array of event types may be provided to filter room events. When this array is not nil,
- the type of the returned last event matches with one of the provided types.
- 
- CAUTION: All rooms must have a last message. If no event matches with the provided event types, the 
- first event is returned whatever its type.
- 
- @param types an array of event types strings (MXEventTypeString) to filter room's events.
- @return a MXEvent instance.
+ the type of the returned last event should match with one of the provided types.
+
+ @param roomId the id of the room.
+ @param types an array of event types strings (MXEventTypeString).
+ @param ignoreProfileChanges tell whether the profile changes should be ignored.
+ @return the events enumerator.
  */
-- (MXEvent*)lastMessageWithTypeIn:(NSArray*)types;
+- (id<MXEventsEnumerator>)enumeratorForMessagesWithTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
 
 /**
  Get all events newer than the event with the passed id.

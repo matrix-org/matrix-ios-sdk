@@ -16,26 +16,19 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXJingleCallStack.h"
-
-#ifdef MX_CALL_STACK_JINGLE
-
-#import "MXCallStackCall.h"
-
-#import <WebRTC/WebRTC.h>
-
-@class RTCPeerConnectionFactory;
+#import "MXEventsEnumerator.h"
 
 /**
- `MXJingleCallStack` is the implementation of the `MXCallStack` protocol using
- the WebRTC part of jingle.
-
- @see https://developers.google.com/talk/libjingle/developer_guide
+ Generic events enumerator on an array of events.
  */
-@interface MXJingleCallStackCall : NSObject <MXCallStackCall, RTCPeerConnectionDelegate>
+@interface MXEventsEnumeratorOnArray : NSObject <MXEventsEnumerator>
 
-- (instancetype)initWithFactory:(RTCPeerConnectionFactory*)factory;
+/**
+ Construct an enumerator based on a events array.
+ 
+ @param messages the list of messages to enumerate.
+ @return the newly created instance.
+ */
+- (instancetype)initWithMessages:(NSArray<MXEvent*> *)messages;
 
 @end
-
-#endif  // MX_CALL_STACK_JINGLE

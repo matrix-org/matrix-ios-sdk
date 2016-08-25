@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		320BBF3C1D6C7D9D0079890E /* MXEventsEnumerator.h in Headers */ = {isa = PBXBuildFile; fileRef = 320BBF3B1D6C7D9D0079890E /* MXEventsEnumerator.h */; };
+		320BBF411D6C81550079890E /* MXEventsByTypesEnumeratorOnArray.m in Sources */ = {isa = PBXBuildFile; fileRef = 320BBF3D1D6C81550079890E /* MXEventsByTypesEnumeratorOnArray.m */; };
+		320BBF421D6C81550079890E /* MXEventsByTypesEnumeratorOnArray.h in Headers */ = {isa = PBXBuildFile; fileRef = 320BBF3E1D6C81550079890E /* MXEventsByTypesEnumeratorOnArray.h */; };
+		320BBF431D6C81550079890E /* MXEventsEnumeratorOnArray.h in Headers */ = {isa = PBXBuildFile; fileRef = 320BBF3F1D6C81550079890E /* MXEventsEnumeratorOnArray.h */; };
+		320BBF441D6C81550079890E /* MXEventsEnumeratorOnArray.m in Sources */ = {isa = PBXBuildFile; fileRef = 320BBF401D6C81550079890E /* MXEventsEnumeratorOnArray.m */; };
 		320DFDDB19DD99B60068622A /* MXRoom.h in Headers */ = {isa = PBXBuildFile; fileRef = 320DFDCA19DD99B60068622A /* MXRoom.h */; };
 		320DFDDC19DD99B60068622A /* MXRoom.m in Sources */ = {isa = PBXBuildFile; fileRef = 320DFDCB19DD99B60068622A /* MXRoom.m */; };
 		320DFDE019DD99B60068622A /* MXSession.h in Headers */ = {isa = PBXBuildFile; fileRef = 320DFDD019DD99B60068622A /* MXSession.h */; };
@@ -172,6 +177,11 @@
 /* Begin PBXFileReference section */
 		0BCFBADF157F3C8C43112BD6 /* Pods-MatrixSDKTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDKTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-MatrixSDKTests/Pods-MatrixSDKTests.release.xcconfig"; sourceTree = "<group>"; };
 		2BF02FACC417CA3368671024 /* Pods-MatrixSDK.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDK.debug.xcconfig"; path = "Pods/Target Support Files/Pods-MatrixSDK/Pods-MatrixSDK.debug.xcconfig"; sourceTree = "<group>"; };
+		320BBF3B1D6C7D9D0079890E /* MXEventsEnumerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXEventsEnumerator.h; sourceTree = "<group>"; };
+		320BBF3D1D6C81550079890E /* MXEventsByTypesEnumeratorOnArray.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXEventsByTypesEnumeratorOnArray.m; sourceTree = "<group>"; };
+		320BBF3E1D6C81550079890E /* MXEventsByTypesEnumeratorOnArray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXEventsByTypesEnumeratorOnArray.h; sourceTree = "<group>"; };
+		320BBF3F1D6C81550079890E /* MXEventsEnumeratorOnArray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXEventsEnumeratorOnArray.h; sourceTree = "<group>"; };
+		320BBF401D6C81550079890E /* MXEventsEnumeratorOnArray.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXEventsEnumeratorOnArray.m; sourceTree = "<group>"; };
 		320DFDCA19DD99B60068622A /* MXRoom.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRoom.h; sourceTree = "<group>"; };
 		320DFDCB19DD99B60068622A /* MXRoom.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = MXRoom.m; sourceTree = "<group>"; };
 		320DFDD019DD99B60068622A /* MXSession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = MXSession.h; sourceTree = "<group>"; };
@@ -354,9 +364,22 @@
 			name = Pods;
 			sourceTree = "<group>";
 		};
+		320BBF3A1D6C7D9D0079890E /* EventsEnumerator */ = {
+			isa = PBXGroup;
+			children = (
+				320BBF3B1D6C7D9D0079890E /* MXEventsEnumerator.h */,
+				320BBF3F1D6C81550079890E /* MXEventsEnumeratorOnArray.h */,
+				320BBF401D6C81550079890E /* MXEventsEnumeratorOnArray.m */,
+				320BBF3D1D6C81550079890E /* MXEventsByTypesEnumeratorOnArray.m */,
+				320BBF3E1D6C81550079890E /* MXEventsByTypesEnumeratorOnArray.h */,
+			);
+			path = EventsEnumerator;
+			sourceTree = "<group>";
+		};
 		320DFDC719DD99B60068622A /* Data */ = {
 			isa = PBXGroup;
 			children = (
+				320BBF3A1D6C7D9D0079890E /* EventsEnumerator */,
 				32114A831A262CE000FF2EC4 /* Store */,
 				320DFDCA19DD99B60068622A /* MXRoom.h */,
 				320DFDCB19DD99B60068622A /* MXRoom.m */,
@@ -686,7 +709,9 @@
 				3245A7521AF7B2930001D8A7 /* MXCallManager.h in Headers */,
 				3264E2A21BDF8D1500F89A86 /* MXCoreDataRoomState.h in Headers */,
 				3291D4D41A68FFEB00C3BA41 /* MXFileRoomStore.h in Headers */,
+				320BBF431D6C81550079890E /* MXEventsEnumeratorOnArray.h in Headers */,
 				32C6F93319DD814400EA4E9C /* MatrixSDK.h in Headers */,
+				320BBF3C1D6C7D9D0079890E /* MXEventsEnumerator.h in Headers */,
 				323D299A1D426F7000A80BE4 /* MXJingleVideoView.h in Headers */,
 				323E0C571A2F6E7D00A31D73 /* MXRoomPowerLevels.h in Headers */,
 				3245A7501AF7B2930001D8A7 /* MXCall.h in Headers */,
@@ -697,6 +722,7 @@
 				32481A841C03572900782AD3 /* MXRoomAccountData.h in Headers */,
 				3281E8B919E42DFE00976E1A /* MXJSONModels.h in Headers */,
 				323B2AFE1BCE9B6700B11F34 /* MXCoreDataEvent+CoreDataProperties.h in Headers */,
+				320BBF421D6C81550079890E /* MXEventsByTypesEnumeratorOnArray.h in Headers */,
 				323B2ADF1BCD4CB600B11F34 /* MXCoreDataAccount+CoreDataProperties.h in Headers */,
 				32CAB1071A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.h in Headers */,
 				32CAB10B1A925B41008C5BB9 /* MXHTTPOperation.h in Headers */,
@@ -916,6 +942,7 @@
 				322360531A8E610500A3CA81 /* MXPushRuleDisplayNameCondtionChecker.m in Sources */,
 				323E0C581A2F6E7D00A31D73 /* MXRoomPowerLevels.m in Sources */,
 				32DC15D51A8CF874006F9AD3 /* MXPushRuleEventMatchConditionChecker.m in Sources */,
+				320BBF411D6C81550079890E /* MXEventsByTypesEnumeratorOnArray.m in Sources */,
 				32CAB1081A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.m in Sources */,
 				3245A7511AF7B2930001D8A7 /* MXCall.m in Sources */,
 				327F8DB31C6112BA00581CA3 /* MXRoomThirdPartyInvite.m in Sources */,
@@ -951,6 +978,7 @@
 				32FE41371D0AB7070060835E /* MXEnumConstants.m in Sources */,
 				320DFDE119DD99B60068622A /* MXSession.m in Sources */,
 				F0C34CBB1C18C93700C36F09 /* MXSDKOptions.m in Sources */,
+				320BBF441D6C81550079890E /* MXEventsEnumeratorOnArray.m in Sources */,
 				320DFDDC19DD99B60068622A /* MXRoom.m in Sources */,
 				3291D4D51A68FFEB00C3BA41 /* MXFileRoomStore.m in Sources */,
 				329FB1801A0B665800A5E88E /* MXUser.m in Sources */,

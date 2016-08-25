@@ -216,9 +216,24 @@ FOUNDATION_EXPORT uint64_t const kMXUndefinedTimestamp;
 - (MXEventType)eventType;
 
 /**
- Indicates if the event hosts state data
+ Indicates if the event hosts state data.
  */
 - (BOOL)isState;
+
+/**
+ Indicates if the event has been redacted.
+ */
+- (BOOL)isRedactedEvent;
+
+/**
+ Return YES if the event is an emote event
+ */
+- (BOOL)isEmote;
+
+/**
+ Return YES when the event corresponds to a user profile change.
+ */
+- (BOOL)isUserProfileChange;
 
 /**
  Returns the event IDs for which a read receipt is defined in this event.

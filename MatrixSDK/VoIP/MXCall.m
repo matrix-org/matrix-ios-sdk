@@ -19,6 +19,9 @@
 #import "MXSession.h"
 #import "MXCallStackCall.h"
 
+#pragma mark - Constants definitions
+NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
+
 @interface MXCall ()
 {
     /**
@@ -66,19 +69,29 @@
 
 @implementation MXCall
 
-- (instancetype)initWithRoomId:(NSString *)roomId andCallManager:(MXCallManager *)callManager2
+- (instancetype)initWithRoomId:(NSString *)roomId andCallManager:(MXCallManager *)theCallManager
+{
+    // For 1:1 call, use the room as the call signaling room
+    return [self initWithRoomId:roomId callSignalingRoomId:roomId andCallManager:theCallManager];
+}
+
+- (instancetype)initWithRoomId:(NSString*)roomId callSignalingRoomId:(NSString*)callSignalingRoomId andCallManager:(MXCallManager*)theCallManager;
 {
     self = [super init];
     if (self)
     {
-        callManager = callManager2;
+        callManager = theCallManager;
 
         _room = [callManager.mxSession roomWithRoomId:roomId];
+        _callSignalingRoom = [callManager.mxSession roomWithRoomId:callSignalingRoomId];
 
         _callId = [[NSUUID UUID] UUIDString];
         _callerId = callManager.mxSession.myUser.userId;
 
         _state = MXCallStateFledgling;
+
+        // Consider we are using a conference call when there are more than 2 users
+        _isConferenceCall = (2 < _room.state.joinedMembers.count);
 
         localICECandidates = [NSMutableArray array];
 
@@ -115,7 +128,7 @@
         {
             callInviteEventContent = [MXCallInviteEventContent modelFromJSON:event.content];
 
-            if (NO == [event.sender isEqualToString:_room.mxSession.myUser.userId])
+            if (NO == [event.sender isEqualToString:_callSignalingRoom.mxSession.myUser.userId])
             {
                 // Incoming call
 
@@ -126,8 +139,8 @@
                 // Store if it is voice or video call
                 _isVideoCall = callInviteEventContent.isVideoCall;
 
-                // Set up the default audio route for this call type
-                callStackCall.audioToSpeaker = _isVideoCall;
+                // Set up the default audio route
+                callStackCall.audioToSpeaker = NO;
                 
                 [callStackCall startCapturingMediaWithVideo:self.isVideoCall success:^{
                     [callStackCall handleOffer:callInviteEventContent.offer.sdp];
@@ -200,7 +213,7 @@
 
         case MXEventTypeCallCandidates:
         {
-            if (NO == [event.sender isEqualToString:_room.mxSession.myUser.userId])
+            if (NO == [event.sender isEqualToString:_callSignalingRoom.mxSession.myUser.userId])
             {
                 MXCallCandidatesEventContent *content = [MXCallCandidatesEventContent modelFromJSON:event.content];
 
@@ -230,8 +243,8 @@
 
     [self setState:MXCallStateWaitLocalMedia reason:nil];
 
-    // Set up the default audio route for this call type
-    callStackCall.audioToSpeaker = video;
+    // Set up the default audio route
+    callStackCall.audioToSpeaker = NO;
 
     [callStackCall startCapturingMediaWithVideo:video success:^() {
 
@@ -251,7 +264,7 @@
                                       @"version": @(0),
                                       @"lifetime": @(callManager.inviteLifetime)
                                       };
-            [_room sendEventOfType:kMXEventTypeStringCallInvite content:content success:^(NSString *eventId) {
+            [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallInvite content:content success:^(NSString *eventId) {
 
                 [self setState:MXCallStateInviteSent reason:nil];
 
@@ -303,7 +316,7 @@
                                               },
                                       @"version": @(0),
                                       };
-            [_room sendEventOfType:kMXEventTypeStringCallAnswer content:content success:^(NSString *eventId) {
+            [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallAnswer content:content success:^(NSString *eventId) {
 
                 // @TODO: This is false
                 [self setState:MXCallStateConnected reason:nil];
@@ -335,7 +348,7 @@
                                   @"call_id": _callId,
                                   @"version": @(0)
                                   };
-        [_room sendEventOfType:kMXEventTypeStringCallHangup content:content success:nil failure:^(NSError *error) {
+        [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallHangup content:content success:nil failure:^(NSError *error) {
             NSLog(@"[MXCall] hangup: ERROR: Cannot send m.call.hangup event. Error: %@", error);
             [self didEncounterError:error];
         }];
@@ -364,6 +377,9 @@
     {
         [_delegate call:self stateDidChange:_state reason:event];
     }
+
+    // Broadcast the new call state
+    [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallStateDidChange object:self userInfo:nil];
 }
 
 - (void)setSelfVideoView:(UIView *)selfVideoView
@@ -427,6 +443,19 @@
     callStackCall.audioToSpeaker = audioToSpeaker;
 }
 
+- (AVCaptureDevicePosition)cameraPosition
+{
+    return callStackCall.cameraPosition;
+}
+
+- (void)setCameraPosition:(AVCaptureDevicePosition)cameraPosition
+{
+    if (cameraPosition != callStackCall.cameraPosition)
+    {
+        callStackCall.cameraPosition = cameraPosition;
+    }
+}
+
 - (NSUInteger)duration
 {
     NSUInteger duration = 0;
@@ -476,7 +505,7 @@
                                   @"candidates": localICECandidates
                                   };
 
-        [_room sendEventOfType:kMXEventTypeStringCallCandidates content:content success:nil failure:^(NSError *error) {
+        [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallCandidates content:content success:nil failure:^(NSError *error) {
             NSLog(@"[MXCall] onICECandidate: Warning: Cannot send m.call.candidates event. Error: %@", error);
         }];
 
