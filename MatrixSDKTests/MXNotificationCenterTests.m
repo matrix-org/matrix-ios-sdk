@@ -246,7 +246,7 @@
 
                 [aliceSession.notificationCenter listenToNotifications:^(MXEvent *event, MXRoomState *roomState, MXPushRule *rule) {
 
-                    XCTAssertEqual(rule.kind, MXPushRuleKindUnderride);
+                    XCTAssertEqual(rule.kind, MXPushRuleKindOverride);
 
                     MXPushRuleCondition *condition = rule.conditions[0];
 
@@ -369,7 +369,7 @@
                         XCTAssert(rule, @"A push rule must be found for this event: %@", event);
 
                         // Do the same test as in testDefaultDisplayNameCondition
-                        XCTAssertEqual(rule.kind, MXPushRuleKindUnderride);
+                        XCTAssertEqual(rule.kind, MXPushRuleKindOverride);
 
                         MXPushRuleCondition *condition = rule.conditions[0];
 
