@@ -504,7 +504,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
             backupEventStreamToken = nil;
 
             // Release the background task
-            dispatch_sync(dispatch_get_main_queue(), ^(void){
+            dispatch_async(dispatch_get_main_queue(), ^(void){
                 [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
                 backgroundTaskIdentifier = UIBackgroundTaskInvalid;
             });
