@@ -36,7 +36,7 @@
 
 @implementation MXEventsByTypesEnumeratorOnArray
 
-- (instancetype)initWithMessages:(NSMutableArray<MXEvent *> *)messages andTypesIn:(NSArray *)theTypes ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
+- (instancetype)initWithMessages:(NSArray<MXEvent *> *)messages andTypesIn:(NSArray *)theTypes ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
 {
     self = [super init];
     if (self)

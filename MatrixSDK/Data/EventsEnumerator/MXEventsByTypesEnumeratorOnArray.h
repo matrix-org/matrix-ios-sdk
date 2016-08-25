@@ -32,6 +32,6 @@
 
  @return the newly created instance.
  */
-- (instancetype)initWithMessages:(NSMutableArray<MXEvent*> *)messages andTypesIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
+- (instancetype)initWithMessages:(NSArray<MXEvent*> *)messages andTypesIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
 
 @end
