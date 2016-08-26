@@ -21,6 +21,7 @@ NSString *const kMXToolsRegexStringForEmailAddress          = @"[A-Z0-9._%+-]+@[
 NSString *const kMXToolsRegexStringForMatrixUserIdentifier  = @"@[A-Z0-9]+:[A-Z0-9.-]+\\.[A-Z]{2,}";
 NSString *const kMXToolsRegexStringForMatrixRoomAlias       = @"#[A-Z0-9._%+-]+:[A-Z0-9.-]+\\.[A-Z]{2,}";
 NSString *const kMXToolsRegexStringForMatrixRoomIdentifier  = @"![A-Z0-9]+:[A-Z0-9.-]+\\.[A-Z]{2,}";
+NSString *const kMXToolsRegexStringForMatrixEventIdentifier = @"\\$[A-Z0-9]+:[A-Z0-9.-]+\\.[A-Z]{2,}";
 
 
 #pragma mark - MXTools static private members
@@ -31,6 +32,7 @@ static NSRegularExpression *isEmailAddressRegex;
 static NSRegularExpression *isMatrixUserIdentifierRegex;
 static NSRegularExpression *isMatrixRoomAliasRegex;
 static NSRegularExpression *isMatrixRoomIdentifierRegex;
+static NSRegularExpression *isMatrixEventIdentifierRegex;
 
 
 @implementation MXTools
@@ -74,6 +76,8 @@ static NSRegularExpression *isMatrixRoomIdentifierRegex;
                                                                            options:NSRegularExpressionCaseInsensitive error:nil];
         isMatrixRoomIdentifierRegex = [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"^%@$", kMXToolsRegexStringForMatrixRoomIdentifier]
                                                                                 options:NSRegularExpressionCaseInsensitive error:nil];
+        isMatrixEventIdentifierRegex = [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"^%@$", kMXToolsRegexStringForMatrixEventIdentifier]
+                                                                                 options:NSRegularExpressionCaseInsensitive error:nil];
     });
 }
 
@@ -197,6 +201,11 @@ static NSRegularExpression *isMatrixRoomIdentifierRegex;
 + (BOOL)isMatrixRoomIdentifier:(NSString *)inputString
 {
     return (nil != [isMatrixRoomIdentifierRegex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
+}
+
++ (BOOL)isMatrixEventIdentifier:(NSString *)inputString
+{
+    return (nil != [isMatrixEventIdentifierRegex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
 }
 
 @end
