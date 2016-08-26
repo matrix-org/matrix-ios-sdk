@@ -37,6 +37,26 @@
 + (NSString*)generateSecret;
 
 /**
+ Removing new line characters from NSString.
+ The new line characters are replaced with a space character.
+ Only one space is used to replace successive new line characters spaced or not.
+
+ @return the resulting string.
+ */
++ (NSString*)stripNewlineCharacters:(NSString *)inputString;
+
+
+#pragma mark - Strings kinds check
+
+/**
+ Regular expressions to search for kinds of strings.
+ */
+FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForEmailAddress;
+FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForMatrixUserIdentifier;
+FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForMatrixRoomAlias;
+FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForMatrixRoomIdentifier;
+
+/**
  Check whether a string is formatted as an email address.
  
  @return YES if the provided string is formatted as an email.
@@ -63,14 +83,5 @@
  @return YES if the provided string is formatted as a matrix room identifier.
  */
 + (BOOL)isMatrixRoomIdentifier:(NSString *)inputString;
-
-/**
- Removing new line characters from NSString.
- The new line characters are replaced with a space character.
- Only one space is used to replace successive new line characters spaced or not.
- 
- @return the resulting string.
- */
-+ (NSString*)stripNewlineCharacters:(NSString *)inputString;
 
 @end

@@ -15,7 +15,38 @@
  */
 #import "MXTools.h"
 
+
+#pragma mark - Constant definition
+NSString *const kMXToolsRegexStringForEmailAddress          = @"[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}";
+NSString *const kMXToolsRegexStringForMatrixUserIdentifier  = @"@[A-Z0-9]+:[A-Z0-9.-]+\\.[A-Z]{2,}";
+NSString *const kMXToolsRegexStringForMatrixRoomAlias       = @"#[A-Z0-9._%+-]+:[A-Z0-9.-]+\\.[A-Z]{2,}";
+NSString *const kMXToolsRegexStringForMatrixRoomIdentifier  = @"![A-Z0-9]+:[A-Z0-9.-]+\\.[A-Z]{2,}";
+
+
+#pragma mark - MXTools static private members
+static NSRegularExpression *isEmailAddressRegex;
+static NSRegularExpression *isMatrixUserIdentifierRegex;
+static NSRegularExpression *isMatrixRoomAliasRegex;
+static NSRegularExpression *isMatrixRoomIdentifierRegex;
+
+
 @implementation MXTools
+
++ (void)initialize
+{
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+
+        isEmailAddressRegex =  [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"^%@$", kMXToolsRegexStringForEmailAddress]
+                                                                         options:NSRegularExpressionCaseInsensitive error:nil];
+        isMatrixUserIdentifierRegex = [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"^%@$", kMXToolsRegexStringForMatrixUserIdentifier]
+                                                                                options:NSRegularExpressionCaseInsensitive error:nil];
+        isMatrixRoomAliasRegex = [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"^%@$", kMXToolsRegexStringForMatrixRoomAlias]
+                                                                           options:NSRegularExpressionCaseInsensitive error:nil];
+        isMatrixRoomIdentifierRegex = [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"^%@$", kMXToolsRegexStringForMatrixRoomIdentifier]
+                                                                                options:NSRegularExpressionCaseInsensitive error:nil];
+    });
+}
 
 /**
  Mapping from MXEventTypeString to MXEventType
@@ -148,37 +179,32 @@
     return [[NSProcessInfo processInfo] globallyUniqueString];
 }
 
++ (NSString*)stripNewlineCharacters:(NSString *)inputString
+{
+    return [inputString stringByReplacingOccurrencesOfString:@" *[\n\r]+[\n\r ]*" withString:@" " options:NSRegularExpressionSearch range:NSMakeRange(0, [inputString length])];
+}
+
+
+#pragma mark - String kinds check
+
 + (BOOL)isEmailAddress:(NSString *)inputString
 {
-    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}$" options:NSRegularExpressionCaseInsensitive error:nil];
-    
-    return (nil != [regex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
+    return (nil != [isEmailAddressRegex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
 }
 
 + (BOOL)isMatrixUserIdentifier:(NSString *)inputString
 {
-    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"^@[A-Z0-9]+:[A-Z0-9.-]+\\.[A-Z]{2,}$" options:NSRegularExpressionCaseInsensitive error:nil];
-    
-    return (nil != [regex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
+    return (nil != [isMatrixUserIdentifierRegex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
 }
 
 + (BOOL)isMatrixRoomAlias:(NSString *)inputString
 {
-    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"^#[A-Z0-9._%+-]+:[A-Z0-9.-]+\\.[A-Z]{2,}$" options:NSRegularExpressionCaseInsensitive error:nil];
-    
-    return (nil != [regex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
+    return (nil != [isMatrixRoomAliasRegex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
 }
 
 + (BOOL)isMatrixRoomIdentifier:(NSString *)inputString
 {
-    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"^![A-Z0-9]+:[A-Z0-9.-]+\\.[A-Z]{2,}$" options:NSRegularExpressionCaseInsensitive error:nil];
-    
-    return (nil != [regex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
-}
-
-+ (NSString*)stripNewlineCharacters:(NSString *)inputString
-{
-    return [inputString stringByReplacingOccurrencesOfString:@" *[\n\r]+[\n\r ]*" withString:@" " options:NSRegularExpressionSearch range:NSMakeRange(0, [inputString length])];
+    return (nil != [isMatrixRoomIdentifierRegex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
 }
 
 @end
