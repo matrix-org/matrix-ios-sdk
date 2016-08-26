@@ -208,7 +208,7 @@
         }
     }
     
-    return aliases;
+    return aliases.count ? aliases : nil;
 }
 
 - (NSString*)canonicalAlias
