@@ -125,7 +125,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 
 - (void)setPartialTextMessage:(NSString *)partialTextMessage
 {
-    [mxSession.store storePartialTextMessageForRoom:self.state.roomId partialTextMessage:partialTextMessage];
+    [mxSession.store storePartialTextMessageForRoom:self.roomId partialTextMessage:partialTextMessage];
     if ([mxSession.store respondsToSelector:@selector(commit)])
     {
         [mxSession.store commit];
@@ -134,7 +134,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 
 - (NSString *)partialTextMessage
 {
-    return [mxSession.store partialTextMessageOfRoom:self.state.roomId];
+    return [mxSession.store partialTextMessageOfRoom:self.roomId];
 }
 
 
@@ -148,7 +148,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     for (MXEvent *event in roomSync.ephemeral.events)
     {
         // Report the room id in the event as it is skipped in /sync response
-        event.roomId = self.state.roomId;
+        event.roomId = self.roomId;
 
         // Handle first typing notifications
         if (event.eventType == MXEventTypeTypingNotification)
@@ -167,8 +167,8 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     }
     
     // Store notification counts from unreadNotifications field in /sync response
-    [mxSession.store storeNotificationCountOfRoom:self.state.roomId count:roomSync.unreadNotifications.notificationCount];
-    [mxSession.store storeHighlightCountOfRoom:self.state.roomId count:roomSync.unreadNotifications.highlightCount];
+    [mxSession.store storeNotificationCountOfRoom:self.roomId count:roomSync.unreadNotifications.notificationCount];
+    [mxSession.store storeHighlightCountOfRoom:self.roomId count:roomSync.unreadNotifications.highlightCount];
     
     // Notify that unread counts have been sync'ed
     [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomDidUpdateUnreadNotification
@@ -202,7 +202,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         // Update the store
         if ([mxSession.store respondsToSelector:@selector(storeAccountDataForRoom:userData:)])
         {
-            [mxSession.store storeAccountDataForRoom:self.state.roomId userData:_accountData];
+            [mxSession.store storeAccountDataForRoom:self.roomId userData:_accountData];
         }
 
         // And notify listeners
@@ -250,7 +250,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                             success:(void (^)(NSString *eventId))success
                             failure:(void (^)(NSError *error))failure
 {
-    return [mxSession.matrixRestClient sendEventToRoom:self.state.roomId eventType:eventTypeString content:content success:success failure:failure];
+    return [mxSession.matrixRestClient sendEventToRoom:self.roomId eventType:eventTypeString content:content success:success failure:failure];
 }
 
 - (MXHTTPOperation*)sendStateEventOfType:(MXEventTypeString)eventTypeString
@@ -258,7 +258,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                                  success:(void (^)(NSString *eventId))success
                                  failure:(void (^)(NSError *error))failure
 {
-    return [mxSession.matrixRestClient sendStateEventToRoom:self.state.roomId eventType:eventTypeString content:content success:success failure:failure];
+    return [mxSession.matrixRestClient sendStateEventToRoom:self.roomId eventType:eventTypeString content:content success:success failure:failure];
 }
 
 - (MXHTTPOperation*)sendMessageOfType:(MXMessageType)msgType
@@ -266,28 +266,28 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                               success:(void (^)(NSString *eventId))success
                               failure:(void (^)(NSError *error))failure
 {
-    return [mxSession.matrixRestClient sendMessageToRoom:self.state.roomId msgType:msgType content:content success:success failure:failure];
+    return [mxSession.matrixRestClient sendMessageToRoom:self.roomId msgType:msgType content:content success:success failure:failure];
 }
 
 - (MXHTTPOperation*)sendTextMessage:(NSString*)text
                             success:(void (^)(NSString *eventId))success
                             failure:(void (^)(NSError *error))failure
 {
-    return [mxSession.matrixRestClient sendTextMessageToRoom:self.state.roomId text:text success:success failure:failure];
+    return [mxSession.matrixRestClient sendTextMessageToRoom:self.roomId text:text success:success failure:failure];
 }
 
 - (MXHTTPOperation*)setTopic:(NSString*)topic
                      success:(void (^)())success
                      failure:(void (^)(NSError *error))failure
 {
-    return [mxSession.matrixRestClient setRoomTopic:self.state.roomId topic:topic success:success failure:failure];
+    return [mxSession.matrixRestClient setRoomTopic:self.roomId topic:topic success:success failure:failure];
 }
 
 - (MXHTTPOperation*)setAvatar:(NSString*)avatar
                      success:(void (^)())success
                      failure:(void (^)(NSError *error))failure
 {
-    return [mxSession.matrixRestClient setRoomAvatar:self.state.roomId avatar:avatar success:success failure:failure];
+    return [mxSession.matrixRestClient setRoomAvatar:self.roomId avatar:avatar success:success failure:failure];
 }
 
 
@@ -295,42 +295,42 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                     success:(void (^)())success
                     failure:(void (^)(NSError *error))failure
 {
-    return [mxSession.matrixRestClient setRoomName:self.state.roomId name:name success:success failure:failure];
+    return [mxSession.matrixRestClient setRoomName:self.roomId name:name success:success failure:failure];
 }
 
 - (MXHTTPOperation *)setHistoryVisibility:(MXRoomHistoryVisibility)historyVisibility
                                   success:(void (^)())success
                                   failure:(void (^)(NSError *))failure
 {
-    return [mxSession.matrixRestClient setRoomHistoryVisibility:self.state.roomId historyVisibility:historyVisibility success:success failure:failure];
+    return [mxSession.matrixRestClient setRoomHistoryVisibility:self.roomId historyVisibility:historyVisibility success:success failure:failure];
 }
 
 - (MXHTTPOperation*)setJoinRule:(MXRoomJoinRule)joinRule
                         success:(void (^)())success
                         failure:(void (^)(NSError *error))failure
 {
-    return [mxSession.matrixRestClient setRoomJoinRule:self.state.roomId joinRule:joinRule success:success failure:failure];
+    return [mxSession.matrixRestClient setRoomJoinRule:self.roomId joinRule:joinRule success:success failure:failure];
 }
 
 - (MXHTTPOperation*)setGuestAccess:(MXRoomGuestAccess)guestAccess
                            success:(void (^)())success
                            failure:(void (^)(NSError *error))failure
 {
-    return [mxSession.matrixRestClient setRoomGuestAccess:self.state.roomId guestAccess:guestAccess success:success failure:failure];
+    return [mxSession.matrixRestClient setRoomGuestAccess:self.roomId guestAccess:guestAccess success:success failure:failure];
 }
 
 - (MXHTTPOperation*)setDirectoryVisibility:(MXRoomDirectoryVisibility)directoryVisibility
                                    success:(void (^)())success
                                    failure:(void (^)(NSError *error))failure
 {
-    return [mxSession.matrixRestClient setRoomDirectoryVisibility:self.state.roomId directoryVisibility:directoryVisibility success:success failure:failure];
+    return [mxSession.matrixRestClient setRoomDirectoryVisibility:self.roomId directoryVisibility:directoryVisibility success:success failure:failure];
 }
 
 - (MXHTTPOperation*)addAlias:(NSString *)roomAlias
                      success:(void (^)())success
                      failure:(void (^)(NSError *error))failure
 {
-    return [mxSession.matrixRestClient addRoomAlias:self.state.roomId alias:roomAlias success:success failure:failure];
+    return [mxSession.matrixRestClient addRoomAlias:self.roomId alias:roomAlias success:success failure:failure];
 }
 
 - (MXHTTPOperation*)removeAlias:(NSString *)roomAlias
@@ -344,19 +344,19 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                               success:(void (^)())success
                               failure:(void (^)(NSError *error))failure
 {
-    return [mxSession.matrixRestClient setRoomCanonicalAlias:self.state.roomId canonicalAlias:canonicalAlias success:success failure:failure];
+    return [mxSession.matrixRestClient setRoomCanonicalAlias:self.roomId canonicalAlias:canonicalAlias success:success failure:failure];
 }
 
 - (MXHTTPOperation*)directoryVisibility:(void (^)(MXRoomDirectoryVisibility directoryVisibility))success
                                 failure:(void (^)(NSError *error))failure
 {
-    return [mxSession.matrixRestClient directoryVisibilityOfRoom:self.state.roomId success:success failure:failure];
+    return [mxSession.matrixRestClient directoryVisibilityOfRoom:self.roomId success:success failure:failure];
 }
 
 - (MXHTTPOperation*)join:(void (^)())success
                  failure:(void (^)(NSError *error))failure
 {
-    return [mxSession joinRoom:self.state.roomId success:^(MXRoom *room) {
+    return [mxSession joinRoom:self.roomId success:^(MXRoom *room) {
         success();
     } failure:failure];
 }
@@ -364,21 +364,21 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 - (MXHTTPOperation*)leave:(void (^)())success
                   failure:(void (^)(NSError *error))failure
 {
-    return [mxSession leaveRoom:self.state.roomId success:success failure:failure];
+    return [mxSession leaveRoom:self.roomId success:success failure:failure];
 }
 
 - (MXHTTPOperation*)inviteUser:(NSString*)userId
                        success:(void (^)())success
                        failure:(void (^)(NSError *error))failure
 {
-    return [mxSession.matrixRestClient inviteUser:userId toRoom:self.state.roomId success:success failure:failure];
+    return [mxSession.matrixRestClient inviteUser:userId toRoom:self.roomId success:success failure:failure];
 }
 
 - (MXHTTPOperation*)inviteUserByEmail:(NSString*)email
                               success:(void (^)())success
                               failure:(void (^)(NSError *error))failure
 {
-    return [mxSession.matrixRestClient inviteUserByEmail:email toRoom:self.state.roomId success:success failure:failure];
+    return [mxSession.matrixRestClient inviteUserByEmail:email toRoom:self.roomId success:success failure:failure];
 }
 
 - (MXHTTPOperation*)kickUser:(NSString*)userId
@@ -386,7 +386,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                      success:(void (^)())success
                      failure:(void (^)(NSError *error))failure
 {
-    return [mxSession.matrixRestClient kickUser:userId fromRoom:self.state.roomId reason:reason success:success failure:failure];
+    return [mxSession.matrixRestClient kickUser:userId fromRoom:self.roomId reason:reason success:success failure:failure];
 }
 
 - (MXHTTPOperation*)banUser:(NSString*)userId
@@ -394,14 +394,14 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                     success:(void (^)())success
                     failure:(void (^)(NSError *error))failure
 {
-    return [mxSession.matrixRestClient banUser:userId inRoom:self.state.roomId reason:reason success:success failure:failure];
+    return [mxSession.matrixRestClient banUser:userId inRoom:self.roomId reason:reason success:success failure:failure];
 }
 
 - (MXHTTPOperation*)unbanUser:(NSString*)userId
                       success:(void (^)())success
                       failure:(void (^)(NSError *error))failure
 {
-    return [mxSession.matrixRestClient unbanUser:userId inRoom:self.state.roomId success:success failure:failure];
+    return [mxSession.matrixRestClient unbanUser:userId inRoom:self.roomId success:success failure:failure];
 }
 
 - (MXHTTPOperation*)setPowerLevelOfUserWithUserID:(NSString *)userId powerLevel:(NSInteger)powerLevel
@@ -428,7 +428,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                                    success:(void (^)())success
                                    failure:(void (^)(NSError *error))failure
 {
-    return [mxSession.matrixRestClient sendTypingNotificationInRoom:self.state.roomId typing:typing timeout:timeout success:success failure:failure];
+    return [mxSession.matrixRestClient sendTypingNotificationInRoom:self.roomId typing:typing timeout:timeout success:success failure:failure];
 }
 
 - (MXHTTPOperation*)redactEvent:(NSString*)eventId
@@ -436,7 +436,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                         success:(void (^)())success
                         failure:(void (^)(NSError *error))failure
 {
-    return [mxSession.matrixRestClient redactEvent:eventId inRoom:self.state.roomId reason:reason success:success failure:failure];
+    return [mxSession.matrixRestClient redactEvent:eventId inRoom:self.roomId reason:reason success:success failure:failure];
 }
 
 - (MXHTTPOperation *)reportEvent:(NSString *)eventId
@@ -445,7 +445,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                          success:(void (^)())success
                          failure:(void (^)(NSError *))failure
 {
-    return [mxSession.matrixRestClient reportEvent:eventId inRoom:self.state.roomId score:score reason:reason success:success failure:failure];
+    return [mxSession.matrixRestClient reportEvent:eventId inRoom:self.roomId score:score reason:reason success:success failure:failure];
 }
 
 
@@ -462,7 +462,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     if ([mxSession.store respondsToSelector:@selector(storeOutgoingMessageForRoom:outgoingMessage:)]
         && [mxSession.store respondsToSelector:@selector(commit)])
     {
-        [mxSession.store storeOutgoingMessageForRoom:self.state.roomId outgoingMessage:outgoingMessage];
+        [mxSession.store storeOutgoingMessageForRoom:self.roomId outgoingMessage:outgoingMessage];
         [mxSession.store commit];
     }
 }
@@ -472,7 +472,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     if ([mxSession.store respondsToSelector:@selector(removeAllOutgoingMessagesFromRoom:)]
         && [mxSession.store respondsToSelector:@selector(commit)])
     {
-        [mxSession.store removeAllOutgoingMessagesFromRoom:self.state.roomId];
+        [mxSession.store removeAllOutgoingMessagesFromRoom:self.roomId];
         [mxSession.store commit];
     }
 }
@@ -482,7 +482,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     if ([mxSession.store respondsToSelector:@selector(removeOutgoingMessageFromRoom:outgoingMessage:)]
         && [mxSession.store respondsToSelector:@selector(commit)])
     {
-        [mxSession.store removeOutgoingMessageFromRoom:self.state.roomId outgoingMessage:outgoingMessageEventId];
+        [mxSession.store removeOutgoingMessageFromRoom:self.roomId outgoingMessage:outgoingMessageEventId];
         [mxSession.store commit];
     }
 }
@@ -499,7 +499,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 {
     if ([mxSession.store respondsToSelector:@selector(outgoingMessagesInRoom:)])
     {
-        return [mxSession.store outgoingMessagesInRoom:self.state.roomId];
+        return [mxSession.store outgoingMessagesInRoom:self.roomId];
     }
     else
     {
@@ -515,7 +515,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                    failure:(void (^)(NSError *error))failure
 {
     // _accountData.tags will be updated by the live streams
-    return [mxSession.matrixRestClient addTag:tag withOrder:order toRoom:self.state.roomId success:success failure:failure];
+    return [mxSession.matrixRestClient addTag:tag withOrder:order toRoom:self.roomId success:success failure:failure];
 }
 
 - (MXHTTPOperation*)removeTag:(NSString*)tag
@@ -523,7 +523,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                       failure:(void (^)(NSError *error))failure
 {
     // _accountData.tags will be updated by the live streams
-    return [mxSession.matrixRestClient removeTag:tag fromRoom:self.state.roomId success:success failure:failure];
+    return [mxSession.matrixRestClient removeTag:tag fromRoom:self.roomId success:success failure:failure];
 }
 
 - (MXHTTPOperation*)replaceTag:(NSString*)oldTag
@@ -571,7 +571,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 {
     if (mxSession.callManager)
     {
-        [mxSession.callManager placeCallInRoom:self.state.roomId withVideo:video success:success failure:failure];
+        [mxSession.callManager placeCallInRoom:self.roomId withVideo:video success:success failure:failure];
     }
     else if (failure)
     {
@@ -608,7 +608,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                     data.eventId = eventId;
                     data.ts = ((NSNumber*)[params objectForKey:@"ts"]).longLongValue;
                     
-                    managedEvents |= [mxSession.store storeReceipt:data inRoom:self.state.roomId];
+                    managedEvents |= [mxSession.store storeReceipt:data inRoom:self.roomId];
                 }
             }
         }
@@ -635,13 +635,24 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         // Sanity check on event id: Do not send read receipt on event without id
         if (event.eventId && ([event.eventId hasPrefix:kMXRoomInviteStateEventIdPrefix] == NO))
         {
+            // Check whether this is the current position of the user
+            NSString* myUserId = mxSession.myUser.userId;
+            MXReceiptData* currentData = [mxSession.store getReceiptInRoom:self.roomId forUserId:myUserId];
+            
+            if (currentData && [currentData.eventId isEqualToString:event.eventId])
+            {
+                // No change is required
+                return NO;
+            }
+            
+            // Update the oneself receipts
             MXReceiptData *data = [[MXReceiptData alloc] init];
 
-            data.userId = mxSession.myUser.userId;
+            data.userId = myUserId;
             data.eventId = event.eventId;
             data.ts = (uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000);
 
-            if ([mxSession.store storeReceipt:data inRoom:self.state.roomId])
+            if ([mxSession.store storeReceipt:data inRoom:self.roomId])
             {
                 if ([mxSession.store respondsToSelector:@selector(commit)])
                 {
@@ -650,7 +661,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 
                 if (sendReceipt)
                 {
-                    [mxSession.matrixRestClient sendReadReceipts:self.state.roomId eventId:event.eventId success:^(NSString *eventId) {
+                    [mxSession.matrixRestClient sendReadReceipts:self.roomId eventId:event.eventId success:^(NSString *eventId) {
 
                     } failure:^(NSError *error) {
 
@@ -669,22 +680,22 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 - (BOOL)hasUnreadEvents
 {
     // Check for unread events in store
-    return [mxSession.store hasUnreadEvents:self.state.roomId withTypeIn:_unreadEventTypes];
+    return [mxSession.store hasUnreadEvents:self.roomId withTypeIn:_unreadEventTypes];
 }
 
 - (NSUInteger)notificationCount
 {
-    return [mxSession.store notificationCountOfRoom:self.state.roomId];
+    return [mxSession.store notificationCountOfRoom:self.roomId];
 }
 
 - (NSUInteger)highlightCount
 {
-    return [mxSession.store highlightCountOfRoom:self.state.roomId];
+    return [mxSession.store highlightCountOfRoom:self.roomId];
 }
 
 - (NSArray*)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort
 {
-    NSArray *receipts = [mxSession.store getEventReceipts:self.state.roomId eventId:eventId sorted:sort];
+    NSArray *receipts = [mxSession.store getEventReceipts:self.roomId eventId:eventId sorted:sort];
     
     // if some receipts are found
     if (receipts)
@@ -723,7 +734,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 
 - (NSString *)description
 {
-    return [NSString stringWithFormat:@"<MXRoom: %p> %@: %@ - %@", self, self.state.roomId, self.state.name, self.state.topic];
+    return [NSString stringWithFormat:@"<MXRoom: %p> %@: %@ - %@", self, self.roomId, self.state.name, self.state.topic];
 }
 
 @end
