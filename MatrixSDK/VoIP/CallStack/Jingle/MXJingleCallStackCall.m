@@ -148,7 +148,6 @@
 {
     RTCSessionDescription *sessionDescription = [[RTCSessionDescription alloc] initWithType:RTCSdpTypeOffer sdp:sdpOffer];
 
-    __weak typeof(self) weakSelf = self;
     [peerConnection setRemoteDescription:sessionDescription completionHandler:^(NSError * _Nullable error) {
 
         NSLog(@"[MXJingleCallStackCall] setRemoteDescription: error: %@", error);
