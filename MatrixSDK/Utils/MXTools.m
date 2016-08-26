@@ -24,6 +24,9 @@ NSString *const kMXToolsRegexStringForMatrixRoomIdentifier  = @"![A-Z0-9]+:[A-Z0
 
 
 #pragma mark - MXTools static private members
+// Mapping from MXEventTypeString to MXEventType
+static NSDictionary*eventTypesMap;
+
 static NSRegularExpression *isEmailAddressRegex;
 static NSRegularExpression *isMatrixUserIdentifierRegex;
 static NSRegularExpression *isMatrixRoomAliasRegex;
@@ -37,6 +40,32 @@ static NSRegularExpression *isMatrixRoomIdentifierRegex;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
 
+        eventTypesMap = @{
+                          kMXEventTypeStringRoomName: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomName],
+                          kMXEventTypeStringRoomTopic: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomTopic],
+                          kMXEventTypeStringRoomAvatar: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomAvatar],
+                          kMXEventTypeStringRoomMember: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMember],
+                          kMXEventTypeStringRoomCreate: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomCreate],
+                          kMXEventTypeStringRoomJoinRules: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomJoinRules],
+                          kMXEventTypeStringRoomPowerLevels: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomPowerLevels],
+                          kMXEventTypeStringRoomAliases: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomAliases],
+                          kMXEventTypeStringRoomCanonicalAlias: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomCanonicalAlias],
+                          kMXEventTypeStringRoomHistoryVisibility: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomHistoryVisibility],
+                          kMXEventTypeStringRoomGuestAccess: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomGuestAccess],
+                          kMXEventTypeStringRoomMessage: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMessage],
+                          kMXEventTypeStringRoomMessageFeedback: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMessageFeedback],
+                          kMXEventTypeStringRoomRedaction: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomRedaction],
+                          kMXEventTypeStringRoomThirdPartyInvite: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomThirdPartyInvite],
+                          kMXEventTypeStringRoomTag: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomTag],
+                          kMXEventTypeStringPresence: [NSNumber numberWithUnsignedInteger:MXEventTypePresence],
+                          kMXEventTypeStringTypingNotification: [NSNumber numberWithUnsignedInteger:MXEventTypeTypingNotification],
+                          kMXEventTypeStringCallInvite: [NSNumber numberWithUnsignedInteger:MXEventTypeCallInvite],
+                          kMXEventTypeStringCallCandidates: [NSNumber numberWithUnsignedInteger:MXEventTypeCallCandidates],
+                          kMXEventTypeStringCallAnswer: [NSNumber numberWithUnsignedInteger:MXEventTypeCallAnswer],
+                          kMXEventTypeStringCallHangup: [NSNumber numberWithUnsignedInteger:MXEventTypeCallHangup],
+                          kMXEventTypeStringReceipt: [NSNumber numberWithUnsignedInteger:MXEventTypeReceipt]
+                          };
+
         isEmailAddressRegex =  [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"^%@$", kMXToolsRegexStringForEmailAddress]
                                                                          options:NSRegularExpressionCaseInsensitive error:nil];
         isMatrixUserIdentifierRegex = [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"^%@$", kMXToolsRegexStringForMatrixUserIdentifier]
@@ -48,46 +77,9 @@ static NSRegularExpression *isMatrixRoomIdentifierRegex;
     });
 }
 
-/**
- Mapping from MXEventTypeString to MXEventType
- */
-+ (NSDictionary*)eventTypesMap
-{
-    static NSDictionary *inst = nil;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        inst = @{
-                 kMXEventTypeStringRoomName: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomName],
-                 kMXEventTypeStringRoomTopic: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomTopic],
-                 kMXEventTypeStringRoomAvatar: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomAvatar],
-                 kMXEventTypeStringRoomMember: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMember],
-                 kMXEventTypeStringRoomCreate: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomCreate],
-                 kMXEventTypeStringRoomJoinRules: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomJoinRules],
-                 kMXEventTypeStringRoomPowerLevels: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomPowerLevels],
-                 kMXEventTypeStringRoomAliases: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomAliases],
-                 kMXEventTypeStringRoomCanonicalAlias: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomCanonicalAlias],
-                 kMXEventTypeStringRoomHistoryVisibility: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomHistoryVisibility],
-                 kMXEventTypeStringRoomGuestAccess: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomGuestAccess],
-                 kMXEventTypeStringRoomMessage: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMessage],
-                 kMXEventTypeStringRoomMessageFeedback: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMessageFeedback],
-                 kMXEventTypeStringRoomRedaction: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomRedaction],
-                 kMXEventTypeStringRoomThirdPartyInvite: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomThirdPartyInvite],
-                 kMXEventTypeStringRoomTag: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomTag],
-                 kMXEventTypeStringPresence: [NSNumber numberWithUnsignedInteger:MXEventTypePresence],
-                 kMXEventTypeStringTypingNotification: [NSNumber numberWithUnsignedInteger:MXEventTypeTypingNotification],
-                 kMXEventTypeStringCallInvite: [NSNumber numberWithUnsignedInteger:MXEventTypeCallInvite],
-                 kMXEventTypeStringCallCandidates: [NSNumber numberWithUnsignedInteger:MXEventTypeCallCandidates],
-                 kMXEventTypeStringCallAnswer: [NSNumber numberWithUnsignedInteger:MXEventTypeCallAnswer],
-                 kMXEventTypeStringCallHangup: [NSNumber numberWithUnsignedInteger:MXEventTypeCallHangup],
-                 kMXEventTypeStringReceipt: [NSNumber numberWithUnsignedInteger:MXEventTypeReceipt]
-                 };
-    });
-    return inst;
-}
-
 + (MXEventTypeString)eventTypeString:(MXEventType)eventType
 {
-    NSArray *matches = [[MXTools eventTypesMap] allKeysForObject:[NSNumber numberWithUnsignedInteger:eventType]];
+    NSArray *matches = [eventTypesMap allKeysForObject:[NSNumber numberWithUnsignedInteger:eventType]];
     return [matches lastObject];
 }
 
@@ -95,7 +87,7 @@ static NSRegularExpression *isMatrixRoomIdentifierRegex;
 {
     MXEventType eventType = MXEventTypeCustom;
 
-    NSNumber *number = [[MXTools eventTypesMap] objectForKey:eventTypeString];
+    NSNumber *number = [eventTypesMap objectForKey:eventTypeString];
     if (number)
     {
         eventType = [number unsignedIntegerValue];
