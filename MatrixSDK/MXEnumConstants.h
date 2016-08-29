@@ -135,3 +135,9 @@ typedef enum : NSUInteger
     // These events come from a back pagination.
     MXTimelineDirectionBackwards
 } MXTimelineDirection;
+
+/**
+ The matrix.to base URL.
+ */
+FOUNDATION_EXPORT NSString *const kMXMatrixDotToUrl;
+
