@@ -92,4 +92,23 @@ FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForMatrixEventIdentifier;
  */
 + (BOOL)isMatrixEventIdentifier:(NSString *)inputString;
 
+
+#pragma mark - Permalink
+/*
+ Return a matrix.to permalink to a room.
+
+ @param roomIdOrAlias the id or the alias of the room to link to.
+ @return the matrix.to permalink.
+ */
++ (NSString*)permalinkToRoom:(NSString*)roomIdOrAlias;
+
+/*
+ Return a matrix.to permalink to an event.
+
+ @param eventId the id of the event to link to.
+ @param roomIdOrAlias the room the event belongs to.
+ @return the matrix.to permalink.
+ */
++ (NSString*)permalinkToEvent:(NSString*)eventId inRoom:(NSString*)roomIdOrAlias;
+
 @end

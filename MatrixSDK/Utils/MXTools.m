@@ -15,6 +15,7 @@
  */
 #import "MXTools.h"
 
+#import "MXEnumConstants.h"
 
 #pragma mark - Constant definition
 NSString *const kMXToolsRegexStringForEmailAddress          = @"[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}";
@@ -206,6 +207,19 @@ static NSRegularExpression *isMatrixEventIdentifierRegex;
 + (BOOL)isMatrixEventIdentifier:(NSString *)inputString
 {
     return (nil != [isMatrixEventIdentifierRegex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
+}
+
+
+#pragma mark - Permalink
++ (NSString *)permalinkToRoom:(NSString *)roomIdOrAlias
+{
+    return [NSString stringWithFormat:@"%@/#/%@", kMXMatrixDotToUrl, roomIdOrAlias];
+}
+
++ (NSString *)permalinkToEvent:(NSString *)eventId inRoom:(NSString *)roomIdOrAlias
+{
+    return [NSString stringWithFormat:@"%@/#/%@/%@", kMXMatrixDotToUrl, roomIdOrAlias, eventId];
+
 }
 
 @end

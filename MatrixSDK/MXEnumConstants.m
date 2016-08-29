@@ -46,3 +46,4 @@ NSString *const kMXRoomGuestAccessForbidden = @"forbidden";
 
 NSString *const kMXRoomMessageFormatHTML = @"org.matrix.custom.html";
 
+NSString *const kMXMatrixDotToUrl = @"https://matrix.to";
