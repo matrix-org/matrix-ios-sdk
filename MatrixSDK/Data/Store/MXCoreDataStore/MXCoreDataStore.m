@@ -354,10 +354,10 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     return nil;
 }
 
-- (BOOL)hasUnreadEvents:(NSString*)roomId withTypeIn:(NSArray*)types
+- (NSUInteger)localUnreadEventCount:(NSString*)roomId withTypeIn:(NSArray*)types
 {
     // TODO
-    return NO;
+    return 0;
 }
 
 - (BOOL)isPermanent

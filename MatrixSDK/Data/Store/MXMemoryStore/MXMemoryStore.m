@@ -174,7 +174,6 @@
     return roomStore.partialTextMessage;
 }
 
-
 - (NSArray*)getEventReceipts:(NSString*)roomId eventId:(NSString*)eventId sorted:(BOOL)sort
 {
     NSMutableArray* receipts = [[NSMutableArray alloc] init];
@@ -252,10 +251,11 @@
     return nil;
 }
 
-- (BOOL)hasUnreadEvents:(NSString*)roomId withTypeIn:(NSArray*)types
+- (NSUInteger)localUnreadEventCount:(NSString*)roomId withTypeIn:(NSArray*)types
 {
     MXMemoryRoomStore* store = [roomStores valueForKey:roomId];
     NSMutableDictionary* receipsByUserId = [receiptsByRoomId objectForKey:roomId];
+    NSUInteger count = 0;
     
     if (store && receipsByUserId)
     {
@@ -271,14 +271,13 @@
             {
                 if (event.redactedBecause == nil)
                 {
-                    // There is at least one unread event - Done
-                    return YES;
+                    count ++;
                 }
             }
         }
     }
    
-    return NO;
+    return count;
 }
 
 - (BOOL)isPermanent

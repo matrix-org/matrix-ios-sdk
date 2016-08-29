@@ -253,9 +253,9 @@
     return nil;
 }
 
-- (BOOL)hasUnreadEvents:(NSString*)roomId withTypeIn:(NSArray*)types
+- (NSUInteger)localUnreadEventCount:(NSString*)roomId withTypeIn:(NSArray*)types
 {
-    return NO;
+    return 0;
 }
 
 

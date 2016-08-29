@@ -99,10 +99,12 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 @property (nonatomic, readonly) NSArray *typingUsers;
 
 /**
- Tell whether the room has unread events.
- This value depends on unreadEventTypes.
+ The number of unread events wrote in the store which have their type listed in the 'unreadEventTypes' array.
+ 
+ @discussion: The returned count is relative to the local storage. The actual unread messages
+ for a room may be higher than the returned value.
  */
-@property (nonatomic, readonly) BOOL hasUnreadEvents;
+@property (nonatomic, readonly) NSUInteger localUnreadEventCount;
 
 /**
  The number of unread messages that match the push notification rules.
@@ -700,6 +702,18 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  @param
  */
 - (BOOL)handleReceiptEvent:(MXEvent *)event direction:(MXTimelineDirection)direction;
+
+/**
+ If the event was not acknowledged yet, this method acknowlegdes it by sending a receipt event.
+ This will indicate to the homeserver that the user has read up to this event.
+ 
+ @discussion If the type of the provided event is not defined in acknowledgableEventTypes,
+ this method acknowlegdes the first prior event of type defined in acknowledgableEventTypes.
+ 
+ @param event the event to acknowlegde.
+ @return true if there is an update
+ */
+- (BOOL)acknowledgeEvent:(MXEvent*)event;
 
 /**
  Acknowlegde the latest event of type defined in acknowledgableEventTypes.
