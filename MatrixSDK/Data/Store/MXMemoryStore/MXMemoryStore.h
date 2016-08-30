@@ -25,12 +25,15 @@
 {
     @protected
     NSMutableDictionary *roomStores;
-    
-    @protected
-    // dict of dict of MXReceiptData indexed by userId
+
+    // All matrix users known by the user
+    // The keys are user ids.
+    NSMutableDictionary <NSString*, MXUser*> *users;
+
+    // Dict of dict of MXReceiptData indexed by userId
     NSMutableDictionary *receiptsByRoomId;
-    
-    @protected
+
+    // The user credentials
     MXCredentials *credentials;
 }
 

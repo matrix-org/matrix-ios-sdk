@@ -22,10 +22,11 @@
 
 #import "MXFileStoreMetaData.h"
 
-NSUInteger const kMXFileVersion = 31;
+NSUInteger const kMXFileVersion = 32;
 
 NSString *const kMXFileStoreFolder = @"MXFileStore";
 NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
+NSString *const kMXFileStoreUsersFile = @"users";
 NSString *const kMXFileStoreBackupFolder = @"backup";
 
 NSString *const kMXFileStoreSavingMarker = @"savingMarker";
@@ -62,8 +63,11 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     // The path of the rooms folder
     NSString *storeRoomsPath;
 
-    // Flag to indicate metaData needs to be store
+    // Flag to indicate metaData needs to be stored
     BOOL metaDataHasChanged;
+
+    // Flag to indicate users needs to be stored
+    BOOL usersHasChanged;
 
     // Cache used to preload room states while the store is opening.
     // It is filled on the separate thread so that the UI thread will not be blocked
@@ -103,6 +107,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         preloadedRoomAccountData = [NSMutableDictionary dictionary];
 
         metaDataHasChanged = NO;
+        usersHasChanged = NO;
 
         dispatchQueue = dispatch_queue_create("MXFileStoreDispatchQueue", DISPATCH_QUEUE_SERIAL);
         backgroundTaskIdentifier = UIBackgroundTaskInvalid;
@@ -186,6 +191,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
                 [self preloadRoomsStates];
                 [self preloadRoomsAccountData];
                 [self loadReceipts];
+                [self loadUsers];
 
                 NSLog(@"[MXFileStore] Data loaded from files in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
             }
@@ -430,8 +436,22 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     return roomUserdData;
 }
 
+
+#pragma mark - Matrix users
+- (void)storeUser:(MXUser *)user
+{
+    // Do not change user while [self saveUsers] is running
+    @synchronized (users)
+    {
+        [super storeUser:user];
+    }
+
+    usersHasChanged = YES;
+}
+
 - (void)setUserDisplayname:(NSString *)userDisplayname
 {
+    // TODO: manu
     if (metaData && NO == [metaData.userDisplayName isEqualToString:userDisplayname])
     {
         metaData.userDisplayName = userDisplayname;
@@ -441,11 +461,13 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
 - (NSString *)userDisplayname
 {
+    // TODO: manu
     return metaData.userDisplayName;
 }
 
 - (void)setUserAvatarUrl:(NSString *)userAvatarUrl
 {
+    // TODO: manu
     if (metaData && NO == [metaData.userAvatarUrl isEqualToString:userAvatarUrl])
     {
         metaData.userAvatarUrl = userAvatarUrl;
@@ -455,6 +477,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
 - (NSString *)userAvatarUrl
 {
+    // TODO: manu
     return metaData.userAvatarUrl;
 }
 
@@ -495,6 +518,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         [self saveRoomsState];
         [self saveRoomsAccountData];
         [self saveReceipts];
+        [self saveUsers];
         [self saveMetaData];
         
         // The data saving is completed: remove the backuped data.
@@ -599,6 +623,18 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     else
     {
         return [[storeBackupPath stringByAppendingPathComponent:backupEventStreamToken] stringByAppendingPathComponent:kMXFileStoreMedaDataFile];
+    }
+}
+
+- (NSString*)usersFileForBackup:(BOOL)backup
+{
+    if (!backup)
+    {
+        return [storePath stringByAppendingPathComponent:kMXFileStoreUsersFile];
+    }
+    else
+    {
+        return [[storeBackupPath stringByAppendingPathComponent:backupEventStreamToken] stringByAppendingPathComponent:kMXFileStoreUsersFile];
     }
 }
 
@@ -962,6 +998,57 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
             // Store new data
             [NSKeyedArchiver archiveRootObject:metaData2 toFile:file];
+        });
+    }
+}
+
+#pragma mark - Matrix users
+/**
+ Preload all users.
+
+ This operation must be called on the `dispatchQueue` thread to avoid blocking the main thread.
+ */
+- (void)loadUsers
+{
+    NSDate *startDate = [NSDate date];
+
+    NSString *usersFile = [self usersFileForBackup:NO];
+
+    @try
+    {
+        users = [NSKeyedUnarchiver unarchiveObjectWithFile:usersFile];
+    }
+    @catch (NSException *exception)
+    {
+        NSLog(@"[MXFileStore] Warning: MXFileStore users has been corrupted");
+    }
+
+    NSLog(@"[MXFileStore] Loaded %tu MXUsers in %.0fms", users.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+}
+
+- (void)saveUsers
+{
+    // Save only in case of change
+    if (usersHasChanged)
+    {
+        usersHasChanged = NO;
+
+        dispatch_async(dispatchQueue, ^(void){
+
+            NSString *file = [self usersFileForBackup:NO];
+            NSString *backupFile = [self usersFileForBackup:YES];
+
+            // Backup the file
+            if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
+            {
+                [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
+            }
+
+            @synchronized (users)
+            {
+                // Store new data
+                [NSKeyedArchiver archiveRootObject:users toFile:file];
+            }
         });
     }
 }

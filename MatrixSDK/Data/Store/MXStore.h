@@ -18,6 +18,7 @@
 #import "MXJSONModels.h"
 #import "MXEvent.h"
 #import "MXReceiptData.h"
+#import "MXUser.h"
 #import "MXRoomAccountData.h"
 
 #import "MXEventsEnumerator.h"
@@ -284,6 +285,28 @@
 - (MXRoomAccountData*)accountDataOfRoom:(NSString*)roomId;
 
 
+#pragma mark - Matrix users
+/**
+ Store a matrix user.
+ */
+- (void)storeUser:(MXUser*)user;
+
+/**
+ Get the list of all stored matrix users.
+
+ @return an array of MXUsers.
+ */
+- (NSArray<MXUser*>*)users;
+
+/**
+ Get a matrix user.
+
+ @param userId The id to the user.
+ @return the MXUser instance or nil if not found.
+ */
+- (MXUser*)userWithUserId:(NSString*)userId;
+
+
 #pragma mark - Outgoing events
 /**
  Store into the store an outgoing message event being sent in a room.
@@ -320,6 +343,7 @@
 /**
  Store/retrieve the user display name.
  */
+// TODO: manu
 @property (nonatomic) NSString *userDisplayname;
 
 /**

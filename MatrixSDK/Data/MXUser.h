@@ -26,7 +26,7 @@
 /**
  `MXUser` represents a user in Matrix.
  */
-@interface MXUser : NSObject
+@interface MXUser : NSObject <NSCoding>
 {
     // Let property members accessible to children classes
     NSString *_displayname;
@@ -81,7 +81,7 @@
  Create an instance for an user ID.
  
  @param userId The id to the user.
- @param mxSession the mxSession to the home server.
+ @param mxSession the mxSession to the home server. // TODO: manu
  
  @return the newly created MXUser instance.
  */

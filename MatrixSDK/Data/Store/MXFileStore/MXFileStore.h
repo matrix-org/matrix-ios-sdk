@@ -39,6 +39,7 @@
                     L receipts
                 + ...
             L MXFileStore : Information about the stored data
+            L users: all MXUsers known by the user
             + backup : This folder contains backup of files that are modified during
                   the commit process. It is flushed when the commit completes.
                   This allows to rollback to previous data if the commit process was
@@ -49,6 +50,7 @@
                         + {roomIdB}
                         + ...
                     L MXFileStore
+                    L users
  */
 @interface MXFileStore : MXMemoryStore
 

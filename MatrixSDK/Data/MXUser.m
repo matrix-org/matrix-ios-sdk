@@ -170,4 +170,33 @@
     }
 }
 
+
+#pragma mark - NSCoding
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super init];
+    if (self)
+    {
+        _userId = [aDecoder decodeObjectForKey:@"userId"];
+        _displayname = [aDecoder decodeObjectForKey:@"displayname"];
+        _avatarUrl = [aDecoder decodeObjectForKey:@"_avatarUrl"];
+        _presence = [(NSNumber*)[aDecoder decodeObjectForKey:@"presence"] unsignedIntegerValue];
+        lastActiveLocalTS = [(NSNumber*)[aDecoder decodeObjectForKey:@"lastActiveLocalTS"] unsignedLongLongValue];
+        _currentlyActive = [(NSNumber*)[aDecoder decodeObjectForKey:@"currentlyActive"] boolValue];
+        _statusMsg = [aDecoder decodeObjectForKey:@"_statusMsg"];
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    [aCoder encodeObject:_userId forKey:@"userId"];
+    [aCoder encodeObject:_displayname forKey:@"displayname"];
+    [aCoder encodeObject:_avatarUrl forKey:@"avatarUrl"];
+    [aCoder encodeObject:@(_presence) forKey:@"presence"];
+    [aCoder encodeObject:@(lastActiveLocalTS) forKey:@"lastActiveLocalTS"];
+    [aCoder encodeObject:@(_currentlyActive) forKey:@"currentlyActive"];
+    [aCoder encodeObject:_statusMsg forKey:@"statusMsg"];
+}
+
 @end

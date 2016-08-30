@@ -62,12 +62,6 @@ typedef void (^MXOnResumeDone)();
     NSMutableDictionary<NSString*, MXRoom*> *rooms;
     
     /**
-     Users data
-     Each key is a user ID. Each value, the MXUser instance.
-     */
-    NSMutableDictionary *users;
-    
-    /**
      Private one-to-one rooms data
      Each key is a user ID. Each value is an array of MXRoom instances (in chronological order).
      */
@@ -131,7 +125,6 @@ typedef void (^MXOnResumeDone)();
     {
         matrixRestClient = mxRestClient;
         rooms = [NSMutableDictionary dictionary];
-        users = [NSMutableDictionary dictionary];
         oneToOneRooms = [NSMutableDictionary dictionary];
         globalEventListeners = [NSMutableArray array];
         syncMessagesLimit = -1;
@@ -192,9 +185,13 @@ typedef void (^MXOnResumeDone)();
             NSLog(@"[MXSession] Loading room state events to build MXRoom objects...");
 
             // Create the user's profile from the store
+
+            // TODO: manu
             _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId andDisplayname:_store.userDisplayname andAvatarUrl:_store.userAvatarUrl andMatrixSession:self];
+
             // And store him as a common MXUser
-            users[matrixRestClient.credentials.userId] = _myUser;
+            //[store storeUser:_myUser];
+            //users[matrixRestClient.credentials.userId] = _myUser;
 
             // Load user account data
             [self handleAccountData:_store.userAccountData];
@@ -294,15 +291,18 @@ typedef void (^MXOnResumeDone)();
     {
         // Get data from the home server
         // First of all, retrieve the user's profile information
+        // TODO: manu
         [matrixRestClient displayNameForUser:matrixRestClient.credentials.userId success:^(NSString *displayname) {
 
             [matrixRestClient avatarUrlForUser:matrixRestClient.credentials.userId success:^(NSString *avatarUrl) {
 
+                // TODO: manu
                 // Create the user's profile
                 _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId andDisplayname:displayname andAvatarUrl:avatarUrl andMatrixSession:self];
 
+                // TODO: manu
                 // And store him as a common MXUser
-                users[matrixRestClient.credentials.userId] = _myUser;
+                //users[matrixRestClient.credentials.userId] = _myUser;
                     
                 // Initial server sync
                 [self serverSyncWithServerTimeout:0 success:onServerSyncDone failure:^(NSError *error) {
@@ -428,6 +428,12 @@ typedef void (^MXOnResumeDone)();
     [eventStreamRequest cancel];
     eventStreamRequest = nil;
 
+    // Clean MXUsers
+    for (MXUser *user in self.users)
+    {
+        [user removeAllListeners];
+    }
+    
     // Flush the store
     if ([_store respondsToSelector:@selector(close)])
     {
@@ -442,13 +448,6 @@ typedef void (^MXOnResumeDone)();
         [room.liveTimeline removeAllListeners];
     }
     [rooms removeAllObjects];
-
-    // Clean MXUsers
-    for (MXUser *user in users.allValues)
-    {
-        [user removeAllListeners];
-    }
-    [users removeAllObjects];
 
     // Clean peeking rooms
     for (MXPeekingRoom *peekingRoom in peekingRooms)
@@ -829,6 +828,8 @@ typedef void (^MXOnResumeDone)();
     {
         MXUser *user = [self getOrCreateUser:userId];
         [user updateWithPresenceEvent:event];
+
+        [_store storeUser:user];
     }
 
     [self notifyListeners:event direction:direction];
@@ -1341,12 +1342,12 @@ typedef void (^MXOnResumeDone)();
 #pragma mark - Matrix users
 - (MXUser *)userWithUserId:(NSString *)userId
 {
-    return [users objectForKey:userId];
+    return [_store userWithUserId:userId];
 }
 
 - (NSArray *)users
 {
-    return [users allValues];
+    return _store.users;
 }
 
 - (MXUser *)getOrCreateUser:(NSString *)userId
@@ -1356,7 +1357,6 @@ typedef void (^MXOnResumeDone)();
     if (nil == user)
     {
         user = [[MXUser alloc] initWithUserId:userId andMatrixSession:self];
-        [users setObject:user forKey:userId];
     }
     return user;
 }

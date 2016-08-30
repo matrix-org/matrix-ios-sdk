@@ -47,6 +47,8 @@
 /**
  User information
  */
+//TODO: manu
+
 @property (nonatomic) NSString *userDisplayName;
 @property (nonatomic) NSString *userAvatarUrl;
 
