@@ -449,37 +449,6 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     usersHasChanged = YES;
 }
 
-- (void)setUserDisplayname:(NSString *)userDisplayname
-{
-    // TODO: manu
-    if (metaData && NO == [metaData.userDisplayName isEqualToString:userDisplayname])
-    {
-        metaData.userDisplayName = userDisplayname;
-        metaDataHasChanged = YES;
-    }
-}
-
-- (NSString *)userDisplayname
-{
-    // TODO: manu
-    return metaData.userDisplayName;
-}
-
-- (void)setUserAvatarUrl:(NSString *)userAvatarUrl
-{
-    // TODO: manu
-    if (metaData && NO == [metaData.userAvatarUrl isEqualToString:userAvatarUrl])
-    {
-        metaData.userAvatarUrl = userAvatarUrl;
-        metaDataHasChanged = YES;
-    }
-}
-
-- (NSString *)userAvatarUrl
-{
-    // TODO: manu
-    return metaData.userAvatarUrl;
-}
 
 - (void)setUserAccountData:(NSDictionary *)userAccountData
 {

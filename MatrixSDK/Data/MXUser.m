@@ -179,11 +179,11 @@
     {
         _userId = [aDecoder decodeObjectForKey:@"userId"];
         _displayname = [aDecoder decodeObjectForKey:@"displayname"];
-        _avatarUrl = [aDecoder decodeObjectForKey:@"_avatarUrl"];
+        _avatarUrl = [aDecoder decodeObjectForKey:@"avatarUrl"];
         _presence = [(NSNumber*)[aDecoder decodeObjectForKey:@"presence"] unsignedIntegerValue];
         lastActiveLocalTS = [(NSNumber*)[aDecoder decodeObjectForKey:@"lastActiveLocalTS"] unsignedLongLongValue];
         _currentlyActive = [(NSNumber*)[aDecoder decodeObjectForKey:@"currentlyActive"] boolValue];
-        _statusMsg = [aDecoder decodeObjectForKey:@"_statusMsg"];
+        _statusMsg = [aDecoder decodeObjectForKey:@"statusMsg"];
     }
     return self;
 }

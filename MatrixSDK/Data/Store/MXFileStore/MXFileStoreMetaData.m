@@ -28,8 +28,6 @@
         _userId = dict[@"userId"];
         _accessToken = dict[@"accessToken"];
         _eventStreamToken = dict[@"eventStreamToken"];
-        _userDisplayName = dict[@"userDisplayName"];
-        _userAvatarUrl = dict[@"userAvatarUrl"];
         _userAccountData = dict[@"userAccountData"];
 
         NSNumber *version = dict[@"version"];
@@ -53,14 +51,6 @@
     {
         dict[@"eventStreamToken"] = _eventStreamToken;
     }
-    if (_userDisplayName)
-    {
-        dict[@"userDisplayName"] = _userDisplayName;
-    }
-    if (_userAvatarUrl)
-    {
-        dict[@"userAvatarUrl"] = _userAvatarUrl;
-    }
     if (_userAccountData)
     {
         dict[@"userAccountData"] = _userAccountData;
@@ -78,8 +68,6 @@
     metaData->_accessToken = [_accessToken copyWithZone:zone];
     metaData->_version = _version;
     metaData->_eventStreamToken = [_eventStreamToken copyWithZone:zone];
-    metaData->_userDisplayName = [_userDisplayName copyWithZone:zone];
-    metaData->_userAvatarUrl = [_userAvatarUrl copyWithZone:zone];
     metaData->_userAccountData = [_userAccountData copyWithZone:zone];
 
     return metaData;

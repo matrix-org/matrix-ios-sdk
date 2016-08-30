@@ -863,16 +863,14 @@
 
             [store deleteAllData];
 
-            XCTAssertNil(store.userDisplayname);
-            XCTAssertNil(store.userAvatarUrl);
+            XCTAssertNil([store userWithUserId:aliceRestClient.credentials.userId]);
 
             if ([store respondsToSelector:@selector(close)])
             {
                 [store close];
             }
 
-            XCTAssertNil(store.userDisplayname);
-            XCTAssertNil(store.userAvatarUrl);
+            XCTAssertNil([store userWithUserId:aliceRestClient.credentials.userId]);
 
             // Let's (and verify) MXSession start update the store with user information
             mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
@@ -881,6 +879,11 @@
 
                 [mxSession start:^{
 
+                    MXUser *myUser = [mxSession userWithUserId:aliceRestClient.credentials.userId];
+                    XCTAssertEqual(myUser, mxSession.myUser);
+                    XCTAssertEqualObjects(myUser.displayname, kMXTestsAliceDisplayName);
+                    XCTAssertEqualObjects(myUser.avatarUrl, kMXTestsAliceAvatarURL);
+
                     [mxSession close];
                     mxSession = nil;
 
@@ -888,8 +891,10 @@
                     id<MXStore> store2 = [[mxStoreClass alloc] init];
                     [store2 openWithCredentials:matrixSDKTestsData.aliceCredentials onComplete:^{
 
-                        XCTAssertEqualObjects(store2.userDisplayname, kMXTestsAliceDisplayName);
-                        XCTAssertEqualObjects(store2.userAvatarUrl, kMXTestsAliceAvatarURL);
+                        MXUser *myUser = [store2 userWithUserId:aliceRestClient.credentials.userId];
+                        XCTAssert([myUser isKindOfClass:MXMyUser.class]);
+                        XCTAssertEqualObjects(myUser.displayname, kMXTestsAliceDisplayName);
+                        XCTAssertEqualObjects(myUser.avatarUrl, kMXTestsAliceAvatarURL);
 
                         if ([store2 respondsToSelector:@selector(close)])
                         {
@@ -931,8 +936,9 @@
             // Make sure to start from an empty store
             [store deleteAllData];
 
-            XCTAssertNil(store.userDisplayname);
-            XCTAssertNil(store.userAvatarUrl);
+            MXUser *myUser = [store userWithUserId:matrixSDKTestsData.bobCredentials.userId];
+
+            XCTAssertNil(myUser);
             XCTAssertEqual(store.rooms.count, 0);
 
             if ([store respondsToSelector:@selector(close)])

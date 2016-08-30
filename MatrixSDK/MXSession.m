@@ -162,10 +162,6 @@ typedef void (^MXOnResumeDone)();
         NSParameterAssert([_store respondsToSelector:@selector(rooms)]);
         NSParameterAssert([_store respondsToSelector:@selector(storeStateForRoom:stateEvents:)]);
         NSParameterAssert([_store respondsToSelector:@selector(stateOfRoom:)]);
-        NSParameterAssert([_store respondsToSelector:@selector(userDisplayname)]);
-        NSParameterAssert([_store respondsToSelector:@selector(setUserDisplayname:)]);
-        NSParameterAssert([_store respondsToSelector:@selector(userAvatarUrl)]);
-        NSParameterAssert([_store respondsToSelector:@selector(setUserAvatarUrl:)]);
     }
 
     NSDate *startDate = [NSDate date];
@@ -185,13 +181,10 @@ typedef void (^MXOnResumeDone)();
             NSLog(@"[MXSession] Loading room state events to build MXRoom objects...");
 
             // Create the user's profile from the store
+            MXUser *myUser = [_store userWithUserId:matrixRestClient.credentials.userId];
+            NSAssert([myUser isKindOfClass:MXMyUser.class], @"Dede");
 
-            // TODO: manu
-            _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId andDisplayname:_store.userDisplayname andAvatarUrl:_store.userAvatarUrl andMatrixSession:self];
-
-            // And store him as a common MXUser
-            //[store storeUser:_myUser];
-            //users[matrixRestClient.credentials.userId] = _myUser;
+            _myUser = (MXMyUser*)myUser;
 
             // Load user account data
             [self handleAccountData:_store.userAccountData];
@@ -291,18 +284,15 @@ typedef void (^MXOnResumeDone)();
     {
         // Get data from the home server
         // First of all, retrieve the user's profile information
-        // TODO: manu
         [matrixRestClient displayNameForUser:matrixRestClient.credentials.userId success:^(NSString *displayname) {
 
             [matrixRestClient avatarUrlForUser:matrixRestClient.credentials.userId success:^(NSString *avatarUrl) {
 
-                // TODO: manu
                 // Create the user's profile
                 _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId andDisplayname:displayname andAvatarUrl:avatarUrl andMatrixSession:self];
 
-                // TODO: manu
                 // And store him as a common MXUser
-                //users[matrixRestClient.credentials.userId] = _myUser;
+                [_store storeUser:_myUser];
                     
                 // Initial server sync
                 [self serverSyncWithServerTimeout:0 success:onServerSyncDone failure:^(NSError *error) {

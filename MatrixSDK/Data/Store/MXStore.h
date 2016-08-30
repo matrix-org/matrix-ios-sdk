@@ -340,18 +340,6 @@
  */
 - (NSArray<MXEvent*>*)outgoingMessagesInRoom:(NSString*)roomId;
 
-
-/**
- Store/retrieve the user display name.
- */
-// TODO: manu
-@property (nonatomic) NSString *userDisplayname;
-
-/**
- Store/retrieve the user avartar URL.
- */
-@property (nonatomic) NSString *userAvatarUrl;
-
 /**
  Store/retrieve the user account data.
  */
