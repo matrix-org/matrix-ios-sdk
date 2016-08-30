@@ -193,13 +193,16 @@
 - (MXReceiptData *)getReceiptInRoom:(NSString*)roomId forUserId:(NSString*)userId;
 
 /**
- Check whether a room has some unread events.
+ Count the unread events wrote in the store.
+ 
+ @discussion: The returned count is relative to the local storage. The actual unread messages
+ for a room may be higher than the returned value.
  
  @param roomId the room id.
  @param types an array of event types strings (MXEventTypeString).
- @return YES if at least one stored event has its type listed in provided array.
+ @return The number of unread events which have their type listed in the provided array.
  */
-- (BOOL)hasUnreadEvents:(NSString*)roomId withTypeIn:(NSArray*)types;
+- (NSUInteger)localUnreadEventCount:(NSString*)roomId withTypeIn:(NSArray*)types;
 
 /**
  Indicate if the MXStore implementation stores data permanently.

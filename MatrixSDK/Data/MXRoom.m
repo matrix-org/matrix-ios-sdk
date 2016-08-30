@@ -624,6 +624,87 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     return managedEvents;
 }
 
+- (BOOL)acknowledgeEvent:(MXEvent*)event
+{
+    // Sanity check
+    if (!event.eventId)
+    {
+        return NO;
+    }
+    
+    // Retrieve the current position
+    NSString *currentEventId;
+    NSString *myUserId = mxSession.myUser.userId;
+    MXReceiptData* currentData = [mxSession.store getReceiptInRoom:self.roomId forUserId:myUserId];
+    if (currentData)
+    {
+        currentEventId = currentData.eventId;
+    }
+    
+    // Check whether the provided event is acknowledgeable
+    BOOL isAcknowledgeable = ([_acknowledgableEventTypes indexOfObject:event.type] != NSNotFound);
+    
+    // Check whether the event is posterior to the current position (if any).
+    // Look for an acknowledgeable event if the event type is not acknowledgeable.
+    if (currentEventId || !isAcknowledgeable)
+    {
+        // Enumerate all the acknowledgeable events of the room
+        id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:_acknowledgableEventTypes ignoreMemberProfileChanges:NO];
+        
+        MXEvent *nextEvent;
+        while ((nextEvent = messagesEnumerator.nextEvent))
+        {
+            // Look for the first acknowledgeable event prior the event timestamp
+            if (nextEvent.originServerTs <= event.originServerTs && nextEvent.eventId)
+            {
+                if ([nextEvent.eventId isEqualToString:event.eventId] == NO)
+                {
+                    event = nextEvent;
+                }
+                
+                // Here we find the right event to acknowledge, and it is posterior to the current position (if any).
+                break;
+            }
+            
+            // Check whether the current acknowledged event is posterior to the provided event.
+            if (currentEventId && [nextEvent.eventId isEqualToString:currentEventId])
+            {
+                // No change is required
+                return NO;
+            }
+        }
+    }
+    
+    // Sanity check: Do not send read receipt on a fake event id
+    if ([event.eventId hasPrefix:kMXRoomInviteStateEventIdPrefix] == NO)
+    {
+        // Update the oneself receipts
+        MXReceiptData *data = [[MXReceiptData alloc] init];
+        
+        data.userId = myUserId;
+        data.eventId = event.eventId;
+        data.ts = (uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000);
+        
+        if ([mxSession.store storeReceipt:data inRoom:self.roomId])
+        {
+            if ([mxSession.store respondsToSelector:@selector(commit)])
+            {
+                [mxSession.store commit];
+            }
+            
+            [mxSession.matrixRestClient sendReadReceipts:self.roomId eventId:event.eventId success:^(NSString *eventId) {
+                
+            } failure:^(NSError *error) {
+                
+            }];
+            
+            return YES;
+        }
+    }
+    
+    return NO;
+}
+
 - (BOOL)acknowledgeLatestEvent:(BOOL)sendReceipt;
 {    
     id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:_acknowledgableEventTypes ignoreMemberProfileChanges:NO];
@@ -677,10 +758,10 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     return NO;
 }
 
-- (BOOL)hasUnreadEvents
+- (NSUInteger)localUnreadEventCount
 {
     // Check for unread events in store
-    return [mxSession.store hasUnreadEvents:self.roomId withTypeIn:_unreadEventTypes];
+    return [mxSession.store localUnreadEventCount:self.roomId withTypeIn:_unreadEventTypes];
 }
 
 - (NSUInteger)notificationCount
