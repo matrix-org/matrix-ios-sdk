@@ -281,5 +281,16 @@
     return NO;
 }
 
+- (void)close
+{
+    [paginationTokens removeAllObjects];
+    [notificationCounts removeAllObjects];
+    [highlightCounts removeAllObjects];
+    [hasReachedHomeServerPaginations removeAllObjects];
+    [lastMessages removeAllObjects];
+    [partialTextMessages removeAllObjects];
+    [users removeAllObjects];
+}
+
 
 @end
