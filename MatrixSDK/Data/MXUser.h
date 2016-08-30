@@ -33,9 +33,6 @@
     NSString *_avatarUrl;
     MXPresence _presence;
     NSString *_statusMsg;
-
-    // MXSession is required to make direct API request
-    MXSession *mxSession;
 }
 
 /**
@@ -81,27 +78,28 @@
  Create an instance for an user ID.
  
  @param userId The id to the user.
- @param mxSession the mxSession to the home server. // TODO: manu
- 
+
  @return the newly created MXUser instance.
  */
-- (instancetype)initWithUserId:(NSString*)userId andMatrixSession:(MXSession*)mxSession;
+- (instancetype)initWithUserId:(NSString*)userId;
 
 /**
  Update the MXUser data with a m.room.member event.
  
  @param roomMemberEvent The event.
  @param roomMember The already decoded room member.
+ @param mxSession the mxSession to the home server.
  */
-- (void)updateWithRoomMemberEvent:(MXEvent*)roomMemberEvent roomMember:(MXRoomMember *)roomMember;
+- (void)updateWithRoomMemberEvent:(MXEvent*)roomMemberEvent roomMember:(MXRoomMember *)roomMember inMatrixSession:(MXSession*)mxSession;
 
 
 /**
  Update the MXUser data with a m.presence event.
  
  @param roomMemberEvent The event.
+ @param mxSession the mxSession to the home server.
  */
-- (void)updateWithPresenceEvent:(MXEvent*)presenceEvent;
+- (void)updateWithPresenceEvent:(MXEvent*)presenceEvent inMatrixSession:(MXSession*)mxSession;
 
 
 #pragma mark - Events listeners

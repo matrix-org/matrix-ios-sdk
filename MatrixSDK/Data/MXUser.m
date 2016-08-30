@@ -41,13 +41,12 @@
 
 @implementation MXUser
 
-- (instancetype)initWithUserId:(NSString *)userId andMatrixSession:(MXSession*)mxSession2
+- (instancetype)initWithUserId:(NSString *)userId
 {
     self = [super init];
     if (self)
     {
         _userId = [userId copy];
-        mxSession = mxSession2;
         lastActiveLocalTS = -1;
 
         updateListeners = [NSMutableArray array];
@@ -60,7 +59,7 @@
     return [NSString stringWithFormat:@"%@: %@ (%@) - Presence: %tu", _userId, _displayname, _avatarUrl, _presence];
 }
 
-- (void)updateWithRoomMemberEvent:(MXEvent*)roomMemberEvent roomMember:(MXRoomMember *)roomMember
+- (void)updateWithRoomMemberEvent:(MXEvent*)roomMemberEvent roomMember:(MXRoomMember *)roomMember inMatrixSession:(MXSession *)mxSession
 {
     // Update the MXUser only if there is change
     if ((NO == [_displayname isEqualToString:roomMember.displayname]
@@ -80,7 +79,7 @@
     }
 }
 
-- (void)updateWithPresenceEvent:(MXEvent*)presenceEvent
+- (void)updateWithPresenceEvent:(MXEvent*)presenceEvent inMatrixSession:(MXSession *)mxSession
 {
     NSParameterAssert(presenceEvent.eventType == MXEventTypePresence);
     

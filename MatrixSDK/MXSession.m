@@ -180,11 +180,12 @@ typedef void (^MXOnResumeDone)();
             // Mount data from the permanent store
             NSLog(@"[MXSession] Loading room state events to build MXRoom objects...");
 
-            // Create the user's profile from the store
+            // Create myUser from the store
             MXUser *myUser = [_store userWithUserId:matrixRestClient.credentials.userId];
             NSAssert([myUser isKindOfClass:MXMyUser.class], @"Dede");
 
             _myUser = (MXMyUser*)myUser;
+            _myUser.mxSession = self;
 
             // Load user account data
             [self handleAccountData:_store.userAccountData];
@@ -289,7 +290,8 @@ typedef void (^MXOnResumeDone)();
             [matrixRestClient avatarUrlForUser:matrixRestClient.credentials.userId success:^(NSString *avatarUrl) {
 
                 // Create the user's profile
-                _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId andDisplayname:displayname andAvatarUrl:avatarUrl andMatrixSession:self];
+                _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId andDisplayname:displayname andAvatarUrl:avatarUrl];
+                _myUser.mxSession = self;
 
                 // And store him as a common MXUser
                 [_store storeUser:_myUser];
@@ -817,7 +819,7 @@ typedef void (^MXOnResumeDone)();
     if (userId)
     {
         MXUser *user = [self getOrCreateUser:userId];
-        [user updateWithPresenceEvent:event];
+        [user updateWithPresenceEvent:event inMatrixSession:self];
 
         [_store storeUser:user];
     }
@@ -1346,7 +1348,7 @@ typedef void (^MXOnResumeDone)();
     
     if (nil == user)
     {
-        user = [[MXUser alloc] initWithUserId:userId andMatrixSession:self];
+        user = [[MXUser alloc] initWithUserId:userId];
     }
     return user;
 }
