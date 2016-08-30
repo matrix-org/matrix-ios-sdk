@@ -147,6 +147,29 @@
  */
 - (id<MXEventsEnumerator>)messagesEnumeratorForRoom:(NSString*)roomId withTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
 
+
+#pragma mark - Matrix users
+/**
+ Store a matrix user.
+ */
+- (void)storeUser:(MXUser*)user;
+
+/**
+ Get the list of all stored matrix users.
+
+ @return an array of MXUsers.
+ */
+- (NSArray<MXUser*>*)users;
+
+/**
+ Get a matrix user.
+
+ @param userId The id to the user.
+ @return the MXUser instance or nil if not found.
+ */
+- (MXUser*)userWithUserId:(NSString*)userId;
+
+
 /**
  Store the text message partially typed by the user but not yet sent.
  
@@ -283,28 +306,6 @@
  @return the user private data for this room.
 */
 - (MXRoomAccountData*)accountDataOfRoom:(NSString*)roomId;
-
-
-#pragma mark - Matrix users
-/**
- Store a matrix user.
- */
-- (void)storeUser:(MXUser*)user;
-
-/**
- Get the list of all stored matrix users.
-
- @return an array of MXUsers.
- */
-- (NSArray<MXUser*>*)users;
-
-/**
- Get a matrix user.
-
- @param userId The id to the user.
- @return the MXUser instance or nil if not found.
- */
-- (MXUser*)userWithUserId:(NSString*)userId;
 
 
 #pragma mark - Outgoing events

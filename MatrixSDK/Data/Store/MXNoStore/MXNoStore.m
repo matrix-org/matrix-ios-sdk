@@ -38,6 +38,10 @@
     NSMutableDictionary *partialTextMessages;
 
     NSString *eventStreamToken;
+
+    // All matrix users known by the user
+    // The keys are user ids.
+    NSMutableDictionary <NSString*, MXUser*> *users;
 }
 @end
 
@@ -56,6 +60,7 @@
         hasReachedHomeServerPaginations = [NSMutableDictionary dictionary];
         lastMessages = [NSMutableDictionary dictionary];
         partialTextMessages = [NSMutableDictionary dictionary];
+        users = [NSMutableDictionary dictionary];
     }
     return self;
 }
@@ -215,6 +220,24 @@
     // So return an enumerator with the last message we have without caring of its type.
     return [[MXEventsEnumeratorOnArray alloc] initWithMessages:@[lastMessages[roomId]]];
 }
+
+
+#pragma mark - Matrix users
+- (void)storeUser:(MXUser *)user
+{
+    users[user.userId] = user;
+}
+
+- (NSArray<MXUser *> *)users
+{
+    return users.allValues;
+}
+
+- (MXUser *)userWithUserId:(NSString *)userId
+{
+    return users[userId];
+}
+
 
 - (void)storePartialTextMessageForRoom:(NSString *)roomId partialTextMessage:(NSString *)partialTextMessage
 {
