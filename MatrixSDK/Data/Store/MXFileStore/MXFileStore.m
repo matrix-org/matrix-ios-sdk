@@ -26,7 +26,7 @@ NSUInteger const kMXFileVersion = 32;
 
 NSString *const kMXFileStoreFolder = @"MXFileStore";
 NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
-NSString *const kMXFileStoreUsersFile = @"users";
+NSString *const kMXFileStoreUsersFolder = @"users";
 NSString *const kMXFileStoreBackupFolder = @"backup";
 
 NSString *const kMXFileStoreSavingMarker = @"savingMarker";
@@ -54,6 +54,8 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
     NSMutableArray *roomsToCommitForDeletion;
 
+    NSMutableDictionary *usersToCommit;
+
     // The path of the MXFileStore folder
     NSString *storePath;
 
@@ -63,11 +65,11 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     // The path of the rooms folder
     NSString *storeRoomsPath;
 
+    // The path of the rooms folder
+    NSString *storeUsersPath;
+
     // Flag to indicate metaData needs to be stored
     BOOL metaDataHasChanged;
-
-    // Flag to indicate users needs to be stored
-    BOOL usersHasChanged;
 
     // Cache used to preload room states while the store is opening.
     // It is filled on the separate thread so that the UI thread will not be blocked
@@ -103,11 +105,11 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         roomsToCommitForAccountData = [NSMutableDictionary dictionary];
         roomsToCommitForReceipts = [NSMutableArray array];
         roomsToCommitForDeletion = [NSMutableArray array];
+        usersToCommit = [NSMutableDictionary dictionary];
         preloadedRoomsStates = [NSMutableDictionary dictionary];
         preloadedRoomAccountData = [NSMutableDictionary dictionary];
 
         metaDataHasChanged = NO;
-        usersHasChanged = NO;
 
         dispatchQueue = dispatch_queue_create("MXFileStoreDispatchQueue", DISPATCH_QUEUE_SERIAL);
         backgroundTaskIdentifier = UIBackgroundTaskInvalid;
@@ -124,6 +126,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     credentials = someCredentials;
     storePath = [[cachePath stringByAppendingPathComponent:kMXFileStoreFolder] stringByAppendingPathComponent:credentials.userId];
     storeRoomsPath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsFolder];
+    storeUsersPath = [storePath stringByAppendingPathComponent:kMXFileStoreUsersFolder];
 
     storeBackupPath = [storePath stringByAppendingPathComponent:kMXFileStoreBackupFolder];
 
@@ -299,6 +302,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     // And create folders back
     [[NSFileManager defaultManager] createDirectoryAtPath:storePath withIntermediateDirectories:YES attributes:nil error:nil];
     [[NSFileManager defaultManager] createDirectoryAtPath:storeRoomsPath withIntermediateDirectories:YES attributes:nil error:nil];
+    [[NSFileManager defaultManager] createDirectoryAtPath:storeUsersPath withIntermediateDirectories:YES attributes:nil error:nil];
 
     // Reset data
     metaData = nil;
@@ -440,13 +444,9 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 #pragma mark - Matrix users
 - (void)storeUser:(MXUser *)user
 {
-    // Do not change user while [self saveUsers] is running
-    @synchronized (users)
-    {
-        [super storeUser:user];
-    }
+    [super storeUser:user];
 
-    usersHasChanged = YES;
+    usersToCommit[user.userId] = user;
 }
 
 
@@ -595,15 +595,19 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     }
 }
 
-- (NSString*)usersFileForBackup:(BOOL)backup
+- (NSString*)usersFileForUser:(NSString*)userId forBackup:(BOOL)backup
 {
+    // Users, according theirs ids, are distrubed into several (100) files in order to
+    // make the save operation quicker
+    NSString *userGroup = [NSString stringWithFormat:@"%tu", userId.hash % 100];
+
     if (!backup)
     {
-        return [storePath stringByAppendingPathComponent:kMXFileStoreUsersFile];
+        return [[storePath stringByAppendingPathComponent:kMXFileStoreUsersFolder] stringByAppendingPathComponent:userGroup];
     }
     else
     {
-        return [[storeBackupPath stringByAppendingPathComponent:backupEventStreamToken] stringByAppendingPathComponent:kMXFileStoreUsersFile];
+        return [[[storeBackupPath stringByAppendingPathComponent:backupEventStreamToken] stringByAppendingPathComponent:kMXFileStoreUsersFolder] stringByAppendingPathComponent:userGroup];
     }
 }
 
@@ -981,43 +985,100 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 {
     NSDate *startDate = [NSDate date];
 
-    NSString *usersFile = [self usersFileForBackup:NO];
+    // Load all users which are distributed in several files
+    NSArray *groups = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeUsersPath error:nil];
 
-    @try
+    for (NSString *group in groups)
     {
-        users = [NSKeyedUnarchiver unarchiveObjectWithFile:usersFile];
-    }
-    @catch (NSException *exception)
-    {
-        NSLog(@"[MXFileStore] Warning: MXFileStore users has been corrupted");
-    }
+        NSString *groupFile = [[storePath stringByAppendingPathComponent:kMXFileStoreUsersFolder] stringByAppendingPathComponent:group];
 
+        // Load stored users in this group
+        @try
+        {
+            NSMutableDictionary <NSString*, MXUser*> *groupUsers = [NSKeyedUnarchiver unarchiveObjectWithFile:groupFile];
+            if (groupUsers)
+            {
+                // Append them
+                [users addEntriesFromDictionary:groupUsers];
+            }
+        }
+        @catch (NSException *exception)
+        {
+            NSLog(@"[MXFileStore] Warning: MXFileRoomStore file for users group %@ has been corrupted", group);
+        }
+    }
+    
     NSLog(@"[MXFileStore] Loaded %tu MXUsers in %.0fms", users.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (void)saveUsers
 {
     // Save only in case of change
-    if (usersHasChanged)
+    if (usersToCommit.count)
     {
-        usersHasChanged = NO;
+        NSLog(@"[MXFileStore] saveUsers");
+
+        // Take a snapshot of users to store them on the other thread
+        NSMutableDictionary *theUsersToCommit = [[NSMutableDictionary alloc] initWithDictionary:usersToCommit copyItems:YES];
+        [usersToCommit removeAllObjects];
 
         dispatch_async(dispatchQueue, ^(void){
 
-            NSString *file = [self usersFileForBackup:NO];
-            NSString *backupFile = [self usersFileForBackup:YES];
+            //NSDate *startDate = [NSDate date];
 
-            // Backup the file
-            if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
+            // Sort/Group users by the files they are be stored to
+            NSMutableDictionary <NSString*, NSMutableArray<MXUser*>*> *usersByFiles = [NSMutableDictionary dictionary];
+            NSMutableDictionary <NSString*, NSString*> *usersByFilesBackupFiles = [NSMutableDictionary dictionary];
+
+            for (NSString *userId in theUsersToCommit)
             {
-                [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
+                MXUser *user = theUsersToCommit[userId];
+
+                NSString *file = [self usersFileForUser:userId forBackup:NO];
+
+                NSMutableArray<MXUser*> *group = usersByFiles[file];
+                if (group)
+                {
+                    [group addObject:user];
+                }
+                else
+                {
+                    group = [NSMutableArray arrayWithObject:user];
+                    usersByFiles[file] = group;
+
+                    // Cache the backup file for this group
+                    usersByFilesBackupFiles[file] = [self usersFileForUser:userId forBackup:YES];
+                }
             }
 
-            @synchronized (users)
+            // Process users group one by one
+            for (NSString *file in usersByFiles)
             {
-                // Store new data
-                [NSKeyedArchiver archiveRootObject:users toFile:file];
+                // Backup the file for this group of users
+                NSString *backupFile = usersByFilesBackupFiles[file];
+                if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
+                {
+                    [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
+                }
+
+                // Load stored users in this group
+                NSMutableDictionary <NSString*, MXUser*> *group = [NSKeyedUnarchiver unarchiveObjectWithFile:file];
+                if (!group)
+                {
+                    group = [NSMutableDictionary dictionary];
+                }
+
+                // Apply the changes
+                for (MXUser *user in usersByFiles[file])
+                {
+                    group[user.userId] = user;
+                }
+
+                // And store the users group
+                [NSKeyedArchiver archiveRootObject:group toFile:file];
             }
+
+            //NSLog(@"[MXFileStore] saveUsers in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
         });
     }
 }

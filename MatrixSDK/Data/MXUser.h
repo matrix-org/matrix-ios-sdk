@@ -26,7 +26,7 @@
 /**
  `MXUser` represents a user in Matrix.
  */
-@interface MXUser : NSObject <NSCoding>
+@interface MXUser : NSObject <NSCoding, NSCopying>
 {
     // Let property members accessible to children classes
     NSString *_displayname;

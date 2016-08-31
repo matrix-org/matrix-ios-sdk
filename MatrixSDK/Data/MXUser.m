@@ -198,4 +198,21 @@
     [aCoder encodeObject:_statusMsg forKey:@"statusMsg"];
 }
 
+
+#pragma mark - NSCopying
+- (id)copyWithZone:(NSZone *)zone
+{
+    MXUser *user = [[[self class] allocWithZone:zone] init];
+
+    user->_userId = [_userId copyWithZone:zone];
+    user->_displayname = [_displayname copyWithZone:zone];
+    user->_avatarUrl = [_avatarUrl copyWithZone:zone];
+    user->_presence = _presence;
+    user->lastActiveLocalTS = lastActiveLocalTS;
+    user->_currentlyActive = _currentlyActive;
+    user->_statusMsg = [_statusMsg copyWithZone:zone];
+
+    return user;
+}
+
 @end
