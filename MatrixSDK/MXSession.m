@@ -182,8 +182,8 @@ typedef void (^MXOnResumeDone)();
 
             // Create myUser from the store
             MXUser *myUser = [_store userWithUserId:matrixRestClient.credentials.userId];
-            NSAssert([myUser isKindOfClass:MXMyUser.class], @"Dede");
 
+            // My user is a MXMyUser object
             _myUser = (MXMyUser*)myUser;
             _myUser.mxSession = self;
 
