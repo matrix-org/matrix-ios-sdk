@@ -216,6 +216,11 @@
     [self checkUserDisplaynameAndAvatarUrl:MXFileStore.class];
 }
 
+- (void)testMXFileStoreUpdateUserDisplaynameAndAvatarUrl
+{
+    [self checkUpdateUserDisplaynameAndAvatarUrl:MXFileStore.class];
+}
+
 - (void)testMXFileStoreMXSessionOnStoreDataReady
 {
     [self checkMXSessionOnStoreDataReady:MXFileStore.class];

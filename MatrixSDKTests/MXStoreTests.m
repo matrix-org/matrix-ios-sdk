@@ -863,16 +863,14 @@
 
             [store deleteAllData];
 
-            XCTAssertNil(store.userDisplayname);
-            XCTAssertNil(store.userAvatarUrl);
+            XCTAssertNil([store userWithUserId:aliceRestClient.credentials.userId]);
 
             if ([store respondsToSelector:@selector(close)])
             {
                 [store close];
             }
 
-            XCTAssertNil(store.userDisplayname);
-            XCTAssertNil(store.userAvatarUrl);
+            XCTAssertNil([store userWithUserId:aliceRestClient.credentials.userId]);
 
             // Let's (and verify) MXSession start update the store with user information
             mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
@@ -881,6 +879,11 @@
 
                 [mxSession start:^{
 
+                    MXUser *myUser = [mxSession userWithUserId:aliceRestClient.credentials.userId];
+                    XCTAssertEqual(myUser, mxSession.myUser);
+                    XCTAssertEqualObjects(myUser.displayname, kMXTestsAliceDisplayName);
+                    XCTAssertEqualObjects(myUser.avatarUrl, kMXTestsAliceAvatarURL);
+
                     [mxSession close];
                     mxSession = nil;
 
@@ -888,8 +891,10 @@
                     id<MXStore> store2 = [[mxStoreClass alloc] init];
                     [store2 openWithCredentials:matrixSDKTestsData.aliceCredentials onComplete:^{
 
-                        XCTAssertEqualObjects(store2.userDisplayname, kMXTestsAliceDisplayName);
-                        XCTAssertEqualObjects(store2.userAvatarUrl, kMXTestsAliceAvatarURL);
+                        MXUser *myUser = [store2 userWithUserId:aliceRestClient.credentials.userId];
+                        XCTAssert([myUser isKindOfClass:MXMyUser.class]);
+                        XCTAssertEqualObjects(myUser.displayname, kMXTestsAliceDisplayName);
+                        XCTAssertEqualObjects(myUser.avatarUrl, kMXTestsAliceAvatarURL);
 
                         if ([store2 respondsToSelector:@selector(close)])
                         {
@@ -902,6 +907,91 @@
                         [expectation fulfill];
                     }];
 
+                } failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)checkUpdateUserDisplaynameAndAvatarUrl:(Class)mxStoreClass
+{
+    [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+
+        expectation = expectation2;
+
+        id<MXStore> store = [[mxStoreClass alloc] init];
+        [store openWithCredentials:matrixSDKTestsData.aliceCredentials onComplete:^{
+
+            [store deleteAllData];
+
+            XCTAssertNil([store userWithUserId:aliceRestClient.credentials.userId]);
+
+            if ([store respondsToSelector:@selector(close)])
+            {
+                [store close];
+            }
+
+            XCTAssertNil([store userWithUserId:aliceRestClient.credentials.userId]);
+
+            // Let's (and verify) MXSession start update the store with user information
+            mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+
+            [mxSession setStore:store success:^{
+
+                [mxSession start:^{
+
+                    MXUser *myUser = [mxSession userWithUserId:aliceRestClient.credentials.userId];
+                    XCTAssertEqual(myUser, mxSession.myUser);
+                    XCTAssertEqualObjects(myUser.displayname, kMXTestsAliceDisplayName);
+                    XCTAssertEqualObjects(myUser.avatarUrl, kMXTestsAliceAvatarURL);
+
+                    [mxSession.myUser setDisplayName:@"Alicia" success:^{
+
+                        XCTAssertEqualObjects(myUser.displayname, @"Alicia");
+
+                        [mxSession.myUser setAvatarUrl:@"http://matrix.org/matrix.png" success:^{
+
+                            XCTAssertEqualObjects(myUser.avatarUrl, @"http://matrix.org/matrix.png");
+
+                            [mxSession close];
+                            mxSession = nil;
+
+                            // Check user information is permanent
+                            id<MXStore> store2 = [[mxStoreClass alloc] init];
+                            [store2 openWithCredentials:matrixSDKTestsData.aliceCredentials onComplete:^{
+
+                                MXUser *myUser = [store2 userWithUserId:aliceRestClient.credentials.userId];
+                                XCTAssertEqualObjects(myUser.displayname, @"Alicia");
+                                XCTAssertEqualObjects(myUser.avatarUrl, @"http://matrix.org/matrix.png");
+
+                                if ([store2 respondsToSelector:@selector(close)])
+                                {
+                                    [store2 close];
+                                }
+                                [expectation fulfill];
+
+                            } failure:^(NSError *error) {
+                                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                [expectation fulfill];
+                            }];
+                        } failure:^(NSError *error) {
+                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                            [expectation fulfill];
+                        }];
+                    } failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
                 } failure:^(NSError *error) {
                     XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                     [expectation fulfill];
@@ -931,8 +1021,9 @@
             // Make sure to start from an empty store
             [store deleteAllData];
 
-            XCTAssertNil(store.userDisplayname);
-            XCTAssertNil(store.userAvatarUrl);
+            MXUser *myUser = [store userWithUserId:matrixSDKTestsData.bobCredentials.userId];
+
+            XCTAssertNil(myUser);
             XCTAssertEqual(store.rooms.count, 0);
 
             if ([store respondsToSelector:@selector(close)])

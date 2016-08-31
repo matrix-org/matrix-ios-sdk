@@ -26,12 +26,16 @@
  Create an instance for an user ID.
 
  @param userId The id to the user.
- @param mxSession the mxSession to the home server. It is used to update user's profile to
-                  the home server.
 
  @return the newly created MXUser instance.
  */
-- (instancetype)initWithUserId:(NSString*)userId andDisplayname:(NSString*)displayname andAvatarUrl:(NSString*)avatarUrl andMatrixSession:(MXSession*)mxSession;
+- (instancetype)initWithUserId:(NSString*)userId andDisplayname:(NSString*)displayname andAvatarUrl:(NSString*)avatarUrl;
+
+/**
+ The mxSession to the home server. 
+ It must be set in order to update user's profile to the home server.
+ */
+@property (nonatomic) MXSession *mxSession;
 
 /**
  Set the display name.

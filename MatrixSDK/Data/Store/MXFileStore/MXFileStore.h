@@ -38,6 +38,10 @@
                     L accountData
                     L receipts
                 + ...
+            + users: all MXUsers known by the user. There are distributed among smaller files to speed up their storage.
+                     L usersGroup #1
+                     L usersGroup #2
+                     L ...
             L MXFileStore : Information about the stored data
             + backup : This folder contains backup of files that are modified during
                   the commit process. It is flushed when the commit completes.
@@ -48,6 +52,9 @@
                         + {roomIdA}
                         + {roomIdB}
                         + ...
+                    + users
+                        L usersGroup #1
+                        L ...
                     L MXFileStore
  */
 @interface MXFileStore : MXMemoryStore

@@ -18,6 +18,7 @@
 #import "MXJSONModels.h"
 #import "MXEvent.h"
 #import "MXReceiptData.h"
+#import "MXUser.h"
 #import "MXRoomAccountData.h"
 
 #import "MXEventsEnumerator.h"
@@ -145,6 +146,29 @@
  @return the events enumerator.
  */
 - (id<MXEventsEnumerator>)messagesEnumeratorForRoom:(NSString*)roomId withTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
+
+
+#pragma mark - Matrix users
+/**
+ Store a matrix user.
+ */
+- (void)storeUser:(MXUser*)user;
+
+/**
+ Get the list of all stored matrix users.
+
+ @return an array of MXUsers.
+ */
+- (NSArray<MXUser*>*)users;
+
+/**
+ Get a matrix user.
+
+ @param userId The id to the user.
+ @return the MXUser instance or nil if not found.
+ */
+- (MXUser*)userWithUserId:(NSString*)userId;
+
 
 /**
  Store the text message partially typed by the user but not yet sent.
@@ -318,17 +342,6 @@
  @return the list of messages that have not been sent yet
  */
 - (NSArray<MXEvent*>*)outgoingMessagesInRoom:(NSString*)roomId;
-
-
-/**
- Store/retrieve the user display name.
- */
-@property (nonatomic) NSString *userDisplayname;
-
-/**
- Store/retrieve the user avartar URL.
- */
-@property (nonatomic) NSString *userAvatarUrl;
 
 /**
  Store/retrieve the user account data.

@@ -41,13 +41,12 @@
 
 @implementation MXUser
 
-- (instancetype)initWithUserId:(NSString *)userId andMatrixSession:(MXSession*)mxSession2
+- (instancetype)initWithUserId:(NSString *)userId
 {
     self = [super init];
     if (self)
     {
         _userId = [userId copy];
-        mxSession = mxSession2;
         lastActiveLocalTS = -1;
 
         updateListeners = [NSMutableArray array];
@@ -60,7 +59,7 @@
     return [NSString stringWithFormat:@"%@: %@ (%@) - Presence: %tu", _userId, _displayname, _avatarUrl, _presence];
 }
 
-- (void)updateWithRoomMemberEvent:(MXEvent*)roomMemberEvent roomMember:(MXRoomMember *)roomMember
+- (void)updateWithRoomMemberEvent:(MXEvent*)roomMemberEvent roomMember:(MXRoomMember *)roomMember inMatrixSession:(MXSession *)mxSession
 {
     // Update the MXUser only if there is change
     if ((NO == [_displayname isEqualToString:roomMember.displayname]
@@ -80,7 +79,7 @@
     }
 }
 
-- (void)updateWithPresenceEvent:(MXEvent*)presenceEvent
+- (void)updateWithPresenceEvent:(MXEvent*)presenceEvent inMatrixSession:(MXSession *)mxSession
 {
     NSParameterAssert(presenceEvent.eventType == MXEventTypePresence);
     
@@ -168,6 +167,52 @@
             listener(event);
         }
     }
+}
+
+
+#pragma mark - NSCoding
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super init];
+    if (self)
+    {
+        _userId = [aDecoder decodeObjectForKey:@"userId"];
+        _displayname = [aDecoder decodeObjectForKey:@"displayname"];
+        _avatarUrl = [aDecoder decodeObjectForKey:@"avatarUrl"];
+        _presence = [(NSNumber*)[aDecoder decodeObjectForKey:@"presence"] unsignedIntegerValue];
+        lastActiveLocalTS = [(NSNumber*)[aDecoder decodeObjectForKey:@"lastActiveLocalTS"] unsignedLongLongValue];
+        _currentlyActive = [(NSNumber*)[aDecoder decodeObjectForKey:@"currentlyActive"] boolValue];
+        _statusMsg = [aDecoder decodeObjectForKey:@"statusMsg"];
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    [aCoder encodeObject:_userId forKey:@"userId"];
+    [aCoder encodeObject:_displayname forKey:@"displayname"];
+    [aCoder encodeObject:_avatarUrl forKey:@"avatarUrl"];
+    [aCoder encodeObject:@(_presence) forKey:@"presence"];
+    [aCoder encodeObject:@(lastActiveLocalTS) forKey:@"lastActiveLocalTS"];
+    [aCoder encodeObject:@(_currentlyActive) forKey:@"currentlyActive"];
+    [aCoder encodeObject:_statusMsg forKey:@"statusMsg"];
+}
+
+
+#pragma mark - NSCopying
+- (id)copyWithZone:(NSZone *)zone
+{
+    MXUser *user = [[[self class] allocWithZone:zone] init];
+
+    user->_userId = [_userId copyWithZone:zone];
+    user->_displayname = [_displayname copyWithZone:zone];
+    user->_avatarUrl = [_avatarUrl copyWithZone:zone];
+    user->_presence = _presence;
+    user->lastActiveLocalTS = lastActiveLocalTS;
+    user->_currentlyActive = _currentlyActive;
+    user->_statusMsg = [_statusMsg copyWithZone:zone];
+
+    return user;
 }
 
 @end

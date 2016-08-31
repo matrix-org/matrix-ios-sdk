@@ -23,9 +23,9 @@
 
 @implementation MXMyUser
 
-- (instancetype)initWithUserId:(NSString *)userId andDisplayname:(NSString *)displayname andAvatarUrl:(NSString *)avatarUrl andMatrixSession:(MXSession *)mxSession2
+- (instancetype)initWithUserId:(NSString *)userId andDisplayname:(NSString *)displayname andAvatarUrl:(NSString *)avatarUrl
 {
-    self = [super initWithUserId:userId andMatrixSession:mxSession2];
+    self = [super initWithUserId:userId];
     if (self)
     {
         self.displayname = [displayname copy];
@@ -36,10 +36,16 @@
 
 - (void)setDisplayName:(NSString *)displayname success:(void (^)())success failure:(void (^)(NSError *))failure
 {
-    [mxSession.matrixRestClient setDisplayName:displayname success:^{
+    [_mxSession.matrixRestClient setDisplayName:displayname success:^{
 
         // Update the information right now
         self.displayname = [displayname copy];
+
+        [_mxSession.store storeUser:self];
+        if ([_mxSession.store respondsToSelector:@selector(commit)])
+        {
+            [_mxSession.store commit];
+        }
 
         if (success)
         {
@@ -56,10 +62,16 @@
 
 - (void)setAvatarUrl:(NSString *)avatarUrl success:(void (^)())success failure:(void (^)(NSError *))failure
 {
-    [mxSession.matrixRestClient setAvatarUrl:avatarUrl success:^{
+    [_mxSession.matrixRestClient setAvatarUrl:avatarUrl success:^{
 
         // Update the information right now
         self.avatarUrl = [avatarUrl copy];
+
+        [_mxSession.store storeUser:self];
+        if ([_mxSession.store respondsToSelector:@selector(commit)])
+        {
+            [_mxSession.store commit];
+        }
 
         if (success)
         {
@@ -76,11 +88,17 @@
 
 - (void)setPresence:(MXPresence)presence andStatusMessage:(NSString *)statusMessage success:(void (^)())success failure:(void (^)(NSError *))failure
 {
-    [mxSession.matrixRestClient setPresence:presence andStatusMessage:statusMessage success:^{
+    [_mxSession.matrixRestClient setPresence:presence andStatusMessage:statusMessage success:^{
 
         // Update the information right now
         _presence = presence;
         _statusMsg = [statusMessage copy];
+
+        [_mxSession.store storeUser:self];
+        if ([_mxSession.store respondsToSelector:@selector(commit)])
+        {
+            [_mxSession.store commit];
+        }
 
         if (success)
         {
@@ -97,12 +115,12 @@
 
 - (void)setDisplayname:(NSString *)displayname
 {
-    if (mxSession.store.isPermanent && _displayname != displayname && NO == [_displayname isEqualToString:displayname])
+    if (_mxSession.store.isPermanent && _displayname != displayname && NO == [_displayname isEqualToString:displayname])
     {
-        mxSession.store.userDisplayname = displayname;
-        if ([mxSession.store respondsToSelector:@selector(commit)])
+        [_mxSession.store storeUser:self];
+        if ([_mxSession.store respondsToSelector:@selector(commit)])
         {
-            [mxSession.store commit];
+            [_mxSession.store commit];
         }
     }
     _displayname = displayname;
@@ -110,12 +128,12 @@
 
 -(void)setAvatarUrl:(NSString *)avatarUrl
 {
-    if (mxSession.store.isPermanent && _avatarUrl != avatarUrl && NO == [_avatarUrl isEqualToString:avatarUrl])
+    if (_mxSession.store.isPermanent && _avatarUrl != avatarUrl && NO == [_avatarUrl isEqualToString:avatarUrl])
     {
-        mxSession.store.userAvatarUrl = avatarUrl;
-        if ([mxSession.store respondsToSelector:@selector(commit)])
+        [_mxSession.store storeUser:self];
+        if ([_mxSession.store respondsToSelector:@selector(commit)])
         {
-            [mxSession.store commit];
+            [_mxSession.store commit];
         }
     }
     _avatarUrl = avatarUrl;

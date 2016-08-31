@@ -36,6 +36,7 @@
     {
         roomStores = [NSMutableDictionary dictionary];
         receiptsByRoomId = [NSMutableDictionary dictionary];
+        users = [NSMutableDictionary dictionary];
     }
     return self;
 }
@@ -288,6 +289,23 @@
 - (NSArray *)rooms
 {
     return roomStores.allKeys;
+}
+
+
+#pragma mark - Matrix users
+- (void)storeUser:(MXUser *)user
+{
+    users[user.userId] = user;
+}
+
+- (NSArray<MXUser *> *)users
+{
+    return users.allValues;
+}
+
+- (MXUser *)userWithUserId:(NSString *)userId
+{
+    return users[userId];
 }
 
 

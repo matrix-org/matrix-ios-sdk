@@ -38,6 +38,10 @@
     NSMutableDictionary *partialTextMessages;
 
     NSString *eventStreamToken;
+
+    // All matrix users known by the user
+    // The keys are user ids.
+    NSMutableDictionary <NSString*, MXUser*> *users;
 }
 @end
 
@@ -56,6 +60,7 @@
         hasReachedHomeServerPaginations = [NSMutableDictionary dictionary];
         lastMessages = [NSMutableDictionary dictionary];
         partialTextMessages = [NSMutableDictionary dictionary];
+        users = [NSMutableDictionary dictionary];
     }
     return self;
 }
@@ -216,6 +221,24 @@
     return [[MXEventsEnumeratorOnArray alloc] initWithMessages:@[lastMessages[roomId]]];
 }
 
+
+#pragma mark - Matrix users
+- (void)storeUser:(MXUser *)user
+{
+    users[user.userId] = user;
+}
+
+- (NSArray<MXUser *> *)users
+{
+    return users.allValues;
+}
+
+- (MXUser *)userWithUserId:(NSString *)userId
+{
+    return users[userId];
+}
+
+
 - (void)storePartialTextMessageForRoom:(NSString *)roomId partialTextMessage:(NSString *)partialTextMessage
 {
     if (partialTextMessage)
@@ -256,6 +279,17 @@
 - (NSUInteger)localUnreadEventCount:(NSString*)roomId withTypeIn:(NSArray*)types
 {
     return 0;
+}
+
+- (void)close
+{
+    [paginationTokens removeAllObjects];
+    [notificationCounts removeAllObjects];
+    [highlightCounts removeAllObjects];
+    [hasReachedHomeServerPaginations removeAllObjects];
+    [lastMessages removeAllObjects];
+    [partialTextMessages removeAllObjects];
+    [users removeAllObjects];
 }
 
 

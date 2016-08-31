@@ -45,12 +45,6 @@
 @property (nonatomic) NSUInteger version;
 
 /**
- User information
- */
-@property (nonatomic) NSString *userDisplayName;
-@property (nonatomic) NSString *userAvatarUrl;
-
-/**
  User account data
  */
 @property (nonatomic) NSDictionary *userAccountData;
