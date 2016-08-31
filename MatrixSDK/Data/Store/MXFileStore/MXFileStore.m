@@ -1016,8 +1016,6 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     // Save only in case of change
     if (usersToCommit.count)
     {
-        NSLog(@"[MXFileStore] saveUsers");
-
         // Take a snapshot of users to store them on the other thread
         NSMutableDictionary *theUsersToCommit = [[NSMutableDictionary alloc] initWithDictionary:usersToCommit copyItems:YES];
         [usersToCommit removeAllObjects];
