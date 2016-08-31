@@ -41,6 +41,12 @@
         // Update the information right now
         self.displayname = [displayname copy];
 
+        [_mxSession.store storeUser:self];
+        if ([_mxSession.store respondsToSelector:@selector(commit)])
+        {
+            [_mxSession.store commit];
+        }
+
         if (success)
         {
             success();
@@ -60,6 +66,12 @@
 
         // Update the information right now
         self.avatarUrl = [avatarUrl copy];
+
+        [_mxSession.store storeUser:self];
+        if ([_mxSession.store respondsToSelector:@selector(commit)])
+        {
+            [_mxSession.store commit];
+        }
 
         if (success)
         {
@@ -81,6 +93,12 @@
         // Update the information right now
         _presence = presence;
         _statusMsg = [statusMessage copy];
+
+        [_mxSession.store storeUser:self];
+        if ([_mxSession.store respondsToSelector:@selector(commit)])
+        {
+            [_mxSession.store commit];
+        }
 
         if (success)
         {
