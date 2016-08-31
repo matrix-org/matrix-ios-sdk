@@ -53,6 +53,7 @@
 
 // Tests that may not relevant for all implementations
 - (void)checkUserDisplaynameAndAvatarUrl:(Class)mxStoreClass;
+- (void)checkUpdateUserDisplaynameAndAvatarUrl:(Class)mxStoreClass;
 - (void)checkMXSessionOnStoreDataReady:(Class)mxStoreClass;
 - (void)checkRoomDeletion:(Class)mxStoreClass;
 - (void)checkEventAge:(Class)mxStoreClass;
