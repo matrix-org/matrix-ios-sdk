@@ -224,23 +224,35 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 
 - (MXEvent *)lastMessageWithTypeIn:(NSArray*)types
 {
-    id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:types ignoreMemberProfileChanges:mxSession.ignoreProfileChangesDuringLastMessageProcessing];
-    MXEvent *lastMessage = messagesEnumerator.nextEvent;
+    MXEvent *lastMessage;
 
-    if (!lastMessage)
+    @autoreleasepool
     {
-        // If no messages match the filter contraints, return the last whatever is its type
-        lastMessage = self.enumeratorForStoredMessages.nextEvent;
+        id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:types ignoreMemberProfileChanges:mxSession.ignoreProfileChangesDuringLastMessageProcessing];
+        lastMessage = messagesEnumerator.nextEvent;
+
+        if (!lastMessage)
+        {
+            // If no messages match the filter contraints, return the last whatever is its type
+            lastMessage = self.enumeratorForStoredMessages.nextEvent;
+        }
     }
-    
+
     return lastMessage;
 }
 
 - (NSUInteger)storedMessagesCount
 {
-    // Note: For performance, it may worth to have a dedicated MXStore method to get
-    // this value
-    return self.enumeratorForStoredMessages.remaining;
+    NSUInteger storedMessagesCount = 0;
+
+    @autoreleasepool
+    {
+        // Note: For performance, it may worth to have a dedicated MXStore method to get
+        // this value
+        storedMessagesCount = self.enumeratorForStoredMessages.remaining;
+    }
+
+    return storedMessagesCount;
 }
 
 
@@ -648,29 +660,32 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     // Look for an acknowledgeable event if the event type is not acknowledgeable.
     if (currentEventId || !isAcknowledgeable)
     {
-        // Enumerate all the acknowledgeable events of the room
-        id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:_acknowledgableEventTypes ignoreMemberProfileChanges:NO];
-        
-        MXEvent *nextEvent;
-        while ((nextEvent = messagesEnumerator.nextEvent))
+        @autoreleasepool
         {
-            // Look for the first acknowledgeable event prior the event timestamp
-            if (nextEvent.originServerTs <= event.originServerTs && nextEvent.eventId)
+            // Enumerate all the acknowledgeable events of the room
+            id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:_acknowledgableEventTypes ignoreMemberProfileChanges:NO];
+
+            MXEvent *nextEvent;
+            while ((nextEvent = messagesEnumerator.nextEvent))
             {
-                if ([nextEvent.eventId isEqualToString:event.eventId] == NO)
+                // Look for the first acknowledgeable event prior the event timestamp
+                if (nextEvent.originServerTs <= event.originServerTs && nextEvent.eventId)
                 {
-                    event = nextEvent;
+                    if ([nextEvent.eventId isEqualToString:event.eventId] == NO)
+                    {
+                        event = nextEvent;
+                    }
+
+                    // Here we find the right event to acknowledge, and it is posterior to the current position (if any).
+                    break;
                 }
-                
-                // Here we find the right event to acknowledge, and it is posterior to the current position (if any).
-                break;
-            }
-            
-            // Check whether the current acknowledged event is posterior to the provided event.
-            if (currentEventId && [nextEvent.eventId isEqualToString:currentEventId])
-            {
-                // No change is required
-                return NO;
+
+                // Check whether the current acknowledged event is posterior to the provided event.
+                if (currentEventId && [nextEvent.eventId isEqualToString:currentEventId])
+                {
+                    // No change is required
+                    return NO;
+                }
             }
         }
     }
@@ -706,53 +721,55 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 }
 
 - (BOOL)acknowledgeLatestEvent:(BOOL)sendReceipt;
-{    
-    id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:_acknowledgableEventTypes ignoreMemberProfileChanges:NO];
-
-    // Acknowledge the lastest valid event
-    MXEvent *event;
-    while ((event = messagesEnumerator.nextEvent))
+{
+    @autoreleasepool
     {
-        // Sanity check on event id: Do not send read receipt on event without id
-        if (event.eventId && ([event.eventId hasPrefix:kMXRoomInviteStateEventIdPrefix] == NO))
+        id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:_acknowledgableEventTypes ignoreMemberProfileChanges:NO];
+
+        // Acknowledge the lastest valid event
+        MXEvent *event;
+        while ((event = messagesEnumerator.nextEvent))
         {
-            // Check whether this is the current position of the user
-            NSString* myUserId = mxSession.myUser.userId;
-            MXReceiptData* currentData = [mxSession.store getReceiptInRoom:self.roomId forUserId:myUserId];
-            
-            if (currentData && [currentData.eventId isEqualToString:event.eventId])
+            // Sanity check on event id: Do not send read receipt on event without id
+            if (event.eventId && ([event.eventId hasPrefix:kMXRoomInviteStateEventIdPrefix] == NO))
             {
-                // No change is required
-                return NO;
-            }
-            
-            // Update the oneself receipts
-            MXReceiptData *data = [[MXReceiptData alloc] init];
+                // Check whether this is the current position of the user
+                NSString* myUserId = mxSession.myUser.userId;
+                MXReceiptData* currentData = [mxSession.store getReceiptInRoom:self.roomId forUserId:myUserId];
 
-            data.userId = myUserId;
-            data.eventId = event.eventId;
-            data.ts = (uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000);
-
-            if ([mxSession.store storeReceipt:data inRoom:self.roomId])
-            {
-                if ([mxSession.store respondsToSelector:@selector(commit)])
+                if (currentData && [currentData.eventId isEqualToString:event.eventId])
                 {
-                    [mxSession.store commit];
+                    // No change is required
+                    return NO;
                 }
 
-                if (sendReceipt)
+                // Update the oneself receipts
+                MXReceiptData *data = [[MXReceiptData alloc] init];
+
+                data.userId = myUserId;
+                data.eventId = event.eventId;
+                data.ts = (uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000);
+
+                if ([mxSession.store storeReceipt:data inRoom:self.roomId])
                 {
-                    [mxSession.matrixRestClient sendReadReceipts:self.roomId eventId:event.eventId success:^(NSString *eventId) {
+                    if ([mxSession.store respondsToSelector:@selector(commit)])
+                    {
+                        [mxSession.store commit];
+                    }
 
-                    } failure:^(NSError *error) {
-
-                    }];
+                    if (sendReceipt)
+                    {
+                        [mxSession.matrixRestClient sendReadReceipts:self.roomId eventId:event.eventId success:^(NSString *eventId) {
+                            
+                        } failure:^(NSError *error) {
+                            
+                        }];
+                    }
+                    
+                    return YES;
                 }
-                
-                return YES;
             }
         }
-        
     }
 
     return NO;
