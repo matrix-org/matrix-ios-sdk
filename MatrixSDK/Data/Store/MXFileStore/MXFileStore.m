@@ -139,13 +139,15 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
     The MXFileStore needs to prepopulate its MXMemoryStore parent data from the file system before being used.
     */
-    
-    // Load data from the file system on a separate thread
-    dispatch_async(dispatchQueue, ^(void){
 
 #if DEBUG
-        NSLog(@"[MXFileStore] diskUsage: %@", [NSByteCountFormatter stringFromByteCount:self.diskUsage countStyle:NSByteCountFormatterCountStyleFile]);
+    [self diskUsageWithBlock:^(NSUInteger diskUsage) {
+        NSLog(@"[MXFileStore] diskUsage: %@", [NSByteCountFormatter stringFromByteCount:diskUsage countStyle:NSByteCountFormatterCountStyleFile]);
+    }];
 #endif
+
+    // Load data from the file system on a separate thread
+    dispatch_async(dispatchQueue, ^(void){
 
         @autoreleasepool
         {
