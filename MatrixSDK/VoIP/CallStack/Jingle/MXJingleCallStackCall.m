@@ -72,7 +72,7 @@
     if (self)
     {
         peerConnectionFactory = factory;
-        cameraPosition = AVCaptureDevicePositionBack;
+        cameraPosition = AVCaptureDevicePositionFront;
     }
     return self;
 }
@@ -430,6 +430,8 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
         {
             RTCAVFoundationVideoSource* avSource = (RTCAVFoundationVideoSource*)source;
             avSource.useBackCamera = (cameraPosition == AVCaptureDevicePositionBack) ? YES : NO;
+
+            [self fixMirrorOnSelfVideoView];
         }
     }
 }
@@ -480,6 +482,8 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
             // Use selfVideoView as a container of a RTCEAGLVideoView
             MXJingleVideoView *renderView = [[MXJingleVideoView alloc] initWithContainerView:self.selfVideoView];
             [localVideoTrack addRenderer:renderView];
+
+            [self fixMirrorOnSelfVideoView];
         }
     }
 
@@ -503,6 +507,20 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
         NSLog(@"[MXJingleCallStackCall] selfVideoView and remoteVideoView are set. Call startGetCaptureSourcesForAudio");
 
         [self createLocalMediaStream];
+    }
+}
+
+- (void)fixMirrorOnSelfVideoView
+{
+    if (cameraPosition == AVCaptureDevicePositionFront)
+    {
+        // Apply a left to right flip on the self video view on the front camera preview
+        // so that the user sees himself as in a mirror
+        selfVideoView.transform = CGAffineTransformMakeScale(-1.0, 1.0);
+    }
+    else
+    {
+        selfVideoView.transform = CGAffineTransformIdentity;
     }
 }
 
