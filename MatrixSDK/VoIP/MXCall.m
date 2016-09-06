@@ -370,6 +370,17 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         // Store the total duration
         totalCallDuration = self.duration;
     }
+    else if (MXCallStateInviteSent == state)
+    {
+        // Start the life expiration timer for the sent invitation
+        inviteExpirationTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:callManager.inviteLifetime / 1000]
+                                                         interval:0
+                                                           target:self
+                                                         selector:@selector(expireCallInvite)
+                                                         userInfo:nil
+                                                          repeats:NO];
+        [[NSRunLoop mainRunLoop] addTimer:inviteExpirationTimer forMode:NSDefaultRunLoopMode];
+    }
 
     _state = state;
 
