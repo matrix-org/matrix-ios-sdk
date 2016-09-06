@@ -517,7 +517,12 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  
  @return an array of MXUsers.
  */
-- (NSArray*)users;
+- (NSArray<MXUser*> *)users;
+
+/**
+ List all the user ids for whom a 1:1 room exists.
+ */
+- (NSArray<NSString*> *)privateOneToOneUsers;
 
 /**
  The list of ignored users.

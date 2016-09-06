@@ -516,13 +516,13 @@ typedef void (^MXOnResumeDone)();
                 }
                 else
                 {
-                    isOneToOneRoom = (!room.state.isJoinRulePublic && room.state.members.count == 2);
+                    isOneToOneRoom = (!room.state.isJoinRulePublic && room.state.members.count == 2 && !room.state.isConferenceUserRoom);
                 }
                 
                 // Sync room
                 [room handleJoinedRoomSync:roomSync];
 
-                if (isOneToOneRoom || (!room.state.isJoinRulePublic && room.state.members.count == 2))
+                if (isOneToOneRoom || (!room.state.isJoinRulePublic && room.state.members.count == 2 && !room.state.isConferenceUserRoom))
                 {
                     // Update one-to-one room dictionary
                     [self handleOneToOneRoom:room];
@@ -1161,8 +1161,8 @@ typedef void (^MXOnResumeDone)();
 
     [rooms setObject:room forKey:room.state.roomId];
     
-    // We store one-to-one room in a second dictionary to ease their reuse.
-    if (!room.state.isJoinRulePublic && room.state.members.count == 2)
+    // We store one-to-one room in a second dictionary to ease their reuse (Ignore room with conference manger).
+    if (!room.state.isJoinRulePublic && room.state.members.count == 2 && !room.state.isConferenceUserRoom)
     {
         [self handleOneToOneRoom:room];
     }
@@ -1332,14 +1332,20 @@ typedef void (^MXOnResumeDone)();
 }
 
 #pragma mark - Matrix users
+
 - (MXUser *)userWithUserId:(NSString *)userId
 {
     return [_store userWithUserId:userId];
 }
 
-- (NSArray *)users
+- (NSArray<MXUser*> *)users
 {
     return _store.users;
+}
+
+- (NSArray<NSString *> *)privateOneToOneUsers
+{
+    return [oneToOneRooms allKeys];
 }
 
 - (MXUser *)getOrCreateUser:(NSString *)userId
