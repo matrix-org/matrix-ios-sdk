@@ -473,7 +473,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         // Commit the data even if the app goes in background
         __block UIBackgroundTaskIdentifier backgroundTaskIdentifier = [[UIApplication sharedApplication] beginBackgroundTaskWithName:@"commit" expirationHandler:^{
 
-            NSLog(@"[MXFileStore commit] Background task #%lu is going to expire after %.0fms - ending it",
+            NSLog(@"[MXFileStore commit] Background task #%tu is going to expire after %.0fms - ending it",
                   backgroundTaskIdentifier, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
             [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
             backgroundTaskIdentifier = UIBackgroundTaskInvalid;
@@ -1192,7 +1192,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         }
     }
 
-    NSLog(@"[MXFileStore] Loaded read receipts of %lu rooms in %.0fms", (unsigned long)roomStores.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXFileStore] Loaded read receipts of %tu rooms in %.0fms", roomStores.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (void)saveReceipts
