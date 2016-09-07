@@ -53,6 +53,7 @@ static NSRegularExpression *isMatrixEventIdentifierRegex;
                           kMXEventTypeStringRoomPowerLevels: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomPowerLevels],
                           kMXEventTypeStringRoomAliases: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomAliases],
                           kMXEventTypeStringRoomCanonicalAlias: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomCanonicalAlias],
+                          kMXEventTypeStringRoomEncrypted: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomEncrypted],
                           kMXEventTypeStringRoomHistoryVisibility: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomHistoryVisibility],
                           kMXEventTypeStringRoomGuestAccess: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomGuestAccess],
                           kMXEventTypeStringRoomMessage: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomMessage],
