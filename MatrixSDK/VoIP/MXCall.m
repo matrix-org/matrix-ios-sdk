@@ -95,6 +95,11 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
         localICECandidates = [NSMutableArray array];
 
+        // Prevent the session from being paused so that the client can send call matrix
+        // events to the other peer to establish the call  even if the app goes in background
+        // meanwhile
+        [callManager.mxSession retainPreventPause];
+
         callStackCall = [callManager.callStack createCall];
         if (nil == callStackCall)
         {
@@ -367,6 +372,9 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     }
     else if (MXCallStateEnded == state)
     {
+        // Release the session pause prevention 
+        [callManager.mxSession releasePreventPause];
+
         // Store the total duration
         totalCallDuration = self.duration;
     }
