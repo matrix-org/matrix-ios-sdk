@@ -112,7 +112,19 @@ typedef void (^MXOnResumeDone)();
      The rooms being peeked.
      */
     NSMutableArray<MXPeekingRoom *> *peekingRooms;
+
+    /**
+     The background task used when the session continue to run the events stream when
+     the app goes in background.
+     */
+    UIBackgroundTaskIdentifier backgroundTaskIdentifier;
 }
+
+/**
+ The count of prevent pause tokens.
+ */
+@property (nonatomic) NSUInteger preventPauseCount;
+
 @end
 
 @implementation MXSession
@@ -131,6 +143,8 @@ typedef void (^MXOnResumeDone)();
         _notificationCenter = [[MXNotificationCenter alloc] initWithMatrixSession:self];
         accountData = [[MXAccountData alloc] init];
         peekingRooms = [NSMutableArray array];
+        _preventPauseCount = 0;
+        backgroundTaskIdentifier = UIBackgroundTaskInvalid;
         
         [self setState:MXSessionStateInitialised];
     }
@@ -322,6 +336,30 @@ typedef void (^MXOnResumeDone)();
 - (void)pause
 {
     NSLog(@"[MXSession] pause the event stream in state %tu", _state);
+
+    // Check that noone required the session to keep running even if the app goes in
+    // background
+    if (_preventPauseCount)
+    {
+        NSLog(@"[MXSession pause] Prevent the session from being paused. preventPauseCount: %tu", _preventPauseCount);
+
+        if (backgroundTaskIdentifier == UIBackgroundTaskInvalid)
+        {
+            backgroundTaskIdentifier = [[UIApplication sharedApplication] beginBackgroundTaskWithName:@"MXSessionBackgroundTask" expirationHandler:^{
+
+                NSLog(@"[MXSession pause] Background task #%tu is going to expire - ending it", backgroundTaskIdentifier);
+
+                // We cannot continue to run in background. Pause the session for real
+                self.preventPauseCount = 0;
+            }];
+
+            NSLog(@"[MXSession pause] Created background task #%tu", backgroundTaskIdentifier);
+        }
+
+        [self setState:MXSessionStatePauseRequested];
+
+        return;
+    }
     
     if ((_state == MXSessionStateRunning) || (_state == MXSessionStateBackgroundSyncInProgress))
     {
@@ -345,8 +383,20 @@ typedef void (^MXOnResumeDone)();
 
 - (void)resume:(void (^)())resumeDone
 {
+    NSLog(@"[MXSession] resume the event stream from state %tu", _state);
+
+    // Reset pause preventing mechanism if any
+    if (backgroundTaskIdentifier != UIBackgroundTaskInvalid)
+    {
+        NSLog(@"[MXSession resume] Stop background task #%tu", backgroundTaskIdentifier);
+
+        [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
+        backgroundTaskIdentifier = UIBackgroundTaskInvalid;
+    }
+
     // Check whether no request is already in progress
-    if (!eventStreamRequest || (_state == MXSessionStateBackgroundSyncInProgress))
+    if (!eventStreamRequest ||
+        (_state == MXSessionStateBackgroundSyncInProgress || _state == MXSessionStatePauseRequested))
     {
         [self setState:MXSessionStateSyncInProgress];
         
@@ -461,11 +511,60 @@ typedef void (^MXOnResumeDone)();
         _callManager = nil;
     }
 
+    // Stop background task
+    if (backgroundTaskIdentifier != UIBackgroundTaskInvalid)
+    {
+        [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
+        backgroundTaskIdentifier = UIBackgroundTaskInvalid;
+    }
+
     _myUser = nil;
     matrixRestClient = nil;
 
     [self setState:MXSessionStateClosed];
 }
+
+
+#pragma mark - MXSession pause prevention
+- (void)retainPreventPause
+{
+    self.preventPauseCount++;
+}
+
+- (void)releasePreventPause
+{
+    if (self.preventPauseCount > 0)
+    {
+        self.preventPauseCount--;
+    }
+}
+
+- (void)setPreventPauseCount:(NSUInteger)preventPauseCount
+{
+    _preventPauseCount = preventPauseCount;
+
+    NSLog(@"[MXSession] setPreventPauseCount: %tu. MXSession state: %tu", _preventPauseCount, _state);
+
+    if (_preventPauseCount == 0)
+    {
+        // The background task can be released
+        if (backgroundTaskIdentifier != UIBackgroundTaskInvalid)
+        {
+            NSLog(@"[MXSession pause] Stop background task #%tu", backgroundTaskIdentifier);
+
+            [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
+            backgroundTaskIdentifier = UIBackgroundTaskInvalid;
+        }
+
+        // And the session can be paused for real if it was not resumed before
+        if (_state == MXSessionStatePauseRequested)
+        {
+            NSLog(@"[MXSession] setPreventPauseCount: Actually pause the session");
+            [self pause];
+        }
+    }
+}
+
 
 #pragma mark - Server sync
 
@@ -665,9 +764,12 @@ typedef void (^MXOnResumeDone)();
             }
         }
         
-        // The event stream is running by now
-        [self setState:MXSessionStateRunning];
-        
+        if (_state != MXSessionStatePauseRequested)
+        {
+            // The event stream is running by now
+            [self setState:MXSessionStateRunning];
+        }
+
         // Check SDK user did not called [MXSession close] or [MXSession pause] during the session state change notification handling.
         if (nil == _myUser || _state == MXSessionStatePaused)
         {

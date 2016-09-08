@@ -81,6 +81,14 @@ typedef enum : NSUInteger
     MXSessionStatePaused,
     
     /**
+     The session has been requested to pause but some services requested the session to
+     continue to run even if the application is in background (@see retainPreventPause).
+     The session will be actually paused when those services declare they have finished
+     (@see releasePreventPause).
+     */
+    MXSessionStatePauseRequested,
+
+    /**
      The initial sync failed.
      
      @discussion
@@ -316,6 +324,33 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  No more data is retrieved from the home server.
  */
 - (void)close;
+
+
+#pragma mark - MXSession pause prevention
+/**
+ Add a token to prevent the session events stream from being paused.
+
+ @discussion
+ The pause method is basically called when the application goes in background.
+ However, the SDK or the application may want to continue so sync Matrix events while
+ the app is in background.
+
+ This method prevents the /sync from being paused so that the session continues to receive
+ and process Matrix events.
+
+ Note that the events stream continues on a UIBackgroundTask which can be terminated
+ by the system at anytime.
+ */
+- (void)retainPreventPause;
+
+/**
+ Release a prevent pause token.
+
+ @discussion
+ When the prevent pause tokens count is back to 0, the session is actually paused if still
+ requested.
+ */
+- (void)releasePreventPause;
 
 
 #pragma mark - Options
