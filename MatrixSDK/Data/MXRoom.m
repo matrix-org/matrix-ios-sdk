@@ -47,6 +47,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                                       kMXEventTypeStringRoomAvatar,
                                       kMXEventTypeStringRoomMember,
                                       kMXEventTypeStringRoomCreate,
+                                      kMXEventTypeStringRoomEncrypted,
                                       kMXEventTypeStringRoomJoinRules,
                                       kMXEventTypeStringRoomPowerLevels,
                                       kMXEventTypeStringRoomAliases,
