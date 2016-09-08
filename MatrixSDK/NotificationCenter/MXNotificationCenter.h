@@ -238,6 +238,21 @@ extern NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID;
                 sound:(BOOL)sound
             highlight:(BOOL)highlight;
 
+/**
+ Create an override push rule, see MXNotificationCenter notifications for operation result.
+ 
+ @param ruleId the rule identifier.
+ @param conditions the rule conditions.
+ @param notify enable/disable notification.
+ @param sound enable/disable sound during notification.
+ @param highlight enable/disable highlight option.
+ */
+- (void)addOverrideRuleWithId:(NSString*)ruleId
+                   conditions:(NSDictionary *)conditions
+                       notify:(BOOL)notify
+                        sound:(BOOL)sound
+                    highlight:(BOOL)highlight;
+
 @end
 
 

@@ -658,6 +658,7 @@ MXAuthAction;
                             kind:(MXPushRuleKind)kind
                          actions:(NSArray*)actions
                          pattern:(NSString*)pattern
+                      conditions:(NSDictionary*)conditions
                          success:(void (^)())success
                          failure:(void (^)(NSError *error))failure
 {
@@ -666,6 +667,17 @@ MXAuthAction;
     
     switch (kind)
     {
+        case MXPushRuleKindOverride:
+            kindString = @"override";
+            if (conditions.count && actions.count)
+            {
+                content = @{@"conditions": conditions, @"actions": actions};
+            }
+            else if (actions.count)
+            {
+                content = @{@"actions": actions};
+            }
+            break;
         case MXPushRuleKindContent:
             kindString = @"content";
             if (pattern.length && actions.count)
@@ -683,6 +695,17 @@ MXAuthAction;
         case MXPushRuleKindSender:
             kindString = @"sender";
             if (actions.count)
+            {
+                content = @{@"actions": actions};
+            }
+            break;
+        case MXPushRuleKindUnderride:
+            kindString = @"underride";
+            if (conditions.count && actions.count)
+            {
+                content = @{@"conditions": conditions, @"actions": actions};
+            }
+            else if (actions.count)
             {
                 content = @{@"actions": actions};
             }
