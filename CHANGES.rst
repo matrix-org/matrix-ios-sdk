@@ -1,3 +1,21 @@
+Changes in Matrix iOS SDK in 0.6.14 (2016-09-08)
+================================================
+
+Improvements:
+ * Allow MXSession to run the events stream in background for special cases
+ * MXEvent: Add the m.room.encrypted type
+ * MXSession: Expose the list of user ids for whom a 1:1 room exists (https://github.com/vector-im/vector-ios/issues/529).
+ * MXStore: Save MXUsers in the store (https://github.com/vector-im/vector-ios/issues/406).
+ * MXTools: Expose regex used to identify email address, user ids, room ids & and room aliases. Cache their regex objects to improve performance.
+ * MXTools: Add [MXTools isMatrixEventIdentifier:].
+ * MXTools: Add methods to create permalinks to room or event (https://github.com/vector-im/vector-ios/issues/547).
+ 
+Bug fixes:
+ * MXKRoomState.aliases: some addresses are missing  (https://github.com/vector-im/vector-ios/issues/528).
+ * MXFileStore: Stop leaking background tasks, which kill the app after 180s of bg.
+ * MXCall: Add a timeout for outgoing calls (https://github.com/vector-im/vector-ios/issues/577).
+ * MXJingleCallStackCall: When screen is locked, rotating the screen landscape makes local video preview go upside down (https://github.com/vector-im/vector-ios/issues/519).
+
 Changes in Matrix iOS SDK in 0.6.13 (2016-08-25)
 ================================================
 
