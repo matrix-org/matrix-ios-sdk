@@ -248,7 +248,7 @@ extern NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID;
  @param highlight enable/disable highlight option.
  */
 - (void)addOverrideRuleWithId:(NSString*)ruleId
-                   conditions:(NSDictionary *)conditions
+                   conditions:(NSArray<NSDictionary *> *)conditions
                        notify:(BOOL)notify
                         sound:(BOOL)sound
                     highlight:(BOOL)highlight;

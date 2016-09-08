@@ -466,19 +466,18 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
 }
 
 - (void)addOverrideRuleWithId:(NSString*)ruleId
-                   conditions:(NSDictionary *)conditions
+                   conditions:(NSArray<NSDictionary *> *)conditions
                        notify:(BOOL)notify
                         sound:(BOOL)sound
                     highlight:(BOOL)highlight
 {
-    // FIXME support conditions
     [self addRuleWithId:ruleId kind:MXPushRuleKindOverride pattern:nil conditions:conditions notify:notify sound:sound highlight:highlight];
 }
 
 - (void)addRuleWithId:(NSString*)ruleId
                  kind:(MXPushRuleKind)kind
               pattern:(NSString *)pattern
-           conditions:(NSDictionary *)conditions
+           conditions:(NSArray<NSDictionary *> *)conditions
                 notify:(BOOL)notify
                  sound:(BOOL)sound
              highlight:(BOOL)highlight
