@@ -446,7 +446,7 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
         ruleId = mutableRuleId;
     }
     
-    [self addRuleWithId:ruleId kind:MXPushRuleKindContent pattern:pattern notify:notify sound:sound highlight:highlight];
+    [self addRuleWithId:ruleId kind:MXPushRuleKindContent pattern:pattern conditions:nil notify:notify sound:sound highlight:highlight];
 }
 
 - (void)addRoomRule:(NSString *)roomId
@@ -454,7 +454,7 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
               sound:(BOOL)sound
           highlight:(BOOL)highlight
 {
-    [self addRuleWithId:roomId kind:MXPushRuleKindRoom pattern:nil notify:notify sound:sound highlight:highlight];
+    [self addRuleWithId:roomId kind:MXPushRuleKindRoom pattern:nil conditions:nil notify:notify sound:sound highlight:highlight];
 }
 
 - (void)addSenderRule:(NSString *)senderId
@@ -462,12 +462,23 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
                 sound:(BOOL)sound
             highlight:(BOOL)highlight
 {
-    [self addRuleWithId:senderId kind:MXPushRuleKindSender pattern:nil notify:notify sound:sound highlight:highlight];
+    [self addRuleWithId:senderId kind:MXPushRuleKindSender pattern:nil conditions:nil notify:notify sound:sound highlight:highlight];
+}
+
+- (void)addOverrideRuleWithId:(NSString*)ruleId
+                   conditions:(NSDictionary *)conditions
+                       notify:(BOOL)notify
+                        sound:(BOOL)sound
+                    highlight:(BOOL)highlight
+{
+    // FIXME support conditions
+    [self addRuleWithId:ruleId kind:MXPushRuleKindOverride pattern:nil conditions:conditions notify:notify sound:sound highlight:highlight];
 }
 
 - (void)addRuleWithId:(NSString*)ruleId
                  kind:(MXPushRuleKind)kind
               pattern:(NSString *)pattern
+           conditions:(NSDictionary *)conditions
                 notify:(BOOL)notify
                  sound:(BOOL)sound
              highlight:(BOOL)highlight
@@ -494,7 +505,7 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
         [actions addObject:@{@"set_tweak": @"highlight"}];
     }
     
-    [mxSession.matrixRestClient addPushRule:ruleId scope:kMXPushRuleScopeStringGlobal kind:kind actions:actions pattern:pattern success:^{
+    [mxSession.matrixRestClient addPushRule:ruleId scope:kMXPushRuleScopeStringGlobal kind:kind actions:actions pattern:pattern conditions:conditions success:^{
         
         // Refresh locally rules
         [self refreshRules:^{

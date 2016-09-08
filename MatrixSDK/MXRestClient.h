@@ -401,6 +401,7 @@ typedef enum : NSUInteger
  @param kind The kind of rule, ie. 'sender', 'room' or 'content' (see MXPushRuleKind).
  @param actions The rule actions: notify, don't notify, set tweak...
  @param pattern The pattern relevant for content rule.
+ @param conditions The conditions relevant for override and underride rule.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
@@ -409,6 +410,7 @@ typedef enum : NSUInteger
                             kind:(MXPushRuleKind)kind
                          actions:(NSArray*)actions
                          pattern:(NSString*)pattern
+                         conditions:(NSDictionary*)conditions
                          success:(void (^)())success
                          failure:(void (^)(NSError *error))failure;
 
