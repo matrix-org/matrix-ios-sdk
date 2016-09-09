@@ -410,7 +410,7 @@ typedef enum : NSUInteger
                             kind:(MXPushRuleKind)kind
                          actions:(NSArray*)actions
                          pattern:(NSString*)pattern
-                         conditions:(NSDictionary*)conditions
+                      conditions:(NSArray<NSDictionary *> *)conditions
                          success:(void (^)())success
                          failure:(void (^)(NSError *error))failure;
 
