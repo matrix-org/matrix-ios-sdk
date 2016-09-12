@@ -22,7 +22,7 @@
 
 #import "MXFileStoreMetaData.h"
 
-NSUInteger const kMXFileVersion = 33;
+NSUInteger const kMXFileVersion = 34;
 
 NSString *const kMXFileStoreFolder = @"MXFileStore";
 NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -1188,11 +1188,10 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
             //[self deleteAllData];
 
             receiptsByRoomId[roomId] = [NSMutableDictionary dictionary];
-            break;
         }
     }
 
-    NSLog(@"[MXFileStore] Loaded read receipts of %tu rooms in %.0fms", roomStores.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXFileStore] Loaded read receipts of %tu rooms in %.0fms", receiptsByRoomId.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (void)saveReceipts
