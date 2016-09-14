@@ -1,3 +1,10 @@
+Changes in Matrix iOS SDK in 0.6.15 (2016-09-14)
+================================================
+
+Bug fixes:
+ * MXFileStore: The stored receipts may not be totally loaded on cold start.
+ * MXNotificationCenter: The conditions of override and underride rules are defined in an array.
+
 Changes in Matrix iOS SDK in 0.6.14 (2016-09-08)
 ================================================
 
