@@ -122,6 +122,31 @@
     [self notifyListeners:presenceEvent];
 }
 
+- (void)updateFromHomeserverOfMatrixSession:(MXSession *)mxSession success:(void (^)())success failure:(void (^)(NSError *))failure
+{
+    [mxSession.matrixRestClient displayNameForUser:_userId success:^(NSString *displayname) {
+
+        [mxSession.matrixRestClient avatarUrlForUser:_userId success:^(NSString *avatarUrl) {
+
+            self.displayname = displayname;
+            self.avatarUrl = avatarUrl;
+
+            success();
+
+            [self notifyListeners:nil];
+
+        } failure:^(NSError *error) {
+
+            NSLog(@"[MXUser] updateFromHomeserverOfMatrixSession. Error when getting avatar: %@", error);
+            failure(error);
+        }];
+    } failure:^(NSError *error) {
+
+        NSLog(@"[MXUser] updateFromHomeserverOfMatrixSession. Error when getting avatar: %@", error);
+        failure(error);
+    }];
+}
+
 - (NSUInteger)lastActiveAgo
 {
     NSUInteger lastActiveAgo = -1;
