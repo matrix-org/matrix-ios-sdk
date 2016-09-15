@@ -1,3 +1,9 @@
+Changes in Matrix iOS SDK in 0.6.16 (2016-09-15)
+================================================
+
+Bug fixes:
+ * MXSession: In case of initialSync, mxsession.myUser.userId must be available before changing the state to MXSessionStateStoreDataReady (https://github.com/vector-im/vector-ios#623).
+
 Changes in Matrix iOS SDK in 0.6.15 (2016-09-14)
 ================================================
 
