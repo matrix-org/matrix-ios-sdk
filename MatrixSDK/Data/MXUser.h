@@ -92,7 +92,6 @@
  */
 - (void)updateWithRoomMemberEvent:(MXEvent*)roomMemberEvent roomMember:(MXRoomMember *)roomMember inMatrixSession:(MXSession*)mxSession;
 
-
 /**
  Update the MXUser data with a m.presence event.
  
@@ -100,6 +99,15 @@
  @param mxSession the mxSession to the home server.
  */
 - (void)updateWithPresenceEvent:(MXEvent*)presenceEvent inMatrixSession:(MXSession*)mxSession;
+
+/**
+ Make a request to the homeserver to update the MXUser.
+
+ @param mxSession the mxSession to the home server.
+ @param success a block when the operation succeeds.
+ @param failure a block when the operation fails.
+ */
+- (void)updateFromHomeserverOfMatrixSession:(MXSession*)mxSession success:(void (^)())success failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Events listeners

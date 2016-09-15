@@ -227,8 +227,12 @@ typedef void (^MXOnResumeDone)();
         }
         else
         {
+            // Create self.myUser instance to expose the user id as soon as possible
+            _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId];
+            _myUser.mxSession = self;
+
             NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
-            
+
             [self setState:MXSessionStateStoreDataReady];
             
             // The SDK client can use this data
@@ -299,31 +303,19 @@ typedef void (^MXOnResumeDone)();
     {
         // Get data from the home server
         // First of all, retrieve the user's profile information
-        [matrixRestClient displayNameForUser:matrixRestClient.credentials.userId success:^(NSString *displayname) {
+        [_myUser updateFromHomeserverOfMatrixSession:self success:^{
 
-            [matrixRestClient avatarUrlForUser:matrixRestClient.credentials.userId success:^(NSString *avatarUrl) {
+            // And store him as a common MXUser
+            [_store storeUser:_myUser];
 
-                // Create the user's profile
-                _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId andDisplayname:displayname andAvatarUrl:avatarUrl];
-                _myUser.mxSession = self;
+            // Initial server sync
+            [self serverSyncWithServerTimeout:0 success:onServerSyncDone failure:^(NSError *error) {
 
-                // And store him as a common MXUser
-                [_store storeUser:_myUser];
-                    
-                // Initial server sync
-                [self serverSyncWithServerTimeout:0 success:onServerSyncDone failure:^(NSError *error) {
-
-                    [self setState:MXSessionStateInitialSyncFailed];
-                    failure(error);
-
-                } clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
-
-            } failure:^(NSError *error) {
-                
                 [self setState:MXSessionStateInitialSyncFailed];
                 failure(error);
-                
-            }];
+
+            } clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+
         } failure:^(NSError *error) {
             
             [self setState:MXSessionStateInitialSyncFailed];
