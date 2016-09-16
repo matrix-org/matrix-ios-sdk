@@ -41,34 +41,6 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         _accountData = [[MXRoomAccountData alloc] init];
 
         _typingUsers = [NSArray array];
-        
-        _acknowledgableEventTypes = @[kMXEventTypeStringRoomName,
-                                      kMXEventTypeStringRoomTopic,
-                                      kMXEventTypeStringRoomAvatar,
-                                      kMXEventTypeStringRoomMember,
-                                      kMXEventTypeStringRoomCreate,
-                                      kMXEventTypeStringRoomEncrypted,
-                                      kMXEventTypeStringRoomJoinRules,
-                                      kMXEventTypeStringRoomPowerLevels,
-                                      kMXEventTypeStringRoomAliases,
-                                      kMXEventTypeStringRoomCanonicalAlias,
-                                      kMXEventTypeStringRoomGuestAccess,
-                                      kMXEventTypeStringRoomHistoryVisibility,
-                                      kMXEventTypeStringRoomMessage,
-                                      kMXEventTypeStringRoomMessageFeedback,
-                                      kMXEventTypeStringRoomRedaction,
-                                      kMXEventTypeStringRoomThirdPartyInvite,
-                                      kMXEventTypeStringCallInvite,
-                                      kMXEventTypeStringCallCandidates,
-                                      kMXEventTypeStringCallAnswer,
-                                      kMXEventTypeStringCallHangup
-                                      ];
-        
-        _unreadEventTypes = @[kMXEventTypeStringRoomName,
-                              kMXEventTypeStringRoomTopic,
-                              kMXEventTypeStringRoomMessage,
-                              kMXEventTypeStringCallInvite
-                              ];
     }
     
     return self;
@@ -655,7 +627,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     }
     
     // Check whether the provided event is acknowledgeable
-    BOOL isAcknowledgeable = ([_acknowledgableEventTypes indexOfObject:event.type] != NSNotFound);
+    BOOL isAcknowledgeable = ([mxSession.acknowledgableEventTypes indexOfObject:event.type] != NSNotFound);
     
     // Check whether the event is posterior to the current position (if any).
     // Look for an acknowledgeable event if the event type is not acknowledgeable.
@@ -664,7 +636,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         @autoreleasepool
         {
             // Enumerate all the acknowledgeable events of the room
-            id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:_acknowledgableEventTypes ignoreMemberProfileChanges:NO];
+            id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:mxSession.acknowledgableEventTypes ignoreMemberProfileChanges:NO];
 
             MXEvent *nextEvent;
             while ((nextEvent = messagesEnumerator.nextEvent))
@@ -725,7 +697,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 {
     @autoreleasepool
     {
-        id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:_acknowledgableEventTypes ignoreMemberProfileChanges:NO];
+        id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:mxSession.acknowledgableEventTypes ignoreMemberProfileChanges:NO];
 
         // Acknowledge the lastest valid event
         MXEvent *event;
@@ -779,7 +751,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 - (NSUInteger)localUnreadEventCount
 {
     // Check for unread events in store
-    return [mxSession.store localUnreadEventCount:self.roomId withTypeIn:_unreadEventTypes];
+    return [mxSession.store localUnreadEventCount:self.roomId withTypeIn:mxSession.unreadEventTypes];
 }
 
 - (NSUInteger)notificationCount

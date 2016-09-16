@@ -99,7 +99,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 @property (nonatomic, readonly) NSArray *typingUsers;
 
 /**
- The number of unread events wrote in the store which have their type listed in the 'unreadEventTypes' array.
+ The number of unread events wrote in the store which have their type listed in the MXSession.unreadEventType.
  
  @discussion: The returned count is relative to the local storage. The actual unread messages
  for a room may be higher than the returned value.
@@ -119,18 +119,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  (kMXRoomDidUpdateUnreadNotification is posted when this property is updated)
  */
 @property (nonatomic, readonly) NSUInteger highlightCount;
-
-/**
- An array of event types strings ('MXEventTypeString').
- By default any event type except the typing, the receipts and the presence ones.
- */
-@property (nonatomic) NSArray* acknowledgableEventTypes;
-
-/**
- The list of event types ('MXEventTypeString') considered to check the presence of some unread events.
- By default [m.room.name, m.room.topic, m.room.message, m.call.invite].
- */
-@property (nonatomic) NSArray* unreadEventTypes;
 
 /**
  Create a `MXRoom` instance.
@@ -707,8 +695,8 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  If the event was not acknowledged yet, this method acknowlegdes it by sending a receipt event.
  This will indicate to the homeserver that the user has read up to this event.
  
- @discussion If the type of the provided event is not defined in acknowledgableEventTypes,
- this method acknowlegdes the first prior event of type defined in acknowledgableEventTypes.
+ @discussion If the type of the provided event is not defined in MXSession.acknowledgableEventTypes,
+ this method acknowlegdes the first prior event of type defined in MXSession.acknowledgableEventTypes.
  
  @param event the event to acknowlegde.
  @return true if there is an update
@@ -716,7 +704,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 - (BOOL)acknowledgeEvent:(MXEvent*)event;
 
 /**
- Acknowlegde the latest event of type defined in acknowledgableEventTypes.
+ Acknowlegde the latest event of type defined in MXSession.acknowledgableEventTypes.
  Put sendReceipt YES to send a receipt event if the latest event was not yet acknowledged.
  This is will indicate to the homeserver that the user has read up to this event.
 

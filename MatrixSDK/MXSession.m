@@ -145,7 +145,35 @@ typedef void (^MXOnResumeDone)();
         peekingRooms = [NSMutableArray array];
         _preventPauseCount = 0;
         backgroundTaskIdentifier = UIBackgroundTaskInvalid;
-        
+
+        _acknowledgableEventTypes = @[kMXEventTypeStringRoomName,
+                                      kMXEventTypeStringRoomTopic,
+                                      kMXEventTypeStringRoomAvatar,
+                                      kMXEventTypeStringRoomMember,
+                                      kMXEventTypeStringRoomCreate,
+                                      kMXEventTypeStringRoomEncrypted,
+                                      kMXEventTypeStringRoomJoinRules,
+                                      kMXEventTypeStringRoomPowerLevels,
+                                      kMXEventTypeStringRoomAliases,
+                                      kMXEventTypeStringRoomCanonicalAlias,
+                                      kMXEventTypeStringRoomGuestAccess,
+                                      kMXEventTypeStringRoomHistoryVisibility,
+                                      kMXEventTypeStringRoomMessage,
+                                      kMXEventTypeStringRoomMessageFeedback,
+                                      kMXEventTypeStringRoomRedaction,
+                                      kMXEventTypeStringRoomThirdPartyInvite,
+                                      kMXEventTypeStringCallInvite,
+                                      kMXEventTypeStringCallCandidates,
+                                      kMXEventTypeStringCallAnswer,
+                                      kMXEventTypeStringCallHangup
+                                      ];
+
+        _unreadEventTypes = @[kMXEventTypeStringRoomName,
+                              kMXEventTypeStringRoomTopic,
+                              kMXEventTypeStringRoomMessage,
+                              kMXEventTypeStringCallInvite
+                              ];
+
         [self setState:MXSessionStateInitialised];
     }
     return self;
