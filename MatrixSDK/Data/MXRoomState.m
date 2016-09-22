@@ -592,7 +592,7 @@
         // Get the user display name from the member list of the room
         MXRoomMember *member = [self memberWithUserId:userId];
         
-        if (!member)
+        if (!member || member.membership == MXMembershipLeave || member.membership == MXMembershipBan)
         {
             // The user may not have joined the room yet. So try to resolve display name from presence data
             // Note: This data may not be available
