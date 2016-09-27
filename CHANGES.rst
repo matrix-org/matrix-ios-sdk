@@ -1,3 +1,15 @@
+Changes in Matrix iOS SDK in 0.6.17 (2016-09-27)
+================================================
+
+Improvements:
+ * Move MXRoom.acknowledgableEventTypes into MXSession (#141).
+ * MXTools: Update the regex used to detect room alias (Support '#' character in alias name).
+
+Bug fixes:
+ * Invite a left user doesn't display his displayname (https://github.com/vector-im/vector-ios#646).
+ * The room preview does not always display the right member info (https://github.com/vector-im/vector-ios#643).
+ * App got stuck and permenantly spinning (https://github.com/vector-im/vector-ios#655).
+
 Changes in Matrix iOS SDK in 0.6.16 (2016-09-15)
 ================================================
 
