@@ -514,8 +514,14 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
             __strong __typeof(weakSelf)strongSelf = weakSelf;
             if (strongSelf)
             {
-                [strongSelf cancel];
-                [self cleanupBackgroundTask];
+                // Cancel all the tasks currently run by the managed session
+                NSArray *tasks = httpManager.tasks;
+                for (NSURLSessionTask *sessionTask in tasks)
+                {
+                    [sessionTask cancel];
+                }
+                
+                [strongSelf cleanupBackgroundTask];
             }
         }];
     }
