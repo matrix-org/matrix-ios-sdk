@@ -2,7 +2,7 @@ Pod::Spec.new do |s|
 
   s.name         = "MatrixSDK"
   s.version      = "0.6.17"
-  s.summary      = "The iOS SDK to build apps compatible with Matrix (http://www.matrix.org)"
+  s.summary      = "The iOS SDK to build apps compatible with Matrix (https://www.matrix.org)"
 
   s.description  = <<-DESC
 				   Matrix is a new open standard for interoperable Instant Messaging and VoIP, providing pragmatic HTTP APIs and open source reference implementations for creating and running your own real-time communication infrastructure. 
@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
 				   Our hope is to make VoIP/IM as universal and interoperable as email.
                    DESC
 
-  s.homepage     = "http://www.matrix.org"
+  s.homepage     = "https://www.matrix.org"
 
   s.license      = { :type => "Apache License, Version 2.0", :file => "LICENSE" }
 
