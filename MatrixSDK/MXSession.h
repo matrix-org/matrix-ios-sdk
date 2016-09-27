@@ -371,6 +371,18 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
          failure:(void (^)(NSError *error))failure;
 
 /**
+ An array of event types for which read receipts are sent.
+ By default any event type except the typing, the read receipt and the presence ones.
+ */
+@property (nonatomic) NSArray<MXEventTypeString> *acknowledgableEventTypes;
+
+/**
+ The list of event types considered for counting unread messages returned by MXRoom.localUnreadEventCount.
+ By default [m.room.name, m.room.topic, m.room.message, m.call.invite].
+ */
+@property (nonatomic) NSArray<MXEventTypeString> *unreadEventTypes;
+
+/**
  Tell whether the profiles changes of the room members should be ignored in the last message processing.
  NO by default.
  

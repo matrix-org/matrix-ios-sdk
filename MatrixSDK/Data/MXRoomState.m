@@ -591,22 +591,11 @@
     {
         // Get the user display name from the member list of the room
         MXRoomMember *member = [self memberWithUserId:userId];
-        
-        if (!member)
-        {
-            // The user may not have joined the room yet. So try to resolve display name from presence data
-            // Note: This data may not be available
-            MXUser* user = [mxSession userWithUserId:userId];
-            if (user && user.displayname.length)
-            {
-                displayName = user.displayname;
-            }
-        }
-        else if (member.displayname.length)
+        if (member && member.displayname.length)
         {
             displayName = member.displayname;
         }
-
+        
         // Do not consider null displayname
         if (displayName)
         {
@@ -640,17 +629,6 @@
     NSString *displayName = member.displayname;
     
     // Do not disambiguate here members who have the same displayname in the room (see memberName:).
-    
-    // The user may not have joined the room yet. So try to resolve display name from presence data
-    // Note: This data may not be available
-    if (!displayName)
-    {
-        MXUser* user = [mxSession userWithUserId:userId];
-        if (user)
-        {
-            displayName = user.displayname;
-        }
-    }
     
     if (!displayName)
     {
