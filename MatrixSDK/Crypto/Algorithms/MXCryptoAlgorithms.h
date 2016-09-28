@@ -18,7 +18,7 @@
 
 #include "MXRoom.h"
 
-@class MXOlmDevice;
+@class MXSession, MXOlmDevice;
 @protocol MXEncrypting, MXDecrypting;
 
 #pragma mark - Constants definitions
@@ -65,6 +65,11 @@ FOUNDATION_EXPORT NSString *const kMXCryptoMegolmAlgorithm;
  */
 - (Class<MXDecrypting>)decryptorClassForAlgorithm:(NSString*)algorithm;
 
+/**
+ The list of registered algorithms.
+ */
+- (NSArray<NSString*>*)supportedAlgorithms;
+
 @end
 
 
@@ -72,21 +77,13 @@ FOUNDATION_EXPORT NSString *const kMXCryptoMegolmAlgorithm;
 
 @protocol MXEncrypting <NSObject>
 
-// @TODO
 /**
- base type for encryption implementations
- 
- @constructor
- @alias module:crypto/algorithms/base.EncryptionAlgorithm
- 
- @param {object} params parameters
- @param {string} params.deviceId The identifier for this device.
- @param {module:crypto} params.crypto crypto core
- @param {module:crypto/OlmDevice} params.olmDevice olm.js wrapper
- @param {module:base-apis~MatrixBaseApis} baseApis base matrix api interface
- @param {string} params.roomId  The ID of the room we will be sending to
+ Constructor.
+
+ @param matrixSession the related 'MXSession'.
+ @param roomId the id of the room we will be sending to.
  */
-- (instancetype)initWith;
+- (instancetype)initWithMatrixSession:(MXSession*)matrixSession andRoom:(NSString*)roomId;
 
 /**
  Encrypt a message event.
@@ -149,11 +146,11 @@ FOUNDATION_EXPORT NSString *const kMXCryptoMegolmAlgorithm;
 @protocol MXDecrypting <NSObject>
 
 /**
- Constructor
+ Constructor.
  
- @param olmDevice the wrapper to libolm.
+ @param matrixSession the related 'MXSession'.
  */
-- (instancetype)initWitOlmDevice:(MXOlmDevice*)olmDevice;
+- (instancetype)initWithMatrixSession:(MXSession*)matrixSession;
 
 /**
  Decrypt a message
@@ -161,7 +158,7 @@ FOUNDATION_EXPORT NSString *const kMXCryptoMegolmAlgorithm;
  @param event the raw event.
  @param the result error if there is a problem decrypting the event.
  
- @return the decryption result. nil if the event referred to an unknown megolm session.
+ @return the decryption result. Nil if the event referred to an unknown megolm session.
  */
 - (MXDecryptionResult*)decryptEvent:(MXEvent*)event error:(NSError**)error;
 
@@ -181,17 +178,27 @@ FOUNDATION_EXPORT NSString *const kMXCryptoMegolmAlgorithm;
  */
 @interface MXEncryptionAlgorithm : NSObject <MXEncrypting>
 
+/**
+ The related matrix session.
+ */
+@property (nonatomic, readonly) MXSession *mxSession;
+
+/**
+ The id of the room we will be sending to.
+ */
+@property (nonatomic, readonly) NSString *roomId;
+
 @end
+
 
 /**
  A base class for decryption implementations.
  */
 @interface MXDecryptionAlgorithm : NSObject <MXDecrypting>
 
-
 /**
- The libolm wrapper.
+ The related matrix session.
  */
-@property (nonatomic,readonly) MXOlmDevice *olmDevice;
+@property (nonatomic, readonly) MXSession *mxSession;
 
 @end

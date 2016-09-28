@@ -75,19 +75,24 @@ static MXCryptoAlgorithms *sharedOnceInstance = nil;
     return decryptors[algorithm];
 }
 
+- (NSArray<NSString *> *)supportedAlgorithms
+{
+    return encryptors.allKeys;
+}
+
 @end
 
 
 #pragma mark - Base implementations classes
 @implementation MXEncryptionAlgorithm
 
-// @TODO
-- (instancetype)initWith
+- (instancetype)initWithMatrixSession:(MXSession *)matrixSession andRoom:(NSString *)roomId
 {
     self = [super init];
     if (self)
     {
-
+        _mxSession = matrixSession;
+        _roomId = roomId;
     }
     return self;
 }
@@ -110,12 +115,12 @@ static MXCryptoAlgorithms *sharedOnceInstance = nil;
 
 @implementation MXDecryptionAlgorithm
 
-- (instancetype)initWitOlmDevice:(MXOlmDevice *)olmDevice
+- (instancetype)initWithMatrixSession:(MXSession *)matrixSession
 {
     self = [super init];
     if (self)
     {
-        _olmDevice = olmDevice;
+        _mxSession = matrixSession;
     }
     return self;
 }
