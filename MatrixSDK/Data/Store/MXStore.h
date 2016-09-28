@@ -20,6 +20,7 @@
 #import "MXReceiptData.h"
 #import "MXUser.h"
 #import "MXRoomAccountData.h"
+#import <OLMKit/OLMKit.h>
 
 #import "MXEventsEnumerator.h"
 
@@ -347,5 +348,35 @@
  Store/retrieve the user account data.
  */
 @property (nonatomic) NSDictionary *userAccountData;
+
+
+#pragma mark - E2E encryption data
+
+/**
+ Store the end to end account for the logged-in user.
+ */
+- (void)storeEndToEndAccount:(OLMAccount*)account;
+
+/**
+ * Load the end to end account for the logged-in user.
+ */
+- (OLMAccount*)endToEndAccount;
+
+/**
+ Store a session between the logged-in user and another device.
+
+ @param deviceKey the public key of the other device.
+ @param session the end-to-end session.
+ */
+- (void)storeEndToEndSession:(OLMSession*)session forDevice:(NSString*)deviceKey;
+
+/**
+ Retrieve the end-to-end sessions between the logged-in user and another
+ device.
+
+ @param deviceKey the public key of the other device.
+ @return {object} A map from sessionId to Base64 end-to-end session.
+ */
+- (NSDictionary<NSString*, OLMSession*>*)endToEndSessionsWithDevice:(NSString*)deviceKey;
 
 @end
