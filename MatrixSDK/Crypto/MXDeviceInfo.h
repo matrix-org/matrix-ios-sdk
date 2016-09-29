@@ -16,6 +16,8 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MXJSONModel.h"
+
 /**
  The device verification state.
  */
@@ -42,19 +44,19 @@ typedef enum : NSUInteger
 /**
  Information about a user's device.
  */
-@interface MXDeviceInfo : NSObject <NSCoding>
+@interface MXDeviceInfo : MXJSONModel
 
 - (instancetype)initWithDeviceId:(NSString*)deviceId;
 
 /**
- The ID of this device.
+ The id of this device.
  */
 @property (nonatomic, readonly) NSString *deviceId;
 
 /**
- Verification state of this device.
+ The id of this device.
  */
-@property (nonatomic) MXDeviceVerification verified;
+@property (nonatomic) NSString *userId;
 
 /**
  The list of algorithms supported by this device.
@@ -68,10 +70,19 @@ typedef enum : NSUInteger
 @property (nonatomic) NSDictionary *keys;
 
 /**
+ The signature of this MXDeviceInfo.
+ A map from <key type>:<device_id> -> <base64-encoded key>>.
+ */
+@property (nonatomic) NSDictionary *signatures;
+
+/**
  Additional data from the homeserver.
- @TODO: Private?
+ HS sends this data under the 'unsigned' field but it is a reserved keyword. Hence, renaming.
  */
 @property (nonatomic) NSDictionary *unsignedData;
+
+
+#pragma mark - Shortcuts to access data
 
 /**
  * The base64-encoded fingerprint for this device (ie, the Ed25519 key).
@@ -87,5 +98,13 @@ typedef enum : NSUInteger
  * The configured display name for this device, if any.
  */
 @property (nonatomic, readonly) NSString *displayName;
+
+
+#pragma mark - Additional information
+
+/**
+ Verification state of this device.
+ */
+@property (nonatomic) MXDeviceVerification verified;
 
 @end

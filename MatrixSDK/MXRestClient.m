@@ -2964,4 +2964,86 @@ MXAuthAction;
     return [self search:parameters nextBatch:nextBatch success:success failure:failure];
 }
 
+
+#pragma mark - Crypto
+- (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys oneTimeKeys:(NSDictionary*)oneTimeKeys
+                     forDevice:(NSString*)deviceId
+                       success:(void (^)(MXKeysUploadResponse *keysUploadResponse))success
+                       failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/keys/upload", kMXAPIPrefixPathUnstable];
+    if (deviceId)
+    {
+        path = [NSString stringWithFormat:@"%@/%@", path, deviceId];
+    }
+
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+    if (deviceKeys)
+    {
+        parameters[@"device_keys"] = deviceKeys;
+    }
+    if (oneTimeKeys)
+    {
+        parameters[@"one_time_keys"] = oneTimeKeys;
+    }
+
+    return [httpClient requestWithMethod:@"POST"
+                                    path: path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+
+                                     // Use here the processing queue in order to keep the server response order
+                                     dispatch_async(processingQueue, ^{
+
+                                        MXKeysUploadResponse *keysUploadResponse =  [MXKeysUploadResponse modelFromJSON:JSONResponse];
+
+                                         dispatch_async(dispatch_get_main_queue(), ^{
+
+                                             if (success)
+                                             {
+                                                 success(keysUploadResponse);
+                                             }
+                                         });
+                                     });
+                                 }
+                                 failure:failure];
+}
+
+- (MXHTTPOperation*)downloadKeysForUsers:(NSArray<NSString*>*)userIds
+                                 success:(void (^)(MXKeysQueryResponse *keysQueryResponse))success
+                                 failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/keys/query", kMXAPIPrefixPathUnstable];
+
+    NSMutableDictionary *downloadQuery = [NSMutableDictionary dictionary];
+    for (NSString *userID in userIds)
+    {
+        downloadQuery[userID] = @{};
+    }
+
+    NSDictionary *parameters = @{
+                                 @"device_keys": downloadQuery
+                                 };
+
+    return [httpClient requestWithMethod:@"POST"
+                                    path: path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+
+                                     dispatch_async(processingQueue, ^{
+
+                                         MXKeysQueryResponse *keysQueryResponse = [MXKeysQueryResponse modelFromJSON:JSONResponse];
+
+                                         dispatch_async(dispatch_get_main_queue(), ^{
+
+                                             if (success)
+                                             {
+                                                 success(keysQueryResponse);
+                                             }
+                                         });
+                                     });
+                                 }
+                                 failure:failure];
+}
+
 @end

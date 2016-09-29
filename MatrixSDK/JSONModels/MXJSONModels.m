@@ -18,6 +18,7 @@
 
 #import "MXEvent.h"
 #import "MXTools.h"
+#import "MXDeviceInfo.h"
 
 @implementation MXPublicRoom
 
@@ -120,6 +121,7 @@ NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
         MXJSONModelSetString(credentials.homeServer, JSONDictionary[@"home_server"]);
         MXJSONModelSetString(credentials.userId, JSONDictionary[@"user_id"]);
         MXJSONModelSetString(credentials.accessToken, JSONDictionary[@"access_token"]);
+        MXJSONModelSetString(credentials.deviceId, JSONDictionary[@"device_id"]);
     }
 
     return credentials;
@@ -1214,6 +1216,81 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         ttl = (NSUInteger)(_ttlExpirationLocalTs / 1000 - (uint64_t)[[NSDate date] timeIntervalSince1970]);
     }
     return ttl;
+}
+
+@end
+
+
+#pragma mark - Crypto
+
+@implementation MXKeysUploadResponse
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXKeysUploadResponse *keysUploadResponse = [[MXKeysUploadResponse alloc] init];
+    if (keysUploadResponse)
+    {
+        MXJSONModelSetDictionary(keysUploadResponse.oneTimeKeyCounts, JSONDictionary[@"one_time_key_counts"]);
+    }
+    return keysUploadResponse;
+}
+
+- (NSUInteger)oneTimeKeyCountsForAlgorithm:(NSString *)algorithm
+{
+    return [((NSNumber*)_oneTimeKeyCounts[algorithm]) unsignedIntegerValue];
+}
+
+@end
+
+@implementation MXKeysQueryResponse
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXKeysQueryResponse *keysQueryResponse = [[MXKeysQueryResponse alloc] init];
+    if (keysQueryResponse)
+    {
+        NSMutableDictionary *deviceKeys = [NSMutableDictionary dictionary];
+
+        if ([JSONDictionary[@"device_keys"] isKindOfClass:NSDictionary.class])
+        {
+            for (NSString *userId in JSONDictionary[@"device_keys"])
+            {
+                if ([JSONDictionary[@"device_keys"][userId] isKindOfClass:NSDictionary.class])
+                {
+                    for (NSString *deviceId in JSONDictionary[@"device_keys"][userId])
+                    {
+                        MXDeviceInfo *deviceInfo;
+                        MXJSONModelSetMXJSONModel(deviceInfo, MXDeviceInfo, JSONDictionary[@"device_keys"][userId][deviceId]);
+
+                        if (!deviceKeys[userId])
+                        {
+                            deviceKeys[userId] = [NSMutableDictionary dictionary];
+                        }
+                        deviceKeys[userId][deviceId] = deviceInfo;
+                    }
+                }
+            }
+        }
+
+        keysQueryResponse.deviceKeys = deviceKeys;
+    }
+
+    return keysQueryResponse;
+}
+
+- (NSArray<NSString *> *)userIds
+{
+    return _deviceKeys.allKeys;
+}
+
+- (NSArray<NSString *> *)deviceIdsForUser:(NSString *)userId
+{
+    return _deviceKeys[userId].allKeys;
+}
+
+- (MXDeviceInfo *)deviceInfoForDevice:(NSString *)deviceId forUser:(NSString *)userId
+{
+    return _deviceKeys[userId][deviceId];
 }
 
 @end

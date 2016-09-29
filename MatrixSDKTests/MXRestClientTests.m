@@ -1339,6 +1339,60 @@
     }];
 }
 
+
+#pragma mark - Crypto
+#import "MXDeviceInfo.h"
+
+- (void)testDeviceKeys
+{
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        NSString *ed25519key = @"wV5E3EUSHpHuoZLljNzojlabjGdXT3Mz7rugG9zgbkI";
+
+
+        MXDeviceInfo *bobDevice = [[MXDeviceInfo alloc] initWithDeviceId:@"dev1"];
+        bobDevice.userId = bobRestClient.credentials.userId;
+        bobDevice.algorithms = @[@"1"];
+        bobDevice.keys = @{
+                          [NSString stringWithFormat:@"ed25519:%@", bobDevice.deviceId]: ed25519key
+                          };
+
+        // Upload the device keys
+        [bobRestClient uploadKeys:bobDevice.JSONDictionary oneTimeKeys:nil forDevice:@"dev1" success:^(MXKeysUploadResponse *keysUploadResponse) {
+
+            XCTAssert(keysUploadResponse.oneTimeKeyCounts);
+            XCTAssertEqual(keysUploadResponse.oneTimeKeyCounts.count, 0, @"There is no yet one-time keys");
+
+            XCTAssertEqual([keysUploadResponse oneTimeKeyCountsForAlgorithm:@"deded"], 0, @"It must response 0 for any algo");
+
+            // And download back it
+            [bobRestClient downloadKeysForUsers:@[bobRestClient.credentials.userId] success:^(MXKeysQueryResponse *keysQueryResponse) {
+
+                XCTAssert(keysQueryResponse.deviceKeys);
+
+                XCTAssertEqual(keysQueryResponse.userIds.count, 1);
+                XCTAssertEqual([keysQueryResponse deviceIdsForUser:bobRestClient.credentials.userId].count, 1);
+
+                MXDeviceInfo *bobDevice2 = [keysQueryResponse deviceInfoForDevice:@"dev1" forUser:bobRestClient.credentials.userId];
+                XCTAssert(bobDevice2);
+                XCTAssertEqualObjects(bobDevice2.deviceId, @"dev1");
+                XCTAssertEqualObjects(bobDevice2.userId, bobRestClient.credentials.userId);
+
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+
 @end
 
 #pragma clang diagnostic pop

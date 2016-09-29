@@ -41,20 +41,53 @@
 
 - (NSString *)displayName
 {
-    return _unsignedData[@"unsigned.device_display_name"];
+    return _unsignedData[@"device_display_name"];
 }
 
+#pragma mark - MXJSONModel
 
-#pragma mark - NSCoding
-- (instancetype)initWithCoder:(NSCoder *)aDecoder
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    // @TODO
-    return nil;
+    MXDeviceInfo *deviceInfo = [[MXDeviceInfo alloc] initWithDeviceId:JSONDictionary[@"device_id"]];
+    if (deviceInfo)
+    {
+        MXJSONModelSetString(deviceInfo.userId, JSONDictionary[@"user_id"]);
+        MXJSONModelSetArray(deviceInfo.algorithms, JSONDictionary[@"algorithms"]);
+        MXJSONModelSetDictionary(deviceInfo.keys, JSONDictionary[@"keys"]);
+        MXJSONModelSetDictionary(deviceInfo.signatures, JSONDictionary[@"signatures"]);
+        MXJSONModelSetDictionary(deviceInfo.unsignedData, JSONDictionary[@"unsigned"]);
+    }
+
+    return deviceInfo;
 }
 
-- (void)encodeWithCoder:(NSCoder *)aCoder
+- (NSDictionary *)JSONDictionary
 {
-    // @TODO
+    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
+
+    JSONDictionary[@"device_id"] = _deviceId;
+    if (_userId)
+    {
+        JSONDictionary[@"user_id"] = _userId;
+    }
+    if (_algorithms)
+    {
+        JSONDictionary[@"algorithms"] = _algorithms;
+    }
+    if (_keys)
+    {
+        JSONDictionary[@"keys"] = _keys;
+    }
+    if (_signatures)
+    {
+        JSONDictionary[@"signatures"] = _signatures;
+    }
+    if (_unsignedData)
+    {
+        JSONDictionary[@"unsigned"] = _unsignedData;
+    }
+
+    return JSONDictionary;
 }
 
 @end

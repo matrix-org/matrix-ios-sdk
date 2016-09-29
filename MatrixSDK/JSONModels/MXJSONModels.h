@@ -18,7 +18,7 @@
 
 #import "MXJSONModel.h"
 
-@class MXEvent;
+@class MXEvent, MXDeviceInfo;
 
 /**
  This file contains definitions of basic JSON responses or objects received
@@ -166,6 +166,11 @@ FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeRecaptcha;
      The access token to create a MXRestClient
      */
     @property (nonatomic) NSString *accessToken;
+
+    /**
+     The device id.
+     */
+    @property (nonatomic) NSString *deviceId;
 
     /**
      The server certificate trusted by the user (nil when the server is trusted by the device).
@@ -1322,6 +1327,46 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
      based on the device clock.
      */
     @property (nonatomic) uint64_t ttlExpirationLocalTs;
+@end
+
+
+#pragma mark - Crypto
+/**
+ `MXKeysUploadResponse` represents the response to /keys/upload request made by
+ [MXRestClient uploadKeys].
+ */
+@interface MXKeysUploadResponse : MXJSONModel
+
+/**
+ The count per algorithm as returned by the homeserver: a map (algorithm->count).
+ */
+@property (nonatomic) NSDictionary<NSString*, NSNumber*> *oneTimeKeyCounts;
+
+/**
+ Helper methods to extract information from 'oneTimeKeyCounts'.
+ */
+- (NSUInteger)oneTimeKeyCountsForAlgorithm:(NSString*)algorithm;
+
+@end
+
+/**
+ `MXKeysQueryResponse` represents the response to /keys/query request made by
+ [MXRestClient downloadKeysForUsers].
+ */
+@interface MXKeysQueryResponse : MXJSONModel
+
+    /**
+      The device keys as returned by the homeserver: a map of a map (userId->deviceId->MXDeviceInfo).
+     */
+    @property (nonatomic) NSDictionary<NSString* /* userId */,
+                                NSDictionary<NSString* /* deviceId */, MXDeviceInfo*>*> *deviceKeys;
+
+/**
+ Helper methods to extract information from 'deviceKeys'.
+ */
+- (NSArray<NSString*>*)userIds;
+- (NSArray<NSString*>*)deviceIdsForUser:(NSString*)userId;
+- (MXDeviceInfo*)deviceInfoForDevice:(NSString*)deviceId forUser:(NSString*)userId;
 
 @end
 
