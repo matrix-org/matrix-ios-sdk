@@ -1392,6 +1392,32 @@
     }];
 }
 
+- (void)testOneTimeKeys
+{
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        NSDictionary *otks = @{
+                              @"curve25519:AAAABQ": @"ueuHES/Q0P1MZ4J3IUpC8iQTkgQNX66ZpxVLUaTDuB8",
+                              @"curve25519:AAAABA": @"PmyaaB68Any+za9CuZXzFsQZW31s/TW6XbAB9akEpQs"
+                              };
+
+        // Upload the device keys
+        [bobRestClient uploadKeys:nil oneTimeKeys:otks forDevice:@"dev1" success:^(MXKeysUploadResponse *keysUploadResponse) {
+
+            XCTAssert(keysUploadResponse.oneTimeKeyCounts);
+            XCTAssertEqual(keysUploadResponse.oneTimeKeyCounts.count, 1, @"There is no yet one-time keys");
+
+            XCTAssertEqual([keysUploadResponse oneTimeKeyCountsForAlgorithm:@"curve25519"], 2, @"It must response 2 for 'curve25519'");
+            XCTAssertEqual([keysUploadResponse oneTimeKeyCountsForAlgorithm:@"deded"], 0, @"It must response 0 for any other algo");
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
 
 @end
 
