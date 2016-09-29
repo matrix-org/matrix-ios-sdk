@@ -18,7 +18,7 @@
 
 #import "MXJSONModel.h"
 
-@class MXEvent, MXDeviceInfo;
+@class MXEvent, MXUsersDevicesInfoMap;
 
 /**
  This file contains definitions of basic JSON responses or objects received
@@ -1356,17 +1356,9 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @interface MXKeysQueryResponse : MXJSONModel
 
     /**
-      The device keys as returned by the homeserver: a map of a map (userId->deviceId->MXDeviceInfo).
+      The device keys per devices per users.
      */
-    @property (nonatomic) NSDictionary<NSString* /* userId */,
-                                NSDictionary<NSString* /* deviceId */, MXDeviceInfo*>*> *deviceKeys;
-
-/**
- Helper methods to extract information from 'deviceKeys'.
- */
-- (NSArray<NSString*>*)userIds;
-- (NSArray<NSString*>*)deviceIdsForUser:(NSString*)userId;
-- (MXDeviceInfo*)deviceInfoForDevice:(NSString*)deviceId forUser:(NSString*)userId;
+    @property (nonatomic) MXUsersDevicesInfoMap *deviceKeys;
 
 @end
 
