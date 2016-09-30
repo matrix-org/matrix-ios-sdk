@@ -53,20 +53,21 @@
     {
         mxSession = matrixSession;
 
-        //
-        if (!mxSession.matrixRestClient.credentials.deviceId)
-        {
-            mxSession.matrixRestClient.credentials.deviceId = [MXTools generateSecret];
-
-            // @TODO: store it
-        }
-
         _olmDevice = [[MXOlmDevice alloc] initWithStore:matrixSession.store];
 
         roomAlgorithms = [NSMutableDictionary dictionary];
 
         // Build our device keys: these will later be uploaded
-        myDevice = [[MXDeviceInfo alloc] initWithDeviceId:mxSession.matrixRestClient.credentials.deviceId];
+        NSString *deviceId = mxSession.matrixRestClient.credentials.deviceId;
+        if (!deviceId)
+        {
+            // Generate a device id if the homeserver did not provide it or the sdk user forgot it
+            deviceId = [self generateDeviceId];
+
+            NSLog(@"[MXCrypto] Warning: No device id in MXCredentials. An id was created. Think of storing it");
+        }
+
+        myDevice = [[MXDeviceInfo alloc] initWithDeviceId:deviceId];
         myDevice.userId = mxSession.myUser.userId;
         myDevice.keys = @{
                             [NSString stringWithFormat:@"ed25519:%@", mxSession.matrixRestClient.credentials.deviceId]: _olmDevice.deviceEd25519Key,
@@ -284,6 +285,11 @@
 
 
 #pragma mark - Private methods
+- (NSString*)generateDeviceId
+{
+    return [[[MXTools generateSecret] stringByReplacingOccurrencesOfString:@"-" withString:@""] substringToIndex:10];
+}
+
 /**
  Listen to events that change the signatures chain.
  */

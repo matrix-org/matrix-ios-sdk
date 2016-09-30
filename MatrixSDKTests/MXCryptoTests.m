@@ -49,6 +49,10 @@
 {
     [matrixSDKTestsData doMXSessionTestWithBob:self andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
 
+        // In case of password registration, the homeserver does not provide a device id
+        // Hardcode one
+        mxSession.matrixRestClient.credentials.deviceId = @"BOB's device";
+
         XCTAssertFalse(mxSession.cryptoEnabled, @"Crypto is disabled by default");
         XCTAssertNil(mxSession.crypto);
 
@@ -59,8 +63,10 @@
         NSString *deviceCurve25519Key = mxSession.crypto.olmDevice.deviceCurve25519Key;
         NSString *deviceEd25519Key = mxSession.crypto.olmDevice.deviceEd25519Key;
 
-        MXRestClient *bobRestClient = mxSession.matrixRestClient;
+        NSArray<MXDeviceInfo *> *myUserDevices = [mxSession.crypto storedDevicesForUser:mxSession.myUser.userId];
+        XCTAssertEqual(myUserDevices.count, 1);
 
+        MXRestClient *bobRestClient = mxSession.matrixRestClient;
         [mxSession close];
         mxSession = nil;
 
@@ -75,6 +81,11 @@
 
             XCTAssertEqualObjects(deviceCurve25519Key, mxSession.crypto.olmDevice.deviceCurve25519Key);
             XCTAssertEqualObjects(deviceEd25519Key, mxSession.crypto.olmDevice.deviceEd25519Key);
+
+            NSArray<MXDeviceInfo *> *myUserDevices2 = [mxSession.crypto storedDevicesForUser:mxSession.myUser.userId];
+            XCTAssertEqual(myUserDevices2.count, 1);
+
+            XCTAssertEqualObjects(myUserDevices[0].deviceId, myUserDevices2[0].deviceId);
 
             [expectation fulfill];
             
