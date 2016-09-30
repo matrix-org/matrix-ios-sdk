@@ -39,9 +39,17 @@
                     L receipts
                 + ...
             + users: all MXUsers known by the user. There are distributed among smaller files to speed up their storage.
-                     L usersGroup #1
-                     L usersGroup #2
-                     L ...
+                L usersGroup #1
+                L usersGroup #2
+                L ...
+            + crypto: crypto data
+                L account: the user's olm account
+                @TODO
+                L announced: ?
+                L devices: ?
+                L rooms: ?
+                L sessions: ?
+                L inboundGroupSessions: ?
             L MXFileStore : Information about the stored data
             + backup : This folder contains backup of files that are modified during
                   the commit process. It is flushed when the commit completes.
@@ -54,6 +62,8 @@
                         + ...
                     + users
                         L usersGroup #1
+                        L ...
+                    + crypto
                         L ...
                     L MXFileStore
  */

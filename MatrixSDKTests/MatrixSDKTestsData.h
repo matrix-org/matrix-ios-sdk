@@ -73,6 +73,9 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
 - (void)doMXSessionTestWithBobAndThePublicRoom:(XCTestCase*)testCase
                                 readyToTest:(void (^)(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation))readyToTest;
 
+- (void)doMXSessionTestWithBob:(XCTestCase*)testCase andStore:(id<MXStore>)store
+                   readyToTest:(void (^)(MXSession *mxSession, XCTestExpectation *expectation))readyToTest;
+
 #pragma mark - mxAlice
 @property (nonatomic, readonly) MXCredentials *aliceCredentials;
 

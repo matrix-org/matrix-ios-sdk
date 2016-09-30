@@ -19,6 +19,10 @@
 #import "MXRestClient.h"
 #import "MXError.h"
 
+// Do not bother with retain cycles warnings in tests
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-retain-cycles"
+
 /*
  Out of the box, the tests are supposed to be run with the iOS simulator attacking
  a test home server running on the same Mac machine.
@@ -410,6 +414,26 @@ NSMutableArray *roomsToClean;
     }];
 }
 
+- (void)doMXSessionTestWithBob:(XCTestCase *)testCase andStore:(id<MXStore>)store readyToTest:(void (^)(MXSession *, XCTestExpectation *))readyToTest
+{
+    [self doMXRestClientTestWithBob:testCase readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+
+        [mxSession setStore:store success:^{
+
+            [mxSession start:^{
+
+                readyToTest(mxSession, expectation);
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
 
 #pragma mark - mxAlice
 - (void)getAliceCredentials:(void (^)())success
@@ -624,3 +648,6 @@ NSMutableArray *roomsToClean;
 }
 
 @end
+
+#pragma clang diagnostic pop
+

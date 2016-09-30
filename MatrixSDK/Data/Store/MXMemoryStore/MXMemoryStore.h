@@ -18,6 +18,9 @@
 
 #import "MXMemoryRoomStore.h"
 
+#import <OLMKit/OLMKit.h>
+#import "MXUsersDevicesInfoMap.h"
+
 /**
  `MXMemoryStore` is an implementation of the `MXStore` interface that stores events in memory.
  */
@@ -35,6 +38,13 @@
 
     // The user credentials
     MXCredentials *credentials;
+
+    // Crypto
+    // The olm account
+    OLMAccount *olmAccount;
+
+    // All users devices keys
+    MXUsersDevicesInfoMap *usersDevicesInfoMap;
 }
 
 #pragma mark - protected operations

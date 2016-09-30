@@ -18,8 +18,9 @@
 
 #import "MXRestClient.h"
 #import "MXDeviceInfo.h"
+#import "MXOlmDevice.h"
 
-@class MXSession, MXOlmDevice;
+@class MXSession;
 
 
 @interface MXCrypto : NSObject

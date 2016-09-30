@@ -16,7 +16,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import <MXStore.h>
+#import "MXStore.h"
 
 /**
  An instance of MXOlmDevice manages the olm cryptography functions.

@@ -174,13 +174,6 @@ typedef void (^MXOnResumeDone)();
                               kMXEventTypeStringCallInvite
                               ];
 
-       // @TODO
-        _cryptoEnabled = YES;
-        if (_cryptoEnabled)
-        {
-            _crypto = [[MXCrypto alloc] initWithMatrixSession:self];
-        }
-
         [self setState:MXSessionStateInitialised];
     }
     return self;
@@ -251,6 +244,12 @@ typedef void (^MXOnResumeDone)();
                 }
             }
 
+            // Consider the user enabled crypto if there is an E2E account in their store
+            if ([_store respondsToSelector:@selector(endToEndAccount)] && [_store endToEndAccount])
+            {
+                self.cryptoEnabled = YES;
+            }
+
             NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
 
             NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
@@ -265,6 +264,12 @@ typedef void (^MXOnResumeDone)();
             // Create self.myUser instance to expose the user id as soon as possible
             _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId];
             _myUser.mxSession = self;
+
+            // Consider the user enabled crypto if there is an E2E account in their store
+            if ([_store respondsToSelector:@selector(endToEndAccount)] && [_store endToEndAccount])
+            {
+                self.cryptoEnabled = YES;
+            }
 
             NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
@@ -1022,6 +1027,37 @@ typedef void (^MXOnResumeDone)();
     NSParameterAssert(!_callManager);
 
     _callManager = [[MXCallManager alloc] initWithMatrixSession:self andCallStack:callStack];
+}
+
+- (void)setCryptoEnabled:(BOOL)cryptoEnabled
+{
+    if (cryptoEnabled != _cryptoEnabled)
+    {
+        if (cryptoEnabled)
+        {
+            if ([_store respondsToSelector:@selector(endToEndAccount)])
+            {
+                NSLog(@"[MXSession] Crypto is enabled");
+                _cryptoEnabled = YES;
+
+                // Instantiate crypto data
+                _crypto = [[MXCrypto alloc] initWithMatrixSession:self];
+
+            }
+            else
+            {
+                NSLog(@"[MXSession] ERROR: Cannot enable crypto as the store %@ is not compatible", _store.class);
+            }
+        }
+        else
+        {
+            NSLog(@"[MXSession] Crypto is disabled");
+            _cryptoEnabled = NO;
+            _crypto = nil;
+
+            //@TODO: Reset crypto store
+        }
+    }
 }
 
 

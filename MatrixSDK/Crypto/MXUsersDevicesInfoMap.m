@@ -18,6 +18,17 @@
 
 @implementation MXUsersDevicesInfoMap
 
+- (instancetype)init
+{
+    self = [super init];
+    if (self)
+    {
+        _map = [NSDictionary dictionary];
+    }
+    
+    return self;
+}
+
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
     MXUsersDevicesInfoMap *usersDevicesInfoMap = [[MXUsersDevicesInfoMap alloc] init];
@@ -65,6 +76,16 @@
 - (MXDeviceInfo *)deviceInfoForDevice:(NSString *)deviceId forUser:(NSString *)userId
 {
     return _map[userId][deviceId];
+}
+
+- (void)setDeviceInfo:(MXDeviceInfo *)deviceInfo forUser:(NSString *)userId
+{
+    NSMutableDictionary *mutableMap = [NSMutableDictionary dictionaryWithDictionary:self.map];
+
+    mutableMap[userId] = [NSMutableDictionary dictionaryWithDictionary:mutableMap[userId]];
+    mutableMap[userId][deviceInfo.deviceId] = deviceInfo;
+
+    _map = mutableMap;
 }
 
 - (void)setDevicesInfo:(NSDictionary<NSString *,MXDeviceInfo *> *)devicesInfo forUser:(NSString *)userId

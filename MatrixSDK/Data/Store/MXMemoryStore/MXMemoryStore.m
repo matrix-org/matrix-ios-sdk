@@ -37,6 +37,7 @@
         roomStores = [NSMutableDictionary dictionary];
         receiptsByRoomId = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
+        usersDevicesInfoMap = [[MXUsersDevicesInfoMap alloc] init];
     }
     return self;
 }
@@ -332,6 +333,38 @@
 {
     MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
     return roomStore.outgoingMessages;
+}
+
+
+#pragma mark - Crypto
+- (void)storeEndToEndAccount:(OLMAccount *)account
+{
+    olmAccount = account;
+}
+
+- (OLMAccount *)endToEndAccount
+{
+    return olmAccount;
+}
+
+- (void)storeEndToEndDeviceForUser:(NSString *)userId device:(MXDeviceInfo *)device
+{
+    [usersDevicesInfoMap setDeviceInfo:device forUser:userId];
+}
+
+- (MXDeviceInfo *)endToEndDeviceWithDeviceId:(NSString *)deviceId forUser:(NSString *)userId
+{
+    return [usersDevicesInfoMap deviceInfoForDevice:deviceId forUser:userId];
+}
+
+- (void)storeEndToEndDevicesForUser:(NSString *)userId devices:(NSDictionary<NSString *,MXDeviceInfo *> *)devices
+{
+    [usersDevicesInfoMap setDevicesInfo:devices forUser:userId];
+}
+
+- (NSDictionary<NSString *,MXDeviceInfo *> *)endToEndDevicesForUser:(NSString *)userId
+{
+    return usersDevicesInfoMap.map[userId];
 }
 
 

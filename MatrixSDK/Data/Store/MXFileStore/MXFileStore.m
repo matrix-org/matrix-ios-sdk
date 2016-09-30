@@ -37,6 +37,9 @@ NSString *const kMXFileStoreRoomStateFile = @"state";
 NSString *const kMXFileStoreRoomAccountDataFile = @"accountData";
 NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
+NSString *const kMXFileStoreCryptoFolder = @"crypto";
+NSString *const kMXFileStoreCryptoAccountFile = @"account";
+
 @interface MXFileStore ()
 {
     // Meta data about the store. It is defined only if the passed MXCredentials contains all information.
@@ -67,6 +70,9 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
     // The path of the rooms folder
     NSString *storeUsersPath;
+
+    // The path of the crypto folder
+    NSString *storeCryptoPath;
 
     // Flag to indicate metaData needs to be stored
     BOOL metaDataHasChanged;
@@ -123,6 +129,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     storePath = [[cachePath stringByAppendingPathComponent:kMXFileStoreFolder] stringByAppendingPathComponent:credentials.userId];
     storeRoomsPath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsFolder];
     storeUsersPath = [storePath stringByAppendingPathComponent:kMXFileStoreUsersFolder];
+    storeCryptoPath = [storePath stringByAppendingPathComponent:kMXFileStoreCryptoFolder];
 
     storeBackupPath = [storePath stringByAppendingPathComponent:kMXFileStoreBackupFolder];
 
@@ -303,6 +310,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     [[NSFileManager defaultManager] createDirectoryAtPath:storePath withIntermediateDirectories:YES attributes:nil error:nil];
     [[NSFileManager defaultManager] createDirectoryAtPath:storeRoomsPath withIntermediateDirectories:YES attributes:nil error:nil];
     [[NSFileManager defaultManager] createDirectoryAtPath:storeUsersPath withIntermediateDirectories:YES attributes:nil error:nil];
+    [[NSFileManager defaultManager] createDirectoryAtPath:storeCryptoPath withIntermediateDirectories:YES attributes:nil error:nil];
 
     // Reset data
     metaData = nil;
@@ -1239,6 +1247,21 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 #endif
         });
     }
+}
+
+
+#pragma mark - Cryto
+- (void)storeEndToEndAccount:(OLMAccount *)account
+{
+    // @TODO: Manage commit(required?) and backup
+    NSString *cryptoAccountFile = [storeCryptoPath stringByAppendingPathComponent:kMXFileStoreCryptoAccountFile];
+    [NSKeyedArchiver archiveRootObject:account toFile:cryptoAccountFile];
+}
+
+- (OLMAccount *)endToEndAccount
+{
+    NSString *cryptoAccountFile = [storeCryptoPath stringByAppendingPathComponent:kMXFileStoreCryptoAccountFile];
+    return [NSKeyedUnarchiver unarchiveObjectWithFile:cryptoAccountFile];
 }
 
 
