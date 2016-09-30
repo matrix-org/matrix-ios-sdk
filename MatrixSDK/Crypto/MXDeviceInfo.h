@@ -107,4 +107,12 @@ typedef enum : NSUInteger
  */
 @property (nonatomic) MXDeviceVerification verified;
 
+
+#pragma mark - Instance methods
+/**
+ Same as the parent [MXJSONModel JSONDictionary] but return only
+ data that must be signed.
+ */
+@property (nonatomic, readonly) NSDictionary *signalableJSONDictionary;
+
 @end

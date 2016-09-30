@@ -90,4 +90,25 @@
     return JSONDictionary;
 }
 
+- (NSDictionary *)signalableJSONDictionary
+{
+    NSMutableDictionary *signalableJSONDictionary = [NSMutableDictionary dictionary];
+
+    signalableJSONDictionary[@"device_id"] = _deviceId;
+    if (_userId)
+    {
+        signalableJSONDictionary[@"user_id"] = _userId;
+    }
+    if (_algorithms)
+    {
+        signalableJSONDictionary[@"algorithms"] = _algorithms;
+    }
+    if (_keys)
+    {
+        signalableJSONDictionary[@"keys"] = _keys;
+    }
+
+    return signalableJSONDictionary;
+}
+
 @end

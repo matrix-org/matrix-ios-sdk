@@ -78,6 +78,12 @@
     return [olmAccount signMessage:message];
 }
 
+- (NSString *)signJSON:(NSDictionary *)JSONDictinary
+{
+    // @TODO: sign on canonical
+    return [self signMessage:[NSKeyedArchiver archivedDataWithRootObject:JSONDictinary]];
+}
+
 - (NSDictionary *)oneTimeKeys
 {
     return olmAccount.oneTimeKeys;
@@ -204,6 +210,15 @@
 - (BOOL)verifySignature:(NSString *)key message:(NSString *)message signature:(NSString *)signature error:(NSError *__autoreleasing *)error
 {
     return [olmUtility ed25519Verify:key message:message signature:signature error:error];
+}
+
+- (BOOL)verifySignature:(NSString *)key JSON:(NSDictionary *)JSONDictinary signature:(NSString *)signature error:(NSError *__autoreleasing *)error
+{
+    // @TODO: sign on canonical
+    NSData *JSONData = [NSJSONSerialization dataWithJSONObject:JSONDictinary options:0 error:nil];
+    NSString *JSONString = [[NSString alloc] initWithData:JSONData encoding:NSUTF8StringEncoding];
+
+    return [self verifySignature:key message:JSONString signature:signature error:error];
 }
 
 

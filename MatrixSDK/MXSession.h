@@ -24,6 +24,7 @@
 #import "MXStore.h"
 #import "MXNotificationCenter.h"
 #import "MXCallManager.h"
+#import "MXCrypto.h"
 
 /**
  `MXSessionState` represents the states in the life cycle of a MXSession instance.
@@ -233,6 +234,12 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  */
 @property (nonatomic, readonly) MXCallManager *callManager;
 
+/**
+ The module that manages E2E encryption.
+ Nil if the feature is not enabled ('cryptoEnabled' property).
+ */
+@property (nonatomic, readonly) MXCrypto *crypto;
+
 
 #pragma mark - Class methods
 
@@ -400,6 +407,10 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 - (void)enableVoIPWithCallStack:(id<MXCallStack>)callStack;
 
+/**
+ Flag to enable End-to-End encryption.
+ */
+@property (nonatomic) BOOL cryptoEnabled;
 
 #pragma mark - Rooms operations
 /**

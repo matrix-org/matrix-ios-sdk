@@ -52,10 +52,20 @@
 /**
  Signs a message with the ed25519 key for this account.
  
- @param message the message to be signed
- @return the base64-encoded signature
+ @param message the message to be signed.
+ @return the base64-encoded signature.
  */
 - (NSString*)signMessage:(NSData*)message;
+
+/**
+ Signs a JSON dictionary with the ed25519 key for this account.
+ 
+ The signature is done on canonical version of the JSON.
+
+ @param JSONDictinary the JSON to be signed.
+ @return the base64-encoded signature
+ */
+- (NSString*)signJSON:(NSDictionary*)JSONDictinary;
 
 /**
  The current (unused, unpublished) one-time keys for this account.
@@ -202,5 +212,19 @@ Determine if an incoming messages is a prekey message matching an existing sessi
  @return YES if valid.
  */
 - (BOOL)verifySignature:(NSString*)key message:(NSString*)message signature:(NSString*)signature error:(NSError**)error;
+
+/**
+ Verify an ed25519 signature on a JSON object.
+
+ @param key the ed25519 key.
+ @param JSONDictinary the JSON object which was signed.
+ @param signature the base64-encoded signature to be checked.
+ @param the result error if there is a problem with the verification.
+ If the key was too small then the message will be "OLM.INVALID_BASE64".
+ If the signature was invalid then the message will be "OLM.BAD_MESSAGE_MAC".
+
+ @return YES if valid.
+ */
+- (BOOL)verifySignature:(NSString*)key JSON:(NSDictionary*)JSONDictinary signature:(NSString*)signature error:(NSError**)error;
 
 @end

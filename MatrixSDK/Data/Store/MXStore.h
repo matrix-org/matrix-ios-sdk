@@ -20,9 +20,11 @@
 #import "MXReceiptData.h"
 #import "MXUser.h"
 #import "MXRoomAccountData.h"
-#import <OLMKit/OLMKit.h>
 
 #import "MXEventsEnumerator.h"
+
+#import <OLMKit/OLMKit.h>
+#import "MXDeviceInfo.h"
 
 /**
  The `MXStore` protocol defines an interface that must be implemented in order to store
@@ -361,6 +363,39 @@
  * Load the end to end account for the logged-in user.
  */
 - (OLMAccount*)endToEndAccount;
+
+/**
+ Store a device for a user.
+
+ @param userId The user's id.
+ @param device the device to store.
+ */
+- (void)storeEndToEndDeviceForUser:(NSString*)userId device:(MXDeviceInfo*)device;
+
+/**
+ Retrieve a device for a user.
+
+ @param deviceId The device id.
+ @param userId The user's id.
+ @return A map from device id to 'MXDevice' object for the device.
+ */
+- (MXDeviceInfo*)endToEndDeviceWithDeviceId:(NSString*)deviceId forUser:(NSString*)userId;
+
+/**
+ Store the known devices for a user.
+
+ @param userId The user's id.
+ @param devices A map from device id to 'MXDevice' object for the device.
+ */
+- (void)storeEndToEndDevicesForUser:(NSString*)userId devices:(NSDictionary<NSString*, MXDeviceInfo*>*)devices;
+
+/**
+ Retrieve the known devices for a user.
+
+ @param userId The user's id.
+ @return A map from device id to 'MXDevice' object for the device.
+ */
+- (NSDictionary<NSString*, MXDeviceInfo*>*)endToEndDevicesForUser:(NSString*)userId;
 
 /**
  Store a session between the logged-in user and another device.

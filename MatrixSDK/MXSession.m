@@ -174,6 +174,13 @@ typedef void (^MXOnResumeDone)();
                               kMXEventTypeStringCallInvite
                               ];
 
+       // @TODO
+        _cryptoEnabled = YES;
+        if (_cryptoEnabled)
+        {
+            _crypto = [[MXCrypto alloc] initWithMatrixSession:self];
+        }
+
         [self setState:MXSessionStateInitialised];
     }
     return self;

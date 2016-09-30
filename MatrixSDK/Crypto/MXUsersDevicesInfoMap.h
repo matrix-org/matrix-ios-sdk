@@ -36,5 +36,10 @@
 - (NSArray<NSString*>*)deviceIdsForUser:(NSString*)userId;
 - (MXDeviceInfo*)deviceInfoForDevice:(NSString*)deviceId forUser:(NSString*)userId;
 
+/**
+ Feed helper method.
+ */
+- (void)setDevicesInfo:(NSDictionary<NSString* /* deviceId */, MXDeviceInfo*>*)devicesInfo forUser:(NSString*)userId;
+
 @end
 

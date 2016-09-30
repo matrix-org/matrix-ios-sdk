@@ -23,7 +23,7 @@
     MXUsersDevicesInfoMap *usersDevicesInfoMap = [[MXUsersDevicesInfoMap alloc] init];
     if (usersDevicesInfoMap)
     {
-        NSMutableDictionary *deviceKeys = [NSMutableDictionary dictionary];
+        NSMutableDictionary *map = [NSMutableDictionary dictionary];
 
         if ([JSONDictionary isKindOfClass:NSDictionary.class])
         {
@@ -36,17 +36,17 @@
                         MXDeviceInfo *deviceInfo;
                         MXJSONModelSetMXJSONModel(deviceInfo, MXDeviceInfo, JSONDictionary[userId][deviceId]);
 
-                        if (!deviceKeys[userId])
+                        if (!map[userId])
                         {
-                            deviceKeys[userId] = [NSMutableDictionary dictionary];
+                            map[userId] = [NSMutableDictionary dictionary];
                         }
-                        deviceKeys[userId][deviceId] = deviceInfo;
+                        map[userId][deviceId] = deviceInfo;
                     }
                 }
             }
         }
 
-        usersDevicesInfoMap.map = deviceKeys;
+        usersDevicesInfoMap.map = map;
     }
 
     return usersDevicesInfoMap;
@@ -65,6 +65,14 @@
 - (MXDeviceInfo *)deviceInfoForDevice:(NSString *)deviceId forUser:(NSString *)userId
 {
     return _map[userId][deviceId];
+}
+
+- (void)setDevicesInfo:(NSDictionary<NSString *,MXDeviceInfo *> *)devicesInfo forUser:(NSString *)userId
+{
+    NSMutableDictionary *mutableMap = [NSMutableDictionary dictionaryWithDictionary:_map];
+    mutableMap[userId] = devicesInfo;
+
+    _map = mutableMap;
 }
 
 @end
