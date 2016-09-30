@@ -85,6 +85,8 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
 - (void)doMXSessionTestWithAlice:(XCTestCase*)testCase
                      readyToTest:(void (^)(MXSession *aliceSession, XCTestExpectation *expectation))readyToTest;
 
+- (void)doMXSessionTestWithAlice:(XCTestCase*)testCase andStore:(id<MXStore>)store
+                   readyToTest:(void (^)(MXSession *mxSession, XCTestExpectation *expectation))readyToTest;
 
 #pragma mark - both
 // The id and alias used for the public room created with *ThePublicRoom* methods

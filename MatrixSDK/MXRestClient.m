@@ -2974,7 +2974,7 @@ MXAuthAction;
     NSString *path = [NSString stringWithFormat:@"%@/keys/upload", kMXAPIPrefixPathUnstable];
     if (deviceId)
     {
-        path = [NSString stringWithFormat:@"%@/%@", path, deviceId];
+        path = [NSString stringWithFormat:@"%@/%@", path, [deviceId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
     }
 
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];

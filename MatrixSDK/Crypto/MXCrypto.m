@@ -148,6 +148,7 @@
         }
 
     } failure:^(NSError *error) {
+        NSLog(@"[MXCrypto] uploadDeviceKeys fails. Reason: %@", error);
         failure(error);
     }];
 }
@@ -330,9 +331,14 @@
         oneTimeJson[[NSString stringWithFormat:@"curve25519:%@", keyId]] = oneTimeKeys[@"curve25519"][keyId];
     }
 
+    // @TODO: Mark the keys?
+
     // For now, we set the device id explicitly, as we may not be using the
     // same one as used in login.
-    return [mxSession.matrixRestClient uploadKeys:nil oneTimeKeys:oneTimeKeys forDevice:myDevice.deviceId success:success failure:failure];
+    return [mxSession.matrixRestClient uploadKeys:nil oneTimeKeys:oneTimeKeys forDevice:myDevice.deviceId success:success failure:^(NSError *error) {
+        NSLog(@"[MXCrypto] uploadOneTimeKeys fails. Reason: %@", error);
+        failure(error);
+    }];
 }
 
 /**

@@ -547,6 +547,26 @@ NSMutableArray *roomsToClean;
     }];
 }
 
+- (void)doMXSessionTestWithAlice:(XCTestCase *)testCase andStore:(id<MXStore>)store readyToTest:(void (^)(MXSession *, XCTestExpectation *))readyToTest
+{
+    [self doMXRestClientTestWithAlice:testCase readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+
+        [mxSession setStore:store success:^{
+
+            [mxSession start:^{
+
+                readyToTest(mxSession, expectation);
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
 
 #pragma mark - both
 - (void)doMXRestClientTestWithBobAndAliceInARoom:(XCTestCase*)testCase
