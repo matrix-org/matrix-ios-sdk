@@ -315,7 +315,7 @@ FOUNDATION_EXPORT uint64_t const kMXUndefinedTimestamp;
  @param keysProved the keys that must have been owned by the sender of this encrypted event.
  @param keysClaimed the additional keys the sender of this encrypted event claims to possess.
  */
-- (void)setClearEvent:(MXEvent*)clearEvent withKeysProved:(NSDictionary*)keysProved andKeysClaimed:(NSDictionary*)keysClaimed;
+- (void)setClearEvent:(MXEvent*)clearEvent withKeysProved:(NSDictionary<NSString*, NSString*>*)keysProved andKeysClaimed:(NSDictionary<NSString*, NSString*>*)keysClaimed;
 
 /**
  For encrypted events, the plaintext payload for the event.
@@ -330,7 +330,7 @@ FOUNDATION_EXPORT uint64_t const kMXUndefinedTimestamp;
  These don't necessarily have to come from this event itself, but may be
  implied by the cryptographic session.
  */
-@property (nonatomic, readonly) NSDictionary *keysProved;
+@property (nonatomic, readonly) NSDictionary<NSString*, NSString*> *keysProved;
 
 /**
  The additional keys the sender of this encrypted event claims to possess.
@@ -342,6 +342,11 @@ FOUNDATION_EXPORT uint64_t const kMXUndefinedTimestamp;
  inherit a claim from the olm message that established the session.
  The keys that must have been owned by the sender of this encrypted event.
  */
-@property (nonatomic, readonly) NSDictionary *keysClaimed;
+@property (nonatomic, readonly) NSDictionary<NSString*, NSString*> *keysClaimed;
+
+/**
+ The curve25519 key that sent this event.
+ */
+@property (nonatomic, readonly) NSString *senderKey;
 
 @end
