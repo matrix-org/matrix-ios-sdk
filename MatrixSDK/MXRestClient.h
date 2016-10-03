@@ -1476,24 +1476,27 @@ typedef enum : NSUInteger
 /**
  Search a text in room messages.
 
- @param text the text to search for.
+ @param textPattern the text to search for in message body.
  @param rooms a list of rooms to search in. nil means all rooms the user is in.
  @param beforeLimit the number of events to get before the matching results.
  @param afterLimit the number of events to get after the matching results.
  @param nextBatch the token to pass for doing pagination from a previous response.
+ @param containsURl tells whether only the messages with url (the attachments) are concerned.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)searchMessageText:(NSString*)text
-                              inRooms:(NSArray<NSString*>*)rooms
-                          beforeLimit:(NSUInteger)beforeLimit
-                           afterLimit:(NSUInteger)afterLimit
-                            nextBatch:(NSString*)nextBatch
-                              success:(void (^)(MXSearchRoomEventResults *roomEventResults))success
-                              failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)searchMessagesWithText:(NSString*)textPattern
+                                   inRooms:(NSArray<NSString*>*)rooms
+                               beforeLimit:(NSUInteger)beforeLimit
+                                afterLimit:(NSUInteger)afterLimit
+                                 nextBatch:(NSString*)nextBatch
+                               containsURL:(BOOL)containsURL
+                                   success:(void (^)(MXSearchRoomEventResults *roomEventResults))success
+                                   failure:(void (^)(NSError *error))failure;
+
 /**
  Make a search.
 
