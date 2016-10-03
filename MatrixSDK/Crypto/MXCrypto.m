@@ -335,7 +335,7 @@
 
     // For now, we set the device id explicitly, as we may not be using the
     // same one as used in login.
-    return [mxSession.matrixRestClient uploadKeys:nil oneTimeKeys:oneTimeKeys forDevice:myDevice.deviceId success:success failure:^(NSError *error) {
+    return [mxSession.matrixRestClient uploadKeys:nil oneTimeKeys:oneTimeJson forDevice:myDevice.deviceId success:success failure:^(NSError *error) {
         NSLog(@"[MXCrypto] uploadOneTimeKeys fails. Reason: %@", error);
         failure(error);
     }];

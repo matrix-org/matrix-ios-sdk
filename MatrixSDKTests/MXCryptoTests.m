@@ -105,11 +105,19 @@
 
         [aliceSession.crypto uploadKeys:10 success:^{
 
-            [matrixSDKTestsData doMXSessionTestWithBob:nil andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
+            [matrixSDKTestsData doMXSessionTestWithBob:nil andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation2) {
                 mxSession.matrixRestClient.credentials.deviceId = @"BobDevice";
                 mxSession.cryptoEnabled = YES;
 
-                [mxSession.crypto downloadKeys:@[aliceSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesInfoMap *usersDevicesInfoMap) {
+                [mxSession.crypto downloadKeys:@[mxSession.myUser.userId, aliceSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesInfoMap *usersDevicesInfoMap) {
+
+                    XCTAssertEqual(usersDevicesInfoMap.userIds.count, 2, @"BobDevice must be obtain from the cache and AliceDevice from the hs");
+
+                    XCTAssertEqual([usersDevicesInfoMap deviceIdsForUser:aliceSession.myUser.userId].count, 1);
+
+                    MXDeviceInfo *aliceDevice = [usersDevicesInfoMap deviceInfoForDevice:@"AliceDevice" forUser:aliceSession.myUser.userId];
+                    XCTAssert(aliceDevice);
+                    XCTAssertEqualObjects(aliceDevice.fingerprint, aliceSession.crypto.olmDevice.deviceEd25519Key);
 
                     [expectation fulfill];
 
@@ -117,48 +125,11 @@
                     XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                     [expectation fulfill];
                 }];
-
-
-//                NSString *deviceCurve25519Key = mxSession.crypto.olmDevice.deviceCurve25519Key;
-//                NSString *deviceEd25519Key = mxSession.crypto.olmDevice.deviceEd25519Key;
-//
-//                NSArray<MXDeviceInfo *> *myUserDevices = [mxSession.crypto storedDevicesForUser:mxSession.myUser.userId];
-//                XCTAssertEqual(myUserDevices.count, 1);
-//
-//                MXRestClient *bobRestClient = mxSession.matrixRestClient;
-//                [mxSession close];
-//                mxSession = nil;
-//
-//                // Reopen the session
-//                MXFileStore *store = [[MXFileStore alloc] init];
-//
-//                mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
-//                [mxSession setStore:store success:^{
-//
-//                    XCTAssert(mxSession.cryptoEnabled, @"MXSession must recall that it has crypto engaged");
-//                    XCTAssert(mxSession.crypto);
-//
-//                    XCTAssertEqualObjects(deviceCurve25519Key, mxSession.crypto.olmDevice.deviceCurve25519Key);
-//                    XCTAssertEqualObjects(deviceEd25519Key, mxSession.crypto.olmDevice.deviceEd25519Key);
-//
-//                    NSArray<MXDeviceInfo *> *myUserDevices2 = [mxSession.crypto storedDevicesForUser:mxSession.myUser.userId];
-//                    XCTAssertEqual(myUserDevices2.count, 1);
-//
-//                    XCTAssertEqualObjects(myUserDevices[0].deviceId, myUserDevices2[0].deviceId);
-//                    
-//                    [expectation fulfill];
-//                    
-//                } failure:^(NSError *error) {
-//                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-//                    [expectation fulfill];
-//                }];
             }];
-
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
-
     }];
 }
 
