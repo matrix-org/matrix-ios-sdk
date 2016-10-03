@@ -212,6 +212,12 @@ FOUNDATION_EXPORT uint64_t const kMXUndefinedTimestamp;
 @property (nonatomic) uint64_t originServerTs;
 
 /**
+ Information about this event which was not sent by the originating homeserver.
+ HS sends this data under the 'unsigned' field but it is a reserved keyword. Hence, renaming.
+ */
+@property (nonatomic) NSDictionary *unsignedData;
+
+/**
  The age of the event in milliseconds.
  As home servers clocks may be not synchronised, this relative value may be more accurate.
  It is computed by the user's home server each time it sends the event to a client.

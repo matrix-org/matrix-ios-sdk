@@ -100,6 +100,7 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
         MXJSONModelSetDictionary(event.wireContent, JSONDictionary[@"content"]);
         MXJSONModelSetString(event.stateKey, JSONDictionary[@"state_key"]);
         MXJSONModelSetUInt64(event.originServerTs, JSONDictionary[@"origin_server_ts"]);
+        MXJSONModelSetDictionary(event.unsignedData, JSONDictionary[@"unsigned"]);
         
         MXJSONModelSetString(event.redacts, JSONDictionary[@"redacts"]);
         
@@ -107,7 +108,7 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
         // 'prev_content' has been moved under unsigned in some server responses (see sync API).
         if (!event.prevContent)
         {
-            MXJSONModelSetDictionary(event.prevContent, JSONDictionary[@"unsigned"][@"prev_content"]);
+            MXJSONModelSetDictionary(event.prevContent, event.unsignedData[@"prev_content"]);
         }
         
         // 'age' has been moved under unsigned.
@@ -115,16 +116,16 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
         {
             MXJSONModelSetUInteger(event.age, JSONDictionary[@"age"]);
         }
-        else if (JSONDictionary[@"unsigned"][@"age"])
+        else if (event.unsignedData[@"age"])
         {
-            MXJSONModelSetUInteger(event.age, JSONDictionary[@"unsigned"][@"age"]);
+            MXJSONModelSetUInteger(event.age, event.unsignedData[@"age"]);
         }
         
         MXJSONModelSetDictionary(event.redactedBecause, JSONDictionary[@"redacted_because"]);
         if (!event.redactedBecause)
         {
             // 'redacted_because' has been moved under unsigned.
-            MXJSONModelSetDictionary(event.redactedBecause, JSONDictionary[@"unsigned"][@"redacted_because"]);
+            MXJSONModelSetDictionary(event.redactedBecause, event.unsignedData[@"redacted_because"]);
         }
         
         if (JSONDictionary[@"invite_room_state"])
@@ -514,6 +515,7 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
         _originServerTs = [originServerTs unsignedLongLongValue];
         NSNumber *ageLocalTs = [aDecoder decodeObjectForKey:@"ageLocalTs"];
         _ageLocalTs = [ageLocalTs unsignedLongLongValue];
+        _unsignedData = [aDecoder decodeObjectForKey:@"unsigned"];
         _redacts = [aDecoder decodeObjectForKey:@"redacts"];
         _redactedBecause = [aDecoder decodeObjectForKey:@"redactedBecause"];
         _inviteRoomState = [aDecoder decodeObjectForKey:@"inviteRoomState"];
@@ -532,6 +534,7 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     [aCoder encodeObject:_stateKey forKey:@"stateKey"];
     [aCoder encodeObject:@(_originServerTs) forKey:@"originServerTs"];
     [aCoder encodeObject:@(_ageLocalTs) forKey:@"ageLocalTs"];
+    [aCoder encodeObject:_unsignedData forKey:@"unsigned"];
     [aCoder encodeObject:_redacts forKey:@"redacts"];
     [aCoder encodeObject:_redactedBecause forKey:@"redactedBecause"];
     [aCoder encodeObject:_inviteRoomState forKey:@"inviteRoomState"];
