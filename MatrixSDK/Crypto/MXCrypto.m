@@ -22,7 +22,6 @@
 #import "MXOlmDevice.h"
 #import "MXDeviceInfo.h"
 #import "MXUsersDevicesInfoMap.h"
-#import "MXCryptoAlgorithms.h"
 
 @interface MXCrypto ()
 {
@@ -80,6 +79,10 @@
         NSMutableDictionary *myDevices = [NSMutableDictionary dictionaryWithDictionary:[mxSession.store endToEndDevicesForUser:mxSession.myUser.userId]];
         myDevices[myDevice.deviceId] = myDevice;
         [mxSession.store storeEndToEndDevicesForUser:mxSession.myUser.userId devices:myDevices];
+        if ([mxSession.store respondsToSelector:@selector(commit)])
+        {
+            [mxSession.store commit];
+        }
 
         [self registerEventHandlers];
 
@@ -208,10 +211,21 @@
                             devices[deviceId] = previouslyStoredDeviceKeys;
                         }
                     }
+                    else if (previouslyStoredDeviceKeys)
+                    {
+                        // The verified status is not sync'ed with hs.
+                        // This is a client side information, valid only for this client.
+                        // So, transfer its previous value
+                        devices[deviceId].verified = previouslyStoredDeviceKeys.verified;
+                    }
                 }
 
                 // Update the store. Note
                 [mxSession.store storeEndToEndDevicesForUser:userId devices:devices];
+                if ([mxSession.store respondsToSelector:@selector(commit)])
+                {
+                    [mxSession.store commit];
+                }
 
                 // And the response result
                 [stored setDevicesInfo:devices forUser:userId];
@@ -274,6 +288,10 @@
         device.verified = verificationStatus;
 
         [mxSession.store storeEndToEndDeviceForUser:userId device:device];
+        if ([mxSession.store respondsToSelector:@selector(commit)])
+        {
+            [mxSession.store commit];
+        }
     }
 }
 

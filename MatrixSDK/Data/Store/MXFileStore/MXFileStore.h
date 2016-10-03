@@ -44,9 +44,9 @@
                 L ...
             + crypto: crypto data
                 L account: the user's olm account
+                L devices: users devices keys
                 @TODO
                 L announced: ?
-                L devices: ?
                 L rooms: ?
                 L sessions: ?
                 L inboundGroupSessions: ?

@@ -19,6 +19,7 @@
 #import "MXRestClient.h"
 #import "MXDeviceInfo.h"
 #import "MXOlmDevice.h"
+#import "MXCryptoAlgorithms.h"
 
 @class MXSession;
 

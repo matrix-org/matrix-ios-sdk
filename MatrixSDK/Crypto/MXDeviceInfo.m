@@ -24,6 +24,7 @@
     if (self)
     {
         _deviceId = deviceId;
+        _verified = MXDeviceUnverified;
     }
     return self;
 }
@@ -51,6 +52,7 @@
     MXDeviceInfo *deviceInfo = [[MXDeviceInfo alloc] initWithDeviceId:JSONDictionary[@"device_id"]];
     if (deviceInfo)
     {
+        deviceInfo.verified = MXDeviceUnverified;
         MXJSONModelSetString(deviceInfo.userId, JSONDictionary[@"user_id"]);
         MXJSONModelSetArray(deviceInfo.algorithms, JSONDictionary[@"algorithms"]);
         MXJSONModelSetDictionary(deviceInfo.keys, JSONDictionary[@"keys"]);
@@ -109,6 +111,52 @@
     }
 
     return signalableJSONDictionary;
+}
+
+#pragma mark - NSCopying
+- (id)copyWithZone:(NSZone *)zone
+{
+    // @TODO: write specific and quicker code
+    return [NSKeyedUnarchiver unarchiveObjectWithData:[NSKeyedArchiver archivedDataWithRootObject:self]];
+}
+
+
+#pragma mark - NSCoding
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super init];
+    if (self)
+    {
+        _deviceId = [aDecoder decodeObjectForKey:@"deviceId"];
+        _userId = [aDecoder decodeObjectForKey:@"userId"];
+        _keys = [aDecoder decodeObjectForKey:@"keys"];
+        _signatures = [aDecoder decodeObjectForKey:@"signatures"];
+        _unsignedData = [aDecoder decodeObjectForKey:@"unsignedData"];
+        _verified = [(NSNumber*)[aDecoder decodeObjectForKey:@"verified"] unsignedIntegerValue];
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    [aCoder encodeObject:_deviceId forKey:@"deviceId"];
+    if (_userId)
+    {
+        [aCoder encodeObject:_userId forKey:@"userId"];
+    }
+    if (_keys)
+    {
+        [aCoder encodeObject:_keys forKey:@"keys"];
+    }
+    if (_signatures)
+    {
+        [aCoder encodeObject:_signatures forKey:@"signatures"];
+    }
+    if (_unsignedData)
+    {
+        [aCoder encodeObject:_unsignedData forKey:@"unsignedData"];
+    }
+    [aCoder encodeObject:[NSNumber numberWithUnsignedInteger:_verified] forKey:@"verified"];
 }
 
 @end

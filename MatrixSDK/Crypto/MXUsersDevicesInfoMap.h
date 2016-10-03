@@ -21,7 +21,7 @@
 /**
  `MXUsersDevicesInfoMap` helps to extract data from device keys sent by an homeserver.
  */
-@interface MXUsersDevicesInfoMap : MXJSONModel
+@interface MXUsersDevicesInfoMap : MXJSONModel <NSCopying>
 
 /**
  The device keys as returned by the homeserver: a map of a map (userId -> deviceId -> MXDeviceInfo).

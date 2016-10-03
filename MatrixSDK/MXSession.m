@@ -543,6 +543,12 @@ typedef void (^MXOnResumeDone)();
         _callManager = nil;
     }
 
+    // Stop crypto
+    if (_crypto)
+    {
+        _crypto = nil;
+    }
+
     // Stop background task
     if (backgroundTaskIdentifier != UIBackgroundTaskInvalid)
     {

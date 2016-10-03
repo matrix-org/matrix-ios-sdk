@@ -96,4 +96,29 @@
     _map = mutableMap;
 }
 
+
+#pragma mark - NSCopying
+- (id)copyWithZone:(NSZone *)zone
+{
+    // @TODO: write specific and quicker code
+    return [NSKeyedUnarchiver unarchiveObjectWithData:[NSKeyedArchiver archivedDataWithRootObject:self]];
+}
+
+
+#pragma mark - NSCoding
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super init];
+    if (self)
+    {
+        _map = [aDecoder decodeObjectForKey:@"map"];
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    [aCoder encodeObject:_map forKey:@"map"];
+}
+
 @end

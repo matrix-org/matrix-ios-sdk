@@ -39,6 +39,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
 NSString *const kMXFileStoreCryptoFolder = @"crypto";
 NSString *const kMXFileStoreCryptoAccountFile = @"account";
+NSString *const kMXFileStoreCryptoDevicesFile = @"devices";
 
 @interface MXFileStore ()
 {
@@ -93,6 +94,9 @@ NSString *const kMXFileStoreCryptoAccountFile = @"account";
 
     // The evenst stream token that corresponds to the data being backed up.
     NSString *backupEventStreamToken;
+
+    // Flags for crypto data changes
+    BOOL usersDevicesInfoMapHasChanged;
 }
 @end
 
@@ -202,6 +206,7 @@ NSString *const kMXFileStoreCryptoAccountFile = @"account";
                 [self preloadRoomsAccountData];
                 [self loadReceipts];
                 [self loadUsers];
+                [self preloadCryptoData];
 
                 NSLog(@"[MXFileStore] Data loaded from files in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
             }
@@ -500,6 +505,7 @@ NSString *const kMXFileStoreCryptoAccountFile = @"account";
         [self saveRoomsAccountData];
         [self saveReceipts];
         [self saveUsers];
+        [self saveCryptoData];
         [self saveMetaData];
         
         // The data saving is completed: remove the backuped data.
@@ -625,6 +631,23 @@ NSString *const kMXFileStoreCryptoAccountFile = @"account";
     }
 }
 
+
+- (NSString*)cryptoPathForBackup:(BOOL)backup
+{
+    if (!backup)
+    {
+        return storeCryptoPath;
+    }
+    else
+    {
+        return [[storeBackupPath stringByAppendingPathComponent:backupEventStreamToken] stringByAppendingPathComponent:storeCryptoPath];
+    }
+}
+
+- (NSString*)cryptoDevicesFileForBackup:(BOOL)backup
+{
+    return [[self cryptoPathForBackup:backup] stringByAppendingPathComponent:kMXFileStoreCryptoDevicesFile];
+}
 
 #pragma mark - Storage validity
 - (BOOL)checkStorageValidity
@@ -1251,6 +1274,25 @@ NSString *const kMXFileStoreCryptoAccountFile = @"account";
 
 
 #pragma mark - Cryto
+/**
+ Preload states of all rooms.
+
+ This operation must be called on the `dispatchQueue` thread to avoid blocking the main thread.
+ */
+- (void)preloadCryptoData
+{
+    NSDate *startDate = [NSDate date];
+
+    usersDevicesInfoMap = [NSKeyedUnarchiver unarchiveObjectWithFile:[self cryptoDevicesFileForBackup:NO]];
+
+    NSLog(@"[MXFileStore] Loaded crypto data in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+}
+
+- (void)saveCryptoData
+{
+    [self saveCryptoDevices];
+}
+
 - (void)storeEndToEndAccount:(OLMAccount *)account
 {
     // @TODO: Manage commit(required?) and backup
@@ -1262,6 +1304,42 @@ NSString *const kMXFileStoreCryptoAccountFile = @"account";
 {
     NSString *cryptoAccountFile = [storeCryptoPath stringByAppendingPathComponent:kMXFileStoreCryptoAccountFile];
     return [NSKeyedUnarchiver unarchiveObjectWithFile:cryptoAccountFile];
+}
+
+- (void)storeEndToEndDeviceForUser:(NSString*)userId device:(MXDeviceInfo*)device
+{
+    [super storeEndToEndDeviceForUser:userId device:device];
+    usersDevicesInfoMapHasChanged = YES;
+}
+
+- (void)storeEndToEndDevicesForUser:(NSString*)userId devices:(NSDictionary<NSString*, MXDeviceInfo*>*)devices
+{
+    [super storeEndToEndDevicesForUser:userId devices:devices];
+    usersDevicesInfoMapHasChanged = YES;
+}
+
+- (void)saveCryptoDevices
+{
+    if (usersDevicesInfoMapHasChanged)
+    {
+        MXUsersDevicesInfoMap *usersDevicesInfoMapSnapshot = [usersDevicesInfoMap copy];
+        usersDevicesInfoMapHasChanged = NO;
+
+        dispatch_async(dispatchQueue, ^(void){
+
+            NSString *file = [self cryptoDevicesFileForBackup:NO];
+            NSString *backupFile = [self cryptoDevicesFileForBackup:NO];
+
+            // Backup the file
+            if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
+            {
+                [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
+            }
+
+            // Store new data
+            [NSKeyedArchiver archiveRootObject:usersDevicesInfoMapSnapshot toFile:file];
+        });
+    }
 }
 
 

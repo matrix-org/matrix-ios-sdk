@@ -96,7 +96,7 @@
     }];
 }
 
-- (void)testKEysUploadAndDownload
+- (void)testKeysUploadAndDownload
 {
     [matrixSDKTestsData doMXSessionTestWithAlice:self andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
 
@@ -115,12 +115,53 @@
 
                     XCTAssertEqual([usersDevicesInfoMap deviceIdsForUser:aliceSession.myUser.userId].count, 1);
 
-                    MXDeviceInfo *aliceDevice = [usersDevicesInfoMap deviceInfoForDevice:@"AliceDevice" forUser:aliceSession.myUser.userId];
-                    XCTAssert(aliceDevice);
-                    XCTAssertEqualObjects(aliceDevice.fingerprint, aliceSession.crypto.olmDevice.deviceEd25519Key);
+                    MXDeviceInfo *aliceDeviceFromBobPOV = [usersDevicesInfoMap deviceInfoForDevice:@"AliceDevice" forUser:aliceSession.myUser.userId];
+                    XCTAssert(aliceDeviceFromBobPOV);
+                    XCTAssertEqualObjects(aliceDeviceFromBobPOV.fingerprint, aliceSession.crypto.olmDevice.deviceEd25519Key);
 
-                    [expectation fulfill];
+                    // Continue testing other methods
+                    XCTAssertEqual([mxSession.crypto deviceWithIdentityKey:aliceSession.crypto.olmDevice.deviceCurve25519Key forUser:aliceSession.myUser.userId andAlgorithm:kMXCryptoOlmAlgorithm], aliceDeviceFromBobPOV);
 
+                    XCTAssertEqual(aliceDeviceFromBobPOV.verified, MXDeviceUnverified);
+
+                    [mxSession.crypto setDeviceVerification:MXDeviceBlocked forDevice:aliceDeviceFromBobPOV.deviceId ofUser:aliceSession.myUser.userId];
+                    XCTAssertEqual(aliceDeviceFromBobPOV.verified, MXDeviceBlocked);
+
+                    MXRestClient *bobRestClient = mxSession.matrixRestClient;
+                    [mxSession close];
+
+
+                    // Test storage: Reopen the session
+                    MXFileStore *store = [[MXFileStore alloc] init];
+
+                    MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                    [mxSession2 setStore:store success:^{
+
+                        MXDeviceInfo *aliceDeviceFromBobPOV2 = [mxSession2.crypto deviceWithIdentityKey:aliceSession.crypto.olmDevice.deviceCurve25519Key forUser:aliceSession.myUser.userId andAlgorithm:kMXCryptoOlmAlgorithm];
+
+                        XCTAssert(aliceDeviceFromBobPOV2);
+                        XCTAssertEqualObjects(aliceDeviceFromBobPOV2.fingerprint, aliceSession.crypto.olmDevice.deviceEd25519Key);
+                        XCTAssertEqual(aliceDeviceFromBobPOV2.verified, MXDeviceBlocked, @"AliceDevice must still be blocked");
+
+                        // Download again alice device
+                        [mxSession2.crypto downloadKeys:@[aliceSession.myUser.userId] forceDownload:YES success:^(MXUsersDevicesInfoMap *usersDevicesInfoMap2) {
+
+                            MXDeviceInfo *aliceDeviceFromBobPOV3 = [mxSession2.crypto deviceWithIdentityKey:aliceSession.crypto.olmDevice.deviceCurve25519Key forUser:aliceSession.myUser.userId andAlgorithm:kMXCryptoOlmAlgorithm];
+
+                            XCTAssert(aliceDeviceFromBobPOV3);
+                            XCTAssertEqualObjects(aliceDeviceFromBobPOV3.fingerprint, aliceSession.crypto.olmDevice.deviceEd25519Key);
+                            XCTAssertEqual(aliceDeviceFromBobPOV3.verified, MXDeviceBlocked, @"AliceDevice must still be blocked.");
+
+                            [expectation fulfill];
+
+                        } failure:^(NSError *error) {
+                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                            [expectation fulfill];
+                        }];
+                    } failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
                 } failure:^(NSError *error) {
                     XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                     [expectation fulfill];
