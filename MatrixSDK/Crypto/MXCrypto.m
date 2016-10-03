@@ -297,8 +297,45 @@
 
 - (MXDeviceInfo *)eventSenderDeviceOfEvent:(MXEvent *)event
 {
-    // @TODO: Come back MXEvent will be ready
-    return nil;
+    NSString *senderKey = event.senderKey;
+    NSString *algorithm = event.wireContent[@"algorithm"];
+
+    if (!senderKey || !algorithm)
+    {
+        return nil;
+    }
+
+    // senderKey is the Curve25519 identity key of the device which the event
+    // was sent from. In the case of Megolm, it's actually the Curve25519
+    // identity key of the device which set up the Megolm session.
+    MXDeviceInfo *device = [self deviceWithIdentityKey:senderKey forUser:event.sender andAlgorithm:algorithm];
+    if (!device)
+    {
+        // we haven't downloaded the details of this device yet.
+        return nil;
+    }
+
+    // so far so good, but now we need to check that the sender of this event
+    // hadn't advertised someone else's Curve25519 key as their own. We do that
+    // by checking the Ed25519 claimed by the event (or, in the case of megolm,
+    // the event which set up the megolm session), to check that it matches the
+    // fingerprint of the purported sending device.
+    //
+    // (see https://github.com/vector-im/vector-web/issues/2215)
+    NSString *claimedKey = event.keysClaimed[@"ed25519"];
+    if (!claimedKey)
+    {
+        NSLog(@"[MXCrypto] eventSenderDeviceOfEvent: Event %@ claims no ed25519 key. Cannot verify sending device", event.eventId);
+        return nil;
+    }
+
+    if (![claimedKey isEqualToString:device.fingerprint])
+    {
+        NSLog(@"[MXCrypto] eventSenderDeviceOfEvent: Event %@ claims ed25519 key %@. Cannot verify sending device but sender device has key %@", event.eventId, claimedKey, device.fingerprint);
+        return nil;
+    }
+    
+    return device;
 }
 
 
