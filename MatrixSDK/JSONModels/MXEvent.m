@@ -67,9 +67,7 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 
 #pragma mark - MXEvent
 @interface MXEvent ()
-{
-    MXEventType eventType;
-}
+
 @end
 
 @implementation MXEvent
@@ -96,10 +94,10 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     if (event)
     {
         MXJSONModelSetString(event.eventId, JSONDictionary[@"event_id"]);
-        MXJSONModelSetString(event.type, JSONDictionary[@"type"]);
+        MXJSONModelSetString(event.wireType, JSONDictionary[@"type"]);
         MXJSONModelSetString(event.roomId, JSONDictionary[@"room_id"]);
         MXJSONModelSetString(event.sender, JSONDictionary[@"sender"]);
-        MXJSONModelSetDictionary(event.content, JSONDictionary[@"content"]);
+        MXJSONModelSetDictionary(event.wireContent, JSONDictionary[@"content"]);
         MXJSONModelSetString(event.stateKey, JSONDictionary[@"state_key"]);
         MXJSONModelSetUInt64(event.originServerTs, JSONDictionary[@"origin_server_ts"]);
         
@@ -145,7 +143,7 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
  */
 - (void)finalise
 {
-    if (MXEventTypePresence == eventType)
+    if (MXEventTypePresence == _wireEventType)
     {
         // Workaround: Presence events provided by the home server do not contain userId
         // in the root of the JSON event object but under its content sub object.
@@ -158,21 +156,34 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     }
 
     // Clean JSON data by removing all null values
-    _content = [MXJSONModel removeNullValuesInJSON:_content];
+    _wireContent = [MXJSONModel removeNullValuesInJSON:_wireContent];
     _prevContent = [MXJSONModel removeNullValuesInJSON:_prevContent];
+}
+
+- (MXEventTypeString)type
+{
+    // Return the decrypted version is any
+    return _clearEvent ? _clearEvent.wireType : _wireType;
 }
 
 - (MXEventType)eventType
 {
-    return eventType;
+    // Return the decrypted version is any
+    return _clearEvent ? _clearEvent.wireEventType : _wireEventType;
 }
 
-- (void)setType:(MXEventTypeString)type
+- (NSDictionary *)content
 {
-    _type = type;
+    // Return the decrypted version is any
+    return _clearEvent ? _clearEvent.wireContent : _wireContent;
+}
+
+- (void)setWireType:(MXEventTypeString)type
+{
+    _wireType = type;
 
     // Compute eventType
-    eventType = [MXTools eventType:_type];
+    _wireEventType = [MXTools eventType:_wireType];
 }
 
 - (void)setAge:(NSUInteger)age
@@ -200,10 +211,10 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     if (JSONDictionary)
     {
         JSONDictionary[@"event_id"] = _eventId;
-        JSONDictionary[@"type"] = _type;
+        JSONDictionary[@"type"] = _wireType;
         JSONDictionary[@"room_id"] = _roomId;
         JSONDictionary[@"sender"] = _sender;
-        JSONDictionary[@"content"] = _content;
+        JSONDictionary[@"content"] = _wireContent;
         JSONDictionary[@"state_key"] = _stateKey;
         JSONDictionary[@"origin_server_ts"] = @(_originServerTs);
         JSONDictionary[@"redacts"] = _redacts;
@@ -267,14 +278,14 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 {
     NSMutableArray* list = nil;
     
-    if (eventType == MXEventTypeReceipt)
+    if (_wireEventType == MXEventTypeReceipt)
     {
-        NSArray* eventIds = [_content allKeys];
+        NSArray* eventIds = [_wireContent allKeys];
         list = [[NSMutableArray alloc] initWithCapacity:eventIds.count];
         
         for (NSString* eventId in eventIds)
         {
-            NSDictionary* eventDict = [_content objectForKey:eventId];
+            NSDictionary* eventDict = [_wireContent objectForKey:eventId];
             NSDictionary* readDict = [eventDict objectForKey:kMXEventTypeStringRead];
             
             if (readDict)
@@ -291,14 +302,14 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 {
     NSMutableArray* list = nil;
     
-    if (eventType == MXEventTypeReceipt)
+    if (_wireEventType == MXEventTypeReceipt)
     {
-        NSArray* eventIds = [_content allKeys];
+        NSArray* eventIds = [_wireContent allKeys];
         list = [[NSMutableArray alloc] initWithCapacity:eventIds.count];
         
         for(NSString* eventId in eventIds)
         {
-            NSDictionary* eventDict = [_content objectForKey:eventId];
+            NSDictionary* eventDict = [_wireContent objectForKey:eventId];
             NSDictionary* readDict = [eventDict objectForKey:kMXEventTypeStringRead];
             
             if (readDict)
@@ -339,7 +350,7 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     NSMutableDictionary *prunedEventDict = [self filterInEventWithKeys:allowedKeys];
     
     // Add filtered content, allowed keys in content depends on the event type
-    switch (eventType)
+    switch (_wireEventType)
     {
         case MXEventTypeRoomMember:
         {
@@ -423,6 +434,15 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 }
 
 
+#pragma mark - Crypto
+- (void)setClearEvent:(MXEvent*)clearEvent withKeysProved:(NSDictionary*)keysProved andKeysClaimed:(NSDictionary*)keysClaimed
+{
+    _clearEvent = clearEvent;
+    _keysProved = keysProved;
+    _keysClaimed = keysClaimed;
+}
+
+
 #pragma mark - private
 - (NSMutableDictionary*)filterInEventWithKeys:(NSArray*)keys
 {
@@ -479,10 +499,10 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     if (self)
     {
         _eventId = [aDecoder decodeObjectForKey:@"eventId"];
-        self.type = [aDecoder decodeObjectForKey:@"type"];
+        self.wireType = [aDecoder decodeObjectForKey:@"type"];
         _roomId = [aDecoder decodeObjectForKey:@"roomId"];
         _sender = [aDecoder decodeObjectForKey:@"userId"];
-        _content = [aDecoder decodeObjectForKey:@"content"];
+        _wireContent = [aDecoder decodeObjectForKey:@"content"];
         _prevContent = [aDecoder decodeObjectForKey:@"prevContent"];
         _stateKey = [aDecoder decodeObjectForKey:@"stateKey"];
         NSNumber *originServerTs = [aDecoder decodeObjectForKey:@"originServerTs"];
@@ -499,10 +519,10 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 - (void)encodeWithCoder:(NSCoder *)aCoder
 {
     [aCoder encodeObject:_eventId forKey:@"eventId"];
-    [aCoder encodeObject:_type forKey:@"type"];
     [aCoder encodeObject:_roomId forKey:@"roomId"];
     [aCoder encodeObject:_sender forKey:@"userId"];
-    [aCoder encodeObject:_content forKey:@"content"];
+    [aCoder encodeObject:_wireType forKey:@"type"];
+    [aCoder encodeObject:_wireContent forKey:@"content"];
     [aCoder encodeObject:_prevContent forKey:@"prevContent"];
     [aCoder encodeObject:_stateKey forKey:@"stateKey"];
     [aCoder encodeObject:@(_originServerTs) forKey:@"originServerTs"];

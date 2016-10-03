@@ -140,11 +140,6 @@ FOUNDATION_EXPORT uint64_t const kMXUndefinedTimestamp;
  */
 @property (nonatomic) NSString *eventId;
 
-/**
- The string event type as provided by the home server.
- Unlike [MXEvent eventType], this field is always filled even for custom events.
- */
-@property (nonatomic) MXEventTypeString type;
 
 /**
  Contains the ID of the room associated with this event.
@@ -157,12 +152,47 @@ FOUNDATION_EXPORT uint64_t const kMXUndefinedTimestamp;
 @property (nonatomic) NSString *sender;
 
 /**
- The event content.
+ The string event (decrypted, if necessary) type as provided by the home server.
+ Unlike 'eventType', this field is always filled even for custom events.
+ */
+@property (nonatomic, readonly) MXEventTypeString type;
+
+/**
+ The enum version of the 'type' property.
+ */
+@property (nonatomic, readonly) MXEventType eventType;
+
+/**
+ The event (decrypted, if necessary) content.
  The keys in this dictionary depend on the event type. 
- Check http://matrix.org/docs/spec/#room-events to get a list of content keys per 
+ Check http://matrix.org/docs/spec/client_server/r0.2.0.html#room-events to get a list of content keys per
  event type.
  */
-@property (nonatomic) NSDictionary *content;
+@property (nonatomic, readonly) NSDictionary *content;
+
+/**
+ The string event (possibly encrypted) type as provided by the home server.
+ Unlike 'wireEventType', this field is always filled even for custom events.
+ 
+ @discussion
+ Do not access this property directly unless you absolutely have to. Prefer to use the
+ 'eventType' property that manages decryption.
+ */
+@property (nonatomic) MXEventTypeString wireType;
+
+/**
+ The enum version of the 'wireType' property.
+ */
+@property (nonatomic) MXEventType wireEventType;
+
+/**
+ The event (possibly encrypted) content.
+
+ @discussion
+ Do not access this property directly unless you absolutely have to. Prefer to use the
+ 'content' property that manages decryption.
+ */
+@property (nonatomic) NSDictionary *wireContent;
 
 /**
  Optional. Contains the previous content for this event. If there is no previous content, this key will be missing.
@@ -211,11 +241,6 @@ FOUNDATION_EXPORT uint64_t const kMXUndefinedTimestamp;
  In case of invite event, inviteRoomState contains a subset of the state of the room at the time of the invite.
  */
 @property (nonatomic) NSArray<MXEvent *> *inviteRoomState;
-
-/**
- The enum version of the event type.
- */
-- (MXEventType)eventType;
 
 /**
  Indicates if the event hosts state data.
@@ -268,5 +293,44 @@ FOUNDATION_EXPORT uint64_t const kMXUndefinedTimestamp;
  @return a NSComparisonResult value: NSOrderedDescending if otherEvent is newer than self.
  */
 - (NSComparisonResult)compareOriginServerTs:(MXEvent *)otherEvent;
+
+
+#pragma mark - Crypto
+
+/**
+ Set the decrypted content for an encrypted event.
+ 
+ @param clearEvent the decrypted content presented as a MXEvent instance.
+ @param keysProved the keys that must have been owned by the sender of this encrypted event.
+ @param keysClaimed the additional keys the sender of this encrypted event claims to possess.
+ */
+- (void)setClearEvent:(MXEvent*)clearEvent withKeysProved:(NSDictionary*)keysProved andKeysClaimed:(NSDictionary*)keysClaimed;
+
+/**
+ For encrypted events, the plaintext payload for the event.
+ This is a small MXEvent instance with typically value for `type` and 'content' fields.
+ */
+@property (nonatomic, readonly) MXEvent *clearEvent;
+
+/**
+ The keys that must have been owned by the sender of this encrypted event.
+
+ @discussion
+ These don't necessarily have to come from this event itself, but may be
+ implied by the cryptographic session.
+ */
+@property (nonatomic, readonly) NSDictionary *keysProved;
+
+/**
+ The additional keys the sender of this encrypted event claims to possess.
+ 
+ @discussion
+ These don't necessarily have to come from this event itself, but may be
+ implied by the cryptographic session.
+ For example megolm messages don't claim keys directly, but instead
+ inherit a claim from the olm message that established the session.
+ The keys that must have been owned by the sender of this encrypted event.
+ */
+@property (nonatomic, readonly) NSDictionary *keysClaimed;
 
 @end
