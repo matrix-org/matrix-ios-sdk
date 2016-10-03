@@ -298,6 +298,11 @@ FOUNDATION_EXPORT uint64_t const kMXUndefinedTimestamp;
 #pragma mark - Crypto
 
 /**
+ True if this event is encrypted.
+ */
+@property (nonatomic, readonly) BOOL isEncrypted;
+
+/**
  Set the decrypted content for an encrypted event.
  
  @param clearEvent the decrypted content presented as a MXEvent instance.
