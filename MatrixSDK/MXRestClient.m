@@ -2886,17 +2886,18 @@ MXAuthAction;
 }
 
 #pragma mark - Search
-- (MXHTTPOperation*)searchMessageText:(NSString*)text
-                              inRooms:(NSArray<NSString*>*)rooms
-                          beforeLimit:(NSUInteger)beforeLimit
-                           afterLimit:(NSUInteger)afterLimit
-                            nextBatch:(NSString*)nextBatch
-                              success:(void (^)(MXSearchRoomEventResults *roomEventResults))success
-                              failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)searchMessagesWithText:(NSString*)textPattern
+                                   inRooms:(NSArray<NSString*>*)rooms
+                               beforeLimit:(NSUInteger)beforeLimit
+                                afterLimit:(NSUInteger)afterLimit
+                                 nextBatch:(NSString*)nextBatch
+                               containsURL:(BOOL)containsURL
+                                   success:(void (^)(MXSearchRoomEventResults *roomEventResults))success
+                                   failure:(void (^)(NSError *error))failure
 {
     NSMutableDictionary *roomEventsParameters = [NSMutableDictionary dictionaryWithDictionary:
                                                  @{
-                                                   @"search_term": text,
+                                                   @"search_term": textPattern,
                                                    @"order_by": @"recent",
                                                    @"event_context": @{
                                                            @"before_limit": @(beforeLimit),
@@ -2907,7 +2908,14 @@ MXAuthAction;
     if (rooms)
     {
         roomEventsParameters[@"filter"] = @{
-                                            @"rooms": rooms
+                                            @"rooms": rooms,
+                                            @"contains_url": [NSNumber numberWithBool:containsURL]
+                                            };
+    }
+    else if (containsURL)
+    {
+        roomEventsParameters[@"filter"] = @{
+                                            @"contains_url": @(YES)
                                             };
     }
 
