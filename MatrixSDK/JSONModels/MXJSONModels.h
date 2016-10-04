@@ -19,7 +19,7 @@
 #import "MXJSONModel.h"
 #import "MXUsersDevicesMap.h"
 
-@class MXEvent, MXDeviceInfo;
+@class MXEvent, MXDeviceInfo, MXKey;
 
 /**
  This file contains definitions of basic JSON responses or objects received
@@ -1360,6 +1360,24 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
       The device keys per devices per users.
      */
     @property (nonatomic) MXUsersDevicesMap<MXDeviceInfo*> *deviceKeys;
+
+@end
+
+/**
+ `MXKeysClaimResponse` represents the response to /keys/query request made by
+ [MXRestClient claimOneTimeKeysForUsersDevices].
+ */
+@interface MXKeysClaimResponse : MXJSONModel
+
+/**
+ The requested keys ordered by device by user.
+ */
+@property (nonatomic) MXUsersDevicesMap<MXKey*> *oneTimeKeys;
+
+/**
+ @TODO: what is it?
+ */
+@property (nonatomic) NSDictionary *failures;
 
 @end
 

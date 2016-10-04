@@ -1544,4 +1544,18 @@ typedef enum : NSUInteger
                                  success:(void (^)(MXKeysQueryResponse *keysQueryResponse))success
                                  failure:(void (^)(NSError *error))failure;
 
+/**
+ * Claim one-time keys.
+
+ @param usersDevicesKeyTypesMap a list of users, devices and key types to retrieve keys for.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)claimOneTimeKeysForUsersDevices:(MXUsersDevicesMap<NSString*>*)usersDevicesKeyTypesMap
+                                            success:(void (^)(MXKeysClaimResponse *keysClaimResponse))success
+                                            failure:(void (^)(NSError *error))failure;
+
 @end

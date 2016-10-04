@@ -20,6 +20,7 @@
 #import "MXTools.h"
 #import "MXUsersDevicesMap.h"
 #import "MXDeviceInfo.h"
+#import "MXKey.h"
 
 @implementation MXPublicRoom
 
@@ -1277,6 +1278,47 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     }
 
     return keysQueryResponse;
+}
+
+@end
+
+@implementation MXKeysClaimResponse
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXKeysClaimResponse *keysClaimResponse = [[MXKeysClaimResponse alloc] init];
+    if (keysClaimResponse)
+    {
+        NSMutableDictionary *map = [NSMutableDictionary dictionary];
+
+        if ([JSONDictionary isKindOfClass:NSDictionary.class])
+        {
+            // @TODO: Factorise in MXUsersDevicesMap?
+            for (NSString *userId in JSONDictionary[@"one_time_keys"])
+            {
+                if ([JSONDictionary[@"one_time_keys"][userId] isKindOfClass:NSDictionary.class])
+                {
+                    for (NSString *deviceId in JSONDictionary[@"one_time_keys"][userId])
+                    {
+                        MXKey *key;
+                        MXJSONModelSetMXJSONModel(key, MXKey, JSONDictionary[@"one_time_keys"][userId][deviceId]);
+
+                        if (!map[userId])
+                        {
+                            map[userId] = [NSMutableDictionary dictionary];
+                        }
+                        map[userId][deviceId] = key;
+                    }
+                }
+            }
+        }
+
+        keysClaimResponse.oneTimeKeys = [[MXUsersDevicesMap<MXKey*> alloc] initWithMap:map];
+
+        MXJSONModelSetDictionary(keysClaimResponse.failures, JSONDictionary[@"failures"]);
+    }
+    
+    return keysClaimResponse;
 }
 
 @end

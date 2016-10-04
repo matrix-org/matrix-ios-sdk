@@ -20,6 +20,7 @@
 #import "MXRestClient.h"
 #import "MatrixSDKTestsData.h"
 #import "MXRoomMember.h"
+#import "MXKey.h"
 
 
 // Do not bother with retain cycles warnings in tests
@@ -1410,6 +1411,56 @@
             XCTAssertEqual([keysUploadResponse oneTimeKeyCountsForAlgorithm:@"deded"], 0, @"It must response 0 for any other algo");
 
             [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testClaimOneTimeKeysForUsersDevices
+{
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        NSDictionary *otks = @{
+                               @"curve25519:AAAABQ": @"ueuHES/Q0P1MZ4J3IUpC8iQTkgQNX66ZpxVLUaTDuB8",
+                               @"curve25519:AAAABA": @"PmyaaB68Any+za9CuZXzFsQZW31s/TW6XbAB9akEpQs"
+                               };
+
+        // Upload the device keys
+        [bobRestClient uploadKeys:nil oneTimeKeys:otks forDevice:@"dev1" success:^(MXKeysUploadResponse *keysUploadResponse) {
+
+            [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+
+                MXUsersDevicesMap<NSString *> *usersDevicesKeyTypesMap = [[MXUsersDevicesMap alloc] init];
+                [usersDevicesKeyTypesMap setObject:@"curve25519" forUser:bobRestClient.credentials.userId andDevice:@"dev1"];
+
+                [aliceRestClient claimOneTimeKeysForUsersDevices:usersDevicesKeyTypesMap success:^(MXKeysClaimResponse *keysClaimResponse) {
+
+                    XCTAssertEqual(keysClaimResponse.oneTimeKeys.map.count, 1);
+
+                    MXKey *bobOtk = [keysClaimResponse.oneTimeKeys objectForDevice:@"dev1" forUser:bobRestClient.credentials.userId];
+                    XCTAssert(bobOtk);
+
+                    // Test MXKey
+                    XCTAssertEqualObjects(bobOtk.type, kMXKeyCurve25519Type);
+                    XCTAssertEqualObjects(bobOtk.keyId, @"AAAABA");
+                    XCTAssertEqualObjects(bobOtk.keyFullId, @"curve25519:AAAABA");
+                    XCTAssertEqualObjects(bobOtk.value, @"PmyaaB68Any+za9CuZXzFsQZW31s/TW6XbAB9akEpQs");
+
+                    NSDictionary *bobOtkJSON = bobOtk.JSONDictionary;
+                    XCTAssertEqual(bobOtkJSON.count, 1);
+                    XCTAssertEqualObjects(bobOtkJSON.allKeys[0], bobOtk.keyFullId);
+                    XCTAssertEqualObjects(bobOtkJSON.allValues[0], bobOtk.value);
+
+                    [expectation fulfill];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            }];
 
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);

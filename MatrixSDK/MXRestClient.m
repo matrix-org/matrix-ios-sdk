@@ -3046,4 +3046,33 @@ MXAuthAction;
                                  failure:failure];
 }
 
+- (MXHTTPOperation *)claimOneTimeKeysForUsersDevices:(MXUsersDevicesMap<NSString *> *)usersDevicesKeyTypesMap success:(void (^)(MXKeysClaimResponse *))success failure:(void (^)(NSError *))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/keys/claim", kMXAPIPrefixPathUnstable];
+
+    NSDictionary *parameters = @{
+                                 @"one_time_keys": usersDevicesKeyTypesMap.map
+                                 };
+
+
+    return [httpClient requestWithMethod:@"POST"
+                                    path: path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+
+                                     dispatch_async(processingQueue, ^{
+
+                                         MXKeysClaimResponse *keysClaimResponse = [MXKeysClaimResponse modelFromJSON:JSONResponse];
+
+                                         dispatch_async(dispatch_get_main_queue(), ^{
+
+                                             if (success)
+                                             {
+                                                 success(keysClaimResponse);
+                                             }
+                                         });
+                                     });
+                                 }
+                                 failure:failure];
+}
 @end
