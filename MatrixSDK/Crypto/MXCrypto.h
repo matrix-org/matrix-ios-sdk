@@ -105,24 +105,27 @@
 - (MXDeviceInfo*)eventSenderDeviceOfEvent:(MXEvent*)event;
 
 /**
- * Configure a room to use encryption (ie, save a flag in the sessionstore).
- *
- * @param roomId The room ID to enable encryption in.
- * @param algorithm The encryption config for the room.
- * @return YES if the operation succeeds.
+ Configure a room to use encryption (ie, save a flag in the sessionstore).
+
+ @param roomId The room ID to enable encryption in.
+ @param algorithm The encryption config for the room.
+ @return YES if the operation succeeds.
  */
 - (BOOL)setEncryptionInRoom:(NSString*)roomId withAlgorithm:(NSString*)algorithm;
 
 /**
- * Try to make sure we have established olm sessions for the given users.
- *
- * @param {string[]} users list of user ids
- *
- * @return {module:client.Promise} resolves once the sessions are complete, to
- *    an Object mapping from userId to deviceId to
- *    {@link module:crypto~OlmSessionResult}
+ Try to make sure we have established olm sessions for the given users.
+
+ @param users a list of user ids
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
  */
-//- (MXUsersDevicesMap<MXOlmSessionResult*>*)ensureOlmSessionsForUsers:(NSArray*)users;
+- (MXHTTPOperation*)ensureOlmSessionsForUsers:(NSArray*)users
+                                                             success:(void (^)(MXUsersDevicesMap<MXOlmSessionResult*> *results))success
+                                                             failure:(void (^)(NSError *error))failure;
 
 @end
 
@@ -130,7 +133,7 @@
 /**
  Represent an olm session result..
  */
-@interface MXOlmSessionResult
+@interface MXOlmSessionResult : NSObject
 
 /**
  The device
@@ -141,6 +144,8 @@
  Base64 olm session id.
  nil if no session could be established.
  */
-@property (nonatomic) NSString *sessionsId;
+@property (nonatomic) NSString *sessionId;
+
+- (instancetype)initWithDevice:(MXDeviceInfo*)device andOlmSession:(NSString*)sessionId;
 
 @end

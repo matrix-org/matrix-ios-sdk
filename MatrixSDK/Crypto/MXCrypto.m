@@ -22,6 +22,7 @@
 #import "MXOlmDevice.h"
 #import "MXUsersDevicesMap.h"
 #import "MXDeviceInfo.h"
+#import "MXKey.h"
 
 @interface MXCrypto ()
 {
@@ -370,6 +371,95 @@
     return YES;
 }
 
+- (MXHTTPOperation*)ensureOlmSessionsForUsers:(NSArray*)users
+                                      success:(void (^)(MXUsersDevicesMap<MXOlmSessionResult*> *results))success
+                                      failure:(void (^)(NSError *error))failure
+{
+    NSMutableArray<MXDeviceInfo*> *devicesWithoutSession = [NSMutableArray array];
+
+    MXUsersDevicesMap<MXOlmSessionResult*> *results = [[MXUsersDevicesMap alloc] init];
+
+    for (NSString *userId in users)
+    {
+        NSArray<MXDeviceInfo *> *devices = [self storedDevicesForUser:userId];
+
+        for (MXDeviceInfo *device in devices)
+        {
+            NSString *key = device.identityKey;
+
+            if ([key isEqualToString:_olmDevice.deviceCurve25519Key])
+            {
+                // Don't bother setting up session to ourself
+                continue;
+            }
+
+            if (device.verified == MXDeviceBlocked) {
+                // Don't bother setting up sessions with blocked users
+                continue;
+            }
+
+            NSString *sessionId = [_olmDevice sessionIdForDevice:key];
+            if (!sessionId)
+            {
+                [devicesWithoutSession addObject:device];
+            }
+
+            MXOlmSessionResult *olmSessionResult = [[MXOlmSessionResult alloc] initWithDevice:device andOlmSession:sessionId];
+            [results setObject:olmSessionResult forUser:device.userId andDevice:device.deviceId];
+        }
+    }
+
+    if (devicesWithoutSession.count == 0)
+    {
+        // No need to get session from the homeserver
+        success(results);
+        return nil;
+    }
+
+    // Prepare the request for claiming one-time keys
+    MXUsersDevicesMap<NSString*> *usersDevicesToClaim = [[MXUsersDevicesMap<NSString*> alloc] init];
+    for (MXDeviceInfo *device in devicesWithoutSession)
+    {
+        [usersDevicesToClaim setObject:kMXKeyCurve25519Type forUser:device.userId andDevice:device.deviceId];
+    }
+
+    // TODO: this has a race condition - if we try to send another message
+    // while we are claiming a key, we will end up claiming two and setting up
+    // two sessions.
+    //
+    // That should eventually resolve itself, but it's poor form.
+
+    return [mxSession.matrixRestClient claimOneTimeKeysForUsersDevices:usersDevicesToClaim success:^(MXKeysClaimResponse *keysClaimResponse) {
+
+        for (NSString *userId in keysClaimResponse.oneTimeKeys.userIds)
+        {
+            for (NSString *deviceId in [keysClaimResponse.oneTimeKeys deviceIdsForUser:userId])
+            {
+                MXKey *key = [keysClaimResponse.oneTimeKeys objectForDevice:deviceId forUser:userId];
+
+                if ([key.type isEqualToString:kMXKeyCurve25519Type])
+                {
+                    // Update the result for this device in results
+                    MXOlmSessionResult *olmSessionResult = [results objectForDevice:deviceId forUser:userId];
+                    MXDeviceInfo *device = olmSessionResult.device;
+
+                    olmSessionResult.sessionId = [_olmDevice createOutboundSession:device.identityKey theirOneTimeKey:key.value];
+
+                    NSLog(@"[MXCrypto] Started new sessionid %@ for device %@", olmSessionResult.sessionId, device);
+                }
+                else
+                {
+                    NSLog(@"[MXCrypto] No one-time keys for device %@:%@", userId, deviceId);
+                }
+            }
+        }
+
+    } failure:^(NSError *error) {
+
+        NSLog(@"[MXCrypto] ensureOlmSessionsForUsers: claimOneTimeKeysForUsersDevices request failed. Error: %@", error);
+        failure(error);
+    }];
+}
 
 #pragma mark - Private methods
 - (NSString*)generateDeviceId
@@ -479,6 +569,23 @@
     }
 
     return YES;
+}
+
+@end
+
+
+@implementation MXOlmSessionResult
+
+- (instancetype)initWithDevice:(MXDeviceInfo *)device andOlmSession:(NSString *)sessionId
+{
+    self = [self init];
+    if (self)
+    {
+        _device = device;
+        _sessionId = sessionId;
+    }
+
+    return self;
 }
 
 @end
