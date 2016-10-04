@@ -45,6 +45,9 @@
 
     // All users devices keys
     MXUsersDevicesInfoMap *usersDevicesInfoMap;
+
+    // The algorithms used in rooms
+    NSMutableDictionary<NSString*, NSString*> *roomsAlgorithms;
 }
 
 #pragma mark - protected operations

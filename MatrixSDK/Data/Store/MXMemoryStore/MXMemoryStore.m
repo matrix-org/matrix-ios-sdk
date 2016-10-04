@@ -38,6 +38,7 @@
         receiptsByRoomId = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
         usersDevicesInfoMap = [[MXUsersDevicesInfoMap alloc] init];
+        roomsAlgorithms = [NSMutableDictionary dictionary];
     }
     return self;
 }
@@ -365,6 +366,16 @@
 - (NSDictionary<NSString *,MXDeviceInfo *> *)endToEndDevicesForUser:(NSString *)userId
 {
     return usersDevicesInfoMap.map[userId];
+}
+
+- (void)storeEndToEndAlgorithmForRoom:(NSString *)roomId algorithm:(NSString *)algorithm
+{
+    roomsAlgorithms[roomId] = algorithm;
+}
+
+- (NSString *)endToEndAlgorithmForRoom:(NSString *)roomId
+{
+    return roomsAlgorithms[roomId];
 }
 
 

@@ -45,9 +45,9 @@
             + crypto: crypto data
                 L account: the user's olm account
                 L devices: users devices keys
+                L roomsAlgorithms: the algos used in rooms
                 @TODO
                 L announced: ?
-                L rooms: ?
                 L sessions: ?
                 L inboundGroupSessions: ?
             L MXFileStore : Information about the stored data

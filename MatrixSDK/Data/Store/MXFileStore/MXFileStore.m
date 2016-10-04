@@ -40,6 +40,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 NSString *const kMXFileStoreCryptoFolder = @"crypto";
 NSString *const kMXFileStoreCryptoAccountFile = @"account";
 NSString *const kMXFileStoreCryptoDevicesFile = @"devices";
+NSString *const kMXFileStoreCryptoRoomsAlgorithmsFile = @"roomsAlgorithms";
 
 @interface MXFileStore ()
 {
@@ -97,6 +98,7 @@ NSString *const kMXFileStoreCryptoDevicesFile = @"devices";
 
     // Flags for crypto data changes
     BOOL usersDevicesInfoMapHasChanged;
+    BOOL roomsAlgorithmsHasChanged;
 }
 @end
 
@@ -647,6 +649,11 @@ NSString *const kMXFileStoreCryptoDevicesFile = @"devices";
 - (NSString*)cryptoDevicesFileForBackup:(BOOL)backup
 {
     return [[self cryptoPathForBackup:backup] stringByAppendingPathComponent:kMXFileStoreCryptoDevicesFile];
+}
+
+- (NSString*)cryptoRoomsAlgorithmsFileForBackup:(BOOL)backup
+{
+    return [[self cryptoPathForBackup:backup] stringByAppendingPathComponent:kMXFileStoreCryptoRoomsAlgorithmsFile];
 }
 
 #pragma mark - Storage validity
@@ -1284,6 +1291,7 @@ NSString *const kMXFileStoreCryptoDevicesFile = @"devices";
     NSDate *startDate = [NSDate date];
 
     usersDevicesInfoMap = [NSKeyedUnarchiver unarchiveObjectWithFile:[self cryptoDevicesFileForBackup:NO]];
+    roomsAlgorithms = [NSKeyedUnarchiver unarchiveObjectWithFile:[self cryptoRoomsAlgorithmsFileForBackup:NO]];
 
     NSLog(@"[MXFileStore] Loaded crypto data in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
@@ -1291,6 +1299,7 @@ NSString *const kMXFileStoreCryptoDevicesFile = @"devices";
 - (void)saveCryptoData
 {
     [self saveCryptoDevices];
+    [self saveRooomAlgorithms];
 }
 
 - (void)storeEndToEndAccount:(OLMAccount *)account
@@ -1338,6 +1347,35 @@ NSString *const kMXFileStoreCryptoDevicesFile = @"devices";
 
             // Store new data
             [NSKeyedArchiver archiveRootObject:usersDevicesInfoMapSnapshot toFile:file];
+        });
+    }
+}
+
+- (void)storeEndToEndAlgorithmForRoom:(NSString *)roomId algorithm:(NSString *)algorithm
+{
+    [super storeEndToEndAlgorithmForRoom:roomId algorithm:algorithm];
+    roomsAlgorithmsHasChanged = YES;
+}
+
+- (void)saveRooomAlgorithms
+{
+    if (roomsAlgorithmsHasChanged)
+    {
+        NSDictionary *roomsAlgorithmsSnapshot = [NSDictionary dictionaryWithDictionary:roomsAlgorithms];
+
+        dispatch_async(dispatchQueue, ^(void){
+
+            NSString *file = [self cryptoRoomsAlgorithmsFileForBackup:NO];
+            NSString *backupFile = [self cryptoRoomsAlgorithmsFileForBackup:NO];
+
+            // Backup the file
+            if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
+            {
+                [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
+            }
+
+            // Store new data
+            [NSKeyedArchiver archiveRootObject:roomsAlgorithmsSnapshot toFile:file];
         });
     }
 }

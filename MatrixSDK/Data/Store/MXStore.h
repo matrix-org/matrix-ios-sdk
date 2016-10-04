@@ -398,12 +398,12 @@
 - (NSDictionary<NSString*, MXDeviceInfo*>*)endToEndDevicesForUser:(NSString*)userId;
 
 /**
- Store a session between the logged-in user and another device.
+ Store the crypto algorithm for a room.
 
- @param deviceKey the public key of the other device.
- @param session the end-to-end session.
+ @param roomId the id of the room.
+ @algorithm the algorithm.
  */
-- (void)storeEndToEndSession:(OLMSession*)session forDevice:(NSString*)deviceKey;
+- (void)storeEndToEndAlgorithmForRoom:(NSString*)roomId algorithm:(NSString*)algorithm;
 
 /**
  The crypto algorithm used in a room.
@@ -412,12 +412,12 @@
 - (NSString*)endToEndAlgorithmForRoom:(NSString*)roomId;
 
 /**
- Store the crypto algorithm for a room.
- 
- @param roomId the id of the room.
- @algorithm the algorithm.
+ Store a session between the logged-in user and another device.
+
+ @param deviceKey the public key of the other device.
+ @param session the end-to-end session.
  */
-- (void)storeEndToEndAlgorithmForRoom:(NSString*)roomId algorithm:(NSString*)algorithm;
+- (void)storeEndToEndSession:(OLMSession*)session forDevice:(NSString*)deviceKey;
 
 /**
  Retrieve the end-to-end sessions between the logged-in user and another
