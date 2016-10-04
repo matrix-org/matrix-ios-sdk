@@ -406,6 +406,20 @@
 - (void)storeEndToEndSession:(OLMSession*)session forDevice:(NSString*)deviceKey;
 
 /**
+ The crypto algorithm used in a room.
+ nil if the room is not encrypted.
+ */
+- (NSString*)endToEndAlgorithmForRoom:(NSString*)roomId;
+
+/**
+ Store the crypto algorithm for a room.
+ 
+ @param roomId the id of the room.
+ @algorithm the algorithm.
+ */
+- (void)storeEndToEndAlgorithmForRoom:(NSString*)roomId algorithm:(NSString*)algorithm;
+
+/**
  Retrieve the end-to-end sessions between the logged-in user and another
  device.
 

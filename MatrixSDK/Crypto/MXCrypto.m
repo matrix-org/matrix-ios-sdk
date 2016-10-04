@@ -33,7 +33,7 @@
     /**
      EncryptionAlgorithm instance for each room.
      */
-    NSMutableDictionary *roomAlgorithms;
+    NSMutableDictionary<NSString*, id<MXEncrypting>> *roomAlgorithms;
 
     /**
      Our device keys
@@ -315,7 +315,7 @@
         return nil;
     }
 
-    // so far so good, but now we need to check that the sender of this event
+    // So far so good, but now we need to check that the sender of this event
     // hadn't advertised someone else's Curve25519 key as their own. We do that
     // by checking the Ed25519 claimed by the event (or, in the case of megolm,
     // the event which set up the megolm session), to check that it matches the
@@ -338,6 +338,37 @@
     return device;
 }
 
+// @TODO: Return NSError
+-(BOOL)setEncryptionInRoom:(NSString*)roomId withAlgorithm:(NSString*)algorithm
+{
+    // If we already have encryption in this room, we should ignore this event
+    // (for now at least. Maybe we should alert the user somehow?)
+    NSString *existingAlgorithm = [mxSession.store endToEndAlgorithmForRoom:roomId];
+    if (existingAlgorithm && ![existingAlgorithm isEqualToString:algorithm])
+    {
+        NSLog(@"[MXCrypto] setEncryptionInRoom: Ignoring m.room.encryption event which requests a change of config in %@", roomId);
+        return NO;
+    }
+
+    Class encryptionClass = [[MXCryptoAlgorithms sharedAlgorithms] encryptorClassForAlgorithm:algorithm];
+    if (!encryptionClass)
+    {
+        NSLog(@"[MXCrypto] setEncryptionInRoom: Unable to encrypt with %@", algorithm);
+        return NO;
+    }
+
+    [mxSession.store storeEndToEndAlgorithmForRoom:roomId algorithm:algorithm];
+    if ([mxSession.store respondsToSelector:@selector(commit)])
+    {
+        [mxSession.store commit];
+    }
+
+    id<MXEncrypting> alg = [[encryptionClass alloc] initWithMatrixSession:mxSession andRoom:roomId];
+
+    roomAlgorithms[roomId] = alg;
+
+    return YES;
+}
 
 
 #pragma mark - Private methods

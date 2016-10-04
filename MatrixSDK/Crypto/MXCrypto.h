@@ -104,4 +104,13 @@
  */
 - (MXDeviceInfo*)eventSenderDeviceOfEvent:(MXEvent*)event;
 
+/**
+ * Configure a room to use encryption (ie, save a flag in the sessionstore).
+ *
+ * @param roomId The room ID to enable encryption in.
+ * @param algorithm The encryption config for the room.
+ * @return YES if the operation succeeds.
+ */
+-(BOOL)setEncryptionInRoom:(NSString*)roomId withAlgorithm:(NSString*)algorithm;
+
 @end
