@@ -45,8 +45,8 @@
     return _unsignedData[@"device_display_name"];
 }
 
-#pragma mark - MXJSONModel
 
+#pragma mark - MXJSONModel
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
     MXDeviceInfo *deviceInfo = [[MXDeviceInfo alloc] initWithDeviceId:JSONDictionary[@"device_id"]];
@@ -112,6 +112,7 @@
 
     return signalableJSONDictionary;
 }
+
 
 #pragma mark - NSCopying
 - (id)copyWithZone:(NSZone *)zone
