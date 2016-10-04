@@ -1331,7 +1331,7 @@ NSString *const kMXFileStoreCryptoRoomsAlgorithmsFile = @"roomsAlgorithms";
 {
     if (usersDevicesInfoMapHasChanged)
     {
-        MXUsersDevicesInfoMap *usersDevicesInfoMapSnapshot = [usersDevicesInfoMap copy];
+        MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMapSnapshot = [usersDevicesInfoMap copy];
         usersDevicesInfoMapHasChanged = NO;
 
         dispatch_async(dispatchQueue, ^(void){

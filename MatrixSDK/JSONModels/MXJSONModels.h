@@ -17,8 +17,9 @@
 #import <Foundation/Foundation.h>
 
 #import "MXJSONModel.h"
+#import "MXUsersDevicesMap.h"
 
-@class MXEvent, MXUsersDevicesInfoMap;
+@class MXEvent, MXDeviceInfo;
 
 /**
  This file contains definitions of basic JSON responses or objects received
@@ -1358,7 +1359,7 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
     /**
       The device keys per devices per users.
      */
-    @property (nonatomic) MXUsersDevicesInfoMap *deviceKeys;
+    @property (nonatomic) MXUsersDevicesMap<MXDeviceInfo*> *deviceKeys;
 
 @end
 

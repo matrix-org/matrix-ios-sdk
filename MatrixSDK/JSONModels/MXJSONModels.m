@@ -18,7 +18,8 @@
 
 #import "MXEvent.h"
 #import "MXTools.h"
-#import "MXUsersDevicesInfoMap.h"
+#import "MXUsersDevicesMap.h"
+#import "MXDeviceInfo.h"
 
 @implementation MXPublicRoom
 
@@ -1249,7 +1250,30 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXKeysQueryResponse *keysQueryResponse = [[MXKeysQueryResponse alloc] init];
     if (keysQueryResponse)
     {
-        MXJSONModelSetMXJSONModel(keysQueryResponse.deviceKeys, MXUsersDevicesInfoMap, JSONDictionary[@"device_keys"]);
+        NSMutableDictionary *map = [NSMutableDictionary dictionary];
+
+        if ([JSONDictionary isKindOfClass:NSDictionary.class])
+        {
+            for (NSString *userId in JSONDictionary[@"device_keys"])
+            {
+                if ([JSONDictionary[@"device_keys"][userId] isKindOfClass:NSDictionary.class])
+                {
+                    for (NSString *deviceId in JSONDictionary[@"device_keys"][userId])
+                    {
+                        MXDeviceInfo *deviceInfo;
+                        MXJSONModelSetMXJSONModel(deviceInfo, MXDeviceInfo, JSONDictionary[@"device_keys"][userId][deviceId]);
+
+                        if (!map[userId])
+                        {
+                            map[userId] = [NSMutableDictionary dictionary];
+                        }
+                        map[userId][deviceId] = deviceInfo;
+                    }
+                }
+            }
+        }
+
+        keysQueryResponse.deviceKeys = [[MXUsersDevicesMap<MXDeviceInfo*> alloc] initWithMap:map];
     }
 
     return keysQueryResponse;

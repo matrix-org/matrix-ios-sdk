@@ -21,7 +21,6 @@
 #import "MatrixSDKTestsData.h"
 #import "MXRoomMember.h"
 
-#import "MXUsersDevicesInfoMap.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -1373,7 +1372,7 @@
                 XCTAssertEqual(keysQueryResponse.deviceKeys.userIds.count, 1);
                 XCTAssertEqual([keysQueryResponse.deviceKeys deviceIdsForUser:bobRestClient.credentials.userId].count, 1);
 
-                MXDeviceInfo *bobDevice2 = [keysQueryResponse.deviceKeys deviceInfoForDevice:@"dev1" forUser:bobRestClient.credentials.userId];
+                MXDeviceInfo *bobDevice2 = [keysQueryResponse.deviceKeys objectForDevice:@"dev1" forUser:bobRestClient.credentials.userId];
                 XCTAssert(bobDevice2);
                 XCTAssertEqualObjects(bobDevice2.deviceId, @"dev1");
                 XCTAssertEqualObjects(bobDevice2.userId, bobRestClient.credentials.userId);

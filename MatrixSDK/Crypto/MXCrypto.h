@@ -20,9 +20,9 @@
 #import "MXDeviceInfo.h"
 #import "MXOlmDevice.h"
 #import "MXCryptoAlgorithms.h"
+#import "MXUsersDevicesMap.h"
 
-@class MXSession;
-
+@class MXSession, MXOlmSessionResult;
 
 @interface MXCrypto : NSObject
 
@@ -66,7 +66,7 @@
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)downloadKeys:(NSArray<NSString*>*)userIds forceDownload:(BOOL)forceDownload
-                         success:(void (^)(MXUsersDevicesInfoMap *usersDevicesInfoMap))success
+                         success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap))success
                          failure:(void (^)(NSError *error))failure;
 
 /**
@@ -111,6 +111,36 @@
  * @param algorithm The encryption config for the room.
  * @return YES if the operation succeeds.
  */
--(BOOL)setEncryptionInRoom:(NSString*)roomId withAlgorithm:(NSString*)algorithm;
+- (BOOL)setEncryptionInRoom:(NSString*)roomId withAlgorithm:(NSString*)algorithm;
+
+/**
+ * Try to make sure we have established olm sessions for the given users.
+ *
+ * @param {string[]} users list of user ids
+ *
+ * @return {module:client.Promise} resolves once the sessions are complete, to
+ *    an Object mapping from userId to deviceId to
+ *    {@link module:crypto~OlmSessionResult}
+ */
+//- (MXUsersDevicesMap<MXOlmSessionResult*>*)ensureOlmSessionsForUsers:(NSArray*)users;
+
+@end
+
+
+/**
+ Represent an olm session result..
+ */
+@interface MXOlmSessionResult
+
+/**
+ The device
+ */
+@property (nonatomic) MXDeviceInfo *device;
+
+/**
+ Base64 olm session id.
+ nil if no session could be established.
+ */
+@property (nonatomic) NSString *sessionsId;
 
 @end

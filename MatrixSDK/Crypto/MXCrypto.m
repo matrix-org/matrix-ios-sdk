@@ -20,8 +20,8 @@
 #import "MXTools.h"
 
 #import "MXOlmDevice.h"
+#import "MXUsersDevicesMap.h"
 #import "MXDeviceInfo.h"
-#import "MXUsersDevicesInfoMap.h"
 
 @interface MXCrypto ()
 {
@@ -157,11 +157,11 @@
 }
 
 - (MXHTTPOperation*)downloadKeys:(NSArray<NSString*>*)userIds forceDownload:(BOOL)forceDownload
-                         success:(void (^)(MXUsersDevicesInfoMap *usersDevicesInfoMap))success
+                         success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap))success
                          failure:(void (^)(NSError *error))failure
 {
     // Map from userid -> deviceid -> DeviceInfo
-    MXUsersDevicesInfoMap *stored = [[MXUsersDevicesInfoMap alloc] init];
+    MXUsersDevicesMap<MXDeviceInfo*> *stored = [[MXUsersDevicesMap<MXDeviceInfo*> alloc] init];
 
     // List of user ids we need to download keys for
     NSMutableArray *downloadUsers = [NSMutableArray array];
@@ -171,7 +171,7 @@
         NSDictionary<NSString *,MXDeviceInfo *> *devices = [mxSession.store endToEndDevicesForUser:userId];
         if (devices.count)
         {
-            [stored setDevicesInfo:devices forUser:userId];
+            [stored setObjects:devices forUser:userId];
         }
 
         if (devices.count == 0 || forceDownload)
@@ -197,7 +197,7 @@
                 for (NSString *deviceId in devices)
                 {
                     // Get the potential previously store device keys for this device
-                    MXDeviceInfo *previouslyStoredDeviceKeys = [stored deviceInfoForDevice:deviceId forUser:userId];
+                    MXDeviceInfo *previouslyStoredDeviceKeys = [stored objectForDevice:deviceId forUser:userId];
 
                     // Validate received keys
                     if (![self validateDeviceKeys:devices[deviceId] forUser:userId previouslyStoredDeviceKeys:previouslyStoredDeviceKeys])
@@ -228,7 +228,7 @@
                 }
 
                 // And the response result
-                [stored setDevicesInfo:devices forUser:userId];
+                [stored setObjects:devices forUser:userId];
             }
 
             success(stored);
