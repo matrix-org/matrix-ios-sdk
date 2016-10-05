@@ -3075,4 +3075,43 @@ MXAuthAction;
                                  }
                                  failure:failure];
 }
+
+
+#pragma mark - Direct-to-device messaging
+- (MXHTTPOperation *)sendToDevice:(NSString *)eventType contentMap:(MXUsersDevicesMap<NSDictionary *> *)contentMap
+                          success:(void (^)())success failure:(void (^)(NSError *))failure
+{
+    // Prepare the path by adding a random transaction id (This id is used to prevent duplicated event).
+    NSString *path = [NSString stringWithFormat:@"%@/sendToDevice/%@/%tu", kMXAPIPrefixPathUnstable, eventType, arc4random_uniform(INT32_MAX)];
+
+    NSDictionary *content = @{
+                              @"messages": contentMap.map
+                              };
+
+    return [httpClient requestWithMethod:@"PUT"
+                                    path:path
+                              parameters:content
+                                 success:^(NSDictionary *JSONResponse) {
+
+                                     if (success)
+                                     {
+                                         // Use here the processing queue in order to keep the server response order
+                                         dispatch_async(processingQueue, ^{
+
+                                             dispatch_async(dispatch_get_main_queue(), ^{
+
+                                                 success();
+
+                                             });
+                                         });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                 }];
+}
+
 @end

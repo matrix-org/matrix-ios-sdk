@@ -1558,4 +1558,20 @@ typedef enum : NSUInteger
                                             success:(void (^)(MXKeysClaimResponse *keysClaimResponse))success
                                             failure:(void (^)(NSError *error))failure;
 
+
+#pragma mark - Direct-to-device messaging
+/**
+ Send an event to a specific list of devices
+
+ @param eventType the type of event to send
+ @param contentMap content to send. Map from user_id to device_id to content dictionary.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)sendToDevice:(NSString*)eventType contentMap:(MXUsersDevicesMap<NSDictionary*>*)contentMap
+                         success:(void (^)())success
+                         failure:(void (^)(NSError *error))failure;
 @end
