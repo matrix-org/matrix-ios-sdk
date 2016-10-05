@@ -528,7 +528,73 @@
  */
 - (void)registerEventHandlers
 {
+    // Observe the server sync
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onInitialSyncCompleted) name:kMXSessionDidSyncNotification object:nil];
+
     // @TODO
+}
+
+- (void)onInitialSyncCompleted
+{
+    // We need to it only once
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXSessionDidSyncNotification object:nil];
+
+    if ([mxSession.store endToEndDeviceAnnounced])
+    {
+        return;
+    }
+
+    // We need to tell all the devices in all the rooms we are members of that
+    // we have arrived.
+    // Build a list of rooms for each user.
+    NSMutableDictionary<NSString*, NSMutableArray*> *roomsByUser = [NSMutableDictionary dictionary];
+    for (MXRoom *room in mxSession.rooms)
+    {
+        // Check for rooms with encryption enabled
+        id<MXEncrypting> alg = roomAlgorithms[room.roomId];
+        if (!alg)
+        {
+            continue;
+        }
+
+        // Ignore any rooms which we have left
+        MXRoomMember *me = [room.state memberWithUserId:mxSession.myUser.userId];
+        if (!me || (me.membership != MXMembershipJoin && me.membership !=MXMembershipInvite))
+        {
+            continue;
+        }
+
+        for (MXRoomMember *member in room.state.members)
+        {
+            if (!roomsByUser[member.userId])
+            {
+                roomsByUser[member.userId] = [NSMutableArray array];
+            }
+            [roomsByUser[member.userId] addObject:room.roomId];
+        }
+    }
+
+    // Build a per-device message for each user
+    MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];
+    for (NSString *userId in roomsByUser)
+    {
+        [contentMap setObjects:@{
+                                @"*": @{
+                                        @"device_id": myDevice.deviceId,
+                                        @"rooms": roomsByUser[userId],
+                                        }
+                                } forUser:userId];
+    }
+
+    [mxSession.matrixRestClient sendToDevice:kMXEventTypeStringNewDevice contentMap:contentMap success:^{
+
+        [mxSession.store storeEndToEndDeviceAnnounced];
+        if ([mxSession.store respondsToSelector:@selector(commit)])
+        {
+            [mxSession.store commit];
+        }
+
+    } failure:nil];
 }
 
 /**

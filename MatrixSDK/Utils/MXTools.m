@@ -63,6 +63,7 @@ static NSRegularExpression *isMatrixEventIdentifierRegex;
                           kMXEventTypeStringRoomTag: [NSNumber numberWithUnsignedInteger:MXEventTypeRoomTag],
                           kMXEventTypeStringPresence: [NSNumber numberWithUnsignedInteger:MXEventTypePresence],
                           kMXEventTypeStringTypingNotification: [NSNumber numberWithUnsignedInteger:MXEventTypeTypingNotification],
+                          kMXEventTypeStringNewDevice: @(MXEventTypeNewDevice),
                           kMXEventTypeStringCallInvite: [NSNumber numberWithUnsignedInteger:MXEventTypeCallInvite],
                           kMXEventTypeStringCallCandidates: [NSNumber numberWithUnsignedInteger:MXEventTypeCallCandidates],
                           kMXEventTypeStringCallAnswer: [NSNumber numberWithUnsignedInteger:MXEventTypeCallAnswer],

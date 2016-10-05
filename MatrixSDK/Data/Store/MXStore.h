@@ -365,6 +365,16 @@
 - (OLMAccount*)endToEndAccount;
 
 /**
+ Store a flag indicating that we have announced the new device.
+ */
+- (void)storeEndToEndDeviceAnnounced;
+
+/**
+ Check if the "device announced" flag is set.
+ */
+- (BOOL)endToEndDeviceAnnounced;
+
+/**
  Store a device for a user.
 
  @param userId The user's id.
