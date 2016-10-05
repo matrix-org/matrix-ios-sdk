@@ -39,6 +39,7 @@
         users = [NSMutableDictionary dictionary];
         usersDevicesInfoMap = [[MXUsersDevicesMap<MXDeviceInfo*> alloc] init];
         roomsAlgorithms = [NSMutableDictionary dictionary];
+        olmSessions = [NSMutableDictionary dictionary];
     }
     return self;
 }
@@ -378,6 +379,20 @@
     return roomsAlgorithms[roomId];
 }
 
+- (void)storeEndToEndSession:(OLMSession *)session forDevice:(NSString *)deviceKey
+{
+    if (!olmSessions[deviceKey])
+    {
+        olmSessions[deviceKey] = [NSMutableDictionary dictionary];
+    }
+    
+    olmSessions[deviceKey][session.sessionIdentifier] = session;
+}
+
+- (NSDictionary<NSString *,OLMSession *> *)endToEndSessionsWithDevice:(NSString *)deviceKey
+{
+    return olmSessions[deviceKey];
+}
 
 #pragma mark - Protected operations
 - (MXMemoryRoomStore*)getOrCreateRoomStore:(NSString*)roomId

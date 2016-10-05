@@ -63,7 +63,7 @@
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  
- @return a MXHTTPOperation instance.
+ @return a MXHTTPOperation instance. May be nil if the data is already in the store.
  */
 - (MXHTTPOperation*)downloadKeys:(NSArray<NSString*>*)userIds forceDownload:(BOOL)forceDownload
                          success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap))success
@@ -114,6 +114,14 @@
 - (BOOL)setEncryptionInRoom:(NSString*)roomId withAlgorithm:(NSString*)algorithm;
 
 /**
+ Indicate whether encryption is enabled for a room.
+
+ @param roomId the id of the room.
+ @return whether encryption is enabled.
+ */
+- (BOOL)isRoomEncrypted:(NSString*)roomId;
+
+/**
  Try to make sure we have established olm sessions for the given users.
 
  @param users a list of user ids
@@ -121,11 +129,11 @@
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
 
- @return a MXHTTPOperation instance.
+ @return a MXHTTPOperation instance. May be nil if the data is already in the store.
  */
 - (MXHTTPOperation*)ensureOlmSessionsForUsers:(NSArray*)users
-                                                             success:(void (^)(MXUsersDevicesMap<MXOlmSessionResult*> *results))success
-                                                             failure:(void (^)(NSError *error))failure;
+                                      success:(void (^)(MXUsersDevicesMap<MXOlmSessionResult*> *results))success
+                                      failure:(void (^)(NSError *error))failure;
 
 @end
 

@@ -41,6 +41,7 @@ NSString *const kMXFileStoreCryptoFolder = @"crypto";
 NSString *const kMXFileStoreCryptoAccountFile = @"account";
 NSString *const kMXFileStoreCryptoDevicesFile = @"devices";
 NSString *const kMXFileStoreCryptoRoomsAlgorithmsFile = @"roomsAlgorithms";
+NSString *const kMXFileStoreCryptoSessionsFile = @"sessions";
 
 @interface MXFileStore ()
 {
@@ -99,6 +100,7 @@ NSString *const kMXFileStoreCryptoRoomsAlgorithmsFile = @"roomsAlgorithms";
     // Flags for crypto data changes
     BOOL usersDevicesInfoMapHasChanged;
     BOOL roomsAlgorithmsHasChanged;
+    BOOL olmSessionsHasChanged;
 }
 @end
 
@@ -655,6 +657,12 @@ NSString *const kMXFileStoreCryptoRoomsAlgorithmsFile = @"roomsAlgorithms";
 {
     return [[self cryptoPathForBackup:backup] stringByAppendingPathComponent:kMXFileStoreCryptoRoomsAlgorithmsFile];
 }
+
+- (NSString*)cryptoSessionFileForBackup:(BOOL)backup
+{
+    return [[self cryptoPathForBackup:backup] stringByAppendingPathComponent:kMXFileStoreCryptoSessionsFile];
+}
+
 
 #pragma mark - Storage validity
 - (BOOL)checkStorageValidity
@@ -1292,6 +1300,7 @@ NSString *const kMXFileStoreCryptoRoomsAlgorithmsFile = @"roomsAlgorithms";
 
     usersDevicesInfoMap = [NSKeyedUnarchiver unarchiveObjectWithFile:[self cryptoDevicesFileForBackup:NO]];
     roomsAlgorithms = [NSKeyedUnarchiver unarchiveObjectWithFile:[self cryptoRoomsAlgorithmsFileForBackup:NO]];
+    olmSessions = [NSKeyedUnarchiver unarchiveObjectWithFile:[self cryptoSessionFileForBackup:NO]];
 
     NSLog(@"[MXFileStore] Loaded crypto data in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
@@ -1300,6 +1309,7 @@ NSString *const kMXFileStoreCryptoRoomsAlgorithmsFile = @"roomsAlgorithms";
 {
     [self saveCryptoDevices];
     [self saveRooomAlgorithms];
+    [self saveOlmSessions];
 }
 
 - (void)storeEndToEndAccount:(OLMAccount *)account
@@ -1362,6 +1372,7 @@ NSString *const kMXFileStoreCryptoRoomsAlgorithmsFile = @"roomsAlgorithms";
     if (roomsAlgorithmsHasChanged)
     {
         NSDictionary *roomsAlgorithmsSnapshot = [NSDictionary dictionaryWithDictionary:roomsAlgorithms];
+        roomsAlgorithmsHasChanged = NO;
 
         dispatch_async(dispatchQueue, ^(void){
 
@@ -1376,6 +1387,36 @@ NSString *const kMXFileStoreCryptoRoomsAlgorithmsFile = @"roomsAlgorithms";
 
             // Store new data
             [NSKeyedArchiver archiveRootObject:roomsAlgorithmsSnapshot toFile:file];
+        });
+    }
+}
+
+- (void)storeEndToEndSession:(OLMSession *)session forDevice:(NSString *)deviceKey
+{
+    [super storeEndToEndSession:session forDevice:deviceKey];
+    olmSessionsHasChanged = YES;
+}
+
+- (void)saveOlmSessions
+{
+    if (olmSessionsHasChanged)
+    {
+        NSDictionary *olmSessionsSnapshot = [NSDictionary dictionaryWithDictionary:olmSessions];
+        olmSessionsHasChanged = NO;
+
+        dispatch_async(dispatchQueue, ^(void){
+
+            NSString *file = [self cryptoSessionFileForBackup:NO];
+            NSString *backupFile = [self cryptoSessionFileForBackup:NO];
+
+            // Backup the file
+            if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
+            {
+                [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
+            }
+
+            // Store new data
+            [NSKeyedArchiver archiveRootObject:olmSessionsSnapshot toFile:file];
         });
     }
 }

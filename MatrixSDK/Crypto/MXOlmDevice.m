@@ -57,7 +57,12 @@
         {
             // Else, create it
             olmAccount = [[OLMAccount alloc] initNewAccount];
+
             [store storeEndToEndAccount:olmAccount];
+            if ([store respondsToSelector:@selector(commit)])
+            {
+                [store commit];
+            }
         }
 
         olmUtility = [[OLMUtility alloc] init];
@@ -97,19 +102,34 @@
 - (void)markKeysAsPublished
 {
     [olmAccount markKeysAsPublished];
+
     [store storeEndToEndAccount:olmAccount];
+    if ([store respondsToSelector:@selector(commit)])
+    {
+        [store commit];
+    }
 }
 
 - (void)generateOneTimeKeys:(NSUInteger)numKeys
 {
     [olmAccount generateOneTimeKeys:numKeys];
+
     [store storeEndToEndAccount:olmAccount];
+    if ([store respondsToSelector:@selector(commit)])
+    {
+        [store commit];
+    }
 }
 
 - (NSString *)createOutboundSession:(NSString *)theirIdentityKey theirOneTimeKey:(NSString *)theirOneTimeKey
 {
     OLMSession *olmSession = [[OLMSession alloc] initOutboundSessionWithAccount:olmAccount theirIdentityKey:theirOneTimeKey theirOneTimeKey:theirOneTimeKey];
+
     [store storeEndToEndSession:olmSession forDevice:theirIdentityKey];
+    if ([store respondsToSelector:@selector(commit)])
+    {
+        [store commit];
+    }
 
     return olmSession.sessionIdentifier;
 }
@@ -126,6 +146,11 @@
 
         NSString *payloadString = [olmSession decryptMessage:[[OLMMessage alloc]initWithCiphertext:ciphertext type:messageType]];
         [store storeEndToEndSession:olmSession forDevice:theirDeviceIdentityKey];
+
+        if ([store respondsToSelector:@selector(commit)])
+        {
+            [store commit];
+        }
 
         return @{
                  @"payload": payloadString,
@@ -166,7 +191,12 @@
     if (olmSession)
     {
         ciphertext = [olmSession encryptMessage:payloadString].ciphertext;
+
         [store storeEndToEndSession:olmSession forDevice:theirDeviceIdentityKey];
+        if ([store respondsToSelector:@selector(commit)])
+        {
+            [store commit];
+        }
     }
 
     return ciphertext;
@@ -180,7 +210,12 @@
     if (olmSession)
     {
         payloadString = [olmSession decryptMessage:[[OLMMessage alloc] initWithCiphertext:ciphertext type:messageType]];
+
         [store storeEndToEndSession:olmSession forDevice:theirDeviceIdentityKey];
+        if ([store respondsToSelector:@selector(commit)])
+        {
+            [store commit];
+        }
     }
 
     return payloadString;

@@ -155,13 +155,89 @@
                             [expectation fulfill];
 
                         } failure:^(NSError *error) {
-                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                            XCTFail(@"The request should not fail - NSError: %@", error);
                             [expectation fulfill];
                         }];
                     } failure:^(NSError *error) {
                         XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                         [expectation fulfill];
                     }];
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testEnsureOlmSessionsForUsers
+{
+    [matrixSDKTestsData doMXSessionTestWithAlice:self andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
+
+        aliceSession.matrixRestClient.credentials.deviceId = @"AliceDevice";
+        aliceSession.cryptoEnabled = YES;
+
+        [aliceSession.crypto uploadKeys:10 success:^{
+
+            [matrixSDKTestsData doMXSessionTestWithBob:nil andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation2) {
+                mxSession.matrixRestClient.credentials.deviceId = @"BobDevice";
+                mxSession.cryptoEnabled = YES;
+
+                [mxSession.crypto downloadKeys:@[mxSession.myUser.userId, aliceSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+
+
+                    // Start the test
+                    MXHTTPOperation *httpOperation = [mxSession.crypto ensureOlmSessionsForUsers:@[mxSession.myUser.userId, aliceSession.myUser.userId] success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {
+
+                        XCTAssertEqual(results.userIds.count, 1, @"Only a session with Alice must be created. No mean to create on with oneself(Bob)");
+
+                        MXOlmSessionResult *sessionWithAliceDevice = [results objectForDevice:@"AliceDevice" forUser:aliceSession.myUser.userId];
+                        XCTAssert(sessionWithAliceDevice);
+                        XCTAssert(sessionWithAliceDevice.sessionId);
+                        XCTAssertEqualObjects(sessionWithAliceDevice.device.deviceId, @"AliceDevice");
+
+
+                        // Test persistence
+                        MXRestClient *bobRestClient = mxSession.matrixRestClient;
+                        [mxSession close];
+
+                        MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                        [mxSession2 setStore:[[MXFileStore alloc] init] success:^{
+
+                            MXHTTPOperation *httpOperation2 = [mxSession2.crypto ensureOlmSessionsForUsers:@[mxSession2.myUser.userId, aliceSession.myUser.userId] success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {
+
+                                XCTAssertEqual(results.userIds.count, 1, @"Only a session with Alice must be created. No mean to create on with oneself(Bob)");
+
+                                MXOlmSessionResult *sessionWithAliceDevice = [results objectForDevice:@"AliceDevice" forUser:aliceSession.myUser.userId];
+                                XCTAssert(sessionWithAliceDevice);
+                                XCTAssert(sessionWithAliceDevice.sessionId);
+                                XCTAssertEqualObjects(sessionWithAliceDevice.device.deviceId, @"AliceDevice");
+
+                                [expectation fulfill];
+
+                            } failure:^(NSError *error) {
+                                XCTFail(@"The request should not fail - NSError: %@", error);
+                                [expectation fulfill];
+                            }];
+
+                            XCTAssertNil(httpOperation2, @"The session must be in cache. No need to make a request");
+
+                        } failure:^(NSError *error) {
+                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                            [expectation fulfill];
+                        }];
+
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The request should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+
+                    XCTAssert(httpOperation);
+
                 } failure:^(NSError *error) {
                     XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                     [expectation fulfill];
@@ -173,6 +249,7 @@
         }];
     }];
 }
+
 
 @end
 

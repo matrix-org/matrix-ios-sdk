@@ -50,6 +50,10 @@
 
     // The algorithms used in rooms
     NSMutableDictionary<NSString*, NSString*> *roomsAlgorithms;
+
+    // The olm sessions (<device identity key> -> (<olm session id> -> <olm session>)
+    NSMutableDictionary<NSString* /*deviceKey*/,
+        NSMutableDictionary<NSString * /*olmSessionId*/,OLMSession *>*> *olmSessions;
 }
 
 #pragma mark - protected operations

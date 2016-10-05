@@ -46,9 +46,9 @@
                 L account: the user's olm account
                 L devices: users devices keys
                 L roomsAlgorithms: the algos used in rooms
+                L sessions: the olm sessions with other users devices
                 @TODO
                 L announced: ?
-                L sessions: ?
                 L inboundGroupSessions: ?
             L MXFileStore : Information about the stored data
             + backup : This folder contains backup of files that are modified during

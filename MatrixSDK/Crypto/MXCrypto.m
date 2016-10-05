@@ -371,6 +371,11 @@
     return YES;
 }
 
+- (BOOL)isRoomEncrypted:(NSString *)roomId
+{
+    return !roomAlgorithms[roomId];
+}
+
 - (MXHTTPOperation*)ensureOlmSessionsForUsers:(NSArray*)users
                                       success:(void (^)(MXUsersDevicesMap<MXOlmSessionResult*> *results))success
                                       failure:(void (^)(NSError *error))failure
@@ -453,6 +458,8 @@
                 }
             }
         }
+
+        success(results);
 
     } failure:^(NSError *error) {
 
