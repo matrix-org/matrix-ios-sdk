@@ -151,6 +151,14 @@
                                 success:(void (^)(NSDictionary *encryptedContent, NSString *encryptedEventType))success
                                 failure:(void (^)(NSError *error))failure;
 
+/**
+ Decrypt a received event
+
+ @param event the raw event.
+ @return a cleared event or nil.
+ */
+- (MXEvent*)decryptEvent:(MXEvent*)event;
+
 @end
 
 

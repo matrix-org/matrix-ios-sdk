@@ -441,16 +441,19 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     return (_clearEvent.type);
 }
 
-- (void)setClearEvent:(MXEvent *)clearEvent withKeysProved:(NSDictionary<NSString *,NSString *> *)keysProved andKeysClaimed:(NSDictionary<NSString *,NSString *> *)keysClaimed
-{
-    _clearEvent = clearEvent;
-    _keysProved = keysProved;
-    _keysClaimed = keysClaimed;
-}
-
 - (NSString *)senderKey
 {
     return _keysProved[@"curve25519"];
+}
+
+- (NSDictionary<NSString *,NSString *> *)keysProved
+{
+    return _clearEvent.keysProved;
+}
+
+- (NSDictionary<NSString *,NSString *> *)keysClaimed
+{
+    return _clearEvent.keysClaimed;
 }
 
 

@@ -523,6 +523,12 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         }
     }
 
+    // Decrypt event if necessary
+    if (event.eventType == MXEventTypeRoomEncrypted)
+    {
+        event.clearEvent = [room.mxSession.crypto decryptEvent:event];
+    }
+
     // Events going forwards on the live timeline come from /sync.
     // They are assimilated to live events.
     if (_isLiveTimeline && direction == MXTimelineDirectionForwards)

@@ -486,6 +486,36 @@
     return nil;
 }
 
+- (MXEvent*)decryptEvent:(MXEvent *)event
+{
+    Class algClass = [[MXCryptoAlgorithms sharedAlgorithms] decryptorClassForAlgorithm:event.content[@"algorithm"]];
+
+    if (!algClass)
+    {
+        NSLog(@"[MXCrypto] decryptEvent: Unable to decrypt %@", event.content[@"algorithm"]);
+        return nil;
+    }
+
+    id<MXDecrypting> alg = [[algClass alloc] initWithMatrixSession:mxSession];
+
+    MXDecryptionResult *result = [alg decryptEvent:event error:nil];
+
+    MXEvent *clearedEvent;
+    if (!result)
+    {
+        event = [MXEvent modelFromJSON:result.payload];
+        event.keysProved = result.keysProved;
+        event.keysClaimed = result.keysClaimed;
+    }
+    else
+    {
+        // @TODO: Manage error
+        NSLog(@"[MXCrypto]: decryptEvent: @TODO: Manage error");
+    }
+
+    return clearedEvent;
+}
+
 
 #pragma mark - Private methods
 - (NSString*)generateDeviceId

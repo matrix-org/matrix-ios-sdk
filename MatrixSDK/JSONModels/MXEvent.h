@@ -309,19 +309,10 @@ FOUNDATION_EXPORT uint64_t const kMXUndefinedTimestamp;
 @property (nonatomic, readonly) BOOL isEncrypted;
 
 /**
- Set the decrypted content for an encrypted event.
- 
- @param clearEvent the decrypted content presented as a MXEvent instance.
- @param keysProved the keys that must have been owned by the sender of this encrypted event.
- @param keysClaimed the additional keys the sender of this encrypted event claims to possess.
- */
-- (void)setClearEvent:(MXEvent*)clearEvent withKeysProved:(NSDictionary<NSString*, NSString*>*)keysProved andKeysClaimed:(NSDictionary<NSString*, NSString*>*)keysClaimed;
-
-/**
  For encrypted events, the plaintext payload for the event.
  This is a small MXEvent instance with typically value for `type` and 'content' fields.
  */
-@property (nonatomic, readonly) MXEvent *clearEvent;
+@property (nonatomic) MXEvent *clearEvent;
 
 /**
  The keys that must have been owned by the sender of this encrypted event.
@@ -330,7 +321,7 @@ FOUNDATION_EXPORT uint64_t const kMXUndefinedTimestamp;
  These don't necessarily have to come from this event itself, but may be
  implied by the cryptographic session.
  */
-@property (nonatomic, readonly) NSDictionary<NSString*, NSString*> *keysProved;
+@property (nonatomic) NSDictionary<NSString*, NSString*> *keysProved;
 
 /**
  The additional keys the sender of this encrypted event claims to possess.
@@ -342,7 +333,7 @@ FOUNDATION_EXPORT uint64_t const kMXUndefinedTimestamp;
  inherit a claim from the olm message that established the session.
  The keys that must have been owned by the sender of this encrypted event.
  */
-@property (nonatomic, readonly) NSDictionary<NSString*, NSString*> *keysClaimed;
+@property (nonatomic) NSDictionary<NSString*, NSString*> *keysClaimed;
 
 /**
  The curve25519 key that sent this event.
