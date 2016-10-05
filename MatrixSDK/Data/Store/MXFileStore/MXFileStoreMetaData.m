@@ -32,6 +32,10 @@
 
         NSNumber *version = dict[@"version"];
         _version = [version unsignedIntegerValue];
+
+        NSNumber *endToEndDeviceAnnounced = dict[@"endToEndDeviceAnnounced"];
+        _endToEndDeviceAnnounced = [endToEndDeviceAnnounced boolValue];
+
     }
     return self;
 }
@@ -44,7 +48,8 @@
                                   @"homeServer": _homeServer,
                                   @"userId": _userId,
                                   @"accessToken": _accessToken,
-                                  @"version": [NSNumber numberWithUnsignedInteger:_version]
+                                  @"version": @(_version),
+                                  @"endToEndDeviceAnnounced": @(_endToEndDeviceAnnounced)
                                   }];
 
     if (_eventStreamToken)
@@ -69,6 +74,7 @@
     metaData->_version = _version;
     metaData->_eventStreamToken = [_eventStreamToken copyWithZone:zone];
     metaData->_userAccountData = [_userAccountData copyWithZone:zone];
+    metaData->_endToEndDeviceAnnounced = _endToEndDeviceAnnounced;
 
     return metaData;
 }

@@ -49,4 +49,11 @@
  */
 @property (nonatomic) NSDictionary *userAccountData;
 
+
+#pragma mark - Crypto
+/**
+ */
+@property (nonatomic) BOOL endToEndDeviceAnnounced;
+
+
 @end

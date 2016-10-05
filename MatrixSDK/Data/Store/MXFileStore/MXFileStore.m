@@ -1325,6 +1325,17 @@ NSString *const kMXFileStoreCryptoSessionsFile = @"sessions";
     return [NSKeyedUnarchiver unarchiveObjectWithFile:cryptoAccountFile];
 }
 
+- (void)storeEndToEndDeviceAnnounced
+{
+    metaData.endToEndDeviceAnnounced = YES;
+    metaDataHasChanged = YES;
+}
+
+- (BOOL)endToEndDeviceAnnounced
+{
+    return metaData.endToEndDeviceAnnounced;
+}
+
 - (void)storeEndToEndDeviceForUser:(NSString*)userId device:(MXDeviceInfo*)device
 {
     [super storeEndToEndDeviceForUser:userId device:device];

@@ -21,6 +21,8 @@
 @interface MXMemoryStore()
 {
     NSString *eventStreamToken;
+
+    BOOL endToEndDeviceAnnounced;
 }
 @end
 
@@ -347,6 +349,16 @@
 - (OLMAccount *)endToEndAccount
 {
     return olmAccount;
+}
+
+- (void)storeEndToEndDeviceAnnounced
+{
+    endToEndDeviceAnnounced = YES;
+}
+
+- (BOOL)endToEndDeviceAnnounced
+{
+    return endToEndDeviceAnnounced;
 }
 
 - (void)storeEndToEndDeviceForUser:(NSString *)userId device:(MXDeviceInfo *)device
