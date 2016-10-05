@@ -2891,7 +2891,7 @@ MXAuthAction;
                                beforeLimit:(NSUInteger)beforeLimit
                                 afterLimit:(NSUInteger)afterLimit
                                  nextBatch:(NSString*)nextBatch
-                               containsURL:(BOOL)containsURL
+                               mediaFilter:(MXMessagesSearchMediaFilter)mediaFilter
                                    success:(void (^)(MXSearchRoomEventResults *roomEventResults))success
                                    failure:(void (^)(NSError *error))failure
 {
@@ -2905,18 +2905,26 @@ MXAuthAction;
                                                            @"include_profile": @(YES)
                                                            }
                                                    }];
+    
+    // Prepare potential filtering option
+    NSMutableDictionary *filter = [NSMutableDictionary dictionary];
     if (rooms)
     {
-        roomEventsParameters[@"filter"] = @{
-                                            @"rooms": rooms,
-                                            @"contains_url": [NSNumber numberWithBool:containsURL]
-                                            };
+         filter[@"rooms"] = rooms;
     }
-    else if (containsURL)
+    
+    if (mediaFilter == MXMessagesSearchMediaFilterLimitedToAttachments)
     {
-        roomEventsParameters[@"filter"] = @{
-                                            @"contains_url": @(YES)
-                                            };
+        filter[@"contains_url"] = @(YES);
+    }
+    else if (mediaFilter == MXMessagesSearchMediaFilterExcludeAttachments)
+    {
+        filter[@"contains_url"] = @(NO);
+    }
+    
+    if (filter.count)
+    {
+        roomEventsParameters[@"filter"] = filter;
     }
 
     return [self searchRoomEvents:roomEventsParameters nextBatch:nextBatch success:success failure:failure];

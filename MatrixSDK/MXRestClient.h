@@ -71,19 +71,40 @@ FOUNDATION_EXPORT NSString *const kMXRestClientErrorDomain;
 typedef enum : NSUInteger
 {
     /**
-     "scale" trys to return an image where either the width or the height is smaller than the
+     "scale" tries to return an image where either the width or the height is smaller than the
      requested size. The client should then scale and letterbox the image if it needs to
      fit within a given rectangle.
      */
     MXThumbnailingMethodScale,
 
     /**
-     "crop" trys to return an image where the width and height are close to the requested size
+     "crop" tries to return an image where the width and height are close to the requested size
      and the aspect matches the requested size. The client should scale the image if it needs to
      fit within a given rectangle.
      */
     MXThumbnailingMethodCrop
 } MXThumbnailingMethod;
+
+/**
+ List the filtering options used during the messages search. This option concerns the attachments handling.
+ */
+typedef enum : NSUInteger
+{
+    /**
+     Default value. No limitation.
+     */
+    MXMessagesSearchMediaFilterUndefined,
+    
+    /**
+     Only the messages which contain an URL are concerned by the search request.
+     */
+    MXMessagesSearchMediaFilterLimitedToAttachments,
+    
+    /**
+     The messages which contain an URL are not concerned by the search request.
+     */
+    MXMessagesSearchMediaFilterExcludeAttachments
+} MXMessagesSearchMediaFilter;
 
 
 /**
@@ -1481,7 +1502,7 @@ typedef enum : NSUInteger
  @param beforeLimit the number of events to get before the matching results.
  @param afterLimit the number of events to get after the matching results.
  @param nextBatch the token to pass for doing pagination from a previous response.
- @param containsURl tells whether only the messages with url (the attachments) are concerned.
+ @param mediaFilter tells whether the messages with url (the attachments) are filtered or not.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
@@ -1493,7 +1514,7 @@ typedef enum : NSUInteger
                                beforeLimit:(NSUInteger)beforeLimit
                                 afterLimit:(NSUInteger)afterLimit
                                  nextBatch:(NSString*)nextBatch
-                               containsURL:(BOOL)containsURL
+                               mediaFilter:(MXMessagesSearchMediaFilter)mediaFilter
                                    success:(void (^)(MXSearchRoomEventResults *roomEventResults))success
                                    failure:(void (^)(NSError *error))failure;
 
