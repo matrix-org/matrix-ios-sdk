@@ -135,6 +135,22 @@
                                       success:(void (^)(MXUsersDevicesMap<MXOlmSessionResult*> *results))success
                                       failure:(void (^)(NSError *error))failure;
 
+/**
+ * Encrypt an event content according to the configuration of the room.
+ *
+ * @param eventContent the content of the event.
+ * @param eventType the type of the event.
+ * @param room the room the event will be sent.
+ *
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance. May be nil if all required materials is already in place.
+ */
+- (MXHTTPOperation*)encryptEventContent:(NSDictionary*)eventContent withType:(MXEventTypeString)eventType inRoom:(MXRoom*)room
+                                success:(void (^)(NSDictionary *encryptedContent, NSString *encryptedEventType))success
+                                failure:(void (^)(NSError *error))failure;
+
 @end
 
 

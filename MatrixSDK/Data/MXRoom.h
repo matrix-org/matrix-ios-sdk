@@ -86,6 +86,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 @property (nonatomic, readonly) MXRoomAccountData *accountData;
 
 /**
+ Indicate whether encryption is enabled for this room.
+ */
+@property (nonatomic, readonly) BOOL isCrypted;
+
+/**
  The text message partially typed by the user but not yet sent.
  The value is stored by the session store. Thus, it can be retrieved
  when the application restarts.

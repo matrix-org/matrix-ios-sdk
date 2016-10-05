@@ -468,6 +468,25 @@
     }];
 }
 
+- (MXHTTPOperation *)encryptEventContent:(NSDictionary *)eventContent withType:(MXEventTypeString)eventType inRoom:(MXRoom *)room
+                                 success:(void (^)(NSDictionary *, NSString *))success
+                                 failure:(void (^)(NSError *))failure
+{
+    if (![eventType isEqualToString:kMXEventTypeStringRoomMessage])
+    {
+        // We only encrypt m.room.message
+        success(eventContent, eventType);
+        return nil;
+    }
+
+    id<MXEncrypting> alg = roomAlgorithms[room.roomId];
+
+    // @TODO
+    /*return*/ [alg encryptMessage:eventContent ofType:eventType inRoom:room];
+    return nil;
+}
+
+
 #pragma mark - Private methods
 - (NSString*)generateDeviceId
 {

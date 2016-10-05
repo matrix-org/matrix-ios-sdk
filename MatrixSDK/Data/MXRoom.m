@@ -110,6 +110,13 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     return [mxSession.store partialTextMessageOfRoom:self.roomId];
 }
 
+- (BOOL)isCrypted
+{
+    // @TODO: if mxSession.cryptoEnabled is NO, it will return always NO.
+    // Is it ok?
+    return [mxSession.crypto isRoomEncrypted:self.roomId];
+}
+
 
 #pragma mark - Sync
 - (void)handleJoinedRoomSync:(MXRoomSync *)roomSync
@@ -235,8 +242,36 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                             success:(void (^)(NSString *eventId))success
                             failure:(void (^)(NSError *error))failure
 {
+    if (mxSession.crypto && self.isCrypted)
+    {
+        // Encrypt the content before sending
+        // @TODO: Would be nice to inform user we are encrypting
+        return [mxSession.crypto encryptEventContent:content withType:eventTypeString inRoom:self success:^(NSDictionary *encryptedContent, NSString *encryptedEventType) {
+
+            // Send the encrypted content
+            [self _sendEventOfType:encryptedEventType content:encryptedContent success:success failure:failure];
+
+            // @TODO: Mutate MXHTTPOperation to take into account this new MXHTTPOperation so that the user can cancel it
+
+        } failure:^(NSError *error) {
+            NSLog(@"[MXRoom] sendEventOfType: Cannot encrypt event. Error: %@", error);
+            failure(error);
+        }];
+    }
+    else
+    {
+        return [self _sendEventOfType:eventTypeString content:content success:success failure:failure];
+    }
+}
+
+- (MXHTTPOperation*)_sendEventOfType:(MXEventTypeString)eventTypeString
+                            content:(NSDictionary*)content
+                            success:(void (^)(NSString *eventId))success
+                            failure:(void (^)(NSError *error))failure
+{
     return [mxSession.matrixRestClient sendEventToRoom:self.roomId eventType:eventTypeString content:content success:success failure:failure];
 }
+
 
 - (MXHTTPOperation*)sendStateEventOfType:(MXEventTypeString)eventTypeString
                                  content:(NSDictionary*)content
@@ -251,6 +286,13 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                               success:(void (^)(NSString *eventId))success
                               failure:(void (^)(NSError *error))failure
 {
+    // Add the messsage type to the data to send
+    NSMutableDictionary *eventContent = [NSMutableDictionary dictionaryWithDictionary:content];
+    eventContent[@"msgtype"] = msgType;
+
+    return [self sendEventOfType:kMXEventTypeStringRoomMessage content:eventContent success:success failure:failure];
+
+
     return [mxSession.matrixRestClient sendMessageToRoom:self.roomId msgType:msgType content:content success:success failure:failure];
 }
 
@@ -258,7 +300,11 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                             success:(void (^)(NSString *eventId))success
                             failure:(void (^)(NSError *error))failure
 {
-    return [mxSession.matrixRestClient sendTextMessageToRoom:self.roomId text:text success:success failure:failure];
+    return [self sendMessageOfType:kMXMessageTypeText
+                           content:@{
+                                     @"body": text
+                                     }
+                           success:success failure:failure];
 }
 
 - (MXHTTPOperation*)setTopic:(NSString*)topic
