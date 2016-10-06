@@ -1188,6 +1188,45 @@
     }];
 }
 
+- (void)testToDeviceEvents
+{
+    [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        mxSession = bobSession;
+
+        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionOnToDeviceEventNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+
+            XCTAssertEqual(notif.object, mxSession);
+
+            MXEvent *toDeviceEvent = notif.userInfo[kMXSessionNotificationEventKey];
+            XCTAssert(toDeviceEvent);
+
+            XCTAssertEqualObjects(toDeviceEvent.sender, aliceRestClient.credentials.userId);
+            XCTAssertEqual(toDeviceEvent.eventType, MXEventTypeNewDevice);
+
+            [[NSNotificationCenter defaultCenter] removeObserver:observer];
+
+            [expectation fulfill];
+        }];
+
+        MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];
+        [contentMap setObjects:@{
+                                 @"*": @{
+                                         @"device_id": @"AliceDevice",
+                                         @"rooms": @[roomId]
+                                         }
+                                 } forUser:mxSession.myUser.userId];
+
+        [aliceRestClient sendToDevice:kMXEventTypeStringNewDevice contentMap:contentMap success:^{
+
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+
+    }];
+}
+
 
 @end
 

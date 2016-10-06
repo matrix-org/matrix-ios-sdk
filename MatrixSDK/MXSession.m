@@ -37,6 +37,7 @@ NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomN
 NSString *const kMXSessionDidLeaveRoomNotification = @"kMXSessionDidLeaveRoomNotification";
 NSString *const kMXSessionDidSyncNotification = @"kMXSessionDidSyncNotification";
 NSString *const kMXSessionInvitedRoomsDidChangeNotification = @"kMXSessionInvitedRoomsDidChangeNotification";
+NSString *const kMXSessionOnToDeviceEventNotification = @"kMXSessionOnToDeviceEventNotification";
 NSString *const kMXSessionNotificationRoomIdKey = @"roomId";
 NSString *const kMXSessionNotificationEventKey = @"event";
 NSString *const kMXSessionIgnoredUsersDidChangeNotification = @"kMXSessionIgnoredUsersDidChangeNotification";
@@ -749,6 +750,12 @@ typedef void (^MXOnResumeDone)();
         {
             [self handleAccountData:syncResponse.accountData];
         }
+
+        // Handle direct messages to device
+        for (MXEvent *toDeviceEvent in syncResponse.toDevice.events)
+        {
+            [self handleToDeviceEvent:toDeviceEvent];
+        }
         
         // Update live event stream token
         _store.eventStreamToken = syncResponse.nextBatch;
@@ -1023,6 +1030,23 @@ typedef void (^MXOnResumeDone)();
         }
 
         _store.userAccountData = accountData.accountData;
+    }
+}
+
+- (void)handleToDeviceEvent:(MXEvent *)event
+{
+    if (event.eventType == MXEventTypeRoomMessage
+        && [event.content[@"msgtype"] isEqualToString:@"m.bad.encrypted"])
+    {
+        NSLog(@"[MXSession] handleToDeviceEvent: Warning: Unable to decrypt to-device even: %@", event.content[@"body"]);
+    }
+    else
+    {
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionOnToDeviceEventNotification
+                                                            object:self
+                                                          userInfo:@{
+                                                                     kMXSessionNotificationEventKey: event
+                                                                     }];
     }
 }
 

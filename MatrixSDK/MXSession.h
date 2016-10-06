@@ -157,6 +157,15 @@ FOUNDATION_EXPORT NSString *const kMXSessionDidSyncNotification;
  */
 FOUNDATION_EXPORT NSString *const kMXSessionInvitedRoomsDidChangeNotification;
 
+/**
+ Posted when MXSession has receive a new to-device event.
+
+ The passed userInfo dictionary contains:
+ - `kMXSessionNotificationEventKey` the to-device MXEvent.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionOnToDeviceEventNotification;
+
+
 #pragma mark - Notifications keys
 /**
  The key in notification userInfo dictionary representating the roomId.
@@ -181,6 +190,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionIgnoredUsersDidChangeNotification;
  The notification object is the concerned session (MXSession instance).
  */
 FOUNDATION_EXPORT NSString *const kMXSessionDidCorruptDataNotification;
+
 
 #pragma mark - Other constants
 /**
