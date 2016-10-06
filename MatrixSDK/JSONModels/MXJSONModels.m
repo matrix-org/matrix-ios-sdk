@@ -995,6 +995,20 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 
 @end
 
+@implementation MXToDeviceSyncResponse
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXToDeviceSyncResponse *toDeviceSyncResponse = [[MXToDeviceSyncResponse alloc] init];
+    if (toDeviceSyncResponse)
+    {
+        MXJSONModelSetMXJSONModelArray(toDeviceSyncResponse.events, MXEvent, JSONDictionary[@"events"]);
+    }
+    return toDeviceSyncResponse;
+}
+
+@end
+
 @implementation MXRoomsSyncResponse
 
 // Override the default Mantle modelFromJSON method to convert room lists.
@@ -1042,6 +1056,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         MXJSONModelSetDictionary(syncResponse.accountData, JSONDictionary[@"account_data"])
         MXJSONModelSetString(syncResponse.nextBatch, JSONDictionary[@"next_batch"]);
         MXJSONModelSetMXJSONModel(syncResponse.presence, MXPresenceSyncResponse, JSONDictionary[@"presence"]);
+        MXJSONModelSetMXJSONModel(syncResponse.toDevice, MXToDeviceSyncResponse, JSONDictionary[@"to_device"]);
         MXJSONModelSetMXJSONModel(syncResponse.rooms, MXRoomsSyncResponse, JSONDictionary[@"rooms"]);
     }
 

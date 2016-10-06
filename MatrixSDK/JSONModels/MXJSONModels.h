@@ -98,7 +98,7 @@ FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeOAuth2;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeEmailCode;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeEmailUrl;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeEmailIdentity;
-FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeRecaptcha;
+FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeToken;
 
 /**
  `MXLoginFlow` represents a login or a register flow supported by the home server.
@@ -1130,6 +1130,18 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @end
 
 /**
+ `MXToDeviceSyncResponse` represents the data directly sent to one of user's devices.
+ */
+@interface MXToDeviceSyncResponse : MXJSONModel
+
+    /**
+     List of direct-to-device events.
+     */
+@property (nonatomic) NSArray<MXEvent*> *events;
+
+@end
+
+/**
  `MXSyncResponse` represents the request response for server sync.
  */
 @interface MXSyncResponse : MXJSONModel
@@ -1148,6 +1160,11 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
      The updates to the presence status of other users.
      */
     @property (nonatomic) MXPresenceSyncResponse *presence;
+
+    /**
+     Data directly sent to one of user's devices.
+     */
+    @property (nonatomic) MXToDeviceSyncResponse *toDevice;
 
     /**
      List of rooms.
