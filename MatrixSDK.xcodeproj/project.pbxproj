@@ -164,6 +164,8 @@
 		71DE22E11BC7C51200284153 /* MXReceiptData.h in Headers */ = {isa = PBXBuildFile; fileRef = 71DE22DD1BC7C51200284153 /* MXReceiptData.h */; };
 		A23A8594855481FEFA0E9A22 /* libPods-MatrixSDK.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E1674C6FF8BBF074E7F76059 /* libPods-MatrixSDK.a */; };
 		D123DC2791F0EAF08F70C207 /* libPods-MatrixSDKTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3ABDD5D65684E6B7F52FB94E /* libPods-MatrixSDKTests.a */; };
+		F0AC734E1DA4F53B0011DAEE /* MXRoomEventFilter.h in Headers */ = {isa = PBXBuildFile; fileRef = F0AC734C1DA4F53B0011DAEE /* MXRoomEventFilter.h */; };
+		F0AC734F1DA4F53B0011DAEE /* MXRoomEventFilter.m in Sources */ = {isa = PBXBuildFile; fileRef = F0AC734D1DA4F53B0011DAEE /* MXRoomEventFilter.m */; };
 		F0C34CBB1C18C93700C36F09 /* MXSDKOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = F0C34CBA1C18C93700C36F09 /* MXSDKOptions.m */; };
 /* End PBXBuildFile section */
 
@@ -358,6 +360,8 @@
 		71DE22DD1BC7C51200284153 /* MXReceiptData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXReceiptData.h; sourceTree = "<group>"; };
 		B1F1AE550CF4C15B653DDE6E /* Pods-MatrixSDKTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDKTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-MatrixSDKTests/Pods-MatrixSDKTests.debug.xcconfig"; sourceTree = "<group>"; };
 		E1674C6FF8BBF074E7F76059 /* libPods-MatrixSDK.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MatrixSDK.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F0AC734C1DA4F53B0011DAEE /* MXRoomEventFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRoomEventFilter.h; sourceTree = "<group>"; };
+		F0AC734D1DA4F53B0011DAEE /* MXRoomEventFilter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRoomEventFilter.m; sourceTree = "<group>"; };
 		F0C34CB91C18C80000C36F09 /* MXSDKOptions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSDKOptions.h; sourceTree = "<group>"; };
 		F0C34CBA1C18C93700C36F09 /* MXSDKOptions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXSDKOptions.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -425,6 +429,8 @@
 				326056841C76FDF1009D44AD /* MXEventTimeline.m */,
 				3220094319EFBF30008DE41D /* MXSessionEventListener.h */,
 				3220094419EFBF30008DE41D /* MXSessionEventListener.m */,
+				F0AC734C1DA4F53B0011DAEE /* MXRoomEventFilter.h */,
+				F0AC734D1DA4F53B0011DAEE /* MXRoomEventFilter.m */,
 				329FB1731A0A3A1600A5E88E /* MXRoomMember.h */,
 				329FB1741A0A3A1600A5E88E /* MXRoomMember.m */,
 				327F8DB01C6112BA00581CA3 /* MXRoomThirdPartyInvite.h */,
@@ -782,6 +788,7 @@
 				32114A851A262CE000FF2EC4 /* MXStore.h in Headers */,
 				3264E2A41BDF8D1500F89A86 /* MXCoreDataRoomState+CoreDataProperties.h in Headers */,
 				329FB1791A0A74B100A5E88E /* MXTools.h in Headers */,
+				F0AC734E1DA4F53B0011DAEE /* MXRoomEventFilter.h in Headers */,
 				323B2B001BCE9B6700B11F34 /* MXCoreDataEvent.h in Headers */,
 				32481A841C03572900782AD3 /* MXRoomAccountData.h in Headers */,
 				3281E8B919E42DFE00976E1A /* MXJSONModels.h in Headers */,
@@ -1035,6 +1042,7 @@
 				32CE6FB91A409B1F00317F1E /* MXFileStoreMetaData.m in Sources */,
 				3264DB921CEC528D00B99881 /* MXAccountData.m in Sources */,
 				329B2AC21D3FB01D002D546F /* MXJingleCallStackCall.m in Sources */,
+				F0AC734F1DA4F53B0011DAEE /* MXRoomEventFilter.m in Sources */,
 				323E0C5C1A306D7A00A31D73 /* MXEvent.m in Sources */,
 				323B2AFF1BCE9B6700B11F34 /* MXCoreDataEvent+CoreDataProperties.m in Sources */,
 				32CAB10C1A925B41008C5BB9 /* MXHTTPOperation.m in Sources */,
