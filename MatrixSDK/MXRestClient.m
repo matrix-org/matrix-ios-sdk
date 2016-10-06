@@ -2887,11 +2887,10 @@ MXAuthAction;
 
 #pragma mark - Search
 - (MXHTTPOperation*)searchMessagesWithText:(NSString*)textPattern
-                                   inRooms:(NSArray<NSString*>*)rooms
+                           roomEventFilter:(MXRoomEventFilter*)roomEventFilter
                                beforeLimit:(NSUInteger)beforeLimit
                                 afterLimit:(NSUInteger)afterLimit
                                  nextBatch:(NSString*)nextBatch
-                               containsURL:(BOOL)containsURL
                                    success:(void (^)(MXSearchRoomEventResults *roomEventResults))success
                                    failure:(void (^)(NSError *error))failure
 {
@@ -2905,18 +2904,10 @@ MXAuthAction;
                                                            @"include_profile": @(YES)
                                                            }
                                                    }];
-    if (rooms)
+    
+    if (roomEventFilter.dictionary.count)
     {
-        roomEventsParameters[@"filter"] = @{
-                                            @"rooms": rooms,
-                                            @"contains_url": [NSNumber numberWithBool:containsURL]
-                                            };
-    }
-    else if (containsURL)
-    {
-        roomEventsParameters[@"filter"] = @{
-                                            @"contains_url": @(YES)
-                                            };
+        roomEventsParameters[@"filter"] = roomEventFilter.dictionary;
     }
 
     return [self searchRoomEvents:roomEventsParameters nextBatch:nextBatch success:success failure:failure];

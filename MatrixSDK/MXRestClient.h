@@ -19,6 +19,7 @@
 
 #import "MXHTTPClient.h"
 #import "MXEvent.h"
+#import "MXRoomEventFilter.h"
 #import "MXEventTimeline.h"
 #import "MXJSONModels.h"
 
@@ -71,20 +72,19 @@ FOUNDATION_EXPORT NSString *const kMXRestClientErrorDomain;
 typedef enum : NSUInteger
 {
     /**
-     "scale" trys to return an image where either the width or the height is smaller than the
+     "scale" tries to return an image where either the width or the height is smaller than the
      requested size. The client should then scale and letterbox the image if it needs to
      fit within a given rectangle.
      */
     MXThumbnailingMethodScale,
 
     /**
-     "crop" trys to return an image where the width and height are close to the requested size
+     "crop" tries to return an image where the width and height are close to the requested size
      and the aspect matches the requested size. The client should scale the image if it needs to
      fit within a given rectangle.
      */
     MXThumbnailingMethodCrop
 } MXThumbnailingMethod;
-
 
 /**
  `MXRestClient` makes requests to Matrix servers.
@@ -1477,11 +1477,10 @@ typedef enum : NSUInteger
  Search a text in room messages.
 
  @param textPattern the text to search for in message body.
- @param rooms a list of rooms to search in. nil means all rooms the user is in.
+ @param roomEventFilter a nullable dictionary which defines the room event filtering during the search request.
  @param beforeLimit the number of events to get before the matching results.
  @param afterLimit the number of events to get after the matching results.
  @param nextBatch the token to pass for doing pagination from a previous response.
- @param containsURl tells whether only the messages with url (the attachments) are concerned.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
@@ -1489,11 +1488,10 @@ typedef enum : NSUInteger
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)searchMessagesWithText:(NSString*)textPattern
-                                   inRooms:(NSArray<NSString*>*)rooms
+                           roomEventFilter:(MXRoomEventFilter*)roomEventFilter
                                beforeLimit:(NSUInteger)beforeLimit
                                 afterLimit:(NSUInteger)afterLimit
                                  nextBatch:(NSString*)nextBatch
-                               containsURL:(BOOL)containsURL
                                    success:(void (^)(MXSearchRoomEventResults *roomEventResults))success
                                    failure:(void (^)(NSError *error))failure;
 
