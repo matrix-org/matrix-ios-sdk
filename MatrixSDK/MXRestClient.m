@@ -122,7 +122,7 @@ MXAuthAction;
     if (self)
     {
         homeserver = inCredentials.homeServer;
-         apiPathPrefix = kMXAPIPrefixPathR0;
+        apiPathPrefix = kMXAPIPrefixPathR0;
         self.credentials = inCredentials;
         
         httpClient = [[MXHTTPClient alloc] initWithBaseURL:homeserver
@@ -239,12 +239,52 @@ MXAuthAction;
     return [self registerOrLogin:MXAuthActionRegister parameters:parameters success:success failure:failure];
 }
 
-- (MXHTTPOperation*)registerWithUser:(NSString*)user andPassword:(NSString*)password
-                             success:(void (^)(MXCredentials *credentials))success
-                             failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation *)registerWithLoginType:(NSString *)loginType username:(NSString *)username password:(NSString *)password
+                                   success:(void (^)(MXCredentials *))success
+                                   failure:(void (^)(NSError *))failure
 {
-    return [self registerOrLoginWithUser:MXAuthActionRegister user:user andPassword:password
-                                 success:success failure:failure];
+    if (![loginType isEqualToString:kMXLoginFlowTypePassword] && ![loginType isEqualToString:kMXLoginFlowTypeDummy])
+    {
+        failure(nil);
+        return nil;
+    }
+
+    return [self getRegisterSession:^(MXAuthenticationSession *authSession) {
+
+        NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:
+                                           @{
+                                             @"auth": @{
+                                                     @"type": loginType,
+                                                     @"session": authSession.session
+                                                     },
+                                             @"password": password
+                                             }];
+        if (username)
+        {
+            parameters[@"username"] = username;
+        }
+
+        [self registerWithParameters: parameters
+                             success:^(NSDictionary *JSONResponse) {
+
+                                 // Update our credentials
+                                 self.credentials = [MXCredentials modelFromJSON:JSONResponse];
+
+                                 // Workaround: HS does not return the right URL. Use the one we used to make the request
+                                 credentials.homeServer = homeserver;
+
+                                 // Report the certificate trusted by user (if any)
+                                 credentials.allowedCertificate = httpClient.allowedCertificate;
+
+                                 // sanity check
+                                 if (success)
+                                 {
+                                     success(credentials);
+                                 }
+
+                             } failure:failure];
+
+    } failure:failure];
 }
 
 - (NSString*)registerFallback;
@@ -284,11 +324,41 @@ MXAuthAction;
     return [self registerOrLogin:MXAuthActionLogin parameters:parameters success:success failure:failure];
 }
 
-- (MXHTTPOperation*)loginWithUser:(NSString *)user andPassword:(NSString *)password
-                          success:(void (^)(MXCredentials *))success failure:(void (^)(NSError *))failure
+- (MXHTTPOperation *)loginWithLoginType:(NSString *)loginType username:(NSString *)username password:(NSString *)password
+                                   success:(void (^)(MXCredentials *))success
+                                   failure:(void (^)(NSError *))failure
 {
-    return [self registerOrLoginWithUser:MXAuthActionLogin user:user andPassword:password
-                                 success:success failure:failure];
+    if (![loginType isEqualToString:kMXLoginFlowTypePassword])
+    {
+        failure(nil);
+        return nil;
+    }
+
+    NSDictionary *parameters = @{
+                                 @"type": loginType,
+                                 @"user": username,
+                                 @"password": password
+                                 };
+
+    return [self login:parameters
+               success:^(NSDictionary *JSONResponse) {
+
+                   // Update our credentials
+                   self.credentials = [MXCredentials modelFromJSON:JSONResponse];
+
+                   // Workaround: HS does not return the right URL. Use the one we used to make the request
+                   credentials.homeServer = homeserver;
+
+                   // Report the certificate trusted by user (if any)
+                   credentials.allowedCertificate = httpClient.allowedCertificate;
+
+                   // sanity check
+                   if (success)
+                   {
+                       success(credentials);
+                   }
+                   
+               } failure:failure];
 }
 
 - (NSString*)loginFallback;
@@ -399,61 +469,6 @@ MXAuthAction;
                                      
                                  }];
 }
-
-- (MXHTTPOperation*)registerOrLoginWithUser:(MXAuthAction)authAction user:(NSString *)user andPassword:(NSString *)password
-                                    success:(void (^)(MXCredentials *))success failure:(void (^)(NSError *))failure
-{
-    // Is it an email or a username?
-    BOOL isEmailAddress = [MXTools isEmailAddress:user];
-    
-    NSDictionary *parameters;
-    
-    if (isEmailAddress)
-    {
-        parameters = @{
-                       @"type": kMXLoginFlowTypePassword,
-                       @"medium": @"email",
-                       @"address": user,
-                       @"password": password
-                       };
-    }
-    else
-    {
-        parameters = @{
-                      @"type": kMXLoginFlowTypePassword,
-                      @"user": user,
-                      @"password": password
-                      };
-    }
-    
-    return [self registerOrLogin:authAction
-                      parameters:parameters
-                         success:^(NSDictionary *JSONResponse) {
-                             
-                             // Update our credentials
-                             self.credentials = [MXCredentials modelFromJSON:JSONResponse];
-                             
-                             // Workaround: HS does not return the right URL. Use the one we used to make the request
-                             credentials.homeServer = homeserver;
-                             
-                             // Report the certificate trusted by user (if any)
-                             credentials.allowedCertificate = httpClient.allowedCertificate;
-                             
-                             // sanity check
-                             if (success)
-                             {
-                                 success(credentials);
-                             }
-                         }
-                         failure:^(NSError *error) {
-                             // sanity check
-                             if (failure)
-                             {
-                                 failure(error);
-                             }
-                         }];
-}
-
 
 #pragma mark - Account data
 - (MXHTTPOperation*)setAccountData:(NSDictionary*)data

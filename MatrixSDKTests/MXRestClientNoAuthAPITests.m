@@ -56,27 +56,22 @@
 - (void)createTestAccount:(void (^)())onReady
 {
     // Register the user
-    // @TODO: Update the registration code to support r0 registration and
-    // remove this patch that redirects the registration to a deprecated CS API.
-    mxRestClient.apiPathPrefix = @"/_matrix/client/api/v1";
-    [mxRestClient registerWithUser:MXTESTS_USER andPassword:MXTESTS_PWD
-                         success:^(MXCredentials *credentials) {
-                             
-                             onReady();
+    [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:MXTESTS_USER password:MXTESTS_PWD success:^(MXCredentials *credentials) {
 
-                         } failure:^(NSError *error) {
-                             MXError *mxError = [[MXError alloc] initWithNSError:error];
-                             if (mxError && [mxError.errcode isEqualToString:@"M_USER_IN_USE"])
-                             {
-                                 // The user already exists. This error is normal
-                                 onReady();
-                             }
-                             else
-                             {
-                                 XCTFail(@"Cannot create the test account");
-                             }
-                         }];
-    mxRestClient.apiPathPrefix = kMXAPIPrefixPathR0;
+        onReady();
+
+    } failure:^(NSError *error) {
+        MXError *mxError = [[MXError alloc] initWithNSError:error];
+        if (mxError && [mxError.errcode isEqualToString:@"M_USER_IN_USE"])
+        {
+            // The user already exists. This error is normal
+            onReady();
+        }
+        else
+        {
+            XCTFail(@"Cannot create the test account");
+        }
+    }];
 }
 
 - (void)testInit
@@ -85,47 +80,29 @@
     XCTAssertTrue([mxRestClient.homeserver isEqualToString:kMXTestsHomeServerURL], @"Pass");
 }
 
-/* TODO: getRegisterFlow success block param has changed
-- (void)testCancel
-{
-    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
-
-    MXHTTPOperation *request = [mxRestClient getRegisterFlow:^(NSArray *flows) {
-
-        XCTFail(@"The request should not succeed");
-        [expectation fulfill];
-
-    } failure:^(NSError *error) {
-        XCTAssertEqual(error.code, NSURLErrorCancelled, @"The request must be flagged as cancelled");
-        [expectation fulfill];
-    }];
-
-    [request cancel];
-
-    [self waitForExpectationsWithTimeout:10 handler:nil];
-}
- */
-
 
 #pragma mark - Registration operations
-/* TODO: getRegisterFlow success block param has changed
-- (void)testRegisterFlow
+- (void)testGetRegisterSession
 {
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
     
-    [mxRestClient getRegisterFlow:^(NSArray *flows) {
-        
+    [mxRestClient getRegisterSession:^(MXAuthenticationSession *authSession) {
+
+        XCTAssert(authSession.session);
+
+        NSArray<MXLoginFlow*> *flows = authSession.flows;
+
         XCTAssertTrue(0 < flows.count, @"There must be at least one way to login");
         
-        BOOL foundPasswordFlowType;
+        BOOL foundDummyFlowType;
         for (MXLoginFlow *flow in flows)
         {
-            if ([flow.type isEqualToString:kMXLoginFlowTypePassword])
+            if (NSNotFound != [flow.stages indexOfObject:kMXLoginFlowTypeDummy])
             {
-                foundPasswordFlowType = YES;
+                foundDummyFlowType = YES;
             }
         }
-        XCTAssertTrue(foundPasswordFlowType, @"Password-based login is the basic type");
+        XCTAssertTrue(foundDummyFlowType, @"Dummy login is the basic type");
         
         [expectation fulfill];
         
@@ -136,26 +113,18 @@
     
     [self waitForExpectationsWithTimeout:10 handler:nil];
 }
-*/
 
-- (void)testRegister
+- (void)testRegisterWithDummyLoginType
 {
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
 
-    // Test the password-based flow with the generic register method
-    NSDictionary *parameters = @{
-                                 @"type": kMXLoginFlowTypePassword,
-                                 @"user": @"",
-                                 @"password": MXTESTS_PWD
-                                 };
+    // Provide nil as username, the HS will provide one for us
+    [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:nil password:MXTESTS_PWD success:^(MXCredentials *credentials) {
 
-    // @TODO: Update the registration code to support r0 registration and
-    // remove this patch that redirects the registration to a deprecated CS API.
-    mxRestClient.apiPathPrefix = @"/_matrix/client/api/v1";
-
-    [mxRestClient registerWithParameters:parameters success:^(NSDictionary *JSONResponse) {
-
-        XCTAssertNotNil(JSONResponse[@"access_token"], @"password-based registration flow is complete in one stage. We must get the access token.");
+        XCTAssertNotNil(credentials);
+        XCTAssertNotNil(credentials.homeServer);
+        XCTAssertNotNil(credentials.userId);
+        XCTAssertNotNil(credentials.accessToken);
 
         [expectation fulfill];
 
@@ -167,64 +136,31 @@
     [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
-- (void)testRegisterPasswordBased
+- (void)testRegisterWithDummyLoginTypeWithExistingUser
 {
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
 
-    // @TODO: Update the registration code to support r0 registration and
-    // remove this patch that redirects the registration to a deprecated CS API.
-    mxRestClient.apiPathPrefix = @"/_matrix/client/api/v1";
-
-    // Provide an empty string as user, the HS will provide one for us
-    [mxRestClient registerWithUser:@"" andPassword:MXTESTS_PWD
-                         success:^(MXCredentials *credentials) {
-                             
-                             XCTAssertNotNil(credentials);
-                             XCTAssertNotNil(credentials.homeServer);
-                             XCTAssertNotNil(credentials.userId);
-                             XCTAssertNotNil(credentials.accessToken);
-                             
-                             [expectation fulfill];
-                             
-                         } failure:^(NSError *error) {
-                             XCTFail(@"The request should not fail - NSError: %@", error);
-                             [expectation fulfill];
-                         }];
-
-    [self waitForExpectationsWithTimeout:10 handler:nil];
-}
-
-- (void)testRegisterPasswordBasedWithExistingUser
-{
-    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
-    
     [self createTestAccount:^{
-        
-        // @TODO: Update the registration code to support r0 registration and
-        // remove this patch that redirects the registration to a deprecated CS API.
-        mxRestClient.apiPathPrefix = @"/_matrix/client/api/v1";
 
         // Register the same user
-        [mxRestClient registerWithUser:MXTESTS_USER andPassword:MXTESTS_PWD
-                             success:^(MXCredentials *credentials) {
-                                 
-                                 XCTFail(@"The request should fail (User already exists)");
-                                 
-                                 [expectation fulfill];
-                                 
-                             } failure:^(NSError *error) {
-                                 XCTAssertTrue([MXError isMXError:error], @"HS should have sent detailed error in the body");
-                                 
-                                 MXError *mxError = [[MXError alloc] initWithNSError:error];
-                                 XCTAssertNotNil(mxError);
-                                 
-                                 XCTAssertTrue([mxError.errcode isEqualToString:@"M_USER_IN_USE"], @"M_USER_IN_USE errcode is expected. Received: %@", error);
-                                 
-                                 [expectation fulfill];
-                             }];
+        [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:MXTESTS_USER password:MXTESTS_PWD success:^(MXCredentials *credentials) {
+
+            XCTFail(@"The request should fail (User already exists)");
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTAssertTrue([MXError isMXError:error], @"HS should have sent detailed error in the body");
+
+            MXError *mxError = [[MXError alloc] initWithNSError:error];
+            XCTAssertNotNil(mxError);
+
+            XCTAssertTrue([mxError.errcode isEqualToString:@"M_USER_IN_USE"], @"M_USER_IN_USE errcode is expected. Received: %@", error);
+
+            [expectation fulfill];
+        }];
     }];
 
-    
     [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
@@ -238,12 +174,13 @@
 
 
 #pragma mark - Login operations
-/* TODO: getLoginFlow success block param has changed
-- (void)testLoginFlow
+- (void)testGetLoginSession
 {
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
 
-    [mxRestClient getLoginFlow:^(NSArray *flows) {
+    [mxRestClient getLoginSession:^(MXAuthenticationSession *authSession) {
+
+        NSArray<MXLoginFlow*> *flows = authSession.flows;
         
         XCTAssertTrue(0 < flows.count, @"There must be at least one way to login");
         
@@ -266,7 +203,6 @@
     
     [self waitForExpectationsWithTimeout:10 handler:nil];
 }
-*/
 
 - (void)testLogin
 {
@@ -296,54 +232,54 @@
     [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
-- (void)testLoginPasswordBased
+- (void)testLoginWithPasswordLoginType
 {
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
     
     [self createTestAccount:^{
-        [mxRestClient loginWithUser:MXTESTS_USER andPassword:MXTESTS_PWD
-                          success:^(MXCredentials *credentials) {
-                              
-                              XCTAssertNotNil(credentials);
-                              XCTAssertNotNil(credentials.homeServer);
-                              XCTAssertNotNil(credentials.userId);
-                              XCTAssertNotNil(credentials.accessToken);
-                              
-                              [expectation fulfill];
-                              
-                          } failure:^(NSError *error) {
-                              XCTFail(@"The request should not fail - NSError: %@", error);
-                              [expectation fulfill];
-                          }];
+
+        [mxRestClient loginWithLoginType:kMXLoginFlowTypePassword username:MXTESTS_USER password:MXTESTS_PWD success:^(MXCredentials *credentials) {
+
+            XCTAssertNotNil(credentials);
+            XCTAssertNotNil(credentials.homeServer);
+            XCTAssertNotNil(credentials.userId);
+            XCTAssertNotNil(credentials.accessToken);
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
     }];
-    
+
     [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
-- (void)testLoginPasswordBasedWithWrongPassword
+- (void)testLoginWithPasswordLoginTypeWithWrongPassword
 {
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
-    
+
     [self createTestAccount:^{
-        [mxRestClient loginWithUser:MXTESTS_USER andPassword:[NSString stringWithFormat:@"wrong%@", MXTESTS_PWD]
-                          success:^(MXCredentials *credentials) {
-                              
-                              XCTFail(@"The request should fail (Wrong password)");
-                              
-                              [expectation fulfill];
-                              
-                          } failure:^(NSError *error) {
-                              XCTAssertTrue([MXError isMXError:error], @"HS should have sent detailed error in the body");
-                              
-                              MXError *mxError = [[MXError alloc] initWithNSError:error];
-                              XCTAssertNotNil(mxError);
-                              
-                              XCTAssertTrue([mxError.errcode isEqualToString:@"M_FORBIDDEN"], @"M_FORBIDDEN errcode is expected. Received: %@", error);
-                              
-                              [expectation fulfill];
-                          }];
+
+        [mxRestClient loginWithLoginType:kMXLoginFlowTypePassword username:MXTESTS_USER password:@"wrongPwd" success:^(MXCredentials *credentials) {
+
+            XCTFail(@"The request should fail (Wrong password)");
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTAssertTrue([MXError isMXError:error], @"HS should have sent detailed error in the body");
+
+            MXError *mxError = [[MXError alloc] initWithNSError:error];
+            XCTAssertNotNil(mxError);
+
+            XCTAssertTrue([mxError.errcode isEqualToString:@"M_FORBIDDEN"], @"M_FORBIDDEN errcode is expected. Received: %@", error);
+
+            [expectation fulfill];
+        }];
     }];
-    
+
     [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
@@ -352,7 +288,7 @@
 - (void)testPublicRooms
 {
     [matrixSDKTestsData doMXRestClientTestWithBobAndThePublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
-        
+
         [mxRestClient publicRooms:^(NSArray *rooms) {
             
             XCTAssertTrue(0 < rooms.count, @"Valid init");

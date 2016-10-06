@@ -78,11 +78,8 @@ NSMutableArray *roomsToClean;
         NSString *bobUniqueUser = [NSString stringWithFormat:@"%@-%@", MXTESTS_BOB, [[NSUUID UUID] UUIDString]];
 
         // First, try register the user
-        // @TODO: Update the registration code to support r0 registration and
-        // remove this patch that redirects the registration to a deprecated CS API.
-        mxRestClient.apiPathPrefix = @"/_matrix/client/api/v1";
-        [mxRestClient registerWithUser:bobUniqueUser andPassword:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
-            
+        [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:bobUniqueUser password:MXTESTS_BOB success:^(MXCredentials *credentials) {
+
             _bobCredentials = credentials;
             success();
             
@@ -92,8 +89,7 @@ NSMutableArray *roomsToClean;
             {
                 // The user already exists. This error is normal.
                 // Log Bob in to get his keys
-                mxRestClient.apiPathPrefix = @"/_matrix/client/api/v1";
-                [mxRestClient loginWithUser:bobUniqueUser andPassword:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
+                [mxRestClient loginWithLoginType:kMXLoginFlowTypeDummy username:bobUniqueUser password:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
                     
                     _bobCredentials = credentials;
                     success();
@@ -101,14 +97,12 @@ NSMutableArray *roomsToClean;
                 } failure:^(NSError *error) {
                     NSAssert(NO, @"Cannot log mxBOB in");
                 }];
-                mxRestClient.apiPathPrefix = kMXAPIPrefixPathR0;
             }
             else
             {
                 NSAssert(NO, @"Cannot create mxBOB account. Make sure the homeserver at %@ is running", mxRestClient.homeserver);
             }
         }];
-        mxRestClient.apiPathPrefix = kMXAPIPrefixPathR0;
     }
 }
 
@@ -424,11 +418,8 @@ NSMutableArray *roomsToClean;
         // Use a different Alice each time so that tests are independent
         NSString *aliceUniqueUser = [NSString stringWithFormat:@"%@-%@", MXTESTS_ALICE, [[NSUUID UUID] UUIDString]];
 
-        // @TODO: Update the registration code to support r0 registration and
-        // remove this patch that redirects the registration to a deprecated CS API.
-        mxRestClient.apiPathPrefix = @"/_matrix/client/api/v1";
         // First, try register the user
-        [mxRestClient registerWithUser:aliceUniqueUser andPassword:MXTESTS_ALICE_PWD success:^(MXCredentials *credentials) {
+        [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:aliceUniqueUser password:MXTESTS_ALICE success:^(MXCredentials *credentials) {
             
             _aliceCredentials = credentials;
             success();
@@ -438,24 +429,21 @@ NSMutableArray *roomsToClean;
             if (mxError && [mxError.errcode isEqualToString:@"M_USER_IN_USE"])
             {
                 // The user already exists. This error is normal.
-                // Log Bob in to get his keys
-        		mxRestClient.apiPathPrefix = @"/_matrix/client/api/v1";
-                [mxRestClient loginWithUser:aliceUniqueUser andPassword:MXTESTS_ALICE_PWD success:^(MXCredentials *credentials) {
-                    
+                // Log Alice in to get his keys
+                [mxRestClient loginWithLoginType:kMXLoginFlowTypeDummy username:aliceUniqueUser password:MXTESTS_ALICE_PWD success:^(MXCredentials *credentials) {
+
                     _aliceCredentials = credentials;
                     success();
                     
                 } failure:^(NSError *error) {
                     NSAssert(NO, @"Cannot log mxAlice in");
                 }];
-                mxRestClient.apiPathPrefix = kMXAPIPrefixPathR0;
             }
             else
             {
                 NSAssert(NO, @"Cannot create mxAlice account");
             }
         }];
-        mxRestClient.apiPathPrefix = kMXAPIPrefixPathR0;
     }
 }
 
