@@ -175,7 +175,7 @@ typedef enum : NSUInteger
 /**
  Generic registration action request.
 
- As described in http://matrix.org/docs/spec/#registration-and-login some registration flows require to
+ As described in http://matrix.org/docs/spec/client_server/r0.2.0.html#client-authentication some registration flows require to
  complete several stages in order to complete user registration.
  This can lead to make several requests to the home server with different kinds of parameters.
  This generic method with open parameters and response exists to handle any kind of registration flow stage.
@@ -195,21 +195,21 @@ typedef enum : NSUInteger
                                    failure:(void (^)(NSError *error))failure;
 
 /**
- Register a user with the password-based flow.
+ Register a user.
+ 
+ This method manages the full flow for simple login types and returns the credentials of the newly created matrix user.
 
- It implements the password-based registration flow described at
- http://matrix.org/docs/spec/#password-based
-
- @param user the user id (ex: "@bob:matrix.org") or the user id localpart (ex: "bob") of the user to register.
+ @param loginType the login type. Only kMXLoginFlowTypePassword and kMXLoginFlowTypeDummy (m.login.password and m.login.dummy) are supported.
+ @param username the user id (ex: "@bob:matrix.org") or the user id localpart (ex: "bob") of the user to register. Can be nil.
  @param password his password.
  @param success A block object called when the operation succeeds. It provides credentials to use to create a MXRestClient.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)registerWithUser:(NSString*)user andPassword:(NSString*)password
-                             success:(void (^)(MXCredentials *credentials))success
-                             failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)registerWithLoginType:(NSString*)loginType username:(NSString*)username password:(NSString*)password
+                                  success:(void (^)(MXCredentials *credentials))success
+                                  failure:(void (^)(NSError *error))failure;
 
 /**
  Get the register fallback page to make registration via a web browser or a web view.
@@ -250,21 +250,21 @@ typedef enum : NSUInteger
                   failure:(void (^)(NSError *error))failure;
 
 /**
- Log a user in with the password-based flow.
+ Log a user in.
 
- It implements the password-based registration flow described at
- http://matrix.org/docs/spec/#password-based
+ This method manages the full flow for simple login types and returns the credentials of the logged matrix user.
 
- @param user the user id (ex: "@bob:matrix.org") or the user id localpart (ex: "bob") of the user to log in.
+ @param loginType the login type. Only kMXLoginFlowTypePassword (m.login.password) is supported.
+ @param username the user id (ex: "@bob:matrix.org") or the user id localpart (ex: "bob") of the user to register.
  @param password his password.
  @param success A block object called when the operation succeeds. It provides credentials to use to create a MXRestClient.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)loginWithUser:(NSString*)user andPassword:(NSString*)password
-                          success:(void (^)(MXCredentials *credentials))success
-                          failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)loginWithLoginType:(NSString*)loginType username:(NSString*)username password:(NSString*)password
+                               success:(void (^)(MXCredentials *credentials))success
+                               failure:(void (^)(NSError *error))failure;
 
 /**
  Get the login fallback page to make login via a web browser or a web view.

@@ -93,11 +93,13 @@ FOUNDATION_EXPORT NSString *const kMX3PIDMediumMSISDN;
  */
 typedef NSString* MXLoginFlowType;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypePassword;
-FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeOAuth2;
-FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeEmailCode;
-FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeEmailUrl;
-FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeEmailIdentity;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeRecaptcha;
+FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeOAuth2;
+FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeEmailIdentity;
+FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeToken;
+FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeDummy;
+
+FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeEmailCode; // Deprecated
 
 /**
  `MXLoginFlow` represents a login or a register flow supported by the home server.
