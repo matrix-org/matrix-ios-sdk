@@ -19,6 +19,7 @@
 
 #import "MXHTTPClient.h"
 #import "MXEvent.h"
+#import "MXRoomEventFilter.h"
 #import "MXEventTimeline.h"
 #import "MXJSONModels.h"
 
@@ -1498,11 +1499,10 @@ typedef enum : NSUInteger
  Search a text in room messages.
 
  @param textPattern the text to search for in message body.
- @param rooms a list of rooms to search in. nil means all rooms the user is in.
+ @param roomEventFilter a nullable dictionary which defines the room event filtering during the search request.
  @param beforeLimit the number of events to get before the matching results.
  @param afterLimit the number of events to get after the matching results.
  @param nextBatch the token to pass for doing pagination from a previous response.
- @param mediaFilter tells whether the messages with url (the attachments) are filtered or not.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
@@ -1510,11 +1510,10 @@ typedef enum : NSUInteger
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)searchMessagesWithText:(NSString*)textPattern
-                                   inRooms:(NSArray<NSString*>*)rooms
+                           roomEventFilter:(MXRoomEventFilter*)roomEventFilter
                                beforeLimit:(NSUInteger)beforeLimit
                                 afterLimit:(NSUInteger)afterLimit
                                  nextBatch:(NSString*)nextBatch
-                               mediaFilter:(MXMessagesSearchMediaFilter)mediaFilter
                                    success:(void (^)(MXSearchRoomEventResults *roomEventResults))success
                                    failure:(void (^)(NSError *error))failure;
 

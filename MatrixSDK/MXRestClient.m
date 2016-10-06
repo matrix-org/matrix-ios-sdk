@@ -2887,11 +2887,10 @@ MXAuthAction;
 
 #pragma mark - Search
 - (MXHTTPOperation*)searchMessagesWithText:(NSString*)textPattern
-                                   inRooms:(NSArray<NSString*>*)rooms
+                           roomEventFilter:(MXRoomEventFilter*)roomEventFilter
                                beforeLimit:(NSUInteger)beforeLimit
                                 afterLimit:(NSUInteger)afterLimit
                                  nextBatch:(NSString*)nextBatch
-                               mediaFilter:(MXMessagesSearchMediaFilter)mediaFilter
                                    success:(void (^)(MXSearchRoomEventResults *roomEventResults))success
                                    failure:(void (^)(NSError *error))failure
 {
@@ -2906,25 +2905,9 @@ MXAuthAction;
                                                            }
                                                    }];
     
-    // Prepare potential filtering option
-    NSMutableDictionary *filter = [NSMutableDictionary dictionary];
-    if (rooms)
+    if (roomEventFilter.dictionary.count)
     {
-         filter[@"rooms"] = rooms;
-    }
-    
-    if (mediaFilter == MXMessagesSearchMediaFilterLimitedToAttachments)
-    {
-        filter[@"contains_url"] = @(YES);
-    }
-    else if (mediaFilter == MXMessagesSearchMediaFilterExcludeAttachments)
-    {
-        filter[@"contains_url"] = @(NO);
-    }
-    
-    if (filter.count)
-    {
-        roomEventsParameters[@"filter"] = filter;
+        roomEventsParameters[@"filter"] = roomEventFilter.dictionary;
     }
 
     return [self searchRoomEvents:roomEventsParameters nextBatch:nextBatch success:success failure:failure];
