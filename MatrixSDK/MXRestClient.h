@@ -87,28 +87,6 @@ typedef enum : NSUInteger
 } MXThumbnailingMethod;
 
 /**
- List the filtering options used during the messages search. This option concerns the attachments handling.
- */
-typedef enum : NSUInteger
-{
-    /**
-     Default value. No limitation.
-     */
-    MXMessagesSearchMediaFilterUndefined,
-    
-    /**
-     Only the messages which contain an URL are concerned by the search request.
-     */
-    MXMessagesSearchMediaFilterLimitedToAttachments,
-    
-    /**
-     The messages which contain an URL are not concerned by the search request.
-     */
-    MXMessagesSearchMediaFilterExcludeAttachments
-} MXMessagesSearchMediaFilter;
-
-
-/**
  `MXRestClient` makes requests to Matrix servers.
 
  It is the single point to send requests to Matrix servers which are:
