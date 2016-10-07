@@ -16,6 +16,7 @@
 
 #import "MXCryptoAlgorithms.h"
 
+#import "MXOlm.h"
 
 #pragma mark - Constants definitions
 NSString *const kMXCryptoOlmAlgorithm = @"m.olm.v1.curve25519-aes-sha2";
@@ -52,7 +53,6 @@ static MXCryptoAlgorithms *sharedOnceInstance = nil;
         decryptors = [NSMutableDictionary dictionary];
 
         // Register default cryptos
-        // @TODO
         [self registerAlgorithm:kMXCryptoOlmAlgorithm encryptorClass:nil decryptorClass:nil];
         [self registerAlgorithm:kMXCryptoMegolmAlgorithm encryptorClass:nil decryptorClass:nil];
     }
@@ -82,57 +82,3 @@ static MXCryptoAlgorithms *sharedOnceInstance = nil;
 
 @end
 
-
-#pragma mark - Base implementations classes
-@implementation MXEncryptionAlgorithm
-
-- (instancetype)initWithMatrixSession:(MXSession *)matrixSession andRoom:(NSString *)roomId
-{
-    self = [super init];
-    if (self)
-    {
-        _mxSession = matrixSession;
-        _roomId = roomId;
-    }
-    return self;
-}
-
-- (NSDictionary *)encryptMessage:(NSDictionary *)content ofType:(MXEventTypeString)eventType inRoom:(MXRoom *)room
-{
-    return nil;
-}
-
-- (void)onRoomMembership:(MXEvent *)event member:(MXRoomMember *)member oldMembership:(MXMembership)oldMembership
-{
-
-}
-
-- (void)onNewDevice:(NSString *)deviceId forUser:(NSString *)userId
-{
-    
-}
-@end
-
-@implementation MXDecryptionAlgorithm
-
-- (instancetype)initWithMatrixSession:(MXSession *)matrixSession
-{
-    self = [super init];
-    if (self)
-    {
-        _mxSession = matrixSession;
-    }
-    return self;
-}
-
-- (MXDecryptionResult *)decryptEvent:(MXEvent *)event error:(NSError *__autoreleasing *)error
-{
-    return nil;
-}
-
-- (void)onRoomKeyEvent:(MXEvent *)event
-{
-
-}
-
-@end
