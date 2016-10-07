@@ -108,7 +108,7 @@
                         success:(void (^)())success
                         failure:(void (^)(NSError *))failure
 {
-    return [self uploadDeviceKeys:^(MXKeysUploadResponse *keysUploadResponse) {
+    MXHTTPOperation *operation =  [self uploadDeviceKeys:^(MXKeysUploadResponse *keysUploadResponse) {
 
         // We need to keep a pool of one time public keys on the server so that
         // other devices can start conversations with us. But we can only store
@@ -150,7 +150,10 @@
 
             // Ask olm to generate new one time keys, then upload them to synapse.
             [_olmDevice generateOneTimeKeys:numberToGenerate];
-            [self uploadOneTimeKeys:success failure:failure];
+            MXHTTPOperation *operation2 = [self uploadOneTimeKeys:success failure:failure];
+
+            // Mutate MXHTTPOperation so that the user can cancel this new operation
+            [operation mutateToAnotherOperation:operation2];
         }
         else
         {
@@ -166,6 +169,8 @@
         NSLog(@"[MXCrypto] uploadDeviceKeys fails. Reason: %@", error);
         failure(error);
     }];
+
+    return operation;
 }
 
 - (MXHTTPOperation*)downloadKeys:(NSArray<NSString*>*)userIds forceDownload:(BOOL)forceDownload

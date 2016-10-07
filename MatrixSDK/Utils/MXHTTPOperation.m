@@ -66,4 +66,14 @@
     return [[NSDate date] timeIntervalSinceDate:creationDate] * 1000;
 }
 
+- (void)mutateToAnotherOperation:(MXHTTPOperation *)operation
+{
+    // Apply all data from the other MXHTTPOperation
+    _operation = operation.operation;
+    creationDate = operation->creationDate;
+    _numberOfTries = operation.numberOfTries;
+    _maxNumberOfTries = operation.maxRetriesTime;
+    _maxRetriesTime = operation.maxRetriesTime;
+}
+
 @end

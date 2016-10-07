@@ -239,17 +239,20 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     {
         // Encrypt the content before sending
         // @TODO: Would be nice to inform user we are encrypting
-        return [mxSession.crypto encryptEventContent:content withType:eventTypeString inRoom:self success:^(NSDictionary *encryptedContent, NSString *encryptedEventType) {
+        MXHTTPOperation *operation = [mxSession.crypto encryptEventContent:content withType:eventTypeString inRoom:self success:^(NSDictionary *encryptedContent, NSString *encryptedEventType) {
 
             // Send the encrypted content
-            [self _sendEventOfType:encryptedEventType content:encryptedContent success:success failure:failure];
+            MXHTTPOperation *operation2 = [self _sendEventOfType:encryptedEventType content:encryptedContent success:success failure:failure];
 
-            // @TODO: Mutate MXHTTPOperation to take into account this new MXHTTPOperation so that the user can cancel it
+            // Mutate MXHTTPOperation so that the user can cancel this new operation
+            [operation mutateToAnotherOperation:operation2];
 
         } failure:^(NSError *error) {
             NSLog(@"[MXRoom] sendEventOfType: Cannot encrypt event. Error: %@", error);
             failure(error);
         }];
+
+        return operation;
     }
     else
     {
@@ -284,9 +287,6 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     eventContent[@"msgtype"] = msgType;
 
     return [self sendEventOfType:kMXEventTypeStringRoomMessage content:eventContent success:success failure:failure];
-
-
-    return [mxSession.matrixRestClient sendMessageToRoom:self.roomId msgType:msgType content:content success:success failure:failure];
 }
 
 - (MXHTTPOperation*)sendTextMessage:(NSString*)text

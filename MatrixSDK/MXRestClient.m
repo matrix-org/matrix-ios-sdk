@@ -249,7 +249,7 @@ MXAuthAction;
         return nil;
     }
 
-    return [self getRegisterSession:^(MXAuthenticationSession *authSession) {
+    MXHTTPOperation *operation = [self getRegisterSession:^(MXAuthenticationSession *authSession) {
 
         NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:
                                            @{
@@ -264,27 +264,31 @@ MXAuthAction;
             parameters[@"username"] = username;
         }
 
-        [self registerWithParameters: parameters
-                             success:^(NSDictionary *JSONResponse) {
+        MXHTTPOperation *operation2 = [self registerWithParameters: parameters success:^(NSDictionary *JSONResponse) {
 
-                                 // Update our credentials
-                                 self.credentials = [MXCredentials modelFromJSON:JSONResponse];
+            // Update our credentials
+            self.credentials = [MXCredentials modelFromJSON:JSONResponse];
 
-                                 // Workaround: HS does not return the right URL. Use the one we used to make the request
-                                 credentials.homeServer = homeserver;
+            // Workaround: HS does not return the right URL. Use the one we used to make the request
+            credentials.homeServer = homeserver;
 
-                                 // Report the certificate trusted by user (if any)
-                                 credentials.allowedCertificate = httpClient.allowedCertificate;
+            // Report the certificate trusted by user (if any)
+            credentials.allowedCertificate = httpClient.allowedCertificate;
 
-                                 // sanity check
-                                 if (success)
-                                 {
-                                     success(credentials);
-                                 }
+            // sanity check
+            if (success)
+            {
+                success(credentials);
+            }
 
-                             } failure:failure];
+        } failure:failure];
+
+        // Mutate MXHTTPOperation so that the user can cancel this new operation
+        [operation mutateToAnotherOperation:operation2];
 
     } failure:failure];
+
+    return operation;
 }
 
 - (NSString*)registerFallback;
