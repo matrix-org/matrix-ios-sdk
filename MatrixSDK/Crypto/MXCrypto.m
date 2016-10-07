@@ -26,20 +26,17 @@
 
 @interface MXCrypto ()
 {
-    /**
-     The Matrix session.
-     */
+    // The Matrix session.
     MXSession *mxSession;
 
-    /**
-     EncryptionAlgorithm instance for each room.
-     */
+    // EncryptionAlgorithm instance for each room.
     NSMutableDictionary<NSString*, id<MXEncrypting>> *roomAlgorithms;
 
-    /**
-     Our device keys
-     */
+    // Our device keys
     MXDeviceInfo *myDevice;
+
+    // Listener on memberships changes
+    id roomMembershipEventsListener;
 }
 @end
 
@@ -95,6 +92,8 @@
 
 - (void)close
 {
+    [mxSession removeListener:roomMembershipEventsListener];
+
     [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXSessionOnToDeviceEventNotification object:mxSession];
 
     _olmDevice = nil;
@@ -547,7 +546,13 @@
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onToDeviceEvent:) name:kMXSessionOnToDeviceEventNotification object:mxSession];
 
     // Observe membership changes
+    roomMembershipEventsListener = [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
 
+        if (direction == MXTimelineDirectionForwards)
+        {
+            [self onRoomMembership:event];
+        }
+    }];
 }
 
 - (void)onInitialSyncCompleted:(NSNotification *)notification
@@ -691,6 +696,36 @@
         NSLog(@"[MXCrypto] onNewDeviceEvent: ERRORupdating device keys for new device %@:%@ : %@", userId, deviceId, error);
 
     }];
+}
+
+/**
+ Handle a change in the membership state of a member of a room.
+ 
+ @param event the membership event causing the change
+ */
+- (void)onRoomMembership:(MXEvent*)event
+{
+    id<MXEncrypting> alg = roomAlgorithms[event.roomId];
+    if (!alg)
+    {
+        // No encrypting in this room
+        return;
+    }
+
+    NSString *userId = event.stateKey;
+    MXRoomMember *roomMember = [[mxSession roomWithRoomId:event.roomId].state memberWithUserId:userId];
+
+    if (roomMember)
+    {
+        MXRoomMemberEventContent *roomMemberPrevContent = [MXRoomMemberEventContent modelFromJSON:event.prevContent];
+        MXMembership oldMembership = [MXTools membership:roomMemberPrevContent.membership];
+
+        [alg onRoomMembership:event member:roomMember oldMembership:oldMembership];
+    }
+    else
+    {
+        NSLog(@"[MXCrypto] onRoomMembership: Error cannot find the room member in event: %@", event);
+    }
 }
 
 /**
