@@ -546,11 +546,18 @@
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onToDeviceEvent:) name:kMXSessionOnToDeviceEventNotification object:mxSession];
 
     // Observe membership changes
-    roomMembershipEventsListener = [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
+    roomMembershipEventsListener = [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption, kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
 
         if (direction == MXTimelineDirectionForwards)
         {
-            [self onRoomMembership:event];
+            if (event.eventType == MXEventTypeRoomEncryption)
+            {
+                [self onCryptoEvent:event];
+            }
+            if (event.eventType == MXEventTypeRoomMember)
+            {
+                [self onRoomMembership:event];
+            }
         }
     }];
 }
@@ -697,6 +704,16 @@
 
     }];
 }
+
+/**
+ Handle an m.room.encryption event.
+
+ @param event the encryption event.
+ */
+- (void)onCryptoEvent:(MXEvent*)event
+{
+    [self setEncryptionInRoom:event.roomId withAlgorithm:event.content[@"algorithm"]];
+};
 
 /**
  Handle a change in the membership state of a member of a room.

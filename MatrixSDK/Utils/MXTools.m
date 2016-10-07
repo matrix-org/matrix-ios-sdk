@@ -54,6 +54,7 @@ static NSRegularExpression *isMatrixEventIdentifierRegex;
                           kMXEventTypeStringRoomAliases: @(MXEventTypeRoomAliases),
                           kMXEventTypeStringRoomCanonicalAlias: @(MXEventTypeRoomCanonicalAlias),
                           kMXEventTypeStringRoomEncrypted: @(MXEventTypeRoomEncrypted),
+                          kMXEventTypeStringRoomEncrypted: @(MXEventTypeRoomEncryption),
                           kMXEventTypeStringRoomHistoryVisibility: @(MXEventTypeRoomHistoryVisibility),
                           kMXEventTypeStringRoomGuestAccess: @(MXEventTypeRoomGuestAccess),
                           kMXEventTypeStringRoomKey: @(MXEventTypeRoomKey),
