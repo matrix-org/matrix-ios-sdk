@@ -105,6 +105,8 @@
 		3271877D1DA7CB2F0071C818 /* MXDecrypting.h in Headers */ = {isa = PBXBuildFile; fileRef = 3271877C1DA7CB2F0071C818 /* MXDecrypting.h */; };
 		3271877F1DA7CC600071C818 /* MXEncrypting.m in Sources */ = {isa = PBXBuildFile; fileRef = 3271877E1DA7CC600071C818 /* MXEncrypting.m */; };
 		327187811DA7CDE60071C818 /* MXDecrypting.m in Sources */ = {isa = PBXBuildFile; fileRef = 327187801DA7CDE60071C818 /* MXDecrypting.m */; };
+		327187851DA7D0220071C818 /* MXOlmDecryption.h in Headers */ = {isa = PBXBuildFile; fileRef = 327187831DA7D0220071C818 /* MXOlmDecryption.h */; };
+		327187861DA7D0220071C818 /* MXOlmDecryption.m in Sources */ = {isa = PBXBuildFile; fileRef = 327187841DA7D0220071C818 /* MXOlmDecryption.m */; };
 		327E37B61A974F75007F026F /* MXLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 327E37B41A974F75007F026F /* MXLogger.h */; };
 		327E37B71A974F75007F026F /* MXLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 327E37B51A974F75007F026F /* MXLogger.m */; };
 		327E37B91A977810007F026F /* MXLoggerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 327E37B81A977810007F026F /* MXLoggerTests.m */; };
@@ -295,6 +297,8 @@
 		3271877C1DA7CB2F0071C818 /* MXDecrypting.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXDecrypting.h; sourceTree = "<group>"; };
 		3271877E1DA7CC600071C818 /* MXEncrypting.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXEncrypting.m; sourceTree = "<group>"; };
 		327187801DA7CDE60071C818 /* MXDecrypting.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXDecrypting.m; sourceTree = "<group>"; };
+		327187831DA7D0220071C818 /* MXOlmDecryption.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXOlmDecryption.h; sourceTree = "<group>"; };
+		327187841DA7D0220071C818 /* MXOlmDecryption.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXOlmDecryption.m; sourceTree = "<group>"; };
 		327E37B41A974F75007F026F /* MXLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXLogger.h; sourceTree = "<group>"; };
 		327E37B51A974F75007F026F /* MXLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXLogger.m; sourceTree = "<group>"; };
 		327E37B81A977810007F026F /* MXLoggerTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXLoggerTests.m; sourceTree = "<group>"; };
@@ -510,6 +514,7 @@
 		322A51C01D9AC8FE00C8536D /* Algorithms */ = {
 			isa = PBXGroup;
 			children = (
+				327187821DA7CFF20071C818 /* Olm */,
 				322A51C11D9AC8FE00C8536D /* MXCryptoAlgorithms.h */,
 				322A51C21D9AC8FE00C8536D /* MXCryptoAlgorithms.m */,
 				322A51CB1D9C0DE100C8536D /* MXOlm.h */,
@@ -581,6 +586,15 @@
 				3245A74F1AF7B2930001D8A7 /* MXCallManager.m */,
 			);
 			path = VoIP;
+			sourceTree = "<group>";
+		};
+		327187821DA7CFF20071C818 /* Olm */ = {
+			isa = PBXGroup;
+			children = (
+				327187831DA7D0220071C818 /* MXOlmDecryption.h */,
+				327187841DA7D0220071C818 /* MXOlmDecryption.m */,
+			);
+			path = Olm;
 			sourceTree = "<group>";
 		};
 		3281E8B219E42DFE00976E1A /* JSONModels */ = {
@@ -781,6 +795,7 @@
 				32114A8F1A262ECB00FF2EC4 /* MXNoStore.h in Headers */,
 				32D776811A27877300FC4AA2 /* MXMemoryRoomStore.h in Headers */,
 				32DC15CF1A8CF7AE006F9AD3 /* MXPushRuleConditionChecker.h in Headers */,
+				327187851DA7D0220071C818 /* MXOlmDecryption.h in Headers */,
 				32D7767D1A27860600FC4AA2 /* MXMemoryStore.h in Headers */,
 				32CE6FB81A409B1F00317F1E /* MXFileStoreMetaData.h in Headers */,
 				3281E8B719E42DFE00976E1A /* MXJSONModel.h in Headers */,
@@ -1052,6 +1067,7 @@
 				329B2AC01D3FB01D002D546F /* MXJingleCallStack.m in Sources */,
 				320DFDE319DD99B60068622A /* MXError.m in Sources */,
 				327137281A24D50A00DB6757 /* MXMyUser.m in Sources */,
+				327187861DA7D0220071C818 /* MXOlmDecryption.m in Sources */,
 				32114A901A262ECB00FF2EC4 /* MXNoStore.m in Sources */,
 				32CE6FB91A409B1F00317F1E /* MXFileStoreMetaData.m in Sources */,
 				3264DB921CEC528D00B99881 /* MXAccountData.m in Sources */,

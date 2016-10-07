@@ -164,14 +164,14 @@
 /**
  Decrypt an incoming message using an existing session.
 
+ @param ciphertext the base64-encoded body from the received message.
+ @param messageType message_type field from the received message.
  @param theirDeviceIdentityKey the Curve25519 identity key for the remote device.
  @param sessionId the id of the active session.
- @param messageType message_type field from the received message.
- @param ciphertext the base64-encoded body from the received message.
 
  @return the decrypted payload.
  */
-- (NSString*)decryptMessage:(NSString*)theirDeviceIdentityKey sessionId:(NSString*)sessionId messageType:(NSUInteger)messageType ciphertext:(NSString*)ciphertext;
+- (NSString*)decryptMessage:(NSString*)ciphertext withType:(NSUInteger)messageType sessionId:(NSString*)sessionId theirDeviceIdentityKey:(NSString*)theirDeviceIdentityKey;
 
 /**
 Determine if an incoming messages is a prekey message matching an existing session.

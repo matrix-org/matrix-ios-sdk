@@ -51,17 +51,17 @@ static MXCryptoAlgorithms *sharedOnceInstance = nil;
     {
         encryptors = [NSMutableDictionary dictionary];
         decryptors = [NSMutableDictionary dictionary];
-
-        // Register default cryptos
-        [self registerAlgorithm:kMXCryptoOlmAlgorithm encryptorClass:nil decryptorClass:nil];
-        [self registerAlgorithm:kMXCryptoMegolmAlgorithm encryptorClass:nil decryptorClass:nil];
     }
     return self;
 }
 
-- (void)registerAlgorithm:(NSString *)algorithm encryptorClass:(Class<MXEncrypting>)encryptorClass decryptorClass:(Class<MXDecrypting>)decryptorClass
+-(void)registerEncryptorClass:(Class<MXEncrypting>)encryptorClass forAlgorithm:(NSString *)algorithm
 {
     encryptors[algorithm] = encryptorClass;
+}
+
+- (void)registerDecryptorClass:(Class<MXDecrypting>)decryptorClass forAlgorithm:(NSString *)algorithm
+{
     decryptors[algorithm] = decryptorClass;
 }
 

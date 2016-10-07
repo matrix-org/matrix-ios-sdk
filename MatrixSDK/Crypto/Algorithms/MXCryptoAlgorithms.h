@@ -39,13 +39,20 @@ FOUNDATION_EXPORT NSString *const kMXCryptoMegolmAlgorithm;
 + (instancetype)sharedAlgorithms;
 
 /**
- Register encryption/decryption classes for a particular algorithm.
- 
- @param algorithm the algorithm tag to register for.
+ Register encryption class for a particular algorithm.
+
  @param encryptorClass a class implementing 'MXEncrypting'.
- @param decryptorClass a class implementing 'MXDecrypting'.
+ @param algorithm the algorithm tag to register for.
  */
-- (void)registerAlgorithm:(NSString*)algorithm encryptorClass:(Class<MXEncrypting>)encryptorClass decryptorClass:(Class<MXDecrypting>)decryptorClass;
+- (void)registerEncryptorClass:(Class<MXEncrypting>)encryptorClass forAlgorithm:(NSString*)algorithm;
+
+/**
+ Register decryption class for a particular algorithm.
+
+ @param decryptorClass a class implementing 'MXDecrypting'.
+ @param algorithm the algorithm tag to register for.
+ */
+- (void)registerDecryptorClass:(Class<MXDecrypting>)decryptorClass forAlgorithm:(NSString *)algorithm;
 
 /**
  Get the class implementing encryption for the provided algorithm.
