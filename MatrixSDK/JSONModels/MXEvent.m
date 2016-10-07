@@ -32,6 +32,7 @@ NSString *const kMXEventTypeStringRoomCanonicalAlias    = @"m.room.canonical_ali
 NSString *const kMXEventTypeStringRoomEncrypted         = @"m.room.encrypted";
 NSString *const kMXEventTypeStringRoomGuestAccess       = @"m.room.guest_access";
 NSString *const kMXEventTypeStringRoomHistoryVisibility = @"m.room.history_visibility";
+NSString *const kMXEventTypeStringRoomKey               = @"m.room_key";
 NSString *const kMXEventTypeStringRoomMessage           = @"m.room.message";
 NSString *const kMXEventTypeStringRoomMessageFeedback   = @"m.room.message.feedback";
 NSString *const kMXEventTypeStringRoomRedaction         = @"m.room.redaction";

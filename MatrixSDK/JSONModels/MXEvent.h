@@ -40,6 +40,7 @@ typedef enum : NSUInteger
     MXEventTypeRoomEncrypted,
     MXEventTypeRoomGuestAccess,
     MXEventTypeRoomHistoryVisibility,
+    MXEventTypeRoomKey,
     MXEventTypeRoomMessage,
     MXEventTypeRoomMessageFeedback,
     MXEventTypeRoomRedaction,
@@ -74,6 +75,7 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomAliases;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomCanonicalAlias;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomEncrypted;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomGuestAccess;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomKey;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomHistoryVisibility;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomMessage;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomMessageFeedback;
