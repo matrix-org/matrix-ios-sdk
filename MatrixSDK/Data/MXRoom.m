@@ -110,13 +110,6 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     return [mxSession.store partialTextMessageOfRoom:self.roomId];
 }
 
-- (BOOL)isCrypted
-{
-    // @TODO: if mxSession.cryptoEnabled is NO, it will return always NO.
-    // Is it ok?
-    return [mxSession.crypto isRoomEncrypted:self.roomId];
-}
-
 
 #pragma mark - Sync
 - (void)handleJoinedRoomSync:(MXRoomSync *)roomSync
@@ -242,7 +235,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                             success:(void (^)(NSString *eventId))success
                             failure:(void (^)(NSError *error))failure
 {
-    if (mxSession.crypto && self.isCrypted)
+    if (mxSession.crypto && self.isEncrypted)
     {
         // Encrypt the content before sending
         // @TODO: Would be nice to inform user we are encrypting
@@ -840,6 +833,50 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     }
     
     return receipts;
+}
+
+
+#pragma mark - Crypto
+- (BOOL)isEncrypted
+{
+    // @TODO: if mxSession.cryptoEnabled is NO, it will return always NO.
+    // Is it ok?
+    return [mxSession.crypto isRoomEncrypted:self.roomId];
+}
+
+- (MXHTTPOperation *)enableEncryptionWithAlgorithm:(NSString *)algorithm
+                                           success:(void (^)())success failure:(void (^)(NSError *))failure
+{
+    MXHTTPOperation *operation;
+
+    if (mxSession.crypto)
+    {
+        // Send the information to the homeserver
+        operation = [self sendStateEventOfType:kMXEventTypeStringRoomEncryption
+                                  content:@{
+                                            @"algorithm": algorithm
+                                            }
+                                  success:nil
+                                  failure:failure];
+
+        // Wait for the event coming back from the hs
+        id eventBackListener = [_liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+            [_liveTimeline removeListener:eventBackListener];
+
+            // Dispatch to let time to MXCrypto to digest the m.room.encryption event
+            dispatch_async(dispatch_get_main_queue(), ^{
+                success();
+            });
+        }];
+    }
+    else
+    {
+        // @TODO
+        failure(nil);
+    }
+
+    return operation;
 }
 
 

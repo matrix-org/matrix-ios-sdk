@@ -86,11 +86,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 @property (nonatomic, readonly) MXRoomAccountData *accountData;
 
 /**
- Indicate whether encryption is enabled for this room.
- */
-@property (nonatomic, readonly) BOOL isCrypted;
-
-/**
  The text message partially typed by the user but not yet sent.
  The value is stored by the session store. Thus, it can be retrieved
  when the application restarts.
@@ -726,6 +721,28 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  @return the receipts for an event in a dedicated room.
  */
 - (NSArray*)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort;
+
+
+#pragma mark - Crypto
+
+/**
+ Indicate whether encryption is enabled for this room.
+ */
+@property (nonatomic, readonly) BOOL isEncrypted;
+
+/**
+ Enable encryption in this room.
+ 
+ @param algorithm the crypto algorithm to use.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+*/
+- (MXHTTPOperation*)enableEncryptionWithAlgorithm:(NSString*)algorithm
+                                          success:(void (^)())success
+                                          failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Utils

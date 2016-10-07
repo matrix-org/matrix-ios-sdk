@@ -384,7 +384,7 @@
 
 - (BOOL)isRoomEncrypted:(NSString *)roomId
 {
-    return !roomAlgorithms[roomId];
+    return roomAlgorithms[roomId];
 }
 
 - (MXHTTPOperation*)ensureOlmSessionsForUsers:(NSArray*)users

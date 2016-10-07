@@ -45,6 +45,9 @@
     [super tearDown];
 }
 
+
+#pragma mark - MXCrypto
+
 - (void)testCryptoPersistenceInStore
 {
     [matrixSDKTestsData doMXSessionTestWithBob:self andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
@@ -250,6 +253,37 @@
     }];
 }
 
+
+#pragma mark - MXRoom
+- (void)testRoomIsEncrypted
+{
+    [matrixSDKTestsData doMXSessionTestWithBob:self andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
+
+        mxSession.cryptoEnabled = YES;
+
+        [mxSession createRoom:@{} success:^(MXRoom *room) {
+
+            XCTAssertFalse(room.isEncrypted);
+
+            [room enableEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm success:^{
+
+                XCTAssert(room.isEncrypted);
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+
+
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+
+    }];
+}
 
 @end
 
