@@ -529,12 +529,15 @@
 - (void)registerEventHandlers
 {
     // Observe the server sync
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onInitialSyncCompleted) name:kMXSessionDidSyncNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onInitialSyncCompleted:) name:kMXSessionDidSyncNotification object:mxSession];
+
+    // Observe incoming to-device events
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onToDeviceEvent:) name:kMXSessionOnToDeviceEventNotification object:mxSession];
 
     // @TODO
 }
 
-- (void)onInitialSyncCompleted
+- (void)onInitialSyncCompleted:(NSNotification *)notification
 {
     // We need to it only once
     [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXSessionDidSyncNotification object:nil];
@@ -595,6 +598,86 @@
         }
 
     } failure:nil];
+}
+
+/**
+ * Handle a to-device event.
+ *
+ * @param event the to-device event.
+ */
+- (void)onToDeviceEvent:(NSNotification *)notification
+{
+    MXEvent *event = notification.userInfo[kMXSessionNotificationEventKey];
+
+    switch (event.eventType)
+    {
+        case MXEventTypeRoomKey:
+            [self onRoomKeyEvent:event];
+            break;
+
+        case MXEventTypeNewDevice:
+            [self onNewDeviceEvent:event];
+            break;
+
+        default:
+            break;
+    }
+}
+
+/**
+ * Handle a key event.
+ *
+ * @param event the key event.
+ */
+- (void)onRoomKeyEvent:(MXEvent*)event
+{
+    Class algClass = [[MXCryptoAlgorithms sharedAlgorithms] decryptorClassForAlgorithm:event.content[@"algorithm"]];
+
+    if (!algClass)
+    {
+        NSLog(@"[MXCrypto] onRoomKeyEvent: ERROR: Unable to handle keys for %@", event.content[@"algorithm"]);
+        return;
+    }
+
+    id<MXDecrypting> alg = [[algClass alloc] initWithMatrixSession:mxSession];
+    [alg onRoomKeyEvent:event];
+}
+
+/**
+ Called when a new device announces itself.
+
+ @param event the announcement event.
+ */
+- (void)onNewDeviceEvent:(MXEvent*)event
+{
+    NSString *userId = event.sender;
+    NSString *deviceId = event.content[@"device_id"];
+    NSArray<NSString*> *rooms = event.content[@"rooms"];
+
+    if (!rooms || !deviceId)
+    {
+        NSLog(@"[MXCrypto] onNewDeviceEvent: new_device event missing keys");
+        return;
+    }
+
+    NSLog(@"[MXCrypto] onNewDeviceEvent: m.new_device event from %@:%@ for rooms %@", userId, deviceId, rooms);
+
+    [self downloadKeys:@[userId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+
+        for (NSString *roomId in rooms)
+        {
+            id<MXEncrypting> alg = roomAlgorithms[roomId];
+            if (alg)
+            {
+                // The room is encrypted, report the new device to it
+                [alg onNewDevice:deviceId forUser:userId];
+            }
+        }
+
+    } failure:^(NSError *error) {
+        NSLog(@"[MXCrypto] onNewDeviceEvent: ERRORupdating device keys for new device %@:%@ : %@", userId, deviceId, error);
+
+    }];
 }
 
 /**
