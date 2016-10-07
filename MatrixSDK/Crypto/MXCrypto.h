@@ -35,6 +35,11 @@
 - (instancetype)initWithMatrixSession:(MXSession*)mxSession;
 
 /**
+ Stop and release crypto objects.
+ */
+- (void)close;
+
+/**
   The libolm wrapper.
  */
 @property (nonatomic, readonly) MXOlmDevice *olmDevice;

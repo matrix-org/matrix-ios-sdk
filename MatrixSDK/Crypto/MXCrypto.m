@@ -93,6 +93,18 @@
     return self;
 }
 
+- (void)close
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXSessionOnToDeviceEventNotification object:mxSession];
+
+    _olmDevice = nil;
+
+    [roomAlgorithms removeAllObjects];
+    roomAlgorithms = nil;
+
+    myDevice = nil;
+}
+
 - (MXHTTPOperation *)uploadKeys:(NSUInteger)maxKeys
                         success:(void (^)())success
                         failure:(void (^)(NSError *))failure
@@ -534,7 +546,8 @@
     // Observe incoming to-device events
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onToDeviceEvent:) name:kMXSessionOnToDeviceEventNotification object:mxSession];
 
-    // @TODO
+    // Observe membership changes
+
 }
 
 - (void)onInitialSyncCompleted:(NSNotification *)notification

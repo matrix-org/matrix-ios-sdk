@@ -547,6 +547,7 @@ typedef void (^MXOnResumeDone)();
     // Stop crypto
     if (_crypto)
     {
+        [_crypto close];
         _crypto = nil;
     }
 
