@@ -53,7 +53,7 @@
 {
     [matrixSDKTestsData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
-        [bobRestClient messagesForRoom:roomId from:nil direction:MXTimelineDirectionBackwards limit:100 success:^(MXPaginationResponse *paginatedResponse) {
+        [bobRestClient messagesForRoom:roomId from:nil direction:MXTimelineDirectionBackwards limit:100 filter:nil success:^(MXPaginationResponse *paginatedResponse) {
 
             NSAssert(0 < paginatedResponse.chunk.count, @"Cannot set up intial test conditions");
 
