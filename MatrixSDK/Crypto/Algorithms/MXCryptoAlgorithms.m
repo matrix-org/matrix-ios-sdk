@@ -16,7 +16,6 @@
 
 #import "MXCryptoAlgorithms.h"
 
-#import "MXOlm.h"
 
 #pragma mark - Constants definitions
 NSString *const kMXCryptoOlmAlgorithm = @"m.olm.v1.curve25519-aes-sha2";

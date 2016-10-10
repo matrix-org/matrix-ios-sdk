@@ -44,8 +44,6 @@
 		322A51C41D9AC8FE00C8536D /* MXCryptoAlgorithms.m in Sources */ = {isa = PBXBuildFile; fileRef = 322A51C21D9AC8FE00C8536D /* MXCryptoAlgorithms.m */; };
 		322A51C71D9BBD3C00C8536D /* MXOlmDevice.h in Headers */ = {isa = PBXBuildFile; fileRef = 322A51C51D9BBD3C00C8536D /* MXOlmDevice.h */; };
 		322A51C81D9BBD3C00C8536D /* MXOlmDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 322A51C61D9BBD3C00C8536D /* MXOlmDevice.m */; };
-		322A51CD1D9C0DE100C8536D /* MXOlm.h in Headers */ = {isa = PBXBuildFile; fileRef = 322A51CB1D9C0DE100C8536D /* MXOlm.h */; };
-		322A51CE1D9C0DE100C8536D /* MXOlm.m in Sources */ = {isa = PBXBuildFile; fileRef = 322A51CC1D9C0DE100C8536D /* MXOlm.m */; };
 		322A51D81D9E846800C8536D /* MXCryptoTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 322A51D71D9E846800C8536D /* MXCryptoTests.m */; };
 		322F3C121DA38C8D005F2E9C /* MXUsersDevicesMap.h in Headers */ = {isa = PBXBuildFile; fileRef = 322F3C101DA38C8D005F2E9C /* MXUsersDevicesMap.h */; };
 		322F3C131DA38C8D005F2E9C /* MXUsersDevicesMap.m in Sources */ = {isa = PBXBuildFile; fileRef = 322F3C111DA38C8D005F2E9C /* MXUsersDevicesMap.m */; };
@@ -107,6 +105,8 @@
 		327187811DA7CDE60071C818 /* MXDecrypting.m in Sources */ = {isa = PBXBuildFile; fileRef = 327187801DA7CDE60071C818 /* MXDecrypting.m */; };
 		327187851DA7D0220071C818 /* MXOlmDecryption.h in Headers */ = {isa = PBXBuildFile; fileRef = 327187831DA7D0220071C818 /* MXOlmDecryption.h */; };
 		327187861DA7D0220071C818 /* MXOlmDecryption.m in Sources */ = {isa = PBXBuildFile; fileRef = 327187841DA7D0220071C818 /* MXOlmDecryption.m */; };
+		327187891DA7DCE50071C818 /* MXOlmEncryption.h in Headers */ = {isa = PBXBuildFile; fileRef = 327187871DA7DCE50071C818 /* MXOlmEncryption.h */; };
+		3271878A1DA7DCE50071C818 /* MXOlmEncryption.m in Sources */ = {isa = PBXBuildFile; fileRef = 327187881DA7DCE50071C818 /* MXOlmEncryption.m */; };
 		327E37B61A974F75007F026F /* MXLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 327E37B41A974F75007F026F /* MXLogger.h */; };
 		327E37B71A974F75007F026F /* MXLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 327E37B51A974F75007F026F /* MXLogger.m */; };
 		327E37B91A977810007F026F /* MXLoggerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 327E37B81A977810007F026F /* MXLoggerTests.m */; };
@@ -235,8 +235,6 @@
 		322A51C21D9AC8FE00C8536D /* MXCryptoAlgorithms.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCryptoAlgorithms.m; sourceTree = "<group>"; };
 		322A51C51D9BBD3C00C8536D /* MXOlmDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXOlmDevice.h; sourceTree = "<group>"; };
 		322A51C61D9BBD3C00C8536D /* MXOlmDevice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXOlmDevice.m; sourceTree = "<group>"; };
-		322A51CB1D9C0DE100C8536D /* MXOlm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXOlm.h; sourceTree = "<group>"; };
-		322A51CC1D9C0DE100C8536D /* MXOlm.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXOlm.m; sourceTree = "<group>"; };
 		322A51D71D9E846800C8536D /* MXCryptoTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCryptoTests.m; sourceTree = "<group>"; };
 		322F3C101DA38C8D005F2E9C /* MXUsersDevicesMap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXUsersDevicesMap.h; sourceTree = "<group>"; };
 		322F3C111DA38C8D005F2E9C /* MXUsersDevicesMap.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXUsersDevicesMap.m; sourceTree = "<group>"; };
@@ -299,6 +297,8 @@
 		327187801DA7CDE60071C818 /* MXDecrypting.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXDecrypting.m; sourceTree = "<group>"; };
 		327187831DA7D0220071C818 /* MXOlmDecryption.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXOlmDecryption.h; sourceTree = "<group>"; };
 		327187841DA7D0220071C818 /* MXOlmDecryption.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXOlmDecryption.m; sourceTree = "<group>"; };
+		327187871DA7DCE50071C818 /* MXOlmEncryption.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXOlmEncryption.h; sourceTree = "<group>"; };
+		327187881DA7DCE50071C818 /* MXOlmEncryption.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXOlmEncryption.m; sourceTree = "<group>"; };
 		327E37B41A974F75007F026F /* MXLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXLogger.h; sourceTree = "<group>"; };
 		327E37B51A974F75007F026F /* MXLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXLogger.m; sourceTree = "<group>"; };
 		327E37B81A977810007F026F /* MXLoggerTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXLoggerTests.m; sourceTree = "<group>"; };
@@ -517,12 +517,10 @@
 				327187821DA7CFF20071C818 /* Olm */,
 				322A51C11D9AC8FE00C8536D /* MXCryptoAlgorithms.h */,
 				322A51C21D9AC8FE00C8536D /* MXCryptoAlgorithms.m */,
-				322A51CB1D9C0DE100C8536D /* MXOlm.h */,
-				322A51CC1D9C0DE100C8536D /* MXOlm.m */,
-				3271877A1DA7CAA60071C818 /* MXEncrypting.h */,
-				3271877E1DA7CC600071C818 /* MXEncrypting.m */,
 				3271877C1DA7CB2F0071C818 /* MXDecrypting.h */,
 				327187801DA7CDE60071C818 /* MXDecrypting.m */,
+				3271877A1DA7CAA60071C818 /* MXEncrypting.h */,
+				3271877E1DA7CC600071C818 /* MXEncrypting.m */,
 			);
 			path = Algorithms;
 			sourceTree = "<group>";
@@ -593,6 +591,8 @@
 			children = (
 				327187831DA7D0220071C818 /* MXOlmDecryption.h */,
 				327187841DA7D0220071C818 /* MXOlmDecryption.m */,
+				327187871DA7DCE50071C818 /* MXOlmEncryption.h */,
+				327187881DA7DCE50071C818 /* MXOlmEncryption.m */,
 			);
 			path = Olm;
 			sourceTree = "<group>";
@@ -807,6 +807,7 @@
 				3291D4D41A68FFEB00C3BA41 /* MXFileRoomStore.h in Headers */,
 				320BBF431D6C81550079890E /* MXEventsEnumeratorOnArray.h in Headers */,
 				32C6F93319DD814400EA4E9C /* MatrixSDK.h in Headers */,
+				327187891DA7DCE50071C818 /* MXOlmEncryption.h in Headers */,
 				320BBF3C1D6C7D9D0079890E /* MXEventsEnumerator.h in Headers */,
 				323D299A1D426F7000A80BE4 /* MXJingleVideoView.h in Headers */,
 				323E0C571A2F6E7D00A31D73 /* MXRoomPowerLevels.h in Headers */,
@@ -838,7 +839,6 @@
 				32E226A61D06AC9F00E6CA54 /* MXPeekingRoom.h in Headers */,
 				323B2AF81BCE8AC800B11F34 /* MXCoreDataRoom.h in Headers */,
 				322F3C161DA3F3E0005F2E9C /* MXKey.h in Headers */,
-				322A51CD1D9C0DE100C8536D /* MXOlm.h in Headers */,
 				329FB1751A0A3A1600A5E88E /* MXRoomMember.h in Headers */,
 				323B2ACF1BCD3EF000B11F34 /* MXCoreDataStore.h in Headers */,
 				329B2ABF1D3FB01D002D546F /* MXJingleCallStack.h in Headers */,
@@ -1058,7 +1058,6 @@
 				32D7767E1A27860600FC4AA2 /* MXMemoryStore.m in Sources */,
 				326056861C76FDF2009D44AD /* MXEventTimeline.m in Sources */,
 				323B2B011BCE9B6700B11F34 /* MXCoreDataEvent.m in Sources */,
-				322A51CE1D9C0DE100C8536D /* MXOlm.m in Sources */,
 				3265CB391A14C43E00E24B2F /* MXRoomState.m in Sources */,
 				323B2AD01BCD3EF000B11F34 /* MXCoreDataStore.m in Sources */,
 				3281E8B819E42DFE00976E1A /* MXJSONModel.m in Sources */,
@@ -1067,6 +1066,7 @@
 				329B2AC01D3FB01D002D546F /* MXJingleCallStack.m in Sources */,
 				320DFDE319DD99B60068622A /* MXError.m in Sources */,
 				327137281A24D50A00DB6757 /* MXMyUser.m in Sources */,
+				3271878A1DA7DCE50071C818 /* MXOlmEncryption.m in Sources */,
 				327187861DA7D0220071C818 /* MXOlmDecryption.m in Sources */,
 				32114A901A262ECB00FF2EC4 /* MXNoStore.m in Sources */,
 				32CE6FB91A409B1F00317F1E /* MXFileStoreMetaData.m in Sources */,

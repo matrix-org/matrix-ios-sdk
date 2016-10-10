@@ -34,7 +34,9 @@
     return self;
 }
 
-- (NSDictionary *)encryptMessage:(NSDictionary *)content ofType:(MXEventTypeString)eventType inRoom:(MXRoom *)room
+- (MXHTTPOperation *)encryptEventContent:(NSDictionary *)eventContent eventType:(MXEventTypeString)eventType inRoom:(MXRoom *)room
+                                 success:(void (^)(NSDictionary *, NSString *))success
+                                 failure:(void (^)(NSError *))failure
 {
     return nil;
 }

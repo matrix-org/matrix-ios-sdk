@@ -45,10 +45,10 @@
         return nil;
     }
 
+    // The message for myUser
     NSDictionary *message = ciphertext[self.mxSession.crypto.olmDevice.deviceCurve25519Key];
 
     NSString *payloadString = [self decryptMessage:message andTheirDeviceIdentityKey:deviceKey];
-
     if (!payloadString)
     {
         NSLog(@"[MXOlmDecryption] Failed to decrypt Olm event (id= %@) from %@: @TODO error", event.eventId, deviceKey);

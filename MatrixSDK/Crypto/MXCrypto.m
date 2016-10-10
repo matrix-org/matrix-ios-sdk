@@ -497,9 +497,7 @@
 
     id<MXEncrypting> alg = roomAlgorithms[room.roomId];
 
-    // @TODO
-    /*return*/ [alg encryptMessage:eventContent ofType:eventType inRoom:room];
-    return nil;
+    return [alg encryptEventContent:eventContent eventType:eventType inRoom:room success:success failure:failure];
 }
 
 - (MXEvent*)decryptEvent:(MXEvent *)event
@@ -531,6 +529,51 @@
 
     return clearedEvent;
 }
+
+- (NSDictionary*)encryptMessage:(NSDictionary*)payloadFields forDevices:(NSArray<NSString*>*)participantKeys
+{
+    // @TODO
+    // participantKeys.sort();
+
+    NSString *participantHash = @""; // Olm.sha256(participantKeys.join());
+
+    NSMutableDictionary *payloadJson = [NSMutableDictionary dictionaryWithDictionary:payloadFields];
+    payloadJson[@"fingerprint"] = participantHash;
+    payloadJson[@"sender_device"] = mxSession.matrixRestClient.credentials.deviceId;
+
+    // Include the Ed25519 key so that the recipient knows what
+    // device this message came from.
+    // We don't need to include the curve25519 key since the
+    // recipient will already know this from the olm headers.
+    // When combined with the device keys retrieved from the
+    // homeserver signed by the ed25519 key this proves that
+    // the curve25519 key and the ed25519 key are owned by
+    // the same device.
+    payloadJson[@"keys"] = @{
+                             @"ed25519": _olmDevice.deviceEd25519Key
+                             };
+
+    NSData * payloadData = [NSJSONSerialization  dataWithJSONObject:payloadJson options:0 error:nil];
+    NSString * payloadString = [[NSString alloc] initWithData:payloadData encoding:NSUTF8StringEncoding];
+
+
+    NSMutableDictionary *ciphertext = [NSMutableDictionary dictionary];
+    for (NSString *deviceKey in participantKeys)
+    {
+        NSString *sessionId = [_olmDevice sessionIdForDevice:deviceKey];
+        if (sessionId)
+        {
+            NSLog(@"[MXOlmEncryption] Using sessionid %@ for device %@", sessionId, deviceKey);
+            ciphertext[deviceKey] = [_olmDevice encryptMessage:deviceKey sessionId:sessionId payloadString:payloadString];
+        }
+    }
+
+    return @{
+             @"algorithm": kMXCryptoOlmAlgorithm,
+             @"sender_key": _olmDevice.deviceCurve25519Key,
+             @"ciphertext": ciphertext
+             };
+};
 
 
 #pragma mark - Private methods

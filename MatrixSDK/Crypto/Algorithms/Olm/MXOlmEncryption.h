@@ -14,9 +14,7 @@
  limitations under the License.
  */
 
-#import <Foundation/Foundation.h>
-
-#import "MXCryptoAlgorithms.h"
+#import "MXEncrypting.h"
 
 @interface MXOlmEncryption : MXEncryptionAlgorithm
 

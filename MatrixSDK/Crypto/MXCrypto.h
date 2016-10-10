@@ -157,12 +157,23 @@
                                 failure:(void (^)(NSError *error))failure;
 
 /**
+ Encrypt an event payload for a list of devices.
+
+ @param payloadFields fields to include in the encrypted payload.
+ @param participantKeys list of curve25519 keys to encrypt for.
+
+ @return the content for an m.room.encrypted event.
+ */
+- (NSDictionary*)encryptMessage:(NSDictionary*)payloadFields forDevices:(NSArray<NSString*>*)participantKeys;
+
+/**
  Decrypt a received event
 
  @param event the raw event.
  @return a cleared event or nil.
  */
 - (MXEvent*)decryptEvent:(MXEvent*)event;
+
 
 @end
 
