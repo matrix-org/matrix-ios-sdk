@@ -19,12 +19,36 @@
 #import "MXCryptoAlgorithms.h"
 #import "MXSession.h"
 
+@interface MXOlmEncryption ()
+{
+    MXCrypto *crypto;
+
+    // The id of the room we will be sending to.
+    NSString *roomId;
+}
+
+@end
+
+
 @implementation MXOlmEncryption
 
 + (void)initialize
 {
     // Register this class as the encryptor for olm
     [[MXCryptoAlgorithms sharedAlgorithms] registerEncryptorClass:MXOlmEncryption.class forAlgorithm:kMXCryptoOlmAlgorithm];
+}
+
+
+#pragma mark - MXEncrypting
+- (instancetype)initWithMatrixSession:(MXSession *)matrixSession andRoom:(NSString *)theRoomId
+{
+    self = [super init];
+    if (self)
+    {
+        crypto = matrixSession.crypto;
+        roomId = theRoomId;
+    }
+    return self;
 }
 
 - (MXHTTPOperation *)encryptEventContent:(NSDictionary *)eventContent eventType:(MXEventTypeString)eventType inRoom:(MXRoom *)room
@@ -48,12 +72,12 @@
 
         for (NSString *userId in users)
         {
-            NSArray<MXDeviceInfo *> *devices = [self.mxSession.crypto storedDevicesForUser:userId];
+            NSArray<MXDeviceInfo *> *devices = [crypto storedDevicesForUser:userId];
             for (MXDeviceInfo *device in devices)
             {
                 NSString *key = device.identityKey;
 
-                if ([key isEqualToString:self.mxSession.crypto.olmDevice.deviceCurve25519Key])
+                if ([key isEqualToString:crypto.olmDevice.deviceCurve25519Key])
                 {
                     // Don't bother setting up session to ourself
                     continue;
@@ -69,24 +93,36 @@
             }
         }
 
-        [self.mxSession.crypto encryptMessage:@{
-                                                @"room_id": room.roomId,
-                                                @"type": eventType,
-                                                @"content": eventContent
-                                                }
-                                   forDevices:participantKeys];
-        
+        [crypto encryptMessage:@{
+                                 @"room_id": room.roomId,
+                                 @"type": eventType,
+                                 @"content": eventContent
+                                 }
+                    forDevices:participantKeys];
+
     } failure:failure];
 }
 
+- (void)onRoomMembership:(MXEvent *)event member:(MXRoomMember *)member oldMembership:(MXMembership)oldMembership
+{
+    // No impact for olm
+}
+
+- (void)onNewDevice:(NSString *)deviceId forUser:(NSString *)userId
+{
+    // No impact for olm
+}
+
+
+#pragma mark - Private methods
 - (MXHTTPOperation*)ensureSession:(NSArray<NSString*>*)users
                           success:(void (^)())success
                           failure:(void (^)(NSError *))failure
 {
     // @TODO: Avoid to do this request for every message. Instead, manage a queue of messages waiting for encryption
-    MXHTTPOperation *operation =   [self.mxSession.crypto downloadKeys:users forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+    MXHTTPOperation *operation =   [crypto downloadKeys:users forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
 
-        MXHTTPOperation *operation2 = [self.mxSession.crypto ensureOlmSessionsForUsers:users success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {
+        MXHTTPOperation *operation2 = [crypto ensureOlmSessionsForUsers:users success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {
             success();
         } failure:failure];
 

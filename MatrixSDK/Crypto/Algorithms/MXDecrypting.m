@@ -16,39 +16,6 @@
 
 #import "MXDecrypting.h"
 
-#import "MXSession.h"
-
-
-@implementation MXDecryptionAlgorithm
-
-- (instancetype)initWithMatrixSession:(MXSession *)matrixSession
-{
-    self = [super init];
-    if (self)
-    {
-        _mxSession = matrixSession;
-    }
-    return self;
-}
-
-- (MXOlmDevice *)olmDevice
-{
-    return _mxSession.crypto.olmDevice;
-}
-
-- (MXDecryptionResult *)decryptEvent:(MXEvent *)event error:(NSError *__autoreleasing *)error
-{
-    return nil;
-}
-
-- (void)onRoomKeyEvent:(MXEvent *)event
-{
-
-}
-
-@end
-
-
 @implementation MXDecryptionResult
 
 @end

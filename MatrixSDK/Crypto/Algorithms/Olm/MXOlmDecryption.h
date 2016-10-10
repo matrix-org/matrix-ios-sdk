@@ -18,6 +18,6 @@
 
 #import "MXDecrypting.h"
 
-@interface MXOlmDecryption : MXDecryptionAlgorithm
+@interface MXOlmDecryption : NSObject <MXDecrypting>
 
 @end

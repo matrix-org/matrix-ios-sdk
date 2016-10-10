@@ -44,7 +44,7 @@
  *
  * @param eventContent the content of the event.
  * @param eventType the type of the event.
- * @param room the room the event will be sent.
+ * @param room the room the event will be sent. //@TODO 'room' duplicates roomId in initWithMatrixSession, no?
  *
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
@@ -71,25 +71,5 @@
  @param {string} deviceId  deviceId of the device
  */
 - (void)onNewDevice:(NSString*)deviceId forUser:(NSString*)userId;
-
-@end
-
-
-#pragma mark - Base class implementation
-
-/**
- A base class for encryption implementations.
- */
-@interface MXEncryptionAlgorithm : NSObject <MXEncrypting>
-
-/**
- The related matrix session.
- */
-@property (nonatomic, readonly) MXSession *mxSession;
-
-/**
- The id of the room we will be sending to.
- */
-@property (nonatomic, readonly) NSString *roomId;
 
 @end

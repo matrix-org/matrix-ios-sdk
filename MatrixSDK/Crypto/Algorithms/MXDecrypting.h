@@ -74,24 +74,3 @@
 
 @end
 
-
-#pragma mark - Base class implementation
-
-#import "MXOlmDevice.h"
-
-/**
- A base class for decryption implementations.
- */
-@interface MXDecryptionAlgorithm : NSObject <MXDecrypting>
-
-/**
- The related matrix session.
- */
-@property (nonatomic, readonly) MXSession *mxSession;
-
-/**
- The olm device.
- */
-@property (nonatomic, readonly) MXOlmDevice *olmDevice;
-
-@end

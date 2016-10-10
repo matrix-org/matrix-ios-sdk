@@ -19,11 +19,32 @@
 #import "MXCryptoAlgorithms.h"
 #import "MXSession.h"
 
+@interface MXOlmDecryption ()
+{
+    // The olm device interface
+    MXOlmDevice *olmDevice;
+}
+@end
+
+
 @implementation MXOlmDecryption
 
 + (void)initialize
 {
+    // Register this class as the decryptor for olm
     [[MXCryptoAlgorithms sharedAlgorithms] registerDecryptorClass:MXOlmDecryption.class forAlgorithm:kMXCryptoOlmAlgorithm];
+}
+
+
+#pragma mark - MXDecrypting
+- (instancetype)initWithMatrixSession:(MXSession *)matrixSession
+{
+    self = [super init];
+    if (self)
+    {
+        olmDevice = matrixSession.crypto.olmDevice;
+    }
+    return self;
 }
 
 - (MXDecryptionResult *)decryptEvent:(MXEvent *)event error:(NSError *__autoreleasing *)error
@@ -38,7 +59,7 @@
         return nil;
     }
 
-    if (!ciphertext[self.olmDevice.deviceCurve25519Key])
+    if (!ciphertext[olmDevice.deviceCurve25519Key])
     {
         // @TODO: error
         //throw new base.DecryptionError("Not included in recipients");
@@ -46,7 +67,7 @@
     }
 
     // The message for myUser
-    NSDictionary *message = ciphertext[self.mxSession.crypto.olmDevice.deviceCurve25519Key];
+    NSDictionary *message = ciphertext[olmDevice.deviceCurve25519Key];
 
     NSString *payloadString = [self decryptMessage:message andTheirDeviceIdentityKey:deviceKey];
     if (!payloadString)
@@ -67,22 +88,29 @@
     return result;
 }
 
+- (void)onRoomKeyEvent:(MXEvent *)event
+{
+    // No impact for olm
+}
+
+
+#pragma mark - Private methods
 /**
  Attempt to decrypt an Olm message.
 
- @param theirDeviceIdentityKey  Curve25519 identity key of the sender
- @param {object} message  message object, with 'type' and 'body' fields
+ @param theirDeviceIdentityKey the Curve25519 identity key of the sender.
+ @param message message object, with 'type' and 'body' fields.
 
- @return {string} payload, if decrypted successfully.
+ @return payload, if decrypted successfully.
  */
 - (NSString*)decryptMessage:(NSDictionary*)message andTheirDeviceIdentityKey:(NSString*)theirDeviceIdentityKey
 {
-    NSArray<NSString *> *sessionIds = [self.olmDevice sessionIdsForDevice:theirDeviceIdentityKey];
+    NSArray<NSString *> *sessionIds = [olmDevice sessionIdsForDevice:theirDeviceIdentityKey];
 
     // Try each session in turn
     for (NSString *sessionId in sessionIds)
     {
-        NSString *payload = [self.olmDevice decryptMessage:message[@"body"]
+        NSString *payload = [olmDevice decryptMessage:message[@"body"]
                               withType:[((NSNumber*)message[@"type"]) unsignedIntegerValue]
                              sessionId:sessionId
                 theirDeviceIdentityKey:theirDeviceIdentityKey];

@@ -16,6 +16,6 @@
 
 #import "MXEncrypting.h"
 
-@interface MXOlmEncryption : MXEncryptionAlgorithm
+@interface MXOlmEncryption : NSObject <MXEncrypting>
 
 @end
