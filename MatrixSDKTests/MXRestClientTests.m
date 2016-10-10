@@ -645,7 +645,7 @@
 {
     [matrixSDKTestsData  doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [bobRestClient messagesForRoom:roomId from:nil direction:MXTimelineDirectionBackwards limit:-1 success:^(MXPaginationResponse *paginatedResponse) {
+        [bobRestClient messagesForRoom:roomId from:nil direction:MXTimelineDirectionBackwards limit:-1 filter:nil success:^(MXPaginationResponse *paginatedResponse) {
             
             XCTAssertNotNil(paginatedResponse);
             XCTAssertNotNil(paginatedResponse.start);
@@ -667,7 +667,7 @@
 {
     [matrixSDKTestsData  doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
-        [bobRestClient messagesForRoom:roomId from:nil direction:MXTimelineDirectionBackwards limit:100 success:^(MXPaginationResponse *paginatedResponse) {
+        [bobRestClient messagesForRoom:roomId from:nil direction:MXTimelineDirectionBackwards limit:100 filter:nil success:^(MXPaginationResponse *paginatedResponse) {
 
             XCTAssertNotNil(paginatedResponse);
             XCTAssertNotNil(paginatedResponse.start);

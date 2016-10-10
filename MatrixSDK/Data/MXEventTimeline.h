@@ -17,6 +17,7 @@
 #import <Foundation/Foundation.h>
 
 #import "MXEvent.h"
+#import "MXRoomEventFilter.h"
 #import "MXJSONModels.h"
 #import "MXRoomState.h"
 #import "MXHTTPOperation.h"
@@ -65,6 +66,11 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
  Indicate if this timeline is a live one.
  */
 @property (nonatomic, readonly) BOOL isLiveTimeline;
+
+/**
+ The room events filter which is applied during the history pagination.
+ */
+@property (nonatomic, readonly) MXRoomEventFilter *roomEventFilter;
 
 /**
  The state of the room at the top most recent event of the timeline.

@@ -918,6 +918,7 @@ typedef enum : NSUInteger
  @param from the token to start getting results from.
  @param direction `MXTimelineDirectionForwards` or `MXTimelineDirectionBackwards`
  @param limit (optional, use -1 to not defined this value) the maximum nuber of messages to return.
+ @param filter to filter returned events with.
 
  @param success A block object called when the operation succeeds. It provides a `MXPaginationResponse` object.
  @param failure A block object called when the operation fails.
@@ -928,6 +929,7 @@ typedef enum : NSUInteger
                                from:(NSString*)from
                           direction:(MXTimelineDirection)direction
                               limit:(NSUInteger)limit
+                             filter:(MXRoomEventFilter*)roomEventFilter
                             success:(void (^)(MXPaginationResponse *paginatedResponse))success
                             failure:(void (^)(NSError *error))failure;
 

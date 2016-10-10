@@ -1599,6 +1599,7 @@ MXAuthAction;
                                from:(NSString*)from
                           direction:(MXTimelineDirection)direction
                               limit:(NSUInteger)limit
+                             filter:(MXRoomEventFilter*)roomEventFilter
                             success:(void (^)(MXPaginationResponse *paginatedResponse))success
                             failure:(void (^)(NSError *error))failure
 {
@@ -1620,6 +1621,11 @@ MXAuthAction;
     if (-1 != limit)
     {
         parameters[@"limit"] = [NSNumber numberWithUnsignedInteger:limit];
+    }
+    
+    if (roomEventFilter.dictionary.count)
+    {
+        parameters[@"filter"] = roomEventFilter.dictionary;
     }
     
     return [httpClient requestWithMethod:@"GET"
