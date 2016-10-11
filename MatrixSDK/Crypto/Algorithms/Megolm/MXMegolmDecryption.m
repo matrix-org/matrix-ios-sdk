@@ -47,25 +47,36 @@
 
 - (MXDecryptionResult *)decryptEvent:(MXEvent *)event error:(NSError *__autoreleasing *)error
 {
-    NSString *deviceKey = event.content[@"sender_key"];
-    NSDictionary *ciphertext = event.content[@"ciphertext"];
-    NSDictionary *sessionId = event.content[@"session_id"];
+    NSString *senderKey = event.content[@"sender_key"];
+    NSString *ciphertext = event.content[@"ciphertext"];
+    NSString *sessionId = event.content[@"session_id"];
 
-    if (!deviceKey || !sessionId || !ciphertext)
+    if (!senderKey || !sessionId || !ciphertext)
     {
         // @TODO: error
         //throw new base.DecryptionError("Missing fields in input");
+        NSLog(@"[MXMegolmDecryption] decryptEvent: ERROR: Missing fields in input");
         return nil;
     }
 
-    // @TODO (need Megolm support in OLMKit)
-    return nil;
+    return [olmDevice decryptGroupMessage:ciphertext roomId:event.roomId sessionId:sessionId senderKey:senderKey];
 }
 
 - (void)onRoomKeyEvent:(MXEvent *)event
 {
-    // @TODO
-}
+    NSLog(@"[MXMegolmDecryption] onRoomKeyEvent: Adding key from %@", event);
 
+    NSString *roomId = event.content[@"room_id"];
+    NSString *sessionId = event.content[@"session_id"];
+    NSString *sessionKey = event.content[@"session_key"];
+
+    if (!roomId || !sessionId || !sessionKey)
+    {
+        NSLog(@"[MXMegolmDecryption] onRoomKeyEvent: ERROR: Key event is missing fields");
+        return;
+    }
+
+    [olmDevice addInboundGroupSession:sessionId sessionKey:sessionKey roomId:roomId senderKey:event.senderKey keysClaimed:event.keysClaimed];
+}
 
 @end
