@@ -17,6 +17,7 @@
 #import <Foundation/Foundation.h>
 
 #import "MXStore.h"
+#import "MXDecrypting.h"
 
 /**
  An instance of MXOlmDevice manages the olm cryptography functions.
@@ -195,7 +196,60 @@ Determine if an incoming messages is a prekey message matching an existing sessi
  */
 - (NSString*)createOutboundGroupSession;
 
-//@TODO
+/**
+ Get the current session key of  an outbound group session.
+
+ @param sessionId the id of the outbound group session.
+ @return the base64-encoded secret key.
+ */
+- (NSString*)sessionKeyForOutboundGroupSession:(NSString*)sessionId;
+
+/**
+ Get the current message index of an outbound group session.
+
+ @param sessionId the id of the outbound group session.
+ @return the current chain index.
+ */
+- (NSUInteger)messageIndexForOutboundGroupSession:(NSString*)sessionId;
+
+/**
+ Encrypt an outgoing message with an outbound group session.
+
+ @param sessionId the id of the outbound group session.
+ @param payloadString the payload to be encrypted and sent.
+ @return ciphertext
+ */
+- (NSString*)encryptGroupMessage:(NSString*)sessionId payloadString:(NSString*)payloadString;
+
+
+#pragma mark - Inbound group session
+/**
+ Add an inbound group session to the session store.
+ 
+ @param sessionId the session identifier.
+ @param sessionKey base64-encoded secret key.
+ @param roomId the id of the room in which this session will be used.
+ @param senderKey the base64-encoded curve25519 key of the sender.
+ @param keysClaimed Other keys the sender claims.
+ 
+ @return YES if the operation succeeds.
+ */
+- (BOOL)addInboundGroupSession:(NSString*)sessionId sessionKey:(NSString*)sessionKey
+                        roomId:(NSString*)roomId
+                     senderKey:(NSString*)senderKey keysClaimed:(NSDictionary<NSString*, NSString*>*)keysClaimed;
+
+/**
+ Decrypt a received message with an inbound group session.
+ 
+ @param body the base64-encoded body of the encrypted message.
+ @param roomId theroom in which the message was received.
+ @param sessionId the session identifier.
+ @param senderKey the base64-encoded curve25519 key of the sender.
+
+ @return the decrypting result. Nil if the sessionId is unknown.
+ */
+- (MXDecryptionResult*)decryptGroupMessage:(NSString*)body roomId:(NSString*)roomId
+                                 sessionId:(NSString*)sessionId senderKey:(NSString*)senderKey;
 
 
 #pragma mark - Utilities

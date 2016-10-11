@@ -24,6 +24,7 @@
 #import "MXEventsEnumerator.h"
 
 #import <OLMKit/OLMKit.h>
+#import "MXOlmInboundGroupSession.h"
 #import "MXDeviceInfo.h"
 
 /**
@@ -437,5 +438,21 @@
  @return {object} A map from sessionId to Base64 end-to-end session.
  */
 - (NSDictionary<NSString*, OLMSession*>*)endToEndSessionsWithDevice:(NSString*)deviceKey;
+
+/**
+ Store an inbound group session.
+
+ @param session the inbound group session and its context.
+ */
+- (void)storeEndToEndInboundGroupSession:(MXOlmInboundGroupSession*)session;
+
+/**
+ Retrieve an inbound group session.
+
+ @param sessionId the session identifier.
+ @param the base64-encoded curve25519 key of the sender.
+ @return an inbound group session.
+ */
+- (MXOlmInboundGroupSession*)endToEndInboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey;
 
 @end

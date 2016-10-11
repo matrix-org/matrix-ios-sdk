@@ -22,22 +22,20 @@
 
 @interface MXOlmDevice ()
 {
-    /**
-     The store where crypto data is saved.
-     */
+    // The store where crypto data is saved.
     id<MXStore> store;
 
-    /**
-     The OLMKit account instance.
-     */
+    // The OLMKit account instance.
     OLMAccount *olmAccount;
 
-    /**
-     The OLMKit utility instance.
-     */
-     OLMUtility *olmUtility;
+    // The OLMKit utility instance.
+    OLMUtility *olmUtility;
 
-    // _outboundGroupSessionStore
+    // The outbound group session.
+    // They are not stored in 'store' to avoid to remember to which devices we sent the session key.
+    // Plus, in cryptography, it is good to refresh sessions from time to time.
+    // The key is the session id, the value the outbound group session.
+    NSMutableDictionary<NSString*, OLMOutboundGroupSession*> *outboundGroupSessionStore;
 }
 @end
 
@@ -66,6 +64,8 @@
         }
 
         olmUtility = [[OLMUtility alloc] init];
+
+        outboundGroupSessionStore = [NSMutableDictionary dictionary];
 
         _deviceCurve25519Key = olmAccount.identityKeys[@"curve25519"];
         _deviceEd25519Key = olmAccount.identityKeys[@"ed25519"];
@@ -142,7 +142,6 @@
     {
         [olmAccount removeOneTimeKeysForSession:olmSession];
         [store storeEndToEndAccount:olmAccount];
-
 
         NSString *payloadString = [olmSession decryptMessage:[[OLMMessage alloc]initWithCiphertext:ciphertext type:messageType]];
         [store storeEndToEndSession:olmSession forDevice:theirDeviceIdentityKey];
@@ -236,8 +235,92 @@
 #pragma mark - Outbound group session
 - (NSString *)createOutboundGroupSession
 {
-    // @TODO
-    return nil;
+    // @TODO: Manage error
+    OLMOutboundGroupSession *session = [[OLMOutboundGroupSession alloc] initOutboundGroupSession];
+
+    // @TODO: pickle it?
+    outboundGroupSessionStore[session.sessionIdentifier] = session;
+
+    return session.sessionIdentifier;
+}
+
+- (NSString *)sessionKeyForOutboundGroupSession:(NSString *)sessionId
+{
+    return outboundGroupSessionStore[sessionId].sessionKey;
+}
+
+- (NSUInteger)messageIndexForOutboundGroupSession:(NSString *)sessionId
+{
+    return outboundGroupSessionStore[sessionId].messageIndex;
+}
+
+- (NSString *)encryptGroupMessage:(NSString *)sessionId payloadString:(NSString *)payloadString
+{
+    return [outboundGroupSessionStore[sessionId] encryptMessage:payloadString];
+}
+
+
+#pragma mark - Inbound group session
+- (BOOL)addInboundGroupSession:(NSString *)sessionId sessionKey:(NSString *)sessionKey roomId:(NSString *)roomId senderKey:(NSString *)senderKey keysClaimed:(NSDictionary<NSString *,NSString *> *)keysClaimed
+{
+    MXOlmInboundGroupSession *session = [[MXOlmInboundGroupSession alloc] initWithSessionKey:sessionKey];
+
+    if (![session.session.sessionIdentifier isEqualToString:sessionId])
+    {
+        NSLog(@"[MXOlmDevice] addInboundGroupSession: ERROR: Mismatched group session ID from senderKey: %@", senderKey);
+        return NO;
+    }
+
+    [store storeEndToEndInboundGroupSession:session];
+    if ([store respondsToSelector:@selector(commit)])
+    {
+        [store commit];
+    }
+
+    return YES;
+}
+
+- (MXDecryptionResult *)decryptGroupMessage:(NSString *)body roomId:(NSString *)roomId
+                                  sessionId:(NSString *)sessionId senderKey:(NSString *)senderKey
+{
+    MXDecryptionResult *result;
+
+    MXOlmInboundGroupSession *session = [store endToEndInboundGroupSessionWithId:sessionId andSenderKey:senderKey];
+    if (!session)
+    {
+        // Check that the room id matches the original one for the session. This stops
+        // the HS pretending a message was targeting a different room.
+        if ([roomId isEqualToString:session.roomId])
+        {
+            NSString *payloadString = [session.session decryptMessage:body];
+
+            [store storeEndToEndInboundGroupSession:session];
+            if ([store respondsToSelector:@selector(commit)])
+            {
+                [store commit];
+            }
+
+            result = [[MXDecryptionResult alloc] init];
+            result.payload = [NSJSONSerialization JSONObjectWithData:[payloadString dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
+            result.keysClaimed = session.keysClaimed;
+
+            // The sender must have had the senderKey to persuade us to save the
+            // session.
+            result.keysProved = @{
+                                  @"curve25519": senderKey
+                                  };
+        }
+        else
+        {
+            NSLog(@"[MXOlmDevice] decryptGroupMessage: ERROR: Mismatched room_id for inbound group session (expected %@, was %@", roomId, session.roomId);
+        }
+    }
+    else
+    {
+        NSLog(@"[MXOlmDevice] decryptGroupMessage: ERROR: Cannot retrieve inbound group session %@", sessionId);
+    }
+
+    return result;
 }
 
 

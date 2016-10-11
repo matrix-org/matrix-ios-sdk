@@ -141,6 +141,8 @@
 		329FB1801A0B665800A5E88E /* MXUser.m in Sources */ = {isa = PBXBuildFile; fileRef = 329FB17E1A0B665800A5E88E /* MXUser.m */; };
 		32A151261DABB0CB00400192 /* MXMegolmDecryption.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A151241DABB0CB00400192 /* MXMegolmDecryption.h */; };
 		32A151271DABB0CB00400192 /* MXMegolmDecryption.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A151251DABB0CB00400192 /* MXMegolmDecryption.m */; };
+		32A151351DAD105600400192 /* MXOlmInboundGroupSession.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A151331DAD105600400192 /* MXOlmInboundGroupSession.h */; };
+		32A151361DAD105600400192 /* MXOlmInboundGroupSession.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A151341DAD105600400192 /* MXOlmInboundGroupSession.m */; };
 		32A27D1F19EC335300BAFADE /* MXRoomTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A27D1E19EC335300BAFADE /* MXRoomTests.m */; };
 		32BED28F1B00A23F00E668FE /* MXCallStack.h in Headers */ = {isa = PBXBuildFile; fileRef = 32BED28E1B00A23F00E668FE /* MXCallStack.h */; };
 		32C6F93319DD814400EA4E9C /* MatrixSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C6F93219DD814400EA4E9C /* MatrixSDK.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -338,6 +340,8 @@
 		329FB17E1A0B665800A5E88E /* MXUser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXUser.m; sourceTree = "<group>"; };
 		32A151241DABB0CB00400192 /* MXMegolmDecryption.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MXMegolmDecryption.h; path = Megolm/MXMegolmDecryption.h; sourceTree = "<group>"; };
 		32A151251DABB0CB00400192 /* MXMegolmDecryption.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MXMegolmDecryption.m; path = Megolm/MXMegolmDecryption.m; sourceTree = "<group>"; };
+		32A151331DAD105600400192 /* MXOlmInboundGroupSession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MXOlmInboundGroupSession.h; path = Data/MXOlmInboundGroupSession.h; sourceTree = "<group>"; };
+		32A151341DAD105600400192 /* MXOlmInboundGroupSession.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MXOlmInboundGroupSession.m; path = Data/MXOlmInboundGroupSession.m; sourceTree = "<group>"; };
 		32A27D1E19EC335300BAFADE /* MXRoomTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = MXRoomTests.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		32BED28E1B00A23F00E668FE /* MXCallStack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallStack.h; sourceTree = "<group>"; };
 		32C6F92D19DD814400EA4E9C /* MatrixSDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MatrixSDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -516,6 +520,7 @@
 		322A51C01D9AC8FE00C8536D /* Algorithms */ = {
 			isa = PBXGroup;
 			children = (
+				32A151321DAD102800400192 /* Data */,
 				32A151231DABB0A100400192 /* Megolm */,
 				327187821DA7CFF20071C818 /* Olm */,
 				322A51C11D9AC8FE00C8536D /* MXCryptoAlgorithms.h */,
@@ -645,6 +650,15 @@
 				32A151251DABB0CB00400192 /* MXMegolmDecryption.m */,
 			);
 			name = Megolm;
+			sourceTree = "<group>";
+		};
+		32A151321DAD102800400192 /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				32A151331DAD105600400192 /* MXOlmInboundGroupSession.h */,
+				32A151341DAD105600400192 /* MXOlmInboundGroupSession.m */,
+			);
+			name = Data;
 			sourceTree = "<group>";
 		};
 		32C6F92319DD814400EA4E9C = {
@@ -824,6 +838,7 @@
 				323E0C571A2F6E7D00A31D73 /* MXRoomPowerLevels.h in Headers */,
 				3245A7501AF7B2930001D8A7 /* MXCall.h in Headers */,
 				3271877D1DA7CB2F0071C818 /* MXDecrypting.h in Headers */,
+				32A151351DAD105600400192 /* MXOlmInboundGroupSession.h in Headers */,
 				322A51BA1D9ABAF900C8536D /* MXDeviceInfo.h in Headers */,
 				32114A851A262CE000FF2EC4 /* MXStore.h in Headers */,
 				3264E2A41BDF8D1500F89A86 /* MXCoreDataRoomState+CoreDataProperties.h in Headers */,
@@ -1071,6 +1086,7 @@
 				326056861C76FDF2009D44AD /* MXEventTimeline.m in Sources */,
 				323B2B011BCE9B6700B11F34 /* MXCoreDataEvent.m in Sources */,
 				3265CB391A14C43E00E24B2F /* MXRoomState.m in Sources */,
+				32A151361DAD105600400192 /* MXOlmInboundGroupSession.m in Sources */,
 				323B2AD01BCD3EF000B11F34 /* MXCoreDataStore.m in Sources */,
 				3281E8B819E42DFE00976E1A /* MXJSONModel.m in Sources */,
 				3264E2A31BDF8D1500F89A86 /* MXCoreDataRoomState.m in Sources */,
