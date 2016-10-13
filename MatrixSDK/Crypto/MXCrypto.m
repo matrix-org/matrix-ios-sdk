@@ -894,19 +894,3 @@
 
 @end
 
-
-@implementation MXOlmSessionResult
-
-- (instancetype)initWithDevice:(MXDeviceInfo *)device andOlmSession:(NSString *)sessionId
-{
-    self = [self init];
-    if (self)
-    {
-        _device = device;
-        _sessionId = sessionId;
-    }
-
-    return self;
-}
-
-@end

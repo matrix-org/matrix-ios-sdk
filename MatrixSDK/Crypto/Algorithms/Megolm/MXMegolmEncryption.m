@@ -18,20 +18,7 @@
 
 #import "MXCryptoAlgorithms.h"
 #import "MXSession.h"
-
-@interface MXQueuedEncryption : NSObject
-
-@property (nonatomic) NSDictionary *eventContent;
-@property (nonatomic) MXEventTypeString eventType;
-
-@property (nonatomic) void (^success)(NSDictionary *encryptedContent);
-@property (nonatomic) void (^failure)(NSError *error);
-
-@end
-
-@implementation MXQueuedEncryption
-
-@end
+#import "MXQueuedEncryption.h"
 
 @interface MXMegolmEncryption ()
 {

@@ -21,8 +21,9 @@
 #import "MXOlmDevice.h"
 #import "MXCryptoAlgorithms.h"
 #import "MXUsersDevicesMap.h"
+#import "MXOlmSessionResult.h"
 
-@class MXSession, MXOlmSessionResult;
+@class MXSession;
 
 /**
  A `MXCrypto` class instance manages the end-to-end crypto for a MXSession instance.
@@ -183,27 +184,5 @@
  @return a cleared event or nil.
  */
 - (MXEvent*)decryptEvent:(MXEvent*)event;
-
-
-@end
-
-
-/**
- Represent an olm session result..
- */
-@interface MXOlmSessionResult : NSObject
-
-/**
- The device
- */
-@property (nonatomic) MXDeviceInfo *device;
-
-/**
- Base64 olm session id.
- nil if no session could be established.
- */
-@property (nonatomic) NSString *sessionId;
-
-- (instancetype)initWithDevice:(MXDeviceInfo*)device andOlmSession:(NSString*)sessionId;
 
 @end
