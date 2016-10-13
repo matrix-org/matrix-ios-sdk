@@ -496,8 +496,11 @@
     }
 
     id<MXEncrypting> alg = roomAlgorithms[room.roomId];
+    return [alg encryptEventContent:eventContent eventType:eventType inRoom:room success:^(NSDictionary *encryptedContent) {
 
-    return [alg encryptEventContent:eventContent eventType:eventType inRoom:room success:success failure:failure];
+        success(encryptedContent, kMXEventTypeStringRoomEncrypted);
+
+    } failure:failure];
 }
 
 - (MXEvent*)decryptEvent:(MXEvent *)event
@@ -553,8 +556,8 @@
                              @"ed25519": _olmDevice.deviceEd25519Key
                              };
 
-    NSData * payloadData = [NSJSONSerialization  dataWithJSONObject:payloadJson options:0 error:nil];
-    NSString * payloadString = [[NSString alloc] initWithData:payloadData encoding:NSUTF8StringEncoding];
+    NSData *payloadData = [NSJSONSerialization  dataWithJSONObject:payloadJson options:0 error:nil];
+    NSString *payloadString = [[NSString alloc] initWithData:payloadData encoding:NSUTF8StringEncoding];
 
 
     NSMutableDictionary *ciphertext = [NSMutableDictionary dictionary];

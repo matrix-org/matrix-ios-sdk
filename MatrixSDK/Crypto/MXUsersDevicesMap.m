@@ -65,6 +65,19 @@
     _map = mutableMap;
 }
 
+- (void)removeAllObjects
+{
+    _map = @{};
+}
+
+- (void)removeObjectsForUser:(NSString *)userId
+{
+    NSMutableDictionary *mutableMap = [NSMutableDictionary dictionaryWithDictionary:_map];
+    [mutableMap removeObjectForKey:userId];
+
+    _map = mutableMap;
+}
+
 #pragma mark - NSCopying
 - (id)copyWithZone:(NSZone *)zone
 {

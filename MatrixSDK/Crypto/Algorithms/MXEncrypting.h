@@ -52,7 +52,7 @@
  @return a MXHTTPOperation instance. May be nil if all required materials is already in place.
  */
 - (MXHTTPOperation*)encryptEventContent:(NSDictionary*)eventContent eventType:(MXEventTypeString)eventType inRoom:(MXRoom*)room
-                                success:(void (^)(NSDictionary *encryptedContent, NSString *encryptedEventType))success
+                                success:(void (^)(NSDictionary *encryptedContent))success
                                 failure:(void (^)(NSError *error))failure;
 
 /**

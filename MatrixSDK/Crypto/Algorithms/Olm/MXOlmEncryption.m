@@ -52,7 +52,7 @@
 }
 
 - (MXHTTPOperation *)encryptEventContent:(NSDictionary *)eventContent eventType:(MXEventTypeString)eventType inRoom:(MXRoom *)room
-                                 success:(void (^)(NSDictionary *, NSString *))success
+                                 success:(void (^)(NSDictionary *))success
                                  failure:(void (^)(NSError *))failure
 {
     // pick the list of recipients based on the membership list.
@@ -120,7 +120,7 @@
                           failure:(void (^)(NSError *))failure
 {
     // @TODO: Avoid to do this request for every message. Instead, manage a queue of messages waiting for encryption
-    MXHTTPOperation *operation =   [crypto downloadKeys:users forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+    MXHTTPOperation *operation = [crypto downloadKeys:users forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
 
         MXHTTPOperation *operation2 = [crypto ensureOlmSessionsForUsers:users success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {
             success();

@@ -45,6 +45,8 @@
  */
 - (void)setObject:(ObjectType)object forUser:(NSString*)userId andDevice:(NSString*)deviceId;
 - (void)setObjects:(NSDictionary<NSString* /* deviceId */, ObjectType>*)objectsPerDevices forUser:(NSString*)userId;
+- (void)removeAllObjects;
+- (void)removeObjectsForUser:(NSString*)userId;
 
 @end
 
