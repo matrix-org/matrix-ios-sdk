@@ -24,6 +24,16 @@
 
 @class MXSession, MXOlmSessionResult;
 
+/**
+ A `MXCrypto` class instance manages the end-to-end crypto for a MXSession instance.
+ 
+ Messages posted by the user are automatically redirected to MXCrypto in order to be encrypted
+ before sending.
+ In the other hand, received events goes through MXCrypto for decrypting.
+ 
+ MXCrypto maintains all necessary keys and their sharing with other devices required for the crypto.
+ Specially, it tracks all room membership changes events in order to do keys updates.
+ */
 @interface MXCrypto : NSObject
 
 /**
@@ -60,7 +70,7 @@
                        failure:(void (^)(NSError *))failure;
 
 /**
- Download the keys for a list of users and stores the keys in the MXStore.
+ Download the device keys for a list of users and stores the keys in the MXStore.
 
  @param userIds The users to fetch.
  @param forceDownload Always download the keys even if cached.
@@ -75,7 +85,7 @@
                          failure:(void (^)(NSError *error))failure;
 
 /**
- Get the stored device keys for a user id.
+ Get the stored device keys for a user.
 
  @param userId the user to list keys for.
  @return the list of devices.
@@ -110,10 +120,10 @@
 - (MXDeviceInfo*)eventSenderDeviceOfEvent:(MXEvent*)event;
 
 /**
- Configure a room to use encryption (ie, save a flag in the sessionstore).
+ Configure a room to use encryption.
 
- @param roomId The room ID to enable encryption in.
- @param algorithm The encryption config for the room.
+ @param roomId the room id to enable encryption in.
+ @param algorithm the encryption config for the room.
  @return YES if the operation succeeds.
  */
 - (BOOL)setEncryptionInRoom:(NSString*)roomId withAlgorithm:(NSString*)algorithm;
@@ -129,7 +139,7 @@
 /**
  Try to make sure we have established olm sessions for the given users.
 
- @param users a list of user ids
+ @param users a list of user ids.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
@@ -141,11 +151,11 @@
                                       failure:(void (^)(NSError *error))failure;
 
 /**
- * Encrypt an event content according to the configuration of the room.
- *
- * @param eventContent the content of the event.
- * @param eventType the type of the event.
- * @param room the room the event will be sent.
+ Encrypt an event content according to the configuration of the room.
+ 
+ @param eventContent the content of the event.
+ @param eventType the type of the event.
+ @param room the room the event will be sent.
  *
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.

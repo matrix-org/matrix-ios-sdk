@@ -20,7 +20,7 @@
 
 /**
  The 'MXOlmInboundGroupSession' class adds more context to a OLMInboundGroupSession
- object.
+ object from OLMKit.
  
  This allows additional checks.
  The class implements NSCoding so that OLMInboundGroupSession can be stored with its

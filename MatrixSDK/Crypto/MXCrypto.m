@@ -54,7 +54,7 @@
 
         roomAlgorithms = [NSMutableDictionary dictionary];
 
-        // Build our device keys: these will later be uploaded
+        // Build our device keys: they will later be uploaded
         NSString *deviceId = mxSession.matrixRestClient.credentials.deviceId;
         if (!deviceId)
         {
@@ -73,7 +73,7 @@
         myDevice.algorithms = [[MXCryptoAlgorithms sharedAlgorithms] supportedAlgorithms];
         myDevice.verified = MXDeviceVerified;
 
-        // Add our own deviceinfo to the sessionstore
+        // Add our own deviceinfo to the store
         NSMutableDictionary *myDevices = [NSMutableDictionary dictionaryWithDictionary:[mxSession.store endToEndDevicesForUser:mxSession.myUser.userId]];
         myDevices[myDevice.deviceId] = myDevice;
         [mxSession.store storeEndToEndDevicesForUser:mxSession.myUser.userId devices:myDevices];
@@ -615,7 +615,7 @@
 
 - (void)onInitialSyncCompleted:(NSNotification *)notification
 {
-    // We need to it only once
+    // We need to do it only once
     [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXSessionDidSyncNotification object:nil];
 
     if ([mxSession.store endToEndDeviceAnnounced])
@@ -677,9 +677,9 @@
 }
 
 /**
- * Handle a to-device event.
- *
- * @param event the to-device event.
+ Handle a to-device event.
+
+ @param notification the notification containing the to-device event.
  */
 - (void)onToDeviceEvent:(NSNotification *)notification
 {
@@ -701,9 +701,9 @@
 }
 
 /**
- * Handle a key event.
- *
- * @param event the key event.
+ Handle a key event.
+
+ @param event the key event.
  */
 - (void)onRoomKeyEvent:(MXEvent*)event
 {

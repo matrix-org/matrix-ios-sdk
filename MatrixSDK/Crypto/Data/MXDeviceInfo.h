@@ -54,7 +54,7 @@ typedef enum : NSUInteger
 @property (nonatomic, readonly) NSString *deviceId;
 
 /**
- The id of this device.
+ The id of the user of this device.
  */
 @property (nonatomic) NSString *userId;
 
@@ -101,7 +101,6 @@ typedef enum : NSUInteger
 
 
 #pragma mark - Additional information
-
 /**
  Verification state of this device.
  */

@@ -17,7 +17,7 @@
 #import <Foundation/Foundation.h>
 
 /**
- `MXUsersDevicesInfoMap` is an abstract class to extract data from map of map
+ `MXUsersDevicesInfoMap` is an abstract class to extract data from a map of maps
   where the 1st map keys are userIds and 2nd map keys are deviceId.
  */
 @interface MXUsersDevicesMap<__covariant ObjectType> : NSObject <NSCopying, NSCoding>
@@ -28,10 +28,10 @@
 - (instancetype)initWithMap:(NSDictionary<NSString*, NSDictionary<NSString*, ObjectType>*>*)map;
 
 /**
- The device keys as returned by the homeserver: a map of a map (userId -> deviceId -> Object).
+ The map of maps (userId -> deviceId -> Object).
  */
-@property (nonatomic) NSDictionary<NSString* /* userId */,
-                            NSDictionary<NSString* /* deviceId */, ObjectType>*> *map;
+@property (nonatomic, readonly) NSDictionary<NSString* /* userId */,
+                                    NSDictionary<NSString* /* deviceId */, ObjectType>*> *map;
 
 /**
  Helper methods to extract information from 'map'.
@@ -41,7 +41,7 @@
 - (ObjectType)objectForDevice:(NSString*)deviceId forUser:(NSString*)userId;
 
 /**
- Feed helper method.
+ Feed helper methods.
  */
 - (void)setObject:(ObjectType)object forUser:(NSString*)userId andDevice:(NSString*)deviceId;
 - (void)setObjects:(NSDictionary<NSString* /* deviceId */, ObjectType>*)objectsPerDevices forUser:(NSString*)userId;
