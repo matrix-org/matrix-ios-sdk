@@ -85,7 +85,7 @@
 /**
  * Marks all of the one-time keys as published.
  */
-- (void)markKeysAsPublished;
+- (void)markOneTimeKeysAsPublished;
 
 /**
  Generate some new one-time keys

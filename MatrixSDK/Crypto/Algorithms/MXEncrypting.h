@@ -29,23 +29,12 @@
 - (instancetype)initWithMatrixSession:(MXSession*)matrixSession andRoom:(NSString*)roomId;
 
 /**
- Encrypt a message event.
+ Encrypt an event content according to the configuration of the room.
 
- @param content the plaintext event content.
+ @param eventContent the content of the event.
  @param eventType the type of the event.
- @param room the room.
+ @param room the room the event will be sent.
 
- @return ? @TODO
- */
-//- (NSDictionary*)encryptMessage:(NSDictionary*)content ofType:(MXEventTypeString)eventType inRoom:(MXRoom*)room;
-
-/**
- * Encrypt an event content according to the configuration of the room.
- *
- * @param eventContent the content of the event.
- * @param eventType the type of the event.
- * @param room the room the event will be sent. //@TODO 'room' duplicates roomId in initWithMatrixSession, no?
- *
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
 

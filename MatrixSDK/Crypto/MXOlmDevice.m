@@ -99,9 +99,9 @@
     return olmAccount.maxOneTimeKeys;
 }
 
-- (void)markKeysAsPublished
+- (void)markOneTimeKeysAsPublished
 {
-    [olmAccount markKeysAsPublished];
+    [olmAccount markOneTimeKeysAsPublished];
 
     [store storeEndToEndAccount:olmAccount];
     if ([store respondsToSelector:@selector(commit)])
