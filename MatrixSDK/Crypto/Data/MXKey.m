@@ -21,6 +21,19 @@ NSString *const kMXKeyEd25519Type = @"ed25519";
 
 @implementation MXKey
 
+- (instancetype)initWithType:(NSString *)type keyId:(NSString *)keyId value:(NSString *)value
+{
+    self = [self init];
+    if (self)
+    {
+        _type = type;
+        _keyId = keyId;
+        _value = value;
+    }
+
+    return self;
+}
+
 - (NSString *)keyFullId
 {
     return [NSString stringWithFormat:@"%@:%@", _type, _keyId];

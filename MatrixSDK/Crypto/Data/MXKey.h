@@ -48,4 +48,6 @@ FOUNDATION_EXPORT NSString *const kMXKeyEd25519Type;
  */
 @property (nonatomic) NSString *keyFullId;
 
+- (instancetype)initWithType:(NSString*)type keyId:(NSString*)keyId value:(NSString*)value;
+
 @end
