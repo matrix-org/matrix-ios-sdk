@@ -42,6 +42,7 @@
         usersDevicesInfoMap = [[MXUsersDevicesMap<MXDeviceInfo*> alloc] init];
         roomsAlgorithms = [NSMutableDictionary dictionary];
         olmSessions = [NSMutableDictionary dictionary];
+        inboundGroupSessions = [NSMutableDictionary dictionary];
     }
     return self;
 }
@@ -404,6 +405,21 @@
 - (NSDictionary<NSString *,OLMSession *> *)endToEndSessionsWithDevice:(NSString *)deviceKey
 {
     return olmSessions[deviceKey];
+}
+
+- (void)storeEndToEndInboundGroupSession:(MXOlmInboundGroupSession *)session
+{
+    if (!inboundGroupSessions[session.senderKey])
+    {
+        inboundGroupSessions[session.senderKey] = [NSMutableDictionary dictionary];
+    }
+
+    inboundGroupSessions[session.senderKey][session.session.sessionIdentifier] = session;
+}
+
+- (MXOlmInboundGroupSession *)endToEndInboundGroupSessionWithId:(NSString *)sessionId andSenderKey:(NSString *)senderKey
+{
+    return inboundGroupSessions[senderKey][sessionId];
 }
 
 #pragma mark - Protected operations

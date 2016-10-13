@@ -54,6 +54,10 @@
     // The olm sessions (<device identity key> -> (<olm session id> -> <olm session>)
     NSMutableDictionary<NSString* /*deviceKey*/,
         NSMutableDictionary<NSString * /*olmSessionId*/,OLMSession *>*> *olmSessions;
+
+    // The inbound group megolm sessions (<senderKey> -> (<inbound group session id> -> <inbound group megolm session>)
+    NSMutableDictionary<NSString* /*senderKey*/,
+        NSMutableDictionary<NSString * /*inboundGroupSessionId*/,MXOlmInboundGroupSession *>*> *inboundGroupSessions;
 }
 
 #pragma mark - protected operations
