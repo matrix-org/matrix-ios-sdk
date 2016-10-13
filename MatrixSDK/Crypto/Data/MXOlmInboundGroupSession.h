@@ -22,8 +22,9 @@
  The 'MXOlmInboundGroupSession' class adds more context to a OLMInboundGroupSession
  object.
  
- This allows additional checks. The class implements NSCoding so that the context
- can be stored.
+ This allows additional checks.
+ The class implements NSCoding so that OLMInboundGroupSession can be stored with its
+ context.
  */
 @interface MXOlmInboundGroupSession : NSObject <NSCoding>
 

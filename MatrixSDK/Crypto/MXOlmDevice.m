@@ -39,8 +39,8 @@
 }
 @end
 
-@implementation MXOlmDevice
 
+@implementation MXOlmDevice
 
 - (instancetype)initWithStore:(id<MXStore>)theStore
 {
@@ -237,8 +237,6 @@
 {
     // @TODO: Manage error
     OLMOutboundGroupSession *session = [[OLMOutboundGroupSession alloc] initOutboundGroupSession];
-
-    // @TODO: pickle it?
     outboundGroupSessionStore[session.sessionIdentifier] = session;
 
     return session.sessionIdentifier;

@@ -138,20 +138,6 @@
 - (NSString*)sessionIdForDevice:(NSString*)theirDeviceIdentityKey;
 
 /**
- Get information on the active Olm sessions for a device.
- <p>
- Returns an array, with an entry for each active session. The first entry in
- the result will be the one used for outgoing messages. Each entry contains
- the keys 'hasReceivedMessage' (true if the session has received an incoming
- message and is therefore past the pre-key stage), and 'sessionId'.
-
- @param {string} deviceIdentityKey Curve25519 identity key for the device
- @return {Array.<{sessionId: string, hasReceivedMessage: Boolean}>}
- */
-// @TODO: Find a way to better represent data
-//OlmDevice.prototype.getSessionInfoForDevice = function(deviceIdentityKey) {
-
-/**
  Encrypt an outgoing message using an existing session.
 
  @param theirDeviceIdentityKey the Curve25519 identity key for the remote device.
@@ -188,7 +174,6 @@ Determine if an incoming messages is a prekey message matching an existing sessi
 
 
 #pragma mark - Outbound group session
-
 /**
  Generate a new outbound group session.
 
