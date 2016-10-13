@@ -269,6 +269,10 @@
         return NO;
     }
 
+    session.senderKey = senderKey;
+    session.roomId = roomId;
+    session.keysClaimed = keysClaimed;
+
     [store storeEndToEndInboundGroupSession:session];
     if ([store respondsToSelector:@selector(commit)])
     {
@@ -284,7 +288,7 @@
     MXDecryptionResult *result;
 
     MXOlmInboundGroupSession *session = [store endToEndInboundGroupSessionWithId:sessionId andSenderKey:senderKey];
-    if (!session)
+    if (session)
     {
         // Check that the room id matches the original one for the session. This stops
         // the HS pretending a message was targeting a different room.

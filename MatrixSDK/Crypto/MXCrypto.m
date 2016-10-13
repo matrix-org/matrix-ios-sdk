@@ -199,7 +199,10 @@
 
     if (downloadUsers.count == 0)
     {
-        success(stored);
+        if (success)
+        {
+            success(stored);
+        }
         return nil;
     }
     else
@@ -248,7 +251,10 @@
                 [stored setObjects:devices forUser:userId];
             }
 
-            success(stored);
+            if (success)
+            {
+                success(stored);
+            }
 
         } failure:failure];
     }
@@ -518,11 +524,11 @@
     MXDecryptionResult *result = [alg decryptEvent:event error:nil];
 
     MXEvent *clearedEvent;
-    if (!result)
+    if (result)
     {
-        event = [MXEvent modelFromJSON:result.payload];
-        event.keysProved = result.keysProved;
-        event.keysClaimed = result.keysClaimed;
+        clearedEvent = [MXEvent modelFromJSON:result.payload];
+        clearedEvent.keysProved = result.keysProved;
+        clearedEvent.keysClaimed = result.keysClaimed;
     }
     else
     {

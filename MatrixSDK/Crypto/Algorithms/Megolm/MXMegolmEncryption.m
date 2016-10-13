@@ -171,6 +171,8 @@
             prepOperation = nil;
             failure(error);
         }];
+        
+        return prepOperation;
     }
 
     if (shareOperation)
