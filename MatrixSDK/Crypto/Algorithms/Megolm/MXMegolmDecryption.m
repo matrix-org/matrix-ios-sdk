@@ -28,7 +28,7 @@
 
 @implementation MXMegolmDecryption
 
-+ (void)initialize
++ (void)load
 {
     // Register this class as the decryptor for olm
     [[MXCryptoAlgorithms sharedAlgorithms] registerDecryptorClass:MXMegolmDecryption.class forAlgorithm:kMXCryptoMegolmAlgorithm];
