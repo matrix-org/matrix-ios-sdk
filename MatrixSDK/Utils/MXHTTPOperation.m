@@ -66,7 +66,7 @@
     return [[NSDate date] timeIntervalSinceDate:creationDate] * 1000;
 }
 
-- (void)mutateToAnotherOperation:(MXHTTPOperation *)operation
+- (void)mutateTo:(MXHTTPOperation *)operation
 {
     // Apply all data from the other MXHTTPOperation
     _operation = operation.operation;

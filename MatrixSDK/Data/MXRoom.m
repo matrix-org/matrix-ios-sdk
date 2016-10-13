@@ -245,7 +245,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
             MXHTTPOperation *operation2 = [self _sendEventOfType:encryptedEventType content:encryptedContent success:success failure:failure];
 
             // Mutate MXHTTPOperation so that the user can cancel this new operation
-            [operation mutateToAnotherOperation:operation2];
+            [operation mutateTo:operation2];
 
         } failure:^(NSError *error) {
             NSLog(@"[MXRoom] sendEventOfType: Cannot encrypt event. Error: %@", error);

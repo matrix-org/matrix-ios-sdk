@@ -68,6 +68,6 @@
  
  @param operation the other operation to copy data from.
  */
-- (void)mutateToAnotherOperation:(MXHTTPOperation*)operation;
+- (void)mutateTo:(MXHTTPOperation*)operation;
 
 @end

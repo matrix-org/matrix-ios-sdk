@@ -272,7 +272,7 @@
             failure(error);
         }];
 
-        [operation mutateToAnotherOperation:operation2];
+        [operation mutateTo:operation2];
 
     } failure:failure];
 
@@ -347,7 +347,7 @@
         if (haveTargets)
         {
             MXHTTPOperation *operation2 = [mxSession.matrixRestClient sendToDevice:kMXEventTypeStringRoomEncrypted contentMap:contentMap success:success failure:failure];
-            [operation mutateToAnotherOperation:operation2];
+            [operation mutateTo:operation2];
         }
         else
         {

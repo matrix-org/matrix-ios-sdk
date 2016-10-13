@@ -126,7 +126,7 @@
             success();
         } failure:failure];
 
-        [operation mutateToAnotherOperation:operation2];
+        [operation mutateTo:operation2];
 
     } failure:failure];
 

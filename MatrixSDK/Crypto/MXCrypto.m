@@ -153,7 +153,7 @@
             MXHTTPOperation *operation2 = [self uploadOneTimeKeys:success failure:failure];
 
             // Mutate MXHTTPOperation so that the user can cancel this new operation
-            [operation mutateToAnotherOperation:operation2];
+            [operation mutateTo:operation2];
         }
         else
         {
