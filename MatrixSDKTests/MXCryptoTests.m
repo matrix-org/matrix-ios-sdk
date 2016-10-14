@@ -400,7 +400,7 @@
         NSString *message = @"Hello!";
 
         MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
-        MXRoom *roomFromAlicePOV = [bobSession roomWithRoomId:roomId];
+        MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
 
         XCTAssert(roomFromBobPOV.isEncrypted);
         XCTAssert(roomFromAlicePOV.isEncrypted);
