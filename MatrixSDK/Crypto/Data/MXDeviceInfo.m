@@ -160,4 +160,9 @@
     [aCoder encodeObject:[NSNumber numberWithUnsignedInteger:_verified] forKey:@"verified"];
 }
 
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"%@:%@", _userId, _deviceId];
+}
+
 @end

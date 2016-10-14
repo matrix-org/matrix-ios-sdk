@@ -78,6 +78,11 @@
     _map = mutableMap;
 }
 
+- (NSString *)description
+{
+    return _map.description;
+}
+
 #pragma mark - NSCopying
 - (id)copyWithZone:(NSZone *)zone
 {
