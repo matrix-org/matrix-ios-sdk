@@ -82,4 +82,9 @@ NSString *const kMXKeyEd25519Type = @"ed25519";
     return JSONDictionary;
 }
 
+- (NSString *)description
+{
+    return self.JSONDictionary.description;
+}
+
 @end
