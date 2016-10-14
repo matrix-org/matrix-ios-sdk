@@ -1036,6 +1036,12 @@ typedef void (^MXOnResumeDone)();
 
 - (void)handleToDeviceEvent:(MXEvent *)event
 {
+    // Decrypt event if necessary
+    if (event.eventType == MXEventTypeRoomEncrypted)
+    {
+        event.clearEvent = [_crypto decryptEvent:event];
+    }
+
     if (event.eventType == MXEventTypeRoomMessage
         && [event.content[@"msgtype"] isEqualToString:@"m.bad.encrypted"])
     {
