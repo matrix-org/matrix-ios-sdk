@@ -175,6 +175,13 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
 FOUNDATION_EXPORT NSString *const kMXSessionIgnoredUsersDidChangeNotification;
 
 /**
+ Posted when MXSession has detected a change in the `directRooms` property.
+ 
+ The notification object is the concerned session (MXSession instance).
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionDirectRoomsDidChangeNotification;
+
+/**
  Posted when MXSession data have been corrupted. The listener must reload the session data with a full server sync.
  
  The notification object is the concerned session (MXSession instance).
@@ -517,6 +524,22 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 - (MXRoom *)privateOneToOneRoomWithUserId:(NSString*)userId;
 
+/**
+ The list of the direct rooms by user identifiers.
+ 
+ @return a dictionary where the keys are the user IDs and values are lists of room ID strings
+ of the 'direct' rooms for that user ID. nil if the direct rooms have not been yet fetched from the homeserver.
+ */
+@property (nonatomic, readonly) NSDictionary<NSString*, NSArray<NSString*>*> *directRooms;
+
+/**
+ Indicate if a room is a direct one.
+ 
+ @param roomId the id of the room.
+ @return YES if the room is direct.
+ */
+- (BOOL)isDirectRoom:(NSString*)roomId;
+
 
 #pragma mark - Room peeking
 /**
@@ -663,7 +686,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  Note: rooms with no tags are returned under the fake tag. The corresponding returned
  array is not ordered.
 
- @return a dictionary where the key is the tag name and value, an array of
+ @return a dictionary where the key is the tag name and the value is an array of
          room tagged with this tag. The array order is the same as [MXSession roomsWithTag:]
  */
 - (NSDictionary<NSString*, NSArray<MXRoom*>*>*)roomsByTags;

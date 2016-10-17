@@ -52,7 +52,8 @@ FOUNDATION_EXPORT NSString *const kMXContentPrefixPath;
 /**
  Account data types
  */
-FOUNDATION_EXPORT NSString *const kMXAccountDataPushRules;
+FOUNDATION_EXPORT NSString *const kMXAccountDataTypeDirect;
+FOUNDATION_EXPORT NSString *const kMXAccountDataTypePushRules;
 FOUNDATION_EXPORT NSString *const kMXAccountDataTypeIgnoredUserList;
 
 /**
