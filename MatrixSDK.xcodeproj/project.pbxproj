@@ -149,6 +149,8 @@
 		32A1514F1DAF897600400192 /* MXOlmSessionResult.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A1514D1DAF897600400192 /* MXOlmSessionResult.m */; };
 		32A151521DAF8A7200400192 /* MXQueuedEncryption.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A151501DAF8A7200400192 /* MXQueuedEncryption.h */; };
 		32A151531DAF8A7200400192 /* MXQueuedEncryption.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A151511DAF8A7200400192 /* MXQueuedEncryption.m */; };
+		32A1515B1DB525DA00400192 /* NSObject+sortedKeys.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A151591DB525DA00400192 /* NSObject+sortedKeys.h */; };
+		32A1515C1DB525DA00400192 /* NSObject+sortedKeys.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A1515A1DB525DA00400192 /* NSObject+sortedKeys.m */; };
 		32A27D1F19EC335300BAFADE /* MXRoomTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A27D1E19EC335300BAFADE /* MXRoomTests.m */; };
 		32BED28F1B00A23F00E668FE /* MXCallStack.h in Headers */ = {isa = PBXBuildFile; fileRef = 32BED28E1B00A23F00E668FE /* MXCallStack.h */; };
 		32C6F93319DD814400EA4E9C /* MatrixSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C6F93219DD814400EA4E9C /* MatrixSDK.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -354,6 +356,8 @@
 		32A1514D1DAF897600400192 /* MXOlmSessionResult.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXOlmSessionResult.m; sourceTree = "<group>"; };
 		32A151501DAF8A7200400192 /* MXQueuedEncryption.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXQueuedEncryption.h; sourceTree = "<group>"; };
 		32A151511DAF8A7200400192 /* MXQueuedEncryption.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXQueuedEncryption.m; sourceTree = "<group>"; };
+		32A151591DB525DA00400192 /* NSObject+sortedKeys.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSObject+sortedKeys.h"; path = "Lib/NSObject+sortedKeys.h"; sourceTree = "<group>"; };
+		32A1515A1DB525DA00400192 /* NSObject+sortedKeys.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSObject+sortedKeys.m"; path = "Lib/NSObject+sortedKeys.m"; sourceTree = "<group>"; };
 		32A27D1E19EC335300BAFADE /* MXRoomTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = MXRoomTests.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		32BED28E1B00A23F00E668FE /* MXCallStack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallStack.h; sourceTree = "<group>"; };
 		32C6F92D19DD814400EA4E9C /* MatrixSDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MatrixSDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -679,6 +683,15 @@
 			path = Data;
 			sourceTree = "<group>";
 		};
+		32A151581DB5254D00400192 /* Lib */ = {
+			isa = PBXGroup;
+			children = (
+				32A151591DB525DA00400192 /* NSObject+sortedKeys.h */,
+				32A1515A1DB525DA00400192 /* NSObject+sortedKeys.m */,
+			);
+			name = Lib;
+			sourceTree = "<group>";
+		};
 		32C6F92319DD814400EA4E9C = {
 			isa = PBXGroup;
 			children = (
@@ -708,6 +721,7 @@
 				32DC15CA1A8CF7AE006F9AD3 /* NotificationCenter */,
 				320DFDD619DD99B60068622A /* Utils */,
 				3245A74B1AF7B2930001D8A7 /* VoIP */,
+				32A151581DB5254D00400192 /* Lib */,
 				32C6F93219DD814400EA4E9C /* MatrixSDK.h */,
 				320DFDD419DD99B60068622A /* MXRestClient.h */,
 				320DFDD519DD99B60068622A /* MXRestClient.m */,
@@ -836,6 +850,7 @@
 				322A51B61D9AB15900C8536D /* MXCrypto.h in Headers */,
 				32114A8F1A262ECB00FF2EC4 /* MXNoStore.h in Headers */,
 				32D776811A27877300FC4AA2 /* MXMemoryRoomStore.h in Headers */,
+				32A1515B1DB525DA00400192 /* NSObject+sortedKeys.h in Headers */,
 				32DC15CF1A8CF7AE006F9AD3 /* MXPushRuleConditionChecker.h in Headers */,
 				327187851DA7D0220071C818 /* MXOlmDecryption.h in Headers */,
 				32D7767D1A27860600FC4AA2 /* MXMemoryStore.h in Headers */,
@@ -1134,6 +1149,7 @@
 				32E226A71D06AC9F00E6CA54 /* MXPeekingRoom.m in Sources */,
 				3220094619EFBF30008DE41D /* MXSessionEventListener.m in Sources */,
 				32A151471DAF7C0C00400192 /* MXDeviceInfo.m in Sources */,
+				32A1515C1DB525DA00400192 /* NSObject+sortedKeys.m in Sources */,
 				71DE22E01BC7C51200284153 /* MXReceiptData.m in Sources */,
 				327E37B71A974F75007F026F /* MXLogger.m in Sources */,
 				320DFDE719DD99B60068622A /* MXHTTPClient.m in Sources */,
