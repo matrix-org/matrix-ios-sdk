@@ -37,6 +37,9 @@
 
     // Listener on memberships changes
     id roomMembershipEventsListener;
+
+    // For dev @TODO
+    NSDictionary *lastPublishedOneTimeKeys;
 }
 @end
 
@@ -83,6 +86,20 @@
         }
 
         [self registerEventHandlers];
+
+        [self uploadKeys:1 success:^{
+            NSLog(@"###########################################################");
+            NSLog(@" uploadKeys done for %@: ", mxSession.myUser.userId);
+
+            NSLog(@"   - device id  : %@", mxSession.matrixRestClient.credentials.deviceId);
+            NSLog(@"   - ed25519    : %@", _olmDevice.deviceEd25519Key);
+            NSLog(@"   - curve25519 : %@", _olmDevice.deviceCurve25519Key);
+            NSLog(@"   - oneTimeKeys: %@", lastPublishedOneTimeKeys);     // They are
+            NSLog(@"");
+
+        } failure:^(NSError *error) {
+            NSLog(@"### uploadKeys failure");
+        }];
 
         // map from userId -> deviceId -> roomId -> timestamp
         // @TODO this._lastNewDeviceMessageTsByUserDeviceRoom = {};
@@ -456,7 +473,11 @@
     //
     // That should eventually resolve itself, but it's poor form.
 
+    NSLog(@"### claimOneTimeKeysForUsersDevices: %@", usersDevicesToClaim);
+
     return [mxSession.matrixRestClient claimOneTimeKeysForUsersDevices:usersDevicesToClaim success:^(MXKeysClaimResponse *keysClaimResponse) {
+
+        NSLog(@"### keysClaimResponse.oneTimeKeys: %@", keysClaimResponse.oneTimeKeys);
 
         for (NSString *userId in keysClaimResponse.oneTimeKeys.userIds)
         {
@@ -472,7 +493,7 @@
 
                     olmSessionResult.sessionId = [_olmDevice createOutboundSession:device.identityKey theirOneTimeKey:key.value];
 
-                    NSLog(@"[MXCrypto] Started new sessionid %@ for device %@", olmSessionResult.sessionId, device);
+                    NSLog(@"[MXCrypto] Started new sessionid %@ for device %@ (theirOneTimeKey: %@)", olmSessionResult.sessionId, device, key.value);
                 }
                 else
                 {
@@ -562,6 +583,8 @@
                              @"ed25519": _olmDevice.deviceEd25519Key
                              };
 
+    NSLog(@">>>> MXCrypto encryptMessage: %@", payloadJson);
+
     NSData *payloadData = [NSJSONSerialization  dataWithJSONObject:payloadJson options:0 error:nil];
     NSString *payloadString = [[NSString alloc] initWithData:payloadData encoding:NSUTF8StringEncoding];
 
@@ -572,7 +595,7 @@
         NSString *sessionId = [_olmDevice sessionIdForDevice:deviceKey];
         if (sessionId)
         {
-            NSLog(@"[MXOlmEncryption] Using sessionid %@ for device %@", sessionId, deviceKey);
+            NSLog(@"[MXCrypto] encryptMessage: Using sessionid %@ for device %@", sessionId, deviceKey);
             ciphertext[deviceKey] = [_olmDevice encryptMessage:deviceKey sessionId:sessionId payloadString:payloadString];
         }
     }
@@ -671,15 +694,18 @@
                                 } forUser:userId];
     }
 
-    [mxSession.matrixRestClient sendToDevice:kMXEventTypeStringNewDevice contentMap:contentMap success:^{
+    if (contentMap.userIds.count)
+    {
+        [mxSession.matrixRestClient sendToDevice:kMXEventTypeStringNewDevice contentMap:contentMap success:^{
 
-        [mxSession.store storeEndToEndDeviceAnnounced];
-        if ([mxSession.store respondsToSelector:@selector(commit)])
-        {
-            [mxSession.store commit];
-        }
-
-    } failure:nil];
+            [mxSession.store storeEndToEndDeviceAnnounced];
+            if ([mxSession.store respondsToSelector:@selector(commit)])
+            {
+                [mxSession.store commit];
+            }
+            
+        } failure:nil];
+    }
 }
 
 /**
@@ -838,6 +864,7 @@
     // same one as used in login.
     return [mxSession.matrixRestClient uploadKeys:nil oneTimeKeys:oneTimeJson forDevice:myDevice.deviceId success:^(MXKeysUploadResponse *keysUploadResponse) {
 
+        lastPublishedOneTimeKeys = oneTimeKeys;
         [_olmDevice markOneTimeKeysAsPublished];
         success(keysUploadResponse);
 
@@ -881,7 +908,7 @@
     NSError *error;
     if (![_olmDevice verifySignature:signKey JSON:deviceKeys.signalableJSONDictionary signature:signature error:&error])
     {
-        NSLog(@"[MXCrypto] validateDeviceKeys: Unable to verify signature on device %@:%@", userId, deviceKeys.deviceId);
+        NSLog(@"[MXCrypto] validateDeviceKeys: Unable to verify signature on device %@:%@. Error:%@", userId, deviceKeys.deviceId, error);
         return NO;
     }
 
