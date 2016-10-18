@@ -379,8 +379,12 @@
             XCTAssertEqualObjects(event.wireContent[@"device_id"], aliceSession.matrixRestClient.credentials.deviceId);
 
             // Check decrypted data
+            XCTAssert(event.eventId);
+            XCTAssertEqualObjects(event.roomId, roomId);
             XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
+            XCTAssertLessThan(event.age, 2000);
             XCTAssertEqualObjects(event.content[@"body"], message);
+            XCTAssertEqualObjects(event.sender, aliceSession.myUser.userId);
 
             [expectation fulfill];
         }];
@@ -397,7 +401,8 @@
 {
     [self doE2ETestWithAliceAndBobInARoom:self readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
-        NSString *message = @"Hello!";
+        NSString *messageFromAlice = @"Hello I'm Alice!";
+        //NSString *messageFromBob = @"Hello I'm Bob!";
 
         MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
         MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
@@ -417,13 +422,18 @@
             XCTAssertEqualObjects(event.wireContent[@"device_id"], aliceSession.matrixRestClient.credentials.deviceId);
 
             // Check decrypted data
+            XCTAssert(event.eventId);
+            XCTAssertEqualObjects(event.roomId, roomId);
             XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
-            XCTAssertEqualObjects(event.content[@"body"], message);
+            XCTAssertLessThan(event.age, 2000);
+            XCTAssertEqualObjects(event.content[@"body"], messageFromAlice);
+            XCTAssertEqualObjects(event.sender, aliceSession.myUser.userId);
+            XCTAssertEqualObjects(event.senderKey, aliceSession.crypto.olmDevice.deviceCurve25519Key);
 
             [expectation fulfill];
         }];
 
-        [roomFromAlicePOV sendTextMessage:message success:nil failure:^(NSError *error) {
+        [roomFromAlicePOV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
