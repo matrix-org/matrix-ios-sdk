@@ -19,6 +19,7 @@
 #import <OLMKit/OLMKit.h>
 
 #import "MXSession.h"
+#import "NSObject+sortedKeys.h"
 
 @interface MXOlmDevice ()
 {
@@ -85,8 +86,11 @@
 
 - (NSString *)signJSON:(NSDictionary *)JSONDictinary
 {
-    // @TODO: sign on canonical
-    return [self signMessage:[NSKeyedArchiver archivedDataWithRootObject:JSONDictinary]];
+    // Compute the signature on a canonical version of the JSON
+    // so that it is the same cross platforms
+    NSData *canonicalJSONData = [NSJSONSerialization dataWithJSONObject:[JSONDictinary objectWithSortedKeys] options:0 error:nil];
+
+    return [self signMessage:canonicalJSONData];
 }
 
 - (NSDictionary *)oneTimeKeys
@@ -123,7 +127,9 @@
 
 - (NSString *)createOutboundSession:(NSString *)theirIdentityKey theirOneTimeKey:(NSString *)theirOneTimeKey
 {
-    OLMSession *olmSession = [[OLMSession alloc] initOutboundSessionWithAccount:olmAccount theirIdentityKey:theirOneTimeKey theirOneTimeKey:theirOneTimeKey];
+    NSLog(@">>>> createOutboundSession: theirIdentityKey: %@ theirOneTimeKey: %@", theirIdentityKey, theirOneTimeKey);
+
+    OLMSession *olmSession = [[OLMSession alloc] initOutboundSessionWithAccount:olmAccount theirIdentityKey:theirIdentityKey theirOneTimeKey:theirOneTimeKey];
 
     [store storeEndToEndSession:olmSession forDevice:theirIdentityKey];
     if ([store respondsToSelector:@selector(commit)])
@@ -131,21 +137,31 @@
         [store commit];
     }
 
+    NSLog(@">>>> olmSession.sessionIdentifier: %@", olmSession.sessionIdentifier);
+
     return olmSession.sessionIdentifier;
 }
 
 - (NSDictionary *)createInboundSession:(NSString *)theirDeviceIdentityKey messageType:(NSUInteger)messageType cipherText:(NSString *)ciphertext
 {
+    NSLog(@"<<< createInboundSession: theirIdentityKey: %@", theirDeviceIdentityKey);
+
     // @TODO: Manage error
     OLMSession *olmSession = [[OLMSession alloc] initInboundSessionWithAccount:olmAccount theirIdentityKey:theirDeviceIdentityKey oneTimeKeyMessage:ciphertext];
+
+    NSLog(@"<<< olmSession.sessionIdentifier: %@", olmSession.sessionIdentifier);
+
     if (olmSession)
     {
         [olmAccount removeOneTimeKeysForSession:olmSession];
         [store storeEndToEndAccount:olmAccount];
 
-        NSString *payloadString = [olmSession decryptMessage:[[OLMMessage alloc]initWithCiphertext:ciphertext type:messageType]];
-        [store storeEndToEndSession:olmSession forDevice:theirDeviceIdentityKey];
+        NSLog(@"<<< ciphertext: %@", ciphertext);
+        NSLog(@"<<< ciphertext: SHA256: %@", [olmUtility sha256:[ciphertext dataUsingEncoding:NSUTF8StringEncoding]]);
 
+        NSString *payloadString = [olmSession decryptMessage:[[OLMMessage alloc] initWithCiphertext:ciphertext type:messageType]];
+
+        [store storeEndToEndSession:olmSession forDevice:theirDeviceIdentityKey];
         if ([store respondsToSelector:@selector(commit)])
         {
             [store commit];
@@ -182,14 +198,18 @@
     return sessionId;
 }
 
-- (NSString *)encryptMessage:(NSString *)theirDeviceIdentityKey sessionId:(NSString *)sessionId payloadString:(NSString *)payloadString
+- (NSDictionary *)encryptMessage:(NSString *)theirDeviceIdentityKey sessionId:(NSString *)sessionId payloadString:(NSString *)payloadString
 {
-    NSString *ciphertext;
+    OLMMessage *olmMessage;
 
     OLMSession *olmSession = [self sessionForDevice:theirDeviceIdentityKey andSessionId:sessionId];
+
+    NSLog(@">>>> encryptMessage: olmSession.sessionIdentifier: %@", olmSession.sessionIdentifier);
+    NSLog(@">>>> payloadString: %@", payloadString);
+
     if (olmSession)
     {
-        ciphertext = [olmSession encryptMessage:payloadString].ciphertext;
+        olmMessage = [olmSession encryptMessage:payloadString];
 
         [store storeEndToEndSession:olmSession forDevice:theirDeviceIdentityKey];
         if ([store respondsToSelector:@selector(commit)])
@@ -198,7 +218,13 @@
         }
     }
 
-    return ciphertext;
+    NSLog(@">>>> ciphertext: %@", olmMessage.ciphertext);
+    NSLog(@">>>> ciphertext: SHA256: %@", [olmUtility sha256:[olmMessage.ciphertext dataUsingEncoding:NSUTF8StringEncoding]]);
+
+    return @{
+             @"body": olmMessage.ciphertext,
+             @"type": @(olmMessage.type)
+             };
 }
 
 - (NSString*)decryptMessage:(NSString*)ciphertext withType:(NSUInteger)messageType sessionId:(NSString*)sessionId theirDeviceIdentityKey:(NSString*)theirDeviceIdentityKey
@@ -329,16 +355,15 @@
 #pragma mark - Utilities
 - (BOOL)verifySignature:(NSString *)key message:(NSString *)message signature:(NSString *)signature error:(NSError *__autoreleasing *)error
 {
-    return [olmUtility ed25519Verify:key message:message signature:signature error:error];
+    return [olmUtility verifyEd25519Signature:signature key:key message:[message dataUsingEncoding:NSUTF8StringEncoding] error:error];
 }
 
 - (BOOL)verifySignature:(NSString *)key JSON:(NSDictionary *)JSONDictinary signature:(NSString *)signature error:(NSError *__autoreleasing *)error
 {
-    // @TODO: sign on canonical
-    NSData *JSONData = [NSJSONSerialization dataWithJSONObject:JSONDictinary options:0 error:nil];
-    NSString *JSONString = [[NSString alloc] initWithData:JSONData encoding:NSUTF8StringEncoding];
+    // Check signature on the canonical version of the JSON
+    NSData *canonicalJSONData = [NSJSONSerialization dataWithJSONObject:[JSONDictinary objectWithSortedKeys] options:0 error:error];
 
-    return [self verifySignature:key message:JSONString signature:signature error:error];
+    return [olmUtility verifyEd25519Signature:signature key:key message:canonicalJSONData error:error];
 }
 
 

@@ -144,9 +144,9 @@
  @param sessionId the id of the active session
  @param payloadString the payload to be encrypted and sent
 
- @return the cipher text
+ @return the cipher text @TODO
  */
-- (NSString*)encryptMessage:(NSString*)theirDeviceIdentityKey sessionId:(NSString*)sessionId payloadString:(NSString*)payloadString;
+- (NSDictionary*)encryptMessage:(NSString*)theirDeviceIdentityKey sessionId:(NSString*)sessionId payloadString:(NSString*)payloadString;
 
 /**
  Decrypt an incoming message using an existing session.
