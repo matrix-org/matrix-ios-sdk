@@ -74,10 +74,14 @@
     {
         NSLog(@"[MXOlmDecryption] Failed to decrypt Olm event (id= %@) from %@: @TODO error", event.eventId, deviceKey);
 
+        return nil;
+
         // @TODO: error
         // throw new base.DecryptionError("Bad Encrypted Message");
     }
 
+    // TODO: Check the sender user id matches the sender key.
+    // TODO: check the room_id and fingerprint
     MXDecryptionResult *result = [[MXDecryptionResult alloc] init];
     result.payload = [NSJSONSerialization JSONObjectWithData:[payloadString dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
     result.keysProved = @{
@@ -107,11 +111,15 @@
 {
     NSArray<NSString *> *sessionIds = [olmDevice sessionIdsForDevice:theirDeviceIdentityKey];
 
+    NSString *messageBody = message[@"body"];
+    NSUInteger messageType = [((NSNumber*)message[@"type"]) unsignedIntegerValue];
+
     // Try each session in turn
+    // decryptionErrors = {};
     for (NSString *sessionId in sessionIds)
     {
-        NSString *payload = [olmDevice decryptMessage:message[@"body"]
-                              withType:[((NSNumber*)message[@"type"]) unsignedIntegerValue]
+        NSString *payload = [olmDevice decryptMessage:messageBody
+                              withType:messageType
                              sessionId:sessionId
                 theirDeviceIdentityKey:theirDeviceIdentityKey];
 
@@ -122,13 +130,54 @@
         }
         else
         {
-            // @TODO
+            BOOL foundSession = [olmDevice matchesSession:theirDeviceIdentityKey sessionId:sessionId messageType:messageType ciphertext:messageBody];
+
+            if (foundSession)
+            {
+                // Decryption failed, but it was a prekey message matching this
+                // session, so it should have worked.
+                NSLog(@"[MXOlmDecryption] Error decrypting prekey message with existing session id %@ : %@", sessionId, @"@TODO");
+                return nil;
+            }
         }
     }
 
-    //@TODO
-    return nil;
-};
+    if (messageType != 0)
+    {
+        // not a prekey message, so it should have matched an existing session, but it
+        // didn't work.
 
+        if (sessionIds.count == 0) {
+            NSLog(@"[MXOlmDecryption] No existing sessions");
+        }
+
+        // @TODO
+//        throw new Error(
+//                        "Error decrypting non-prekey message with existing sessions: " +
+//                        JSON.stringify(decryptionErrors)
+//                        );
+
+        return nil;
+    }
+
+    // prekey message which doesn't match any existing sessions: make a new
+    // session.
+
+    NSDictionary *res = [olmDevice createInboundSession:theirDeviceIdentityKey messageType:messageType cipherText:messageBody];
+
+    if (!res)
+    {
+//        decryptionErrors["(new)"] = e.message;
+//        throw new Error(
+//                        "Error decrypting prekey message: " +
+//                        JSON.stringify(decryptionErrors)
+//                        );
+        return nil;
+    }
+
+    NSLog(@"[MXOlmDecryption] Created new inbound Olm session id %@ with %@", res[@"session_id"], theirDeviceIdentityKey);
+
+    return res[@"payload"];
+};
 
 @end
