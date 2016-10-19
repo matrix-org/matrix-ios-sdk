@@ -231,7 +231,7 @@
             {
                 NSMutableDictionary<NSString*, MXDeviceInfo*> *devices = [NSMutableDictionary dictionaryWithDictionary:keysQueryResponse.deviceKeys.map[userId]];
 
-                for (NSString *deviceId in devices)
+                for (NSString *deviceId in devices.allKeys)
                 {
                     // Get the potential previously store device keys for this device
                     MXDeviceInfo *previouslyStoredDeviceKeys = [stored objectForDevice:deviceId forUser:userId];
