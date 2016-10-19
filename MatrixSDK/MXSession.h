@@ -532,15 +532,6 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 @property (nonatomic, readonly) NSDictionary<NSString*, NSArray<NSString*>*> *directRooms;
 
-/**
- Indicate if a room is a direct one.
- 
- @param roomId the id of the room.
- @return YES if the room is direct.
- */
-- (BOOL)isDirectRoom:(NSString*)roomId;
-
-
 #pragma mark - Room peeking
 /**
  Start peeking a room.

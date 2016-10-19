@@ -764,6 +764,24 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     return [mxSession.store highlightCountOfRoom:self.roomId];
 }
 
+- (BOOL)isDirect
+{
+    // Retrieve a joined member from the  members list.
+    NSArray* roomMembers = self.state.members;
+    MXRoomMember* member;
+    
+    for (member in roomMembers)
+    {
+        if (member.membership == MXMembershipJoin && ![member.userId isEqualToString:mxSession.myUser.userId])
+        {
+            // Check whether the provided room id belong to the direct rooms related to this member
+            return ([mxSession.directRooms[member.userId] indexOfObject:self.roomId] != NSNotFound);
+        }
+    }
+    
+    return NO;
+}
+
 - (NSArray*)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort
 {
     NSArray *receipts = [mxSession.store getEventReceipts:self.roomId eventId:eventId sorted:sort];

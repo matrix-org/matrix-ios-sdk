@@ -1430,28 +1430,6 @@ typedef void (^MXOnResumeDone)();
     }
 }
 
-- (BOOL)isDirectRoom:(NSString*)roomId
-{
-    MXRoom *room = [self roomWithRoomId:roomId];
-    if (room)
-    {
-        // Retrieve a joined member from the  members list.
-        NSArray* roomMembers = room.state.members;
-        MXRoomMember* member;
-        
-        for (member in roomMembers)
-        {
-            if (member.membership == MXMembershipJoin && ![member.userId isEqualToString:self.myUser.userId])
-            {
-                // Check whether the provided room id belong to the direct rooms related to this member
-                return ([self.directRooms[member.userId] indexOfObject:roomId] != NSNotFound);
-            }
-        }
-    }
-    
-    return NO;
-}
-
 #pragma mark - Room peeking
 - (void)peekInRoomWithRoomId:(NSString*)roomId
                      success:(void (^)(MXPeekingRoom *peekingRoom))success
