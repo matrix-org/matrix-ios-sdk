@@ -1538,6 +1538,9 @@ MXAuthAction;
                     visibility:(MXRoomDirectoryVisibility)visibility
                      roomAlias:(NSString*)roomAlias
                          topic:(NSString*)topic
+                        invite:(NSArray<NSString*>*)inviteArray
+                    invite3PID:(NSArray<MXInvite3PID*>*)invite3PIDArray
+                      isDirect:(BOOL)isDirect
                        success:(void (^)(MXCreateRoomResponse *response))success
                        failure:(void (^)(NSError *error))failure
 {
@@ -1560,6 +1563,28 @@ MXAuthAction;
     {
         parameters[@"topic"] = topic;
     }
+    if (inviteArray)
+    {
+        parameters[@"invite"] = inviteArray;
+    }
+    if (invite3PIDArray)
+    {
+        NSMutableArray *invite3PIDArray2 = [NSMutableArray arrayWithCapacity:invite3PIDArray.count];
+        for (MXInvite3PID *invite3PID in invite3PIDArray)
+        {
+            if (invite3PID.dictionary)
+            {
+                [invite3PIDArray2 addObject:invite3PID.dictionary];
+            }
+        }
+        
+        if (invite3PIDArray2.count)
+        {
+            parameters[@"invite_3pid"] = invite3PIDArray2;
+        }
+    }
+    
+    parameters[@"is_direct"] = [NSNumber numberWithBool:isDirect];;
 
     return [self createRoom:parameters success:success failure:failure];
 }

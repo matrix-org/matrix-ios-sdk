@@ -416,6 +416,9 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @param visibility (optional) the visibility of the room in the current HS's room directory.
  @param roomAlias (optional) the room alias on the home server the room will be created.
  @param topic (optional) the room topic.
+ @param inviteArray (optional) A list of user IDs to invite to the room. This will tell the server to invite everyone in the list to the newly created room.
+ @param invite3PIDArray (optional) A list of objects representing third party IDs to invite into the room.
+ @param isDirect tells whether the room must be tagged as a direct room (Use NO by default).
 
  @param success A block object called when the operation succeeds. It provides the MXRoom
                 instance of the joined room.
@@ -427,6 +430,9 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                     visibility:(MXRoomDirectoryVisibility)visibility
                      roomAlias:(NSString*)roomAlias
                          topic:(NSString*)topic
+                        invite:(NSArray<NSString*>*)inviteArray
+                    invite3PID:(NSArray<MXInvite3PID*>*)invite3PIDArray
+                      isDirect:(BOOL)isDirect
                        success:(void (^)(MXRoom *room))success
                        failure:(void (^)(NSError *error))failure;
 

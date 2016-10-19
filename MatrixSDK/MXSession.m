@@ -1063,10 +1063,13 @@ typedef void (^MXOnResumeDone)();
                     visibility:(MXRoomDirectoryVisibility)visibility
                      roomAlias:(NSString*)roomAlias
                          topic:(NSString*)topic
+                        invite:(NSArray<NSString*>*)inviteArray
+                    invite3PID:(NSArray<MXInvite3PID*>*)invite3PIDArray
+                      isDirect:(BOOL)isDirect
                        success:(void (^)(MXRoom *room))success
                        failure:(void (^)(NSError *error))failure
 {
-    return [matrixRestClient createRoom:name visibility:visibility roomAlias:roomAlias topic:topic success:^(MXCreateRoomResponse *response) {
+    return [matrixRestClient createRoom:name visibility:visibility roomAlias:roomAlias topic:topic invite:inviteArray invite3PID:invite3PIDArray isDirect:isDirect success:^(MXCreateRoomResponse *response) {
 
         [self onCreatedRoom:response success:success];
 
