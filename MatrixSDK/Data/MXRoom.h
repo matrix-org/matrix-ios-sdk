@@ -121,6 +121,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 @property (nonatomic, readonly) NSUInteger highlightCount;
 
 /**
+ Indicate if the room is tagged as a direct room.
+ */
+@property (nonatomic, readonly) BOOL isDirect;
+
+/**
  Create a `MXRoom` instance.
 
  @param roomId the id of the room.

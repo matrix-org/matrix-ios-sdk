@@ -40,6 +40,7 @@ NSString *const kMXSessionInvitedRoomsDidChangeNotification = @"kMXSessionInvite
 NSString *const kMXSessionNotificationRoomIdKey = @"roomId";
 NSString *const kMXSessionNotificationEventKey = @"event";
 NSString *const kMXSessionIgnoredUsersDidChangeNotification = @"kMXSessionIgnoredUsersDidChangeNotification";
+NSString *const kMXSessionDirectRoomsDidChangeNotification = @"kMXSessionDirectRoomsDidChangeNotification";
 NSString *const kMXSessionDidCorruptDataNotification = @"kMXSessionDidCorruptDataNotification";
 NSString *const kMXSessionNoRoomTag = @"m.recent";  // Use the same value as matrix-react-sdk
 
@@ -957,7 +958,7 @@ typedef void (^MXOnResumeDone)();
 
         for (NSDictionary *event in accountDataUpdate[@"events"])
         {
-            if ([event[@"type"] isEqualToString:kMXAccountDataPushRules])
+            if ([event[@"type"] isEqualToString:kMXAccountDataTypePushRules])
             {
                 // Handle push rules
                 MXPushRulesResponse *pushRules = [MXPushRulesResponse modelFromJSON:event[@"content"]];
@@ -998,6 +999,14 @@ typedef void (^MXOnResumeDone)();
                                                                           userInfo:nil];
                     }
                 }
+            }
+            else if ([event[@"type"] isEqualToString:kMXAccountDataTypeDirect])
+            {
+                MXJSONModelSetDictionary(_directRooms, event[@"content"]);
+                
+                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDirectRoomsDidChangeNotification
+                                                                    object:self
+                                                                  userInfo:nil];
             }
 
             // Update the corresponding part of account data
@@ -1420,7 +1429,6 @@ typedef void (^MXOnResumeDone)();
         }
     }
 }
-
 
 #pragma mark - Room peeking
 - (void)peekInRoomWithRoomId:(NSString*)roomId
