@@ -775,7 +775,10 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         if (member.membership == MXMembershipJoin && ![member.userId isEqualToString:mxSession.myUser.userId])
         {
             // Check whether the provided room id belong to the direct rooms related to this member
-            return ([mxSession.directRooms[member.userId] indexOfObject:self.roomId] != NSNotFound);
+            if (mxSession.directRooms[member.userId])
+            {
+                return ([mxSession.directRooms[member.userId] indexOfObject:self.roomId] != NSNotFound);
+            }
         }
     }
     
