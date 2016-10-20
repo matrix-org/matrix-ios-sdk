@@ -62,7 +62,7 @@
         NSString *alias = [[NSProcessInfo processInfo] globallyUniqueString];
 
         // Room with a tag with "oranges" order
-        [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:alias topic:nil success:^(MXCreateRoomResponse *response) {
+        [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:alias topic:nil invite:nil invite3PID:nil isDirect:NO success:^(MXCreateRoomResponse *response) {
 
             mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
             [mxSession start:^{
@@ -436,7 +436,7 @@
                 mxSession = nil;
 
                 // Create another random room to create more data server side
-                [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
+                [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil invite:nil invite3PID:nil isDirect:NO success:^(MXCreateRoomResponse *response) {
 
                     // Check the stream has been correctly shutdowned. Checking that the store has not changed is one way to verify it
                     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
@@ -654,7 +654,7 @@
         mxSession = mxSession2;
 
         // Create a random room with no params
-        [mxSession createRoom:nil visibility:nil roomAlias:nil topic:nil success:^(MXRoom *room) {
+        [mxSession createRoom:nil visibility:nil roomAlias:nil topic:nil invite:nil invite3PID:nil isDirect:NO success:^(MXRoom *room) {
 
             XCTAssertNotNil(room);
             
@@ -745,7 +745,7 @@
                 [expectation fulfill];
             }];
 
-            [mxSession.matrixRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPublic roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
+            [mxSession.matrixRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPublic roomAlias:nil topic:nil invite:nil invite3PID:nil isDirect:NO success:^(MXCreateRoomResponse *response) {
 
             } failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -847,15 +847,15 @@
         NSString *tag = [[NSProcessInfo processInfo] globallyUniqueString];
 
         // Room with a tag with "oranges" order
-        [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:@"2" success:^(MXCreateRoomResponse *response) {
+        [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:@"2" invite:nil invite3PID:nil isDirect:NO success:^(MXCreateRoomResponse *response) {
             [bobRestClient addTag:tag withOrder:order2  toRoom:response.roomId success:^{
 
                 // Room with a tag with no order
-                [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:@"3" success:^(MXCreateRoomResponse *response) {
+                [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:@"3" invite:nil invite3PID:nil isDirect:NO success:^(MXCreateRoomResponse *response) {
                     [bobRestClient addTag:tag withOrder:order3 toRoom:response.roomId success:^{
 
                         // Room with a tag with "apples" order
-                        [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:@"1" success:^(MXCreateRoomResponse *response) {
+                        [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:@"1" invite:nil invite3PID:nil isDirect:NO success:^(MXCreateRoomResponse *response) {
                             [bobRestClient addTag:tag withOrder:order1 toRoom:response.roomId success:^{
 
 
@@ -943,11 +943,11 @@
         NSString *tag = [[NSProcessInfo processInfo] globallyUniqueString];
 
         // Room at position
-        [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:@"oldest" success:^(MXCreateRoomResponse *response) {
+        [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:@"oldest" invite:nil invite3PID:nil isDirect:NO success:^(MXCreateRoomResponse *response) {
             [bobRestClient addTag:tag withOrder:@"0.2"  toRoom:response.roomId success:^{
 
                 // Room at position
-                [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:@"newest" success:^(MXCreateRoomResponse *response) {
+                [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:@"newest" invite:nil invite3PID:nil isDirect:NO success:^(MXCreateRoomResponse *response) {
                     [bobRestClient addTag:tag withOrder:@"0.2" toRoom:response.roomId success:^{
 
                         // Do the tests
@@ -991,11 +991,11 @@
     [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
 
         // Create a tagged room
-        [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:@"Tagged" success:^(MXCreateRoomResponse *response) {
+        [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:@"Tagged" invite:nil invite3PID:nil isDirect:NO success:^(MXCreateRoomResponse *response) {
             [bobRestClient addTag:@"aTag" withOrder:nil  toRoom:response.roomId success:^{
 
                 // And a not tagged room
-                [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:@"Not tagged" success:^(MXCreateRoomResponse *response) {
+                [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:@"Not tagged" invite:nil invite3PID:nil isDirect:NO success:^(MXCreateRoomResponse *response) {
 
                     // Do the test
                     mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
@@ -1045,15 +1045,15 @@
         NSString *tag = [[NSProcessInfo processInfo] globallyUniqueString];
 
         // Room at position #1
-        [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
+        [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil invite:nil invite3PID:nil isDirect:NO success:^(MXCreateRoomResponse *response) {
             [bobRestClient addTag:tag withOrder:@"0.1"  toRoom:response.roomId success:^{
 
                 // Room at position #2
-                [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
+                [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil invite:nil invite3PID:nil isDirect:NO success:^(MXCreateRoomResponse *response) {
                     [bobRestClient addTag:tag withOrder:@"0.2" toRoom:response.roomId success:^{
 
                         // Room at position #3
-                        [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
+                        [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil invite:nil invite3PID:nil isDirect:NO success:^(MXCreateRoomResponse *response) {
                             [bobRestClient addTag:tag withOrder:@"0.3" toRoom:response.roomId success:^{
 
                                 // Do the tests
@@ -1170,7 +1170,7 @@
         }];
 
         // Make Alice invite Bob in a room
-        [aliceRestClient createRoom:@"A room name" visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
+        [aliceRestClient createRoom:@"A room name" visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil invite:nil invite3PID:nil isDirect:NO success:^(MXCreateRoomResponse *response) {
 
             testRoomId = response.roomId;
 

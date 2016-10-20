@@ -625,7 +625,7 @@
     [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
         
         // Create a random room with no params
-        [bobRestClient createRoom:nil visibility:nil roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
+        [bobRestClient createRoom:nil visibility:nil roomAlias:nil topic:nil invite:nil invite3PID:nil isDirect:NO success:^(MXCreateRoomResponse *response) {
             
             XCTAssertNotNil(response);
             XCTAssertNotNil(response.roomId, "The home server should have allocated a room id");

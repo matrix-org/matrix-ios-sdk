@@ -185,7 +185,7 @@
 
             XCTAssertTrue([NSThread isMainThread], @"The block must be called from the main thread");
 
-            [mxSession createRoom:nil visibility:nil roomAlias:nil topic:nil success:^(MXRoom *room) {
+            [mxSession createRoom:nil visibility:nil roomAlias:nil topic:nil invite:nil invite3PID:nil isDirect:NO success:^(MXRoom *room) {
 
                 [fileStore diskUsageWithBlock:^(NSUInteger diskUsage2) {
 
