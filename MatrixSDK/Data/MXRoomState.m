@@ -453,6 +453,11 @@
     return result;
 }
 
+- (BOOL)isEncrypted
+{
+    return (nil != stateEvents[kMXEventTypeStringRoomEncryption]);
+}
+
 
 #pragma mark - State events handling
 - (void)handleStateEvent:(MXEvent*)event

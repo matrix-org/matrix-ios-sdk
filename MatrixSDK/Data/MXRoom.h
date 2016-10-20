@@ -726,12 +726,9 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 #pragma mark - Crypto
 
 /**
- Indicate whether encryption is enabled for this room.
- */
-@property (nonatomic, readonly) BOOL isEncrypted;
-
-/**
  Enable encryption in this room.
+ 
+ You can check if a room is encrypted via its state (MXRoomState.isEncrypted)
  
  @param algorithm the crypto algorithm to use.
 

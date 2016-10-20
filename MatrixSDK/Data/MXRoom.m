@@ -235,7 +235,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                             success:(void (^)(NSString *eventId))success
                             failure:(void (^)(NSError *error))failure
 {
-    if (mxSession.crypto && self.isEncrypted)
+    if (mxSession.crypto && self.state.isEncrypted)
     {
         // Encrypt the content before sending
         // @TODO: Would be nice to inform user we are encrypting
@@ -837,12 +837,6 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 
 
 #pragma mark - Crypto
-- (BOOL)isEncrypted
-{
-    // @TODO: if mxSession.cryptoEnabled is NO, it will return always NO.
-    // Is it ok?
-    return [mxSession.crypto isRoomEncrypted:self.roomId];
-}
 
 - (MXHTTPOperation *)enableEncryptionWithAlgorithm:(NSString *)algorithm
                                            success:(void (^)())success failure:(void (^)(NSError *))failure

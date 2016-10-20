@@ -64,7 +64,7 @@
         mxSession = matrixSession;
         crypto = matrixSession.crypto;
         roomId = theRoomId;
-        deviceId = matrixSession.matrixRestClient.credentials.deviceId;
+        deviceId = crypto.store.deviceId;
 
         pendingEncryptions = [NSMutableArray array];
 

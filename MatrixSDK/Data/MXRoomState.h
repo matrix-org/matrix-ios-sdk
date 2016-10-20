@@ -131,6 +131,11 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
 @property (nonatomic, readonly) MXMembership membership;
 
 /**
+ Indicate whether encryption is enabled for this room.
+ */
+@property (nonatomic, readonly) BOOL isEncrypted;
+
+/**
  Create a `MXRoomState` instance.
  
  @param roomId the room id to the room.
