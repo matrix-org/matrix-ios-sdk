@@ -50,7 +50,7 @@
         store = theStore;
 
         // Retrieve the account from the store
-        olmAccount = [store endToEndAccount];
+        olmAccount = [store account];
         if (!olmAccount)
         {
             NSLog(@"[MXOlmDevice] initWithStore: Create new OLMAccount");
@@ -58,7 +58,7 @@
             // Else, create it
             olmAccount = [[OLMAccount alloc] initNewAccount];
 
-            [store storeEndToEndAccount:olmAccount];
+            [store storeAccount:olmAccount];
         }
         else
         {
@@ -108,14 +108,14 @@
 {
     [olmAccount markOneTimeKeysAsPublished];
 
-    [store storeEndToEndAccount:olmAccount];
+    [store storeAccount:olmAccount];
 }
 
 - (void)generateOneTimeKeys:(NSUInteger)numKeys
 {
     [olmAccount generateOneTimeKeys:numKeys];
 
-    [store storeEndToEndAccount:olmAccount];
+    [store storeAccount:olmAccount];
 }
 
 - (NSString *)createOutboundSession:(NSString *)theirIdentityKey theirOneTimeKey:(NSString *)theirOneTimeKey
@@ -124,7 +124,7 @@
 
     OLMSession *olmSession = [[OLMSession alloc] initOutboundSessionWithAccount:olmAccount theirIdentityKey:theirIdentityKey theirOneTimeKey:theirOneTimeKey];
 
-    [store storeEndToEndSession:olmSession forDevice:theirIdentityKey];
+    [store storeSession:olmSession forDevice:theirIdentityKey];
 
     NSLog(@">>>> olmSession.sessionIdentifier: %@", olmSession.sessionIdentifier);
 
@@ -143,14 +143,14 @@
     if (olmSession)
     {
         [olmAccount removeOneTimeKeysForSession:olmSession];
-        [store storeEndToEndAccount:olmAccount];
+        [store storeAccount:olmAccount];
 
         NSLog(@"<<< ciphertext: %@", ciphertext);
         NSLog(@"<<< ciphertext: SHA256: %@", [olmUtility sha256:[ciphertext dataUsingEncoding:NSUTF8StringEncoding]]);
 
         NSString *payloadString = [olmSession decryptMessage:[[OLMMessage alloc] initWithCiphertext:ciphertext type:messageType]];
 
-        [store storeEndToEndSession:olmSession forDevice:theirDeviceIdentityKey];
+        [store storeSession:olmSession forDevice:theirDeviceIdentityKey];
 
         return @{
                  @"payload": payloadString,
@@ -163,7 +163,7 @@
 
 - (NSArray<NSString *> *)sessionIdsForDevice:(NSString *)theirDeviceIdentityKey
 {
-    NSDictionary *sessions = [store endToEndSessionsWithDevice:theirDeviceIdentityKey];
+    NSDictionary *sessions = [store sessionsWithDevice:theirDeviceIdentityKey];
 
     return sessions.allKeys;
 }
@@ -196,7 +196,7 @@
     {
         olmMessage = [olmSession encryptMessage:payloadString];
 
-        [store storeEndToEndSession:olmSession forDevice:theirDeviceIdentityKey];
+        [store storeSession:olmSession forDevice:theirDeviceIdentityKey];
     }
 
     NSLog(@">>>> ciphertext: %@", olmMessage.ciphertext);
@@ -217,7 +217,7 @@
     {
         payloadString = [olmSession decryptMessage:[[OLMMessage alloc] initWithCiphertext:ciphertext type:messageType]];
 
-        [store storeEndToEndSession:olmSession forDevice:theirDeviceIdentityKey];
+        [store storeSession:olmSession forDevice:theirDeviceIdentityKey];
     }
 
     return payloadString;
@@ -276,7 +276,7 @@
     session.roomId = roomId;
     session.keysClaimed = keysClaimed;
 
-    [store storeEndToEndInboundGroupSession:session];
+    [store storeInboundGroupSession:session];
 
     return YES;
 }
@@ -286,7 +286,7 @@
 {
     MXDecryptionResult *result;
 
-    MXOlmInboundGroupSession *session = [store endToEndInboundGroupSessionWithId:sessionId andSenderKey:senderKey];
+    MXOlmInboundGroupSession *session = [store inboundGroupSessionWithId:sessionId andSenderKey:senderKey];
     if (session)
     {
         // Check that the room id matches the original one for the session. This stops
@@ -295,7 +295,7 @@
         {
             NSString *payloadString = [session.session decryptMessage:body];
 
-            [store storeEndToEndInboundGroupSession:session];
+            [store storeInboundGroupSession:session];
 
             result = [[MXDecryptionResult alloc] init];
             result.payload = [NSJSONSerialization JSONObjectWithData:[payloadString dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
@@ -339,7 +339,7 @@
 #pragma mark - Private methods
 - (OLMSession*)sessionForDevice:(NSString *)theirDeviceIdentityKey andSessionId:(NSString*)sessionId
 {
-    return [store endToEndSessionsWithDevice:theirDeviceIdentityKey][sessionId];
+    return [store sessionsWithDevice:theirDeviceIdentityKey][sessionId];
 }
 
 @end

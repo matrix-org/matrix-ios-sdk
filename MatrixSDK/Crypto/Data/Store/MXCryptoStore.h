@@ -54,22 +54,22 @@
 /**
  Store the end to end account for the logged-in user.
  */
-- (void)storeEndToEndAccount:(OLMAccount*)account;
+- (void)storeAccount:(OLMAccount*)account;
 
 /**
  * Load the end to end account for the logged-in user.
  */
-- (OLMAccount*)endToEndAccount;
+- (OLMAccount*)account;
 
 /**
  Store a flag indicating that we have announced the new device.
  */
-- (void)storeEndToEndDeviceAnnounced;
+- (void)storeDeviceAnnounced;
 
 /**
  Check if the "device announced" flag is set.
  */
-- (BOOL)endToEndDeviceAnnounced;
+- (BOOL)deviceAnnounced;
 
 /**
  Store a device for a user.
@@ -77,7 +77,7 @@
  @param userId The user's id.
  @param device the device to store.
  */
-- (void)storeEndToEndDeviceForUser:(NSString*)userId device:(MXDeviceInfo*)device;
+- (void)storeDeviceForUser:(NSString*)userId device:(MXDeviceInfo*)device;
 
 /**
  Retrieve a device for a user.
@@ -86,7 +86,7 @@
  @param userId The user's id.
  @return A map from device id to 'MXDevice' object for the device.
  */
-- (MXDeviceInfo*)endToEndDeviceWithDeviceId:(NSString*)deviceId forUser:(NSString*)userId;
+- (MXDeviceInfo*)deviceWithDeviceId:(NSString*)deviceId forUser:(NSString*)userId;
 
 /**
  Store the known devices for a user.
@@ -94,7 +94,7 @@
  @param userId The user's id.
  @param devices A map from device id to 'MXDevice' object for the device.
  */
-- (void)storeEndToEndDevicesForUser:(NSString*)userId devices:(NSDictionary<NSString*, MXDeviceInfo*>*)devices;
+- (void)storeDevicesForUser:(NSString*)userId devices:(NSDictionary<NSString*, MXDeviceInfo*>*)devices;
 
 /**
  Retrieve the known devices for a user.
@@ -102,7 +102,7 @@
  @param userId The user's id.
  @return A map from device id to 'MXDevice' object for the device.
  */
-- (NSDictionary<NSString*, MXDeviceInfo*>*)endToEndDevicesForUser:(NSString*)userId;
+- (NSDictionary<NSString*, MXDeviceInfo*>*)devicesForUser:(NSString*)userId;
 
 /**
  Store the crypto algorithm for a room.
@@ -110,13 +110,13 @@
  @param roomId the id of the room.
  @algorithm the algorithm.
  */
-- (void)storeEndToEndAlgorithmForRoom:(NSString*)roomId algorithm:(NSString*)algorithm;
+- (void)storeAlgorithmForRoom:(NSString*)roomId algorithm:(NSString*)algorithm;
 
 /**
  The crypto algorithm used in a room.
  nil if the room is not encrypted.
  */
-- (NSString*)endToEndAlgorithmForRoom:(NSString*)roomId;
+- (NSString*)algorithmForRoom:(NSString*)roomId;
 
 /**
  Store a session between the logged-in user and another device.
@@ -124,7 +124,7 @@
  @param deviceKey the public key of the other device.
  @param session the end-to-end session.
  */
-- (void)storeEndToEndSession:(OLMSession*)session forDevice:(NSString*)deviceKey;
+- (void)storeSession:(OLMSession*)session forDevice:(NSString*)deviceKey;
 
 /**
  Retrieve the end-to-end sessions between the logged-in user and another
@@ -133,14 +133,14 @@
  @param deviceKey the public key of the other device.
  @return {object} A map from sessionId to Base64 end-to-end session.
  */
-- (NSDictionary<NSString*, OLMSession*>*)endToEndSessionsWithDevice:(NSString*)deviceKey;
+- (NSDictionary<NSString*, OLMSession*>*)sessionsWithDevice:(NSString*)deviceKey;
 
 /**
  Store an inbound group session.
 
  @param session the inbound group session and its context.
  */
-- (void)storeEndToEndInboundGroupSession:(MXOlmInboundGroupSession*)session;
+- (void)storeInboundGroupSession:(MXOlmInboundGroupSession*)session;
 
 /**
  Retrieve an inbound group session.
@@ -149,6 +149,6 @@
  @param the base64-encoded curve25519 key of the sender.
  @return an inbound group session.
  */
-- (MXOlmInboundGroupSession*)endToEndInboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey;
+- (MXOlmInboundGroupSession*)inboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey;
 
 @end

@@ -35,6 +35,6 @@
 
 /**
  */
-@property (nonatomic) BOOL endToEndDeviceAnnounced;
+@property (nonatomic) BOOL DeviceAnnounced;
 
 @end

@@ -149,7 +149,7 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
             metaData.userId = [credentials.userId copy];
             metaData.deviceId = [credentials.deviceId copy];
             metaData.version = kMXFileCryptoStoreVersion;
-            metaData.endToEndDeviceAnnounced = NO;
+            metaData.DeviceAnnounced = NO;
             [self saveMetaData];
         }
 
@@ -178,7 +178,7 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
     metaData = nil;
 }
 
-- (void)storeEndToEndAccount:(OLMAccount *)account
+- (void)storeAccount:(OLMAccount *)account
 {
     olmAccount = account;
 
@@ -186,23 +186,23 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
     [NSKeyedArchiver archiveRootObject:olmAccount toFile:filePath];
 }
 
-- (OLMAccount *)endToEndAccount
+- (OLMAccount *)account
 {
     return olmAccount;
 }
 
-- (void)storeEndToEndDeviceAnnounced
+- (void)storeDeviceAnnounced
 {
-    metaData.endToEndDeviceAnnounced = YES;
+    metaData.DeviceAnnounced = YES;
     [self saveMetaData];
 }
 
-- (BOOL)endToEndDeviceAnnounced
+- (BOOL)deviceAnnounced
 {
-    return metaData.endToEndDeviceAnnounced;
+    return metaData.DeviceAnnounced;
 }
 
-- (void)storeEndToEndDeviceForUser:(NSString *)userId device:(MXDeviceInfo *)device
+- (void)storeDeviceForUser:(NSString *)userId device:(MXDeviceInfo *)device
 {
     [usersDevicesInfoMap setObject:device forUser:userId andDevice:device.deviceId];
 
@@ -210,12 +210,12 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
     [NSKeyedArchiver archiveRootObject:usersDevicesInfoMap toFile:filePath];
 }
 
-- (MXDeviceInfo *)endToEndDeviceWithDeviceId:(NSString *)deviceId forUser:(NSString *)userId
+- (MXDeviceInfo *)deviceWithDeviceId:(NSString *)deviceId forUser:(NSString *)userId
 {
     return [usersDevicesInfoMap objectForDevice:deviceId forUser:userId];
 }
 
-- (void)storeEndToEndDevicesForUser:(NSString *)userId devices:(NSDictionary<NSString *,MXDeviceInfo *> *)devices
+- (void)storeDevicesForUser:(NSString *)userId devices:(NSDictionary<NSString *,MXDeviceInfo *> *)devices
 {
     [usersDevicesInfoMap setObjects:devices forUser:userId];
 
@@ -223,12 +223,12 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
     [NSKeyedArchiver archiveRootObject:usersDevicesInfoMap toFile:filePath];
 }
 
-- (NSDictionary<NSString *,MXDeviceInfo *> *)endToEndDevicesForUser:(NSString *)userId
+- (NSDictionary<NSString *,MXDeviceInfo *> *)devicesForUser:(NSString *)userId
 {
     return usersDevicesInfoMap.map[userId];
 }
 
-- (void)storeEndToEndAlgorithmForRoom:(NSString *)roomId algorithm:(NSString *)algorithm
+- (void)storeAlgorithmForRoom:(NSString *)roomId algorithm:(NSString *)algorithm
 {
     roomsAlgorithms[roomId] = algorithm;
 
@@ -236,12 +236,12 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
     [NSKeyedArchiver archiveRootObject:roomsAlgorithms toFile:filePath];
 }
 
-- (NSString *)endToEndAlgorithmForRoom:(NSString *)roomId
+- (NSString *)algorithmForRoom:(NSString *)roomId
 {
     return roomsAlgorithms[roomId];
 }
 
-- (void)storeEndToEndSession:(OLMSession *)session forDevice:(NSString *)deviceKey
+- (void)storeSession:(OLMSession *)session forDevice:(NSString *)deviceKey
 {
     if (!olmSessions[deviceKey])
     {
@@ -254,12 +254,12 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
     [NSKeyedArchiver archiveRootObject:olmSessions toFile:filePath];
 }
 
-- (NSDictionary<NSString *,OLMSession *> *)endToEndSessionsWithDevice:(NSString *)deviceKey
+- (NSDictionary<NSString *,OLMSession *> *)sessionsWithDevice:(NSString *)deviceKey
 {
     return olmSessions[deviceKey];
 }
 
-- (void)storeEndToEndInboundGroupSession:(MXOlmInboundGroupSession *)session
+- (void)storeInboundGroupSession:(MXOlmInboundGroupSession *)session
 {
     if (!inboundGroupSessions[session.senderKey])
     {
@@ -272,7 +272,7 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
     [NSKeyedArchiver archiveRootObject:inboundGroupSessions toFile:filePath];
 }
 
-- (MXOlmInboundGroupSession *)endToEndInboundGroupSessionWithId:(NSString *)sessionId andSenderKey:(NSString *)senderKey
+- (MXOlmInboundGroupSession *)inboundGroupSessionWithId:(NSString *)sessionId andSenderKey:(NSString *)senderKey
 {
     return inboundGroupSessions[senderKey][sessionId];
 }

@@ -31,8 +31,8 @@
         NSNumber *version = dict[@"version"];
         _version = [version unsignedIntegerValue];
 
-        NSNumber *endToEndDeviceAnnounced = dict[@"endToEndDeviceAnnounced"];
-        _endToEndDeviceAnnounced = [endToEndDeviceAnnounced boolValue];
+        NSNumber *DeviceAnnounced = dict[@"DeviceAnnounced"];
+        _DeviceAnnounced = [DeviceAnnounced boolValue];
 
     }
     return self;
@@ -46,7 +46,7 @@
                                   @"deviceId": _deviceId,
                                   @"userId": _userId,
                                   @"version": @(_version),
-                                  @"endToEndDeviceAnnounced": @(_endToEndDeviceAnnounced)
+                                  @"DeviceAnnounced": @(_DeviceAnnounced)
                                   }];
 
     [aCoder encodeObject:dict forKey:@"dict"];

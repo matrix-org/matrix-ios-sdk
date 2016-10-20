@@ -92,9 +92,9 @@
     myDevice.verified = MXDeviceVerified;
 
     // Add our own deviceinfo to the store
-    NSMutableDictionary *myDevices = [NSMutableDictionary dictionaryWithDictionary:[_store endToEndDevicesForUser:mxSession.myUser.userId]];
+    NSMutableDictionary *myDevices = [NSMutableDictionary dictionaryWithDictionary:[_store devicesForUser:mxSession.myUser.userId]];
     myDevices[myDevice.deviceId] = myDevice;
-    [_store storeEndToEndDevicesForUser:mxSession.myUser.userId devices:myDevices];
+    [_store storeDevicesForUser:mxSession.myUser.userId devices:myDevices];
 
     [self registerEventHandlers];
 
@@ -208,7 +208,7 @@
 
     for (NSString *userId in userIds)
     {
-        NSDictionary<NSString *,MXDeviceInfo *> *devices = [_store endToEndDevicesForUser:userId];
+        NSDictionary<NSString *,MXDeviceInfo *> *devices = [_store devicesForUser:userId];
         if (devices.count)
         {
             [stored setObjects:devices forUser:userId];
@@ -264,7 +264,7 @@
                 }
 
                 // Update the store. Note
-                [_store storeEndToEndDevicesForUser:userId devices:devices];
+                [_store storeDevicesForUser:userId devices:devices];
 
                 // And the response result
                 [stored setObjects:devices forUser:userId];
@@ -283,7 +283,7 @@
 
 - (NSArray<MXDeviceInfo *> *)storedDevicesForUser:(NSString *)userId
 {
-    return [_store endToEndDevicesForUser:userId].allValues;
+    return [_store devicesForUser:userId].allValues;
 }
 
 - (MXDeviceInfo *)deviceWithIdentityKey:(NSString *)senderKey forUser:(NSString *)userId andAlgorithm:(NSString *)algorithm
@@ -316,7 +316,7 @@
 
 - (void)setDeviceVerification:(MXDeviceVerification)verificationStatus forDevice:(NSString *)deviceId ofUser:(NSString *)userId
 {
-    MXDeviceInfo *device = [_store endToEndDeviceWithDeviceId:deviceId forUser:userId];
+    MXDeviceInfo *device = [_store deviceWithDeviceId:deviceId forUser:userId];
 
     // Sanity check
     if (!device)
@@ -329,7 +329,7 @@
     {
         device.verified = verificationStatus;
 
-        [_store storeEndToEndDeviceForUser:userId device:device];
+        [_store storeDeviceForUser:userId device:device];
     }
 }
 
@@ -381,7 +381,7 @@
 {
     // If we already have encryption in this room, we should ignore this event
     // (for now at least. Maybe we should alert the user somehow?)
-    NSString *existingAlgorithm = [_store endToEndAlgorithmForRoom:roomId];
+    NSString *existingAlgorithm = [_store algorithmForRoom:roomId];
     if (existingAlgorithm && ![existingAlgorithm isEqualToString:algorithm])
     {
         NSLog(@"[MXCrypto] setEncryptionInRoom: Ignoring m.room.encryption event which requests a change of config in %@", roomId);
@@ -395,7 +395,7 @@
         return NO;
     }
 
-    [_store storeEndToEndAlgorithmForRoom:roomId algorithm:algorithm];
+    [_store storeAlgorithmForRoom:roomId algorithm:algorithm];
 
     id<MXEncrypting> alg = [[encryptionClass alloc] initWithMatrixSession:mxSession andRoom:roomId];
 
@@ -641,7 +641,7 @@
     // We need to do it only once
     [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXSessionDidSyncNotification object:nil];
 
-    if ([_store endToEndDeviceAnnounced])
+    if (_store.deviceAnnounced)
     {
         return;
     }
@@ -692,7 +692,7 @@
     {
         [mxSession.matrixRestClient sendToDevice:kMXEventTypeStringNewDevice contentMap:contentMap success:^{
 
-            [_store storeEndToEndDeviceAnnounced];
+            [_store storeDeviceAnnounced];
             
         } failure:nil];
     }
