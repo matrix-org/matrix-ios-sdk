@@ -16,6 +16,7 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MXCryptoStore.h"
 #import "MXRestClient.h"
 #import "MXDeviceInfo.h"
 #import "MXOlmDevice.h"
@@ -41,14 +42,25 @@
  Create the `MXCrypto` instance.
 
  @param mxSession the mxSession to the home server.
+ @param store the storage module for crypto data.
  @return the newly created MXCrypto instance.
  */
-- (instancetype)initWithMatrixSession:(MXSession*)mxSession;
+- (instancetype)initWithMatrixSession:(MXSession*)mxSession andStore:(id<MXCryptoStore>)store;
+
+/**
+ Start the crypto module.
+ */
+- (void)start;
 
 /**
  Stop and release crypto objects.
  */
 - (void)close;
+
+/**
+ The store for crypto data.
+ */
+@property (nonatomic, readonly) id<MXCryptoStore> store;
 
 /**
   The libolm wrapper.

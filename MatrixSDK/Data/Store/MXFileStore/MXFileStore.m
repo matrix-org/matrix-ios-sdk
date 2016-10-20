@@ -37,13 +37,6 @@ NSString *const kMXFileStoreRoomStateFile = @"state";
 NSString *const kMXFileStoreRoomAccountDataFile = @"accountData";
 NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
-NSString *const kMXFileStoreCryptoFolder = @"crypto";
-NSString *const kMXFileStoreCryptoAccountFile = @"account";
-NSString *const kMXFileStoreCryptoDevicesFile = @"devices";
-NSString *const kMXFileStoreCryptoRoomsAlgorithmsFile = @"roomsAlgorithms";
-NSString *const kMXFileStoreCryptoSessionsFile = @"sessions";
-NSString *const kMXFileStoreCryptoInboundGroupSessionsFile = @"inboundGroupSessions";
-
 @interface MXFileStore ()
 {
     // Meta data about the store. It is defined only if the passed MXCredentials contains all information.
@@ -75,9 +68,6 @@ NSString *const kMXFileStoreCryptoInboundGroupSessionsFile = @"inboundGroupSessi
     // The path of the rooms folder
     NSString *storeUsersPath;
 
-    // The path of the crypto folder
-    NSString *storeCryptoPath;
-
     // Flag to indicate metaData needs to be stored
     BOOL metaDataHasChanged;
 
@@ -97,12 +87,6 @@ NSString *const kMXFileStoreCryptoInboundGroupSessionsFile = @"inboundGroupSessi
 
     // The evenst stream token that corresponds to the data being backed up.
     NSString *backupEventStreamToken;
-
-    // Flags for crypto data changes
-    BOOL usersDevicesInfoMapHasChanged;
-    BOOL roomsAlgorithmsHasChanged;
-    BOOL olmSessionsHasChanged;
-    BOOL inboundGroupSessionsHasChanged;
 }
 @end
 
@@ -139,7 +123,6 @@ NSString *const kMXFileStoreCryptoInboundGroupSessionsFile = @"inboundGroupSessi
     storePath = [[cachePath stringByAppendingPathComponent:kMXFileStoreFolder] stringByAppendingPathComponent:credentials.userId];
     storeRoomsPath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsFolder];
     storeUsersPath = [storePath stringByAppendingPathComponent:kMXFileStoreUsersFolder];
-    storeCryptoPath = [storePath stringByAppendingPathComponent:kMXFileStoreCryptoFolder];
 
     storeBackupPath = [storePath stringByAppendingPathComponent:kMXFileStoreBackupFolder];
 
@@ -212,7 +195,6 @@ NSString *const kMXFileStoreCryptoInboundGroupSessionsFile = @"inboundGroupSessi
                 [self preloadRoomsAccountData];
                 [self loadReceipts];
                 [self loadUsers];
-                [self preloadCryptoData];
 
                 NSLog(@"[MXFileStore] Data loaded from files in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
             }
@@ -321,7 +303,6 @@ NSString *const kMXFileStoreCryptoInboundGroupSessionsFile = @"inboundGroupSessi
     [[NSFileManager defaultManager] createDirectoryAtPath:storePath withIntermediateDirectories:YES attributes:nil error:nil];
     [[NSFileManager defaultManager] createDirectoryAtPath:storeRoomsPath withIntermediateDirectories:YES attributes:nil error:nil];
     [[NSFileManager defaultManager] createDirectoryAtPath:storeUsersPath withIntermediateDirectories:YES attributes:nil error:nil];
-    [[NSFileManager defaultManager] createDirectoryAtPath:storeCryptoPath withIntermediateDirectories:YES attributes:nil error:nil];
 
     // Reset data
     metaData = nil;
@@ -511,7 +492,6 @@ NSString *const kMXFileStoreCryptoInboundGroupSessionsFile = @"inboundGroupSessi
         [self saveRoomsAccountData];
         [self saveReceipts];
         [self saveUsers];
-        [self saveCryptoData];
         [self saveMetaData];
         
         // The data saving is completed: remove the backuped data.
@@ -635,39 +615,6 @@ NSString *const kMXFileStoreCryptoInboundGroupSessionsFile = @"inboundGroupSessi
     {
         return [[[storeBackupPath stringByAppendingPathComponent:backupEventStreamToken] stringByAppendingPathComponent:kMXFileStoreUsersFolder] stringByAppendingPathComponent:userGroup];
     }
-}
-
-
-- (NSString*)cryptoPathForBackup:(BOOL)backup
-{
-    if (!backup)
-    {
-        return storeCryptoPath;
-    }
-    else
-    {
-        return [[storeBackupPath stringByAppendingPathComponent:backupEventStreamToken] stringByAppendingPathComponent:storeCryptoPath];
-    }
-}
-
-- (NSString*)cryptoDevicesFileForBackup:(BOOL)backup
-{
-    return [[self cryptoPathForBackup:backup] stringByAppendingPathComponent:kMXFileStoreCryptoDevicesFile];
-}
-
-- (NSString*)cryptoRoomsAlgorithmsFileForBackup:(BOOL)backup
-{
-    return [[self cryptoPathForBackup:backup] stringByAppendingPathComponent:kMXFileStoreCryptoRoomsAlgorithmsFile];
-}
-
-- (NSString*)cryptoSessionFileForBackup:(BOOL)backup
-{
-    return [[self cryptoPathForBackup:backup] stringByAppendingPathComponent:kMXFileStoreCryptoSessionsFile];
-}
-
-- (NSString*)cryptoInboundGroupSessionsFileForBackup:(BOOL)backup
-{
-    return [[self cryptoPathForBackup:backup] stringByAppendingPathComponent:kMXFileStoreCryptoInboundGroupSessionsFile];
 }
 
 
@@ -1290,183 +1237,6 @@ NSString *const kMXFileStoreCryptoInboundGroupSessionsFile = @"inboundGroupSessi
 #if DEBUG
             NSLog(@"[MXFileStore commit] lasted %.0fms for receipts in %tu rooms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000, roomsToCommit.count);
 #endif
-        });
-    }
-}
-
-
-#pragma mark - Cryto
-/**
- Preload states of all rooms.
-
- This operation must be called on the `dispatchQueue` thread to avoid blocking the main thread.
- */
-- (void)preloadCryptoData
-{
-    NSDate *startDate = [NSDate date];
-
-    usersDevicesInfoMap = [NSKeyedUnarchiver unarchiveObjectWithFile:[self cryptoDevicesFileForBackup:NO]];
-    roomsAlgorithms = [NSKeyedUnarchiver unarchiveObjectWithFile:[self cryptoRoomsAlgorithmsFileForBackup:NO]];
-    olmSessions = [NSKeyedUnarchiver unarchiveObjectWithFile:[self cryptoSessionFileForBackup:NO]];
-    inboundGroupSessions = [NSKeyedUnarchiver unarchiveObjectWithFile:[self cryptoInboundGroupSessionsFileForBackup:NO]];
-
-    NSLog(@"[MXFileStore] Loaded crypto data in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
-}
-
-- (void)saveCryptoData
-{
-    [self saveCryptoDevices];
-    [self saveRooomAlgorithms];
-    [self saveOlmSessions];
-    [self saveInboundGroupSessions];
-}
-
-- (void)storeEndToEndAccount:(OLMAccount *)account
-{
-    // @TODO: Manage commit(required?) and backup
-    NSString *cryptoAccountFile = [storeCryptoPath stringByAppendingPathComponent:kMXFileStoreCryptoAccountFile];
-    [NSKeyedArchiver archiveRootObject:account toFile:cryptoAccountFile];
-}
-
-- (OLMAccount *)endToEndAccount
-{
-    NSString *cryptoAccountFile = [storeCryptoPath stringByAppendingPathComponent:kMXFileStoreCryptoAccountFile];
-    return [NSKeyedUnarchiver unarchiveObjectWithFile:cryptoAccountFile];
-}
-
-- (void)storeEndToEndDeviceAnnounced
-{
-    metaData.endToEndDeviceAnnounced = YES;
-    metaDataHasChanged = YES;
-}
-
-- (BOOL)endToEndDeviceAnnounced
-{
-    return metaData.endToEndDeviceAnnounced;
-}
-
-- (void)storeEndToEndDeviceForUser:(NSString*)userId device:(MXDeviceInfo*)device
-{
-    [super storeEndToEndDeviceForUser:userId device:device];
-    usersDevicesInfoMapHasChanged = YES;
-}
-
-- (void)storeEndToEndDevicesForUser:(NSString*)userId devices:(NSDictionary<NSString*, MXDeviceInfo*>*)devices
-{
-    [super storeEndToEndDevicesForUser:userId devices:devices];
-    usersDevicesInfoMapHasChanged = YES;
-}
-
-- (void)saveCryptoDevices
-{
-    if (usersDevicesInfoMapHasChanged)
-    {
-        MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMapSnapshot = [usersDevicesInfoMap copy];
-        usersDevicesInfoMapHasChanged = NO;
-
-        dispatch_async(dispatchQueue, ^(void){
-
-            NSString *file = [self cryptoDevicesFileForBackup:NO];
-            NSString *backupFile = [self cryptoDevicesFileForBackup:NO];
-
-            // Backup the file
-            if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
-            {
-                [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
-            }
-
-            // Store new data
-            [NSKeyedArchiver archiveRootObject:usersDevicesInfoMapSnapshot toFile:file];
-        });
-    }
-}
-
-- (void)storeEndToEndAlgorithmForRoom:(NSString *)roomId algorithm:(NSString *)algorithm
-{
-    [super storeEndToEndAlgorithmForRoom:roomId algorithm:algorithm];
-    roomsAlgorithmsHasChanged = YES;
-}
-
-- (void)saveRooomAlgorithms
-{
-    if (roomsAlgorithmsHasChanged)
-    {
-        NSDictionary *roomsAlgorithmsSnapshot = [NSDictionary dictionaryWithDictionary:roomsAlgorithms];
-        roomsAlgorithmsHasChanged = NO;
-
-        dispatch_async(dispatchQueue, ^(void){
-
-            NSString *file = [self cryptoRoomsAlgorithmsFileForBackup:NO];
-            NSString *backupFile = [self cryptoRoomsAlgorithmsFileForBackup:NO];
-
-            // Backup the file
-            if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
-            {
-                [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
-            }
-
-            // Store new data
-            [NSKeyedArchiver archiveRootObject:roomsAlgorithmsSnapshot toFile:file];
-        });
-    }
-}
-
-- (void)storeEndToEndSession:(OLMSession *)session forDevice:(NSString *)deviceKey
-{
-    [super storeEndToEndSession:session forDevice:deviceKey];
-    olmSessionsHasChanged = YES;
-}
-
-- (void)saveOlmSessions
-{
-    if (olmSessionsHasChanged)
-    {
-        NSDictionary *olmSessionsSnapshot = [NSDictionary dictionaryWithDictionary:olmSessions];
-        olmSessionsHasChanged = NO;
-
-        dispatch_async(dispatchQueue, ^(void){
-
-            NSString *file = [self cryptoSessionFileForBackup:NO];
-            NSString *backupFile = [self cryptoSessionFileForBackup:NO];
-
-            // Backup the file
-            if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
-            {
-                [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
-            }
-
-            // Store new data
-            [NSKeyedArchiver archiveRootObject:olmSessionsSnapshot toFile:file];
-        });
-    }
-}
-
-- (void)storeEndToEndInboundGroupSession:(MXOlmInboundGroupSession *)session
-{
-    [super storeEndToEndInboundGroupSession:session];
-    inboundGroupSessionsHasChanged = YES;
-}
-
-- (void)saveInboundGroupSessions
-{
-    if (inboundGroupSessionsHasChanged)
-    {
-        NSDictionary *inboundGroupSessionsSnapshot = [NSDictionary dictionaryWithDictionary:inboundGroupSessions];
-        inboundGroupSessionsHasChanged = NO;
-
-        dispatch_async(dispatchQueue, ^(void){
-
-            NSString *file = [self cryptoInboundGroupSessionsFileForBackup:NO];
-            NSString *backupFile = [self cryptoInboundGroupSessionsFileForBackup:NO];
-
-            // Backup the file
-            if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
-            {
-                [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
-            }
-
-            // Store new data
-            [NSKeyedArchiver archiveRootObject:inboundGroupSessionsSnapshot toFile:file];
         });
     }
 }

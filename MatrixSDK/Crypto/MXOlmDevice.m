@@ -18,13 +18,12 @@
 
 #import <OLMKit/OLMKit.h>
 
-#import "MXSession.h"
 #import "NSObject+sortedKeys.h"
 
 @interface MXOlmDevice ()
 {
     // The store where crypto data is saved.
-    id<MXStore> store;
+    id<MXCryptoStore> store;
 
     // The OLMKit account instance.
     OLMAccount *olmAccount;
@@ -43,7 +42,7 @@
 
 @implementation MXOlmDevice
 
-- (instancetype)initWithStore:(id<MXStore>)theStore
+- (instancetype)initWithStore:(id<MXCryptoStore>)theStore
 {
     self = [super init];
     if (self)
@@ -54,14 +53,16 @@
         olmAccount = [store endToEndAccount];
         if (!olmAccount)
         {
+            NSLog(@"[MXOlmDevice] initWithStore: Create new OLMAccount");
+
             // Else, create it
             olmAccount = [[OLMAccount alloc] initNewAccount];
 
             [store storeEndToEndAccount:olmAccount];
-            if ([store respondsToSelector:@selector(commit)])
-            {
-                [store commit];
-            }
+        }
+        else
+        {
+            NSLog(@"[MXOlmDevice] initWithStore: Reuse OLMAccount from store");
         }
 
         olmUtility = [[OLMUtility alloc] init];
@@ -108,10 +109,6 @@
     [olmAccount markOneTimeKeysAsPublished];
 
     [store storeEndToEndAccount:olmAccount];
-    if ([store respondsToSelector:@selector(commit)])
-    {
-        [store commit];
-    }
 }
 
 - (void)generateOneTimeKeys:(NSUInteger)numKeys
@@ -119,10 +116,6 @@
     [olmAccount generateOneTimeKeys:numKeys];
 
     [store storeEndToEndAccount:olmAccount];
-    if ([store respondsToSelector:@selector(commit)])
-    {
-        [store commit];
-    }
 }
 
 - (NSString *)createOutboundSession:(NSString *)theirIdentityKey theirOneTimeKey:(NSString *)theirOneTimeKey
@@ -132,10 +125,6 @@
     OLMSession *olmSession = [[OLMSession alloc] initOutboundSessionWithAccount:olmAccount theirIdentityKey:theirIdentityKey theirOneTimeKey:theirOneTimeKey];
 
     [store storeEndToEndSession:olmSession forDevice:theirIdentityKey];
-    if ([store respondsToSelector:@selector(commit)])
-    {
-        [store commit];
-    }
 
     NSLog(@">>>> olmSession.sessionIdentifier: %@", olmSession.sessionIdentifier);
 
@@ -162,10 +151,6 @@
         NSString *payloadString = [olmSession decryptMessage:[[OLMMessage alloc] initWithCiphertext:ciphertext type:messageType]];
 
         [store storeEndToEndSession:olmSession forDevice:theirDeviceIdentityKey];
-        if ([store respondsToSelector:@selector(commit)])
-        {
-            [store commit];
-        }
 
         return @{
                  @"payload": payloadString,
@@ -212,10 +197,6 @@
         olmMessage = [olmSession encryptMessage:payloadString];
 
         [store storeEndToEndSession:olmSession forDevice:theirDeviceIdentityKey];
-        if ([store respondsToSelector:@selector(commit)])
-        {
-            [store commit];
-        }
     }
 
     NSLog(@">>>> ciphertext: %@", olmMessage.ciphertext);
@@ -237,10 +218,6 @@
         payloadString = [olmSession decryptMessage:[[OLMMessage alloc] initWithCiphertext:ciphertext type:messageType]];
 
         [store storeEndToEndSession:olmSession forDevice:theirDeviceIdentityKey];
-        if ([store respondsToSelector:@selector(commit)])
-        {
-            [store commit];
-        }
     }
 
     return payloadString;
@@ -300,10 +277,6 @@
     session.keysClaimed = keysClaimed;
 
     [store storeEndToEndInboundGroupSession:session];
-    if ([store respondsToSelector:@selector(commit)])
-    {
-        [store commit];
-    }
 
     return YES;
 }
@@ -323,10 +296,6 @@
             NSString *payloadString = [session.session decryptMessage:body];
 
             [store storeEndToEndInboundGroupSession:session];
-            if ([store respondsToSelector:@selector(commit)])
-            {
-                [store commit];
-            }
 
             result = [[MXDecryptionResult alloc] init];
             result.payload = [NSJSONSerialization JSONObjectWithData:[payloadString dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];

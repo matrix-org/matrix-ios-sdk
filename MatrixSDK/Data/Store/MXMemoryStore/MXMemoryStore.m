@@ -21,8 +21,6 @@
 @interface MXMemoryStore()
 {
     NSString *eventStreamToken;
-
-    BOOL endToEndDeviceAnnounced;
 }
 @end
 
@@ -39,10 +37,6 @@
         roomStores = [NSMutableDictionary dictionary];
         receiptsByRoomId = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
-        usersDevicesInfoMap = [[MXUsersDevicesMap<MXDeviceInfo*> alloc] init];
-        roomsAlgorithms = [NSMutableDictionary dictionary];
-        olmSessions = [NSMutableDictionary dictionary];
-        inboundGroupSessions = [NSMutableDictionary dictionary];
     }
     return self;
 }
@@ -340,87 +334,6 @@
     return roomStore.outgoingMessages;
 }
 
-
-#pragma mark - Crypto
-- (void)storeEndToEndAccount:(OLMAccount *)account
-{
-    olmAccount = account;
-}
-
-- (OLMAccount *)endToEndAccount
-{
-    return olmAccount;
-}
-
-- (void)storeEndToEndDeviceAnnounced
-{
-    endToEndDeviceAnnounced = YES;
-}
-
-- (BOOL)endToEndDeviceAnnounced
-{
-    return endToEndDeviceAnnounced;
-}
-
-- (void)storeEndToEndDeviceForUser:(NSString *)userId device:(MXDeviceInfo *)device
-{
-    [usersDevicesInfoMap setObject:device forUser:userId andDevice:device.deviceId];
-}
-
-- (MXDeviceInfo *)endToEndDeviceWithDeviceId:(NSString *)deviceId forUser:(NSString *)userId
-{
-    return [usersDevicesInfoMap objectForDevice:deviceId forUser:userId];
-}
-
-- (void)storeEndToEndDevicesForUser:(NSString *)userId devices:(NSDictionary<NSString *,MXDeviceInfo *> *)devices
-{
-    [usersDevicesInfoMap setObjects:devices forUser:userId];
-}
-
-- (NSDictionary<NSString *,MXDeviceInfo *> *)endToEndDevicesForUser:(NSString *)userId
-{
-    return usersDevicesInfoMap.map[userId];
-}
-
-- (void)storeEndToEndAlgorithmForRoom:(NSString *)roomId algorithm:(NSString *)algorithm
-{
-    roomsAlgorithms[roomId] = algorithm;
-}
-
-- (NSString *)endToEndAlgorithmForRoom:(NSString *)roomId
-{
-    return roomsAlgorithms[roomId];
-}
-
-- (void)storeEndToEndSession:(OLMSession *)session forDevice:(NSString *)deviceKey
-{
-    if (!olmSessions[deviceKey])
-    {
-        olmSessions[deviceKey] = [NSMutableDictionary dictionary];
-    }
-    
-    olmSessions[deviceKey][session.sessionIdentifier] = session;
-}
-
-- (NSDictionary<NSString *,OLMSession *> *)endToEndSessionsWithDevice:(NSString *)deviceKey
-{
-    return olmSessions[deviceKey];
-}
-
-- (void)storeEndToEndInboundGroupSession:(MXOlmInboundGroupSession *)session
-{
-    if (!inboundGroupSessions[session.senderKey])
-    {
-        inboundGroupSessions[session.senderKey] = [NSMutableDictionary dictionary];
-    }
-
-    inboundGroupSessions[session.senderKey][session.session.sessionIdentifier] = session;
-}
-
-- (MXOlmInboundGroupSession *)endToEndInboundGroupSessionWithId:(NSString *)sessionId andSenderKey:(NSString *)senderKey
-{
-    return inboundGroupSessions[senderKey][sessionId];
-}
 
 #pragma mark - Protected operations
 - (MXMemoryRoomStore*)getOrCreateRoomStore:(NSString*)roomId

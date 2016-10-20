@@ -26,14 +26,13 @@
 
     + NSCachesDirectory
         + MXFileCryptoStore
-            + Matrix user id (one folder per account) // deviceId? (@TODO)
+            + Matrix user id (one folder per account)
                 L account: the user's olm account
                 L devices: users devices keys
                 L roomsAlgorithms: the algos used in rooms
                 L sessions: the olm sessions with other users devices
                 L inboundGroupSessions: the inbound group session
                 L MXFileCryptoStore: Information about the stored data
-
  */
 @interface MXFileCryptoStore : NSObject <MXCryptoStore>
 

@@ -40,24 +40,6 @@
 
     // The user credentials
     MXCredentials *credentials;
-
-    // Crypto
-    // The olm account
-    OLMAccount *olmAccount;
-
-    // All users devices keys
-    MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap;
-
-    // The algorithms used in rooms
-    NSMutableDictionary<NSString*, NSString*> *roomsAlgorithms;
-
-    // The olm sessions (<device identity key> -> (<olm session id> -> <olm session>)
-    NSMutableDictionary<NSString* /*deviceKey*/,
-        NSMutableDictionary<NSString * /*olmSessionId*/,OLMSession *>*> *olmSessions;
-
-    // The inbound group megolm sessions (<senderKey> -> (<inbound group session id> -> <inbound group megolm session>)
-    NSMutableDictionary<NSString* /*senderKey*/,
-        NSMutableDictionary<NSString * /*inboundGroupSessionId*/,MXOlmInboundGroupSession *>*> *inboundGroupSessions;
 }
 
 #pragma mark - protected operations

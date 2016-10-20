@@ -26,6 +26,8 @@
 #import "MXMemoryStore.h"
 #import "MXFileStore.h"
 
+#import "MXFileCryptoStore.h"
+
 #import "MXAccountData.h"
 
 #pragma mark - Constants definitions
@@ -211,74 +213,72 @@ typedef void (^MXOnResumeDone)();
 
     [_store openWithCredentials:matrixRestClient.credentials onComplete:^{
 
-        // Sanity check: The session may be closed before the end of store opening.
-        if (!matrixRestClient)
-        {
-            return;
-        }
+        // Check if the user has enabled crypto
+        [self checkCrypto:^{
 
-        // Can we start on data from the MXStore?
-        if (_store.isPermanent && _store.eventStreamToken && 0 < _store.rooms.count)
-        {
-            // Mount data from the permanent store
-            NSLog(@"[MXSession] Loading room state events to build MXRoom objects...");
-
-            // Create myUser from the store
-            MXUser *myUser = [_store userWithUserId:matrixRestClient.credentials.userId];
-
-            // My user is a MXMyUser object
-            _myUser = (MXMyUser*)myUser;
-            _myUser.mxSession = self;
-
-            // Load user account data
-            [self handleAccountData:_store.userAccountData];
-
-            // Create MXRooms from their states stored in the store
-            NSDate *startDate2 = [NSDate date];
-            for (NSString *roomId in _store.rooms)
+            // Sanity check: The session may be closed before the end of store opening.
+            if (!matrixRestClient)
             {
-                @autoreleasepool
+                return;
+            }
+
+            // Can we start on data from the MXStore?
+            if (_store.isPermanent && _store.eventStreamToken && 0 < _store.rooms.count)
+            {
+                // Mount data from the permanent store
+                NSLog(@"[MXSession] Loading room state events to build MXRoom objects...");
+
+                // Create myUser from the store
+                MXUser *myUser = [_store userWithUserId:matrixRestClient.credentials.userId];
+
+                // My user is a MXMyUser object
+                _myUser = (MXMyUser*)myUser;
+                _myUser.mxSession = self;
+
+                // Load user account data
+                [self handleAccountData:_store.userAccountData];
+
+                // Create MXRooms from their states stored in the store
+                NSDate *startDate2 = [NSDate date];
+                for (NSString *roomId in _store.rooms)
                 {
-                    NSArray *stateEvents = [_store stateOfRoom:roomId];
-                    MXRoomAccountData *roomAccountData = [_store accountDataOfRoom:roomId];
-                    [self createRoom:roomId withStateEvents:stateEvents andAccountData:roomAccountData notify:NO];
+                    @autoreleasepool
+                    {
+                        NSArray *stateEvents = [_store stateOfRoom:roomId];
+                        MXRoomAccountData *roomAccountData = [_store accountDataOfRoom:roomId];
+                        [self createRoom:roomId withStateEvents:stateEvents andAccountData:roomAccountData notify:NO];
+                    }
                 }
-            }
 
-            // Consider the user enabled crypto if there is an E2E account in their store
-            if ([_store respondsToSelector:@selector(endToEndAccount)] && [_store endToEndAccount])
+                // If enabled, start crypto
+                [_crypto start];
+
+                NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+
+                NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+
+                [self setState:MXSessionStateStoreDataReady];
+
+                // The SDK client can use this data
+                onStoreDataReady();
+            }
+            else
             {
-                self.cryptoEnabled = YES;
+                // Create self.myUser instance to expose the user id as soon as possible
+                _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId];
+                _myUser.mxSession = self;
+
+                // If enabled, start crypto
+                [_crypto start];
+                
+                NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                
+                [self setState:MXSessionStateStoreDataReady];
+                
+                // The SDK client can use this data
+                onStoreDataReady();
             }
-
-            NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
-
-            NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
-
-            [self setState:MXSessionStateStoreDataReady];
-
-            // The SDK client can use this data
-            onStoreDataReady();
-        }
-        else
-        {
-            // Create self.myUser instance to expose the user id as soon as possible
-            _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId];
-            _myUser.mxSession = self;
-
-            // Consider the user enabled crypto if there is an E2E account in their store
-            if ([_store respondsToSelector:@selector(endToEndAccount)] && [_store endToEndAccount])
-            {
-                self.cryptoEnabled = YES;
-            }
-
-            NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
-
-            [self setState:MXSessionStateStoreDataReady];
-            
-            // The SDK client can use this data
-            onStoreDataReady();
-        }
+        }];
 
     } failure:^(NSError *error) {
         [self setState:MXSessionStateInitialised];
@@ -1066,34 +1066,55 @@ typedef void (^MXOnResumeDone)();
     _callManager = [[MXCallManager alloc] initWithMatrixSession:self andCallStack:callStack];
 }
 
-- (void)setCryptoEnabled:(BOOL)cryptoEnabled
+- (void)enableCrypto:(BOOL)enableCrypto success:(void (^)())success failure:(void (^)(NSError *))failure
 {
-    if (cryptoEnabled != _cryptoEnabled)
+    if (enableCrypto && !_crypto)
     {
-        if (cryptoEnabled)
-        {
-            if ([_store respondsToSelector:@selector(endToEndAccount)])
+        MXFileCryptoStore *cryptoStore = [[MXFileCryptoStore alloc] init];
+
+        [cryptoStore openWithCredentials:self.matrixRestClient.credentials onComplete:^{
+
+            _crypto = [[MXCrypto alloc] initWithMatrixSession:self andStore:cryptoStore];
+
+            if (_myUser)
             {
-                NSLog(@"[MXSession] Crypto is enabled");
-                _cryptoEnabled = YES;
-
-                // Instantiate crypto data
-                _crypto = [[MXCrypto alloc] initWithMatrixSession:self];
-
+                [_crypto start];
             }
-            else
-            {
-                NSLog(@"[MXSession] ERROR: Cannot enable crypto as the store %@ is not compatible", _store.class);
-            }
-        }
-        else
-        {
-            NSLog(@"[MXSession] Crypto is disabled");
-            _cryptoEnabled = NO;
-            _crypto = nil;
 
-            //@TODO: Reset crypto store
-        }
+            success();
+
+        } failure:failure];
+
+    }
+    else if (!enableCrypto && _crypto)
+    {
+        // Erase all crypto data of this user
+        [_crypto.store deleteAllData];
+
+        [_crypto close];
+        _crypto = nil;
+        success();
+    }
+    else
+    {
+        // Nothing to do
+        success();
+    }
+}
+
+/**
+ Check if the user has previously enabled crypto.
+ If yes, init the crypto module.
+ */
+- (void)checkCrypto:(void (^)())complete
+{
+    if ([MXFileCryptoStore hasDataForCredentials:matrixRestClient.credentials])
+    {
+        [self enableCrypto:YES success:complete failure:complete];
+    }
+    else
+    {
+        complete();
     }
 }
 

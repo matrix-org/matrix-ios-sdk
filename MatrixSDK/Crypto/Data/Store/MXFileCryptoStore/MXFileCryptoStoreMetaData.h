@@ -16,7 +16,7 @@
 
 #import <Foundation/Foundation.h>
 
-@interface MXFileCryptoStoreMetaData : NSObject
+@interface MXFileCryptoStoreMetaData : NSObject <NSCoding>
 
 /**
  The obtained user id.

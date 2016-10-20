@@ -64,14 +64,17 @@
 {
     [matrixSDKTestsData doMXSessionTestWithBob:self andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation) {
 
-        bobSession.cryptoEnabled = YES;
+        [bobSession enableCrypto:YES success:^{
 
-        [matrixSDKTestsData doMXSessionTestWithAlice:nil andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
+            [matrixSDKTestsData doMXSessionTestWithAlice:nil andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
 
-            aliceSession.cryptoEnabled = YES;
+                [aliceSession enableCrypto:YES success:^{
+                    readyToTest(bobSession, aliceSession, expectation);
+                } failure:nil];
+                
+            }];
 
-            readyToTest(bobSession, aliceSession, expectation);
-        }];
+        } failure:nil];
     }];
 }
 
@@ -80,21 +83,23 @@
 {
     [matrixSDKTestsData doMXSessionTestWithAlice:self andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
 
-        aliceSession.cryptoEnabled = YES;
+        [aliceSession enableCrypto:YES success:^{
 
-        [aliceSession createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil success:^(MXRoom *room) {
+            [aliceSession createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil success:^(MXRoom *room) {
 
-            [room enableEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm success:^{
+                [room enableEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm success:^{
 
-                readyToTest(aliceSession, room.roomId, expectation);
+                    readyToTest(aliceSession, room.roomId, expectation);
+
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot enable encryption in room - error: %@", error);
+                }];
 
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot enable encryption in room - error: %@", error);
+                NSAssert(NO, @"Cannot create a room - error: %@", error);
             }];
 
-        } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot create a room - error: %@", error);
-        }];
+        } failure:nil];
 
     }];
 }
@@ -108,25 +113,27 @@
 
         [matrixSDKTestsData doMXSessionTestWithBob:nil andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation2) {
 
-            bobSession.cryptoEnabled = YES;
+            [bobSession enableCrypto:YES success:^{
 
-            // Listen to Alice's MXSessionNewRoomNotification event
-            __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+                // Listen to Alice's MXSessionNewRoomNotification event
+                __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-                [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                    [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
-                [bobSession joinRoom:note.userInfo[kMXSessionNotificationRoomIdKey] success:^(MXRoom *room) {
+                    [bobSession joinRoom:note.userInfo[kMXSessionNotificationRoomIdKey] success:^(MXRoom *room) {
 
-                    readyToTest(aliceSession, bobSession, room.roomId, expectation);
+                        readyToTest(aliceSession, bobSession, room.roomId, expectation);
 
-                } failure:^(NSError *error) {
-                    NSAssert(NO, @"Cannot join a room - error: %@", error);
+                    } failure:^(NSError *error) {
+                        NSAssert(NO, @"Cannot join a room - error: %@", error);
+                    }];
                 }];
-            }];
 
-            [room inviteUser:bobSession.myUser.userId success:nil failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot invite Alice - error: %@", error);
-            }];
+                [room inviteUser:bobSession.myUser.userId success:nil failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot invite Alice - error: %@", error);
+                }];
+
+            } failure:nil];
 
         }];
 
@@ -205,44 +212,49 @@
         // Hardcode one
         mxSession.matrixRestClient.credentials.deviceId = @"BobDevice";
 
-        XCTAssertFalse(mxSession.cryptoEnabled, @"Crypto is disabled by default");
-        XCTAssertNil(mxSession.crypto);
+        XCTAssertNil(mxSession.crypto, @"Crypto is disabled by default");
 
-        mxSession.cryptoEnabled = YES;
-        XCTAssert(mxSession.cryptoEnabled);
-        XCTAssert(mxSession.crypto);
+        __block MXSession *mxSession2 = mxSession;
 
-        NSString *deviceCurve25519Key = mxSession.crypto.olmDevice.deviceCurve25519Key;
-        NSString *deviceEd25519Key = mxSession.crypto.olmDevice.deviceEd25519Key;
+        [mxSession2 enableCrypto:YES success:^{
 
-        NSArray<MXDeviceInfo *> *myUserDevices = [mxSession.crypto storedDevicesForUser:mxSession.myUser.userId];
-        XCTAssertEqual(myUserDevices.count, 1);
-
-        MXRestClient *bobRestClient = mxSession.matrixRestClient;
-        [mxSession close];
-        mxSession = nil;
-
-        // Reopen the session
-        MXFileStore *store = [[MXFileStore alloc] init];
-
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
-        [mxSession setStore:store success:^{
-
-            XCTAssert(mxSession.cryptoEnabled, @"MXSession must recall that it has crypto engaged");
             XCTAssert(mxSession.crypto);
 
-            XCTAssertEqualObjects(deviceCurve25519Key, mxSession.crypto.olmDevice.deviceCurve25519Key);
-            XCTAssertEqualObjects(deviceEd25519Key, mxSession.crypto.olmDevice.deviceEd25519Key);
+            NSString *deviceCurve25519Key = mxSession2.crypto.olmDevice.deviceCurve25519Key;
+            NSString *deviceEd25519Key = mxSession2.crypto.olmDevice.deviceEd25519Key;
 
-            NSArray<MXDeviceInfo *> *myUserDevices2 = [mxSession.crypto storedDevicesForUser:mxSession.myUser.userId];
-            XCTAssertEqual(myUserDevices2.count, 1);
+            NSArray<MXDeviceInfo *> *myUserDevices = [mxSession2.crypto storedDevicesForUser:mxSession.myUser.userId];
+            XCTAssertEqual(myUserDevices.count, 1);
 
-            XCTAssertEqualObjects(myUserDevices[0].deviceId, myUserDevices2[0].deviceId);
+            MXRestClient *bobRestClient = mxSession2.matrixRestClient;
+            [mxSession2 close];
+            mxSession2 = nil;
 
-            [expectation fulfill];
-            
+            // Reopen the session
+            MXFileStore *store = [[MXFileStore alloc] init];
+
+            mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+            [mxSession2 setStore:store success:^{
+
+                XCTAssert(mxSession2.crypto, @"MXSession must recall that it has crypto engaged");
+
+                XCTAssertEqualObjects(deviceCurve25519Key, mxSession2.crypto.olmDevice.deviceCurve25519Key);
+                XCTAssertEqualObjects(deviceEd25519Key, mxSession2.crypto.olmDevice.deviceEd25519Key);
+
+                NSArray<MXDeviceInfo *> *myUserDevices2 = [mxSession2.crypto storedDevicesForUser:mxSession2.myUser.userId];
+                XCTAssertEqual(myUserDevices2.count, 1);
+
+                XCTAssertEqualObjects(myUserDevices[0].deviceId, myUserDevices2[0].deviceId);
+
+                [expectation fulfill];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+
         } failure:^(NSError *error) {
-            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
     }];
@@ -253,133 +265,71 @@
     [matrixSDKTestsData doMXSessionTestWithAlice:self andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
 
         aliceSession.matrixRestClient.credentials.deviceId = @"AliceDevice";
-        aliceSession.cryptoEnabled = YES;
 
-        [aliceSession.crypto uploadKeys:10 success:^{
+        [aliceSession enableCrypto:YES success:^{
 
-            [matrixSDKTestsData doMXSessionTestWithBob:nil andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation2) {
-                mxSession.matrixRestClient.credentials.deviceId = @"BobDevice";
-                mxSession.cryptoEnabled = YES;
+            [aliceSession.crypto uploadKeys:10 success:^{
 
-                [mxSession.crypto downloadKeys:@[mxSession.myUser.userId, aliceSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+                [matrixSDKTestsData doMXSessionTestWithBob:nil andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation2) {
+                    mxSession.matrixRestClient.credentials.deviceId = @"BobDevice";
 
-                    XCTAssertEqual(usersDevicesInfoMap.userIds.count, 2, @"BobDevice must be obtain from the cache and AliceDevice from the hs");
+                    [mxSession enableCrypto:YES success:^{
 
-                    XCTAssertEqual([usersDevicesInfoMap deviceIdsForUser:aliceSession.myUser.userId].count, 1);
+                        [mxSession.crypto downloadKeys:@[mxSession.myUser.userId, aliceSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
 
-                    MXDeviceInfo *aliceDeviceFromBobPOV = [usersDevicesInfoMap objectForDevice:@"AliceDevice" forUser:aliceSession.myUser.userId];
-                    XCTAssert(aliceDeviceFromBobPOV);
-                    XCTAssertEqualObjects(aliceDeviceFromBobPOV.fingerprint, aliceSession.crypto.olmDevice.deviceEd25519Key);
+                            XCTAssertEqual(usersDevicesInfoMap.userIds.count, 2, @"BobDevice must be obtain from the cache and AliceDevice from the hs");
 
-                    // Continue testing other methods
-                    XCTAssertEqual([mxSession.crypto deviceWithIdentityKey:aliceSession.crypto.olmDevice.deviceCurve25519Key forUser:aliceSession.myUser.userId andAlgorithm:kMXCryptoOlmAlgorithm], aliceDeviceFromBobPOV);
+                            XCTAssertEqual([usersDevicesInfoMap deviceIdsForUser:aliceSession.myUser.userId].count, 1);
 
-                    XCTAssertEqual(aliceDeviceFromBobPOV.verified, MXDeviceUnverified);
+                            MXDeviceInfo *aliceDeviceFromBobPOV = [usersDevicesInfoMap objectForDevice:@"AliceDevice" forUser:aliceSession.myUser.userId];
+                            XCTAssert(aliceDeviceFromBobPOV);
+                            XCTAssertEqualObjects(aliceDeviceFromBobPOV.fingerprint, aliceSession.crypto.olmDevice.deviceEd25519Key);
 
-                    [mxSession.crypto setDeviceVerification:MXDeviceBlocked forDevice:aliceDeviceFromBobPOV.deviceId ofUser:aliceSession.myUser.userId];
-                    XCTAssertEqual(aliceDeviceFromBobPOV.verified, MXDeviceBlocked);
+                            // Continue testing other methods
+                            XCTAssertEqual([mxSession.crypto deviceWithIdentityKey:aliceSession.crypto.olmDevice.deviceCurve25519Key forUser:aliceSession.myUser.userId andAlgorithm:kMXCryptoOlmAlgorithm], aliceDeviceFromBobPOV);
 
-                    MXRestClient *bobRestClient = mxSession.matrixRestClient;
-                    [mxSession close];
+                            XCTAssertEqual(aliceDeviceFromBobPOV.verified, MXDeviceUnverified);
 
+                            [mxSession.crypto setDeviceVerification:MXDeviceBlocked forDevice:aliceDeviceFromBobPOV.deviceId ofUser:aliceSession.myUser.userId];
+                            XCTAssertEqual(aliceDeviceFromBobPOV.verified, MXDeviceBlocked);
 
-                    // Test storage: Reopen the session
-                    MXFileStore *store = [[MXFileStore alloc] init];
-
-                    MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
-                    [mxSession2 setStore:store success:^{
-
-                        MXDeviceInfo *aliceDeviceFromBobPOV2 = [mxSession2.crypto deviceWithIdentityKey:aliceSession.crypto.olmDevice.deviceCurve25519Key forUser:aliceSession.myUser.userId andAlgorithm:kMXCryptoOlmAlgorithm];
-
-                        XCTAssert(aliceDeviceFromBobPOV2);
-                        XCTAssertEqualObjects(aliceDeviceFromBobPOV2.fingerprint, aliceSession.crypto.olmDevice.deviceEd25519Key);
-                        XCTAssertEqual(aliceDeviceFromBobPOV2.verified, MXDeviceBlocked, @"AliceDevice must still be blocked");
-
-                        // Download again alice device
-                        [mxSession2.crypto downloadKeys:@[aliceSession.myUser.userId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap2) {
-
-                            MXDeviceInfo *aliceDeviceFromBobPOV3 = [mxSession2.crypto deviceWithIdentityKey:aliceSession.crypto.olmDevice.deviceCurve25519Key forUser:aliceSession.myUser.userId andAlgorithm:kMXCryptoOlmAlgorithm];
-
-                            XCTAssert(aliceDeviceFromBobPOV3);
-                            XCTAssertEqualObjects(aliceDeviceFromBobPOV3.fingerprint, aliceSession.crypto.olmDevice.deviceEd25519Key);
-                            XCTAssertEqual(aliceDeviceFromBobPOV3.verified, MXDeviceBlocked, @"AliceDevice must still be blocked.");
-
-                            [expectation fulfill];
-
-                        } failure:^(NSError *error) {
-                            XCTFail(@"The request should not fail - NSError: %@", error);
-                            [expectation fulfill];
-                        }];
-                    } failure:^(NSError *error) {
-                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                        [expectation fulfill];
-                    }];
-                } failure:^(NSError *error) {
-                    XCTFail(@"The request should not fail - NSError: %@", error);
-                    [expectation fulfill];
-                }];
-            }];
-        } failure:^(NSError *error) {
-            XCTFail(@"The request should not fail - NSError: %@", error);
-            [expectation fulfill];
-        }];
-    }];
-}
-
-- (void)testEnsureOlmSessionsForUsers
-{
-    [matrixSDKTestsData doMXSessionTestWithAlice:self andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
-
-        aliceSession.matrixRestClient.credentials.deviceId = @"AliceDevice";
-        aliceSession.cryptoEnabled = YES;
-
-        [aliceSession.crypto uploadKeys:10 success:^{
-
-            [matrixSDKTestsData doMXSessionTestWithBob:nil andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation2) {
-                mxSession.matrixRestClient.credentials.deviceId = @"BobDevice";
-                mxSession.cryptoEnabled = YES;
-
-                [mxSession.crypto downloadKeys:@[mxSession.myUser.userId, aliceSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+                            MXRestClient *bobRestClient = mxSession.matrixRestClient;
+                            [mxSession close];
 
 
-                    // Start the test
-                    MXHTTPOperation *httpOperation = [mxSession.crypto ensureOlmSessionsForUsers:@[mxSession.myUser.userId, aliceSession.myUser.userId] success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {
+                            // Test storage: Reopen the session
+                            MXFileStore *store = [[MXFileStore alloc] init];
 
-                        XCTAssertEqual(results.userIds.count, 1, @"Only a session with Alice must be created. No mean to create on with oneself(Bob)");
+                            MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                            [mxSession2 setStore:store success:^{
 
-                        MXOlmSessionResult *sessionWithAliceDevice = [results objectForDevice:@"AliceDevice" forUser:aliceSession.myUser.userId];
-                        XCTAssert(sessionWithAliceDevice);
-                        XCTAssert(sessionWithAliceDevice.sessionId);
-                        XCTAssertEqualObjects(sessionWithAliceDevice.device.deviceId, @"AliceDevice");
+                                MXDeviceInfo *aliceDeviceFromBobPOV2 = [mxSession2.crypto deviceWithIdentityKey:aliceSession.crypto.olmDevice.deviceCurve25519Key forUser:aliceSession.myUser.userId andAlgorithm:kMXCryptoOlmAlgorithm];
 
+                                XCTAssert(aliceDeviceFromBobPOV2);
+                                XCTAssertEqualObjects(aliceDeviceFromBobPOV2.fingerprint, aliceSession.crypto.olmDevice.deviceEd25519Key);
+                                XCTAssertEqual(aliceDeviceFromBobPOV2.verified, MXDeviceBlocked, @"AliceDevice must still be blocked");
 
-                        // Test persistence
-                        MXRestClient *bobRestClient = mxSession.matrixRestClient;
-                        [mxSession close];
+                                // Download again alice device
+                                [mxSession2.crypto downloadKeys:@[aliceSession.myUser.userId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap2) {
 
-                        MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
-                        [mxSession2 setStore:[[MXFileStore alloc] init] success:^{
+                                    MXDeviceInfo *aliceDeviceFromBobPOV3 = [mxSession2.crypto deviceWithIdentityKey:aliceSession.crypto.olmDevice.deviceCurve25519Key forUser:aliceSession.myUser.userId andAlgorithm:kMXCryptoOlmAlgorithm];
 
-                            MXHTTPOperation *httpOperation2 = [mxSession2.crypto ensureOlmSessionsForUsers:@[mxSession2.myUser.userId, aliceSession.myUser.userId] success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {
+                                    XCTAssert(aliceDeviceFromBobPOV3);
+                                    XCTAssertEqualObjects(aliceDeviceFromBobPOV3.fingerprint, aliceSession.crypto.olmDevice.deviceEd25519Key);
+                                    XCTAssertEqual(aliceDeviceFromBobPOV3.verified, MXDeviceBlocked, @"AliceDevice must still be blocked.");
 
-                                XCTAssertEqual(results.userIds.count, 1, @"Only a session with Alice must be created. No mean to create on with oneself(Bob)");
+                                    [expectation fulfill];
 
-                                MXOlmSessionResult *sessionWithAliceDevice = [results objectForDevice:@"AliceDevice" forUser:aliceSession.myUser.userId];
-                                XCTAssert(sessionWithAliceDevice);
-                                XCTAssert(sessionWithAliceDevice.sessionId);
-                                XCTAssertEqualObjects(sessionWithAliceDevice.device.deviceId, @"AliceDevice");
-
-                                [expectation fulfill];
-
+                                } failure:^(NSError *error) {
+                                    XCTFail(@"The request should not fail - NSError: %@", error);
+                                    [expectation fulfill];
+                                }];
                             } failure:^(NSError *error) {
-                                XCTFail(@"The request should not fail - NSError: %@", error);
+                                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                                 [expectation fulfill];
                             }];
-
-                            XCTAssertNil(httpOperation2, @"The session must be in cache. No need to make a request");
-
                         } failure:^(NSError *error) {
-                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                            XCTFail(@"The request should not fail - NSError: %@", error);
                             [expectation fulfill];
                         }];
 
@@ -388,12 +338,99 @@
                         [expectation fulfill];
                     }];
 
-                    XCTAssert(httpOperation);
-
-                } failure:^(NSError *error) {
-                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                    [expectation fulfill];
                 }];
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+    }];
+}
+
+- (void)testEnsureOlmSessionsForUsers
+{
+    [matrixSDKTestsData doMXSessionTestWithAlice:self andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
+
+        aliceSession.matrixRestClient.credentials.deviceId = @"AliceDevice";
+
+        [aliceSession enableCrypto:YES success:^{
+            [aliceSession.crypto uploadKeys:10 success:^{
+
+                [matrixSDKTestsData doMXSessionTestWithBob:nil andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation2) {
+                    mxSession.matrixRestClient.credentials.deviceId = @"BobDevice";
+
+                    [mxSession enableCrypto:YES success:^{
+
+                        [mxSession.crypto downloadKeys:@[mxSession.myUser.userId, aliceSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+
+
+                            // Start the test
+                            MXHTTPOperation *httpOperation = [mxSession.crypto ensureOlmSessionsForUsers:@[mxSession.myUser.userId, aliceSession.myUser.userId] success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {
+
+                                XCTAssertEqual(results.userIds.count, 1, @"Only a session with Alice must be created. No mean to create on with oneself(Bob)");
+
+                                MXOlmSessionResult *sessionWithAliceDevice = [results objectForDevice:@"AliceDevice" forUser:aliceSession.myUser.userId];
+                                XCTAssert(sessionWithAliceDevice);
+                                XCTAssert(sessionWithAliceDevice.sessionId);
+                                XCTAssertEqualObjects(sessionWithAliceDevice.device.deviceId, @"AliceDevice");
+
+
+                                // Test persistence
+                                MXRestClient *bobRestClient = mxSession.matrixRestClient;
+                                [mxSession close];
+
+                                MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                                [mxSession2 setStore:[[MXFileStore alloc] init] success:^{
+
+                                    MXHTTPOperation *httpOperation2 = [mxSession2.crypto ensureOlmSessionsForUsers:@[mxSession2.myUser.userId, aliceSession.myUser.userId] success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {
+
+                                        XCTAssertEqual(results.userIds.count, 1, @"Only a session with Alice must be created. No mean to create on with oneself(Bob)");
+
+                                        MXOlmSessionResult *sessionWithAliceDevice = [results objectForDevice:@"AliceDevice" forUser:aliceSession.myUser.userId];
+                                        XCTAssert(sessionWithAliceDevice);
+                                        XCTAssert(sessionWithAliceDevice.sessionId);
+                                        XCTAssertEqualObjects(sessionWithAliceDevice.device.deviceId, @"AliceDevice");
+
+                                        [expectation fulfill];
+
+                                    } failure:^(NSError *error) {
+                                        XCTFail(@"The request should not fail - NSError: %@", error);
+                                        [expectation fulfill];
+                                    }];
+
+                                    XCTAssertNil(httpOperation2, @"The session must be in cache. No need to make a request");
+
+                                } failure:^(NSError *error) {
+                                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                    [expectation fulfill];
+                                }];
+                                
+                            } failure:^(NSError *error) {
+                                XCTFail(@"The request should not fail - NSError: %@", error);
+                                [expectation fulfill];
+                            }];
+                            
+                            XCTAssert(httpOperation);
+                            
+                        } failure:^(NSError *error) {
+                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                            [expectation fulfill];
+                        }];
+
+                    } failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+
+                }];
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
             }];
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -408,25 +445,31 @@
 {
     [matrixSDKTestsData doMXSessionTestWithBob:self andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
 
-        mxSession.cryptoEnabled = YES;
+        [mxSession enableCrypto:YES success:^{
 
-        [mxSession createRoom:@{} success:^(MXRoom *room) {
+            [mxSession createRoom:@{} success:^(MXRoom *room) {
 
-            XCTAssertFalse(room.isEncrypted);
+                XCTAssertFalse(room.isEncrypted);
 
-            [room enableEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm success:^{
+                [room enableEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm success:^{
 
-                XCTAssert(room.isEncrypted);
-                [expectation fulfill];
+                    XCTAssert(room.isEncrypted);
+                    [expectation fulfill];
 
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
             } failure:^(NSError *error) {
-                XCTFail(@"The request should not fail - NSError: %@", error);
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                 [expectation fulfill];
             }];
+
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
+
     }];
 }
 
@@ -558,63 +601,67 @@
         // @TODO: we lost all crypto data. So events cannot be decypted :/
         [bobSession setStore:[[MXMemoryStore alloc] init] success:^{
 
-            bobSession.cryptoEnabled = YES;
 
-            [bobSession start:^{
+            [bobSession enableCrypto:YES success:^{
+                [bobSession start:^{
 
-                __block NSUInteger paginatedMessagesCount = 0;
+                    __block NSUInteger paginatedMessagesCount = 0;
 
-                MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
+                    MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
 
-                [roomFromBobPOV.liveTimeline resetPagination];
-                [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                    [roomFromBobPOV.liveTimeline resetPagination];
+                    [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                    XCTAssertEqual(direction, MXTimelineDirectionBackwards);
+                        XCTAssertEqual(direction, MXTimelineDirectionBackwards);
 
-                    switch (paginatedMessagesCount++) {
-                        case 0:
-                            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromAlice[1] senderSession:aliceSession]);
-                            break;
+                        switch (paginatedMessagesCount++) {
+                            case 0:
+                                XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromAlice[1] senderSession:aliceSession]);
+                                break;
 
-                        case 1:
-                            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromBob[2] senderSession:bobSession]);
-                            break;
+                            case 1:
+                                XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromBob[2] senderSession:bobSession]);
+                                break;
 
-                        case 2:
-                            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromBob[1] senderSession:bobSession]);
-                            break;
+                            case 2:
+                                XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromBob[1] senderSession:bobSession]);
+                                break;
 
-                        case 3:
-                            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromBob[0] senderSession:bobSession]);
-                            break;
+                            case 3:
+                                XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromBob[0] senderSession:bobSession]);
+                                break;
 
-                        case 4:
-                            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromAlice[0] senderSession:aliceSession]);
-                            break;
+                            case 4:
+                                XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromAlice[0] senderSession:aliceSession]);
+                                break;
 
-                        default:
-                            break;
-                    }
+                            default:
+                                break;
+                        }
 
-                }];
+                    }];
 
-                XCTAssert([roomFromBobPOV.liveTimeline canPaginate:MXTimelineDirectionBackwards]);
-                
-                [roomFromBobPOV.liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:YES complete:^{
+                    XCTAssert([roomFromBobPOV.liveTimeline canPaginate:MXTimelineDirectionBackwards]);
+
+                    [roomFromBobPOV.liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:YES complete:^{
+
+                        XCTAssertEqual(paginatedMessagesCount, 5);
+                        
+                        [expectation fulfill];
+                        
+                    } failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
                     
-                    XCTAssertEqual(paginatedMessagesCount, 5);
-                    
-                    [expectation fulfill];
                     
                 } failure:^(NSError *error) {
-                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                    [expectation fulfill];
+                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
                 }];
-
-
             } failure:^(NSError *error) {
                 NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
             }];
+
         } failure:^(NSError *error) {
             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
         }];

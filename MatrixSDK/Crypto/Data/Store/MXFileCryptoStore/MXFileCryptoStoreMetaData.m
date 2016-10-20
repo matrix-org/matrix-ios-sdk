@@ -18,6 +18,39 @@
 
 @implementation MXFileCryptoStoreMetaData
 
+#pragma mark - NSCoding
+- (id)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [self init];
+    if (self)
+    {
+        NSDictionary *dict = [aDecoder decodeObjectForKey:@"dict"];
+        _userId = dict[@"userId"];
+        _deviceId = dict[@"deviceId"];
+
+        NSNumber *version = dict[@"version"];
+        _version = [version unsignedIntegerValue];
+
+        NSNumber *endToEndDeviceAnnounced = dict[@"endToEndDeviceAnnounced"];
+        _endToEndDeviceAnnounced = [endToEndDeviceAnnounced boolValue];
+
+    }
+    return self;
+}
+
+-(void)encodeWithCoder:(NSCoder *)aCoder
+{
+    // All properties are mandatory except eventStreamToken
+    NSMutableDictionary *dict =[NSMutableDictionary dictionaryWithDictionary:
+                                @{
+                                  @"deviceId": _deviceId,
+                                  @"userId": _userId,
+                                  @"version": @(_version),
+                                  @"endToEndDeviceAnnounced": @(_endToEndDeviceAnnounced)
+                                  }];
+
+    [aCoder encodeObject:dict forKey:@"dict"];
+}
 
 
 @end

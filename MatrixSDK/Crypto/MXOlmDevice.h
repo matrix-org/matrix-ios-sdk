@@ -16,7 +16,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXStore.h"
+#import "MXCryptoStore.h"
 #import "MXDecrypting.h"
 
 /**
@@ -33,7 +33,7 @@
  @param mxSession the mxSession to the home server.
  @return the newly created MXOlmDevice instance.
  */
-- (instancetype)initWithStore:(id<MXStore>)store;
+- (instancetype)initWithStore:(id<MXCryptoStore>)store;
 
 /**
  Curve25519 key for the account.

@@ -29,6 +29,12 @@
 @protocol MXCryptoStore <NSObject>
 
 /**
+ Indicate if the store contains data for the passed account.
+ YES means that the user enabled the crypto in a previous sesison.
+ */
++ (BOOL)hasDataForCredentials:(MXCredentials*)credentials;
+
+/**
  Open the store corresponding to the passed account.
 
  The implementation can use a separated thread for processing but the callback blocks

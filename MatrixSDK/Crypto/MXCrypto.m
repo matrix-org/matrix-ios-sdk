@@ -46,65 +46,71 @@
 
 @implementation MXCrypto
 
-- (instancetype)initWithMatrixSession:(MXSession*)matrixSession
+- (instancetype)initWithMatrixSession:(MXSession*)matrixSession andStore:(id<MXCryptoStore>)store
 {
     self = [super init];
     if (self)
     {
         mxSession = matrixSession;
 
-        _olmDevice = [[MXOlmDevice alloc] initWithStore:matrixSession.store];
+        _store = store;
+        _olmDevice = [[MXOlmDevice alloc] initWithStore:_store];
 
         roomAlgorithms = [NSMutableDictionary dictionary];
-
-        // Build our device keys: they will later be uploaded
-        NSString *deviceId = mxSession.matrixRestClient.credentials.deviceId;
-        if (!deviceId)
-        {
-            // Generate a device id if the homeserver did not provide it or the sdk user forgot it
-            deviceId = [self generateDeviceId];
-
-            NSLog(@"[MXCrypto] Warning: No device id in MXCredentials. An id was created. Think of storing it");
-        }
-
-        myDevice = [[MXDeviceInfo alloc] initWithDeviceId:deviceId];
-        myDevice.userId = mxSession.myUser.userId;
-        myDevice.keys = @{
-                            [NSString stringWithFormat:@"ed25519:%@", mxSession.matrixRestClient.credentials.deviceId]: _olmDevice.deviceEd25519Key,
-                            [NSString stringWithFormat:@"curve25519:%@", mxSession.matrixRestClient.credentials.deviceId]: _olmDevice.deviceCurve25519Key,
-                            };
-        myDevice.algorithms = [[MXCryptoAlgorithms sharedAlgorithms] supportedAlgorithms];
-        myDevice.verified = MXDeviceVerified;
-
-        // Add our own deviceinfo to the store
-        NSMutableDictionary *myDevices = [NSMutableDictionary dictionaryWithDictionary:[mxSession.store endToEndDevicesForUser:mxSession.myUser.userId]];
-        myDevices[myDevice.deviceId] = myDevice;
-        [mxSession.store storeEndToEndDevicesForUser:mxSession.myUser.userId devices:myDevices];
-        if ([mxSession.store respondsToSelector:@selector(commit)])
-        {
-            [mxSession.store commit];
-        }
-
-        [self registerEventHandlers];
-
-        [self uploadKeys:1 success:^{
-            NSLog(@"###########################################################");
-            NSLog(@" uploadKeys done for %@: ", mxSession.myUser.userId);
-
-            NSLog(@"   - device id  : %@", mxSession.matrixRestClient.credentials.deviceId);
-            NSLog(@"   - ed25519    : %@", _olmDevice.deviceEd25519Key);
-            NSLog(@"   - curve25519 : %@", _olmDevice.deviceCurve25519Key);
-            NSLog(@"   - oneTimeKeys: %@", lastPublishedOneTimeKeys);     // They are
-            NSLog(@"");
-
-        } failure:^(NSError *error) {
-            NSLog(@"### uploadKeys failure");
-        }];
 
         // map from userId -> deviceId -> roomId -> timestamp
         // @TODO this._lastNewDeviceMessageTsByUserDeviceRoom = {};
     }
     return self;
+}
+
+- (void)start
+{
+    // The session must be initialised enough before starting this module
+    NSParameterAssert(mxSession.myUser.userId);
+
+    // @TODO: store device id in the store. Do not rely on credentials.deviceId
+    // since it may not exist (which is the case for user logged-in before e2e)
+    
+    // Build our device keys: they will later be uploaded
+    NSString *deviceId = mxSession.matrixRestClient.credentials.deviceId;
+    if (!deviceId)
+    {
+        // Generate a device id if the homeserver did not provide it or the sdk user forgot it
+        deviceId = [self generateDeviceId];
+
+        NSLog(@"[MXCrypto] Warning: No device id in MXCredentials. An id was created. Think of storing it");
+    }
+
+    myDevice = [[MXDeviceInfo alloc] initWithDeviceId:deviceId];
+    myDevice.userId = mxSession.myUser.userId;
+    myDevice.keys = @{
+                      [NSString stringWithFormat:@"ed25519:%@", mxSession.matrixRestClient.credentials.deviceId]: _olmDevice.deviceEd25519Key,
+                      [NSString stringWithFormat:@"curve25519:%@", mxSession.matrixRestClient.credentials.deviceId]: _olmDevice.deviceCurve25519Key,
+                      };
+    myDevice.algorithms = [[MXCryptoAlgorithms sharedAlgorithms] supportedAlgorithms];
+    myDevice.verified = MXDeviceVerified;
+
+    // Add our own deviceinfo to the store
+    NSMutableDictionary *myDevices = [NSMutableDictionary dictionaryWithDictionary:[_store endToEndDevicesForUser:mxSession.myUser.userId]];
+    myDevices[myDevice.deviceId] = myDevice;
+    [_store storeEndToEndDevicesForUser:mxSession.myUser.userId devices:myDevices];
+
+    [self registerEventHandlers];
+
+    [self uploadKeys:1 success:^{
+        NSLog(@"###########################################################");
+        NSLog(@" uploadKeys done for %@: ", mxSession.myUser.userId);
+
+        NSLog(@"   - device id  : %@", mxSession.matrixRestClient.credentials.deviceId);
+        NSLog(@"   - ed25519    : %@", _olmDevice.deviceEd25519Key);
+        NSLog(@"   - curve25519 : %@", _olmDevice.deviceCurve25519Key);
+        NSLog(@"   - oneTimeKeys: %@", lastPublishedOneTimeKeys);     // They are
+        NSLog(@"");
+
+    } failure:^(NSError *error) {
+        NSLog(@"### uploadKeys failure");
+    }];
 }
 
 - (void)close
@@ -202,7 +208,7 @@
 
     for (NSString *userId in userIds)
     {
-        NSDictionary<NSString *,MXDeviceInfo *> *devices = [mxSession.store endToEndDevicesForUser:userId];
+        NSDictionary<NSString *,MXDeviceInfo *> *devices = [_store endToEndDevicesForUser:userId];
         if (devices.count)
         {
             [stored setObjects:devices forUser:userId];
@@ -258,11 +264,7 @@
                 }
 
                 // Update the store. Note
-                [mxSession.store storeEndToEndDevicesForUser:userId devices:devices];
-                if ([mxSession.store respondsToSelector:@selector(commit)])
-                {
-                    [mxSession.store commit];
-                }
+                [_store storeEndToEndDevicesForUser:userId devices:devices];
 
                 // And the response result
                 [stored setObjects:devices forUser:userId];
@@ -281,7 +283,7 @@
 
 - (NSArray<MXDeviceInfo *> *)storedDevicesForUser:(NSString *)userId
 {
-    return [mxSession.store endToEndDevicesForUser:userId].allValues;
+    return [_store endToEndDevicesForUser:userId].allValues;
 }
 
 - (MXDeviceInfo *)deviceWithIdentityKey:(NSString *)senderKey forUser:(NSString *)userId andAlgorithm:(NSString *)algorithm
@@ -314,7 +316,7 @@
 
 - (void)setDeviceVerification:(MXDeviceVerification)verificationStatus forDevice:(NSString *)deviceId ofUser:(NSString *)userId
 {
-    MXDeviceInfo *device = [mxSession.store endToEndDeviceWithDeviceId:deviceId forUser:userId];
+    MXDeviceInfo *device = [_store endToEndDeviceWithDeviceId:deviceId forUser:userId];
 
     // Sanity check
     if (!device)
@@ -327,11 +329,7 @@
     {
         device.verified = verificationStatus;
 
-        [mxSession.store storeEndToEndDeviceForUser:userId device:device];
-        if ([mxSession.store respondsToSelector:@selector(commit)])
-        {
-            [mxSession.store commit];
-        }
+        [_store storeEndToEndDeviceForUser:userId device:device];
     }
 }
 
@@ -383,7 +381,7 @@
 {
     // If we already have encryption in this room, we should ignore this event
     // (for now at least. Maybe we should alert the user somehow?)
-    NSString *existingAlgorithm = [mxSession.store endToEndAlgorithmForRoom:roomId];
+    NSString *existingAlgorithm = [_store endToEndAlgorithmForRoom:roomId];
     if (existingAlgorithm && ![existingAlgorithm isEqualToString:algorithm])
     {
         NSLog(@"[MXCrypto] setEncryptionInRoom: Ignoring m.room.encryption event which requests a change of config in %@", roomId);
@@ -397,11 +395,7 @@
         return NO;
     }
 
-    [mxSession.store storeEndToEndAlgorithmForRoom:roomId algorithm:algorithm];
-    if ([mxSession.store respondsToSelector:@selector(commit)])
-    {
-        [mxSession.store commit];
-    }
+    [_store storeEndToEndAlgorithmForRoom:roomId algorithm:algorithm];
 
     id<MXEncrypting> alg = [[encryptionClass alloc] initWithMatrixSession:mxSession andRoom:roomId];
 
@@ -647,7 +641,7 @@
     // We need to do it only once
     [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXSessionDidSyncNotification object:nil];
 
-    if ([mxSession.store endToEndDeviceAnnounced])
+    if ([_store endToEndDeviceAnnounced])
     {
         return;
     }
@@ -698,11 +692,7 @@
     {
         [mxSession.matrixRestClient sendToDevice:kMXEventTypeStringNewDevice contentMap:contentMap success:^{
 
-            [mxSession.store storeEndToEndDeviceAnnounced];
-            if ([mxSession.store respondsToSelector:@selector(commit)])
-            {
-                [mxSession.store commit];
-            }
+            [_store storeEndToEndDeviceAnnounced];
             
         } failure:nil];
     }

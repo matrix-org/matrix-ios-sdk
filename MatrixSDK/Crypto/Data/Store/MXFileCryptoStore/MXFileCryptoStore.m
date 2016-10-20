@@ -61,6 +61,17 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 
 @implementation MXFileCryptoStore
 
++ (BOOL)hasDataForCredentials:(MXCredentials *)credentials
+{
+    // Create the file path where data will be stored for the user id passed in credentials
+    NSArray *cacheDirList = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+    NSString *cachePath  = [cacheDirList objectAtIndex:0];
+
+    NSString *storePath = [[cachePath stringByAppendingPathComponent:kMXFileCryptoStoreFolder] stringByAppendingPathComponent:credentials.userId];
+
+    return [NSFileManager.defaultManager fileExistsAtPath:storePath];
+}
+
 - (instancetype)init
 {
     self = [super init];
@@ -80,7 +91,7 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
     NSArray *cacheDirList = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
     NSString *cachePath  = [cacheDirList objectAtIndex:0];
 
-    storePath = [[cachePath stringByAppendingPathComponent:kMXFileCryptoStoreFolder] stringByAppendingPathComponent:credentials.deviceId];
+    storePath = [[cachePath stringByAppendingPathComponent:kMXFileCryptoStoreFolder] stringByAppendingPathComponent:credentials.userId];
 
     // Load the data even if the app goes in background
     __block UIBackgroundTaskIdentifier backgroundTaskIdentifier = [[UIApplication sharedApplication] beginBackgroundTaskWithName:@"openWithCredentials" expirationHandler:^{
@@ -154,12 +165,25 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 
 - (void)deleteAllData
 {
+    NSLog(@"[MXFileCryptoStore] Delete all data");
 
+    // Remove the MXFileStore and all its content
+    NSError *error;
+    [[NSFileManager defaultManager] removeItemAtPath:storePath error:&error];
+
+    // And create folders back
+    [[NSFileManager defaultManager] createDirectoryAtPath:storePath withIntermediateDirectories:YES attributes:nil error:nil];
+
+    // Reset data
+    metaData = nil;
 }
 
 - (void)storeEndToEndAccount:(OLMAccount *)account
 {
     olmAccount = account;
+
+    NSString *filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreAccountFile];
+    [NSKeyedArchiver archiveRootObject:olmAccount toFile:filePath];
 }
 
 - (OLMAccount *)endToEndAccount
@@ -170,6 +194,7 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 - (void)storeEndToEndDeviceAnnounced
 {
     metaData.endToEndDeviceAnnounced = YES;
+    [self saveMetaData];
 }
 
 - (BOOL)endToEndDeviceAnnounced
@@ -180,6 +205,9 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 - (void)storeEndToEndDeviceForUser:(NSString *)userId device:(MXDeviceInfo *)device
 {
     [usersDevicesInfoMap setObject:device forUser:userId andDevice:device.deviceId];
+
+    NSString *filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreDevicesFile];
+    [NSKeyedArchiver archiveRootObject:usersDevicesInfoMap toFile:filePath];
 }
 
 - (MXDeviceInfo *)endToEndDeviceWithDeviceId:(NSString *)deviceId forUser:(NSString *)userId
@@ -190,6 +218,9 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 - (void)storeEndToEndDevicesForUser:(NSString *)userId devices:(NSDictionary<NSString *,MXDeviceInfo *> *)devices
 {
     [usersDevicesInfoMap setObjects:devices forUser:userId];
+
+    NSString *filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreDevicesFile];
+    [NSKeyedArchiver archiveRootObject:usersDevicesInfoMap toFile:filePath];
 }
 
 - (NSDictionary<NSString *,MXDeviceInfo *> *)endToEndDevicesForUser:(NSString *)userId
@@ -200,6 +231,9 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 - (void)storeEndToEndAlgorithmForRoom:(NSString *)roomId algorithm:(NSString *)algorithm
 {
     roomsAlgorithms[roomId] = algorithm;
+
+    NSString *filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreRoomsAlgorithmsFile];
+    [NSKeyedArchiver archiveRootObject:roomsAlgorithms toFile:filePath];
 }
 
 - (NSString *)endToEndAlgorithmForRoom:(NSString *)roomId
@@ -215,6 +249,9 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
     }
 
     olmSessions[deviceKey][session.sessionIdentifier] = session;
+
+    NSString *filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreSessionsFile];
+    [NSKeyedArchiver archiveRootObject:olmSessions toFile:filePath];
 }
 
 - (NSDictionary<NSString *,OLMSession *> *)endToEndSessionsWithDevice:(NSString *)deviceKey
@@ -224,13 +261,15 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 
 - (void)storeEndToEndInboundGroupSession:(MXOlmInboundGroupSession *)session
 {
-    NSLog(@"##### storeEndToEndInboundGroupSession: %@", session.senderKey);
     if (!inboundGroupSessions[session.senderKey])
     {
         inboundGroupSessions[session.senderKey] = [NSMutableDictionary dictionary];
     }
 
     inboundGroupSessions[session.senderKey][session.session.sessionIdentifier] = session;
+
+    NSString *filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreInboundGroupSessionsFile];
+    [NSKeyedArchiver archiveRootObject:inboundGroupSessions toFile:filePath];
 }
 
 - (MXOlmInboundGroupSession *)endToEndInboundGroupSessionWithId:(NSString *)sessionId andSenderKey:(NSString *)senderKey
@@ -263,7 +302,10 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 
 - (void)preloadCryptoData
 {
-    NSString *filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreDevicesFile];
+    NSString *filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreAccountFile];
+    olmAccount = [NSKeyedUnarchiver unarchiveObjectWithFile:filePath];
+
+    filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreDevicesFile];
     usersDevicesInfoMap = [NSKeyedUnarchiver unarchiveObjectWithFile:filePath];
 
     filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreRoomsAlgorithmsFile];
