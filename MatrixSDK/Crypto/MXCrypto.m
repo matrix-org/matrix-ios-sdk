@@ -68,25 +68,24 @@
 {
     // The session must be initialised enough before starting this module
     NSParameterAssert(mxSession.myUser.userId);
-
-    // @TODO: store device id in the store. Do not rely on credentials.deviceId
-    // since it may not exist (which is the case for user logged-in before e2e)
     
     // Build our device keys: they will later be uploaded
-    NSString *deviceId = mxSession.matrixRestClient.credentials.deviceId;
+    NSString *deviceId = _store.deviceId;
     if (!deviceId)
     {
-        // Generate a device id if the homeserver did not provide it or the sdk user forgot it
+        // Generate a device id if the homeserver did not provide it or it was lost
         deviceId = [self generateDeviceId];
 
-        NSLog(@"[MXCrypto] Warning: No device id in MXCredentials. An id was created. Think of storing it");
+        NSLog(@"[MXCrypto] Warning: No device id in MXCredentials. The id %@ was created", deviceId);
+
+        [_store storeDeviceId:deviceId];
     }
 
     myDevice = [[MXDeviceInfo alloc] initWithDeviceId:deviceId];
     myDevice.userId = mxSession.myUser.userId;
     myDevice.keys = @{
-                      [NSString stringWithFormat:@"ed25519:%@", mxSession.matrixRestClient.credentials.deviceId]: _olmDevice.deviceEd25519Key,
-                      [NSString stringWithFormat:@"curve25519:%@", mxSession.matrixRestClient.credentials.deviceId]: _olmDevice.deviceCurve25519Key,
+                      [NSString stringWithFormat:@"ed25519:%@", deviceId]: _olmDevice.deviceEd25519Key,
+                      [NSString stringWithFormat:@"curve25519:%@", deviceId]: _olmDevice.deviceCurve25519Key,
                       };
     myDevice.algorithms = [[MXCryptoAlgorithms sharedAlgorithms] supportedAlgorithms];
     myDevice.verified = MXDeviceVerified;
@@ -102,7 +101,7 @@
         NSLog(@"###########################################################");
         NSLog(@" uploadKeys done for %@: ", mxSession.myUser.userId);
 
-        NSLog(@"   - device id  : %@", mxSession.matrixRestClient.credentials.deviceId);
+        NSLog(@"   - device id  : %@", deviceId);
         NSLog(@"   - ed25519    : %@", _olmDevice.deviceEd25519Key);
         NSLog(@"   - curve25519 : %@", _olmDevice.deviceCurve25519Key);
         NSLog(@"   - oneTimeKeys: %@", lastPublishedOneTimeKeys);     // They are
@@ -563,7 +562,7 @@
 
     NSMutableDictionary *payloadJson = [NSMutableDictionary dictionaryWithDictionary:payloadFields];
     payloadJson[@"fingerprint"] = participantHash;
-    payloadJson[@"sender_device"] = mxSession.matrixRestClient.credentials.deviceId;
+    payloadJson[@"sender_device"] = _store.deviceId;
 
     // Include the Ed25519 key so that the recipient knows what
     // device this message came from.

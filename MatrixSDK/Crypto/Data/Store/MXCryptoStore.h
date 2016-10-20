@@ -52,6 +52,16 @@
 - (void)deleteAllData;
 
 /**
+ Store the device id.
+ */
+- (void)storeDeviceId:(NSString*)deviceId;
+
+/**
+ The device id.
+ */
+- (NSString*)deviceId;
+
+/**
  Store the end to end account for the logged-in user.
  */
 - (void)storeAccount:(OLMAccount*)account;

@@ -124,7 +124,8 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
             [self deleteAllData];
         }
         // Check credentials
-        else if (NO == [metaData.userId isEqualToString:credentials.userId])
+        else if (NO == [metaData.userId isEqualToString:credentials.userId]
+                 || NO == [metaData.deviceId isEqualToString:credentials.deviceId])
 
         {
             NSLog(@"[MXFileCryptoStore] Credentials do not match");
@@ -176,6 +177,17 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 
     // Reset data
     metaData = nil;
+}
+
+- (void)storeDeviceId:(NSString *)deviceId
+{
+    metaData.deviceId = deviceId;
+    [self saveMetaData];
+}
+
+- (NSString *)deviceId
+{
+    return metaData.deviceId;
 }
 
 - (void)storeAccount:(OLMAccount *)account
