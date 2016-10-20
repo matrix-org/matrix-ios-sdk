@@ -62,11 +62,11 @@
 - (void)doE2ETestWithBobAndAlice:(XCTestCase*)testCase
                                   readyToTest:(void (^)(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation))readyToTest
 {
-    [matrixSDKTestsData doMXSessionTestWithBob:self andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation) {
 
         [bobSession enableCrypto:YES success:^{
 
-            [matrixSDKTestsData doMXSessionTestWithAlice:nil andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
+            [matrixSDKTestsData doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
 
                 [aliceSession enableCrypto:YES success:^{
                     readyToTest(bobSession, aliceSession, expectation);
@@ -81,7 +81,7 @@
 - (void)doE2ETestWithAliceInARoom:(XCTestCase*)testCase
                     readyToTest:(void (^)(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation))readyToTest
 {
-    [matrixSDKTestsData doMXSessionTestWithAlice:self andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXSessionTestWithAlice:self readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
 
         [aliceSession enableCrypto:YES success:^{
 
@@ -111,7 +111,7 @@
 
         MXRoom *room = [aliceSession roomWithRoomId:roomId];
 
-        [matrixSDKTestsData doMXSessionTestWithBob:nil andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation2) {
+        [matrixSDKTestsData doMXSessionTestWithBob:nil readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation2) {
 
             [bobSession enableCrypto:YES success:^{
 
@@ -157,16 +157,22 @@
             }
         }];
 
+        // Send messages in expected order
         [roomFromAlicePOV sendTextMessage:messagesFromAlice[0] success:^(NSString *eventId) {
 
-            [roomFromBobPOV sendTextMessage:messagesFromBob[0] success:nil failure:nil];
-            [roomFromBobPOV sendTextMessage:messagesFromBob[1] success:nil failure:nil];
-            [roomFromBobPOV sendTextMessage:messagesFromBob[2] success:^(NSString *eventId) {
+            [roomFromBobPOV sendTextMessage:messagesFromBob[0] success:^(NSString *eventId) {
 
-                [roomFromAlicePOV sendTextMessage:messagesFromAlice[1] success:nil failure:nil];
+                [roomFromBobPOV sendTextMessage:messagesFromBob[1] success:^(NSString *eventId) {
+
+                    [roomFromBobPOV sendTextMessage:messagesFromBob[2] success:^(NSString *eventId) {
+
+                        [roomFromAlicePOV sendTextMessage:messagesFromAlice[1] success:nil failure:nil];
+
+                    } failure:nil];
+                    
+                } failure:nil];
 
             } failure:nil];
-
 
         } failure:^(NSError *error) {
             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
@@ -206,7 +212,7 @@
 
 - (void)testCryptoPersistenceInStore
 {
-    [matrixSDKTestsData doMXSessionTestWithBob:self andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
 
         // In case of password registration, the homeserver does not provide a device id
         // Hardcode one
@@ -262,7 +268,7 @@
 
 - (void)testKeysUploadAndDownload
 {
-    [matrixSDKTestsData doMXSessionTestWithAlice:self andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXSessionTestWithAlice:self readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
 
         aliceSession.matrixRestClient.credentials.deviceId = @"AliceDevice";
 
@@ -270,7 +276,7 @@
 
             [aliceSession.crypto uploadKeys:10 success:^{
 
-                [matrixSDKTestsData doMXSessionTestWithBob:nil andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation2) {
+                [matrixSDKTestsData doMXSessionTestWithBob:nil readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation2) {
                     mxSession.matrixRestClient.credentials.deviceId = @"BobDevice";
 
                     [mxSession enableCrypto:YES success:^{
@@ -354,14 +360,14 @@
 
 - (void)testEnsureOlmSessionsForUsers
 {
-    [matrixSDKTestsData doMXSessionTestWithAlice:self andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXSessionTestWithAlice:self readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
 
         aliceSession.matrixRestClient.credentials.deviceId = @"AliceDevice";
 
         [aliceSession enableCrypto:YES success:^{
             [aliceSession.crypto uploadKeys:10 success:^{
 
-                [matrixSDKTestsData doMXSessionTestWithBob:nil andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation2) {
+                [matrixSDKTestsData doMXSessionTestWithBob:nil readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation2) {
                     mxSession.matrixRestClient.credentials.deviceId = @"BobDevice";
 
                     [mxSession enableCrypto:YES success:^{
@@ -443,7 +449,7 @@
 #pragma mark - MXRoom
 - (void)testRoomIsEncrypted
 {
-    [matrixSDKTestsData doMXSessionTestWithBob:self andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
+    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
 
         [mxSession enableCrypto:YES success:^{
 
@@ -548,14 +554,19 @@
 
             XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromAlice[receivedMessagesFromAlice++] senderSession:aliceSession]);
 
-            switch (receivedMessagesFromAlice) {
+            switch (receivedMessagesFromAlice)
+            {
                 case 1:
-
-                    [roomFromBobPOV sendTextMessage:messagesFromBob[0] success:nil failure:nil];
-                    [roomFromBobPOV sendTextMessage:messagesFromBob[1] success:nil failure:nil];
-                    [roomFromBobPOV sendTextMessage:messagesFromBob[2] success:nil failure:nil];
+                {
+                    // Send messages in expected order
+                    [roomFromBobPOV sendTextMessage:messagesFromBob[0] success:^(NSString *eventId) {
+                        [roomFromBobPOV sendTextMessage:messagesFromBob[1] success:^(NSString *eventId) {
+                            [roomFromBobPOV sendTextMessage:messagesFromBob[2] success:nil failure:nil];
+                        } failure:nil];
+                    } failure:nil];
 
                     break;
+                }
 
                 case 2:
                     [expectation fulfill];
