@@ -523,19 +523,26 @@
     } failure:failure];
 }
 
-- (MXEvent*)decryptEvent:(MXEvent *)event
+- (MXEvent*)decryptEvent:(MXEvent *)event error:(NSError *__autoreleasing *)error
 {
     Class algClass = [[MXCryptoAlgorithms sharedAlgorithms] decryptorClassForAlgorithm:event.content[@"algorithm"]];
 
     if (!algClass)
     {
         NSLog(@"[MXCrypto] decryptEvent: Unable to decrypt %@", event.content[@"algorithm"]);
+        
+        *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                     code:MXDecryptingErrorUnableToDecryptCode
+                                 userInfo:@{
+                                            NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, event.content[@"algorithm"]]
+                                            }];
         return nil;
     }
 
     id<MXDecrypting> alg = [[algClass alloc] initWithMatrixSession:mxSession];
 
-    MXDecryptionResult *result = [alg decryptEvent:event error:nil];
+    NSError *algDecryptError;
+    MXDecryptionResult *result = [alg decryptEvent:event error:&algDecryptError];
 
     MXEvent *clearedEvent;
     if (result)
@@ -546,8 +553,12 @@
     }
     else
     {
-        // @TODO: Manage error
-        NSLog(@"[MXCrypto]: decryptEvent: @TODO: Manage error");
+        NSLog(@"[MXCrypto] decryptEvent: Error: %@", algDecryptError);
+
+        if (error)
+        {
+            *error = algDecryptError;
+        }
     }
 
     return clearedEvent;

@@ -53,9 +53,11 @@
 
     if (!senderKey || !sessionId || !ciphertext)
     {
-        // @TODO: error
-        //throw new base.DecryptionError("Missing fields in input");
-        NSLog(@"[MXMegolmDecryption] decryptEvent: ERROR: Missing fields in input");
+        *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                     code:MXDecryptingErrorMissingFieldsCode
+                                 userInfo:@{
+                                            NSLocalizedFailureReasonErrorKey: MXDecryptingErrorMissingFieldsReason
+                                            }];
         return nil;
     }
 

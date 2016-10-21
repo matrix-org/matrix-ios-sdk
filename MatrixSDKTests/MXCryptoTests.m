@@ -815,8 +815,7 @@
             XCTAssertEqual(event.eventType, MXEventTypeRoomEncrypted);
             XCTAssertNil(event.content[@"body"]);
 
-            // @TODO
-            //XCTAssert(event.decryptError);
+            XCTAssert(event.decryptionError);
 
             [expectation fulfill];
         }];

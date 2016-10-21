@@ -54,15 +54,25 @@
 
     if (!ciphertext)
     {
-        // @TODO: error
-        //throw new base.DecryptionError("Missing ciphertext");
+        NSLog(@"[MXOlmDecryption] decryptEvent: Error: Missing ciphertext");
+
+        *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                     code:MXDecryptingErrorMissingCiphertextCode
+                                 userInfo:@{
+                                            NSLocalizedFailureReasonErrorKey: MXDecryptingErrorMissingCiphertextReason
+                                            }];
         return nil;
     }
 
     if (!ciphertext[olmDevice.deviceCurve25519Key])
     {
-        // @TODO: error
-        //throw new base.DecryptionError("Not included in recipients");
+        NSLog(@"[MXOlmDecryption] decryptEvent: Error: Not included in recipients");
+
+        *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                     code:MXDecryptingErrorNotIncludedInRecipientsCode
+                                 userInfo:@{
+                                            NSLocalizedFailureReasonErrorKey: MXDecryptingErrorNotIncludedInRecipientsReason
+                                            }];
         return nil;
     }
 
@@ -72,12 +82,15 @@
     NSString *payloadString = [self decryptMessage:message andTheirDeviceIdentityKey:deviceKey];
     if (!payloadString)
     {
-        NSLog(@"[MXOlmDecryption] Failed to decrypt Olm event (id= %@) from %@: @TODO error", event.eventId, deviceKey);
+        NSLog(@"[MXOlmDecryption] Failed to decrypt Olm event (id= %@) from %@", event.eventId, deviceKey);
+
+        *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                     code:MXDecryptingErrorBadEncryptedMessageCode
+                                 userInfo:@{
+                                            NSLocalizedFailureReasonErrorKey: MXDecryptingErrorBadEncryptedMessageReason
+                                            }];
 
         return nil;
-
-        // @TODO: error
-        // throw new base.DecryptionError("Bad Encrypted Message");
     }
 
     // TODO: Check the sender user id matches the sender key.

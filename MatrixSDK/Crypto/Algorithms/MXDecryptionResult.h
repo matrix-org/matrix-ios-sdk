@@ -16,6 +16,21 @@
 
 #import <Foundation/Foundation.h>
 
+FOUNDATION_EXPORT NSString *const MXDecryptingErrorDomain;
+
+FOUNDATION_EXPORT NSInteger const MXDecryptingErrorUnableToDecryptCode;
+FOUNDATION_EXPORT NSString* const MXDecryptingErrorUnableToDecryptReason;
+FOUNDATION_EXPORT NSInteger const MXDecryptingErrorUnkwnownInboundSessionIdCode;
+FOUNDATION_EXPORT NSString* const MXDecryptingErrorUnkwnownInboundSessionIdReason;
+FOUNDATION_EXPORT NSInteger const MXDecryptingErrorMissingFieldsCode;
+FOUNDATION_EXPORT NSString* const MXDecryptingErrorMissingFieldsReason;
+FOUNDATION_EXPORT NSInteger const MXDecryptingErrorMissingCiphertextCode;
+FOUNDATION_EXPORT NSString* const MXDecryptingErrorMissingCiphertextReason;
+FOUNDATION_EXPORT NSInteger const MXDecryptingErrorNotIncludedInRecipientsCode;
+FOUNDATION_EXPORT NSString* const MXDecryptingErrorNotIncludedInRecipientsReason;
+FOUNDATION_EXPORT NSInteger const MXDecryptingErrorBadEncryptedMessageCode;
+FOUNDATION_EXPORT NSString* const MXDecryptingErrorBadEncryptedMessageReason;
+
 /**
  Result of a decryption.
  */

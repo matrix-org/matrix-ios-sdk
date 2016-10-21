@@ -1039,22 +1039,21 @@ typedef void (^MXOnResumeDone)();
     // Decrypt event if necessary
     if (event.eventType == MXEventTypeRoomEncrypted)
     {
-        event.clearEvent = [_crypto decryptEvent:event];
+        NSError *error;
+        event.clearEvent = [_crypto decryptEvent:event error:&error];
+
+        if (!event.clearEvent)
+        {
+            NSLog(@"[MXSession] handleToDeviceEvent: Warning: Unable to decrypt to-device event: %@\nError: %@", event.content[@"body"], error);
+            return;
+        }
     }
 
-    if (event.eventType == MXEventTypeRoomMessage
-        && [event.content[@"msgtype"] isEqualToString:@"m.bad.encrypted"])
-    {
-        NSLog(@"[MXSession] handleToDeviceEvent: Warning: Unable to decrypt to-device even: %@", event.content[@"body"]);
-    }
-    else
-    {
-        [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionOnToDeviceEventNotification
-                                                            object:self
-                                                          userInfo:@{
-                                                                     kMXSessionNotificationEventKey: event
-                                                                     }];
-    }
+    [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionOnToDeviceEventNotification
+                                                        object:self
+                                                      userInfo:@{
+                                                                 kMXSessionNotificationEventKey: event
+                                                                 }];
 }
 
 #pragma mark - Options

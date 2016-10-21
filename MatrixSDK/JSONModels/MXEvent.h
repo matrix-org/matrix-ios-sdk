@@ -346,4 +346,9 @@ FOUNDATION_EXPORT uint64_t const kMXUndefinedTimestamp;
  */
 @property (nonatomic, readonly) NSString *senderKey;
 
+/**
+ If any, the error that occured during decryption.
+ */
+@property (nonatomic) NSError *decryptionError;
+
 @end

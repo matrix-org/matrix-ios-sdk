@@ -16,6 +16,21 @@
 
 #import "MXDecryptionResult.h"
 
+NSString *const MXDecryptingErrorDomain = @"org.matrix.sdk.crypto.decryption";
+
+NSInteger const MXDecryptingErrorUnableToDecryptCode            = 0;
+NSString* const MXDecryptingErrorUnableToDecryptReason          = @"Unable to decrypt %@";
+NSInteger const MXDecryptingErrorUnkwnownInboundSessionIdCode   = 1;
+NSString* const MXDecryptingErrorUnkwnownInboundSessionIdReason = @"Unknown inbound session id";
+NSInteger const MXDecryptingErrorMissingFieldsCode              = 2;
+NSString* const MXDecryptingErrorMissingFieldsReason            = @"Missing fields in input";
+NSInteger const MXDecryptingErrorMissingCiphertextCode          = 3;
+NSString* const MXDecryptingErrorMissingCiphertextReason        = @"Missing ciphertext";
+NSInteger const MXDecryptingErrorNotIncludedInRecipientsCode    = 4;
+NSString* const MXDecryptingErrorNotIncludedInRecipientsReason  = @"Not included in recipients";
+NSInteger const MXDecryptingErrorBadEncryptedMessageCode        = 5;
+NSString* const MXDecryptingErrorBadEncryptedMessageReason      = @"Bad Encrypted Message";
+
 @implementation MXDecryptionResult
 
 @end
