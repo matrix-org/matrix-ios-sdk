@@ -43,11 +43,16 @@
     // All properties are mandatory except eventStreamToken
     NSMutableDictionary *dict =[NSMutableDictionary dictionaryWithDictionary:
                                 @{
-                                  @"deviceId": _deviceId,
                                   @"userId": _userId,
                                   @"version": @(_version),
                                   @"DeviceAnnounced": @(_DeviceAnnounced)
                                   }];
+
+    // Device may be not provided by the hs
+    if (_deviceId)
+    {
+        dict[@"deviceId"] = _deviceId;
+    }
 
     [aCoder encodeObject:dict forKey:@"dict"];
 }
