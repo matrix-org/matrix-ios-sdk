@@ -516,6 +516,8 @@
     }
 
     id<MXEncrypting> alg = roomAlgorithms[room.roomId];
+
+    // @TODO: We silently fail if roomAlgorithms[room.roomId] = nil :/
     return [alg encryptEventContent:eventContent eventType:eventType inRoom:room success:^(NSDictionary *encryptedContent) {
 
         success(encryptedContent, kMXEventTypeStringRoomEncrypted);
