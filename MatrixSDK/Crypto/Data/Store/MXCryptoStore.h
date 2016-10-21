@@ -35,16 +35,31 @@
 + (BOOL)hasDataForCredentials:(MXCredentials*)credentials;
 
 /**
- Open the store corresponding to the passed account.
+ Create a crypto store for the passed credentials.
+ 
+ @param credentials the credentials of the account.
+ @return the ready to use store.
+ */
++ (instancetype)createStoreWithCredentials:(MXCredentials*)credentials;
 
- The implementation can use a separated thread for processing but the callback blocks
- must be called from the main thread.
+/**
+ Create a crypto store for the passed credentials.
 
  @param credentials the credentials of the account.
- @param onComplete the callback called once the data has been loaded
+ @return the store. Call the open method before using it.
+ */
+- (instancetype)initWithCredentials:(MXCredentials *)credentials;
+
+/**
+ Open the store corresponding to the passed account.
+
+ The implementation can use a separated thread for loading data but the callback blocks
+ must be called from the main thread.
+
+ @param onComplete the callback called once the data has been loaded.
  @param failure the callback called in case of error.
  */
-- (void)openWithCredentials:(MXCredentials*)credentials onComplete:(void (^)())onComplete failure:(void (^)(NSError *error))failure;
+- (void)open:(void (^)())onComplete failure:(void (^)(NSError *error))failure;
 
 /**
  Erase all data from the store.

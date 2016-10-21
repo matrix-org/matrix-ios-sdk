@@ -32,6 +32,9 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 
 @interface MXFileCryptoStore ()
 {
+    // The credentials used for this store
+    MXCredentials *credentials;
+
     // Meta data about the store
     MXFileCryptoStoreMetaData *metaData;
 
@@ -72,11 +75,48 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
     return [NSFileManager.defaultManager fileExistsAtPath:storePath];
 }
 
-- (instancetype)init
++ (instancetype)createStoreWithCredentials:(MXCredentials *)credentials
+{
+    // The store must not exist yet
+    NSParameterAssert(![MXFileCryptoStore hasDataForCredentials:credentials]);
+
+    MXFileCryptoStore *store = [[MXFileCryptoStore alloc] initWithCredentials:credentials];
+    if (store)
+    {
+        MXFileCryptoStoreMetaData *cachedMetaData = store->metaData;
+
+        [store deleteAllData];
+
+        store->metaData = cachedMetaData;
+        [store saveMetaData];
+    }
+    return store;
+}
+
+- (instancetype)initWithCredentials:(MXCredentials *)theCredentials
 {
     self = [super init];
     if (self)
     {
+        credentials = theCredentials;
+        
+        // Create the file path where data will be stored for the user id passed in credentials
+        NSArray *cacheDirList = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+        NSString *cachePath  = [cacheDirList objectAtIndex:0];
+
+        storePath = [[cachePath stringByAppendingPathComponent:kMXFileCryptoStoreFolder] stringByAppendingPathComponent:credentials.userId];
+
+        // Build default metadata
+        if (nil == metaData && credentials.homeServer && credentials.userId && credentials.accessToken)
+        {
+            metaData = [[MXFileCryptoStoreMetaData alloc] init];
+            metaData.userId = [credentials.userId copy];
+            metaData.deviceId = [credentials.deviceId copy];
+            metaData.version = kMXFileCryptoStoreVersion;
+            metaData.DeviceAnnounced = NO;
+            [self saveMetaData];
+        }
+
         usersDevicesInfoMap = [[MXUsersDevicesMap<MXDeviceInfo*> alloc] init];
         roomsAlgorithms = [NSMutableDictionary dictionary];
         olmSessions = [NSMutableDictionary dictionary];
@@ -85,13 +125,10 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
     return self;
 }
 
-- (void)openWithCredentials:(MXCredentials *)credentials onComplete:(void (^)())onComplete failure:(void (^)(NSError *))failure
+- (void)open:(void (^)())onComplete failure:(void (^)(NSError *))failure
 {
-    // Create the file path where data will be stored for the user id passed in credentials
-    NSArray *cacheDirList = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-    NSString *cachePath  = [cacheDirList objectAtIndex:0];
-
-    storePath = [[cachePath stringByAppendingPathComponent:kMXFileCryptoStoreFolder] stringByAppendingPathComponent:credentials.userId];
+    // Reset the metadata, it will be rebuilt from the data on the store
+    metaData = nil;
 
     // Load the data even if the app goes in background
     __block UIBackgroundTaskIdentifier backgroundTaskIdentifier = [[UIApplication sharedApplication] beginBackgroundTaskWithName:@"openWithCredentials" expirationHandler:^{
@@ -116,11 +153,6 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
         else if (kMXFileCryptoStoreVersion != metaData.version)
         {
             NSLog(@"[MXFileCryptoStore] New MXFileCryptoStore version detected");
-            [self deleteAllData];
-        }
-        // Check credentials
-        else if (nil == credentials)
-        {
             [self deleteAllData];
         }
         // Check credentials

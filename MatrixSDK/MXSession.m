@@ -1062,39 +1062,28 @@ typedef void (^MXOnResumeDone)();
     _callManager = [[MXCallManager alloc] initWithMatrixSession:self andCallStack:callStack];
 }
 
-- (void)enableCrypto:(BOOL)enableCrypto success:(void (^)())success failure:(void (^)(NSError *))failure
+- (void)setCryptoEnabled:(BOOL)cryptoEnabled
 {
-    if (enableCrypto && !_crypto)
+    _cryptoEnabled = cryptoEnabled;
+
+    if (cryptoEnabled && !_crypto)
     {
-        MXFileCryptoStore *cryptoStore = [[MXFileCryptoStore alloc] init];
+        MXFileCryptoStore *cryptoStore = [MXFileCryptoStore createStoreWithCredentials:self.matrixRestClient.credentials];
 
-        [cryptoStore openWithCredentials:self.matrixRestClient.credentials onComplete:^{
+        _crypto = [[MXCrypto alloc] initWithMatrixSession:self andStore:cryptoStore];
 
-            _crypto = [[MXCrypto alloc] initWithMatrixSession:self andStore:cryptoStore];
-
-            if (_myUser)
-            {
-                [_crypto start];
-            }
-
-            success();
-
-        } failure:failure];
-
+        if (_myUser)
+        {
+            [_crypto start];
+        }
     }
-    else if (!enableCrypto && _crypto)
+    else if (!cryptoEnabled && _crypto)
     {
         // Erase all crypto data of this user
         [_crypto.store deleteAllData];
 
         [_crypto close];
         _crypto = nil;
-        success();
-    }
-    else
-    {
-        // Nothing to do
-        success();
     }
 }
 
@@ -1104,9 +1093,24 @@ typedef void (^MXOnResumeDone)();
  */
 - (void)checkCrypto:(void (^)())complete
 {
-    if ([MXFileCryptoStore hasDataForCredentials:matrixRestClient.credentials])
+    if (!_crypto && [MXFileCryptoStore hasDataForCredentials:matrixRestClient.credentials])
     {
-        [self enableCrypto:YES success:complete failure:complete];
+        MXFileCryptoStore *cryptoStore = [[MXFileCryptoStore alloc] initWithCredentials:self.matrixRestClient.credentials];
+
+        [cryptoStore open:^{
+
+            _crypto = [[MXCrypto alloc] initWithMatrixSession:self andStore:cryptoStore];
+
+            if (_myUser)
+            {
+                [_crypto start];
+            }
+
+            complete();
+
+        } failure:^(NSError *error) {
+            complete();
+        }];
     }
     else
     {
