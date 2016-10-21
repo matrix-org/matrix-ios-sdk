@@ -825,7 +825,7 @@ typedef void (^MXOnResumeDone)();
             MXError *mxError = [[MXError alloc] initWithNSError:error];
             if ([mxError.errcode isEqualToString:kMXErrCodeStringUnknownToken])
             {
-                NSLog(@"[MXSession] The access token is no more valid. Go to MXSessionStateUnknownToken state. Error: %@", error);
+                NSLog(@"[MXSession] The access token is no more valid. Go to MXSessionStateUnknownToken state.");
                 [self setState:MXSessionStateUnknownToken];
 
                 // Do nothing more because without a valid access_token, the session is useless
