@@ -77,6 +77,8 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 
 + (instancetype)createStoreWithCredentials:(MXCredentials *)credentials
 {
+    NSLog(@"[MXFileCryptoStore] createStoreWithCredentials");
+
     // The store must not exist yet
     NSParameterAssert(![MXFileCryptoStore hasDataForCredentials:credentials]);
 

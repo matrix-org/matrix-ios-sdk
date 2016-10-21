@@ -205,6 +205,25 @@
 
 #pragma mark - MXCrypto
 
+- (void)testCryptoNoDeviceId
+{
+    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
+
+        // Simulate no device id provided by the home server
+        mxSession.matrixRestClient.credentials.deviceId = nil;
+
+        XCTAssertNil(mxSession.crypto, @"Crypto is disabled by default");
+
+        mxSession.cryptoEnabled = YES;
+        XCTAssert(mxSession.crypto);
+
+        XCTAssertGreaterThan(mxSession.crypto.store.deviceId.length, 0, "If the hs did not provide a device id, the crypto module must create one");
+
+        [expectation fulfill];
+
+    }];
+}
+
 - (void)testCryptoPersistenceInStore
 {
     [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
@@ -219,7 +238,7 @@
 
         mxSession2.cryptoEnabled = YES;
 
-        XCTAssert(mxSession.crypto);
+        XCTAssert(mxSession2.crypto);
 
         NSString *deviceCurve25519Key = mxSession2.crypto.olmDevice.deviceCurve25519Key;
         NSString *deviceEd25519Key = mxSession2.crypto.olmDevice.deviceEd25519Key;
@@ -774,23 +793,124 @@
         XCTAssert(roomFromBobPOV.state.isEncrypted, "Even if his crypto is disabled, Bob should know that a room is encrypted");
         XCTAssert(roomFromAlicePOV.state.isEncrypted);
 
-        [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+        __block NSUInteger messageCount = 0;
 
-            XCTAssertEqual(event.eventType, MXEventTypeRoomEncrypted);
-            XCTAssertNil(event.content[@"body"]);
+        [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomEncrypted, kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-            XCTAssert(event.decryptionError);
-            XCTAssertEqualObjects(event.decryptionError.domain, MXDecryptingErrorDomain);
-            XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorEncryptionNotEnabledCode);
-            XCTAssertEqualObjects(event.decryptionError.localizedDescription, MXDecryptingErrorEncryptionNotEnabledReason);
+            switch (messageCount++)
+            {
+                case 0:
+                {
+                    XCTAssert(event.isEncrypted);
+                    XCTAssertEqual(event.eventType, MXEventTypeRoomEncrypted);
+                    XCTAssertNil(event.content[@"body"]);
 
-            [expectation fulfill];
+                    XCTAssert(event.decryptionError);
+                    XCTAssertEqualObjects(event.decryptionError.domain, MXDecryptingErrorDomain);
+                    XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorEncryptionNotEnabledCode);
+                    XCTAssertEqualObjects(event.decryptionError.localizedDescription, MXDecryptingErrorEncryptionNotEnabledReason);
+
+                    [roomFromBobPOV sendTextMessage:@"Hello I'm Bob!" success:nil failure:nil];
+                    break;
+                }
+
+                case 1:
+                {
+                    XCTAssertFalse(event.isEncrypted);
+
+                    [expectation fulfill];
+                    break;
+                }
+
+                default:
+                    break;
+            }
+
         }];
 
         [roomFromAlicePOV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
+    }];
+}
+
+// testAliceInACryptedRoomAfterClearCache
+
+- (void)testAliceWithANewDeviceInACryptedRoom
+{
+    [self doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        NSString *message = @"Hello myself!";
+
+        MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
+
+        XCTAssert(roomFromAlicePOV.state.isEncrypted);
+
+        // Check the echo from hs of a post message is correct
+        [roomFromAlicePOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:message senderSession:aliceSession]);
+
+
+            // Disable and clear all crypto data
+            aliceSession.cryptoEnabled = NO;
+
+            __block NSUInteger paginatedMessagesCount = 0;
+            [roomFromAlicePOV.liveTimeline resetPagination];
+
+            [roomFromAlicePOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                paginatedMessagesCount ++;
+
+            }];
+
+            XCTAssert([roomFromAlicePOV.liveTimeline canPaginate:MXTimelineDirectionBackwards]);
+            [roomFromAlicePOV.liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:YES complete:^{
+                
+                XCTAssertEqual(paginatedMessagesCount, 1, @"The message should now appear as encrypted");
+
+
+                // @TODO: Make it work
+                aliceSession.cryptoEnabled = YES;
+
+                paginatedMessagesCount = 0;
+                [roomFromAlicePOV.liveTimeline resetPagination];
+
+                [roomFromAlicePOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                    paginatedMessagesCount ++;
+
+                }];
+
+                XCTAssert([roomFromAlicePOV.liveTimeline canPaginate:MXTimelineDirectionBackwards]);
+                [roomFromAlicePOV.liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:YES complete:^{
+
+                    XCTAssertEqual(paginatedMessagesCount, 1, @"The message should now be decrypted");
+
+
+                    [expectation fulfill];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+
+
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+
+
+        }];
+
+        [roomFromAlicePOV sendTextMessage:@"Hello myself!" success:nil failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+        
     }];
 }
 
