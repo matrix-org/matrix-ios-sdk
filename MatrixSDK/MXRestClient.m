@@ -1538,6 +1538,36 @@ MXAuthAction;
                     visibility:(MXRoomDirectoryVisibility)visibility
                      roomAlias:(NSString*)roomAlias
                          topic:(NSString*)topic
+                       success:(void (^)(MXCreateRoomResponse *response))success
+                       failure:(void (^)(NSError *error))failure
+{
+    // All parameters are optional. Fill the request parameters on demand
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+    
+    if (name)
+    {
+        parameters[@"name"] = name;
+    }
+    if (visibility)
+    {
+        parameters[@"visibility"] = visibility;
+    }
+    if (roomAlias)
+    {
+        parameters[@"room_alias_name"] = roomAlias;
+    }
+    if (topic)
+    {
+        parameters[@"topic"] = topic;
+    }
+    
+    return [self createRoom:parameters success:success failure:failure];
+}
+
+- (MXHTTPOperation*)createRoom:(NSString*)name 
+                    visibility:(MXRoomDirectoryVisibility)visibility
+                     roomAlias:(NSString*)roomAlias
+                         topic:(NSString*)topic
                         invite:(NSArray<NSString*>*)inviteArray
                     invite3PID:(NSArray<MXInvite3PID*>*)invite3PIDArray
                       isDirect:(BOOL)isDirect
@@ -1584,7 +1614,7 @@ MXAuthAction;
         }
     }
     
-    parameters[@"is_direct"] = [NSNumber numberWithBool:isDirect];;
+    parameters[@"is_direct"] = [NSNumber numberWithBool:isDirect];
 
     return [self createRoom:parameters success:success failure:failure];
 }

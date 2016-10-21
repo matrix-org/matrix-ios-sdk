@@ -625,7 +625,7 @@
     [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
         
         // Create a random room with no params
-        [bobRestClient createRoom:nil visibility:nil roomAlias:nil topic:nil invite:nil invite3PID:nil isDirect:NO success:^(MXCreateRoomResponse *response) {
+        [bobRestClient createRoom:nil visibility:nil roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
             
             XCTAssertNotNil(response);
             XCTAssertNotNil(response.roomId, "The home server should have allocated a room id");
@@ -638,6 +638,54 @@
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
+    }];
+}
+
+- (void)testCreateRoomWithInvite
+{
+    [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+        
+        [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+            
+            // Create a random room by inviting alice
+            [bobRestClient createRoom:nil visibility:nil roomAlias:nil topic:nil invite:@[matrixSDKTestsData.aliceCredentials.userId] invite3PID:nil isDirect:NO success:^(MXCreateRoomResponse *response) {
+                
+                XCTAssertNotNil(response);
+                XCTAssertNotNil(response.roomId, "The home server should have allocated a room id");
+                
+                [bobRestClient membersOfRoom:response.roomId success:^(NSArray *roomMemberEvents) {
+                    
+                    XCTAssertEqual(roomMemberEvents.count, 2);
+                    
+                    MXEvent *roomMemberEvent1 = roomMemberEvents[0];
+                    MXEvent *roomMemberEvent2 = roomMemberEvents[1];
+                    
+                    BOOL succeed;
+                    if ([roomMemberEvent1.stateKey isEqualToString:bobRestClient.credentials.userId])
+                    {
+                        succeed = [roomMemberEvent2.stateKey isEqualToString:matrixSDKTestsData.aliceCredentials.userId];
+                    }
+                    else if ([roomMemberEvent1.stateKey isEqualToString:matrixSDKTestsData.aliceCredentials.userId])
+                    {
+                        succeed = [roomMemberEvent2.stateKey isEqualToString:bobRestClient.credentials.userId];
+                    }
+                    
+                    XCTAssertTrue(succeed);
+                    
+                    [expectation fulfill];
+                    
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        }];
+       
     }];
 }
 

@@ -878,6 +878,26 @@ typedef enum : NSUInteger
                       success:(void (^)())success
                       failure:(void (^)(NSError *error))failure;
 
+/**
+ Create a room.
+ 
+ @param name (optional) the room name.
+ @param visibility (optional) the visibility of the room in the current HS's room directory.
+ @param roomAlias (optional) the room alias on the home server the room will be created.
+ @param topic (optional) the room topic.
+ 
+ @param success A block object called when the operation succeeds. It provides a MXCreateRoomResponse object.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)createRoom:(NSString*)name
+                    visibility:(MXRoomDirectoryVisibility)visibility
+                     roomAlias:(NSString*)roomAlias
+                         topic:(NSString*)topic
+                       success:(void (^)(MXCreateRoomResponse *response))success
+                       failure:(void (^)(NSError *error))failure;
+
 
 /**
  Create a room.

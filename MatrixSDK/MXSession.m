@@ -1043,7 +1043,7 @@ typedef void (^MXOnResumeDone)();
             // Tag the room
             [room setIsDirect:YES success:nil failure:^(NSError *error) {
                 
-                NSLog(@"[MXSession] Failed to tag the room (%@) as a direct chat", room.roomId);
+                NSLog(@"[MXSession] Failed to tag the room (%@) as a direct chat", response.roomId);
                 
             }];
         }
@@ -1069,7 +1069,7 @@ typedef void (^MXOnResumeDone)();
                     // Tag the room
                     [room setIsDirect:YES success:nil failure:^(NSError *error) {
                         
-                        NSLog(@"[MXSession] Failed to tag the room (%@) as a direct chat", room.roomId);
+                        NSLog(@"[MXSession] Failed to tag the room (%@) as a direct chat", response.roomId);
                         
                     }];
                 }
@@ -1083,6 +1083,20 @@ typedef void (^MXOnResumeDone)();
             }
         }];
     }
+}
+
+- (MXHTTPOperation*)createRoom:(NSString*)name
+                    visibility:(MXRoomDirectoryVisibility)visibility
+                     roomAlias:(NSString*)roomAlias
+                         topic:(NSString*)topic
+                       success:(void (^)(MXRoom *room))success
+                       failure:(void (^)(NSError *error))failure
+{
+    return [matrixRestClient createRoom:name visibility:visibility roomAlias:roomAlias topic:topic success:^(MXCreateRoomResponse *response) {
+        
+        [self onCreatedRoom:response isDirect:NO success:success];
+        
+    } failure:failure];
 }
 
 - (MXHTTPOperation*)createRoom:(NSString*)name
