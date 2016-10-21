@@ -766,23 +766,104 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 
 - (BOOL)isDirect
 {
-    // Retrieve a joined member from the  members list.
-    NSArray* roomMembers = self.state.members;
-    MXRoomMember* member;
-    
-    for (member in roomMembers)
+    // Check whether this room is tagged as direct for one of the room members.
+    return ([self getDirectUserId] != nil);
+}
+
+- (MXHTTPOperation*)setIsDirect:(BOOL)isDirect
+                        success:(void (^)())success
+                        failure:(void (^)(NSError *error))failure
+{
+    if (isDirect == NO)
     {
-        if (member.membership == MXMembershipJoin && ![member.userId isEqualToString:mxSession.myUser.userId])
+        NSString *directUserId = [self getDirectUserId];
+        if (directUserId)
         {
-            // Check whether the provided room id belong to the direct rooms related to this member
-            if (mxSession.directRooms[member.userId])
+            NSMutableDictionary *directRooms = [NSMutableDictionary dictionaryWithDictionary:mxSession.directRooms];
+            NSMutableArray *roomLists = [NSMutableArray arrayWithArray:directRooms[directUserId]];
+            
+            [roomLists removeObject:self.roomId];
+            
+            if (roomLists.count)
             {
-                return ([mxSession.directRooms[member.userId] indexOfObject:self.roomId] != NSNotFound);
+                [directRooms setObject:roomLists forKey:directUserId];
+            }
+            else
+            {
+                [directRooms removeObjectForKey:directUserId];
+            }
+            
+            return [mxSession setDirectRooms:directRooms success:success failure:failure];
+        }
+    }
+    else if (!self.isDirect)
+    {
+        // Mark as direct this room for the oldest joined member.
+        NSArray *members = self.state.joinedMembers;
+        MXRoomMember *oldestJoinedMember;
+        
+        for (MXRoomMember *member in members)
+        {
+            if (![member.userId isEqualToString:mxSession.myUser.userId])
+            {
+                if (!oldestJoinedMember)
+                {
+                    oldestJoinedMember = member;
+                }
+                else if (member.originalEvent.originServerTs < oldestJoinedMember.originalEvent.originServerTs)
+                {
+                    oldestJoinedMember = member;
+                }
+            }
+        }
+        
+        NSString *directUserId = oldestJoinedMember.userId;
+        if (!directUserId)
+        {
+            // Use the current user by default
+            directUserId = mxSession.myUser.userId;
+        }
+        
+        NSMutableDictionary *directRooms = [NSMutableDictionary dictionaryWithDictionary:mxSession.directRooms];
+        NSMutableArray *roomLists = (directRooms[directUserId] ? [NSMutableArray arrayWithArray:directRooms[directUserId]] : [NSMutableArray array]);
+        
+        [roomLists addObject:self.roomId];
+        
+        [directRooms setObject:roomLists forKey:directUserId];
+        
+        return [mxSession setDirectRooms:directRooms success:success failure:failure];
+    }
+    
+    // Here the room has already the right value for the direct tag
+    if (success)
+    {
+        success();
+    }
+    
+    return nil;
+}
+
+- (NSString*)getDirectUserId
+{
+    // Return the user identifier for who this room is tagged as direct if any.
+    
+    // Enumerate all the user identifiers for which a direct chat is defined.
+    NSArray *userIdWithDirectRoom = mxSession.directRooms.allKeys;
+    for (NSString *userId in userIdWithDirectRoom)
+    {
+        // Check whether this user is a member of this room.
+        if ([self.state memberWithUserId:userId])
+        {
+            // Check whether this room is tagged as direct for this user
+            if ([mxSession.directRooms[userId] indexOfObject:self.roomId] != NSNotFound)
+            {
+                // Matched!
+                return userId;
             }
         }
     }
     
-    return NO;
+    return nil;
 }
 
 - (NSArray*)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort

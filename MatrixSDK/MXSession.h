@@ -411,11 +411,35 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 #pragma mark - Rooms operations
 /**
  Create a room.
+ 
+ @param name (optional) the room name.
+ @param visibility (optional) the visibility of the room in the current HS's room directory.
+ @param roomAlias (optional) the room alias on the home server the room will be created.
+ @param topic (optional) the room topic.
+ 
+ @param success A block object called when the operation succeeds. It provides the MXRoom
+ instance of the joined room.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)createRoom:(NSString*)name
+                    visibility:(MXRoomDirectoryVisibility)visibility
+                     roomAlias:(NSString*)roomAlias
+                         topic:(NSString*)topic
+                       success:(void (^)(MXRoom *room))success
+                       failure:(void (^)(NSError *error))failure;
+
+/**
+ Create a room.
 
  @param name (optional) the room name.
  @param visibility (optional) the visibility of the room in the current HS's room directory.
  @param roomAlias (optional) the room alias on the home server the room will be created.
  @param topic (optional) the room topic.
+ @param inviteArray (optional) A list of user IDs to invite to the room. This will tell the server to invite everyone in the list to the newly created room.
+ @param invite3PIDArray (optional) A list of objects representing third party IDs to invite into the room.
+ @param isDirect tells whether the resulting room must be tagged as a direct room.
 
  @param success A block object called when the operation succeeds. It provides the MXRoom
                 instance of the joined room.
@@ -427,6 +451,9 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                     visibility:(MXRoomDirectoryVisibility)visibility
                      roomAlias:(NSString*)roomAlias
                          topic:(NSString*)topic
+                        invite:(NSArray<NSString*>*)inviteArray
+                    invite3PID:(NSArray<MXInvite3PID*>*)invite3PIDArray
+                      isDirect:(BOOL)isDirect
                        success:(void (^)(MXRoom *room))success
                        failure:(void (^)(NSError *error))failure;
 
@@ -527,10 +554,23 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 /**
  The list of the direct rooms by user identifiers.
  
- @return a dictionary where the keys are the user IDs and values are lists of room ID strings
+ @return a dictionary where the keys are the user IDs and values are lists of room ID strings.
  of the 'direct' rooms for that user ID. nil if the direct rooms have not been yet fetched from the homeserver.
  */
 @property (nonatomic, readonly) NSDictionary<NSString*, NSArray<NSString*>*> *directRooms;
+
+/**
+ Update the direct rooms list on homeserver side.
+ 
+ @param directRooms a dictionary where the keys are the user IDs and values are lists of room ID strings
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setDirectRooms:(NSDictionary<NSString*, NSArray<NSString*>*> *)directRooms
+                        success:(void (^)())success
+                        failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Room peeking
 /**
