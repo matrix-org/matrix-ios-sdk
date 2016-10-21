@@ -17,8 +17,9 @@
 #import <Foundation/Foundation.h>
 
 #import "MXEvent.h"
+#import "MXDecryptionResult.h"
 
-@class MXDecryptionResult, MXSession;
+@class MXSession;
 
 
 @protocol MXDecrypting <NSObject>
@@ -38,7 +39,7 @@
 
  @return the decryption result. Nil if the event referred to an unknown megolm session.
  */
-- (MXDecryptionResult*)decryptEvent:(MXEvent*)event error:(NSError**)error;
+- (MXDecryptionResult*)decryptEvent:(MXEvent*)event error:(NSError** )error;
 
 /**
  * Handle a key event.
@@ -48,29 +49,3 @@
 - (void)onRoomKeyEvent:(MXEvent*)event;
 
 @end
-
-
-/**
- Result of a decryption.
- */
-@interface MXDecryptionResult : NSObject
-
-/**
- The decrypted payload (with properties 'type', 'content')
- */
-@property (nonatomic) NSDictionary *payload;
-
-/**
- keys that the sender of the event claims ownership of:
- map from key type to base64-encoded key.
- */
-@property (nonatomic) NSDictionary *keysClaimed;
-
-/**
- The keys that the sender of the event is known to have ownership of:
- map from key type to base64-encoded key.
- */
-@property (nonatomic) NSDictionary *keysProved;
-
-@end
-

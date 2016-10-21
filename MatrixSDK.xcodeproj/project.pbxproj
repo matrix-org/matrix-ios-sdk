@@ -95,7 +95,6 @@
 		327137281A24D50A00DB6757 /* MXMyUser.m in Sources */ = {isa = PBXBuildFile; fileRef = 327137261A24D50A00DB6757 /* MXMyUser.m */; };
 		3271877B1DA7CAA60071C818 /* MXEncrypting.h in Headers */ = {isa = PBXBuildFile; fileRef = 3271877A1DA7CAA60071C818 /* MXEncrypting.h */; };
 		3271877D1DA7CB2F0071C818 /* MXDecrypting.h in Headers */ = {isa = PBXBuildFile; fileRef = 3271877C1DA7CB2F0071C818 /* MXDecrypting.h */; };
-		327187811DA7CDE60071C818 /* MXDecrypting.m in Sources */ = {isa = PBXBuildFile; fileRef = 327187801DA7CDE60071C818 /* MXDecrypting.m */; };
 		327187851DA7D0220071C818 /* MXOlmDecryption.h in Headers */ = {isa = PBXBuildFile; fileRef = 327187831DA7D0220071C818 /* MXOlmDecryption.h */; };
 		327187861DA7D0220071C818 /* MXOlmDecryption.m in Sources */ = {isa = PBXBuildFile; fileRef = 327187841DA7D0220071C818 /* MXOlmDecryption.m */; };
 		327187891DA7DCE50071C818 /* MXOlmEncryption.h in Headers */ = {isa = PBXBuildFile; fileRef = 327187871DA7DCE50071C818 /* MXOlmEncryption.h */; };
@@ -179,6 +178,8 @@
 		32E226A61D06AC9F00E6CA54 /* MXPeekingRoom.h in Headers */ = {isa = PBXBuildFile; fileRef = 32E226A41D06AC9F00E6CA54 /* MXPeekingRoom.h */; };
 		32E226A71D06AC9F00E6CA54 /* MXPeekingRoom.m in Sources */ = {isa = PBXBuildFile; fileRef = 32E226A51D06AC9F00E6CA54 /* MXPeekingRoom.m */; };
 		32E226A91D081CE200E6CA54 /* MXPeekingRoomTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32E226A81D081CE200E6CA54 /* MXPeekingRoomTests.m */; };
+		32F9FA7D1DBA0CF0009D98A6 /* MXDecryptionResult.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F9FA7B1DBA0CF0009D98A6 /* MXDecryptionResult.h */; };
+		32F9FA7E1DBA0CF0009D98A6 /* MXDecryptionResult.m in Sources */ = {isa = PBXBuildFile; fileRef = 32F9FA7C1DBA0CF0009D98A6 /* MXDecryptionResult.m */; };
 		32FCAB4D19E578860049C555 /* MXRestClientTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32FCAB4C19E578860049C555 /* MXRestClientTests.m */; };
 		32FE41361D0AB7070060835E /* MXEnumConstants.h in Headers */ = {isa = PBXBuildFile; fileRef = 32FE41341D0AB7070060835E /* MXEnumConstants.h */; };
 		32FE41371D0AB7070060835E /* MXEnumConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = 32FE41351D0AB7070060835E /* MXEnumConstants.m */; };
@@ -303,7 +304,6 @@
 		327137261A24D50A00DB6757 /* MXMyUser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXMyUser.m; sourceTree = "<group>"; };
 		3271877A1DA7CAA60071C818 /* MXEncrypting.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXEncrypting.h; sourceTree = "<group>"; };
 		3271877C1DA7CB2F0071C818 /* MXDecrypting.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXDecrypting.h; sourceTree = "<group>"; };
-		327187801DA7CDE60071C818 /* MXDecrypting.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXDecrypting.m; sourceTree = "<group>"; };
 		327187831DA7D0220071C818 /* MXOlmDecryption.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXOlmDecryption.h; sourceTree = "<group>"; };
 		327187841DA7D0220071C818 /* MXOlmDecryption.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXOlmDecryption.m; sourceTree = "<group>"; };
 		327187871DA7DCE50071C818 /* MXOlmEncryption.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXOlmEncryption.h; sourceTree = "<group>"; };
@@ -396,6 +396,8 @@
 		32E226A51D06AC9F00E6CA54 /* MXPeekingRoom.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXPeekingRoom.m; sourceTree = "<group>"; };
 		32E226A81D081CE200E6CA54 /* MXPeekingRoomTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXPeekingRoomTests.m; sourceTree = "<group>"; };
 		32F1FE9AF82A426C2EAED587 /* Pods-MatrixSDK.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDK.release.xcconfig"; path = "Pods/Target Support Files/Pods-MatrixSDK/Pods-MatrixSDK.release.xcconfig"; sourceTree = "<group>"; };
+		32F9FA7B1DBA0CF0009D98A6 /* MXDecryptionResult.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXDecryptionResult.h; sourceTree = "<group>"; };
+		32F9FA7C1DBA0CF0009D98A6 /* MXDecryptionResult.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXDecryptionResult.m; sourceTree = "<group>"; };
 		32FCAB4C19E578860049C555 /* MXRestClientTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = MXRestClientTests.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		32FE41341D0AB7070060835E /* MXEnumConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXEnumConstants.h; sourceTree = "<group>"; };
 		32FE41351D0AB7070060835E /* MXEnumConstants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXEnumConstants.m; sourceTree = "<group>"; };
@@ -546,8 +548,9 @@
 				322A51C11D9AC8FE00C8536D /* MXCryptoAlgorithms.h */,
 				322A51C21D9AC8FE00C8536D /* MXCryptoAlgorithms.m */,
 				3271877C1DA7CB2F0071C818 /* MXDecrypting.h */,
-				327187801DA7CDE60071C818 /* MXDecrypting.m */,
 				3271877A1DA7CAA60071C818 /* MXEncrypting.h */,
+				32F9FA7B1DBA0CF0009D98A6 /* MXDecryptionResult.h */,
+				32F9FA7C1DBA0CF0009D98A6 /* MXDecryptionResult.m */,
 			);
 			path = Algorithms;
 			sourceTree = "<group>";
@@ -901,6 +904,7 @@
 				32A1514E1DAF897600400192 /* MXOlmSessionResult.h in Headers */,
 				320BBF3C1D6C7D9D0079890E /* MXEventsEnumerator.h in Headers */,
 				323D299A1D426F7000A80BE4 /* MXJingleVideoView.h in Headers */,
+				32F9FA7D1DBA0CF0009D98A6 /* MXDecryptionResult.h in Headers */,
 				323E0C571A2F6E7D00A31D73 /* MXRoomPowerLevels.h in Headers */,
 				3245A7501AF7B2930001D8A7 /* MXCall.h in Headers */,
 				3271877D1DA7CB2F0071C818 /* MXDecrypting.h in Headers */,
@@ -1198,10 +1202,10 @@
 				329FB1801A0B665800A5E88E /* MXUser.m in Sources */,
 				32169AA11BD4D0E30077868B /* MXCoreDataStore.xcdatamodeld in Sources */,
 				323B2AF91BCE8AC900B11F34 /* MXCoreDataRoom.m in Sources */,
+				32F9FA7E1DBA0CF0009D98A6 /* MXDecryptionResult.m in Sources */,
 				3220093919EFA4C9008DE41D /* MXEventListener.m in Sources */,
 				323D299B1D426F7000A80BE4 /* MXJingleVideoView.m in Sources */,
 				32A1514F1DAF897600400192 /* MXOlmSessionResult.m in Sources */,
-				327187811DA7CDE60071C818 /* MXDecrypting.m in Sources */,
 				322A51B71D9AB15900C8536D /* MXCrypto.m in Sources */,
 				32DC15D11A8CF7AE006F9AD3 /* MXNotificationCenter.m in Sources */,
 				3284A5AD1DB7CFA800A09972 /* MXFileCryptoStore.m in Sources */,

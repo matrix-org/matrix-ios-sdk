@@ -14,9 +14,28 @@
  limitations under the License.
  */
 
-#import "MXDecrypting.h"
+#import <Foundation/Foundation.h>
 
-@implementation MXDecryptionResult
+/**
+ Result of a decryption.
+ */
+@interface MXDecryptionResult : NSObject
+
+/**
+ The decrypted payload (with properties 'type', 'content')
+ */
+@property (nonatomic) NSDictionary *payload;
+
+/**
+ keys that the sender of the event claims ownership of:
+ map from key type to base64-encoded key.
+ */
+@property (nonatomic) NSDictionary *keysClaimed;
+
+/**
+ The keys that the sender of the event is known to have ownership of:
+ map from key type to base64-encoded key.
+ */
+@property (nonatomic) NSDictionary *keysProved;
 
 @end
-
