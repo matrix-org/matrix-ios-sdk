@@ -56,7 +56,7 @@
         *error = [NSError errorWithDomain:MXDecryptingErrorDomain
                                      code:MXDecryptingErrorMissingFieldsCode
                                  userInfo:@{
-                                            NSLocalizedFailureReasonErrorKey: MXDecryptingErrorMissingFieldsReason
+                                            NSLocalizedDescriptionKey: MXDecryptingErrorMissingFieldsReason
                                             }];
         return nil;
     }

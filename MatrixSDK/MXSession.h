@@ -705,6 +705,16 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (NSString*)tagOrderToBeAtIndex:(NSUInteger)index from:(NSUInteger)originIndex withTag:(NSString *)tag;
 
 
+#pragma mark - Crypto
+/**
+ Decrypt an event and update its data.
+ 
+ @param event the event to decrypt.
+ @return YES if decryption is successful.
+ */
+- (BOOL)decryptEvent:(MXEvent*)event;
+
+
 #pragma mark - Global events listeners
 /**
  Register a global listener to events related to the current session.

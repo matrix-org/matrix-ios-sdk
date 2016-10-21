@@ -59,7 +59,7 @@
         *error = [NSError errorWithDomain:MXDecryptingErrorDomain
                                      code:MXDecryptingErrorMissingCiphertextCode
                                  userInfo:@{
-                                            NSLocalizedFailureReasonErrorKey: MXDecryptingErrorMissingCiphertextReason
+                                            NSLocalizedDescriptionKey: MXDecryptingErrorMissingCiphertextReason
                                             }];
         return nil;
     }
@@ -71,7 +71,7 @@
         *error = [NSError errorWithDomain:MXDecryptingErrorDomain
                                      code:MXDecryptingErrorNotIncludedInRecipientsCode
                                  userInfo:@{
-                                            NSLocalizedFailureReasonErrorKey: MXDecryptingErrorNotIncludedInRecipientsReason
+                                            NSLocalizedDescriptionKey: MXDecryptingErrorNotIncludedInRecipientsReason
                                             }];
         return nil;
     }
@@ -87,7 +87,7 @@
         *error = [NSError errorWithDomain:MXDecryptingErrorDomain
                                      code:MXDecryptingErrorBadEncryptedMessageCode
                                  userInfo:@{
-                                            NSLocalizedFailureReasonErrorKey: MXDecryptingErrorBadEncryptedMessageReason
+                                            NSLocalizedDescriptionKey: MXDecryptingErrorBadEncryptedMessageReason
                                             }];
 
         return nil;

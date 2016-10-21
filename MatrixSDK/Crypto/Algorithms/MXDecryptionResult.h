@@ -18,6 +18,8 @@
 
 FOUNDATION_EXPORT NSString *const MXDecryptingErrorDomain;
 
+FOUNDATION_EXPORT NSInteger const MXDecryptingErrorEncryptionNotEnabledCode;
+FOUNDATION_EXPORT NSString* const MXDecryptingErrorEncryptionNotEnabledReason;
 FOUNDATION_EXPORT NSInteger const MXDecryptingErrorUnableToDecryptCode;
 FOUNDATION_EXPORT NSString* const MXDecryptingErrorUnableToDecryptReason;
 FOUNDATION_EXPORT NSInteger const MXDecryptingErrorUnkwnownInboundSessionIdCode;

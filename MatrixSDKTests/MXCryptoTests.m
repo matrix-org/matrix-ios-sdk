@@ -816,6 +816,9 @@
             XCTAssertNil(event.content[@"body"]);
 
             XCTAssert(event.decryptionError);
+            XCTAssertEqualObjects(event.decryptionError.domain, MXDecryptingErrorDomain);
+            XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorEncryptionNotEnabledCode);
+            XCTAssertEqualObjects(event.decryptionError.localizedDescription, MXDecryptingErrorEncryptionNotEnabledReason);
 
             [expectation fulfill];
         }];

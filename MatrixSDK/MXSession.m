@@ -1039,12 +1039,9 @@ typedef void (^MXOnResumeDone)();
     // Decrypt event if necessary
     if (event.eventType == MXEventTypeRoomEncrypted)
     {
-        NSError *error;
-        event.clearEvent = [_crypto decryptEvent:event error:&error];
-
-        if (!event.clearEvent)
+        if (![self decryptEvent:event])
         {
-            NSLog(@"[MXSession] handleToDeviceEvent: Warning: Unable to decrypt to-device event: %@\nError: %@", event.content[@"body"], error);
+            NSLog(@"[MXSession] handleToDeviceEvent: Warning: Unable to decrypt to-device event: %@\nError: %@", event.content[@"body"], event.decryptionError);
             return;
         }
     }
@@ -2004,6 +2001,36 @@ typedef void (^MXOnResumeDone)();
     // in some cases, the order is 0.00000 ("%f" formatter");
     // with this method, it becomes "0".
     return [formatter stringFromNumber:[NSNumber numberWithDouble:order]];
+}
+
+
+#pragma mark - Crypto
+- (BOOL)decryptEvent:(MXEvent*)event
+{
+    if (event.eventType == MXEventTypeRoomEncrypted)
+    {
+        if (_crypto)
+        {
+            NSError *error;
+            event.clearEvent = [_crypto decryptEvent:event error:&error];
+
+            if (!event.clearEvent)
+            {
+                event.decryptionError = error;
+            }
+        }
+        else
+        {
+            // Encryption not enabled
+            event.decryptionError = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                                        code:MXDecryptingErrorEncryptionNotEnabledCode
+                                                    userInfo:@{
+                                                               NSLocalizedDescriptionKey: MXDecryptingErrorEncryptionNotEnabledReason
+                                                               }];
+        }
+    }
+
+    return (nil != event.clearEvent);
 }
 
 
