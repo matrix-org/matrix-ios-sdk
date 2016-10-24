@@ -266,4 +266,12 @@ Determine if an incoming messages is a prekey message matching an existing sessi
  */
 - (BOOL)verifySignature:(NSString*)key JSON:(NSDictionary*)JSONDictinary signature:(NSString*)signature error:(NSError**)error;
 
+/**
+ Calculate the SHA-256 hash of the input and encodes it as base64.
+
+ @param message the message to hash.
+ @return the base64-encoded hash value.
+ */
+- (NSString*)sha256:(NSString*)message;
+
 @end

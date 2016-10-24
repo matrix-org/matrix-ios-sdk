@@ -569,10 +569,11 @@
 
 - (NSDictionary*)encryptMessage:(NSDictionary*)payloadFields forDevices:(NSArray<NSString*>*)participantKeys
 {
-    // @TODO
-    // participantKeys.sort();
+    NSArray *sorted = [participantKeys sortedArrayUsingComparator:^NSComparisonResult(NSString *str1, NSString *str2) {
+        return [str1 localizedCompare:str2];
+    }];
 
-    NSString *participantHash = @""; // Olm.sha256(participantKeys.join());
+    NSString *participantHash  = [_olmDevice sha256:[sorted componentsJoinedByString:@","]];
 
     NSMutableDictionary *payloadJson = [NSMutableDictionary dictionaryWithDictionary:payloadFields];
     payloadJson[@"fingerprint"] = participantHash;

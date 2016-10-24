@@ -335,6 +335,11 @@
     return [olmUtility verifyEd25519Signature:signature key:key message:canonicalJSONData error:error];
 }
 
+- (NSString *)sha256:(NSString *)message
+{
+    return [olmUtility sha256:[message dataUsingEncoding:NSUTF8StringEncoding]];
+}
+
 
 #pragma mark - Private methods
 - (OLMSession*)sessionForDevice:(NSString *)theirDeviceIdentityKey andSessionId:(NSString*)sessionId
