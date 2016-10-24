@@ -486,6 +486,57 @@
     }];
 }
 
+- (void)testAliceInACryptedRoomAfterInitialSync
+{
+
+    [self doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+
+
+        MXRestClient *aliceRestClient = aliceSession.matrixRestClient;
+        [aliceSession close];
+        aliceSession = nil;
+
+        MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+
+        [aliceSession2 setStore:[[MXMemoryStore alloc] init] success:^{
+
+            [aliceSession2 start:^{
+
+                XCTAssert(aliceSession2.crypto, @"MXSession must recall that it has crypto engaged");
+
+                NSString *message = @"Hello myself!";
+
+                MXRoom *roomFromAlicePOV = [aliceSession2 roomWithRoomId:roomId];
+
+                XCTAssert(roomFromAlicePOV.state.isEncrypted);
+
+                // Check the echo from hs of a post message is correct
+                [roomFromAlicePOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:message senderSession:aliceSession2]);
+
+                    [expectation fulfill];
+                }];
+
+                [roomFromAlicePOV sendTextMessage:@"Hello myself!" success:nil failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+
+
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+
+    }];
+}
+
 - (void)testAliceAndBobInACryptedRoom
 {
     [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {

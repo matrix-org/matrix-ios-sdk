@@ -121,6 +121,8 @@
 
     [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXSessionOnToDeviceEventNotification object:mxSession];
 
+    NSLog(@"[MXCrypto] close. store: %@",_store);
+
     _olmDevice = nil;
     _store = nil;
 
@@ -542,7 +544,6 @@
 
         return nil;
     }
-
 }
 
 - (MXEvent*)decryptEvent:(MXEvent *)event error:(NSError *__autoreleasing *)error

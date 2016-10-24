@@ -362,19 +362,34 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 - (void)preloadCryptoData
 {
     NSString *filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreAccountFile];
-    olmAccount = [NSKeyedUnarchiver unarchiveObjectWithFile:filePath];
+    if ([NSFileManager.defaultManager fileExistsAtPath:filePath])
+    {
+        olmAccount = [NSKeyedUnarchiver unarchiveObjectWithFile:filePath];
+    }
 
     filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreDevicesFile];
-    usersDevicesInfoMap = [NSKeyedUnarchiver unarchiveObjectWithFile:filePath];
+    if ([NSFileManager.defaultManager fileExistsAtPath:filePath])
+    {
+        usersDevicesInfoMap = [NSKeyedUnarchiver unarchiveObjectWithFile:filePath];
+    }
 
     filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreRoomsAlgorithmsFile];
-    roomsAlgorithms = [NSKeyedUnarchiver unarchiveObjectWithFile:filePath];
+    if ([NSFileManager.defaultManager fileExistsAtPath:filePath])
+    {
+        roomsAlgorithms = [NSKeyedUnarchiver unarchiveObjectWithFile:filePath];
+    }
 
     filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreSessionsFile];
-    olmSessions = [NSKeyedUnarchiver unarchiveObjectWithFile:filePath];
+    if ([NSFileManager.defaultManager fileExistsAtPath:filePath])
+    {
+        olmSessions = [NSKeyedUnarchiver unarchiveObjectWithFile:filePath];
+    }
 
     filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreInboundGroupSessionsFile];
-    inboundGroupSessions = [NSKeyedUnarchiver unarchiveObjectWithFile:filePath];
+    if ([NSFileManager.defaultManager fileExistsAtPath:filePath])
+    {
+        inboundGroupSessions = [NSKeyedUnarchiver unarchiveObjectWithFile:filePath];
+    }
 }
 
 - (NSString *)description
