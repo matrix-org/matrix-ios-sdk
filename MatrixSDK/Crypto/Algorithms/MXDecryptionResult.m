@@ -20,19 +20,21 @@ NSString *const MXDecryptingErrorDomain = @"org.matrix.sdk.decryption";
 
 NSInteger const MXDecryptingErrorEncryptionNotEnabledCode           = 0;
 NSString* const MXDecryptingErrorEncryptionNotEnabledReason         = @"Encryption not enabled";
-NSInteger const MXDecryptingErrorUnableToDecryptCode                = 1;
+NSInteger const MXDecryptingErrorUnableToEncryptCode                = 1;
+NSString* const MXDecryptingErrorUnableToEncryptReason              = @"Unable to encrypt %@";
+NSInteger const MXDecryptingErrorUnableToDecryptCode                = 2;
 NSString* const MXDecryptingErrorUnableToDecryptReason              = @"Unable to decrypt %@";
-NSInteger const MXDecryptingErrorUnkwnownInboundSessionIdCode       = 2;
+NSInteger const MXDecryptingErrorUnkwnownInboundSessionIdCode       = 3;
 NSString* const MXDecryptingErrorUnkwnownInboundSessionIdReason     = @"Unknown inbound session id";
-NSInteger const MXDecryptingErrorInboundSessionMismatchRoomIdCode   = 3;
+NSInteger const MXDecryptingErrorInboundSessionMismatchRoomIdCode   = 4;
 NSString* const MXDecryptingErrorInboundSessionMismatchRoomIdReason = @"Mismatched room_id for inbound group session (expected %@, was %@)";
-NSInteger const MXDecryptingErrorMissingFieldsCode                  = 4;
+NSInteger const MXDecryptingErrorMissingFieldsCode                  = 5;
 NSString* const MXDecryptingErrorMissingFieldsReason                = @"Missing fields in input";
-NSInteger const MXDecryptingErrorMissingCiphertextCode              = 5;
+NSInteger const MXDecryptingErrorMissingCiphertextCode              = 6;
 NSString* const MXDecryptingErrorMissingCiphertextReason            = @"Missing ciphertext";
-NSInteger const MXDecryptingErrorNotIncludedInRecipientsCode        = 6;
+NSInteger const MXDecryptingErrorNotIncludedInRecipientsCode        = 7;
 NSString* const MXDecryptingErrorNotIncludedInRecipientsReason      = @"Not included in recipients";
-NSInteger const MXDecryptingErrorBadEncryptedMessageCode            = 7;
+NSInteger const MXDecryptingErrorBadEncryptedMessageCode            = 8;
 NSString* const MXDecryptingErrorBadEncryptedMessageReason          = @"Bad Encrypted Message";
 
 @implementation MXDecryptionResult

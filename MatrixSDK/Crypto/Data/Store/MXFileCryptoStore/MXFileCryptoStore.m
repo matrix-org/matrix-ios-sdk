@@ -377,5 +377,16 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
     inboundGroupSessions = [NSKeyedUnarchiver unarchiveObjectWithFile:filePath];
 }
 
+- (NSString *)description
+{
+    NSString *description = [NSString stringWithFormat:@"<MXFileCryptoStore: %p> ", self];
+
+    description = [NSString stringWithFormat:@"%@\nroomsAlgorithms: %@", description, roomsAlgorithms];
+    description = [NSString stringWithFormat:@"%@\nusersDevicesInfoMap: %@", description, usersDevicesInfoMap];
+    description = [NSString stringWithFormat:@"%@\nolmSessions: %@", description, olmSessions];
+    description = [NSString stringWithFormat:@"%@\ninboundGroupSessions: %@", description, inboundGroupSessions];
+
+    return description;
+}
 
 @end

@@ -97,7 +97,8 @@
 
     [self registerEventHandlers];
 
-    [self uploadKeys:1 success:^{
+    // @TODO: Repeat upload
+    [self uploadKeys:5 success:^{
         NSLog(@"###########################################################");
         NSLog(@" uploadKeys done for %@: ", mxSession.myUser.userId);
 
@@ -105,6 +106,8 @@
         NSLog(@"   - ed25519    : %@", _olmDevice.deviceEd25519Key);
         NSLog(@"   - curve25519 : %@", _olmDevice.deviceCurve25519Key);
         NSLog(@"   - oneTimeKeys: %@", lastPublishedOneTimeKeys);     // They are
+        NSLog(@"");
+        NSLog(@"Store: %@", _store); 
         NSLog(@"");
 
     } failure:^(NSError *error) {
@@ -517,13 +520,29 @@
     }
 
     id<MXEncrypting> alg = roomAlgorithms[room.roomId];
+    if (alg)
+    {
+        return [alg encryptEventContent:eventContent eventType:eventType inRoom:room success:^(NSDictionary *encryptedContent) {
 
-    // @TODO: We silently fail if roomAlgorithms[room.roomId] = nil :/
-    return [alg encryptEventContent:eventContent eventType:eventType inRoom:room success:^(NSDictionary *encryptedContent) {
+            success(encryptedContent, kMXEventTypeStringRoomEncrypted);
 
-        success(encryptedContent, kMXEventTypeStringRoomEncrypted);
+        } failure:failure];
+    }
+    else
+    {
+        NSLog(@"[MXCrypto] encryptEventContent: Cannot find room algo");
 
-    } failure:failure];
+        NSError *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                             code:MXDecryptingErrorUnableToEncryptCode
+                                         userInfo:@{
+                                                    NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorUnableToEncryptReason, room.roomId]
+                                                    }];
+
+        failure(error);
+
+        return nil;
+    }
+
 }
 
 - (MXEvent*)decryptEvent:(MXEvent *)event error:(NSError *__autoreleasing *)error

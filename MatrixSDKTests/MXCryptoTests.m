@@ -228,10 +228,6 @@
 {
     [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
 
-        // In case of password registration, the homeserver does not provide a device id
-        // Hardcode one
-        mxSession.matrixRestClient.credentials.deviceId = @"BobDevice";
-
         XCTAssertNil(mxSession.crypto, @"Crypto is disabled by default");
 
         __block MXSession *mxSession2 = mxSession;
@@ -870,23 +866,25 @@
                 
                 XCTAssertEqual(paginatedMessagesCount, 1, @"The message should now appear as encrypted");
 
+                aliceSession.matrixRestClient.credentials.deviceId = @"NewDevice";
 
-                // @TODO: Make it work
                 aliceSession.cryptoEnabled = YES;
 
-                paginatedMessagesCount = 0;
+                __block NSUInteger paginatedMessagesCount2 = 0;
                 [roomFromAlicePOV.liveTimeline resetPagination];
 
                 [roomFromAlicePOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                    paginatedMessagesCount ++;
+                    paginatedMessagesCount2 ++;
+
+                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:message senderSession:aliceSession]);
 
                 }];
 
                 XCTAssert([roomFromAlicePOV.liveTimeline canPaginate:MXTimelineDirectionBackwards]);
-                [roomFromAlicePOV.liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:YES complete:^{
+                [roomFromAlicePOV.liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
 
-                    XCTAssertEqual(paginatedMessagesCount, 1, @"The message should now be decrypted");
+                    XCTAssertEqual(paginatedMessagesCount2, 1, @"The message should now be decrypted");
 
 
                     [expectation fulfill];
