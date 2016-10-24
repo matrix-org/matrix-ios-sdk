@@ -43,6 +43,13 @@
 + (instancetype)createStoreWithCredentials:(MXCredentials*)credentials;
 
 /**
+ Delete the crypto store for the passed credentials.
+
+ @param credentials the credentials of the account.
+ */
++ (void)deleteStoreWithCredentials:(MXCredentials*)credentials;
+
+/**
  Create a crypto store for the passed credentials.
 
  @param credentials the credentials of the account.
@@ -60,11 +67,6 @@
  @param failure the callback called in case of error.
  */
 - (void)open:(void (^)())onComplete failure:(void (^)(NSError *error))failure;
-
-/**
- Erase all data from the store.
- */
-- (void)deleteAllData;
 
 /**
  Store the device id.

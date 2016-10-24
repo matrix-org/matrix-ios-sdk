@@ -1079,11 +1079,11 @@ typedef void (^MXOnResumeDone)();
     }
     else if (!cryptoEnabled && _crypto)
     {
-        // Erase all crypto data of this user
-        [_crypto.store deleteAllData];
-
         [_crypto close];
         _crypto = nil;
+
+        // Erase all crypto data of this user
+        [MXFileCryptoStore deleteStoreWithCredentials:matrixRestClient.credentials];
     }
 }
 

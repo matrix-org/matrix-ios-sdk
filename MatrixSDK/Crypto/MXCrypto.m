@@ -119,6 +119,7 @@
     [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXSessionOnToDeviceEventNotification object:mxSession];
 
     _olmDevice = nil;
+    _store = nil;
 
     [roomAlgorithms removeAllObjects];
     roomAlgorithms = nil;

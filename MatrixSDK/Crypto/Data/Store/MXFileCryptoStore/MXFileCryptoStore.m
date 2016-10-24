@@ -66,11 +66,7 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 
 + (BOOL)hasDataForCredentials:(MXCredentials *)credentials
 {
-    // Create the file path where data will be stored for the user id passed in credentials
-    NSArray *cacheDirList = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-    NSString *cachePath  = [cacheDirList objectAtIndex:0];
-
-    NSString *storePath = [[cachePath stringByAppendingPathComponent:kMXFileCryptoStoreFolder] stringByAppendingPathComponent:credentials.userId];
+    NSString *storePath = [MXFileCryptoStore storePathForCredentials:credentials];
 
     return [NSFileManager.defaultManager fileExistsAtPath:storePath];
 }
@@ -87,12 +83,23 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
     {
         MXFileCryptoStoreMetaData *cachedMetaData = store->metaData;
 
-        [store deleteAllData];
+        // Initialise folders for this user
+        [store resetData];
 
         store->metaData = cachedMetaData;
         [store saveMetaData];
     }
     return store;
+}
+
++ (void)deleteStoreWithCredentials:(MXCredentials *)credentials
+{
+    NSLog(@"[MXFileCryptoStore] deleteStoreWithCredentials");
+
+    NSString *storePath = [MXFileCryptoStore storePathForCredentials:credentials];
+
+    NSError *error;
+    [[NSFileManager defaultManager] removeItemAtPath:storePath error:&error];
 }
 
 - (instancetype)initWithCredentials:(MXCredentials *)theCredentials
@@ -102,11 +109,7 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
     {
         credentials = theCredentials;
         
-        // Create the file path where data will be stored for the user id passed in credentials
-        NSArray *cacheDirList = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-        NSString *cachePath  = [cacheDirList objectAtIndex:0];
-
-        storePath = [[cachePath stringByAppendingPathComponent:kMXFileCryptoStoreFolder] stringByAppendingPathComponent:credentials.userId];
+        storePath = [MXFileCryptoStore storePathForCredentials:credentials];
 
         // Build default metadata
         if (nil == metaData && credentials.homeServer && credentials.userId && credentials.accessToken)
@@ -149,13 +152,13 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
         // Check if
         if (nil == metaData)
         {
-            [self deleteAllData];
+            [self resetData];
         }
         // Check store version
         else if (kMXFileCryptoStoreVersion != metaData.version)
         {
             NSLog(@"[MXFileCryptoStore] New MXFileCryptoStore version detected");
-            [self deleteAllData];
+            [self resetData];
         }
         // Check credentials
         else if (NO == [metaData.userId isEqualToString:credentials.userId]
@@ -163,7 +166,7 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 
         {
             NSLog(@"[MXFileCryptoStore] Credentials do not match");
-            [self deleteAllData];
+            [self resetData];
         }
 
         // If metaData is still defined, we can load rooms data
@@ -196,21 +199,6 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
             onComplete();
         });
     });
-}
-
-- (void)deleteAllData
-{
-    NSLog(@"[MXFileCryptoStore] Delete all data");
-
-    // Remove the MXFileStore and all its content
-    NSError *error;
-    [[NSFileManager defaultManager] removeItemAtPath:storePath error:&error];
-
-    // And create folders back
-    [[NSFileManager defaultManager] createDirectoryAtPath:storePath withIntermediateDirectories:YES attributes:nil error:nil];
-
-    // Reset data
-    metaData = nil;
 }
 
 - (void)storeDeviceId:(NSString *)deviceId
@@ -325,6 +313,31 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 
 
 #pragma mark - Private methods
+
++ (NSString*)storePathForCredentials:(MXCredentials *)credentials
+{
+    // Create the file path where data will be stored for the user id passed in credentials
+    NSArray *cacheDirList = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+    NSString *cachePath  = [cacheDirList objectAtIndex:0];
+
+    return [[cachePath stringByAppendingPathComponent:kMXFileCryptoStoreFolder] stringByAppendingPathComponent:credentials.userId];
+}
+
+- (void)resetData
+{
+    NSLog(@"[MXFileCryptoStore] reset data");
+
+    // Remove the MXFileCryptoStore and all its content
+    NSError *error;
+    [[NSFileManager defaultManager] removeItemAtPath:storePath error:&error];
+
+    // And create folders back
+    [[NSFileManager defaultManager] createDirectoryAtPath:storePath withIntermediateDirectories:YES attributes:nil error:nil];
+
+    // Reset data
+    metaData = nil;
+}
+
 - (void)loadMetaData
 {
     NSString *filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreMedaDataFile];
@@ -363,5 +376,6 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
     filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreInboundGroupSessionsFile];
     inboundGroupSessions = [NSKeyedUnarchiver unarchiveObjectWithFile:filePath];
 }
+
 
 @end
