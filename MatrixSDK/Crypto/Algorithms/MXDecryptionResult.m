@@ -18,20 +18,22 @@
 
 NSString *const MXDecryptingErrorDomain = @"org.matrix.sdk.decryption";
 
-NSInteger const MXDecryptingErrorEncryptionNotEnabledCode       = 0;
-NSString* const MXDecryptingErrorEncryptionNotEnabledReason     = @"Encryption not enabled";
-NSInteger const MXDecryptingErrorUnableToDecryptCode            = 1;
-NSString* const MXDecryptingErrorUnableToDecryptReason          = @"Unable to decrypt %@";
-NSInteger const MXDecryptingErrorUnkwnownInboundSessionIdCode   = 2;
-NSString* const MXDecryptingErrorUnkwnownInboundSessionIdReason = @"Unknown inbound session id";
-NSInteger const MXDecryptingErrorMissingFieldsCode              = 3;
-NSString* const MXDecryptingErrorMissingFieldsReason            = @"Missing fields in input";
-NSInteger const MXDecryptingErrorMissingCiphertextCode          = 4;
-NSString* const MXDecryptingErrorMissingCiphertextReason        = @"Missing ciphertext";
-NSInteger const MXDecryptingErrorNotIncludedInRecipientsCode    = 5;
-NSString* const MXDecryptingErrorNotIncludedInRecipientsReason  = @"Not included in recipients";
-NSInteger const MXDecryptingErrorBadEncryptedMessageCode        = 6;
-NSString* const MXDecryptingErrorBadEncryptedMessageReason      = @"Bad Encrypted Message";
+NSInteger const MXDecryptingErrorEncryptionNotEnabledCode           = 0;
+NSString* const MXDecryptingErrorEncryptionNotEnabledReason         = @"Encryption not enabled";
+NSInteger const MXDecryptingErrorUnableToDecryptCode                = 1;
+NSString* const MXDecryptingErrorUnableToDecryptReason              = @"Unable to decrypt %@";
+NSInteger const MXDecryptingErrorUnkwnownInboundSessionIdCode       = 2;
+NSString* const MXDecryptingErrorUnkwnownInboundSessionIdReason     = @"Unknown inbound session id";
+NSInteger const MXDecryptingErrorInboundSessionMismatchRoomIdCode   = 3;
+NSString* const MXDecryptingErrorInboundSessionMismatchRoomIdReason = @"Mismatched room_id for inbound group session (expected %@, was %@)";
+NSInteger const MXDecryptingErrorMissingFieldsCode                  = 4;
+NSString* const MXDecryptingErrorMissingFieldsReason                = @"Missing fields in input";
+NSInteger const MXDecryptingErrorMissingCiphertextCode              = 5;
+NSString* const MXDecryptingErrorMissingCiphertextReason            = @"Missing ciphertext";
+NSInteger const MXDecryptingErrorNotIncludedInRecipientsCode        = 6;
+NSString* const MXDecryptingErrorNotIncludedInRecipientsReason      = @"Not included in recipients";
+NSInteger const MXDecryptingErrorBadEncryptedMessageCode            = 7;
+NSString* const MXDecryptingErrorBadEncryptedMessageReason          = @"Bad Encrypted Message";
 
 @implementation MXDecryptionResult
 

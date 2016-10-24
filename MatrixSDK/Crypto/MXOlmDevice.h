@@ -230,11 +230,13 @@ Determine if an incoming messages is a prekey message matching an existing sessi
  @param roomId theroom in which the message was received.
  @param sessionId the session identifier.
  @param senderKey the base64-encoded curve25519 key of the sender.
+ @param the result error if there is a problem decrypting the event.
 
  @return the decrypting result. Nil if the sessionId is unknown.
  */
 - (MXDecryptionResult*)decryptGroupMessage:(NSString*)body roomId:(NSString*)roomId
-                                 sessionId:(NSString*)sessionId senderKey:(NSString*)senderKey;
+                                 sessionId:(NSString*)sessionId senderKey:(NSString*)senderKey
+                                     error:(NSError** )error;
 
 
 #pragma mark - Utilities

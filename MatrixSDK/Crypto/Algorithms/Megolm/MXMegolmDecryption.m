@@ -61,7 +61,7 @@
         return nil;
     }
 
-    return [olmDevice decryptGroupMessage:ciphertext roomId:event.roomId sessionId:sessionId senderKey:senderKey];
+    return [olmDevice decryptGroupMessage:ciphertext roomId:event.roomId sessionId:sessionId senderKey:senderKey error:error];
 }
 
 - (void)onRoomKeyEvent:(MXEvent *)event

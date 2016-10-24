@@ -283,6 +283,7 @@
 
 - (MXDecryptionResult *)decryptGroupMessage:(NSString *)body roomId:(NSString *)roomId
                                   sessionId:(NSString *)sessionId senderKey:(NSString *)senderKey
+                                      error:(NSError *__autoreleasing *)error
 {
     MXDecryptionResult *result;
 
@@ -309,12 +310,26 @@
         }
         else
         {
-            NSLog(@"[MXOlmDevice] decryptGroupMessage: ERROR: Mismatched room_id for inbound group session (expected %@, was %@", roomId, session.roomId);
+            NSLog(@"[MXOlmDevice] decryptGroupMessage: ERROR: Mismatched room_id for inbound group session (expected %@, was %@)", roomId, session.roomId);
+
+            NSString *errorDescription = [NSString stringWithFormat:MXDecryptingErrorInboundSessionMismatchRoomIdReason, roomId, session.roomId];
+
+            *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                         code:MXDecryptingErrorUnkwnownInboundSessionIdCode
+                                     userInfo:@{
+                                                NSLocalizedDescriptionKey: errorDescription
+                                                }];
         }
     }
     else
     {
         NSLog(@"[MXOlmDevice] decryptGroupMessage: ERROR: Cannot retrieve inbound group session %@", sessionId);
+        
+        *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                     code:MXDecryptingErrorUnkwnownInboundSessionIdCode
+                                 userInfo:@{
+                                            NSLocalizedDescriptionKey: MXDecryptingErrorUnkwnownInboundSessionIdReason
+                                            }];
     }
 
     return result;
