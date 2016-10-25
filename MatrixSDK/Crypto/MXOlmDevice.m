@@ -87,11 +87,7 @@
 
 - (NSString *)signJSON:(NSDictionary *)JSONDictinary
 {
-    // Compute the signature on a canonical version of the JSON
-    // so that it is the same cross platforms
-    NSData *canonicalJSONData = [NSJSONSerialization dataWithJSONObject:[JSONDictinary objectWithSortedKeys] options:0 error:nil];
-
-    return [self signMessage:canonicalJSONData];
+    return [self signMessage:[self canonicalJSONForJSON:JSONDictinary]];
 }
 
 - (NSDictionary *)oneTimeKeys
@@ -344,10 +340,7 @@
 
 - (BOOL)verifySignature:(NSString *)key JSON:(NSDictionary *)JSONDictinary signature:(NSString *)signature error:(NSError *__autoreleasing *)error
 {
-    // Check signature on the canonical version of the JSON
-    NSData *canonicalJSONData = [NSJSONSerialization dataWithJSONObject:[JSONDictinary objectWithSortedKeys] options:0 error:error];
-
-    return [olmUtility verifyEd25519Signature:signature key:key message:canonicalJSONData error:error];
+    return [olmUtility verifyEd25519Signature:signature key:key message:[self canonicalJSONForJSON:JSONDictinary] error:error];
 }
 
 - (NSString *)sha256:(NSString *)message
@@ -360,6 +353,27 @@
 - (OLMSession*)sessionForDevice:(NSString *)theirDeviceIdentityKey andSessionId:(NSString*)sessionId
 {
     return [store sessionsWithDevice:theirDeviceIdentityKey][sessionId];
+}
+
+/**
+ Get the canonical version of a JSON dictionary.
+ 
+ This ensures that a JSON has the same string representation cross platforms.
+
+ @param JSONDictinary the JSON to convert.
+ @return the canonical version of the JSON.
+ */
+- (NSData*)canonicalJSONForJSON:(NSDictionary*)JSONDictinary
+{
+    NSData *canonicalJSONData = [NSJSONSerialization dataWithJSONObject:[JSONDictinary objectWithSortedKeys] options:0 error:nil];
+
+    // NSJSONSerialization escapes the '/' character in base64 strings which is useless in our case
+    // and does not match with other platforms.
+    // Remove this escaping
+    NSString *unescapedCanonicalJSON = [[NSString alloc] initWithData:canonicalJSONData encoding:NSUTF8StringEncoding];
+    unescapedCanonicalJSON = [unescapedCanonicalJSON stringByReplacingOccurrencesOfString:@"\\/" withString:@"/"];
+
+    return [unescapedCanonicalJSON dataUsingEncoding:NSUTF8StringEncoding];
 }
 
 @end
