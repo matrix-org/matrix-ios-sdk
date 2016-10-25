@@ -478,7 +478,7 @@
             [expectation fulfill];
         }];
 
-        [roomFromAlicePOV sendTextMessage:@"Hello myself!" success:nil failure:^(NSError *error) {
+        [roomFromAlicePOV sendTextMessage:message success:nil failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
@@ -488,9 +488,7 @@
 
 - (void)testAliceInACryptedRoomAfterInitialSync
 {
-
     [self doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
-
 
         MXRestClient *aliceRestClient = aliceSession.matrixRestClient;
         [aliceSession close];
@@ -518,7 +516,7 @@
                     [expectation fulfill];
                 }];
 
-                [roomFromAlicePOV sendTextMessage:@"Hello myself!" success:nil failure:^(NSError *error) {
+                [roomFromAlicePOV sendTextMessage:message success:nil failure:^(NSError *error) {
                     XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                     [expectation fulfill];
                 }];
@@ -536,6 +534,66 @@
 
     }];
 }
+
+// testAliceInACryptedRoomAfterClearCache
+
+// As the web client, we should not be able to decrypt an event in the past
+// when using a new device.
+- (void)testAliceDecryptOldMessageWithANewDeviceInACryptedRoom
+{
+    [self doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        NSString *message = @"Hello myself!";
+
+        MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
+
+        [roomFromAlicePOV sendTextMessage:message success:^(NSString *eventId) {
+
+            MXRestClient *aliceRestClient = aliceSession.matrixRestClient;
+            [aliceSession close];
+
+            // Simulate a new device
+            aliceRestClient.credentials.deviceId = @"AliceNewDevice";
+
+            MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+
+            [aliceSession2 setStore:[[MXMemoryStore alloc] init] success:^{
+
+                [aliceSession2 start:^{
+
+                    MXRoom *roomFromAlicePOV2 = [aliceSession2 roomWithRoomId:roomId];
+
+                    XCTAssert(roomFromAlicePOV2.state.isEncrypted, @"The room must still appear as encrypted");
+
+                    MXEvent *event = [roomFromAlicePOV2 lastMessageWithTypeIn:nil];
+
+                    XCTAssert(event.isEncrypted);
+
+                    XCTAssertNil(event.clearEvent);
+                    XCTAssert(event.decryptionError);
+                    XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorUnkwnownInboundSessionIdCode);
+
+                    [expectation fulfill];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+
+
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+        
+    }];
+}
+
 
 - (void)testAliceAndBobInACryptedRoom
 {
@@ -882,86 +940,6 @@
     }];
 }
 
-// testAliceInACryptedRoomAfterClearCache
-
-- (void)testAliceWithANewDeviceInACryptedRoom
-{
-    [self doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
-
-        NSString *message = @"Hello myself!";
-
-        MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
-
-        XCTAssert(roomFromAlicePOV.state.isEncrypted);
-
-        // Check the echo from hs of a post message is correct
-        [roomFromAlicePOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-
-            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:message senderSession:aliceSession]);
-
-
-            // Disable and clear all crypto data
-            aliceSession.cryptoEnabled = NO;
-
-            __block NSUInteger paginatedMessagesCount = 0;
-            [roomFromAlicePOV.liveTimeline resetPagination];
-
-            [roomFromAlicePOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-
-                paginatedMessagesCount ++;
-
-            }];
-
-            XCTAssert([roomFromAlicePOV.liveTimeline canPaginate:MXTimelineDirectionBackwards]);
-            [roomFromAlicePOV.liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:YES complete:^{
-                
-                XCTAssertEqual(paginatedMessagesCount, 1, @"The message should now appear as encrypted");
-
-                aliceSession.matrixRestClient.credentials.deviceId = @"NewDevice";
-
-                aliceSession.cryptoEnabled = YES;
-
-                __block NSUInteger paginatedMessagesCount2 = 0;
-                [roomFromAlicePOV.liveTimeline resetPagination];
-
-                [roomFromAlicePOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-
-                    paginatedMessagesCount2 ++;
-
-                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:message senderSession:aliceSession]);
-
-                }];
-
-                XCTAssert([roomFromAlicePOV.liveTimeline canPaginate:MXTimelineDirectionBackwards]);
-                [roomFromAlicePOV.liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
-
-                    XCTAssertEqual(paginatedMessagesCount2, 1, @"The message should now be decrypted");
-
-
-                    [expectation fulfill];
-
-                } failure:^(NSError *error) {
-                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                    [expectation fulfill];
-                }];
-
-
-                
-            } failure:^(NSError *error) {
-                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                [expectation fulfill];
-            }];
-
-
-        }];
-
-        [roomFromAlicePOV sendTextMessage:@"Hello myself!" success:nil failure:^(NSError *error) {
-            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-            [expectation fulfill];
-        }];
-        
-    }];
-}
 
 @end
 

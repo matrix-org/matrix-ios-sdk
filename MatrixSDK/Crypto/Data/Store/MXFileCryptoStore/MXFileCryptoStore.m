@@ -118,8 +118,7 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
             metaData.userId = [credentials.userId copy];
             metaData.deviceId = [credentials.deviceId copy];
             metaData.version = kMXFileCryptoStoreVersion;
-            metaData.DeviceAnnounced = NO;
-            [self saveMetaData];
+            metaData.deviceAnnounced = NO;
         }
 
         usersDevicesInfoMap = [[MXUsersDevicesMap<MXDeviceInfo*> alloc] init];
@@ -187,7 +186,7 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
             metaData.userId = [credentials.userId copy];
             metaData.deviceId = [credentials.deviceId copy];
             metaData.version = kMXFileCryptoStoreVersion;
-            metaData.DeviceAnnounced = NO;
+            metaData.deviceAnnounced = NO;
             [self saveMetaData];
         }
 
@@ -227,13 +226,13 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 
 - (void)storeDeviceAnnounced
 {
-    metaData.DeviceAnnounced = YES;
+    metaData.deviceAnnounced = YES;
     [self saveMetaData];
 }
 
 - (BOOL)deviceAnnounced
 {
-    return metaData.DeviceAnnounced;
+    return metaData.deviceAnnounced;
 }
 
 - (void)storeDeviceForUser:(NSString *)userId device:(MXDeviceInfo *)device
@@ -396,6 +395,7 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 {
     NSString *description = [NSString stringWithFormat:@"<MXFileCryptoStore: %p> ", self];
 
+    description = [NSString stringWithFormat:@"%@\nMetadata: %@", description, metaData];
     description = [NSString stringWithFormat:@"%@\nroomsAlgorithms: %@", description, roomsAlgorithms];
     description = [NSString stringWithFormat:@"%@\nusersDevicesInfoMap: %@", description, usersDevicesInfoMap];
     description = [NSString stringWithFormat:@"%@\nolmSessions: %@", description, olmSessions];
