@@ -26,8 +26,8 @@
 {
     MXSession *mxSession;
     
-    NSMutableDictionary *stateEvents;
-    NSMutableDictionary *members;
+    NSMutableDictionary<NSString*, MXEvent*> *stateEvents;
+    NSMutableDictionary<NSString*, MXRoomMember*> *members;
     
     /**
      The room aliases. The key is the domain.
@@ -456,6 +456,11 @@
 - (BOOL)isEncrypted
 {
     return (nil != stateEvents[kMXEventTypeStringRoomEncryption]);
+}
+
+- (NSString *)encryptionAlgorithm
+{
+    return stateEvents[kMXEventTypeStringRoomEncryption].content[@"algorithm"];
 }
 
 

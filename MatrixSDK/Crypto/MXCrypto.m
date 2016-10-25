@@ -521,7 +521,26 @@
         return nil;
     }
 
+    NSString *algorithm;
     id<MXEncrypting> alg = roomAlgorithms[room.roomId];
+
+    if (!alg)
+    {
+        // If the crypto has been enabled after the initialSync (the global one or the one for this room),
+        // the algorithm has not been initialised yet. So it do it now from room state information
+        algorithm = room.state.encryptionAlgorithm;
+        if (algorithm)
+        {
+            [self setEncryptionInRoom:room.roomId withAlgorithm:algorithm];
+            alg = roomAlgorithms[room.roomId];
+        }
+    }
+    else
+    {
+        // For log purpose
+        algorithm = NSStringFromClass(alg.class);
+    }
+
     if (alg)
     {
         return [alg encryptEventContent:eventContent eventType:eventType inRoom:room success:^(NSDictionary *encryptedContent) {
@@ -532,12 +551,10 @@
     }
     else
     {
-        NSLog(@"[MXCrypto] encryptEventContent: Cannot find room algo");
-
         NSError *error = [NSError errorWithDomain:MXDecryptingErrorDomain
                                              code:MXDecryptingErrorUnableToEncryptCode
                                          userInfo:@{
-                                                    NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorUnableToEncryptReason, room.roomId]
+                                                    NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorUnableToEncryptReason, algorithm]
                                                     }];
 
         failure(error);

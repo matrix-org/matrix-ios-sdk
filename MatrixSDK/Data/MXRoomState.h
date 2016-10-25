@@ -136,6 +136,12 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
 @property (nonatomic, readonly) BOOL isEncrypted;
 
 /**
+ If any the encryption algorithm used in this room.
+ */
+@property (nonatomic, readonly) NSString *encryptionAlgorithm;
+
+
+/**
  Create a `MXRoomState` instance.
  
  @param roomId the room id to the room.
