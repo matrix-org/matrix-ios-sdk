@@ -441,7 +441,7 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 #pragma mark - Crypto
 - (BOOL)isEncrypted
 {
-    return (self.eventType == MXEventTypeRoomEncrypted);
+    return (self.wireEventType == MXEventTypeRoomEncrypted);
 }
 
 - (NSString *)senderKey
