@@ -183,6 +183,14 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
 - (void)handleStateEvent:(MXEvent*)event;
 
 /**
+ Return the state event with the given type.
+ 
+ @param eventType the type of event.
+ @return the state event. Can be nil.
+ */
+- (MXEvent*)stateEventWithType:(MXEventTypeString)eventType;
+
+/**
  Return the member with the given user id.
  
  @param userId the id of the member to retrieve.

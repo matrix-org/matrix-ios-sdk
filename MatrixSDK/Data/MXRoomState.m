@@ -565,7 +565,13 @@
     }
 }
 
-#pragma mark -
+- (MXEvent *)stateEventWithType:(MXEventTypeString)eventType
+{
+    return stateEvents[eventType];
+}
+
+
+#pragma mark - Memberships
 - (MXRoomMember*)memberWithUserId:(NSString *)userId
 {
     return members[userId];
