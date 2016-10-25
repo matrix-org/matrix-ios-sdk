@@ -160,8 +160,10 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
             [self resetData];
         }
         // Check credentials
+        // The device id may not have been provided in credentials.
+        // Check it only if provided, else trust the stored one.
         else if (NO == [metaData.userId isEqualToString:credentials.userId]
-                 || NO == [metaData.deviceId isEqualToString:credentials.deviceId])
+                 || (credentials.deviceId && NO == [metaData.deviceId isEqualToString:credentials.deviceId]))
 
         {
             NSLog(@"[MXFileCryptoStore] Credentials do not match");
@@ -194,6 +196,8 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 
             [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
             backgroundTaskIdentifier = UIBackgroundTaskInvalid;
+
+            NSLog(@"[MXFileCryptoStore] loaded store: %@", self);
 
             onComplete();
         });
