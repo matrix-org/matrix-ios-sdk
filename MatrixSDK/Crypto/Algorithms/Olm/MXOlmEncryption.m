@@ -93,12 +93,13 @@
             }
         }
 
-        [crypto encryptMessage:@{
-                                 @"room_id": room.roomId,
-                                 @"type": eventType,
-                                 @"content": eventContent
-                                 }
-                    forDevices:participantKeys];
+        NSDictionary *encryptedMessage = [crypto encryptMessage:@{
+                                                                  @"room_id": room.roomId,
+                                                                  @"type": eventType,
+                                                                  @"content": eventContent
+                                                                  }
+                                                     forDevices:participantKeys];
+        success(encryptedMessage);
 
     } failure:failure];
 }
