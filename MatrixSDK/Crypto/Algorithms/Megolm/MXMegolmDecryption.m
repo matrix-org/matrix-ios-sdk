@@ -66,7 +66,7 @@
 
 - (void)onRoomKeyEvent:(MXEvent *)event
 {
-    NSLog(@"[MXMegolmDecryption] onRoomKeyEvent: Adding key from %@", event);
+    NSLog(@"[MXMegolmDecryption] onRoomKeyEvent: Adding key from %@", event.JSONDictionary);
 
     NSString *roomId = event.content[@"room_id"];
     NSString *sessionId = event.content[@"session_id"];

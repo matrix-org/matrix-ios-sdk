@@ -66,7 +66,7 @@
 
     if (!ciphertext[olmDevice.deviceCurve25519Key])
     {
-        NSLog(@"[MXOlmDecryption] decryptEvent: Error: Not included in recipients");
+        NSLog(@"[MXOlmDecryption] decryptEvent: Error: our device %@ is not included in recipients. Event: %@", olmDevice.deviceCurve25519Key, event.JSONDictionary);
 
         *error = [NSError errorWithDomain:MXDecryptingErrorDomain
                                      code:MXDecryptingErrorNotIncludedInRecipientsCode

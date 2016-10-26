@@ -236,7 +236,8 @@
 
     // TODO: We need to give the user a chance to block any devices or users
     // before we send them the keys; it's too late to download them here.
-    MXHTTPOperation *operation = [crypto downloadKeys:shareMap.userIds forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+    // @TODO: YES or NO?
+    MXHTTPOperation *operation = [crypto downloadKeys:shareMap.userIds forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
 
         MXHTTPOperation *operation2 = [self shareKey:sessionId withDevices:shareMap success:^{
 
@@ -284,7 +285,12 @@
                                       }
                               };
 
+    NSLog(@"[MXMegolEncryption] shareKey with %@", shareMap);
+
     MXHTTPOperation *operation = [crypto ensureOlmSessionsForUsers:shareMap.userIds success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {
+
+
+        NSLog(@"[MXMegolEncryption] shareKey. ensureOlmSessionsForUsers result: %@", results.map);
 
         MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];
         BOOL haveTargets = NO;
@@ -335,6 +341,8 @@
 
         if (haveTargets)
         {
+            NSLog(@"[MXMegolEncryption] shareKey. Acutally share with %@", contentMap);
+
             MXHTTPOperation *operation2 = [mxSession.matrixRestClient sendToDevice:kMXEventTypeStringRoomEncrypted contentMap:contentMap success:success failure:failure];
             [operation mutateTo:operation2];
         }

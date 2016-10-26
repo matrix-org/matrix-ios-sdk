@@ -186,7 +186,7 @@
     OLMSession *olmSession = [self sessionForDevice:theirDeviceIdentityKey andSessionId:sessionId];
 
     NSLog(@">>>> encryptMessage: olmSession.sessionIdentifier: %@", olmSession.sessionIdentifier);
-    NSLog(@">>>> payloadString: %@", payloadString);
+    //NSLog(@">>>> payloadString: %@", payloadString);
 
     if (olmSession)
     {
@@ -195,8 +195,8 @@
         [store storeSession:olmSession forDevice:theirDeviceIdentityKey];
     }
 
-    NSLog(@">>>> ciphertext: %@", olmMessage.ciphertext);
-    NSLog(@">>>> ciphertext: SHA256: %@", [olmUtility sha256:[olmMessage.ciphertext dataUsingEncoding:NSUTF8StringEncoding]]);
+    //NSLog(@">>>> ciphertext: %@", olmMessage.ciphertext);
+    //NSLog(@">>>> ciphertext: SHA256: %@", [olmUtility sha256:[olmMessage.ciphertext dataUsingEncoding:NSUTF8StringEncoding]]);
 
     return @{
              @"body": olmMessage.ciphertext,
@@ -294,15 +294,26 @@
 
             [store storeInboundGroupSession:session];
 
-            result = [[MXDecryptionResult alloc] init];
-            result.payload = [NSJSONSerialization JSONObjectWithData:[payloadString dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
-            result.keysClaimed = session.keysClaimed;
+            if (payloadString)
+            {
+                result = [[MXDecryptionResult alloc] init];
+                result.payload = [NSJSONSerialization JSONObjectWithData:[payloadString dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
+                result.keysClaimed = session.keysClaimed;
 
-            // The sender must have had the senderKey to persuade us to save the
-            // session.
-            result.keysProved = @{
-                                  @"curve25519": senderKey
-                                  };
+                // The sender must have had the senderKey to persuade us to save the
+                // session.
+                result.keysProved = @{
+                                      @"curve25519": senderKey
+                                      };
+            }
+            else
+            {
+                *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                             code:MXDecryptingErrorUnableToDecryptCode
+                                         userInfo:@{
+                                                    NSLocalizedDescriptionKey: @"@TODO: Make OLMKit return an error"
+                                                    }];
+            }
         }
         else
         {
