@@ -422,6 +422,8 @@
 
     MXUsersDevicesMap<MXOlmSessionResult*> *results = [[MXUsersDevicesMap alloc] init];
 
+    NSLog(@"[MXCrypto] ensureOlmSessionsForUsers: %@", users);
+
     for (NSString *userId in users)
     {
         NSArray<MXDeviceInfo *> *devices = [self storedDevicesForUser:userId];
@@ -451,6 +453,8 @@
             [results setObject:olmSessionResult forUser:device.userId andDevice:device.deviceId];
         }
     }
+
+    NSLog(@"[MXCrypto] ensureOlmSessionsForUsers - from crypto store: %@. Missing :%@", results, devicesWithoutSession);
 
     if (devicesWithoutSession.count == 0)
     {
@@ -595,6 +599,23 @@
     {
         NSLog(@"[MXCrypto] decryptEvent: Error: %@", algDecryptError);
 
+        // We've got a message for a session we don't have.  Maybe the sender
+        // forgot to tell us about the session.  Remind the sender that we
+        // exist so that they might tell us about the session on their next
+        // send.
+        //
+        // (Alternatively, it might be that we are just looking at
+        // scrollback... at least we rate-limit the m.new_device events :/)
+        //
+        // XXX: this is a band-aid which masks symptoms of other bugs. It would
+        // be nice to get rid of it.
+        if (event.roomId && event.sender)
+        {
+            // Note: if the sending device didn't tell us its device_id, fall
+            // back to all devices.
+            [self sendPingToDevice:event.content[@"device_id"] userId:event.sender forRoom:event.roomId];
+        }
+
         if (error)
         {
             *error = algDecryptError;
@@ -704,8 +725,7 @@
     for (MXRoom *room in mxSession.rooms)
     {
         // Check for rooms with encryption enabled
-        id<MXEncrypting> alg = roomAlgorithms[room.roomId];
-        if (!alg)
+        if (!room.state.isEncrypted)
         {
             continue;
         }
@@ -757,6 +777,8 @@
 - (void)onToDeviceEvent:(NSNotification *)notification
 {
     MXEvent *event = notification.userInfo[kMXSessionNotificationEventKey];
+
+    NSLog(@"[MXCrypto] onToDeviceEvent %@:%@: %@", mxSession.myUser.userId, _store.deviceId, event);
 
     switch (event.eventType)
     {
@@ -967,6 +989,42 @@
     }
 
     return YES;
+}
+
+/**
+ Send a "m.new_device" message to remind it that we exist and are a member
+ of a room.
+ 
+ This is rate limited to send a message at most once an hour per destination.
+ 
+ @param deviceId the id of the device to ping. If nil, all devices.
+ @param userId the id of the user to ping.
+ @param roomId the id of the room we want to remind them about.
+ */
+- (void)sendPingToDevice:(NSString*)deviceId userId:(NSString*)userId forRoom:(NSString*)roomId
+{
+    if (!deviceId)
+    {
+        deviceId = @"*";
+    }
+
+    // @TODO: Manage rate limit
+
+    // Build a per-device message for each user
+    MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];
+
+    [contentMap setObjects:@{
+                             deviceId: @{
+                                     @"device_id": deviceId,
+                                     @"rooms": @[roomId],
+                                     }
+
+                             } forUser:userId];
+
+
+    NSLog(@"[MXCrypto] sendPingToDevice (%@): %@", kMXEventTypeStringNewDevice, contentMap);
+
+    [mxSession.matrixRestClient sendToDevice:kMXEventTypeStringNewDevice contentMap:contentMap success:nil failure:nil];
 }
 
 @end
