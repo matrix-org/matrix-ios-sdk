@@ -409,11 +409,6 @@
     return YES;
 }
 
-- (BOOL)isRoomEncrypted:(NSString *)roomId
-{
-    return roomAlgorithms[roomId];
-}
-
 - (MXHTTPOperation*)ensureOlmSessionsForUsers:(NSArray*)users
                                       success:(void (^)(MXUsersDevicesMap<MXOlmSessionResult*> *results))success
                                       failure:(void (^)(NSError *error))failure
@@ -531,7 +526,7 @@
     if (!alg)
     {
         // If the crypto has been enabled after the initialSync (the global one or the one for this room),
-        // the algorithm has not been initialised yet. So it do it now from room state information
+        // the algorithm has not been initialised yet. So, do it now from room state information
         algorithm = room.state.encryptionAlgorithm;
         if (algorithm)
         {

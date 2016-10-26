@@ -142,14 +142,6 @@
 - (BOOL)setEncryptionInRoom:(NSString*)roomId withAlgorithm:(NSString*)algorithm;
 
 /**
- Indicate whether encryption is enabled for a room.
-
- @param roomId the id of the room.
- @return whether encryption is enabled.
- */
-- (BOOL)isRoomEncrypted:(NSString*)roomId;
-
-/**
  Try to make sure we have established olm sessions for the given users.
 
  @param users a list of user ids.
