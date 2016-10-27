@@ -262,7 +262,7 @@ NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:1930
         }
 
     } failure:^(NSError *error) {
-        NSLog(@"[MXCallManager] refreshTURNServer: Failed to get TURN URIs. Error: %@\n", error);
+        NSLog(@"[MXCallManager] refreshTURNServer: Failed to get TURN URIs.\n");
         if (calls)
         {
             NSLog(@"Retry in 60s");

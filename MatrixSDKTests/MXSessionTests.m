@@ -672,6 +672,120 @@
     }];
 }
 
+- (void)testCreateRoomWithInvite
+{
+    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession2, XCTestExpectation *expectation) {
+        
+        [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+            
+            mxSession = mxSession2;
+            
+            // Create a random room with no params
+            [mxSession createRoom:nil visibility:nil roomAlias:nil topic:nil invite:@[matrixSDKTestsData.aliceCredentials.userId] invite3PID:nil isDirect:NO success:^(MXRoom *room) {
+                
+                XCTAssertNotNil(room);
+                
+                BOOL isSync = (room.state.membership != MXMembershipInvite && room.state.membership != MXMembershipUnknown);
+                XCTAssertTrue(isSync, @"The callback must be called once the room has been initialSynced");
+                
+                [mxSession.matrixRestClient membersOfRoom:room.roomId success:^(NSArray *roomMemberEvents) {
+                    
+                    XCTAssertEqual(roomMemberEvents.count, 2);
+                    
+                    MXEvent *roomMemberEvent1 = roomMemberEvents[0];
+                    MXEvent *roomMemberEvent2 = roomMemberEvents[1];
+                    
+                    BOOL succeed;
+                    if ([roomMemberEvent1.stateKey isEqualToString:mxSession.myUser.userId])
+                    {
+                        succeed = [roomMemberEvent2.stateKey isEqualToString:matrixSDKTestsData.aliceCredentials.userId];
+                    }
+                    else if ([roomMemberEvent1.stateKey isEqualToString:matrixSDKTestsData.aliceCredentials.userId])
+                    {
+                        succeed = [roomMemberEvent2.stateKey isEqualToString:mxSession.myUser.userId];
+                    }
+                    
+                    XCTAssertTrue(succeed);
+                    
+                    [expectation fulfill];
+                    
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        }];
+        
+    }];
+}
+
+- (void)testCreateDirectRoom
+{
+    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession2, XCTestExpectation *expectation) {
+        
+        [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+            
+            mxSession = mxSession2;
+            
+            // Create a random room with no params
+            [mxSession createRoom:nil visibility:nil roomAlias:nil topic:nil invite:@[matrixSDKTestsData.aliceCredentials.userId] invite3PID:nil isDirect:YES success:^(MXRoom *room) {
+                
+                XCTAssertNotNil(room);
+                
+                BOOL isSync = (room.state.membership != MXMembershipInvite && room.state.membership != MXMembershipUnknown);
+                XCTAssertTrue(isSync, @"The callback must be called once the room has been initialSynced");
+                
+                [mxSession.matrixRestClient membersOfRoom:room.roomId success:^(NSArray *roomMemberEvents) {
+                    
+                    XCTAssertEqual(roomMemberEvents.count, 2);
+                    
+                    MXEvent *roomMemberEvent1 = roomMemberEvents[0];
+                    MXEvent *roomMemberEvent2 = roomMemberEvents[1];
+                    
+                    BOOL succeed;
+                    if ([roomMemberEvent1.stateKey isEqualToString:mxSession.myUser.userId])
+                    {
+                        succeed = [roomMemberEvent2.stateKey isEqualToString:matrixSDKTestsData.aliceCredentials.userId];
+                    }
+                    else if ([roomMemberEvent1.stateKey isEqualToString:matrixSDKTestsData.aliceCredentials.userId])
+                    {
+                        succeed = [roomMemberEvent2.stateKey isEqualToString:mxSession.myUser.userId];
+                    }
+                    
+                    XCTAssertTrue(succeed);
+                    
+                    // Force sync to get direct rooms list
+                    [mxSession startWithMessagesLimit:0 onServerSyncDone:^{
+                        
+                        XCTAssertTrue(room.isDirect);
+                        
+                        [expectation fulfill];
+                        
+                    } failure:^(NSError *error) {
+                        XCTFail(@"Cannot sync direct rooms - error: %@", error);
+                        [expectation fulfill];
+                    }];                    
+                    
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        }];
+        
+    }];
+}
+
 - (void)testPrivateOneToOneRoomWithUserId
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {

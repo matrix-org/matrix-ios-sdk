@@ -471,6 +471,29 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation*)logout:(void (^)())success
+                   failure:(void (^)(NSError *error))failure
+{
+    return [httpClient requestWithMethod:@"POST"
+                                    path:[NSString stringWithFormat:@"%@/logout", apiPathPrefix]
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     
+                                     if (success)
+                                     {
+                                         success();
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                     
+                                 }];
+}
+
 #pragma mark - Account data
 - (MXHTTPOperation*)setAccountData:(NSDictionary*)data
                            forType:(NSString*)type
@@ -488,15 +511,13 @@ MXAuthAction;
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
-
+                                             
                                              dispatch_async(dispatch_get_main_queue(), ^{
-
-                                                 NSString *eventId;
-                                                 MXJSONModelSetString(eventId, JSONResponse[@"event_id"]);
-                                                 success(eventId);
-
+                                                 
+                                                 success();
+                                                 
                                              });
-
+                                             
                                          });
                                      }
 
@@ -1543,6 +1564,39 @@ MXAuthAction;
 {
     // All parameters are optional. Fill the request parameters on demand
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+    
+    if (name)
+    {
+        parameters[@"name"] = name;
+    }
+    if (visibility)
+    {
+        parameters[@"visibility"] = visibility;
+    }
+    if (roomAlias)
+    {
+        parameters[@"room_alias_name"] = roomAlias;
+    }
+    if (topic)
+    {
+        parameters[@"topic"] = topic;
+    }
+    
+    return [self createRoom:parameters success:success failure:failure];
+}
+
+- (MXHTTPOperation*)createRoom:(NSString*)name 
+                    visibility:(MXRoomDirectoryVisibility)visibility
+                     roomAlias:(NSString*)roomAlias
+                         topic:(NSString*)topic
+                        invite:(NSArray<NSString*>*)inviteArray
+                    invite3PID:(NSArray<MXInvite3PID*>*)invite3PIDArray
+                      isDirect:(BOOL)isDirect
+                       success:(void (^)(MXCreateRoomResponse *response))success
+                       failure:(void (^)(NSError *error))failure
+{
+    // All parameters are optional. Fill the request parameters on demand
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
 
     if (name)
     {
@@ -1560,6 +1614,28 @@ MXAuthAction;
     {
         parameters[@"topic"] = topic;
     }
+    if (inviteArray)
+    {
+        parameters[@"invite"] = inviteArray;
+    }
+    if (invite3PIDArray)
+    {
+        NSMutableArray *invite3PIDArray2 = [NSMutableArray arrayWithCapacity:invite3PIDArray.count];
+        for (MXInvite3PID *invite3PID in invite3PIDArray)
+        {
+            if (invite3PID.dictionary)
+            {
+                [invite3PIDArray2 addObject:invite3PID.dictionary];
+            }
+        }
+        
+        if (invite3PIDArray2.count)
+        {
+            parameters[@"invite_3pid"] = invite3PIDArray2;
+        }
+    }
+    
+    parameters[@"is_direct"] = [NSNumber numberWithBool:isDirect];
 
     return [self createRoom:parameters success:success failure:failure];
 }

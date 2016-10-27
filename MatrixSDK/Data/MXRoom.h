@@ -121,9 +121,27 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 @property (nonatomic, readonly) NSUInteger highlightCount;
 
 /**
- Indicate if the room is tagged as a direct room.
+ Indicate if the room is tagged as a direct chat.
  */
 @property (nonatomic, readonly) BOOL isDirect;
+
+/**
+ Indicate whether the room looks like a direct room ("heuritic method").
+ */
+@property (nonatomic, readonly) BOOL looksLikeDirect;
+
+/**
+ Tag this room as a direct one, or remove the direct tag.
+
+ @discussion: When a group chat is tagged as direct, the room becomes a direct chat with the oldest joined member.
+
+ @param isDirect Tell whether the room is direct or not.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (MXHTTPOperation*)setIsDirect:(BOOL)isDirect
+                        success:(void (^)())success
+                        failure:(void (^)(NSError *error))failure;
 
 /**
  Create a `MXRoom` instance.

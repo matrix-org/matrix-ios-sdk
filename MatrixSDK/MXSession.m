@@ -139,6 +139,7 @@ typedef void (^MXOnResumeDone)();
         matrixRestClient = mxRestClient;
         rooms = [NSMutableDictionary dictionary];
         oneToOneRooms = [NSMutableDictionary dictionary];
+        _directRooms = [NSMutableDictionary dictionary];
         globalEventListeners = [NSMutableArray array];
         syncMessagesLimit = -1;
         _notificationCenter = [[MXNotificationCenter alloc] initWithMatrixSession:self];
@@ -545,6 +546,12 @@ typedef void (^MXOnResumeDone)();
     [self setState:MXSessionStateClosed];
 }
 
+- (MXHTTPOperation*)logout:(void (^)())success
+                   failure:(void (^)(NSError *error))failure
+{
+    return [self.matrixRestClient logout:success failure:failure];
+}
+
 
 #pragma mark - MXSession pause prevention
 - (void)retainPreventPause
@@ -825,7 +832,7 @@ typedef void (^MXOnResumeDone)();
             MXError *mxError = [[MXError alloc] initWithNSError:error];
             if ([mxError.errcode isEqualToString:kMXErrCodeStringUnknownToken])
             {
-                NSLog(@"[MXSession] The access token is no more valid. Go to MXSessionStateUnknownToken state. Error: %@", error);
+                NSLog(@"[MXSession] The access token is no more valid. Go to MXSessionStateUnknownToken state.");
                 [self setState:MXSessionStateUnknownToken];
 
                 // Do nothing more because without a valid access_token, the session is useless
@@ -952,9 +959,10 @@ typedef void (^MXOnResumeDone)();
 
 - (void)handleAccountData:(NSDictionary*)accountDataUpdate
 {
-    if (accountDataUpdate && accountDataUpdate[@"events"])
+    if (accountDataUpdate && accountDataUpdate[@"events"] && ((NSArray*)accountDataUpdate[@"events"]).count)
     {
         BOOL isInitialSync = !_store.eventStreamToken || _state == MXSessionStateInitialised;
+        BOOL didDefineDirectChats = NO;
 
         for (NSDictionary *event in accountDataUpdate[@"events"])
         {
@@ -1002,7 +1010,16 @@ typedef void (^MXOnResumeDone)();
             }
             else if ([event[@"type"] isEqualToString:kMXAccountDataTypeDirect])
             {
-                MXJSONModelSetDictionary(_directRooms, event[@"content"]);
+                didDefineDirectChats = YES;
+                
+                if ([event[@"content"] isKindOfClass:NSDictionary.class])
+                {
+                    _directRooms = [NSMutableDictionary dictionaryWithDictionary:event[@"content"]];
+                }
+                else
+                {
+                    [_directRooms removeAllObjects];
+                }
                 
                 [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDirectRoomsDidChangeNotification
                                                                     object:self
@@ -1014,6 +1031,20 @@ typedef void (^MXOnResumeDone)();
         }
 
         _store.userAccountData = accountData.accountData;
+        
+        if (!didDefineDirectChats)
+        {
+            // When no direct chat is listed in account data, we synthesize them from the current heuristics of what counts as a 1:1 room.
+            for (MXRoom *room in self.rooms)
+            {
+                if (room.looksLikeDirect)
+                {
+                    [room setIsDirect:YES success:nil failure:^(NSError *error) {
+                        NSLog(@"[MXSession] Failed to tag a direct chat");
+                    }];
+                }
+            }
+        }
     }
 }
 
@@ -1029,33 +1060,59 @@ typedef void (^MXOnResumeDone)();
 
 #pragma mark - Rooms operations
 
-- (void)onCreatedRoom:(MXCreateRoomResponse*)response success:(void (^)(MXRoom *room))success
+- (void)onCreatedRoom:(MXCreateRoomResponse*)response isDirect:(BOOL)isDirect success:(void (^)(MXRoom *room))success
 {
     // Wait to receive data from /sync about this room before returning
-    if (success)
+    MXRoom *room = [self roomWithRoomId:response.roomId];
+    if (room)
     {
-        MXRoom *room = [self roomWithRoomId:response.roomId];
-        if (room)
+        // The first /sync response for this room may have happened before the
+        // homeserver answer to the createRoom request.
+        
+        if (isDirect)
         {
-            // The first /sync response for this room may have happened before the
-            // homeserver answer to the createRoom request.
-            success(room);
-        }
-        else
-        {
-            // Else, just wait for the corresponding kMXRoomInitialSyncNotification
-            // that will be fired from MXRoom.
-            __block id initialSyncObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomInitialSyncNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
-
-                MXRoom *room = note.object;
-
-                if ([room.state.roomId isEqualToString:response.roomId])
-                {
-                    success(room);
-                    [[NSNotificationCenter defaultCenter] removeObserver:initialSyncObserver];
-                }
+            // Tag the room
+            [room setIsDirect:YES success:nil failure:^(NSError *error) {
+                
+                NSLog(@"[MXSession] Failed to tag the room (%@) as a direct chat", response.roomId);
+                
             }];
         }
+        
+        if (success)
+        {
+            success(room);
+        }
+    }
+    else
+    {
+        // Else, just wait for the corresponding kMXRoomInitialSyncNotification
+        // that will be fired from MXRoom.
+        
+        __block id initialSyncObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomInitialSyncNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+            
+            MXRoom *room = note.object;
+            
+            if ([room.state.roomId isEqualToString:response.roomId])
+            {
+                if (isDirect)
+                {
+                    // Tag the room
+                    [room setIsDirect:YES success:nil failure:^(NSError *error) {
+                        
+                        NSLog(@"[MXSession] Failed to tag the room (%@) as a direct chat", response.roomId);
+                        
+                    }];
+                }
+                
+                if (success)
+                {
+                    success(room);
+                }
+                
+                [[NSNotificationCenter defaultCenter] removeObserver:initialSyncObserver];
+            }
+        }];
     }
 }
 
@@ -1067,8 +1124,25 @@ typedef void (^MXOnResumeDone)();
                        failure:(void (^)(NSError *error))failure
 {
     return [matrixRestClient createRoom:name visibility:visibility roomAlias:roomAlias topic:topic success:^(MXCreateRoomResponse *response) {
+        
+        [self onCreatedRoom:response isDirect:NO success:success];
+        
+    } failure:failure];
+}
 
-        [self onCreatedRoom:response success:success];
+- (MXHTTPOperation*)createRoom:(NSString*)name
+                    visibility:(MXRoomDirectoryVisibility)visibility
+                     roomAlias:(NSString*)roomAlias
+                         topic:(NSString*)topic
+                        invite:(NSArray<NSString*>*)inviteArray
+                    invite3PID:(NSArray<MXInvite3PID*>*)invite3PIDArray
+                      isDirect:(BOOL)isDirect
+                       success:(void (^)(MXRoom *room))success
+                       failure:(void (^)(NSError *error))failure
+{
+    return [matrixRestClient createRoom:name visibility:visibility roomAlias:roomAlias topic:topic invite:inviteArray invite3PID:invite3PIDArray isDirect:isDirect success:^(MXCreateRoomResponse *response) {
+
+        [self onCreatedRoom:response isDirect:isDirect success:success];
 
     } failure:failure];
 }
@@ -1079,7 +1153,13 @@ typedef void (^MXOnResumeDone)();
 {
     return [matrixRestClient createRoom:parameters success:^(MXCreateRoomResponse *response) {
 
-        [self onCreatedRoom:response success:success];
+        BOOL isDirect = NO;
+        if ([parameters[@"is_direct"] isKindOfClass:NSNumber.class])
+        {
+            isDirect = ((NSNumber*)parameters[@"is_direct"]).boolValue;
+        }
+        
+        [self onCreatedRoom:response isDirect:isDirect success:success];
 
     } failure:failure];
 }
@@ -1254,6 +1334,13 @@ typedef void (^MXOnResumeDone)();
         }
     }
     return nil;
+}
+
+- (MXHTTPOperation*)uploadDirectRooms:(void (^)())success
+                              failure:(void (^)(NSError *error))failure
+{
+    // Push the current direct rooms dictionary to the homeserver.
+    return [matrixRestClient setAccountData:_directRooms forType:kMXAccountDataTypeDirect success:success failure:failure];
 }
 
 - (MXRoom *)getOrCreateRoom:(NSString *)roomId notify:(BOOL)notify
