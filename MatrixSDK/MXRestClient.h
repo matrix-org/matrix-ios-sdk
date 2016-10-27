@@ -20,6 +20,7 @@
 #import "MXHTTPClient.h"
 #import "MXEvent.h"
 #import "MXRoomEventFilter.h"
+#import "MXInvite3PID.h"
 #import "MXEventTimeline.h"
 #import "MXJSONModels.h"
 
@@ -52,7 +53,8 @@ FOUNDATION_EXPORT NSString *const kMXContentPrefixPath;
 /**
  Account data types
  */
-FOUNDATION_EXPORT NSString *const kMXAccountDataPushRules;
+FOUNDATION_EXPORT NSString *const kMXAccountDataTypeDirect;
+FOUNDATION_EXPORT NSString *const kMXAccountDataTypePushRules;
 FOUNDATION_EXPORT NSString *const kMXAccountDataTypeIgnoredUserList;
 
 /**
@@ -876,6 +878,26 @@ typedef enum : NSUInteger
                       success:(void (^)())success
                       failure:(void (^)(NSError *error))failure;
 
+/**
+ Create a room.
+ 
+ @param name (optional) the room name.
+ @param visibility (optional) the visibility of the room in the current HS's room directory.
+ @param roomAlias (optional) the room alias on the home server the room will be created.
+ @param topic (optional) the room topic.
+ 
+ @param success A block object called when the operation succeeds. It provides a MXCreateRoomResponse object.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)createRoom:(NSString*)name
+                    visibility:(MXRoomDirectoryVisibility)visibility
+                     roomAlias:(NSString*)roomAlias
+                         topic:(NSString*)topic
+                       success:(void (^)(MXCreateRoomResponse *response))success
+                       failure:(void (^)(NSError *error))failure;
+
 
 /**
  Create a room.
@@ -884,6 +906,9 @@ typedef enum : NSUInteger
  @param visibility (optional) the visibility of the room in the current HS's room directory.
  @param roomAlias (optional) the room alias on the home server the room will be created.
  @param topic (optional) the room topic.
+ @param inviteArray (optional) A list of user IDs to invite to the room. This will tell the server to invite everyone in the list to the newly created room.
+ @param invite3PIDArray (optional) A list of objects representing third party IDs to invite into the room.
+ @param isDirect This flag makes the server set the is_direct flag on the m.room.member events sent to the users in invite and invite_3pid (Use NO by default).
 
  @param success A block object called when the operation succeeds. It provides a MXCreateRoomResponse object.
  @param failure A block object called when the operation fails.
@@ -894,6 +919,9 @@ typedef enum : NSUInteger
                     visibility:(MXRoomDirectoryVisibility)visibility
                      roomAlias:(NSString*)roomAlias
                          topic:(NSString*)topic
+                        invite:(NSArray<NSString*>*)inviteArray
+                    invite3PID:(NSArray<MXInvite3PID*>*)invite3PIDArray
+                      isDirect:(BOOL)isDirect
                        success:(void (^)(MXCreateRoomResponse *response))success
                        failure:(void (^)(NSError *error))failure;
 
@@ -918,6 +946,7 @@ typedef enum : NSUInteger
  @param from the token to start getting results from.
  @param direction `MXTimelineDirectionForwards` or `MXTimelineDirectionBackwards`
  @param limit (optional, use -1 to not defined this value) the maximum nuber of messages to return.
+ @param filter to filter returned events with.
 
  @param success A block object called when the operation succeeds. It provides a `MXPaginationResponse` object.
  @param failure A block object called when the operation fails.
@@ -928,6 +957,7 @@ typedef enum : NSUInteger
                                from:(NSString*)from
                           direction:(MXTimelineDirection)direction
                               limit:(NSUInteger)limit
+                             filter:(MXRoomEventFilter*)roomEventFilter
                             success:(void (^)(MXPaginationResponse *paginatedResponse))success
                             failure:(void (^)(NSError *error))failure;
 

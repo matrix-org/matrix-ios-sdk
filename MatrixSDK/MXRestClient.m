@@ -42,7 +42,8 @@ NSString *const kMXContentPrefixPath = @"/_matrix/media/v1";
  Account data types
  */
 NSString *const kMXAccountDataTypeIgnoredUserList = @"m.ignored_user_list";
-NSString *const kMXAccountDataPushRules = @"m.push_rules";
+NSString *const kMXAccountDataTypePushRules = @"m.push_rules";
+NSString *const kMXAccountDataTypeDirect = @"m.direct";
 
 /**
  Account data keys
@@ -1546,6 +1547,39 @@ MXAuthAction;
 {
     // All parameters are optional. Fill the request parameters on demand
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+    
+    if (name)
+    {
+        parameters[@"name"] = name;
+    }
+    if (visibility)
+    {
+        parameters[@"visibility"] = visibility;
+    }
+    if (roomAlias)
+    {
+        parameters[@"room_alias_name"] = roomAlias;
+    }
+    if (topic)
+    {
+        parameters[@"topic"] = topic;
+    }
+    
+    return [self createRoom:parameters success:success failure:failure];
+}
+
+- (MXHTTPOperation*)createRoom:(NSString*)name 
+                    visibility:(MXRoomDirectoryVisibility)visibility
+                     roomAlias:(NSString*)roomAlias
+                         topic:(NSString*)topic
+                        invite:(NSArray<NSString*>*)inviteArray
+                    invite3PID:(NSArray<MXInvite3PID*>*)invite3PIDArray
+                      isDirect:(BOOL)isDirect
+                       success:(void (^)(MXCreateRoomResponse *response))success
+                       failure:(void (^)(NSError *error))failure
+{
+    // All parameters are optional. Fill the request parameters on demand
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
 
     if (name)
     {
@@ -1563,6 +1597,28 @@ MXAuthAction;
     {
         parameters[@"topic"] = topic;
     }
+    if (inviteArray)
+    {
+        parameters[@"invite"] = inviteArray;
+    }
+    if (invite3PIDArray)
+    {
+        NSMutableArray *invite3PIDArray2 = [NSMutableArray arrayWithCapacity:invite3PIDArray.count];
+        for (MXInvite3PID *invite3PID in invite3PIDArray)
+        {
+            if (invite3PID.dictionary)
+            {
+                [invite3PIDArray2 addObject:invite3PID.dictionary];
+            }
+        }
+        
+        if (invite3PIDArray2.count)
+        {
+            parameters[@"invite_3pid"] = invite3PIDArray2;
+        }
+    }
+    
+    parameters[@"is_direct"] = [NSNumber numberWithBool:isDirect];
 
     return [self createRoom:parameters success:success failure:failure];
 }
@@ -1603,6 +1659,7 @@ MXAuthAction;
                                from:(NSString*)from
                           direction:(MXTimelineDirection)direction
                               limit:(NSUInteger)limit
+                             filter:(MXRoomEventFilter*)roomEventFilter
                             success:(void (^)(MXPaginationResponse *paginatedResponse))success
                             failure:(void (^)(NSError *error))failure
 {
@@ -1624,6 +1681,11 @@ MXAuthAction;
     if (-1 != limit)
     {
         parameters[@"limit"] = [NSNumber numberWithUnsignedInteger:limit];
+    }
+    
+    if (roomEventFilter.dictionary.count)
+    {
+        parameters[@"filter"] = roomEventFilter.dictionary;
     }
     
     return [httpClient requestWithMethod:@"GET"

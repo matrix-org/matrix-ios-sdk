@@ -137,12 +137,12 @@
 
         } failure:^(NSError *error) {
 
-            NSLog(@"[MXUser] updateFromHomeserverOfMatrixSession. Error when getting avatar: %@", error);
+            NSLog(@"[MXUser] updateFromHomeserverOfMatrixSession failed to get avatar");
             failure(error);
         }];
     } failure:^(NSError *error) {
 
-        NSLog(@"[MXUser] updateFromHomeserverOfMatrixSession. Error when getting avatar: %@", error);
+        NSLog(@"[MXUser] updateFromHomeserverOfMatrixSession failed to get display name");
         failure(error);
     }];
 }

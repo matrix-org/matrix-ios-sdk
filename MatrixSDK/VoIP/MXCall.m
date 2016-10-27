@@ -274,7 +274,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                 [self setState:MXCallStateInviteSent reason:nil];
 
             } failure:^(NSError *error) {
-                NSLog(@"[MXCall] callWithVideo: ERROR: Cannot send m.call.invite event. Error: %@", error);
+                NSLog(@"[MXCall] callWithVideo: ERROR: Cannot send m.call.invite event.");
                 [self didEncounterError:error];
             }];
 
@@ -327,7 +327,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                 [self setState:MXCallStateConnected reason:nil];
                 
             } failure:^(NSError *error) {
-                NSLog(@"[MXCall] answer: ERROR: Cannot send m.call.answer event. Error: %@", error);
+                NSLog(@"[MXCall] answer: ERROR: Cannot send m.call.answer event.");
                 [self didEncounterError:error];
             }];
             
@@ -354,7 +354,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                                   @"version": @(0)
                                   };
         [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallHangup content:content success:nil failure:^(NSError *error) {
-            NSLog(@"[MXCall] hangup: ERROR: Cannot send m.call.hangup event. Error: %@", error);
+            NSLog(@"[MXCall] hangup: ERROR: Cannot send m.call.hangup event.");
             [self didEncounterError:error];
         }];
     }
@@ -525,7 +525,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                                   };
 
         [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallCandidates content:content success:nil failure:^(NSError *error) {
-            NSLog(@"[MXCall] onICECandidate: Warning: Cannot send m.call.candidates event. Error: %@", error);
+            NSLog(@"[MXCall] onICECandidate: Warning: Cannot send m.call.candidates event.");
         }];
 
         [localICECandidates removeAllObjects];

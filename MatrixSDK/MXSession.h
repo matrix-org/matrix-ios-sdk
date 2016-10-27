@@ -185,6 +185,13 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
 FOUNDATION_EXPORT NSString *const kMXSessionIgnoredUsersDidChangeNotification;
 
 /**
+ Posted when the `directRooms` property is updated from homeserver.
+ 
+ The notification object is the concerned session (MXSession instance).
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionDirectRoomsDidChangeNotification;
+
+/**
  Posted when MXSession data have been corrupted. The listener must reload the session data with a full server sync.
  
  The notification object is the concerned session (MXSession instance).
@@ -436,11 +443,35 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 #pragma mark - Rooms operations
 /**
  Create a room.
+ 
+ @param name (optional) the room name.
+ @param visibility (optional) the visibility of the room in the current HS's room directory.
+ @param roomAlias (optional) the room alias on the home server the room will be created.
+ @param topic (optional) the room topic.
+ 
+ @param success A block object called when the operation succeeds. It provides the MXRoom
+ instance of the joined room.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)createRoom:(NSString*)name
+                    visibility:(MXRoomDirectoryVisibility)visibility
+                     roomAlias:(NSString*)roomAlias
+                         topic:(NSString*)topic
+                       success:(void (^)(MXRoom *room))success
+                       failure:(void (^)(NSError *error))failure;
+
+/**
+ Create a room.
 
  @param name (optional) the room name.
  @param visibility (optional) the visibility of the room in the current HS's room directory.
  @param roomAlias (optional) the room alias on the home server the room will be created.
  @param topic (optional) the room topic.
+ @param inviteArray (optional) A list of user IDs to invite to the room. This will tell the server to invite everyone in the list to the newly created room.
+ @param invite3PIDArray (optional) A list of objects representing third party IDs to invite into the room.
+ @param isDirect tells whether the resulting room must be tagged as a direct room.
 
  @param success A block object called when the operation succeeds. It provides the MXRoom
                 instance of the joined room.
@@ -452,6 +483,9 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                     visibility:(MXRoomDirectoryVisibility)visibility
                      roomAlias:(NSString*)roomAlias
                          topic:(NSString*)topic
+                        invite:(NSArray<NSString*>*)inviteArray
+                    invite3PID:(NSArray<MXInvite3PID*>*)invite3PIDArray
+                      isDirect:(BOOL)isDirect
                        success:(void (^)(MXRoom *room))success
                        failure:(void (^)(NSError *error))failure;
 
@@ -549,6 +583,24 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 - (MXRoom *)privateOneToOneRoomWithUserId:(NSString*)userId;
 
+/**
+ The list of the direct rooms by user identifiers.
+ 
+ A dictionary where the keys are the user IDs and values are lists of room ID strings.
+ of the 'direct' rooms for that user ID.
+ */
+@property (nonatomic, readonly) NSMutableDictionary<NSString*, NSArray<NSString*>*> *directRooms;
+
+/**
+ Update the direct rooms list on homeserver side with the current value of the `directRooms` property.
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)uploadDirectRooms:(void (^)())success
+                              failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Room peeking
 /**
@@ -695,7 +747,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  Note: rooms with no tags are returned under the fake tag. The corresponding returned
  array is not ordered.
 
- @return a dictionary where the key is the tag name and value, an array of
+ @return a dictionary where the key is the tag name and the value is an array of
          room tagged with this tag. The array order is the same as [MXSession roomsWithTag:]
  */
 - (NSDictionary<NSString*, NSArray<MXRoom*>*>*)roomsByTags;

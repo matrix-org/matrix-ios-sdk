@@ -98,6 +98,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         }
 
         _state = [[MXRoomState alloc] initWithRoomId:room.roomId andMatrixSession:room.mxSession andDirection:YES];
+        
+        _roomEventFilter = [[MXRoomEventFilter alloc] init];
     }
     return self;
 }
@@ -290,7 +292,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
     NSLog(@"[MXEventTimeline] paginate : request %tu messages from the server", numItems);
 
-    operation = [room.mxSession.matrixRestClient messagesForRoom:_state.roomId from:paginationToken direction:direction limit:numItems success:^(MXPaginationResponse *paginatedResponse) {
+    operation = [room.mxSession.matrixRestClient messagesForRoom:_state.roomId from:paginationToken direction:direction limit:numItems filter:_roomEventFilter success:^(MXPaginationResponse *paginatedResponse) {
 
         NSLog(@"[MXEventTimeline] paginate : get %tu messages from the server", paginatedResponse.chunk.count);
 
@@ -323,7 +325,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             return;
         }
 
-        NSLog(@"[MXEventTimeline] paginate error: %@", error);
+        NSLog(@"[MXEventTimeline] paginate failed");
         failure(error);
     }];
 
