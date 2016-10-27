@@ -1040,7 +1040,7 @@ typedef void (^MXOnResumeDone)();
                 if (room.looksLikeDirect)
                 {
                     [room setIsDirect:YES success:nil failure:^(NSError *error) {
-                        NSLog(@"[MXSession] Failed to tag the room (%@) as a direct chat", room.roomId);
+                        NSLog(@"[MXSession] Failed to tag a direct chat");
                     }];
                 }
             }
