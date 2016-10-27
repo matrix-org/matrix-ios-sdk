@@ -27,6 +27,10 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 
 @interface MXRoom ()
 {
+    /**
+     Tell whether the heuristic method used to detect direct room should be applied on this room when the user joins it.
+     */
+    BOOL shouldCheckDirectStatusOnJoin;
 }
 @end
 
@@ -41,6 +45,8 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         _accountData = [[MXRoomAccountData alloc] init];
 
         _typingUsers = [NSArray array];
+        
+        shouldCheckDirectStatusOnJoin = NO;
     }
     
     return self;
@@ -64,6 +70,13 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
             // Report the provided accountData.
             // Allocate a new instance if none, in order to handle room tag events for this room.
             _accountData = accountData ? accountData : [[MXRoomAccountData alloc] init];
+            
+            // Check whether the room is pending on an invitation.
+            if (self.state.membership == MXMembershipInvite)
+            {
+                // Handle direct flag to decide if it is direct or not
+                [self handleInviteDirectFlag];
+            }
         }
     }
     return self;
@@ -150,14 +163,54 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 
     // Handle account data events (if any)
     [self handleAccounDataEvents:roomSync.accountData.events direction:MXTimelineDirectionForwards];
+    
+    // Check whether the room was pending on an invitation without 'is_direct' flag.
+    if (shouldCheckDirectStatusOnJoin)
+    {
+        shouldCheckDirectStatusOnJoin = NO;
+        
+        if (self.looksLikeDirect)
+        {
+            [self setIsDirect:YES success:nil failure:^(NSError *error) {
+                NSLog(@"[MXSession] Failed to tag an joined room as a direct chat");
+            }];
+        }
+    }
 }
 
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync
 {
     // Let the live timeline handle live events
     [_liveTimeline handleInvitedRoomSync:invitedRoomSync];
+    
+    // Handle direct flag to decide if it is direct or not
+    [self handleInviteDirectFlag];
 }
 
+- (void)handleInviteDirectFlag
+{
+    // Handle here invite data to decide if it is direct or not
+    MXRoomMember *myUser = [self.state memberWithUserId:mxSession.myUser.userId];
+    BOOL isDirect = NO;
+    
+    if (myUser.originalEvent.content[@"is_direct"])
+    {
+        isDirect = [((NSNumber*)myUser.originalEvent.content[@"is_direct"]) boolValue];
+    }
+    else
+    {
+        // If there is no 'is_direct' tag, we'll have to apply heuristics to decide whether to consider it a DM
+        // (given it may have come from a client that doesn't know about m.direct).
+        shouldCheckDirectStatusOnJoin = YES;
+    }
+    
+    if (isDirect)
+    {
+        [self setIsDirect:YES success:nil failure:^(NSError *error) {
+            NSLog(@"[MXSession] Failed to tag an invite as a direct chat");
+        }];
+    }
+}
 
 #pragma mark - Room private account data handling
 /**
