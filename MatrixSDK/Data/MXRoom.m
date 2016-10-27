@@ -800,23 +800,20 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         NSString *directUserId = [self getDirectUserId];
         if (directUserId)
         {
-            @synchronized (mxSession.directRooms)
+            NSMutableArray *roomLists = [NSMutableArray arrayWithArray:mxSession.directRooms[directUserId]];
+            
+            [roomLists removeObject:self.roomId];
+            
+            if (roomLists.count)
             {
-                NSMutableArray *roomLists = [NSMutableArray arrayWithArray:mxSession.directRooms[directUserId]];
-                
-                [roomLists removeObject:self.roomId];
-                
-                if (roomLists.count)
-                {
-                    [mxSession.directRooms setObject:roomLists forKey:directUserId];
-                }
-                else
-                {
-                    [mxSession.directRooms removeObjectForKey:directUserId];
-                }
+                [mxSession.directRooms setObject:roomLists forKey:directUserId];
+            }
+            else
+            {
+                [mxSession.directRooms removeObjectForKey:directUserId];
             }
             
-            // Let the mxSession post the 'kMXSessionDirectRoomsDidChangeNotification' notification on account data update
+            // Note: mxSession will post the 'kMXSessionDirectRoomsDidChangeNotification' notification on account data update.
             return [mxSession uploadDirectRooms:success failure:failure];
         }
     }
@@ -848,16 +845,13 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
             directUserId = mxSession.myUser.userId;
         }
         
-        @synchronized (mxSession.directRooms)
-        {
-            NSMutableArray *roomLists = (mxSession.directRooms[directUserId] ? [NSMutableArray arrayWithArray:mxSession.directRooms[directUserId]] : [NSMutableArray array]);
-            
-            [roomLists addObject:self.roomId];
-            
-            [mxSession.directRooms setObject:roomLists forKey:directUserId];
-        }
+        NSMutableArray *roomLists = (mxSession.directRooms[directUserId] ? [NSMutableArray arrayWithArray:mxSession.directRooms[directUserId]] : [NSMutableArray array]);
         
-        // Let the mxSession post the 'kMXSessionDirectRoomsDidChangeNotification' notification on account data update
+        [roomLists addObject:self.roomId];
+        
+        [mxSession.directRooms setObject:roomLists forKey:directUserId];
+        
+        // Note: mxSession will post the 'kMXSessionDirectRoomsDidChangeNotification' notification on account data update.
         return [mxSession uploadDirectRooms:success failure:failure];
     }
     
@@ -876,22 +870,19 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     NSString *directUserId;
     
     // Enumerate all the user identifiers for which a direct chat is defined.
-    @synchronized (mxSession.directRooms)
+    NSArray *userIdWithDirectRoom = mxSession.directRooms.allKeys;
+    
+    for (NSString *userId in userIdWithDirectRoom)
     {
-        NSArray *userIdWithDirectRoom = mxSession.directRooms.allKeys;
-        
-        for (NSString *userId in userIdWithDirectRoom)
+        // Check whether this user is a member of this room.
+        if ([self.state memberWithUserId:userId])
         {
-            // Check whether this user is a member of this room.
-            if ([self.state memberWithUserId:userId])
+            // Check whether this room is tagged as direct for this user
+            if ([mxSession.directRooms[userId] indexOfObject:self.roomId] != NSNotFound)
             {
-                // Check whether this room is tagged as direct for this user
-                if ([mxSession.directRooms[userId] indexOfObject:self.roomId] != NSNotFound)
-                {
-                    // Matched!
-                    directUserId = userId;
-                    break;
-                }
+                // Matched!
+                directUserId = userId;
+                break;
             }
         }
     }

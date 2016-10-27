@@ -1006,17 +1006,11 @@ typedef void (^MXOnResumeDone)();
             {
                 didDefineDirectChats = YES;
                 
-                if ([event[@"content"] isKindOfClass:NSDictionary.class])
-                {
-                    @synchronized (self.directRooms)
-                    {
-                        _directRooms = [NSMutableDictionary dictionaryWithDictionary:event[@"content"]];
-                    }
-                    
-                    [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDirectRoomsDidChangeNotification
-                                                                        object:self
-                                                                      userInfo:nil];
-                }
+                MXJSONModelSetDictionary(_directRooms, event[@"content"]);
+                
+                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDirectRoomsDidChangeNotification
+                                                                    object:self
+                                                                  userInfo:nil];
             }
 
             // Update the corresponding part of account data
@@ -1335,14 +1329,7 @@ typedef void (^MXOnResumeDone)();
                               failure:(void (^)(NSError *error))failure
 {
     // Push the current direct rooms dictionary to the homeserver.
-    MXHTTPOperation *operation;
-    
-    @synchronized (self.directRooms)
-    {
-        operation = [matrixRestClient setAccountData:_directRooms forType:kMXAccountDataTypeDirect success:success failure:failure];
-    }
-    
-    return operation;
+    return [matrixRestClient setAccountData:_directRooms forType:kMXAccountDataTypeDirect success:success failure:failure];
 }
 
 - (MXRoom *)getOrCreateRoom:(NSString *)roomId notify:(BOOL)notify
