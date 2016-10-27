@@ -772,7 +772,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 
 - (BOOL)looksLikeDirect
 {
-    BOOL kicked;
+    BOOL kicked = NO;
     if (self.state.membership == MXMembershipLeave)
     {
         MXRoomMember *member = [self.state memberWithUserId:mxSession.myUser.userId];
