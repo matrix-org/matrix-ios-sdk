@@ -1029,9 +1029,7 @@ typedef void (^MXOnResumeDone)();
         if (!didDefineDirectChats)
         {
             // When no direct chat is listed in account data, we synthesize them from the current heuristics of what counts as a 1:1 room.
-            NSArray *rooms = self.rooms;
-            
-            for (MXRoom *room in rooms)
+            for (MXRoom *room in self.rooms)
             {
                 if (room.looksLikeDirect)
                 {
@@ -1149,7 +1147,7 @@ typedef void (^MXOnResumeDone)();
 {
     return [matrixRestClient createRoom:parameters success:^(MXCreateRoomResponse *response) {
 
-        BOOL isDirect;
+        BOOL isDirect = NO;
         if ([parameters[@"is_direct"] isKindOfClass:NSNumber.class])
         {
             isDirect = ((NSNumber*)parameters[@"is_direct"]).boolValue;
