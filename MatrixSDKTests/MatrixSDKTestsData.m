@@ -45,8 +45,6 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
 
 @interface MatrixSDKTestsData ()
 {
-    MXRestClient *mxRestClient;
-    
     NSDate *startDate;
 }
 @end
@@ -61,9 +59,6 @@ NSMutableArray *roomsToClean;
     self = [super init];
     if (self)
     {
-        mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL
-                              andOnUnrecognizedCertificateBlock:nil];
-
         startDate = [NSDate date];
     }
     return self;
@@ -80,6 +75,9 @@ NSMutableArray *roomsToClean;
     {
         // Use a different Bob each time so that tests are independent
         NSString *bobUniqueUser = [NSString stringWithFormat:@"%@-%@", MXTESTS_BOB, [[NSUUID UUID] UUIDString]];
+
+        MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL
+                                            andOnUnrecognizedCertificateBlock:nil];
 
         // First, try register the user
         [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:bobUniqueUser password:MXTESTS_BOB success:^(MXCredentials *credentials) {
@@ -441,6 +439,9 @@ NSMutableArray *roomsToClean;
     {
         // Use a different Alice each time so that tests are independent
         NSString *aliceUniqueUser = [NSString stringWithFormat:@"%@-%@", MXTESTS_ALICE, [[NSUUID UUID] UUIDString]];
+
+        MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL
+                                            andOnUnrecognizedCertificateBlock:nil];
 
         // First, try register the user
         [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:aliceUniqueUser password:MXTESTS_ALICE success:^(MXCredentials *credentials) {
