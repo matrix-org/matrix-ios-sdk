@@ -1006,7 +1006,14 @@ typedef void (^MXOnResumeDone)();
             {
                 didDefineDirectChats = YES;
                 
-                MXJSONModelSetDictionary(_directRooms, event[@"content"]);
+                if ([event[@"content"] isKindOfClass:NSDictionary.class])
+                {
+                    _directRooms = [NSMutableDictionary dictionaryWithDictionary:event[@"content"]];
+                }
+                else
+                {
+                    [_directRooms removeAllObjects];
+                }
                 
                 [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDirectRoomsDidChangeNotification
                                                                     object:self
