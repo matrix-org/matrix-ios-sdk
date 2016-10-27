@@ -570,6 +570,12 @@ typedef void (^MXOnResumeDone)();
     [self setState:MXSessionStateClosed];
 }
 
+- (MXHTTPOperation*)logout:(void (^)())success
+                   failure:(void (^)(NSError *error))failure
+{
+    return [self.matrixRestClient logout:success failure:failure];
+}
+
 
 #pragma mark - MXSession pause prevention
 - (void)retainPreventPause
@@ -1059,14 +1065,12 @@ typedef void (^MXOnResumeDone)();
         if (!didDefineDirectChats)
         {
             // When no direct chat is listed in account data, we synthesize them from the current heuristics of what counts as a 1:1 room.
-            NSArray *rooms = self.rooms;
-            
-            for (MXRoom *room in rooms)
+            for (MXRoom *room in self.rooms)
             {
                 if (room.looksLikeDirect)
                 {
                     [room setIsDirect:YES success:nil failure:^(NSError *error) {
-                        NSLog(@"[MXSession] Failed to tag the room (%@) as a direct chat", room.roomId);
+                        NSLog(@"[MXSession] Failed to tag a direct chat");
                     }];
                 }
             }
@@ -1236,7 +1240,7 @@ typedef void (^MXOnResumeDone)();
 {
     return [matrixRestClient createRoom:parameters success:^(MXCreateRoomResponse *response) {
 
-        BOOL isDirect;
+        BOOL isDirect = NO;
         if ([parameters[@"is_direct"] isKindOfClass:NSNumber.class])
         {
             isDirect = ((NSNumber*)parameters[@"is_direct"]).boolValue;

@@ -811,14 +811,14 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 
 - (BOOL)looksLikeDirect
 {
-    BOOL kicked;
-    if (self.state.membership == kMXMembershipStringLeave)
+    BOOL kicked = NO;
+    if (self.state.membership == MXMembershipLeave)
     {
         MXRoomMember *member = [self.state memberWithUserId:mxSession.myUser.userId];
         kicked = ![member.originalEvent.sender isEqualToString:mxSession.myUser.userId];
     }
     
-    if (self.state.membership == MXMembershipJoin || self.state.membership == kMXMembershipStringBan || kicked)
+    if (self.state.membership == MXMembershipJoin || self.state.membership == MXMembershipBan || kicked)
     {
         // Consider as direct chats the 1:1 chats.
         // Contrary to the web client we allow the tagged rooms (favorite/low priority...) to become direct.
