@@ -418,11 +418,19 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (void)enableVoIPWithCallStack:(id<MXCallStack>)callStack;
 
 /**
- Flag to enable End-to-End encryption.
+ Enable End-to-End encryption.
  
- Setting NO stops crypto and erases crypto data.
+ In case of enabling, the operation will complete when the session will be ready
+ to make encrytion with other users devices
+
+ @param enableCrypto NO stops crypto and erases crypto data.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return the HTTP operation that may be required. Can be nil.
  */
-@property (nonatomic) BOOL cryptoEnabled;
+- (MXHTTPOperation*)enableCrypto:(BOOL)enableCrypto success:(void (^)())success failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Rooms operations

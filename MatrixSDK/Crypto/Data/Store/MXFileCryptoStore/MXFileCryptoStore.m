@@ -73,7 +73,7 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 
 + (instancetype)createStoreWithCredentials:(MXCredentials *)credentials
 {
-    NSLog(@"[MXFileCryptoStore] createStoreWithCredentials");
+    NSLog(@"[MXFileCryptoStore] createStore for %@:%@", credentials.userId, credentials.deviceId);
 
     // The store must not exist yet
     NSParameterAssert(![MXFileCryptoStore hasDataForCredentials:credentials]);
@@ -94,7 +94,7 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 
 + (void)deleteStoreWithCredentials:(MXCredentials *)credentials
 {
-    NSLog(@"[MXFileCryptoStore] deleteStoreWithCredentials");
+    NSLog(@"[MXFileCryptoStore] deleteStore for %@:%@", credentials.userId, credentials.deviceId);
 
     NSString *storePath = [MXFileCryptoStore storePathForCredentials:credentials];
 
@@ -131,6 +131,8 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 
 - (void)open:(void (^)())onComplete failure:(void (^)(NSError *))failure
 {
+    NSLog(@"[MXFileCryptoStore] open for %@:%@", credentials.userId, credentials.deviceId);
+
     // Reset the metadata, it will be rebuilt from the data on the store
     metaData = nil;
 

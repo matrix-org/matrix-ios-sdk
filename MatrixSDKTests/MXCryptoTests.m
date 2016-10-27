@@ -21,6 +21,9 @@
 #import "MXSession.h"
 #import "MXFileStore.h"
 
+#import "MXFileCryptoStore.h"
+#import "MXSDKOptions.h"
+
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-retain-cycles"
@@ -62,13 +65,14 @@
 - (void)doE2ETestWithBobAndAlice:(XCTestCase*)testCase
                                   readyToTest:(void (^)(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation))readyToTest
 {
-    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation) {
+    [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
 
-        bobSession.cryptoEnabled = YES;
+    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation) {
 
         [matrixSDKTestsData doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
 
-            aliceSession.cryptoEnabled = YES;
+            [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
+
             readyToTest(bobSession, aliceSession, expectation);
 
         }];
@@ -78,9 +82,11 @@
 - (void)doE2ETestWithAliceInARoom:(XCTestCase*)testCase
                     readyToTest:(void (^)(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation))readyToTest
 {
+    [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+
     [matrixSDKTestsData doMXSessionTestWithAlice:self readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
 
-        aliceSession.cryptoEnabled = YES;
+        [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
         [aliceSession createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil success:^(MXRoom *room) {
 
@@ -107,9 +113,11 @@
 
         MXRoom *room = [aliceSession roomWithRoomId:roomId];
 
+        [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = cryptedBob;
+
         [matrixSDKTestsData doMXSessionTestWithBob:nil readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation2) {
 
-            bobSession.cryptoEnabled = cryptedBob;
+            [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
             // Listen to Alice's MXSessionNewRoomNotification event
             __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
@@ -205,6 +213,72 @@
 
 #pragma mark - MXCrypto
 
+- (void)testEnableCrypto
+{
+    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
+
+        XCTAssertNil(mxSession.crypto, @"Crypto is disabled by default");
+
+        XCTAssertFalse([MXFileCryptoStore hasDataForCredentials:mxSession.matrixRestClient.credentials]);
+
+        MXHTTPOperation *operation = [mxSession enableCrypto:YES success:^{
+
+            XCTAssert(mxSession.crypto);
+            XCTAssert([MXFileCryptoStore hasDataForCredentials:mxSession.matrixRestClient.credentials]);
+
+            XCTAssert(mxSession.crypto.store.deviceAnnounced, @"The device must have been announced when enableCrypto completes");
+
+            [mxSession enableCrypto:NO success:^{
+
+                XCTAssertNil(mxSession.crypto);
+                XCTAssertFalse([MXFileCryptoStore hasDataForCredentials:mxSession.matrixRestClient.credentials], @"Crypto data must have been trashed");
+
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+        XCTAssert(operation, @"HTTP operations must be done when initialising crypto for the first tume");
+
+    }];
+}
+
+- (void)testMXSDKOptionsEnableCryptoWhenOpeningMXSession
+{
+    [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+
+    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
+
+        // Reset the option to not disturb other tests
+        [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
+
+        XCTAssert(mxSession.crypto);
+        XCTAssert([MXFileCryptoStore hasDataForCredentials:mxSession.matrixRestClient.credentials]);
+
+        XCTAssert(mxSession.crypto.store.deviceAnnounced, @"The device must have been announced when [MXSession start] completes");
+
+        [mxSession enableCrypto:NO success:^{
+
+            XCTAssertNil(mxSession.crypto);
+            XCTAssertFalse([MXFileCryptoStore hasDataForCredentials:mxSession.matrixRestClient.credentials], @"Crypto data must have been trashed");
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+    }];
+}
+
 - (void)testCryptoNoDeviceId
 {
     [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
@@ -212,14 +286,15 @@
         // Simulate no device id provided by the home server
         mxSession.matrixRestClient.credentials.deviceId = nil;
 
-        XCTAssertNil(mxSession.crypto, @"Crypto is disabled by default");
+        [mxSession enableCrypto:YES success:^{
 
-        mxSession.cryptoEnabled = YES;
-        XCTAssert(mxSession.crypto);
+            XCTAssertGreaterThan(mxSession.crypto.store.deviceId.length, 0, "If the hs did not provide a device id, the crypto module must create one");
+            [expectation fulfill];
 
-        XCTAssertGreaterThan(mxSession.crypto.store.deviceId.length, 0, "If the hs did not provide a device id, the crypto module must create one");
-
-        [expectation fulfill];
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
 
     }];
 }
@@ -232,60 +307,61 @@
 
         __block MXSession *mxSession2 = mxSession;
 
-        mxSession2.cryptoEnabled = YES;
+        [mxSession enableCrypto:YES success:^{
 
-        XCTAssert(mxSession2.crypto);
+            XCTAssert(mxSession2.crypto);
 
-        NSString *deviceCurve25519Key = mxSession2.crypto.olmDevice.deviceCurve25519Key;
-        NSString *deviceEd25519Key = mxSession2.crypto.olmDevice.deviceEd25519Key;
+            NSString *deviceCurve25519Key = mxSession2.crypto.olmDevice.deviceCurve25519Key;
+            NSString *deviceEd25519Key = mxSession2.crypto.olmDevice.deviceEd25519Key;
 
-        NSArray<MXDeviceInfo *> *myUserDevices = [mxSession2.crypto storedDevicesForUser:mxSession.myUser.userId];
-        XCTAssertEqual(myUserDevices.count, 1);
+            NSArray<MXDeviceInfo *> *myUserDevices = [mxSession2.crypto storedDevicesForUser:mxSession.myUser.userId];
+            XCTAssertEqual(myUserDevices.count, 1);
 
-        MXRestClient *bobRestClient = mxSession2.matrixRestClient;
-        [mxSession2 close];
-        mxSession2 = nil;
+            MXRestClient *bobRestClient = mxSession2.matrixRestClient;
+            [mxSession2 close];
+            mxSession2 = nil;
 
-        // Reopen the session
-        MXFileStore *store = [[MXFileStore alloc] init];
+            // Reopen the session
+            MXFileStore *store = [[MXFileStore alloc] init];
 
-        mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
-        [mxSession2 setStore:store success:^{
+            mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+            [mxSession2 setStore:store success:^{
 
-            XCTAssert(mxSession2.crypto, @"MXSession must recall that it has crypto engaged");
+                XCTAssert(mxSession2.crypto, @"MXSession must recall that it has crypto engaged");
 
-            XCTAssertEqualObjects(deviceCurve25519Key, mxSession2.crypto.olmDevice.deviceCurve25519Key);
-            XCTAssertEqualObjects(deviceEd25519Key, mxSession2.crypto.olmDevice.deviceEd25519Key);
+                XCTAssertEqualObjects(deviceCurve25519Key, mxSession2.crypto.olmDevice.deviceCurve25519Key);
+                XCTAssertEqualObjects(deviceEd25519Key, mxSession2.crypto.olmDevice.deviceEd25519Key);
 
-            NSArray<MXDeviceInfo *> *myUserDevices2 = [mxSession2.crypto storedDevicesForUser:mxSession2.myUser.userId];
-            XCTAssertEqual(myUserDevices2.count, 1);
+                NSArray<MXDeviceInfo *> *myUserDevices2 = [mxSession2.crypto storedDevicesForUser:mxSession2.myUser.userId];
+                XCTAssertEqual(myUserDevices2.count, 1);
 
-            XCTAssertEqualObjects(myUserDevices[0].deviceId, myUserDevices2[0].deviceId);
+                XCTAssertEqualObjects(myUserDevices[0].deviceId, myUserDevices2[0].deviceId);
 
-            [expectation fulfill];
+                [expectation fulfill];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
 
         } failure:^(NSError *error) {
-            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
-
     }];
 }
 
 - (void)testKeysUploadAndDownload
 {
+    [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+
     [matrixSDKTestsData doMXSessionTestWithAlice:self readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
-
-        aliceSession.matrixRestClient.credentials.deviceId = @"AliceDevice";
-
-        aliceSession.cryptoEnabled = YES;
 
         [aliceSession.crypto uploadKeys:10 success:^{
 
             [matrixSDKTestsData doMXSessionTestWithBob:nil readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation2) {
-                mxSession.matrixRestClient.credentials.deviceId = @"BobDevice";
 
-                mxSession.cryptoEnabled = YES;
+                [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
                 [mxSession.crypto downloadKeys:@[mxSession.myUser.userId, aliceSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
 
@@ -293,7 +369,7 @@
 
                     XCTAssertEqual([usersDevicesInfoMap deviceIdsForUser:aliceSession.myUser.userId].count, 1);
 
-                    MXDeviceInfo *aliceDeviceFromBobPOV = [usersDevicesInfoMap objectForDevice:@"AliceDevice" forUser:aliceSession.myUser.userId];
+                    MXDeviceInfo *aliceDeviceFromBobPOV = [usersDevicesInfoMap objectForDevice:aliceSession.matrixRestClient.credentials.deviceId forUser:aliceSession.myUser.userId];
                     XCTAssert(aliceDeviceFromBobPOV);
                     XCTAssertEqualObjects(aliceDeviceFromBobPOV.fingerprint, aliceSession.crypto.olmDevice.deviceEd25519Key);
 
@@ -356,18 +432,15 @@
 
 - (void)testEnsureOlmSessionsForUsers
 {
+    [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+
     [matrixSDKTestsData doMXSessionTestWithAlice:self readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
-
-        aliceSession.matrixRestClient.credentials.deviceId = @"AliceDevice";
-
-        aliceSession.cryptoEnabled = YES;
 
         [aliceSession.crypto uploadKeys:10 success:^{
 
             [matrixSDKTestsData doMXSessionTestWithBob:nil readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation2) {
-                mxSession.matrixRestClient.credentials.deviceId = @"BobDevice";
 
-                mxSession.cryptoEnabled = YES;
+                [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
                 [mxSession.crypto downloadKeys:@[mxSession.myUser.userId, aliceSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
 
@@ -377,10 +450,10 @@
 
                         XCTAssertEqual(results.userIds.count, 1, @"Only a session with Alice must be created. No mean to create on with oneself(Bob)");
 
-                        MXOlmSessionResult *sessionWithAliceDevice = [results objectForDevice:@"AliceDevice" forUser:aliceSession.myUser.userId];
+                        MXOlmSessionResult *sessionWithAliceDevice = [results objectForDevice:aliceSession.matrixRestClient.credentials.deviceId forUser:aliceSession.myUser.userId];
                         XCTAssert(sessionWithAliceDevice);
                         XCTAssert(sessionWithAliceDevice.sessionId);
-                        XCTAssertEqualObjects(sessionWithAliceDevice.device.deviceId, @"AliceDevice");
+                        XCTAssertEqualObjects(sessionWithAliceDevice.device.deviceId, aliceSession.matrixRestClient.credentials.deviceId);
 
 
                         // Test persistence
@@ -394,10 +467,10 @@
 
                                 XCTAssertEqual(results.userIds.count, 1, @"Only a session with Alice must be created. No mean to create on with oneself(Bob)");
 
-                                MXOlmSessionResult *sessionWithAliceDevice = [results objectForDevice:@"AliceDevice" forUser:aliceSession.myUser.userId];
+                                MXOlmSessionResult *sessionWithAliceDevice = [results objectForDevice:aliceSession.matrixRestClient.credentials.deviceId forUser:aliceSession.myUser.userId];
                                 XCTAssert(sessionWithAliceDevice);
                                 XCTAssert(sessionWithAliceDevice.sessionId);
-                                XCTAssertEqualObjects(sessionWithAliceDevice.device.deviceId, @"AliceDevice");
+                                XCTAssertEqualObjects(sessionWithAliceDevice.device.deviceId, aliceSession.matrixRestClient.credentials.deviceId);
 
                                 [expectation fulfill];
 
@@ -436,9 +509,11 @@
 #pragma mark - MXRoom
 - (void)testRoomIsEncrypted
 {
+    [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+
     [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
 
-        mxSession.cryptoEnabled = YES;
+        [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
         [mxSession createRoom:@{} success:^(MXRoom *room) {
 

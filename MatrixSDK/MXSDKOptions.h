@@ -26,4 +26,10 @@
  */
 @property (nonatomic) BOOL disableIdenticonUseForUserAvatar;
 
+/**
+ Automatically enable crypto starting a new MXSession.
+ NO by default.
+ */
+@property (nonatomic) BOOL enableCryptoWhenStartingMXSession;
+
 @end

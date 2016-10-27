@@ -58,70 +58,81 @@
 
         roomAlgorithms = [NSMutableDictionary dictionary];
 
+        // Build our device keys: they will later be uploaded
+        NSString *deviceId = _store.deviceId;
+        if (!deviceId)
+        {
+            // Generate a device id if the homeserver did not provide it or it was lost
+            deviceId = [self generateDeviceId];
+
+            NSLog(@"[MXCrypto] Warning: No device id in MXCredentials. The id %@ was created", deviceId);
+
+            [_store storeDeviceId:deviceId];
+        }
+
+        NSString *userId = mxSession.matrixRestClient.credentials.userId;
+
+        myDevice = [[MXDeviceInfo alloc] initWithDeviceId:deviceId];
+        myDevice.userId = userId;
+        myDevice.keys = @{
+                          [NSString stringWithFormat:@"ed25519:%@", deviceId]: _olmDevice.deviceEd25519Key,
+                          [NSString stringWithFormat:@"curve25519:%@", deviceId]: _olmDevice.deviceCurve25519Key,
+                          };
+        myDevice.algorithms = [[MXCryptoAlgorithms sharedAlgorithms] supportedAlgorithms];
+        myDevice.verified = MXDeviceVerified;
+
+        // Add our own deviceinfo to the store
+        NSMutableDictionary *myDevices = [NSMutableDictionary dictionaryWithDictionary:[_store devicesForUser:userId]];
+        myDevices[myDevice.deviceId] = myDevice;
+        [_store storeDevicesForUser:userId devices:myDevices];
+        
+        [self registerEventHandlers];
+
         // map from userId -> deviceId -> roomId -> timestamp
         // @TODO this._lastNewDeviceMessageTsByUserDeviceRoom = {};
     }
     return self;
 }
 
-- (void)start
+- (MXHTTPOperation*)start:(void (^)())success
+                  failure:(void (^)(NSError *error))failure
 {
+    NSLog(@"[MXCrypto] start");
+
     // The session must be initialised enough before starting this module
     NSParameterAssert(mxSession.myUser.userId);
-    
-    // Build our device keys: they will later be uploaded
-    NSString *deviceId = _store.deviceId;
-    if (!deviceId)
-    {
-        // Generate a device id if the homeserver did not provide it or it was lost
-        deviceId = [self generateDeviceId];
-
-        NSLog(@"[MXCrypto] Warning: No device id in MXCredentials. The id %@ was created", deviceId);
-
-        [_store storeDeviceId:deviceId];
-    }
-
-    myDevice = [[MXDeviceInfo alloc] initWithDeviceId:deviceId];
-    myDevice.userId = mxSession.myUser.userId;
-    myDevice.keys = @{
-                      [NSString stringWithFormat:@"ed25519:%@", deviceId]: _olmDevice.deviceEd25519Key,
-                      [NSString stringWithFormat:@"curve25519:%@", deviceId]: _olmDevice.deviceCurve25519Key,
-                      };
-    myDevice.algorithms = [[MXCryptoAlgorithms sharedAlgorithms] supportedAlgorithms];
-    myDevice.verified = MXDeviceVerified;
-
-    // Add our own deviceinfo to the store
-    NSMutableDictionary *myDevices = [NSMutableDictionary dictionaryWithDictionary:[_store devicesForUser:mxSession.myUser.userId]];
-    myDevices[myDevice.deviceId] = myDevice;
-    [_store storeDevicesForUser:mxSession.myUser.userId devices:myDevices];
-
-    [self registerEventHandlers];
 
     // @TODO: Repeat upload
-    [self uploadKeys:5 success:^{
-        NSLog(@"###########################################################");
+    MXHTTPOperation *operation = [self uploadKeys:5 success:^{
+        NSLog(@"[MXCrypto] start ###########################################################");
         NSLog(@" uploadKeys done for %@: ", mxSession.myUser.userId);
 
-        NSLog(@"   - device id  : %@", deviceId);
+        NSLog(@"   - device id  : %@", _store.deviceId);
         NSLog(@"   - ed25519    : %@", _olmDevice.deviceEd25519Key);
         NSLog(@"   - curve25519 : %@", _olmDevice.deviceCurve25519Key);
         NSLog(@"   - oneTimeKeys: %@", lastPublishedOneTimeKeys);     // They are
         NSLog(@"");
-        NSLog(@"Store: %@", _store); 
+        NSLog(@"Store: %@", _store);
         NSLog(@"");
 
+        // Once keys are uploaded, make sure we announce ourselves
+        MXHTTPOperation *operation2 = [self checkDeviceAnnounced:success failure:failure];
+
+        [operation mutateTo:operation2];
+
     } failure:^(NSError *error) {
-        NSLog(@"### uploadKeys failure");
+        NSLog(@"[MXCrypto] start. Error in uploadKeys: %@", error);
+        failure(error);
     }];
+
+    return operation;
 }
 
 - (void)close
 {
-    [mxSession removeListener:roomMembershipEventsListener];
-
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXSessionOnToDeviceEventNotification object:mxSession];
-
     NSLog(@"[MXCrypto] close. store: %@",_store);
+
+    [mxSession removeListener:roomMembershipEventsListener];
 
     _olmDevice = nil;
     _store = nil;
@@ -680,9 +691,6 @@
  */
 - (void)registerEventHandlers
 {
-    // Observe the server sync
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onInitialSyncCompleted:) name:kMXSessionDidSyncNotification object:mxSession];
-
     // Observe incoming to-device events
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onToDeviceEvent:) name:kMXSessionOnToDeviceEventNotification object:mxSession];
 
@@ -703,14 +711,14 @@
     }];
 }
 
-- (void)onInitialSyncCompleted:(NSNotification *)notification
+- (MXHTTPOperation*)checkDeviceAnnounced:(void (^)())onComplete
+                                 failure:(void (^)(NSError *error))failure;
 {
-    // We need to do it only once
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXSessionDidSyncNotification object:nil];
-
     if (_store.deviceAnnounced)
     {
-        return;
+        NSLog(@"[MXCrypto] checkDeviceAnnounced: Already done");
+        onComplete();
+        return nil;
     }
 
     // We need to tell all the devices in all the rooms we are members of that
@@ -754,14 +762,30 @@
                                 } forUser:userId];
     }
 
+    NSLog(@"[MXCrypto] checkDeviceAnnounced: Make annoucements to: %@", contentMap);
+
     if (contentMap.userIds.count)
     {
-        [mxSession.matrixRestClient sendToDevice:kMXEventTypeStringNewDevice contentMap:contentMap success:^{
+        return [mxSession.matrixRestClient sendToDevice:kMXEventTypeStringNewDevice contentMap:contentMap success:^{
+
+            NSLog(@"[MXCrypto] checkDeviceAnnounced: Annoucements done");
 
             [_store storeDeviceAnnounced];
+            onComplete();
             
-        } failure:nil];
+        } failure:^(NSError *error) {
+            NSLog(@"[MXCrypto] checkDeviceAnnounced: Annoucements failed: %@", error);
+            failure(error);
+        }];
     }
+    else
+    {
+        NSLog(@"[MXCrypto] checkDeviceAnnounced: Annoucements done 2");
+        [_store storeDeviceAnnounced];
+    }
+
+    onComplete();
+    return nil;
 }
 
 /**
