@@ -471,6 +471,29 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation*)logout:(void (^)())success
+                   failure:(void (^)(NSError *error))failure
+{
+    return [httpClient requestWithMethod:@"POST"
+                                    path:[NSString stringWithFormat:@"%@/logout", apiPathPrefix]
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     
+                                     if (success)
+                                     {
+                                         success();
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                     
+                                 }];
+}
+
 #pragma mark - Account data
 - (MXHTTPOperation*)setAccountData:(NSDictionary*)data
                            forType:(NSString*)type
@@ -488,15 +511,13 @@ MXAuthAction;
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
-
+                                             
                                              dispatch_async(dispatch_get_main_queue(), ^{
-
-                                                 NSString *eventId;
-                                                 MXJSONModelSetString(eventId, JSONResponse[@"event_id"]);
-                                                 success(eventId);
-
+                                                 
+                                                 success();
+                                                 
                                              });
-
+                                             
                                          });
                                      }
 
