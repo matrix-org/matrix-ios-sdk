@@ -66,9 +66,24 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 
 + (BOOL)hasDataForCredentials:(MXCredentials *)credentials
 {
+    BOOL hasDataForCredentials;
     NSString *storePath = [MXFileCryptoStore storePathForCredentials:credentials];
 
-    return [NSFileManager.defaultManager fileExistsAtPath:storePath];
+    if ([NSFileManager.defaultManager fileExistsAtPath:storePath])
+    {
+        // User ids match. Check device ids
+        NSString *filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreMedaDataFile];
+
+        MXFileCryptoStoreMetaData *metaData = [NSKeyedUnarchiver unarchiveObjectWithFile:filePath];
+
+        if (metaData &&
+            (!credentials.deviceId || [credentials.deviceId isEqualToString:metaData.deviceId]))
+        {
+            hasDataForCredentials = YES;
+        }
+    }
+
+    return hasDataForCredentials;
 }
 
 + (instancetype)createStoreWithCredentials:(MXCredentials *)credentials

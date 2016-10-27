@@ -630,11 +630,14 @@
             // Simulate a new device
             aliceRestClient.credentials.deviceId = @"AliceNewDevice";
 
-            MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+            [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
 
+            MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
             [aliceSession2 setStore:[[MXMemoryStore alloc] init] success:^{
 
                 [aliceSession2 start:^{
+
+                    [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
                     MXRoom *roomFromAlicePOV2 = [aliceSession2 roomWithRoomId:roomId];
 
@@ -1029,12 +1032,14 @@
 
         NSLog(@"\n\n######################## NEW ALICE ###############\n\n");
 
+        [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
 
         MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
-
         [aliceSession2 setStore:[[MXMemoryStore alloc] init] success:^{
 
             [aliceSession2 start:^{
+
+                [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
                 MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
                 MXRoom *roomFromAlice2POV = [aliceSession2 roomWithRoomId:roomId];
@@ -1084,12 +1089,14 @@
 
         NSLog(@"\n\n######################## NEW BOB ###############\n\n");
 
+        [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
 
         MXSession *bobSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
-
         [bobSession2 setStore:[[MXMemoryStore alloc] init] success:^{
 
             [bobSession2 start:^{
+
+                [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
 
