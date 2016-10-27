@@ -332,6 +332,17 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 - (void)close;
 
+/**
+ Invalidate the access token, so that it can no longer be used for authorization.
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)logout:(void (^)())success
+                   failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - MXSession pause prevention
 /**

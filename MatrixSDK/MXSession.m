@@ -546,6 +546,12 @@ typedef void (^MXOnResumeDone)();
     [self setState:MXSessionStateClosed];
 }
 
+- (MXHTTPOperation*)logout:(void (^)())success
+                   failure:(void (^)(NSError *error))failure
+{
+    return [self.matrixRestClient logout:success failure:failure];
+}
+
 
 #pragma mark - MXSession pause prevention
 - (void)retainPreventPause
