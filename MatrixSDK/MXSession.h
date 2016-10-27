@@ -175,7 +175,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
 FOUNDATION_EXPORT NSString *const kMXSessionIgnoredUsersDidChangeNotification;
 
 /**
- Posted when MXSession has detected a change in the `directRooms` property.
+ Posted when the `directRooms` property is updated from homeserver.
  
  The notification object is the concerned session (MXSession instance).
  */
@@ -554,23 +554,21 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 /**
  The list of the direct rooms by user identifiers.
  
- @return a dictionary where the keys are the user IDs and values are lists of room ID strings.
- of the 'direct' rooms for that user ID. nil if the direct rooms have not been yet fetched from the homeserver.
+ A dictionary where the keys are the user IDs and values are lists of room ID strings.
+ of the 'direct' rooms for that user ID.
  */
-@property (nonatomic, readonly) NSDictionary<NSString*, NSArray<NSString*>*> *directRooms;
+@property (nonatomic, readonly) NSMutableDictionary<NSString*, NSArray<NSString*>*> *directRooms;
 
 /**
- Update the direct rooms list on homeserver side.
+ Update the direct rooms list on homeserver side with the current value of the `directRooms` property.
  
- @param directRooms a dictionary where the keys are the user IDs and values are lists of room ID strings
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)setDirectRooms:(NSDictionary<NSString*, NSArray<NSString*>*> *)directRooms
-                        success:(void (^)())success
-                        failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)uploadDirectRooms:(void (^)())success
+                              failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Room peeking
 /**

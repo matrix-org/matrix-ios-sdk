@@ -139,6 +139,7 @@ typedef void (^MXOnResumeDone)();
         matrixRestClient = mxRestClient;
         rooms = [NSMutableDictionary dictionary];
         oneToOneRooms = [NSMutableDictionary dictionary];
+        _directRooms = [NSMutableDictionary dictionary];
         globalEventListeners = [NSMutableArray array];
         syncMessagesLimit = -1;
         _notificationCenter = [[MXNotificationCenter alloc] initWithMatrixSession:self];
@@ -952,9 +953,10 @@ typedef void (^MXOnResumeDone)();
 
 - (void)handleAccountData:(NSDictionary*)accountDataUpdate
 {
-    if (accountDataUpdate && accountDataUpdate[@"events"])
+    if (accountDataUpdate && accountDataUpdate[@"events"] && ((NSArray*)accountDataUpdate[@"events"]).count)
     {
         BOOL isInitialSync = !_store.eventStreamToken || _state == MXSessionStateInitialised;
+        BOOL didDefineDirectChats = NO;
 
         for (NSDictionary *event in accountDataUpdate[@"events"])
         {
@@ -1002,7 +1004,16 @@ typedef void (^MXOnResumeDone)();
             }
             else if ([event[@"type"] isEqualToString:kMXAccountDataTypeDirect])
             {
-                MXJSONModelSetDictionary(_directRooms, event[@"content"]);
+                didDefineDirectChats = YES;
+                
+                if ([event[@"content"] isKindOfClass:NSDictionary.class])
+                {
+                    _directRooms = [NSMutableDictionary dictionaryWithDictionary:event[@"content"]];
+                }
+                else
+                {
+                    [_directRooms removeAllObjects];
+                }
                 
                 [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDirectRoomsDidChangeNotification
                                                                     object:self
@@ -1014,6 +1025,22 @@ typedef void (^MXOnResumeDone)();
         }
 
         _store.userAccountData = accountData.accountData;
+        
+        if (!didDefineDirectChats)
+        {
+            // When no direct chat is listed in account data, we synthesize them from the current heuristics of what counts as a 1:1 room.
+            NSArray *rooms = self.rooms;
+            
+            for (MXRoom *room in rooms)
+            {
+                if (room.looksLikeDirect)
+                {
+                    [room setIsDirect:YES success:nil failure:^(NSError *error) {
+                        NSLog(@"[MXSession] Failed to tag the room (%@) as a direct chat", room.roomId);
+                    }];
+                }
+            }
+        }
     }
 }
 
@@ -1305,12 +1332,11 @@ typedef void (^MXOnResumeDone)();
     return nil;
 }
 
-- (MXHTTPOperation*)setDirectRooms:(NSDictionary<NSString*, NSArray<NSString*>*> *)directRooms
-                           success:(void (^)())success
-                           failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)uploadDirectRooms:(void (^)())success
+                              failure:(void (^)(NSError *error))failure
 {
-    // Report the new dictionary to the homeserver, the local dictionary will be updated at the next sync in case of success.
-    return [matrixRestClient setAccountData:directRooms forType:kMXAccountDataTypeDirect success:success failure:failure];
+    // Push the current direct rooms dictionary to the homeserver.
+    return [matrixRestClient setAccountData:_directRooms forType:kMXAccountDataTypeDirect success:success failure:failure];
 }
 
 - (MXRoom *)getOrCreateRoom:(NSString *)roomId notify:(BOOL)notify
