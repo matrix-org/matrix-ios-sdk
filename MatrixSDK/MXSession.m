@@ -2028,7 +2028,7 @@ typedef void (^MXOnResumeDone)();
     }
     else
     {
-        // Else do not enabled crypto
+        // Else do not enable crypto
         complete();
     }
 }

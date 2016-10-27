@@ -37,12 +37,6 @@ NSString * const kMXTestsAliceDisplayName = @"mxAlice";
 NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqmmttIQ";
 
 
-#define MXTESTS_BOB @"mxBob"
-#define MXTESTS_BOB_PWD @"bobbob"
-
-#define MXTESTS_ALICE @"mxAlice"
-#define MXTESTS_ALICE_PWD @"alicealice"
-
 @interface MatrixSDKTestsData ()
 {
     NSDate *startDate;
@@ -80,7 +74,7 @@ NSMutableArray *roomsToClean;
                                             andOnUnrecognizedCertificateBlock:nil];
 
         // First, try register the user
-        [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:bobUniqueUser password:MXTESTS_BOB success:^(MXCredentials *credentials) {
+        [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:bobUniqueUser password:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
 
             _bobCredentials = credentials;
             success();
@@ -444,7 +438,7 @@ NSMutableArray *roomsToClean;
                                             andOnUnrecognizedCertificateBlock:nil];
 
         // First, try register the user
-        [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:aliceUniqueUser password:MXTESTS_ALICE success:^(MXCredentials *credentials) {
+        [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:aliceUniqueUser password:MXTESTS_ALICE_PWD success:^(MXCredentials *credentials) {
             
             _aliceCredentials = credentials;
             success();
@@ -601,6 +595,38 @@ NSMutableArray *roomsToClean;
 
 
 #pragma mark - tools
+
+- (void)relogUserSession:(MXSession*)session withPassword:(NSString*)password onComplete:(void (^)(MXSession *newSession))onComplete
+{
+    NSString *userId = session.matrixRestClient.credentials.userId;
+
+    // @TODO
+    //[session logout]
+
+    [session close];
+
+    MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL
+                                        andOnUnrecognizedCertificateBlock:nil];
+
+    [mxRestClient loginWithLoginType:kMXLoginFlowTypePassword username:userId password:password success:^(MXCredentials *credentials) {
+
+        MXRestClient *mxRestClient2 = [[MXRestClient alloc] initWithCredentials:credentials andOnUnrecognizedCertificateBlock:nil];
+        MXSession *newSession = [[MXSession alloc] initWithMatrixRestClient:mxRestClient2];
+
+        [newSession start:^{
+
+            onComplete(newSession);
+
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+
+    } failure:^(NSError *error) {
+        NSAssert(NO, @"Cannot relog %@. Error: %@", userId, error);
+    }];
+    
+}
+
 
 - (void)closeMXSession:(MXSession*)mxSession
 {

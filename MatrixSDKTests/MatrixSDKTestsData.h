@@ -28,6 +28,13 @@ FOUNDATION_EXPORT NSString * const kMXTestsHomeServerURL;
 FOUNDATION_EXPORT NSString * const kMXTestsAliceDisplayName;
 FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
 
+#define MXTESTS_BOB @"mxBob"
+#define MXTESTS_BOB_PWD @"bobbob"
+
+#define MXTESTS_ALICE @"mxAlice"
+#define MXTESTS_ALICE_PWD @"alicealice"
+
+
 @interface MatrixSDKTestsData : NSObject
 
 #pragma mark - mxBob
@@ -99,7 +106,11 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
 - (void)doMXSessionTestWithBobAndAliceInARoom:(XCTestCase*)testCase
                                   readyToTest:(void (^)(MXSession *bobSession,  MXRestClient *aliceRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest;
 
+
 #pragma mark - tools
+
+- (void)relogUserSession:(MXSession*)session withPassword:(NSString*)password onComplete:(void (^)(MXSession *newSession))onComplete;
+
 - (void)for:(MXRestClient *)mxRestClient2 andRoom:(NSString*)roomId sendMessages:(NSUInteger)messagesCount success:(void (^)())success;
 
 // Close the session
