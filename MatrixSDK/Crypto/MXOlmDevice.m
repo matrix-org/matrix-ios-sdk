@@ -127,7 +127,7 @@
     return olmSession.sessionIdentifier;
 }
 
-- (NSDictionary *)createInboundSession:(NSString *)theirDeviceIdentityKey messageType:(NSUInteger)messageType cipherText:(NSString *)ciphertext
+- (NSString*)createInboundSession:(NSString*)theirDeviceIdentityKey messageType:(NSUInteger)messageType cipherText:(NSString*)ciphertext payload:(NSString**)payload
 {
     NSLog(@"<<< createInboundSession: theirIdentityKey: %@", theirDeviceIdentityKey);
 
@@ -144,14 +144,11 @@
         NSLog(@"<<< ciphertext: %@", ciphertext);
         NSLog(@"<<< ciphertext: SHA256: %@", [olmUtility sha256:[ciphertext dataUsingEncoding:NSUTF8StringEncoding]]);
 
-        NSString *payloadString = [olmSession decryptMessage:[[OLMMessage alloc] initWithCiphertext:ciphertext type:messageType]];
+        *payload = [olmSession decryptMessage:[[OLMMessage alloc] initWithCiphertext:ciphertext type:messageType]];
 
         [store storeSession:olmSession forDevice:theirDeviceIdentityKey];
 
-        return @{
-                 @"payload": payloadString,
-                 @"session_id": olmSession.sessionIdentifier
-        };
+        return olmSession.sessionIdentifier;
     }
 
     return nil;

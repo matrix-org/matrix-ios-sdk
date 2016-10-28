@@ -172,16 +172,17 @@
 
     // prekey message which doesn't match any existing sessions: make a new
     // session.
-    NSDictionary *res = [olmDevice createInboundSession:theirDeviceIdentityKey messageType:messageType cipherText:messageBody];
-    if (!res)
+    NSString *payload;
+    NSString *sessionId = [olmDevice createInboundSession:theirDeviceIdentityKey messageType:messageType cipherText:messageBody payload:&payload];
+    if (!sessionId)
     {
         NSLog(@"[MXOlmDecryption] decryptMessage: Error decrypting non-prekey message with existing sessions");
         return nil;
     }
 
-    NSLog(@"[MXOlmDecryption] Created new inbound Olm session id %@ with %@", res[@"session_id"], theirDeviceIdentityKey);
+    NSLog(@"[MXOlmDecryption] Created new inbound Olm session id %@ with %@", sessionId, theirDeviceIdentityKey);
 
-    return res[@"payload"];
+    return payload;
 };
 
 @end

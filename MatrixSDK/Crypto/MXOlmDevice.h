@@ -71,9 +71,9 @@
 /**
  The current (unused, unpublished) one-time keys for this account.
 
- @TODO: @return {object} one time keys; an object with the single property
- <tt>curve25519</tt>, which is itself an object mapping key id to Curve25519
- key.
+ @return a dictionary with one key which is "curve25519". 
+         Its value is a dictionary where keys are keys ids 
+         and values, the Curve25519 keys.
  */
 @property (nonatomic, readonly) NSDictionary *oneTimeKeys;
 
@@ -101,7 +101,7 @@
  
  @param theirIdentityKey the remote user's Curve25519 identity key
  @param theirOneTimeKey the remote user's one-time Curve25519 key
- @return the session id for the outbound session. @TODO OLMSession?
+ @return the session id for the outbound session.
  */
 - (NSString*)createOutboundSession:(NSString*)theirIdentityKey theirOneTimeKey:(NSString*)theirOneTimeKey;
 
@@ -111,15 +111,12 @@
  @param theirDeviceIdentityKey the remote user's Curve25519 identity key.
  @param messageType the message_type field from the received message (must be 0).
  @param ciphertext base64-encoded body from the received message.
+ @param the decoded payload.
 
- @TODO
- @return {{payload: string, session_id: string}} decrypted payload, and
-     session id of new session.
-
- @TODO @raises {Error} if the received message was not valid (for instance, it
-     didn't use a valid one-time key).
+ @return the session id. Nil if the received message was not valid (for instance, it
+         didn't use a valid one-time key).
  */
-- (NSDictionary*)createInboundSession:(NSString*)theirDeviceIdentityKey messageType:(NSUInteger)messageType cipherText:(NSString*)ciphertext;
+- (NSString*)createInboundSession:(NSString*)theirDeviceIdentityKey messageType:(NSUInteger)messageType cipherText:(NSString*)ciphertext payload:(NSString**)payload;
 
 /**
  Get a list of known session IDs for the given device.
