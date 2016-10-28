@@ -236,7 +236,7 @@
 
     // TODO: We need to give the user a chance to block any devices or users
     // before we send them the keys; it's too late to download them here.
-    // @TODO: YES or NO?
+    // Force download in order to make sure we discove all devices from all users
     MXHTTPOperation *operation = [crypto downloadKeys:shareMap.userIds forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
 
         MXHTTPOperation *operation2 = [self shareKey:sessionId withDevices:shareMap success:^{
