@@ -40,6 +40,9 @@
 
     // For dev @TODO
     NSDictionary *lastPublishedOneTimeKeys;
+
+    // Timer to periodically upload keys
+    NSTimer *uploadKeysTimer;
 }
 @end
 
@@ -102,8 +105,9 @@
     // The session must be initialised enough before starting this module
     NSParameterAssert(mxSession.myUser.userId);
 
-    // @TODO: Repeat upload
+    // Start uploading user device keys
     MXHTTPOperation *operation = [self uploadKeys:5 success:^{
+
         NSLog(@"[MXCrypto] start ###########################################################");
         NSLog(@" uploadKeys done for %@: ", mxSession.myUser.userId);
 
@@ -116,7 +120,18 @@
         NSLog(@"");
 
         // Once keys are uploaded, make sure we announce ourselves
-        MXHTTPOperation *operation2 = [self checkDeviceAnnounced:success failure:failure];
+        MXHTTPOperation *operation2 = [self checkDeviceAnnounced:^{
+
+            // Start periodic timer for uploading keys
+            uploadKeysTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:10 * 60]
+                                                       interval:10 * 60   // 10 min
+                                                         target:self
+                                                       selector:@selector(uploadKeys)
+                                                       userInfo:nil
+                                                        repeats:YES];
+            [[NSRunLoop mainRunLoop] addTimer:uploadKeysTimer forMode:NSDefaultRunLoopMode];
+
+        } failure:failure];
 
         [operation mutateTo:operation2];
 
@@ -131,6 +146,10 @@
 - (void)close
 {
     NSLog(@"[MXCrypto] close. store: %@",_store);
+
+    // Stop timer
+    [uploadKeysTimer invalidate];
+    uploadKeysTimer = nil;
 
     [mxSession removeListener:roomMembershipEventsListener];
 
@@ -210,6 +229,16 @@
     }];
 
     return operation;
+}
+
+- (void)uploadKeys
+{
+    NSLog(@"[MXCrypto] Periodic uploadKeys");
+
+    [self uploadKeys:5 success:^{
+    } failure:^(NSError *error) {
+        NSLog(@"[MXCrypto] Periodic uploadKeys failed: %@", error);
+    }];
 }
 
 - (MXHTTPOperation*)downloadKeys:(NSArray<NSString*>*)userIds forceDownload:(BOOL)forceDownload
