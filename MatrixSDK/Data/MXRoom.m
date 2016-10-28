@@ -992,8 +992,11 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     }
     else
     {
-        // @TODO
-        failure(nil);
+        failure([NSError errorWithDomain:MXDecryptingErrorDomain
+                                    code:MXDecryptingErrorEncryptionNotEnabledCode
+                                userInfo:@{
+                                           NSLocalizedDescriptionKey: MXDecryptingErrorEncryptionNotEnabledReason
+                                           }]);
     }
 
     return operation;

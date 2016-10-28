@@ -1383,20 +1383,25 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @end
 
 /**
- `MXKeysClaimResponse` represents the response to /keys/query request made by
+ `MXKeysClaimResponse` represents the response to /keys/claim request made by
  [MXRestClient claimOneTimeKeysForUsersDevices].
  */
 @interface MXKeysClaimResponse : MXJSONModel
 
-/**
- The requested keys ordered by device by user.
- */
-@property (nonatomic) MXUsersDevicesMap<MXKey*> *oneTimeKeys;
+    /**
+     The requested keys ordered by device by user.
+     */
+    @property (nonatomic) MXUsersDevicesMap<MXKey*> *oneTimeKeys;
 
-/**
- @TODO: what is it?
- */
-@property (nonatomic) NSDictionary *failures;
+    /**
+     If any remote homeservers could not be reached, they are recorded here. 
+     The names of the properties are the names of the unreachable servers.
+
+     If the homeserver could be reached, but the user or device was unknown, 
+     no failure is recorded. 
+     Instead, the corresponding user or device is missing from the one_time_keys result.
+     */
+    @property (nonatomic) NSDictionary *failures;
 
 @end
 
