@@ -83,13 +83,6 @@
     return _map.description;
 }
 
-#pragma mark - NSCopying
-- (id)copyWithZone:(NSZone *)zone
-{
-    // @TODO: write specific and quicker code
-    return [NSKeyedUnarchiver unarchiveObjectWithData:[NSKeyedArchiver archivedDataWithRootObject:self]];
-}
-
 
 #pragma mark - NSCoding
 - (instancetype)initWithCoder:(NSCoder *)aDecoder

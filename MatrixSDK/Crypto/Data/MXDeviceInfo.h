@@ -44,7 +44,7 @@ typedef enum : NSUInteger
 /**
  Information about a user's device.
  */
-@interface MXDeviceInfo : MXJSONModel <NSCopying>
+@interface MXDeviceInfo : MXJSONModel
 
 - (instancetype)initWithDeviceId:(NSString*)deviceId;
 
