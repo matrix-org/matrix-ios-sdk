@@ -131,7 +131,6 @@
 {
     NSLog(@"<<< createInboundSession: theirIdentityKey: %@", theirDeviceIdentityKey);
 
-    // @TODO: Manage error
     OLMSession *olmSession = [[OLMSession alloc] initInboundSessionWithAccount:olmAccount theirIdentityKey:theirDeviceIdentityKey oneTimeKeyMessage:ciphertext];
 
     NSLog(@"<<< olmSession.sessionIdentifier: %@", olmSession.sessionIdentifier);
@@ -231,7 +230,6 @@
 #pragma mark - Outbound group session
 - (NSString *)createOutboundGroupSession
 {
-    // @TODO: Manage error
     OLMOutboundGroupSession *session = [[OLMOutboundGroupSession alloc] initOutboundGroupSession];
     outboundGroupSessionStore[session.sessionIdentifier] = session;
 
@@ -308,7 +306,7 @@
                 *error = [NSError errorWithDomain:MXDecryptingErrorDomain
                                              code:MXDecryptingErrorUnableToDecryptCode
                                          userInfo:@{
-                                                    NSLocalizedDescriptionKey: @"@TODO: Make OLMKit return an error"
+                                                    NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, body]
                                                     }];
             }
         }
