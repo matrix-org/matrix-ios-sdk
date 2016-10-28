@@ -333,7 +333,14 @@ typedef void (^MXOnResumeDone)();
         NSDate *startDate2 = [NSDate date];
         [self resume:^{
             NSLog(@"[MXSession] Events stream resumed in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
-            onServerSyncDone();
+
+            // Start crypto if enabled
+            [self startCrypto:onServerSyncDone failure:^(NSError *error) {
+
+                [self setState:MXSessionStateInitialSyncFailed];
+                failure(error);
+
+            }];
         }];
     }
     else
