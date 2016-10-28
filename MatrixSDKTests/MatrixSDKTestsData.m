@@ -600,31 +600,32 @@ NSMutableArray *roomsToClean;
 {
     NSString *userId = session.matrixRestClient.credentials.userId;
 
-    // @TODO
-    //[session logout]
+    [session logout:^{
 
-    [session close];
+        [session close];
 
-    MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL
-                                        andOnUnrecognizedCertificateBlock:nil];
+        MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL
+                                            andOnUnrecognizedCertificateBlock:nil];
 
-    [mxRestClient loginWithLoginType:kMXLoginFlowTypePassword username:userId password:password success:^(MXCredentials *credentials) {
+        [mxRestClient loginWithLoginType:kMXLoginFlowTypePassword username:userId password:password success:^(MXCredentials *credentials) {
 
-        MXRestClient *mxRestClient2 = [[MXRestClient alloc] initWithCredentials:credentials andOnUnrecognizedCertificateBlock:nil];
-        MXSession *newSession = [[MXSession alloc] initWithMatrixRestClient:mxRestClient2];
+            MXRestClient *mxRestClient2 = [[MXRestClient alloc] initWithCredentials:credentials andOnUnrecognizedCertificateBlock:nil];
+            MXSession *newSession = [[MXSession alloc] initWithMatrixRestClient:mxRestClient2];
 
-        [newSession start:^{
+            [newSession start:^{
 
-            onComplete(newSession);
+                onComplete(newSession);
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            NSAssert(NO, @"Cannot relog %@. Error: %@", userId, error);
         }];
-
     } failure:^(NSError *error) {
-        NSAssert(NO, @"Cannot relog %@. Error: %@", userId, error);
+        NSAssert(NO, @"Cannot logout %@. Error: %@", userId, error);
     }];
-    
 }
 
 
