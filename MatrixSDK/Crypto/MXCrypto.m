@@ -137,6 +137,8 @@
                                                         repeats:YES];
             [[NSRunLoop mainRunLoop] addTimer:uploadKeysTimer forMode:NSDefaultRunLoopMode];
 
+            success();
+
         } failure:failure];
 
         [operation mutateTo:operation2];
