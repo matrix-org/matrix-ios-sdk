@@ -38,11 +38,16 @@
     // Listener on memberships changes
     id roomMembershipEventsListener;
 
-    // For dev @TODO
+    // For dev
+    // @TODO: could be removed
     NSDictionary *lastPublishedOneTimeKeys;
 
     // Timer to periodically upload keys
     NSTimer *uploadKeysTimer;
+
+    // Map from userId -> deviceId -> roomId -> timestamp
+    // to manage rate limiting for pinging devices
+    MXUsersDevicesMap<NSMutableDictionary<NSString* /*roomId*/, NSDate* /*timestamp*/>*> *lastNewDeviceMessageTsByUserDeviceRoom;
 }
 @end
 
@@ -60,6 +65,8 @@
         _olmDevice = [[MXOlmDevice alloc] initWithStore:_store];
 
         roomAlgorithms = [NSMutableDictionary dictionary];
+
+        lastNewDeviceMessageTsByUserDeviceRoom = [[MXUsersDevicesMap alloc] init];
 
         // Build our device keys: they will later be uploaded
         NSString *deviceId = _store.deviceId;
@@ -91,8 +98,6 @@
         
         [self registerEventHandlers];
 
-        // map from userId -> deviceId -> roomId -> timestamp
-        // @TODO this._lastNewDeviceMessageTsByUserDeviceRoom = {};
     }
     return self;
 }
@@ -106,7 +111,8 @@
     NSParameterAssert(mxSession.myUser.userId);
 
     // Start uploading user device keys
-    MXHTTPOperation *operation = [self uploadKeys:5 success:^{
+    MXHTTPOperation *operation;
+    operation = [self uploadKeys:5 success:^{
 
         NSLog(@"[MXCrypto] start ###########################################################");
         NSLog(@" uploadKeys done for %@: ", mxSession.myUser.userId);
@@ -166,7 +172,8 @@
                         success:(void (^)())success
                         failure:(void (^)(NSError *))failure
 {
-    MXHTTPOperation *operation =  [self uploadDeviceKeys:^(MXKeysUploadResponse *keysUploadResponse) {
+    MXHTTPOperation *operation;
+    operation = [self uploadDeviceKeys:^(MXKeysUploadResponse *keysUploadResponse) {
 
         // We need to keep a pool of one time public keys on the server so that
         // other devices can start conversations with us. But we can only store
@@ -1054,7 +1061,24 @@
         deviceId = @"*";
     }
 
-    // @TODO: Manage rate limit
+    // Check rate limiting
+    NSMutableDictionary<NSString*, NSDate*> *lastTsByRoom = [lastNewDeviceMessageTsByUserDeviceRoom objectForDevice:deviceId forUser:userId];
+    if (!lastTsByRoom)
+    {
+        lastTsByRoom = [[NSMutableDictionary alloc] init];
+    }
+
+    NSDate *lastTs = lastTsByRoom[roomId];
+    NSDate *now = [NSDate date];
+    if (now.timeIntervalSince1970 - lastTs.timeIntervalSince1970 < 3600)
+    {
+        // rate-limiting
+        return;
+    }
+
+    // Update rate limiting data
+    lastTsByRoom[roomId] = now;
+    [lastNewDeviceMessageTsByUserDeviceRoom setObject:lastTsByRoom forUser:userId andDevice:deviceId];
 
     // Build a per-device message for each user
     MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];
