@@ -573,6 +573,11 @@ typedef void (^MXOnResumeDone)();
 - (MXHTTPOperation*)logout:(void (^)())success
                    failure:(void (^)(NSError *error))failure
 {
+    // Clear crypto data
+    // For security and because it will be no more useful as we will get a new device id
+    // on the next log in
+    [self enableCrypto:NO success:nil failure:nil];
+
     return [self.matrixRestClient logout:success failure:failure];
 }
 
@@ -1124,7 +1129,11 @@ typedef void (^MXOnResumeDone)();
         else
         {
             NSLog(@"[MXSesion] enableCrypto: crypto module will be start later (MXSession.state: %@)", @(_state));
-            success();
+
+            if (success)
+            {
+                success();
+            }
         }
     }
     else if (!enableCrypto && _crypto)
@@ -1134,11 +1143,17 @@ typedef void (^MXOnResumeDone)();
 
         // Erase all crypto data of this user
         [MXFileCryptoStore deleteStoreWithCredentials:matrixRestClient.credentials];
-        success();
+        if (success)
+        {
+            success();
+        }
     }
     else
     {
-        success();
+        if (success)
+        {
+            success();
+        }
     }
 
     return operation;

@@ -865,8 +865,7 @@
         }
 
     } failure:^(NSError *error) {
-        NSLog(@"[MXCrypto] onNewDeviceEvent: ERRORupdating device keys for new device %@:%@ : %@", userId, deviceId, error);
-
+        NSLog(@"[MXCrypto] onNewDeviceEvent: ERROR updating device keys for new device %@:%@ : %@", userId, deviceId, error);
     }];
 }
 
