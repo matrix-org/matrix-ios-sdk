@@ -64,8 +64,7 @@ typedef enum : NSUInteger
 @property (nonatomic) NSArray<NSString*> *algorithms;
 
 /**
- A map from <key type>:<id> -> <base64-encoded key>>.
- @TODO
+ A map from <key type>:<id> -> <base64-encoded key>.
  */
 @property (nonatomic) NSDictionary *keys;
 
@@ -101,6 +100,7 @@ typedef enum : NSUInteger
 
 
 #pragma mark - Additional information
+
 /**
  Verification state of this device.
  */

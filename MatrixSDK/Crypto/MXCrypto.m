@@ -392,7 +392,6 @@
     return device;
 }
 
-// @TODO: Return NSError
 -(BOOL)setEncryptionInRoom:(NSString*)roomId withAlgorithm:(NSString*)algorithm
 {
     // If we already have encryption in this room, we should ignore this event
