@@ -1309,7 +1309,6 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 
         if ([JSONDictionary isKindOfClass:NSDictionary.class])
         {
-            // @TODO: Factorise in MXUsersDevicesMap?
             for (NSString *userId in JSONDictionary[@"one_time_keys"])
             {
                 if ([JSONDictionary[@"one_time_keys"][userId] isKindOfClass:NSDictionary.class])
