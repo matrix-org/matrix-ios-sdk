@@ -681,7 +681,7 @@
             mxSession = mxSession2;
             
             // Create a random room with no params
-            [mxSession createRoom:nil visibility:nil roomAlias:nil topic:nil invite:@[matrixSDKTestsData.aliceCredentials.userId] invite3PID:nil isDirect:NO success:^(MXRoom *room) {
+            [mxSession createRoom:nil visibility:nil roomAlias:nil topic:nil invite:@[matrixSDKTestsData.aliceCredentials.userId] invite3PID:nil isDirect:NO preset:nil success:^(MXRoom *room) {
                 
                 XCTAssertNotNil(room);
                 
@@ -733,7 +733,7 @@
             mxSession = mxSession2;
             
             // Create a random room with no params
-            [mxSession createRoom:nil visibility:nil roomAlias:nil topic:nil invite:@[matrixSDKTestsData.aliceCredentials.userId] invite3PID:nil isDirect:YES success:^(MXRoom *room) {
+            [mxSession createRoom:nil visibility:nil roomAlias:nil topic:nil invite:@[matrixSDKTestsData.aliceCredentials.userId] invite3PID:nil isDirect:YES preset:kMXRoomPresetTrustedPrivateChat success:^(MXRoom *room) {
                 
                 XCTAssertNotNil(room);
                 
@@ -758,6 +758,8 @@
                     }
                     
                     XCTAssertTrue(succeed);
+                    
+                    // TODO Check whether both members have the same power level (trusted_private_chat preset)
                     
                     // Force sync to get direct rooms list
                     [mxSession startWithMessagesLimit:0 onServerSyncDone:^{
