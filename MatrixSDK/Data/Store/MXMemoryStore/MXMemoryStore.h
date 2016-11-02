@@ -18,11 +18,6 @@
 
 #import "MXMemoryRoomStore.h"
 
-#import <OLMKit/OLMKit.h>
-
-#import "MXUsersDevicesMap.h"
-#import "MXDeviceInfo.h"
-
 /**
  `MXMemoryStore` is an implementation of the `MXStore` interface that stores events in memory.
  */

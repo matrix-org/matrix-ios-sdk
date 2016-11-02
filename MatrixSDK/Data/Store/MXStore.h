@@ -23,10 +23,6 @@
 
 #import "MXEventsEnumerator.h"
 
-#import <OLMKit/OLMKit.h>
-#import "MXOlmInboundGroupSession.h"
-#import "MXDeviceInfo.h"
-
 /**
  The `MXStore` protocol defines an interface that must be implemented in order to store
  Matrix data handled during a `MXSession`.
