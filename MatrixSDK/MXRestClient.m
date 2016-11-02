@@ -1592,6 +1592,7 @@ MXAuthAction;
                         invite:(NSArray<NSString*>*)inviteArray
                     invite3PID:(NSArray<MXInvite3PID*>*)invite3PIDArray
                       isDirect:(BOOL)isDirect
+                        preset:(MXRoomPreset)preset
                        success:(void (^)(MXCreateRoomResponse *response))success
                        failure:(void (^)(NSError *error))failure
 {
@@ -1633,6 +1634,10 @@ MXAuthAction;
         {
             parameters[@"invite_3pid"] = invite3PIDArray2;
         }
+    }
+    if (preset)
+    {
+        parameters[@"preset"] = preset;
     }
     
     parameters[@"is_direct"] = [NSNumber numberWithBool:isDirect];
