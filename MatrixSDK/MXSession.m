@@ -119,6 +119,11 @@ typedef void (^MXOnResumeDone)();
      the app goes in background.
      */
     UIBackgroundTaskIdentifier backgroundTaskIdentifier;
+    
+    /**
+     Tell whether the client should synthesize the direct chats from the current heuristics of what counts as a 1:1 room.
+     */
+    BOOL shouldSynthesizeDirectChats;
 }
 
 /**
@@ -625,6 +630,12 @@ typedef void (^MXOnResumeDone)();
         // Check whether this is the initial sync
         BOOL isInitialSync = !_store.eventStreamToken;
         
+        // Handle top-level account data
+        if (syncResponse.accountData)
+        {
+            [self handleAccountData:syncResponse.accountData];
+        }
+        
         // Handle first joined rooms
         for (NSString *roomId in syncResponse.rooms.join)
         {
@@ -733,11 +744,22 @@ typedef void (^MXOnResumeDone)();
         {
             [self handlePresenceEvent:presenceEvent direction:MXTimelineDirectionForwards];
         }
-
-        // Handle top-level account data
-        if (syncResponse.accountData)
+        
+        // Check whether no direct chats has been defined yet.
+        if (shouldSynthesizeDirectChats)
         {
-            [self handleAccountData:syncResponse.accountData];
+            NSLog(@"[MXSession] Synthesize direct chats from the current heuristics of what counts as a 1:1 room");
+            
+            for (MXRoom *room in self.rooms)
+            {
+                if (room.looksLikeDirect)
+                {
+                    // Mark this room has direct
+                    [room setIsDirect:YES withUserId:nil success:nil failure:^(NSError *error) {
+                        NSLog(@"[MXSession] Failed to tag a direct chat");
+                    }];
+                }
+            }
         }
         
         // Update live event stream token
@@ -962,7 +984,9 @@ typedef void (^MXOnResumeDone)();
     if (accountDataUpdate && accountDataUpdate[@"events"] && ((NSArray*)accountDataUpdate[@"events"]).count)
     {
         BOOL isInitialSync = !_store.eventStreamToken || _state == MXSessionStateInitialised;
-        BOOL didDefineDirectChats = NO;
+        
+        // Turn on by default the direct chats synthesizing at the initial sync
+        shouldSynthesizeDirectChats = isInitialSync;
 
         for (NSDictionary *event in accountDataUpdate[@"events"])
         {
@@ -1010,7 +1034,8 @@ typedef void (^MXOnResumeDone)();
             }
             else if ([event[@"type"] isEqualToString:kMXAccountDataTypeDirect])
             {
-                didDefineDirectChats = YES;
+                // The direct chats are defined, turn off the automatic synthesizing.
+                shouldSynthesizeDirectChats = NO;
                 
                 if ([event[@"content"] isKindOfClass:NSDictionary.class])
                 {
@@ -1031,20 +1056,6 @@ typedef void (^MXOnResumeDone)();
         }
 
         _store.userAccountData = accountData.accountData;
-        
-        if (!didDefineDirectChats)
-        {
-            // When no direct chat is listed in account data, we synthesize them from the current heuristics of what counts as a 1:1 room.
-            for (MXRoom *room in self.rooms)
-            {
-                if (room.looksLikeDirect)
-                {
-                    [room setIsDirect:YES success:nil failure:^(NSError *error) {
-                        NSLog(@"[MXSession] Failed to tag a direct chat");
-                    }];
-                }
-            }
-        }
     }
 }
 
@@ -1060,24 +1071,52 @@ typedef void (^MXOnResumeDone)();
 
 #pragma mark - Rooms operations
 
-- (void)onCreatedRoom:(MXCreateRoomResponse*)response isDirect:(BOOL)isDirect success:(void (^)(MXRoom *room))success
+- (void)onCreatedRoom:(MXCreateRoomResponse*)response success:(void (^)(MXRoom *room))success
 {
     // Wait to receive data from /sync about this room before returning
+    if (success)
+    {
+        MXRoom *room = [self roomWithRoomId:response.roomId];
+        if (room)
+        {
+            // The first /sync response for this room may have happened before the
+            // homeserver answer to the createRoom request.
+            success(room);
+        }
+        else
+        {
+            // Else, just wait for the corresponding kMXRoomInitialSyncNotification
+            // that will be fired from MXRoom.
+            __block id initialSyncObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomInitialSyncNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+                
+                MXRoom *room = note.object;
+                
+                if ([room.state.roomId isEqualToString:response.roomId])
+                {
+                    success(room);
+                    [[NSNotificationCenter defaultCenter] removeObserver:initialSyncObserver];
+                }
+            }];
+        }
+    }
+}
+
+- (void)onCreatedDirectChat:(MXCreateRoomResponse*)response withUserId:(NSString*)userId success:(void (^)(MXRoom *room))success
+{
+    // Wait to receive data from /sync about this room before returning
+    // CAUTION: The initial sync may not contain the invited member, they may be received later during the next sync.
     MXRoom *room = [self roomWithRoomId:response.roomId];
     if (room)
     {
         // The first /sync response for this room may have happened before the
         // homeserver answer to the createRoom request.
         
-        if (isDirect)
-        {
-            // Tag the room
-            [room setIsDirect:YES success:nil failure:^(NSError *error) {
-                
-                NSLog(@"[MXSession] Failed to tag the room (%@) as a direct chat", response.roomId);
-                
-            }];
-        }
+        // Tag the room as direct
+        [room setIsDirect:YES withUserId:userId success:nil failure:^(NSError *error) {
+            
+            NSLog(@"[MXSession] Failed to tag the room (%@) as a direct chat", response.roomId);
+            
+        }];
         
         if (success)
         {
@@ -1095,15 +1134,12 @@ typedef void (^MXOnResumeDone)();
             
             if ([room.state.roomId isEqualToString:response.roomId])
             {
-                if (isDirect)
-                {
-                    // Tag the room
-                    [room setIsDirect:YES success:nil failure:^(NSError *error) {
-                        
-                        NSLog(@"[MXSession] Failed to tag the room (%@) as a direct chat", response.roomId);
-                        
-                    }];
-                }
+                // Tag the room as direct
+                [room setIsDirect:YES withUserId:userId success:nil failure:^(NSError *error) {
+                    
+                    NSLog(@"[MXSession] Failed to tag the room (%@) as a direct chat", response.roomId);
+                    
+                }];
                 
                 if (success)
                 {
@@ -1125,7 +1161,7 @@ typedef void (^MXOnResumeDone)();
 {
     return [matrixRestClient createRoom:name visibility:visibility roomAlias:roomAlias topic:topic success:^(MXCreateRoomResponse *response) {
         
-        [self onCreatedRoom:response isDirect:NO success:success];
+        [self onCreatedRoom:response success:success];
         
     } failure:failure];
 }
@@ -1142,7 +1178,18 @@ typedef void (^MXOnResumeDone)();
 {
     return [matrixRestClient createRoom:name visibility:visibility roomAlias:roomAlias topic:topic invite:inviteArray invite3PID:invite3PIDArray isDirect:isDirect success:^(MXCreateRoomResponse *response) {
 
-        [self onCreatedRoom:response isDirect:isDirect success:success];
+        if (isDirect)
+        {
+            // When the flag isDirect is turned on, only one user id is expected in the inviteArray.
+            // The room is considered as direct only for the first mentioned user in case of several user ids.
+            // Note: It is not possible FTM to mark as direct a room with an invited third party.
+            NSString *directUserId = (inviteArray.count ? inviteArray.firstObject : nil);
+            [self onCreatedDirectChat:response withUserId:directUserId success:success];
+        }
+        else
+        {
+            [self onCreatedRoom:response success:success];
+        }
 
     } failure:failure];
 }
@@ -1159,7 +1206,23 @@ typedef void (^MXOnResumeDone)();
             isDirect = ((NSNumber*)parameters[@"is_direct"]).boolValue;
         }
         
-        [self onCreatedRoom:response isDirect:isDirect success:success];
+        if (isDirect)
+        {
+            // When the flag isDirect is turned on, only one user id is expected in the inviteArray.
+            // The room is considered as direct only for the first mentioned user in case of several user ids.
+            // Note: It is not possible FTM to mark as direct a room with an invited third party.
+            NSString *directUserId = nil;
+            if ([parameters[@"invite"] isKindOfClass:NSArray.class])
+            {
+                NSArray *inviteArray = parameters[@"invite"];
+                directUserId = (inviteArray.count ? inviteArray.firstObject : nil);
+            }
+            [self onCreatedDirectChat:response withUserId:directUserId success:success];
+        }
+        else
+        {
+            [self onCreatedRoom:response success:success];
+        }
 
     } failure:failure];
 }
@@ -1183,7 +1246,7 @@ typedef void (^MXOnResumeDone)();
     {
         if (room.state.membership == MXMembershipJoin)
         {
-            // The /sync corresponding to this join fmay have happened before the
+            // The /sync corresponding to this join may have happened before the
             // homeserver answer to the joinRoom request.
             success(room);
         }
