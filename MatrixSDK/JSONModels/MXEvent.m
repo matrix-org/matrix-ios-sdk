@@ -166,19 +166,19 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 
 - (MXEventTypeString)type
 {
-    // Return the decrypted version is any
+    // Return the decrypted version if any
     return _clearEvent ? _clearEvent.wireType : _wireType;
 }
 
 - (MXEventType)eventType
 {
-    // Return the decrypted version is any
+    // Return the decrypted version if any
     return _clearEvent ? _clearEvent.wireEventType : _wireEventType;
 }
 
 - (NSDictionary *)content
 {
-    // Return the decrypted version is any
+    // Return the decrypted version if any
     return _clearEvent ? _clearEvent.wireContent : _wireContent;
 }
 
