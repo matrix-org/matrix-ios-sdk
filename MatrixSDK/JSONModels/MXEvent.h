@@ -158,8 +158,12 @@ FOUNDATION_EXPORT uint64_t const kMXUndefinedTimestamp;
 @property (nonatomic) NSString *sender;
 
 /**
- The string event (decrypted, if necessary) type as provided by the home server.
+ The string event (decrypted, if necessary) type as provided by the homeserver.
  Unlike 'eventType', this field is always filled even for custom events.
+ 
+ @discussion
+ If the event is encrypted and the decryption failed (check 'decryptionError' property),
+  'type' will remain kMXEventTypeStringRoomEncrypted ("m.room.encrypted").
  */
 @property (nonatomic, readonly) MXEventTypeString type;
 
@@ -173,11 +177,15 @@ FOUNDATION_EXPORT uint64_t const kMXUndefinedTimestamp;
  The keys in this dictionary depend on the event type. 
  Check http://matrix.org/docs/spec/client_server/r0.2.0.html#room-events to get a list of content keys per
  event type.
+
+ @discussion
+ If the event is encrypted and the decryption failed (check 'decryptionError' property),
+  'content' will remain encrypted.
  */
 @property (nonatomic, readonly) NSDictionary *content;
 
 /**
- The string event (possibly encrypted) type as provided by the home server.
+ The string event (possibly encrypted) type as provided by the homeserver.
  Unlike 'wireEventType', this field is always filled even for custom events.
  
  @discussion
