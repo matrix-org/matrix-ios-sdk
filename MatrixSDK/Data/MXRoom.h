@@ -133,13 +133,17 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 /**
  Tag this room as a direct one, or remove the direct tag.
 
- @discussion: When a group chat is tagged as direct, the room becomes a direct chat with the oldest joined member.
+ @discussion: When a room is tagged as direct without mentioning the concerned userId,
+ the room becomes a direct chat with the oldest joined member. If no member has joined yet,
+ the room becomes direct with the oldest invited member.
 
  @param isDirect Tell whether the room is direct or not.
+ @param userId (optional) the identifier of the user for whom the room becomes direct.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
 - (MXHTTPOperation*)setIsDirect:(BOOL)isDirect
+                     withUserId:(NSString*)userId
                         success:(void (^)())success
                         failure:(void (^)(NSError *error))failure;
 

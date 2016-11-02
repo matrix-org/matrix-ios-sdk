@@ -455,6 +455,9 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @param success A block object called when the operation succeeds. It provides the MXRoom
                 instance of the joined room.
  @param failure A block object called when the operation fails.
+ 
+ @discussion When the flag isDirect is turned on, only one user id is expected in the inviteArray. The room will be considered
+ as direct only for the first mentioned user in case of several user ids.
 
  @return a MXHTTPOperation instance.
  */
