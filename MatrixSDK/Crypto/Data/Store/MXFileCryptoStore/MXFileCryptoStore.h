@@ -16,6 +16,10 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MXSDKOptions.h"
+
+#ifdef MX_CRYPTO
+
 #import "MXCryptoStore.h"
 
 /**
@@ -37,3 +41,5 @@
 @interface MXFileCryptoStore : NSObject <MXCryptoStore>
 
 @end
+
+#endif

@@ -18,6 +18,7 @@
 
 #import "MXSession.h"
 #import "MXTools.h"
+#import "MXDecryptionResult.h"
 
 #import "MXError.h"
 
@@ -235,6 +236,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                             success:(void (^)(NSString *eventId))success
                             failure:(void (^)(NSError *error))failure
 {
+#ifdef MX_CRYPTO
     if (mxSession.crypto && self.state.isEncrypted)
     {
         // Encrypt the content before sending
@@ -255,6 +257,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         return operation;
     }
     else
+#endif
     {
         return [self _sendEventOfType:eventTypeString content:content success:success failure:failure];
     }
@@ -969,6 +972,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 {
     MXHTTPOperation *operation;
 
+#ifdef MX_CRYPTO
     if (mxSession.crypto)
     {
         // Send the information to the homeserver
@@ -991,6 +995,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         }];
     }
     else
+#endif
     {
         failure([NSError errorWithDomain:MXDecryptingErrorDomain
                                     code:MXDecryptingErrorEncryptionNotEnabledCode

@@ -14,6 +14,24 @@
  limitations under the License.
  */
 
+#import <Foundation/Foundation.h>
+
+/**
+ The crypto module depends on libolm (https://matrix.org/git/olm/ ), which the iOS wrapper
+ is OLMKit.
+ 
+ The crypto will be automatically available if the application has the OLMKit Cocoa pod:
+
+     pod 'OLMKit'
+ */
+
+#if __has_include(<OLMKit/OLMKit.h>)
+#define MX_CRYPTO
+#endif
+
+/**
+ SDK options that can be set at runtime.
+ */
 @interface MXSDKOptions : NSObject
 
 + (MXSDKOptions *)sharedInstance;

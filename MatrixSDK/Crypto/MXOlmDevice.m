@@ -14,6 +14,10 @@
  limitations under the License.
  */
 
+#import "MXSDKOptions.h"
+
+#ifdef MX_CRYPTO
+
 #import "MXOlmDevice.h"
 
 #import <OLMKit/OLMKit.h>
@@ -383,3 +387,5 @@
 }
 
 @end
+
+#endif

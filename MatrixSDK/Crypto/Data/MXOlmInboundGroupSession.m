@@ -13,7 +13,10 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  */
+
 #import "MXOlmInboundGroupSession.h"
+
+#ifdef MX_CRYPTO
 
 @implementation MXOlmInboundGroupSession
 
@@ -51,3 +54,6 @@
 }
 
 @end
+
+#endif
+

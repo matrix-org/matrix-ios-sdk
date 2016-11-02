@@ -1397,6 +1397,7 @@
 
 
 #pragma mark - Crypto
+#ifdef MX_CRYPTO
 - (void)testDeviceKeys
 {
     [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
@@ -1445,6 +1446,7 @@
         }];
     }];
 }
+#endif
 
 - (void)testOneTimeKeys
 {

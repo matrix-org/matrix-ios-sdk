@@ -14,6 +14,8 @@
  limitations under the License.
  */
 
+#ifdef MX_CRYPTO
+
 #import "MXMegolmDecryption.h"
 
 #import "MXCryptoAlgorithms.h"
@@ -82,3 +84,5 @@
 }
 
 @end
+
+#endif

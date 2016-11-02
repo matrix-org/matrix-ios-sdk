@@ -16,6 +16,10 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MXSDKOptions.h"
+
+#ifdef MX_CRYPTO
+
 #import "MXCryptoStore.h"
 #import "MXDecrypting.h"
 
@@ -274,3 +278,5 @@ Determine if an incoming messages is a prekey message matching an existing sessi
 - (NSString*)sha256:(NSString*)message;
 
 @end
+
+#endif

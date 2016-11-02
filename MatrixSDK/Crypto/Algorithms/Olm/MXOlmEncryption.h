@@ -14,8 +14,14 @@
  limitations under the License.
  */
 
+#import "MXSDKOptions.h"
+
+#ifdef MX_CRYPTO
+
 #import "MXEncrypting.h"
 
 @interface MXOlmEncryption : NSObject <MXEncrypting>
 
 @end
+
+#endif

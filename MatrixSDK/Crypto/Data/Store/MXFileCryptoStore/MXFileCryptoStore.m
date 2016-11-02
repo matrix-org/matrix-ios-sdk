@@ -16,6 +16,8 @@
 
 #import "MXFileCryptoStore.h"
 
+#ifdef MX_CRYPTO
+
 #import "MXFileCryptoStoreMetaData.h"
 #import "MXUsersDevicesMap.h"
 
@@ -426,3 +428,5 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 }
 
 @end
+
+#endif

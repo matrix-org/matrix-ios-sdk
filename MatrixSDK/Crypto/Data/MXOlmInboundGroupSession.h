@@ -16,6 +16,10 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MXSDKOptions.h"
+
+#ifdef MX_CRYPTO
+
 #import <OLMKit/OLMKit.h>
 
 /**
@@ -56,3 +60,5 @@
 @property (nonatomic) NSDictionary<NSString*, NSString*> *keysClaimed;
 
 @end
+
+#endif // MX_CRYPTO

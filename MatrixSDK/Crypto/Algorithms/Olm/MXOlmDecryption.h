@@ -16,8 +16,14 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MXSDKOptions.h"
+
+#ifdef MX_CRYPTO
+
 #import "MXDecrypting.h"
 
 @interface MXOlmDecryption : NSObject <MXDecrypting>
 
 @end
+
+#endif

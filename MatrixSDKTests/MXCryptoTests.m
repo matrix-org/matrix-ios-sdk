@@ -24,6 +24,8 @@
 #import "MXFileCryptoStore.h"
 #import "MXSDKOptions.h"
 
+#ifdef MX_CRYPTO
+
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-retain-cycles"
@@ -1124,3 +1126,5 @@
 @end
 
 #pragma clang diagnostic pop
+
+#endif

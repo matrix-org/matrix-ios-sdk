@@ -16,6 +16,8 @@
 
 #import "MXCrypto.h"
 
+#ifdef MX_CRYPTO
+
 #import "MXSession.h"
 #import "MXTools.h"
 
@@ -1100,4 +1102,6 @@
 }
 
 @end
+
+#endif
 

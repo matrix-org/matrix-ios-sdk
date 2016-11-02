@@ -26,6 +26,7 @@
 #import "MXMemoryStore.h"
 #import "MXFileStore.h"
 
+#import "MXDecryptionResult.h"
 #import "MXFileCryptoStore.h"
 
 #import "MXAccountData.h"
@@ -557,12 +558,14 @@ typedef void (^MXOnResumeDone)();
         _callManager = nil;
     }
 
+#ifdef MX_CRYPTO
     // Stop crypto
     if (_crypto)
     {
         [_crypto close];
         _crypto = nil;
     }
+#endif
 
     // Stop background task
     if (backgroundTaskIdentifier != UIBackgroundTaskInvalid)
@@ -1124,6 +1127,7 @@ typedef void (^MXOnResumeDone)();
 
     NSLog(@"[MXSesion] enableCrypto: %@", @(enableCrypto));
 
+#ifdef MX_CRYPTO
     if (enableCrypto && !_crypto)
     {
         MXFileCryptoStore *cryptoStore = [MXFileCryptoStore createStoreWithCredentials:self.matrixRestClient.credentials];
@@ -1162,6 +1166,15 @@ typedef void (^MXOnResumeDone)();
             success();
         }
     }
+
+#else
+
+    if (failure)
+    {
+        failure(nil);
+    }
+
+#endif
 
     return operation;
 }
@@ -2121,6 +2134,7 @@ typedef void (^MXOnResumeDone)();
  */
 - (void)checkCrypto:(void (^)())complete
 {
+#ifdef MX_CRYPTO
     if ([MXFileCryptoStore hasDataForCredentials:matrixRestClient.credentials])
     {
         // If it already exists, open and init crypto
@@ -2144,6 +2158,7 @@ typedef void (^MXOnResumeDone)();
         complete();
     }
     else
+#endif
     {
         // Else do not enable crypto
         complete();
@@ -2159,11 +2174,14 @@ typedef void (^MXOnResumeDone)();
                         failure:(void (^)(NSError *error))failure
 {
     MXHTTPOperation *operation;
+
+#ifdef MX_CRYPTO
     if (_crypto)
     {
         operation = [_crypto start:success failure:failure];
     }
     else
+#endif
     {
         success();
     }
@@ -2175,6 +2193,7 @@ typedef void (^MXOnResumeDone)();
 {
     if (event.eventType == MXEventTypeRoomEncrypted)
     {
+#ifdef MX_CRYPTO
         if (_crypto)
         {
             NSError *error;
@@ -2186,6 +2205,7 @@ typedef void (^MXOnResumeDone)();
             }
         }
         else
+#endif
         {
             // Encryption not enabled
             event.decryptionError = [NSError errorWithDomain:MXDecryptingErrorDomain

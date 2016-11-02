@@ -16,6 +16,10 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MXSDKOptions.h"
+
+#ifdef MX_CRYPTO
+
 #import "MXJSONModels.h"
 
 #import <OLMKit/OLMKit.h>
@@ -179,3 +183,5 @@
 - (MXOlmInboundGroupSession*)inboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey;
 
 @end
+
+#endif

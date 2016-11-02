@@ -16,6 +16,10 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MXSDKOptions.h"
+
+#ifdef MX_CRYPTO
+
 #import "MXCryptoStore.h"
 #import "MXRestClient.h"
 #import "MXDeviceInfo.h"
@@ -201,3 +205,11 @@
 - (MXEvent*)decryptEvent:(MXEvent*)event error:(NSError**)error;
 
 @end
+
+#else
+
+@interface MXCrypto : NSObject
+@end
+
+#endif
+
