@@ -483,6 +483,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @param inviteArray (optional) A list of user IDs to invite to the room. This will tell the server to invite everyone in the list to the newly created room.
  @param invite3PIDArray (optional) A list of objects representing third party IDs to invite into the room.
  @param isDirect tells whether the resulting room must be tagged as a direct room.
+ @param preset (optional) Convenience parameter for setting various default state events based on a preset.
 
  @param success A block object called when the operation succeeds. It provides the MXRoom
                 instance of the joined room.
@@ -500,6 +501,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                         invite:(NSArray<NSString*>*)inviteArray
                     invite3PID:(NSArray<MXInvite3PID*>*)invite3PIDArray
                       isDirect:(BOOL)isDirect
+                        preset:(MXRoomPreset)preset
                        success:(void (^)(MXRoom *room))success
                        failure:(void (^)(NSError *error))failure;
 

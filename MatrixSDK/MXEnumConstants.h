@@ -98,6 +98,26 @@ FOUNDATION_EXPORT NSString *const kMXRoomJoinRuleInvite;
 FOUNDATION_EXPORT NSString *const kMXRoomJoinRulePrivate;
 FOUNDATION_EXPORT NSString *const kMXRoomJoinRuleKnock;
 
+/**
+ Room presets
+ Define a set of state events applied during a new room creation.
+ */
+typedef NSString* MXRoomPreset;
+
+/**
+ join_rules is set to invite. history_visibility is set to shared.
+ */
+FOUNDATION_EXPORT NSString *const kMXRoomPresetPrivateChat;
+
+/**
+ join_rules is set to invite. history_visibility is set to shared. All invitees are given the same power level as the room creator.
+ */
+FOUNDATION_EXPORT NSString *const kMXRoomPresetTrustedPrivateChat;
+
+/**
+ join_rules is set to public. history_visibility is set to shared.
+ */
+FOUNDATION_EXPORT NSString *const kMXRoomPresetPublicChat;
 
 /**
  Room guest access.

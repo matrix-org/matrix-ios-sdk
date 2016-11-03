@@ -1295,10 +1295,11 @@ typedef void (^MXOnResumeDone)();
                         invite:(NSArray<NSString*>*)inviteArray
                     invite3PID:(NSArray<MXInvite3PID*>*)invite3PIDArray
                       isDirect:(BOOL)isDirect
+                        preset:(MXRoomPreset)preset
                        success:(void (^)(MXRoom *room))success
                        failure:(void (^)(NSError *error))failure
 {
-    return [matrixRestClient createRoom:name visibility:visibility roomAlias:roomAlias topic:topic invite:inviteArray invite3PID:invite3PIDArray isDirect:isDirect success:^(MXCreateRoomResponse *response) {
+    return [matrixRestClient createRoom:name visibility:visibility roomAlias:roomAlias topic:topic invite:inviteArray invite3PID:invite3PIDArray isDirect:isDirect preset:preset success:^(MXCreateRoomResponse *response) {
 
         if (isDirect)
         {

@@ -39,6 +39,13 @@ NSString *const kMXRoomJoinRulePrivate = @"private";
 NSString *const kMXRoomJoinRuleKnock   = @"knock";
 
 /**
+ Room presets
+ */
+NSString *const kMXRoomPresetPrivateChat = @"private_chat";
+NSString *const kMXRoomPresetTrustedPrivateChat = @"trusted_private_chat";
+NSString *const kMXRoomPresetPublicChat = @"public_chat";
+
+/**
  Room guest access.
  */
 NSString *const kMXRoomGuestAccessCanJoin   = @"can_join";

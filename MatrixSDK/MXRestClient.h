@@ -919,6 +919,7 @@ typedef enum : NSUInteger
  @param inviteArray (optional) A list of user IDs to invite to the room. This will tell the server to invite everyone in the list to the newly created room.
  @param invite3PIDArray (optional) A list of objects representing third party IDs to invite into the room.
  @param isDirect This flag makes the server set the is_direct flag on the m.room.member events sent to the users in invite and invite_3pid (Use NO by default).
+ @param preset (optional) Convenience parameter for setting various default state events based on a preset.
 
  @param success A block object called when the operation succeeds. It provides a MXCreateRoomResponse object.
  @param failure A block object called when the operation fails.
@@ -932,6 +933,7 @@ typedef enum : NSUInteger
                         invite:(NSArray<NSString*>*)inviteArray
                     invite3PID:(NSArray<MXInvite3PID*>*)invite3PIDArray
                       isDirect:(BOOL)isDirect
+                        preset:(MXRoomPreset)preset
                        success:(void (^)(MXCreateRoomResponse *response))success
                        failure:(void (^)(NSError *error))failure;
 
