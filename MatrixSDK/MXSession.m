@@ -65,12 +65,6 @@ typedef void (^MXOnResumeDone)();
      Each key is a room ID. Each value, the MXRoom instance.
      */
     NSMutableDictionary<NSString*, MXRoom*> *rooms;
-    
-    /**
-     Private one-to-one rooms data
-     Each key is a user ID. Each value is an array of MXRoom instances (in chronological order).
-     */
-    NSMutableDictionary *oneToOneRooms;
 
     /**
      The current request of the event stream.
@@ -147,7 +141,6 @@ typedef void (^MXOnResumeDone)();
     {
         matrixRestClient = mxRestClient;
         rooms = [NSMutableDictionary dictionary];
-        oneToOneRooms = [NSMutableDictionary dictionary];
         _directRooms = [NSMutableDictionary dictionary];
         globalEventListeners = [NSMutableArray array];
         syncMessagesLimit = -1;
@@ -550,8 +543,6 @@ typedef void (^MXOnResumeDone)();
     }
     [peekingRooms removeAllObjects];
 
-    [oneToOneRooms removeAllObjects];
-
     // Clean notification center
     [_notificationCenter removeAllListeners];
     _notificationCenter = nil;
@@ -682,8 +673,6 @@ typedef void (^MXOnResumeDone)();
             
             @autoreleasepool {
                 
-                BOOL isOneToOneRoom = NO;
-                
                 // Retrieve existing room or create a new one
                 MXRoom *room = [self roomWithRoomId:roomId];
                 if (nil == room)
@@ -691,20 +680,10 @@ typedef void (^MXOnResumeDone)();
                     room = [[MXRoom alloc] initWithRoomId:roomId andMatrixSession:self];
                     [self addRoom:room notify:!isInitialSync];
                 }
-                else
-                {
-                    isOneToOneRoom = (!room.state.isJoinRulePublic && room.state.members.count == 2 && !room.state.isConferenceUserRoom);
-                }
                 
                 // Sync room
                 [room handleJoinedRoomSync:roomSync];
 
-                if (isOneToOneRoom || (!room.state.isJoinRulePublic && room.state.members.count == 2 && !room.state.isConferenceUserRoom))
-                {
-                    // Update one-to-one room dictionary
-                    [self handleOneToOneRoom:room];
-                }
-                
             }
         }
         
@@ -1501,27 +1480,6 @@ typedef void (^MXOnResumeDone)();
     return [rooms allValues];
 }
 
-- (MXRoom *)privateOneToOneRoomWithUserId:(NSString*)userId
-{
-    NSArray *array = [[oneToOneRooms objectForKey:userId] copy];
-    if (array.count)
-    {
-        // Update stored rooms before returning the first one.
-        // Indeed a state event may be handled and notified to the SDK user before updating private one-to-one room list.
-        for (MXRoom *room in array)
-        {
-            [self handleOneToOneRoom:room];
-        }
-        
-        array = [oneToOneRooms objectForKey:userId];
-        if (array.count)
-        {
-            return array.firstObject;
-        }
-    }
-    return nil;
-}
-
 - (MXHTTPOperation*)uploadDirectRooms:(void (^)())success
                               failure:(void (^)(NSError *error))failure
 {
@@ -1564,12 +1522,6 @@ typedef void (^MXOnResumeDone)();
     }
 
     [rooms setObject:room forKey:room.state.roomId];
-    
-    // We store one-to-one room in a second dictionary to ease their reuse (Ignore room with conference manger).
-    if (!room.state.isJoinRulePublic && room.state.members.count == 2 && !room.state.isConferenceUserRoom)
-    {
-        [self handleOneToOneRoom:room];
-    }
 
     if (notify)
     {
@@ -1596,12 +1548,6 @@ typedef void (^MXOnResumeDone)();
 
         // Clean the store
         [_store deleteRoom:roomId];
-        
-        // Clean one-to-one room dictionary
-        if (!room.state.isJoinRulePublic && room.state.members.count == 2)
-        {
-            [self removeOneToOneRoom:room];
-        }
 
         // And remove the room from the list
         [rooms removeObjectForKey:roomId];
@@ -1612,94 +1558,6 @@ typedef void (^MXOnResumeDone)();
                                                           userInfo:@{
                                                                      kMXSessionNotificationRoomIdKey: roomId
                                                                      }];
-    }
-}
-
-- (void)handleOneToOneRoom:(MXRoom*)room
-{
-    // Retrieve the one-to-one contact in members list.
-    NSArray* roomMembers = room.state.members;
-    MXRoomMember* oneToOneContact = nil;
-    
-    // Check whether the room is a one-to-one room.
-    if (roomMembers.count == 2)
-    {
-        oneToOneContact = [roomMembers objectAtIndex:0];
-        if ([oneToOneContact.userId isEqualToString:self.myUser.userId])
-        {
-            oneToOneContact = [roomMembers objectAtIndex:1];
-        }
-    }
-    
-    // Check the membership of this member (Indeed the room should be ignored if the member left it)
-    if (oneToOneContact && oneToOneContact.membership != MXMembershipLeave && oneToOneContact.membership != MXMembershipBan)
-    {
-        // Retrieve the current one-to-one rooms related to this user.
-        NSMutableArray *array = [oneToOneRooms objectForKey:oneToOneContact.userId];
-        if (array)
-        {
-            // Add the room if it is not already present
-            if ([array indexOfObject:room] == NSNotFound)
-            {
-                [array addObject:room];
-            }
-            
-            if (array.count > 1)
-            {
-                // In case of mutiple rooms, order them by origin_server_ts
-                [array sortUsingComparator:^NSComparisonResult(MXRoom *obj1, MXRoom *obj2) {
-                    NSComparisonResult result = NSOrderedAscending;
-                    if ([obj2 lastMessageWithTypeIn:nil].originServerTs > [obj1 lastMessageWithTypeIn:nil].originServerTs) {
-                        result = NSOrderedDescending;
-                    } else if ([obj2 lastMessageWithTypeIn:nil].originServerTs == [obj1 lastMessageWithTypeIn:nil].originServerTs) {
-                        result = NSOrderedSame;
-                    }
-                    return result;
-                }];
-            }
-        }
-        else
-        {
-            array = [NSMutableArray arrayWithObject:room];
-        }
-        
-        [oneToOneRooms setObject:array forKey:oneToOneContact.userId];
-    }
-    else
-    {
-        [self removeOneToOneRoom:room];
-    }
-}
-
-- (void)removeOneToOneRoom:(MXRoom*)room
-{
-    // This method should be called when a member left, or when a new member joined the room.
-    
-    // Remove this room from one-to-one rooms for each member.
-    NSArray* roomMembers = room.state.members;
-    for (MXRoomMember *member in roomMembers)
-    {
-        if ([member.userId isEqualToString:self.myUser.userId] == NO)
-        {
-            NSMutableArray *array = [oneToOneRooms objectForKey:member.userId];
-            if (array)
-            {
-                NSUInteger index = [array indexOfObject:room];
-                if (index != NSNotFound)
-                {
-                    [array removeObjectAtIndex:index];
-                    
-                    if (array.count)
-                    {
-                        [oneToOneRooms setObject:array forKey:member.userId];
-                    }
-                    else
-                    {
-                        [oneToOneRooms removeObjectForKey:member.userId];
-                    }
-                }
-            }
-        }
     }
 }
 
@@ -1744,11 +1602,6 @@ typedef void (^MXOnResumeDone)();
 - (NSArray<MXUser*> *)users
 {
     return _store.users;
-}
-
-- (NSArray<NSString *> *)privateOneToOneUsers
-{
-    return [oneToOneRooms allKeys];
 }
 
 - (MXUser *)getOrCreateUser:(NSString *)userId

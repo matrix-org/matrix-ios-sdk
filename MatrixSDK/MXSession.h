@@ -593,13 +593,6 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (NSArray<MXRoom*>*)rooms;
 
 /**
- Get the existing private OneToOne room with this user.
-
- @return the MXRoom instance (nil if the room does not exist yet).
- */
-- (MXRoom *)privateOneToOneRoomWithUserId:(NSString*)userId;
-
-/**
  The list of the direct rooms by user identifiers.
  
  A dictionary where the keys are the user IDs and values are lists of room ID strings.
@@ -665,11 +658,6 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @return an array of MXUsers.
  */
 - (NSArray<MXUser*> *)users;
-
-/**
- List all the user ids for whom a 1:1 room exists.
- */
-- (NSArray<NSString*> *)privateOneToOneUsers;
 
 /**
  The list of ignored users.
