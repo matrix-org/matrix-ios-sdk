@@ -1480,6 +1480,28 @@ typedef void (^MXOnResumeDone)();
     return [rooms allValues];
 }
 
+- (MXRoom *)directJoinedRoomWithUserId:(NSString*)userId
+{
+    // Retrieve the existing direct chats
+    NSArray *directRoomIds = self.directRooms[userId];
+    
+    // Check whether the room is still existing
+    for (NSString* directRoomId in directRoomIds)
+    {
+        MXRoom *directRoom = [self roomWithRoomId:directRoomId];
+        if (directRoom)
+        {
+            // Check whether the user membership is joined
+            if (directRoom.state.membership == MXMembershipJoin)
+            {
+                return directRoom;
+            }
+        }
+    }
+    
+    return nil;
+}
+
 - (MXHTTPOperation*)uploadDirectRooms:(void (^)())success
                               failure:(void (^)(NSError *error))failure
 {

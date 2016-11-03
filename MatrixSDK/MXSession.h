@@ -593,6 +593,13 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (NSArray<MXRoom*>*)rooms;
 
 /**
+ Return the first joined direct chat listed in account data for this user.
+ 
+ @return the MXRoom instance (nil if no room exists yet).
+ */
+- (MXRoom *)directJoinedRoomWithUserId:(NSString*)userId;
+
+/**
  The list of the direct rooms by user identifiers.
  
  A dictionary where the keys are the user IDs and values are lists of room ID strings.
