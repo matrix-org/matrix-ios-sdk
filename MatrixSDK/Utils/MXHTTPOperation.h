@@ -59,4 +59,15 @@
  */
 - (void)cancel;
 
+/**
+ Mutate the MXHTTPOperation instance into another operation.
+ 
+ @discussion
+ This allows to chain HTTP requests and let the user keep the control on consecutive
+ requests, ie he will able to cancel subsequent http requests.
+ 
+ @param operation the other operation to copy data from.
+ */
+- (void)mutateTo:(MXHTTPOperation*)operation;
+
 @end

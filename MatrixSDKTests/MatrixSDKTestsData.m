@@ -19,6 +19,10 @@
 #import "MXRestClient.h"
 #import "MXError.h"
 
+// Do not bother with retain cycles warnings in tests
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-retain-cycles"
+
 /*
  Out of the box, the tests are supposed to be run with the iOS simulator attacking
  a test home server running on the same Mac machine.
@@ -33,16 +37,8 @@ NSString * const kMXTestsAliceDisplayName = @"mxAlice";
 NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqmmttIQ";
 
 
-#define MXTESTS_BOB @"mxBob"
-#define MXTESTS_BOB_PWD @"bobbob"
-
-#define MXTESTS_ALICE @"mxAlice"
-#define MXTESTS_ALICE_PWD @"alicealice"
-
 @interface MatrixSDKTestsData ()
 {
-    MXRestClient *mxRestClient;
-    
     NSDate *startDate;
 }
 @end
@@ -57,9 +53,6 @@ NSMutableArray *roomsToClean;
     self = [super init];
     if (self)
     {
-        mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL
-                              andOnUnrecognizedCertificateBlock:nil];
-
         startDate = [NSDate date];
     }
     return self;
@@ -77,8 +70,11 @@ NSMutableArray *roomsToClean;
         // Use a different Bob each time so that tests are independent
         NSString *bobUniqueUser = [NSString stringWithFormat:@"%@-%@", MXTESTS_BOB, [[NSUUID UUID] UUIDString]];
 
+        MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL
+                                            andOnUnrecognizedCertificateBlock:nil];
+
         // First, try register the user
-        [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:bobUniqueUser password:MXTESTS_BOB success:^(MXCredentials *credentials) {
+        [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:bobUniqueUser password:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
 
             _bobCredentials = credentials;
             success();
@@ -404,6 +400,26 @@ NSMutableArray *roomsToClean;
     }];
 }
 
+- (void)doMXSessionTestWithBob:(XCTestCase *)testCase andStore:(id<MXStore>)store readyToTest:(void (^)(MXSession *, XCTestExpectation *))readyToTest
+{
+    [self doMXRestClientTestWithBob:testCase readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+
+        [mxSession setStore:store success:^{
+
+            [mxSession start:^{
+
+                readyToTest(mxSession, expectation);
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
 
 #pragma mark - mxAlice
 - (void)getAliceCredentials:(void (^)())success
@@ -418,8 +434,11 @@ NSMutableArray *roomsToClean;
         // Use a different Alice each time so that tests are independent
         NSString *aliceUniqueUser = [NSString stringWithFormat:@"%@-%@", MXTESTS_ALICE, [[NSUUID UUID] UUIDString]];
 
+        MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL
+                                            andOnUnrecognizedCertificateBlock:nil];
+
         // First, try register the user
-        [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:aliceUniqueUser password:MXTESTS_ALICE success:^(MXCredentials *credentials) {
+        [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:aliceUniqueUser password:MXTESTS_ALICE_PWD success:^(MXCredentials *credentials) {
             
             _aliceCredentials = credentials;
             success();
@@ -511,6 +530,26 @@ NSMutableArray *roomsToClean;
     }];
 }
 
+- (void)doMXSessionTestWithAlice:(XCTestCase *)testCase andStore:(id<MXStore>)store readyToTest:(void (^)(MXSession *, XCTestExpectation *))readyToTest
+{
+    [self doMXRestClientTestWithAlice:testCase readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+
+        [mxSession setStore:store success:^{
+
+            [mxSession start:^{
+
+                readyToTest(mxSession, expectation);
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
 
 #pragma mark - both
 - (void)doMXRestClientTestWithBobAndAliceInARoom:(XCTestCase*)testCase
@@ -556,6 +595,39 @@ NSMutableArray *roomsToClean;
 
 
 #pragma mark - tools
+
+- (void)relogUserSession:(MXSession*)session withPassword:(NSString*)password onComplete:(void (^)(MXSession *newSession))onComplete
+{
+    NSString *userId = session.matrixRestClient.credentials.userId;
+
+    [session logout:^{
+
+        [session close];
+
+        MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL
+                                            andOnUnrecognizedCertificateBlock:nil];
+
+        [mxRestClient loginWithLoginType:kMXLoginFlowTypePassword username:userId password:password success:^(MXCredentials *credentials) {
+
+            MXRestClient *mxRestClient2 = [[MXRestClient alloc] initWithCredentials:credentials andOnUnrecognizedCertificateBlock:nil];
+            MXSession *newSession = [[MXSession alloc] initWithMatrixRestClient:mxRestClient2];
+
+            [newSession start:^{
+
+                onComplete(newSession);
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot relog %@. Error: %@", userId, error);
+        }];
+    } failure:^(NSError *error) {
+        NSAssert(NO, @"Cannot logout %@. Error: %@", userId, error);
+    }];
+}
+
 
 - (void)closeMXSession:(MXSession*)mxSession
 {
@@ -612,3 +684,6 @@ NSMutableArray *roomsToClean;
 }
 
 @end
+
+#pragma clang diagnostic pop
+

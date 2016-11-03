@@ -30,8 +30,10 @@ NSString *const kMXEventTypeStringRoomPowerLevels       = @"m.room.power_levels"
 NSString *const kMXEventTypeStringRoomAliases           = @"m.room.aliases";
 NSString *const kMXEventTypeStringRoomCanonicalAlias    = @"m.room.canonical_alias";
 NSString *const kMXEventTypeStringRoomEncrypted         = @"m.room.encrypted";
+NSString *const kMXEventTypeStringRoomEncryption        = @"m.room.encryption";
 NSString *const kMXEventTypeStringRoomGuestAccess       = @"m.room.guest_access";
 NSString *const kMXEventTypeStringRoomHistoryVisibility = @"m.room.history_visibility";
+NSString *const kMXEventTypeStringRoomKey               = @"m.room_key";
 NSString *const kMXEventTypeStringRoomMessage           = @"m.room.message";
 NSString *const kMXEventTypeStringRoomMessageFeedback   = @"m.room.message.feedback";
 NSString *const kMXEventTypeStringRoomRedaction         = @"m.room.redaction";
@@ -41,6 +43,7 @@ NSString *const kMXEventTypeStringPresence              = @"m.presence";
 NSString *const kMXEventTypeStringTypingNotification    = @"m.typing";
 NSString *const kMXEventTypeStringReceipt               = @"m.receipt";
 NSString *const kMXEventTypeStringRead                  = @"m.read";
+NSString *const kMXEventTypeStringNewDevice             = @"m.new_device";
 
 NSString *const kMXEventTypeStringCallInvite          = @"m.call.invite";
 NSString *const kMXEventTypeStringCallCandidates      = @"m.call.candidates";
@@ -67,9 +70,7 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 
 #pragma mark - MXEvent
 @interface MXEvent ()
-{
-    MXEventType eventType;
-}
+
 @end
 
 @implementation MXEvent
@@ -96,12 +97,13 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     if (event)
     {
         MXJSONModelSetString(event.eventId, JSONDictionary[@"event_id"]);
-        MXJSONModelSetString(event.type, JSONDictionary[@"type"]);
+        MXJSONModelSetString(event.wireType, JSONDictionary[@"type"]);
         MXJSONModelSetString(event.roomId, JSONDictionary[@"room_id"]);
         MXJSONModelSetString(event.sender, JSONDictionary[@"sender"]);
-        MXJSONModelSetDictionary(event.content, JSONDictionary[@"content"]);
+        MXJSONModelSetDictionary(event.wireContent, JSONDictionary[@"content"]);
         MXJSONModelSetString(event.stateKey, JSONDictionary[@"state_key"]);
         MXJSONModelSetUInt64(event.originServerTs, JSONDictionary[@"origin_server_ts"]);
+        MXJSONModelSetDictionary(event.unsignedData, JSONDictionary[@"unsigned"]);
         
         MXJSONModelSetString(event.redacts, JSONDictionary[@"redacts"]);
         
@@ -109,7 +111,7 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
         // 'prev_content' has been moved under unsigned in some server responses (see sync API).
         if (!event.prevContent)
         {
-            MXJSONModelSetDictionary(event.prevContent, JSONDictionary[@"unsigned"][@"prev_content"]);
+            MXJSONModelSetDictionary(event.prevContent, event.unsignedData[@"prev_content"]);
         }
         
         // 'age' has been moved under unsigned.
@@ -117,16 +119,16 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
         {
             MXJSONModelSetUInteger(event.age, JSONDictionary[@"age"]);
         }
-        else if (JSONDictionary[@"unsigned"][@"age"])
+        else if (event.unsignedData[@"age"])
         {
-            MXJSONModelSetUInteger(event.age, JSONDictionary[@"unsigned"][@"age"]);
+            MXJSONModelSetUInteger(event.age, event.unsignedData[@"age"]);
         }
         
         MXJSONModelSetDictionary(event.redactedBecause, JSONDictionary[@"redacted_because"]);
         if (!event.redactedBecause)
         {
             // 'redacted_because' has been moved under unsigned.
-            MXJSONModelSetDictionary(event.redactedBecause, JSONDictionary[@"unsigned"][@"redacted_because"]);
+            MXJSONModelSetDictionary(event.redactedBecause, event.unsignedData[@"redacted_because"]);
         }
         
         if (JSONDictionary[@"invite_room_state"])
@@ -145,7 +147,7 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
  */
 - (void)finalise
 {
-    if (MXEventTypePresence == eventType)
+    if (MXEventTypePresence == _wireEventType)
     {
         // Workaround: Presence events provided by the home server do not contain userId
         // in the root of the JSON event object but under its content sub object.
@@ -158,21 +160,34 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     }
 
     // Clean JSON data by removing all null values
-    _content = [MXJSONModel removeNullValuesInJSON:_content];
+    _wireContent = [MXJSONModel removeNullValuesInJSON:_wireContent];
     _prevContent = [MXJSONModel removeNullValuesInJSON:_prevContent];
+}
+
+- (MXEventTypeString)type
+{
+    // Return the decrypted version if any
+    return _clearEvent ? _clearEvent.wireType : _wireType;
 }
 
 - (MXEventType)eventType
 {
-    return eventType;
+    // Return the decrypted version if any
+    return _clearEvent ? _clearEvent.wireEventType : _wireEventType;
 }
 
-- (void)setType:(MXEventTypeString)type
+- (NSDictionary *)content
 {
-    _type = type;
+    // Return the decrypted version if any
+    return _clearEvent ? _clearEvent.wireContent : _wireContent;
+}
+
+- (void)setWireType:(MXEventTypeString)type
+{
+    _wireType = type;
 
     // Compute eventType
-    eventType = [MXTools eventType:_type];
+    _wireEventType = [MXTools eventType:_wireType];
 }
 
 - (void)setAge:(NSUInteger)age
@@ -200,10 +215,10 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     if (JSONDictionary)
     {
         JSONDictionary[@"event_id"] = _eventId;
-        JSONDictionary[@"type"] = _type;
+        JSONDictionary[@"type"] = _wireType;
         JSONDictionary[@"room_id"] = _roomId;
         JSONDictionary[@"sender"] = _sender;
-        JSONDictionary[@"content"] = _content;
+        JSONDictionary[@"content"] = _wireContent;
         JSONDictionary[@"state_key"] = _stateKey;
         JSONDictionary[@"origin_server_ts"] = @(_originServerTs);
         JSONDictionary[@"redacts"] = _redacts;
@@ -267,14 +282,14 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 {
     NSMutableArray* list = nil;
     
-    if (eventType == MXEventTypeReceipt)
+    if (_wireEventType == MXEventTypeReceipt)
     {
-        NSArray* eventIds = [_content allKeys];
+        NSArray* eventIds = [_wireContent allKeys];
         list = [[NSMutableArray alloc] initWithCapacity:eventIds.count];
         
         for (NSString* eventId in eventIds)
         {
-            NSDictionary* eventDict = [_content objectForKey:eventId];
+            NSDictionary* eventDict = [_wireContent objectForKey:eventId];
             NSDictionary* readDict = [eventDict objectForKey:kMXEventTypeStringRead];
             
             if (readDict)
@@ -291,14 +306,14 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 {
     NSMutableArray* list = nil;
     
-    if (eventType == MXEventTypeReceipt)
+    if (_wireEventType == MXEventTypeReceipt)
     {
-        NSArray* eventIds = [_content allKeys];
+        NSArray* eventIds = [_wireContent allKeys];
         list = [[NSMutableArray alloc] initWithCapacity:eventIds.count];
         
         for(NSString* eventId in eventIds)
         {
-            NSDictionary* eventDict = [_content objectForKey:eventId];
+            NSDictionary* eventDict = [_wireContent objectForKey:eventId];
             NSDictionary* readDict = [eventDict objectForKey:kMXEventTypeStringRead];
             
             if (readDict)
@@ -339,7 +354,7 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     NSMutableDictionary *prunedEventDict = [self filterInEventWithKeys:allowedKeys];
     
     // Add filtered content, allowed keys in content depends on the event type
-    switch (eventType)
+    switch (_wireEventType)
     {
         case MXEventTypeRoomMember:
         {
@@ -423,6 +438,42 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 }
 
 
+#pragma mark - Crypto
+- (BOOL)isEncrypted
+{
+    return (self.wireEventType == MXEventTypeRoomEncrypted);
+}
+
+- (NSString *)senderKey
+{
+    return self.keysProved[@"curve25519"];
+}
+
+- (NSDictionary<NSString *,NSString *> *)keysProved
+{
+    if (_clearEvent)
+    {
+        return _clearEvent.keysProved;
+    }
+    else
+    {
+        return _keysProved;
+    }
+}
+
+- (NSDictionary<NSString *,NSString *> *)keysClaimed
+{
+    if (_clearEvent)
+    {
+        return _clearEvent.keysClaimed;
+    }
+    else
+    {
+        return _keysClaimed;
+    }
+}
+
+
 #pragma mark - private
 - (NSMutableDictionary*)filterInEventWithKeys:(NSArray*)keys
 {
@@ -479,16 +530,17 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
     if (self)
     {
         _eventId = [aDecoder decodeObjectForKey:@"eventId"];
-        self.type = [aDecoder decodeObjectForKey:@"type"];
+        self.wireType = [aDecoder decodeObjectForKey:@"type"];
         _roomId = [aDecoder decodeObjectForKey:@"roomId"];
         _sender = [aDecoder decodeObjectForKey:@"userId"];
-        _content = [aDecoder decodeObjectForKey:@"content"];
+        _wireContent = [aDecoder decodeObjectForKey:@"content"];
         _prevContent = [aDecoder decodeObjectForKey:@"prevContent"];
         _stateKey = [aDecoder decodeObjectForKey:@"stateKey"];
         NSNumber *originServerTs = [aDecoder decodeObjectForKey:@"originServerTs"];
         _originServerTs = [originServerTs unsignedLongLongValue];
         NSNumber *ageLocalTs = [aDecoder decodeObjectForKey:@"ageLocalTs"];
         _ageLocalTs = [ageLocalTs unsignedLongLongValue];
+        _unsignedData = [aDecoder decodeObjectForKey:@"unsigned"];
         _redacts = [aDecoder decodeObjectForKey:@"redacts"];
         _redactedBecause = [aDecoder decodeObjectForKey:@"redactedBecause"];
         _inviteRoomState = [aDecoder decodeObjectForKey:@"inviteRoomState"];
@@ -499,14 +551,15 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 - (void)encodeWithCoder:(NSCoder *)aCoder
 {
     [aCoder encodeObject:_eventId forKey:@"eventId"];
-    [aCoder encodeObject:_type forKey:@"type"];
     [aCoder encodeObject:_roomId forKey:@"roomId"];
     [aCoder encodeObject:_sender forKey:@"userId"];
-    [aCoder encodeObject:_content forKey:@"content"];
+    [aCoder encodeObject:_wireType forKey:@"type"];
+    [aCoder encodeObject:_wireContent forKey:@"content"];
     [aCoder encodeObject:_prevContent forKey:@"prevContent"];
     [aCoder encodeObject:_stateKey forKey:@"stateKey"];
     [aCoder encodeObject:@(_originServerTs) forKey:@"originServerTs"];
     [aCoder encodeObject:@(_ageLocalTs) forKey:@"ageLocalTs"];
+    [aCoder encodeObject:_unsignedData forKey:@"unsigned"];
     [aCoder encodeObject:_redacts forKey:@"redacts"];
     [aCoder encodeObject:_redactedBecause forKey:@"redactedBecause"];
     [aCoder encodeObject:_inviteRoomState forKey:@"inviteRoomState"];

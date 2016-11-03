@@ -24,6 +24,7 @@
 #import "MXStore.h"
 #import "MXNotificationCenter.h"
 #import "MXCallManager.h"
+#import "MXCrypto.h"
 
 /**
  `MXSessionState` represents the states in the life cycle of a MXSession instance.
@@ -156,6 +157,15 @@ FOUNDATION_EXPORT NSString *const kMXSessionDidSyncNotification;
  */
 FOUNDATION_EXPORT NSString *const kMXSessionInvitedRoomsDidChangeNotification;
 
+/**
+ Posted when MXSession has receive a new to-device event.
+
+ The passed userInfo dictionary contains:
+ - `kMXSessionNotificationEventKey` the to-device MXEvent.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionOnToDeviceEventNotification;
+
+
 #pragma mark - Notifications keys
 /**
  The key in notification userInfo dictionary representating the roomId.
@@ -187,6 +197,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionDirectRoomsDidChangeNotification;
  The notification object is the concerned session (MXSession instance).
  */
 FOUNDATION_EXPORT NSString *const kMXSessionDidCorruptDataNotification;
+
 
 #pragma mark - Other constants
 /**
@@ -239,6 +250,12 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  Nil by default. It is created when [self enableVoIPWithCallStack:] is called
  */
 @property (nonatomic, readonly) MXCallManager *callManager;
+
+/**
+ The module that manages E2E encryption.
+ Nil if the feature is not enabled ('cryptoEnabled' property).
+ */
+@property (nonatomic, readonly) MXCrypto *crypto;
 
 
 #pragma mark - Class methods
@@ -417,6 +434,21 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @param callStack the VoIP call stack to use.
  */
 - (void)enableVoIPWithCallStack:(id<MXCallStack>)callStack;
+
+/**
+ Enable End-to-End encryption.
+ 
+ In case of enabling, the operation will complete when the session will be ready
+ to make encrytion with other users devices
+
+ @param enableCrypto NO stops crypto and erases crypto data.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return the HTTP operation that may be required. Can be nil.
+ */
+- (MXHTTPOperation*)enableCrypto:(BOOL)enableCrypto success:(void (^)())success failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Rooms operations
@@ -744,6 +776,16 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @return the tag order to apply to get the expected position.
  */
 - (NSString*)tagOrderToBeAtIndex:(NSUInteger)index from:(NSUInteger)originIndex withTag:(NSString *)tag;
+
+
+#pragma mark - Crypto
+/**
+ Decrypt an event and update its data.
+ 
+ @param event the event to decrypt.
+ @return YES if decryption is successful.
+ */
+- (BOOL)decryptEvent:(MXEvent*)event;
 
 
 #pragma mark - Global events listeners

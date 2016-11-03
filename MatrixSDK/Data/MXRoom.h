@@ -750,6 +750,25 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 - (NSArray*)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort;
 
 
+#pragma mark - Crypto
+
+/**
+ Enable encryption in this room.
+ 
+ You can check if a room is encrypted via its state (MXRoomState.isEncrypted)
+ 
+ @param algorithm the crypto algorithm to use.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+*/
+- (MXHTTPOperation*)enableEncryptionWithAlgorithm:(NSString*)algorithm
+                                          success:(void (^)())success
+                                          failure:(void (^)(NSError *error))failure;
+
+
 #pragma mark - Utils
 
 /**

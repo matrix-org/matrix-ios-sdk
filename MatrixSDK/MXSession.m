@@ -26,6 +26,9 @@
 #import "MXMemoryStore.h"
 #import "MXFileStore.h"
 
+#import "MXDecryptionResult.h"
+#import "MXFileCryptoStore.h"
+
 #import "MXAccountData.h"
 
 #pragma mark - Constants definitions
@@ -37,6 +40,7 @@ NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomN
 NSString *const kMXSessionDidLeaveRoomNotification = @"kMXSessionDidLeaveRoomNotification";
 NSString *const kMXSessionDidSyncNotification = @"kMXSessionDidSyncNotification";
 NSString *const kMXSessionInvitedRoomsDidChangeNotification = @"kMXSessionInvitedRoomsDidChangeNotification";
+NSString *const kMXSessionOnToDeviceEventNotification = @"kMXSessionOnToDeviceEventNotification";
 NSString *const kMXSessionNotificationRoomIdKey = @"roomId";
 NSString *const kMXSessionNotificationEventKey = @"event";
 NSString *const kMXSessionIgnoredUsersDidChangeNotification = @"kMXSessionIgnoredUsersDidChangeNotification";
@@ -217,62 +221,66 @@ typedef void (^MXOnResumeDone)();
 
     [_store openWithCredentials:matrixRestClient.credentials onComplete:^{
 
-        // Sanity check: The session may be closed before the end of store opening.
-        if (!matrixRestClient)
-        {
-            return;
-        }
+        // Check if the user has enabled crypto
+        [self checkCrypto:^{
 
-        // Can we start on data from the MXStore?
-        if (_store.isPermanent && _store.eventStreamToken && 0 < _store.rooms.count)
-        {
-            // Mount data from the permanent store
-            NSLog(@"[MXSession] Loading room state events to build MXRoom objects...");
-
-            // Create myUser from the store
-            MXUser *myUser = [_store userWithUserId:matrixRestClient.credentials.userId];
-
-            // My user is a MXMyUser object
-            _myUser = (MXMyUser*)myUser;
-            _myUser.mxSession = self;
-
-            // Load user account data
-            [self handleAccountData:_store.userAccountData];
-
-            // Create MXRooms from their states stored in the store
-            NSDate *startDate2 = [NSDate date];
-            for (NSString *roomId in _store.rooms)
+            // Sanity check: The session may be closed before the end of store opening.
+            if (!matrixRestClient)
             {
-                @autoreleasepool
-                {
-                    NSArray *stateEvents = [_store stateOfRoom:roomId];
-                    MXRoomAccountData *roomAccountData = [_store accountDataOfRoom:roomId];
-                    [self createRoom:roomId withStateEvents:stateEvents andAccountData:roomAccountData notify:NO];
-                }
+                return;
             }
 
-            NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+            // Can we start on data from the MXStore?
+            if (_store.isPermanent && _store.eventStreamToken && 0 < _store.rooms.count)
+            {
+                // Mount data from the permanent store
+                NSLog(@"[MXSession] Loading room state events to build MXRoom objects...");
 
-            NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                // Create myUser from the store
+                MXUser *myUser = [_store userWithUserId:matrixRestClient.credentials.userId];
 
-            [self setState:MXSessionStateStoreDataReady];
+                // My user is a MXMyUser object
+                _myUser = (MXMyUser*)myUser;
+                _myUser.mxSession = self;
 
-            // The SDK client can use this data
-            onStoreDataReady();
-        }
-        else
-        {
-            // Create self.myUser instance to expose the user id as soon as possible
-            _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId];
-            _myUser.mxSession = self;
+                // Load user account data
+                [self handleAccountData:_store.userAccountData];
 
-            NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                // Create MXRooms from their states stored in the store
+                NSDate *startDate2 = [NSDate date];
+                for (NSString *roomId in _store.rooms)
+                {
+                    @autoreleasepool
+                    {
+                        NSArray *stateEvents = [_store stateOfRoom:roomId];
+                        MXRoomAccountData *roomAccountData = [_store accountDataOfRoom:roomId];
+                        [self createRoom:roomId withStateEvents:stateEvents andAccountData:roomAccountData notify:NO];
+                    }
+                }
 
-            [self setState:MXSessionStateStoreDataReady];
-            
-            // The SDK client can use this data
-            onStoreDataReady();
-        }
+                NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+
+                NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+
+                [self setState:MXSessionStateStoreDataReady];
+
+                // The SDK client can use this data
+                onStoreDataReady();
+            }
+            else
+            {
+                // Create self.myUser instance to expose the user id as soon as possible
+                _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId];
+                _myUser.mxSession = self;
+                
+                NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                
+                [self setState:MXSessionStateStoreDataReady];
+                
+                // The SDK client can use this data
+                onStoreDataReady();
+            }
+        }];
 
     } failure:^(NSError *error) {
         [self setState:MXSessionStateInitialised];
@@ -331,7 +339,14 @@ typedef void (^MXOnResumeDone)();
         NSDate *startDate2 = [NSDate date];
         [self resume:^{
             NSLog(@"[MXSession] Events stream resumed in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
-            onServerSyncDone();
+
+            // Start crypto if enabled
+            [self startCrypto:onServerSyncDone failure:^(NSError *error) {
+
+                [self setState:MXSessionStateInitialSyncFailed];
+                failure(error);
+
+            }];
         }];
     }
     else
@@ -344,7 +359,17 @@ typedef void (^MXOnResumeDone)();
             [_store storeUser:_myUser];
 
             // Initial server sync
-            [self serverSyncWithServerTimeout:0 success:onServerSyncDone failure:^(NSError *error) {
+            [self serverSyncWithServerTimeout:0 success:^{
+
+                // Start crypto if enabled
+                [self startCrypto:onServerSyncDone failure:^(NSError *error) {
+
+                    [self setState:MXSessionStateInitialSyncFailed];
+                    failure(error);
+
+                }];
+
+            } failure:^(NSError *error) {
 
                 [self setState:MXSessionStateInitialSyncFailed];
                 failure(error);
@@ -538,6 +563,15 @@ typedef void (^MXOnResumeDone)();
         _callManager = nil;
     }
 
+#ifdef MX_CRYPTO
+    // Stop crypto
+    if (_crypto)
+    {
+        [_crypto close];
+        _crypto = nil;
+    }
+#endif
+
     // Stop background task
     if (backgroundTaskIdentifier != UIBackgroundTaskInvalid)
     {
@@ -554,6 +588,11 @@ typedef void (^MXOnResumeDone)();
 - (MXHTTPOperation*)logout:(void (^)())success
                    failure:(void (^)(NSError *error))failure
 {
+    // Clear crypto data
+    // For security and because it will be no more useful as we will get a new device id
+    // on the next log in
+    [self enableCrypto:NO success:nil failure:nil];
+
     return [self.matrixRestClient logout:success failure:failure];
 }
 
@@ -760,6 +799,12 @@ typedef void (^MXOnResumeDone)();
                     }];
                 }
             }
+        }
+
+        // Handle direct messages to device
+        for (MXEvent *toDeviceEvent in syncResponse.toDevice.events)
+        {
+            [self handleToDeviceEvent:toDeviceEvent];
         }
         
         // Update live event stream token
@@ -1059,6 +1104,25 @@ typedef void (^MXOnResumeDone)();
     }
 }
 
+- (void)handleToDeviceEvent:(MXEvent *)event
+{
+    // Decrypt event if necessary
+    if (event.eventType == MXEventTypeRoomEncrypted)
+    {
+        if (![self decryptEvent:event])
+        {
+            NSLog(@"[MXSession] handleToDeviceEvent: Warning: Unable to decrypt to-device event: %@\nError: %@", event.content[@"body"], event.decryptionError);
+            return;
+        }
+    }
+
+    [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionOnToDeviceEventNotification
+                                                        object:self
+                                                      userInfo:@{
+                                                                 kMXSessionNotificationEventKey: event
+                                                                 }];
+}
+
 #pragma mark - Options
 - (void)enableVoIPWithCallStack:(id<MXCallStack>)callStack
 {
@@ -1066,6 +1130,64 @@ typedef void (^MXOnResumeDone)();
     NSParameterAssert(!_callManager);
 
     _callManager = [[MXCallManager alloc] initWithMatrixSession:self andCallStack:callStack];
+}
+
+- (MXHTTPOperation *)enableCrypto:(BOOL)enableCrypto success:(void (^)())success failure:(void (^)(NSError *))failure
+{
+    MXHTTPOperation *operation;
+
+    NSLog(@"[MXSesion] enableCrypto: %@", @(enableCrypto));
+
+#ifdef MX_CRYPTO
+    if (enableCrypto && !_crypto)
+    {
+        MXFileCryptoStore *cryptoStore = [MXFileCryptoStore createStoreWithCredentials:self.matrixRestClient.credentials];
+        _crypto = [[MXCrypto alloc] initWithMatrixSession:self andStore:cryptoStore];
+
+        if (_state == MXSessionStateRunning)
+        {
+            operation = [_crypto start:success failure:failure];
+        }
+        else
+        {
+            NSLog(@"[MXSesion] enableCrypto: crypto module will be start later (MXSession.state: %@)", @(_state));
+
+            if (success)
+            {
+                success();
+            }
+        }
+    }
+    else if (!enableCrypto && _crypto)
+    {
+        [_crypto close];
+        _crypto = nil;
+
+        // Erase all crypto data of this user
+        [MXFileCryptoStore deleteStoreWithCredentials:matrixRestClient.credentials];
+        if (success)
+        {
+            success();
+        }
+    }
+    else
+    {
+        if (success)
+        {
+            success();
+        }
+    }
+
+#else
+
+    if (failure)
+    {
+        failure(nil);
+    }
+
+#endif
+
+    return operation;
 }
 
 
@@ -2062,6 +2184,102 @@ typedef void (^MXOnResumeDone)();
     // in some cases, the order is 0.00000 ("%f" formatter");
     // with this method, it becomes "0".
     return [formatter stringFromNumber:[NSNumber numberWithDouble:order]];
+}
+
+
+#pragma mark - Crypto
+
+/**
+ Check if the user has previously enabled crypto.
+ If yes, init the crypto module.
+ 
+ @param complete a block called in any case when the operation completes.
+ */
+- (void)checkCrypto:(void (^)())complete
+{
+#ifdef MX_CRYPTO
+    if ([MXFileCryptoStore hasDataForCredentials:matrixRestClient.credentials])
+    {
+        // If it already exists, open and init crypto
+        MXFileCryptoStore *cryptoStore = [[MXFileCryptoStore alloc] initWithCredentials:self.matrixRestClient.credentials];
+
+        [cryptoStore open:^{
+
+            _crypto = [[MXCrypto alloc] initWithMatrixSession:self andStore:cryptoStore];
+
+            complete();
+
+        } failure:^(NSError *error) {
+            complete();
+        }];
+    }
+    else if ([MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession)
+    {
+        //
+        MXFileCryptoStore *cryptoStore = [MXFileCryptoStore createStoreWithCredentials:self.matrixRestClient.credentials];
+        _crypto = [[MXCrypto alloc] initWithMatrixSession:self andStore:cryptoStore];
+        complete();
+    }
+    else
+#endif
+    {
+        // Else do not enable crypto
+        complete();
+    }
+}
+
+/**
+ If any, start the crypto module.
+
+ @param complete a block called in any case when the operation completes.
+ */
+- (MXHTTPOperation*)startCrypto:(void (^)())success
+                        failure:(void (^)(NSError *error))failure
+{
+    MXHTTPOperation *operation;
+
+#ifdef MX_CRYPTO
+    if (_crypto)
+    {
+        operation = [_crypto start:success failure:failure];
+    }
+    else
+#endif
+    {
+        success();
+    }
+
+    return operation;
+}
+
+- (BOOL)decryptEvent:(MXEvent*)event
+{
+    if (event.eventType == MXEventTypeRoomEncrypted)
+    {
+#ifdef MX_CRYPTO
+        if (_crypto)
+        {
+            NSError *error;
+            event.clearEvent = [_crypto decryptEvent:event error:&error];
+
+            if (!event.clearEvent)
+            {
+                event.decryptionError = error;
+            }
+        }
+        else
+#endif
+        {
+            // Encryption not enabled
+            event.decryptionError = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                                        code:MXDecryptingErrorEncryptionNotEnabledCode
+                                                    userInfo:@{
+                                                               NSLocalizedDescriptionKey: MXDecryptingErrorEncryptionNotEnabledReason
+                                                               }];
+        }
+    }
+
+    return (nil != event.clearEvent);
 }
 
 

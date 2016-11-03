@@ -131,6 +131,17 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
 @property (nonatomic, readonly) MXMembership membership;
 
 /**
+ Indicate whether encryption is enabled for this room.
+ */
+@property (nonatomic, readonly) BOOL isEncrypted;
+
+/**
+ If any the encryption algorithm used in this room.
+ */
+@property (nonatomic, readonly) NSString *encryptionAlgorithm;
+
+
+/**
  Create a `MXRoomState` instance.
  
  @param roomId the room id to the room.
@@ -176,6 +187,14 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
  @param event the state event.
  */
 - (void)handleStateEvent:(MXEvent*)event;
+
+/**
+ Return the state event with the given type.
+ 
+ @param eventType the type of event.
+ @return the state event. Can be nil.
+ */
+- (MXEvent*)stateEventWithType:(MXEventTypeString)eventType;
 
 /**
  Return the member with the given user id.

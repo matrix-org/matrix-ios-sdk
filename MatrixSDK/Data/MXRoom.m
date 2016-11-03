@@ -18,6 +18,7 @@
 
 #import "MXSession.h"
 #import "MXTools.h"
+#import "MXDecryptionResult.h"
 
 #import "MXError.h"
 
@@ -289,8 +290,41 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                             success:(void (^)(NSString *eventId))success
                             failure:(void (^)(NSError *error))failure
 {
+#ifdef MX_CRYPTO
+    if (mxSession.crypto && self.state.isEncrypted)
+    {
+        // Encrypt the content before sending
+        // @TODO: Would be nice to inform user we are encrypting
+        MXHTTPOperation *operation = [mxSession.crypto encryptEventContent:content withType:eventTypeString inRoom:self success:^(NSDictionary *encryptedContent, NSString *encryptedEventType) {
+
+            // Send the encrypted content
+            MXHTTPOperation *operation2 = [self _sendEventOfType:encryptedEventType content:encryptedContent success:success failure:failure];
+
+            // Mutate MXHTTPOperation so that the user can cancel this new operation
+            [operation mutateTo:operation2];
+
+        } failure:^(NSError *error) {
+            NSLog(@"[MXRoom] sendEventOfType: Cannot encrypt event. Error: %@", error);
+            failure(error);
+        }];
+
+        return operation;
+    }
+    else
+#endif
+    {
+        return [self _sendEventOfType:eventTypeString content:content success:success failure:failure];
+    }
+}
+
+- (MXHTTPOperation*)_sendEventOfType:(MXEventTypeString)eventTypeString
+                            content:(NSDictionary*)content
+                            success:(void (^)(NSString *eventId))success
+                            failure:(void (^)(NSError *error))failure
+{
     return [mxSession.matrixRestClient sendEventToRoom:self.roomId eventType:eventTypeString content:content success:success failure:failure];
 }
+
 
 - (MXHTTPOperation*)sendStateEventOfType:(MXEventTypeString)eventTypeString
                                  content:(NSDictionary*)content
@@ -305,14 +339,22 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                               success:(void (^)(NSString *eventId))success
                               failure:(void (^)(NSError *error))failure
 {
-    return [mxSession.matrixRestClient sendMessageToRoom:self.roomId msgType:msgType content:content success:success failure:failure];
+    // Add the messsage type to the data to send
+    NSMutableDictionary *eventContent = [NSMutableDictionary dictionaryWithDictionary:content];
+    eventContent[@"msgtype"] = msgType;
+
+    return [self sendEventOfType:kMXEventTypeStringRoomMessage content:eventContent success:success failure:failure];
 }
 
 - (MXHTTPOperation*)sendTextMessage:(NSString*)text
                             success:(void (^)(NSString *eventId))success
                             failure:(void (^)(NSError *error))failure
 {
-    return [mxSession.matrixRestClient sendTextMessageToRoom:self.roomId text:text success:success failure:failure];
+    return [self sendMessageOfType:kMXMessageTypeText
+                           content:@{
+                                     @"body": text
+                                     }
+                           success:success failure:failure];
 }
 
 - (MXHTTPOperation*)setTopic:(NSString*)topic
@@ -1020,6 +1062,49 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     }
     
     return receipts;
+}
+
+
+#pragma mark - Crypto
+
+- (MXHTTPOperation *)enableEncryptionWithAlgorithm:(NSString *)algorithm
+                                           success:(void (^)())success failure:(void (^)(NSError *))failure
+{
+    MXHTTPOperation *operation;
+
+#ifdef MX_CRYPTO
+    if (mxSession.crypto)
+    {
+        // Send the information to the homeserver
+        operation = [self sendStateEventOfType:kMXEventTypeStringRoomEncryption
+                                  content:@{
+                                            @"algorithm": algorithm
+                                            }
+                                  success:nil
+                                  failure:failure];
+
+        // Wait for the event coming back from the hs
+        id eventBackListener = [_liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+            [_liveTimeline removeListener:eventBackListener];
+
+            // Dispatch to let time to MXCrypto to digest the m.room.encryption event
+            dispatch_async(dispatch_get_main_queue(), ^{
+                success();
+            });
+        }];
+    }
+    else
+#endif
+    {
+        failure([NSError errorWithDomain:MXDecryptingErrorDomain
+                                    code:MXDecryptingErrorEncryptionNotEnabledCode
+                                userInfo:@{
+                                           NSLocalizedDescriptionKey: MXDecryptingErrorEncryptionNotEnabledReason
+                                           }]);
+    }
+
+    return operation;
 }
 
 

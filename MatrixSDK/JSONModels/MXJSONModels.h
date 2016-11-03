@@ -17,8 +17,9 @@
 #import <Foundation/Foundation.h>
 
 #import "MXJSONModel.h"
+#import "MXUsersDevicesMap.h"
 
-@class MXEvent;
+@class MXEvent, MXDeviceInfo, MXKey;
 
 /**
  This file contains definitions of basic JSON responses or objects received
@@ -168,6 +169,11 @@ FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeEmailCode; // Deprecated
      The access token to create a MXRestClient
      */
     @property (nonatomic) NSString *accessToken;
+
+    /**
+     The device id.
+     */
+    @property (nonatomic) NSString *deviceId;
 
     /**
      The server certificate trusted by the user (nil when the server is trusted by the device).
@@ -1126,6 +1132,18 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @end
 
 /**
+ `MXToDeviceSyncResponse` represents the data directly sent to one of user's devices.
+ */
+@interface MXToDeviceSyncResponse : MXJSONModel
+
+    /**
+     List of direct-to-device events.
+     */
+@property (nonatomic) NSArray<MXEvent*> *events;
+
+@end
+
+/**
  `MXSyncResponse` represents the request response for server sync.
  */
 @interface MXSyncResponse : MXJSONModel
@@ -1144,6 +1162,11 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
      The updates to the presence status of other users.
      */
     @property (nonatomic) MXPresenceSyncResponse *presence;
+
+    /**
+     Data directly sent to one of user's devices.
+     */
+    @property (nonatomic) MXToDeviceSyncResponse *toDevice;
 
     /**
      List of rooms.
@@ -1324,6 +1347,61 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
      based on the device clock.
      */
     @property (nonatomic) uint64_t ttlExpirationLocalTs;
+@end
+
+
+#pragma mark - Crypto
+/**
+ `MXKeysUploadResponse` represents the response to /keys/upload request made by
+ [MXRestClient uploadKeys].
+ */
+@interface MXKeysUploadResponse : MXJSONModel
+
+/**
+ The count per algorithm as returned by the homeserver: a map (algorithm->count).
+ */
+@property (nonatomic) NSDictionary<NSString*, NSNumber*> *oneTimeKeyCounts;
+
+/**
+ Helper methods to extract information from 'oneTimeKeyCounts'.
+ */
+- (NSUInteger)oneTimeKeyCountsForAlgorithm:(NSString*)algorithm;
+
+@end
+
+/**
+ `MXKeysQueryResponse` represents the response to /keys/query request made by
+ [MXRestClient downloadKeysForUsers].
+ */
+@interface MXKeysQueryResponse : MXJSONModel
+
+    /**
+      The device keys per devices per users.
+     */
+    @property (nonatomic) MXUsersDevicesMap<MXDeviceInfo*> *deviceKeys;
+
+@end
+
+/**
+ `MXKeysClaimResponse` represents the response to /keys/claim request made by
+ [MXRestClient claimOneTimeKeysForUsersDevices].
+ */
+@interface MXKeysClaimResponse : MXJSONModel
+
+    /**
+     The requested keys ordered by device by user.
+     */
+    @property (nonatomic) MXUsersDevicesMap<MXKey*> *oneTimeKeys;
+
+    /**
+     If any remote homeservers could not be reached, they are recorded here. 
+     The names of the properties are the names of the unreachable servers.
+
+     If the homeserver could be reached, but the user or device was unknown, 
+     no failure is recorded. 
+     Instead, the corresponding user or device is missing from the one_time_keys result.
+     */
+    @property (nonatomic) NSDictionary *failures;
 
 @end
 

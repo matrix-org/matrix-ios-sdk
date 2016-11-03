@@ -5,6 +5,10 @@ source 'https://github.com/CocoaPods/Specs.git'
 
 target "MatrixSDK" do
 pod 'AFNetworking', '~> 3.1.0'
+
+#pod 'OLMKit', '1.3.0'
+#pod 'OLMKit', :path => '../olm/OLMKit.podspec'
+
 end
 
 target "MatrixSDKTests" do

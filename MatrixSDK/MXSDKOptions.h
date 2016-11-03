@@ -14,6 +14,49 @@
  limitations under the License.
  */
 
+#import <Foundation/Foundation.h>
+
+
+#pragma mark - Build time options
+
+#pragma mark Automatic enabling
+/**
+ These flags are automatically enabled if the application Xcode workspace contains
+ their associated Cocoa pods.
+ */
+
+/**
+ VoIP with libjingle.
+
+ Application can use the libjingle build pod provided at
+ https://github.com/Anakros/WebRTC.git :
+
+     pod 'WebRTC'
+ */
+
+#if __has_include(<WebRTC/RTCPeerConnection.h>)
+#define MX_CALL_STACK_JINGLE
+#endif
+
+/**
+ Crypto.
+
+ The crypto module depends on libolm (https://matrix.org/git/olm/ ), which the iOS wrapper
+ is OLMKit:
+
+     pod 'OLMKit'
+ */
+
+#if __has_include(<OLMKit/OLMKit.h>)
+#define MX_CRYPTO
+#endif
+
+
+#pragma mark - Runtime options
+
+/**
+ SDK options that can be set at runtime.
+ */
 @interface MXSDKOptions : NSObject
 
 + (MXSDKOptions *)sharedInstance;
@@ -25,5 +68,11 @@
  Use this property to disable identicon use at SDK level. NO by default.
  */
 @property (nonatomic) BOOL disableIdenticonUseForUserAvatar;
+
+/**
+ Automatically enable crypto starting a new MXSession.
+ NO by default.
+ */
+@property (nonatomic) BOOL enableCryptoWhenStartingMXSession;
 
 @end

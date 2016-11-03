@@ -250,7 +250,7 @@ MXAuthAction;
         return nil;
     }
 
-    return [self getRegisterSession:^(MXAuthenticationSession *authSession) {
+    MXHTTPOperation *operation = [self getRegisterSession:^(MXAuthenticationSession *authSession) {
 
         NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:
                                            @{
@@ -265,27 +265,31 @@ MXAuthAction;
             parameters[@"username"] = username;
         }
 
-        [self registerWithParameters: parameters
-                             success:^(NSDictionary *JSONResponse) {
+        MXHTTPOperation *operation2 = [self registerWithParameters: parameters success:^(NSDictionary *JSONResponse) {
 
-                                 // Update our credentials
-                                 self.credentials = [MXCredentials modelFromJSON:JSONResponse];
+            // Update our credentials
+            self.credentials = [MXCredentials modelFromJSON:JSONResponse];
 
-                                 // Workaround: HS does not return the right URL. Use the one we used to make the request
-                                 credentials.homeServer = homeserver;
+            // Workaround: HS does not return the right URL. Use the one we used to make the request
+            credentials.homeServer = homeserver;
 
-                                 // Report the certificate trusted by user (if any)
-                                 credentials.allowedCertificate = httpClient.allowedCertificate;
+            // Report the certificate trusted by user (if any)
+            credentials.allowedCertificate = httpClient.allowedCertificate;
 
-                                 // sanity check
-                                 if (success)
-                                 {
-                                     success(credentials);
-                                 }
+            // sanity check
+            if (success)
+            {
+                success(credentials);
+            }
 
-                             } failure:failure];
+        } failure:failure];
+
+        // Mutate MXHTTPOperation so that the user can cancel this new operation
+        [operation mutateTo:operation2];
 
     } failure:failure];
+
+    return operation;
 }
 
 - (NSString*)registerFallback;
@@ -3059,6 +3063,156 @@ MXAuthAction;
                                  };
 
     return [self search:parameters nextBatch:nextBatch success:success failure:failure];
+}
+
+
+#pragma mark - Crypto
+- (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys oneTimeKeys:(NSDictionary*)oneTimeKeys
+                     forDevice:(NSString*)deviceId
+                       success:(void (^)(MXKeysUploadResponse *keysUploadResponse))success
+                       failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/keys/upload", kMXAPIPrefixPathUnstable];
+    if (deviceId)
+    {
+        path = [NSString stringWithFormat:@"%@/%@", path, [deviceId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    }
+
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+    if (deviceKeys)
+    {
+        parameters[@"device_keys"] = deviceKeys;
+    }
+    if (oneTimeKeys)
+    {
+        parameters[@"one_time_keys"] = oneTimeKeys;
+    }
+
+    return [httpClient requestWithMethod:@"POST"
+                                    path: path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+
+                                     // Use here the processing queue in order to keep the server response order
+                                     dispatch_async(processingQueue, ^{
+
+                                        MXKeysUploadResponse *keysUploadResponse =  [MXKeysUploadResponse modelFromJSON:JSONResponse];
+
+                                         dispatch_async(dispatch_get_main_queue(), ^{
+
+                                             if (success)
+                                             {
+                                                 success(keysUploadResponse);
+                                             }
+                                         });
+                                     });
+                                 }
+                                 failure:failure];
+}
+
+- (MXHTTPOperation*)downloadKeysForUsers:(NSArray<NSString*>*)userIds
+                                 success:(void (^)(MXKeysQueryResponse *keysQueryResponse))success
+                                 failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/keys/query", kMXAPIPrefixPathUnstable];
+
+    NSMutableDictionary *downloadQuery = [NSMutableDictionary dictionary];
+    for (NSString *userID in userIds)
+    {
+        downloadQuery[userID] = @{};
+    }
+
+    NSDictionary *parameters = @{
+                                 @"device_keys": downloadQuery
+                                 };
+
+    return [httpClient requestWithMethod:@"POST"
+                                    path: path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+
+                                     dispatch_async(processingQueue, ^{
+
+                                         MXKeysQueryResponse *keysQueryResponse = [MXKeysQueryResponse modelFromJSON:JSONResponse];
+
+                                         dispatch_async(dispatch_get_main_queue(), ^{
+
+                                             if (success)
+                                             {
+                                                 success(keysQueryResponse);
+                                             }
+                                         });
+                                     });
+                                 }
+                                 failure:failure];
+}
+
+- (MXHTTPOperation *)claimOneTimeKeysForUsersDevices:(MXUsersDevicesMap<NSString *> *)usersDevicesKeyTypesMap success:(void (^)(MXKeysClaimResponse *))success failure:(void (^)(NSError *))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/keys/claim", kMXAPIPrefixPathUnstable];
+
+    NSDictionary *parameters = @{
+                                 @"one_time_keys": usersDevicesKeyTypesMap.map
+                                 };
+
+
+    return [httpClient requestWithMethod:@"POST"
+                                    path: path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+
+                                     dispatch_async(processingQueue, ^{
+
+                                         MXKeysClaimResponse *keysClaimResponse = [MXKeysClaimResponse modelFromJSON:JSONResponse];
+
+                                         dispatch_async(dispatch_get_main_queue(), ^{
+
+                                             if (success)
+                                             {
+                                                 success(keysClaimResponse);
+                                             }
+                                         });
+                                     });
+                                 }
+                                 failure:failure];
+}
+
+
+#pragma mark - Direct-to-device messaging
+- (MXHTTPOperation *)sendToDevice:(NSString *)eventType contentMap:(MXUsersDevicesMap<NSDictionary *> *)contentMap
+                          success:(void (^)())success failure:(void (^)(NSError *))failure
+{
+    // Prepare the path by adding a random transaction id (This id is used to prevent duplicated event).
+    NSString *path = [NSString stringWithFormat:@"%@/sendToDevice/%@/%tu", kMXAPIPrefixPathUnstable, eventType, arc4random_uniform(INT32_MAX)];
+
+    NSDictionary *content = @{
+                              @"messages": contentMap.map
+                              };
+
+    return [httpClient requestWithMethod:@"PUT"
+                                    path:path
+                              parameters:content
+                                 success:^(NSDictionary *JSONResponse) {
+
+                                     if (success)
+                                     {
+                                         // Use here the processing queue in order to keep the server response order
+                                         dispatch_async(processingQueue, ^{
+
+                                             dispatch_async(dispatch_get_main_queue(), ^{
+
+                                                 success();
+
+                                             });
+                                         });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                 }];
 }
 
 @end

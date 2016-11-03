@@ -1551,4 +1551,68 @@ typedef enum : NSUInteger
                    success:(void (^)(MXSearchRoomEventResults *roomEventResults))success
                    failure:(void (^)(NSError *error))failure;
 
+
+#pragma mark - Crypto
+/**
+ Upload device and/or one-time keys.
+
+ @param deviceKeys the device keys to send.
+ @param oneTimeKeys the one-time keys to send.
+ @param deviceId the explicit device_id to use for upload
+        (default is to use the same as that used during auth).
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys oneTimeKeys:(NSDictionary*)oneTimeKeys
+                     forDevice:(NSString*)deviceId
+                       success:(void (^)(MXKeysUploadResponse *keysUploadResponse))success
+                       failure:(void (^)(NSError *error))failure;
+
+/**
+ Download device keys.
+
+ @param userIds list of users to get keys for.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)downloadKeysForUsers:(NSArray<NSString*>*)userIds
+                                 success:(void (^)(MXKeysQueryResponse *keysQueryResponse))success
+                                 failure:(void (^)(NSError *error))failure;
+
+/**
+ * Claim one-time keys.
+
+ @param usersDevicesKeyTypesMap a list of users, devices and key types to retrieve keys for.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)claimOneTimeKeysForUsersDevices:(MXUsersDevicesMap<NSString*>*)usersDevicesKeyTypesMap
+                                            success:(void (^)(MXKeysClaimResponse *keysClaimResponse))success
+                                            failure:(void (^)(NSError *error))failure;
+
+
+#pragma mark - Direct-to-device messaging
+/**
+ Send an event to a specific list of devices
+
+ @param eventType the type of event to send
+ @param contentMap content to send. Map from user_id to device_id to content dictionary.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)sendToDevice:(NSString*)eventType contentMap:(MXUsersDevicesMap<NSDictionary*>*)contentMap
+                         success:(void (^)())success
+                         failure:(void (^)(NSError *error))failure;
 @end

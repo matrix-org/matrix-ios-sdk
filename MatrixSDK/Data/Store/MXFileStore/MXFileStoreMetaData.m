@@ -44,7 +44,7 @@
                                   @"homeServer": _homeServer,
                                   @"userId": _userId,
                                   @"accessToken": _accessToken,
-                                  @"version": [NSNumber numberWithUnsignedInteger:_version]
+                                  @"version": @(_version),
                                   }];
 
     if (_eventStreamToken)
@@ -69,7 +69,7 @@
     metaData->_version = _version;
     metaData->_eventStreamToken = [_eventStreamToken copyWithZone:zone];
     metaData->_userAccountData = [_userAccountData copyWithZone:zone];
-
+ 
     return metaData;
 }
 

@@ -18,6 +18,9 @@
 
 #import "MXEvent.h"
 #import "MXTools.h"
+#import "MXUsersDevicesMap.h"
+#import "MXDeviceInfo.h"
+#import "MXKey.h"
 
 @implementation MXPublicRoom
 
@@ -121,6 +124,7 @@ NSString *const kMXLoginFlowTypeEmailCode = @"m.login.email.code";
         MXJSONModelSetString(credentials.homeServer, JSONDictionary[@"home_server"]);
         MXJSONModelSetString(credentials.userId, JSONDictionary[@"user_id"]);
         MXJSONModelSetString(credentials.accessToken, JSONDictionary[@"access_token"]);
+        MXJSONModelSetString(credentials.deviceId, JSONDictionary[@"device_id"]);
     }
 
     return credentials;
@@ -992,6 +996,20 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 
 @end
 
+@implementation MXToDeviceSyncResponse
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXToDeviceSyncResponse *toDeviceSyncResponse = [[MXToDeviceSyncResponse alloc] init];
+    if (toDeviceSyncResponse)
+    {
+        MXJSONModelSetMXJSONModelArray(toDeviceSyncResponse.events, MXEvent, JSONDictionary[@"events"]);
+    }
+    return toDeviceSyncResponse;
+}
+
+@end
+
 @implementation MXRoomsSyncResponse
 
 // Override the default Mantle modelFromJSON method to convert room lists.
@@ -1039,6 +1057,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         MXJSONModelSetDictionary(syncResponse.accountData, JSONDictionary[@"account_data"])
         MXJSONModelSetString(syncResponse.nextBatch, JSONDictionary[@"next_batch"]);
         MXJSONModelSetMXJSONModel(syncResponse.presence, MXPresenceSyncResponse, JSONDictionary[@"presence"]);
+        MXJSONModelSetMXJSONModel(syncResponse.toDevice, MXToDeviceSyncResponse, JSONDictionary[@"to_device"]);
         MXJSONModelSetMXJSONModel(syncResponse.rooms, MXRoomsSyncResponse, JSONDictionary[@"rooms"]);
     }
 
@@ -1215,6 +1234,106 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         ttl = (NSUInteger)(_ttlExpirationLocalTs / 1000 - (uint64_t)[[NSDate date] timeIntervalSince1970]);
     }
     return ttl;
+}
+
+@end
+
+
+#pragma mark - Crypto
+
+@implementation MXKeysUploadResponse
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXKeysUploadResponse *keysUploadResponse = [[MXKeysUploadResponse alloc] init];
+    if (keysUploadResponse)
+    {
+        MXJSONModelSetDictionary(keysUploadResponse.oneTimeKeyCounts, JSONDictionary[@"one_time_key_counts"]);
+    }
+    return keysUploadResponse;
+}
+
+- (NSUInteger)oneTimeKeyCountsForAlgorithm:(NSString *)algorithm
+{
+    return [((NSNumber*)_oneTimeKeyCounts[algorithm]) unsignedIntegerValue];
+}
+
+@end
+
+@implementation MXKeysQueryResponse
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXKeysQueryResponse *keysQueryResponse = [[MXKeysQueryResponse alloc] init];
+    if (keysQueryResponse)
+    {
+        NSMutableDictionary *map = [NSMutableDictionary dictionary];
+
+        if ([JSONDictionary isKindOfClass:NSDictionary.class])
+        {
+            for (NSString *userId in JSONDictionary[@"device_keys"])
+            {
+                if ([JSONDictionary[@"device_keys"][userId] isKindOfClass:NSDictionary.class])
+                {
+                    for (NSString *deviceId in JSONDictionary[@"device_keys"][userId])
+                    {
+                        MXDeviceInfo *deviceInfo;
+                        MXJSONModelSetMXJSONModel(deviceInfo, MXDeviceInfo, JSONDictionary[@"device_keys"][userId][deviceId]);
+
+                        if (!map[userId])
+                        {
+                            map[userId] = [NSMutableDictionary dictionary];
+                        }
+                        map[userId][deviceId] = deviceInfo;
+                    }
+                }
+            }
+        }
+
+        keysQueryResponse.deviceKeys = [[MXUsersDevicesMap<MXDeviceInfo*> alloc] initWithMap:map];
+    }
+
+    return keysQueryResponse;
+}
+
+@end
+
+@implementation MXKeysClaimResponse
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXKeysClaimResponse *keysClaimResponse = [[MXKeysClaimResponse alloc] init];
+    if (keysClaimResponse)
+    {
+        NSMutableDictionary *map = [NSMutableDictionary dictionary];
+
+        if ([JSONDictionary isKindOfClass:NSDictionary.class])
+        {
+            for (NSString *userId in JSONDictionary[@"one_time_keys"])
+            {
+                if ([JSONDictionary[@"one_time_keys"][userId] isKindOfClass:NSDictionary.class])
+                {
+                    for (NSString *deviceId in JSONDictionary[@"one_time_keys"][userId])
+                    {
+                        MXKey *key;
+                        MXJSONModelSetMXJSONModel(key, MXKey, JSONDictionary[@"one_time_keys"][userId][deviceId]);
+
+                        if (!map[userId])
+                        {
+                            map[userId] = [NSMutableDictionary dictionary];
+                        }
+                        map[userId][deviceId] = key;
+                    }
+                }
+            }
+        }
+
+        keysClaimResponse.oneTimeKeys = [[MXUsersDevicesMap<MXKey*> alloc] initWithMap:map];
+
+        MXJSONModelSetDictionary(keysClaimResponse.failures, JSONDictionary[@"failures"]);
+    }
+    
+    return keysClaimResponse;
 }
 
 @end
