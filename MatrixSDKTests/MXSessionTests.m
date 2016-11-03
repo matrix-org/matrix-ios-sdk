@@ -759,12 +759,18 @@
                     
                     XCTAssertTrue(succeed);
                     
-                    // TODO Check whether both members have the same power level (trusted_private_chat preset)
-                    
                     // Force sync to get direct rooms list
                     [mxSession startWithMessagesLimit:0 onServerSyncDone:^{
                         
                         XCTAssertTrue(room.isDirect);
+                        
+                        // Check whether both members have the same power level (trusted_private_chat preset)
+                        MXRoomPowerLevels *roomPowerLevels = room.state.powerLevels;
+                        
+                        XCTAssertNotNil(roomPowerLevels);
+                        NSUInteger powerlLevel1 = [roomPowerLevels powerLevelOfUserWithUserID:mxSession.myUser.userId];
+                        NSUInteger powerlLevel2 = [roomPowerLevels powerLevelOfUserWithUserID:matrixSDKTestsData.aliceCredentials.userId];
+                        XCTAssertEqual(powerlLevel1, powerlLevel2, @"The members must have the same power level");
                         
                         [expectation fulfill];
                         
