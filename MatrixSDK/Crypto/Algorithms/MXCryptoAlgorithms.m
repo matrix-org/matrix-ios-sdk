@@ -16,12 +16,6 @@
 
 #import "MXCryptoAlgorithms.h"
 
-
-#pragma mark - Constants definitions
-NSString *const kMXCryptoOlmAlgorithm = @"m.olm.v1.curve25519-aes-sha2";
-NSString *const kMXCryptoMegolmAlgorithm = @"m.megolm.v1.aes-sha2";
-
-
 @interface MXCryptoAlgorithms ()
 {
     NSMutableDictionary<NSString*, Class<MXEncrypting>> *encryptors;

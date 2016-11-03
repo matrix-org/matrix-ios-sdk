@@ -16,19 +16,9 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MXCryptoConstants.h"
 #import "MXEncrypting.h"
 #import "MXDecrypting.h"
-
-#pragma mark - Constants definitions
-/**
- Matrix algorithm tag for olm.
- */
-FOUNDATION_EXPORT NSString *const kMXCryptoOlmAlgorithm;
-
-/**
- Matrix algorithm tag for megolm.
- */
-FOUNDATION_EXPORT NSString *const kMXCryptoMegolmAlgorithm;
 
 
 @interface MXCryptoAlgorithms : NSObject

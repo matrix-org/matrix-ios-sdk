@@ -26,7 +26,7 @@
 #import "MXCall.h"
 #import "MXEventTimeline.h"
 #import "MXEventsEnumerator.h"
-#import "MXCryptoAlgorithms.h"
+#import "MXCryptoConstants.h"
 
 @class MXRoom;
 @class MXSession;
