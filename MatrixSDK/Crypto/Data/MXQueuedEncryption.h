@@ -33,8 +33,8 @@
 /**
  The blocks to call when the encryption is processed.
  */
-@property (nonatomic) void (^success)(NSDictionary *encryptedContent);
-@property (nonatomic) void (^failure)(NSError *error);
+@property (nonatomic, strong) void (^success)(NSDictionary *encryptedContent);
+@property (nonatomic, strong) void (^failure)(NSError *error);
 
 @end
 
