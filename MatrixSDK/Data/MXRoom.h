@@ -769,6 +769,13 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
                                           success:(void (^)())success
                                           failure:(void (^)(NSError *error))failure;
 
+/**
+ Return the device information for an encrypted event.
+ 
+ @param event The event.
+ @return the device info if any.
+ */
+- (MXDeviceInfo*)eventDeviceInfo:(MXEvent*)event;
 
 #pragma mark - Utils
 
