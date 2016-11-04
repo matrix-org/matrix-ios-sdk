@@ -794,17 +794,17 @@
     }];
 }
 
-- (void)testPrivateOneToOneRoomWithUserId
+- (void)testPrivateDirectRoomWithUserId
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         mxSession = bobSession;
         
-        MXRoom *mxRoom1 = [mxSession privateOneToOneRoomWithUserId:aliceRestClient.credentials.userId];
+        MXRoom *mxRoom1 = [mxSession directJoinedRoomWithUserId:aliceRestClient.credentials.userId];
         XCTAssertEqualObjects(mxRoom1.state.roomId, roomId, @"We should retrieve the last created room");
         
         [mxSession leaveRoom:roomId success:^{
-            MXRoom *mxRoom2 = [mxSession privateOneToOneRoomWithUserId:aliceRestClient.credentials.userId];
+            MXRoom *mxRoom2 = [mxSession directJoinedRoomWithUserId:aliceRestClient.credentials.userId];
             if (mxRoom2) {
                 XCTAssertNotEqualObjects(mxRoom2.state.roomId, roomId, @"We should not retrieve the left room");
             }
