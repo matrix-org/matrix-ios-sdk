@@ -192,7 +192,7 @@
         // these factors.
 
         // We first find how many keys the server has for us.
-        NSUInteger keyCount = [keysUploadResponse oneTimeKeyCountsForAlgorithm:@"curve25519"];
+        NSUInteger keyCount = [keysUploadResponse oneTimeKeyCountsForAlgorithm:@"signed_curve25519"];
 
         // We then check how many keys we can store in the Account object.
         CGFloat maxOneTimeKeys = _olmDevice.maxNumberOfOneTimeKeys;
@@ -512,7 +512,7 @@
     MXUsersDevicesMap<NSString*> *usersDevicesToClaim = [[MXUsersDevicesMap<NSString*> alloc] init];
     for (MXDeviceInfo *device in devicesWithoutSession)
     {
-        [usersDevicesToClaim setObject:kMXKeyCurve25519Type forUser:device.userId andDevice:device.deviceId];
+        [usersDevicesToClaim setObject:kMXKeySignedCurve25519Type forUser:device.userId andDevice:device.deviceId];
     }
 
     // TODO: this has a race condition - if we try to send another message
@@ -533,15 +533,27 @@
             {
                 MXKey *key = [keysClaimResponse.oneTimeKeys objectForDevice:deviceId forUser:userId];
 
-                if ([key.type isEqualToString:kMXKeyCurve25519Type])
+                if ([key.type isEqualToString:kMXKeySignedCurve25519Type])
                 {
-                    // Update the result for this device in results
                     MXOlmSessionResult *olmSessionResult = [results objectForDevice:deviceId forUser:userId];
                     MXDeviceInfo *device = olmSessionResult.device;
 
-                    olmSessionResult.sessionId = [_olmDevice createOutboundSession:device.identityKey theirOneTimeKey:key.value];
+                    NSString *signKeyId = [NSString stringWithFormat:@"ed25519:%@", deviceId];
+                    NSString *signature = [key.signatures objectForDevice:signKeyId forUser:userId];
 
-                    NSLog(@"[MXCrypto] Started new sessionid %@ for device %@ (theirOneTimeKey: %@)", olmSessionResult.sessionId, device, key.value);
+                    // Check one-time key signature
+                    NSError *error;
+                    if ([_olmDevice verifySignature:device.fingerprint JSON:key.signalableJSONDictionary signature:signature error:&error])
+                    {
+                        // Update the result for this device in results
+                        olmSessionResult.sessionId = [_olmDevice createOutboundSession:device.identityKey theirOneTimeKey:key.value];
+
+                        NSLog(@"[MXCrypto] Started new sessionid %@ for device %@ (theirOneTimeKey: %@)", olmSessionResult.sessionId, device, key.value);
+                    }
+                    else
+                    {
+                        NSLog(@"[MXCrypto] Unable to verify signature on one-time key for device %@:%@. Error: %@", userId, deviceId, error);
+                    }
                 }
                 else
                 {
@@ -977,7 +989,17 @@
 
     for (NSString *keyId in oneTimeKeys[@"curve25519"])
     {
-        oneTimeJson[[NSString stringWithFormat:@"curve25519:%@", keyId]] = oneTimeKeys[@"curve25519"][keyId];
+        // Sign each one-time key
+        NSMutableDictionary *k = [NSMutableDictionary dictionary];
+        k[@"key"] = oneTimeKeys[@"curve25519"][keyId];
+
+        k[@"signatures"] = @{
+                             myDevice.userId: @{
+                                     [NSString stringWithFormat:@"ed25519:%@", myDevice.deviceId]: [_olmDevice signJSON:k]
+                                     }
+                             };
+
+        oneTimeJson[[NSString stringWithFormat:@"signed_curve25519:%@", keyId]] = k;
     }
 
     // For now, we set the device id explicitly, as we may not be using the
