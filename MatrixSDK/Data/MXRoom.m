@@ -1107,6 +1107,17 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     return operation;
 }
 
+- (MXDeviceInfo*)eventDeviceInfo:(MXEvent*)event
+{
+#ifdef MX_CRYPTO
+    if (mxSession.crypto && event.isEncrypted)
+    {
+        return [mxSession.crypto deviceWithIdentityKey:event.senderKey forUser:event.sender andAlgorithm:self.state.encryptionAlgorithm];
+    }
+#endif
+    
+    return nil;
+}
 
 #pragma mark - Utils
 - (NSComparisonResult)compareOriginServerTs:(MXRoom *)otherRoom
