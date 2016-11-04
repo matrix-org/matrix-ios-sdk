@@ -299,7 +299,7 @@
                     MXDeviceInfo *previouslyStoredDeviceKeys = [stored objectForDevice:deviceId forUser:userId];
 
                     // Validate received keys
-                    if (![self validateDeviceKeys:devices[deviceId] forUser:userId previouslyStoredDeviceKeys:previouslyStoredDeviceKeys])
+                    if (![self validateDeviceKeys:devices[deviceId] forUser:userId andDevice:deviceId previouslyStoredDeviceKeys:previouslyStoredDeviceKeys])
                     {
                         // New device keys are not valid. Do not store them
                         [devices removeObjectForKey:deviceId];
@@ -999,14 +999,27 @@
 
  @param the device keys to validate.
  @param the id of the user of the device.
+ @param the id of the device.
  @param previouslyStoredDeviceKeys the device keys we received before for this device
  @return YES if valid.
  */
-- (BOOL)validateDeviceKeys:(MXDeviceInfo*)deviceKeys forUser:(NSString*)userId previouslyStoredDeviceKeys:(MXDeviceInfo*)previouslyStoredDeviceKeys
+- (BOOL)validateDeviceKeys:(MXDeviceInfo*)deviceKeys forUser:(NSString*)userId andDevice:(NSString*)deviceId previouslyStoredDeviceKeys:(MXDeviceInfo*)previouslyStoredDeviceKeys
 {
     if (!deviceKeys.keys)
     {
         // no keys?
+        return NO;
+    }
+
+    // Check that the user_id and device_id in the received deviceKeys are correct
+    if (![deviceKeys.userId isEqualToString:userId])
+    {
+        NSLog(@"[MXCrypto] validateDeviceKeys: Mismatched user_id %@ in keys from %@:%@", deviceKeys.userId, userId, deviceId);
+        return NO;
+    }
+    if (![deviceKeys.deviceId isEqualToString:deviceId])
+    {
+        NSLog(@"[MXCrypto] validateDeviceKeys: Mismatched device_id %@ in keys from %@:%@", deviceKeys.deviceId, userId, deviceId);
         return NO;
     }
 
