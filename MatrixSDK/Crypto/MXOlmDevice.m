@@ -289,7 +289,10 @@
         // the HS pretending a message was targeting a different room.
         if ([roomId isEqualToString:session.roomId])
         {
-            NSString *payloadString = [session.session decryptMessage:body];
+            // TODO: Manage messageIndex to detect replay attacks
+            // https://github.com/matrix-org/matrix-ios-sdk/issues/162
+            NSUInteger messageIndex;
+            NSString *payloadString = [session.session decryptMessage:body messageIndex:&messageIndex];
 
             [store storeInboundGroupSession:session];
 
