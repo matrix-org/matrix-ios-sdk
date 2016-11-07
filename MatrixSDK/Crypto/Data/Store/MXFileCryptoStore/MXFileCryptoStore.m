@@ -68,7 +68,7 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 
 + (BOOL)hasDataForCredentials:(MXCredentials *)credentials
 {
-    BOOL hasDataForCredentials;
+    BOOL hasDataForCredentials = NO;
     NSString *storePath = [MXFileCryptoStore storePathForCredentials:credentials];
 
     if ([NSFileManager.defaultManager fileExistsAtPath:storePath])
