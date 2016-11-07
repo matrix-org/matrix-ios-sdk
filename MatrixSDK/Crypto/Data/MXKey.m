@@ -17,6 +17,7 @@
 #import "MXKey.h"
 
 NSString *const kMXKeyCurve25519Type = @"curve25519";
+NSString *const kMXKeySignedCurve25519Type = @"signed_curve25519";
 NSString *const kMXKeyEd25519Type = @"ed25519";
 
 @implementation MXKey
@@ -62,7 +63,8 @@ NSString *const kMXKeyEd25519Type = @"ed25519";
     if (key)
     {
         MXJSONModelSetString(key.keyFullId, JSONDictionary.allKeys[0]);
-        MXJSONModelSetString(key.value, JSONDictionary.allValues[0]);
+        MXJSONModelSetString(key.value, JSONDictionary[key.keyFullId][@"key"]);
+        key.signatures = [[MXUsersDevicesMap<NSString*> alloc] initWithMap:JSONDictionary[key.keyFullId][@"signatures"]];
     }
 
     return key;
@@ -80,6 +82,13 @@ NSString *const kMXKeyEd25519Type = @"ed25519";
                            };
     }
     return JSONDictionary;
+}
+
+- (NSDictionary *)signalableJSONDictionary
+{
+    return @{
+             @"key": _value
+             };
 }
 
 - (NSString *)description

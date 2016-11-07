@@ -16,10 +16,13 @@
 
 #import "MXJSONModel.h"
 
+#import "MXUsersDevicesMap.h"
+
 /**
  Key types.
  */
 FOUNDATION_EXPORT NSString *const kMXKeyCurve25519Type;
+FOUNDATION_EXPORT NSString *const kMXKeySignedCurve25519Type;
 FOUNDATION_EXPORT NSString *const kMXKeyEd25519Type;
 
 /**
@@ -48,6 +51,17 @@ FOUNDATION_EXPORT NSString *const kMXKeyEd25519Type;
  */
 @property (nonatomic) NSString *keyFullId;
 
+/**
+ Signatures by userId by deviceId (well, this is "<key_type:device_id>" which is almost the same).
+ */
+@property (nonatomic) MXUsersDevicesMap<NSString*> *signatures;
+
 - (instancetype)initWithType:(NSString*)type keyId:(NSString*)keyId value:(NSString*)value;
+
+/**
+ Same as the parent [MXJSONModel JSONDictionary] but return only
+ data that must be signed.
+ */
+@property (nonatomic, readonly) NSDictionary *signalableJSONDictionary;
 
 @end
