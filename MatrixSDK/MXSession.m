@@ -666,6 +666,13 @@ typedef void (^MXOnResumeDone)();
             [self handleAccountData:syncResponse.accountData];
         }
         
+        // Handle the to device events before the room ones
+        // to ensure to decrypt them properly
+        for (MXEvent *toDeviceEvent in syncResponse.toDevice.events)
+        {
+            [self handleToDeviceEvent:toDeviceEvent];
+        }
+        
         // Handle first joined rooms
         for (NSString *roomId in syncResponse.rooms.join)
         {
@@ -778,12 +785,6 @@ typedef void (^MXOnResumeDone)();
                     }];
                 }
             }
-        }
-
-        // Handle direct messages to device
-        for (MXEvent *toDeviceEvent in syncResponse.toDevice.events)
-        {
-            [self handleToDeviceEvent:toDeviceEvent];
         }
         
         // Update live event stream token
