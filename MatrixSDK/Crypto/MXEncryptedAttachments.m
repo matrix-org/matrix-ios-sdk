@@ -107,7 +107,8 @@
         if (plainBuf == nil || plainBuf.length == 0) break;
         
         if (buflen < plainBuf.length) {
-            outbuf = realloc(outbuf, plainBuf.length);
+            buflen = plainBuf.length;
+            outbuf = realloc(outbuf, buflen);
         }
         
         size_t outLen;
@@ -117,6 +118,7 @@
             CCCryptorRelease(cryptor);
             err = [NSError errorWithDomain:MXEncryptedAttachmentsErrorDomain code:0 userInfo:nil];
             failure(err);
+            return;
         }
         CC_SHA256_Update(&sha256ctx, outbuf, outLen);
         [ciphertext appendBytes:outbuf length:outLen];
