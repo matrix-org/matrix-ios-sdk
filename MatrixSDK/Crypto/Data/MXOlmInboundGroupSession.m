@@ -25,7 +25,11 @@
     self = [self init];
     if (self)
     {
-        _session  = [[OLMInboundGroupSession alloc] initInboundGroupSessionWithSessionKey:sessionKey];
+        _session  = [[OLMInboundGroupSession alloc] initInboundGroupSessionWithSessionKey:sessionKey error:nil];
+        if (!_session)
+        {
+            return nil;
+        }
     }
     return self;
 }

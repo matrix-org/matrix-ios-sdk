@@ -120,22 +120,34 @@
 
 - (NSString *)createOutboundSession:(NSString *)theirIdentityKey theirOneTimeKey:(NSString *)theirOneTimeKey
 {
+    NSError *error;
+
     NSLog(@">>>> createOutboundSession: theirIdentityKey: %@ theirOneTimeKey: %@", theirIdentityKey, theirOneTimeKey);
 
-    OLMSession *olmSession = [[OLMSession alloc] initOutboundSessionWithAccount:olmAccount theirIdentityKey:theirIdentityKey theirOneTimeKey:theirOneTimeKey];
-
-    [store storeSession:olmSession forDevice:theirIdentityKey];
+    OLMSession *olmSession = [[OLMSession alloc] initOutboundSessionWithAccount:olmAccount theirIdentityKey:theirIdentityKey theirOneTimeKey:theirOneTimeKey error:&error];
 
     NSLog(@">>>> olmSession.sessionIdentifier: %@", olmSession.sessionIdentifier);
 
-    return olmSession.sessionIdentifier;
+    if (olmSession)
+    {
+        [store storeSession:olmSession forDevice:theirIdentityKey];
+        return olmSession.sessionIdentifier;
+    }
+    else if (error)
+    {
+        NSLog(@"[MXOlmDevice] createOutboundSession. Error: %@", error);
+    }
+
+    return nil;
 }
 
 - (NSString*)createInboundSession:(NSString*)theirDeviceIdentityKey messageType:(NSUInteger)messageType cipherText:(NSString*)ciphertext payload:(NSString**)payload
 {
+    NSError *error;
+
     NSLog(@"<<< createInboundSession: theirIdentityKey: %@", theirDeviceIdentityKey);
 
-    OLMSession *olmSession = [[OLMSession alloc] initInboundSessionWithAccount:olmAccount theirIdentityKey:theirDeviceIdentityKey oneTimeKeyMessage:ciphertext];
+    OLMSession *olmSession = [[OLMSession alloc] initInboundSessionWithAccount:olmAccount theirIdentityKey:theirDeviceIdentityKey oneTimeKeyMessage:ciphertext error:&error];
 
     NSLog(@"<<< olmSession.sessionIdentifier: %@", olmSession.sessionIdentifier);
 
@@ -147,11 +159,20 @@
         NSLog(@"<<< ciphertext: %@", ciphertext);
         NSLog(@"<<< ciphertext: SHA256: %@", [olmUtility sha256:[ciphertext dataUsingEncoding:NSUTF8StringEncoding]]);
 
-        *payload = [olmSession decryptMessage:[[OLMMessage alloc] initWithCiphertext:ciphertext type:messageType]];
+        *payload = [olmSession decryptMessage:[[OLMMessage alloc] initWithCiphertext:ciphertext type:messageType] error:&error];
+
+        if (error)
+        {
+            NSLog(@"[MXOlmDevice] createInboundSession. decryptMessage error: %@", error);
+        }
 
         [store storeSession:olmSession forDevice:theirDeviceIdentityKey];
 
         return olmSession.sessionIdentifier;
+    }
+    else if (error)
+    {
+        NSLog(@"[MXOlmDevice] createInboundSession. Error: %@", error);
     }
 
     return nil;
@@ -181,6 +202,7 @@
 
 - (NSDictionary *)encryptMessage:(NSString *)theirDeviceIdentityKey sessionId:(NSString *)sessionId payloadString:(NSString *)payloadString
 {
+    NSError *error;
     OLMMessage *olmMessage;
 
     OLMSession *olmSession = [self sessionForDevice:theirDeviceIdentityKey andSessionId:sessionId];
@@ -190,7 +212,12 @@
 
     if (olmSession)
     {
-        olmMessage = [olmSession encryptMessage:payloadString];
+        olmMessage = [olmSession encryptMessage:payloadString error:&error];
+
+        if (error)
+        {
+            NSLog(@"[MXOlmDevice] encryptMessage failed: %@", error);
+        }
 
         [store storeSession:olmSession forDevice:theirDeviceIdentityKey];
     }
@@ -206,12 +233,18 @@
 
 - (NSString*)decryptMessage:(NSString*)ciphertext withType:(NSUInteger)messageType sessionId:(NSString*)sessionId theirDeviceIdentityKey:(NSString*)theirDeviceIdentityKey
 {
+    NSError *error;
     NSString *payloadString;
 
     OLMSession *olmSession = [self sessionForDevice:theirDeviceIdentityKey andSessionId:sessionId];
     if (olmSession)
     {
-        payloadString = [olmSession decryptMessage:[[OLMMessage alloc] initWithCiphertext:ciphertext type:messageType]];
+        payloadString = [olmSession decryptMessage:[[OLMMessage alloc] initWithCiphertext:ciphertext type:messageType] error:&error];
+
+        if (error)
+        {
+            NSLog(@"[MXOlmDevice] decryptMessage failed: %@", error);
+        }
 
         [store storeSession:olmSession forDevice:theirDeviceIdentityKey];
     }
@@ -252,7 +285,7 @@
 
 - (NSString *)encryptGroupMessage:(NSString *)sessionId payloadString:(NSString *)payloadString
 {
-    return [outboundGroupSessionStore[sessionId] encryptMessage:payloadString];
+    return [outboundGroupSessionStore[sessionId] encryptMessage:payloadString error:nil];
 }
 
 
@@ -292,7 +325,7 @@
             // TODO: Manage messageIndex to detect replay attacks
             // https://github.com/matrix-org/matrix-ios-sdk/issues/162
             NSUInteger messageIndex;
-            NSString *payloadString = [session.session decryptMessage:body messageIndex:&messageIndex];
+            NSString *payloadString = [session.session decryptMessage:body messageIndex:&messageIndex error:error];
 
             [store storeInboundGroupSession:session];
 
@@ -313,7 +346,7 @@
                 *error = [NSError errorWithDomain:MXDecryptingErrorDomain
                                              code:MXDecryptingErrorUnableToDecryptCode
                                          userInfo:@{
-                                                    NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, body]
+                                                    NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, body, error]
                                                     }];
             }
         }
