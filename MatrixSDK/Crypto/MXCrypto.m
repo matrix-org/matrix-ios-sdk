@@ -1124,7 +1124,7 @@
 
     [contentMap setObjects:@{
                              deviceId: @{
-                                     @"device_id": deviceId,
+                                     @"device_id": myDevice.deviceId,
                                      @"rooms": @[roomId],
                                      }
 
