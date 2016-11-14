@@ -454,6 +454,14 @@ MXAuthAction;
 
 - (MXHTTPOperation*)registerOrLogin:(MXAuthAction)authAction parameters:(NSDictionary *)parameters success:(void (^)(NSDictionary *JSONResponse))success failure:(void (^)(NSError *))failure
 {
+    // If the caller does not provide it, fill the device display name field with the device name
+    if (!parameters[@"initial_device_display_name"])
+    {
+        NSMutableDictionary *newParameters = [NSMutableDictionary dictionaryWithDictionary:parameters];
+        newParameters[@"initial_device_display_name"] = [UIDevice currentDevice].name;
+        parameters = newParameters;
+    }
+
     return [httpClient requestWithMethod:@"POST"
                                     path:[self authActionPath:authAction]
                               parameters:parameters
