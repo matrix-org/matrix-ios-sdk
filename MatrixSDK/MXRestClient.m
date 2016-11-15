@@ -2717,9 +2717,11 @@ MXAuthAction;
         
         // Remove the auto generated image tag from the URL
         contentURL = [contentURL stringByReplacingOccurrencesOfString:@"#auto" withString:@""];
+        return contentURL;
     }
     
-    return contentURL;
+    // do not allow non-mxc content URLs: we should not be making requests out to whatever http urls people send us
+    return nil;
 }
 
 - (NSString*)urlOfContentThumbnail:(NSString*)mxcContentURI toFitViewSize:(CGSize)viewSize withMethod:(MXThumbnailingMethod)thumbnailingMethod
@@ -2754,9 +2756,12 @@ MXAuthAction;
         
         // Add thumbnailing parameters to the URL
         thumbnailURL = [NSString stringWithFormat:@"%@?width=%tu&height=%tu&method=%@", thumbnailURL, (NSUInteger)sizeInPixels.width, (NSUInteger)sizeInPixels.height, thumbnailingMethodString];
+        
+        return thumbnailURL;
     }
     
-    return thumbnailURL;
+    // do not allow non-mxc content URLs: we should not be making requests out to whatever http urls people send us
+    return nil;
 }
 
 - (NSString *)urlOfIdenticon:(NSString *)identiconString
