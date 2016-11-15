@@ -31,6 +31,7 @@ NSString* const MXDecryptingErrorBadRecipientKeyReason              = @"Message 
 NSString* const MXDecryptingErrorForwardedMessageReason             = @"Message forwarded from %@";
 NSString* const MXDecryptingErrorBadRoomReason                      = @"Message intended for room %@";
 NSString* const MXDecryptingErrorBadEncryptedMessageReason          = @"Bad Encrypted Message";
+NSString* const MXDecryptingErrorDuplicateMessageIndexReason        = @"Duplicate message index, possible replay attack %@";
 
 @implementation MXDecryptionResult
 

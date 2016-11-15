@@ -40,6 +40,18 @@
     // Plus, in cryptography, it is good to refresh sessions from time to time.
     // The key is the session id, the value the outbound group session.
     NSMutableDictionary<NSString*, OLMOutboundGroupSession*> *outboundGroupSessionStore;
+
+    // Store a set of decrypted message indexes for each group session.
+    // This partially mitigates a replay attack where a MITM resends a group
+    // message into the room.
+    //
+    // TODO: If we ever remove an event from memory we will also need to remove
+    // it from this map. Otherwise if we download the event from the server we
+    // will think that it is a duplicate.
+    //
+    // Keys are strings of form "<senderKey>|<session_id>|<message_index>"
+    // Values are @(YES).
+    NSMutableDictionary<NSString*, NSNumber*> *inboundGroupSessionMessageIndexes;
 }
 @end
 
@@ -72,6 +84,7 @@
         olmUtility = [[OLMUtility alloc] init];
 
         outboundGroupSessionStore = [NSMutableDictionary dictionary];
+        inboundGroupSessionMessageIndexes = [NSMutableDictionary dictionary];
 
         _deviceCurve25519Key = olmAccount.identityKeys[@"curve25519"];
         _deviceEd25519Key = olmAccount.identityKeys[@"ed25519"];
@@ -331,6 +344,20 @@
 
             if (payloadString)
             {
+                // Check if we have seen this message index before to detect replay attacks.
+                NSString *messageIndexKey = [NSString stringWithFormat:@"%@|%@|%tu", senderKey, sessionId, messageIndex];
+                if (inboundGroupSessionMessageIndexes[messageIndexKey])
+                {
+                    *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                                 code:MXDecryptingErrorDuplicateMessageIndexCode
+                                             userInfo:@{
+                                                        NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorDuplicateMessageIndexReason, messageIndexKey]
+                                                        }];
+                    return nil;
+                }
+
+                inboundGroupSessionMessageIndexes[messageIndexKey] = @(YES);
+
                 result = [[MXDecryptionResult alloc] init];
                 result.payload = [NSJSONSerialization JSONObjectWithData:[payloadString dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
                 result.keysClaimed = session.keysClaimed;

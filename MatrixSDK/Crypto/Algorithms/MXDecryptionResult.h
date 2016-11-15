@@ -33,6 +33,7 @@ typedef enum : NSUInteger
     MXDecryptingErrorForwardedMessageCode,
     MXDecryptingErrorBadRoomCode,
     MXDecryptingErrorBadEncryptedMessageCode,
+    MXDecryptingErrorDuplicateMessageIndexCode,
 } MXDecryptingErrorCode;
 
 FOUNDATION_EXPORT NSString* const MXDecryptingErrorEncryptionNotEnabledReason;
@@ -48,6 +49,7 @@ FOUNDATION_EXPORT NSString* const MXDecryptingErrorBadRecipientKeyReason;
 FOUNDATION_EXPORT NSString* const MXDecryptingErrorForwardedMessageReason;
 FOUNDATION_EXPORT NSString* const MXDecryptingErrorBadRoomReason;
 FOUNDATION_EXPORT NSString* const MXDecryptingErrorBadEncryptedMessageReason;
+FOUNDATION_EXPORT NSString* const MXDecryptingErrorDuplicateMessageIndexReason;
 
 /**
  Result of a decryption.
