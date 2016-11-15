@@ -2137,7 +2137,11 @@ typedef void (^MXOnResumeDone)();
         if (_crypto)
         {
             NSError *error;
-            event.clearEvent = [_crypto decryptEvent:event error:&error];
+            @try {
+                event.clearEvent = [_crypto decryptEvent:event error:&error];
+            } @catch (NSException *e) {
+                NSLog(@"It's all gone Pete Tong: %@", e);
+            }
 
             if (!event.clearEvent)
             {
