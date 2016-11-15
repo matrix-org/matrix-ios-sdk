@@ -635,7 +635,7 @@
         *error = [NSError errorWithDomain:MXDecryptingErrorDomain
                                      code:MXDecryptingErrorUnableToDecryptCode
                                  userInfo:@{
-                                            NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, event.content[@"algorithm"]]
+                                            NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, event, event.content[@"algorithm"]]
                                             }];
         return nil;
     }
