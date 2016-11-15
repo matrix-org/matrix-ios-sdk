@@ -14,12 +14,12 @@
  limitations under the License.
  */
 
-#ifdef MX_CRYPTO
-
 #import "MXOlmEncryption.h"
 
 #import "MXCryptoAlgorithms.h"
 #import "MXSession.h"
+
+#ifdef MX_CRYPTO
 
 @interface MXOlmEncryption ()
 {
@@ -70,16 +70,14 @@
 
     return [self ensureSession:users success:^{
 
-        NSMutableArray *participantKeys = [NSMutableArray array];
+        NSMutableArray *participantDevices = [NSMutableArray array];
 
         for (NSString *userId in users)
         {
             NSArray<MXDeviceInfo *> *devices = [crypto storedDevicesForUser:userId];
             for (MXDeviceInfo *device in devices)
             {
-                NSString *key = device.identityKey;
-
-                if ([key isEqualToString:crypto.olmDevice.deviceCurve25519Key])
+                if ([device.identityKey isEqualToString:crypto.olmDevice.deviceCurve25519Key])
                 {
                     // Don't bother setting up session to ourself
                     continue;
@@ -91,7 +89,7 @@
                     continue;
                 }
 
-                [participantKeys addObject:key];
+                [participantDevices addObject:device];
             }
         }
 
@@ -100,7 +98,7 @@
                                                                   @"type": eventType,
                                                                   @"content": eventContent
                                                                   }
-                                                     forDevices:participantKeys];
+                                                     forDevices:participantDevices];
         success(encryptedMessage);
 
     } failure:failure];
