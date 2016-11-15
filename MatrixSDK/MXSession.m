@@ -1091,7 +1091,7 @@ typedef void (^MXOnResumeDone)();
     {
         if (![self decryptEvent:event])
         {
-            NSLog(@"[MXSession] handleToDeviceEvent: Warning: Unable to decrypt to-device event: %@\nError: %@", event.content[@"body"], event.decryptionError);
+            NSLog(@"[MXSession] handleToDeviceEvent: Warning: Unable to decrypt to-device event: %@\nError: %@", event.wireContent[@"body"], event.decryptionError);
             return;
         }
     }

@@ -189,11 +189,11 @@
  Encrypt an event payload for a list of devices.
 
  @param payloadFields fields to include in the encrypted payload.
- @param participantKeys list of curve25519 keys to encrypt for.
+ @param deviceInfos the list of the recipient devices.
 
  @return the content for an m.room.encrypted event.
  */
-- (NSDictionary*)encryptMessage:(NSDictionary*)payloadFields forDevices:(NSArray<NSString*>*)participantKeys;
+- (NSDictionary*)encryptMessage:(NSDictionary*)payloadFields forDevices:(NSArray<MXDeviceInfo*>*)devices;
 
 /**
  Decrypt a received event

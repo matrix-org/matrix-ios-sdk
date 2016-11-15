@@ -682,44 +682,43 @@
     return clearedEvent;
 }
 
-- (NSDictionary*)encryptMessage:(NSDictionary*)payloadFields forDevices:(NSArray<NSString*>*)participantKeys
+- (NSDictionary*)encryptMessage:(NSDictionary*)payloadFields forDevices:(NSArray<MXDeviceInfo*>*)devices
 {
-    NSArray *sorted = [participantKeys sortedArrayUsingComparator:^NSComparisonResult(NSString *str1, NSString *str2) {
-        return [str1 localizedCompare:str2];
-    }];
-
-    NSString *participantHash  = [_olmDevice sha256:[sorted componentsJoinedByString:@","]];
-
-    NSMutableDictionary *payloadJson = [NSMutableDictionary dictionaryWithDictionary:payloadFields];
-    payloadJson[@"fingerprint"] = participantHash;
-    payloadJson[@"sender_device"] = _store.deviceId;
-
-    // Include the Ed25519 key so that the recipient knows what
-    // device this message came from.
-    // We don't need to include the curve25519 key since the
-    // recipient will already know this from the olm headers.
-    // When combined with the device keys retrieved from the
-    // homeserver signed by the ed25519 key this proves that
-    // the curve25519 key and the ed25519 key are owned by
-    // the same device.
-    payloadJson[@"keys"] = @{
-                             @"ed25519": _olmDevice.deviceEd25519Key
-                             };
-
-    NSLog(@">>>> MXCrypto encryptMessage: %@", payloadJson);
-
-    NSData *payloadData = [NSJSONSerialization  dataWithJSONObject:payloadJson options:0 error:nil];
-    NSString *payloadString = [[NSString alloc] initWithData:payloadData encoding:NSUTF8StringEncoding];
-
-
     NSMutableDictionary *ciphertext = [NSMutableDictionary dictionary];
-    for (NSString *deviceKey in participantKeys)
+    for (MXDeviceInfo *recipientDevice in devices)
     {
-        NSString *sessionId = [_olmDevice sessionIdForDevice:deviceKey];
+        NSString *sessionId = [_olmDevice sessionIdForDevice:recipientDevice.identityKey];
         if (sessionId)
         {
-            NSLog(@"[MXCrypto] encryptMessage: Using sessionid %@ for device %@", sessionId, deviceKey);
-            ciphertext[deviceKey] = [_olmDevice encryptMessage:deviceKey sessionId:sessionId payloadString:payloadString];
+            NSMutableDictionary *payloadJson = [NSMutableDictionary dictionaryWithDictionary:payloadFields];
+            payloadJson[@"sender"] = mxSession.myUser.userId;
+            payloadJson[@"sender_device"] = _store.deviceId;
+
+            // Include the Ed25519 key so that the recipient knows what
+            // device this message came from.
+            // We don't need to include the curve25519 key since the
+            // recipient will already know this from the olm headers.
+            // When combined with the device keys retrieved from the
+            // homeserver signed by the ed25519 key this proves that
+            // the curve25519 key and the ed25519 key are owned by
+            // the same device.
+            payloadJson[@"keys"] = @{
+                                     @"ed25519": _olmDevice.deviceEd25519Key
+                                     };
+
+            // Include the recipient device details in the payload,
+            // to avoid unknown key attacks, per
+            // https://github.com/vector-im/vector-web/issues/2483
+            payloadJson[@"recipient"] = recipientDevice.userId;
+            payloadJson[@"recipient_keys"] = @{
+                                               @"ed25519": recipientDevice.fingerprint
+                                               };
+
+            NSData *payloadData = [NSJSONSerialization  dataWithJSONObject:payloadJson options:0 error:nil];
+            NSString *payloadString = [[NSString alloc] initWithData:payloadData encoding:NSUTF8StringEncoding];
+
+            NSLog(@"[MXCrypto] encryptMessage: %@\nUsing sessionid %@ for device %@", payloadJson, sessionId, recipientDevice.identityKey);
+            ciphertext[recipientDevice.identityKey] = [_olmDevice encryptMessage:recipientDevice.identityKey sessionId:sessionId payloadString:payloadString];
         }
     }
 

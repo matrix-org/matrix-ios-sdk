@@ -18,23 +18,35 @@
 
 FOUNDATION_EXPORT NSString *const MXDecryptingErrorDomain;
 
-FOUNDATION_EXPORT NSInteger const MXDecryptingErrorEncryptionNotEnabledCode;
+typedef enum : NSUInteger
+{
+    MXDecryptingErrorEncryptionNotEnabledCode = 0,
+    MXDecryptingErrorUnableToEncryptCode,
+    MXDecryptingErrorUnableToDecryptCode,
+    MXDecryptingErrorUnkwnownInboundSessionIdCode,
+    MXDecryptingErrorInboundSessionMismatchRoomIdCode,
+    MXDecryptingErrorMissingFieldsCode,
+    MXDecryptingErrorMissingCiphertextCode,
+    MXDecryptingErrorNotIncludedInRecipientsCode,
+    MXDecryptingErrorBadRecipientCode,
+    MXDecryptingErrorBadRecipientKeyCode,
+    MXDecryptingErrorForwardedMessageCode,
+    MXDecryptingErrorBadRoomCode,
+    MXDecryptingErrorBadEncryptedMessageCode,
+} MXDecryptingErrorCode;
+
 FOUNDATION_EXPORT NSString* const MXDecryptingErrorEncryptionNotEnabledReason;
-FOUNDATION_EXPORT NSInteger const MXDecryptingErrorUnableToEncryptCode;
 FOUNDATION_EXPORT NSString* const MXDecryptingErrorUnableToEncryptReason;
-FOUNDATION_EXPORT NSInteger const MXDecryptingErrorUnableToDecryptCode;
 FOUNDATION_EXPORT NSString* const MXDecryptingErrorUnableToDecryptReason;
-FOUNDATION_EXPORT NSInteger const MXDecryptingErrorUnkwnownInboundSessionIdCode;
 FOUNDATION_EXPORT NSString* const MXDecryptingErrorUnkwnownInboundSessionIdReason;
-FOUNDATION_EXPORT NSInteger const MXDecryptingErrorInboundSessionMismatchRoomIdCode;
 FOUNDATION_EXPORT NSString* const MXDecryptingErrorInboundSessionMismatchRoomIdReason;
-FOUNDATION_EXPORT NSInteger const MXDecryptingErrorMissingFieldsCode;
 FOUNDATION_EXPORT NSString* const MXDecryptingErrorMissingFieldsReason;
-FOUNDATION_EXPORT NSInteger const MXDecryptingErrorMissingCiphertextCode;
 FOUNDATION_EXPORT NSString* const MXDecryptingErrorMissingCiphertextReason;
-FOUNDATION_EXPORT NSInteger const MXDecryptingErrorNotIncludedInRecipientsCode;
 FOUNDATION_EXPORT NSString* const MXDecryptingErrorNotIncludedInRecipientsReason;
-FOUNDATION_EXPORT NSInteger const MXDecryptingErrorBadEncryptedMessageCode;
+FOUNDATION_EXPORT NSString* const MXDecryptingErrorBadRecipientReason;
+FOUNDATION_EXPORT NSString* const MXDecryptingErrorBadRecipientKeyReason;
+FOUNDATION_EXPORT NSString* const MXDecryptingErrorForwardedMessageReason;
+FOUNDATION_EXPORT NSString* const MXDecryptingErrorBadRoomReason;
 FOUNDATION_EXPORT NSString* const MXDecryptingErrorBadEncryptedMessageReason;
 
 /**

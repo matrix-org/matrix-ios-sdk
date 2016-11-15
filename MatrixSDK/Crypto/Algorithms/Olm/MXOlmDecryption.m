@@ -25,6 +25,9 @@
 {
     // The olm device interface
     MXOlmDevice *olmDevice;
+
+    // Our user id
+    NSString *userId;
 }
 @end
 
@@ -45,6 +48,7 @@
     if (self)
     {
         olmDevice = matrixSession.crypto.olmDevice;
+        userId = matrixSession.myUser.userId;
     }
     return self;
 }
@@ -84,7 +88,7 @@
     NSString *payloadString = [self decryptMessage:message andTheirDeviceIdentityKey:deviceKey];
     if (!payloadString)
     {
-        NSLog(@"[MXOlmDecryption] Failed to decrypt Olm event (id= %@) from %@", event.eventId, deviceKey);
+        NSLog(@"[MXOlmDecryption] decryptEvent: Failed to decrypt Olm event (id= %@) from %@", event.eventId, deviceKey);
 
         *error = [NSError errorWithDomain:MXDecryptingErrorDomain
                                      code:MXDecryptingErrorBadEncryptedMessageCode
@@ -95,10 +99,81 @@
         return nil;
     }
 
-    // TODO: Check the sender user id matches the sender key.
-    // TODO: check the room_id and fingerprint
+    NSDictionary *payload = [NSJSONSerialization JSONObjectWithData:[payloadString dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
+
+    // Check that we were the intended recipient, to avoid unknown-key attack
+    // https://github.com/vector-im/vector-web/issues/2483
+    if (!payload[@"recipient"])
+    {
+        // Older versions of riot did not set this field, so we cannot make
+        // this check. TODO: kill this off once our users have updated
+        NSLog(@"[MXOlmDecryption] decryptEvent: Warning: Olm event (id=%@) contains no 'recipient' property; cannot prevent unknown-key attack", event.eventId);
+    }
+    else if (![payload[@"recipient"] isEqualToString:userId])
+    {
+        NSLog(@"[MXOlmDecryption] decryptEvent: Event %@: Intended recipient %@ does not match our id %@", event.eventId, payload[@"recipient"], userId);
+
+        *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                     code:MXDecryptingErrorBadRecipientCode
+                                 userInfo:@{
+                                            NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorBadRecipientReason, payload[@"recipient"]]
+                                            }];
+        return nil;
+    }
+
+    if (!payload[@"recipient_keys"])
+    {
+        // ditto
+        NSLog(@"[MXOlmDecryption] decryptEvent: Warning: Olm event (id=%@) contains no 'recipient_keys' property; cannot prevent unknown-key attack", event.eventId);
+    }
+    else if (![payload[@"recipient_keys"][@"ed25519"] isEqualToString:olmDevice.deviceEd25519Key])
+    {
+        NSLog(@"[MXOlmDecryption] decryptEvent: Event %@: Intended recipient ed25519 key %@ does not match ours", event.eventId, payload[@"recipient_keys"][@"ed25519"]);
+
+        *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                     code:MXDecryptingErrorBadRecipientKeyCode
+                                 userInfo:@{
+                                            NSLocalizedDescriptionKey: MXDecryptingErrorBadRecipientKeyReason
+                                            }];
+        return nil;
+    }
+
+    // Check that the original sender matches what the homeserver told us, to
+    // avoid people masquerading as others.
+    // (this check is also provided via the sender's embedded ed25519 key,
+    // which is checked elsewhere).
+    if (!payload[@"sender"])
+    {
+        // ditto
+        NSLog(@"[MXOlmDecryption] decryptEvent: Warning: Olm event (id=%@) contains no 'sender' property; cannot prevent unknown-key attack", event.eventId);
+    }
+    else if (![payload[@"sender"] isEqualToString:event.sender])
+    {
+        NSLog(@"[MXOlmDecryption] decryptEvent: Event %@: original sender %@ does not match reported sender %@", event.eventId, payload[@"sender"], event.sender);
+
+        *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                     code:MXDecryptingErrorForwardedMessageCode
+                                 userInfo:@{
+                                            NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorForwardedMessageReason, payload[@"sender"]]
+                                            }];
+        return nil;
+    }
+
+    // Olm events intended for a room have a room_id.
+    if (event.roomId && ![payload[@"room_id"] isEqualToString:event.roomId])
+    {
+        NSLog(@"[MXOlmDecryption] decryptEvent: Event %@: original room %@ does not match reported room %@", event.eventId, payload[@"room_id"], event.roomId);
+
+        *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                     code:MXDecryptingErrorBadRoomCode
+                                 userInfo:@{
+                                            NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorBadRoomReason, payload[@"room_id"]]
+                                            }];
+        return nil;
+    }
+
     MXDecryptionResult *result = [[MXDecryptionResult alloc] init];
-    result.payload = [NSJSONSerialization JSONObjectWithData:[payloadString dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
+    result.payload = payload;
     result.keysProved = @{
                           @"curve25519": deviceKey
                           };

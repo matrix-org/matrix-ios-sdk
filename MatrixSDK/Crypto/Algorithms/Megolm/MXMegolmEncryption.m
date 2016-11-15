@@ -336,7 +336,7 @@
 
                 MXDeviceInfo *deviceInfo = sessionResult.device;
 
-                [contentMap setObject:[crypto encryptMessage:payload forDevices:@[deviceInfo.identityKey]]
+                [contentMap setObject:[crypto encryptMessage:payload forDevices:@[deviceInfo]]
                               forUser:userId andDevice:deviceID];
 
                 haveTargets = YES;
