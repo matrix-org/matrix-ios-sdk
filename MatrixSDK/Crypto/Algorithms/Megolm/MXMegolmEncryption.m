@@ -45,6 +45,14 @@
     MXHTTPOperation *shareOperation;
 
     NSMutableArray<MXQueuedEncryption*> *pendingEncryptions;
+
+    // Session rotation periods
+    NSUInteger sessionRotationPeriodMsgs;
+    NSUInteger sessionRotationPeriodMs;
+
+    // Outbound session information
+    NSUInteger useCount;
+    NSDate  *creationTime;
 }
 
 @end
@@ -72,6 +80,10 @@
 
         pendingEncryptions = [NSMutableArray array];
 
+        // Default rotation periods
+        // TODO: Make it configurable via parameters
+        sessionRotationPeriodMsgs = 100;
+        sessionRotationPeriodMs = 7 * 24 * 3600 * 1000;
     }
     return self;
 }
@@ -166,7 +178,7 @@
     }
 
     // Need to make a brand new session?
-    if (!outboundSessionId)
+    if (!outboundSessionId || [self needsRotation])
     {
         prepOperation = [self prepareNewSessionInRoom:room success:^(NSString *sessionId) {
             prepOperation = nil;
@@ -215,7 +227,7 @@
                         success:(void (^)(NSString *sessionId))success
                         failure:(void (^)(NSError *))failure
 {
-    NSString *sessionId= [crypto.olmDevice createOutboundGroupSession];
+    NSString *sessionId = [crypto.olmDevice createOutboundGroupSession];
 
     [crypto.olmDevice addInboundGroupSession:sessionId
                                   sessionKey:[crypto.olmDevice sessionKeyForOutboundGroupSession:sessionId]
@@ -256,6 +268,8 @@
             else
             {
                 outboundSessionId = sessionId;
+                creationTime = [NSDate date];
+                useCount = 0;
             }
 
             discardNewSession = NO;
@@ -405,6 +419,8 @@
                       // m.new_device message if they don't have our session key.
                       @"device_id": deviceId
                       });
+
+            useCount++;
         }
     }
     else
@@ -416,6 +432,23 @@
     }
 
     [pendingEncryptions removeAllObjects];
+}
+
+/**
+ Check if it's time to rotate the session
+ */
+- (BOOL)needsRotation
+{
+    BOOL needsRotation = NO;
+    NSUInteger sessionLifetime = [[NSDate date] timeIntervalSinceDate:creationTime] * 1000;
+
+    if (useCount >= sessionRotationPeriodMsgs || sessionLifetime >= sessionRotationPeriodMs)
+    {
+        NSLog(@"[MXMegolmEncryption] Rotating megolm session after %tu messages, %tu ms", useCount, sessionLifetime);
+        needsRotation = YES;
+    }
+
+    return needsRotation;
 }
 
 @end
