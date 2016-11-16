@@ -75,4 +75,21 @@ static const NSString *MXEncryptedAttachmentsErrorDomain = @"MXKEncryptedAttachm
                   success:(void(^)(NSDictionary *result))success
                   failure:(void(^)(NSError *error))failure;
 
+/**
+ Given the dictionary of information about an encrypted
+ attachment, performs the decryption on the data provided
+ by the input stream and writes it to the output stream.
+ The 'url' in the information is ignored, with the
+ ciphertext instead being read from the provided input
+ stream
+
+ @param fileInfo The file information block
+ @param inputStream A stream of the ciphertext
+ @param outputStream Stream to write the plaintext to
+ @returns NSError nil on success, otherwise an error describing what went wrong
+ */
++ (NSError *)decryptAttachment:(NSDictionary *)fileInfo
+              inputStream:(NSInputStream *)inputStream
+             outputStream:(NSOutputStream *)outputStream;
+
 @end
