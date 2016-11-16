@@ -32,6 +32,7 @@ NSString* const MXDecryptingErrorForwardedMessageReason             = @"Message 
 NSString* const MXDecryptingErrorBadRoomReason                      = @"Message intended for room %@";
 NSString* const MXDecryptingErrorBadEncryptedMessageReason          = @"Bad Encrypted Message";
 NSString* const MXDecryptingErrorDuplicateMessageIndexReason        = @"Duplicate message index, possible replay attack %@";
+NSString* const MXDecryptingErrorMissingPropertyReason              = @"No '%@' property. Cannot prevent unknown-key attack";
 
 @implementation MXDecryptionResult
 
