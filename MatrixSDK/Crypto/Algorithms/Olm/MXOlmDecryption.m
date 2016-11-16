@@ -105,9 +105,14 @@
     // https://github.com/vector-im/vector-web/issues/2483
     if (!payload[@"recipient"])
     {
-        // Older versions of riot did not set this field, so we cannot make
-        // this check. TODO: kill this off once our users have updated
-        NSLog(@"[MXOlmDecryption] decryptEvent: Warning: Olm event (id=%@) contains no 'recipient' property; cannot prevent unknown-key attack", event.eventId);
+        NSLog(@"[MXOlmDecryption] decryptEvent: Olm event (id=%@) contains no 'recipient' property; cannot prevent unknown-key attack", event.eventId);
+
+        *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                     code:MXDecryptingErrorMissingPropertyCode
+                                 userInfo:@{
+                                            NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorMissingPropertyReason, @"recipient"]
+                                            }];
+        return nil;
     }
     else if (![payload[@"recipient"] isEqualToString:userId])
     {
@@ -123,8 +128,14 @@
 
     if (!payload[@"recipient_keys"])
     {
-        // ditto
-        NSLog(@"[MXOlmDecryption] decryptEvent: Warning: Olm event (id=%@) contains no 'recipient_keys' property; cannot prevent unknown-key attack", event.eventId);
+        NSLog(@"[MXOlmDecryption] decryptEvent: Olm event (id=%@) contains no 'recipient_keys' property; cannot prevent unknown-key attack", event.eventId);
+
+        *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                     code:MXDecryptingErrorMissingPropertyCode
+                                 userInfo:@{
+                                            NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorMissingPropertyReason, @"recipient_keys"]
+                                            }];
+        return nil;
     }
     else if (![payload[@"recipient_keys"][@"ed25519"] isEqualToString:olmDevice.deviceEd25519Key])
     {
@@ -144,8 +155,14 @@
     // which is checked elsewhere).
     if (!payload[@"sender"])
     {
-        // ditto
-        NSLog(@"[MXOlmDecryption] decryptEvent: Warning: Olm event (id=%@) contains no 'sender' property; cannot prevent unknown-key attack", event.eventId);
+        NSLog(@"[MXOlmDecryption] decryptEvent: Olm event (id=%@) contains no 'sender' property; cannot prevent unknown-key attack", event.eventId);
+
+        *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                     code:MXDecryptingErrorMissingPropertyCode
+                                 userInfo:@{
+                                            NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorMissingPropertyReason, @"sender"]
+                                            }];
+        return nil;
     }
     else if (![payload[@"sender"] isEqualToString:event.sender])
     {
