@@ -1480,8 +1480,22 @@
     [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         NSDictionary *otks = @{
-                               @"curve25519:AAAABQ": @"ueuHES/Q0P1MZ4J3IUpC8iQTkgQNX66ZpxVLUaTDuB8",
-                               @"curve25519:AAAABA": @"PmyaaB68Any+za9CuZXzFsQZW31s/TW6XbAB9akEpQs"
+                               @"curve25519:AAAABQ": @{
+                                       @"key": @"ueuHES/Q0P1MZ4J3IUpC8iQTkgQNX66ZpxVLUaTDuB8",
+                                       @"signatures": @{
+                                               @"@mxAlice:localhost:8480": @{
+                                                       @"ed25519:OSXDWZOVKR": @"fw0H0YWu9HJ2vNFB3pEzVLc9NpQAKXlUZR/2mJUEUzl+ptYtnroG7JSONITtvSZFJIol7b7iSs5pVM0NFr+sBg"
+                                                       }
+                                               }
+                                       },
+                               @"curve25519:AAAABA": @{
+                                       @"key": @"PmyaaB68Any+za9CuZXzFsQZW31s/TW6XbAB9akEpQs",
+                                       @"signatures": @{
+                                               @"@mxAlice:localhost:8480": @{
+                                                       @"ed25519:OSXDWZOVKR": @"fw0H0YWu9HJ2vNFB3pEzVLc9NpQAKXlUZR/2mJUEUzl+ptYtnroG7JSONITtvSZFJIol7b7iSs5pVM0NFr+sBg"
+                                                       }
+                                               }
+                                       }
                                };
 
         // Upload the device keys
