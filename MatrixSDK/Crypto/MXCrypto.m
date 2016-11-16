@@ -575,13 +575,6 @@
                                  success:(void (^)(NSDictionary *, NSString *))success
                                  failure:(void (^)(NSError *))failure
 {
-    if (![eventType isEqualToString:kMXEventTypeStringRoomMessage])
-    {
-        // We only encrypt m.room.message
-        success(eventContent, eventType);
-        return nil;
-    }
-
     NSString *algorithm;
     id<MXEncrypting> alg = roomAlgorithms[room.roomId];
 
