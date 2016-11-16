@@ -22,6 +22,8 @@
 
 #import "MXError.h"
 
+NSString *const kMXRoomLocalEventIdPrefix = @"kMXRoomLocalId_";
+
 NSString *const kMXRoomDidFlushDataNotification = @"kMXRoomDidFlushDataNotification";
 NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotification";
 NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNotification";
@@ -534,6 +536,46 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 - (MXEventTimeline*)timelineOnEvent:(NSString*)eventId;
 {
     return [[MXEventTimeline alloc] initWithRoom:self andInitialEventId:eventId];
+}
+
+
+
+#pragma mark - Fake event objects creation
+- (MXEvent*)fakeRoomMessageEventWithEventId:(NSString*)eventId andContent:(NSDictionary*)content
+{
+    if (!eventId)
+    {
+        eventId = [NSString stringWithFormat:@"%@%@", kMXRoomLocalEventIdPrefix, [[NSProcessInfo processInfo] globallyUniqueString]];
+    }
+    
+    MXEvent *event = [[MXEvent alloc] init];
+    event.roomId = _roomId;
+    event.eventId = eventId;
+    event.wireType = kMXEventTypeStringRoomMessage;
+    event.originServerTs = (uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000);
+    event.sender = mxSession.myUser.userId;
+    event.wireContent = content;
+    
+#ifdef MX_CRYPTO
+    if (mxSession.crypto && self.state.isEncrypted)
+    {
+        // Encapsulate the resulting event in a fake encrypted event
+        MXEvent *encryptedEvent = [[MXEvent alloc] init];
+        
+        encryptedEvent.roomId = _roomId;
+        encryptedEvent.eventId = eventId;
+        encryptedEvent.wireType = kMXEventTypeStringRoomEncrypted;
+        encryptedEvent.originServerTs = event.originServerTs;
+        encryptedEvent.sender = mxSession.myUser.userId;
+        
+        event.keysProved = @{@"curve25519":mxSession.crypto.olmDevice.deviceCurve25519Key};
+        encryptedEvent.clearEvent = event;
+        
+        event = encryptedEvent;
+    }
+#endif
+    
+    return event;
 }
 
 
