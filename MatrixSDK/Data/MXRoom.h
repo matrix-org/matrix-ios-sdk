@@ -28,6 +28,8 @@
 #import "MXEventsEnumerator.h"
 #import "MXCryptoConstants.h"
 
+extern NSString *const kMXRoomLocalEventIdPrefix;
+
 @class MXRoom;
 @class MXSession;
 
@@ -604,6 +606,16 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  @return a new `MXEventTimeline` instance.
  */
 - (MXEventTimeline*)timelineOnEvent:(NSString*)eventId;
+
+#pragma mark - Fake event objects creation
+/**
+ Create a temporary message event for the room.
+ 
+ @param eventId the event id. A globally unique string with kMXRoomLocalEventIdPrefix prefix is defined when this param is nil.
+ @param content the event content.
+ @return the created event.
+ */
+- (MXEvent*)fakeRoomMessageEventWithEventId:(NSString*)eventId andContent:(NSDictionary*)content;
 
 
 #pragma mark - Outgoing events management
