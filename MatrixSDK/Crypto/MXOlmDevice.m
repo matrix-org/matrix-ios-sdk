@@ -335,8 +335,6 @@
         // the HS pretending a message was targeting a different room.
         if ([roomId isEqualToString:session.roomId])
         {
-            // TODO: Manage messageIndex to detect replay attacks
-            // https://github.com/matrix-org/matrix-ios-sdk/issues/162
             NSUInteger messageIndex;
             NSString *payloadString = [session.session decryptMessage:body messageIndex:&messageIndex error:error];
 
@@ -348,12 +346,17 @@
                 NSString *messageIndexKey = [NSString stringWithFormat:@"%@|%@|%tu", senderKey, sessionId, messageIndex];
                 if (inboundGroupSessionMessageIndexes[messageIndexKey])
                 {
-                    *error = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                                 code:MXDecryptingErrorDuplicateMessageIndexCode
-                                             userInfo:@{
-                                                        NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorDuplicateMessageIndexReason, messageIndexKey]
-                                                        }];
-                    return nil;
+                    // TODO: Disable this protection for now as it creates regression
+                    // See https://github.com/matrix-org/matrix-ios-sdk/issues/162#issuecomment-260939830
+                    NSLog(@"[MXOlmDevice] decryptGroupMessage: Warning: Possible replay attack %@", messageIndexKey);
+
+//                    *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+//                                                 code:MXDecryptingErrorDuplicateMessageIndexCode
+//                                             userInfo:@{
+//                                                        NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorDuplicateMessageIndexReason, messageIndexKey]
+//                                                        }];
+//
+//                    return nil;
                 }
 
                 inboundGroupSessionMessageIndexes[messageIndexKey] = @(YES);
