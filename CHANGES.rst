@@ -1,3 +1,29 @@
+Changes in Matrix iOS SDK in 0.7.0 (2016-11-16)
+================================================
+
+Improvements:
+ * Support end-to-end encryption. It is experimental and may not be reliable. You should not yet trust it to secure data. File transfers are not yet encrypted. Devices will not yet be able to decrypt history from before they joined the room. Once encryption is enabled for a room it cannot be turned off again (for now). Encrypted messages will not be visible on clients that do not yet implement encryption.
+ * MXSession: support `m.direct` type in `account_data` (#149). Required to convert existing rooms to/from DMs (https://github.com/vector-im/vector-ios#715).
+ * MXRoom: Handle inbound invites to decide if they are DMs or not (https://github.com/vector-im/vector-ios#713).
+ * MXSDKOptions: Create a "Build time options" section.
+ 
+API improvements:
+ * MXRestClient: Add registerWithLoginType and loginWithLoginType which do the job with new CS auth api for dummy and password flows.
+ * MXRestClient: Support /logout API to invalidate an existing access token.
+ * MXRestClient: Register/login: Fill the initial_device_display_name field with the device name by default.
+ * MXRestClient: Support the `filter` parameter during a messages request (see `MXRoomEventFilter` object). The `contains_url` filter is now used for events search.
+ * MXHTTPOperation: Add the `mutateTo` method to be able to cancel any current HTTP request in a requests chain.
+ * MXSession/MXRestClient: Support `invite` array, `isDirect` flag and `preset` during the room creation. Required to tag explicitly the invite as DM or not DM (https://github.com/vector-im/vector-ios#714).
+ * MXRoomState: Add the stateEventWithType getter method.
+ * MXSession: Add `directJoinedRoomWithUserId` to get the first joined direct chat listed in account data for this user.
+ * MXRoom: Add `setIsDirect` method to convert existing rooms to/from DMs (https://github.com/vector-im/vector-ios#715).
+ * MXRoom: Add `eventDeviceInfo` to get the device information related to an encrypted event.
+ * MXRoom: Add API to create a temporary message event. This temporary event is automatically defined as `encrypted` when the room is encrypted and the encryption is enabled.
+
+API break:
+ * MXRestClient: Remove `registerWithUser` and `loginWithUser` methods which worked only with old CS auth API.
+ * MXSession: Remove `privateOneToOneRoomWithUserId:` and `privateOneToOneUsers` (the developer must use the `directRooms` property instead).
+
 Changes in Matrix iOS SDK in 0.6.17 (2016-09-27)
 ================================================
 
