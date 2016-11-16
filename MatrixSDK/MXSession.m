@@ -2090,7 +2090,9 @@ typedef void (^MXOnResumeDone)();
             complete();
         }];
     }
-    else if ([MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession)
+    else if ([MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession
+        // Without the device id provided by the hs, the crypto does not work
+        && matrixRestClient.credentials.deviceId)
     {
         //
         MXFileCryptoStore *cryptoStore = [MXFileCryptoStore createStoreWithCredentials:self.matrixRestClient.credentials];
