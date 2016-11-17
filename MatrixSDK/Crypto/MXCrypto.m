@@ -608,7 +608,8 @@
         NSError *error = [NSError errorWithDomain:MXDecryptingErrorDomain
                                              code:MXDecryptingErrorUnableToEncryptCode
                                          userInfo:@{
-                                                    NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorUnableToEncryptReason, algorithm]
+                                                    NSLocalizedDescriptionKey: MXDecryptingErrorUnableToEncrypt,
+                                                    NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToEncryptReason, algorithm]
                                                     }];
 
         failure(error);
@@ -628,7 +629,8 @@
         *error = [NSError errorWithDomain:MXDecryptingErrorDomain
                                      code:MXDecryptingErrorUnableToDecryptCode
                                  userInfo:@{
-                                            NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, event, event.content[@"algorithm"]]
+                                            NSLocalizedDescriptionKey: MXDecryptingErrorUnableToDecrypt,
+                                            NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, event, event.content[@"algorithm"]]
                                             }];
         return nil;
     }

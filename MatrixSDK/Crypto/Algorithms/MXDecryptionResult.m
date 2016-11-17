@@ -19,7 +19,9 @@
 NSString *const MXDecryptingErrorDomain = @"org.matrix.sdk.decryption";
 
 NSString* const MXDecryptingErrorEncryptionNotEnabledReason         = @"Encryption not enabled";
+NSString* const MXDecryptingErrorUnableToEncrypt                    = @"Unable to encrypt";
 NSString* const MXDecryptingErrorUnableToEncryptReason              = @"Unable to encrypt %@";
+NSString* const MXDecryptingErrorUnableToDecrypt                    = @"Unable to decrypt";
 NSString* const MXDecryptingErrorUnableToDecryptReason              = @"Unable to decrypt %@. Olm error: %@";
 NSString* const MXDecryptingErrorUnkwnownInboundSessionIdReason     = @"Unknown inbound session id";
 NSString* const MXDecryptingErrorInboundSessionMismatchRoomIdReason = @"Mismatched room_id for inbound group session (expected %@, was %@)";
