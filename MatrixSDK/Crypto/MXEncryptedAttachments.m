@@ -23,6 +23,8 @@
 
 @implementation MXEncryptedAttachments
 
+#pragma mark encrypt
+
 + (void)encryptAttachment:(MXKMediaLoader *)uploader
                  mimeType:(NSString *)mimeType
                  localUrl:(NSURL *)url
@@ -127,8 +129,8 @@
     free(outbuf);
     CCCryptorRelease(cryptor);
     
-    NSMutableData *plaintextSha256 = [[NSMutableData alloc] initWithLength:CC_SHA256_DIGEST_LENGTH];
-    CC_SHA256_Final(plaintextSha256.mutableBytes, &sha256ctx);
+    NSMutableData *computedSha256 = [[NSMutableData alloc] initWithLength:CC_SHA256_DIGEST_LENGTH];
+    CC_SHA256_Final(computedSha256.mutableBytes, &sha256ctx);
     
     
     [uploader uploadData:ciphertext filename:nil mimeType:@"application/octet-stream" success:^(NSString *url) {
@@ -144,13 +146,115 @@
                           },
                   @"iv": [iv base64EncodedStringWithOptions:0],
                   @"hashes": @{
-                          @"sha256": [MXEncryptedAttachments base64ToUnpaddedBase64:[plaintextSha256 base64EncodedStringWithOptions:0]],
+                          @"sha256": [MXEncryptedAttachments base64ToUnpaddedBase64:[computedSha256 base64EncodedStringWithOptions:0]],
                           }
                   });
     } failure:^(NSError *error) {
         failure(error);
     }];
 }
+
+#pragma mark decrypt
+
++ (NSError *)decryptAttachment:(NSDictionary *)fileInfo
+              inputStream:(NSInputStream *)inputStream
+             outputStream:(NSOutputStream *)outputStream {
+    if (!fileInfo[@"key"])
+    {
+        return [NSError errorWithDomain:MXEncryptedAttachmentsErrorDomain code:0 userInfo:@{@"err": @"missing_key"}];
+    }
+    if (![fileInfo[@"key"][@"alg"] isEqualToString:@"A256CTR"])
+    {
+        return [NSError errorWithDomain:MXEncryptedAttachmentsErrorDomain code:0 userInfo:@{@"err": @"missing_or_incorrect_key_alg"}];
+    }
+    if (!fileInfo[@"key"][@"k"])
+    {
+        return [NSError errorWithDomain:MXEncryptedAttachmentsErrorDomain code:0 userInfo:@{@"err": @"missing_key_data"}];
+    }
+    if (!fileInfo[@"iv"])
+    {
+        return [NSError errorWithDomain:MXEncryptedAttachmentsErrorDomain code:0 userInfo:@{@"err": @"missing_iv"}];
+    }
+    if (!fileInfo[@"hashes"])
+    {
+        return [NSError errorWithDomain:MXEncryptedAttachmentsErrorDomain code:0 userInfo:@{@"err": @"missing_hashes"}];
+    }
+    if (!fileInfo[@"hashes"][@"sha256"])
+    {
+        return [NSError errorWithDomain:MXEncryptedAttachmentsErrorDomain code:0 userInfo:@{@"err": @"missing_sha256_hash"}];
+    }
+    
+    NSData *keyData = [[NSData alloc] initWithBase64EncodedString:[MXEncryptedAttachments base64UrlToBase64:fileInfo[@"key"][@"k"]]
+                                                                   options:0];
+    if (!keyData || keyData.length != kCCKeySizeAES256)
+    {
+        return [NSError errorWithDomain:MXEncryptedAttachmentsErrorDomain code:0 userInfo:@{@"err": @"bad_key_data"}];
+    }
+    
+    NSData *ivData = [[NSData alloc] initWithBase64EncodedString:fileInfo[@"iv"] options:0];
+    if (!ivData || ivData.length != kCCBlockSizeAES128)
+    {
+        return [NSError errorWithDomain:MXEncryptedAttachmentsErrorDomain code:0 userInfo:@{@"err": @"bad_iv_data"}];
+    }
+    
+    CCCryptorRef cryptor;
+    CCCryptorStatus status;
+    
+    status = CCCryptorCreateWithMode(kCCDecrypt, kCCModeCTR, kCCAlgorithmAES,
+                                     ccNoPadding, ivData.bytes, keyData.bytes, kCCKeySizeAES256,
+                                     NULL, 0, 0, kCCModeOptionCTR_BE, &cryptor);
+    if (status != kCCSuccess)
+    {
+        return [NSError errorWithDomain:MXEncryptedAttachmentsErrorDomain code:0 userInfo:@{@"err": @"error_creating_cryptor"}];
+    }
+    
+    [inputStream open];
+    [outputStream open];
+    
+    size_t buflen = 4096;
+    uint8_t *ctbuf = malloc(buflen);
+    uint8_t *ptbuf = malloc(buflen);
+    
+    CC_SHA256_CTX sha256ctx;
+    CC_SHA256_Init(&sha256ctx);
+    
+    NSInteger bytesRead;
+    size_t bytesProduced;
+    while ( (bytesRead = [inputStream read:ctbuf maxLength:buflen]) > 0)
+    {
+        status = CCCryptorUpdate(cryptor, ctbuf, bytesRead, ptbuf, buflen, &bytesProduced);
+        if (status != kCCSuccess) {
+            free(ptbuf);
+            free(ctbuf);
+            CCCryptorRelease(cryptor);
+            return [NSError errorWithDomain:MXEncryptedAttachmentsErrorDomain code:0 userInfo:@{@"err": @"error_decrypting"}];
+        }
+        
+        [outputStream write:ptbuf maxLength:bytesProduced];
+        
+        CC_SHA256_Update(&sha256ctx, ctbuf, bytesRead);
+    }
+    free(ctbuf);
+    free(ptbuf);
+    CCCryptorRelease(cryptor);
+    
+    [inputStream close];
+    [outputStream close];
+    
+    NSMutableData *computedSha256 = [[NSMutableData alloc] initWithLength:CC_SHA256_DIGEST_LENGTH];
+    CC_SHA256_Final(computedSha256.mutableBytes, &sha256ctx);
+    
+    NSData *expectedSha256 = [[NSData alloc] initWithBase64EncodedString:[MXEncryptedAttachments padBase64:fileInfo[@"hashes"][@"sha256"]] options:0];
+    
+    if (![computedSha256 isEqualToData:expectedSha256])
+    {
+        NSLog(@"Hash mismatch when decrypting attachment! Expected: %@, got %@", fileInfo[@"hashes"][@"sha256"], [computedSha256 base64EncodedStringWithOptions:0]);
+        return [NSError errorWithDomain:MXEncryptedAttachmentsErrorDomain code:0 userInfo:@{@"err": @"hash_mismatch"}];
+    }
+    return nil;
+}
+
+#pragma mark utility code
 
 + (NSString *)base64ToUnpaddedBase64:(NSString *)base64 {
     return [base64 stringByReplacingOccurrencesOfString:@"=" withString:@""];
@@ -161,8 +265,17 @@
     ret = [ret stringByReplacingOccurrencesOfString:@"-" withString:@"+"];
     ret = [ret stringByReplacingOccurrencesOfString:@"_" withString:@"/"];
     
-    // don't bother adding padding
+    // iOS needs the padding to decode base64
+    return [MXEncryptedAttachments padBase64:ret];
+}
+
++ (NSString *)padBase64:(NSString *)unpadded {
+    NSString *ret = unpadded;
     
+    int paddingNeeded = ret.length % 3;
+    for (int i = 0; i < paddingNeeded; ++i) {
+        ret = [ret stringByAppendingString:@"="];
+    }
     return ret;
 }
 
