@@ -191,7 +191,7 @@
         return [NSError errorWithDomain:MXEncryptedAttachmentsErrorDomain code:0 userInfo:@{@"err": @"bad_key_data"}];
     }
     
-    NSData *ivData = [[NSData alloc] initWithBase64EncodedString:fileInfo[@"iv"] options:0];
+    NSData *ivData = [[NSData alloc] initWithBase64EncodedString:[MXEncryptedAttachments padBase64:fileInfo[@"iv"]] options:0];
     if (!ivData || ivData.length != kCCBlockSizeAES128)
     {
         return [NSError errorWithDomain:MXEncryptedAttachmentsErrorDomain code:0 userInfo:@{@"err": @"bad_iv_data"}];
@@ -272,8 +272,7 @@
 + (NSString *)padBase64:(NSString *)unpadded {
     NSString *ret = unpadded;
     
-    int paddingNeeded = ret.length % 3;
-    for (int i = 0; i < paddingNeeded; ++i) {
+    while (ret.length % 3) {
         ret = [ret stringByAppendingString:@"="];
     }
     return ret;
