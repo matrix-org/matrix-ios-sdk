@@ -376,7 +376,8 @@
                 *error = [NSError errorWithDomain:MXDecryptingErrorDomain
                                              code:MXDecryptingErrorUnableToDecryptCode
                                          userInfo:@{
-                                                    NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, body, *error]
+                                                    NSLocalizedDescriptionKey: MXDecryptingErrorUnableToDecrypt,
+                                                    NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, body, *error]
                                                     }];
             }
         }
