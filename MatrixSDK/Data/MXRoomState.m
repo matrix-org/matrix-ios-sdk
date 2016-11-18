@@ -594,8 +594,8 @@
 
 - (NSString*)memberName:(NSString*)userId
 {
-    // Sanity check
-    if (!userId.length)
+    // Sanity check (ignore the request if the room state is not initialized yet)
+    if (!userId.length || !membersNamesCache)
     {
         return nil;
     }
