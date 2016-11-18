@@ -1,5 +1,12 @@
+Changes in Matrix iOS SDK in 0.7.1 (2016-11-18)
+===============================================
+
+Bug fixes:
+* fix Signal detected: 11 at [MXRoomState memberName:] level.
+* [Register flow] Register with a mail address fails (https://github.com/vector-im/vector-ios#799).
+
 Changes in Matrix iOS SDK in 0.7.0 (2016-11-16)
-================================================
+===============================================
 
 Improvements:
  * Support end-to-end encryption. It is experimental and may not be reliable. You should not yet trust it to secure data. File transfers are not yet encrypted. Devices will not yet be able to decrypt history from before they joined the room. Once encryption is enabled for a room it cannot be turned off again (for now). Encrypted messages will not be visible on clients that do not yet implement encryption.
