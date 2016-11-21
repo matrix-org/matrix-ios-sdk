@@ -53,7 +53,7 @@
     return self;
 }
 
-- (MXDecryptionResult *)decryptEvent:(MXEvent *)event error:(NSError *__autoreleasing *)error
+- (MXDecryptionResult *)decryptEvent:(MXEvent *)event inTimeline:(NSString*)timeline error:(NSError *__autoreleasing *)error
 {
     NSString *deviceKey = event.content[@"sender_key"];
     NSDictionary *ciphertext = event.content[@"ciphertext"];

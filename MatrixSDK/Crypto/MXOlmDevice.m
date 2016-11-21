@@ -45,13 +45,16 @@
     // This partially mitigates a replay attack where a MITM resends a group
     // message into the room.
     //
-    // TODO: If we ever remove an event from memory we will also need to remove
-    // it from this map. Otherwise if we download the event from the server we
-    // will think that it is a duplicate.
+    // The Matrix SDK exposes events through MXEventTimelines. A developer can open several
+    // timelines from a same room so that a message can be decrypted several times but from
+    // a different timeline.
+    // So, store these message indexes per timeline id.
     //
-    // Keys are strings of form "<senderKey>|<session_id>|<message_index>"
+    // The first level keys are timeline ids.
+    // The second level keys are strings of form "<senderKey>|<session_id>|<message_index>"
     // Values are @(YES).
-    NSMutableDictionary<NSString*, NSNumber*> *inboundGroupSessionMessageIndexes;
+    NSMutableDictionary<NSString*,
+        NSMutableDictionary<NSString*, NSNumber*> *> *inboundGroupSessionMessageIndexes;
 }
 @end
 
@@ -323,6 +326,7 @@
 }
 
 - (MXDecryptionResult *)decryptGroupMessage:(NSString *)body roomId:(NSString *)roomId
+                                 inTimeline:(NSString *)timeline
                                   sessionId:(NSString *)sessionId senderKey:(NSString *)senderKey
                                       error:(NSError *__autoreleasing *)error
 {
@@ -343,23 +347,29 @@
             if (payloadString)
             {
                 // Check if we have seen this message index before to detect replay attacks.
-                NSString *messageIndexKey = [NSString stringWithFormat:@"%@|%@|%tu", senderKey, sessionId, messageIndex];
-                if (inboundGroupSessionMessageIndexes[messageIndexKey])
+                if (timeline)
                 {
-                    // TODO: Disable this protection for now as it creates regression
-                    // See https://github.com/matrix-org/matrix-ios-sdk/issues/162#issuecomment-260939830
-                    NSLog(@"[MXOlmDevice] decryptGroupMessage: Warning: Possible replay attack %@", messageIndexKey);
+                    if (!inboundGroupSessionMessageIndexes[timeline])
+                    {
+                        inboundGroupSessionMessageIndexes[timeline] = [NSMutableDictionary dictionary];
+                    }
 
-//                    *error = [NSError errorWithDomain:MXDecryptingErrorDomain
-//                                                 code:MXDecryptingErrorDuplicateMessageIndexCode
-//                                             userInfo:@{
-//                                                        NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorDuplicateMessageIndexReason, messageIndexKey]
-//                                                        }];
-//
-//                    return nil;
+                    NSString *messageIndexKey = [NSString stringWithFormat:@"%@|%@|%tu", senderKey, sessionId, messageIndex];
+                    if (inboundGroupSessionMessageIndexes[timeline][messageIndexKey])
+                    {
+                        NSLog(@"[MXOlmDevice] decryptGroupMessage: Warning: Possible replay attack %@", messageIndexKey);
+
+                        *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                                     code:MXDecryptingErrorDuplicateMessageIndexCode
+                                                 userInfo:@{
+                                                            NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorDuplicateMessageIndexReason, messageIndexKey]
+                                                            }];
+
+                        return nil;
+                    }
+
+                    inboundGroupSessionMessageIndexes[timeline][messageIndexKey] = @(YES);
                 }
-
-                inboundGroupSessionMessageIndexes[messageIndexKey] = @(YES);
 
                 result = [[MXDecryptionResult alloc] init];
                 result.payload = [NSJSONSerialization JSONObjectWithData:[payloadString dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
@@ -406,6 +416,11 @@
     }
 
     return result;
+}
+
+- (void)resetReplayAttackCheckInTimeline:(NSString*)timeline
+{
+    [inboundGroupSessionMessageIndexes removeObjectForKey:timeline];
 }
 
 

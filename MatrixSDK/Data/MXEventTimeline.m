@@ -87,6 +87,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     self = [super init];
     if (self)
     {
+        _timelineId = [[NSUUID UUID] UUIDString];
         _initialEventId = initialEventId;
         room = room2;
         store = store2;
@@ -114,6 +115,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 - (void)destroy
 {
+    [room.mxSession resetReplayAttackCheckInTimeline:_timelineId];
+
     if (httpOperation)
     {
         // Cancel the current server request
@@ -160,6 +163,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 - (void)resetPagination
 {
+    [room.mxSession resetReplayAttackCheckInTimeline:_timelineId];
+
     // Reset the back state to the current room state
     backState = [[MXRoomState alloc] initBackStateWith:_state];
 
@@ -172,6 +177,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     NSParameterAssert(success);
     NSAssert(_initialEventId, @"[MXEventTimeline] resetPaginationAroundInitialEventWithLimit cannot be called on live timeline");
 
+    [room.mxSession resetReplayAttackCheckInTimeline:_timelineId];
+    
     // Reset the store
     [store deleteAllData];
 
@@ -528,7 +535,9 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     // Decrypt event if necessary
     if (event.eventType == MXEventTypeRoomEncrypted)
     {
-        if (![room.mxSession decryptEvent:event])
+        BOOL doCheck = self.isLiveTimeline && !fromStore; // && direction == MXTimelineDirectionForwards;
+        doCheck = !doCheck;
+        if (![room.mxSession decryptEvent:event inTimeline:_timelineId])
         {
             NSLog(@"[MXTimeline] addEvent: Warning: Unable to decrypt event: %@\nError: %@", event.content[@"body"], event.decryptionError);
         }

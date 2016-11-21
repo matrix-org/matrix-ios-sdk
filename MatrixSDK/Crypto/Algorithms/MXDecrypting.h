@@ -35,11 +35,13 @@
  Decrypt a message
 
  @param event the raw event.
+ @param timeline the id of the timeline where the event is decrypted. It is used
+                 to prevent replay attack.
  @param the result error if there is a problem decrypting the event.
 
  @return the decryption result. Nil if the event referred to an unknown megolm session.
  */
-- (MXDecryptionResult*)decryptEvent:(MXEvent*)event error:(NSError** )error;
+- (MXDecryptionResult*)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline error:(NSError** )error;
 
 /**
  * Handle a key event.

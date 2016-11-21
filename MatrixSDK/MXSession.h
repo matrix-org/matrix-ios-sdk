@@ -778,11 +778,20 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 #pragma mark - Crypto
 /**
  Decrypt an event and update its data.
- 
+
  @param event the event to decrypt.
+ @param timeline the id of the timeline where the event is decrypted. It is used
+        to prevent replay attack.
  @return YES if decryption is successful.
  */
-- (BOOL)decryptEvent:(MXEvent*)event;
+- (BOOL)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline;
+
+/**
+ Reset replay attack data for the given timeline.
+
+ @param the id of the timeline.
+ */
+- (void)resetReplayAttackCheckInTimeline:(NSString*)timeline;
 
 
 #pragma mark - Global events listeners

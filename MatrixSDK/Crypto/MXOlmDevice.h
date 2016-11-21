@@ -229,6 +229,8 @@ Determine if an incoming messages is a prekey message matching an existing sessi
  
  @param body the base64-encoded body of the encrypted message.
  @param roomId theroom in which the message was received.
+ @param timeline the id of the timeline where the event is decrypted. It is used
+                 to prevent replay attack.
  @param sessionId the session identifier.
  @param senderKey the base64-encoded curve25519 key of the sender.
  @param the result error if there is a problem decrypting the event.
@@ -236,8 +238,16 @@ Determine if an incoming messages is a prekey message matching an existing sessi
  @return the decrypting result. Nil if the sessionId is unknown.
  */
 - (MXDecryptionResult*)decryptGroupMessage:(NSString*)body roomId:(NSString*)roomId
+                                inTimeline:(NSString*)timeline
                                  sessionId:(NSString*)sessionId senderKey:(NSString*)senderKey
                                      error:(NSError** )error;
+
+/**
+ Reset replay attack data for the given timeline.
+
+ @param the id of the timeline.
+ */
+- (void)resetReplayAttackCheckInTimeline:(NSString*)timeline;
 
 
 #pragma mark - Utilities

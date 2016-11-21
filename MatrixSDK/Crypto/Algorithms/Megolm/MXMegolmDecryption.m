@@ -47,7 +47,7 @@
     return self;
 }
 
-- (MXDecryptionResult *)decryptEvent:(MXEvent *)event error:(NSError *__autoreleasing *)error
+- (MXDecryptionResult *)decryptEvent:(MXEvent *)event inTimeline:(NSString*)timeline error:(NSError *__autoreleasing *)error
 {
     NSString *senderKey = event.content[@"sender_key"];
     NSString *ciphertext = event.content[@"ciphertext"];
@@ -63,7 +63,7 @@
         return nil;
     }
 
-    return [olmDevice decryptGroupMessage:ciphertext roomId:event.roomId sessionId:sessionId senderKey:senderKey error:error];
+    return [olmDevice decryptGroupMessage:ciphertext roomId:event.roomId inTimeline:timeline sessionId:sessionId senderKey:senderKey error:error];
 }
 
 - (void)onRoomKeyEvent:(MXEvent *)event
