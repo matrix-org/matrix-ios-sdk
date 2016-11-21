@@ -1539,6 +1539,99 @@
     }];
 }
 
+#pragma mark - Device Management
+
+- (void)testDevices
+{
+    [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
+        
+        // Get the devices
+        [aliceRestClient devices:^(NSArray<MXDevice *> *devices){
+            
+            XCTAssertEqual(devices.count, 1);
+            XCTAssertNotNil(devices[0].displayName, @"The device name is missing");
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testDeviceByDeviceId
+{
+    [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
+        
+        // Get the devices
+        [aliceRestClient devices:^(NSArray<MXDevice *> *devices){
+            
+            XCTAssertEqual(devices.count, 1);
+            
+            MXDevice *device = devices[0];
+            NSString *deviceId = device.deviceId;
+            
+            // Get the devices
+            [aliceRestClient deviceByDeviceId:deviceId success:^(MXDevice *device){
+                
+                XCTAssertNotNil(device, @"The device is not found by device id");
+                
+                XCTAssertEqualObjects(device.deviceId, deviceId);
+                [expectation fulfill];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        
+    }];
+}
+
+- (void)testSetDeviceName
+{
+    [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
+        
+        // Get the devices
+        [aliceRestClient devices:^(NSArray<MXDevice *> *devices){
+            
+            XCTAssertEqual(devices.count, 1);
+            
+            MXDevice *device = devices[0];
+            NSString *deviceId = device.deviceId;
+            
+            // Set the device name
+            __block NSString *deviceName = @"mxAliceDevice";
+            [aliceRestClient setDeviceName:deviceName forDeviceId:deviceId success:^{
+                
+                // Check the new device name
+                [aliceRestClient deviceByDeviceId:deviceId success:^(MXDevice *device){
+                    
+                    XCTAssert(device);
+                    XCTAssertTrue([device.displayName isEqualToString:deviceName], @"Must retrieved the set string: %@ - %@", device.displayName, deviceName);
+                    [expectation fulfill];
+                    
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop

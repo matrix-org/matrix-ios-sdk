@@ -1617,4 +1617,74 @@ typedef enum : NSUInteger
 - (MXHTTPOperation*)sendToDevice:(NSString*)eventType contentMap:(MXUsersDevicesMap<NSDictionary*>*)contentMap
                          success:(void (^)())success
                          failure:(void (^)(NSError *error))failure;
+
+#pragma mark - Device Management
+/**
+ Get information about all devices for the current user.
+ 
+ @param success A block object called when the operation succeeds. It provides an array of the devices.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)devices:(void (^)(NSArray<MXDevice *> *))success
+                    failure:(void (^)(NSError *error))failure;
+
+/**
+ Get information on a single device, by device id.
+ 
+ @param deviceId The device identifier.
+ @param success A block object called when the operation succeeds. It provides information on the requested device.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)deviceByDeviceId:(NSString *)deviceId
+                             success:(void (^)(MXDevice *))success
+                             failure:(void (^)(NSError *error))failure;
+
+/**
+ Update the display name of a given device.
+ 
+ @param deviceName The new device name. If not given, the display name is unchanged.
+ @param deviceId The device identifier.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setDeviceName:(NSString *)deviceName
+                      forDeviceId:(NSString *)deviceId
+                          success:(void (^)())success
+                          failure:(void (^)(NSError *error))failure;
+
+/**
+ Get an authentication session to delete a device.
+ 
+ @param success A block object called when the operation succeeds. It provides the server response
+ as an MXAuthenticationSession instance.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)getSessionToDeleteDeviceByDeviceId:(NSString *)deviceId
+                                               success:(void (^)(MXAuthenticationSession *authSession))success
+                                               failure:(void (^)(NSError *error))failure;
+
+/**
+ Delete the given device, and invalidates any access token associated with it.
+ 
+ @discussion This API endpoint uses the User-Interactive Authentication API.
+ 
+ @param deviceId The device identifier.
+ @param authParameters The additional authentication information for the user-interactive authentication API.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)deleteDeviceByDeviceId:(NSString *)deviceId
+                                authParams:(NSDictionary*)authParameters
+                                   success:(void (^)())success
+                                   failure:(void (^)(NSError *error))failure;
 @end
