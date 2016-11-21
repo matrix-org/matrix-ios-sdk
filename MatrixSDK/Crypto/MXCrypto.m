@@ -618,7 +618,7 @@
     }
 }
 
-- (MXEvent*)decryptEvent:(MXEvent *)event error:(NSError *__autoreleasing *)error
+- (MXEvent*)decryptEvent:(MXEvent *)event inTimeline:(NSString*)timeline error:(NSError *__autoreleasing *)error
 {
     Class algClass = [[MXCryptoAlgorithms sharedAlgorithms] decryptorClassForAlgorithm:event.content[@"algorithm"]];
 
@@ -638,7 +638,7 @@
     id<MXDecrypting> alg = [[algClass alloc] initWithMatrixSession:mxSession];
 
     NSError *algDecryptError;
-    MXDecryptionResult *result = [alg decryptEvent:event error:&algDecryptError];
+    MXDecryptionResult *result = [alg decryptEvent:event inTimeline:timeline error:&algDecryptError];
 
     MXEvent *clearedEvent;
     if (result)

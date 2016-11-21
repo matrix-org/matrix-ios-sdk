@@ -199,10 +199,12 @@
  Decrypt a received event
 
  @param event the raw event.
+ @param timeline the id of the timeline where the event is decrypted. It is used
+                 to prevent replay attack.
  @param the result error if there is a problem decrypting the event.
  @return a cleared event or nil.
  */
-- (MXEvent*)decryptEvent:(MXEvent*)event error:(NSError**)error;
+- (MXEvent*)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline error:(NSError**)error;
 
 @end
 

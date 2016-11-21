@@ -1089,7 +1089,7 @@ typedef void (^MXOnResumeDone)();
     // Decrypt event if necessary
     if (event.eventType == MXEventTypeRoomEncrypted)
     {
-        if (![self decryptEvent:event])
+        if (![self decryptEvent:event inTimeline:nil])
         {
             NSLog(@"[MXSession] handleToDeviceEvent: Warning: Unable to decrypt to-device event: %@\nError: %@", event.wireContent[@"body"], event.decryptionError);
             return;
@@ -2131,7 +2131,7 @@ typedef void (^MXOnResumeDone)();
     return operation;
 }
 
-- (BOOL)decryptEvent:(MXEvent*)event
+- (BOOL)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline
 {
     if (event.eventType == MXEventTypeRoomEncrypted)
     {
@@ -2139,7 +2139,7 @@ typedef void (^MXOnResumeDone)();
         if (_crypto)
         {
             NSError *error;
-            event.clearEvent = [_crypto decryptEvent:event error:&error];
+            event.clearEvent = [_crypto decryptEvent:event inTimeline:timeline error:&error];
 
             if (!event.clearEvent)
             {
@@ -2159,6 +2159,16 @@ typedef void (^MXOnResumeDone)();
     }
 
     return (nil != event.clearEvent);
+}
+
+- (void)resetReplayAttackCheckInTimeline:(NSString*)timeline
+{
+#ifdef MX_CRYPTO
+    if (_crypto)
+    {
+        [_crypto.olmDevice resetReplayAttackCheckInTimeline:timeline];
+    }
+#endif
 }
 
 

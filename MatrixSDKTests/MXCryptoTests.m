@@ -612,8 +612,6 @@
     }];
 }
 
-// testAliceInACryptedRoomAfterClearCache
-
 - (void)testAliceAndBobInACryptedRoom
 {
     [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -1119,6 +1117,39 @@
             
         }];
 
+    }];
+}
+
+- (void)testReplayAttack
+{
+    [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        NSString *messageFromAlice = @"Hello I'm Alice!";
+
+        MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
+        MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
+
+        XCTAssert(roomFromBobPOV.state.isEncrypted);
+        XCTAssert(roomFromAlicePOV.state.isEncrypted);
+
+        [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+            // Try to decrypt the event again
+            event.clearEvent = nil;
+            BOOL b = [bobSession decryptEvent:event inTimeline:roomFromBobPOV.liveTimeline.timelineId];
+
+            // It must fail
+            XCTAssertFalse(b);
+            XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorDuplicateMessageIndexCode);
+            XCTAssertNil(event.clearEvent);
+
+            [expectation fulfill];
+        }];
+
+        [roomFromAlicePOV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
     }];
 }
 

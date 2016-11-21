@@ -57,6 +57,11 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
 @interface MXEventTimeline : NSObject
 
 /**
+ The id of this timeline.
+ */
+@property (nonatomic, readonly) NSString *timelineId;
+
+/**
  The initial event id used to initialise the timeline.
  Nil in case of live timeline.
  */
