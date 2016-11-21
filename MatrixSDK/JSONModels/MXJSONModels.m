@@ -1337,3 +1337,25 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 }
 
 @end
+
+#pragma mark - Device Management
+
+@implementation MXDevice
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXDevice *device = [[MXDevice alloc] init];
+    if (device)
+    {
+        NSDictionary *dict = [MXJSONModel removeNullValuesInJSON:JSONDictionary];
+        
+        MXJSONModelSetString(device.deviceId, dict[@"device_id"]);
+        MXJSONModelSetString(device.displayName, dict[@"display_name"]);
+        MXJSONModelSetString(device.lastSeenIp, dict[@"last_seen_ip"]);
+        MXJSONModelSetUInt64(device.lastSeenTs, dict[@"last_seen_ts"]);
+    }
+    
+    return device;
+}
+
+@end

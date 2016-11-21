@@ -3234,4 +3234,178 @@ MXAuthAction;
                                  }];
 }
 
+#pragma mark - Device Information
+- (MXHTTPOperation*)devices:(void (^)(NSArray<MXDevice *> *))success
+                    failure:(void (^)(NSError *error))failure
+{
+    return [httpClient requestWithMethod:@"GET"
+                                    path:[NSString stringWithFormat:@"%@/devices", kMXAPIPrefixPathUnstable]
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     
+                                     if (success)
+                                     {
+                                         // Create devices array from JSON on processing queue
+                                         dispatch_async(processingQueue, ^{
+                                             
+                                             NSArray<MXDevice *> *devices;
+                                             MXJSONModelSetMXJSONModelArray(devices, MXDevice, JSONResponse[@"devices"]);
+                                             
+                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                                 
+                                                 success(devices);
+                                                 
+                                             });
+                                         });
+                                     }
+                                     
+                                 } failure:^(NSError *error) {
+                                     
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                     
+                                 }];
+}
+
+- (MXHTTPOperation*)deviceByDeviceId:(NSString *)deviceId
+                             success:(void (^)(MXDevice *))success
+                             failure:(void (^)(NSError *error))failure
+{
+    return [httpClient requestWithMethod:@"GET"
+                                    path:[NSString stringWithFormat:@"%@/devices/%@", kMXAPIPrefixPathUnstable, deviceId]
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     
+                                     if (success)
+                                     {
+                                         // Create device from JSON on processing queue
+                                         dispatch_async(processingQueue, ^{
+                                             
+                                             MXDevice *device;
+                                             MXJSONModelSetMXJSONModel(device, MXDevice, JSONResponse);
+                                             
+                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                                 
+                                                 success(device);
+                                                 
+                                             });
+                                         });
+                                     }
+                                     
+                                 } failure:^(NSError *error) {
+                                     
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                     
+                                 }];
+}
+
+- (MXHTTPOperation*)setDeviceName:(NSString *)deviceName
+                      forDeviceId:(NSString *)deviceId
+                          success:(void (^)())success
+                          failure:(void (^)(NSError *error))failure
+{
+    NSDictionary *parameters;
+    if (deviceName.length)
+    {
+        parameters = @{@"display_name": deviceName};
+    }
+    
+    return [httpClient requestWithMethod:@"PUT"
+                                    path:[NSString stringWithFormat:@"%@/devices/%@", kMXAPIPrefixPathUnstable, deviceId]
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     
+                                     if (success)
+                                     {
+                                         // Use here the processing queue in order to keep the server response order
+                                         dispatch_async(processingQueue, ^{
+                                             
+                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                                 
+                                                 success();
+                                                 
+                                             });
+                                         });
+                                     }
+                                     
+                                 } failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                 }];
+}
+
+- (MXHTTPOperation*)getSessionToDeleteDeviceByDeviceId:(NSString *)deviceId
+                                               success:(void (^)(MXAuthenticationSession *authSession))success
+                                               failure:(void (^)(NSError *error))failure
+{
+    // Use DELETE with no params to get the supported authentication flows to delete device.
+    // The request will fail with Unauthorized status code, but the auth session will be available in response data.
+    
+    return [httpClient requestWithMethod:@"DELETE"
+                                    path:[NSString stringWithFormat:@"%@/devices/%@", kMXAPIPrefixPathUnstable, deviceId]
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     
+                                     NSLog(@"[MXRestClient] Warning: get an authentication session to delete a device failed");
+                                     if (success)
+                                     {
+                                         success(nil);
+                                     }
+                                     
+                                 } failure:^(NSError *error) {
+                                     
+                                     // The auth session should be available in response data in case of unauthorized request.
+                                     NSDictionary *JSONResponse = nil;
+                                     if (error.userInfo[MXHTTPClientErrorResponseDataKey])
+                                     {
+                                         JSONResponse = error.userInfo[MXHTTPClientErrorResponseDataKey];
+                                     }
+                                     
+                                     if (JSONResponse)
+                                     {
+                                         if (success)
+                                         {
+                                             success([MXAuthenticationSession modelFromJSON:JSONResponse]);
+                                         }
+                                     }
+                                     else if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                     
+                                 }];
+}
+
+- (MXHTTPOperation*)deleteDeviceByDeviceId:(NSString *)deviceId
+                                authParams:(NSDictionary*)authParameters
+                                   success:(void (^)())success
+                                   failure:(void (^)(NSError *error))failure
+{
+    return [httpClient requestWithMethod:@"DELETE"
+                                    path:[NSString stringWithFormat:@"%@/devices/%@", kMXAPIPrefixPathUnstable, deviceId]
+                              parameters:@{@"auth": authParameters}
+                                 success:^(NSDictionary *JSONResponse) {
+                                     
+                                     if (success)
+                                     {
+                                         success();
+                                     }
+                                     
+                                 } failure:^(NSError *error) {
+                                     
+                                     if (failure)
+                                     {
+                                         failure(error);
+                                     }
+                                     
+                                 }];
+}
+
 @end
