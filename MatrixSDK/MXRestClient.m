@@ -250,7 +250,8 @@ MXAuthAction;
         return nil;
     }
 
-    MXHTTPOperation *operation = [self getRegisterSession:^(MXAuthenticationSession *authSession) {
+    MXHTTPOperation *operation;
+    operation = [self getRegisterSession:^(MXAuthenticationSession *authSession) {
 
         NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:
                                            @{
