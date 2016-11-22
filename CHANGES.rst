@@ -1,3 +1,13 @@
+Changes in Matrix iOS SDK in 0.7.2 (2016-11-22)
+===============================================
+
+Improvements:
+ * MXRestClient: Add API to get information about user's devices.
+ 
+Bug fixes:
+ * Cannot invite user with dash in their user id (vector-im/vector-ios#812).
+ * Crypto: Mitigate replay attack #162.
+
 Changes in Matrix iOS SDK in 0.7.1 (2016-11-18)
 ===============================================
 
