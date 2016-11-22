@@ -1358,4 +1358,28 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     return device;
 }
 
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super init];
+    if (self)
+    {
+        _deviceId = [aDecoder decodeObjectForKey:@"device_id"];
+        _displayName = [aDecoder decodeObjectForKey:@"display_name"];
+        _lastSeenIp = [aDecoder decodeObjectForKey:@"last_seen_ip"];
+        _lastSeenTs = [((NSNumber*)[aDecoder decodeObjectForKey:@"last_seen_ts"]) unsignedLongLongValue];
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    [aCoder encodeObject:_deviceId forKey:@"device_id"];
+    if (_displayName)
+    {
+        [aCoder encodeObject:_displayName forKey:@"display_name"];
+    }
+    [aCoder encodeObject:_lastSeenIp forKey:@"last_seen_ip"];
+    [aCoder encodeObject:@(_lastSeenTs) forKey:@"last_seen_ts"];
+}
+
 @end
