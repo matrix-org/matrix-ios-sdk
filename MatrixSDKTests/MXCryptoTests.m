@@ -1143,6 +1143,11 @@
             XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorDuplicateMessageIndexCode);
             XCTAssertNil(event.clearEvent);
 
+            // Decrypting it with no replay attack mitigation must still work
+            b = [bobSession decryptEvent:event inTimeline:nil];
+            XCTAssert(b);
+            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
+
             [expectation fulfill];
         }];
 
@@ -1153,6 +1158,60 @@
     }];
 }
 
+- (void)testRoomKeyReshare
+{
+    [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        NSString *messageFromAlice = @"Hello I'm Alice!";
+
+        MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
+        MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
+
+        __block MXEvent *toDeviceEvent;
+
+        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionOnToDeviceEventNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+
+            toDeviceEvent = notif.userInfo[kMXSessionNotificationEventKey];
+
+            [[NSNotificationCenter defaultCenter] removeObserver:observer];
+        }];
+
+
+        [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
+
+            // Reinject a modified version of the received room_key event from Alice.
+            // From Bob pov, that mimics Alice resharing her keys but with an advanced outbound group session.
+            XCTAssert(toDeviceEvent);
+            NSString *sessionId = toDeviceEvent.content[@"session_id"];
+            NSString *newSessionKey = [aliceSession.crypto.olmDevice sessionKeyForOutboundGroupSession:sessionId];
+
+            [bobSession.crypto.olmDevice addInboundGroupSession:sessionId
+                                                     sessionKey:newSessionKey
+                                                         roomId:toDeviceEvent.content[@"room_id"]
+                                                      senderKey:toDeviceEvent.senderKey
+                                                    keysClaimed:toDeviceEvent.keysClaimed];
+
+            // We still must be able to decrypt the event
+            // ie, the implementation must have ignored the new room key with the advanced outbound group
+            // session key
+            event.clearEvent = nil;
+            BOOL b = [bobSession decryptEvent:event inTimeline:nil];
+
+            XCTAssert(b);
+            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
+
+
+            [expectation fulfill];
+        }];
+
+        [roomFromAlicePOV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
 
 @end
 

@@ -228,7 +228,7 @@ Determine if an incoming messages is a prekey message matching an existing sessi
  Decrypt a received message with an inbound group session.
  
  @param body the base64-encoded body of the encrypted message.
- @param roomId theroom in which the message was received.
+ @param roomId the room in which the message was received.
  @param timeline the id of the timeline where the event is decrypted. It is used
                  to prevent replay attack.
  @param sessionId the session identifier.
