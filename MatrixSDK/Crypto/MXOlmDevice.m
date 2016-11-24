@@ -26,9 +26,6 @@
 
 @interface MXOlmDevice ()
 {
-    // The store where crypto data is saved.
-    id<MXCryptoStore> store;
-
     // The OLMKit account instance.
     OLMAccount *olmAccount;
 
@@ -56,10 +53,15 @@
     NSMutableDictionary<NSString*,
         NSMutableDictionary<NSString*, NSNumber*> *> *inboundGroupSessionMessageIndexes;
 }
+
+// The store where crypto data is saved.
+@property (nonatomic, readonly) id<MXCryptoStore> store;
+
 @end
 
 
 @implementation MXOlmDevice
+@synthesize store;
 
 - (instancetype)initWithStore:(id<MXCryptoStore>)theStore
 {
@@ -386,15 +388,6 @@
             result.keysProved = @{
                                   @"curve25519": senderKey
                                   };
-        }
-        else
-        {
-            *error = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                         code:MXDecryptingErrorUnableToDecryptCode
-                                     userInfo:@{
-                                                NSLocalizedDescriptionKey: MXDecryptingErrorUnableToDecrypt,
-                                                NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, body, *error]
-                                                }];
         }
     }
 

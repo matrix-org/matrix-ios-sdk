@@ -58,7 +58,7 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 
     // The inbound group megolm sessions (<senderKey> -> (<inbound group session id> -> <inbound group megolm session>)
     NSMutableDictionary<NSString* /*senderKey*/,
-    NSMutableDictionary<NSString * /*inboundGroupSessionId*/,MXOlmInboundGroupSession *>*> *inboundGroupSessions;
+        NSMutableDictionary<NSString * /*inboundGroupSessionId*/,MXOlmInboundGroupSession *>*> *inboundGroupSessions;
 }
 
 @end
@@ -331,6 +331,16 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 - (MXOlmInboundGroupSession *)inboundGroupSessionWithId:(NSString *)sessionId andSenderKey:(NSString *)senderKey
 {
     return inboundGroupSessions[senderKey][sessionId];
+}
+
+
+#pragma mark - Methods for unitary tests purpose
+- (void)removeInboundGroupSessionWithId:(NSString *)sessionId andSenderKey:(NSString *)senderKey
+{
+    [inboundGroupSessions[senderKey] removeObjectForKey:sessionId];
+
+    NSString *filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreInboundGroupSessionsFile];
+    [NSKeyedArchiver archiveRootObject:inboundGroupSessions toFile:filePath];
 }
 
 

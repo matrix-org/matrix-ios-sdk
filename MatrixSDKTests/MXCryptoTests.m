@@ -207,6 +207,7 @@
     XCTAssertLessThan(event.age, 2000);
     XCTAssertEqualObjects(event.content[@"body"], clearMessage);
     XCTAssertEqualObjects(event.sender, senderSession.myUser.userId);
+    XCTAssertNil(event.decryptionError);
 
     // Return the number of failures in this method
     return self.testRun.failureCount - failureCount;
@@ -1207,6 +1208,66 @@
 
 
             [expectation fulfill];
+        }];
+
+        [roomFromAlicePOV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testLateRoomKey
+{
+    [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        NSString *messageFromAlice = @"Hello I'm Alice!";
+
+        MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
+        MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
+
+        __block MXEvent *toDeviceEvent;
+
+        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionOnToDeviceEventNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+
+            toDeviceEvent = notif.userInfo[kMXSessionNotificationEventKey];
+
+            [[NSNotificationCenter defaultCenter] removeObserver:observer];
+        }];
+
+        [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
+
+            // Make crypto forget the inbound group session
+            XCTAssert(toDeviceEvent);
+            NSString *sessionId = toDeviceEvent.content[@"session_id"];
+
+            MXFileCryptoStore *bobCryptoStore = (MXFileCryptoStore *)[bobSession.crypto.olmDevice valueForKey:@"store"];
+            [bobCryptoStore removeInboundGroupSessionWithId:sessionId andSenderKey:toDeviceEvent.senderKey];
+
+            // So that we cannot decrypt it anymore right now
+            [event setClearData:nil keysProved:nil keysClaimed:nil];
+            BOOL b = [bobSession decryptEvent:event inTimeline:nil];
+
+            XCTAssertFalse(b);
+            XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorUnkwnownInboundSessionIdCode);
+
+            // The event must be decrypted once we reinject the m.room_key event
+            __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXEventDidDecryptNotification object:event queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                [[NSNotificationCenter defaultCenter] removeObserver:observer];
+
+                XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
+                [expectation fulfill];
+            }];
+
+            // Reinject the m.room_key event. This mimics a room_key event that arrives after message events.
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionOnToDeviceEventNotification
+                                                                object:bobSession
+                                                              userInfo:@{
+                                                                         kMXSessionNotificationEventKey: toDeviceEvent
+                                                                         }];
         }];
 
         [roomFromAlicePOV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
