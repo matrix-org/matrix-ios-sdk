@@ -25,6 +25,11 @@
 {
     // The olm device interface
     MXOlmDevice *olmDevice;
+
+    // Events which we couldn't decrypt due to unknown sessions / indexes: map from
+    // senderKey|sessionId to timelines to list of MatrixEvents
+    NSMutableDictionary<NSString* /* senderKey|sessionId */,
+        NSMutableDictionary<NSString* /* timelineId */, NSMutableArray<MXEvent*>*>*> *pendingEvents;
 }
 @end
 
@@ -43,6 +48,7 @@
     if (self)
     {
         olmDevice = matrixSession.crypto.olmDevice;
+        pendingEvents = [NSMutableDictionary dictionary];
     }
     return self;
 }
@@ -73,10 +79,61 @@
     }
     else
     {
+        if ([error.domain isEqualToString:OLMErrorDomain])
+        {
+            // Manage OLMKit error
+            if ([error.localizedDescription isEqualToString:@"UNKNOWN_MESSAGE_INDEX"])
+            {
+                [self addEventToPendingList:event inTimeline:timeline];
+            }
+
+            // Package olm error into MXDecryptingErrorDomain
+            error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                         code:MXDecryptingErrorUnableToDecryptCode
+                                     userInfo:@{
+                                                NSLocalizedDescriptionKey: MXDecryptingErrorUnableToDecrypt,
+                                                NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, ciphertext, error]
+                                                }];
+        }
+        else if ([error.domain isEqualToString:MXDecryptingErrorDomain] && error.code == MXDecryptingErrorUnkwnownInboundSessionIdCode)
+        {
+            [self addEventToPendingList:event inTimeline:timeline];
+        }
+
         event.decryptionError = error;
     }
 
     return (event.clearEvent != nil);
+}
+
+/**
+ Add an event to the list of those we couldn't decrypt the first time we
+ saw them.
+ 
+ @param event the event to try to decrypt later.
+ */
+- (void)addEventToPendingList:(MXEvent*)event inTimeline:(NSString*)timelineId
+{
+    NSDictionary *content = event.wireContent;
+    NSString *k = [NSString stringWithFormat:@"%@|%@", content[@"sender_key"], content[@"session_id"]];
+
+    if (!timelineId)
+    {
+        timelineId = @"";
+    }
+
+    if (!pendingEvents[k])
+    {
+        pendingEvents[k] = [NSMutableDictionary dictionary];
+    }
+
+    if (!pendingEvents[k][timelineId])
+    {
+        pendingEvents[k][timelineId] = [NSMutableArray array];
+    }
+
+    NSLog(@"[MXMegolmDecryption] addEventToPendingList: %@", event);
+    [pendingEvents[k][timelineId] addObject:event];
 }
 
 - (void)onRoomKeyEvent:(MXEvent *)event
@@ -94,6 +151,29 @@
     }
 
     [olmDevice addInboundGroupSession:sessionId sessionKey:sessionKey roomId:roomId senderKey:event.senderKey keysClaimed:event.keysClaimed];
+
+    NSString *k = [NSString stringWithFormat:@"%@|%@", event.senderKey, event.content[@"session_id"]];
+    NSDictionary *pending = pendingEvents[k];
+    if (pending)
+    {
+        // Have another go at decrypting events sent with this session.
+        [pendingEvents removeObjectForKey:k];
+
+        for (NSString *timelineId in pending)
+        {
+            for (MXEvent *event in pending[timelineId])
+            {
+                if ([self decryptEvent:event inTimeline:(timelineId.length ? timelineId : nil)])
+                {
+                    NSLog(@"[MXMegolmDecryption] onRoomKeyEvent: successful re-decryption of %@", event.eventId);
+                }
+                else
+                {
+                    NSLog(@"[MXMegolmDecryption] onRoomKeyEvent: Still can't decrypt %@. Error: %@", event.eventId, event.decryptionError);
+                }
+            }
+        }
+    }
 }
 
 @end

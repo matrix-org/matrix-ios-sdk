@@ -451,6 +451,9 @@ NSString *const kMXEventDidDecryptNotification = @"kMXEventDidDecryptNotificatio
     _clearEvent.keysProved = keysProved;
     _clearEvent.keysClaimed = keysClaimed;
 
+    // Reset previous decryption error
+    _decryptionError = nil;
+
     [[NSNotificationCenter defaultCenter] postNotificationName:kMXEventDidDecryptNotification object:self userInfo:nil];
 }
 
