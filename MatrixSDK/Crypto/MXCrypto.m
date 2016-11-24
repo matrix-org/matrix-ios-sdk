@@ -31,8 +31,12 @@
     // The Matrix session.
     MXSession *mxSession;
 
-    // EncryptionAlgorithm instance for each room.
-    NSMutableDictionary<NSString*, id<MXEncrypting>> *roomAlgorithms;
+    // MXEncrypting instance for each room.
+    NSMutableDictionary<NSString*, id<MXEncrypting>> *roomEncryptors;
+
+    // A map from algorithm to MXDecrypting instance, for each room
+    NSMutableDictionary<NSString* /* roomId */,
+        NSMutableDictionary<NSString* /* algorithm */, id<MXDecrypting>>*> *roomDecryptors;
 
     // Our device keys
     MXDeviceInfo *myDevice;
@@ -62,7 +66,8 @@
         _store = store;
         _olmDevice = [[MXOlmDevice alloc] initWithStore:_store];
 
-        roomAlgorithms = [NSMutableDictionary dictionary];
+        roomEncryptors = [NSMutableDictionary dictionary];
+        roomDecryptors = [NSMutableDictionary dictionary];
 
         // Build our device keys: they will later be uploaded
         NSString *deviceId = _store.deviceId;
@@ -160,8 +165,11 @@
     _olmDevice = nil;
     _store = nil;
 
-    [roomAlgorithms removeAllObjects];
-    roomAlgorithms = nil;
+    [roomEncryptors removeAllObjects];
+    roomEncryptors = nil;
+
+    [roomDecryptors removeAllObjects];
+    roomDecryptors = nil;
 
     myDevice = nil;
 }
@@ -448,7 +456,7 @@
 
     id<MXEncrypting> alg = [[encryptionClass alloc] initWithMatrixSession:mxSession andRoom:roomId];
 
-    roomAlgorithms[roomId] = alg;
+    roomEncryptors[roomId] = alg;
 
     return YES;
 }
@@ -570,7 +578,7 @@
                                  failure:(void (^)(NSError *))failure
 {
     NSString *algorithm;
-    id<MXEncrypting> alg = roomAlgorithms[room.roomId];
+    id<MXEncrypting> alg = roomEncryptors[room.roomId];
 
     if (!alg)
     {
@@ -580,7 +588,7 @@
         if (algorithm)
         {
             [self setEncryptionInRoom:room.roomId withAlgorithm:algorithm];
-            alg = roomAlgorithms[room.roomId];
+            alg = roomEncryptors[room.roomId];
         }
     }
     else
@@ -614,9 +622,8 @@
 
 - (BOOL)decryptEvent:(MXEvent *)event inTimeline:(NSString*)timeline
 {
-    Class algClass = [[MXCryptoAlgorithms sharedAlgorithms] decryptorClassForAlgorithm:event.content[@"algorithm"]];
-
-    if (!algClass)
+    id<MXDecrypting> alg = [self getRoomDecryptor:event.roomId algorithm:event.content[@"algorithm"]];
+    if (!alg)
     {
         NSLog(@"[MXCrypto] decryptEvent: Unable to decrypt %@", event.content[@"algorithm"]);
         
@@ -628,8 +635,6 @@
                                                            }];
         return NO;
     }
-
-    id<MXDecrypting> alg = [[algClass alloc] initWithMatrixSession:mxSession];
 
     BOOL result = [alg decryptEvent:event inTimeline:timeline];
     if (!result)
@@ -829,15 +834,19 @@
  */
 - (void)onRoomKeyEvent:(MXEvent*)event
 {
-    Class algClass = [[MXCryptoAlgorithms sharedAlgorithms] decryptorClassForAlgorithm:event.content[@"algorithm"]];
+    if (!event.content[@"room_id"] || !event.content[@"algorithm"])
+    {
+        NSLog(@"[MXCrypto] onRoomKeyEvent: ERROR: Key event is missing fields");
+        return;
+    }
 
-    if (!algClass)
+    id<MXDecrypting> alg = [self getRoomDecryptor:event.roomId algorithm:event.content[@"algorithm"]];
+    if (!alg)
     {
         NSLog(@"[MXCrypto] onRoomKeyEvent: ERROR: Unable to handle keys for %@", event.content[@"algorithm"]);
         return;
     }
 
-    id<MXDecrypting> alg = [[algClass alloc] initWithMatrixSession:mxSession];
     [alg onRoomKeyEvent:event];
 }
 
@@ -864,7 +873,7 @@
 
         for (NSString *roomId in rooms)
         {
-            id<MXEncrypting> alg = roomAlgorithms[roomId];
+            id<MXEncrypting> alg = roomEncryptors[roomId];
             if (alg)
             {
                 // The room is encrypted, report the new device to it
@@ -894,7 +903,7 @@
  */
 - (void)onRoomMembership:(MXEvent*)event
 {
-    id<MXEncrypting> alg = roomAlgorithms[event.roomId];
+    id<MXEncrypting> alg = roomEncryptors[event.roomId];
     if (!alg)
     {
         // No encrypting in this room
@@ -1039,6 +1048,54 @@
 
     return YES;
 }
+
+/**
+ Get a decryptor for a given room and algorithm.
+ 
+ If we already have a decryptor for the given room and algorithm, return
+ it. Otherwise try to instantiate it.
+ 
+ @param {string?} roomId   room id for decryptor. If undefined, a temporary
+ decryptor is instantiated.
+ 
+ @param {string} algorithm  crypto algorithm
+ 
+ @return {module:crypto.algorithms.base.DecryptionAlgorithm}
+ 
+ @raises {module:crypto.algorithms.DecryptionError} if the algorithm is
+ unknown
+ */
+- (id<MXDecrypting>)getRoomDecryptor:(NSString*)roomId algorithm:(NSString*)algorithm
+{
+    id<MXDecrypting> alg;
+
+    if (roomId)
+    {
+        if (!roomDecryptors[roomId])
+        {
+            roomDecryptors[roomId] = [NSMutableDictionary dictionary];
+        }
+
+        alg = roomDecryptors[roomId][algorithm];
+        if (alg)
+        {
+            return alg;
+        }
+    }
+
+    Class algClass = [[MXCryptoAlgorithms sharedAlgorithms] decryptorClassForAlgorithm:algorithm];
+    if (algClass)
+    {
+        alg = [[algClass alloc] initWithMatrixSession:mxSession];
+
+        if (roomId)
+        {
+            roomDecryptors[roomId][algorithm] = alg;
+        }
+    }
+
+    return alg;
+};
 
 @end
 
