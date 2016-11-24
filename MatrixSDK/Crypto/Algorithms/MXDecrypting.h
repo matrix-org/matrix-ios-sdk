@@ -32,16 +32,18 @@
 - (instancetype)initWithMatrixSession:(MXSession*)matrixSession;
 
 /**
- Decrypt a message
+ Decrypt a message.
+
+ In case of success, the event is updated with clear data.
+ In case of failure, event.decryptionError contains the error.
 
  @param event the raw event.
  @param timeline the id of the timeline where the event is decrypted. It is used
                  to prevent replay attack.
- @param the result error if there is a problem decrypting the event.
 
- @return the decryption result. Nil if the event referred to an unknown megolm session.
+ @return YES if the decryption was successful.
  */
-- (MXDecryptionResult*)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline error:(NSError** )error;
+- (BOOL)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline;
 
 /**
  * Handle a key event.

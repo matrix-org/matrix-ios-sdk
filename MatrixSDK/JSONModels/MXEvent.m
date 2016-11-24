@@ -67,6 +67,7 @@ NSString *const kMXMembershipStringBan    = @"ban";
 
 uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 
+NSString *const kMXEventDidDecryptNotification = @"kMXEventDidDecryptNotification";
 
 #pragma mark - MXEvent
 @interface MXEvent ()
@@ -442,6 +443,15 @@ uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 - (BOOL)isEncrypted
 {
     return (self.wireEventType == MXEventTypeRoomEncrypted);
+}
+
+- (void)setClearData:(MXEvent *)clearEvent keysProved:(NSDictionary<NSString *,NSString *> *)keysProved keysClaimed:(NSDictionary<NSString *,NSString *> *)keysClaimed
+{
+    _clearEvent = clearEvent;
+    _clearEvent.keysProved = keysProved;
+    _clearEvent.keysClaimed = keysClaimed;
+
+    [[NSNotificationCenter defaultCenter] postNotificationName:kMXEventDidDecryptNotification object:self userInfo:nil];
 }
 
 - (NSString *)senderKey

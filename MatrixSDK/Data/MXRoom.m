@@ -567,9 +567,10 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         encryptedEvent.wireType = kMXEventTypeStringRoomEncrypted;
         encryptedEvent.originServerTs = event.originServerTs;
         encryptedEvent.sender = mxSession.myUser.userId;
-        
-        event.keysProved = @{@"curve25519":mxSession.crypto.olmDevice.deviceCurve25519Key};
-        encryptedEvent.clearEvent = event;
+
+        [encryptedEvent setClearData:event
+                          keysProved:@{@"curve25519":mxSession.crypto.olmDevice.deviceCurve25519Key}
+                         keysClaimed:nil];
         
         event = encryptedEvent;
     }

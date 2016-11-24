@@ -46,10 +46,6 @@
 
     // Timer to periodically upload keys
     NSTimer *uploadKeysTimer;
-
-    // Map from userId -> deviceId -> roomId -> timestamp
-    // to manage rate limiting for pinging devices
-    MXUsersDevicesMap<NSMutableDictionary<NSString* /*roomId*/, NSDate* /*timestamp*/>*> *lastNewDeviceMessageTsByUserDeviceRoom;
 }
 @end
 
@@ -67,8 +63,6 @@
         _olmDevice = [[MXOlmDevice alloc] initWithStore:_store];
 
         roomAlgorithms = [NSMutableDictionary dictionary];
-
-        lastNewDeviceMessageTsByUserDeviceRoom = [[MXUsersDevicesMap alloc] init];
 
         // Build our device keys: they will later be uploaded
         NSString *deviceId = _store.deviceId;
@@ -618,7 +612,7 @@
     }
 }
 
-- (MXEvent*)decryptEvent:(MXEvent *)event inTimeline:(NSString*)timeline error:(NSError *__autoreleasing *)error
+- (BOOL)decryptEvent:(MXEvent *)event inTimeline:(NSString*)timeline
 {
     Class algClass = [[MXCryptoAlgorithms sharedAlgorithms] decryptorClassForAlgorithm:event.content[@"algorithm"]];
 
@@ -626,55 +620,24 @@
     {
         NSLog(@"[MXCrypto] decryptEvent: Unable to decrypt %@", event.content[@"algorithm"]);
         
-        *error = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                     code:MXDecryptingErrorUnableToDecryptCode
-                                 userInfo:@{
-                                            NSLocalizedDescriptionKey: MXDecryptingErrorUnableToDecrypt,
-                                            NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, event, event.content[@"algorithm"]]
-                                            }];
-        return nil;
+        event.decryptionError = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                                    code:MXDecryptingErrorUnableToDecryptCode
+                                                userInfo:@{
+                                                           NSLocalizedDescriptionKey: MXDecryptingErrorUnableToDecrypt,
+                                                           NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, event, event.content[@"algorithm"]]
+                                                           }];
+        return NO;
     }
 
     id<MXDecrypting> alg = [[algClass alloc] initWithMatrixSession:mxSession];
 
-    NSError *algDecryptError;
-    MXDecryptionResult *result = [alg decryptEvent:event inTimeline:timeline error:&algDecryptError];
-
-    MXEvent *clearedEvent;
-    if (result)
+    BOOL result = [alg decryptEvent:event inTimeline:timeline];
+    if (!result)
     {
-        clearedEvent = [MXEvent modelFromJSON:result.payload];
-        clearedEvent.keysProved = result.keysProved;
-        clearedEvent.keysClaimed = result.keysClaimed;
-    }
-    else
-    {
-        NSLog(@"[MXCrypto] decryptEvent: Error: %@", algDecryptError);
-
-        // We've got a message for a session we don't have.  Maybe the sender
-        // forgot to tell us about the session.  Remind the sender that we
-        // exist so that they might tell us about the session on their next
-        // send.
-        //
-        // (Alternatively, it might be that we are just looking at
-        // scrollback... at least we rate-limit the m.new_device events :/)
-        //
-        // XXX: this is a band-aid which masks symptoms of other bugs. It would
-        // be nice to get rid of it.
-        if (event.roomId && event.sender)
-        {
-            // Note: if the sending device didn't tell us its device_id, fall
-            // back to all devices.
-            [self sendPingToDevice:event.content[@"device_id"] userId:event.sender forRoom:event.roomId];
-        }
-
-        if (error)
-        {
-            *error = algDecryptError;
-        }
+        NSLog(@"[MXCrypto] decryptEvent: Error: %@", event.decryptionError);
     }
 
-    return clearedEvent;
+    return result;
 }
 
 - (NSDictionary*)encryptMessage:(NSDictionary*)payloadFields forDevices:(NSArray<MXDeviceInfo*>*)devices
@@ -1075,59 +1038,6 @@
     }
 
     return YES;
-}
-
-/**
- Send a "m.new_device" message to remind it that we exist and are a member
- of a room.
- 
- This is rate limited to send a message at most once an hour per destination.
- 
- @param deviceId the id of the device to ping. If nil, all devices.
- @param userId the id of the user to ping.
- @param roomId the id of the room we want to remind them about.
- */
-- (void)sendPingToDevice:(NSString*)deviceId userId:(NSString*)userId forRoom:(NSString*)roomId
-{
-    if (!deviceId)
-    {
-        deviceId = @"*";
-    }
-
-    // Check rate limiting
-    NSMutableDictionary<NSString*, NSDate*> *lastTsByRoom = [lastNewDeviceMessageTsByUserDeviceRoom objectForDevice:deviceId forUser:userId];
-    if (!lastTsByRoom)
-    {
-        lastTsByRoom = [[NSMutableDictionary alloc] init];
-    }
-
-    NSDate *lastTs = lastTsByRoom[roomId];
-    NSDate *now = [NSDate date];
-    if (now.timeIntervalSince1970 - lastTs.timeIntervalSince1970 < 3600)
-    {
-        // rate-limiting
-        return;
-    }
-
-    // Update rate limiting data
-    lastTsByRoom[roomId] = now;
-    [lastNewDeviceMessageTsByUserDeviceRoom setObject:lastTsByRoom forUser:userId andDevice:deviceId];
-
-    // Build a per-device message for each user
-    MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];
-
-    [contentMap setObjects:@{
-                             deviceId: @{
-                                     @"device_id": myDevice.deviceId,
-                                     @"rooms": @[roomId],
-                                     }
-
-                             } forUser:userId];
-
-
-    NSLog(@"[MXCrypto] sendPingToDevice (%@): %@", kMXEventTypeStringNewDevice, contentMap);
-
-    [mxSession.matrixRestClient sendToDevice:kMXEventTypeStringNewDevice contentMap:contentMap success:nil failure:nil];
 }
 
 @end

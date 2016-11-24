@@ -1135,7 +1135,7 @@
         [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
             // Try to decrypt the event again
-            event.clearEvent = nil;
+            [event setClearData:nil keysProved:nil keysClaimed:nil];
             BOOL b = [bobSession decryptEvent:event inTimeline:roomFromBobPOV.liveTimeline.timelineId];
 
             // It must fail
@@ -1185,18 +1185,21 @@
             // From Bob pov, that mimics Alice resharing her keys but with an advanced outbound group session.
             XCTAssert(toDeviceEvent);
             NSString *sessionId = toDeviceEvent.content[@"session_id"];
-            NSString *newSessionKey = [aliceSession.crypto.olmDevice sessionKeyForOutboundGroupSession:sessionId];
 
-            [bobSession.crypto.olmDevice addInboundGroupSession:sessionId
-                                                     sessionKey:newSessionKey
-                                                         roomId:toDeviceEvent.content[@"room_id"]
-                                                      senderKey:toDeviceEvent.senderKey
-                                                    keysClaimed:toDeviceEvent.keysClaimed];
+            NSMutableDictionary *newContent = [NSMutableDictionary dictionaryWithDictionary:toDeviceEvent.content];
+            newContent[@"session_key"] = [aliceSession.crypto.olmDevice sessionKeyForOutboundGroupSession:sessionId];
+            toDeviceEvent.clearEvent.wireContent = newContent;
+
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionOnToDeviceEventNotification
+                                                                object:bobSession
+                                                              userInfo:@{
+                                                                         kMXSessionNotificationEventKey: toDeviceEvent
+                                                                         }];
 
             // We still must be able to decrypt the event
             // ie, the implementation must have ignored the new room key with the advanced outbound group
             // session key
-            event.clearEvent = nil;
+            [event setClearData:nil keysProved:nil keysClaimed:nil];
             BOOL b = [bobSession decryptEvent:event inTimeline:nil];
 
             XCTAssert(b);

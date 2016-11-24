@@ -2133,18 +2133,13 @@ typedef void (^MXOnResumeDone)();
 
 - (BOOL)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline
 {
+    BOOL result = NO;
     if (event.eventType == MXEventTypeRoomEncrypted)
     {
 #ifdef MX_CRYPTO
         if (_crypto)
         {
-            NSError *error;
-            event.clearEvent = [_crypto decryptEvent:event inTimeline:timeline error:&error];
-
-            if (!event.clearEvent)
-            {
-                event.decryptionError = error;
-            }
+            result = [_crypto decryptEvent:event inTimeline:timeline];
         }
         else
 #endif
@@ -2158,7 +2153,7 @@ typedef void (^MXOnResumeDone)();
         }
     }
 
-    return (nil != event.clearEvent);
+    return result;
 }
 
 - (void)resetReplayAttackCheckInTimeline:(NSString*)timeline

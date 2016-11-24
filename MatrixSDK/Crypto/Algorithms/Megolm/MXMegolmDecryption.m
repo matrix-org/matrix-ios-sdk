@@ -47,7 +47,7 @@
     return self;
 }
 
-- (MXDecryptionResult *)decryptEvent:(MXEvent *)event inTimeline:(NSString*)timeline error:(NSError *__autoreleasing *)error
+- (BOOL)decryptEvent:(MXEvent *)event inTimeline:(NSString*)timeline
 {
     NSString *senderKey = event.content[@"sender_key"];
     NSString *ciphertext = event.content[@"ciphertext"];
@@ -55,15 +55,28 @@
 
     if (!senderKey || !sessionId || !ciphertext)
     {
-        *error = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                     code:MXDecryptingErrorMissingFieldsCode
-                                 userInfo:@{
-                                            NSLocalizedDescriptionKey: MXDecryptingErrorMissingFieldsReason
-                                            }];
-        return nil;
+        event.decryptionError = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                                    code:MXDecryptingErrorMissingFieldsCode
+                                                userInfo:@{
+                                                           NSLocalizedDescriptionKey: MXDecryptingErrorMissingFieldsReason
+                                                           }];
+        return NO;
     }
 
-    return [olmDevice decryptGroupMessage:ciphertext roomId:event.roomId inTimeline:timeline sessionId:sessionId senderKey:senderKey error:error];
+    NSError *error;
+    MXDecryptionResult *result = [olmDevice decryptGroupMessage:ciphertext roomId:event.roomId inTimeline:timeline sessionId:sessionId senderKey:senderKey error:&error];
+
+    if (result)
+    {
+        MXEvent *clearedEvent = [MXEvent modelFromJSON:result.payload];
+        [event setClearData:clearedEvent keysProved:result.keysProved keysClaimed:result.keysClaimed];
+    }
+    else
+    {
+        event.decryptionError = error;
+    }
+
+    return (event.clearEvent != nil);
 }
 
 - (void)onRoomKeyEvent:(MXEvent *)event
