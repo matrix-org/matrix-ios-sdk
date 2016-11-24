@@ -1,3 +1,12 @@
+Changes in Matrix iOS SDK in 0.7.3 (2016-11-23)
+===========================================
+
+Improvements:
+ * Crypto: Ignore reshares of known megolm sessions.
+ 
+Bug fixes:
+ * MXRestClient: Fix Delete Device API.
+ 
 Changes in Matrix iOS SDK in 0.7.2 (2016-11-22)
 ===============================================
 
