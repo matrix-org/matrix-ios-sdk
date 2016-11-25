@@ -18,11 +18,12 @@
 
 #import "MXSDKOptions.h"
 
+#import "MXDeviceInfo.h"
+
 #ifdef MX_CRYPTO
 
 #import "MXCryptoStore.h"
 #import "MXRestClient.h"
-#import "MXDeviceInfo.h"
 #import "MXOlmDevice.h"
 #import "MXCryptoAlgorithms.h"
 #import "MXUsersDevicesMap.h"
