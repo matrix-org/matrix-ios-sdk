@@ -134,6 +134,8 @@ FOUNDATION_EXPORT uint64_t const kMXUndefinedTimestamp;
 
 /**
  Posted when the MXEvent has been decrypted.
+ 
+ The notification is sent for event that is received before the key to decrypt it.
 
  The notification object is the MXEvent.
  */
