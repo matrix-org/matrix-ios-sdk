@@ -21,8 +21,6 @@
 #import <UIKit/UIKit.h>
 #import <AVFoundation/AVCaptureDevice.h>
 #import <AVFoundation/AVMediaFormat.h>
-#import <AVFoundation/AVAudioSession.h>
-
 
 #import "MXJingleVideoView.h"
 

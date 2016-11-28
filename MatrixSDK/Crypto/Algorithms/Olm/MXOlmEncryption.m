@@ -122,7 +122,8 @@
 {
     // TODO: Avoid to do this request for every message. Instead, manage a queue of messages waiting for encryption
     // XXX: This class is not used so fix it later
-    MXHTTPOperation *operation = [crypto downloadKeys:users forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+    MXHTTPOperation *operation;
+    operation = [crypto downloadKeys:users forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
 
         MXHTTPOperation *operation2 = [crypto ensureOlmSessionsForUsers:users success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {
             success();

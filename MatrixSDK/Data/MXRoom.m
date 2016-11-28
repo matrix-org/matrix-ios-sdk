@@ -297,7 +297,8 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     {
         // Encrypt the content before sending
         // @TODO: Would be nice to inform user we are encrypting
-        MXHTTPOperation *operation = [mxSession.crypto encryptEventContent:content withType:eventTypeString inRoom:self success:^(NSDictionary *encryptedContent, NSString *encryptedEventType) {
+        MXHTTPOperation *operation;
+        operation = [mxSession.crypto encryptEventContent:content withType:eventTypeString inRoom:self success:^(NSDictionary *encryptedContent, NSString *encryptedEventType) {
 
             // Send the encrypted content
             MXHTTPOperation *operation2 = [self _sendEventOfType:encryptedEventType content:encryptedContent success:success failure:failure];
@@ -1127,7 +1128,8 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                                   failure:failure];
 
         // Wait for the event coming back from the hs
-        id eventBackListener = [_liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+        id eventBackListener;
+        eventBackListener = [_liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
             [_liveTimeline removeListener:eventBackListener];
 
