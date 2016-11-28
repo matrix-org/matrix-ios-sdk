@@ -24,6 +24,35 @@
 #import "MXSession.h"
 #import "MXQueuedEncryption.h"
 
+@interface MXOutboundSessionInfo : NSObject
+{
+    // When the session was created
+    NSDate  *creationTime;
+}
+
+- (instancetype)initWithSessionID:(NSString*)sessionId;
+
+/**
+ Check if it's time to rotate the session.
+
+ @param rotationPeriodMsgs the max number of encryptions before rotating.
+ @param rotationPeriodMs the max duration of an encryption session before rotating.
+ @return YES if rotation is needed.
+ */
+- (BOOL)needsRotation:(NSUInteger)rotationPeriodMsgs rotationPeriodMs:(NSUInteger)rotationPeriodMs;
+
+// The id of the session
+@property (nonatomic, readonly) NSString *sessionId;
+
+// Number of times this session has been used
+@property (nonatomic) NSUInteger useCount;
+
+// If a share operation is in progress, the corresping http request
+@property (nonatomic) MXHTTPOperation* shareOperation;
+
+@end
+
+
 @interface MXMegolmEncryption ()
 {
     MXSession *mxSession;
@@ -34,25 +63,21 @@
 
     NSString *deviceId;
 
-    MXHTTPOperation *prepOperation;
-    NSString *outboundSessionId;
-    BOOL discardNewSession;
+    // OutboundSessionInfo. Null if we haven't yet started setting one up. Note
+    // that even if this is non-null, it may not be ready for use (in which
+    // case outboundSession.shareOperation will be non-nill.)
+    MXOutboundSessionInfo *outboundSession;
 
     // Devices which have joined since we last sent a message.
     // userId -> {deviceId -> @(YES)}
     // If deviceId is "*", share keys with all devices of the user.
     MXUsersDevicesMap<NSNumber*> *devicesPendingKeyShare;
-    MXHTTPOperation *shareOperation;
 
     NSMutableArray<MXQueuedEncryption*> *pendingEncryptions;
 
     // Session rotation periods
     NSUInteger sessionRotationPeriodMsgs;
     NSUInteger sessionRotationPeriodMs;
-
-    // Outbound session information
-    NSUInteger useCount;
-    NSDate  *creationTime;
 }
 
 @end
@@ -101,18 +126,23 @@
     queuedEncryption.failure = failure;
     [pendingEncryptions addObject:queuedEncryption];
 
-    return [self ensureOutboundSessionInRoom:room success:^(NSString *sessionId) {
+    return [self ensureOutboundSessionInRoom:room success:^(MXOutboundSessionInfo *session) {
 
-        outboundSessionId = sessionId;
-        [self processPendingEncryptionsWithError:nil];
+        [self processPendingEncryptionsInSession:session withError:nil];
 
     } failure:^(NSError *error) {
-        [self processPendingEncryptionsWithError:error];
+        [self processPendingEncryptionsInSession:nil withError:error];
     }];
 }
 
 - (void)onRoomMembership:(MXEvent *)event member:(MXRoomMember *)member oldMembership:(MXMembership)oldMembership
 {
+    // if we haven't yet made a session, there's nothing to do here.
+    if (!outboundSession)
+    {
+        return;
+    }
+
     MXMembership newMembership = member.membership;
 
     if (newMembership == MXMembershipJoin)
@@ -128,16 +158,10 @@
     }
 
     // Otherwise we assume the user is leaving, and start a new outbound session.
-    if (outboundSessionId)
-    {
-        NSLog(@"Discarding outbound megolm session due to change in membership of %@ (%tu -> %tu)", member.userId, oldMembership, newMembership);
-        outboundSessionId = nil;
-    }
+    NSLog(@"Discarding outbound megolm session due to change in membership of %@ (%tu -> %tu)", member.userId, oldMembership, newMembership);
 
-    if (prepOperation) {
-        NSLog(@"Discarding as-yet-incomplete megolm session due to change in membership of %@ (%tu -> %tu)", member.userId, oldMembership, newMembership);
-        discardNewSession = true;
-    }
+    // This ensures that we will start a new session on the next message.
+    outboundSession = nil;
 }
 
 - (void)onNewDevice:(NSString *)deviceID forUser:(NSString *)userId
@@ -168,33 +192,21 @@
  *   sessionId when setup is complete.
  */
 - (MXHTTPOperation *)ensureOutboundSessionInRoom:(MXRoom*)room
-                                         success:(void (^)(NSString *sessionId))success
+                                         success:(void (^)(MXOutboundSessionInfo *session))success
                                          failure:(void (^)(NSError *))failure
 {
-    if (prepOperation)
-    {
-        // Prep already in progress
-        return prepOperation;
-    }
+    MXOutboundSessionInfo *session = outboundSession;
 
     // Need to make a brand new session?
-    if (!outboundSessionId || [self needsRotation])
+    if (!session || [session needsRotation:sessionRotationPeriodMsgs rotationPeriodMs:sessionRotationPeriodMs])
     {
-        prepOperation = [self prepareNewSessionInRoom:room success:^(NSString *sessionId) {
-            prepOperation = nil;
-            success(sessionId);
-        } failure:^(NSError *error) {
-            prepOperation = nil;
-            failure(error);
-        }];
-        
-        return prepOperation;
-    }
+        outboundSession = session = [self prepareNewSessionInRoom:room success:success failure:failure];
+   }
 
-    if (shareOperation)
+    if (session.shareOperation)
     {
-        // Key share already in progress
-        return shareOperation;
+        // Prep already in progress
+        return session.shareOperation;
     }
 
     // Prep already done, but check for new devices
@@ -212,22 +224,24 @@
         }
     }
 
-    shareOperation = [self shareKey:outboundSessionId withDevices:shareMap success:^{
-        shareOperation = nil;
-        success(outboundSessionId);
+    session.shareOperation = [self shareKey:session.sessionId withDevices:shareMap success:^{
+        session.shareOperation = nil;
+        success(session);
     } failure:^(NSError *error) {
-        shareOperation = nil;
+        session.shareOperation = nil;
         failure(error);
     }];
 
-    return shareOperation;
+    return session.shareOperation;
 }
 
-- (MXHTTPOperation*)prepareNewSessionInRoom:(MXRoom*)room
-                        success:(void (^)(NSString *sessionId))success
+- (MXOutboundSessionInfo*)prepareNewSessionInRoom:(MXRoom*)room
+                        success:(void (^)(MXOutboundSessionInfo *session))success
                         failure:(void (^)(NSError *))failure
 {
     NSString *sessionId = [crypto.olmDevice createOutboundGroupSession];
+
+    MXOutboundSessionInfo *session = [[MXOutboundSessionInfo alloc] initWithSessionID:sessionId];
 
     [crypto.olmDevice addInboundGroupSession:sessionId
                                   sessionKey:[crypto.olmDevice sessionKeyForOutboundGroupSession:sessionId]
@@ -253,39 +267,30 @@
     // TODO: We need to give the user a chance to block any devices or users
     // before we send them the keys; it's too late to download them here.
     // Force download in order to make sure we discove all devices from all users
-    MXHTTPOperation *operation;
-    operation = [crypto downloadKeys:shareMap.userIds forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+    session.shareOperation = [crypto downloadKeys:shareMap.userIds forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
 
         MXHTTPOperation *operation2 = [self shareKey:sessionId withDevices:shareMap success:^{
 
-            if (discardNewSession)
-            {
-                // we've had cause to reset the session_id since starting this process.
-                // we'll use the current session for any currently pending events, but
-                // don't save it as the current _outboundSessionId, so that new events
-                // will use a new session.
-                NSLog(@"[MXMegolmEncryption] Session generation complete, but discarding");
-            }
-            else
-            {
-                outboundSessionId = sessionId;
-                creationTime = [NSDate date];
-                useCount = 0;
-            }
-
-            discardNewSession = NO;
-            success(sessionId);
+            session.shareOperation = nil;
+            success(session);
 
         } failure:^(NSError *error) {
-            discardNewSession = NO;
+            session.shareOperation = nil;
             failure(error);
         }];
 
-        [operation mutateTo:operation2];
+        if (operation2)
+        {
+            [session.shareOperation mutateTo:operation2];
+        }
+        else
+        {
+        	session.shareOperation = nil;
+        }
 
     } failure:failure];
 
-    return operation;
+    return session;
 }
 
 - (MXHTTPOperation*)shareKey:(NSString*)sessionId withDevices:(MXUsersDevicesMap<NSNumber*>*)shareMap
@@ -392,9 +397,9 @@
     [devicesPendingKeyShare setObject:@(YES) forUser:userId andDevice:@"*"];
 }
 
-- (void)processPendingEncryptionsWithError:(NSError*)error
+- (void)processPendingEncryptionsInSession:(MXOutboundSessionInfo*)session withError:(NSError*)error
 {
-    if (!error)
+    if (session)
     {
         // Everything is in place, encrypt all pending events
         for (MXQueuedEncryption *queuedEncryption in pendingEncryptions)
@@ -408,20 +413,20 @@
             NSData *payloadData = [NSJSONSerialization  dataWithJSONObject:payloadJson options:0 error:nil];
             NSString *payloadString = [[NSString alloc] initWithData:payloadData encoding:NSUTF8StringEncoding];
 
-            NSString *ciphertext = [crypto.olmDevice encryptGroupMessage:outboundSessionId payloadString:payloadString];
+            NSString *ciphertext = [crypto.olmDevice encryptGroupMessage:session.sessionId payloadString:payloadString];
 
             queuedEncryption.success(@{
                       @"algorithm": kMXCryptoMegolmAlgorithm,
                       @"sender_key": crypto.olmDevice.deviceCurve25519Key,
                       @"ciphertext": ciphertext,
-                      @"session_id": outboundSessionId,
+                      @"session_id": session.sessionId,
 
                       // Include our device ID so that recipients can send us a
                       // m.new_device message if they don't have our session key.
                       @"device_id": deviceId
                       });
 
-            useCount++;
+            session.useCount++;
         }
     }
     else
@@ -435,17 +440,31 @@
     [pendingEncryptions removeAllObjects];
 }
 
-/**
- Check if it's time to rotate the session
- */
-- (BOOL)needsRotation
+@end
+
+
+#pragma mark - MXOutboundSessionInfo
+
+@implementation MXOutboundSessionInfo
+
+- (instancetype)initWithSessionID:(NSString *)sessionId
+{
+    self = [super init];
+    if (self)
+    {
+        _sessionId = sessionId;
+    }
+    return self;
+}
+
+- (BOOL)needsRotation:(NSUInteger)rotationPeriodMsgs rotationPeriodMs:(NSUInteger)rotationPeriodMs
 {
     BOOL needsRotation = NO;
     NSUInteger sessionLifetime = [[NSDate date] timeIntervalSinceDate:creationTime] * 1000;
 
-    if (useCount >= sessionRotationPeriodMsgs || sessionLifetime >= sessionRotationPeriodMs)
+    if (_useCount >= rotationPeriodMsgs || sessionLifetime >= rotationPeriodMs)
     {
-        NSLog(@"[MXMegolmEncryption] Rotating megolm session after %tu messages, %tu ms", useCount, sessionLifetime);
+        NSLog(@"[MXMegolmEncryption] Rotating megolm session after %tu messages, %tu ms", _useCount, sessionLifetime);
         needsRotation = YES;
     }
 
