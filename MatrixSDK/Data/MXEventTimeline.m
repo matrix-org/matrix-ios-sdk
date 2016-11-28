@@ -535,8 +535,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     // Decrypt event if necessary
     if (event.eventType == MXEventTypeRoomEncrypted)
     {
-        BOOL doCheck = self.isLiveTimeline && !fromStore; // && direction == MXTimelineDirectionForwards;
-        doCheck = !doCheck;
         if (![room.mxSession decryptEvent:event inTimeline:_timelineId])
         {
             NSLog(@"[MXTimeline] addEvent: Warning: Unable to decrypt event: %@\nError: %@", event.content[@"body"], event.decryptionError);
