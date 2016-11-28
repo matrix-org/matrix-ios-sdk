@@ -132,6 +132,15 @@ FOUNDATION_EXPORT NSString *const kMXMembershipStringBan;
 // Timestamp value when the information is not available or not provided by the home server
 FOUNDATION_EXPORT uint64_t const kMXUndefinedTimestamp;
 
+/**
+ Posted when the MXEvent has been decrypted.
+ 
+ The notification is sent for event that is received before the key to decrypt it.
+
+ The notification object is the MXEvent.
+ */
+FOUNDATION_EXPORT NSString *const kMXEventDidDecryptNotification;
+
 
 /**
  `MXEvent` is the generic model of events received from the home server.
@@ -323,10 +332,22 @@ FOUNDATION_EXPORT uint64_t const kMXUndefinedTimestamp;
 @property (nonatomic, readonly) BOOL isEncrypted;
 
 /**
+ Update the clear data on this event.
+
+ This is used after decrypting an event; it should not be used by applications.
+ It fires kMXEventDidDecryptNotification.
+
+ @param clearEvent the plaintext payload for the event.
+ @param keysProved the keys owned by the sender of this event.
+ @param keysClaimed the keys the sender of this event claims.
+ */
+- (void)setClearData:(MXEvent*)clearEvent keysProved:(NSDictionary<NSString*, NSString*> *)keysProved keysClaimed:(NSDictionary<NSString*, NSString*> *)keysClaimed;
+
+/**
  For encrypted events, the plaintext payload for the event.
  This is a small MXEvent instance with typically value for `type` and 'content' fields.
  */
-@property (nonatomic) MXEvent *clearEvent;
+@property (nonatomic, readonly) MXEvent *clearEvent;
 
 /**
  The keys that must have been owned by the sender of this encrypted event.

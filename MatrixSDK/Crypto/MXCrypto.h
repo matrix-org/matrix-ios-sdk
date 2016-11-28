@@ -197,15 +197,18 @@
 - (NSDictionary*)encryptMessage:(NSDictionary*)payloadFields forDevices:(NSArray<MXDeviceInfo*>*)devices;
 
 /**
- Decrypt a received event
+ Decrypt a received event.
+ 
+ In case of success, the event is updated with clear data.
+ In case of failure, event.decryptionError contains the error.
 
  @param event the raw event.
  @param timeline the id of the timeline where the event is decrypted. It is used
                  to prevent replay attack.
- @param the result error if there is a problem decrypting the event.
- @return a cleared event or nil.
+ 
+ @return YES if the decryption was successful.
  */
-- (MXEvent*)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline error:(NSError**)error;
+- (BOOL)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline;
 
 @end
 

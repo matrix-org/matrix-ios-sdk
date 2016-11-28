@@ -207,6 +207,7 @@
     XCTAssertLessThan(event.age, 2000);
     XCTAssertEqualObjects(event.content[@"body"], clearMessage);
     XCTAssertEqualObjects(event.sender, senderSession.myUser.userId);
+    XCTAssertNil(event.decryptionError);
 
     // Return the number of failures in this method
     return self.testRun.failureCount - failureCount;
@@ -1135,7 +1136,7 @@
         [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
             // Try to decrypt the event again
-            event.clearEvent = nil;
+            [event setClearData:nil keysProved:nil keysClaimed:nil];
             BOOL b = [bobSession decryptEvent:event inTimeline:roomFromBobPOV.liveTimeline.timelineId];
 
             // It must fail
@@ -1185,18 +1186,21 @@
             // From Bob pov, that mimics Alice resharing her keys but with an advanced outbound group session.
             XCTAssert(toDeviceEvent);
             NSString *sessionId = toDeviceEvent.content[@"session_id"];
-            NSString *newSessionKey = [aliceSession.crypto.olmDevice sessionKeyForOutboundGroupSession:sessionId];
 
-            [bobSession.crypto.olmDevice addInboundGroupSession:sessionId
-                                                     sessionKey:newSessionKey
-                                                         roomId:toDeviceEvent.content[@"room_id"]
-                                                      senderKey:toDeviceEvent.senderKey
-                                                    keysClaimed:toDeviceEvent.keysClaimed];
+            NSMutableDictionary *newContent = [NSMutableDictionary dictionaryWithDictionary:toDeviceEvent.content];
+            newContent[@"session_key"] = [aliceSession.crypto.olmDevice sessionKeyForOutboundGroupSession:sessionId];
+            toDeviceEvent.clearEvent.wireContent = newContent;
+
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionOnToDeviceEventNotification
+                                                                object:bobSession
+                                                              userInfo:@{
+                                                                         kMXSessionNotificationEventKey: toDeviceEvent
+                                                                         }];
 
             // We still must be able to decrypt the event
             // ie, the implementation must have ignored the new room key with the advanced outbound group
             // session key
-            event.clearEvent = nil;
+            [event setClearData:nil keysProved:nil keysClaimed:nil];
             BOOL b = [bobSession decryptEvent:event inTimeline:nil];
 
             XCTAssert(b);
@@ -1204,6 +1208,66 @@
 
 
             [expectation fulfill];
+        }];
+
+        [roomFromAlicePOV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testLateRoomKey
+{
+    [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        NSString *messageFromAlice = @"Hello I'm Alice!";
+
+        MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
+        MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
+
+        __block MXEvent *toDeviceEvent;
+
+        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionOnToDeviceEventNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+
+            toDeviceEvent = notif.userInfo[kMXSessionNotificationEventKey];
+
+            [[NSNotificationCenter defaultCenter] removeObserver:observer];
+        }];
+
+        [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
+
+            // Make crypto forget the inbound group session
+            XCTAssert(toDeviceEvent);
+            NSString *sessionId = toDeviceEvent.content[@"session_id"];
+
+            MXFileCryptoStore *bobCryptoStore = (MXFileCryptoStore *)[bobSession.crypto.olmDevice valueForKey:@"store"];
+            [bobCryptoStore removeInboundGroupSessionWithId:sessionId andSenderKey:toDeviceEvent.senderKey];
+
+            // So that we cannot decrypt it anymore right now
+            [event setClearData:nil keysProved:nil keysClaimed:nil];
+            BOOL b = [bobSession decryptEvent:event inTimeline:nil];
+
+            XCTAssertFalse(b);
+            XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorUnkwnownInboundSessionIdCode);
+
+            // The event must be decrypted once we reinject the m.room_key event
+            __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXEventDidDecryptNotification object:event queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                [[NSNotificationCenter defaultCenter] removeObserver:observer];
+
+                XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
+                [expectation fulfill];
+            }];
+
+            // Reinject the m.room_key event. This mimics a room_key event that arrives after message events.
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionOnToDeviceEventNotification
+                                                                object:bobSession
+                                                              userInfo:@{
+                                                                         kMXSessionNotificationEventKey: toDeviceEvent
+                                                                         }];
         }];
 
         [roomFromAlicePOV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
