@@ -1073,8 +1073,6 @@
                 }];
 
                 [[NSNotificationCenter defaultCenter] removeObserver:observer];
-
-                [expectation fulfill];
             }];
 
         }];
@@ -1136,6 +1134,66 @@
             
         }];
 
+    }];
+}
+
+- (void)testAliceAndBlockedBob
+{
+    [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
+        MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
+
+        NSArray *aliceMessages = @[
+                                   @"Hello I'm Alice!",
+                                   @"Hello I'm still Alice!"
+                                   ];
+
+        __block NSUInteger messageCount = 0;
+
+        [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+            switch (messageCount++)
+            {
+                case 0:
+                {
+                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:aliceMessages[0] senderSession:aliceSession]);
+
+                    // Make Alice block Bob
+                    [aliceSession.crypto setDeviceVerification:MXDeviceBlocked
+                                                     forDevice:bobSession.matrixRestClient.credentials.deviceId
+                                                        ofUser:bobSession.myUser.userId];
+
+                    [roomFromAlicePOV sendTextMessage:aliceMessages[1] success:nil failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+
+                    break;
+                }
+
+                case 1:
+
+                    // Bob must be not able to decrypt the 2nd message
+                    XCTAssertEqual(event.eventType, MXEventTypeRoomEncrypted);
+                    XCTAssertNil(event.clearEvent);
+                    XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorUnkwnownInboundSessionIdCode);
+
+                    [expectation fulfill];
+                    break;
+                    
+                default:
+                    break;
+            }
+
+        }];
+
+        // 1st message to Bob
+        [roomFromAlicePOV sendTextMessage:aliceMessages[0] success:nil failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+        
     }];
 }
 
