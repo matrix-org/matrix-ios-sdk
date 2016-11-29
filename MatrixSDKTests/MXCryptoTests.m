@@ -1035,38 +1035,56 @@
     }];
 }
 
-
 - (void)testAliceAndBobWithNewDevice
 {
-    //[self doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
     [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
-        // Relog bob to simulate a new device
-        [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
-        [matrixSDKTestsData relogUserSession:bobSession withPassword:MXTESTS_BOB_PWD onComplete:^(MXSession *bobSession2) {
-            [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
+        MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
+        MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
 
-            MXRoom *roomFromBob2POV = [bobSession2 roomWithRoomId:roomId];
-            MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
-
+        [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
             NSString *messageFromAlice = @"Hello I'm still Alice!";
 
-            [roomFromBob2POV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            // Relog bob to simulate a new device
+            [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+            [matrixSDKTestsData relogUserSession:bobSession withPassword:MXTESTS_BOB_PWD onComplete:^(MXSession *bobSession2) {
+                [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
-                XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
+                MXRoom *roomFromBob2POV = [bobSession2 roomWithRoomId:roomId];
 
-                [expectation fulfill];
+                [roomFromBob2POV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
+
+                    [expectation fulfill];
+
+                }];
 
             }];
 
-            [roomFromAlicePOV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
-                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            // Wait a bit before sending the 2nd message to Bob with his 2 devices.
+            // We wait until Alice receives the new device information event. This cannot be more accurate.
+            id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionOnToDeviceEventNotification object:aliceSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+
+                [roomFromAlicePOV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+
+                [[NSNotificationCenter defaultCenter] removeObserver:observer];
+
                 [expectation fulfill];
             }];
 
         }];
-    
+
+        // 1st message to Bob and his single device
+        [roomFromAlicePOV sendTextMessage:@"Hello I'm Alice!" success:nil failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+
     }];
 }
 
