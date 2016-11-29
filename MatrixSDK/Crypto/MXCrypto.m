@@ -922,21 +922,22 @@
 
     NSLog(@"[MXCrypto] onNewDeviceEvent: m.new_device event from %@:%@ for rooms %@", userId, deviceId, rooms);
 
-    [self downloadKeys:@[userId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
-
-        for (NSString *roomId in rooms)
-        {
-            id<MXEncrypting> alg = roomEncryptors[roomId];
-            if (alg)
-            {
-                // The room is encrypted, report the new device to it
-                [alg onNewDevice:deviceId forUser:userId];
-            }
-        }
-
-    } failure:^(NSError *error) {
-        NSLog(@"[MXCrypto] onNewDeviceEvent: ERROR updating device keys for new device %@:%@ : %@", userId, deviceId, error);
-    }];
+    // TODO. Manu: It will be replaced in next PR
+//    [self downloadKeys:@[userId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+//
+//        for (NSString *roomId in rooms)
+//        {
+//            id<MXEncrypting> alg = roomEncryptors[roomId];
+//            if (alg)
+//            {
+//                // The room is encrypted, report the new device to it
+//                [alg onNewDevice:deviceId forUser:userId];
+//            }
+//        }
+//
+//    } failure:^(NSError *error) {
+//        NSLog(@"[MXCrypto] onNewDeviceEvent: ERROR updating device keys for new device %@:%@ : %@", userId, deviceId, error);
+//    }];
 }
 
 /**
