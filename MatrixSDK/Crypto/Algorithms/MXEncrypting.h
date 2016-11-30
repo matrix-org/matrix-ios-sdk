@@ -53,12 +53,4 @@
  */
 - (void)onRoomMembership:(MXEvent*)event member:(MXRoomMember*)member oldMembership:(MXMembership)oldMembership;
 
-/**
- Called when a new device announces itself in the room
-
- @param {string} userId    owner of the device
- @param {string} deviceId  deviceId of the device
- */
-- (void)onNewDevice:(NSString*)deviceId forUser:(NSString*)userId;
-
 @end

@@ -465,16 +465,15 @@
                                       success:(void (^)(MXUsersDevicesMap<MXOlmSessionResult*> *results))success
                                       failure:(void (^)(NSError *error))failure
 {
-    NSMutableArray<MXDeviceInfo*> *devicesWithoutSession = [NSMutableArray array];
-
-    MXUsersDevicesMap<MXOlmSessionResult*> *results = [[MXUsersDevicesMap alloc] init];
-
     NSLog(@"[MXCrypto] ensureOlmSessionsForUsers: %@", users);
+
+    NSMutableDictionary<NSString* /* userId */, NSMutableArray<MXDeviceInfo*>*> *devicesByUser = [NSMutableDictionary dictionary];
 
     for (NSString *userId in users)
     {
-        NSArray<MXDeviceInfo *> *devices = [self storedDevicesForUser:userId];
+        devicesByUser[userId] = [NSMutableArray array];
 
+        NSArray<MXDeviceInfo *> *devices = [self storedDevicesForUser:userId];
         for (MXDeviceInfo *device in devices)
         {
             NSString *key = device.identityKey;
@@ -490,31 +489,53 @@
                 continue;
             }
 
-            NSString *sessionId = [_olmDevice sessionIdForDevice:key];
-            if (!sessionId)
-            {
-                [devicesWithoutSession addObject:device];
-            }
-
-            MXOlmSessionResult *olmSessionResult = [[MXOlmSessionResult alloc] initWithDevice:device andOlmSession:sessionId];
-            [results setObject:olmSessionResult forUser:device.userId andDevice:device.deviceId];
+            [devicesByUser[userId] addObject:device];
         }
     }
 
-    NSLog(@"[MXCrypto] ensureOlmSessionsForUsers - from crypto store: %@. Missing :%@", results, devicesWithoutSession);
+    return [self ensureOlmSessionsForDevices:devicesByUser success:success failure:failure];
+}
+
+- (MXHTTPOperation*)ensureOlmSessionsForDevices:(NSDictionary<NSString* /* userId */, NSArray<MXDeviceInfo*>*>*)devicesByUser
+                                        success:(void (^)(MXUsersDevicesMap<MXOlmSessionResult*> *results))success
+                                        failure:(void (^)(NSError *error))failure
+
+{
+    NSMutableArray<MXDeviceInfo*> *devicesWithoutSession = [NSMutableArray array];
+
+    MXUsersDevicesMap<MXOlmSessionResult*> *results = [[MXUsersDevicesMap alloc] init];
+
+    for (NSString *userId in devicesByUser)
+    {
+        for (MXDeviceInfo *deviceInfo in devicesByUser[userId])
+        {
+            NSString *deviceId = deviceInfo.deviceId;
+            NSString *key = deviceInfo.identityKey;
+
+            NSString *sessionId = [_olmDevice sessionIdForDevice:key];
+            if (!sessionId)
+            {
+                [devicesWithoutSession addObject:deviceInfo];
+            }
+
+            MXOlmSessionResult *olmSessionResult = [[MXOlmSessionResult alloc] initWithDevice:deviceInfo andOlmSession:sessionId];
+            [results setObject:olmSessionResult forUser:userId andDevice:deviceId];
+        }
+    }
 
     if (devicesWithoutSession.count == 0)
     {
-        // No need to get session from the homeserver
         success(results);
         return nil;
     }
+
+    NSString *oneTimeKeyAlgorithm = kMXKeySignedCurve25519Type;
 
     // Prepare the request for claiming one-time keys
     MXUsersDevicesMap<NSString*> *usersDevicesToClaim = [[MXUsersDevicesMap<NSString*> alloc] init];
     for (MXDeviceInfo *device in devicesWithoutSession)
     {
-        [usersDevicesToClaim setObject:kMXKeySignedCurve25519Type forUser:device.userId andDevice:device.deviceId];
+        [usersDevicesToClaim setObject:oneTimeKeyAlgorithm forUser:device.userId andDevice:device.deviceId];
     }
 
     // TODO: this has a race condition - if we try to send another message
@@ -529,37 +550,36 @@
 
         NSLog(@"### keysClaimResponse.oneTimeKeys: %@", keysClaimResponse.oneTimeKeys);
 
-        for (NSString *userId in keysClaimResponse.oneTimeKeys.userIds)
+        for (NSString *userId in devicesByUser)
         {
-            for (NSString *deviceId in [keysClaimResponse.oneTimeKeys deviceIdsForUser:userId])
+            for (MXDeviceInfo *deviceInfo in devicesByUser[userId])
             {
-                MXKey *key = [keysClaimResponse.oneTimeKeys objectForDevice:deviceId forUser:userId];
-
-                if ([key.type isEqualToString:kMXKeySignedCurve25519Type])
+                MXKey *oneTimeKey;
+                for (NSString *deviceId in [keysClaimResponse.oneTimeKeys deviceIdsForUser:userId])
                 {
                     MXOlmSessionResult *olmSessionResult = [results objectForDevice:deviceId forUser:userId];
-                    MXDeviceInfo *device = olmSessionResult.device;
-
-                    NSString *signKeyId = [NSString stringWithFormat:@"ed25519:%@", deviceId];
-                    NSString *signature = [key.signatures objectForDevice:signKeyId forUser:userId];
-
-                    // Check one-time key signature
-                    NSError *error;
-                    if ([_olmDevice verifySignature:device.fingerprint JSON:key.signalableJSONDictionary signature:signature error:&error])
+                    if (olmSessionResult.sessionId)
                     {
-                        // Update the result for this device in results
-                        olmSessionResult.sessionId = [_olmDevice createOutboundSession:device.identityKey theirOneTimeKey:key.value];
+                        // We already have a result for this device
+                        continue;
+                    }
 
-                        NSLog(@"[MXCrypto] Started new sessionid %@ for device %@ (theirOneTimeKey: %@)", olmSessionResult.sessionId, device, key.value);
-                    }
-                    else
+                    MXKey *key = [keysClaimResponse.oneTimeKeys objectForDevice:deviceId forUser:userId];
+                    if ([key.type isEqualToString:oneTimeKeyAlgorithm])
                     {
-                        NSLog(@"[MXCrypto] Unable to verify signature on one-time key for device %@:%@. Error: %@", userId, deviceId, error);
+                        oneTimeKey = key;
                     }
-                }
-                else
-                {
-                    NSLog(@"[MXCrypto] No one-time keys for device %@:%@", userId, deviceId);
+
+                    if (!oneTimeKey)
+                    {
+                        NSLog(@"[MXCrypto] No one-time keys (alg=%@)for device %@:%@", oneTimeKeyAlgorithm, userId, deviceId);
+                        continue;
+                    }
+
+                    NSString *sid = [self verifyKeyAndStartSession:oneTimeKey userId:userId deviceInfo:deviceInfo];
+
+                    // Update the result for this device in results
+                    olmSessionResult.sessionId = sid;
                 }
             }
         }
@@ -571,6 +591,39 @@
         NSLog(@"[MXCrypto] ensureOlmSessionsForUsers: claimOneTimeKeysForUsersDevices request failed. Error: %@", error);
         failure(error);
     }];
+}
+
+- (NSString*)verifyKeyAndStartSession:(MXKey*)oneTimeKey userId:(NSString*)userId deviceInfo:(MXDeviceInfo*)deviceInfo
+{
+    NSString *sessionId;
+
+    NSString *deviceId = deviceInfo.deviceId;
+    NSString *signKeyId = [NSString stringWithFormat:@"ed25519:%@", deviceId];
+    NSString *signature = [oneTimeKey.signatures objectForDevice:signKeyId forUser:userId];
+
+    // Check one-time key signature
+    NSError *error;
+    if ([_olmDevice verifySignature:deviceInfo.fingerprint JSON:oneTimeKey.signalableJSONDictionary signature:signature error:&error])
+    {
+        // Update the result for this device in results
+        sessionId = [_olmDevice createOutboundSession:deviceInfo.identityKey theirOneTimeKey:oneTimeKey.value];
+
+        if (sessionId)
+        {
+            NSLog(@"[MXCrypto] Started new sessionid %@ for device %@ (theirOneTimeKey: %@)", sessionId, deviceInfo, oneTimeKey.value);
+        }
+        else
+        {
+            // Possibly a bad key
+            NSLog(@"[MXCrypto]Error starting session with device %@:%@", userId, deviceId);
+        }
+    }
+    else
+    {
+        NSLog(@"[MXCrypto] Unable to verify signature on one-time key for device %@:%@. Error: %@", userId, deviceId, error);
+    }
+
+    return sessionId;
 }
 
 - (MXHTTPOperation *)encryptEventContent:(NSDictionary *)eventContent withType:(MXEventTypeString)eventType inRoom:(MXRoom *)room
@@ -869,21 +922,22 @@
 
     NSLog(@"[MXCrypto] onNewDeviceEvent: m.new_device event from %@:%@ for rooms %@", userId, deviceId, rooms);
 
-    [self downloadKeys:@[userId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
-
-        for (NSString *roomId in rooms)
-        {
-            id<MXEncrypting> alg = roomEncryptors[roomId];
-            if (alg)
-            {
-                // The room is encrypted, report the new device to it
-                [alg onNewDevice:deviceId forUser:userId];
-            }
-        }
-
-    } failure:^(NSError *error) {
-        NSLog(@"[MXCrypto] onNewDeviceEvent: ERROR updating device keys for new device %@:%@ : %@", userId, deviceId, error);
-    }];
+    // TODO. Manu: It will be replaced in next PR
+//    [self downloadKeys:@[userId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+//
+//        for (NSString *roomId in rooms)
+//        {
+//            id<MXEncrypting> alg = roomEncryptors[roomId];
+//            if (alg)
+//            {
+//                // The room is encrypted, report the new device to it
+//                [alg onNewDevice:deviceId forUser:userId];
+//            }
+//        }
+//
+//    } failure:^(NSError *error) {
+//        NSLog(@"[MXCrypto] onNewDeviceEvent: ERROR updating device keys for new device %@:%@ : %@", userId, deviceId, error);
+//    }];
 }
 
 /**

@@ -171,6 +171,18 @@
                                       failure:(void (^)(NSError *error))failure;
 
 /**
+ Try to make sure we have established olm sessions for the given devices.
+
+ @param devicesByUser a map from userid to list of devices.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (MXHTTPOperation*)ensureOlmSessionsForDevices:(NSDictionary<NSString* /* userId */, NSArray<MXDeviceInfo*>*>*)devicesByUser
+                                      success:(void (^)(MXUsersDevicesMap<MXOlmSessionResult*> *results))success
+                                      failure:(void (^)(NSError *error))failure;
+
+/**
  Encrypt an event content according to the configuration of the room.
  
  @param eventContent the content of the event.
