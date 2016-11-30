@@ -268,7 +268,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 /**
  Send a room message to a room.
 
- @param msgType the type of the message. @see MXMessageType.
  @param content the message content that will be sent to the server as a JSON object.
  @param success A block object called when the operation succeeds. It returns
                 the event id of the event generated on the home server
@@ -276,10 +275,9 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)sendMessageOfType:(MXMessageType)msgType
-                              content:(NSDictionary*)content
-                              success:(void (^)(NSString *eventId))success
-                              failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)sendMessageWithContent:(NSDictionary*)content
+                                   success:(void (^)(NSString *eventId))success
+                                   failure:(void (^)(NSError *error))failure;
 
 /**
  Send a text message to a room
