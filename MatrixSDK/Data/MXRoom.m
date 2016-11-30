@@ -328,7 +328,6 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     return [mxSession.matrixRestClient sendEventToRoom:self.roomId eventType:eventTypeString content:content success:success failure:failure];
 }
 
-
 - (MXHTTPOperation*)sendStateEventOfType:(MXEventTypeString)eventTypeString
                                  content:(NSDictionary*)content
                                  success:(void (^)(NSString *eventId))success
@@ -337,27 +336,22 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     return [mxSession.matrixRestClient sendStateEventToRoom:self.roomId eventType:eventTypeString content:content success:success failure:failure];
 }
 
-- (MXHTTPOperation*)sendMessageOfType:(MXMessageType)msgType
-                              content:(NSDictionary*)content
-                              success:(void (^)(NSString *eventId))success
-                              failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)sendMessageWithContent:(NSDictionary*)content
+                                   success:(void (^)(NSString *eventId))success
+                                   failure:(void (^)(NSError *error))failure
 {
-    // Add the messsage type to the data to send
-    NSMutableDictionary *eventContent = [NSMutableDictionary dictionaryWithDictionary:content];
-    eventContent[@"msgtype"] = msgType;
-
-    return [self sendEventOfType:kMXEventTypeStringRoomMessage content:eventContent success:success failure:failure];
+    return [self sendEventOfType:kMXEventTypeStringRoomMessage content:content success:success failure:failure];
 }
 
 - (MXHTTPOperation*)sendTextMessage:(NSString*)text
                             success:(void (^)(NSString *eventId))success
                             failure:(void (^)(NSError *error))failure
 {
-    return [self sendMessageOfType:kMXMessageTypeText
-                           content:@{
-                                     @"body": text
-                                     }
-                           success:success failure:failure];
+    return [self sendMessageWithContent:@{
+                                          @"msgtype": kMXMessageTypeText,
+                                          @"body": text
+                                          }
+                                success:success failure:failure];
 }
 
 - (MXHTTPOperation*)setTopic:(NSString*)topic
