@@ -39,3 +39,7 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXTools.h"
 
 #import "MXSDKOptions.h"
+
+#import "MXMediaManager.h"
+
+#import "MXLRUCache.h"
