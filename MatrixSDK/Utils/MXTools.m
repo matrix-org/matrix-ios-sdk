@@ -15,6 +15,8 @@
  */
 #import "MXTools.h"
 
+#import <MobileCoreServices/MobileCoreServices.h>
+
 #import "MXEnumConstants.h"
 
 #pragma mark - Constant definition
@@ -224,6 +226,229 @@ static NSRegularExpression *isMatrixEventIdentifierRegex;
 {
     return [NSString stringWithFormat:@"%@/#/%@/%@", kMXMatrixDotToUrl, roomIdOrAlias, eventId];
 
+}
+
+#pragma mark - File
+
+// return an array of files attributes
++ (NSArray*)listAttributesFiles:(NSString *)folderPath
+{
+    NSArray *contents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:folderPath error:nil];
+    NSEnumerator *contentsEnumurator = [contents objectEnumerator];
+    
+    NSString *file;
+    NSMutableArray* res = [[NSMutableArray alloc] init];
+    
+    while (file = [contentsEnumurator nextObject])
+        
+    {
+        NSString* itemPath = [folderPath stringByAppendingPathComponent:file];
+        
+        NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:itemPath error:nil];
+        
+        // is directory
+        if ([[fileAttributes objectForKey:NSFileType] isEqual:NSFileTypeDirectory])
+            
+        {
+            [res addObjectsFromArray:[MXTools listAttributesFiles:itemPath]];
+        }
+        else
+            
+        {
+            NSMutableDictionary* att = [fileAttributes mutableCopy];
+            // add the file path
+            [att setObject:itemPath forKey:@"NSFilePath"];
+            [res addObject:att];
+        }
+    }
+    
+    return res;
+}
+
++ (long long)roundFileSize:(long long)filesize
+{
+    static long long roundedFactor = (100 * 1024);
+    static long long smallRoundedFactor = (10 * 1024);
+    long long roundedFileSize = filesize;
+    
+    if (filesize > roundedFactor)
+    {
+        roundedFileSize = ((filesize + (roundedFactor /2)) / roundedFactor) * roundedFactor;
+    }
+    else if (filesize > smallRoundedFactor)
+    {
+        roundedFileSize = ((filesize + (smallRoundedFactor /2)) / smallRoundedFactor) * smallRoundedFactor;
+    }
+    
+    return roundedFileSize;
+}
+
++ (NSString*)fileSizeToString:(long)fileSize round:(BOOL)round
+{
+    if (fileSize < 0)
+    {
+        return @"";
+    }
+    else if (fileSize < 1024)
+    {
+        return [NSString stringWithFormat:@"%ld bytes", fileSize];
+    }
+    else if (fileSize < (1024 * 1024))
+    {
+        if (round)
+        {
+            return [NSString stringWithFormat:@"%.0f KB", ceil(fileSize / 1024.0)];
+        }
+        else
+        {
+            return [NSString stringWithFormat:@"%.2f KB", (fileSize / 1024.0)];
+        }
+    }
+    else
+    {
+        if (round)
+        {
+            return [NSString stringWithFormat:@"%.0f MB", ceil(fileSize / 1024.0 / 1024.0)];
+        }
+        else
+        {
+            return [NSString stringWithFormat:@"%.2f MB", (fileSize / 1024.0 / 1024.0)];
+        }
+    }
+}
+
+// recursive method to compute the folder content size
++ (long long)folderSize:(NSString *)folderPath
+{
+    long long folderSize = 0;
+    NSArray *fileAtts = [MXTools listAttributesFiles:folderPath];
+    
+    for(NSDictionary *fileAtt in fileAtts)
+    {
+        folderSize += [[fileAtt objectForKey:NSFileSize] intValue];
+    }
+    
+    return folderSize;
+}
+
+// return the list of files by name
+// isTimeSorted : the files are sorted by creation date from the oldest to the most recent one
+// largeFilesFirst: move the largest file to the list head (large > 100KB). It can be combined isTimeSorted
++ (NSArray*)listFiles:(NSString *)folderPath timeSorted:(BOOL)isTimeSorted largeFilesFirst:(BOOL)largeFilesFirst
+{
+    NSArray* attFilesList = [MXTools listAttributesFiles:folderPath];
+    
+    if (attFilesList.count > 0)
+    {
+        
+        // sorted by timestamp (oldest first)
+        if (isTimeSorted)
+        {
+            NSSortDescriptor *sortDescriptor = [NSSortDescriptor sortDescriptorWithKey:@"NSFileCreationDate" ascending:YES selector:@selector(compare:)];
+            attFilesList = [attFilesList sortedArrayUsingDescriptors:@[ sortDescriptor]];
+        }
+        
+        // list the large files first
+        if (largeFilesFirst)
+        {
+            NSMutableArray* largeFilesAttList = [[NSMutableArray alloc] init];
+            NSMutableArray* smallFilesAttList = [[NSMutableArray alloc] init];
+            
+            for (NSDictionary* att in attFilesList)
+            {
+                if ([[att objectForKey:NSFileSize] intValue] > 100 * 1024)
+                {
+                    [largeFilesAttList addObject:att];
+                }
+                else
+                {
+                    [smallFilesAttList addObject:att];
+                }
+            }
+            
+            NSMutableArray* mergedList = [[NSMutableArray alloc] init];
+            [mergedList addObjectsFromArray:largeFilesAttList];
+            [mergedList addObjectsFromArray:smallFilesAttList];
+            attFilesList = mergedList;
+        }
+        
+        // list filenames
+        NSMutableArray* res = [[NSMutableArray alloc] init];
+        for (NSDictionary* att in attFilesList)
+        {
+            [res addObject:[att valueForKey:@"NSFilePath"]];
+        }
+        
+        return res;
+    }
+    else
+    {
+        return nil;
+    }
+}
+
+
+// cache the value to improve the UX.
+static NSMutableDictionary *fileExtensionByContentType = nil;
+
+// return the file extension from a contentType
++ (NSString*)fileExtensionFromContentType:(NSString*)contentType
+{
+    // sanity checks
+    if (!contentType || (0 == contentType.length))
+    {
+        return @"";
+    }
+    
+    NSString* fileExt = nil;
+    
+    if (!fileExtensionByContentType)
+    {
+        fileExtensionByContentType  = [[NSMutableDictionary alloc] init];
+    }
+    
+    fileExt = fileExtensionByContentType[contentType];
+    
+    if (!fileExt)
+    {
+        fileExt = @"";
+        
+        // else undefined type
+        if ([contentType isEqualToString:@"application/jpeg"])
+        {
+            fileExt = @".jpg";
+        }
+        else if ([contentType isEqualToString:@"audio/x-alaw-basic"])
+        {
+            fileExt = @".alaw";
+        }
+        else if ([contentType isEqualToString:@"audio/x-caf"])
+        {
+            fileExt = @".caf";
+        }
+        else if ([contentType isEqualToString:@"audio/aac"])
+        {
+            fileExt =  @".aac";
+        }
+        else
+        {
+            CFStringRef mimeType = (__bridge CFStringRef)contentType;
+            CFStringRef uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassMIMEType, mimeType, NULL);
+            
+            NSString* extension = (__bridge_transfer NSString *)UTTypeCopyPreferredTagWithClass(uti, kUTTagClassFilenameExtension);
+            
+            CFRelease(uti);
+            
+            if (extension)
+            {
+                fileExt = [NSString stringWithFormat:@".%@", extension];
+            }
+        }
+        
+        [fileExtensionByContentType setObject:fileExt forKey:contentType];
+    }
+    
+    return fileExt;
 }
 
 @end

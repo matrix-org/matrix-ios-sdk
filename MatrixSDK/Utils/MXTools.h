@@ -111,4 +111,45 @@ FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForMatrixEventIdentifier;
  */
 + (NSString*)permalinkToEvent:(NSString*)eventId inRoom:(NSString*)roomIdOrAlias;
 
+#pragma mark - File
+
+/**
+ Round file size.
+ */
++ (long long)roundFileSize:(long long)filesize;
+
+/**
+ Return file size in string format.
+ 
+ @param fileSize the file size in bytes.
+ @param round tells whether the size must be rounded to hide decimal digits
+ */
++ (NSString*)fileSizeToString:(long)fileSize round:(BOOL)round;
+
+/**
+ Get folder size
+ 
+ @param folderPath
+ @return folder size in bytes
+ */
++ (long long)folderSize:(NSString *)folderPath;
+
+/**
+ List files in folder
+ 
+ @param folderPath
+ @param isTimeSorted if YES, the files are sorted by creation date from the oldest to the most recent one.
+ @param largeFilesFirst if YES move the largest file to the list head (large > 100KB). It can be combined with isTimeSorted.
+ @return the list of files by name.
+ */
++ (NSArray*)listFiles:(NSString *)folderPath timeSorted:(BOOL)isTimeSorted largeFilesFirst:(BOOL)largeFilesFirst;
+
+/**
+ Deduce the file extension from a contentType
+ 
+ @param contentType
+ @return file extension (extension divider is included)
+ */
++ (NSString*)fileExtensionFromContentType:(NSString*)contentType;
+
 @end
