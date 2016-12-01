@@ -195,6 +195,8 @@
 		F03EF5011DF014D9009DF592 /* MXMediaManager.m in Sources */ = {isa = PBXBuildFile; fileRef = F03EF4FD1DF014D9009DF592 /* MXMediaManager.m */; };
 		F03EF5041DF01596009DF592 /* MXLRUCache.h in Headers */ = {isa = PBXBuildFile; fileRef = F03EF5021DF01596009DF592 /* MXLRUCache.h */; };
 		F03EF5051DF01596009DF592 /* MXLRUCache.m in Sources */ = {isa = PBXBuildFile; fileRef = F03EF5031DF01596009DF592 /* MXLRUCache.m */; };
+		F03EF5081DF071D5009DF592 /* MXEncryptedAttachments.h in Headers */ = {isa = PBXBuildFile; fileRef = F03EF5061DF071D5009DF592 /* MXEncryptedAttachments.h */; };
+		F03EF5091DF071D5009DF592 /* MXEncryptedAttachments.m in Sources */ = {isa = PBXBuildFile; fileRef = F03EF5071DF071D5009DF592 /* MXEncryptedAttachments.m */; };
 		F082946D1DB66C3D00CEAB63 /* MXInvite3PID.h in Headers */ = {isa = PBXBuildFile; fileRef = F082946B1DB66C3D00CEAB63 /* MXInvite3PID.h */; };
 		F082946E1DB66C3D00CEAB63 /* MXInvite3PID.m in Sources */ = {isa = PBXBuildFile; fileRef = F082946C1DB66C3D00CEAB63 /* MXInvite3PID.m */; };
 		F0AC734E1DA4F53B0011DAEE /* MXRoomEventFilter.h in Headers */ = {isa = PBXBuildFile; fileRef = F0AC734C1DA4F53B0011DAEE /* MXRoomEventFilter.h */; };
@@ -424,6 +426,8 @@
 		F03EF4FD1DF014D9009DF592 /* MXMediaManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXMediaManager.m; sourceTree = "<group>"; };
 		F03EF5021DF01596009DF592 /* MXLRUCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXLRUCache.h; sourceTree = "<group>"; };
 		F03EF5031DF01596009DF592 /* MXLRUCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXLRUCache.m; sourceTree = "<group>"; };
+		F03EF5061DF071D5009DF592 /* MXEncryptedAttachments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXEncryptedAttachments.h; sourceTree = "<group>"; };
+		F03EF5071DF071D5009DF592 /* MXEncryptedAttachments.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXEncryptedAttachments.m; sourceTree = "<group>"; };
 		F082946B1DB66C3D00CEAB63 /* MXInvite3PID.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXInvite3PID.h; sourceTree = "<group>"; };
 		F082946C1DB66C3D00CEAB63 /* MXInvite3PID.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXInvite3PID.m; sourceTree = "<group>"; };
 		F0AC734C1DA4F53B0011DAEE /* MXRoomEventFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRoomEventFilter.h; sourceTree = "<group>"; };
@@ -730,6 +734,8 @@
 				3256E3801DCB91EB003C9718 /* MXCryptoConstants.m */,
 				32A151401DAF7C0C00400192 /* MXDeviceInfo.h */,
 				32A151411DAF7C0C00400192 /* MXDeviceInfo.m */,
+				F03EF5061DF071D5009DF592 /* MXEncryptedAttachments.h */,
+				F03EF5071DF071D5009DF592 /* MXEncryptedAttachments.m */,
 				32A151421DAF7C0C00400192 /* MXKey.h */,
 				32A151431DAF7C0C00400192 /* MXKey.m */,
 				32A1513C1DAF768D00400192 /* MXOlmInboundGroupSession.h */,
@@ -960,6 +966,7 @@
 				32A151521DAF8A7200400192 /* MXQueuedEncryption.h in Headers */,
 				323B2AFE1BCE9B6700B11F34 /* MXCoreDataEvent+CoreDataProperties.h in Headers */,
 				3284A5AC1DB7CFA800A09972 /* MXFileCryptoStore.h in Headers */,
+				F03EF5081DF071D5009DF592 /* MXEncryptedAttachments.h in Headers */,
 				320BBF421D6C81550079890E /* MXEventsByTypesEnumeratorOnArray.h in Headers */,
 				3271877B1DA7CAA60071C818 /* MXEncrypting.h in Headers */,
 				32A151481DAF7C0C00400192 /* MXKey.h in Headers */,
@@ -1236,6 +1243,7 @@
 				3220094619EFBF30008DE41D /* MXSessionEventListener.m in Sources */,
 				32A151471DAF7C0C00400192 /* MXDeviceInfo.m in Sources */,
 				32A1515C1DB525DA00400192 /* NSObject+sortedKeys.m in Sources */,
+				F03EF5091DF071D5009DF592 /* MXEncryptedAttachments.m in Sources */,
 				F03EF5051DF01596009DF592 /* MXLRUCache.m in Sources */,
 				71DE22E01BC7C51200284153 /* MXReceiptData.m in Sources */,
 				327E37B71A974F75007F026F /* MXLogger.m in Sources */,
