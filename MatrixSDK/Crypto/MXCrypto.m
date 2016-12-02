@@ -267,14 +267,15 @@
     for (NSString *userId in userIds)
     {
         NSDictionary<NSString *,MXDeviceInfo *> *devices = [_store devicesForUser:userId];
-        if (devices.count)
-        {
-            [stored setObjects:devices forUser:userId];
-        }
 
-        if (devices.count == 0 || forceDownload)
+        if (!devices || forceDownload)
         {
             [downloadUsers addObject:userId];
+        }
+
+        if (devices)
+        {
+            [stored setObjects:devices forUser:userId];
         }
     }
 
@@ -291,7 +292,7 @@
         // Download
         return [mxSession.matrixRestClient downloadKeysForUsers:downloadUsers success:^(MXKeysQueryResponse *keysQueryResponse) {
 
-            for (NSString *userId in keysQueryResponse.deviceKeys.userIds)
+            for (NSString *userId in downloadUsers)
             {
                 NSMutableDictionary<NSString*, MXDeviceInfo*> *devices = [NSMutableDictionary dictionaryWithDictionary:keysQueryResponse.deviceKeys.map[userId]];
 

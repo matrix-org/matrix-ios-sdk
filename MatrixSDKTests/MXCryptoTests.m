@@ -433,6 +433,34 @@
     }];
 }
 
+- (void)testDownloadKeysForUserWithNoDevice
+{
+    // No device = non-e2e-capable device
+
+    [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        [aliceSession.crypto downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+
+            NSArray *bobDevices = [usersDevicesInfoMap deviceIdsForUser:bobSession.myUser.userId];
+            XCTAssertNotNil(bobDevices, @"[MXCrypto downloadKeys] should return @[] for Bob to distinguish him from an unknown user");
+            XCTAssertEqual(0, bobDevices.count);
+
+            MXHTTPOperation *operation = [aliceSession.crypto downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:nil failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+            XCTAssertNil(operation, "@Alice shouldn't do a second /query for non-e2e-capable devices");
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+    }];
+}
+
 - (void)testEnsureOlmSessionsForUsers
 {
     [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;

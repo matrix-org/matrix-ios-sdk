@@ -131,7 +131,8 @@
  Retrieve the known devices for a user.
 
  @param userId The user's id.
- @return A map from device id to 'MXDevice' object for the device.
+ @return A map from device id to 'MXDevice' object for the device or nil if we haven't
+         managed to get a list of devices for this user yet.
  */
 - (NSDictionary<NSString*, MXDeviceInfo*>*)devicesForUser:(NSString*)userId;
 
