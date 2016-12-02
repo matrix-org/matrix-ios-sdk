@@ -347,6 +347,12 @@ typedef void (^MXOnResumeDone)();
         // Get data from the home server
         // First of all, retrieve the user's profile information
         [_myUser updateFromHomeserverOfMatrixSession:self success:^{
+            
+            // Stop here if [MXSession close] has been triggered.
+            if (nil == _myUser)
+            {
+                return;
+            }
 
             // And store him as a common MXUser
             [_store storeUser:_myUser];
