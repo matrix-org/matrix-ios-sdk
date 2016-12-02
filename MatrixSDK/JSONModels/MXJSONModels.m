@@ -1275,15 +1275,13 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
             {
                 if ([JSONDictionary[@"device_keys"][userId] isKindOfClass:NSDictionary.class])
                 {
+                    map[userId] = [NSMutableDictionary dictionary];
+
                     for (NSString *deviceId in JSONDictionary[@"device_keys"][userId])
                     {
                         MXDeviceInfo *deviceInfo;
                         MXJSONModelSetMXJSONModel(deviceInfo, MXDeviceInfo, JSONDictionary[@"device_keys"][userId][deviceId]);
 
-                        if (!map[userId])
-                        {
-                            map[userId] = [NSMutableDictionary dictionary];
-                        }
                         map[userId][deviceId] = deviceInfo;
                     }
                 }
