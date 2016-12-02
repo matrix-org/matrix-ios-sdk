@@ -45,6 +45,7 @@
  */
 - (void)setObject:(ObjectType)object forUser:(NSString*)userId andDevice:(NSString*)deviceId;
 - (void)setObjects:(NSDictionary<NSString* /* deviceId */, ObjectType>*)objectsPerDevices forUser:(NSString*)userId;
+- (void)addEntriesFromMap:(MXUsersDevicesMap*)map;
 - (void)removeAllObjects;
 - (void)removeObjectsForUser:(NSString*)userId;
 

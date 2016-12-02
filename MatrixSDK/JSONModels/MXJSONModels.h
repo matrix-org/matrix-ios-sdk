@@ -1376,9 +1376,14 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @interface MXKeysQueryResponse : MXJSONModel
 
     /**
-      The device keys per devices per users.
+     The device keys per devices per users.
      */
     @property (nonatomic) MXUsersDevicesMap<MXDeviceInfo*> *deviceKeys;
+
+    /**
+     The failures sorted by homeservers.
+    */
+    @property (nonatomic) NSDictionary *failures;
 
 @end
 

@@ -1291,6 +1291,8 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         }
 
         keysQueryResponse.deviceKeys = [[MXUsersDevicesMap<MXDeviceInfo*> alloc] initWithMap:map];
+
+        MXJSONModelSetDictionary(keysQueryResponse.failures, JSONDictionary[@"failures"]);
     }
 
     return keysQueryResponse;
