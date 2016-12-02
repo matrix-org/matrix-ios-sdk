@@ -313,7 +313,10 @@
 
             [usersDevicesInfoMap addEntriesFromMap:stored];
 
-            success(usersDevicesInfoMap);
+            if (success)
+            {
+                success(usersDevicesInfoMap);
+            }
 
         } failure:failure];
     }
