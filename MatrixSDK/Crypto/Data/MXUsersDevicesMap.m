@@ -73,6 +73,14 @@
     _map = mutableMap;
 }
 
+- (void)addEntriesFromMap:(MXUsersDevicesMap*)map
+{
+    NSMutableDictionary *mutableMap = [NSMutableDictionary dictionaryWithDictionary:_map];
+    [mutableMap addEntriesFromDictionary:map.map];
+
+    _map = mutableMap;
+}
+
 - (void)removeAllObjects
 {
     _map = @{};

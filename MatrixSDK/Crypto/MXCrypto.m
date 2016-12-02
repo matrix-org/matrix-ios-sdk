@@ -50,6 +50,10 @@
 
     // Timer to periodically upload keys
     NSTimer *uploadKeysTimer;
+
+    // New devices
+    // userId -> {deviceId -> @(YES)}
+    MXUsersDevicesMap<NSNumber*> *pendingNewDevices;
 }
 @end
 
@@ -68,6 +72,8 @@
 
         roomEncryptors = [NSMutableDictionary dictionary];
         roomDecryptors = [NSMutableDictionary dictionary];
+
+        pendingNewDevices = [[MXUsersDevicesMap alloc] init];
 
         // Build our device keys: they will later be uploaded
         NSString *deviceId = _store.deviceId;
@@ -262,20 +268,28 @@
     MXUsersDevicesMap<MXDeviceInfo*> *stored = [[MXUsersDevicesMap<MXDeviceInfo*> alloc] init];
 
     // List of user ids we need to download keys for
-    NSMutableArray *downloadUsers = [NSMutableArray array];
+    NSMutableArray *downloadUsers;
 
-    for (NSString *userId in userIds)
+    if (forceDownload)
     {
-        NSDictionary<NSString *,MXDeviceInfo *> *devices = [_store devicesForUser:userId];
-
-        if (!devices || forceDownload)
+        downloadUsers = [userIds mutableCopy];
+    }
+    else
+    {
+        downloadUsers = [NSMutableArray array];
+        for (NSString *userId in userIds)
         {
-            [downloadUsers addObject:userId];
-        }
 
-        if (devices)
-        {
-            [stored setObjects:devices forUser:userId];
+            NSDictionary<NSString *,MXDeviceInfo *> *devices = [_store devicesForUser:userId];
+            if (!devices || forceDownload)
+            {
+                [downloadUsers addObject:userId];
+            }
+
+            if (devices)
+            {
+                [stored setObjects:devices forUser:userId];
+            }
         }
     }
 
@@ -290,27 +304,67 @@
     else
     {
         // Download
-        return [mxSession.matrixRestClient downloadKeysForUsers:downloadUsers success:^(MXKeysQueryResponse *keysQueryResponse) {
+        return [self doKeyDownloadForUsers:downloadUsers success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSArray *failedUserIds) {
 
-            for (NSString *userId in downloadUsers)
+            for (NSString *failedUserId in failedUserIds)
             {
-                NSMutableDictionary<NSString*, MXDeviceInfo*> *devices = [NSMutableDictionary dictionaryWithDictionary:keysQueryResponse.deviceKeys.map[userId]];
+                NSLog(@"[MXCrypto] downloadKeys: Error downloading keys for user %@", failedUserId);
+            }
 
-                for (NSString *deviceId in devices.allKeys)
+            [usersDevicesInfoMap addEntriesFromMap:stored];
+
+            if (success)
+            {
+                success(usersDevicesInfoMap);
+            }
+
+        } failure:failure];
+    }
+}
+
+- (MXHTTPOperation*)doKeyDownloadForUsers:(NSArray<NSString*>*)downloadUsers
+                         success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap, NSArray<NSString*> *failedUserIds))success
+                         failure:(void (^)(NSError *error))failure
+{
+    NSLog(@"[MXCrypto] doKeyDownloadForUsers: %@", downloadUsers);
+
+    // Download
+    return [mxSession.matrixRestClient downloadKeysForUsers:downloadUsers success:^(MXKeysQueryResponse *keysQueryResponse) {
+
+        MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap = [[MXUsersDevicesMap alloc] init];
+        NSMutableArray<NSString*> *failedUserIds = [NSMutableArray array];
+
+        for (NSString *userId in downloadUsers)
+        {
+            NSDictionary<NSString*, MXDeviceInfo*> *devices = keysQueryResponse.deviceKeys.map[userId];
+
+            NSLog(@"[MXCrypto] Got keys for %@: %@", userId, devices);
+
+            if (!devices)
+            {
+                // This can happen when the user hs can not reach the other users hses
+                // TODO: do something with keysQueryResponse.failures
+                [failedUserIds addObject:userId];
+            }
+            else
+            {
+                NSMutableDictionary<NSString*, MXDeviceInfo*> *mutabledevices = [NSMutableDictionary dictionaryWithDictionary:devices];
+
+                for (NSString *deviceId in mutabledevices.allKeys)
                 {
                     // Get the potential previously store device keys for this device
-                    MXDeviceInfo *previouslyStoredDeviceKeys = [stored objectForDevice:deviceId forUser:userId];
+                    MXDeviceInfo *previouslyStoredDeviceKeys = [_store deviceWithDeviceId:deviceId forUser:userId];
 
                     // Validate received keys
-                    if (![self validateDeviceKeys:devices[deviceId] forUser:userId andDevice:deviceId previouslyStoredDeviceKeys:previouslyStoredDeviceKeys])
+                    if (![self validateDeviceKeys:mutabledevices[deviceId] forUser:userId andDevice:deviceId previouslyStoredDeviceKeys:previouslyStoredDeviceKeys])
                     {
                         // New device keys are not valid. Do not store them
-                        [devices removeObjectForKey:deviceId];
+                        [mutabledevices removeObjectForKey:deviceId];
 
                         if (previouslyStoredDeviceKeys)
                         {
                             // But keep old validated ones if any
-                            devices[deviceId] = previouslyStoredDeviceKeys;
+                            mutabledevices[deviceId] = previouslyStoredDeviceKeys;
                         }
                     }
                     else if (previouslyStoredDeviceKeys)
@@ -318,26 +372,25 @@
                         // The verified status is not sync'ed with hs.
                         // This is a client side information, valid only for this client.
                         // So, transfer its previous value
-                        devices[deviceId].verified = previouslyStoredDeviceKeys.verified;
+                        mutabledevices[deviceId].verified = previouslyStoredDeviceKeys.verified;
                     }
                 }
 
-                // Update the store. Note
-                [_store storeDevicesForUser:userId devices:devices];
+                // Update the store
+                // Note that devices which aren't in the response will be removed from the store
+                [_store storeDevicesForUser:userId devices:mutabledevices];
 
                 // And the response result
-                [stored setObjects:devices forUser:userId];
+                [usersDevicesInfoMap setObjects:mutabledevices forUser:userId];
             }
+        }
 
-            if (success)
-            {
-                success(stored);
-            }
+        if (success)
+        {
+            success(usersDevicesInfoMap, failedUserIds);
+        }
 
-        } failure:failure];
-    }
-
-    return nil;
+    } failure:failure];
 }
 
 - (NSArray<MXDeviceInfo *> *)storedDevicesForUser:(NSString *)userId
@@ -781,6 +834,11 @@
 - (MXHTTPOperation*)checkDeviceAnnounced:(void (^)())onComplete
                                  failure:(void (^)(NSError *error))failure;
 {
+    // This method is called when the initialSync was done or the session was resumed
+
+    // Catch up on any m.new_device events which arrived during the initial sync.
+    [self flushNewDeviceRequests];
+
     if (_store.deviceAnnounced)
     {
         NSLog(@"[MXCrypto] checkDeviceAnnounced: Already done");
@@ -923,22 +981,58 @@
 
     NSLog(@"[MXCrypto] onNewDeviceEvent: m.new_device event from %@:%@ for rooms %@", userId, deviceId, rooms);
 
-    // TODO. Manu: It will be replaced in next PR
-//    [self downloadKeys:@[userId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
-//
-//        for (NSString *roomId in rooms)
-//        {
-//            id<MXEncrypting> alg = roomEncryptors[roomId];
-//            if (alg)
-//            {
-//                // The room is encrypted, report the new device to it
-//                [alg onNewDevice:deviceId forUser:userId];
-//            }
-//        }
-//
-//    } failure:^(NSError *error) {
-//        NSLog(@"[MXCrypto] onNewDeviceEvent: ERROR updating device keys for new device %@:%@ : %@", userId, deviceId, error);
-//    }];
+    if ([_store deviceWithDeviceId:deviceId forUser:userId])
+    {
+        NSLog(@"[MXCrypto] onNewDeviceEvent: known device; ignoring");
+        return;
+    }
+
+    [pendingNewDevices setObject:@(YES) forUser:userId andDevice:deviceId];
+
+    // We delay handling these until the intialsync has completed, so that we
+    // can do all of them together.
+    if (mxSession.state == MXSessionStateRunning)
+    {
+        [self flushNewDeviceRequests];
+    }
+}
+
+/**
+ Start device queries for any users who sent us an m.new_device recently
+ */
+- (void)flushNewDeviceRequests
+{
+    NSArray *users = pendingNewDevices.userIds;
+
+    if (users.count == 0)
+    {
+        return;
+    }
+
+    // We've kicked off requests to these users: remove their
+    // pending flag for now.
+    [pendingNewDevices removeAllObjects];
+
+    [self doKeyDownloadForUsers:users success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSArray<NSString *> *failedUserIds) {
+
+        for (NSString *failedUserId in failedUserIds)
+        {
+            NSLog(@"[MXCrypto] flushNewDeviceRequests. Error updating device keys for user %@", failedUserId);
+
+            // Reinstate the pending flags on any users which failed; this will
+            // mean that we will do another download in the future, but won't
+            // tight-loop.
+            [pendingNewDevices setObjects:@{} forUser:failedUserId];
+        }
+
+    } failure:^(NSError *error) {
+         NSLog(@"[MXCrypto] flushNewDeviceRequests: ERROR updating device keys for users %@: %@", users, error);
+
+        for (NSString *failedUserId in users)
+        {
+            [pendingNewDevices setObjects:@{} forUser:failedUserId];
+        }
+    }];
 }
 
 /**

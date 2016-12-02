@@ -461,6 +461,30 @@
     }];
 }
 
+- (void)testDownloadKeysWithUnreachableHS
+{
+    [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        // Try to get info from a user on matrix.org.
+        // The local hs we use for tests is not federated and is not able to talk with matrix.org
+        [aliceSession.crypto downloadKeys:@[bobSession.myUser.userId, @"@auser:matrix.org"] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+
+            // We can get info only for Bob
+            XCTAssertEqual(1, usersDevicesInfoMap.map.count);
+
+            NSArray *bobDevices = [usersDevicesInfoMap deviceIdsForUser:bobSession.myUser.userId];
+            XCTAssertNotNil(bobDevices);
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+    }];
+}
+
 - (void)testEnsureOlmSessionsForUsers
 {
     [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
@@ -1085,7 +1109,7 @@
 
                     XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
 
-                    [expectation fulfill];
+                    //[expectation fulfill];
 
                 }];
 
