@@ -171,7 +171,7 @@
     // Need to make a brand new session?
     if (!session || [session needsRotation:sessionRotationPeriodMsgs rotationPeriodMs:sessionRotationPeriodMs])
     {
-        outboundSession = session = [self prepareNewSessionInRoom:room success:success failure:failure];
+        outboundSession = session = [self prepareNewSessionInRoom:room];
    }
 
     if (session.shareOperation)
@@ -242,8 +242,6 @@
 }
 
 - (MXOutboundSessionInfo*)prepareNewSessionInRoom:(MXRoom*)room
-                        success:(void (^)(MXOutboundSessionInfo *session))success
-                        failure:(void (^)(NSError *))failure
 {
     NSString *sessionId = [crypto.olmDevice createOutboundGroupSession];
 
