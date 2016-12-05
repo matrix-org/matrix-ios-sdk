@@ -367,11 +367,14 @@
                 {
                     NSLog(@"[MXOlmDevice] decryptGroupMessage: Warning: Possible replay attack %@", messageIndexKey);
 
-                    *error = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                                 code:MXDecryptingErrorDuplicateMessageIndexCode
-                                             userInfo:@{
-                                                        NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorDuplicateMessageIndexReason, messageIndexKey]
-                                                        }];
+                    if (error)
+                    {
+                        *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                                     code:MXDecryptingErrorDuplicateMessageIndexCode
+                                                 userInfo:@{
+                                                            NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorDuplicateMessageIndexReason, messageIndexKey]
+                                                            }];
+                    }
 
                     return nil;
                 }
@@ -429,22 +432,28 @@
 
             NSString *errorDescription = [NSString stringWithFormat:MXDecryptingErrorInboundSessionMismatchRoomIdReason, roomId, session.roomId];
 
-            *error = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                         code:MXDecryptingErrorUnkwnownInboundSessionIdCode
-                                     userInfo:@{
-                                                NSLocalizedDescriptionKey: errorDescription
-                                                }];
+            if (error)
+            {
+                *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                             code:MXDecryptingErrorUnkwnownInboundSessionIdCode
+                                         userInfo:@{
+                                                    NSLocalizedDescriptionKey: errorDescription
+                                                    }];
+            }
         }
     }
     else
     {
         NSLog(@"[MXOlmDevice] inboundGroupSessionWithId: ERROR: Cannot retrieve inbound group session %@", sessionId);
 
-        *error = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                     code:MXDecryptingErrorUnkwnownInboundSessionIdCode
-                                 userInfo:@{
-                                            NSLocalizedDescriptionKey: MXDecryptingErrorUnkwnownInboundSessionIdReason
-                                            }];
+        if (error)
+        {
+            *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                         code:MXDecryptingErrorUnkwnownInboundSessionIdCode
+                                     userInfo:@{
+                                                NSLocalizedDescriptionKey: MXDecryptingErrorUnkwnownInboundSessionIdReason
+                                                }];
+        }
     }
     return session;
 }
