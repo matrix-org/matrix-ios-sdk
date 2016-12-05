@@ -438,6 +438,7 @@
     {
         _sessionId = sessionId;
         _sharedWithDevices = [[MXUsersDevicesMap alloc] init];
+        creationTime = [NSDate date];
     }
     return self;
 }
