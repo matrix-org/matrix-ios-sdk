@@ -120,6 +120,35 @@ typedef enum : NSUInteger
 } MXMembership;
 
 /**
+ The internal event state used to handle the different steps of the event sending.
+ */
+typedef enum : NSUInteger
+{
+    /**
+     Default state of incoming events.
+     The outgoing events switch into this state when their sending succeeds.
+     */
+    MXEventSentStateSent,
+    /**
+     The event is an outgoing event which is encrypting.
+     */
+    MXEventSentStateEncrypting,
+    /**
+     The data for the outgoing event is uploading. Once complete, the state will move to `MXEventSentStateSending`.
+     */
+    MXEventSentStateUploading,
+    /**
+     The event is an outgoing event in progress.
+     */
+    MXEventSentStateSending,
+    /**
+     The event is an outgoing event which failed to be sent.
+     */
+    MXEventSentStateFailed
+    
+} MXEventSentState;
+
+/**
  Membership definitions - String version
  */
 typedef NSString* MXMembershipString;
@@ -165,6 +194,11 @@ FOUNDATION_EXPORT NSString *const kMXEventDidDecryptNotification;
  Contains the fully-qualified ID of the user who sent this event.
  */
 @property (nonatomic) NSString *sender;
+
+/**
+ The state of the event sending process.
+ */
+@property (nonatomic) MXEventSentState sentState;
 
 /**
  The string event (decrypted, if necessary) type as provided by the homeserver.
@@ -290,6 +324,11 @@ FOUNDATION_EXPORT NSString *const kMXEventDidDecryptNotification;
  Return YES when the event corresponds to a user profile change.
  */
 - (BOOL)isUserProfileChange;
+
+/**
+ Return YES if the event contains a media: image, audio, video or file.
+ */
+- (BOOL)isMediaAttachment;
 
 /**
  Returns the event IDs for which a read receipt is defined in this event.

@@ -279,6 +279,19 @@ NSString *const kMXEventDidDecryptNotification = @"kMXEventDidDecryptNotificatio
     return (prevMembership && membership && [membership isEqualToString:prevMembership]);
 }
 
+- (BOOL)isMediaAttachment
+{
+    if (self.eventType == MXEventTypeRoomMessage)
+    {
+        NSString *msgtype = self.content[@"msgtype"];
+        if ([msgtype isEqualToString:kMXMessageTypeImage] || [msgtype isEqualToString:kMXMessageTypeVideo] || [msgtype isEqualToString:kMXMessageTypeAudio] || [msgtype isEqualToString:kMXMessageTypeFile])
+        {
+            return YES;
+        }
+    }
+    return NO;
+}
+
 - (NSArray *)readReceiptEventIds
 {
     NSMutableArray* list = nil;
@@ -552,6 +565,8 @@ NSString *const kMXEventDidDecryptNotification = @"kMXEventDidDecryptNotificatio
         self.wireType = [aDecoder decodeObjectForKey:@"type"];
         _roomId = [aDecoder decodeObjectForKey:@"roomId"];
         _sender = [aDecoder decodeObjectForKey:@"userId"];
+        NSNumber *sentState = [aDecoder decodeObjectForKey:@"sentState"];
+        _sentState = [sentState unsignedIntegerValue];
         _wireContent = [aDecoder decodeObjectForKey:@"content"];
         _prevContent = [aDecoder decodeObjectForKey:@"prevContent"];
         _stateKey = [aDecoder decodeObjectForKey:@"stateKey"];
@@ -572,6 +587,7 @@ NSString *const kMXEventDidDecryptNotification = @"kMXEventDidDecryptNotificatio
     [aCoder encodeObject:_eventId forKey:@"eventId"];
     [aCoder encodeObject:_roomId forKey:@"roomId"];
     [aCoder encodeObject:_sender forKey:@"userId"];
+    [aCoder encodeObject:@(_sentState) forKey:@"sentState"];
     [aCoder encodeObject:_wireType forKey:@"type"];
     [aCoder encodeObject:_wireContent forKey:@"content"];
     [aCoder encodeObject:_prevContent forKey:@"prevContent"];
