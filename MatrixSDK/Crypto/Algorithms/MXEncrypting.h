@@ -17,6 +17,7 @@
 #import <Foundation/Foundation.h>
 
 #include "MXRoom.h"
+#import "MXDeviceInfo.h"
 
 @protocol MXEncrypting <NSObject>
 
@@ -52,5 +53,13 @@
  @param oldMembership the previous membership.
  */
 - (void)onRoomMembership:(MXEvent*)event member:(MXRoomMember*)member oldMembership:(MXMembership)oldMembership;
+
+/**
+ Called when the verification status of a device changes.
+ 
+ @param device the device which the 'verified' property changed.
+ @param oldVerified the old verification status.
+ */
+- (void)onDeviceVerification:(MXDeviceInfo*)device oldVerified:(MXDeviceVerification)oldVerified;
 
 @end
