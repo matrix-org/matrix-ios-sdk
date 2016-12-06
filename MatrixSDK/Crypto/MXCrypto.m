@@ -51,9 +51,8 @@
     // Timer to periodically upload keys
     NSTimer *uploadKeysTimer;
 
-    // New devices
-    // userId -> {deviceId -> @(YES)}
-    MXUsersDevicesMap<NSNumber*> *pendingNewDevices;
+    // Users with new devices
+    NSMutableArray<NSString*> *pendingUsersWithNewDevices;
 }
 @end
 
@@ -73,7 +72,7 @@
         roomEncryptors = [NSMutableDictionary dictionary];
         roomDecryptors = [NSMutableDictionary dictionary];
 
-        pendingNewDevices = [[MXUsersDevicesMap alloc] init];
+        pendingUsersWithNewDevices = [NSMutableArray array];
 
         // Build our device keys: they will later be uploaded
         NSString *deviceId = _store.deviceId;
@@ -288,10 +287,10 @@
             }
             else
             {
-                // If we have some pending new devices for this device, force download theirs keys.
+                // If we have some pending new devices for this user, force download their devices keys.
                 // The keys will be downloaded twice (in flushNewDeviceRequests and here)
                 // but this is better than no keys.
-                if ([pendingNewDevices deviceIdsForUser:userId].count)
+                if (NSNotFound != [pendingUsersWithNewDevices indexOfObject:userId])
                 {
                     [downloadUsers addObject:userId];
                 }
@@ -868,15 +867,20 @@
 {
     // This method is called when the initialSync was done or the session was resumed
 
-    // Catch up on any m.new_device events which arrived during the initial sync.
-    [self flushNewDeviceRequests];
-
     if (_store.deviceAnnounced)
     {
+        // Catch up on any m.new_device events which arrived during the initial sync.
+        [self flushNewDeviceRequests];
+
         NSLog(@"[MXCrypto] checkDeviceAnnounced: Already done");
         onComplete();
         return nil;
     }
+
+    // Catch up on any m.new_device events which arrived during the initial sync.
+    // And force download all devices keys  the user already has.
+    [pendingUsersWithNewDevices addObject:myDevice.userId];
+    [self flushNewDeviceRequests];
 
     // We need to tell all the devices in all the rooms we are members of that
     // we have arrived.
@@ -1019,7 +1023,7 @@
         return;
     }
 
-    [pendingNewDevices setObject:@(YES) forUser:userId andDevice:deviceId];
+    [pendingUsersWithNewDevices addObject:userId];
 
     // We delay handling these until the intialsync has completed, so that we
     // can do all of them together.
@@ -1034,14 +1038,12 @@
  */
 - (void)flushNewDeviceRequests
 {
-    NSArray *users = pendingNewDevices.userIds;
-
-    if (users.count == 0)
+    if (pendingUsersWithNewDevices.count == 0)
     {
         return;
     }
 
-    [self doKeyDownloadForUsers:users success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSArray<NSString *> *failedUserIds) {
+    [self doKeyDownloadForUsers:pendingUsersWithNewDevices success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSArray<NSString *> *failedUserIds) {
 
         NSLog(@"[MXCrypto] flushNewDeviceRequests. Error updating device keys for users %@", failedUserIds);
 
@@ -1051,16 +1053,11 @@
         // tight-loop.
         for (NSString *userId in usersDevicesInfoMap.userIds)
         {
-            [pendingNewDevices removeObjectsForUser:userId];
+            [pendingUsersWithNewDevices removeObject:userId];
         }
 
     } failure:^(NSError *error) {
-         NSLog(@"[MXCrypto] flushNewDeviceRequests: ERROR updating device keys for users %@: %@", users, error);
-
-        for (NSString *failedUserId in users)
-        {
-            [pendingNewDevices setObjects:@{} forUser:failedUserId];
-        }
+         NSLog(@"[MXCrypto] flushNewDeviceRequests: ERROR updating device keys for users %@: %@", pendingUsersWithNewDevices, error);
     }];
 }
 
