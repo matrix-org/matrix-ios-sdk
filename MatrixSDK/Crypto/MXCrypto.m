@@ -264,6 +264,8 @@
                          success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap))success
                          failure:(void (^)(NSError *error))failure
 {
+    NSLog(@"[MXCrypto] downloadKeys(forceDownload: %tu) : %@", forceDownload, userIds);
+
     // Map from userid -> deviceid -> DeviceInfo
     MXUsersDevicesMap<MXDeviceInfo*> *stored = [[MXUsersDevicesMap<MXDeviceInfo*> alloc] init];
 
@@ -279,16 +281,24 @@
         downloadUsers = [NSMutableArray array];
         for (NSString *userId in userIds)
         {
-
             NSDictionary<NSString *,MXDeviceInfo *> *devices = [_store devicesForUser:userId];
-            if (!devices || forceDownload)
+            if (!devices)
             {
                 [downloadUsers addObject:userId];
             }
-
-            if (devices)
+            else
             {
-                [stored setObjects:devices forUser:userId];
+                // If we have some pending new devices for this device, force download theirs keys.
+                // The keys will be downloaded twice (in flushNewDeviceRequests and here)
+                // but this is better than no keys.
+                if ([pendingNewDevices deviceIdsForUser:userId].count)
+                {
+                    [downloadUsers addObject:userId];
+                }
+                else
+                {
+                    [stored setObjects:devices forUser:userId];
+                }
             }
         }
     }
@@ -1031,20 +1041,17 @@
         return;
     }
 
-    // We've kicked off requests to these users: remove their
-    // pending flag for now.
-    [pendingNewDevices removeAllObjects];
-
     [self doKeyDownloadForUsers:users success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSArray<NSString *> *failedUserIds) {
 
-        for (NSString *failedUserId in failedUserIds)
-        {
-            NSLog(@"[MXCrypto] flushNewDeviceRequests. Error updating device keys for user %@", failedUserId);
+        NSLog(@"[MXCrypto] flushNewDeviceRequests. Error updating device keys for users %@", failedUserIds);
 
-            // Reinstate the pending flags on any users which failed; this will
-            // mean that we will do another download in the future, but won't
-            // tight-loop.
-            [pendingNewDevices setObjects:@{} forUser:failedUserId];
+        // Remove users we got the keys from the pending queue
+        // but keep the pending flags on any users which failed; this will
+        // mean that we will do another download in the future, but won't
+        // tight-loop.
+        for (NSString *userId in usersDevicesInfoMap.userIds)
+        {
+            [pendingNewDevices removeObjectsForUser:userId];
         }
 
     } failure:^(NSError *error) {
