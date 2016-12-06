@@ -867,15 +867,20 @@
 {
     // This method is called when the initialSync was done or the session was resumed
 
-    // Catch up on any m.new_device events which arrived during the initial sync.
-    [self flushNewDeviceRequests];
-
     if (_store.deviceAnnounced)
     {
+        // Catch up on any m.new_device events which arrived during the initial sync.
+        [self flushNewDeviceRequests];
+
         NSLog(@"[MXCrypto] checkDeviceAnnounced: Already done");
         onComplete();
         return nil;
     }
+
+    // Catch up on any m.new_device events which arrived during the initial sync.
+    // And force download all devices keys  the user already has.
+    [pendingUsersWithNewDevices addObject:myDevice.userId];
+    [self flushNewDeviceRequests];
 
     // We need to tell all the devices in all the rooms we are members of that
     // we have arrived.
