@@ -145,10 +145,22 @@
     }
 
     // Otherwise we assume the user is leaving, and start a new outbound session.
-    NSLog(@"Discarding outbound megolm session due to change in membership of %@ (%tu -> %tu)", member.userId, oldMembership, newMembership);
+    NSLog(@"[MXMegolmEncryption] Discarding outbound megolm session in %@ due to change in membership of %@ (%tu -> %tu)", roomId, member.userId, oldMembership, newMembership);
 
     // This ensures that we will start a new session on the next message.
     outboundSession = nil;
+}
+
+- (void)onDeviceVerification:(MXDeviceInfo*)device oldVerified:(MXDeviceVerification)oldVerified
+{
+    if (device.verified == MXDeviceBlocked)
+    {
+        NSLog(@"[MXMegolmEncryption] Discarding outbound megolm session in %@ due to the blacklisting of %@", roomId, device);
+        outboundSession = nil;
+    }
+
+    // In other cases, the key will be shared to this device on the next
+    // message thanks to [self ensureOutboundSessionInRoom]
 }
 
 

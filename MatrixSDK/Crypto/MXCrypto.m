@@ -439,9 +439,27 @@
 
     if (device.verified != verificationStatus)
     {
-        device.verified = verificationStatus;
+        MXDeviceVerification oldVerified = device.verified;
 
+        device.verified = verificationStatus;
         [_store storeDeviceForUser:userId device:device];
+
+        // Report the change to all outbound sessions with this device
+        for (MXRoom *room in mxSession.rooms)
+        {
+            if (room.state.isEncrypted)
+            {
+                MXRoomMember *member = [room.state memberWithUserId:device.userId];
+                if (member && member.membership == MXMembershipJoin)
+                {
+                    id<MXEncrypting> alg = roomEncryptors[room.roomId];
+                    if (alg)
+                    {
+                        [alg onDeviceVerification:device oldVerified:oldVerified];
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -706,6 +724,10 @@
 
     if (alg)
     {
+#ifdef DEBUG
+        NSLog(@"[MXCrypto] encryptEventContent with %@: %@", algorithm, eventContent);
+#endif
+
         return [alg encryptEventContent:eventContent eventType:eventType inRoom:room success:^(NSDictionary *encryptedContent) {
 
             success(encryptedContent, kMXEventTypeStringRoomEncrypted);

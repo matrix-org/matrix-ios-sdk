@@ -1198,7 +1198,8 @@
 
         NSArray *aliceMessages = @[
                                    @"Hello I'm Alice!",
-                                   @"Hello I'm still Alice!"
+                                   @"Hello I'm still Alice but you cannot read this!",
+                                   @"Hello I'm still Alice and you can read this!"
                                    ];
 
         __block NSUInteger messageCount = 0;
@@ -1225,15 +1226,32 @@
                 }
 
                 case 1:
-
+                {
                     // Bob must be not able to decrypt the 2nd message
                     XCTAssertEqual(event.eventType, MXEventTypeRoomEncrypted);
                     XCTAssertNil(event.clearEvent);
                     XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorUnkwnownInboundSessionIdCode);
 
+                    // Make Alice unblock Bob
+                    [aliceSession.crypto setDeviceVerification:MXDeviceUnverified
+                                                     forDevice:bobSession.matrixRestClient.credentials.deviceId
+                                                        ofUser:bobSession.myUser.userId];
+
+                    [roomFromAlicePOV sendTextMessage:aliceMessages[2] success:nil failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+
+                    break;
+                }
+
+                case 2:
+                {
+                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:aliceMessages[2] senderSession:aliceSession]);
                     [expectation fulfill];
                     break;
-                    
+                }
+
                 default:
                     break;
             }
