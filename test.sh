@@ -18,6 +18,7 @@ pip install --upgrade --process-dependency-links https://github.com/matrix-org/s
 
 basedir=`pwd`
 function cleanup {
+    echo `date "+%F %T"` - clean up
     cd $basedir
     cd synapse/demo
     ./stop.sh
@@ -29,6 +30,7 @@ cd synapse/demo
 ./clean.sh
 ./start.sh --no-rate-limit
 
+echo `date "+%F %T"` - start xcode
 cd ../..
 xcodebuild -workspace MatrixSDK.xcworkspace/ -scheme MatrixSDK -sdk iphonesimulator  -destination 'name=iPhone 4s' test
-
+echo `date "+%F %T"` - xcode ended
