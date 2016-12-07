@@ -214,7 +214,7 @@
                     continue;
                 }
 
-                if (![session.sharedWithDevices objectForDevice:deviceId forUser:userId])
+                if (![session.sharedWithDevices objectForDevice:deviceID forUser:userId])
                 {
                     if (!shareMap[userId])
                     {
