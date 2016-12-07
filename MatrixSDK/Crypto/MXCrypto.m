@@ -52,7 +52,8 @@
     NSTimer *uploadKeysTimer;
 
     // Users with new devices
-    NSMutableArray<NSString*> *pendingUsersWithNewDevices;
+    NSMutableSet<NSString*> *pendingUsersWithNewDevices;
+    NSMutableSet<NSString*> *inProgressUsersWithNewDevices;
 }
 @end
 
@@ -72,7 +73,8 @@
         roomEncryptors = [NSMutableDictionary dictionary];
         roomDecryptors = [NSMutableDictionary dictionary];
 
-        pendingUsersWithNewDevices = [NSMutableArray array];
+        pendingUsersWithNewDevices = [NSMutableSet set];
+        inProgressUsersWithNewDevices = [NSMutableSet set];
 
         // Build our device keys: they will later be uploaded
         NSString *deviceId = _store.deviceId;
@@ -290,7 +292,7 @@
                 // If we have some pending new devices for this user, force download their devices keys.
                 // The keys will be downloaded twice (in flushNewDeviceRequests and here)
                 // but this is better than no keys.
-                if (NSNotFound != [pendingUsersWithNewDevices indexOfObject:userId])
+                if ([pendingUsersWithNewDevices containsObject:userId] || [inProgressUsersWithNewDevices containsObject:userId])
                 {
                     [downloadUsers addObject:userId];
                 }
@@ -1038,26 +1040,41 @@
  */
 - (void)flushNewDeviceRequests
 {
-    if (pendingUsersWithNewDevices.count == 0)
+    NSArray *users = pendingUsersWithNewDevices.allObjects;
+    if (users.count == 0)
     {
         return;
     }
 
-    [self doKeyDownloadForUsers:pendingUsersWithNewDevices success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSArray<NSString *> *failedUserIds) {
+    // We've kicked off requests to these users: remove their
+    // pending flag for now.
+    [pendingUsersWithNewDevices removeAllObjects];
 
-        NSLog(@"[MXCrypto] flushNewDeviceRequests. Error updating device keys for users %@", failedUserIds);
+    // Keep track of requests in progress
+    [inProgressUsersWithNewDevices addObjectsFromArray:users];
 
-        // Remove users we got the keys from the pending queue
-        // but keep the pending flags on any users which failed; this will
-        // mean that we will do another download in the future, but won't
-        // tight-loop.
-        for (NSString *userId in usersDevicesInfoMap.userIds)
+    [self doKeyDownloadForUsers:users success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSArray<NSString *> *failedUserIds) {
+
+        // Consider the request for these users as done
+        for (NSString *userId in users)
         {
-            [pendingUsersWithNewDevices removeObject:userId];
+            [inProgressUsersWithNewDevices removeObject:userId];
+        }
+
+        if (failedUserIds.count)
+        {
+            NSLog(@"[MXCrypto] flushNewDeviceRequests. Error updating device keys for users %@", failedUserIds);
+
+            // Reinstate the pending flags on any users which failed; this will
+            // mean that we will do another download in the future, but won't
+            // tight-loop.
+            [pendingUsersWithNewDevices addObjectsFromArray:failedUserIds];
         }
 
     } failure:^(NSError *error) {
          NSLog(@"[MXCrypto] flushNewDeviceRequests: ERROR updating device keys for users %@: %@", pendingUsersWithNewDevices, error);
+
+        [pendingUsersWithNewDevices addObjectsFromArray:users];
     }];
 }
 
