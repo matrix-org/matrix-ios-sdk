@@ -193,9 +193,9 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 {
     RLMRealm *realm = [MXRealmCryptoStore realmForUser:credentials.userId];
 
-    [realm beginWriteTransaction];
-    //[realm deleteObject:cheeseBook];
-    [realm commitWriteTransaction];
+    [realm transactionWithBlock:^{
+        [realm deleteAllObjects];
+    }];
 }
 
 - (instancetype)initWithCredentials:(MXCredentials *)credentials
@@ -406,6 +406,14 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     return [NSKeyedUnarchiver unarchiveObjectWithData:realmSession.olmInboundGroupSessionData];
 }
 
+- (void)removeInboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey
+{
+    RLMResults<MXRealmOlmInboundGroupSession *> *realmSessions = [account.olmInboundGroupSessions objectsWhere:@"sessionId = %@ AND senderKey = %@", sessionId, senderKey];
+
+    [realm transactionWithBlock:^{
+        [realm deleteObjects:realmSessions];
+    }];
+}
 
 #pragma mark - Private methods
 
