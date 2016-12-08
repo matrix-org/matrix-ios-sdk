@@ -237,7 +237,6 @@ RLM_ARRAY_TYPE(MXRealmRoomAlgorithm)
                                                             }];
 
             [account.users addObject:realmUser];
-
         }
 
         MXReamDeviceInfo *realmDevice = [[realmUser.devices objectsWhere:@"deviceId = %@", device.deviceId] firstObject];
@@ -268,6 +267,17 @@ RLM_ARRAY_TYPE(MXRealmRoomAlgorithm)
 
 - (void)storeDevicesForUser:(NSString*)userId devices:(NSDictionary<NSString*, MXDeviceInfo*>*)devices
 {
+    MXReamUser *realmUser = [[account.users objectsWhere:@"userId = %@", userId] firstObject];
+    if (!realmUser)
+    {
+        realmUser = [[MXReamUser alloc] initWithValue:@{
+                                                        @"userId": userId,
+                                                        }];
+        [realm transactionWithBlock:^{
+            [account.users addObject:realmUser];
+        }];
+    }
+
     // TODO
     for (NSString *deviceId in devices)
     {
