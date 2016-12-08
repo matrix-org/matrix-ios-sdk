@@ -21,7 +21,6 @@
 #import "MXSession.h"
 #import "MXFileStore.h"
 
-#import "MXFileCryptoStore.h"
 #import "MXSDKOptions.h"
 
 #ifdef MX_CRYPTO
@@ -222,19 +221,19 @@
 
         XCTAssertNil(mxSession.crypto, @"Crypto is disabled by default");
 
-        XCTAssertFalse([MXFileCryptoStore hasDataForCredentials:mxSession.matrixRestClient.credentials]);
+        XCTAssertFalse([mxSession.crypto.store.class hasDataForCredentials:mxSession.matrixRestClient.credentials]);
 
         MXHTTPOperation *operation = [mxSession enableCrypto:YES success:^{
 
             XCTAssert(mxSession.crypto);
-            XCTAssert([MXFileCryptoStore hasDataForCredentials:mxSession.matrixRestClient.credentials]);
+            XCTAssert([mxSession.crypto.store.class hasDataForCredentials:mxSession.matrixRestClient.credentials]);
 
             XCTAssert(mxSession.crypto.store.deviceAnnounced, @"The device must have been announced when enableCrypto completes");
 
             [mxSession enableCrypto:NO success:^{
 
                 XCTAssertNil(mxSession.crypto);
-                XCTAssertFalse([MXFileCryptoStore hasDataForCredentials:mxSession.matrixRestClient.credentials], @"Crypto data must have been trashed");
+                XCTAssertFalse([mxSession.crypto.store.class hasDataForCredentials:mxSession.matrixRestClient.credentials], @"Crypto data must have been trashed");
 
                 [expectation fulfill];
 
@@ -263,14 +262,14 @@
         [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
         XCTAssert(mxSession.crypto);
-        XCTAssert([MXFileCryptoStore hasDataForCredentials:mxSession.matrixRestClient.credentials]);
+        XCTAssert([mxSession.crypto.store.class hasDataForCredentials:mxSession.matrixRestClient.credentials]);
 
         XCTAssert(mxSession.crypto.store.deviceAnnounced, @"The device must have been announced when [MXSession start] completes");
 
         [mxSession enableCrypto:NO success:^{
 
             XCTAssertNil(mxSession.crypto);
-            XCTAssertFalse([MXFileCryptoStore hasDataForCredentials:mxSession.matrixRestClient.credentials], @"Crypto data must have been trashed");
+            XCTAssertFalse([mxSession.crypto.store.class hasDataForCredentials:mxSession.matrixRestClient.credentials], @"Crypto data must have been trashed");
 
             [expectation fulfill];
 
@@ -377,11 +376,13 @@
                     XCTAssertEqualObjects(aliceDeviceFromBobPOV.fingerprint, aliceSession.crypto.olmDevice.deviceEd25519Key);
 
                     // Continue testing other methods
-                    XCTAssertEqual([mxSession.crypto deviceWithIdentityKey:aliceSession.crypto.olmDevice.deviceCurve25519Key forUser:aliceSession.myUser.userId andAlgorithm:kMXCryptoOlmAlgorithm], aliceDeviceFromBobPOV);
+                    XCTAssertEqualObjects([mxSession.crypto deviceWithIdentityKey:aliceSession.crypto.olmDevice.deviceCurve25519Key forUser:aliceSession.myUser.userId andAlgorithm:kMXCryptoOlmAlgorithm].description, aliceDeviceFromBobPOV.description);
 
                     XCTAssertEqual(aliceDeviceFromBobPOV.verified, MXDeviceUnverified);
 
                     [mxSession.crypto setDeviceVerification:MXDeviceBlocked forDevice:aliceDeviceFromBobPOV.deviceId ofUser:aliceSession.myUser.userId];
+
+                    aliceDeviceFromBobPOV = [mxSession.crypto.store deviceWithDeviceId:aliceDeviceFromBobPOV.deviceId forUser:aliceSession.myUser.userId];
                     XCTAssertEqual(aliceDeviceFromBobPOV.verified, MXDeviceBlocked);
 
                     MXRestClient *bobRestClient = mxSession.matrixRestClient;
@@ -577,6 +578,9 @@
             [room enableEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm success:^{
 
                 XCTAssert(room.state.isEncrypted);
+
+                XCTAssertEqualObjects(kMXCryptoMegolmAlgorithm, [mxSession.crypto.store algorithmForRoom:room.roomId]);
+
                 [expectation fulfill];
 
             } failure:^(NSError *error) {
@@ -1389,7 +1393,7 @@
             XCTAssert(toDeviceEvent);
             NSString *sessionId = toDeviceEvent.content[@"session_id"];
 
-            MXFileCryptoStore *bobCryptoStore = (MXFileCryptoStore *)[bobSession.crypto.olmDevice valueForKey:@"store"];
+            id<MXCryptoStore> bobCryptoStore = (id<MXCryptoStore>)[bobSession.crypto.olmDevice valueForKey:@"store"];
             [bobCryptoStore removeInboundGroupSessionWithId:sessionId andSenderKey:toDeviceEvent.senderKey];
 
             // So that we cannot decrypt it anymore right now
