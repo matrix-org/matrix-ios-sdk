@@ -174,6 +174,8 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
 + (instancetype)createStoreWithCredentials:(MXCredentials*)credentials
 {
+    NSLog(@"[MXRealmCryptoStore] createStore for %@:%@", credentials.userId, credentials.deviceId);
+
     RLMRealm *realm = [MXRealmCryptoStore realmForUser:credentials.userId];
 
     MXReamOlmAccount *account = [[MXReamOlmAccount alloc] initWithValue:@{
@@ -191,6 +193,8 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
 + (void)deleteStoreWithCredentials:(MXCredentials*)credentials
 {
+    NSLog(@"[MXRealmCryptoStore] deleteStore for %@:%@", credentials.userId, credentials.deviceId);
+
     RLMRealm *realm = [MXRealmCryptoStore realmForUser:credentials.userId];
 
     [realm transactionWithBlock:^{
@@ -200,6 +204,8 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
 - (instancetype)initWithCredentials:(MXCredentials *)credentials
 {
+    NSLog(@"[MXRealmCryptoStore] initWithCredentials for %@:%@", credentials.userId, credentials.deviceId);
+
     self = [super init];
     if (self)
     {
@@ -210,7 +216,16 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
         {
             return nil;
         }
-
+        else
+        {
+            // Make sure the device id corresponds
+            if (account.deviceId && ![account.deviceId isEqualToString:credentials.deviceId])
+            {
+                NSLog(@"[MXRealmCryptoStore] Credentials do not match");
+                [MXRealmCryptoStore deleteStoreWithCredentials:credentials];
+                return [MXRealmCryptoStore createStoreWithCredentials:credentials];
+            }
+        }
     }
     return self;
 }
