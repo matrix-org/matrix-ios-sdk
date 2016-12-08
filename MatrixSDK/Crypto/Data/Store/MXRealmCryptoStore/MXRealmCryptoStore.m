@@ -31,11 +31,6 @@
 
 @implementation MXReamDeviceInfo
 
-+ (NSString *)primaryKey
-{
-    return @"deviceId";
-}
-
 @end
 RLM_ARRAY_TYPE(MXReamDeviceInfo)
 
@@ -78,6 +73,36 @@ RLM_ARRAY_TYPE(MXReamUser)
 RLM_ARRAY_TYPE(MXRealmRoomAlgorithm)
 
 
+@interface MXRealmOlmSession : RLMObject
+
+@property NSString *deviceKey;
+
+@property NSData *olmSessionData;
+
+@end
+
+@implementation MXRealmOlmSession
+
+@end
+RLM_ARRAY_TYPE(MXRealmOlmSession)
+
+
+@interface MXRealmOlmInboundGroupSession : RLMObject
+
+@property NSString *sessionId;
+
+@property NSString *senderKey;
+
+@property NSData *olmInboundGroupSessionData;
+
+@end
+
+@implementation MXRealmOlmInboundGroupSession
+
+@end
+RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
+
+
 
 @interface MXReamOlmAccount : RLMObject
 
@@ -108,14 +133,20 @@ RLM_ARRAY_TYPE(MXRealmRoomAlgorithm)
 
 @property RLMArray<MXRealmRoomAlgorithm *><MXRealmRoomAlgorithm> *roomsAlgorithms;
 
+@property RLMArray<MXRealmOlmSession *><MXRealmOlmSession> *olmSessions;
+
+@property RLMArray<MXRealmOlmInboundGroupSession *><MXRealmOlmInboundGroupSession> *olmInboundGroupSessions;
+
 @end
 
 @implementation MXReamOlmAccount
 
++ (NSString *)primaryKey
+{
+    return @"userId";
+}
+
 @end
-
-
-
 
 
 @interface MXRealmCryptoStore ()
@@ -327,22 +358,52 @@ RLM_ARRAY_TYPE(MXRealmRoomAlgorithm)
 
 - (void)storeSession:(OLMSession*)session forDevice:(NSString*)deviceKey
 {
+    MXRealmOlmSession *realmOlmSession = [[MXRealmOlmSession alloc] initWithValue:@{
+                                                                                    @"deviceKey": deviceKey,
+                                                                                    @"olmSessionData": [NSKeyedArchiver archivedDataWithRootObject:session]
+                                                                                    }];
 
+    [realm transactionWithBlock:^{
+        [account.olmSessions addObject:realmOlmSession];
+    }];
 }
 
 - (NSDictionary<NSString*, OLMSession*>*)sessionsWithDevice:(NSString*)deviceKey
 {
-    return nil;
+    NSMutableDictionary<NSString*, OLMSession*> *sessionsWithDevice;
+
+    RLMResults<MXRealmOlmSession *> *realmOlmSessions = [account.olmSessions objectsWhere:@"deviceKey = %@", deviceKey];
+    for (MXRealmOlmSession *realmOlmSession in realmOlmSessions)
+    {
+        if (!sessionsWithDevice)
+        {
+            sessionsWithDevice = [NSMutableDictionary dictionary];
+        }
+
+        sessionsWithDevice[realmOlmSession.deviceKey] = [NSKeyedUnarchiver unarchiveObjectWithData:realmOlmSession.olmSessionData];
+    }
+
+    return sessionsWithDevice;
 }
 
 - (void)storeInboundGroupSession:(MXOlmInboundGroupSession*)session
 {
+    MXRealmOlmInboundGroupSession *realmSession = [[MXRealmOlmInboundGroupSession alloc] initWithValue:@{
+                                                                                    @"sessionId": session.session.sessionIdentifier,
+                                                                                    @"senderKey": session.senderKey,
+                                                                                    @"olmInboundGroupSessionData": [NSKeyedArchiver archivedDataWithRootObject:session]
+                                                                                    }];
 
+    [realm transactionWithBlock:^{
+        [account.olmInboundGroupSessions addObject:realmSession];
+    }];
 }
 
 - (MXOlmInboundGroupSession*)inboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey
 {
-    return nil;
+     MXRealmOlmInboundGroupSession *realmSession = [account.olmInboundGroupSessions objectsWhere:@"sessionId = %@ AND senderKey = %@", sessionId, senderKey].firstObject;
+
+    return [NSKeyedUnarchiver unarchiveObjectWithData:realmSession.olmInboundGroupSessionData];
 }
 
 
