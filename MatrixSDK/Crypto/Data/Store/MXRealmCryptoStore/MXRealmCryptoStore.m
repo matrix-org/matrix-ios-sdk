@@ -434,9 +434,9 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 {
     // Each user has its own db file.
     // Else, it can lead to issue with primary keys.
-    // Ex: if 2 users are is the same encrypted room, [self storeAlgorithmForRoom] will
-    // be called twice for the same room id which breaks the uniqueness the primary key (roomId)
-    // for this table.
+    // Ex: if 2 users are is the same encrypted room, [self storeAlgorithmForRoom]
+    // will be called twice for the same room id which breaks the uniqueness of the
+    // primary key (roomId) for this table.
     RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
 
     // Use the default directory, but replace the filename with the userId
@@ -476,7 +476,8 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
             NSLog(@"[MXRealmCryptoStore] realmForUser still gets after reset. Error: %@", error);
         }
 
-        // TODO: We should report this db reset to higher modules and even to the user
+        // TODO: We should report this db reset to higher modules and even to
+        // the end user
     }
 
     return realm;
