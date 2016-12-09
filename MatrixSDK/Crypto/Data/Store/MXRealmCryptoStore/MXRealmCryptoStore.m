@@ -256,7 +256,11 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
 - (OLMAccount*)account
 {
-    return [NSKeyedUnarchiver unarchiveObjectWithData:account.olmAccountData];
+    if (account)
+    {
+        return [NSKeyedUnarchiver unarchiveObjectWithData:account.olmAccountData];
+    }
+    return nil;
 }
 
 - (void)storeDeviceAnnounced
@@ -308,7 +312,11 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
     MXReamDeviceInfo *realmDevice = [[realmUser.devices objectsWhere:@"deviceId = %@", deviceId] firstObject];
 
-    return [NSKeyedUnarchiver unarchiveObjectWithData:realmDevice.deviceInfoData];
+    if (realmDevice)
+    {
+        return [NSKeyedUnarchiver unarchiveObjectWithData:realmDevice.deviceInfoData];
+    }
+    return nil;
 }
 
 - (void)storeDevicesForUser:(NSString*)userId devices:(NSDictionary<NSString*, MXDeviceInfo*>*)devices
@@ -418,7 +426,11 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 {
      MXRealmOlmInboundGroupSession *realmSession = [account.olmInboundGroupSessions objectsWhere:@"sessionId = %@ AND senderKey = %@", sessionId, senderKey].firstObject;
 
-    return [NSKeyedUnarchiver unarchiveObjectWithData:realmSession.olmInboundGroupSessionData];
+    if (realmSession)
+    {
+        return [NSKeyedUnarchiver unarchiveObjectWithData:realmSession.olmInboundGroupSessionData];
+    }
+    return nil;
 }
 
 - (void)removeInboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey
