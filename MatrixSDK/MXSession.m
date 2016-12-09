@@ -28,6 +28,7 @@
 
 #import "MXDecryptionResult.h"
 #import "MXFileCryptoStore.h"
+#import "MXRealmCryptoStore.h"
 
 #import "MXAccountData.h"
 
@@ -54,6 +55,11 @@ NSString *const kMXSessionNoRoomTag = @"m.recent";  // Use the same value as mat
 #define SERVER_TIMEOUT_MS 30000
 #define CLIENT_TIMEOUT_MS 120000
 
+/**
+ The store to use for crypto.
+ */
+//#define MXCryptoStoreClass MXFileCryptoStore
+#define MXCryptoStoreClass MXRealmCryptoStore
 
 // Block called when MSSession resume is complete
 typedef void (^MXOnResumeDone)();
@@ -1127,7 +1133,7 @@ typedef void (^MXOnResumeDone)();
 #ifdef MX_CRYPTO
     if (enableCrypto && !_crypto)
     {
-        MXFileCryptoStore *cryptoStore = [MXFileCryptoStore createStoreWithCredentials:self.matrixRestClient.credentials];
+        MXCryptoStoreClass *cryptoStore = [MXCryptoStoreClass createStoreWithCredentials:self.matrixRestClient.credentials];
         _crypto = [[MXCrypto alloc] initWithMatrixSession:self andStore:cryptoStore];
 
         if (_state == MXSessionStateRunning)
@@ -2081,10 +2087,10 @@ typedef void (^MXOnResumeDone)();
 - (void)checkCrypto:(void (^)())complete
 {
 #ifdef MX_CRYPTO
-    if ([MXFileCryptoStore hasDataForCredentials:matrixRestClient.credentials])
+    if ([MXCryptoStoreClass hasDataForCredentials:matrixRestClient.credentials])
     {
         // If it already exists, open and init crypto
-        MXFileCryptoStore *cryptoStore = [[MXFileCryptoStore alloc] initWithCredentials:self.matrixRestClient.credentials];
+        MXCryptoStoreClass *cryptoStore = [[MXCryptoStoreClass alloc] initWithCredentials:self.matrixRestClient.credentials];
 
         [cryptoStore open:^{
 
@@ -2100,8 +2106,8 @@ typedef void (^MXOnResumeDone)();
         // Without the device id provided by the hs, the crypto does not work
         && matrixRestClient.credentials.deviceId)
     {
-        //
-        MXFileCryptoStore *cryptoStore = [MXFileCryptoStore createStoreWithCredentials:self.matrixRestClient.credentials];
+        // Create it
+        MXCryptoStoreClass *cryptoStore = [MXCryptoStoreClass createStoreWithCredentials:self.matrixRestClient.credentials];
         _crypto = [[MXCrypto alloc] initWithMatrixSession:self andStore:cryptoStore];
         complete();
     }

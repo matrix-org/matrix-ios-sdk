@@ -183,6 +183,16 @@
  */
 - (MXOlmInboundGroupSession*)inboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey;
 
+
+#pragma mark - Methods for unitary tests purpose
+/**
+ Remove an inbound group session.
+
+ @param sessionId the session identifier.
+ @param the base64-encoded curve25519 key of the sender.
+ */
+- (void)removeInboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey;
+
 @end
 
 #endif

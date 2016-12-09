@@ -53,7 +53,7 @@
 {
     [aCoder encodeObject:_session forKey:@"session"];
     [aCoder encodeObject:_roomId forKey:@"roomId"];
-    [aCoder encodeObject:_keysClaimed forKey:@"senderKey"];
+    [aCoder encodeObject:_senderKey forKey:@"senderKey"];
     [aCoder encodeObject:_keysClaimed forKey:@"keysClaimed"];
 }
 
