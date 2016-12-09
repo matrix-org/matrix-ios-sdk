@@ -152,7 +152,7 @@
         [operation mutateTo:operation2];
 
     } failure:^(NSError *error) {
-        NSLog(@"[MXCrypto] start. Error in uploadKeys: %@", error);
+        NSLog(@"[MXCrypto] start. Error in uploadKeys");
         failure(error);
     }];
 
@@ -244,7 +244,7 @@
         }
 
     } failure:^(NSError *error) {
-        NSLog(@"[MXCrypto] uploadDeviceKeys fails. Reason: %@", error);
+        NSLog(@"[MXCrypto] uploadDeviceKeys fails.");
         failure(error);
     }];
 
@@ -257,7 +257,7 @@
 
     [self uploadKeys:5 success:^{
     } failure:^(NSError *error) {
-        NSLog(@"[MXCrypto] Periodic uploadKeys failed: %@", error);
+        NSLog(@"[MXCrypto] Periodic uploadKeys failed.");
     }];
 }
 
@@ -671,7 +671,7 @@
 
     } failure:^(NSError *error) {
 
-        NSLog(@"[MXCrypto] ensureOlmSessionsForUsers: claimOneTimeKeysForUsersDevices request failed. Error: %@", error);
+        NSLog(@"[MXCrypto] ensureOlmSessionsForUsers: claimOneTimeKeysForUsersDevices request failed.");
         failure(error);
     }];
 }
@@ -703,7 +703,7 @@
     }
     else
     {
-        NSLog(@"[MXCrypto] Unable to verify signature on one-time key for device %@:%@. Error: %@", userId, deviceId, error);
+        NSLog(@"[MXCrypto] Unable to verify signature on one-time key for device %@:%@.", userId, deviceId);
     }
 
     return sessionId;
@@ -733,7 +733,8 @@
         algorithm = NSStringFromClass(alg.class);
     }
 
-    if (alg)
+    // Sanity check (we don't expect an encrypted content here).
+    if (alg && [eventType isEqualToString:kMXEventTypeStringRoomEncrypted] == NO)
     {
 #ifdef DEBUG
         NSLog(@"[MXCrypto] encryptEventContent with %@: %@", algorithm, eventContent);
@@ -937,7 +938,7 @@
             onComplete();
             
         } failure:^(NSError *error) {
-            NSLog(@"[MXCrypto] checkDeviceAnnounced: Annoucements failed: %@", error);
+            NSLog(@"[MXCrypto] checkDeviceAnnounced: Annoucements failed.");
             failure(error);
         }];
     }
@@ -1072,7 +1073,7 @@
         }
 
     } failure:^(NSError *error) {
-         NSLog(@"[MXCrypto] flushNewDeviceRequests: ERROR updating device keys for users %@: %@", pendingUsersWithNewDevices, error);
+         NSLog(@"[MXCrypto] flushNewDeviceRequests: ERROR updating device keys for users %@", pendingUsersWithNewDevices);
 
         [pendingUsersWithNewDevices addObjectsFromArray:users];
     }];
@@ -1169,7 +1170,7 @@
         success(keysUploadResponse);
 
     } failure:^(NSError *error) {
-        NSLog(@"[MXCrypto] uploadOneTimeKeys fails. Reason: %@", error);
+        NSLog(@"[MXCrypto] uploadOneTimeKeys fails.");
         failure(error);
     }];
 }
@@ -1221,7 +1222,7 @@
     NSError *error;
     if (![_olmDevice verifySignature:signKey JSON:deviceKeys.signalableJSONDictionary signature:signature error:&error])
     {
-        NSLog(@"[MXCrypto] validateDeviceKeys: Unable to verify signature on device %@:%@. Error:%@", userId, deviceKeys.deviceId, error);
+        NSLog(@"[MXCrypto] validateDeviceKeys: Unable to verify signature on device %@:%@", userId, deviceKeys.deviceId);
         return NO;
     }
 
