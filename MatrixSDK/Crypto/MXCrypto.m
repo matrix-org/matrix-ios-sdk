@@ -591,8 +591,11 @@
 
     MXUsersDevicesMap<MXOlmSessionResult*> *results = [[MXUsersDevicesMap alloc] init];
 
+    NSUInteger count = 0;
     for (NSString *userId in devicesByUser)
     {
+        count += devicesByUser[userId].count;
+
         for (MXDeviceInfo *deviceInfo in devicesByUser[userId])
         {
             NSString *deviceId = deviceInfo.deviceId;
@@ -608,6 +611,8 @@
             [results setObject:olmSessionResult forUser:userId andDevice:deviceId];
         }
     }
+
+    NSLog(@"[MXCrypto] ensureOlmSessionsForDevices (users count: %lu - devices: %tu)", devicesByUser.count, count);
 
     if (devicesWithoutSession.count == 0)
     {
@@ -630,11 +635,13 @@
     //
     // That should eventually resolve itself, but it's poor form.
 
-    NSLog(@"### claimOneTimeKeysForUsersDevices (count: %@", usersDevicesToClaim);
+    NSLog(@"[MXCrypto] ensureOlmSessionsForDevices: claimOneTimeKeysForUsersDevices (users count: %lu - devices: %tu)",
+          usersDevicesToClaim.map.count, usersDevicesToClaim.count);
 
     return [mxSession.matrixRestClient claimOneTimeKeysForUsersDevices:usersDevicesToClaim success:^(MXKeysClaimResponse *keysClaimResponse) {
 
-        NSLog(@"### keysClaimResponse.oneTimeKeys: %@", keysClaimResponse.oneTimeKeys);
+        NSLog(@"[MXCrypto] keysClaimResponse.oneTimeKeys (users count: %lu - devices: %tu): %@",
+              keysClaimResponse.oneTimeKeys.map.count, keysClaimResponse.oneTimeKeys.count, keysClaimResponse.oneTimeKeys);
 
         for (NSString *userId in devicesByUser)
         {

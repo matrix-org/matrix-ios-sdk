@@ -32,6 +32,10 @@
  */
 @property (nonatomic, readonly) NSDictionary<NSString* /* userId */,
                                     NSDictionary<NSString* /* deviceId */, ObjectType>*> *map;
+/**
+ Number of stored objects.
+ */
+@property (nonatomic, readonly) NSUInteger count;
 
 /**
  Helper methods to extract information from 'map'.

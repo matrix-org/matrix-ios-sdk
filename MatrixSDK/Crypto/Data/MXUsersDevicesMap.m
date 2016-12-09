@@ -40,6 +40,18 @@
     return self;
 }
 
+- (NSUInteger)count
+{
+    NSUInteger count = 0;
+
+    for (NSString *userId in _map)
+    {
+        count += _map[userId].count;
+    }
+
+    return count;
+}
+
 - (NSArray<NSString *> *)userIds
 {
     return _map.allKeys;
