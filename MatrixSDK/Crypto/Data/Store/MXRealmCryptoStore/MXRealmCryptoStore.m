@@ -467,7 +467,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
         NSLog(@"[MXRealmCryptoStore] realmForUser gets error: %@", error);
 
         // Remove the db file
-        [[NSFileManager defaultManager] removeItemAtPath:config.fileURL error:nil];
+        [[NSFileManager defaultManager] removeItemAtPath:config.fileURL.absoluteString error:nil];
 
         // And try again
         realm = [RLMRealm realmWithConfiguration:config error:&error];
