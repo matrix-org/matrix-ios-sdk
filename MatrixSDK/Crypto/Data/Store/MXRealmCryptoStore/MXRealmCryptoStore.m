@@ -155,12 +155,6 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
 @implementation MXRealmCryptoStore
 
-+ (void)initialize
-{
-    // For now, do not bother with migration
-    [RLMRealmConfiguration defaultConfiguration].deleteRealmIfMigrationNeeded = YES;
-}
-
 + (BOOL)hasDataForCredentials:(MXCredentials*)credentials
 {
     RLMRealm *realm = [MXRealmCryptoStore realmForUser:credentials.userId];
@@ -356,11 +350,6 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
 - (void)storeAlgorithmForRoom:(NSString*)roomId algorithm:(NSString*)algorithm
 {
-    if ([self algorithmForRoom:roomId])
-    {
-        NSLog(@"eded");
-    }
-
     MXRealmRoomAlgorithm *roomAlgorithm = [[MXRealmRoomAlgorithm alloc] initWithValue:@{
                                                                               @"roomId": roomId,
                                                                               @"algorithm": algorithm
@@ -457,8 +446,41 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
     config.schemaVersion = kMXRealmCryptoStoreVersion;
 
-    return [RLMRealm realmWithConfiguration:config error:nil];
-}
+    // Set the block which will be called automatically when opening a Realm with a
+    // schema version lower than the one set above
+    config.migrationBlock = ^(RLMMigration *migration, uint64_t oldSchemaVersion) {
+        
+        if (oldSchemaVersion < kMXRealmCryptoStoreVersion)
+        {
+            NSLog(@"[MXRealmCryptoStore] Required migration detected. oldSchemaVersion: %tu - current: %tu", oldSchemaVersion, kMXRealmCryptoStoreVersion);
+
+            // Note: There is nothing to do most of the time
+            // Realm will automatically detect new properties and removed properties
+            // And will update the schema on disk automatically
+        }
+    };
+
+    NSError *error;
+    RLMRealm *realm = [RLMRealm realmWithConfiguration:config error:&error];
+    if (error)
+    {
+        NSLog(@"[MXRealmCryptoStore] realmForUser gets error: %@", error);
+
+        // Remove the db file
+        [[NSFileManager defaultManager] removeItemAtPath:config.fileURL error:nil];
+
+        // And try again
+        realm = [RLMRealm realmWithConfiguration:config error:&error];
+        if (!realm)
+        {
+            NSLog(@"[MXRealmCryptoStore] realmForUser still gets after reset. Error: %@", error);
+        }
+
+        // TODO: We should report this db reset to higher modules and even to the user
+    }
+
+    return realm;
+ }
 
 @end
 
