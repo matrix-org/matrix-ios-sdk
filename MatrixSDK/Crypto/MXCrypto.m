@@ -535,7 +535,10 @@
         return NO;
     }
 
-    [_store storeAlgorithmForRoom:roomId algorithm:algorithm];
+    if (!existingAlgorithm)
+    {
+        [_store storeAlgorithmForRoom:roomId algorithm:algorithm];
+    }
 
     id<MXEncrypting> alg = [[encryptionClass alloc] initWithMatrixSession:mxSession andRoom:roomId];
 
@@ -627,7 +630,7 @@
     //
     // That should eventually resolve itself, but it's poor form.
 
-    NSLog(@"### claimOneTimeKeysForUsersDevices: %@", usersDevicesToClaim);
+    NSLog(@"### claimOneTimeKeysForUsersDevices (count: %@", usersDevicesToClaim);
 
     return [mxSession.matrixRestClient claimOneTimeKeysForUsersDevices:usersDevicesToClaim success:^(MXKeysClaimResponse *keysClaimResponse) {
 
