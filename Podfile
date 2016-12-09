@@ -9,6 +9,7 @@ pod 'AFNetworking', '~> 3.1.0'
 pod 'OLMKit', :git => 'https://matrix.org/git/olm.git', :branch => 'olmkit'
 #pod 'OLMKit', '1.3.0'
 #pod 'OLMKit', :path => '../olm/OLMKit.podspec'
+pod 'Realm', '~> 2.1.1'
 
 end
 
