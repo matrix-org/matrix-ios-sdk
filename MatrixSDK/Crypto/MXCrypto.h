@@ -20,9 +20,6 @@
 
 #import "MXDeviceInfo.h"
 
-#ifdef MX_CRYPTO
-
-#import "MXCryptoStore.h"
 #import "MXRestClient.h"
 
 @class MXSession;
@@ -55,13 +52,20 @@
 @property (nonatomic, readonly) NSString *olmVersion;
 
 /**
- Create the `MXCrypto` instance.
-
- @param mxSession the mxSession to the home server.
- @param store the storage module for crypto data.
- @return the newly created MXCrypto instance.
+ Create a new crypto instance and data for the given user.
+ 
+ @param mxSession the session on which to enable crypto.
+ @return the fresh crypto instance.
  */
-- (instancetype)initWithMatrixSession:(MXSession*)mxSession andStore:(id<MXCryptoStore>)store;
++ (MXCrypto *)createCryptoWithMatrixSession:(MXSession*)mxSession;
+
+/**
+ Check if the user has previously enabled crypto.
+ If yes, init the crypto module.
+
+ @param complete a block called in any case when the operation completes.
+ */
++ (void)checkCryptoWithMatrixSession:(MXSession*)mxSession complete:(void (^)(MXCrypto *crypto))complete;
 
 /**
  Start the crypto module.
@@ -139,12 +143,13 @@
  */
 - (void)resetReplayAttackCheckInTimeline:(NSString*)timeline;
 
+/**
+ Delete the crypto store for the passed credentials.
+
+ @param credentials the credentials of the account.
+ */
++ (void)deleteStoreWithCredentials:(MXCredentials*)credentials;
+
 @end
 
-#else
-
-@interface MXCrypto : NSObject
-@end
-
-#endif
 

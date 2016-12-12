@@ -16,8 +16,6 @@
 
 #import "MXCrypto.h"
 
-#ifdef MX_CRYPTO
-
 #import "MXCrypto_Private.h"
 
 #import "MXSession.h"
@@ -27,6 +25,17 @@
 #import "MXUsersDevicesMap.h"
 #import "MXDeviceInfo.h"
 #import "MXKey.h"
+
+#import "MXFileCryptoStore.h"
+#import "MXRealmCryptoStore.h"
+
+/**
+ The store to use for crypto.
+ */
+//#define MXCryptoStoreClass MXFileCryptoStore
+#define MXCryptoStoreClass MXRealmCryptoStore
+
+#ifdef MX_CRYPTO
 
 @interface MXCrypto ()
 {
@@ -59,69 +68,79 @@
 }
 @end
 
+#endif
+
 
 @implementation MXCrypto
 
-- (instancetype)initWithMatrixSession:(MXSession*)matrixSession andStore:(id<MXCryptoStore>)store
++ (MXCrypto *)createCryptoWithMatrixSession:(MXSession *)mxSession
 {
-    self = [super init];
-    if (self)
+    MXCrypto *crypto;
+
+#ifdef MX_CRYPTO
+    MXCryptoStoreClass *cryptoStore = [MXCryptoStoreClass createStoreWithCredentials:mxSession.matrixRestClient.credentials];
+    crypto = [[MXCrypto alloc] initWithMatrixSession:mxSession andStore:cryptoStore];
+#endif
+
+    return crypto;
+}
+
++ (void)checkCryptoWithMatrixSession:(MXSession *)mxSession complete:(void (^)(MXCrypto *))complete
+{
+#ifdef MX_CRYPTO
+    if ([MXCryptoStoreClass hasDataForCredentials:mxSession.matrixRestClient.credentials])
     {
-        mxSession = matrixSession;
+        // If it already exists, open and init crypto
+        MXCryptoStoreClass *cryptoStore = [[MXCryptoStoreClass alloc] initWithCredentials:mxSession.matrixRestClient.credentials];
 
-        _store = store;
-        _olmDevice = [[MXOlmDevice alloc] initWithStore:_store];
+        [cryptoStore open:^{
 
-        roomEncryptors = [NSMutableDictionary dictionary];
-        roomDecryptors = [NSMutableDictionary dictionary];
+            MXCrypto *crypto = [[MXCrypto alloc] initWithMatrixSession:mxSession andStore:cryptoStore];
 
-        pendingUsersWithNewDevices = [NSMutableSet set];
-        inProgressUsersWithNewDevices = [NSMutableSet set];
+            complete(crypto);
 
-        // Build our device keys: they will later be uploaded
-        NSString *deviceId = _store.deviceId;
-        if (!deviceId)
-        {
-            // Generate a device id if the homeserver did not provide it or it was lost
-            deviceId = [self generateDeviceId];
-
-            NSLog(@"[MXCrypto] Warning: No device id in MXCredentials. The id %@ was created", deviceId);
-
-            [_store storeDeviceId:deviceId];
-        }
-
-        NSString *userId = mxSession.matrixRestClient.credentials.userId;
-
-        myDevice = [[MXDeviceInfo alloc] initWithDeviceId:deviceId];
-        myDevice.userId = userId;
-        myDevice.keys = @{
-                          [NSString stringWithFormat:@"ed25519:%@", deviceId]: _olmDevice.deviceEd25519Key,
-                          [NSString stringWithFormat:@"curve25519:%@", deviceId]: _olmDevice.deviceCurve25519Key,
-                          };
-        myDevice.algorithms = [[MXCryptoAlgorithms sharedAlgorithms] supportedAlgorithms];
-        myDevice.verified = MXDeviceVerified;
-
-        // Add our own deviceinfo to the store
-        NSMutableDictionary *myDevices = [NSMutableDictionary dictionaryWithDictionary:[_store devicesForUser:userId]];
-        myDevices[myDevice.deviceId] = myDevice;
-        [_store storeDevicesForUser:userId devices:myDevices];
-        
-        [self registerEventHandlers];
-
+        } failure:^(NSError *error) {
+            complete(nil);
+        }];
     }
-    return self;
+    else if ([MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession
+             // Without the device id provided by the hs, the crypto does not work
+             && mxSession.matrixRestClient.credentials.deviceId)
+    {
+        // Create it
+        MXCryptoStoreClass *cryptoStore = [MXCryptoStoreClass createStoreWithCredentials:mxSession.matrixRestClient.credentials];
+        MXCrypto *crypto = [[MXCrypto alloc] initWithMatrixSession:mxSession andStore:cryptoStore];
+        complete(crypto);
+    }
+    else
+    {
+        // Else do not enable crypto
+        complete(nil);
+    }
+#else
+    complete(nil);
+#endif
+}
+
++ (void)deleteStoreWithCredentials:(MXCredentials *)credentials
+{
+#ifdef MX_CRYPTO
+    [MXCryptoStoreClass deleteStoreWithCredentials:credentials];
+#endif
 }
 
 - (MXHTTPOperation*)start:(void (^)())success
                   failure:(void (^)(NSError *error))failure
 {
+    MXHTTPOperation *operation;
+
+#ifdef MX_CRYPTO
     NSLog(@"[MXCrypto] start");
 
     // The session must be initialised enough before starting this module
     NSParameterAssert(mxSession.myUser.userId);
 
     // Start uploading user device keys
-    MXHTTPOperation *operation;
     operation = [self uploadKeys:5 success:^{
 
         NSLog(@"[MXCrypto] start ###########################################################");
@@ -158,11 +177,14 @@
         failure(error);
     }];
 
+#endif
     return operation;
 }
 
 - (void)close
 {
+#ifdef MX_CRYPTO
+
     NSLog(@"[MXCrypto] close. store: %@",_store);
 
     // Stop timer
@@ -181,12 +203,16 @@
     roomDecryptors = nil;
 
     myDevice = nil;
+
+#endif
 }
 
 - (MXHTTPOperation *)encryptEventContent:(NSDictionary *)eventContent withType:(MXEventTypeString)eventType inRoom:(MXRoom *)room
                                  success:(void (^)(NSDictionary *, NSString *))success
                                  failure:(void (^)(NSError *))failure
 {
+#ifdef MX_CRYPTO
+
     NSString *algorithm;
     id<MXEncrypting> alg = roomEncryptors[room.roomId];
 
@@ -233,10 +259,15 @@
 
         return nil;
     }
+#else
+    return nil;
+#endif
 }
 
 - (BOOL)decryptEvent:(MXEvent *)event inTimeline:(NSString*)timeline
 {
+#ifdef MX_CRYPTO
+
     id<MXDecrypting> alg = [self getRoomDecryptor:event.roomId algorithm:event.content[@"algorithm"]];
     if (!alg)
     {
@@ -258,30 +289,101 @@
     }
     
     return result;
+#else
+    return NO;
+#endif
 }
 
 
 - (void)resetReplayAttackCheckInTimeline:(NSString*)timeline
 {
+#ifdef MX_CRYPTO
     [_olmDevice resetReplayAttackCheckInTimeline:timeline];
+#else
+    return nil;
+#endif
 }
 
 - (NSString *)deviceCurve25519Key
 {
+#ifdef MX_CRYPTO
     return _olmDevice.deviceCurve25519Key;
+#else
+    return nil;
+#endif
 }
 
 - (NSString *)deviceEd25519Key
 {
+#ifdef MX_CRYPTO
     return _olmDevice.deviceEd25519Key;
+#else
+    return nil;
+#endif
 }
 
 - (NSString *)olmVersion
 {
+#ifdef MX_CRYPTO
     return _olmDevice.olmVersion;
+#else
+    return nil;
+#endif
 }
 
 #pragma mark - Private API
+
+#ifdef MX_CRYPTO
+
+- (instancetype)initWithMatrixSession:(MXSession*)matrixSession andStore:(id<MXCryptoStore>)store
+{
+    self = [super init];
+    if (self)
+    {
+        mxSession = matrixSession;
+
+        _store = store;
+        _olmDevice = [[MXOlmDevice alloc] initWithStore:_store];
+
+        roomEncryptors = [NSMutableDictionary dictionary];
+        roomDecryptors = [NSMutableDictionary dictionary];
+
+        pendingUsersWithNewDevices = [NSMutableSet set];
+        inProgressUsersWithNewDevices = [NSMutableSet set];
+
+        // Build our device keys: they will later be uploaded
+        NSString *deviceId = _store.deviceId;
+        if (!deviceId)
+        {
+            // Generate a device id if the homeserver did not provide it or it was lost
+            deviceId = [self generateDeviceId];
+
+            NSLog(@"[MXCrypto] Warning: No device id in MXCredentials. The id %@ was created", deviceId);
+
+            [_store storeDeviceId:deviceId];
+        }
+
+        NSString *userId = mxSession.matrixRestClient.credentials.userId;
+
+        myDevice = [[MXDeviceInfo alloc] initWithDeviceId:deviceId];
+        myDevice.userId = userId;
+        myDevice.keys = @{
+                          [NSString stringWithFormat:@"ed25519:%@", deviceId]: _olmDevice.deviceEd25519Key,
+                          [NSString stringWithFormat:@"curve25519:%@", deviceId]: _olmDevice.deviceCurve25519Key,
+                          };
+        myDevice.algorithms = [[MXCryptoAlgorithms sharedAlgorithms] supportedAlgorithms];
+        myDevice.verified = MXDeviceVerified;
+
+        // Add our own deviceinfo to the store
+        NSMutableDictionary *myDevices = [NSMutableDictionary dictionaryWithDictionary:[_store devicesForUser:userId]];
+        myDevices[myDevice.deviceId] = myDevice;
+        [_store storeDevicesForUser:userId devices:myDevices];
+        
+        [self registerEventHandlers];
+        
+    }
+    return self;
+}
 
 - (MXHTTPOperation *)uploadKeys:(NSUInteger)maxKeys
                         success:(void (^)())success
@@ -1325,7 +1427,8 @@
     return alg;
 };
 
+#endif
+
 @end
 
-#endif
 

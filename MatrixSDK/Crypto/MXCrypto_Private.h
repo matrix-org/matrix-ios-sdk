@@ -47,6 +47,15 @@
 @property (nonatomic, readonly) MXOlmDevice *olmDevice;
 
 /**
+ Create the `MXCrypto` instance.
+
+ @param mxSession the mxSession to the home server.
+ @param store the storage module for crypto data.
+ @return the newly created MXCrypto instance.
+ */
+- (instancetype)initWithMatrixSession:(MXSession*)mxSession andStore:(id<MXCryptoStore>)store;
+
+/**
  Upload the device keys to the homeserver and ensure that the
  homeserver has enough one-time keys.
 
