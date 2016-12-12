@@ -47,6 +47,11 @@
 @property (nonatomic, readonly) MXOlmDevice *olmDevice;
 
 /**
+  The instance used to make requests to the homeserver.
+ */
+@property (nonatomic, readonly) MXRestClient *matrixRestClient;
+
+/**
  Create the `MXCrypto` instance.
 
  @param mxSession the mxSession to the home server.

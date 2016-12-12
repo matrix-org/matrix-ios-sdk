@@ -16,18 +16,20 @@
 
 #import <Foundation/Foundation.h>
 
-#include "MXRoom.h"
+#import "MXRoom.h"
 #import "MXDeviceInfo.h"
+
+@class MXCrypto;
 
 @protocol MXEncrypting <NSObject>
 
 /**
  Constructor.
 
- @param matrixSession the related 'MXSession'.
+ @param crypto the related 'MXCrypto'.
  @param roomId the id of the room we will be sending to.
  */
-- (instancetype)initWithMatrixSession:(MXSession*)matrixSession andRoom:(NSString*)roomId;
+- (instancetype)initWithCrypto:(MXCrypto*)crypto andRoom:(NSString*)roomId;
 
 /**
  Encrypt an event content according to the configuration of the room.

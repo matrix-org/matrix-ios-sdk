@@ -344,6 +344,7 @@
 
         _store = store;
         _olmDevice = [[MXOlmDevice alloc] initWithStore:_store];
+        _matrixRestClient = mxSession.matrixRestClient;
 
         roomEncryptors = [NSMutableDictionary dictionary];
         roomDecryptors = [NSMutableDictionary dictionary];
@@ -363,7 +364,7 @@
             [_store storeDeviceId:deviceId];
         }
 
-        NSString *userId = mxSession.matrixRestClient.credentials.userId;
+        NSString *userId = _matrixRestClient.credentials.userId;
 
         myDevice = [[MXDeviceInfo alloc] initWithDeviceId:deviceId];
         myDevice.userId = userId;
@@ -544,7 +545,7 @@
     NSLog(@"[MXCrypto] doKeyDownloadForUsers: %@", downloadUsers);
 
     // Download
-    return [mxSession.matrixRestClient downloadKeysForUsers:downloadUsers success:^(MXKeysQueryResponse *keysQueryResponse) {
+    return [_matrixRestClient downloadKeysForUsers:downloadUsers success:^(MXKeysQueryResponse *keysQueryResponse) {
 
         MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap = [[MXUsersDevicesMap alloc] init];
         NSMutableArray<NSString*> *failedUserIds = [NSMutableArray array];
@@ -744,7 +745,7 @@
         [_store storeAlgorithmForRoom:roomId algorithm:algorithm];
     }
 
-    id<MXEncrypting> alg = [[encryptionClass alloc] initWithMatrixSession:mxSession andRoom:roomId];
+    id<MXEncrypting> alg = [[encryptionClass alloc] initWithCrypto:self andRoom:roomId];
 
     roomEncryptors[roomId] = alg;
 
@@ -1272,7 +1273,7 @@
 
     // For now, we set the device id explicitly, as we may not be using the
     // same one as used in login.
-    return [mxSession.matrixRestClient uploadKeys:myDevice.JSONDictionary oneTimeKeys:nil forDevice:myDevice.deviceId success:success failure:failure];
+    return [_matrixRestClient uploadKeys:myDevice.JSONDictionary oneTimeKeys:nil forDevice:myDevice.deviceId success:success failure:failure];
 }
 
 /**
@@ -1300,7 +1301,7 @@
 
     // For now, we set the device id explicitly, as we may not be using the
     // same one as used in login.
-    return [mxSession.matrixRestClient uploadKeys:nil oneTimeKeys:oneTimeJson forDevice:myDevice.deviceId success:^(MXKeysUploadResponse *keysUploadResponse) {
+    return [_matrixRestClient uploadKeys:nil oneTimeKeys:oneTimeJson forDevice:myDevice.deviceId success:^(MXKeysUploadResponse *keysUploadResponse) {
 
         lastPublishedOneTimeKeys = oneTimeKeys;
         [_olmDevice markOneTimeKeysAsPublished];
@@ -1416,7 +1417,7 @@
     Class algClass = [[MXCryptoAlgorithms sharedAlgorithms] decryptorClassForAlgorithm:algorithm];
     if (algClass)
     {
-        alg = [[algClass alloc] initWithMatrixSession:mxSession];
+        alg = [[algClass alloc] initWithCrypto:self];
 
         if (roomId)
         {

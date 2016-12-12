@@ -17,7 +17,6 @@
 #import "MXOlmEncryption.h"
 
 #import "MXCryptoAlgorithms.h"
-#import "MXSession.h"
 #import "MXCrypto_Private.h"
 
 #ifdef MX_CRYPTO
@@ -43,12 +42,12 @@
 
 
 #pragma mark - MXEncrypting
-- (instancetype)initWithMatrixSession:(MXSession *)matrixSession andRoom:(NSString *)theRoomId
+- (instancetype)initWithCrypto:(MXCrypto *)theCrypto andRoom:(NSString *)theRoomId
 {
     self = [super init];
     if (self)
     {
-        crypto = matrixSession.crypto;
+        crypto = theCrypto;
         roomId = theRoomId;
     }
     return self;

@@ -21,7 +21,6 @@
 #import "MXMegolmEncryption.h"
 
 #import "MXCryptoAlgorithms.h"
-#import "MXSession.h"
 #import "MXCrypto_Private.h"
 #import "MXQueuedEncryption.h"
 
@@ -60,7 +59,6 @@
 
 @interface MXMegolmEncryption ()
 {
-    MXSession *mxSession;
     MXCrypto *crypto;
 
     // The id of the room we will be sending to.
@@ -93,13 +91,12 @@
 
 
 #pragma mark - MXEncrypting
-- (instancetype)initWithMatrixSession:(MXSession *)matrixSession andRoom:(NSString *)theRoomId
+- (instancetype)initWithCrypto:(MXCrypto *)theCrypto andRoom:(NSString *)theRoomId
 {
     self = [super init];
     if (self)
     {
-        mxSession = matrixSession;
-        crypto = matrixSession.crypto;
+        crypto = theCrypto;
         roomId = theRoomId;
         deviceId = crypto.store.deviceId;
 
@@ -343,7 +340,7 @@
         {
             NSLog(@"[MXMegolEncryption] shareKey. Actually share with %@", contentMap);
 
-            MXHTTPOperation *operation2 = [mxSession.matrixRestClient sendToDevice:kMXEventTypeStringRoomEncrypted contentMap:contentMap success:^{
+            MXHTTPOperation *operation2 = [crypto.matrixRestClient sendToDevice:kMXEventTypeStringRoomEncrypted contentMap:contentMap success:^{
 
                 // Add the devices we have shared with to session.sharedWithDevices.
                 //
