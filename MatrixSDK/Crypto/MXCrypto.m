@@ -404,8 +404,9 @@
 
         _olmDevice = [[MXOlmDevice alloc] initWithStore:_store];
 
-        // Use our own rest client that answers on the crypto thread
+        // Use our own REST client that answers on the crypto thread
         _matrixRestClient = [[MXRestClient alloc] initWithCredentials:mxSession.matrixRestClient.credentials andOnUnrecognizedCertificateBlock:nil];
+        _matrixRestClient.completionQueue = cryptoQueue;
 
         roomEncryptors = [NSMutableDictionary dictionary];
         roomDecryptors = [NSMutableDictionary dictionary];
