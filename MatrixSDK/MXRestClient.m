@@ -321,12 +321,30 @@ MXAuthAction;
                 });
             });
 
-        } failure:failure];
+        } failure:^(NSError *error) {
+            if (failure)
+            {
+                dispatch_async(processingQueue, ^{
+                    dispatch_async(completionQueue, ^{
+                        failure(error);
+                    });
+                });
+            }
+        }];
 
         // Mutate MXHTTPOperation so that the user can cancel this new operation
         [operation mutateTo:operation2];
 
-    } failure:failure];
+    } failure:^(NSError *error) {
+        if (failure)
+        {
+            dispatch_async(processingQueue, ^{
+                dispatch_async(completionQueue, ^{
+                    failure(error);
+                });
+            });
+        }
+    }];
 
     return operation;
 }
@@ -423,7 +441,16 @@ MXAuthAction;
                        });
                    });
                    
-               } failure:failure];
+               } failure:^(NSError *error) {
+                   if (failure)
+                   {
+                       dispatch_async(processingQueue, ^{
+                           dispatch_async(completionQueue, ^{
+                               failure(error);
+                           });
+                       });
+                   }
+               }];
 }
 
 - (NSString*)loginFallback;
@@ -3062,7 +3089,16 @@ MXAuthAction;
 
                                      }
                                  }
-                                 failure:failure];
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
+                                     }
+                                 }];
 }
 
 - (NSString*)urlOfContent:(NSString*)mxcContentURI
@@ -3481,7 +3517,16 @@ MXAuthAction;
                                      });
 
                                  }
-                                 failure:failure];
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
+                                     }
+                                 }];
 }
 
 // Shorcut for calling [self search] without needing to manage top hierarchy parameters
@@ -3541,7 +3586,16 @@ MXAuthAction;
                                          });
                                      });
                                  }
-                                 failure:failure];
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
+                                     }
+                                 }];
 }
 
 - (MXHTTPOperation*)downloadKeysForUsers:(NSArray<NSString*>*)userIds
@@ -3578,7 +3632,16 @@ MXAuthAction;
                                          });
                                      });
                                  }
-                                 failure:failure];
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
+                                     }
+                                 }];
 }
 
 - (MXHTTPOperation *)claimOneTimeKeysForUsersDevices:(MXUsersDevicesMap<NSString *> *)usersDevicesKeyTypesMap success:(void (^)(MXKeysClaimResponse *))success failure:(void (^)(NSError *))failure
@@ -3608,7 +3671,16 @@ MXAuthAction;
                                          });
                                      });
                                  }
-                                 failure:failure];
+                                 failure:^(NSError *error) {
+                                     if (failure)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
+                                     }
+                                 }];
 }
 
 
