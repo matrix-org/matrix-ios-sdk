@@ -125,8 +125,12 @@
     queuedEncryption.failure = failure;
     [pendingEncryptions addObject:queuedEncryption];
 
+    NSDate *startDate = [NSDate date];
+
     return [self ensureOutboundSessionInRoom:room success:^(MXOutboundSessionInfo *session) {
 
+        NSLog(@"[MXMegolmEncryption] ensureOutboundSessionInRoom took %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+        
         [self processPendingEncryptionsInSession:session withError:nil];
 
     } failure:^(NSError *error) {

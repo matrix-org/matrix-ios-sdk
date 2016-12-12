@@ -238,8 +238,10 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 {
     olmAccount = account;
 
+    NSDate *startDate = [NSDate date];
     NSString *filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreAccountFile];
     [NSKeyedArchiver archiveRootObject:olmAccount toFile:filePath];
+    NSLog(@"##### [MXFileCryptoStore] storeAccount in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (OLMAccount *)account
@@ -262,8 +264,10 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 {
     [usersDevicesInfoMap setObject:device forUser:userId andDevice:device.deviceId];
 
+    NSDate *startDate = [NSDate date];
     NSString *filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreDevicesFile];
     [NSKeyedArchiver archiveRootObject:usersDevicesInfoMap toFile:filePath];
+    NSLog(@"##### [MXFileCryptoStore] storeAccount in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (MXDeviceInfo *)deviceWithDeviceId:(NSString *)deviceId forUser:(NSString *)userId
@@ -275,8 +279,10 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 {
     [usersDevicesInfoMap setObjects:devices forUser:userId];
 
+    NSDate *startDate = [NSDate date];
     NSString *filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreDevicesFile];
     [NSKeyedArchiver archiveRootObject:usersDevicesInfoMap toFile:filePath];
+    NSLog(@"##### [MXFileCryptoStore] storeDevicesForUser in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (NSDictionary<NSString *,MXDeviceInfo *> *)devicesForUser:(NSString *)userId
@@ -288,8 +294,10 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 {
     roomsAlgorithms[roomId] = algorithm;
 
+    NSDate *startDate = [NSDate date];
     NSString *filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreRoomsAlgorithmsFile];
     [NSKeyedArchiver archiveRootObject:roomsAlgorithms toFile:filePath];
+    NSLog(@"##### [MXFileCryptoStore] storeAlgorithmForRoom in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (NSString *)algorithmForRoom:(NSString *)roomId
@@ -306,8 +314,10 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 
     olmSessions[deviceKey][session.sessionIdentifier] = session;
 
+    NSDate *startDate = [NSDate date];
     NSString *filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreSessionsFile];
     [NSKeyedArchiver archiveRootObject:olmSessions toFile:filePath];
+    NSLog(@"##### [MXFileCryptoStore] storeSession in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (NSDictionary<NSString *,OLMSession *> *)sessionsWithDevice:(NSString *)deviceKey
@@ -324,8 +334,10 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 
     inboundGroupSessions[session.senderKey][session.session.sessionIdentifier] = session;
 
+    NSDate *startDate = [NSDate date];
     NSString *filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreInboundGroupSessionsFile];
     [NSKeyedArchiver archiveRootObject:inboundGroupSessions toFile:filePath];
+    NSLog(@"##### [MXFileCryptoStore] storeInboundGroupSession in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (MXOlmInboundGroupSession *)inboundGroupSessionWithId:(NSString *)sessionId andSenderKey:(NSString *)senderKey
@@ -339,8 +351,10 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 {
     [inboundGroupSessions[senderKey] removeObjectForKey:sessionId];
 
+    NSDate *startDate = [NSDate date];
     NSString *filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreInboundGroupSessionsFile];
     [NSKeyedArchiver archiveRootObject:inboundGroupSessions toFile:filePath];
+    NSLog(@"##### [MXFileCryptoStore] removeInboundGroupSessionWithId in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 
