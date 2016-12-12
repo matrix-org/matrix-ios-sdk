@@ -134,7 +134,9 @@ MXAuthAction;
         
         // By default, use the same address for the identity server
         self.identityServer = homeserver;
-        
+
+        completionQueue = dispatch_get_main_queue();
+
         processingQueue = dispatch_queue_create("MXRestClient", DISPATCH_QUEUE_SERIAL);
     }
     return self;
