@@ -244,7 +244,11 @@ MXAuthAction;
                                              }
                                              else if (failure)
                                              {
-                                                 failure(error);
+                                                 dispatch_async(processingQueue, ^{
+                                                     dispatch_async(completionQueue, ^{
+                                                         failure(error);
+                                                     });
+                                                 });
                                              }
                                              
                                          });
@@ -267,7 +271,11 @@ MXAuthAction;
 {
     if (![loginType isEqualToString:kMXLoginFlowTypePassword] && ![loginType isEqualToString:kMXLoginFlowTypeDummy])
     {
-        failure(nil);
+        dispatch_async(processingQueue, ^{
+            dispatch_async(completionQueue, ^{
+                failure(nil);
+            });
+        });
         return nil;
     }
 
@@ -351,7 +359,11 @@ MXAuthAction;
                                      
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                      
                                  }];
@@ -370,7 +382,11 @@ MXAuthAction;
 {
     if (![loginType isEqualToString:kMXLoginFlowTypePassword])
     {
-        failure(nil);
+        dispatch_async(processingQueue, ^{
+            dispatch_async(completionQueue, ^{
+                failure(nil);
+            });
+        });
         return nil;
     }
 
@@ -424,11 +440,16 @@ MXAuthAction;
     if (!parameters)
     {
         NSError* error = [NSError errorWithDomain:@"Invalid params" code:500 userInfo:nil];
-        
-        failure(error);
+
+        dispatch_async(processingQueue, ^{
+            dispatch_async(completionQueue, ^{
+                failure(error);
+            });
+        });
+
         return nil;
     }
-    
+
     return [httpClient requestWithMethod:@"POST"
                                     path:[NSString stringWithFormat:@"%@/account/password", apiPathPrefix]
                               parameters:parameters
@@ -442,7 +463,11 @@ MXAuthAction;
 
                                  }
                                  failure:^(NSError *error) {
-                                     failure(error);
+                                     dispatch_async(processingQueue, ^{
+                                         dispatch_async(completionQueue, ^{
+                                             failure(error);
+                                         });
+                                     });
                                  }];
 }
 
@@ -455,10 +480,15 @@ MXAuthAction;
     {
         NSError* error = [NSError errorWithDomain:@"Invalid params" code:500 userInfo:nil];
         
-        failure(error);
+        dispatch_async(processingQueue, ^{
+            dispatch_async(completionQueue, ^{
+                failure(error);
+            });
+        });
+
         return nil;
     }
-    
+
     NSDictionary *parameters = @{
                                  @"auth": @{
                                              @"type": kMXLoginFlowTypePassword,
@@ -481,7 +511,11 @@ MXAuthAction;
 
                                  }
                                  failure:^(NSError *error) {
-                                     failure(error);
+                                     dispatch_async(processingQueue, ^{
+                                         dispatch_async(completionQueue, ^{
+                                             failure(error);
+                                         });
+                                     });
                                  }];
 }
 
@@ -536,7 +570,11 @@ MXAuthAction;
                                      
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                      
                                  }];
@@ -563,7 +601,11 @@ MXAuthAction;
                                      
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                      
                                  }];
@@ -600,7 +642,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -624,10 +670,15 @@ MXAuthAction;
     {
         NSError* error = [NSError errorWithDomain:@"Invalid params" code:500 userInfo:nil];
         
-        failure(error);
+        dispatch_async(processingQueue, ^{
+            dispatch_async(completionQueue, ^{
+                failure(error);
+            });
+        });
+
         return nil;
     }
-    
+
     // Fill the request parameters on demand
     // Caution: parameters are JSON serialized in http body, we must use a NSNumber created with a boolean for append value.
     NSDictionary *parameters = @{
@@ -655,7 +706,11 @@ MXAuthAction;
 
                                  }
                                  failure:^(NSError *error) {
-                                     failure(error);
+                                     dispatch_async(processingQueue, ^{
+                                         dispatch_async(completionQueue, ^{
+                                             failure(error);
+                                         });
+                                     });
                                  }];
 }
 
@@ -678,7 +733,11 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     failure(error);
+                                     dispatch_async(processingQueue, ^{
+                                         dispatch_async(completionQueue, ^{
+                                             failure(error);
+                                         });
+                                     });
                                  }];
 }
 
@@ -733,7 +792,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -780,7 +843,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -865,7 +932,11 @@ MXAuthAction;
                                      failure:^(NSError *error) {
                                          if (failure)
                                          {
-                                             failure(error);
+                                             dispatch_async(processingQueue, ^{
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             });
                                          }
                                      }];
     }
@@ -873,7 +944,11 @@ MXAuthAction;
     {
         if (failure)
         {
-            failure([NSError errorWithDomain:kMXRestClientErrorDomain code:0 userInfo:@{@"error": @"Invalid argument"}]);
+            dispatch_async(processingQueue, ^{
+                dispatch_async(completionQueue, ^{
+                    failure([NSError errorWithDomain:kMXRestClientErrorDomain code:0 userInfo:@{@"error": @"Invalid argument"}]);
+                });
+            });
         }
         return nil;
     }
@@ -912,7 +987,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -945,7 +1024,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -1012,7 +1095,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -1057,7 +1144,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -1096,7 +1187,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -1337,7 +1432,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -1365,7 +1464,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -1397,7 +1500,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -1426,7 +1533,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -1514,7 +1625,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -1564,8 +1679,12 @@ MXAuthAction;
     {
         if (failure)
         {
-            MXError *error = [[MXError alloc] initWithErrorCode:kMXSDKErrCodeStringMissingParameters error:@"No supplied identity server URL"];
-            failure([error createNSError]);
+            dispatch_async(processingQueue, ^{
+                dispatch_async(completionQueue, ^{
+                    MXError *error = [[MXError alloc] initWithErrorCode:kMXSDKErrCodeStringMissingParameters error:@"No supplied identity server URL"];
+                    failure([error createNSError]);
+                });
+            });
         }
         return nil;
     }
@@ -1606,7 +1725,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -1648,7 +1771,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -1799,7 +1926,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -1860,7 +1991,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -1900,7 +2035,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -1932,7 +2071,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -1975,7 +2118,11 @@ MXAuthAction;
                                                        failure:^(NSError *error) {
                                                            if (failure)
                                                            {
-                                                               failure(error);
+                                                               dispatch_async(processingQueue, ^{
+                                                                   dispatch_async(completionQueue, ^{
+                                                                       failure(error);
+                                                                   });
+                                                               });
                                                            }
                                                        }];
     
@@ -2021,7 +2168,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -2065,7 +2216,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -2102,7 +2257,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -2140,7 +2299,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -2180,7 +2343,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -2219,7 +2386,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -2246,7 +2417,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -2281,7 +2456,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -2321,7 +2500,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -2354,7 +2537,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -2392,7 +2579,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -2430,7 +2621,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -2462,7 +2657,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -2503,7 +2702,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -2541,7 +2744,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -2573,7 +2780,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -2608,7 +2819,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -2674,7 +2889,11 @@ MXAuthAction;
                                                        failure:^(NSError *error) {
                                                            if (failure)
                                                            {
-                                                               failure(error);
+                                                               dispatch_async(processingQueue, ^{
+                                                                   dispatch_async(completionQueue, ^{
+                                                                       failure(error);
+                                                                   });
+                                                               });
                                                            }
                                                        }];
     
@@ -2711,8 +2930,12 @@ MXAuthAction;
                                  }
                                  failure:^(NSError *error) {
                                      
-                                     failure(error);
-                                     
+                                     dispatch_async(processingQueue, ^{
+                                         dispatch_async(completionQueue, ^{
+                                             failure(error);
+                                         });
+                                     });
+
                                  }];
     
 }
@@ -2748,7 +2971,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -2782,7 +3009,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -2937,7 +3168,11 @@ MXAuthAction;
                                          failure:^(NSError *error) {
                                              if (failure)
                                              {
-                                                 failure(error);
+                                                 dispatch_async(processingQueue, ^{
+                                                     dispatch_async(completionQueue, ^{
+                                                         failure(error);
+                                                     });
+                                                 });
                                              }
                                          }];
 }
@@ -2986,7 +3221,11 @@ MXAuthAction;
             
         } failure:^(NSError *error) {
             if (failure) {
-                failure(error);
+                dispatch_async(processingQueue, ^{
+                    dispatch_async(completionQueue, ^{
+                        failure(error);
+                    });
+                });
             }
         }];
     }
@@ -3051,7 +3290,11 @@ MXAuthAction;
                                          failure:^(NSError *error) {
                                              if (failure)
                                              {
-                                                 failure(error);
+                                                 dispatch_async(processingQueue, ^{
+                                                     dispatch_async(completionQueue, ^{
+                                                         failure(error);
+                                                     });
+                                                 });
                                              }
                                          }];
 }
@@ -3087,15 +3330,23 @@ MXAuthAction;
                                                  // Build the error from the JSON data
                                                  if (failure && JSONResponse[@"errcode"] && JSONResponse[@"error"])
                                                  {
-                                                     MXError *error = [[MXError alloc] initWithErrorCode:JSONResponse[@"errcode"] error:JSONResponse[@"error"]];
-                                                     failure([error createNSError]);
+                                                     dispatch_async(processingQueue, ^{
+                                                         dispatch_async(completionQueue, ^{
+                                                             MXError *error = [[MXError alloc] initWithErrorCode:JSONResponse[@"errcode"] error:JSONResponse[@"error"]];
+                                                             failure([error createNSError]);
+                                                         });
+                                                     });
                                                  }
                                              }
                                          }
                                          failure:^(NSError *error) {
                                              if (failure)
                                              {
-                                                 failure(error);
+                                                 dispatch_async(processingQueue, ^{
+                                                     dispatch_async(completionQueue, ^{
+                                                         failure(error);
+                                                     });
+                                                 });
                                              }
                                          }];
 }
@@ -3126,7 +3377,11 @@ MXAuthAction;
                                          failure:^(NSError *error) {
                                              if (failure)
                                              {
-                                                 failure(error);
+                                                 dispatch_async(processingQueue, ^{
+                                                     dispatch_async(completionQueue, ^{
+                                                         failure(error);
+                                                     });
+                                                 });
                                              }
                                          }];
 }
@@ -3155,7 +3410,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -3383,7 +3642,11 @@ MXAuthAction;
                                  failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -3417,7 +3680,11 @@ MXAuthAction;
                                      
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                      
                                  }];
@@ -3452,7 +3719,11 @@ MXAuthAction;
                                      
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                      
                                  }];
@@ -3490,7 +3761,11 @@ MXAuthAction;
                                  } failure:^(NSError *error) {
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                  }];
 }
@@ -3539,7 +3814,11 @@ MXAuthAction;
                                              }
                                              else if (failure)
                                              {
-                                                 failure(error);
+                                                 dispatch_async(processingQueue, ^{
+                                                     dispatch_async(completionQueue, ^{
+                                                         failure(error);
+                                                     });
+                                                 });
                                              }
                                              
                                          });
@@ -3581,7 +3860,11 @@ MXAuthAction;
                                      
                                      if (failure)
                                      {
-                                         failure(error);
+                                         dispatch_async(processingQueue, ^{
+                                             dispatch_async(completionQueue, ^{
+                                                 failure(error);
+                                             });
+                                         });
                                      }
                                      
                                  }];
