@@ -132,6 +132,13 @@ typedef enum : NSUInteger
 @property (nonatomic, readonly) NSData* allowedCertificate;
 
 /**
+ The queue on which asynchronous response blocks are called.
+ Default is dispatch_get_main_queue().
+ */
+@property (nonatomic, strong) dispatch_queue_t completionQueue;
+
+
+/**
  Create an instance based on homeserver url.
 
  @param homeserver the homeserver URL.
