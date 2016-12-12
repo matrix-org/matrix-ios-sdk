@@ -95,7 +95,7 @@ MXAuthAction;
 @end
 
 @implementation MXRestClient
-@synthesize homeserver, homeserverSuffix, credentials, apiPathPrefix;
+@synthesize homeserver, homeserverSuffix, credentials, apiPathPrefix, completionQueue;
 
 -(id)initWithHomeServer:(NSString *)inHomeserver andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
 {
@@ -111,7 +111,9 @@ MXAuthAction;
         
         // By default, use the same address for the identity server
         self.identityServer = homeserver;
-        
+
+        completionQueue = dispatch_get_main_queue();
+
         processingQueue = dispatch_queue_create("MXRestClient", DISPATCH_QUEUE_SERIAL);
     }
     return self;
@@ -526,7 +528,7 @@ MXAuthAction;
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
                                              
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
                                                  
                                                  success();
                                                  
@@ -814,7 +816,7 @@ MXAuthAction;
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
                                              
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
 
                                                  NSString *eventId;
                                                  MXJSONModelSetString(eventId, JSONResponse[@"event_id"]);
@@ -850,7 +852,7 @@ MXAuthAction;
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
                                              
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
                                                  
                                                  NSString *eventId;
                                                  MXJSONModelSetString(eventId, JSONResponse[@"event_id"]);
@@ -919,7 +921,7 @@ MXAuthAction;
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
                                              
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
                                                  
                                                  success();
                                                  
@@ -964,7 +966,7 @@ MXAuthAction;
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
 
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
 
                                                  success();
 
@@ -1004,7 +1006,7 @@ MXAuthAction;
                                      // Use here the processing queue in order to keep the server response order
                                      dispatch_async(processingQueue, ^{
 
-                                         dispatch_async(dispatch_get_main_queue(), ^{
+                                         dispatch_async(completionQueue, ^{
 
                                              success(JSONResponse);
 
@@ -1208,7 +1210,7 @@ MXAuthAction;
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
 
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
 
                                                  success();
 
@@ -1237,7 +1239,7 @@ MXAuthAction;
                                      // Use here the processing queue in order to keep the server response order
                                      dispatch_async(processingQueue, ^{
 
-                                         dispatch_async(dispatch_get_main_queue(), ^{
+                                         dispatch_async(completionQueue, ^{
 
                                              MXRoomDirectoryVisibility directoryVisibility;
                                              MXJSONModelSetString(directoryVisibility, JSONResponse[@"visibility"]);
@@ -1274,7 +1276,7 @@ MXAuthAction;
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
                                              
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
                                                  
                                                  success();
                                                  
@@ -1307,7 +1309,7 @@ MXAuthAction;
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
                                              
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
                                                  
                                                  success();
                                                  
@@ -1384,7 +1386,7 @@ MXAuthAction;
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
                                              
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
                                                  
                                                  NSString *roomId;
                                                  MXJSONModelSetString(roomId, JSONResponse[@"room_id"]);
@@ -1481,7 +1483,7 @@ MXAuthAction;
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
 
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
 
                                                  success(JSONResponse);
 
@@ -1523,7 +1525,7 @@ MXAuthAction;
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
                                              
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
                                                  
                                                  success();
                                                  
@@ -1674,7 +1676,7 @@ MXAuthAction;
                                              
                                              MXCreateRoomResponse *response = [MXCreateRoomResponse modelFromJSON:JSONResponse];
                                              
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
                                                  
                                                  success(response);
                                                  
@@ -1735,7 +1737,7 @@ MXAuthAction;
                                              
                                              MXPaginationResponse *paginatedResponse = [MXPaginationResponse modelFromJSON:JSONResponse];
                                              
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
                                                  
                                                  success(paginatedResponse);
                                                  
@@ -1775,7 +1777,7 @@ MXAuthAction;
                                                  [roomMemberEvents addObject:roomMemberEvent];
                                              }
                                              
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
                                                  
                                                  success(roomMemberEvents);
                                                  
@@ -1807,7 +1809,7 @@ MXAuthAction;
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
                                              
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
                                                  
                                                  success(JSONResponse);
                                                  
@@ -1850,7 +1852,7 @@ MXAuthAction;
                                                                // Use here the processing queue in order to keep the server response order
                                                                dispatch_async(processingQueue, ^{
                                                                    
-                                                                   dispatch_async(dispatch_get_main_queue(), ^{
+                                                                   dispatch_async(completionQueue, ^{
                                                                        
                                                                        success();
                                                                        
@@ -1896,7 +1898,7 @@ MXAuthAction;
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
                                              
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
                                                  
                                                  success();
                                                  
@@ -1940,7 +1942,7 @@ MXAuthAction;
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
 
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
 
                                                  success();
 
@@ -1977,7 +1979,7 @@ MXAuthAction;
                                              
                                              MXRoomInitialSync *roomInitialSync = [MXRoomInitialSync modelFromJSON:JSONResponse];
                                              
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
                                                  
                                                  success(roomInitialSync);
                                                  
@@ -2015,7 +2017,7 @@ MXAuthAction;
 
                                              MXEventContext *eventContext = [MXEventContext modelFromJSON:JSONResponse];
 
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
 
                                                  success(eventContext);
 
@@ -2056,7 +2058,7 @@ MXAuthAction;
                                                  [tags addObject:tag];
                                              }
 
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
 
                                                  success(tags);
 
@@ -2094,7 +2096,7 @@ MXAuthAction;
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
 
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
 
                                                  success();
 
@@ -2152,7 +2154,7 @@ MXAuthAction;
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
                                              
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
                                                  
                                                  success();
                                                  
@@ -2190,7 +2192,7 @@ MXAuthAction;
                                              
                                              NSDictionary *cleanedJSONResponse = [MXJSONModel removeNullValuesInJSON:JSONResponse];
                                              
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
 
                                                  NSString *displayname;
                                                  MXJSONModelSetString(displayname, cleanedJSONResponse[@"displayname"]);
@@ -2225,7 +2227,7 @@ MXAuthAction;
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
                                              
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
                                                  
                                                  success();
                                                  
@@ -2263,7 +2265,7 @@ MXAuthAction;
                                              
                                              NSDictionary *cleanedJSONResponse = [MXJSONModel removeNullValuesInJSON:JSONResponse];
                                              
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
                                                  
                                                  NSString *avatarUrl;
                                                  MXJSONModelSetString(avatarUrl, cleanedJSONResponse[@"avatar_url"]);
@@ -2329,7 +2331,7 @@ MXAuthAction;
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
 
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
 
                                                  NSArray<MXThirdPartyIdentifier*> *threePIDs;
                                                  MXJSONModelSetMXJSONModelArray(threePIDs, MXThirdPartyIdentifier, JSONResponse[@"threepids"]);
@@ -2372,7 +2374,7 @@ MXAuthAction;
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
                                              
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
                                                  
                                                  success();
                                                  
@@ -2410,7 +2412,7 @@ MXAuthAction;
                                              
                                              MXPresenceResponse *presence = [MXPresenceResponse modelFromJSON:JSONResponse];
                                              
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
                                                  
                                                  success(presence);
                                                  
@@ -2442,7 +2444,7 @@ MXAuthAction;
                                              
                                              MXPresenceResponse *presence = [MXPresenceResponse modelFromJSON:JSONResponse];
                                              
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
                                                  
                                                  success(presence);
                                                  
@@ -2477,7 +2479,7 @@ MXAuthAction;
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
                                              
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
                                                  
                                                  success();
                                                  
@@ -2543,7 +2545,7 @@ MXAuthAction;
                                                                    
                                                                    MXSyncResponse *syncResponse = [MXSyncResponse modelFromJSON:JSONResponse];
                                                                    
-                                                                   dispatch_async(dispatch_get_main_queue(), ^{
+                                                                   dispatch_async(completionQueue, ^{
                                                                        
                                                                        success(syncResponse);
                                                                        
@@ -2581,7 +2583,7 @@ MXAuthAction;
                                      // Use here the processing queue in order to keep the server response order
                                      dispatch_async(processingQueue, ^{
                                          
-                                         dispatch_async(dispatch_get_main_queue(), ^{
+                                         dispatch_async(completionQueue, ^{
                                              
                                              success(eventId);
                                              
@@ -2616,7 +2618,7 @@ MXAuthAction;
                                                  NSArray *publicRooms;
                                                  MXJSONModelSetMXJSONModelArray(publicRooms, MXPublicRoom, JSONResponse[@"chunk"]);
 
-                                                 dispatch_async(dispatch_get_main_queue(), ^{
+                                                 dispatch_async(completionQueue, ^{
 
                                                      success(publicRooms);
 
@@ -2650,7 +2652,7 @@ MXAuthAction;
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
                                              
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
 
                                                  NSString *roomId;
                                                  MXJSONModelSetString(roomId, JSONResponse[@"room_id"]);
@@ -2968,7 +2970,7 @@ MXAuthAction;
                                                  // Use here the processing queue in order to keep the server response order
                                                  dispatch_async(processingQueue, ^{
 
-                                                     dispatch_async(dispatch_get_main_queue(), ^{
+                                                     dispatch_async(completionQueue, ^{
 
                                                          success(JSONResponse);
 
@@ -3054,7 +3056,7 @@ MXAuthAction;
                                      // Use here the processing queue in order to keep the server response order
                                      dispatch_async(processingQueue, ^{
 
-                                         dispatch_async(dispatch_get_main_queue(), ^{
+                                         dispatch_async(completionQueue, ^{
 
                                              MXSearchResponse *searchResponse = [MXSearchResponse modelFromJSON:JSONResponse];
 
@@ -3118,7 +3120,7 @@ MXAuthAction;
 
                                         MXKeysUploadResponse *keysUploadResponse =  [MXKeysUploadResponse modelFromJSON:JSONResponse];
 
-                                         dispatch_async(dispatch_get_main_queue(), ^{
+                                         dispatch_async(completionQueue, ^{
 
                                              if (success)
                                              {
@@ -3155,7 +3157,7 @@ MXAuthAction;
 
                                          MXKeysQueryResponse *keysQueryResponse = [MXKeysQueryResponse modelFromJSON:JSONResponse];
 
-                                         dispatch_async(dispatch_get_main_queue(), ^{
+                                         dispatch_async(completionQueue, ^{
 
                                              if (success)
                                              {
@@ -3185,7 +3187,7 @@ MXAuthAction;
 
                                          MXKeysClaimResponse *keysClaimResponse = [MXKeysClaimResponse modelFromJSON:JSONResponse];
 
-                                         dispatch_async(dispatch_get_main_queue(), ^{
+                                         dispatch_async(completionQueue, ^{
 
                                              if (success)
                                              {
@@ -3219,7 +3221,7 @@ MXAuthAction;
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
 
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
 
                                                  success();
 
@@ -3252,7 +3254,7 @@ MXAuthAction;
                                              NSArray<MXDevice *> *devices;
                                              MXJSONModelSetMXJSONModelArray(devices, MXDevice, JSONResponse[@"devices"]);
                                              
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
                                                  
                                                  success(devices);
                                                  
@@ -3287,7 +3289,7 @@ MXAuthAction;
                                              MXDevice *device;
                                              MXJSONModelSetMXJSONModel(device, MXDevice, JSONResponse);
                                              
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
                                                  
                                                  success(device);
                                                  
@@ -3326,7 +3328,7 @@ MXAuthAction;
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
                                              
-                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                             dispatch_async(completionQueue, ^{
                                                  
                                                  success();
                                                  

@@ -318,4 +318,79 @@
     }];
 }
 
+
+#pragma mark - completionQueue
+- (void)testCompletionQueueDefaultValue
+{
+    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
+
+    MXRestClient *client = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL
+                                  andOnUnrecognizedCertificateBlock:nil];
+
+    [client publicRooms:^(NSArray *rooms) {
+
+        // Result must be returned on the main queue by default
+        XCTAssert([[NSThread currentThread] isMainThread]);
+        XCTAssertEqual(dispatch_get_current_queue(), dispatch_get_main_queue());
+
+        [expectation fulfill];
+
+    } failure:^(NSError *error) {
+        XCTFail(@"The request should not fail - NSError: %@", error);
+        [expectation fulfill];
+    }];
+
+    [self waitForExpectationsWithTimeout:10 handler:nil];
+}
+
+- (void)testCompletionQueue
+{
+    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
+
+    MXRestClient *client = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL
+                          andOnUnrecognizedCertificateBlock:nil];
+
+    client.completionQueue = dispatch_queue_create("aQueueFromAnotherThread", DISPATCH_QUEUE_SERIAL);
+
+    [client publicRooms:^(NSArray *rooms) {
+
+        XCTAssertFalse([[NSThread currentThread] isMainThread]);
+        XCTAssertEqual(dispatch_get_current_queue(), client.completionQueue);
+
+        [expectation fulfill];
+
+    } failure:^(NSError *error) {
+        XCTFail(@"The request should not fail - NSError: %@", error);
+        [expectation fulfill];
+    }];
+
+    [self waitForExpectationsWithTimeout:10 handler:nil];
+}
+
+- (void)testCompletionQueueOnError
+{
+    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
+
+    MXRestClient *client = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL
+                                  andOnUnrecognizedCertificateBlock:nil];
+
+    client.completionQueue = dispatch_queue_create("aQueueFromAnotherThread", DISPATCH_QUEUE_SERIAL);
+
+    [client avatarUrlForUser:nil success:^(NSString *avatarUrl) {
+
+        XCTFail(@"The request should fail");
+        [expectation fulfill];
+
+    } failure:^(NSError *error) {
+
+        XCTAssertFalse([[NSThread currentThread] isMainThread]);
+        XCTAssertEqual(dispatch_get_current_queue(), client.completionQueue);
+
+        [expectation fulfill];
+    }];
+
+    [self waitForExpectationsWithTimeout:10 handler:nil];
+}
+
+
 @end
