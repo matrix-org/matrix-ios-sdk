@@ -2173,7 +2173,7 @@ typedef void (^MXOnResumeDone)();
 #ifdef MX_CRYPTO
     if (_crypto)
     {
-        [_crypto.olmDevice resetReplayAttackCheckInTimeline:timeline];
+        [_crypto resetReplayAttackCheckInTimeline:timeline];
     }
 #endif
 }

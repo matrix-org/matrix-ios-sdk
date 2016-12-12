@@ -20,6 +20,7 @@
 
 #import "MXCryptoAlgorithms.h"
 #import "MXSession.h"
+#import "MXCrypto_Private.h"
 
 @interface MXMegolmDecryption ()
 {

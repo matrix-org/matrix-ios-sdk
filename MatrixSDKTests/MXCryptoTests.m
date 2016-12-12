@@ -19,6 +19,7 @@
 #import "MatrixSDKTestsData.h"
 
 #import "MXSession.h"
+#import "MXCrypto_Private.h"
 #import "MXFileStore.h"
 
 #import "MXSDKOptions.h"

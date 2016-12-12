@@ -18,6 +18,7 @@
 
 #import "MXCryptoAlgorithms.h"
 #import "MXSession.h"
+#import "MXCrypto_Private.h"
 
 #ifdef MX_CRYPTO
 

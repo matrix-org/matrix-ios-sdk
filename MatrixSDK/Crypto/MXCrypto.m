@@ -18,6 +18,8 @@
 
 #ifdef MX_CRYPTO
 
+#import "MXCrypto_Private.h"
+
 #import "MXSession.h"
 #import "MXTools.h"
 
@@ -180,6 +182,106 @@
 
     myDevice = nil;
 }
+
+- (MXHTTPOperation *)encryptEventContent:(NSDictionary *)eventContent withType:(MXEventTypeString)eventType inRoom:(MXRoom *)room
+                                 success:(void (^)(NSDictionary *, NSString *))success
+                                 failure:(void (^)(NSError *))failure
+{
+    NSString *algorithm;
+    id<MXEncrypting> alg = roomEncryptors[room.roomId];
+
+    if (!alg)
+    {
+        // If the crypto has been enabled after the initialSync (the global one or the one for this room),
+        // the algorithm has not been initialised yet. So, do it now from room state information
+        algorithm = room.state.encryptionAlgorithm;
+        if (algorithm)
+        {
+            [self setEncryptionInRoom:room.roomId withAlgorithm:algorithm];
+            alg = roomEncryptors[room.roomId];
+        }
+    }
+    else
+    {
+        // For log purpose
+        algorithm = NSStringFromClass(alg.class);
+    }
+
+    // Sanity check (we don't expect an encrypted content here).
+    if (alg && [eventType isEqualToString:kMXEventTypeStringRoomEncrypted] == NO)
+    {
+#ifdef DEBUG
+        NSLog(@"[MXCrypto] encryptEventContent with %@: %@", algorithm, eventContent);
+#endif
+
+        return [alg encryptEventContent:eventContent eventType:eventType inRoom:room success:^(NSDictionary *encryptedContent) {
+
+            success(encryptedContent, kMXEventTypeStringRoomEncrypted);
+
+        } failure:failure];
+    }
+    else
+    {
+        NSError *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                             code:MXDecryptingErrorUnableToEncryptCode
+                                         userInfo:@{
+                                                    NSLocalizedDescriptionKey: MXDecryptingErrorUnableToEncrypt,
+                                                    NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToEncryptReason, algorithm]
+                                                    }];
+
+        failure(error);
+
+        return nil;
+    }
+}
+
+- (BOOL)decryptEvent:(MXEvent *)event inTimeline:(NSString*)timeline
+{
+    id<MXDecrypting> alg = [self getRoomDecryptor:event.roomId algorithm:event.content[@"algorithm"]];
+    if (!alg)
+    {
+        NSLog(@"[MXCrypto] decryptEvent: Unable to decrypt %@", event.content[@"algorithm"]);
+
+        event.decryptionError = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                                    code:MXDecryptingErrorUnableToDecryptCode
+                                                userInfo:@{
+                                                           NSLocalizedDescriptionKey: MXDecryptingErrorUnableToDecrypt,
+                                                           NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, event, event.content[@"algorithm"]]
+                                                           }];
+        return NO;
+    }
+
+    BOOL result = [alg decryptEvent:event inTimeline:timeline];
+    if (!result)
+    {
+        NSLog(@"[MXCrypto] decryptEvent: Error: %@", event.decryptionError);
+    }
+    
+    return result;
+}
+
+
+- (void)resetReplayAttackCheckInTimeline:(NSString*)timeline
+{
+    [_olmDevice resetReplayAttackCheckInTimeline:timeline];
+}
+
+- (NSString *)deviceCurve25519Key
+{
+    return _olmDevice.deviceCurve25519Key;
+}
+
+- (NSString *)deviceEd25519Key
+{
+    return _olmDevice.deviceEd25519Key;
+}
+
+- (NSString *)olmVersion
+{
+    return _olmDevice.olmVersion;
+}
+
+#pragma mark - Private API
 
 - (MXHTTPOperation *)uploadKeys:(NSUInteger)maxKeys
                         success:(void (^)())success
@@ -717,83 +819,6 @@
     }
 
     return sessionId;
-}
-
-- (MXHTTPOperation *)encryptEventContent:(NSDictionary *)eventContent withType:(MXEventTypeString)eventType inRoom:(MXRoom *)room
-                                 success:(void (^)(NSDictionary *, NSString *))success
-                                 failure:(void (^)(NSError *))failure
-{
-    NSString *algorithm;
-    id<MXEncrypting> alg = roomEncryptors[room.roomId];
-
-    if (!alg)
-    {
-        // If the crypto has been enabled after the initialSync (the global one or the one for this room),
-        // the algorithm has not been initialised yet. So, do it now from room state information
-        algorithm = room.state.encryptionAlgorithm;
-        if (algorithm)
-        {
-            [self setEncryptionInRoom:room.roomId withAlgorithm:algorithm];
-            alg = roomEncryptors[room.roomId];
-        }
-    }
-    else
-    {
-        // For log purpose
-        algorithm = NSStringFromClass(alg.class);
-    }
-
-    // Sanity check (we don't expect an encrypted content here).
-    if (alg && [eventType isEqualToString:kMXEventTypeStringRoomEncrypted] == NO)
-    {
-#ifdef DEBUG
-        NSLog(@"[MXCrypto] encryptEventContent with %@: %@", algorithm, eventContent);
-#endif
-
-        return [alg encryptEventContent:eventContent eventType:eventType inRoom:room success:^(NSDictionary *encryptedContent) {
-
-            success(encryptedContent, kMXEventTypeStringRoomEncrypted);
-
-        } failure:failure];
-    }
-    else
-    {
-        NSError *error = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                             code:MXDecryptingErrorUnableToEncryptCode
-                                         userInfo:@{
-                                                    NSLocalizedDescriptionKey: MXDecryptingErrorUnableToEncrypt,
-                                                    NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToEncryptReason, algorithm]
-                                                    }];
-
-        failure(error);
-
-        return nil;
-    }
-}
-
-- (BOOL)decryptEvent:(MXEvent *)event inTimeline:(NSString*)timeline
-{
-    id<MXDecrypting> alg = [self getRoomDecryptor:event.roomId algorithm:event.content[@"algorithm"]];
-    if (!alg)
-    {
-        NSLog(@"[MXCrypto] decryptEvent: Unable to decrypt %@", event.content[@"algorithm"]);
-        
-        event.decryptionError = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                                    code:MXDecryptingErrorUnableToDecryptCode
-                                                userInfo:@{
-                                                           NSLocalizedDescriptionKey: MXDecryptingErrorUnableToDecrypt,
-                                                           NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, event, event.content[@"algorithm"]]
-                                                           }];
-        return NO;
-    }
-
-    BOOL result = [alg decryptEvent:event inTimeline:timeline];
-    if (!result)
-    {
-        NSLog(@"[MXCrypto] decryptEvent: Error: %@", event.decryptionError);
-    }
-
-    return result;
 }
 
 - (NSDictionary*)encryptMessage:(NSDictionary*)payloadFields forDevices:(NSArray<MXDeviceInfo*>*)devices
