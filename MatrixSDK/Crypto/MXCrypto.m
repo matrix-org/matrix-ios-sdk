@@ -400,11 +400,49 @@
             }
         }
 
-        dispatch_async(dispatch_get_main_queue(), ^{
-            success();
-        });
-
+        if (success)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                success();
+            });
+        }
     });
+}
+
+- (MXHTTPOperation*)downloadKeys:(NSArray<NSString*>*)userIds
+                         success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap))success
+                         failure:(void (^)(NSError *error))failure
+{
+#ifdef MX_CRYPTO
+
+    // Create an empty operation that will be mutated later
+    MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
+
+    dispatch_async(_cryptoQueue, ^{
+
+        MXHTTPOperation *operation2 = [self downloadKeys:userIds forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+
+            dispatch_async(dispatch_get_main_queue(), ^{
+                success(usersDevicesInfoMap);
+            });
+
+        } failure:^(NSError *error) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure(error);
+            });
+        }];
+
+        if (operation2)
+        {
+            [operation mutateTo:operation2];
+        }
+    });
+
+    return operation;
+#else
+    success(nil);
+    return nil;
+#endif
 }
 
 - (void)resetReplayAttackCheckInTimeline:(NSString*)timeline

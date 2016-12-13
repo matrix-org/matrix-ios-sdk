@@ -139,6 +139,20 @@
                       failure:(void (^)(NSError *error))failure;
 
 /**
+ Download the device keys for a list of users and stores them into the crypto store.
+
+ @param userIds The users to fetch.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance. May be nil if the data is already in the store.
+ */
+- (MXHTTPOperation*)downloadKeys:(NSArray<NSString*>*)userIds
+                        success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap))success
+                        failure:(void (^)(NSError *error))failure;
+
+/**
  Reset replay attack data for the given timeline.
 
  @param the id of the timeline.
@@ -151,11 +165,6 @@
  @param credentials the credentials of the account.
  */
 + (void)deleteStoreWithCredentials:(MXCredentials*)credentials;
-
-
-- (MXHTTPOperation*)downloadKeys:(NSArray<NSString*>*)userIds forceDownload:(BOOL)forceDownload
-                         success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap))success
-                         failure:(void (^)(NSError *error))failure;
 
 @end
 

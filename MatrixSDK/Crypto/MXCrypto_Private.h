@@ -91,9 +91,9 @@
  
  @return a MXHTTPOperation instance. May be nil if the data is already in the store.
  */
-//- (MXHTTPOperation*)downloadKeys:(NSArray<NSString*>*)userIds forceDownload:(BOOL)forceDownload
-//                         success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap))success
-//                         failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)downloadKeys:(NSArray<NSString*>*)userIds forceDownload:(BOOL)forceDownload
+                         success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap))success
+                         failure:(void (^)(NSError *error))failure;
 
 /**
  Get the stored device keys for a user.
