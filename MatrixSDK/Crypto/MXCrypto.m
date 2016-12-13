@@ -329,7 +329,7 @@
     __block BOOL result = NO;
 
     // @TODO: dispatch_ssync
-    dispatch_sync(_cryptoQueue, ^{
+    dispatch_sync(_cryptoLessBusyQueue, ^{
         id<MXDecrypting> alg = [self getRoomDecryptor:event.roomId algorithm:event.content[@"algorithm"]];
         if (!alg)
         {
@@ -363,7 +363,7 @@
 - (void)resetReplayAttackCheckInTimeline:(NSString*)timeline
 {
 #ifdef MX_CRYPTO
-    dispatch_async(_cryptoQueue, ^{
+    dispatch_async(_cryptoLessBusyQueue, ^{
         [_olmDevice resetReplayAttackCheckInTimeline:timeline];
     });
 #else
@@ -411,6 +411,8 @@
         mxSession = matrixSession;
         _cryptoQueue = theCryptoQueue;
         _store = store;
+
+        _cryptoLessBusyQueue = dispatch_queue_create("MXCryptoLessBusy", DISPATCH_QUEUE_SERIAL);
 
         _olmDevice = [[MXOlmDevice alloc] initWithStore:_store];
 

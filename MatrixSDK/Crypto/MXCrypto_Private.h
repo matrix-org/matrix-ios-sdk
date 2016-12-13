@@ -52,9 +52,18 @@
 @property (nonatomic, readonly) MXRestClient *matrixRestClient;
 
 /**
- The queue used for all crypto processing.
+ The queue used for almost all crypto processing.
  */
 @property (nonatomic, readonly) dispatch_queue_t cryptoQueue;
+
+/**
+ A less busy queue that can respond quicker to the UI.
+ 
+ The best example is the event decryption.
+ Encrypting an event is a long task (like 20s). We do not want the UI to wait the end of
+ the encryption before being able to decrypt and display other messages of the room history.
+ */
+@property (nonatomic, readonly) dispatch_queue_t cryptoLessBusyQueue;
 
 /**
  Upload the device keys to the homeserver and ensure that the
@@ -82,9 +91,9 @@
  
  @return a MXHTTPOperation instance. May be nil if the data is already in the store.
  */
-- (MXHTTPOperation*)downloadKeys:(NSArray<NSString*>*)userIds forceDownload:(BOOL)forceDownload
-                         success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap))success
-                         failure:(void (^)(NSError *error))failure;
+//- (MXHTTPOperation*)downloadKeys:(NSArray<NSString*>*)userIds forceDownload:(BOOL)forceDownload
+//                         success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap))success
+//                         failure:(void (^)(NSError *error))failure;
 
 /**
  Get the stored device keys for a user.
