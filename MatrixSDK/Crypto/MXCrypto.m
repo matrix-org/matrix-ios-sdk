@@ -32,16 +32,13 @@
 /**
  The store to use for crypto.
  */
-//#define MXCryptoStoreClass MXFileCryptoStore
-#define MXCryptoStoreClass MXRealmCryptoStore
+#define MXCryptoStoreClass MXFileCryptoStore
+//#define MXCryptoStoreClass MXRealmCryptoStore
 
 #ifdef MX_CRYPTO
 
 @interface MXCrypto ()
 {
-    // The thread used for all crypto processing
-    dispatch_queue_t cryptoQueue;
-
     // The Matrix session.
     MXSession *mxSession;
 
@@ -164,54 +161,53 @@
     // The session must be initialised enough before starting this module
     NSParameterAssert(mxSession.myUser.userId);
 
-    dispatch_async(cryptoQueue, ^{
+    // Start uploading user device keys
+    operation = [self uploadKeys:5 success:^{
 
-        // Start uploading user device keys
-        operation = [self uploadKeys:5 success:^{
+        NSLog(@"[MXCrypto] start ###########################################################");
+        NSLog(@" uploadKeys done for %@: ", mxSession.myUser.userId);
 
-            NSLog(@"[MXCrypto] start ###########################################################");
-            NSLog(@" uploadKeys done for %@: ", mxSession.myUser.userId);
+        NSLog(@"   - device id  : %@", _store.deviceId);
+        NSLog(@"   - ed25519    : %@", _olmDevice.deviceEd25519Key);
+        NSLog(@"   - curve25519 : %@", _olmDevice.deviceCurve25519Key);
+        NSLog(@"   - oneTimeKeys: %@", lastPublishedOneTimeKeys);     // They are
+        NSLog(@"");
+        NSLog(@"Store: %@", _store);
+        NSLog(@"");
 
-            NSLog(@"   - device id  : %@", _store.deviceId);
-            NSLog(@"   - ed25519    : %@", _olmDevice.deviceEd25519Key);
-            NSLog(@"   - curve25519 : %@", _olmDevice.deviceCurve25519Key);
-            NSLog(@"   - oneTimeKeys: %@", lastPublishedOneTimeKeys);     // They are
-            NSLog(@"");
-            NSLog(@"Store: %@", _store);
-            NSLog(@"");
+        // Once keys are uploaded, make sure we announce ourselves
+        MXHTTPOperation *operation2 = [self checkDeviceAnnounced:^{
 
-            // Once keys are uploaded, make sure we announce ourselves
-            MXHTTPOperation *operation2 = [self checkDeviceAnnounced:^{
+            // Start periodic timer for uploading keys
+            uploadKeysTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:10 * 60]
+                                                       interval:10 * 60   // 10 min
+                                                         target:self
+                                                       selector:@selector(uploadKeys)
+                                                       userInfo:nil
+                                                        repeats:YES];
+            [[NSRunLoop mainRunLoop] addTimer:uploadKeysTimer forMode:NSDefaultRunLoopMode];
 
-                // Start periodic timer for uploading keys
-                uploadKeysTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:10 * 60]
-                                                           interval:10 * 60   // 10 min
-                                                             target:self
-                                                           selector:@selector(uploadKeys)
-                                                           userInfo:nil
-                                                            repeats:YES];
-                [[NSRunLoop mainRunLoop] addTimer:uploadKeysTimer forMode:NSDefaultRunLoopMode];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                success();
+            });
 
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    success();
-                });
-
-            } failure:^(NSError *error) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    failure(error);
-                });
-            }];
-            
-            [operation mutateTo:operation2];
-            
         } failure:^(NSError *error) {
-            NSLog(@"[MXCrypto] start. Error in uploadKeys");
             dispatch_async(dispatch_get_main_queue(), ^{
                 failure(error);
             });
         }];
 
-    });
+        if (operation2)
+        {
+            [operation mutateTo:operation2];
+        }
+
+    } failure:^(NSError *error) {
+        NSLog(@"[MXCrypto] start. Error in uploadKeys");
+        dispatch_async(dispatch_get_main_queue(), ^{
+            failure(error);
+        });
+    }];
 
 #endif
     return operation;
@@ -223,7 +219,7 @@
 
     NSLog(@"[MXCrypto] close. store: %@",_store);
 
-    dispatch_sync(cryptoQueue, ^{
+    dispatch_async(_cryptoQueue, ^{
 
         // Stop timer
         [uploadKeysTimer invalidate];
@@ -232,6 +228,7 @@
         [mxSession removeListener:roomMembershipEventsListener];
 
         _olmDevice = nil;
+        _cryptoQueue = nil;
         _store = nil;
 
         [roomEncryptors removeAllObjects];
@@ -255,8 +252,8 @@
 
     __block MXHTTPOperation *operation;
 
-    // @TODO: dispatch_ssync
-    dispatch_sync(cryptoQueue, ^{
+    // @TODO: dispatch_async
+    dispatch_sync(_cryptoQueue, ^{
 
         NSString *algorithm;
         id<MXEncrypting> alg = roomEncryptors[room.roomId];
@@ -319,7 +316,7 @@
     __block BOOL result = NO;
 
     // @TODO: dispatch_ssync
-    dispatch_sync(cryptoQueue, ^{
+    dispatch_sync(_cryptoQueue, ^{
         id<MXDecrypting> alg = [self getRoomDecryptor:event.roomId algorithm:event.content[@"algorithm"]];
         if (!alg)
         {
@@ -353,7 +350,7 @@
 - (void)resetReplayAttackCheckInTimeline:(NSString*)timeline
 {
 #ifdef MX_CRYPTO
-    dispatch_async(cryptoQueue, ^{
+    dispatch_async(_cryptoQueue, ^{
         [_olmDevice resetReplayAttackCheckInTimeline:timeline];
     });
 #else
@@ -399,14 +396,14 @@
     if (self)
     {
         mxSession = matrixSession;
-        cryptoQueue = theCryptoQueue;
+        _cryptoQueue = theCryptoQueue;
         _store = store;
 
         _olmDevice = [[MXOlmDevice alloc] initWithStore:_store];
 
         // Use our own REST client that answers on the crypto thread
         _matrixRestClient = [[MXRestClient alloc] initWithCredentials:mxSession.matrixRestClient.credentials andOnUnrecognizedCertificateBlock:nil];
-        _matrixRestClient.completionQueue = cryptoQueue;
+        _matrixRestClient.completionQueue = _cryptoQueue;
 
         roomEncryptors = [NSMutableDictionary dictionary];
         roomDecryptors = [NSMutableDictionary dictionary];

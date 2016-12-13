@@ -52,6 +52,11 @@
 @property (nonatomic, readonly) MXRestClient *matrixRestClient;
 
 /**
+ The queue used for all crypto processing.
+ */
+@property (nonatomic, readonly) dispatch_queue_t cryptoQueue;
+
+/**
  Upload the device keys to the homeserver and ensure that the
  homeserver has enough one-time keys.
 
