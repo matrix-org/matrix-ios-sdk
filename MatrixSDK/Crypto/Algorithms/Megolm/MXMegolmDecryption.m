@@ -75,7 +75,11 @@
     if (result)
     {
         MXEvent *clearedEvent = [MXEvent modelFromJSON:result.payload];
-        [event setClearData:clearedEvent keysProved:result.keysProved keysClaimed:result.keysClaimed];
+
+        // @TODO
+        //dispatch_async(dispatch_get_main_queue(), ^{
+            [event setClearData:clearedEvent keysProved:result.keysProved keysClaimed:result.keysClaimed];
+        //});
     }
     else
     {

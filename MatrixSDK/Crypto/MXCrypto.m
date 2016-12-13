@@ -219,13 +219,13 @@
 
     NSLog(@"[MXCrypto] close. store: %@",_store);
 
+    [mxSession removeListener:roomMembershipEventsListener];
+
     dispatch_async(_cryptoQueue, ^{
 
         // Stop timer
         [uploadKeysTimer invalidate];
         uploadKeysTimer = nil;
-
-        [mxSession removeListener:roomMembershipEventsListener];
 
         _olmDevice = nil;
         _cryptoQueue = nil;
@@ -284,9 +284,15 @@
 
             operation =  [alg encryptEventContent:eventContent eventType:eventType inRoom:room success:^(NSDictionary *encryptedContent) {
 
-                success(encryptedContent, kMXEventTypeStringRoomEncrypted);
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    success(encryptedContent, kMXEventTypeStringRoomEncrypted);
+                });
 
-            } failure:failure];
+            } failure:^(NSError *error) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    failure(error);
+                });
+            }];
         }
         else
         {
@@ -297,8 +303,9 @@
                                                         NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToEncryptReason, algorithm]
                                                         }];
             
-            failure(error);
-
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure(error);
+            });
         }
     });
 
@@ -1042,24 +1049,31 @@
  */
 - (void)registerEventHandlers
 {
-    // Observe incoming to-device events
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onToDeviceEvent:) name:kMXSessionOnToDeviceEventNotification object:mxSession];
+    dispatch_async(dispatch_get_main_queue(), ^{
 
-    // Observe membership changes
-    roomMembershipEventsListener = [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption, kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
+        // Observe incoming to-device events
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onToDeviceEvent:) name:kMXSessionOnToDeviceEventNotification object:mxSession];
 
-        if (direction == MXTimelineDirectionForwards)
-        {
-            if (event.eventType == MXEventTypeRoomEncryption)
-            {
-                [self onCryptoEvent:event];
-            }
-            if (event.eventType == MXEventTypeRoomMember)
-            {
-                [self onRoomMembership:event];
-            }
-        }
-    }];
+        // Observe membership changes
+        roomMembershipEventsListener = [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption, kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
+
+            dispatch_async(_cryptoQueue, ^{
+
+                if (direction == MXTimelineDirectionForwards)
+                {
+                    if (event.eventType == MXEventTypeRoomEncryption)
+                    {
+                        [self onCryptoEvent:event];
+                    }
+                    if (event.eventType == MXEventTypeRoomMember)
+                    {
+                        [self onRoomMembership:event];
+                    }
+                }
+            });
+        }];
+
+    });
 }
 
 - (MXHTTPOperation*)checkDeviceAnnounced:(void (^)())onComplete
@@ -1160,19 +1174,22 @@
 
     NSLog(@"[MXCrypto] onToDeviceEvent %@:%@: %@", mxSession.myUser.userId, _store.deviceId, event);
 
-    switch (event.eventType)
-    {
-        case MXEventTypeRoomKey:
-            [self onRoomKeyEvent:event];
-            break;
+    dispatch_async(_cryptoQueue, ^{
 
-        case MXEventTypeNewDevice:
-            [self onNewDeviceEvent:event];
-            break;
+        switch (event.eventType)
+        {
+            case MXEventTypeRoomKey:
+                [self onRoomKeyEvent:event];
+                break;
 
-        default:
-            break;
-    }
+            case MXEventTypeNewDevice:
+                [self onNewDeviceEvent:event];
+                break;
+
+            default:
+                break;
+        }
+    });
 }
 
 /**

@@ -190,11 +190,15 @@
     }
 
     MXEvent *clearedEvent = [MXEvent modelFromJSON:payload];
-    [event setClearData:clearedEvent
-             keysProved:@{
-                          @"curve25519": deviceKey
-                          }
-            keysClaimed:payload[@"keys"]];
+
+    // @TODO
+    //dispatch_async(dispatch_get_main_queue(), ^{
+        [event setClearData:clearedEvent
+                 keysProved:@{
+                              @"curve25519": deviceKey
+                              }
+                keysClaimed:payload[@"keys"]];
+    //});
 
     return YES;
 }
