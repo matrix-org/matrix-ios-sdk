@@ -359,10 +359,29 @@
 #endif
 }
 
+- (void)devicesForUser:(NSString*)userId complete:(void (^)(NSArray<MXDeviceInfo*> *devices))complete
+{
+#ifdef MX_CRYPTO
+    dispatch_async(_cryptoLessBusyQueue, ^{
+
+        NSArray<MXDeviceInfo*> *devices = [self storedDevicesForUser:userId];
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            complete(devices);
+        });
+
+    });
+#else
+    complete(nil);
+#endif
+}
+
 - (void)setDeviceVerification:(MXDeviceVerification)verificationStatus forDevice:(NSString*)deviceId ofUser:(NSString*)userId
                       success:(void (^)())success
                       failure:(void (^)(NSError *error))failure
 {
+#ifdef MX_CRYPTO
+
     // Note: failure is not currently used but it would make sense the day device
     // verification will be sync'ed with the hs.
     dispatch_async(_cryptoQueue, ^{
@@ -407,6 +426,13 @@
             });
         }
     });
+
+#else
+    if (success)
+    {
+        success();
+    }
+#endif
 }
 
 - (MXHTTPOperation*)downloadKeys:(NSArray<NSString*>*)userIds
@@ -421,15 +447,19 @@
     dispatch_async(_cryptoQueue, ^{
 
         MXHTTPOperation *operation2 = [self downloadKeys:userIds forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
-
-            dispatch_async(dispatch_get_main_queue(), ^{
-                success(usersDevicesInfoMap);
-            });
-
+            if (success)
+            {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    success(usersDevicesInfoMap);
+                });
+            }
         } failure:^(NSError *error) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                failure(error);
-            });
+            if (failure)
+            {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    failure(error);
+                });
+            }
         }];
 
         if (operation2)
@@ -440,7 +470,10 @@
 
     return operation;
 #else
-    success(nil);
+    if (success)
+    {
+        success(nil);
+    }
     return nil;
 #endif
 }

@@ -128,6 +128,14 @@
 - (MXDeviceInfo*)deviceWithIdentityKey:(NSString*)senderKey forUser:(NSString*)userId andAlgorithm:(NSString*)algorithm;
 
 /**
+ Get the stored device keys for a user.
+
+ @param userId the user to list keys for.
+ @param complete a block called with the list of devices.
+ */
+- (void)devicesForUser:(NSString*)userId complete:(void (^)(NSArray<MXDeviceInfo*> *devices))complete;
+
+/**
  Update the blocked/verified state of the given device
 
  @param verificationStatus the new verification status.
