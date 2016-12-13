@@ -250,10 +250,10 @@
 {
 #ifdef MX_CRYPTO
 
-    __block MXHTTPOperation *operation;
+    // Create an empty operation that will be mutated later 
+    MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
 
-    // @TODO: dispatch_async
-    dispatch_sync(_cryptoQueue, ^{
+    dispatch_async(_cryptoQueue, ^{
 
         NSString *algorithm;
         id<MXEncrypting> alg = roomEncryptors[room.roomId];
@@ -282,7 +282,7 @@
             NSLog(@"[MXCrypto] encryptEventContent with %@: %@", algorithm, eventContent);
 #endif
 
-            operation =  [alg encryptEventContent:eventContent eventType:eventType inRoom:room success:^(NSDictionary *encryptedContent) {
+            MXHTTPOperation *operation2 =  [alg encryptEventContent:eventContent eventType:eventType inRoom:room success:^(NSDictionary *encryptedContent) {
 
                 dispatch_async(dispatch_get_main_queue(), ^{
                     success(encryptedContent, kMXEventTypeStringRoomEncrypted);
@@ -293,6 +293,12 @@
                     failure(error);
                 });
             }];
+
+            // Mutate the HTTP operation if an HTTP is required for the encryption
+            if (operation2)
+            {
+                [operation mutateTo:operation2];
+            }
         }
         else
         {
@@ -909,7 +915,7 @@
     NSLog(@"[MXCrypto] ensureOlmSessionsForDevices: claimOneTimeKeysForUsersDevices (users count: %lu - devices: %tu)",
           usersDevicesToClaim.map.count, usersDevicesToClaim.count);
 
-    return [mxSession.matrixRestClient claimOneTimeKeysForUsersDevices:usersDevicesToClaim success:^(MXKeysClaimResponse *keysClaimResponse) {
+    return [_matrixRestClient claimOneTimeKeysForUsersDevices:usersDevicesToClaim success:^(MXKeysClaimResponse *keysClaimResponse) {
 
         NSLog(@"[MXCrypto] keysClaimResponse.oneTimeKeys (users count: %lu - devices: %tu): %@",
               keysClaimResponse.oneTimeKeys.map.count, keysClaimResponse.oneTimeKeys.count, keysClaimResponse.oneTimeKeys);
@@ -1057,20 +1063,23 @@
         // Observe membership changes
         roomMembershipEventsListener = [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption, kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
 
-            dispatch_async(_cryptoQueue, ^{
+            if (_cryptoQueue)
+            {
+                dispatch_async(_cryptoQueue, ^{
 
-                if (direction == MXTimelineDirectionForwards)
-                {
-                    if (event.eventType == MXEventTypeRoomEncryption)
+                    if (direction == MXTimelineDirectionForwards)
                     {
-                        [self onCryptoEvent:event];
+                        if (event.eventType == MXEventTypeRoomEncryption)
+                        {
+                            [self onCryptoEvent:event];
+                        }
+                        if (event.eventType == MXEventTypeRoomMember)
+                        {
+                            [self onRoomMembership:event];
+                        }
                     }
-                    if (event.eventType == MXEventTypeRoomMember)
-                    {
-                        [self onRoomMembership:event];
-                    }
-                }
-            });
+                });
+            }
         }];
 
     });
@@ -1099,6 +1108,8 @@
     // We need to tell all the devices in all the rooms we are members of that
     // we have arrived.
     // Build a list of rooms for each user.
+
+    // @TODO on main thread
     NSMutableDictionary<NSString*, NSMutableArray*> *roomsByUser = [NSMutableDictionary dictionary];
     for (MXRoom *room in mxSession.rooms)
     {
@@ -1141,7 +1152,7 @@
 
     if (contentMap.userIds.count)
     {
-        return [mxSession.matrixRestClient sendToDevice:kMXEventTypeStringNewDevice contentMap:contentMap success:^{
+        return [_matrixRestClient sendToDevice:kMXEventTypeStringNewDevice contentMap:contentMap success:^{
 
             NSLog(@"[MXCrypto] checkDeviceAnnounced: Annoucements done");
 
@@ -1174,22 +1185,25 @@
 
     NSLog(@"[MXCrypto] onToDeviceEvent %@:%@: %@", mxSession.myUser.userId, _store.deviceId, event);
 
-    dispatch_async(_cryptoQueue, ^{
+    if (_cryptoQueue)
+    {
+        dispatch_async(_cryptoQueue, ^{
 
-        switch (event.eventType)
-        {
-            case MXEventTypeRoomKey:
-                [self onRoomKeyEvent:event];
-                break;
+            switch (event.eventType)
+            {
+                case MXEventTypeRoomKey:
+                    [self onRoomKeyEvent:event];
+                    break;
 
-            case MXEventTypeNewDevice:
-                [self onNewDeviceEvent:event];
-                break;
-
-            default:
-                break;
-        }
-    });
+                case MXEventTypeNewDevice:
+                    [self onNewDeviceEvent:event];
+                    break;
+                    
+                default:
+                    break;
+            }
+        });
+    }
 }
 
 /**
