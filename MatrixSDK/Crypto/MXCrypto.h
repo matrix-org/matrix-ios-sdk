@@ -134,7 +134,9 @@
  @param deviceId the unique identifier for the device.
  @param userId the owner of the device.
  */
-- (void)setDeviceVerification:(MXDeviceVerification)verificationStatus forDevice:(NSString*)deviceId ofUser:(NSString*)userId;
+- (void)setDeviceVerification:(MXDeviceVerification)verificationStatus forDevice:(NSString*)deviceId ofUser:(NSString*)userId
+                      success:(void (^)())success
+                      failure:(void (^)(NSError *error))failure;
 
 /**
  Reset replay attack data for the given timeline.
@@ -149,6 +151,11 @@
  @param credentials the credentials of the account.
  */
 + (void)deleteStoreWithCredentials:(MXCredentials*)credentials;
+
+
+- (MXHTTPOperation*)downloadKeys:(NSArray<NSString*>*)userIds forceDownload:(BOOL)forceDownload
+                         success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap))success
+                         failure:(void (^)(NSError *error))failure;
 
 @end
 

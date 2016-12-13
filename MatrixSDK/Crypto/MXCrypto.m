@@ -359,6 +359,53 @@
 #endif
 }
 
+- (void)setDeviceVerification:(MXDeviceVerification)verificationStatus forDevice:(NSString*)deviceId ofUser:(NSString*)userId
+                      success:(void (^)())success
+                      failure:(void (^)(NSError *error))failure
+{
+    // Note: failure is not currently used but it would make sense the day device
+    // verification will be sync'ed with the hs.
+    dispatch_async(_cryptoQueue, ^{
+        MXDeviceInfo *device = [_store deviceWithDeviceId:deviceId forUser:userId];
+
+        // Sanity check
+        if (!device)
+        {
+            NSLog(@"[MXCrypto] setDeviceVerificationForDevice: Unknown device %@:%@", userId, deviceId);
+            return;
+        }
+
+        if (device.verified != verificationStatus)
+        {
+            MXDeviceVerification oldVerified = device.verified;
+
+            device.verified = verificationStatus;
+            [_store storeDeviceForUser:userId device:device];
+
+            // Report the change to all outbound sessions with this device
+            for (MXRoom *room in mxSession.rooms)
+            {
+                if (room.state.isEncrypted)
+                {
+                    MXRoomMember *member = [room.state memberWithUserId:device.userId];
+                    if (member && member.membership == MXMembershipJoin)
+                    {
+                        id<MXEncrypting> alg = roomEncryptors[room.roomId];
+                        if (alg)
+                        {
+                            [alg onDeviceVerification:device oldVerified:oldVerified];
+                        }
+                    }
+                }
+            }
+        }
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            success();
+        });
+
+    });
+}
 
 - (void)resetReplayAttackCheckInTimeline:(NSString*)timeline
 {
@@ -714,43 +761,6 @@
 
     // Doesn't match a known device
     return nil;
-}
-
-- (void)setDeviceVerification:(MXDeviceVerification)verificationStatus forDevice:(NSString *)deviceId ofUser:(NSString *)userId
-{
-    MXDeviceInfo *device = [_store deviceWithDeviceId:deviceId forUser:userId];
-
-    // Sanity check
-    if (!device)
-    {
-        NSLog(@"[MXCrypto] setDeviceVerificationForDevice: Unknown device %@:%@", userId, deviceId);
-        return;
-    }
-
-    if (device.verified != verificationStatus)
-    {
-        MXDeviceVerification oldVerified = device.verified;
-
-        device.verified = verificationStatus;
-        [_store storeDeviceForUser:userId device:device];
-
-        // Report the change to all outbound sessions with this device
-        for (MXRoom *room in mxSession.rooms)
-        {
-            if (room.state.isEncrypted)
-            {
-                MXRoomMember *member = [room.state memberWithUserId:device.userId];
-                if (member && member.membership == MXMembershipJoin)
-                {
-                    id<MXEncrypting> alg = roomEncryptors[room.roomId];
-                    if (alg)
-                    {
-                        [alg onDeviceVerification:device oldVerified:oldVerified];
-                    }
-                }
-            }
-        }
-    }
 }
 
 - (MXDeviceInfo *)eventSenderDeviceOfEvent:(MXEvent *)event
@@ -1110,8 +1120,6 @@
     // We need to tell all the devices in all the rooms we are members of that
     // we have arrived.
     // Build a list of rooms for each user.
-
-    // @TODO on main thread
     NSMutableDictionary<NSString*, NSMutableArray*> *roomsByUser = [NSMutableDictionary dictionary];
     for (MXRoom *room in mxSession.rooms)
     {
