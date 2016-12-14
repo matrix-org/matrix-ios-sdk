@@ -250,8 +250,20 @@
 {
 #ifdef MX_CRYPTO
 
-    // Create an empty operation that will be mutated later 
+    // Create an empty operation that will be mutated later
     MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
+
+    // Pick the list of recipients based on the membership list.
+
+    // TODO: there is a race condition here! What if a new user turns up
+    // just as you are sending a secret message?
+
+    // XXX what about rooms where invitees can see the content?
+    NSMutableArray *roomMembers = [NSMutableArray array];
+    for (MXRoomMember *roomMember in room.state.joinedMembers)
+    {
+        [roomMembers addObject:roomMember.userId];
+    }
 
     dispatch_async(_cryptoQueue, ^{
 
@@ -282,7 +294,7 @@
             NSLog(@"[MXCrypto] encryptEventContent with %@: %@", algorithm, eventContent);
 #endif
 
-            MXHTTPOperation *operation2 =  [alg encryptEventContent:eventContent eventType:eventType inRoom:room success:^(NSDictionary *encryptedContent) {
+            MXHTTPOperation *operation2 = [alg encryptEventContent:eventContent eventType:eventType forUsers:roomMembers success:^(NSDictionary *encryptedContent) {
 
                 dispatch_async(dispatch_get_main_queue(), ^{
                     success(encryptedContent, kMXEventTypeStringRoomEncrypted);

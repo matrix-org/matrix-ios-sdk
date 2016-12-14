@@ -53,21 +53,11 @@
     return self;
 }
 
-- (MXHTTPOperation *)encryptEventContent:(NSDictionary *)eventContent eventType:(MXEventTypeString)eventType inRoom:(MXRoom *)room
-                                 success:(void (^)(NSDictionary *))success
-                                 failure:(void (^)(NSError *))failure
+- (MXHTTPOperation*)encryptEventContent:(NSDictionary*)eventContent eventType:(MXEventTypeString)eventType
+                               forUsers:(NSArray<NSString*>*)users
+                                success:(void (^)(NSDictionary *encryptedContent))success
+                                failure:(void (^)(NSError *error))failure
 {
-    // pick the list of recipients based on the membership list.
-    //
-    // TODO: there is a race condition here! What if a new user turns up
-    // just as you are sending a secret message?
-
-    NSMutableArray <NSString*> *users = [NSMutableArray array];
-    for (MXRoomMember *member in room.state.joinedMembers)
-    {
-        [users addObject:member.userId];
-    }
-
     return [self ensureSession:users success:^{
 
         NSMutableArray *participantDevices = [NSMutableArray array];
@@ -94,7 +84,7 @@
         }
 
         NSDictionary *encryptedMessage = [crypto encryptMessage:@{
-                                                                  @"room_id": room.roomId,
+                                                                  @"room_id": roomId,
                                                                   @"type": eventType,
                                                                   @"content": eventContent
                                                                   }

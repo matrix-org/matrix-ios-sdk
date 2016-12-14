@@ -16,7 +16,8 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXRoom.h"
+#import "MXHTTPOperation.h"
+#import "MXEvent.h"
 #import "MXDeviceInfo.h"
 
 @class MXCrypto;
@@ -36,14 +37,15 @@
 
  @param eventContent the content of the event.
  @param eventType the type of the event.
- @param room the room the event will be sent.
+ @param users the room members the event will be sent to.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance. May be nil if all required materials is already in place.
  */
-- (MXHTTPOperation*)encryptEventContent:(NSDictionary*)eventContent eventType:(MXEventTypeString)eventType inRoom:(MXRoom*)room
+- (MXHTTPOperation*)encryptEventContent:(NSDictionary*)eventContent eventType:(MXEventTypeString)eventType
+                               forUsers:(NSArray<NSString*>*)users
                                 success:(void (^)(NSDictionary *encryptedContent))success
                                 failure:(void (^)(NSError *error))failure;
 
