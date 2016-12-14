@@ -161,6 +161,9 @@
     // The session must be initialised enough before starting this module
     NSParameterAssert(mxSession.myUser.userId);
 
+    // Check if announcement must be done and to who
+    NSMutableDictionary *roomsByUser = [self usersToMakeAnnouncement];
+
     // Start uploading user device keys
     operation = [self uploadKeys:5 success:^{
 
@@ -176,7 +179,7 @@
         NSLog(@"");
 
         // Once keys are uploaded, make sure we announce ourselves
-        MXHTTPOperation *operation2 = [self checkDeviceAnnounced:^{
+        MXHTTPOperation *operation2 = [self makeAnnoucement:roomsByUser success:^{
 
             // Start periodic timer for uploading keys
             uploadKeysTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:10 * 60]
@@ -1174,25 +1177,21 @@
     });
 }
 
-- (MXHTTPOperation*)checkDeviceAnnounced:(void (^)())onComplete
-                                 failure:(void (^)(NSError *error))failure;
+/**
+ Get the list of users and rooms where to announce a new device.
+ 
+ @return the list of rooms ids ordered by user id. nil if annoucement is not required.
+ */
+- (NSMutableDictionary<NSString*, NSMutableArray*> *)usersToMakeAnnouncement
 {
-    // This method is called when the initialSync was done or the session was resumed
+    // Following operations must be called from the main thread
+    NSParameterAssert([NSThread currentThread].isMainThread);
 
     if (_store.deviceAnnounced)
     {
-        // Catch up on any m.new_device events which arrived during the initial sync.
-        [self flushNewDeviceRequests];
-
-        NSLog(@"[MXCrypto] checkDeviceAnnounced: Already done");
-        onComplete();
+        NSLog(@"[MXCrypto] usersToMakeAnnouncement: Device announcement already done");
         return nil;
     }
-
-    // Catch up on any m.new_device events which arrived during the initial sync.
-    // And force download all devices keys  the user already has.
-    [pendingUsersWithNewDevices addObject:myDevice.userId];
-    [self flushNewDeviceRequests];
 
     // We need to tell all the devices in all the rooms we are members of that
     // we have arrived.
@@ -1223,16 +1222,48 @@
         }
     }
 
+    return roomsByUser;
+}
+
+/**
+ Make device annoucement if required.
+ 
+ @param roomsByUser the rooms and users to announce the device to.
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (MXHTTPOperation*)makeAnnoucement:(NSMutableDictionary<NSString*, NSMutableArray*> *)roomsByUser
+                            success:(void (^)())success
+                            failure:(void (^)(NSError *error))failure
+{
+    // This method is called when the initialSync was done or the session was resumed
+
+    if (!roomsByUser)
+    {
+        // Catch up on any m.new_device events which arrived during the initial sync.
+        [self flushNewDeviceRequests];
+
+        NSLog(@"[MXCrypto] makeAnnoucementTo: Already done");
+        success();
+        return nil;
+    }
+
+    // Catch up on any m.new_device events which arrived during the initial sync.
+    // And force download all devices keys the user already has.
+    [pendingUsersWithNewDevices addObject:myDevice.userId];
+    [self flushNewDeviceRequests];
+
     // Build a per-device message for each user
     MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];
     for (NSString *userId in roomsByUser)
     {
         [contentMap setObjects:@{
-                                @"*": @{
-                                        @"device_id": myDevice.deviceId,
-                                        @"rooms": roomsByUser[userId],
-                                        }
-                                } forUser:userId];
+                                 @"*": @{
+                                         @"device_id": myDevice.deviceId,
+                                         @"rooms": roomsByUser[userId],
+                                         }
+                                 } forUser:userId];
     }
 
     NSLog(@"[MXCrypto] checkDeviceAnnounced: Make annoucements to %tu users: %@", contentMap.userIds.count, contentMap);
@@ -1244,8 +1275,8 @@
             NSLog(@"[MXCrypto] checkDeviceAnnounced: Annoucements done");
 
             [_store storeDeviceAnnounced];
-            onComplete();
-            
+            success();
+
         } failure:^(NSError *error) {
             NSLog(@"[MXCrypto] checkDeviceAnnounced: Annoucements failed.");
             failure(error);
@@ -1256,8 +1287,8 @@
         NSLog(@"[MXCrypto] checkDeviceAnnounced: Annoucements done 2");
         [_store storeDeviceAnnounced];
     }
-
-    onComplete();
+    
+    success();
     return nil;
 }
 
