@@ -377,7 +377,7 @@
 - (void)devicesForUser:(NSString*)userId complete:(void (^)(NSArray<MXDeviceInfo*> *devices))complete
 {
 #ifdef MX_CRYPTO
-    dispatch_async(_cryptoLessBusyQueue, ^{
+    dispatch_async(_cryptoQueue, ^{
 
         NSArray<MXDeviceInfo*> *devices = [self storedDevicesForUser:userId];
 
@@ -397,6 +397,20 @@
 {
 #ifdef MX_CRYPTO
 
+    // Get all rooms with this user
+    NSMutableArray<NSString*> *userRooms = [NSMutableArray array];
+    for (MXRoom *room in mxSession.rooms)
+    {
+        if (room.state.isEncrypted)
+        {
+            MXRoomMember *member = [room.state memberWithUserId:userId];
+            if (member && member.membership == MXMembershipJoin)
+            {
+                [userRooms addObject:room.roomId];
+            }
+        }
+    }
+
     // Note: failure is not currently used but it would make sense the day device
     // verification will be sync'ed with the hs.
     dispatch_async(_cryptoQueue, ^{
@@ -406,6 +420,7 @@
         if (!device)
         {
             NSLog(@"[MXCrypto] setDeviceVerificationForDevice: Unknown device %@:%@", userId, deviceId);
+            success();
             return;
         }
 
@@ -417,19 +432,12 @@
             [_store storeDeviceForUser:userId device:device];
 
             // Report the change to all outbound sessions with this device
-            for (MXRoom *room in mxSession.rooms)
+            for (NSString *roomId in userRooms)
             {
-                if (room.state.isEncrypted)
+                id<MXEncrypting> alg = roomEncryptors[roomId];
+                if (alg)
                 {
-                    MXRoomMember *member = [room.state memberWithUserId:device.userId];
-                    if (member && member.membership == MXMembershipJoin)
-                    {
-                        id<MXEncrypting> alg = roomEncryptors[room.roomId];
-                        if (alg)
-                        {
-                            [alg onDeviceVerification:device oldVerified:oldVerified];
-                        }
-                    }
+                    [alg onDeviceVerification:device oldVerified:oldVerified];
                 }
             }
         }
@@ -441,7 +449,6 @@
             });
         }
     });
-
 #else
     if (success)
     {
@@ -1103,7 +1110,7 @@
         if (sessionId)
         {
             NSMutableDictionary *payloadJson = [NSMutableDictionary dictionaryWithDictionary:payloadFields];
-            payloadJson[@"sender"] = mxSession.myUser.userId;
+            payloadJson[@"sender"] = _matrixRestClient.credentials.userId;
             payloadJson[@"sender_device"] = _store.deviceId;
 
             // Include the Ed25519 key so that the recipient knows what
@@ -1206,7 +1213,7 @@
         }
 
         // Ignore any rooms which we have left
-        MXRoomMember *me = [room.state memberWithUserId:mxSession.myUser.userId];
+        MXRoomMember *me = [room.state memberWithUserId:_matrixRestClient.credentials.userId];
         if (!me || (me.membership != MXMembershipJoin && me.membership !=MXMembershipInvite))
         {
             continue;
@@ -1301,7 +1308,7 @@
 {
     MXEvent *event = notification.userInfo[kMXSessionNotificationEventKey];
 
-    NSLog(@"[MXCrypto] onToDeviceEvent %@:%@: %@", mxSession.myUser.userId, _store.deviceId, event);
+    NSLog(@"[MXCrypto] onToDeviceEvent %@:%@: %@", _matrixRestClient.credentials.userId, _store.deviceId, event);
 
     if (_cryptoQueue)
     {
@@ -1485,7 +1492,7 @@
     // Sign it
     NSString *signature = [_olmDevice signJSON:myDevice.signalableJSONDictionary];
     myDevice.signatures = @{
-                            mxSession.myUser.userId: @{
+                            _matrixRestClient.credentials.userId: @{
                                     [NSString stringWithFormat:@"ed25519:%@", myDevice.deviceId]: signature
                                     }
                             };
