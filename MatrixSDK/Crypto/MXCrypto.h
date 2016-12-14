@@ -118,14 +118,12 @@
 - (BOOL)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline;
 
 /**
- Find a device by curve25519 identity key
+ Return the device information for an encrypted event.
 
- @param userId the owner of the device.
- @param algorithm the encryption algorithm.
- @param senderKey the curve25519 key to match.
- @return the device info.
+ @param event The event.
+ @return the device if any.
  */
-- (MXDeviceInfo*)deviceWithIdentityKey:(NSString*)senderKey forUser:(NSString*)userId andAlgorithm:(NSString*)algorithm;
+- (MXDeviceInfo *)eventDeviceInfo:(MXEvent*)event;
 
 /**
  Get the stored device keys for a user.

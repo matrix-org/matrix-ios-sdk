@@ -109,6 +109,16 @@
 - (NSArray<MXDeviceInfo*>*)storedDevicesForUser:(NSString*)userId;
 
 /**
+ Find a device by curve25519 identity key
+
+ @param userId the owner of the device.
+ @param algorithm the encryption algorithm.
+ @param senderKey the curve25519 key to match.
+ @return the device info.
+ */
+- (MXDeviceInfo*)deviceWithIdentityKey:(NSString*)senderKey forUser:(NSString*)userId andAlgorithm:(NSString*)algorithm;
+
+/**
  Get the device which sent an event.
 
  @param event the event to be checked.

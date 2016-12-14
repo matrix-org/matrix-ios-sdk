@@ -343,7 +343,7 @@
 
     __block BOOL result = NO;
 
-    // @TODO: dispatch_ssync
+    // @TODO: dispatch_async
     dispatch_sync(_decryptionQueue, ^{
         id<MXDecrypting> alg = [self getRoomDecryptor:event.roomId algorithm:event.content[@"algorithm"]];
         if (!alg)
@@ -372,6 +372,30 @@
 #else
     return NO;
 #endif
+}
+
+- (MXDeviceInfo *)eventDeviceInfo:(MXEvent *)event
+{
+    __block MXDeviceInfo *device;
+
+#ifdef MX_CRYPTO
+
+    if (event.isEncrypted)
+    {
+        // Use decryptionQueue because this is a simple read in the db
+        // AND we do it synchronously
+        // @TODO: dispatch_async
+        dispatch_sync(_decryptionQueue, ^{
+
+            NSString *algorithm = event.wireContent[@"algorithm"];
+            device = [self deviceWithIdentityKey:event.senderKey forUser:event.sender andAlgorithm:algorithm];
+
+        });
+    }
+
+#endif
+
+    return device;
 }
 
 - (void)devicesForUser:(NSString*)userId complete:(void (^)(NSArray<MXDeviceInfo*> *devices))complete
