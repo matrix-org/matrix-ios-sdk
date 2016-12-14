@@ -57,13 +57,18 @@
 @property (nonatomic, readonly) dispatch_queue_t cryptoQueue;
 
 /**
+ The queue used for decryption.
+
  A less busy queue that can respond quicker to the UI.
+
+ Encrypting the 1st event in a room is a long task (like 20s). We do not want the UI to
+ wait the end of the encryption before being able to decrypt and display other messages
+ of the room history.
  
- The best example is the event decryption.
- Encrypting an event is a long task (like 20s). We do not want the UI to wait the end of
- the encryption before being able to decrypt and display other messages of the room history.
+ We might miss a room key which is handled on cryptoQueue but the event will be decoded
+ later once available. kMXEventDidDecryptNotification will then be sent. 
  */
-@property (nonatomic, readonly) dispatch_queue_t cryptoLessBusyQueue;
+@property (nonatomic, readonly) dispatch_queue_t decryptionQueue;
 
 /**
  Upload the device keys to the homeserver and ensure that the

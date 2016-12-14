@@ -344,7 +344,7 @@
     __block BOOL result = NO;
 
     // @TODO: dispatch_ssync
-    dispatch_sync(_cryptoLessBusyQueue, ^{
+    dispatch_sync(_decryptionQueue, ^{
         id<MXDecrypting> alg = [self getRoomDecryptor:event.roomId algorithm:event.content[@"algorithm"]];
         if (!alg)
         {
@@ -503,7 +503,7 @@
 - (void)resetReplayAttackCheckInTimeline:(NSString*)timeline
 {
 #ifdef MX_CRYPTO
-    dispatch_async(_cryptoLessBusyQueue, ^{
+    dispatch_async(_decryptionQueue, ^{
         [_olmDevice resetReplayAttackCheckInTimeline:timeline];
     });
 #else
@@ -552,7 +552,7 @@
         _cryptoQueue = theCryptoQueue;
         _store = store;
 
-        _cryptoLessBusyQueue = dispatch_queue_create("MXCryptoLessBusy", DISPATCH_QUEUE_SERIAL);
+        _decryptionQueue = dispatch_queue_create("MXCryptoDecryption", DISPATCH_QUEUE_SERIAL);
 
         _olmDevice = [[MXOlmDevice alloc] initWithStore:_store];
 
@@ -1312,22 +1312,28 @@
 
     if (_cryptoQueue)
     {
-        dispatch_async(_cryptoQueue, ^{
-
-            switch (event.eventType)
+        switch (event.eventType)
+        {
+            case MXEventTypeRoomKey:
             {
-                case MXEventTypeRoomKey:
+                // Room key is used for decryption. Switch to the associated queue
+                dispatch_async(_decryptionQueue, ^{
                     [self onRoomKeyEvent:event];
-                    break;
-
-                case MXEventTypeNewDevice:
-                    [self onNewDeviceEvent:event];
-                    break;
-                    
-                default:
-                    break;
+                });
+                break;
             }
-        });
+
+            case MXEventTypeNewDevice:
+            {
+                dispatch_async(_cryptoQueue, ^{
+                    [self onNewDeviceEvent:event];
+                });
+                break;
+            }
+
+            default:
+                break;
+        }
     }
 }
 
