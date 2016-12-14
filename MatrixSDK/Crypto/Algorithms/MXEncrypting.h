@@ -50,11 +50,11 @@
 /**
  Called when the membership of a member of the room changes.
 
- @param event the event causing the change.
- @param member the user whose membership changed.
+ @param userId the user whose membership changed.
  @param oldMembership the previous membership.
+ @param newMembership the new membership.
  */
-- (void)onRoomMembership:(MXEvent*)event member:(MXRoomMember*)member oldMembership:(MXMembership)oldMembership;
+- (void)onRoomMembership:(NSString*)userId oldMembership:(MXMembership)oldMembership newMembership:(MXMembership)newMembership;
 
 /**
  Called when the verification status of a device changes.

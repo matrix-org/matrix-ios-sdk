@@ -104,7 +104,7 @@
     } failure:failure];
 }
 
-- (void)onRoomMembership:(MXEvent *)event member:(MXRoomMember *)member oldMembership:(MXMembership)oldMembership
+- (void)onRoomMembership:(NSString*)userId oldMembership:(MXMembership)oldMembership newMembership:(MXMembership)newMembership;
 {
     // No impact for olm
 }

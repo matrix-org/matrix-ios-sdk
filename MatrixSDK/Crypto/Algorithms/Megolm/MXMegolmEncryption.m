@@ -136,18 +136,15 @@
     }];
 }
 
-- (void)onRoomMembership:(MXEvent *)event member:(MXRoomMember *)member oldMembership:(MXMembership)oldMembership
+- (void)onRoomMembership:(NSString*)userId oldMembership:(MXMembership)oldMembership newMembership:(MXMembership)newMembership;
 {
-
-    MXMembership newMembership = member.membership;
-
     if (newMembership == MXMembershipJoin || newMembership == MXMembershipInvite)
     {
         return;
     }
 
     // Otherwise we assume the user is leaving, and start a new outbound session.
-    NSLog(@"[MXMegolmEncryption] Discarding outbound megolm session in %@ due to change in membership of %@ (%tu -> %tu)", roomId, member.userId, oldMembership, newMembership);
+    NSLog(@"[MXMegolmEncryption] Discarding outbound megolm session in %@ due to change in membership of %@ (%tu -> %tu)", roomId, userId, oldMembership, newMembership);
 
     // This ensures that we will start a new session on the next message.
     outboundSession = nil;

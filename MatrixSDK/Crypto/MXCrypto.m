@@ -1146,22 +1146,16 @@
         // Observe membership changes
         roomMembershipEventsListener = [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption, kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
 
-            if (_cryptoQueue)
+            if (direction == MXTimelineDirectionForwards)
             {
-                dispatch_async(_cryptoQueue, ^{
-
-                    if (direction == MXTimelineDirectionForwards)
-                    {
-                        if (event.eventType == MXEventTypeRoomEncryption)
-                        {
-                            [self onCryptoEvent:event];
-                        }
-                        if (event.eventType == MXEventTypeRoomMember)
-                        {
-                            [self onRoomMembership:event];
-                        }
-                    }
-                });
+                if (event.eventType == MXEventTypeRoomEncryption)
+                {
+                    [self onCryptoEvent:event];
+                }
+                if (event.eventType == MXEventTypeRoomMember)
+                {
+                    [self onRoomMembership:event];
+                }
             }
         }];
 
@@ -1395,7 +1389,12 @@
  */
 - (void)onCryptoEvent:(MXEvent*)event
 {
-    [self setEncryptionInRoom:event.roomId withAlgorithm:event.content[@"algorithm"]];
+    if (_cryptoQueue)
+    {
+        dispatch_async(_cryptoQueue, ^{
+            [self setEncryptionInRoom:event.roomId withAlgorithm:event.content[@"algorithm"]];
+        });
+    }
 };
 
 /**
@@ -1419,8 +1418,14 @@
     {
         MXRoomMemberEventContent *roomMemberPrevContent = [MXRoomMemberEventContent modelFromJSON:event.prevContent];
         MXMembership oldMembership = [MXTools membership:roomMemberPrevContent.membership];
+        MXMembership newMembership = roomMember.membership;
 
-        [alg onRoomMembership:event member:roomMember oldMembership:oldMembership];
+        if (_cryptoQueue)
+        {
+            dispatch_async(_cryptoQueue, ^{
+                [alg onRoomMembership:userId oldMembership:oldMembership newMembership:newMembership];
+            });
+        }
     }
     else
     {
