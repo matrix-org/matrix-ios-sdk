@@ -98,7 +98,6 @@
     dispatch_queue_t cryptoQueue = dispatch_queue_create("MXCrypto", DISPATCH_QUEUE_SERIAL);
     dispatch_async(cryptoQueue, ^{
 
-#if 1
         if ([MXFileCryptoStore hasDataForCredentials:mxSession.matrixRestClient.credentials])
         {
             NSLog(@"[MXCrypto] checkCryptoWithMatrixSession: Migration required for %@", mxSession.matrixRestClient.credentials);
@@ -108,7 +107,6 @@
                 NSLog(@"[MXCrypto] Migration failed. We cannot do nothing except logging out");
             }
         }
-#endif
 
         if ([MXCryptoStoreClass hasDataForCredentials:mxSession.matrixRestClient.credentials])
         {
