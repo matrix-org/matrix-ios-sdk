@@ -40,6 +40,14 @@
  */
 @interface MXFileCryptoStore : NSObject <MXCryptoStore>
 
+/**
+ Script to migrate to another storage.
+
+ @param credentials the user account to migrate
+ @return YES if successful.
+ */
++ (BOOL)migrateToMXRealmCryptoStore:(MXCredentials *)credentials;
+
 @end
 
 #endif
