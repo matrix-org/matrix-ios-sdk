@@ -106,26 +106,6 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
  */
 @property (nonatomic) BOOL deviceAnnounced;
 
-/**
- The list of users we know devices.
- */
-@property RLMArray<MXRealmUser *><MXRealmUser> *users;
-
-/**
- The crypto algorithms used per room.
- */
-@property RLMArray<MXRealmRoomAlgorithm *><MXRealmRoomAlgorithm> *roomsAlgorithms;
-
-/**
- All olm sessions with other devices.
- */
-@property RLMArray<MXRealmOlmSession *><MXRealmOlmSession> *olmSessions;
-
-/**
- All inbound group session.
- */
-@property RLMArray<MXRealmOlmInboundGroupSession *><MXRealmOlmInboundGroupSession> *olmInboundGroupSessions;
-
 @end
 
 @implementation MXRealmOlmAccount
@@ -141,15 +121,23 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 @interface MXRealmCryptoStore ()
 {
     /**
-     The realm of this user.
+     The user id.
      */
-    RLMRealm *realm;
-
-    /**
-     The root realm object.
-     */
-    MXRealmOlmAccount *account;
+    NSString *userId;
 }
+
+/**
+ The realm on the current thread.
+
+ As MXCryptoStore methods can be called from different threads, we need to load realm objects
+ from the root. This is how Realm works in multi-threading environment.
+ */
+@property (readonly) RLMRealm *realm;
+
+/**
+ The MXRealmOlmAccount on the current thread.
+ */
+@property (readonly) MXRealmOlmAccount *accountInCurrentThread;
 
 @end
 
@@ -171,7 +159,6 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                                                                           @"userId" : credentials.userId,
                                                                           }];
     account.deviceId = credentials.deviceId;
-
 
     [realm beginWriteTransaction];
     [realm addObject:account];
@@ -198,9 +185,9 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     self = [super init];
     if (self)
     {
-        realm = [MXRealmCryptoStore realmForUser:credentials.userId];
+        userId = credentials.userId;
 
-        account = [MXRealmOlmAccount objectsInRealm:realm where:@"userId = %@", credentials.userId].firstObject;
+        MXRealmOlmAccount *account = self.accountInCurrentThread;
         if (!account)
         {
             return nil;
@@ -216,9 +203,19 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
             }
         }
 
-        NSLog(@"Schema version: %tu", realm.configuration.schemaVersion);
+        NSLog(@"Schema version: %tu", account.realm.configuration.schemaVersion);
     }
     return self;
+}
+
+- (RLMRealm *)realm
+{
+    return [MXRealmCryptoStore realmForUser:userId];
+}
+
+- (MXRealmOlmAccount*)accountInCurrentThread
+{
+    return [MXRealmOlmAccount objectsInRealm:self.realm where:@"userId = %@", userId].firstObject;
 }
 
 - (void)open:(void (^)())onComplete failure:(void (^)(NSError *error))failure
@@ -228,13 +225,17 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
 - (void)storeDeviceId:(NSString*)deviceId
 {
-    [realm transactionWithBlock:^{
+    MXRealmOlmAccount *account = self.accountInCurrentThread;
+
+    [account.realm transactionWithBlock:^{
         account.deviceId = deviceId;
     }];
 }
 
 - (NSString*)deviceId
 {
+    MXRealmOlmAccount *account = self.accountInCurrentThread;
+
     return account.deviceId;
 }
 
@@ -242,7 +243,9 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 {
     NSDate *startDate = [NSDate date];
 
-    [realm transactionWithBlock:^{
+    MXRealmOlmAccount *account = self.accountInCurrentThread;
+
+    [account.realm transactionWithBlock:^{
         account.olmAccountData = [NSKeyedArchiver archivedDataWithRootObject:olmAccount];
     }];
 
@@ -251,7 +254,8 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
 - (OLMAccount*)account
 {
-    if (account)
+    MXRealmOlmAccount *account = self.accountInCurrentThread;
+    if (account.olmAccountData)
     {
         return [NSKeyedUnarchiver unarchiveObjectWithData:account.olmAccountData];
     }
@@ -260,30 +264,34 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
 - (void)storeDeviceAnnounced
 {
-    [realm transactionWithBlock:^{
+    MXRealmOlmAccount *account = self.accountInCurrentThread;
+    [account.realm transactionWithBlock:^{
         account.deviceAnnounced = YES;
     }];
 }
 
 - (BOOL)deviceAnnounced
 {
+    MXRealmOlmAccount *account = self.accountInCurrentThread;
     return account.deviceAnnounced;
 }
 
-- (void)storeDeviceForUser:(NSString*)userId device:(MXDeviceInfo*)device
+- (void)storeDeviceForUser:(NSString*)userID device:(MXDeviceInfo*)device
 {
     NSDate *startDate = [NSDate date];
 
+    RLMRealm *realm = self.realm;
+
     [realm transactionWithBlock:^{
 
-        MXRealmUser *realmUser = [[account.users objectsWhere:@"userId = %@", userId] firstObject];
+        MXRealmUser *realmUser = [MXRealmUser objectsInRealm:realm where:@"userId = %@", userID].firstObject;
         if (!realmUser)
         {
             realmUser = [[MXRealmUser alloc] initWithValue:@{
-                                                            @"userId": userId,
+                                                            @"userId": userID,
                                                             }];
 
-            [account.users addObject:realmUser];
+            [realm addObject:realmUser];
         }
 
         MXRealmDeviceInfo *realmDevice = [[realmUser.devices objectsWhere:@"deviceId = %@", device.deviceId] firstObject];
@@ -305,38 +313,40 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     NSLog(@"##### [MXRealmCryptoStore] storeDeviceForUser in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
-- (MXDeviceInfo*)deviceWithDeviceId:(NSString*)deviceId forUser:(NSString*)userId
+- (MXDeviceInfo*)deviceWithDeviceId:(NSString*)deviceId forUser:(NSString*)userID
 {
-    MXRealmUser *realmUser = [[account.users objectsWhere:@"userId = %@", userId] firstObject];
+    MXRealmUser *realmUser = [MXRealmUser objectsInRealm:self.realm where:@"userId = %@", userID].firstObject;
 
     MXRealmDeviceInfo *realmDevice = [[realmUser.devices objectsWhere:@"deviceId = %@", deviceId] firstObject];
-
     if (realmDevice)
     {
         return [NSKeyedUnarchiver unarchiveObjectWithData:realmDevice.deviceInfoData];
     }
+
     return nil;
 }
 
-- (void)storeDevicesForUser:(NSString*)userId devices:(NSDictionary<NSString*, MXDeviceInfo*>*)devices
+- (void)storeDevicesForUser:(NSString*)userID devices:(NSDictionary<NSString*, MXDeviceInfo*>*)devices
 {
     NSDate *startDate = [NSDate date];
 
-    MXRealmUser *realmUser = [[account.users objectsWhere:@"userId = %@", userId] firstObject];
-    if (!realmUser)
-    {
-        realmUser = [[MXRealmUser alloc] initWithValue:@{
-                                                        @"userId": userId,
-                                                        }];
-        [realm transactionWithBlock:^{
-            [account.users addObject:realmUser];
-        }];
-    }
+    RLMRealm *realm = self.realm;
 
     [realm transactionWithBlock:^{
 
-        // Reset all previously stored devices for this device
-        [realmUser.devices removeAllObjects];
+        MXRealmUser *realmUser = [MXRealmUser objectsInRealm:realm where:@"userId = %@", userID].firstObject;
+        if (!realmUser)
+        {
+            realmUser = [[MXRealmUser alloc] initWithValue:@{
+                                                             @"userId": userID,
+                                                             }];
+            [realm addObject:realmUser];
+        }
+        else
+        {
+            // Reset all previously stored devices for this device
+            [realmUser.devices removeAllObjects];
+        }
 
         for (NSString *deviceId in devices)
         {
@@ -352,11 +362,11 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     NSLog(@"##### [MXRealmCryptoStore] storeDevicesForUser (count: %tu) in %.0fms", devices.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
-- (NSDictionary<NSString*, MXDeviceInfo*>*)devicesForUser:(NSString*)userId
+- (NSDictionary<NSString*, MXDeviceInfo*>*)devicesForUser:(NSString*)userID
 {
     NSMutableDictionary *devicesForUser;
 
-    MXRealmUser *realmUser = [[account.users objectsWhere:@"userId = %@", userId] firstObject];
+    MXRealmUser *realmUser = [MXRealmUser objectsInRealm:self.realm where:@"userId = %@", userID].firstObject;
     if (realmUser)
     {
         devicesForUser = [NSMutableDictionary dictionary];
@@ -378,9 +388,9 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                                                                               @"roomId": roomId,
                                                                               @"algorithm": algorithm
                                                                               }];
-
+    RLMRealm *realm = self.realm;
     [realm transactionWithBlock:^{
-        [account.roomsAlgorithms addObject:roomAlgorithm];
+        [realm addObject:roomAlgorithm];
     }];
 
     NSLog(@"##### [MXRealmCryptoStore] storeAlgorithmForRoom in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
@@ -388,7 +398,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
 - (NSString*)algorithmForRoom:(NSString*)roomId
 {
-    return [[account.roomsAlgorithms objectsWhere:@"roomId = %@", roomId] firstObject].algorithm;
+    return ((MXRealmRoomAlgorithm *)[MXRealmRoomAlgorithm objectsInRealm:self.realm where:@"roomId = %@", roomId].firstObject).algorithm;
 }
 
 - (void)storeSession:(OLMSession*)session forDevice:(NSString*)deviceKey
@@ -400,8 +410,9 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                                                                                     @"olmSessionData": [NSKeyedArchiver archivedDataWithRootObject:session]
                                                                                     }];
 
+    RLMRealm *realm = self.realm;
     [realm transactionWithBlock:^{
-        [account.olmSessions addObject:realmOlmSession];
+        [realm addObject:realmOlmSession];
     }];
 
     NSLog(@"##### [MXRealmCryptoStore] storeSession in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
@@ -411,7 +422,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 {
     NSMutableDictionary<NSString*, OLMSession*> *sessionsWithDevice;
 
-    RLMResults<MXRealmOlmSession *> *realmOlmSessions = [account.olmSessions objectsWhere:@"deviceKey = %@", deviceKey];
+    RLMResults<MXRealmOlmSession *> *realmOlmSessions = [MXRealmOlmSession objectsInRealm:self.realm where:@"deviceKey = %@", deviceKey];
     for (MXRealmOlmSession *realmOlmSession in realmOlmSessions)
     {
         if (!sessionsWithDevice)
@@ -435,8 +446,9 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                                                                                     @"olmInboundGroupSessionData": [NSKeyedArchiver archivedDataWithRootObject:session]
                                                                                     }];
 
+    RLMRealm *realm = self.realm;
     [realm transactionWithBlock:^{
-        [account.olmInboundGroupSessions addObject:realmSession];
+        [realm addObject:realmSession];
     }];
 
     NSLog(@"##### [MXRealmCryptoStore] storeInboundGroupSession in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
@@ -444,7 +456,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
 - (MXOlmInboundGroupSession*)inboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey
 {
-     MXRealmOlmInboundGroupSession *realmSession = [account.olmInboundGroupSessions objectsWhere:@"sessionId = %@ AND senderKey = %@", sessionId, senderKey].firstObject;
+    MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectsInRealm:self.realm where:@"sessionId = %@ AND senderKey = %@", sessionId, senderKey].firstObject;
 
     if (realmSession)
     {
@@ -455,7 +467,9 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
 - (void)removeInboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey
 {
-    RLMResults<MXRealmOlmInboundGroupSession *> *realmSessions = [account.olmInboundGroupSessions objectsWhere:@"sessionId = %@ AND senderKey = %@", sessionId, senderKey];
+    RLMRealm *realm = self.realm;
+
+    RLMResults<MXRealmOlmInboundGroupSession *> *realmSessions = [MXRealmOlmInboundGroupSession objectsInRealm:realm where:@"sessionId = %@ AND senderKey = %@", sessionId, senderKey];
 
     [realm transactionWithBlock:^{
         [realm deleteObjects:realmSessions];

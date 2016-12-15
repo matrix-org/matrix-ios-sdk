@@ -586,9 +586,13 @@
 
                 XCTAssert(room.state.isEncrypted);
 
-                XCTAssertEqualObjects(kMXCryptoMegolmAlgorithm, [mxSession.crypto.store algorithmForRoom:room.roomId]);
+                // mxSession.crypto.store is a private member
+                // and should be used only from the cryptoQueue. Particularly for this test
+                dispatch_async(mxSession.crypto.cryptoQueue, ^{
+                    XCTAssertEqualObjects(kMXCryptoMegolmAlgorithm, [mxSession.crypto.store algorithmForRoom:room.roomId]);
 
-                [expectation fulfill];
+                    [expectation fulfill];
+                });
 
             } failure:^(NSError *error) {
                 XCTFail(@"The request should not fail - NSError: %@", error);
