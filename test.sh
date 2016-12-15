@@ -32,5 +32,5 @@ cd synapse/demo
 
 echo `date "+%F %T"` - start xcode
 cd ../..
-xcodebuild -workspace MatrixSDK.xcworkspace/ -scheme MatrixSDK -sdk iphonesimulator  -destination 'name=iPhone 4s' test
+xcodebuild -workspace MatrixSDK.xcworkspace/ -scheme MatrixSDK -sdk iphonesimulator  -destination 'name=iPhone 5s' test
 echo `date "+%F %T"` - xcode ended
