@@ -530,8 +530,6 @@
     dispatch_async(_decryptionQueue, ^{
         [_olmDevice resetReplayAttackCheckInTimeline:timeline];
     });
-#else
-    return nil;
 #endif
 }
 
