@@ -16,43 +16,47 @@
 
 #import <Foundation/Foundation.h>
 
-#include "MXRoom.h"
+#import "MXHTTPOperation.h"
+#import "MXEvent.h"
 #import "MXDeviceInfo.h"
+
+@class MXCrypto;
 
 @protocol MXEncrypting <NSObject>
 
 /**
  Constructor.
 
- @param matrixSession the related 'MXSession'.
+ @param crypto the related 'MXCrypto'.
  @param roomId the id of the room we will be sending to.
  */
-- (instancetype)initWithMatrixSession:(MXSession*)matrixSession andRoom:(NSString*)roomId;
+- (instancetype)initWithCrypto:(MXCrypto*)crypto andRoom:(NSString*)roomId;
 
 /**
  Encrypt an event content according to the configuration of the room.
 
  @param eventContent the content of the event.
  @param eventType the type of the event.
- @param room the room the event will be sent.
+ @param users the room members the event will be sent to.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance. May be nil if all required materials is already in place.
  */
-- (MXHTTPOperation*)encryptEventContent:(NSDictionary*)eventContent eventType:(MXEventTypeString)eventType inRoom:(MXRoom*)room
+- (MXHTTPOperation*)encryptEventContent:(NSDictionary*)eventContent eventType:(MXEventTypeString)eventType
+                               forUsers:(NSArray<NSString*>*)users
                                 success:(void (^)(NSDictionary *encryptedContent))success
                                 failure:(void (^)(NSError *error))failure;
 
 /**
  Called when the membership of a member of the room changes.
 
- @param event the event causing the change.
- @param member the user whose membership changed.
+ @param userId the user whose membership changed.
  @param oldMembership the previous membership.
+ @param newMembership the new membership.
  */
-- (void)onRoomMembership:(MXEvent*)event member:(MXRoomMember*)member oldMembership:(MXMembership)oldMembership;
+- (void)onRoomMembership:(NSString*)userId oldMembership:(MXMembership)oldMembership newMembership:(MXMembership)newMembership;
 
 /**
  Called when the verification status of a device changes.

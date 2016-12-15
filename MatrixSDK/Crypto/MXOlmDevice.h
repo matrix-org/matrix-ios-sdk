@@ -34,7 +34,7 @@
 /**
  Create the `MXOlmDevice` instance.
 
- @param mxSession the mxSession to the home server.
+ @param store the crypto data storage.
  @return the newly created MXOlmDevice instance.
  */
 - (instancetype)initWithStore:(id<MXCryptoStore>)store;

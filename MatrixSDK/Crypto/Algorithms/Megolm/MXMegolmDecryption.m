@@ -19,7 +19,7 @@
 #ifdef MX_CRYPTO
 
 #import "MXCryptoAlgorithms.h"
-#import "MXSession.h"
+#import "MXCrypto_Private.h"
 
 @interface MXMegolmDecryption ()
 {
@@ -42,12 +42,12 @@
 }
 
 #pragma mark - MXDecrypting
-- (instancetype)initWithMatrixSession:(MXSession *)matrixSession
+- (instancetype)initWithCrypto:(MXCrypto *)crypto
 {
     self = [super init];
     if (self)
     {
-        olmDevice = matrixSession.crypto.olmDevice;
+        olmDevice = crypto.olmDevice;
         pendingEvents = [NSMutableDictionary dictionary];
     }
     return self;
@@ -75,7 +75,11 @@
     if (result)
     {
         MXEvent *clearedEvent = [MXEvent modelFromJSON:result.payload];
-        [event setClearData:clearedEvent keysProved:result.keysProved keysClaimed:result.keysClaimed];
+
+        // @TODO
+        //dispatch_async(dispatch_get_main_queue(), ^{
+            [event setClearData:clearedEvent keysProved:result.keysProved keysClaimed:result.keysClaimed];
+        //});
     }
     else
     {

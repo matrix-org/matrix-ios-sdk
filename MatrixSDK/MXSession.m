@@ -27,8 +27,6 @@
 #import "MXFileStore.h"
 
 #import "MXDecryptionResult.h"
-#import "MXFileCryptoStore.h"
-#import "MXRealmCryptoStore.h"
 
 #import "MXAccountData.h"
 
@@ -55,11 +53,6 @@ NSString *const kMXSessionNoRoomTag = @"m.recent";  // Use the same value as mat
 #define SERVER_TIMEOUT_MS 30000
 #define CLIENT_TIMEOUT_MS 120000
 
-/**
- The store to use for crypto.
- */
-//#define MXCryptoStoreClass MXFileCryptoStore
-#define MXCryptoStoreClass MXRealmCryptoStore
 
 // Block called when MSSession resume is complete
 typedef void (^MXOnResumeDone)();
@@ -221,7 +214,8 @@ typedef void (^MXOnResumeDone)();
     [_store openWithCredentials:matrixRestClient.credentials onComplete:^{
 
         // Check if the user has enabled crypto
-        [self checkCrypto:^{
+        [MXCrypto checkCryptoWithMatrixSession:self complete:^(MXCrypto *crypto) {
+            _crypto = crypto;
 
             // Sanity check: The session may be closed before the end of store opening.
             if (!matrixRestClient)
@@ -566,14 +560,12 @@ typedef void (^MXOnResumeDone)();
         _callManager = nil;
     }
 
-#ifdef MX_CRYPTO
     // Stop crypto
     if (_crypto)
     {
         [_crypto close];
         _crypto = nil;
     }
-#endif
 
     // Stop background task
     if (backgroundTaskIdentifier != UIBackgroundTaskInvalid)
@@ -1130,11 +1122,9 @@ typedef void (^MXOnResumeDone)();
 
     NSLog(@"[MXSesion] enableCrypto: %@", @(enableCrypto));
 
-#ifdef MX_CRYPTO
     if (enableCrypto && !_crypto)
     {
-        MXCryptoStoreClass *cryptoStore = [MXCryptoStoreClass createStoreWithCredentials:self.matrixRestClient.credentials];
-        _crypto = [[MXCrypto alloc] initWithMatrixSession:self andStore:cryptoStore];
+        _crypto = [MXCrypto createCryptoWithMatrixSession:self];
 
         if (_state == MXSessionStateRunning)
         {
@@ -1156,7 +1146,7 @@ typedef void (^MXOnResumeDone)();
         _crypto = nil;
 
         // Erase all crypto data of this user
-        [MXFileCryptoStore deleteStoreWithCredentials:matrixRestClient.credentials];
+        [MXCrypto deleteStoreWithCredentials:matrixRestClient.credentials];
         if (success)
         {
             success();
@@ -1169,15 +1159,6 @@ typedef void (^MXOnResumeDone)();
             success();
         }
     }
-
-#else
-
-    if (failure)
-    {
-        failure(nil);
-    }
-
-#endif
 
     return operation;
 }
@@ -2079,47 +2060,6 @@ typedef void (^MXOnResumeDone)();
 #pragma mark - Crypto
 
 /**
- Check if the user has previously enabled crypto.
- If yes, init the crypto module.
- 
- @param complete a block called in any case when the operation completes.
- */
-- (void)checkCrypto:(void (^)())complete
-{
-#ifdef MX_CRYPTO
-    if ([MXCryptoStoreClass hasDataForCredentials:matrixRestClient.credentials])
-    {
-        // If it already exists, open and init crypto
-        MXCryptoStoreClass *cryptoStore = [[MXCryptoStoreClass alloc] initWithCredentials:self.matrixRestClient.credentials];
-
-        [cryptoStore open:^{
-
-            _crypto = [[MXCrypto alloc] initWithMatrixSession:self andStore:cryptoStore];
-
-            complete();
-
-        } failure:^(NSError *error) {
-            complete();
-        }];
-    }
-    else if ([MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession
-        // Without the device id provided by the hs, the crypto does not work
-        && matrixRestClient.credentials.deviceId)
-    {
-        // Create it
-        MXCryptoStoreClass *cryptoStore = [MXCryptoStoreClass createStoreWithCredentials:self.matrixRestClient.credentials];
-        _crypto = [[MXCrypto alloc] initWithMatrixSession:self andStore:cryptoStore];
-        complete();
-    }
-    else
-#endif
-    {
-        // Else do not enable crypto
-        complete();
-    }
-}
-
-/**
  If any, start the crypto module.
 
  @param complete a block called in any case when the operation completes.
@@ -2129,13 +2069,11 @@ typedef void (^MXOnResumeDone)();
 {
     MXHTTPOperation *operation;
 
-#ifdef MX_CRYPTO
     if (_crypto)
     {
         operation = [_crypto start:success failure:failure];
     }
     else
-#endif
     {
         success();
     }
@@ -2148,13 +2086,11 @@ typedef void (^MXOnResumeDone)();
     BOOL result = NO;
     if (event.eventType == MXEventTypeRoomEncrypted)
     {
-#ifdef MX_CRYPTO
         if (_crypto)
         {
             result = [_crypto decryptEvent:event inTimeline:timeline];
         }
         else
-#endif
         {
             // Encryption not enabled
             event.decryptionError = [NSError errorWithDomain:MXDecryptingErrorDomain
@@ -2170,12 +2106,10 @@ typedef void (^MXOnResumeDone)();
 
 - (void)resetReplayAttackCheckInTimeline:(NSString*)timeline
 {
-#ifdef MX_CRYPTO
     if (_crypto)
     {
-        [_crypto.olmDevice resetReplayAttackCheckInTimeline:timeline];
+        [_crypto resetReplayAttackCheckInTimeline:timeline];
     }
-#endif
 }
 
 

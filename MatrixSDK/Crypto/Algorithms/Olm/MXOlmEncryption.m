@@ -17,7 +17,7 @@
 #import "MXOlmEncryption.h"
 
 #import "MXCryptoAlgorithms.h"
-#import "MXSession.h"
+#import "MXCrypto_Private.h"
 
 #ifdef MX_CRYPTO
 
@@ -42,32 +42,22 @@
 
 
 #pragma mark - MXEncrypting
-- (instancetype)initWithMatrixSession:(MXSession *)matrixSession andRoom:(NSString *)theRoomId
+- (instancetype)initWithCrypto:(MXCrypto *)theCrypto andRoom:(NSString *)theRoomId
 {
     self = [super init];
     if (self)
     {
-        crypto = matrixSession.crypto;
+        crypto = theCrypto;
         roomId = theRoomId;
     }
     return self;
 }
 
-- (MXHTTPOperation *)encryptEventContent:(NSDictionary *)eventContent eventType:(MXEventTypeString)eventType inRoom:(MXRoom *)room
-                                 success:(void (^)(NSDictionary *))success
-                                 failure:(void (^)(NSError *))failure
+- (MXHTTPOperation*)encryptEventContent:(NSDictionary*)eventContent eventType:(MXEventTypeString)eventType
+                               forUsers:(NSArray<NSString*>*)users
+                                success:(void (^)(NSDictionary *encryptedContent))success
+                                failure:(void (^)(NSError *error))failure
 {
-    // pick the list of recipients based on the membership list.
-    //
-    // TODO: there is a race condition here! What if a new user turns up
-    // just as you are sending a secret message?
-
-    NSMutableArray <NSString*> *users = [NSMutableArray array];
-    for (MXRoomMember *member in room.state.joinedMembers)
-    {
-        [users addObject:member.userId];
-    }
-
     return [self ensureSession:users success:^{
 
         NSMutableArray *participantDevices = [NSMutableArray array];
@@ -94,7 +84,7 @@
         }
 
         NSDictionary *encryptedMessage = [crypto encryptMessage:@{
-                                                                  @"room_id": room.roomId,
+                                                                  @"room_id": roomId,
                                                                   @"type": eventType,
                                                                   @"content": eventContent
                                                                   }
@@ -104,7 +94,7 @@
     } failure:failure];
 }
 
-- (void)onRoomMembership:(MXEvent *)event member:(MXRoomMember *)member oldMembership:(MXMembership)oldMembership
+- (void)onRoomMembership:(NSString*)userId oldMembership:(MXMembership)oldMembership newMembership:(MXMembership)newMembership;
 {
     // No impact for olm
 }

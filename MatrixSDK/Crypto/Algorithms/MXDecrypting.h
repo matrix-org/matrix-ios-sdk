@@ -19,7 +19,7 @@
 #import "MXEvent.h"
 #import "MXDecryptionResult.h"
 
-@class MXSession;
+@class MXCrypto;
 
 
 @protocol MXDecrypting <NSObject>
@@ -27,9 +27,9 @@
 /**
  Constructor.
 
- @param matrixSession the related 'MXSession'.
- */
-- (instancetype)initWithMatrixSession:(MXSession*)matrixSession;
+ @param crypto the related 'MXCrypto'.
+*/
+- (instancetype)initWithCrypto:(MXCrypto*)crypto;
 
 /**
  Decrypt a message.

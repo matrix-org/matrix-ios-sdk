@@ -81,6 +81,7 @@
 		3256E3821DCB91EB003C9718 /* MXCryptoConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = 3256E3801DCB91EB003C9718 /* MXCryptoConstants.m */; };
 		3259CD531DF860C300186944 /* MXRealmCryptoStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 3259CD511DF860C300186944 /* MXRealmCryptoStore.h */; };
 		3259CD541DF860C300186944 /* MXRealmCryptoStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 3259CD521DF860C300186944 /* MXRealmCryptoStore.m */; };
+		325D1C261DFECE0D0070B8BF /* MXCrypto_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 325D1C251DFECE0D0070B8BF /* MXCrypto_Private.h */; };
 		326056851C76FDF2009D44AD /* MXEventTimeline.h in Headers */ = {isa = PBXBuildFile; fileRef = 326056831C76FDF1009D44AD /* MXEventTimeline.h */; };
 		326056861C76FDF2009D44AD /* MXEventTimeline.m in Sources */ = {isa = PBXBuildFile; fileRef = 326056841C76FDF1009D44AD /* MXEventTimeline.m */; };
 		3264DB911CEC528D00B99881 /* MXAccountData.h in Headers */ = {isa = PBXBuildFile; fileRef = 3264DB8F1CEC528D00B99881 /* MXAccountData.h */; };
@@ -304,6 +305,7 @@
 		3256E3801DCB91EB003C9718 /* MXCryptoConstants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCryptoConstants.m; sourceTree = "<group>"; };
 		3259CD511DF860C300186944 /* MXRealmCryptoStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRealmCryptoStore.h; sourceTree = "<group>"; };
 		3259CD521DF860C300186944 /* MXRealmCryptoStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRealmCryptoStore.m; sourceTree = "<group>"; };
+		325D1C251DFECE0D0070B8BF /* MXCrypto_Private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCrypto_Private.h; sourceTree = "<group>"; };
 		326056831C76FDF1009D44AD /* MXEventTimeline.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXEventTimeline.h; sourceTree = "<group>"; };
 		326056841C76FDF1009D44AD /* MXEventTimeline.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXEventTimeline.m; sourceTree = "<group>"; };
 		3264DB8F1CEC528D00B99881 /* MXAccountData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXAccountData.h; sourceTree = "<group>"; };
@@ -567,6 +569,7 @@
 				32A1513B1DAF768D00400192 /* Data */,
 				322A51B41D9AB15900C8536D /* MXCrypto.h */,
 				322A51B51D9AB15900C8536D /* MXCrypto.m */,
+				325D1C251DFECE0D0070B8BF /* MXCrypto_Private.h */,
 				322A51C51D9BBD3C00C8536D /* MXOlmDevice.h */,
 				322A51C61D9BBD3C00C8536D /* MXOlmDevice.m */,
 			);
@@ -978,6 +981,7 @@
 				32481A841C03572900782AD3 /* MXRoomAccountData.h in Headers */,
 				3284A5AE1DB7CFA800A09972 /* MXFileCryptoStoreMetaData.h in Headers */,
 				3281E8B919E42DFE00976E1A /* MXJSONModels.h in Headers */,
+				325D1C261DFECE0D0070B8BF /* MXCrypto_Private.h in Headers */,
 				32A151521DAF8A7200400192 /* MXQueuedEncryption.h in Headers */,
 				323B2AFE1BCE9B6700B11F34 /* MXCoreDataEvent+CoreDataProperties.h in Headers */,
 				3284A5AC1DB7CFA800A09972 /* MXFileCryptoStore.h in Headers */,

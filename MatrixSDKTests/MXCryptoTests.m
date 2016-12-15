@@ -19,6 +19,7 @@
 #import "MatrixSDKTestsData.h"
 
 #import "MXSession.h"
+#import "MXCrypto_Private.h"
 #import "MXFileStore.h"
 
 #import "MXSDKOptions.h"
@@ -247,7 +248,7 @@
             [expectation fulfill];
         }];
 
-        XCTAssert(operation, @"HTTP operations must be done when initialising crypto for the first tume");
+        XCTAssert(operation, @"HTTP operations must be done when initialising crypto for the first time");
 
     }];
 }
@@ -371,7 +372,7 @@
 
                     XCTAssertEqual([usersDevicesInfoMap deviceIdsForUser:aliceSession.myUser.userId].count, 1);
 
-                    MXDeviceInfo *aliceDeviceFromBobPOV = [usersDevicesInfoMap objectForDevice:aliceSession.matrixRestClient.credentials.deviceId forUser:aliceSession.myUser.userId];
+                    __block MXDeviceInfo *aliceDeviceFromBobPOV = [usersDevicesInfoMap objectForDevice:aliceSession.matrixRestClient.credentials.deviceId forUser:aliceSession.myUser.userId];
                     XCTAssert(aliceDeviceFromBobPOV);
                     XCTAssertEqualObjects(aliceDeviceFromBobPOV.fingerprint, aliceSession.crypto.olmDevice.deviceEd25519Key);
 
@@ -380,47 +381,53 @@
 
                     XCTAssertEqual(aliceDeviceFromBobPOV.verified, MXDeviceUnverified);
 
-                    [mxSession.crypto setDeviceVerification:MXDeviceBlocked forDevice:aliceDeviceFromBobPOV.deviceId ofUser:aliceSession.myUser.userId];
+                    [mxSession.crypto setDeviceVerification:MXDeviceBlocked forDevice:aliceDeviceFromBobPOV.deviceId ofUser:aliceSession.myUser.userId success:^{
 
-                    aliceDeviceFromBobPOV = [mxSession.crypto.store deviceWithDeviceId:aliceDeviceFromBobPOV.deviceId forUser:aliceSession.myUser.userId];
-                    XCTAssertEqual(aliceDeviceFromBobPOV.verified, MXDeviceBlocked);
+                        aliceDeviceFromBobPOV = [mxSession.crypto.store deviceWithDeviceId:aliceDeviceFromBobPOV.deviceId forUser:aliceSession.myUser.userId];
+                        XCTAssertEqual(aliceDeviceFromBobPOV.verified, MXDeviceBlocked);
 
-                    MXRestClient *bobRestClient = mxSession.matrixRestClient;
-                    [mxSession close];
+                        MXRestClient *bobRestClient = mxSession.matrixRestClient;
+                        [mxSession close];
 
 
-                    // Test storage: Reopen the session
-                    MXFileStore *store = [[MXFileStore alloc] init];
+                        // Test storage: Reopen the session
+                        MXFileStore *store = [[MXFileStore alloc] init];
 
-                    MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
-                    [mxSession2 setStore:store success:^{
+                        MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                        [mxSession2 setStore:store success:^{
 
-                        MXDeviceInfo *aliceDeviceFromBobPOV2 = [mxSession2.crypto deviceWithIdentityKey:aliceSession.crypto.olmDevice.deviceCurve25519Key forUser:aliceSession.myUser.userId andAlgorithm:kMXCryptoOlmAlgorithm];
+                            MXDeviceInfo *aliceDeviceFromBobPOV2 = [mxSession2.crypto deviceWithIdentityKey:aliceSession.crypto.olmDevice.deviceCurve25519Key forUser:aliceSession.myUser.userId andAlgorithm:kMXCryptoOlmAlgorithm];
 
-                        XCTAssert(aliceDeviceFromBobPOV2);
-                        XCTAssertEqualObjects(aliceDeviceFromBobPOV2.fingerprint, aliceSession.crypto.olmDevice.deviceEd25519Key);
-                        XCTAssertEqual(aliceDeviceFromBobPOV2.verified, MXDeviceBlocked, @"AliceDevice must still be blocked");
+                            XCTAssert(aliceDeviceFromBobPOV2);
+                            XCTAssertEqualObjects(aliceDeviceFromBobPOV2.fingerprint, aliceSession.crypto.olmDevice.deviceEd25519Key);
+                            XCTAssertEqual(aliceDeviceFromBobPOV2.verified, MXDeviceBlocked, @"AliceDevice must still be blocked");
 
-                        // Download again alice device
-                        [mxSession2.crypto downloadKeys:@[aliceSession.myUser.userId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap2) {
+                            // Download again alice device
+                            [mxSession2.crypto downloadKeys:@[aliceSession.myUser.userId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap2) {
 
-                            MXDeviceInfo *aliceDeviceFromBobPOV3 = [mxSession2.crypto deviceWithIdentityKey:aliceSession.crypto.olmDevice.deviceCurve25519Key forUser:aliceSession.myUser.userId andAlgorithm:kMXCryptoOlmAlgorithm];
+                                MXDeviceInfo *aliceDeviceFromBobPOV3 = [mxSession2.crypto deviceWithIdentityKey:aliceSession.crypto.olmDevice.deviceCurve25519Key forUser:aliceSession.myUser.userId andAlgorithm:kMXCryptoOlmAlgorithm];
 
-                            XCTAssert(aliceDeviceFromBobPOV3);
-                            XCTAssertEqualObjects(aliceDeviceFromBobPOV3.fingerprint, aliceSession.crypto.olmDevice.deviceEd25519Key);
-                            XCTAssertEqual(aliceDeviceFromBobPOV3.verified, MXDeviceBlocked, @"AliceDevice must still be blocked.");
+                                XCTAssert(aliceDeviceFromBobPOV3);
+                                XCTAssertEqualObjects(aliceDeviceFromBobPOV3.fingerprint, aliceSession.crypto.olmDevice.deviceEd25519Key);
+                                XCTAssertEqual(aliceDeviceFromBobPOV3.verified, MXDeviceBlocked, @"AliceDevice must still be blocked.");
 
-                            [expectation fulfill];
+                                [expectation fulfill];
 
+                            } failure:^(NSError *error) {
+                                XCTFail(@"The request should not fail - NSError: %@", error);
+                                [expectation fulfill];
+                            }];
                         } failure:^(NSError *error) {
-                            XCTFail(@"The request should not fail - NSError: %@", error);
+                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                             [expectation fulfill];
                         }];
+
                     } failure:^(NSError *error) {
-                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        XCTFail(@"The request should not fail - NSError: %@", error);
                         [expectation fulfill];
                     }];
-                } failure:^(NSError *error) {
+
+                 } failure:^(NSError *error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
                     [expectation fulfill];
                 }];
@@ -1219,12 +1226,19 @@
                     // Make Alice block Bob
                     [aliceSession.crypto setDeviceVerification:MXDeviceBlocked
                                                      forDevice:bobSession.matrixRestClient.credentials.deviceId
-                                                        ofUser:bobSession.myUser.userId];
+                                                        ofUser:bobSession.myUser.userId
+                                                       success:
+                     ^{
 
-                    [roomFromAlicePOV sendTextMessage:aliceMessages[1] success:nil failure:^(NSError *error) {
-                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                        [expectation fulfill];
-                    }];
+                         [roomFromAlicePOV sendTextMessage:aliceMessages[1] success:nil failure:^(NSError *error) {
+                             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                             [expectation fulfill];
+                         }];
+
+                     } failure:^(NSError *error) {
+                         XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                         [expectation fulfill];
+                     }];
 
                     break;
                 }
@@ -1239,12 +1253,17 @@
                     // Make Alice unblock Bob
                     [aliceSession.crypto setDeviceVerification:MXDeviceUnverified
                                                      forDevice:bobSession.matrixRestClient.credentials.deviceId
-                                                        ofUser:bobSession.myUser.userId];
+                                                        ofUser:bobSession.myUser.userId success:
+                     ^{
+                         [roomFromAlicePOV sendTextMessage:aliceMessages[2] success:nil failure:^(NSError *error) {
+                             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                             [expectation fulfill];
+                         }];
 
-                    [roomFromAlicePOV sendTextMessage:aliceMessages[2] success:nil failure:^(NSError *error) {
-                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                        [expectation fulfill];
-                    }];
+                     } failure:^(NSError *error) {
+                         XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                         [expectation fulfill];
+                     }];
 
                     break;
                 }
@@ -1405,6 +1424,8 @@
 
             // The event must be decrypted once we reinject the m.room_key event
             __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXEventDidDecryptNotification object:event queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                XCTAssert([NSThread currentThread].isMainThread);
 
                 [[NSNotificationCenter defaultCenter] removeObserver:observer];
 

@@ -21,7 +21,7 @@
 #import "MXMegolmEncryption.h"
 
 #import "MXCryptoAlgorithms.h"
-#import "MXSession.h"
+#import "MXCrypto_Private.h"
 #import "MXQueuedEncryption.h"
 
 @interface MXOutboundSessionInfo : NSObject
@@ -59,7 +59,6 @@
 
 @interface MXMegolmEncryption ()
 {
-    MXSession *mxSession;
     MXCrypto *crypto;
 
     // The id of the room we will be sending to.
@@ -92,13 +91,12 @@
 
 
 #pragma mark - MXEncrypting
-- (instancetype)initWithMatrixSession:(MXSession *)matrixSession andRoom:(NSString *)theRoomId
+- (instancetype)initWithCrypto:(MXCrypto *)theCrypto andRoom:(NSString *)theRoomId
 {
     self = [super init];
     if (self)
     {
-        mxSession = matrixSession;
-        crypto = matrixSession.crypto;
+        crypto = theCrypto;
         roomId = theRoomId;
         deviceId = crypto.store.deviceId;
 
@@ -112,9 +110,10 @@
     return self;
 }
 
-- (MXHTTPOperation *)encryptEventContent:(NSDictionary *)eventContent eventType:(MXEventTypeString)eventType inRoom:(MXRoom *)room
-                                 success:(void (^)(NSDictionary *))success
-                                 failure:(void (^)(NSError *))failure
+- (MXHTTPOperation*)encryptEventContent:(NSDictionary*)eventContent eventType:(MXEventTypeString)eventType
+                               forUsers:(NSArray<NSString*>*)users
+                                success:(void (^)(NSDictionary *encryptedContent))success
+                                failure:(void (^)(NSError *error))failure
 {
     // Queue the encryption request
     // It will be processed when everything is set up
@@ -127,7 +126,7 @@
 
     NSDate *startDate = [NSDate date];
 
-    return [self ensureOutboundSessionInRoom:room success:^(MXOutboundSessionInfo *session) {
+    return [self ensureOutboundSessionWithUsers:users success:^(MXOutboundSessionInfo *session) {
 
         NSLog(@"[MXMegolmEncryption] ensureOutboundSessionInRoom took %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
         
@@ -138,18 +137,15 @@
     }];
 }
 
-- (void)onRoomMembership:(MXEvent *)event member:(MXRoomMember *)member oldMembership:(MXMembership)oldMembership
+- (void)onRoomMembership:(NSString*)userId oldMembership:(MXMembership)oldMembership newMembership:(MXMembership)newMembership;
 {
-
-    MXMembership newMembership = member.membership;
-
     if (newMembership == MXMembershipJoin || newMembership == MXMembershipInvite)
     {
         return;
     }
 
     // Otherwise we assume the user is leaving, and start a new outbound session.
-    NSLog(@"[MXMegolmEncryption] Discarding outbound megolm session in %@ due to change in membership of %@ (%tu -> %tu)", roomId, member.userId, oldMembership, newMembership);
+    NSLog(@"[MXMegolmEncryption] Discarding outbound megolm session in %@ due to change in membership of %@ (%tu -> %tu)", roomId, userId, oldMembership, newMembership);
 
     // This ensures that we will start a new session on the next message.
     outboundSession = nil;
@@ -178,16 +174,16 @@
  * @return {module:client.Promise} Promise which resolves to the megolm
  *   sessionId when setup is complete.
  */
-- (MXHTTPOperation *)ensureOutboundSessionInRoom:(MXRoom*)room
-                                         success:(void (^)(MXOutboundSessionInfo *session))success
-                                         failure:(void (^)(NSError *))failure
+- (MXHTTPOperation *)ensureOutboundSessionWithUsers:(NSArray<NSString*>*)users
+                                            success:(void (^)(MXOutboundSessionInfo *session))success
+                                            failure:(void (^)(NSError *))failure
 {
     MXOutboundSessionInfo *session = outboundSession;
 
     // Need to make a brand new session?
     if (!session || [session needsRotation:sessionRotationPeriodMsgs rotationPeriodMs:sessionRotationPeriodMs])
     {
-        outboundSession = session = [self prepareNewSessionInRoom:room];
+        outboundSession = session = [self prepareNewSession];
    }
 
     if (session.shareOperation)
@@ -197,7 +193,13 @@
     }
 
     // No share in progress: check if we need to share with any devices
-    session.shareOperation = [self devicesInRoom:room success:^(MXUsersDevicesMap<MXDeviceInfo *> *devicesInRoom) {
+
+    // Get all keys of all users devices
+    // We are happy to use a cached version here: we assume that if we already
+    // have a list of the user's devices, then we already share an e2e room
+    // with them, which means that they will have announced any new devices via
+    // an m.new_device.
+    session.shareOperation = [crypto downloadKeys:users forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *devicesInRoom) {
 
         NSMutableDictionary<NSString* /* userId */, NSMutableArray<MXDeviceInfo*>*> *shareMap = [NSMutableDictionary dictionary];
 
@@ -257,7 +259,7 @@
     return session.shareOperation;
 }
 
-- (MXOutboundSessionInfo*)prepareNewSessionInRoom:(MXRoom*)room
+- (MXOutboundSessionInfo*)prepareNewSession
 {
     NSString *sessionId = [crypto.olmDevice createOutboundGroupSession];
 
@@ -342,7 +344,7 @@
         {
             NSLog(@"[MXMegolEncryption] shareKey. Actually share with %@", contentMap);
 
-            MXHTTPOperation *operation2 = [mxSession.matrixRestClient sendToDevice:kMXEventTypeStringRoomEncrypted contentMap:contentMap success:^{
+            MXHTTPOperation *operation2 = [crypto.matrixRestClient sendToDevice:kMXEventTypeStringRoomEncrypted contentMap:contentMap success:^{
 
                 // Add the devices we have shared with to session.sharedWithDevices.
                 //
@@ -415,27 +417,6 @@
     }
 
     [pendingEncryptions removeAllObjects];
-}
-
-/**
- Get the list of devices for all users in the room.
- */
-- (MXHTTPOperation*)devicesInRoom:(MXRoom*)room
-                          success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap))success
-                          failure:(void (^)(NSError *error))failure
-{
-    // XXX what about rooms where invitees can see the content?
-    NSMutableArray *roomMembers = [NSMutableArray array];
-    for (MXRoomMember *roomMember in room.state.joinedMembers)
-    {
-        [roomMembers addObject:roomMember.userId];
-    }
-
-    // We are happy to use a cached version here: we assume that if we already
-    // have a list of the user's devices, then we already share an e2e room
-    // with them, which means that they will have announced any new devices via
-    // an m.new_device.
-    return [crypto downloadKeys:roomMembers forceDownload:NO success:success failure:failure];
 }
 
 @end

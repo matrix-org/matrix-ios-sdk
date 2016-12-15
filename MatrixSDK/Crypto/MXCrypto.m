@@ -16,7 +16,7 @@
 
 #import "MXCrypto.h"
 
-#ifdef MX_CRYPTO
+#import "MXCrypto_Private.h"
 
 #import "MXSession.h"
 #import "MXTools.h"
@@ -25,6 +25,17 @@
 #import "MXUsersDevicesMap.h"
 #import "MXDeviceInfo.h"
 #import "MXKey.h"
+
+#import "MXFileCryptoStore.h"
+#import "MXRealmCryptoStore.h"
+
+/**
+ The store to use for crypto.
+ */
+#define MXCryptoStoreClass MXFileCryptoStore
+//#define MXCryptoStoreClass MXRealmCryptoStore
+
+#ifdef MX_CRYPTO
 
 @interface MXCrypto ()
 {
@@ -57,18 +68,521 @@
 }
 @end
 
+#endif
+
 
 @implementation MXCrypto
 
-- (instancetype)initWithMatrixSession:(MXSession*)matrixSession andStore:(id<MXCryptoStore>)store
++ (MXCrypto *)createCryptoWithMatrixSession:(MXSession *)mxSession
 {
+    __block MXCrypto *crypto;
+
+#ifdef MX_CRYPTO
+
+    dispatch_queue_t cryptoQueue = dispatch_queue_create("MXCrypto", DISPATCH_QUEUE_SERIAL);
+    dispatch_sync(cryptoQueue, ^{
+
+        MXCryptoStoreClass *cryptoStore = [MXCryptoStoreClass createStoreWithCredentials:mxSession.matrixRestClient.credentials];
+        crypto = [[MXCrypto alloc] initWithMatrixSession:mxSession cryptoQueue:cryptoQueue andStore:cryptoStore];
+
+    });
+#endif
+
+    return crypto;
+}
+
++ (void)checkCryptoWithMatrixSession:(MXSession *)mxSession complete:(void (^)(MXCrypto *))complete
+{
+#ifdef MX_CRYPTO
+    dispatch_queue_t cryptoQueue = dispatch_queue_create("MXCrypto", DISPATCH_QUEUE_SERIAL);
+    dispatch_async(cryptoQueue, ^{
+
+        if ([MXCryptoStoreClass hasDataForCredentials:mxSession.matrixRestClient.credentials])
+        {
+            // If it already exists, open and init crypto
+            MXCryptoStoreClass *cryptoStore = [[MXCryptoStoreClass alloc] initWithCredentials:mxSession.matrixRestClient.credentials];
+
+            [cryptoStore open:^{
+
+                MXCrypto *crypto = [[MXCrypto alloc] initWithMatrixSession:mxSession cryptoQueue:cryptoQueue andStore:cryptoStore];
+
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    complete(crypto);
+                });
+
+            } failure:^(NSError *error) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    complete(nil);
+                });
+            }];
+        }
+        else if ([MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession
+                 // Without the device id provided by the hs, the crypto does not work
+                 && mxSession.matrixRestClient.credentials.deviceId)
+        {
+            // Create it
+            MXCryptoStoreClass *cryptoStore = [MXCryptoStoreClass createStoreWithCredentials:mxSession.matrixRestClient.credentials];
+            MXCrypto *crypto = [[MXCrypto alloc] initWithMatrixSession:mxSession cryptoQueue:cryptoQueue andStore:cryptoStore];
+
+            dispatch_async(dispatch_get_main_queue(), ^{
+                complete(crypto);
+            });
+        }
+        else
+        {
+            // Else do not enable crypto
+            dispatch_async(dispatch_get_main_queue(), ^{
+                complete(nil);
+            });
+        }
+
+    });
+
+#else
+    complete(nil);
+#endif
+}
+
++ (void)deleteStoreWithCredentials:(MXCredentials *)credentials
+{
+#ifdef MX_CRYPTO
+    [MXCryptoStoreClass deleteStoreWithCredentials:credentials];
+#endif
+}
+
+- (MXHTTPOperation*)start:(void (^)())success
+                  failure:(void (^)(NSError *error))failure
+{
+    __block MXHTTPOperation *operation;
+
+#ifdef MX_CRYPTO
+    NSLog(@"[MXCrypto] start");
+
+    // The session must be initialised enough before starting this module
+    NSParameterAssert(mxSession.myUser.userId);
+
+    // Check if announcement must be done and to who
+    NSMutableDictionary *roomsByUser = [self usersToMakeAnnouncement];
+
+    // Start uploading user device keys
+    operation = [self uploadKeys:5 success:^{
+
+        NSLog(@"[MXCrypto] start ###########################################################");
+        NSLog(@" uploadKeys done for %@: ", mxSession.myUser.userId);
+
+        NSLog(@"   - device id  : %@", _store.deviceId);
+        NSLog(@"   - ed25519    : %@", _olmDevice.deviceEd25519Key);
+        NSLog(@"   - curve25519 : %@", _olmDevice.deviceCurve25519Key);
+        NSLog(@"   - oneTimeKeys: %@", lastPublishedOneTimeKeys);     // They are
+        NSLog(@"");
+        NSLog(@"Store: %@", _store);
+        NSLog(@"");
+
+        // Once keys are uploaded, make sure we announce ourselves
+        MXHTTPOperation *operation2 = [self makeAnnoucement:roomsByUser success:^{
+
+            // Start periodic timer for uploading keys
+            uploadKeysTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:10 * 60]
+                                                       interval:10 * 60   // 10 min
+                                                         target:self
+                                                       selector:@selector(uploadKeys)
+                                                       userInfo:nil
+                                                        repeats:YES];
+            [[NSRunLoop mainRunLoop] addTimer:uploadKeysTimer forMode:NSDefaultRunLoopMode];
+
+            dispatch_async(dispatch_get_main_queue(), ^{
+                success();
+            });
+
+        } failure:^(NSError *error) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure(error);
+            });
+        }];
+
+        if (operation2)
+        {
+            [operation mutateTo:operation2];
+        }
+
+    } failure:^(NSError *error) {
+        NSLog(@"[MXCrypto] start. Error in uploadKeys");
+        dispatch_async(dispatch_get_main_queue(), ^{
+            failure(error);
+        });
+    }];
+
+#endif
+    return operation;
+}
+
+- (void)close
+{
+#ifdef MX_CRYPTO
+
+    NSLog(@"[MXCrypto] close. store: %@",_store);
+
+    [mxSession removeListener:roomMembershipEventsListener];
+
+    dispatch_async(_cryptoQueue, ^{
+
+        // Stop timer
+        [uploadKeysTimer invalidate];
+        uploadKeysTimer = nil;
+
+        _olmDevice = nil;
+        _cryptoQueue = nil;
+        _store = nil;
+
+        [roomEncryptors removeAllObjects];
+        roomEncryptors = nil;
+
+        [roomDecryptors removeAllObjects];
+        roomDecryptors = nil;
+        
+        myDevice = nil;
+
+    });
+
+#endif
+}
+
+- (MXHTTPOperation *)encryptEventContent:(NSDictionary *)eventContent withType:(MXEventTypeString)eventType inRoom:(MXRoom *)room
+                                 success:(void (^)(NSDictionary *, NSString *))success
+                                 failure:(void (^)(NSError *))failure
+{
+#ifdef MX_CRYPTO
+
+    // Create an empty operation that will be mutated later
+    MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
+
+    // Pick the list of recipients based on the membership list.
+
+    // TODO: there is a race condition here! What if a new user turns up
+    // just as you are sending a secret message?
+
+    // XXX what about rooms where invitees can see the content?
+    NSMutableArray *roomMembers = [NSMutableArray array];
+    for (MXRoomMember *roomMember in room.state.joinedMembers)
+    {
+        [roomMembers addObject:roomMember.userId];
+    }
+
+    dispatch_async(_cryptoQueue, ^{
+
+        NSString *algorithm;
+        id<MXEncrypting> alg = roomEncryptors[room.roomId];
+
+        if (!alg)
+        {
+            // If the crypto has been enabled after the initialSync (the global one or the one for this room),
+            // the algorithm has not been initialised yet. So, do it now from room state information
+            algorithm = room.state.encryptionAlgorithm;
+            if (algorithm)
+            {
+                [self setEncryptionInRoom:room.roomId withAlgorithm:algorithm];
+                alg = roomEncryptors[room.roomId];
+            }
+        }
+        else
+        {
+            // For log purpose
+            algorithm = NSStringFromClass(alg.class);
+        }
+
+        // Sanity check (we don't expect an encrypted content here).
+        if (alg && [eventType isEqualToString:kMXEventTypeStringRoomEncrypted] == NO)
+        {
+#ifdef DEBUG
+            NSLog(@"[MXCrypto] encryptEventContent with %@: %@", algorithm, eventContent);
+#endif
+
+            MXHTTPOperation *operation2 = [alg encryptEventContent:eventContent eventType:eventType forUsers:roomMembers success:^(NSDictionary *encryptedContent) {
+
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    success(encryptedContent, kMXEventTypeStringRoomEncrypted);
+                });
+
+            } failure:^(NSError *error) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    failure(error);
+                });
+            }];
+
+            // Mutate the HTTP operation if an HTTP is required for the encryption
+            if (operation2)
+            {
+                [operation mutateTo:operation2];
+            }
+        }
+        else
+        {
+            NSError *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                                 code:MXDecryptingErrorUnableToEncryptCode
+                                             userInfo:@{
+                                                        NSLocalizedDescriptionKey: MXDecryptingErrorUnableToEncrypt,
+                                                        NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToEncryptReason, algorithm]
+                                                        }];
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure(error);
+            });
+        }
+    });
+
+    return operation;
+
+#else
+    return nil;
+#endif
+}
+
+- (BOOL)decryptEvent:(MXEvent *)event inTimeline:(NSString*)timeline
+{
+#ifdef MX_CRYPTO
+
+    __block BOOL result = NO;
+
+    // @TODO: dispatch_async
+    dispatch_sync(_decryptionQueue, ^{
+        id<MXDecrypting> alg = [self getRoomDecryptor:event.roomId algorithm:event.content[@"algorithm"]];
+        if (!alg)
+        {
+            NSLog(@"[MXCrypto] decryptEvent: Unable to decrypt %@", event.content[@"algorithm"]);
+
+            event.decryptionError = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                                        code:MXDecryptingErrorUnableToDecryptCode
+                                                    userInfo:@{
+                                                               NSLocalizedDescriptionKey: MXDecryptingErrorUnableToDecrypt,
+                                                               NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, event, event.content[@"algorithm"]]
+                                                               }];
+            return;
+        }
+
+        // @TODO: event should not be modified on the crypto thread
+        result = [alg decryptEvent:event inTimeline:timeline];
+        if (!result)
+        {
+            NSLog(@"[MXCrypto] decryptEvent: Error: %@", event.decryptionError);
+        }
+    });
+
+    return result;
+
+#else
+    return NO;
+#endif
+}
+
+- (MXDeviceInfo *)eventDeviceInfo:(MXEvent *)event
+{
+    __block MXDeviceInfo *device;
+
+#ifdef MX_CRYPTO
+
+    if (event.isEncrypted)
+    {
+        // Use decryptionQueue because this is a simple read in the db
+        // AND we do it synchronously
+        // @TODO: dispatch_async
+        dispatch_sync(_decryptionQueue, ^{
+
+            NSString *algorithm = event.wireContent[@"algorithm"];
+            device = [self deviceWithIdentityKey:event.senderKey forUser:event.sender andAlgorithm:algorithm];
+
+        });
+    }
+
+#endif
+
+    return device;
+}
+
+- (void)devicesForUser:(NSString*)userId complete:(void (^)(NSArray<MXDeviceInfo*> *devices))complete
+{
+#ifdef MX_CRYPTO
+    dispatch_async(_cryptoQueue, ^{
+
+        NSArray<MXDeviceInfo*> *devices = [self storedDevicesForUser:userId];
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            complete(devices);
+        });
+
+    });
+#else
+    complete(nil);
+#endif
+}
+
+- (void)setDeviceVerification:(MXDeviceVerification)verificationStatus forDevice:(NSString*)deviceId ofUser:(NSString*)userId
+                      success:(void (^)())success
+                      failure:(void (^)(NSError *error))failure
+{
+#ifdef MX_CRYPTO
+
+    // Get all rooms with this user
+    NSMutableArray<NSString*> *userRooms = [NSMutableArray array];
+    for (MXRoom *room in mxSession.rooms)
+    {
+        if (room.state.isEncrypted)
+        {
+            MXRoomMember *member = [room.state memberWithUserId:userId];
+            if (member && member.membership == MXMembershipJoin)
+            {
+                [userRooms addObject:room.roomId];
+            }
+        }
+    }
+
+    // Note: failure is not currently used but it would make sense the day device
+    // verification will be sync'ed with the hs.
+    dispatch_async(_cryptoQueue, ^{
+        MXDeviceInfo *device = [_store deviceWithDeviceId:deviceId forUser:userId];
+
+        // Sanity check
+        if (!device)
+        {
+            NSLog(@"[MXCrypto] setDeviceVerificationForDevice: Unknown device %@:%@", userId, deviceId);
+            success();
+            return;
+        }
+
+        if (device.verified != verificationStatus)
+        {
+            MXDeviceVerification oldVerified = device.verified;
+
+            device.verified = verificationStatus;
+            [_store storeDeviceForUser:userId device:device];
+
+            // Report the change to all outbound sessions with this device
+            for (NSString *roomId in userRooms)
+            {
+                id<MXEncrypting> alg = roomEncryptors[roomId];
+                if (alg)
+                {
+                    [alg onDeviceVerification:device oldVerified:oldVerified];
+                }
+            }
+        }
+
+        if (success)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                success();
+            });
+        }
+    });
+#else
+    if (success)
+    {
+        success();
+    }
+#endif
+}
+
+- (MXHTTPOperation*)downloadKeys:(NSArray<NSString*>*)userIds
+                         success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap))success
+                         failure:(void (^)(NSError *error))failure
+{
+#ifdef MX_CRYPTO
+
+    // Create an empty operation that will be mutated later
+    MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
+
+    dispatch_async(_cryptoQueue, ^{
+
+        MXHTTPOperation *operation2 = [self downloadKeys:userIds forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+            if (success)
+            {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    success(usersDevicesInfoMap);
+                });
+            }
+        } failure:^(NSError *error) {
+            if (failure)
+            {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    failure(error);
+                });
+            }
+        }];
+
+        if (operation2)
+        {
+            [operation mutateTo:operation2];
+        }
+    });
+
+    return operation;
+#else
+    if (success)
+    {
+        success(nil);
+    }
+    return nil;
+#endif
+}
+
+- (void)resetReplayAttackCheckInTimeline:(NSString*)timeline
+{
+#ifdef MX_CRYPTO
+    dispatch_async(_decryptionQueue, ^{
+        [_olmDevice resetReplayAttackCheckInTimeline:timeline];
+    });
+#else
+    return nil;
+#endif
+}
+
+- (NSString *)deviceCurve25519Key
+{
+#ifdef MX_CRYPTO
+    return _olmDevice.deviceCurve25519Key;
+#else
+    return nil;
+#endif
+}
+
+- (NSString *)deviceEd25519Key
+{
+#ifdef MX_CRYPTO
+    return _olmDevice.deviceEd25519Key;
+#else
+    return nil;
+#endif
+}
+
+- (NSString *)olmVersion
+{
+#ifdef MX_CRYPTO
+    return _olmDevice.olmVersion;
+#else
+    return nil;
+#endif
+}
+
+#pragma mark - Private API
+
+#ifdef MX_CRYPTO
+
+- (instancetype)initWithMatrixSession:(MXSession*)matrixSession cryptoQueue:(dispatch_queue_t)theCryptoQueue andStore:(id<MXCryptoStore>)store
+{
+    // This method must be called on the crypto thread
     self = [super init];
     if (self)
     {
         mxSession = matrixSession;
-
+        _cryptoQueue = theCryptoQueue;
         _store = store;
+
+        _decryptionQueue = dispatch_queue_create("MXCryptoDecryption", DISPATCH_QUEUE_SERIAL);
+
         _olmDevice = [[MXOlmDevice alloc] initWithStore:_store];
+
+        // Use our own REST client that answers on the crypto thread
+        _matrixRestClient = [[MXRestClient alloc] initWithCredentials:mxSession.matrixRestClient.credentials andOnUnrecognizedCertificateBlock:nil];
+        _matrixRestClient.completionQueue = _cryptoQueue;
 
         roomEncryptors = [NSMutableDictionary dictionary];
         roomDecryptors = [NSMutableDictionary dictionary];
@@ -88,7 +602,7 @@
             [_store storeDeviceId:deviceId];
         }
 
-        NSString *userId = mxSession.matrixRestClient.credentials.userId;
+        NSString *userId = _matrixRestClient.credentials.userId;
 
         myDevice = [[MXDeviceInfo alloc] initWithDeviceId:deviceId];
         myDevice.userId = userId;
@@ -105,80 +619,9 @@
         [_store storeDevicesForUser:userId devices:myDevices];
         
         [self registerEventHandlers];
-
+        
     }
     return self;
-}
-
-- (MXHTTPOperation*)start:(void (^)())success
-                  failure:(void (^)(NSError *error))failure
-{
-    NSLog(@"[MXCrypto] start");
-
-    // The session must be initialised enough before starting this module
-    NSParameterAssert(mxSession.myUser.userId);
-
-    // Start uploading user device keys
-    MXHTTPOperation *operation;
-    operation = [self uploadKeys:5 success:^{
-
-        NSLog(@"[MXCrypto] start ###########################################################");
-        NSLog(@" uploadKeys done for %@: ", mxSession.myUser.userId);
-
-        NSLog(@"   - device id  : %@", _store.deviceId);
-        NSLog(@"   - ed25519    : %@", _olmDevice.deviceEd25519Key);
-        NSLog(@"   - curve25519 : %@", _olmDevice.deviceCurve25519Key);
-        NSLog(@"   - oneTimeKeys: %@", lastPublishedOneTimeKeys);     // They are
-        NSLog(@"");
-        NSLog(@"Store: %@", _store);
-        NSLog(@"");
-
-        // Once keys are uploaded, make sure we announce ourselves
-        MXHTTPOperation *operation2 = [self checkDeviceAnnounced:^{
-
-            // Start periodic timer for uploading keys
-            uploadKeysTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:10 * 60]
-                                                       interval:10 * 60   // 10 min
-                                                         target:self
-                                                       selector:@selector(uploadKeys)
-                                                       userInfo:nil
-                                                        repeats:YES];
-            [[NSRunLoop mainRunLoop] addTimer:uploadKeysTimer forMode:NSDefaultRunLoopMode];
-
-            success();
-
-        } failure:failure];
-
-        [operation mutateTo:operation2];
-
-    } failure:^(NSError *error) {
-        NSLog(@"[MXCrypto] start. Error in uploadKeys");
-        failure(error);
-    }];
-
-    return operation;
-}
-
-- (void)close
-{
-    NSLog(@"[MXCrypto] close. store: %@",_store);
-
-    // Stop timer
-    [uploadKeysTimer invalidate];
-    uploadKeysTimer = nil;
-
-    [mxSession removeListener:roomMembershipEventsListener];
-
-    _olmDevice = nil;
-    _store = nil;
-
-    [roomEncryptors removeAllObjects];
-    roomEncryptors = nil;
-
-    [roomDecryptors removeAllObjects];
-    roomDecryptors = nil;
-
-    myDevice = nil;
 }
 
 - (MXHTTPOperation *)uploadKeys:(NSUInteger)maxKeys
@@ -340,7 +783,7 @@
     NSLog(@"[MXCrypto] doKeyDownloadForUsers: %@", downloadUsers);
 
     // Download
-    return [mxSession.matrixRestClient downloadKeysForUsers:downloadUsers success:^(MXKeysQueryResponse *keysQueryResponse) {
+    return [_matrixRestClient downloadKeysForUsers:downloadUsers success:^(MXKeysQueryResponse *keysQueryResponse) {
 
         MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap = [[MXUsersDevicesMap alloc] init];
         NSMutableArray<NSString*> *failedUserIds = [NSMutableArray array];
@@ -437,43 +880,6 @@
     return nil;
 }
 
-- (void)setDeviceVerification:(MXDeviceVerification)verificationStatus forDevice:(NSString *)deviceId ofUser:(NSString *)userId
-{
-    MXDeviceInfo *device = [_store deviceWithDeviceId:deviceId forUser:userId];
-
-    // Sanity check
-    if (!device)
-    {
-        NSLog(@"[MXCrypto] setDeviceVerificationForDevice: Unknown device %@:%@", userId, deviceId);
-        return;
-    }
-
-    if (device.verified != verificationStatus)
-    {
-        MXDeviceVerification oldVerified = device.verified;
-
-        device.verified = verificationStatus;
-        [_store storeDeviceForUser:userId device:device];
-
-        // Report the change to all outbound sessions with this device
-        for (MXRoom *room in mxSession.rooms)
-        {
-            if (room.state.isEncrypted)
-            {
-                MXRoomMember *member = [room.state memberWithUserId:device.userId];
-                if (member && member.membership == MXMembershipJoin)
-                {
-                    id<MXEncrypting> alg = roomEncryptors[room.roomId];
-                    if (alg)
-                    {
-                        [alg onDeviceVerification:device oldVerified:oldVerified];
-                    }
-                }
-            }
-        }
-    }
-}
-
 - (MXDeviceInfo *)eventSenderDeviceOfEvent:(MXEvent *)event
 {
     NSString *senderKey = event.senderKey;
@@ -540,7 +946,7 @@
         [_store storeAlgorithmForRoom:roomId algorithm:algorithm];
     }
 
-    id<MXEncrypting> alg = [[encryptionClass alloc] initWithMatrixSession:mxSession andRoom:roomId];
+    id<MXEncrypting> alg = [[encryptionClass alloc] initWithCrypto:self andRoom:roomId];
 
     roomEncryptors[roomId] = alg;
 
@@ -638,7 +1044,7 @@
     NSLog(@"[MXCrypto] ensureOlmSessionsForDevices: claimOneTimeKeysForUsersDevices (users count: %lu - devices: %tu)",
           usersDevicesToClaim.map.count, usersDevicesToClaim.count);
 
-    return [mxSession.matrixRestClient claimOneTimeKeysForUsersDevices:usersDevicesToClaim success:^(MXKeysClaimResponse *keysClaimResponse) {
+    return [_matrixRestClient claimOneTimeKeysForUsersDevices:usersDevicesToClaim success:^(MXKeysClaimResponse *keysClaimResponse) {
 
         NSLog(@"[MXCrypto] keysClaimResponse.oneTimeKeys (users count: %lu - devices: %tu): %@",
               keysClaimResponse.oneTimeKeys.map.count, keysClaimResponse.oneTimeKeys.count, keysClaimResponse.oneTimeKeys);
@@ -719,83 +1125,6 @@
     return sessionId;
 }
 
-- (MXHTTPOperation *)encryptEventContent:(NSDictionary *)eventContent withType:(MXEventTypeString)eventType inRoom:(MXRoom *)room
-                                 success:(void (^)(NSDictionary *, NSString *))success
-                                 failure:(void (^)(NSError *))failure
-{
-    NSString *algorithm;
-    id<MXEncrypting> alg = roomEncryptors[room.roomId];
-
-    if (!alg)
-    {
-        // If the crypto has been enabled after the initialSync (the global one or the one for this room),
-        // the algorithm has not been initialised yet. So, do it now from room state information
-        algorithm = room.state.encryptionAlgorithm;
-        if (algorithm)
-        {
-            [self setEncryptionInRoom:room.roomId withAlgorithm:algorithm];
-            alg = roomEncryptors[room.roomId];
-        }
-    }
-    else
-    {
-        // For log purpose
-        algorithm = NSStringFromClass(alg.class);
-    }
-
-    // Sanity check (we don't expect an encrypted content here).
-    if (alg && [eventType isEqualToString:kMXEventTypeStringRoomEncrypted] == NO)
-    {
-#ifdef DEBUG
-        NSLog(@"[MXCrypto] encryptEventContent with %@: %@", algorithm, eventContent);
-#endif
-
-        return [alg encryptEventContent:eventContent eventType:eventType inRoom:room success:^(NSDictionary *encryptedContent) {
-
-            success(encryptedContent, kMXEventTypeStringRoomEncrypted);
-
-        } failure:failure];
-    }
-    else
-    {
-        NSError *error = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                             code:MXDecryptingErrorUnableToEncryptCode
-                                         userInfo:@{
-                                                    NSLocalizedDescriptionKey: MXDecryptingErrorUnableToEncrypt,
-                                                    NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToEncryptReason, algorithm]
-                                                    }];
-
-        failure(error);
-
-        return nil;
-    }
-}
-
-- (BOOL)decryptEvent:(MXEvent *)event inTimeline:(NSString*)timeline
-{
-    id<MXDecrypting> alg = [self getRoomDecryptor:event.roomId algorithm:event.content[@"algorithm"]];
-    if (!alg)
-    {
-        NSLog(@"[MXCrypto] decryptEvent: Unable to decrypt %@", event.content[@"algorithm"]);
-        
-        event.decryptionError = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                                    code:MXDecryptingErrorUnableToDecryptCode
-                                                userInfo:@{
-                                                           NSLocalizedDescriptionKey: MXDecryptingErrorUnableToDecrypt,
-                                                           NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, event, event.content[@"algorithm"]]
-                                                           }];
-        return NO;
-    }
-
-    BOOL result = [alg decryptEvent:event inTimeline:timeline];
-    if (!result)
-    {
-        NSLog(@"[MXCrypto] decryptEvent: Error: %@", event.decryptionError);
-    }
-
-    return result;
-}
-
 - (NSDictionary*)encryptMessage:(NSDictionary*)payloadFields forDevices:(NSArray<MXDeviceInfo*>*)devices
 {
     NSMutableDictionary *ciphertext = [NSMutableDictionary dictionary];
@@ -805,7 +1134,7 @@
         if (sessionId)
         {
             NSMutableDictionary *payloadJson = [NSMutableDictionary dictionaryWithDictionary:payloadFields];
-            payloadJson[@"sender"] = mxSession.myUser.userId;
+            payloadJson[@"sender"] = _matrixRestClient.credentials.userId;
             payloadJson[@"sender_device"] = _store.deviceId;
 
             // Include the Ed25519 key so that the recipient knows what
@@ -855,45 +1184,45 @@
  */
 - (void)registerEventHandlers
 {
-    // Observe incoming to-device events
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onToDeviceEvent:) name:kMXSessionOnToDeviceEventNotification object:mxSession];
+    dispatch_async(dispatch_get_main_queue(), ^{
 
-    // Observe membership changes
-    roomMembershipEventsListener = [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption, kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
+        // Observe incoming to-device events
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onToDeviceEvent:) name:kMXSessionOnToDeviceEventNotification object:mxSession];
 
-        if (direction == MXTimelineDirectionForwards)
-        {
-            if (event.eventType == MXEventTypeRoomEncryption)
+        // Observe membership changes
+        roomMembershipEventsListener = [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption, kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
+
+            if (direction == MXTimelineDirectionForwards)
             {
-                [self onCryptoEvent:event];
+                if (event.eventType == MXEventTypeRoomEncryption)
+                {
+                    [self onCryptoEvent:event];
+                }
+                if (event.eventType == MXEventTypeRoomMember)
+                {
+                    [self onRoomMembership:event];
+                }
             }
-            if (event.eventType == MXEventTypeRoomMember)
-            {
-                [self onRoomMembership:event];
-            }
-        }
-    }];
+        }];
+
+    });
 }
 
-- (MXHTTPOperation*)checkDeviceAnnounced:(void (^)())onComplete
-                                 failure:(void (^)(NSError *error))failure;
+/**
+ Get the list of users and rooms where to announce a new device.
+ 
+ @return the list of rooms ids ordered by user id. nil if annoucement is not required.
+ */
+- (NSMutableDictionary<NSString*, NSMutableArray*> *)usersToMakeAnnouncement
 {
-    // This method is called when the initialSync was done or the session was resumed
+    // Following operations must be called from the main thread
+    NSParameterAssert([NSThread currentThread].isMainThread);
 
     if (_store.deviceAnnounced)
     {
-        // Catch up on any m.new_device events which arrived during the initial sync.
-        [self flushNewDeviceRequests];
-
-        NSLog(@"[MXCrypto] checkDeviceAnnounced: Already done");
-        onComplete();
+        NSLog(@"[MXCrypto] usersToMakeAnnouncement: Device announcement already done");
         return nil;
     }
-
-    // Catch up on any m.new_device events which arrived during the initial sync.
-    // And force download all devices keys  the user already has.
-    [pendingUsersWithNewDevices addObject:myDevice.userId];
-    [self flushNewDeviceRequests];
 
     // We need to tell all the devices in all the rooms we are members of that
     // we have arrived.
@@ -908,7 +1237,7 @@
         }
 
         // Ignore any rooms which we have left
-        MXRoomMember *me = [room.state memberWithUserId:mxSession.myUser.userId];
+        MXRoomMember *me = [room.state memberWithUserId:_matrixRestClient.credentials.userId];
         if (!me || (me.membership != MXMembershipJoin && me.membership !=MXMembershipInvite))
         {
             continue;
@@ -924,29 +1253,61 @@
         }
     }
 
+    return roomsByUser;
+}
+
+/**
+ Make device annoucement if required.
+ 
+ @param roomsByUser the rooms and users to announce the device to.
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (MXHTTPOperation*)makeAnnoucement:(NSMutableDictionary<NSString*, NSMutableArray*> *)roomsByUser
+                            success:(void (^)())success
+                            failure:(void (^)(NSError *error))failure
+{
+    // This method is called when the initialSync was done or the session was resumed
+
+    if (!roomsByUser)
+    {
+        // Catch up on any m.new_device events which arrived during the initial sync.
+        [self flushNewDeviceRequests];
+
+        NSLog(@"[MXCrypto] makeAnnoucementTo: Already done");
+        success();
+        return nil;
+    }
+
+    // Catch up on any m.new_device events which arrived during the initial sync.
+    // And force download all devices keys the user already has.
+    [pendingUsersWithNewDevices addObject:myDevice.userId];
+    [self flushNewDeviceRequests];
+
     // Build a per-device message for each user
     MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];
     for (NSString *userId in roomsByUser)
     {
         [contentMap setObjects:@{
-                                @"*": @{
-                                        @"device_id": myDevice.deviceId,
-                                        @"rooms": roomsByUser[userId],
-                                        }
-                                } forUser:userId];
+                                 @"*": @{
+                                         @"device_id": myDevice.deviceId,
+                                         @"rooms": roomsByUser[userId],
+                                         }
+                                 } forUser:userId];
     }
 
     NSLog(@"[MXCrypto] checkDeviceAnnounced: Make annoucements to %tu users: %@", contentMap.userIds.count, contentMap);
 
     if (contentMap.userIds.count)
     {
-        return [mxSession.matrixRestClient sendToDevice:kMXEventTypeStringNewDevice contentMap:contentMap success:^{
+        return [_matrixRestClient sendToDevice:kMXEventTypeStringNewDevice contentMap:contentMap success:^{
 
             NSLog(@"[MXCrypto] checkDeviceAnnounced: Annoucements done");
 
             [_store storeDeviceAnnounced];
-            onComplete();
-            
+            success();
+
         } failure:^(NSError *error) {
             NSLog(@"[MXCrypto] checkDeviceAnnounced: Annoucements failed.");
             failure(error);
@@ -957,8 +1318,8 @@
         NSLog(@"[MXCrypto] checkDeviceAnnounced: Annoucements done 2");
         [_store storeDeviceAnnounced];
     }
-
-    onComplete();
+    
+    success();
     return nil;
 }
 
@@ -971,20 +1332,32 @@
 {
     MXEvent *event = notification.userInfo[kMXSessionNotificationEventKey];
 
-    NSLog(@"[MXCrypto] onToDeviceEvent %@:%@: %@", mxSession.myUser.userId, _store.deviceId, event);
+    NSLog(@"[MXCrypto] onToDeviceEvent %@:%@: %@", _matrixRestClient.credentials.userId, _store.deviceId, event);
 
-    switch (event.eventType)
+    if (_cryptoQueue)
     {
-        case MXEventTypeRoomKey:
-            [self onRoomKeyEvent:event];
-            break;
+        switch (event.eventType)
+        {
+            case MXEventTypeRoomKey:
+            {
+                // Room key is used for decryption. Switch to the associated queue
+                dispatch_async(_decryptionQueue, ^{
+                    [self onRoomKeyEvent:event];
+                });
+                break;
+            }
 
-        case MXEventTypeNewDevice:
-            [self onNewDeviceEvent:event];
-            break;
+            case MXEventTypeNewDevice:
+            {
+                dispatch_async(_cryptoQueue, ^{
+                    [self onNewDeviceEvent:event];
+                });
+                break;
+            }
 
-        default:
-            break;
+            default:
+                break;
+        }
     }
 }
 
@@ -1096,7 +1469,12 @@
  */
 - (void)onCryptoEvent:(MXEvent*)event
 {
-    [self setEncryptionInRoom:event.roomId withAlgorithm:event.content[@"algorithm"]];
+    if (_cryptoQueue)
+    {
+        dispatch_async(_cryptoQueue, ^{
+            [self setEncryptionInRoom:event.roomId withAlgorithm:event.content[@"algorithm"]];
+        });
+    }
 };
 
 /**
@@ -1120,8 +1498,14 @@
     {
         MXRoomMemberEventContent *roomMemberPrevContent = [MXRoomMemberEventContent modelFromJSON:event.prevContent];
         MXMembership oldMembership = [MXTools membership:roomMemberPrevContent.membership];
+        MXMembership newMembership = roomMember.membership;
 
-        [alg onRoomMembership:event member:roomMember oldMembership:oldMembership];
+        if (_cryptoQueue)
+        {
+            dispatch_async(_cryptoQueue, ^{
+                [alg onRoomMembership:userId oldMembership:oldMembership newMembership:newMembership];
+            });
+        }
     }
     else
     {
@@ -1138,14 +1522,14 @@
     // Sign it
     NSString *signature = [_olmDevice signJSON:myDevice.signalableJSONDictionary];
     myDevice.signatures = @{
-                            mxSession.myUser.userId: @{
+                            _matrixRestClient.credentials.userId: @{
                                     [NSString stringWithFormat:@"ed25519:%@", myDevice.deviceId]: signature
                                     }
                             };
 
     // For now, we set the device id explicitly, as we may not be using the
     // same one as used in login.
-    return [mxSession.matrixRestClient uploadKeys:myDevice.JSONDictionary oneTimeKeys:nil forDevice:myDevice.deviceId success:success failure:failure];
+    return [_matrixRestClient uploadKeys:myDevice.JSONDictionary oneTimeKeys:nil forDevice:myDevice.deviceId success:success failure:failure];
 }
 
 /**
@@ -1173,7 +1557,7 @@
 
     // For now, we set the device id explicitly, as we may not be using the
     // same one as used in login.
-    return [mxSession.matrixRestClient uploadKeys:nil oneTimeKeys:oneTimeJson forDevice:myDevice.deviceId success:^(MXKeysUploadResponse *keysUploadResponse) {
+    return [_matrixRestClient uploadKeys:nil oneTimeKeys:oneTimeJson forDevice:myDevice.deviceId success:^(MXKeysUploadResponse *keysUploadResponse) {
 
         lastPublishedOneTimeKeys = oneTimeKeys;
         [_olmDevice markOneTimeKeysAsPublished];
@@ -1289,7 +1673,7 @@
     Class algClass = [[MXCryptoAlgorithms sharedAlgorithms] decryptorClassForAlgorithm:algorithm];
     if (algClass)
     {
-        alg = [[algClass alloc] initWithMatrixSession:mxSession];
+        alg = [[algClass alloc] initWithCrypto:self];
 
         if (roomId)
         {
@@ -1300,7 +1684,8 @@
     return alg;
 };
 
+#endif
+
 @end
 
-#endif
 

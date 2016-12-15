@@ -19,7 +19,7 @@
 #ifdef MX_CRYPTO
 
 #import "MXCryptoAlgorithms.h"
-#import "MXSession.h"
+#import "MXCrypto_Private.h"
 
 @interface MXOlmDecryption ()
 {
@@ -42,13 +42,13 @@
 
 
 #pragma mark - MXDecrypting
-- (instancetype)initWithMatrixSession:(MXSession *)matrixSession
+- (instancetype)initWithCrypto:(MXCrypto *)crypto
 {
     self = [super init];
     if (self)
     {
-        olmDevice = matrixSession.crypto.olmDevice;
-        userId = matrixSession.myUser.userId;
+        olmDevice = crypto.olmDevice;
+        userId = crypto.matrixRestClient.credentials.userId;
     }
     return self;
 }
@@ -190,11 +190,15 @@
     }
 
     MXEvent *clearedEvent = [MXEvent modelFromJSON:payload];
-    [event setClearData:clearedEvent
-             keysProved:@{
-                          @"curve25519": deviceKey
-                          }
-            keysClaimed:payload[@"keys"]];
+
+    // @TODO
+    //dispatch_async(dispatch_get_main_queue(), ^{
+        [event setClearData:clearedEvent
+                 keysProved:@{
+                              @"curve25519": deviceKey
+                              }
+                keysClaimed:payload[@"keys"]];
+    //});
 
     return YES;
 }

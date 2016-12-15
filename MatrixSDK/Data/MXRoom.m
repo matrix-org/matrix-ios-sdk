@@ -292,7 +292,6 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                             success:(void (^)(NSString *eventId))success
                             failure:(void (^)(NSError *error))failure
 {
-#ifdef MX_CRYPTO
     if (mxSession.crypto && self.state.isEncrypted)
     {
         // Encrypt the content before sending
@@ -314,7 +313,6 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         return operation;
     }
     else
-#endif
     {
         return [self _sendEventOfType:eventTypeString content:content success:success failure:failure];
     }
@@ -550,8 +548,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     event.originServerTs = (uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000);
     event.sender = mxSession.myUser.userId;
     event.wireContent = content;
-    
-#ifdef MX_CRYPTO
+
     if (mxSession.crypto && self.state.isEncrypted)
     {
         // Encapsulate the resulting event in a fake encrypted event
@@ -564,12 +561,11 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         encryptedEvent.sender = mxSession.myUser.userId;
 
         [encryptedEvent setClearData:event
-                          keysProved:@{@"curve25519":mxSession.crypto.olmDevice.deviceCurve25519Key}
+                          keysProved:@{@"curve25519":mxSession.crypto.deviceCurve25519Key}
                          keysClaimed:nil];
         
         event = encryptedEvent;
     }
-#endif
     
     return event;
 }
@@ -1110,7 +1106,6 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 {
     MXHTTPOperation *operation;
 
-#ifdef MX_CRYPTO
     if (mxSession.crypto)
     {
         // Send the information to the homeserver
@@ -1134,7 +1129,6 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         }];
     }
     else
-#endif
     {
         failure([NSError errorWithDomain:MXDecryptingErrorDomain
                                     code:MXDecryptingErrorEncryptionNotEnabledCode
@@ -1144,18 +1138,6 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     }
 
     return operation;
-}
-
-- (MXDeviceInfo*)eventDeviceInfo:(MXEvent*)event
-{
-#ifdef MX_CRYPTO
-    if (mxSession.crypto && event.isEncrypted)
-    {
-        return [mxSession.crypto deviceWithIdentityKey:event.senderKey forUser:event.sender andAlgorithm:self.state.encryptionAlgorithm];
-    }
-#endif
-    
-    return nil;
 }
 
 #pragma mark - Utils
