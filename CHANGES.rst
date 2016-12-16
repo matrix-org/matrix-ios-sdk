@@ -1,5 +1,21 @@
+Changes in Matrix iOS SDK in 0.7.4 (2016-12-19)
+===============================================
+
+Improvements:
+ * Crypto: all crypto processing is now done outside the main thread.
+ * Crypto: keys are now stored in a realm db.
+ * Crypto: variuos bug fixes and improvements including:
+     * Retry decryption after receiving keys
+     * Avoid a packetstorm of device queries on startup
+     * Detect store corruption and send kMXSessionCryptoDidCorruptDataNotification
+ * Move MXKMediaManager and MXKMediaLoader at SDK level.
+ * MXEvent: Add sentState property (was previously in the kit)
+ 
+API breaks:
+ * MXRoom:`sendMessageOfType` is deprecated. Replaced by sendMessageWithContent.
+
 Changes in Matrix iOS SDK in 0.7.3 (2016-11-23)
-===========================================
+===============================================
 
 Improvements:
  * Crypto: Ignore reshares of known megolm sessions.
