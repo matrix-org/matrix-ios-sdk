@@ -19,6 +19,7 @@
 #ifdef MX_CRYPTO
 
 #import <Realm/Realm.h>
+#import "MXSession.h"
 
 NSUInteger const kMXRealmCryptoStoreVersion = 1;
 
@@ -515,7 +516,9 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
         NSLog(@"[MXRealmCryptoStore] realmForUser gets error: %@", error);
 
         // Remove the db file
-        [[NSFileManager defaultManager] removeItemAtPath:config.fileURL.absoluteString error:nil];
+        NSError *error;
+        [[NSFileManager defaultManager] removeItemAtPath:config.fileURL.path error:&error];
+        NSLog(@"[MXRealmCryptoStore] removeItemAtPath error result: %@", error);
 
         // And try again
         realm = [RLMRealm realmWithConfiguration:config error:&error];
@@ -524,8 +527,11 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
             NSLog(@"[MXRealmCryptoStore] realmForUser still gets after reset. Error: %@", error);
         }
 
-        // TODO: We should report this db reset to higher modules and even to
-        // the end user
+        // Report this db reset to higher modules
+        // A user logout and in is anyway required to make crypto work reliably again
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionCryptoDidCorruptDataNotification
+                                                            object:userId
+                                                          userInfo:nil];
     }
 
     return realm;

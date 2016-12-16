@@ -103,8 +103,10 @@
             NSLog(@"[MXCrypto] checkCryptoWithMatrixSession: Migration required for %@", mxSession.matrixRestClient.credentials);
             if (![MXFileCryptoStore migrateToMXRealmCryptoStore:mxSession.matrixRestClient.credentials])
             {
-                // TODO: Ask the app to logout
-                NSLog(@"[MXCrypto] Migration failed. We cannot do nothing except logging out");
+                NSLog(@"[MXCrypto] Migration failed. We cannot do nothing except asking user for logging out and in");
+                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionCryptoDidCorruptDataNotification
+                                                                    object:mxSession.myUser.userId
+                                                                  userInfo:nil];
             }
         }
 
