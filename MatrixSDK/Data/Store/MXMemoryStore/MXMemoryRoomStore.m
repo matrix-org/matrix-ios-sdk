@@ -126,7 +126,11 @@
 
 - (void)storeOutgoingMessage:(MXEvent*)outgoingMessage
 {
-    [outgoingMessages addObject:outgoingMessage];
+    // Sanity check: prevent from adding multiple occurrences of the same object.
+    if ([outgoingMessages indexOfObject:outgoingMessage] == NSNotFound)
+    {
+        [outgoingMessages addObject:outgoingMessage];
+    }
 }
 
 - (void)removeAllOutgoingMessages

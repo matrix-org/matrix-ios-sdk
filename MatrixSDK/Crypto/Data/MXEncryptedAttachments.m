@@ -31,16 +31,21 @@ NSString *const MXEncryptedAttachmentsErrorDomain = @"MXEncryptedAttachmentsErro
                  mimeType:(NSString *)mimeType
                  localUrl:(NSURL *)url
                   success:(void(^)(NSDictionary *result))success
-                  failure:(void(^)(NSError *error))failure {
+                  failure:(void(^)(NSError *error))failure
+{
     NSError *err;
     NSFileHandle *fileHandle = [NSFileHandle fileHandleForReadingFromURL:url error:&err];
     if (fileHandle == nil) {
+        
         failure(err);
         return;
+        
     }
     
     [MXEncryptedAttachments encryptAttachment:uploader mimeType:mimeType dataCallback:^NSData *{
+        
         return [fileHandle readDataOfLength:4096];
+        
     } success:success failure:failure];
     
     [fileHandle closeFile];
@@ -50,12 +55,17 @@ NSString *const MXEncryptedAttachmentsErrorDomain = @"MXEncryptedAttachmentsErro
                  mimeType:(NSString *)mimeType
                      data:(NSData *)data
                   success:(void(^)(NSDictionary *result))success
-                  failure:(void(^)(NSError *error))failure {
+                  failure:(void(^)(NSError *error))failure
+{
     __block bool dataGiven = false;
+    
     [MXEncryptedAttachments encryptAttachment:uploader mimeType:mimeType dataCallback:^NSData *{
+        
         if (dataGiven) return nil;
+        
         dataGiven = true;
         return data;
+        
     } success:success failure:failure];
 }
 
@@ -63,7 +73,8 @@ NSString *const MXEncryptedAttachmentsErrorDomain = @"MXEncryptedAttachmentsErro
                  mimeType:(NSString *)mimeType
              dataCallback:(NSData *(^)())dataCallback
                   success:(void(^)(NSDictionary *result))success
-                  failure:(void(^)(NSError *error))failure {
+                  failure:(void(^)(NSError *error))failure
+{
     NSError *err;
     CCCryptorStatus status;
     int retval;

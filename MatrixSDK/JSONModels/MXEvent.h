@@ -162,6 +162,13 @@ FOUNDATION_EXPORT NSString *const kMXMembershipStringBan;
 FOUNDATION_EXPORT uint64_t const kMXUndefinedTimestamp;
 
 /**
+ Posted when the MXEvent has updated its sent state.
+ 
+ The notification object is the MXEvent.
+ */
+FOUNDATION_EXPORT NSString *const kMXEventDidChangeSentStateNotification;
+
+/**
  Posted when the MXEvent has been decrypted.
  
  The notification is sent for event that is received before the key to decrypt it.
@@ -196,7 +203,7 @@ FOUNDATION_EXPORT NSString *const kMXEventDidDecryptNotification;
 @property (nonatomic) NSString *sender;
 
 /**
- The state of the event sending process.
+ The state of the event sending process (kMXEventDidChangeSentStateNotification is posted in case of change).
  */
 @property (nonatomic) MXEventSentState sentState;
 
