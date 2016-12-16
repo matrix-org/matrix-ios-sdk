@@ -198,6 +198,15 @@ FOUNDATION_EXPORT NSString *const kMXSessionDirectRoomsDidChangeNotification;
  */
 FOUNDATION_EXPORT NSString *const kMXSessionDidCorruptDataNotification;
 
+/**
+ Posted when crypto data have been corrupted. User's device keys may be no
+ more valid. The listener must make the user login out and in in order to be able
+ to read and send readable crypted messages.
+
+ The notification object is the id of the concerned user.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionCryptoDidCorruptDataNotification;
+
 
 #pragma mark - Other constants
 /**
