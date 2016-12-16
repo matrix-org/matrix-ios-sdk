@@ -93,10 +93,10 @@
 
             // Package olm error into MXDecryptingErrorDomain
             error = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                         code:MXDecryptingErrorUnableToDecryptCode
+                                         code:MXDecryptingErrorOlmCode
                                      userInfo:@{
-                                                NSLocalizedDescriptionKey: MXDecryptingErrorUnableToDecrypt,
-                                                NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, ciphertext, error]
+                                                NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorOlm, error.localizedDescription],
+                                                NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorOlmReason, ciphertext, error]
                                                 }];
         }
         else if ([error.domain isEqualToString:MXDecryptingErrorDomain] && error.code == MXDecryptingErrorUnkwnownInboundSessionIdCode)
