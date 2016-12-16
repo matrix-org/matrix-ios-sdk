@@ -1308,7 +1308,7 @@
                                  } forUser:userId];
     }
 
-    NSLog(@"[MXCrypto] checkDeviceAnnounced: Make annoucements to %tu users: %@", contentMap.userIds.count, contentMap);
+    NSLog(@"[MXCrypto] checkDeviceAnnounced: Make annoucements to %tu users and %tu devices: %@", contentMap.userIds.count, contentMap.count, contentMap);
 
     if (contentMap.userIds.count)
     {

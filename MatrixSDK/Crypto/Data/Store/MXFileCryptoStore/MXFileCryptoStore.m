@@ -243,7 +243,7 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
     NSDate *startDate = [NSDate date];
     NSString *filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreAccountFile];
     [NSKeyedArchiver archiveRootObject:olmAccount toFile:filePath];
-    NSLog(@"##### [MXFileCryptoStore] storeAccount in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXFileCryptoStore] storeAccount in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (OLMAccount *)account
@@ -269,7 +269,7 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
     NSDate *startDate = [NSDate date];
     NSString *filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreDevicesFile];
     [NSKeyedArchiver archiveRootObject:usersDevicesInfoMap toFile:filePath];
-    NSLog(@"##### [MXFileCryptoStore] storeAccount in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXFileCryptoStore] storeAccount in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (MXDeviceInfo *)deviceWithDeviceId:(NSString *)deviceId forUser:(NSString *)userId
@@ -284,7 +284,7 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
     NSDate *startDate = [NSDate date];
     NSString *filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreDevicesFile];
     [NSKeyedArchiver archiveRootObject:usersDevicesInfoMap toFile:filePath];
-    NSLog(@"##### [MXFileCryptoStore] storeDevicesForUser in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXFileCryptoStore] storeDevicesForUser in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (NSDictionary<NSString *,MXDeviceInfo *> *)devicesForUser:(NSString *)userId
@@ -299,7 +299,7 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
     NSDate *startDate = [NSDate date];
     NSString *filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreRoomsAlgorithmsFile];
     [NSKeyedArchiver archiveRootObject:roomsAlgorithms toFile:filePath];
-    NSLog(@"##### [MXFileCryptoStore] storeAlgorithmForRoom in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXFileCryptoStore] storeAlgorithmForRoom in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (NSString *)algorithmForRoom:(NSString *)roomId
@@ -319,7 +319,7 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
     NSDate *startDate = [NSDate date];
     NSString *filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreSessionsFile];
     [NSKeyedArchiver archiveRootObject:olmSessions toFile:filePath];
-    NSLog(@"##### [MXFileCryptoStore] storeSession in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXFileCryptoStore] storeSession in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (NSDictionary<NSString *,OLMSession *> *)sessionsWithDevice:(NSString *)deviceKey
@@ -339,7 +339,7 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
     NSDate *startDate = [NSDate date];
     NSString *filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreInboundGroupSessionsFile];
     [NSKeyedArchiver archiveRootObject:inboundGroupSessions toFile:filePath];
-    NSLog(@"##### [MXFileCryptoStore] storeInboundGroupSession in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXFileCryptoStore] storeInboundGroupSession in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (MXOlmInboundGroupSession *)inboundGroupSessionWithId:(NSString *)sessionId andSenderKey:(NSString *)senderKey
@@ -356,7 +356,7 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
     NSDate *startDate = [NSDate date];
     NSString *filePath = [storePath stringByAppendingPathComponent:kMXFileCryptoStoreInboundGroupSessionsFile];
     [NSKeyedArchiver archiveRootObject:inboundGroupSessions toFile:filePath];
-    NSLog(@"##### [MXFileCryptoStore] removeInboundGroupSessionWithId in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXFileCryptoStore] removeInboundGroupSessionWithId in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 
