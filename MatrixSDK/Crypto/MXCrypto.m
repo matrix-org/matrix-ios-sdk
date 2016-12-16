@@ -32,8 +32,8 @@
 /**
  The store to use for crypto.
  */
-#define MXCryptoStoreClass MXFileCryptoStore
-//#define MXCryptoStoreClass MXRealmCryptoStore
+//#define MXCryptoStoreClass MXFileCryptoStore
+#define MXCryptoStoreClass MXRealmCryptoStore
 
 #ifdef MX_CRYPTO
 
@@ -94,8 +94,19 @@
 + (void)checkCryptoWithMatrixSession:(MXSession *)mxSession complete:(void (^)(MXCrypto *))complete
 {
 #ifdef MX_CRYPTO
+
     dispatch_queue_t cryptoQueue = dispatch_queue_create("MXCrypto", DISPATCH_QUEUE_SERIAL);
     dispatch_async(cryptoQueue, ^{
+
+        if ([MXFileCryptoStore hasDataForCredentials:mxSession.matrixRestClient.credentials])
+        {
+            NSLog(@"[MXCrypto] checkCryptoWithMatrixSession: Migration required for %@", mxSession.matrixRestClient.credentials);
+            if (![MXFileCryptoStore migrateToMXRealmCryptoStore:mxSession.matrixRestClient.credentials])
+            {
+                // TODO: Ask the app to logout
+                NSLog(@"[MXCrypto] Migration failed. We cannot do nothing except logging out");
+            }
+        }
 
         if ([MXCryptoStoreClass hasDataForCredentials:mxSession.matrixRestClient.credentials])
         {

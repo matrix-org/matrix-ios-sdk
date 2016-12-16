@@ -21,6 +21,8 @@
 #import "MXFileCryptoStoreMetaData.h"
 #import "MXUsersDevicesMap.h"
 
+#import "MXRealmCryptoStore.h"
+
 NSUInteger const kMXFileCryptoStoreVersion = 1;
 
 NSString *const kMXFileCryptoStoreFolder = @"MXFileCryptoStore";
@@ -436,6 +438,80 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
     {
         inboundGroupSessions = [NSKeyedUnarchiver unarchiveObjectWithFile:filePath];
     }
+}
+
+
+#pragma mark - Migration
++ (BOOL)migrateToMXRealmCryptoStore:(MXCredentials *)credentials
+{
+    NSLog(@"[MXFileCryptoStore] migrateToMXRealmCryptoStore START");
+
+    // If any (could happen if this function was interrupted before its end), reset the destination
+    if ([MXRealmCryptoStore hasDataForCredentials:credentials])
+    {
+        [MXRealmCryptoStore deleteStoreWithCredentials:credentials];
+    }
+
+    MXFileCryptoStore *fileCryptoStore = [[MXFileCryptoStore alloc] initWithCredentials:credentials];
+
+    @try
+    {
+        [fileCryptoStore preloadCryptoData];
+    }
+    @catch (NSException *exception)
+    {
+        NSLog(@"[MXFileCryptoStore] migrateToMXRealmCryptoStore: Cannot migrate. Error: %@", exception);
+        return NO;
+    }
+
+    MXRealmCryptoStore *realmCryptoStore = [MXRealmCryptoStore createStoreWithCredentials:credentials];
+
+    // Migrate data
+    [realmCryptoStore storeDeviceId:fileCryptoStore.deviceId];
+    [realmCryptoStore storeAccount:fileCryptoStore.account];
+    if (fileCryptoStore.deviceAnnounced)
+    {
+        [realmCryptoStore storeDeviceAnnounced];
+    }
+
+    for (NSString *userId in fileCryptoStore->usersDevicesInfoMap.userIds)
+    {
+        [realmCryptoStore storeDevicesForUser:userId
+                                      devices:[fileCryptoStore devicesForUser:userId]];
+    }
+
+    for (NSString *roomId in fileCryptoStore->roomsAlgorithms)
+    {
+        [realmCryptoStore storeAlgorithmForRoom:roomId
+                                      algorithm:[fileCryptoStore algorithmForRoom:roomId]];
+    }
+
+    for (NSString *deviceKey in fileCryptoStore->olmSessions)
+    {
+        for (OLMSession *session in [fileCryptoStore sessionsWithDevice:deviceKey].allValues)
+        {
+            [realmCryptoStore storeSession:session
+                                 forDevice:deviceKey];
+        }
+    }
+
+    for (NSString *senderKey in fileCryptoStore->inboundGroupSessions)
+    {
+        for (NSString *sessionId in fileCryptoStore->inboundGroupSessions[senderKey])
+        {
+            [realmCryptoStore storeInboundGroupSession:[fileCryptoStore inboundGroupSessionWithId:sessionId andSenderKey:senderKey]];
+        }
+    }
+
+    fileCryptoStore = nil;
+    realmCryptoStore = nil;
+
+    // Migration is done, clear source
+    [MXFileCryptoStore deleteStoreWithCredentials:credentials];
+
+    NSLog(@"[MXFileCryptoStore] migrateToMXRealmCryptoStore END");
+
+    return YES;
 }
 
 - (NSString *)description
