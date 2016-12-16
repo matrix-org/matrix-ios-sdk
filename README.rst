@@ -29,6 +29,18 @@ If you want to use the develop version of the SDK, use instead:
     :branch => 'develop'
 
 
+Options
+=======
+If you want to enable VoIP, add the following pod to you app Podfile::
+
+    pod 'WebRTC'
+
+If you want to enable end-to-end encryption, add::
+
+    pod 'OLMKit'
+    pod 'Realm'
+
+
 Overview
 ========
 
