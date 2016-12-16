@@ -642,7 +642,9 @@
             [expectation fulfill];
         }];
 
-        XCTAssertEqual(MXSessionStateSyncInProgress, mxSession.state);
+        // Since crypto, we do start syncing immediately but there is
+        // an intermediate true asynchronous step where crypto is checked
+        // XCTAssertEqual(MXSessionStateSyncInProgress, mxSession.state);
     }];
 }
 
