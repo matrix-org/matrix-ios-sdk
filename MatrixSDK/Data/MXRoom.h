@@ -244,9 +244,8 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
                   to echo the message in the messages list until the resulting event come through the server sync.
                   You may specify nil for this parameter if you do not want this information.
                   You may provide your own MXEvent object, in this case only its send state is updated.
- 
                   When the event type is `kMXEventTypeStringRoomEncrypted`, no local event is created.
-                  You may provide your own MXEvent object, in this case only its send state is updated.
+
  @param success A block object called when the operation succeeds. It returns
                 the event id of the event generated on the home server
  @param failure A block object called when the operation fails.
@@ -310,6 +309,20 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 - (MXHTTPOperation*)sendTextMessage:(NSString*)text
                       formattedText:(NSString*)formattedText
                           localEcho:(MXEvent**)localEcho
+                            success:(void (^)(NSString *eventId))success
+                            failure:(void (^)(NSError *error))failure;
+
+/**
+ Send a text message to the room.
+
+ @param text the text to send.
+ @param success A block object called when the operation succeeds. It returns
+ the event id of the event generated on the home server
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)sendTextMessage:(NSString*)text
                             success:(void (^)(NSString *eventId))success
                             failure:(void (^)(NSError *error))failure;
 

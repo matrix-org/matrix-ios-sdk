@@ -301,8 +301,12 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     // Create a fake operation by default
     MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
     
-    __block MXEvent *event = *localEcho;
-    
+    __block MXEvent *event;
+    if (localEcho)
+    {
+        event = *localEcho;
+    }
+
     void(^onSuccess)(NSString *) = ^(NSString *eventId) {
         
         // Update the local echo with its actual identifier (by keeping the initial id).
@@ -489,6 +493,13 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                               localEcho:localEcho
                                 success:success
                                 failure:failure];
+}
+
+- (MXHTTPOperation *)sendTextMessage:(NSString *)text
+                             success:(void (^)(NSString *))success
+                             failure:(void (^)(NSError *))failure
+{
+    return [self sendTextMessage:text formattedText:nil localEcho:nil success:success failure:failure];
 }
 
 - (MXHTTPOperation*)sendEmote:(NSString*)emoteBody
