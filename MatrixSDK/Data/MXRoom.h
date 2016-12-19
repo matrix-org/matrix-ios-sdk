@@ -238,6 +238,15 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 
  @param eventType the type of the event. @see MXEventType.
  @param content the content that will be sent to the server as a JSON object.
+ @param localEcho a pointer to a MXEvent object.
+                  When the event type is `kMXEventTypeStringRoomMessage`, this pointer
+                  is set to an actual MXEvent object containing the local created event which should be used
+                  to echo the message in the messages list until the resulting event come through the server sync.
+                  You may specify nil for this parameter if you do not want this information.
+                  You may provide your own MXEvent object, in this case only its send state is updated.
+ 
+                  When the event type is `kMXEventTypeStringRoomEncrypted`, no local event is created.
+                  You may provide your own MXEvent object, in this case only its send state is updated.
  @param success A block object called when the operation succeeds. It returns
                 the event id of the event generated on the home server
  @param failure A block object called when the operation fails.
@@ -246,6 +255,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  */
 - (MXHTTPOperation*)sendEventOfType:(MXEventTypeString)eventTypeString
                             content:(NSDictionary*)content
+                          localEcho:(MXEvent**)localEcho
                             success:(void (^)(NSString *eventId))success
                             failure:(void (^)(NSError *error))failure;
 
@@ -269,6 +279,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  Send a room message to a room.
 
  @param content the message content that will be sent to the server as a JSON object.
+ @param localEcho a pointer to a MXEvent object. This pointer is set to an actual MXEvent object
+                  containing the local created event which should be used to echo the message in
+                  the messages list until the resulting event come through the server sync.
+                  You may specify nil for this parameter if you do not want this information.
+                  You may provide your own MXEvent object, in this case only its send state is updated.
  @param success A block object called when the operation succeeds. It returns
                 the event id of the event generated on the home server
  @param failure A block object called when the operation fails.
@@ -276,13 +291,16 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)sendMessageWithContent:(NSDictionary*)content
+                                 localEcho:(MXEvent**)localEcho
                                    success:(void (^)(NSString *eventId))success
                                    failure:(void (^)(NSError *error))failure;
 
 /**
- Send a text message to a room
-
+ Send a text message to the room.
+ 
  @param text the text to send.
+ @param formattedText the optional HTML formatted string of the text to send.
+ @param localEcho a pointer to a MXEvent object (@see sendMessageWithContent: for details).
  @param success A block object called when the operation succeeds. It returns
                 the event id of the event generated on the home server
  @param failure A block object called when the operation fails.
@@ -290,8 +308,105 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)sendTextMessage:(NSString*)text
+                      formattedText:(NSString*)formattedText
+                          localEcho:(MXEvent**)localEcho
                             success:(void (^)(NSString *eventId))success
                             failure:(void (^)(NSError *error))failure;
+
+/**
+ Send an emote message to the room.
+ 
+ @param emoteBody the emote body to send.
+ @param formattedBody the optional HTML formatted string of the emote.
+ @param localEcho a pointer to a MXEvent object (@see sendMessageWithContent: for details).
+ @param success A block object called when the operation succeeds. It returns
+                the event id of the event generated on the home server
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)sendEmote:(NSString*)emoteBody
+                formattedText:(NSString*)formattedBody
+                    localEcho:(MXEvent**)localEcho
+                      success:(void (^)(NSString *eventId))success
+                      failure:(void (^)(NSError *error))failure;
+
+/**
+ Send an image to the room.
+ 
+ @param imageData the data of the image to send.
+ @param imageSize the original size of the image.
+ @param mimetype  the image mimetype.
+ @param thumbnail optional thumbnail image (may be nil).
+ @param localEcho a pointer to a MXEvent object (@see sendMessageWithContent: for details).
+ @param success A block object called when the operation succeeds. It returns
+                the event id of the event generated on the home server
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)sendImage:(NSData*)imageData
+                withImageSize:(CGSize)imageSize
+                     mimeType:(NSString*)mimetype
+                 andThumbnail:(UIImage*)thumbnail
+                    localEcho:(MXEvent**)localEcho
+                      success:(void (^)(NSString *eventId))success
+                      failure:(void (^)(NSError *error))failure;
+
+/**
+ Send an video to the room.
+ 
+ @param videoLocalURL the local filesystem path of the video to send.
+ @param videoThumbnail the UIImage hosting a video thumbnail.
+ @param localEcho a pointer to a MXEvent object (@see sendMessageWithContent: for details).
+ @param success A block object called when the operation succeeds. It returns
+                the event id of the event generated on the home server
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)sendVideo:(NSURL*)videoLocalURL
+                withThumbnail:(UIImage*)videoThumbnail
+                    localEcho:(MXEvent**)localEcho
+                      success:(void (^)(NSString *eventId))success
+                      failure:(void (^)(NSError *error))failure;
+
+/**
+ Send a file to the room.
+ 
+ @param fileLocalURL the local filesystem path of the file to send.
+ @param mimeType the mime type of the file.
+ @param localEcho a pointer to a MXEvent object (@see sendMessageWithContent: for details).
+ @param success A block object called when the operation succeeds. It returns
+                the event id of the event generated on the home server
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)sendFile:(NSURL*)fileLocalURL
+                    mimeType:(NSString*)mimeType
+                   localEcho:(MXEvent**)localEcho
+                     success:(void (^)(NSString *eventId))success
+                     failure:(void (^)(NSError *error))failure;
+
+/**
+ Determine if an event has a local echo.
+ 
+ @param event the concerned event.
+ @return a local echo event corresponding to the event. Nil if there is no match.
+ */
+- (MXEvent*)pendingLocalEchoRelatedToEvent:(MXEvent*)event;
+
+/**
+ Remove a local echo event from the pending queue.
+ 
+ @discussion
+ It can be removed from the list because we received the true event from the event stream
+ or the corresponding request has failed.
+ 
+ @param localEchoEventId the local echo event id.
+ */
+- (void)removePendingLocalEcho:(NSString*)localEchoEventId;
 
 /**
  Set the topic of the room.

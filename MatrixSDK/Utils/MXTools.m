@@ -15,6 +15,7 @@
  */
 #import "MXTools.h"
 
+#import <AVFoundation/AVFoundation.h>
 #import <MobileCoreServices/MobileCoreServices.h>
 
 #import "MXEnumConstants.h"
@@ -449,6 +450,103 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
     }
     
     return fileExt;
+}
+
+#pragma mark - Video processing
+
++ (void)convertVideoToMP4:(NSURL*)videoLocalURL
+                  success:(void(^)(NSURL *videoLocalURL, NSString *mimetype, CGSize size, double durationInMs))success
+                  failure:(void(^)())failure
+{
+    NSParameterAssert(success);
+    NSParameterAssert(failure);
+    
+    NSURL *outputVideoLocalURL;
+    NSString *mimetype;
+    
+    // Define a random output URL in the cache foler
+    NSString * outputFileName = [NSString stringWithFormat:@"%.0f.mp4",[[NSDate date] timeIntervalSince1970]];
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+    NSString *cacheRoot = [paths objectAtIndex:0];
+    outputVideoLocalURL = [NSURL fileURLWithPath:[cacheRoot stringByAppendingPathComponent:outputFileName]];
+    
+    // Convert video container to mp4
+    // Use medium quality to save bandwidth
+    AVURLAsset* videoAsset = [AVURLAsset URLAssetWithURL:videoLocalURL options:nil];
+    AVAssetExportSession *exportSession = [AVAssetExportSession exportSessionWithAsset:videoAsset presetName:AVAssetExportPresetMediumQuality];
+    exportSession.outputURL = outputVideoLocalURL;
+    
+    // Check output file types supported by the device
+    NSArray *supportedFileTypes = exportSession.supportedFileTypes;
+    if ([supportedFileTypes containsObject:AVFileTypeMPEG4])
+    {
+        exportSession.outputFileType = AVFileTypeMPEG4;
+        mimetype = @"video/mp4";
+    }
+    else
+    {
+        NSLog(@"[MXTools] convertVideoToMP4: Warning: MPEG-4 file format is not supported. Use QuickTime format.");
+        
+        // Fallback to QuickTime format
+        exportSession.outputFileType = AVFileTypeQuickTimeMovie;
+        mimetype = @"video/quicktime";
+    }
+    
+    // Export video file
+    [exportSession exportAsynchronouslyWithCompletionHandler:^{
+        
+        AVAssetExportSessionStatus status = exportSession.status;
+        
+        // Come back to the UI thread to avoid race conditions
+        dispatch_async(dispatch_get_main_queue(), ^{
+            
+            // Check status
+            if (status == AVAssetExportSessionStatusCompleted)
+            {
+                
+                AVURLAsset* asset = [AVURLAsset URLAssetWithURL:outputVideoLocalURL
+                                                        options:[NSDictionary dictionaryWithObjectsAndKeys:
+                                                                 [NSNumber numberWithBool:YES],
+                                                                 AVURLAssetPreferPreciseDurationAndTimingKey,
+                                                                 nil]
+                                     ];
+                
+                double durationInMs = (1000 * CMTimeGetSeconds(asset.duration));
+                
+                // Extract the video size
+                CGSize videoSize;
+                NSArray *videoTracks = [asset tracksWithMediaType:AVMediaTypeVideo];
+                if (videoTracks.count > 0)
+                {
+                    
+                    AVAssetTrack *videoTrack = [videoTracks objectAtIndex:0];
+                    videoSize = videoTrack.naturalSize;
+                    
+                    // The operation is complete
+                    success(outputVideoLocalURL, mimetype, videoSize, durationInMs);
+                }
+                else
+                {
+                    
+                    NSLog(@"[MXTools] convertVideoToMP4: Video export failed. Cannot extract video size.");
+                    
+                    // Remove output file (if any)
+                    [[NSFileManager defaultManager] removeItemAtPath:[outputVideoLocalURL path] error:nil];
+                    failure();
+                }
+            }
+            else
+            {
+                
+                NSLog(@"[MXTools] convertVideoToMP4: Video export failed. exportSession.status: %tu", status);
+                
+                // Remove output file (if any)
+                [[NSFileManager defaultManager] removeItemAtPath:[outputVideoLocalURL path] error:nil];
+                failure();
+            }
+        });
+        
+    }];
 }
 
 @end

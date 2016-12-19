@@ -67,6 +67,7 @@ NSString *const kMXMembershipStringBan    = @"ban";
 
 uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 
+NSString *const kMXEventDidChangeSentStateNotification = @"kMXEventDidChangeSentStateNotification";
 NSString *const kMXEventDidDecryptNotification = @"kMXEventDidDecryptNotification";
 
 #pragma mark - MXEvent
@@ -163,6 +164,16 @@ NSString *const kMXEventDidDecryptNotification = @"kMXEventDidDecryptNotificatio
     // Clean JSON data by removing all null values
     _wireContent = [MXJSONModel removeNullValuesInJSON:_wireContent];
     _prevContent = [MXJSONModel removeNullValuesInJSON:_prevContent];
+}
+
+- (void)setSentState:(MXEventSentState)sentState
+{
+    if (_sentState != sentState)
+    {
+        _sentState = sentState;
+        
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXEventDidChangeSentStateNotification object:self userInfo:nil];
+    }
 }
 
 - (MXEventTypeString)type

@@ -269,7 +269,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                                       @"version": @(0),
                                       @"lifetime": @(callManager.inviteLifetime)
                                       };
-            [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallInvite content:content success:^(NSString *eventId) {
+            [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallInvite content:content localEcho:nil success:^(NSString *eventId) {
 
                 [self setState:MXCallStateInviteSent reason:nil];
 
@@ -321,7 +321,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                                               },
                                       @"version": @(0),
                                       };
-            [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallAnswer content:content success:^(NSString *eventId) {
+            [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallAnswer content:content localEcho:nil success:^(NSString *eventId) {
 
                 // @TODO: This is false
                 [self setState:MXCallStateConnected reason:nil];
@@ -353,7 +353,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                                   @"call_id": _callId,
                                   @"version": @(0)
                                   };
-        [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallHangup content:content success:nil failure:^(NSError *error) {
+        [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallHangup content:content localEcho:nil success:nil failure:^(NSError *error) {
             NSLog(@"[MXCall] hangup: ERROR: Cannot send m.call.hangup event.");
             [self didEncounterError:error];
         }];
@@ -524,7 +524,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                                   @"candidates": localICECandidates
                                   };
 
-        [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallCandidates content:content success:nil failure:^(NSError *error) {
+        [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallCandidates content:content localEcho:nil success:nil failure:^(NSError *error) {
             NSLog(@"[MXCall] onICECandidate: Warning: Cannot send m.call.candidates event.");
         }];
 
