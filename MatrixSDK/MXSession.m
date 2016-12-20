@@ -337,6 +337,8 @@ typedef void (^MXOnResumeDone)();
             // Start crypto if enabled
             [self startCrypto:onServerSyncDone failure:^(NSError *error) {
 
+                NSLog(@"[MXSession] Crypto failed to start. Error: %@", error);
+
                 [self setState:MXSessionStateInitialSyncFailed];
                 failure(error);
 
@@ -358,11 +360,15 @@ typedef void (^MXOnResumeDone)();
             // And store him as a common MXUser
             [_store storeUser:_myUser];
 
+            NSLog(@"[MXSession] Do an initial /sync");
+
             // Initial server sync
             [self serverSyncWithServerTimeout:0 success:^{
 
                 // Start crypto if enabled
                 [self startCrypto:onServerSyncDone failure:^(NSError *error) {
+
+                    NSLog(@"[MXSession] Crypto failed to start. Error: %@", error);
 
                     [self setState:MXSessionStateInitialSyncFailed];
                     failure(error);
@@ -2070,12 +2076,15 @@ typedef void (^MXOnResumeDone)();
 {
     MXHTTPOperation *operation;
 
+    NSLog(@"[MXSession] Start crypto");
+
     if (_crypto)
     {
         operation = [_crypto start:success failure:failure];
     }
     else
     {
+        NSLog(@"[MXSession] Start crypto -> No crypto");
         success();
     }
 

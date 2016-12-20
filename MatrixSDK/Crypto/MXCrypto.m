@@ -79,7 +79,7 @@
 
 #ifdef MX_CRYPTO
 
-    dispatch_queue_t cryptoQueue = dispatch_queue_create("MXCrypto", DISPATCH_QUEUE_SERIAL);
+    dispatch_queue_t cryptoQueue = [MXCrypto dispatchQueueForUser:mxSession.matrixRestClient.credentials.userId];
     dispatch_sync(cryptoQueue, ^{
 
         MXCryptoStoreClass *cryptoStore = [MXCryptoStoreClass createStoreWithCredentials:mxSession.matrixRestClient.credentials];
@@ -95,7 +95,9 @@
 {
 #ifdef MX_CRYPTO
 
-    dispatch_queue_t cryptoQueue = dispatch_queue_create("MXCrypto", DISPATCH_QUEUE_SERIAL);
+    NSLog(@"[MXCrypto] checkCryptoWithMatrixSession for %@", mxSession.matrixRestClient.credentials.userId);
+
+    dispatch_queue_t cryptoQueue = [MXCrypto dispatchQueueForUser:mxSession.matrixRestClient.credentials.userId];
     dispatch_async(cryptoQueue, ^{
 
         if ([MXFileCryptoStore hasDataForCredentials:mxSession.matrixRestClient.credentials])
@@ -105,17 +107,21 @@
             {
                 NSLog(@"[MXCrypto] Migration failed. We cannot do nothing except asking user for logging out and in");
                 [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionCryptoDidCorruptDataNotification
-                                                                    object:mxSession.myUser.userId
+                                                                    object:mxSession.matrixRestClient.credentials.userId
                                                                   userInfo:nil];
             }
         }
 
         if ([MXCryptoStoreClass hasDataForCredentials:mxSession.matrixRestClient.credentials])
         {
+            NSLog(@"[MXCrypto] checkCryptoWithMatrixSession: Crypto store exists");
+
             // If it already exists, open and init crypto
             MXCryptoStoreClass *cryptoStore = [[MXCryptoStoreClass alloc] initWithCredentials:mxSession.matrixRestClient.credentials];
 
             [cryptoStore open:^{
+
+                NSLog(@"[MXCrypto] checkCryptoWithMatrixSession: Crypto store opened");
 
                 MXCrypto *crypto = [[MXCrypto alloc] initWithMatrixSession:mxSession cryptoQueue:cryptoQueue andStore:cryptoStore];
 
@@ -124,6 +130,9 @@
                 });
 
             } failure:^(NSError *error) {
+
+                NSLog(@"[MXCrypto] checkCryptoWithMatrixSession: Crypto store failed to open. Error: %@", error);
+                
                 dispatch_async(dispatch_get_main_queue(), ^{
                     complete(nil);
                 });
@@ -133,6 +142,8 @@
                  // Without the device id provided by the hs, the crypto does not work
                  && mxSession.matrixRestClient.credentials.deviceId)
         {
+            NSLog(@"[MXCrypto] checkCryptoWithMatrixSession: Need to create the store");
+
             // Create it
             MXCryptoStoreClass *cryptoStore = [MXCryptoStoreClass createStoreWithCredentials:mxSession.matrixRestClient.credentials];
             MXCrypto *crypto = [[MXCrypto alloc] initWithMatrixSession:mxSession cryptoQueue:cryptoQueue andStore:cryptoStore];
@@ -587,7 +598,7 @@
         _cryptoQueue = theCryptoQueue;
         _store = store;
 
-        _decryptionQueue = dispatch_queue_create("MXCryptoDecryption", DISPATCH_QUEUE_SERIAL);
+        _decryptionQueue = [MXCrypto dispatchQueueForUser:mxSession.matrixRestClient.credentials.userId];
 
         _olmDevice = [[MXOlmDevice alloc] initWithStore:_store];
 
@@ -1185,6 +1196,35 @@
 
 
 #pragma mark - Private methods
+/**
+ Get or create the GCD queue for a given user.
+
+ @param userId the user id.
+ @return the dispatch queue to use to handle the crypto for this user.
+ */
++ (dispatch_queue_t)dispatchQueueForUser:(NSString*)userId
+{
+    static NSMutableDictionary <NSString*, dispatch_queue_t> *dispatchQueues;
+
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        dispatchQueues = [NSMutableDictionary dictionary];
+    });
+
+    dispatch_queue_t queue = dispatchQueues[userId];
+    if (!queue)
+    {
+        @synchronized (dispatchQueues)
+        {
+            NSLog(@"[MXCrypto] Create dispatch queue for %@'s crypto", userId);
+            queue = dispatch_queue_create([NSString stringWithFormat:@"MXCrypto-%@", userId].UTF8String, DISPATCH_QUEUE_SERIAL);
+            dispatchQueues[userId] = queue;
+        }
+    }
+
+    return queue;
+}
+
 - (NSString*)generateDeviceId
 {
     return [[[MXTools generateSecret] stringByReplacingOccurrencesOfString:@"-" withString:@""] substringToIndex:10];
