@@ -308,18 +308,21 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     }
 
     void(^onSuccess)(NSString *) = ^(NSString *eventId) {
-        
-        // Update the local echo with its actual identifier (by keeping the initial id).
-        NSString *localEventId = event.eventId;
-        event.eventId = eventId;
-        
-        // Update the local echo state (This will trigger kMXEventDidChangeSentStateNotification notification).
-        event.sentState = MXEventSentStateSent;
-        
-        // Update stored echo.
-        // We keep this event here as local echo to handle correctly outgoing messages from multiple devices.
-        // The echo will be removed when the corresponding event will come through the server sync.
-        [self updateOutgoingMessage:localEventId withOutgoingMessage:event];
+
+        if (event)
+        {
+            // Update the local echo with its actual identifier (by keeping the initial id).
+            NSString *localEventId = event.eventId;
+            event.eventId = eventId;
+
+            // Update the local echo state (This will trigger kMXEventDidChangeSentStateNotification notification).
+            event.sentState = MXEventSentStateSent;
+
+            // Update stored echo.
+            // We keep this event here as local echo to handle correctly outgoing messages from multiple devices.
+            // The echo will be removed when the corresponding event will come through the server sync.
+            [self updateOutgoingMessage:localEventId withOutgoingMessage:event];
+        }
         
         if (success)
         {
@@ -329,9 +332,12 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     };
     
     void(^onFailure)(NSError *) = ^(NSError *error) {
-        
-        // Update the local echo with the error state (This will trigger kMXEventDidChangeSentStateNotification notification).
-        event.sentState = MXEventSentStateFailed;
+
+        if (event)
+        {
+            // Update the local echo with the error state (This will trigger kMXEventDidChangeSentStateNotification notification).
+            event.sentState = MXEventSentStateFailed;
+        }
         
         if (failure)
         {
@@ -378,22 +384,25 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
             }
             
             operation = [mxSession.crypto encryptEventContent:content withType:eventTypeString inRoom:self success:^(NSDictionary *encryptedContent, NSString *encryptedEventType) {
-                
-                // Encapsulate the resulting event in a fake encrypted event
-                MXEvent *clearEvent = [self fakeRoomMessageEventWithEventId:event.eventId andContent:event.content];
-                
-                event.wireType = encryptedEventType;
-                event.wireContent = encryptedContent;
-                [event setClearData:clearEvent
-                         keysProved:@{@"curve25519":mxSession.crypto.deviceCurve25519Key}
-                        keysClaimed:nil];
-                
-                // Update the local echo state (This will trigger kMXEventDidChangeSentStateNotification notification).
-                event.sentState = MXEventSentStateSending;
-                
-                // Update stored echo.
-                [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
-                
+
+                if (event)
+                {
+                    // Encapsulate the resulting event in a fake encrypted event
+                    MXEvent *clearEvent = [self fakeRoomMessageEventWithEventId:event.eventId andContent:event.content];
+
+                    event.wireType = encryptedEventType;
+                    event.wireContent = encryptedContent;
+                    [event setClearData:clearEvent
+                             keysProved:@{@"curve25519":mxSession.crypto.deviceCurve25519Key}
+                            keysClaimed:nil];
+
+                    // Update the local echo state (This will trigger kMXEventDidChangeSentStateNotification notification).
+                    event.sentState = MXEventSentStateSending;
+
+                    // Update stored echo.
+                    [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
+                }
+  
                 // Send the encrypted content
                 MXHTTPOperation *operation2 = [self _sendEventOfType:encryptedEventType content:encryptedContent success:onSuccess failure:onFailure];
                 if (operation2)
