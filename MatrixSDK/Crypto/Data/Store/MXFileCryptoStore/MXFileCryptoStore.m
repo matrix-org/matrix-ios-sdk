@@ -501,7 +501,12 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
         {
             for (NSString *sessionId in fileCryptoStore->inboundGroupSessions[senderKey])
             {
-                [realmCryptoStore storeInboundGroupSession:[fileCryptoStore inboundGroupSessionWithId:sessionId andSenderKey:senderKey]];
+                MXOlmInboundGroupSession *session = [fileCryptoStore inboundGroupSessionWithId:sessionId andSenderKey:senderKey];
+
+                // Repair MXOlmInboundGroupSession senderKey that was not correctly store in MXFileCryptoStore
+                session.senderKey = senderKey;
+                
+                [realmCryptoStore storeInboundGroupSession:session];
             }
         }
     }
