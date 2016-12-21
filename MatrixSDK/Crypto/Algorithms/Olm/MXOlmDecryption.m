@@ -191,14 +191,25 @@
 
     MXEvent *clearedEvent = [MXEvent modelFromJSON:payload];
 
-    // @TODO
-    //dispatch_async(dispatch_get_main_queue(), ^{
+    // @TODO: We should always be on the crypto queue
+    if ([NSThread currentThread].isMainThread)
+    {
         [event setClearData:clearedEvent
                  keysProved:@{
                               @"curve25519": deviceKey
                               }
                 keysClaimed:payload[@"keys"]];
-    //});
+    }
+    else
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [event setClearData:clearedEvent
+                     keysProved:@{
+                                  @"curve25519": deviceKey
+                                  }
+                    keysClaimed:payload[@"keys"]];
+        });
+    }
 
     return YES;
 }

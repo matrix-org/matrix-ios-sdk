@@ -76,10 +76,17 @@
     {
         MXEvent *clearedEvent = [MXEvent modelFromJSON:result.payload];
 
-        // @TODO
-        //dispatch_async(dispatch_get_main_queue(), ^{
+        // @TODO: We should always be on the crypto queue
+        if ([NSThread currentThread].isMainThread)
+        {
             [event setClearData:clearedEvent keysProved:result.keysProved keysClaimed:result.keysClaimed];
-        //});
+        }
+        else
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [event setClearData:clearedEvent keysProved:result.keysProved keysClaimed:result.keysClaimed];
+            });
+        }
     }
     else
     {
