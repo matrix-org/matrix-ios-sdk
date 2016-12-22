@@ -242,6 +242,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
                   When the event type is `kMXEventTypeStringRoomMessage`, this pointer
                   is set to an actual MXEvent object containing the local created event which should be used
                   to echo the message in the messages list until the resulting event come through the server sync.
+                  For information, the identifier of the created local event has the prefix: `kMXRoomLocalEventIdPrefix`.
                   You may specify nil for this parameter if you do not want this information.
                   You may provide your own MXEvent object, in this case only its send state is updated.
                   When the event type is `kMXEventTypeStringRoomEncrypted`, no local event is created.
@@ -281,6 +282,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  @param localEcho a pointer to a MXEvent object. This pointer is set to an actual MXEvent object
                   containing the local created event which should be used to echo the message in
                   the messages list until the resulting event come through the server sync.
+                  For information, the identifier of the created local event has the prefix: `kMXRoomLocalEventIdPrefix`.
                   You may specify nil for this parameter if you do not want this information.
                   You may provide your own MXEvent object, in this case only its send state is updated.
  @param success A block object called when the operation succeeds. It returns
