@@ -298,8 +298,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                             success:(void (^)(NSString *eventId))success
                             failure:(void (^)(NSError *error))failure
 {
-    // Create a fake operation by default
-    MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
+    MXHTTPOperation *operation;
     
     __block MXEvent *event;
     if (localEcho)
@@ -337,6 +336,9 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         {
             // Update the local echo with the error state (This will trigger kMXEventDidChangeSentStateNotification notification).
             event.sentState = MXEventSentStateFailed;
+            
+            // Update the stored echo.
+            [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
         }
         
         if (failure)
@@ -357,6 +359,9 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
             {
                 // Update the local echo sent state.
                 event.sentState = MXEventSentStateSending;
+                
+                // Update the stored echo.
+                [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
             }
             
             operation = [self _sendEventOfType:eventTypeString content:content success:onSuccess failure:onFailure];
@@ -379,7 +384,11 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                 }
                 else
                 {
+                    // Update the local echo state (This will trigger kMXEventDidChangeSentStateNotification notification).
                     event.sentState = MXEventSentStateEncrypting;
+                    
+                    // Update the stored echo.
+                    [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
                 }
             }
             
@@ -437,7 +446,11 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
             }
             else
             {
+                // Update the local echo state (This will trigger kMXEventDidChangeSentStateNotification notification).
                 event.sentState = MXEventSentStateSending;
+                
+                // Update the stored echo. It will be used to suppress this echo in [self pendingLocalEchoRelatedToEvent];
+                [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
             }
         }
         
@@ -601,6 +614,9 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         // Update the local echo with the error state (This will trigger kMXEventDidChangeSentStateNotification notification).
         event.sentState = MXEventSentStateFailed;
         
+        // Update the stored echo.
+        [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
+        
         if (uploaderObserver)
         {
             [[NSNotificationCenter defaultCenter] removeObserver:uploaderObserver];
@@ -637,6 +653,9 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                 {
                     event.sentState = MXEventSentStateUploading;
                     
+                    // Update the stored echo.
+                    [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
+                    
                     [[NSNotificationCenter defaultCenter] removeObserver:uploaderObserver];
                     uploaderObserver = nil;
                 }
@@ -650,11 +669,9 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
             [msgContent removeObjectForKey:@"url"];
             msgContent[@"file"] = result;
             
-            // Update stored echo.
-            [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
-            
             void(^onDidUpload)() = ^{
                 
+                // Send this content (the sent state of the local echo will be updated, its local storage too).
                 MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent localEcho:&event success:success failure:failure];
                 if (operation2)
                 {
@@ -670,14 +687,14 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
             }
             else
             {
+                // Update the stored echo.
+                [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
+                
                 MXMediaLoader *thumbUploader = [MXMediaManager prepareUploaderWithMatrixSession:self.mxSession initialRange:0.9 andRange:1];
                 
                 [MXEncryptedAttachments encryptAttachment:thumbUploader mimeType:@"image/png" data:UIImagePNGRepresentation(thumbnail) success:^(NSDictionary *result) {
                     
                     msgContent[@"info"][@"thumbnail_file"] = result;
-                    
-                    // Update stored echo.
-                    [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
                     
                     onDidUpload();
                     
@@ -699,13 +716,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
             // Update the message content with the mxc:// of the media on the homeserver
             msgContent[@"url"] = url;
             
-            // Update the local echo state (This will trigger kMXEventDidChangeSentStateNotification notification).
-            event.sentState = MXEventSentStateSending;
-            
-            // Update stored echo. It will be used to suppress this echo in [self pendingLocalEchoRelatedToEvent];
-            [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
-            
-            // Make the final request that posts the image event
+            // Make the final request that posts the image event (the sent state of the local echo will be updated, its local storage too).
             MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent localEcho:&event success:success failure:onFailure];
             if (operation2)
             {
@@ -763,6 +774,9 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         
         // Update the local echo with the error state (This will trigger kMXEventDidChangeSentStateNotification notification).
         event.sentState = MXEventSentStateFailed;
+        
+        // Update the stored echo.
+        [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
         
         if (uploaderObserver)
         {
@@ -831,6 +845,9 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                         {
                             event.sentState = MXEventSentStateUploading;
                             
+                            // Update the stored echo.
+                            [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
+                            
                             [[NSNotificationCenter defaultCenter] removeObserver:uploaderObserver];
                             uploaderObserver = nil;
                         }
@@ -843,8 +860,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                     [msgContent removeObjectForKey:@"url"];
                     msgContent[@"file"] = result;
                     
-                    [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
-                    
+                    // Send this content (the sent state of the local echo will be updated, its local storage too).
                     MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent localEcho:&event success:success failure:failure];
                     if (operation2)
                     {
@@ -904,9 +920,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                         // Update video URL with the actual mxc: URL
                         msgContent[@"url"] = videoUrl;
                         
-                        [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
-                        
-                        // And send the Matrix room message video event to the homeserver
+                        // And send the Matrix room message video event to the homeserver (the sent state of the local echo will be updated, its local storage too).
                         MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent localEcho:&event success:success failure:failure];
                         if (operation2)
                         {
@@ -977,6 +991,9 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         // Update the local echo with the error state (This will trigger kMXEventDidChangeSentStateNotification notification).
         event.sentState = MXEventSentStateFailed;
         
+        // Update the stored echo.
+        [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
+        
         if (uploaderObserver)
         {
             [[NSNotificationCenter defaultCenter] removeObserver:uploaderObserver];
@@ -1012,6 +1029,9 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                 {
                     event.sentState = MXEventSentStateUploading;
                     
+                    // Update the stored echo.
+                    [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
+                    
                     [[NSNotificationCenter defaultCenter] removeObserver:uploaderObserver];
                     uploaderObserver = nil;
                 }
@@ -1046,12 +1066,6 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
             
             // Update the message content with the mxc:// of the media on the homeserver
             msgContent[@"url"] = url;
-            
-            // Update the local echo state (This will trigger kMXEventDidChangeSentStateNotification notification).
-            event.sentState = MXEventSentStateSending;
-            
-            // Update stored echo. It will be used to suppress this echo in [self pendingLocalEchoRelatedToEvent];
-            [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
             
             // Make the final request that posts the image event
             MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent localEcho:&event success:success failure:onFailure];
