@@ -468,7 +468,10 @@
         if (!device)
         {
             NSLog(@"[MXCrypto] setDeviceVerificationForDevice: Unknown device %@:%@", userId, deviceId);
-            success();
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
+                success();
+            });
             return;
         }
 
