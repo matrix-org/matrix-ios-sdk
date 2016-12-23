@@ -2,7 +2,7 @@ Changes in Matrix iOS SDK in 0.7.4 (2016-12-19)
 ===============================================
 
 Improvements:
- * Crypto: all crypto processing is now done outside the main thread (#205).
+ * Crypto: all crypto processing is now done outside the main thread.
  * Crypto: keys are now stored in a realm db.
  * Crypto: variuos bug fixes and improvements including:
      * Retry decryption after receiving keys
