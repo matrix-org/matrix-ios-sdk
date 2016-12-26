@@ -611,11 +611,19 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     
     void(^onFailure)(NSError *) = ^(NSError *error) {
         
-        // Update the local echo with the error state (This will trigger kMXEventDidChangeSentStateNotification notification).
-        event.sentState = MXEventSentStateFailed;
-        
-        // Update the stored echo.
-        [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
+        // Remove outgoing message when its sent has been cancelled
+        if ([error.domain isEqualToString:NSURLErrorDomain] && error.code == NSURLErrorCancelled)
+        {
+            [self removeOutgoingMessage:event.eventId];
+        }
+        else
+        {
+            // Update the local echo with the error state (This will trigger kMXEventDidChangeSentStateNotification notification).
+            event.sentState = MXEventSentStateFailed;
+            
+            // Update the stored echo.
+            [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
+        }
         
         if (uploaderObserver)
         {
@@ -772,11 +780,19 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     
     void(^onFailure)(NSError *) = ^(NSError *error) {
         
-        // Update the local echo with the error state (This will trigger kMXEventDidChangeSentStateNotification notification).
-        event.sentState = MXEventSentStateFailed;
-        
-        // Update the stored echo.
-        [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
+        // Remove outgoing message when its sent has been cancelled
+        if ([error.domain isEqualToString:NSURLErrorDomain] && error.code == NSURLErrorCancelled)
+        {
+            [self removeOutgoingMessage:event.eventId];
+        }
+        else
+        {
+            // Update the local echo with the error state (This will trigger kMXEventDidChangeSentStateNotification notification).
+            event.sentState = MXEventSentStateFailed;
+            
+            // Update the stored echo.
+            [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
+        }
         
         if (uploaderObserver)
         {
@@ -988,11 +1004,19 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     
     void(^onFailure)(NSError *) = ^(NSError *error) {
         
-        // Update the local echo with the error state (This will trigger kMXEventDidChangeSentStateNotification notification).
-        event.sentState = MXEventSentStateFailed;
-        
-        // Update the stored echo.
-        [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
+        // Remove outgoing message when its sent has been cancelled
+        if ([error.domain isEqualToString:NSURLErrorDomain] && error.code == NSURLErrorCancelled)
+        {
+            [self removeOutgoingMessage:event.eventId];
+        }
+        else
+        {
+            // Update the local echo with the error state (This will trigger kMXEventDidChangeSentStateNotification notification).
+            event.sentState = MXEventSentStateFailed;
+            
+            // Update the stored echo.
+            [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
+        }
         
         if (uploaderObserver)
         {
