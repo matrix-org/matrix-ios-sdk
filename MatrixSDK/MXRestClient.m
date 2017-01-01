@@ -24,19 +24,19 @@
 /**
  Prefix used in path of home server API requests.
  */
-NSString *const kMXAPIPrefixPathR0 = @"/_matrix/client/r0";
-NSString *const kMXAPIPrefixPathUnstable = @"/_matrix/client/unstable";
+NSString *const kMXAPIPrefixPathR0 = @"_matrix/client/r0";
+NSString *const kMXAPIPrefixPathUnstable = @"_matrix/client/unstable";
 
 /**
  Prefix used in path of identity server API requests.
  */
-NSString *const kMXIdentityAPIPrefixPath = @"/_matrix/identity/api/v1";
+NSString *const kMXIdentityAPIPrefixPath = @"_matrix/identity/api/v1";
 
 /**
  Matrix content respository path
  */
 NSString *const kMXContentUriScheme  = @"mxc://";
-NSString *const kMXContentPrefixPath = @"/_matrix/media/v1";
+NSString *const kMXContentPrefixPath = @"_matrix/media/v1";
 
 /**
  Account data types
@@ -95,7 +95,7 @@ MXAuthAction;
 @end
 
 @implementation MXRestClient
-@synthesize homeserver, homeserverSuffix, credentials, apiPathPrefix, completionQueue;
+@synthesize homeserver, homeserverSuffix, credentials, apiPathPrefix, contentPathPrefix, completionQueue;
 
 -(id)initWithHomeServer:(NSString *)inHomeserver andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
 {
@@ -104,6 +104,7 @@ MXAuthAction;
     {
         homeserver = inHomeserver;
         apiPathPrefix = kMXAPIPrefixPathR0;
+        contentPathPrefix = kMXContentPrefixPath;
         
         httpClient = [[MXHTTPClient alloc] initWithBaseURL:homeserver
                                                accessToken:nil
@@ -126,6 +127,8 @@ MXAuthAction;
     {
         homeserver = inCredentials.homeServer;
         apiPathPrefix = kMXAPIPrefixPathR0;
+        contentPathPrefix = kMXContentPrefixPath;
+        
         self.credentials = inCredentials;
         
         httpClient = [[MXHTTPClient alloc] initWithBaseURL:homeserver
@@ -3165,7 +3168,7 @@ MXAuthAction;
     // Replace the "mxc://" scheme by the absolute http location of the content
     if ([mxcContentURI hasPrefix:kMXContentUriScheme])
     {
-        NSString *mxMediaPrefix = [NSString stringWithFormat:@"%@%@/download/", homeserver, kMXContentPrefixPath];
+        NSString *mxMediaPrefix = [NSString stringWithFormat:@"%@/%@/download/", homeserver, kMXContentPrefixPath];
         contentURL = [mxcContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:mxMediaPrefix];
         
         // Remove the auto generated image tag from the URL
@@ -3188,7 +3191,7 @@ MXAuthAction;
         CGSize sizeInPixels = CGSizeMake(viewSize.width * scale, viewSize.height * scale);
         
         // Replace the "mxc://" scheme by the absolute http location for the content thumbnail
-        NSString *mxThumbnailPrefix = [NSString stringWithFormat:@"%@%@/thumbnail/", homeserver, kMXContentPrefixPath];
+        NSString *mxThumbnailPrefix = [NSString stringWithFormat:@"%@/%@/thumbnail/", homeserver, kMXContentPrefixPath];
         thumbnailURL = [mxcContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:mxThumbnailPrefix];
         
         // Convert MXThumbnailingMethod to parameter string
@@ -3219,7 +3222,7 @@ MXAuthAction;
 
 - (NSString *)urlOfIdenticon:(NSString *)identiconString
 {
-    return [NSString stringWithFormat:@"%@%@/identicon/%@", homeserver, kMXContentPrefixPath, [identiconString stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]]];
+    return [NSString stringWithFormat:@"%@/%@/identicon/%@", homeserver, kMXContentPrefixPath, [identiconString stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]]];
 }
 
 
@@ -3227,7 +3230,7 @@ MXAuthAction;
 - (void)setIdentityServer:(NSString *)identityServer
 {
     _identityServer = [identityServer copy];
-    identityHttpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", identityServer, kMXIdentityAPIPrefixPath]
+    identityHttpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@/%@", identityServer, kMXIdentityAPIPrefixPath]
                              andOnUnrecognizedCertificateBlock:nil];
 
     // The identity server accepts parameters in form data form not in JSON

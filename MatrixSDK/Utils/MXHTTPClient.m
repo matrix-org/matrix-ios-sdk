@@ -204,11 +204,6 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
         path = [path stringByAppendingString:[NSString stringWithFormat:@"%@access_token=%@", urlSeparator, accessToken]];
     }
     
-    // Remove the potential leading slash for the provided path, so that NSURL +URLWithString:relativeToURL: works as expected.
-    if ([path hasPrefix:@"/"] && path.length > 1)
-    {
-        path = [path substringFromIndex:1];
-    }
     NSString *URLString = [[NSURL URLWithString:path relativeToURL:httpManager.baseURL] absoluteString];
     
     NSMutableURLRequest *request;
