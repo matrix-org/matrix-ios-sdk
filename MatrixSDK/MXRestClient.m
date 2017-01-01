@@ -3118,7 +3118,7 @@ MXAuthAction;
                     uploadProgress:(void (^)(NSProgress *uploadProgress))uploadProgress
 {
     // Define an absolute path based on Matrix content respository path instead of the base url
-    NSString* path = [NSString stringWithFormat:@"%@/upload", kMXContentPrefixPath];
+    NSString* path = [NSString stringWithFormat:@"%@/upload", contentPathPrefix];
     NSDictionary *headers = @{@"Content-Type": mimeType};
 
     if (filename.length)
@@ -3168,7 +3168,7 @@ MXAuthAction;
     // Replace the "mxc://" scheme by the absolute http location of the content
     if ([mxcContentURI hasPrefix:kMXContentUriScheme])
     {
-        NSString *mxMediaPrefix = [NSString stringWithFormat:@"%@/%@/download/", homeserver, kMXContentPrefixPath];
+        NSString *mxMediaPrefix = [NSString stringWithFormat:@"%@/%@/download/", homeserver, contentPathPrefix];
         contentURL = [mxcContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:mxMediaPrefix];
         
         // Remove the auto generated image tag from the URL
@@ -3191,7 +3191,7 @@ MXAuthAction;
         CGSize sizeInPixels = CGSizeMake(viewSize.width * scale, viewSize.height * scale);
         
         // Replace the "mxc://" scheme by the absolute http location for the content thumbnail
-        NSString *mxThumbnailPrefix = [NSString stringWithFormat:@"%@/%@/thumbnail/", homeserver, kMXContentPrefixPath];
+        NSString *mxThumbnailPrefix = [NSString stringWithFormat:@"%@/%@/thumbnail/", homeserver, contentPathPrefix];
         thumbnailURL = [mxcContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:mxThumbnailPrefix];
         
         // Convert MXThumbnailingMethod to parameter string
@@ -3222,7 +3222,7 @@ MXAuthAction;
 
 - (NSString *)urlOfIdenticon:(NSString *)identiconString
 {
-    return [NSString stringWithFormat:@"%@/%@/identicon/%@", homeserver, kMXContentPrefixPath, [identiconString stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]]];
+    return [NSString stringWithFormat:@"%@/%@/identicon/%@", homeserver, contentPathPrefix, [identiconString stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]]];
 }
 
 
