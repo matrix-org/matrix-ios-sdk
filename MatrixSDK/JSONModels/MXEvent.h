@@ -130,6 +130,10 @@ typedef enum : NSUInteger
      */
     MXEventSentStateSent,
     /**
+     The event is an outgoing event which is preparing by converting the data to sent, or uploading additional data.
+     */
+    MXEventSentStatePreparing,
+    /**
      The event is an outgoing event which is encrypting.
      */
     MXEventSentStateEncrypting,
