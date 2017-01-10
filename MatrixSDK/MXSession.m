@@ -263,6 +263,19 @@ typedef void (^MXOnResumeDone)();
 
                 NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
 
+                // Create MXRoomSummarys from the store
+                startDate2 = [NSDate date];
+                for (NSString *roomId in _store.rooms)
+                {
+                    @autoreleasepool
+                    {
+                        MXRoomSummary *roomSummary = [self roomSummaryWithRoomId:roomId];
+                        [roomSummary loadFromStore];
+                    }
+                }
+
+                NSLog(@"[MXSession] Loaded and built %lu MXRoomSummaries in %.0fms", (unsigned long)roomsSummaries.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+
                 NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
                 [self setState:MXSessionStateStoreDataReady];
@@ -1594,13 +1607,6 @@ typedef void (^MXOnResumeDone)();
 
 
 #pragma mark - Rooms summaries
-/**
- Get the MXRoomSummary instance of a room.
-
- @param roomId The room id to the room.
-
- @return the MXRoomSummary instance.
- */
 - (MXRoomSummary *)roomSummaryWithRoomId:(NSString*)roomId
 {
     MXRoomSummary *roomSummary;
@@ -1612,69 +1618,11 @@ typedef void (^MXOnResumeDone)();
     return roomSummary;
 }
 
-
 - (NSArray<MXRoomSummary*>*)roomsSummaries
 {
     return [roomsSummaries allValues];
 }
 
-//- (void)updateRoomsSummariesForRooms:(NSArray<NSString*>*)roomIds
-//{
-//    if (!roomIds.count)
-//    {
-//        return;
-//    }
-//
-//    //MXMemoryStore *memoryStore = [[MXMemoryStore alloc] init];
-//    //[memoryStore openWithCredentials:matrixRestClient.credentials onComplete:nil failure:nil];
-//
-//    for (NSString *roomId in roomIds)
-//    {
-//        MXRoom *room = rooms[roomId];
-//        MXRoomSummary *summary = roomsSummaries[roomId];
-//
-//        MXEventTimeline *timeline = [[MXEventTimeline alloc] initWithRoom:room andInitialEventId:nil];
-//        [timeline resetPagination];
-//
-//        __block BOOL updated = NO;
-//        [timeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-//
-//            if (!updated)
-//            {
-//                updated = [_roomSummaryUpdateDelegate session:self updateRoomSummary:summary withEvent:event oldState:roomState];
-//                [summary commit];
-//                updated = YES;
-//            }
-//
-//        }];
-//
-//        //
-//        [timeline paginate:30 direction:MXTimelineDirectionBackwards onlyFromStore:YES complete:^{
-//
-//            if (!updated)
-//            {
-//                NSLog(@"########### dededed");
-//            }
-//
-//        } failure:^(NSError *error) {
-//            NSLog(@"######### DEDEDEDED. Error: %@", error);
-//        }];
-//
-//    }
-//}
-
-//- (BOOL)session:(MXSession *)session updateRoomSummary:(MXRoomSummary *)summary withLastEvent:(MXEvent *)event oldState:(MXRoomState *)oldState
-//{
-//    // @TODO: To implement
-//    summary.lastEvent = event;
-//    return YES;
-//}
-//
-//- (BOOL)session:(MXSession *)session updateRoomSummary:(MXRoomSummary *)summary withStateEvent:(MXEvent *)event
-//{
-//    // @TODO
-//    return YES;
-//}
 
 #pragma mark - Room peeking
 - (void)peekInRoomWithRoomId:(NSString*)roomId

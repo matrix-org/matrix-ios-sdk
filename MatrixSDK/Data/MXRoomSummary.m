@@ -35,6 +35,35 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     return self;
 }
 
+- (void)loadFromStore
+{
+    MXRoom *room = self.room;
+
+    // Well, load it from the room state data
+    // @TODO: Make MXStore manage room summaries
+    [self updateFromRoomState];
+
+    id<MXEventsEnumerator> messagesEnumerator = room.enumeratorForStoredMessages;
+    MXEvent *event = messagesEnumerator.nextEvent;
+
+    MXRoomState *state = self.room.state;
+
+    BOOL lastEventUpdated = NO;
+    while (event && !lastEventUpdated)
+    {
+        if (event.isState)
+        {
+            // @TODO: udpate state
+        }
+
+        lastEventUpdated = [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withLastEvent:event oldState:state];
+
+        event = messagesEnumerator.nextEvent;
+    }
+
+    [self save];
+}
+
 - (void)save
 {
     // @TODO: storage
@@ -49,6 +78,16 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     return [_mxSession roomWithRoomId:_roomId];
 }
 
+
+- (void)updateFromRoomState
+{
+    MXRoom *room = self.room;
+
+    // @TODO: Manage all summary properties
+    _avatar = room.state.avatar;
+    _displayname = room.state.displayname;
+    _topic = room.state.topic;
+}
 
 #pragma mark - Server sync
 - (void)handleJoinedRoomSync:(MXRoomSync*)roomSync

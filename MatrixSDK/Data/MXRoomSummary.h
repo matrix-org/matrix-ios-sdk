@@ -58,6 +58,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 - (instancetype)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession;
 
 /**
+ Load room summary data from the store.
+ */
+- (void)loadFromStore;
+
+/**
  Save room summary data.
  
  This method must be called when data is modified outside the `MXRoomSummaryUpdating` callbacks.
