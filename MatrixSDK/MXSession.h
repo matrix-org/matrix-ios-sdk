@@ -627,6 +627,31 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (MXHTTPOperation*)uploadDirectRooms:(void (^)())success
                               failure:(void (^)(NSError *error))failure;
 
+
+#pragma mark - Rooms summaries
+/**
+ Get the MXRoomSummary instance of a room.
+
+ @param roomId The room id to the room.
+
+ @return the MXRoomSummary instance.
+ */
+- (MXRoomSummary *)roomSummaryWithRoomId:(NSString*)roomId;
+
+/**
+ Get the list of all rooms summaries.
+
+ @return an array of MXRoomSummary.
+ */
+- (NSArray<MXRoomSummary*>*)roomsSummaries;
+
+/**
+ Delegate for updating room summaries.
+ By default, it is the one returned by [MXRoomSummaryUpdater roomSummaryUpdaterForSession:].
+ */
+@property id<MXRoomSummaryUpdating> roomSummaryUpdateDelegate;
+
+
 #pragma mark - Room peeking
 /**
  Start peeking a room.

@@ -30,6 +30,8 @@
 
 #import "MXAccountData.h"
 
+#import "MXRoomSummaryUpdater.h"
+
 #pragma mark - Constants definitions
 
 const NSString *MatrixSDKVersion = @"0.7.3";
@@ -65,6 +67,11 @@ typedef void (^MXOnResumeDone)();
      Each key is a room ID. Each value, the MXRoom instance.
      */
     NSMutableDictionary<NSString*, MXRoom*> *rooms;
+
+
+    /**
+     */
+    NSMutableDictionary<NSString*, MXRoomSummary*> *roomsSummaries;
 
     /**
      The current request of the event stream.
@@ -141,6 +148,8 @@ typedef void (^MXOnResumeDone)();
     {
         matrixRestClient = mxRestClient;
         rooms = [NSMutableDictionary dictionary];
+        roomsSummaries = [NSMutableDictionary dictionary];
+        _roomSummaryUpdateDelegate = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:self];
         _directRooms = [NSMutableDictionary dictionary];
         globalEventListeners = [NSMutableArray array];
         syncMessagesLimit = -1;
@@ -692,15 +701,11 @@ typedef void (^MXOnResumeDone)();
             @autoreleasepool {
                 
                 // Retrieve existing room or create a new one
-                MXRoom *room = [self roomWithRoomId:roomId];
-                if (nil == room)
-                {
-                    room = [[MXRoom alloc] initWithRoomId:roomId andMatrixSession:self];
-                    [self addRoom:room notify:!isInitialSync];
-                }
+                MXRoom *room = [self getOrCreateRoom:roomId notify:!isInitialSync];
                 
                 // Sync room
                 [room handleJoinedRoomSync:roomSync];
+                [room.summary handleJoinedRoomSync:roomSync];
 
             }
         }
@@ -713,16 +718,11 @@ typedef void (^MXOnResumeDone)();
             @autoreleasepool {
                 
                 // Retrieve existing room or create a new one
-                MXRoom *room = [self roomWithRoomId:roomId];
-                if (nil == room)
-                {
-                    room = [[MXRoom alloc] initWithRoomId:roomId andMatrixSession:self];
-                    [self addRoom:room notify:!isInitialSync];
-                }
+                MXRoom *room = [self getOrCreateRoom:roomId notify:!isInitialSync];
                 
                 // Prepare invited room
                 [room handleInvitedRoomSync:invitedRoomSync];
-                
+                [room.summary handleInvitedRoomSync:invitedRoomSync];
             }
         }
         
@@ -745,6 +745,7 @@ typedef void (^MXOnResumeDone)();
                     // use 'handleJoinedRoomSync' to pass the last events to the room before leaving it.
                     // The room will then able to notify its listeners.
                     [room handleJoinedRoomSync:leftRoomSync];
+                    [room.summary handleJoinedRoomSync:leftRoomSync];
 
                     // Look for the last room member event
                     MXEvent *roomMemberEvent;
@@ -1546,6 +1547,12 @@ typedef void (^MXOnResumeDone)();
 
     [rooms setObject:room forKey:room.state.roomId];
 
+    MXRoomSummary *summary = [[MXRoomSummary alloc] initWithRoomId:room.roomId andMatrixSession:self];
+    roomsSummaries[room.roomId] = summary;
+
+    // @TODO: Required?
+    room.summary = summary;
+
     if (notify)
     {
         // Broadcast the new room available in the MXSession.rooms array
@@ -1572,8 +1579,9 @@ typedef void (^MXOnResumeDone)();
         // Clean the store
         [_store deleteRoom:roomId];
 
-        // And remove the room from the list
+        // And remove the room and its summary from the list
         [rooms removeObjectForKey:roomId];
+        [roomsSummaries removeObjectForKey:roomId];
 
         // Broadcast the left room
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidLeaveRoomNotification
@@ -1583,6 +1591,90 @@ typedef void (^MXOnResumeDone)();
                                                                      }];
     }
 }
+
+
+#pragma mark - Rooms summaries
+/**
+ Get the MXRoomSummary instance of a room.
+
+ @param roomId The room id to the room.
+
+ @return the MXRoomSummary instance.
+ */
+- (MXRoomSummary *)roomSummaryWithRoomId:(NSString*)roomId
+{
+    MXRoomSummary *roomSummary;
+
+    if (roomId)
+    {
+        roomSummary =  roomsSummaries[roomId];
+    }
+    return roomSummary;
+}
+
+
+- (NSArray<MXRoomSummary*>*)roomsSummaries
+{
+    return [roomsSummaries allValues];
+}
+
+//- (void)updateRoomsSummariesForRooms:(NSArray<NSString*>*)roomIds
+//{
+//    if (!roomIds.count)
+//    {
+//        return;
+//    }
+//
+//    //MXMemoryStore *memoryStore = [[MXMemoryStore alloc] init];
+//    //[memoryStore openWithCredentials:matrixRestClient.credentials onComplete:nil failure:nil];
+//
+//    for (NSString *roomId in roomIds)
+//    {
+//        MXRoom *room = rooms[roomId];
+//        MXRoomSummary *summary = roomsSummaries[roomId];
+//
+//        MXEventTimeline *timeline = [[MXEventTimeline alloc] initWithRoom:room andInitialEventId:nil];
+//        [timeline resetPagination];
+//
+//        __block BOOL updated = NO;
+//        [timeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+//
+//            if (!updated)
+//            {
+//                updated = [_roomSummaryUpdateDelegate session:self updateRoomSummary:summary withEvent:event oldState:roomState];
+//                [summary commit];
+//                updated = YES;
+//            }
+//
+//        }];
+//
+//        //
+//        [timeline paginate:30 direction:MXTimelineDirectionBackwards onlyFromStore:YES complete:^{
+//
+//            if (!updated)
+//            {
+//                NSLog(@"########### dededed");
+//            }
+//
+//        } failure:^(NSError *error) {
+//            NSLog(@"######### DEDEDEDED. Error: %@", error);
+//        }];
+//
+//    }
+//}
+
+//- (BOOL)session:(MXSession *)session updateRoomSummary:(MXRoomSummary *)summary withLastEvent:(MXEvent *)event oldState:(MXRoomState *)oldState
+//{
+//    // @TODO: To implement
+//    summary.lastEvent = event;
+//    return YES;
+//}
+//
+//- (BOOL)session:(MXSession *)session updateRoomSummary:(MXRoomSummary *)summary withStateEvent:(MXEvent *)event
+//{
+//    // @TODO
+//    return YES;
+//}
 
 #pragma mark - Room peeking
 - (void)peekInRoomWithRoomId:(NSString*)roomId

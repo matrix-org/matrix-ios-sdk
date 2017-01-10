@@ -18,6 +18,7 @@
 
 #import "MXEvent.h"
 #import "MXJSONModels.h"
+#import "MXRoomSummary.h"
 #import "MXRoomMember.h"
 #import "MXEventListener.h"
 #import "MXRoomState.h"
@@ -67,6 +68,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  The Matrix id of the room.
  */
 @property (nonatomic, readonly) NSString *roomId;
+
+/**
+ Shortcut to the room summary.
+ */
+@property (nonatomic) MXRoomSummary *summary;
 
 /**
  The related matrix session.
