@@ -46,7 +46,7 @@ FOUNDATION_EXPORT NSString *const kMXIdentityAPIPrefixPath;
  */
 FOUNDATION_EXPORT NSString *const kMXContentUriScheme;
 /**
- Matrix content respository path.
+ A constant representing the prefix of the Matrix content repository path.
  */
 FOUNDATION_EXPORT NSString *const kMXContentPrefixPath;
 
@@ -115,9 +115,15 @@ typedef enum : NSUInteger
 
 /**
  The Client-Server API prefix to use.
- By default, it is '/_matrix/client/r0'. See kMXAPIPrefixPathR0 and kMXAPIPrefixPathUnstable for constants.
+ By default, it is '_matrix/client/r0'. See kMXAPIPrefixPathR0 and kMXAPIPrefixPathUnstable for constants.
  */
 @property (nonatomic) NSString *apiPathPrefix;
+
+/**
+ The Matrix content repository prefix to use.
+ By default, it is defined by the constant kMXContentPrefixPath.
+ */
+@property (nonatomic) NSString *contentPathPrefix;
 
 /**
  The identity server.

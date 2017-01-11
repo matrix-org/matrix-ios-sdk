@@ -24,7 +24,8 @@
 
 #import "MXSDKOptions.h"
 
-#ifdef MX_CRYPTO
+#if 1 // MX_CRYPTO autamatic definiton does not work well for tests so force it
+//#ifdef MX_CRYPTO
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push

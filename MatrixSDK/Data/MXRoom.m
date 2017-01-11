@@ -617,11 +617,19 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     
     void(^onFailure)(NSError *) = ^(NSError *error) {
         
-        // Update the local echo with the error state (This will trigger kMXEventDidChangeSentStateNotification notification).
-        event.sentState = MXEventSentStateFailed;
-        
-        // Update the stored echo.
-        [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
+        // Remove outgoing message when its sent has been cancelled
+        if ([error.domain isEqualToString:NSURLErrorDomain] && error.code == NSURLErrorCancelled)
+        {
+            [self removeOutgoingMessage:event.eventId];
+        }
+        else
+        {
+            // Update the local echo with the error state (This will trigger kMXEventDidChangeSentStateNotification notification).
+            event.sentState = MXEventSentStateFailed;
+            
+            // Update the stored echo.
+            [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
+        }
         
         if (uploaderObserver)
         {
@@ -778,11 +786,19 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     
     void(^onFailure)(NSError *) = ^(NSError *error) {
         
-        // Update the local echo with the error state (This will trigger kMXEventDidChangeSentStateNotification notification).
-        event.sentState = MXEventSentStateFailed;
-        
-        // Update the stored echo.
-        [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
+        // Remove outgoing message when its sent has been cancelled
+        if ([error.domain isEqualToString:NSURLErrorDomain] && error.code == NSURLErrorCancelled)
+        {
+            [self removeOutgoingMessage:event.eventId];
+        }
+        else
+        {
+            // Update the local echo with the error state (This will trigger kMXEventDidChangeSentStateNotification notification).
+            event.sentState = MXEventSentStateFailed;
+            
+            // Update the stored echo.
+            [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
+        }
         
         if (uploaderObserver)
         {
@@ -798,8 +814,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     };
     
     // Add a local echo for this message during the sending process.
-    MXEventSentState initialSentState = (mxSession.crypto && self.state.isEncrypted) ? MXEventSentStateEncrypting : MXEventSentStateUploading;
-    event = [self addLocalEchoForMessageContent:msgContent withState:initialSentState];
+    event = [self addLocalEchoForMessageContent:msgContent withState:MXEventSentStatePreparing];
     
     if (localEcho)
     {
@@ -836,10 +851,10 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                 // Apply the nasty trick again so that the cell can monitor the upload progress
                 msgContent[@"url"] = videoUploader.uploadId;
                 
-                [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
+                // Update the local echo state (This will trigger kMXEventDidChangeSentStateNotification notification).
+                event.sentState = MXEventSentStateEncrypting;
                 
-                // Force a refresh of the displayed echo by posting sent state change notification even if the state did not change (it is still uploading)
-                [[NSNotificationCenter defaultCenter] postNotificationName:kMXEventDidChangeSentStateNotification object:event userInfo:nil];
+                [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
                 
                 // Register video uploader observer in order to trigger sent state change
                 uploaderObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXMediaUploadProgressNotification object:videoUploader queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
@@ -911,10 +926,10 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                     // Apply the nasty trick again so that the cell can monitor the upload progress
                     msgContent[@"url"] = videoUploader.uploadId;
                     
-                    [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
+                    // Update the local echo state (This will trigger kMXEventDidChangeSentStateNotification notification).
+                    event.sentState = MXEventSentStateUploading;
                     
-                    // Force a refresh of the displayed echo by posting sent state change notification even if the state did not change (it is still uploading)
-                    [[NSNotificationCenter defaultCenter] postNotificationName:kMXEventDidChangeSentStateNotification object:event userInfo:nil];
+                    [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
                     
                     [videoUploader uploadData:videoData filename:filename mimeType:mimetype success:^(NSString *videoUrl) {
                         
@@ -994,11 +1009,19 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     
     void(^onFailure)(NSError *) = ^(NSError *error) {
         
-        // Update the local echo with the error state (This will trigger kMXEventDidChangeSentStateNotification notification).
-        event.sentState = MXEventSentStateFailed;
-        
-        // Update the stored echo.
-        [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
+        // Remove outgoing message when its sent has been cancelled
+        if ([error.domain isEqualToString:NSURLErrorDomain] && error.code == NSURLErrorCancelled)
+        {
+            [self removeOutgoingMessage:event.eventId];
+        }
+        else
+        {
+            // Update the local echo with the error state (This will trigger kMXEventDidChangeSentStateNotification notification).
+            event.sentState = MXEventSentStateFailed;
+            
+            // Update the stored echo.
+            [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
+        }
         
         if (uploaderObserver)
         {

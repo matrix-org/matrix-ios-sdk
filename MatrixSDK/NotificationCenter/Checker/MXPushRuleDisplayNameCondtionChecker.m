@@ -21,6 +21,11 @@
 @interface MXPushRuleDisplayNameCondtionChecker ()
 {
     MXSession *mxSession;
+    
+    /**
+     Regex for finding the user's display name in events content.
+     */
+    NSRegularExpression *userNameRegex;
 }
 
 @end
@@ -52,7 +57,13 @@
             
             if (body)
             {
-                if (NSNotFound != [body rangeOfString:mxSession.myUser.displayname options:NSCaseInsensitiveSearch].location)
+                if (!userNameRegex)
+                {
+                    userNameRegex = [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"\\b%@\\b", mxSession.myUser.displayname] options:NSRegularExpressionCaseInsensitive error:nil];
+                }
+
+                NSRange range = [userNameRegex rangeOfFirstMatchInString:body options:0 range:NSMakeRange(0, body.length)];
+                if (range.length)
                 {
                     isSatisfied = YES;
                 }

@@ -14,13 +14,25 @@ PODS:
   - AFNetworking/Serialization (3.1.0)
   - AFNetworking/UIKit (3.1.0):
     - AFNetworking/NSURLSession
+  - OLMKit (2.1.0):
+    - OLMKit/olmc (= 2.1.0)
+    - OLMKit/olmcpp (= 2.1.0)
+  - OLMKit/olmc (2.1.0)
+  - OLMKit/olmcpp (2.1.0)
+  - Realm (2.1.2):
+    - Realm/Headers (= 2.1.2)
+  - Realm/Headers (2.1.2)
 
 DEPENDENCIES:
   - AFNetworking (~> 3.1.0)
+  - OLMKit
+  - Realm (~> 2.1.1)
 
 SPEC CHECKSUMS:
   AFNetworking: 5e0e199f73d8626b11e79750991f5d173d1f8b67
+  OLMKit: ad0807fc53e7ec6eb83651112e277f8221ce783a
+  Realm: efe855f4d977c8ce5a82d3116d9f1ff155a6550c
 
-PODFILE CHECKSUM: 371d8baba56d2c1f5eb732e052d4e248aa5ec4e4
+PODFILE CHECKSUM: 810f1900d8be18d87c95fa54eef00775cc11926d
 
 COCOAPODS: 1.1.1
