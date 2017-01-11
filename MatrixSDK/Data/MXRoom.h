@@ -72,7 +72,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 /**
  Shortcut to the room summary.
  */
-@property (nonatomic) MXRoomSummary *summary;
+@property (nonatomic, readonly) MXRoomSummary *summary;
 
 /**
  The related matrix session.

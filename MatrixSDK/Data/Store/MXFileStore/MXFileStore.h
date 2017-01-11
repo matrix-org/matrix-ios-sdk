@@ -30,11 +30,13 @@
                 + {roomId1}
                     L messages: The room messages
                     L state: The room state events
+                    L summary: The room summary
                     L accountData: The account data for this room
                     L receipts: The read receipts for this room
                 + {roomId2}
                     L messages
                     L state
+                    L summary
                     L accountData
                     L receipts
                 + ...

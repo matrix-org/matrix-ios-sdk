@@ -69,7 +69,14 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 
 - (void)save
 {
-    // @TODO: storage
+    if ([_mxSession.store respondsToSelector:@selector(storeSummaryForRoom:summary:)])
+    {
+        [_mxSession.store storeSummaryForRoom:_roomId summary:self];
+    }
+    if ([_mxSession.store respondsToSelector:@selector(commit)])
+    {
+        [_mxSession.store commit];
+    }
 
     // Broadcast the change
     [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomSummaryDidChangeNotification object:self userInfo:nil];
@@ -210,19 +217,6 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
             if ([[encoding componentsSeparatedByString:@","] containsObject:@"R"])
             {
                 readonly = YES;
-
-                //see if there is a backing ivar with a KVC-compliant name
-                NSRange iVarRange = [encoding rangeOfString:@",V"];
-                if (iVarRange.location != NSNotFound)
-                {
-                    NSString *iVarName = [encoding substringFromIndex:iVarRange.location + 2];
-                    if ([iVarName isEqualToString:key] ||
-                        [iVarName isEqualToString:[@"_" stringByAppendingString:key]])
-                    {
-                        //setValue:forKey: will still work
-                        readonly = NO;
-                    }
-                }
             }
 
             if (!readonly)

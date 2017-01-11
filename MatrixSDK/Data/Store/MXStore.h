@@ -312,6 +312,7 @@
  */
 - (MXRoomSummary*)summaryOfRoom:(NSString*)roomId;
 
+
 /**
  Store the user data for a room.
 

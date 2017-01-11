@@ -22,7 +22,7 @@
 
 #import "MXFileStoreMetaData.h"
 
-NSUInteger const kMXFileVersion = 35;
+NSUInteger const kMXFileVersion = 36;
 
 NSString *const kMXFileStoreFolder = @"MXFileStore";
 NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -34,6 +34,7 @@ NSString *const kMXFileStoreSavingMarker = @"savingMarker";
 NSString *const kMXFileStoreRoomsFolder = @"rooms";
 NSString *const kMXFileStoreRoomMessagesFile = @"messages";
 NSString *const kMXFileStoreRoomStateFile = @"state";
+NSString *const kMXFileStoreRoomSummaryFile = @"summary";
 NSString *const kMXFileStoreRoomAccountDataFile = @"accountData";
 NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
@@ -47,6 +48,8 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     NSMutableArray *roomsToCommitForMessages;
 
     NSMutableDictionary *roomsToCommitForState;
+
+    NSMutableDictionary<NSString*, MXRoomSummary*> *roomsToCommitForSummary;
 
     NSMutableDictionary<NSString*, MXRoomAccountData*> *roomsToCommitForAccountData;
     
@@ -76,7 +79,8 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     // when it will read rooms states.
     NSMutableDictionary<NSString*, NSArray*> *preloadedRoomsStates;
 
-    // Same kind of cache for room account data.
+    // Same kind of cache for room summary and room account data.
+    NSMutableDictionary<NSString*, MXRoomSummary*> *preloadedRoomSummary;
     NSMutableDictionary<NSString*, MXRoomAccountData*> *preloadedRoomAccountData;
 
     // File reading and writing operations are dispatched to a separated thread.
@@ -99,6 +103,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     {
         roomsToCommitForMessages = [NSMutableArray array];
         roomsToCommitForState = [NSMutableDictionary dictionary];
+        roomsToCommitForSummary = [NSMutableDictionary dictionary];
         roomsToCommitForAccountData = [NSMutableDictionary dictionary];
         roomsToCommitForReceipts = [NSMutableArray array];
         roomsToCommitForDeletion = [NSMutableArray array];
@@ -192,6 +197,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
                 [self loadRoomsMessages];
                 [self preloadRoomsStates];
+                [self preloadRoomsSummaries];
                 [self preloadRoomsAccountData];
                 [self loadReceipts];
                 [self loadUsers];
@@ -410,6 +416,36 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     return stateEvents;
 }
 
+- (void)storeSummaryForRoom:(NSString *)roomId summary:(MXRoomSummary *)summary
+{
+    roomsToCommitForSummary[roomId] = summary;
+}
+
+- (MXRoomSummary *)summaryOfRoom:(NSString *)roomId
+{
+    // First, try to get the data from the cache
+    MXRoomSummary *summary = preloadedRoomSummary[roomId];
+
+    if (!summary)
+    {
+        summary =[NSKeyedUnarchiver unarchiveObjectWithFile:[self summaryFileForRoom:roomId forBackup:NO]];
+
+        if (NO == [NSThread isMainThread])
+        {
+            // If this method is called from the `dispatchQueue` thread, it means MXFileStore is preloading
+            // data. So, fill the cache.
+            preloadedRoomSummary[roomId] = summary;
+        }
+    }
+    else
+    {
+        // The cache information is valid only once
+        [preloadedRoomSummary removeObjectForKey:roomId];
+    }
+
+    return summary;
+}
+
 - (void)storeAccountDataForRoom:(NSString *)roomId userData:(MXRoomAccountData *)accountData
 {
     roomsToCommitForAccountData[roomId] = accountData;
@@ -489,6 +525,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         [self saveRoomsDeletion];
         [self saveRoomsMessages];
         [self saveRoomsState];
+        [self saveRoomsSummaries];
         [self saveRoomsAccountData];
         [self saveReceipts];
         [self saveUsers];
@@ -577,6 +614,11 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 - (NSString*)stateFileForRoom:(NSString*)roomId forBackup:(BOOL)backup
 {
     return [[self folderForRoom:roomId forBackup:backup] stringByAppendingPathComponent:kMXFileStoreRoomStateFile];
+}
+
+- (NSString*)summaryFileForRoom:(NSString*)roomId forBackup:(BOOL)backup
+{
+    return [[self folderForRoom:roomId forBackup:backup] stringByAppendingPathComponent:kMXFileStoreRoomSummaryFile];
 }
 
 - (NSString*)accountDataFileForRoom:(NSString*)roomId forBackup:(BOOL)backup
@@ -825,6 +867,64 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
             }
 #if DEBUG
             NSLog(@"[MXFileStore commit] lasted %.0fms for %tu rooms state", [[NSDate date] timeIntervalSinceDate:startDate] * 1000, roomsToCommit.count);
+#endif
+        });
+    }
+}
+
+
+#pragma mark - Rooms summaries
+/**
+ Preload summaries of all rooms.
+
+ This operation must be called on the `dispatchQueue` thread to avoid blocking the main thread.
+ */
+- (void)preloadRoomsSummaries
+{
+    NSDate *startDate = [NSDate date];
+
+    for (NSString *roomId in roomStores)
+    {
+        preloadedRoomSummary[roomId] = [self summaryOfRoom:roomId];
+    }
+
+    NSLog(@"[MXFileStore] Loaded rooms summaries data of %tu rooms in %.0fms", roomStores.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+}
+
+- (void)saveRoomsSummaries
+{
+    if (roomsToCommitForSummary.count)
+    {
+        // Take a snapshot of room ids to store to process them on the other thread
+        NSDictionary *roomsToCommit = [NSDictionary dictionaryWithDictionary:roomsToCommitForSummary];
+        [roomsToCommitForSummary removeAllObjects];
+#if DEBUG
+        NSLog(@"[MXFileStore commit] queuing saveRoomsSummaries for %tu rooms", roomsToCommit.count);
+#endif
+        dispatch_async(dispatchQueue, ^(void){
+#if DEBUG
+            NSDate *startDate = [NSDate date];
+#endif
+            for (NSString *roomId in roomsToCommit)
+            {
+                MXRoomSummary *summary = roomsToCommit[roomId];
+
+                NSString *file = [self summaryFileForRoom:roomId forBackup:NO];
+                NSString *backupFile = [self summaryFileForRoom:roomId forBackup:YES];
+
+                // Backup the file
+                if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
+                {
+                    [self checkFolderExistenceForRoom:roomId forBackup:YES];
+                    [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
+                }
+
+                // Store new data
+                [self checkFolderExistenceForRoom:roomId forBackup:NO];
+                [NSKeyedArchiver archiveRootObject:summary toFile:file];
+            }
+#if DEBUG
+            NSLog(@"[MXFileStore commit] lasted %.0fms for summaries for %tu rooms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000, roomsToCommit.count);
 #endif
         });
     }

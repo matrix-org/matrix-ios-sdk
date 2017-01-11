@@ -60,6 +60,7 @@
 - (void)checkMXRoomPaginationToken:(Class)mxStoreClass;
 - (void)checkMultiAccount:(Class)mxStoreClass;
 - (void)checkRoomAccountDataTags:(Class)mxStoreClass;
+- (void)checkRoomSummary:(Class)mxStoreClass;
 
 @end
 

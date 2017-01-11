@@ -251,6 +251,11 @@
     [self checkRoomAccountDataTags:MXFileStore.class];
 }
 
+- (void)testMXFileStoreRoomSummary
+{
+    [self checkRoomSummary:MXFileStore.class];
+}
+
 @end
 
 #pragma clang diagnostic pop

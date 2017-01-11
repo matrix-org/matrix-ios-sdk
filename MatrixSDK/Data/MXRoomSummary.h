@@ -61,6 +61,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 /**
  Load room summary data from the store.
  */
+// @TODO: rename it. It acts more like a reset from the room state.
 - (void)loadFromStore;
 
 /**

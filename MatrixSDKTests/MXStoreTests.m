@@ -1453,6 +1453,74 @@
     }];
 }
 
+- (void)checkRoomSummary:(Class)mxStoreClass
+{
+    [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation2) {
+
+        expectation = expectation2;
+
+        // Create a random room
+        [bobRestClient createRoom:@"A name" visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:@"A topic" success:^(MXCreateRoomResponse *response) {
+
+            // Do the test
+            id<MXStore> store = [[mxStoreClass alloc] init];
+            [store openWithCredentials:matrixSDKTestsData.bobCredentials onComplete:^{
+
+                // Make sure to start from an empty store
+                [store deleteAllData];
+
+                if ([store respondsToSelector:@selector(close)])
+                {
+                    [store close];
+                }
+
+                // Do a 1st [mxSession start] to fill the store
+                mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                [mxSession setStore:store success:^{
+                    [mxSession start:^{
+
+                        [mxSession close];
+                        mxSession = nil;
+
+                        // Reopen a session and check roomSummary
+                        id<MXStore> store2 = [[mxStoreClass alloc] init];
+
+                        [store2 openWithCredentials:bobRestClient.credentials onComplete:^{
+
+                            MXRoomSummary *summary = [store2 summaryOfRoom:response.roomId];
+
+                            XCTAssert(summary);
+
+                            XCTAssertEqual(summary.displayname, @"A name");
+                            XCTAssertEqual(summary.topic, @"A topic");
+
+                            [expectation fulfill];
+
+                        } failure:^(NSError *error) {
+                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                            [expectation fulfill];
+                        }];
+
+                    } failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop

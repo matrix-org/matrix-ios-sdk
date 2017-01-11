@@ -217,6 +217,7 @@ typedef void (^MXOnResumeDone)();
         NSParameterAssert([_store respondsToSelector:@selector(rooms)]);
         NSParameterAssert([_store respondsToSelector:@selector(storeStateForRoom:stateEvents:)]);
         NSParameterAssert([_store respondsToSelector:@selector(stateOfRoom:)]);
+        NSParameterAssert([_store respondsToSelector:@selector(summaryOfRoom:)]);
     }
 
     NSDate *startDate = [NSDate date];
@@ -249,8 +250,18 @@ typedef void (^MXOnResumeDone)();
                 // Load user account data
                 [self handleAccountData:_store.userAccountData];
 
-                // Create MXRooms from their states stored in the store
+                // Load MXRoomSummarys from the store
                 NSDate *startDate2 = [NSDate date];
+                for (NSString *roomId in _store.rooms)
+                {
+                    @autoreleasepool
+                    {
+                        roomsSummaries[roomId] = [_store summaryOfRoom:roomId];
+                    }
+                }
+
+                // Create MXRooms from their states stored in the store
+                NSDate *startDate3 = [NSDate date];
                 for (NSString *roomId in _store.rooms)
                 {
                     @autoreleasepool
@@ -261,20 +272,9 @@ typedef void (^MXOnResumeDone)();
                     }
                 }
 
-                NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+                NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate3] * 1000);
 
-                // Create MXRoomSummarys from the store
-                startDate2 = [NSDate date];
-                for (NSString *roomId in _store.rooms)
-                {
-                    @autoreleasepool
-                    {
-                        MXRoomSummary *roomSummary = [self roomSummaryWithRoomId:roomId];
-                        [roomSummary loadFromStore];
-                    }
-                }
-
-                NSLog(@"[MXSession] Loaded and built %lu MXRoomSummaries in %.0fms", (unsigned long)roomsSummaries.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+                NSLog(@"[MXSession] Loaded %lu MXRoomSummaries in %.0fms", (unsigned long)roomsSummaries.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
 
                 NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
@@ -1560,11 +1560,13 @@ typedef void (^MXOnResumeDone)();
 
     [rooms setObject:room forKey:room.state.roomId];
 
-    MXRoomSummary *summary = [[MXRoomSummary alloc] initWithRoomId:room.roomId andMatrixSession:self];
-    roomsSummaries[room.roomId] = summary;
-
-    // @TODO: Required?
-    room.summary = summary;
+    // Create the room summary if does not exist yet
+    MXRoomSummary *summary = roomsSummaries[room.roomId];
+    if (!summary)
+    {
+        summary = [[MXRoomSummary alloc] initWithRoomId:room.roomId andMatrixSession:self];
+        roomsSummaries[room.roomId] = summary;
+    }
 
     if (notify)
     {
