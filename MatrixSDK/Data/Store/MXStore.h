@@ -19,6 +19,7 @@
 #import "MXEvent.h"
 #import "MXReceiptData.h"
 #import "MXUser.h"
+#import "MXRoomSummary.h"
 #import "MXRoomAccountData.h"
 
 #import "MXEventsEnumerator.h"
@@ -289,6 +290,27 @@
  @return the stored state events that define the room state.
  */
 - (NSArray*)stateOfRoom:(NSString*)roomId;
+
+
+/**
+ Store the summary for a room.
+
+ Note: this method is required in permanent storage implementation.
+
+ @param roomId the id of the room.
+ @param summary the room summary.
+ */
+- (void)storeSummaryForRoom:(NSString*)roomId summary:(MXRoomSummary*)summary;
+
+/**
+ Get the summary a room.
+
+ Note: this method is required in permanent storage implementation.
+
+ @param roomId the id of the room.
+ @return the user private data for this room.
+ */
+- (MXRoomSummary*)summaryOfRoom:(NSString*)roomId;
 
 /**
  Store the user data for a room.
