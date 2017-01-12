@@ -170,10 +170,13 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     {
         _roomId = [aDecoder decodeObjectForKey:@"roomId"];
 
-        for (NSString *key in [self propertyKeys])
+        for (NSString *key in [MXRoomSummary propertyKeys])
         {
             id value = [aDecoder decodeObjectForKey:key];
-            [self setValue:value forKey:key];
+            if (value)
+            {
+                [self setValue:value forKey:key];
+            }
         }
     }
     return self;
@@ -183,7 +186,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 {
     [aCoder encodeObject:_roomId forKey:@"roomId"];
 
-    for (NSString *key in [self propertyKeys])
+    for (NSString *key in [MXRoomSummary propertyKeys])
     {
         id value = [self valueForKey:key];
         if (value)
@@ -195,40 +198,50 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 
 // Took at http://stackoverflow.com/a/8938097
 // in order to automatically NSCoding the class properties
-- (NSArray *)propertyKeys
++ (NSArray *)propertyKeys
 {
-    NSMutableArray *array = [NSMutableArray array];
-    Class class = [self class];
-    while (class != [NSObject class])
-    {
-        unsigned int propertyCount;
-        objc_property_t *properties = class_copyPropertyList(class, &propertyCount);
-        for (int i = 0; i < propertyCount; i++)
+    static NSMutableArray *propertyKeys;
+
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        
+        propertyKeys = [NSMutableArray array];
+        Class class = [self class];
+        while (class != [NSObject class])
         {
-            //get property
-            objc_property_t property = properties[i];
-            const char *propertyName = property_getName(property);
-            NSString *key = [NSString stringWithCString:propertyName encoding:NSUTF8StringEncoding];
-
-            //check if read-only
-            BOOL readonly = NO;
-            const char *attributes = property_getAttributes(property);
-            NSString *encoding = [NSString stringWithCString:attributes encoding:NSUTF8StringEncoding];
-            if ([[encoding componentsSeparatedByString:@","] containsObject:@"R"])
+            unsigned int propertyCount;
+            objc_property_t *properties = class_copyPropertyList(class, &propertyCount);
+            for (int i = 0; i < propertyCount; i++)
             {
-                readonly = YES;
-            }
+                //get property
+                objc_property_t property = properties[i];
+                const char *propertyName = property_getName(property);
+                NSString *key = [NSString stringWithCString:propertyName encoding:NSUTF8StringEncoding];
 
-            if (!readonly)
-            {
-                //exclude read-only properties
-                [array addObject:key];
+                //check if read-only
+                BOOL readonly = NO;
+                const char *attributes = property_getAttributes(property);
+                NSString *encoding = [NSString stringWithCString:attributes encoding:NSUTF8StringEncoding];
+                if ([[encoding componentsSeparatedByString:@","] containsObject:@"R"])
+                {
+                    readonly = YES;
+                }
+
+                if (!readonly)
+                {
+                    //exclude read-only properties
+                    [propertyKeys addObject:key];
+                }
             }
+            free(properties);
+            class = [class superclass];
         }
-        free(properties);
-        class = [class superclass];
-    }
-    return array;
+
+
+        NSLog(@"[MXRoomSummary] Stored properties: %@", propertyKeys);
+    });
+
+    return propertyKeys;
 }
 
 

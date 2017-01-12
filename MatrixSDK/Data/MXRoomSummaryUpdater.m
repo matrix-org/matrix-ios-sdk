@@ -53,7 +53,7 @@
 - (BOOL)session:(MXSession *)session updateRoomSummary:(MXRoomSummary *)summary withLastEvent:(MXEvent *)event oldState:(MXRoomState *)oldState
 {
     // @TODO: To implement
-    summary.lastEvent = event;
+    summary.lastEventId = event.eventId;
     return YES;
 }
 

@@ -260,6 +260,8 @@ typedef void (^MXOnResumeDone)();
                     }
                 }
 
+                NSLog(@"[MXSession] Built %lu MXRoomSummaries in %.0fms", (unsigned long)roomsSummaries.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+
                 // Create MXRooms from their states stored in the store
                 NSDate *startDate3 = [NSDate date];
                 for (NSString *roomId in _store.rooms)
@@ -273,8 +275,6 @@ typedef void (^MXOnResumeDone)();
                 }
 
                 NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate3] * 1000);
-
-                NSLog(@"[MXSession] Loaded %lu MXRoomSummaries in %.0fms", (unsigned long)roomsSummaries.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
 
                 NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 

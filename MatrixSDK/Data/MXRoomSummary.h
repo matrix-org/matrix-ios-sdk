@@ -116,9 +116,9 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 #pragma mark - Data related to the last event
 
 /**
- The last event.
+ The last event id.
  */
-@property (nonatomic) MXEvent *lastEvent;
+@property (nonatomic) NSString *lastEventId;
 
 /**
  String representation of this last event.
