@@ -452,12 +452,14 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
         [realm addObject:realmSession];
     }];
 
-    NSLog(@"[MXRealmCryptoStore] storeInboundGroupSession in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXRealmCryptoStore] storeInboundGroupSession %@ in %.0fms", session.session.sessionIdentifier, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (MXOlmInboundGroupSession*)inboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey
 {
     MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectsInRealm:self.realm where:@"sessionId = %@ AND senderKey = %@", sessionId, senderKey].firstObject;
+
+    NSLog(@"[MXRealmCryptoStore] inboundGroupSessionWithId: %@ -> %@", sessionId, realmSession);
 
     if (realmSession)
     {
@@ -533,6 +535,9 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                                                             object:userId
                                                           userInfo:nil];
     }
+
+    // Wait for completion of other operations on this realm launched from other threads
+    [realm refresh];
 
     return realm;
  }
