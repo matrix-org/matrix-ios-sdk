@@ -1453,6 +1453,44 @@
     }];
 }
 
+// Test for https://github.com/vector-im/riot-ios/issues/913
+- (void)testFirstMessageSentWhileSessionWasPaused
+{
+    [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        NSString *messageFromAlice = @"Hello I'm Alice!";
+
+        MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
+        MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
+
+        // Pause the session outside this callback
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [bobSession pause];
+
+            [roomFromAlicePOV sendTextMessage:messageFromAlice success:^(NSString *eventId) {
+
+                __block BOOL testDone = NO;
+
+                [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
+                    testDone = YES;
+
+                }];
+
+                [bobSession resume:^{
+                    XCTAssert(testDone);
+                    [expectation fulfill];
+                }];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+        });
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop

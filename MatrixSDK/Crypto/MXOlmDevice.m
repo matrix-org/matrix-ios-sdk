@@ -444,7 +444,7 @@
     }
     else
     {
-        NSLog(@"[MXOlmDevice] inboundGroupSessionWithId: ERROR: Cannot retrieve inbound group session %@", sessionId);
+        NSLog(@"[MXOlmDevice] inboundGroupSessionWithId: Cannot retrieve inbound group session %@", sessionId);
 
         if (error)
         {
