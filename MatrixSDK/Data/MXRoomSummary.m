@@ -88,6 +88,10 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     return [_mxSession roomWithRoomId:_roomId];
 }
 
+- (MXEvent *)lastEvent
+{
+    return [_mxSession.store eventWithEventId:_lastEventId inRoom:_roomId];
+}
 
 - (void)updateFromRoomState
 {
@@ -242,6 +246,11 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     });
 
     return propertyKeys;
+}
+
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"%@ %@: %@ - %@", super.description, _roomId, _displayname, _lastEventString];
 }
 
 

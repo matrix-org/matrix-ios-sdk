@@ -126,6 +126,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 @property (nonatomic) NSString *lastEventString;
 @property (nonatomic) NSAttributedString *lastEventAttribytedString;
 
+/**
+ The shortcut to the last event.
+ */
+@property (nonatomic, readonly) MXEvent *lastEvent;
+
 
 #pragma mark - Server sync
 
