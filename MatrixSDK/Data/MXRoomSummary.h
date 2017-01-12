@@ -59,6 +59,15 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 - (instancetype)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession;
 
 /**
+ Set the Matrix session.
+
+ Must be used for MXRoomSummary instance loaded from the store.
+
+ @param mxSession the session to use.
+ */
+- (void)setMatrixSession:(MXSession*)mxSession;
+
+/**
  Load room summary data from the store.
  */
 // @TODO: rename it. It acts more like a reset from the room state.

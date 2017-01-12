@@ -256,7 +256,9 @@ typedef void (^MXOnResumeDone)();
                 {
                     @autoreleasepool
                     {
-                        roomsSummaries[roomId] = [_store summaryOfRoom:roomId];
+                        MXRoomSummary *summary = [_store summaryOfRoom:roomId];
+                        [summary setMatrixSession:self];
+                        roomsSummaries[roomId] = summary;
                     }
                 }
 
@@ -1617,6 +1619,8 @@ typedef void (^MXOnResumeDone)();
     {
         roomSummary =  roomsSummaries[roomId];
     }
+
+    NSLog(@"roomSummaryWithRoomId: %@", roomSummary);
     return roomSummary;
 }
 

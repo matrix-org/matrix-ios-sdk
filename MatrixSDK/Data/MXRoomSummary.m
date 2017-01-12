@@ -38,6 +38,11 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     return self;
 }
 
+- (void)setMatrixSession:(MXSession *)mxSession
+{
+    _mxSession = mxSession;
+}
+
 - (void)loadFromStore
 {
     MXRoom *room = self.room;
