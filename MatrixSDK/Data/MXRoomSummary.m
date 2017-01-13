@@ -33,6 +33,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     {
         _roomId = theRoomId;
         _mxSession = matrixSession;
+        _others = [NSMutableDictionary dictionary];
     }
 
     return self;

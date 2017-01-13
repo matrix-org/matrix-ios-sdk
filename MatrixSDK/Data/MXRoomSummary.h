@@ -119,7 +119,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 /**
  Placeholder to store more information in the room summary
  */
-@property (nonatomic) NSDictionary<NSString*, id<NSCoding>> *others;
+@property (nonatomic) NSMutableDictionary<NSString*, id<NSCoding>> *others;
 
 
 #pragma mark - Data related to the last event
