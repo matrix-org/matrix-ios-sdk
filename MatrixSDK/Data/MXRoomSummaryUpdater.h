@@ -33,6 +33,26 @@
  */
 + (instancetype)roomSummaryUpdaterForSession:(MXSession*)mxSession;
 
+
+#pragma mark - Configuration
+
+/**
+ The type of events allowed as last message.
+ 
+ Default is nil. All messages types are accepted.
+ */
+@property (nonatomic) NSArray<NSString*> *eventsFilterForMessages;
+
+/**
+ If YES, ignore profile changes of room members as last message.
+ 
+ Default is NO.
+ */
+@property (nonatomic) BOOL ignoreMemberProfileChanges;
+
+
+#pragma mark - Methods
+
 /**
  Reset room summary data related to the room state.
  */

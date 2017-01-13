@@ -52,14 +52,27 @@
 
 - (BOOL)session:(MXSession *)session updateRoomSummary:(MXRoomSummary *)summary withLastEvent:(MXEvent *)event oldState:(MXRoomState *)oldState
 {
-    // @TODO: To implement
-    summary.lastEventId = event.eventId;
-    return YES;
+    BOOL updated = NO;
+
+    // Accept event which type is in the filter list
+    if (event.eventId && (!_eventsFilterForMessages || (NSNotFound != [_eventsFilterForMessages indexOfObject:event.type])))
+    {
+        // Accept event related to profile change only if the flag is NO
+        if (!_ignoreMemberProfileChanges || !event.isUserProfileChange)
+        {
+            summary.lastEventId = event.eventId;
+            updated = YES;
+        }
+    }
+
+    // @TODO: Manage redaction
+
+    return updated;
 }
 
 - (BOOL)session:(MXSession *)session updateRoomSummary:(MXRoomSummary *)summary withStateEvent:(MXEvent *)event
 {
-    // @TODO
+    // @TODO: this call is a bit too much, no?
     [self updateSummaryFromRoomState:summary];
     return YES;
 }
