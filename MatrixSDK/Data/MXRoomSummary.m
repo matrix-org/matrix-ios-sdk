@@ -76,6 +76,15 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
             // @TODO: udpate state
         }
 
+        // Decrypt event if necessary
+        if (event.eventType == MXEventTypeRoomEncrypted)
+        {
+            if (![self.mxSession decryptEvent:event inTimeline:nil])
+            {
+                NSLog(@"[MXKRoomDataSource] lastMessageWithEventFormatter: Warning: Unable to decrypt event: %@\nError: %@", event.content[@"body"], event.decryptionError);
+            }
+        }
+
         lastEventUpdated = [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withLastEvent:event oldState:state];
 
         event = messagesEnumerator.nextEvent;
