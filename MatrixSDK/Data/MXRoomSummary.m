@@ -44,14 +44,25 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     _mxSession = mxSession;
 }
 
-- (void)loadFromStore
+- (void)reset
 {
     MXRoom *room = self.room;
 
-    // Well, load it from the room state data
-    // @TODO: Make MXStore manage room summaries
+    if (!room)
+    {
+        return;
+    }
+
+    // Reset data
+    _lastEventId = nil;
+    _lastEventString = nil;
+    _lastEventAttribytedString = nil;
+    [_others removeAllObjects];
+
+    // Rebuild data related to room state
     [self updateFromRoomState];
 
+    // Compute the last message again
     id<MXEventsEnumerator> messagesEnumerator = room.enumeratorForStoredMessages;
     MXEvent *event = messagesEnumerator.nextEvent;
 
@@ -69,6 +80,8 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 
         event = messagesEnumerator.nextEvent;
     }
+
+    // @TODO: fetch events from the hs if lastEventUpdated is still nil
 
     [self save];
 }

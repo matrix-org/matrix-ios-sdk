@@ -33,6 +33,7 @@
     if (!updater)
     {
         updater = [[MXRoomSummaryUpdater alloc] init];
+        [updaterPerSession setObject:updater forKey:mxSession];
     }
 
     return updater;
@@ -52,6 +53,16 @@
 
 - (BOOL)session:(MXSession *)session updateRoomSummary:(MXRoomSummary *)summary withLastEvent:(MXEvent *)event oldState:(MXRoomState *)oldState
 {
+    // Do not show redaction events
+    if (event.eventType == MXEventTypeRoomRedaction)
+    {
+        if ([event.redacts isEqualToString:summary.lastEventId])
+        {
+            [summary reset];
+        }
+        return NO;
+    }
+
     BOOL updated = NO;
 
     // Accept event which type is in the filter list
@@ -64,8 +75,6 @@
             updated = YES;
         }
     }
-
-    // @TODO: Manage redaction
 
     return updated;
 }

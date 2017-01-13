@@ -68,10 +68,9 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 - (void)setMatrixSession:(MXSession*)mxSession;
 
 /**
- Load room summary data from the store.
+ Reset and recompute summary data.
  */
-// @TODO: rename it. It acts more like a reset from the room state.
-- (void)loadFromStore;
+- (void)reset;
 
 /**
  Save room summary data.
