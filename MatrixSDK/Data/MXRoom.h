@@ -16,6 +16,13 @@
 
 #import <Foundation/Foundation.h>
 
+#if TARGET_OS_IPHONE
+#import <UIKit/UIKit.h>
+#elif TARGET_OS_OSX
+#import <Cocoa/Cocoa.h>
+@compatibility_alias UIImage NSImage;
+#endif
+
 #import "MXEvent.h"
 #import "MXJSONModels.h"
 #import "MXRoomMember.h"
@@ -836,6 +843,8 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 
 #pragma mark - Voice over IP
 
+#ifdef MX_CALL_STACK_JINGLE
+
 /**
  Place a voice or a video call into the room.
 
@@ -847,6 +856,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
                    success:(void (^)(MXCall *call))success
                    failure:(void (^)(NSError *error))failure;
 
+#endif
 
 #pragma mark - Read receipts management
 

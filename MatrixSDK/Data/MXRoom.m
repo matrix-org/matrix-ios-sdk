@@ -700,7 +700,16 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                 
                 MXMediaLoader *thumbUploader = [MXMediaManager prepareUploaderWithMatrixSession:self.mxSession initialRange:0.9 andRange:1];
                 
-                [MXEncryptedAttachments encryptAttachment:thumbUploader mimeType:@"image/png" data:UIImagePNGRepresentation(thumbnail) success:^(NSDictionary *result) {
+#if TARGET_OS_IPHONE
+                NSData *pngImageData = UIImagePNGRepresentation(thumbnail);
+#elif TARGET_OS_OSX
+                CGImageRef cgRef = [thumbnail CGImageForProposedRect:NULL context:nil hints:nil];
+                NSBitmapImageRep *newRep = [[NSBitmapImageRep alloc] initWithCGImage:cgRef];
+                [newRep setSize:[thumbnail size]];
+                NSData *pngImageData = [newRep representationUsingType:NSPNGFileType properties:nil];
+#endif
+                
+                [MXEncryptedAttachments encryptAttachment:thumbUploader mimeType:@"image/png" data:pngImageData success:^(NSDictionary *result) {
                     
                     msgContent[@"info"][@"thumbnail_file"] = result;
                     
@@ -746,8 +755,16 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 {
     // Create a fake operation by default
     MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
-    
+#if TARGET_OS_IPHONE
     NSData *videoThumbnailData = UIImageJPEGRepresentation(videoThumbnail, 0.8);
+#elif TARGET_OS_OSX
+    CGImageRef cgRef = [videoThumbnail CGImageForProposedRect:NULL context:nil hints:nil];
+    NSBitmapImageRep *newRep = [[NSBitmapImageRep alloc] initWithCGImage:cgRef];
+    [newRep setSize:[videoThumbnail size]];
+    NSData *videoThumbnailData = [newRep representationUsingType:NSJPEGFileType properties: @{NSImageCompressionFactor: @0.8}];
+#endif
+    
+    
     
     // Use the uploader id as fake URL for this image data
     // The URL does not need to be valid as the MediaManager will get the data
@@ -1516,6 +1533,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 
 
 #pragma mark - Voice over IP
+#ifdef MX_CALL_STACK_JINGLE
 - (void)placeCallWithVideo:(BOOL)video
                    success:(void (^)(MXCall *call))success
                    failure:(void (^)(NSError *error))failure
@@ -1529,7 +1547,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         failure(nil);
     }
 }
-
+#endif // MX_CALL_STACK_JINGLE
 
 #pragma mark - Read receipts management
 

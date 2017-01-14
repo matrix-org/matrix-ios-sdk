@@ -14,8 +14,10 @@
  limitations under the License.
  */
 
+#if TRAGET_OS_IPHONE
 #import <AssetsLibrary/ALAsset.h>
 #import <AssetsLibrary/ALAssetRepresentation.h>
+#endif
 
 #import <Photos/Photos.h>
 
@@ -86,9 +88,17 @@ static NSMutableDictionary* uploadTableById = nil;
 
 static MXLRUCache* imagesCacheLruCache = nil;
 
+#if TARGET_OS_IPHONE
 + (UIImage*)loadThroughCacheWithFilePath:(NSString*)filePath
+#elif TARGET_OS_OSX
++ (NSImage*)loadThroughCacheWithFilePath:(NSString*)filePath
+#endif
 {
+#if TARGET_OS_IPHONE
     UIImage *image = [MXMediaManager getFromMemoryCacheWithFilePath:filePath];
+#elif TARGET_OS_OSX
+    NSImage *image = [MXMediaManager getFromMemoryCacheWithFilePath:filePath];
+#endif
     
     if (image) return image;
     
@@ -102,38 +112,64 @@ static MXLRUCache* imagesCacheLruCache = nil;
     return image;
 }
 
+
+#if TARGET_OS_IPHONE
 + (UIImage*)getFromMemoryCacheWithFilePath:(NSString*)filePath
+#elif TARGET_OS_OSX
++ (NSImage*)getFromMemoryCacheWithFilePath:(NSString*)filePath
+#endif
 {
     if (!imagesCacheLruCache)
     {
         imagesCacheLruCache = [[MXLRUCache alloc] initWithCapacity:20];
     }
     
+#if TARGET_OS_IPHONE
     return (UIImage*)[imagesCacheLruCache get:filePath];
+#elif TARGET_OS_OSX
+    return (NSImage*)[imagesCacheLruCache get:filePath];
+#endif
 }
 
+#if TARGET_OS_IPHONE
 + (void)cacheImage:(UIImage *)image withCachePath:(NSString *)filePath
+#elif TARGET_OS_OSX
++ (void)cacheImage:(NSImage *)image withCachePath:(NSString *)filePath
+#endif
 {
     [imagesCacheLruCache put:filePath object:image];
 }
 
 
+#if TARGET_OS_IPHONE
 + (UIImage*)loadPictureFromFilePath:(NSString*)filePath
+#elif TARGET_OS_OSX
++ (NSImage*)loadPictureFromFilePath:(NSString*)filePath
+#endif
 {
+#if TARGET_OS_IPHONE
     UIImage* res = nil;
+#elif TARGET_OS_OSX
+    NSImage* res = nil;
+#endif
     
     if ([[NSFileManager defaultManager] fileExistsAtPath:filePath])
     {
         NSData* imageContent = [NSData dataWithContentsOfFile:filePath options:(NSDataReadingMappedAlways | NSDataReadingUncached) error:nil];
         if (imageContent)
         {
+#if TARGET_OS_IPHONE
             res = [[UIImage alloc] initWithData:imageContent];
+#elif TARGET_OS_OSX
+            res = [[NSImage alloc] initWithData:imageContent];
+#endif
         }
     }
     
     return res;
 }
 
+#if TARGET_OS_IPHONE
 + (void)saveImageToPhotosLibrary:(UIImage*)image success:(void (^)(NSURL *imageURL))success failure:(void (^)(NSError *error))failure
 {
     if (image)
@@ -222,7 +258,9 @@ static MXLRUCache* imagesCacheLruCache = nil;
         }
     }
 }
+#endif
 
+#if TARGET_OS_IPHONE
 + (void)saveMediaToPhotosLibrary:(NSURL*)fileURL isImage:(BOOL)isImage success:(void (^)(NSURL *imageURL))success failure:(void (^)(NSError *error))failure
 {
     if (fileURL)
@@ -364,6 +402,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
         }
     }
 }
+#endif
 
 #pragma mark - Media Download
 

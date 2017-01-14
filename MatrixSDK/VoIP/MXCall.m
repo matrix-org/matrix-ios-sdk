@@ -14,6 +14,8 @@
  limitations under the License.
  */
 
+#ifdef MX_CALL_STACK_JINGLE
+
 #import "MXCall.h"
 
 #import "MXSession.h"
@@ -602,3 +604,5 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 }
 
 @end
+
+#endif // MX_CALL_STACK_JINGLE

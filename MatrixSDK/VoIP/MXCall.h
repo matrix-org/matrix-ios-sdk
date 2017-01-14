@@ -15,6 +15,8 @@
  */
 
 #import <Foundation/Foundation.h>
+
+#ifdef MX_CALL_STACK_JINGLE
 #import <UIKit/UIKit.h>
 
 #import "MXEvent.h"
@@ -227,3 +229,4 @@ extern NSString *const kMXCallStateDidChange;
 - (void)call:(MXCall *)call didEncounterError:(NSError*)error;
 
 @end
+#endif // MX_CALL_STACK_JINGLE

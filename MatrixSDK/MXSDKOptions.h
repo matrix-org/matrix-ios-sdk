@@ -34,7 +34,7 @@
      pod 'WebRTC'
  */
 
-#if __has_include(<WebRTC/RTCPeerConnection.h>)
+#if __has_include(<WebRTC/RTCPeerConnection.h>) && TARGET_OS_PHONE
 #define MX_CALL_STACK_JINGLE
 #endif
 

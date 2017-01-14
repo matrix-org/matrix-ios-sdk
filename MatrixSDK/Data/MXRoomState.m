@@ -507,11 +507,13 @@
                     [self handleStateEvent:inviteRoomStateEvent];
                 }
             }
+#ifdef MX_CALL_STACK_JINGLE
             else if (_isLive && self.membership == MXMembershipJoin && members.count > 2 && [roomMember.userId isEqualToString:self.conferenceUserId])
             {
-                // Forward the change of the conference user membership to the call manager 
+                // Forward the change of the conference user membership to the call manager
                 [mxSession.callManager handleConferenceUserUpdate:roomMember inRoom:_roomId];
             }
+#endif // MX_CALL_STACK_JINGLE
 
             break;
         }
@@ -687,6 +689,7 @@
 
 
 # pragma mark - Conference call
+#ifdef MX_CALL_STACK_JINGLE
 - (BOOL)isOngoingConferenceCall
 {
     BOOL isOngoingConferenceCall = NO;
@@ -789,6 +792,7 @@
 
     return membersWithMembership;
 }
+#endif // MX_CALL_STACK_JINGLE
 
 
 #pragma mark - NSCopying

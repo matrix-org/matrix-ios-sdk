@@ -14,6 +14,8 @@
  limitations under the License.
  */
 
+#ifdef MX_CALL_STACK_JINGLE
+
 #import "MXCallManager.h"
 
 #import "MXSession.h"
@@ -521,3 +523,5 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
 }
 
 @end
+
+#endif // MX_CALL_STACK_JINGLE
