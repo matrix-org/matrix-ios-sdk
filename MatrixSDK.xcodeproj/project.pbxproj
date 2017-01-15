@@ -191,12 +191,6 @@
 		71DE22E01BC7C51200284153 /* MXReceiptData.m in Sources */ = {isa = PBXBuildFile; fileRef = 71DE22DC1BC7C51200284153 /* MXReceiptData.m */; };
 		71DE22E11BC7C51200284153 /* MXReceiptData.h in Headers */ = {isa = PBXBuildFile; fileRef = 71DE22DD1BC7C51200284153 /* MXReceiptData.h */; };
 		A23A8594855481FEFA0E9A22 /* libPods-MatrixSDK.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E1674C6FF8BBF074E7F76059 /* libPods-MatrixSDK.a */; };
-		A8D4FF1E7EBE481DD4135E9F /* libPods-MatrixSDK_macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4EE151EBDA1F45078E2A0E2B /* libPods-MatrixSDK_macOS.a */; };
-		ADDDBB127CE0040E987B4BBB /* libPods-MatrixSDK_macOSTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F492B91C3A580A103E5482BB /* libPods-MatrixSDK_macOSTests.a */; };
-		C6CC8E3E1E2A8C38006C231F /* MatrixSDK_macOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C6CC8E351E2A8C37006C231F /* MatrixSDK_macOS.framework */; };
-		C6CC8E431E2A8C38006C231F /* MatrixSDK_macOSTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C6CC8E421E2A8C38006C231F /* MatrixSDK_macOSTests.m */; };
-		C6CC8E451E2A8C38006C231F /* MatrixSDK_macOS.h in Headers */ = {isa = PBXBuildFile; fileRef = C6CC8E371E2A8C37006C231F /* MatrixSDK_macOS.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		C6CC8F021E2AC9B3006C231F /* MatrixSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C6F93219DD814400EA4E9C /* MatrixSDK.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D123DC2791F0EAF08F70C207 /* libPods-MatrixSDKTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3ABDD5D65684E6B7F52FB94E /* libPods-MatrixSDKTests.a */; };
 		F03EF4FE1DF014D9009DF592 /* MXMediaLoader.h in Headers */ = {isa = PBXBuildFile; fileRef = F03EF4FA1DF014D9009DF592 /* MXMediaLoader.h */; };
 		F03EF4FF1DF014D9009DF592 /* MXMediaLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = F03EF4FB1DF014D9009DF592 /* MXMediaLoader.m */; };
@@ -222,13 +216,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = 32C6F92C19DD814400EA4E9C;
 			remoteInfo = MatrixSDK;
-		};
-		C6CC8E3F1E2A8C38006C231F /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 32C6F92419DD814400EA4E9C /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = C6CC8E341E2A8C37006C231F;
-			remoteInfo = MatrixSDK_macOS;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -445,10 +432,8 @@
 		AEC6D863857E41E84955AB25 /* Pods-MatrixSDK_macOSTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDK_macOSTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-MatrixSDK_macOSTests/Pods-MatrixSDK_macOSTests.release.xcconfig"; sourceTree = "<group>"; };
 		B1F1AE550CF4C15B653DDE6E /* Pods-MatrixSDKTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDKTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-MatrixSDKTests/Pods-MatrixSDKTests.debug.xcconfig"; sourceTree = "<group>"; };
 		C2F8E4479B19F7C8CE57943B /* Pods-MatrixSDK_macOSTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDK_macOSTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-MatrixSDK_macOSTests/Pods-MatrixSDK_macOSTests.debug.xcconfig"; sourceTree = "<group>"; };
-		C6CC8E351E2A8C37006C231F /* MatrixSDK_macOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MatrixSDK_macOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C6CC8E371E2A8C37006C231F /* MatrixSDK_macOS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MatrixSDK_macOS.h; sourceTree = "<group>"; };
 		C6CC8E381E2A8C37006C231F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		C6CC8E3D1E2A8C38006C231F /* MatrixSDK_macOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MatrixSDK_macOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C6CC8E421E2A8C38006C231F /* MatrixSDK_macOSTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MatrixSDK_macOSTests.m; sourceTree = "<group>"; };
 		C6CC8E441E2A8C38006C231F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		E1674C6FF8BBF074E7F76059 /* libPods-MatrixSDK.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MatrixSDK.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -486,23 +471,6 @@
 			files = (
 				3226DC3819DEED3B00866530 /* MatrixSDK.framework in Frameworks */,
 				D123DC2791F0EAF08F70C207 /* libPods-MatrixSDKTests.a in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		C6CC8E311E2A8C37006C231F /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				A8D4FF1E7EBE481DD4135E9F /* libPods-MatrixSDK_macOS.a in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		C6CC8E3A1E2A8C38006C231F /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				C6CC8E3E1E2A8C38006C231F /* MatrixSDK_macOS.framework in Frameworks */,
-				ADDDBB127CE0040E987B4BBB /* libPods-MatrixSDK_macOSTests.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -845,8 +813,6 @@
 			children = (
 				32C6F92D19DD814400EA4E9C /* MatrixSDK.framework */,
 				32C6F93819DD814400EA4E9C /* MatrixSDKTests.xctest */,
-				C6CC8E351E2A8C37006C231F /* MatrixSDK_macOS.framework */,
-				C6CC8E3D1E2A8C38006C231F /* MatrixSDK_macOSTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1116,15 +1082,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		C6CC8E321E2A8C37006C231F /* Headers */ = {
-			isa = PBXHeadersBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				C6CC8F021E2AC9B3006C231F /* MatrixSDK.h in Headers */,
-				C6CC8E451E2A8C38006C231F /* MatrixSDK_macOS.h in Headers */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
@@ -1170,47 +1127,6 @@
 			productReference = 32C6F93819DD814400EA4E9C /* MatrixSDKTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		C6CC8E341E2A8C37006C231F /* MatrixSDK_macOS */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = C6CC8E4A1E2A8C38006C231F /* Build configuration list for PBXNativeTarget "MatrixSDK_macOS" */;
-			buildPhases = (
-				CFF00B3866841B206BAADB2E /* [CP] Check Pods Manifest.lock */,
-				C6CC8E301E2A8C37006C231F /* Sources */,
-				C6CC8E311E2A8C37006C231F /* Frameworks */,
-				C6CC8E321E2A8C37006C231F /* Headers */,
-				C6CC8E331E2A8C37006C231F /* Resources */,
-				24F25C1D64186649526E6444 /* [CP] Copy Pods Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = MatrixSDK_macOS;
-			productName = MatrixSDK_macOS;
-			productReference = C6CC8E351E2A8C37006C231F /* MatrixSDK_macOS.framework */;
-			productType = "com.apple.product-type.framework";
-		};
-		C6CC8E3C1E2A8C38006C231F /* MatrixSDK_macOSTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = C6CC8E4B1E2A8C38006C231F /* Build configuration list for PBXNativeTarget "MatrixSDK_macOSTests" */;
-			buildPhases = (
-				0413B1523575B428F8C91622 /* [CP] Check Pods Manifest.lock */,
-				C6CC8E391E2A8C38006C231F /* Sources */,
-				C6CC8E3A1E2A8C38006C231F /* Frameworks */,
-				C6CC8E3B1E2A8C38006C231F /* Resources */,
-				3B19495049575396142329B7 /* [CP] Embed Pods Frameworks */,
-				A5A33B4092C03D9E505EB48F /* [CP] Copy Pods Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				C6CC8E401E2A8C38006C231F /* PBXTargetDependency */,
-			);
-			name = MatrixSDK_macOSTests;
-			productName = MatrixSDK_macOSTests;
-			productReference = C6CC8E3D1E2A8C38006C231F /* MatrixSDK_macOSTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -1225,14 +1141,6 @@
 					};
 					32C6F93719DD814400EA4E9C = {
 						CreatedOnToolsVersion = 6.0;
-					};
-					C6CC8E341E2A8C37006C231F = {
-						CreatedOnToolsVersion = 8.2.1;
-						ProvisioningStyle = Automatic;
-					};
-					C6CC8E3C1E2A8C38006C231F = {
-						CreatedOnToolsVersion = 8.2.1;
-						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -1250,8 +1158,6 @@
 			targets = (
 				32C6F92C19DD814400EA4E9C /* MatrixSDK */,
 				32C6F93719DD814400EA4E9C /* MatrixSDKTests */,
-				C6CC8E341E2A8C37006C231F /* MatrixSDK_macOS */,
-				C6CC8E3C1E2A8C38006C231F /* MatrixSDK_macOSTests */,
 			);
 		};
 /* End PBXProject section */
@@ -1265,20 +1171,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		32C6F93619DD814400EA4E9C /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		C6CC8E331E2A8C37006C231F /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		C6CC8E3B1E2A8C38006C231F /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1303,51 +1195,6 @@
 			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n";
 			showEnvVarsInLog = 0;
 		};
-		0413B1523575B428F8C91622 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n";
-			showEnvVarsInLog = 0;
-		};
-		24F25C1D64186649526E6444 /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "[CP] Copy Pods Resources";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-MatrixSDK_macOS/Pods-MatrixSDK_macOS-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		3B19495049575396142329B7 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-MatrixSDK_macOSTests/Pods-MatrixSDK_macOSTests-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 		7114C42CA45A805993B08914 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -1364,36 +1211,6 @@
 			showEnvVarsInLog = 0;
 		};
 		977E3F228F61BF8765F90684 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n";
-			showEnvVarsInLog = 0;
-		};
-		A5A33B4092C03D9E505EB48F /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "[CP] Copy Pods Resources";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-MatrixSDK_macOSTests/Pods-MatrixSDK_macOSTests-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		CFF00B3866841B206BAADB2E /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1565,21 +1382,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		C6CC8E301E2A8C37006C231F /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		C6CC8E391E2A8C38006C231F /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				C6CC8E431E2A8C38006C231F /* MatrixSDK_macOSTests.m in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -1587,11 +1389,6 @@
 			isa = PBXTargetDependency;
 			target = 32C6F92C19DD814400EA4E9C /* MatrixSDK */;
 			targetProxy = 3226DC3619DEED2100866530 /* PBXContainerItemProxy */;
-		};
-		C6CC8E401E2A8C38006C231F /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = C6CC8E341E2A8C37006C231F /* MatrixSDK_macOS */;
-			targetProxy = C6CC8E3F1E2A8C38006C231F /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1772,112 +1569,6 @@
 			};
 			name = Release;
 		};
-		C6CC8E461E2A8C38006C231F /* Debug */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 15EA746A71684C0E172E21C0 /* Pods-MatrixSDK_macOS.debug.xcconfig */;
-			buildSettings = {
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CODE_SIGN_IDENTITY = "-";
-				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEFINES_MODULE = YES;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				ENABLE_TESTABILITY = YES;
-				FRAMEWORK_VERSION = A;
-				GCC_NO_COMMON_BLOCKS = YES;
-				INFOPLIST_FILE = MatrixSDK_macOS/Info.plist;
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
-				PRODUCT_BUNDLE_IDENTIFIER = "org.matrix.MatrixSDK-macOS";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
-				SKIP_INSTALL = YES;
-				VERSIONING_SYSTEM = "apple-generic";
-			};
-			name = Debug;
-		};
-		C6CC8E471E2A8C38006C231F /* Release */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1C0C2C5CE0079FE9D278A88B /* Pods-MatrixSDK_macOS.release.xcconfig */;
-			buildSettings = {
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CODE_SIGN_IDENTITY = "-";
-				COMBINE_HIDPI_IMAGES = YES;
-				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEFINES_MODULE = YES;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				FRAMEWORK_VERSION = A;
-				GCC_NO_COMMON_BLOCKS = YES;
-				INFOPLIST_FILE = MatrixSDK_macOS/Info.plist;
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
-				PRODUCT_BUNDLE_IDENTIFIER = "org.matrix.MatrixSDK-macOS";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
-				SKIP_INSTALL = YES;
-				VERSIONING_SYSTEM = "apple-generic";
-			};
-			name = Release;
-		};
-		C6CC8E481E2A8C38006C231F /* Debug */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = C2F8E4479B19F7C8CE57943B /* Pods-MatrixSDK_macOSTests.debug.xcconfig */;
-			buildSettings = {
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CODE_SIGN_IDENTITY = "-";
-				COMBINE_HIDPI_IMAGES = YES;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				ENABLE_TESTABILITY = YES;
-				GCC_NO_COMMON_BLOCKS = YES;
-				INFOPLIST_FILE = MatrixSDK_macOSTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
-				PRODUCT_BUNDLE_IDENTIFIER = "org.matrix.MatrixSDK-macOSTests";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
-			};
-			name = Debug;
-		};
-		C6CC8E491E2A8C38006C231F /* Release */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = AEC6D863857E41E84955AB25 /* Pods-MatrixSDK_macOSTests.release.xcconfig */;
-			buildSettings = {
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CODE_SIGN_IDENTITY = "-";
-				COMBINE_HIDPI_IMAGES = YES;
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_NO_COMMON_BLOCKS = YES;
-				INFOPLIST_FILE = MatrixSDK_macOSTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
-				PRODUCT_BUNDLE_IDENTIFIER = "org.matrix.MatrixSDK-macOSTests";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1904,24 +1595,6 @@
 			buildConfigurations = (
 				32C6F94419DD814400EA4E9C /* Debug */,
 				32C6F94519DD814400EA4E9C /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		C6CC8E4A1E2A8C38006C231F /* Build configuration list for PBXNativeTarget "MatrixSDK_macOS" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				C6CC8E461E2A8C38006C231F /* Debug */,
-				C6CC8E471E2A8C38006C231F /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		C6CC8E4B1E2A8C38006C231F /* Build configuration list for PBXNativeTarget "MatrixSDK_macOSTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				C6CC8E481E2A8C38006C231F /* Debug */,
-				C6CC8E491E2A8C38006C231F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
