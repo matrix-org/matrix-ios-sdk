@@ -14,7 +14,9 @@
  limitations under the License.
  */
 
-#if TRAGET_OS_IPHONE
+#import "TargetConditionals.h"
+
+#if TARGET_OS_IPHONE
 #import <AssetsLibrary/ALAsset.h>
 #import <AssetsLibrary/ALAssetRepresentation.h>
 #endif
