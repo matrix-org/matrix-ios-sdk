@@ -8,6 +8,10 @@ pod 'AFNetworking', '~> 3.1.0'
 
 pod 'OLMKit'
 #pod 'OLMKit', :path => '../olm/OLMKit.podspec'
+
+# This fork of OLMKit includes only trivial changes that enable it to run on macOS.
+#pod 'OLMKit', :git => 'https://github.com/aapierce0/OLMKit.git', :branch => 'macOS_port'
+
 pod 'Realm', '~> 2.1.1'
 
 end
