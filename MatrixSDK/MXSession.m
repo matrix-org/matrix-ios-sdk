@@ -568,14 +568,12 @@ typedef void (^MXOnResumeDone)();
     [_notificationCenter removeAllListeners];
     _notificationCenter = nil;
 
-#ifdef MX_CALL_STACK_JINGLE
     // Stop calls
     if (_callManager)
     {
         [_callManager close];
         _callManager = nil;
     }
-#endif // MX_CALL_STACK_JINGLE
     
     // Stop crypto
     if (_crypto)
@@ -1129,7 +1127,6 @@ typedef void (^MXOnResumeDone)();
 }
 
 #pragma mark - Options
-#ifdef MX_CALL_STACK_JINGLE
 - (void)enableVoIPWithCallStack:(id<MXCallStack>)callStack
 {
     // A call stack is defined for life
@@ -1137,7 +1134,6 @@ typedef void (^MXOnResumeDone)();
 
     _callManager = [[MXCallManager alloc] initWithMatrixSession:self andCallStack:callStack];
 }
-#endif MX_CALL_STACK_JINGLE
 
 - (MXHTTPOperation *)enableCrypto:(BOOL)enableCrypto success:(void (^)())success failure:(void (^)(NSError *))failure
 {

@@ -15,9 +15,13 @@
  */
 
 #import <Foundation/Foundation.h>
-#ifdef MX_CALL_STACK_JINGLE
 
+#if TARGET_OS_IPHONE
 #import <UIKit/UIKit.h>
+#elif TARGET_OS_OSX
+#import <Cocoa/Cocoa.h>
+#endif
+
 #import <AVFoundation/AVCaptureDevice.h>
 
 @protocol MXCallStackCallDelegate;
@@ -128,18 +132,29 @@
 /**
  The UIView that receives frames from the user's camera.
  */
+#if TARGET_OS_IPHONE
 @property (nonatomic) UIView *selfVideoView;
+#elif TARGET_OS_OSX
+@property (nonatomic) NSView *selfVideoView;
+#endif
+
 
 /**
  The UIView that receives frames from the remote camera.
  */
+#if TARGET_OS_IPHONE
 @property (nonatomic) UIView *remoteVideoView;
+#elif TARGET_OS_OSX
+@property (nonatomic) NSView *remoteVideoView;
+#endif
 
 /**
  The camera orientation. It is used to display the video in the right direction
  on the other peer device.
  */
+#if TARGET_OS_IPHONE
 @property (nonatomic) UIDeviceOrientation selfOrientation;
+#endif
 
 /**
  Mute state of the outbound audio.
@@ -191,5 +206,3 @@
 - (void)callStackCall:(id<MXCallStackCall>)callStackCall onError:(NSError*)error;
 
 @end
-
-#endif // MX_CALL_STACK_JINGLE

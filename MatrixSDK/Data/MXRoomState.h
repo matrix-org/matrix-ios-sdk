@@ -255,7 +255,6 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
 
 
 # pragma mark - Conference call
-#ifdef MX_CALL_STACK_JINGLE
 /**
  Flag indicating there is conference call ongoing in the room.
  */
@@ -285,5 +284,4 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
  @return an array of MXRoomMember objects.
  */
 - (NSArray<MXRoomMember*>*)membersWithMembership:(MXMembership)membership includeConferenceUser:(BOOL)includeConferenceUser;
-#endif // MX_CALL_STACK_JINGLE
 @end

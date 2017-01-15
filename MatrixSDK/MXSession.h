@@ -254,13 +254,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  */
 @property (nonatomic, readonly) MXNotificationCenter *notificationCenter;
 
-#ifdef MX_CALL_STACK_JINGLE
 /**
  The module that manages incoming and outgoing calls.
  Nil by default. It is created when [self enableVoIPWithCallStack:] is called
  */
 @property (nonatomic, readonly) MXCallManager *callManager;
-#endif // MX_CALL_STACK_JINGLE
 
 /**
  The module that manages E2E encryption.
@@ -439,14 +437,12 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 @property (nonatomic) BOOL ignoreProfileChangesDuringLastMessageProcessing;
 
-#ifdef MX_CALL_STACK_JINGLE
 /**
  Enable VoIP by setting the external VoIP stack to use.
  
  @param callStack the VoIP call stack to use.
  */
 - (void)enableVoIPWithCallStack:(id<MXCallStack>)callStack;
-#endif // MX_CALL_STACK_JINGLE
 
 /**
  Enable End-to-End encryption.

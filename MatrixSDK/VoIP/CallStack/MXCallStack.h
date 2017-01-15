@@ -16,8 +16,6 @@
 
 #import <Foundation/Foundation.h>
 
-#ifdef MX_CALL_STACK_JINGLE
-
 #import "MXCallStackCall.h"
 
 /**
@@ -41,5 +39,3 @@
 - (id<MXCallStackCall>)createCall;
 
 @end
-
-#endif // MX_CALL_STACK_JINGLE

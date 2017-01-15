@@ -843,8 +843,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 
 #pragma mark - Voice over IP
 
-#ifdef MX_CALL_STACK_JINGLE
-
 /**
  Place a voice or a video call into the room.
 
@@ -855,8 +853,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 - (void)placeCallWithVideo:(BOOL)video
                    success:(void (^)(MXCall *call))success
                    failure:(void (^)(NSError *error))failure;
-
-#endif
 
 #pragma mark - Read receipts management
 

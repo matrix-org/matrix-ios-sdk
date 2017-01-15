@@ -1533,7 +1533,6 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 
 
 #pragma mark - Voice over IP
-#ifdef MX_CALL_STACK_JINGLE
 - (void)placeCallWithVideo:(BOOL)video
                    success:(void (^)(MXCall *call))success
                    failure:(void (^)(NSError *error))failure
@@ -1547,7 +1546,6 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         failure(nil);
     }
 }
-#endif // MX_CALL_STACK_JINGLE
 
 #pragma mark - Read receipts management
 

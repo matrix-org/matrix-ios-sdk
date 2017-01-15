@@ -16,8 +16,6 @@
 
 #import <Foundation/Foundation.h>
 
-#ifdef MX_CALL_STACK_JINGLE
-
 #import "MXCall.h"
 #import "MXCallStack.h"
 #import "MXJSONModels.h"
@@ -166,5 +164,3 @@ extern NSString *const kMXCallManagerConferenceFinished;
 + (BOOL)canPlaceConferenceCallInRoom:(MXRoom*)room;
 
 @end
-
-#endif // MX_CALL_STACK_JINGLE
