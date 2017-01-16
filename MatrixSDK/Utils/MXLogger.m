@@ -145,9 +145,8 @@ static void handleUncaughtException(NSException *exception)
     NSString *model = [[UIDevice currentDevice] model];
     NSString *version = [[UIDevice currentDevice] systemVersion];
 #elif TARGET_OS_OSX
-    // TODO: Detect device and OS version on the Mac.
     NSString *model = @"Mac";
-    NSString *version = @"TBD";
+    NSString *version = [[NSProcessInfo processInfo] operatingSystemVersionString];
 #endif
     NSArray  *backtrace = [exception callStackSymbols];
     NSString *description = [NSString stringWithFormat:@"%tu - %@\n%@\nApplication: %@ (%@)\nApplication version: %@\nMatrix SDK version: %@\nBuild: %@\n%@ %@\n\nMain thread: %@\n%@\n",
