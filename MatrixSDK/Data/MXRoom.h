@@ -99,6 +99,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  The value is stored by the session store. Thus, it can be retrieved
  when the application restarts.
  */
+// @TODO: Move to MXRoomSummary
 @property (nonatomic) NSString *partialTextMessage;
 
 /**
@@ -120,6 +121,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  It is based on the notificationCount field in /sync response.
  (kMXRoomDidUpdateUnreadNotification is posted when this property is updated)
  */
+// @TODO: Move to MXRoomSummary
 @property (nonatomic, readonly) NSUInteger notificationCount;
 
 /**
@@ -127,6 +129,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  It is based on the notificationCount field in /sync response.
  (kMXRoomDidUpdateUnreadNotification is posted when this property is updated)
  */
+// @TODO: Move to MXRoomSummary
 @property (nonatomic, readonly) NSUInteger highlightCount;
 
 /**
@@ -230,6 +233,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  @return the last event of the requested types or the true last event if no event of the requested type is found.
  (CAUTION: All rooms must have a last message. For this reason, the returned event may be a profile change even if it should be ignored).
  */
+// @TODO: deprecated
 - (MXEvent*)lastMessageWithTypeIn:(NSArray*)type;
 
 /**

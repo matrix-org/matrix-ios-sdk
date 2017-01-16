@@ -98,6 +98,20 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
  */
 @property (nonatomic) NSString *topic;
 
+/**
+ The number of unread messages that match the push notification rules.
+ It is based on the notificationCount field in /sync response.
+ (kMXRoomDidUpdateUnreadNotification is posted when this property is updated)
+ */
+//@property (nonatomic) NSUInteger notificationCount;
+
+/**
+ The number of highlighted unread messages (subset of notifications).
+ It is based on the notificationCount field in /sync response.
+ (kMXRoomDidUpdateUnreadNotification is posted when this property is updated)
+ */
+//@property (nonatomic) NSUInteger highlightCount;
+
 // @TODO: Add:
 
 /*

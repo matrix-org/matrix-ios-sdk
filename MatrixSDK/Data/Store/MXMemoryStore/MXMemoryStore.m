@@ -254,6 +254,7 @@
 
 - (NSUInteger)localUnreadEventCount:(NSString*)roomId withTypeIn:(NSArray*)types
 {
+    // @TODO: This method is only logic which could be moved to MXRoom
     MXMemoryRoomStore* store = [roomStores valueForKey:roomId];
     NSMutableDictionary* receipsByUserId = [receiptsByRoomId objectForKey:roomId];
     NSUInteger count = 0;
