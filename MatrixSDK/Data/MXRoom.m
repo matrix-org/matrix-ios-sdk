@@ -560,7 +560,11 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 - (MXHTTPOperation*)sendImage:(NSData*)imageData
                 withImageSize:(CGSize)imageSize
                      mimeType:(NSString*)mimetype
+#if TARGET_OS_IPHONE
                  andThumbnail:(UIImage*)thumbnail
+#elif TARGET_OS_OSX
+                 andThumbnail:(NSImage*)thumbnail
+#endif
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure
@@ -748,7 +752,11 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 }
 
 - (MXHTTPOperation*)sendVideo:(NSURL*)videoLocalURL
+#if TARGET_OS_IPHONE
                 withThumbnail:(UIImage*)videoThumbnail
+#elif TARGET_OS_OSX
+                withThumbnail:(NSImage*)videoThumbnail
+#endif
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure
