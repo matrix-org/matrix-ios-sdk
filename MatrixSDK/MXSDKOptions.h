@@ -33,7 +33,6 @@
 
      pod 'WebRTC'
  */
-
 #if __has_include(<WebRTC/RTCPeerConnection.h>)
 #define MX_CALL_STACK_JINGLE
 #endif
@@ -46,9 +45,18 @@
 
      pod 'OLMKit'
  */
-
 #if __has_include(<OLMKit/OLMKit.h>)
 #define MX_CRYPTO
+#endif
+
+/**
+ Google Analytics.
+
+ The Matrix SDK will send some stats to Google Analytics if the application imports
+ the GoogleAnalytics library (like pod 'GoogleAnalytics') and if 'enableGoogleAnalytics' is YES.
+ */
+#if __has_include(<GoogleAnalytics/GAI.h>)
+#define MX_GA
 #endif
 
 
@@ -74,5 +82,12 @@
  NO by default.
  */
 @property (nonatomic) BOOL enableCryptoWhenStartingMXSession;
+
+/**
+ Send stats to Google Analytics.
+
+ NO by default.
+ */
+@property (nonatomic) BOOL enableGoogleAnalytics;
 
 @end

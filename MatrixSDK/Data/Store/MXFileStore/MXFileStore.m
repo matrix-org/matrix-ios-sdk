@@ -22,6 +22,8 @@
 
 #import "MXFileStoreMetaData.h"
 
+#import "MXEnumConstants.h"
+
 NSUInteger const kMXFileVersion = 35;
 
 NSString *const kMXFileStoreFolder = @"MXFileStore";
@@ -196,9 +198,21 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
                 [self loadReceipts];
                 [self loadUsers];
 
-                NSLog(@"[MXFileStore] Data loaded from files in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                NSTimeInterval durationMs = [[NSDate date] timeIntervalSinceDate:startDate] * 1000;
+                NSLog(@"[MXFileStore] Data loaded from files in %.0fms", durationMs);
+
+#ifdef MX_GA
+                if ([MXSDKOptions sharedInstance].enableGoogleAnalytics)
+                {
+                    id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
+                    [tracker send:[[GAIDictionaryBuilder createTimingWithCategory:kMXGoogleAnalyticsStartupCategory
+                                                                         interval:@((int)durationMs)
+                                                                             name:kMXGoogleAnalyticsStartupStorePreload
+                                                                            label:nil] build]];
+                }
+#endif
             }
-            
+
             // Else, if credentials is valid, create and store it
             if (nil == metaData && credentials.homeServer && credentials.userId && credentials.accessToken)
             {
