@@ -710,7 +710,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                 CGImageRef cgRef = [thumbnail CGImageForProposedRect:NULL context:nil hints:nil];
                 NSBitmapImageRep *newRep = [[NSBitmapImageRep alloc] initWithCGImage:cgRef];
                 [newRep setSize:[thumbnail size]];
-                NSData *pngImageData = [newRep representationUsingType:NSPNGFileType properties:nil];
+                NSData *pngImageData = [newRep representationUsingType:NSPNGFileType properties:@{}];
 #endif
                 
                 [MXEncryptedAttachments encryptAttachment:thumbUploader mimeType:@"image/png" data:pngImageData success:^(NSDictionary *result) {

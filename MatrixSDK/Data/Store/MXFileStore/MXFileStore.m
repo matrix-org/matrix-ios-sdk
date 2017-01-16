@@ -478,9 +478,9 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     // Save data only if metaData exists
     if (metaData)
     {
+#if TARGET_OS_IPHONE
         NSDate *startDate = [NSDate date];
         // Commit the data even if the app goes in background
-#if TARGET_OS_IPHONE
         __block UIBackgroundTaskIdentifier backgroundTaskIdentifier = [[UIApplication sharedApplication] beginBackgroundTaskWithName:@"commit" expirationHandler:^{
 
             NSLog(@"[MXFileStore commit] Background task #%tu is going to expire after %.0fms - ending it",
@@ -488,11 +488,11 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
             [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
             backgroundTaskIdentifier = UIBackgroundTaskInvalid;
         }];
-#endif
-        
-#if DEBUG && TARGET_OS_IPHONE
+#if DEBUG
         NSLog(@"[MXFileStore commit] Background task #%tu started", backgroundTaskIdentifier);
-#endif
+#endif // DEBUG
+#endif // TARGET_OS_IPHONE
+        
         // Make sure the data will be backed up with the right events stream token
         dispatch_async(dispatchQueue, ^(void){
             backupEventStreamToken = self.eventStreamToken;
