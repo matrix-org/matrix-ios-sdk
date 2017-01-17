@@ -560,7 +560,11 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 - (MXHTTPOperation*)sendImage:(NSData*)imageData
                 withImageSize:(CGSize)imageSize
                      mimeType:(NSString*)mimetype
+#if TARGET_OS_IPHONE
                  andThumbnail:(UIImage*)thumbnail
+#elif TARGET_OS_OSX
+                 andThumbnail:(NSImage*)thumbnail
+#endif
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure
@@ -700,7 +704,16 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
                 
                 MXMediaLoader *thumbUploader = [MXMediaManager prepareUploaderWithMatrixSession:self.mxSession initialRange:0.9 andRange:1];
                 
-                [MXEncryptedAttachments encryptAttachment:thumbUploader mimeType:@"image/png" data:UIImagePNGRepresentation(thumbnail) success:^(NSDictionary *result) {
+#if TARGET_OS_IPHONE
+                NSData *pngImageData = UIImagePNGRepresentation(thumbnail);
+#elif TARGET_OS_OSX
+                CGImageRef cgRef = [thumbnail CGImageForProposedRect:NULL context:nil hints:nil];
+                NSBitmapImageRep *newRep = [[NSBitmapImageRep alloc] initWithCGImage:cgRef];
+                [newRep setSize:[thumbnail size]];
+                NSData *pngImageData = [newRep representationUsingType:NSPNGFileType properties:@{}];
+#endif
+                
+                [MXEncryptedAttachments encryptAttachment:thumbUploader mimeType:@"image/png" data:pngImageData success:^(NSDictionary *result) {
                     
                     msgContent[@"info"][@"thumbnail_file"] = result;
                     
@@ -739,15 +752,27 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 }
 
 - (MXHTTPOperation*)sendVideo:(NSURL*)videoLocalURL
+#if TARGET_OS_IPHONE
                 withThumbnail:(UIImage*)videoThumbnail
+#elif TARGET_OS_OSX
+                withThumbnail:(NSImage*)videoThumbnail
+#endif
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure
 {
     // Create a fake operation by default
     MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
-    
+#if TARGET_OS_IPHONE
     NSData *videoThumbnailData = UIImageJPEGRepresentation(videoThumbnail, 0.8);
+#elif TARGET_OS_OSX
+    CGImageRef cgRef = [videoThumbnail CGImageForProposedRect:NULL context:nil hints:nil];
+    NSBitmapImageRep *newRep = [[NSBitmapImageRep alloc] initWithCGImage:cgRef];
+    [newRep setSize:[videoThumbnail size]];
+    NSData *videoThumbnailData = [newRep representationUsingType:NSJPEGFileType properties: @{NSImageCompressionFactor: @0.8}];
+#endif
+    
+    
     
     // Use the uploader id as fake URL for this image data
     // The URL does not need to be valid as the MediaManager will get the data
@@ -1529,7 +1554,6 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         failure(nil);
     }
 }
-
 
 #pragma mark - Read receipts management
 

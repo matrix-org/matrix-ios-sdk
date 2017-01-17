@@ -122,7 +122,9 @@ typedef void (^MXOnResumeDone)();
      The background task used when the session continue to run the events stream when
      the app goes in background.
      */
+#if TARGET_OS_IPHONE
     UIBackgroundTaskIdentifier backgroundTaskIdentifier;
+#endif
     
     /**
      Tell whether the client should synthesize the direct chats from the current heuristics of what counts as a 1:1 room.
@@ -159,7 +161,9 @@ typedef void (^MXOnResumeDone)();
         accountData = [[MXAccountData alloc] init];
         peekingRooms = [NSMutableArray array];
         _preventPauseCount = 0;
+#if TARGET_OS_IPHONE
         backgroundTaskIdentifier = UIBackgroundTaskInvalid;
+#endif
 
         _acknowledgableEventTypes = @[kMXEventTypeStringRoomName,
                                       kMXEventTypeStringRoomTopic,
@@ -424,6 +428,7 @@ typedef void (^MXOnResumeDone)();
     {
         NSLog(@"[MXSession pause] Prevent the session from being paused. preventPauseCount: %tu", _preventPauseCount);
 
+#if TARGET_OS_IPHONE
         if (backgroundTaskIdentifier == UIBackgroundTaskInvalid)
         {
             backgroundTaskIdentifier = [[UIApplication sharedApplication] beginBackgroundTaskWithName:@"MXSessionBackgroundTask" expirationHandler:^{
@@ -436,6 +441,7 @@ typedef void (^MXOnResumeDone)();
 
             NSLog(@"[MXSession pause] Created background task #%tu", backgroundTaskIdentifier);
         }
+#endif
 
         [self setState:MXSessionStatePauseRequested];
 
@@ -466,6 +472,7 @@ typedef void (^MXOnResumeDone)();
 {
     NSLog(@"[MXSession] resume the event stream from state %tu", _state);
 
+#if TARGET_OS_IPHONE
     // Reset pause preventing mechanism if any
     if (backgroundTaskIdentifier != UIBackgroundTaskInvalid)
     {
@@ -474,6 +481,7 @@ typedef void (^MXOnResumeDone)();
         [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
         backgroundTaskIdentifier = UIBackgroundTaskInvalid;
     }
+#endif
 
     // Check whether no request is already in progress
     if (!eventStreamRequest ||
@@ -589,7 +597,7 @@ typedef void (^MXOnResumeDone)();
         [_callManager close];
         _callManager = nil;
     }
-
+    
     // Stop crypto
     if (_crypto)
     {
@@ -597,12 +605,14 @@ typedef void (^MXOnResumeDone)();
         _crypto = nil;
     }
 
+#if TARGET_OS_IPHONE
     // Stop background task
     if (backgroundTaskIdentifier != UIBackgroundTaskInvalid)
     {
         [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
         backgroundTaskIdentifier = UIBackgroundTaskInvalid;
     }
+#endif
 
     _myUser = nil;
     matrixRestClient = nil;
@@ -645,6 +655,7 @@ typedef void (^MXOnResumeDone)();
     if (_preventPauseCount == 0)
     {
         // The background task can be released
+#if TARGET_OS_IPHONE
         if (backgroundTaskIdentifier != UIBackgroundTaskInvalid)
         {
             NSLog(@"[MXSession pause] Stop background task #%tu", backgroundTaskIdentifier);
@@ -652,6 +663,7 @@ typedef void (^MXOnResumeDone)();
             [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
             backgroundTaskIdentifier = UIBackgroundTaskInvalid;
         }
+#endif
 
         // And the session can be paused for real if it was not resumed before
         if (_state == MXSessionStatePauseRequested)

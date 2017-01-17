@@ -14,6 +14,7 @@
  limitations under the License.
  */
 
+
 #import "MXCall.h"
 
 #import "MXSession.h"
@@ -401,7 +402,11 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallStateDidChange object:self userInfo:nil];
 }
 
+#if TARGET_OS_IPHONE
 - (void)setSelfVideoView:(UIView *)selfVideoView
+#elif TARGET_OS_OSX
+- (void)setSelfVideoView:(NSView *)selfVideoView
+#endif
 {
     if (selfVideoView != _selfVideoView)
     {
@@ -410,7 +415,11 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     }
 }
 
+#if TARGET_OS_IPHONE
 - (void)setRemoteVideoView:(UIView *)remoteVideoView
+#elif TARGET_OS_OSX
+- (void)setRemoteVideoView:(NSView *)remoteVideoView
+#endif
 {
     if (remoteVideoView != _remoteVideoView)
     {
@@ -419,11 +428,14 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     }
 }
 
+#if TARGET_OS_IPHONE
 - (UIDeviceOrientation)selfOrientation
 {
     return callStackCall.selfOrientation;
 }
+#endif
 
+#if TARGET_OS_IPHONE
 - (void)setSelfOrientation:(UIDeviceOrientation)selfOrientation
 {
     if (callStackCall.selfOrientation != selfOrientation)
@@ -431,6 +443,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         callStackCall.selfOrientation = selfOrientation;
     }
 }
+#endif
 
 - (BOOL)audioMuted
 {
@@ -602,3 +615,4 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 }
 
 @end
+

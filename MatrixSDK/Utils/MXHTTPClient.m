@@ -68,10 +68,12 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
      */
     MXHTTPClientOnUnrecognizedCertificate onUnrecognizedCertificateBlock;
 
+#if TARGET_OS_IPHONE
     /**
      The current background task id if any.
      */
     UIBackgroundTaskIdentifier backgroundTaskIdentifier;
+#endif
 
     /**
      Flag to indicate that the underlying NSURLSession has been invalidated.
@@ -111,7 +113,9 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
         }
         
         onUnrecognizedCertificateBlock = onUnrecognizedCertBlock;
+#if TARGET_OS_IPHONE
         backgroundTaskIdentifier = UIBackgroundTaskInvalid;
+#endif
         
         // Send requests parameters in JSON format by default
         self.requestParametersInJSON = YES;
@@ -133,10 +137,12 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
 {
     [self cancel];
 
+#if TARGET_OS_IPHONE
     if (backgroundTaskIdentifier != UIBackgroundTaskInvalid)
     {
         [self cleanupBackgroundTask];
     }
+#endif
 
     httpManager = nil;
 }
@@ -459,6 +465,7 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
             //     - then, the sending of the message event associated to this media
             // When backgrounding the app while sending the media, the user expects that the two
             // requests complete.
+            
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self cleanupBackgroundTask];
             });
@@ -503,6 +510,7 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
  */
 - (void)startBackgroundTask
 {
+#if TARGET_OS_IPHONE
     // Create the bg task if it does not exist yet
     if (backgroundTaskIdentifier == UIBackgroundTaskInvalid)
     {
@@ -525,7 +533,9 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
             }
         }];
     }
+#endif
 }
+
 
 /**
  End the background task.
@@ -534,11 +544,13 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
  */
 - (void)cleanupBackgroundTask
 {
+#if TARGET_OS_IPHONE
     if (backgroundTaskIdentifier != UIBackgroundTaskInvalid && httpManager.tasks.count == 0)
     {
         [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
         backgroundTaskIdentifier = UIBackgroundTaskInvalid;
     }
+#endif
 }
 
 

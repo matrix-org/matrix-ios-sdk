@@ -14,8 +14,12 @@
  limitations under the License.
  */
 
-#import <Foundation/Foundation.h>
+#import "TargetConditionals.h"
+#if TARGET_OS_IPHONE
 #import <UIKit/UIKit.h>
+#elif TARGET_OS_OSX
+#import <Cocoa/Cocoa.h>
+#endif
 
 #import "MXEvent.h"
 #import "MXJSONModels.h"

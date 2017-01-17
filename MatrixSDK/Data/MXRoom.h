@@ -16,6 +16,12 @@
 
 #import <Foundation/Foundation.h>
 
+#if TARGET_OS_IPHONE
+#import <UIKit/UIKit.h>
+#elif TARGET_OS_OSX
+#import <Cocoa/Cocoa.h>
+#endif
+
 #import "MXEvent.h"
 #import "MXJSONModels.h"
 #import "MXRoomMember.h"
@@ -363,7 +369,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 - (MXHTTPOperation*)sendImage:(NSData*)imageData
                 withImageSize:(CGSize)imageSize
                      mimeType:(NSString*)mimetype
+#if TARGET_OS_IPHONE
                  andThumbnail:(UIImage*)thumbnail
+#elif TARGET_OS_OSX
+                 andThumbnail:(NSImage*)thumbnail
+#endif
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure;
@@ -381,7 +391,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)sendVideo:(NSURL*)videoLocalURL
+#if TARGET_OS_IPHONE
                 withThumbnail:(UIImage*)videoThumbnail
+#elif TARGET_OS_OSX
+                withThumbnail:(NSImage*)videoThumbnail
+#endif
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure;
@@ -846,7 +860,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 - (void)placeCallWithVideo:(BOOL)video
                    success:(void (^)(MXCall *call))success
                    failure:(void (^)(NSError *error))failure;
-
 
 #pragma mark - Read receipts management
 
