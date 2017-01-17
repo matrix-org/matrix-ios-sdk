@@ -420,6 +420,36 @@ NSMutableArray *roomsToClean;
     }];
 }
 
+- (void)doMXSessionTestWithBobAndARoom:(XCTestCase*)testCase andStore:(id<MXStore>)store
+                           readyToTest:(void (^)(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation))readyToTest
+{
+    [self doMXRestClientTestWithBob:testCase readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+
+        [bobRestClient createRoom:@"A room" visibility:nil roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
+
+            [mxSession setStore:store success:^{
+
+                [mxSession start:^{
+
+                    MXRoom *room = [mxSession roomWithRoomId:response.roomId];
+                    readyToTest(mxSession, room, expectation);
+
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                }];
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+
+
+    }];
+}
+
 
 #pragma mark - mxAlice
 - (void)getAliceCredentials:(void (^)())success

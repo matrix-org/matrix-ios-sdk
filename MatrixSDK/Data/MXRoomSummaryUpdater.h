@@ -50,6 +50,13 @@
  */
 @property (nonatomic) BOOL ignoreMemberProfileChanges;
 
+/**
+ If YES, ignore redacted events as last message.
+
+ Default is NO.
+ */
+@property (nonatomic) BOOL ignoreRedactedEvent;
+
 
 #pragma mark - Methods
 

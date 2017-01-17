@@ -59,7 +59,14 @@
         if ([event.redacts isEqualToString:summary.lastEventId])
         {
             [summary reset];
+            return YES;
         }
+        return NO;
+    }
+
+    // Accept redacted event only if configured
+    if (_ignoreRedactedEvent && event.redactedBecause)
+    {
         return NO;
     }
 

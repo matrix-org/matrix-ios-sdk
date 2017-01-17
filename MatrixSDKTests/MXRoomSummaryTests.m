@@ -18,6 +18,8 @@
 
 #import "MatrixSDKTestsData.h"
 
+#import "MXMemoryStore.h"
+
 #import "MXRoomSummaryUpdater.h"
 
 @interface MXRoomSummaryTests : XCTestCase <MXRoomSummaryUpdating>
@@ -54,7 +56,7 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
 
     if ([self.description containsString:@"testDelegate"])
     {
-        XCTAssertNotEqualObjects(summary.lastEvent.eventId, event.eventId);
+        XCTAssertNotEqualObjects(summary.lastEventId, event.eventId);
 
         // Do a classic update
         MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:session];
@@ -63,7 +65,7 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
         summary.lastEventString = testDelegateLastEventString;
 
         XCTAssert(updated);
-        XCTAssertEqualObjects(summary.lastEvent.eventId, event.eventId);
+        XCTAssertEqualObjects(summary.lastEventId, event.eventId);
 
         testDelegate = YES;
     }
@@ -97,7 +99,7 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
         XCTAssert(summary);
 
         XCTAssertEqualObjects(summary.roomId, room.roomId);
-        XCTAssert(summary.lastEvent);
+        XCTAssert(summary.lastEventId);
 
         [expectation fulfill];
 
@@ -118,7 +120,7 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
             [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
             XCTAssert(testDelegate);
-            XCTAssertEqualObjects(summary.lastEvent.eventId, lastEventId);
+            XCTAssertEqualObjects(summary.lastEventId, lastEventId);
             XCTAssertEqualObjects(summary.lastEventString, testDelegateLastEventString);
 
             [expectation fulfill];
@@ -215,8 +217,7 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
 
                 [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
-                XCTAssertEqualObjects(summary.lastEvent.eventId, invitationEvent.eventId);
-                XCTAssertEqual(summary.lastEvent.eventType, MXEventTypeRoomMember);
+                XCTAssertEqualObjects(summary.lastEventId, invitationEvent.eventId);
 
                 // @TODO: Fix it (or fix the test) (is it testable?)
                 //XCTAssertEqualObjects(summary.displayname, newRoomName);
@@ -236,6 +237,63 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                 [expectation fulfill];
             }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testRedaction
+{
+    // Need a store to roll back the last message when the redaction happens
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+
+        MXRoomSummaryUpdater *defaultUpdater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:mxSession];
+        defaultUpdater.ignoreRedactedEvent = YES;
+
+        MXRoomSummary *summary = room.summary;
+
+        __block NSString *newEventId;
+        NSString *lastEventId = summary.lastEventId;
+
+        __block NSUInteger notifCount = 0;
+        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+            switch (notifCount++)
+            {
+                case 0:
+                {
+                    XCTAssertEqualObjects(summary.lastEventId, newEventId);
+
+                    // Redact the last event
+                    [room redactEvent:newEventId reason:nil success:nil failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+
+                    break;
+                }
+
+                case 1:
+                {
+                    [[NSNotificationCenter defaultCenter] removeObserver:observer];
+
+                    XCTAssertEqualObjects(summary.lastEventId, lastEventId, @"We must come back to the previous event");
+
+                    [expectation fulfill];
+                    break;
+                }
+
+                default:
+                    break;
+            }
+        }];
+
+        [room sendTextMessage:@"new message" success:^(NSString *eventId) {
+
+            newEventId = eventId;
 
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
