@@ -14,3 +14,6 @@ Dave Baker <dave at matrix.org>
 Matthew Hodgson <matthew at matrix.org>
  * General doc & housekeeping
  * File store: Stop leaking background tasks
+ 
+Avery Pierce <aapierce0 at gmail.com>
+ * MacOS compatibility
