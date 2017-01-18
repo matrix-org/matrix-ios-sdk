@@ -29,6 +29,12 @@
 
 #import "MXEnumConstants.h"
 
+#ifdef MX_GA
+#import "GAI.h"
+#import "GAIFields.h"
+#import "GAIDictionaryBuilder.h"
+#endif
+
 NSUInteger const kMXFileVersion = 35;
 
 NSString *const kMXFileStoreFolder = @"MXFileStore";

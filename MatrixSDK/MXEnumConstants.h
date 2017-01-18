@@ -16,6 +16,8 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MXSDKOptions.h"
+
 /**
  The file defines contants, enums and typdefs that are used from different classes
  of the SDK.

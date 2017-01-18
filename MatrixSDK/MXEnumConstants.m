@@ -64,7 +64,7 @@ NSString *const kMXGoogleAnalyticsStartupInititialSync = @"initialSync";
 NSString *const kMXGoogleAnalyticsStartupIncrementalSync = @"incrementalSync";
 NSString *const kMXGoogleAnalyticsStartupStorePreload = @"storePreload";
 NSString *const kMXGoogleAnalyticsStartupMountData = @"mountData";
-NSString *const kMXGoogleAnalyticsStartupLaunchScreen = @"LaunchScreen";
+NSString *const kMXGoogleAnalyticsStartupLaunchScreen = @"launchScreen";
 
 NSString *const kMXGoogleAnalyticsStatsCategory = @"stats";
 NSString *const kMXGoogleAnalyticsStatsRooms = @"rooms";
