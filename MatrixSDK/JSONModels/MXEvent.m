@@ -59,6 +59,8 @@ NSString *const kMXMessageTypeVideo     = @"m.video";
 NSString *const kMXMessageTypeLocation  = @"m.location";
 NSString *const kMXMessageTypeFile      = @"m.file";
 
+NSString *const kMXEventLocalEventIdPrefix = @"kMXEventLocalId_";
+
 NSString *const kMXMembershipStringInvite = @"invite";
 NSString *const kMXMembershipStringJoin   = @"join";
 NSString *const kMXMembershipStringLeave  = @"leave";
@@ -251,6 +253,11 @@ NSString *const kMXEventDidDecryptNotification = @"kMXEventDidDecryptNotificatio
 {
     // The event is a state event if has a state_key
     return (nil != self.stateKey);
+}
+
+- (BOOL)isLocalEvent
+{
+    return [_eventId hasPrefix:kMXEventLocalEventIdPrefix];
 }
 
 - (BOOL)isRedactedEvent
