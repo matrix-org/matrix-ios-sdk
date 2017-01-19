@@ -15,7 +15,6 @@
  */
 
 #import <Foundation/Foundation.h>
-#import <UIKit/UIKit.h>
 
 #import "MXHTTPClient.h"
 #import "MXEvent.h"

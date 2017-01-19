@@ -17,6 +17,13 @@
 #import <AVFoundation/AVFoundation.h>
 #import "MXMediaLoader.h"
 
+#if TARGET_OS_IPHONE
+#import <UIKit/UIKit.h>
+#elif TARGET_OS_OSX
+#import <Cocoa/Cocoa.h>
+#endif
+
+
 /**
  The predefined folder for avatar thumbnail.
  */
@@ -53,7 +60,11 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
  @param filePath picture file path.
  @return Image (if any).
  */
+#if TARGET_OS_IPHONE
 + (UIImage*)loadThroughCacheWithFilePath:(NSString*)filePath;
+#elif TARGET_OS_OSX
++ (NSImage*)loadThroughCacheWithFilePath:(NSString*)filePath;
+#endif
 
 /**
  Load an image from the in memory cache, or return nil if the image
@@ -62,13 +73,22 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
  @param filePath picture file path.
  @return Image (if any).
  */
+#if TARGET_OS_IPHONE
 + (UIImage*)getFromMemoryCacheWithFilePath:(NSString*)filePath;
+#elif TARGET_OS_OSX
++ (NSImage*)getFromMemoryCacheWithFilePath:(NSString*)filePath;
+#endif
 
 /**
  * Save an image to in-memory cache, evicting other images
  * if necessary
  */
+
+#if TARGET_OS_IPHONE
 + (void)cacheImage:(UIImage *)image withCachePath:(NSString *)cachePath;
+#elif TARGET_OS_OSX
++ (void)cacheImage:(NSImage *)image withCachePath:(NSString *)cachePath;
+#endif
 
 /**
  Load a picture from the local storage
@@ -76,7 +96,11 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
  @param filePath picture file path.
  @return Image (if any).
  */
+#if TARGET_OS_IPHONE
 + (UIImage*)loadPictureFromFilePath:(NSString*)filePath; 
+#elif TARGET_OS_OSX
++ (NSImage*)loadPictureFromFilePath:(NSString*)filePath;
+#endif
 
 /**
  Save an image to user's photos library
@@ -86,8 +110,9 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
  references the image in the file system or in the AssetsLibrary framework.
  @param failure A block object called when the operation fails.
  */
+#if TARGET_OS_IPHONE
 + (void)saveImageToPhotosLibrary:(UIImage*)image success:(void (^)(NSURL *imageURL))success failure:(void (^)(NSError *error))failure;
-
+#endif
 /**
  Save a media to user's photos library
  
@@ -97,7 +122,9 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
  references the media in the file system or in the AssetsLibrary framework.
  @param failure A block object called when the operation fails.
  */
+#if TARGET_OS_IPHONE
 + (void)saveMediaToPhotosLibrary:(NSURL*)fileURL isImage:(BOOL)isImage success:(void (^)(NSURL *imageURL))success failure:(void (^)(NSError *error))failure;
+#endif
 
 #pragma mark - Download
 

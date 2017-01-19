@@ -16,6 +16,8 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MXSDKOptions.h"
+
 /**
  The file defines contants, enums and typdefs that are used from different classes
  of the SDK.
@@ -160,4 +162,35 @@ typedef enum : NSUInteger
  The matrix.to base URL.
  */
 FOUNDATION_EXPORT NSString *const kMXMatrixDotToUrl;
+
+
+#pragma mark - Google Analytics
+
+/**
+ Timing stats relative to app startup.
+ */
+FOUNDATION_EXPORT NSString *const kMXGoogleAnalyticsStartupCategory;
+
+// Duration of the initial /sync request
+FOUNDATION_EXPORT NSString *const kMXGoogleAnalyticsStartupInititialSync;
+
+// Duration of the first /sync when resuming the app
+FOUNDATION_EXPORT NSString *const kMXGoogleAnalyticsStartupIncrementalSync;
+
+// Time to preload data in the MXStore
+FOUNDATION_EXPORT NSString *const kMXGoogleAnalyticsStartupStorePreload;
+
+// Time to mount all objects from the store (it includes kMXGoogleAnalyticsStartupStorePreload time)
+FOUNDATION_EXPORT NSString *const kMXGoogleAnalyticsStartupMountData;
+
+// Duration of the the display of the app launch screen
+FOUNDATION_EXPORT NSString *const kMXGoogleAnalyticsStartupLaunchScreen;
+
+/**
+ Overall stats category.
+ */
+FOUNDATION_EXPORT NSString *const kMXGoogleAnalyticsStatsCategory;
+
+// The number of room the user is in
+FOUNDATION_EXPORT NSString *const kMXGoogleAnalyticsStatsRooms;
 

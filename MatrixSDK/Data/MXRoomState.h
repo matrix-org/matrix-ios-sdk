@@ -284,5 +284,4 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
  @return an array of MXRoomMember objects.
  */
 - (NSArray<MXRoomMember*>*)membersWithMembership:(MXMembership)membership includeConferenceUser:(BOOL)includeConferenceUser;
-
 @end

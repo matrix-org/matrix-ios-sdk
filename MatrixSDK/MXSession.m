@@ -32,9 +32,16 @@
 
 #import "MXRoomSummaryUpdater.h"
 
+#ifdef MX_GA
+#import "GAI.h"
+#import "GAIFields.h"
+#import "GAIDictionaryBuilder.h"
+#endif
+
+
 #pragma mark - Constants definitions
 
-const NSString *MatrixSDKVersion = @"0.7.4";
+const NSString *MatrixSDKVersion = @"0.7.5";
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
@@ -67,7 +74,6 @@ typedef void (^MXOnResumeDone)();
      Each key is a room ID. Each value, the MXRoom instance.
      */
     NSMutableDictionary<NSString*, MXRoom*> *rooms;
-
 
     /**
      */
@@ -123,12 +129,19 @@ typedef void (^MXOnResumeDone)();
      The background task used when the session continue to run the events stream when
      the app goes in background.
      */
+#if TARGET_OS_IPHONE
     UIBackgroundTaskIdentifier backgroundTaskIdentifier;
+#endif
     
     /**
      Tell whether the client should synthesize the direct chats from the current heuristics of what counts as a 1:1 room.
      */
     BOOL shouldSynthesizeDirectChats;
+
+    /**
+     For debug, indicate if the first sync after the MXSession startup is done.
+     */
+    BOOL firstSyncDone;
 }
 
 /**
@@ -157,7 +170,9 @@ typedef void (^MXOnResumeDone)();
         accountData = [[MXAccountData alloc] init];
         peekingRooms = [NSMutableArray array];
         _preventPauseCount = 0;
+#if TARGET_OS_IPHONE
         backgroundTaskIdentifier = UIBackgroundTaskInvalid;
+#endif
 
         _acknowledgableEventTypes = @[kMXEventTypeStringRoomName,
                                       kMXEventTypeStringRoomTopic,
@@ -278,7 +293,19 @@ typedef void (^MXOnResumeDone)();
 
                 NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate3] * 1000);
 
-                NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                NSTimeInterval durationMs = [[NSDate date] timeIntervalSinceDate:startDate] * 1000;
+                NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", durationMs);
+
+#ifdef MX_GA
+                if ([MXSDKOptions sharedInstance].enableGoogleAnalytics)
+                {
+                    id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
+                    [tracker send:[[GAIDictionaryBuilder createTimingWithCategory:kMXGoogleAnalyticsStartupCategory
+                                                                         interval:@((int)durationMs)
+                                                                             name:kMXGoogleAnalyticsStartupMountData
+                                                                            label:nil] build]];
+                }
+#endif
 
                 [self setState:MXSessionStateStoreDataReady];
 
@@ -425,6 +452,7 @@ typedef void (^MXOnResumeDone)();
     {
         NSLog(@"[MXSession pause] Prevent the session from being paused. preventPauseCount: %tu", _preventPauseCount);
 
+#if TARGET_OS_IPHONE
         if (backgroundTaskIdentifier == UIBackgroundTaskInvalid)
         {
             backgroundTaskIdentifier = [[UIApplication sharedApplication] beginBackgroundTaskWithName:@"MXSessionBackgroundTask" expirationHandler:^{
@@ -437,6 +465,7 @@ typedef void (^MXOnResumeDone)();
 
             NSLog(@"[MXSession pause] Created background task #%tu", backgroundTaskIdentifier);
         }
+#endif
 
         [self setState:MXSessionStatePauseRequested];
 
@@ -467,6 +496,7 @@ typedef void (^MXOnResumeDone)();
 {
     NSLog(@"[MXSession] resume the event stream from state %tu", _state);
 
+#if TARGET_OS_IPHONE
     // Reset pause preventing mechanism if any
     if (backgroundTaskIdentifier != UIBackgroundTaskInvalid)
     {
@@ -475,6 +505,7 @@ typedef void (^MXOnResumeDone)();
         [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
         backgroundTaskIdentifier = UIBackgroundTaskInvalid;
     }
+#endif
 
     // Check whether no request is already in progress
     if (!eventStreamRequest ||
@@ -590,7 +621,7 @@ typedef void (^MXOnResumeDone)();
         [_callManager close];
         _callManager = nil;
     }
-
+    
     // Stop crypto
     if (_crypto)
     {
@@ -598,12 +629,14 @@ typedef void (^MXOnResumeDone)();
         _crypto = nil;
     }
 
+#if TARGET_OS_IPHONE
     // Stop background task
     if (backgroundTaskIdentifier != UIBackgroundTaskInvalid)
     {
         [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
         backgroundTaskIdentifier = UIBackgroundTaskInvalid;
     }
+#endif
 
     _myUser = nil;
     matrixRestClient = nil;
@@ -646,6 +679,7 @@ typedef void (^MXOnResumeDone)();
     if (_preventPauseCount == 0)
     {
         // The background task can be released
+#if TARGET_OS_IPHONE
         if (backgroundTaskIdentifier != UIBackgroundTaskInvalid)
         {
             NSLog(@"[MXSession pause] Stop background task #%tu", backgroundTaskIdentifier);
@@ -653,6 +687,7 @@ typedef void (^MXOnResumeDone)();
             [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
             backgroundTaskIdentifier = UIBackgroundTaskInvalid;
         }
+#endif
 
         // And the session can be paused for real if it was not resumed before
         if (_state == MXSessionStatePauseRequested)
@@ -689,12 +724,31 @@ typedef void (^MXOnResumeDone)();
         {
             return;
         }
-        
-        NSLog(@"[MXSession] Received %tu joined rooms, %tu invited rooms, %tu left rooms in %.0fms", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
-        
+
+        NSTimeInterval durationMs = [[NSDate date] timeIntervalSinceDate:startDate] * 1000;
+        NSLog(@"[MXSession] Received %tu joined rooms, %tu invited rooms, %tu left rooms in %.0fms", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, durationMs);
+
         // Check whether this is the initial sync
         BOOL isInitialSync = !_store.eventStreamToken;
-        
+
+#ifdef MX_GA
+        if (!firstSyncDone)
+        {
+            firstSyncDone = YES;
+
+            // Send stat on the first sync.
+            // This is either an initial sync or an incremental sync from the data of the store
+            if ([MXSDKOptions sharedInstance].enableGoogleAnalytics)
+            {
+                id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
+                [tracker send:[[GAIDictionaryBuilder createTimingWithCategory:kMXGoogleAnalyticsStartupCategory
+                                                                     interval:@((int)durationMs)
+                                                                         name:(isInitialSync ? kMXGoogleAnalyticsStartupInititialSync : kMXGoogleAnalyticsStartupIncrementalSync)
+                                                                        label:nil] build]];
+            }
+        }
+#endif
+
         // Handle top-level account data
         if (syncResponse.accountData)
         {
@@ -880,7 +934,18 @@ typedef void (^MXOnResumeDone)();
         
         // Pursue live events listening (long polling)
         [self serverSyncWithServerTimeout:SERVER_TIMEOUT_MS success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
-        
+
+#ifdef MX_GA
+        if ([MXSDKOptions sharedInstance].enableGoogleAnalytics && isInitialSync)
+        {
+            id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
+            [tracker send:[[GAIDictionaryBuilder createEventWithCategory:kMXGoogleAnalyticsStatsCategory
+                                                                  action:kMXGoogleAnalyticsStatsRooms
+                                                                   label:nil
+                                                                   value:@(rooms.count)] build]];
+        }
+#endif
+
         // Broadcast that a server sync has been processed.
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidSyncNotification
                                                             object:self

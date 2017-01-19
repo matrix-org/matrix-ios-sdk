@@ -141,8 +141,13 @@ static void handleUncaughtException(NSException *exception)
     }
 
     // Build the crash log
+#if TARGET_OS_IPHONE
     NSString *model = [[UIDevice currentDevice] model];
     NSString *version = [[UIDevice currentDevice] systemVersion];
+#elif TARGET_OS_OSX
+    NSString *model = @"Mac";
+    NSString *version = [[NSProcessInfo processInfo] operatingSystemVersionString];
+#endif
     NSArray  *backtrace = [exception callStackSymbols];
     NSString *description = [NSString stringWithFormat:@"%tu - %@\n%@\nApplication: %@ (%@)\nApplication version: %@\nMatrix SDK version: %@\nBuild: %@\n%@ %@\n\nMain thread: %@\n%@\n",
                              [[NSDate date] timeIntervalSince1970],

@@ -17,7 +17,6 @@
 #import <Foundation/Foundation.h>
 
 #import "MXJSONModels.h"
-#import <UIKit/UIKit.h>
 
 @class MXSession;
 @class MXEvent;

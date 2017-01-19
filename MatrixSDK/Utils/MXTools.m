@@ -16,7 +16,10 @@
 #import "MXTools.h"
 
 #import <AVFoundation/AVFoundation.h>
+
+#if TARGET_OS_IPHONE
 #import <MobileCoreServices/MobileCoreServices.h>
+#endif
 
 #import "MXEnumConstants.h"
 
