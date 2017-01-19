@@ -258,6 +258,8 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
         __block NSString *newEventId;
         NSString *lastEventId = summary.lastEventId;
 
+        XCTAssert(lastEventId);
+
         __block NSUInteger notifCount = 0;
         id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
