@@ -99,7 +99,7 @@
 
 - (NSString *)olmVersion
 {
-    return OLMKitVersionString();
+    return [OLMKit versionString];
 }
 
 - (NSString *)signMessage:(NSData*)message
