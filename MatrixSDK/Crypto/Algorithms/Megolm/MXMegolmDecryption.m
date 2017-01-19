@@ -106,7 +106,7 @@
                                                 NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorOlmReason, ciphertext, error]
                                                 }];
         }
-        else if ([error.domain isEqualToString:MXDecryptingErrorDomain] && error.code == MXDecryptingErrorUnkwnownInboundSessionIdCode)
+        else if ([error.domain isEqualToString:MXDecryptingErrorDomain] && error.code == MXDecryptingErrorUnknownInboundSessionIdCode)
         {
             [self addEventToPendingList:event inTimeline:timeline];
         }
