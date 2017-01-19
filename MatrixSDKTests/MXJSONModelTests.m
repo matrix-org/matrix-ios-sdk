@@ -68,7 +68,7 @@
 
     matrixSDKTestsData = [[MatrixSDKTestsData alloc] init];
 
-    httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", kMXTestsHomeServerURL, kMXAPIPrefixPathR0]
+    httpClient = [[MXHTTPClient alloc] initWithBaseURL:kMXTestsHomeServerURL
                      andOnUnrecognizedCertificateBlock:nil];
 }
 
@@ -85,7 +85,7 @@
         
         // Use publicRooms JSON response to check modelFromJSON
         [httpClient requestWithMethod:@"GET"
-                                 path:@"publicRooms"
+                                 path:[NSString stringWithFormat:@"%@/publicRooms", kMXAPIPrefixPathR0]
                            parameters:nil
                               success:^(NSDictionary *JSONResponse)
          {
