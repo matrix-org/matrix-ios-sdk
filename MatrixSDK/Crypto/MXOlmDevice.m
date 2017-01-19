@@ -435,7 +435,7 @@
             if (error)
             {
                 *error = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                             code:MXDecryptingErrorUnkwnownInboundSessionIdCode
+                                             code:MXDecryptingErrorUnknownInboundSessionIdCode
                                          userInfo:@{
                                                     NSLocalizedDescriptionKey: errorDescription
                                                     }];
@@ -449,9 +449,9 @@
         if (error)
         {
             *error = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                         code:MXDecryptingErrorUnkwnownInboundSessionIdCode
+                                         code:MXDecryptingErrorUnknownInboundSessionIdCode
                                      userInfo:@{
-                                                NSLocalizedDescriptionKey: MXDecryptingErrorUnkwnownInboundSessionIdReason
+                                                NSLocalizedDescriptionKey: MXDecryptingErrorUnknownInboundSessionIdReason
                                                 }];
         }
     }

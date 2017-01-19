@@ -24,7 +24,7 @@ typedef enum : NSUInteger
     MXDecryptingErrorUnableToEncryptCode,
     MXDecryptingErrorUnableToDecryptCode,
     MXDecryptingErrorOlmCode,
-    MXDecryptingErrorUnkwnownInboundSessionIdCode,
+    MXDecryptingErrorUnknownInboundSessionIdCode,
     MXDecryptingErrorInboundSessionMismatchRoomIdCode,
     MXDecryptingErrorMissingFieldsCode,
     MXDecryptingErrorMissingCiphertextCode,
@@ -45,7 +45,7 @@ FOUNDATION_EXPORT NSString* const MXDecryptingErrorUnableToDecrypt;
 FOUNDATION_EXPORT NSString* const MXDecryptingErrorUnableToDecryptReason;
 FOUNDATION_EXPORT NSString* const MXDecryptingErrorOlm;
 FOUNDATION_EXPORT NSString* const MXDecryptingErrorOlmReason;
-FOUNDATION_EXPORT NSString* const MXDecryptingErrorUnkwnownInboundSessionIdReason;
+FOUNDATION_EXPORT NSString* const MXDecryptingErrorUnknownInboundSessionIdReason;
 FOUNDATION_EXPORT NSString* const MXDecryptingErrorInboundSessionMismatchRoomIdReason;
 FOUNDATION_EXPORT NSString* const MXDecryptingErrorMissingFieldsReason;
 FOUNDATION_EXPORT NSString* const MXDecryptingErrorMissingCiphertextReason;
