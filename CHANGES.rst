@@ -1,3 +1,18 @@
+Changes in Matrix iOS SDK in 0.7.5 (2017-01-19)
+===============================================
+
+Improvements:
+ * Matrix iOS SDK in now compatible with macOS, thanks to @aapierce0 (PR #218).
+ * MXEvent.sentState: add MXEventSentStatePreparing state.
+ * Google Analytics: Add an option to send some speed stats to GA (It is currently focused on app startup).
+ 
+Bug fixes:
+ * Resend now function doesn't work on canceled upload file (https://github.com/vector-im/riot-ios#890).
+ * Riot is picking up my name within words and highlighting them (https://github.com/vector-im/riot-ios#893).
+ * MXHTTPClient: Handle correctly the case where the homeserver url is a subdirectory (#213).
+ * Failure to decrypt megolm event despite receiving the keys (https://github.com/vector-im/riot-ios#913).
+ * Riot looks to me like I'm sending the same message twice (https://github.com/vector-im/riot-ios#894).
+
 Changes in Matrix iOS SDK in 0.7.4 (2016-12-23)
 ===============================================
 
