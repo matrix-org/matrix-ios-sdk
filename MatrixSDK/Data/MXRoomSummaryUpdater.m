@@ -59,7 +59,6 @@
         if ([event.redacts isEqualToString:summary.lastEventId])
         {
             [summary reset];
-            return YES;
         }
         return NO;
     }
