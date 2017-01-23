@@ -1414,21 +1414,16 @@ typedef enum : NSUInteger
 /**
  Retrieve user matrix ids from a list of 3rd party ids.
 
- `addresses` and `media` arrays must have the same count.
-
- @param addresses the list of ids of the user in the 3rd party system.
- @param media the list of 3rd party systems (MX3PIDMedium type).
-
- @param success A block object called when the operation succeeds. It provides a list of Matrix user ids
- in the same order as passed arrays. A not found Matrix user id is indicated by NSNull in this array
+ @param threepids the list of 3rd party ids: [[<(MX3PIDMedium)media1>, <(NSString*)address1>], [<(MX3PIDMedium)media2>, <(NSString*)address2>], ...].
+ @param success A block object called when the operation succeeds. It provides the array of the discovered users returned by the identity server.
+ [[<(MX3PIDMedium)media>, <(NSString*)address>, <(NSString*)userId>], ...].
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
-- (void)lookup3pids:(NSArray*)addresses
-           forMedia:(NSArray*)media
-            success:(void (^)(NSArray *userIds))success
-            failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)lookup3pids:(NSArray*)threepids
+                        success:(void (^)(NSArray *discoveredUsers))success
+                        failure:(void (^)(NSError *error))failure;
 
 /**
  Request the validation of an email address.

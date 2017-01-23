@@ -3285,70 +3285,50 @@ MXAuthAction;
                                          }];
 }
 
-- (void)lookup3pids:(NSArray*)addresses
-           forMedia:(NSArray*)media
-            success:(void (^)(NSArray *userIds))success
-            failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)lookup3pids:(NSArray*)threepids
+                        success:(void (^)(NSArray *discoveredUsers))success
+                        failure:(void (^)(NSError *error))failure
 {
-    NSParameterAssert(addresses.count == media.count);
+    NSData *payloadData = nil;
+    if (threepids)
+    {
+        payloadData = [NSJSONSerialization dataWithJSONObject:@{@"threepids": threepids} options:0 error:nil];
+    }
     
-    // The identity server does not expose this API yet (@see SYD-7)
-    // Do n calls to lookup3pid to implement it
-    NSMutableArray *userIds = [NSMutableArray arrayWithCapacity:addresses.count];
-    
-    NSMutableArray *addresses2 = [NSMutableArray arrayWithArray:addresses];
-    NSMutableArray *media2 = [NSMutableArray arrayWithArray:media];
-    
-    [self lookup3pidsNext:addresses2 forMedia:media2 resultBeingBuilt:userIds success:success failure:failure];
-}
+    return [identityHttpClient requestWithMethod:@"POST"
+                                            path:@"lookup"
+                                      parameters:nil
+                                            data:payloadData
+                                         headers:@{@"Content-Type": @"application/json"}
+                                         timeout:-1
+                                  uploadProgress:nil
+                                         success:^(NSDictionary *JSONResponse) {
+                                             
+                                             if (success)
+                                             {
+                                                 dispatch_async(processingQueue, ^{
+                                                     
+                                                     NSArray *discoveredUsers;
+                                                     // Trick: the current bulk lookup response is an array. 
+                                                     MXJSONModelSetArray(discoveredUsers, (NSArray*)JSONResponse);
+                                                     
+                                                     dispatch_async(completionQueue, ^{
+                                                         success(discoveredUsers);
+                                                     });
+                                                 });
+                                             }
+                                         }
+                                         failure:^(NSError *error) {
+                                             if (failure)
+                                             {
+                                                 dispatch_async(processingQueue, ^{
+                                                     dispatch_async(completionQueue, ^{
+                                                         failure(error);
+                                                     });
+                                                 });
+                                             }
+                                         }];
 
-- (void)lookup3pidsNext:(NSMutableArray*)addresses
-               forMedia:(NSMutableArray*)media
-       resultBeingBuilt:(NSMutableArray*)userIds
-                success:(void (^)(NSArray *userIds))success
-                failure:(void (^)(NSError *error))failure
-{
-    if (addresses.count)
-    {
-        // Look up 3PID one by one
-        [self lookup3pid:[addresses lastObject] forMedium:[media lastObject] success:^(NSString *userId) {
-            
-            if (userId) {
-                [userIds insertObject:userId atIndex:0];
-            }
-            else
-            {
-                // The user is not in Matrix. Mark it as NSNull in the result array
-                [userIds insertObject:[NSNull null] atIndex:0];
-            }
-            
-            // Go to the next 3PID
-            [addresses removeLastObject];
-            [media removeLastObject];
-            [self lookup3pidsNext:addresses forMedia:media resultBeingBuilt:userIds success:success failure:failure];
-            
-        } failure:^(NSError *error) {
-            if (failure) {
-                dispatch_async(processingQueue, ^{
-                    dispatch_async(completionQueue, ^{
-                        failure(error);
-                    });
-                });
-            }
-        }];
-    }
-    else
-    {
-        if (success)
-        {
-            // We are done
-            dispatch_async(processingQueue, ^{
-                dispatch_async(completionQueue, ^{
-                    success(userIds);
-                });
-            });
-        }
-    }
 }
 
 - (MXHTTPOperation*)requestEmailValidation:(NSString*)email
