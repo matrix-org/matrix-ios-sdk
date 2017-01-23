@@ -228,12 +228,19 @@ typedef void (^MXOnResumeDone)();
     NSDate *startDate = [NSDate date];
 
     [_store openWithCredentials:matrixRestClient.credentials onComplete:^{
+        
+        // Sanity check: The session may be closed before the end of store opening.
+        if (!matrixRestClient)
+        {
+            return;
+        }
 
         // Check if the user has enabled crypto
         [MXCrypto checkCryptoWithMatrixSession:self complete:^(MXCrypto *crypto) {
+            
             _crypto = crypto;
 
-            // Sanity check: The session may be closed before the end of store opening.
+            // Sanity check: The session may be closed before the end of this operation.
             if (!matrixRestClient)
             {
                 return;
