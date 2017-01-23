@@ -551,16 +551,15 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
                         }
                         else
                         {
-                            NSLog(@"-> Cannot be fixed. Forget this session. User will be not able to decrypt part of the room history");
-                            session = nil;
+                            NSLog(@"-> Cannot be fixed. The user will be not able to decrypt part of the room history");
+
+                            // But store it anyway with a fake sender key. We may be able to fix it in the future
+                            session.senderKey = [NSString stringWithFormat:@"BadlyStoredSenderKey-%@", [[NSUUID UUID] UUIDString]];
                         }
                     }
                 }
 
-                if (session)
-                {
-                    [realmCryptoStore storeInboundGroupSession:session];
-                }
+                [realmCryptoStore storeInboundGroupSession:session];
             }
         }
     }
