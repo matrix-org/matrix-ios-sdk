@@ -108,6 +108,11 @@ FOUNDATION_EXPORT NSString *const kMXMessageTypeLocation;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeFile;
 
 /**
+ Prefix used for id of temporary local event.
+ */
+FOUNDATION_EXPORT NSString *const kMXEventLocalEventIdPrefix;
+
+/**
  Membership definitions
  */
 typedef enum : NSUInteger
@@ -320,6 +325,11 @@ FOUNDATION_EXPORT NSString *const kMXEventDidDecryptNotification;
  Indicates if the event hosts state data.
  */
 - (BOOL)isState;
+
+/**
+ Indicates if the event is a local one.
+ */
+- (BOOL)isLocalEvent;
 
 /**
  Indicates if the event has been redacted.
