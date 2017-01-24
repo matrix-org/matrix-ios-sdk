@@ -27,8 +27,6 @@
 
 #import "MXError.h"
 
-NSString *const kMXRoomLocalEventIdPrefix = @"kMXRoomLocalId_";
-
 NSString *const kMXRoomDidFlushDataNotification = @"kMXRoomDidFlushDataNotification";
 NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotification";
 NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNotification";
@@ -1320,7 +1318,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 {
     if (!eventId)
     {
-        eventId = [NSString stringWithFormat:@"%@%@", kMXRoomLocalEventIdPrefix, [[NSProcessInfo processInfo] globallyUniqueString]];
+        eventId = [NSString stringWithFormat:@"%@%@", kMXEventLocalEventIdPrefix, [[NSProcessInfo processInfo] globallyUniqueString]];
     }
     
     MXEvent *event = [[MXEvent alloc] init];

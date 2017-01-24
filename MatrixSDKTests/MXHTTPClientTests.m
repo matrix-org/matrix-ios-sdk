@@ -43,14 +43,13 @@
 
 - (void)testMainThread
 {
-    
-    MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", kMXTestsHomeServerURL, kMXAPIPrefixPathR0]
+    MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:kMXTestsHomeServerURL
                                    andOnUnrecognizedCertificateBlock:nil];
 
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
     
     [httpClient requestWithMethod:@"GET"
-                             path:@"publicRooms"
+                             path:[NSString stringWithFormat:@"%@/publicRooms", kMXAPIPrefixPathR0]
                        parameters:nil
                           success:^(NSDictionary *JSONResponse) {
                               XCTAssertTrue([NSThread isMainThread], @"The block callback must be called from the main thread");
@@ -66,7 +65,7 @@
 
 - (void)testCancel
 {
-    MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", kMXTestsHomeServerURL, kMXAPIPrefixPathR0]
+    MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:kMXTestsHomeServerURL
                                    andOnUnrecognizedCertificateBlock:nil];
 
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
@@ -89,13 +88,13 @@
 
 - (void)testMXError
 {
-    MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@%@", kMXTestsHomeServerURL, kMXAPIPrefixPathR0]
+    MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:kMXTestsHomeServerURL
                                    andOnUnrecognizedCertificateBlock:nil];
     
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
     
     [httpClient requestWithMethod:@"GET"
-                             path:@"notExistingAPI"
+                             path:[NSString stringWithFormat:@"%@/notExistingAPI", kMXAPIPrefixPathR0]
                        parameters:nil
                           success:^(NSDictionary *JSONResponse) {
                               XCTFail(@"The request must fail as the API path does not exist");

@@ -1,3 +1,21 @@
+Changes in Matrix iOS SDK in 0.7.6 (2017-01-24)
+===============================================
+
+Improvements:
+ * MXRestClient: Made apiPathPrefix fully relative (#213).
+ * MXRestClient: Add contentPathPrefix property to customise path to content repository (#213).
+ * MXRestClient: Support the bulk lookup API (/bulk_lookup) of the identity server.
+ * MXEvent: Add isLocalEvent property.
+ * Crypto store migration: The migration from MXFileCryptoStore to MXRealmCryptoStore have been improved to avoid user from relogging.
+
+Bug fixes:
+ * MXCrypto: App crash on "setObjectForKey: key cannot be nil"
+
+API breaks:
+ * MXDecryptingErrorUnkwnownInboundSessionIdCode has been renamed to MXDecryptingErrorUnknownInboundSessionIdCode.
+ * MXDecryptingErrorUnkwnownInboundSessionIdReason has been renamed to MXDecryptingErrorUnknownInboundSessionIdReason.
+ * kMXRoomLocalEventIdPrefix has been renamed to kMXEventLocalEventIdPrefix
+
 Changes in Matrix iOS SDK in 0.7.5 (2017-01-19)
 ===============================================
 

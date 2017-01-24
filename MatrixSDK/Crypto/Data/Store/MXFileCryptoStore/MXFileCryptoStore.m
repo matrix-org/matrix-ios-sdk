@@ -515,8 +515,52 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
                 MXOlmInboundGroupSession *session = [fileCryptoStore inboundGroupSessionWithId:sessionId andSenderKey:senderKey];
 
                 // Repair MXOlmInboundGroupSession senderKey that was not correctly store in MXFileCryptoStore
-                session.senderKey = senderKey;
-                
+                if (![session.senderKey isKindOfClass:NSString.class])
+                {
+                    NSLog(@"Warning: Need to fix badly stored senderKey of inbound group session.\nRoom id: %@\nSession id: %@\nsession.senderKey: %@", session.roomId, session.session.sessionIdentifier, session.senderKey);
+
+                    if ([senderKey isKindOfClass:NSString.class])
+                    {
+                        // Most of time, the true senderKey can be retrieved from the key in fileCryptoStore->inboundGroupSessions
+                        NSLog(@"-> can be fixed with fileCryptoStore->inboundGroupSessions. senderKey: %@", senderKey);
+                        session.senderKey = senderKey;
+                    }
+                    else if ([senderKey isKindOfClass:NSDictionary.class])
+                    {
+                        // Else, we can attempt to find the device with keys that correspond to
+                        // the claimed keys badldy stored instead of the sender key
+                        NSDictionary *ed25519BadlyStoredInSenderKey = (NSDictionary*)senderKey;
+
+                        NSString *identityKey;
+                        for (NSString *userId in fileCryptoStore->usersDevicesInfoMap.userIds)
+                        {
+                            for (NSString *deviceId in [fileCryptoStore->usersDevicesInfoMap deviceIdsForUser:userId])
+                            {
+                                MXDeviceInfo *device = [fileCryptoStore->usersDevicesInfoMap objectForDevice:deviceId forUser:userId];
+                                NSString *keyKey = [NSString stringWithFormat:@"ed25519:%@", deviceId];
+                                if ([device.keys[keyKey] isEqualToString:ed25519BadlyStoredInSenderKey[@"ed25519"]])
+                                {
+                                    identityKey = device.identityKey;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (identityKey)
+                        {
+                            NSLog(@"-> can be fixed with fileCryptoStore->usersDevicesInfoMap. senderKey: %@", identityKey);
+                            session.senderKey = identityKey;
+                        }
+                        else
+                        {
+                            NSLog(@"-> Cannot be fixed. The user will be not able to decrypt part of the room history");
+
+                            // But store it anyway with a fake sender key. We may be able to fix it in the future
+                            session.senderKey = [NSString stringWithFormat:@"BadlyStoredSenderKey-%@", [[NSUUID UUID] UUIDString]];
+                        }
+                    }
+                }
+
                 [realmCryptoStore storeInboundGroupSession:session];
             }
         }
