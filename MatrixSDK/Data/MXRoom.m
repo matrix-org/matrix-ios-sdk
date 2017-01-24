@@ -105,6 +105,9 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
             // Let the timeline use the session store
             _liveTimeline = [[MXEventTimeline alloc] initWithRoom:self andInitialEventId:nil];
         }
+        
+        // Update the stored outgoing messages, by removing the sent messages and tagging as failed the others.
+        [self refreshOutgoingMessages];
     }
     return self;
 }
@@ -1392,6 +1395,41 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     }
 }
 
+- (void)refreshOutgoingMessages
+{
+    // Update the stored outgoing messages, by removing the sent messages and tagging as failed the others.
+    NSArray<MXEvent*>* outgoingMessages = self.outgoingMessages;
+    
+    if (outgoingMessages.count && [mxSession.store respondsToSelector:@selector(commit)])
+    {
+        for (NSInteger index = 0; index < outgoingMessages.count;)
+        {
+            MXEvent *outgoingMessage = [outgoingMessages objectAtIndex:index];
+            
+            // Remove successfully sent messages
+            if (outgoingMessage.isLocalEvent == NO)
+            {
+                if ([mxSession.store respondsToSelector:@selector(removeOutgoingMessageFromRoom:outgoingMessage:)])
+                {
+                    [mxSession.store removeOutgoingMessageFromRoom:_roomId outgoingMessage:outgoingMessage.eventId];
+                    continue;
+                }
+            }
+            else
+            {
+                // Here the message sending has failed
+                outgoingMessage.sentState = MXEventSentStateFailed;
+                
+                // Erase the timestamp
+                outgoingMessage.originServerTs = kMXUndefinedTimestamp;
+            }
+            
+            index++;
+        }
+        
+        [mxSession.store commit];
+    }
+}
 
 #pragma mark - Local echo handling
 
