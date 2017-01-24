@@ -1056,7 +1056,7 @@
 
                 XCTAssertNil(event.clearEvent);
                 XCTAssert(event.decryptionError);
-                XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorUnkwnownInboundSessionIdCode);
+                XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorUnknownInboundSessionIdCode);
 
                 [expectation fulfill];
                 
@@ -1180,7 +1180,7 @@
 
                 XCTAssertNil(event.clearEvent);
                 XCTAssert(event.decryptionError);
-                XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorUnkwnownInboundSessionIdCode);
+                XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorUnknownInboundSessionIdCode);
 
 
                 NSString *messageFromAlice = @"Hello I'm still Alice!";
@@ -1253,7 +1253,7 @@
                     // Bob must be not able to decrypt the 2nd message
                     XCTAssertEqual(event.eventType, MXEventTypeRoomEncrypted);
                     XCTAssertNil(event.clearEvent);
-                    XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorUnkwnownInboundSessionIdCode);
+                    XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorUnknownInboundSessionIdCode);
 
                     // Make Alice unblock Bob
                     [aliceSession.crypto setDeviceVerification:MXDeviceUnverified
@@ -1425,7 +1425,7 @@
             BOOL b = [bobSession decryptEvent:event inTimeline:nil];
 
             XCTAssertFalse(b);
-            XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorUnkwnownInboundSessionIdCode);
+            XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorUnknownInboundSessionIdCode);
 
             // The event must be decrypted once we reinject the m.room_key event
             __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXEventDidDecryptNotification object:event queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
