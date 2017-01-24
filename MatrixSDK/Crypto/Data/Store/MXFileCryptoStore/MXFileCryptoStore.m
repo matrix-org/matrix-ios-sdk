@@ -522,13 +522,13 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
                     if ([senderKey isKindOfClass:NSString.class])
                     {
                         // Most of time, the true senderKey can be retrieved from the key in fileCryptoStore->inboundGroupSessions
-                        NSLog(@"-> can be fixed with fileCryptoStore->inboundGroupSessions");
+                        NSLog(@"-> can be fixed with fileCryptoStore->inboundGroupSessions. senderKey: %@", senderKey);
                         session.senderKey = senderKey;
                     }
                     else if ([senderKey isKindOfClass:NSDictionary.class])
                     {
-                        // Else, we can attempt to find the device that corresponds to the claimed keys badldy
-                        // stored instead of the sender key
+                        // Else, we can attempt to find the device with keys that correspond to
+                        // the claimed keys badldy stored instead of the sender key
                         NSDictionary *ed25519BadlyStoredInSenderKey = (NSDictionary*)senderKey;
 
                         NSString *identityKey;
@@ -537,16 +537,18 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
                             for (NSString *deviceId in [fileCryptoStore->usersDevicesInfoMap deviceIdsForUser:userId])
                             {
                                 MXDeviceInfo *device = [fileCryptoStore->usersDevicesInfoMap objectForDevice:deviceId forUser:userId];
-                                if ([device.signatures[@"ed25519"] isEqualToString:ed25519BadlyStoredInSenderKey[@"ed25519"]])
+                                NSString *keyKey = [NSString stringWithFormat:@"ed25519:%@", deviceId];
+                                if ([device.keys[keyKey] isEqualToString:ed25519BadlyStoredInSenderKey[@"ed25519"]])
                                 {
                                     identityKey = device.identityKey;
+                                    break;
                                 }
                             }
                         }
 
                         if (identityKey)
                         {
-                            NSLog(@"-> can be fixed with fileCryptoStore->usersDevicesInfoMap");
+                            NSLog(@"-> can be fixed with fileCryptoStore->usersDevicesInfoMap. senderKey: %@", identityKey);
                             session.senderKey = identityKey;
                         }
                         else
