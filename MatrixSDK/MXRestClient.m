@@ -3296,7 +3296,7 @@ MXAuthAction;
     }
     
     return [identityHttpClient requestWithMethod:@"POST"
-                                            path:@"lookup"
+                                            path:@"bulk_lookup"
                                       parameters:nil
                                             data:payloadData
                                          headers:@{@"Content-Type": @"application/json"}
@@ -3308,9 +3308,10 @@ MXAuthAction;
                                              {
                                                  dispatch_async(processingQueue, ^{
                                                      
+                                                     // The identity server returns a dictionary with key 'threepids', which is a list of results
+                                                     // where each result is a 3 item list of medium, address, mxid.
                                                      NSArray *discoveredUsers;
-                                                     // Trick: the current bulk lookup response is an array. 
-                                                     MXJSONModelSetArray(discoveredUsers, (NSArray*)JSONResponse);
+                                                     MXJSONModelSetArray(discoveredUsers, JSONResponse[@"threepids"]);
                                                      
                                                      dispatch_async(completionQueue, ^{
                                                          success(discoveredUsers);
