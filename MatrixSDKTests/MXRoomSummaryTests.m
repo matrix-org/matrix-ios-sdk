@@ -196,6 +196,67 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
     }];
 }
 
+- (void)testMemberProfileChange
+{
+    // Need a store for this test
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+        
+        MXRoomSummary *summary = room.summary;
+
+        NSString *userDisplayName = @"NewBob";
+
+        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+            [[NSNotificationCenter defaultCenter] removeObserver:observer];
+
+            MXEvent *event = summary.lastEvent;
+
+            XCTAssert(event);
+            XCTAssertFalse(event.isLocalEvent);
+            XCTAssertEqual(event.eventType, MXEventTypeRoomMember);
+
+            [expectation fulfill];
+        }];
+
+        [mxSession.myUser setDisplayName:userDisplayName success:nil failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testIgnoreMemberProfileChanges
+{
+    // Need a store for this test
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+
+        MXRoomSummaryUpdater *defaultUpdater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:mxSession];
+        defaultUpdater.ignoreMemberProfileChanges = YES;
+
+        MXRoomSummary *summary = room.summary;
+
+        NSString *userDisplayName = @"NewBob";
+
+        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+            [[NSNotificationCenter defaultCenter] removeObserver:observer];
+
+            MXEvent *event = summary.lastEvent;
+
+            XCTAssert(event);
+            XCTAssertFalse(event.isLocalEvent);
+            XCTAssertNotEqual(event.eventType, MXEventTypeRoomMember, @"The last event must not be the change of Bob's displayname");
+
+            [expectation fulfill];
+        }];
+
+        [mxSession.myUser setDisplayName:userDisplayName success:nil failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 - (void)testOutgoingMessageEcho
 {
     // Need a store to manage outgoing events
@@ -252,10 +313,6 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
     }];
 }
 
-// testProfileChange
-// testRoomState
-// testInviteUser
-// testImage
 - (void)testFailedOutgoingMessageEcho
 {
     // Need a store to manage outgoing events
