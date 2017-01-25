@@ -620,6 +620,9 @@ typedef void (^MXOnResumeDone)();
     }
     [peekingRooms removeAllObjects];
 
+    // Clean summaries
+    [roomsSummaries removeAllObjects];
+
     // Clean notification center
     [_notificationCenter removeAllListeners];
     _notificationCenter = nil;

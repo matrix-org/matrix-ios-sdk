@@ -220,6 +220,7 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
 
                     XCTAssert(event);
                     XCTAssert(event.isLocalEvent);
+                    XCTAssertEqual(event.sentState, MXEventSentStateSending);
                     break;
                 }
 
@@ -228,6 +229,7 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
                     // 2nd notif must be the event sent back by the hs
                     XCTAssert(event);
                     XCTAssertFalse(event.isLocalEvent);
+                    XCTAssertEqual(event.sentState, MXEventSentStateSent);
 
                     XCTAssertEqualObjects(summary.lastEventId, lastEventId);
 
@@ -246,6 +248,63 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
+        
+    }];
+}
+
+// testProfileChange
+// testRoomState
+// testInviteUser
+// testImage
+- (void)testFailedOutgoingMessageEcho
+{
+    // Need a store to manage outgoing events
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+
+        MXRoomSummary *summary = room.summary;
+
+        MXEvent *localEcho;
+
+        __block NSUInteger notifCount = 0;
+        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+            MXEvent *event = summary.lastEvent;
+
+            switch (notifCount++)
+            {
+                case 0:
+                {
+                    // First notif is for the echo
+                    XCTAssert([summary.lastEventId hasPrefix:kMXEventLocalEventIdPrefix]);
+
+                    XCTAssert(event);
+                    XCTAssert(event.isLocalEvent);
+                    XCTAssertEqual(event.sentState, MXEventSentStateSending);
+                    break;
+                }
+
+                case 1:
+                {
+                    // 2nd notif must be the event failure notification
+                    XCTAssert(event);
+                    XCTAssert(event.isLocalEvent);
+                    XCTAssertEqual(event.sentState, MXEventSentStateFailed);
+
+                    [[NSNotificationCenter defaultCenter] removeObserver:observer];
+
+                    [expectation fulfill];
+
+                    break;
+                }
+            }
+        }];
+
+        MXHTTPOperation *operation = [room sendTextMessage:@"new message" formattedText:nil localEcho:&localEcho success:^(NSString *eventId) {
+            XCTFail(@"Cannot set up intial test conditions");
+            [expectation fulfill];
+        } failure:nil];
+
+        [operation cancel];
         
     }];
 }

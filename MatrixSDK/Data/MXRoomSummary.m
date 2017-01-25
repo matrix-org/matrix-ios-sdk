@@ -34,9 +34,19 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         _roomId = theRoomId;
         _mxSession = matrixSession;
         _others = [NSMutableDictionary dictionary];
+
+        // Listen to the event sent state changes
+        // This is used to follow evolution of local echo events
+        // (ex: when a sentState change from sending to sentFailed)
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(eventDidChangeSentState:) name:kMXEventDidChangeSentStateNotification object:nil];
     }
 
     return self;
+}
+
+- (void)dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXEventDidChangeSentStateNotification object:nil];
 }
 
 - (void)setMatrixSession:(MXSession *)mxSession
@@ -69,7 +79,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     MXRoomState *state = self.room.state;
 
     BOOL lastEventUpdated = NO;
-    while (event && !lastEventUpdated)
+    while (event)
     {
         if (event.isState)
         {
@@ -86,6 +96,10 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         }
 
         lastEventUpdated = [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withLastEvent:event oldState:state];
+        if (lastEventUpdated)
+        {
+            break;
+        }
 
         event = messagesEnumerator.nextEvent;
     }
@@ -138,6 +152,19 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     }
 
     return lastEvent;
+}
+
+- (void)eventDidChangeSentState:(NSNotification *)notif
+{
+    MXEvent *event = notif.object;
+
+    // If the last event is a local echo, update it.
+    // Do nothing when its sentState becomes sent. In this case, the last event will be
+    // updated by the true event coming back from the homeserver.
+    if (event.sentState != MXEventSentStateSent && [event.eventId isEqualToString:_lastEventId])
+    {
+        [self handleEvent:event];
+    }
 }
 
 - (void)updateFromRoomState
