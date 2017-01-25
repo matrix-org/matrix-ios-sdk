@@ -19,6 +19,7 @@
 #import "MatrixSDKTestsData.h"
 
 #import "MXMemoryStore.h"
+#import "MXFileStore.h"
 
 #import "MXRoomSummaryUpdater.h"
 
@@ -53,6 +54,12 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
 - (BOOL)session:(MXSession *)session updateRoomSummary:(MXRoomSummary *)summary withLastEvent:(MXEvent *)event oldState:(MXRoomState *)oldState
 {
     BOOL updated = NO;
+
+    if (event.isLocalEvent)
+    {
+        // Do not care about local echo
+        return NO;
+    }
 
     if ([self.description containsString:@"testDelegate"])
     {
@@ -189,9 +196,58 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
     }];
 }
 
-- (void)testOutgoingMessage
+- (void)testOutgoingMessageEcho
 {
-    XCTFail(@"@TODO: To implement...");
+    // Need a store to manage outgoing events
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+
+        MXRoomSummary *summary = room.summary;
+
+        __block NSString *lastEventId;
+        MXEvent *localEcho;
+
+        __block NSUInteger notifCount = 0;
+        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+            MXEvent *event = summary.lastEvent;
+
+            switch (notifCount++)
+            {
+                case 0:
+                {
+                    // First notif is for the echo
+                    XCTAssert([summary.lastEventId hasPrefix:kMXEventLocalEventIdPrefix]);
+
+                    XCTAssert(event);
+                    XCTAssert(event.isLocalEvent);
+                    break;
+                }
+
+                case 1:
+                {
+                    // 2nd notif must be the event sent back by the hs
+                    XCTAssert(event);
+                    XCTAssertFalse(event.isLocalEvent);
+
+                    XCTAssertEqualObjects(summary.lastEventId, lastEventId);
+
+                    [[NSNotificationCenter defaultCenter] removeObserver:observer];
+
+                    [expectation fulfill];
+
+                    break;
+                }
+            }
+        }];
+
+        [room sendTextMessage:@"new message" formattedText:nil localEcho:&localEcho success:^(NSString *eventId) {
+            lastEventId = eventId;
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+        
+    }];
 }
 
 - (void)testInvite
@@ -266,6 +322,10 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
             switch (notifCount++)
             {
                 case 0:
+                    // Do not care about the local echo
+                    break;
+
+                case 1:
                 {
                     XCTAssertEqualObjects(summary.lastEventId, newEventId);
 
@@ -278,7 +338,7 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
                     break;
                 }
 
-                case 1:
+                case 2:
                 {
                     [[NSNotificationCenter defaultCenter] removeObserver:observer];
 

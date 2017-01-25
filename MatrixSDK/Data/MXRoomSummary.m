@@ -118,7 +118,26 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 
 - (MXEvent *)lastEvent
 {
-    return [_mxSession.store eventWithEventId:_lastEventId inRoom:_roomId];
+    MXEvent *lastEvent;
+
+    if (![_lastEventId hasPrefix:kMXEventLocalEventIdPrefix])
+    {
+        lastEvent = [_mxSession.store eventWithEventId:_lastEventId inRoom:_roomId];
+    }
+    else
+    {
+        NSLog(@"%@", [_mxSession.store outgoingMessagesInRoom:_roomId]);
+        for (MXEvent *event in [_mxSession.store outgoingMessagesInRoom:_roomId])
+        {
+            if ([event.eventId isEqualToString:_lastEventId])
+            {
+                lastEvent = event;
+                break;
+            }
+        }
+    }
+
+    return lastEvent;
 }
 
 - (void)updateFromRoomState
@@ -190,6 +209,24 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     if (updated)
     {
         [self save];
+    }
+}
+
+
+#pragma mark - Single update
+
+- (void)handleEvent:(MXEvent*)event
+{
+    MXRoom *room = self.room;
+
+    if (room)
+    {
+        BOOL updated = [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withLastEvent:event oldState:room.state];
+
+        if (updated)
+        {
+            [self save];
+        }
     }
 }
 

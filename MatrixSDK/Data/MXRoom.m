@@ -1406,10 +1406,13 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     // Create a room message event.
     MXEvent *localEcho = [self fakeRoomMessageEventWithEventId:nil andContent:msgContent];
     localEcho.sentState = eventState;
-    
+
     // Register the echo as pending for its future deletion
     [self storeOutgoingMessage:localEcho];
-    
+
+    // Update the room summary
+    [self.summary handleEvent:localEcho];
+
     return localEcho;
 }
 

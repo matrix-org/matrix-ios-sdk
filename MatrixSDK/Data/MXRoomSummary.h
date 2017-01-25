@@ -170,6 +170,16 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
  */
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync*)invitedRoomSync;
 
+
+#pragma mark - Single update
+
+/**
+ Update room summary with this event.
+
+ @param event an candidate for the last event.
+ */
+- (void)handleEvent:(MXEvent*)event;
+
 @end
 
 
