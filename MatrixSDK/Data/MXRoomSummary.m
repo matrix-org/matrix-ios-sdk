@@ -120,13 +120,13 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 {
     MXEvent *lastEvent;
 
+    // Is it a true matrix event or a local echo?
     if (![_lastEventId hasPrefix:kMXEventLocalEventIdPrefix])
     {
         lastEvent = [_mxSession.store eventWithEventId:_lastEventId inRoom:_roomId];
     }
     else
     {
-        NSLog(@"%@", [_mxSession.store outgoingMessagesInRoom:_roomId]);
         for (MXEvent *event in [_mxSession.store outgoingMessagesInRoom:_roomId])
         {
             if ([event.eventId isEqualToString:_lastEventId])

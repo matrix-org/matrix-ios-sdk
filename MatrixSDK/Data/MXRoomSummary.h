@@ -30,7 +30,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 /**
  `MXRoomSummary` exposes information about a room.
 
- The data is thus cached to avoid to recompute it everytime from the room state.
+ The data is cached to avoid to recompute everything everytime from the room state.
  */
 @interface MXRoomSummary : NSObject <NSCoding>
 

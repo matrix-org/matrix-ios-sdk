@@ -71,11 +71,13 @@ typedef void (^MXOnResumeDone)();
 {
     /**
      Rooms data
-     Each key is a room ID. Each value, the MXRoom instance.
+     Each key is a room id. Each value, the MXRoom instance.
      */
     NSMutableDictionary<NSString*, MXRoom*> *rooms;
 
     /**
+     Rooms summaries
+     Each key is a room id. Each value, the MXRoomSummary instance.
      */
     NSMutableDictionary<NSString*, MXRoomSummary*> *roomsSummaries;
 
@@ -272,7 +274,7 @@ typedef void (^MXOnResumeDone)();
                 // Load user account data
                 [self handleAccountData:_store.userAccountData];
 
-                // Load MXRoomSummarys from the store
+                // Load MXRoomSummaries from the store
                 NSDate *startDate2 = [NSDate date];
                 for (NSString *roomId in _store.rooms)
                 {
