@@ -103,7 +103,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  The list of ids of users currently typing in this room.
  This array is updated on each received m.typing event (MXEventTypeTypingNotification).
  */
-@property (nonatomic, readonly) NSArray *typingUsers;
+@property (nonatomic, readonly) NSArray<NSString *> *typingUsers;
 
 /**
  The number of unread events wrote in the store which have their type listed in the MXSession.unreadEventType.
@@ -172,7 +172,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  @param accountData the account data for the room.
  @return the new instance.
  */
-- (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession andStateEvents:(NSArray*)stateEvents andAccountData:(MXRoomAccountData*)accountData;
+- (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession andStateEvents:(NSArray<MXEvent *> *)stateEvents andAccountData:(MXRoomAccountData*)accountData;
 
 /**
  Create a `MXRoom` instance by specifying the store the live timeline must use.
@@ -218,7 +218,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  @param ignoreProfileChanges tell whether the profile changes should be ignored.
  @return the events enumerator.
  */
-- (id<MXEventsEnumerator>)enumeratorForStoredMessagesWithTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
+- (id<MXEventsEnumerator>)enumeratorForStoredMessagesWithTypeIn:(NSArray<MXEventTypeString> *)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
 
 /**
  The last message of the requested types.
@@ -228,7 +228,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  @return the last event of the requested types or the true last event if no event of the requested type is found.
  (CAUTION: All rooms must have a last message. For this reason, the returned event may be a profile change even if it should be ignored).
  */
-- (MXEvent*)lastMessageWithTypeIn:(NSArray*)type;
+- (MXEvent*)lastMessageWithTypeIn:(NSArray<MXEventTypeString> *)type;
 
 /**
  The count of stored messages for this room.
@@ -258,7 +258,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)sendEventOfType:(MXEventTypeString)eventTypeString
-                            content:(NSDictionary*)content
+                            content:(NSDictionary<NSString*, id>*)content
                           localEcho:(MXEvent**)localEcho
                             success:(void (^)(NSString *eventId))success
                             failure:(void (^)(NSError *error))failure;
@@ -275,7 +275,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)sendStateEventOfType:(MXEventTypeString)eventTypeString
-                                 content:(NSDictionary*)content
+                                 content:(NSDictionary<NSString*, id>*)content
                                  success:(void (^)(NSString *eventId))success
                                  failure:(void (^)(NSError *error))failure;
 
@@ -295,7 +295,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)sendMessageWithContent:(NSDictionary*)content
+- (MXHTTPOperation*)sendMessageWithContent:(NSDictionary<NSString*, id>*)content
                                  localEcho:(MXEvent**)localEcho
                                    success:(void (^)(NSString *eventId))success
                                    failure:(void (^)(NSError *error))failure;
@@ -755,7 +755,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  @param content the event content.
  @return the created event.
  */
-- (MXEvent*)fakeRoomMessageEventWithEventId:(NSString*)eventId andContent:(NSDictionary*)content;
+- (MXEvent*)fakeRoomMessageEventWithEventId:(NSString*)eventId andContent:(NSDictionary<NSString*, id>*)content;
 
 
 #pragma mark - Outgoing events management
