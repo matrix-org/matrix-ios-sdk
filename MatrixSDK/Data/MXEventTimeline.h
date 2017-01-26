@@ -220,7 +220,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
  @param onEvent the block that will called once a new event has been handled.
  @return a reference to use to unregister the listener
  */
-- (id)listenToEventsOfTypes:(NSArray*)types onEvent:(MXOnRoomEvent)onEvent;
+- (id)listenToEventsOfTypes:(NSArray<MXEventTypeString> *)types onEvent:(MXOnRoomEvent)onEvent;
 
 /**
  Unregister a listener.
