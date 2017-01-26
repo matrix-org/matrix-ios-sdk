@@ -23,7 +23,7 @@
 @implementation MXEventListener
 
 -(instancetype)initWithSender:(id)sender
-                andEventTypes:(NSArray *)eventTypes
+                andEventTypes:(NSArray<MXEventTypeString> *)eventTypes
              andListenerBlock:(MXOnEvent)listenerBlock
 {
     self = [super init];

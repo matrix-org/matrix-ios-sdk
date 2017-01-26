@@ -36,7 +36,7 @@ typedef void (^MXOnEvent)(MXEvent *event, MXTimelineDirection direction, id cust
 @interface MXEventListener : NSObject
 
 - (instancetype)initWithSender:(id)sender
-                 andEventTypes:(NSArray*)eventTypes
+                 andEventTypes:(NSArray<MXEventTypeString>*)eventTypes
               andListenerBlock:(MXOnEvent)listenerBlock;
 
 /**
@@ -50,7 +50,7 @@ typedef void (^MXOnEvent)(MXEvent *event, MXTimelineDirection direction, id cust
 - (void)notify:(MXEvent*)event direction:(MXTimelineDirection)direction andCustomObject:(id)customObject;
 
 @property (nonatomic, readonly) id sender;
-@property (nonatomic, readonly) NSArray* eventTypes;
+@property (nonatomic, readonly) NSArray<MXEventTypeString>* eventTypes;
 @property (nonatomic, readonly) MXOnEvent listenerBlock;
 
 @end
