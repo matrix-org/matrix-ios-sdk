@@ -84,6 +84,6 @@
  @param roomMemberEventContent roomMemberEvent.content or roomMemberEvent.prevContent
  */
 - (instancetype)initWithMXEvent:(MXEvent*)roomMemberEvent
-                andEventContent:(NSDictionary*)roomMemberEventContent;
+                andEventContent:(NSDictionary<NSString *, id>*)roomMemberEventContent;
 
 @end
