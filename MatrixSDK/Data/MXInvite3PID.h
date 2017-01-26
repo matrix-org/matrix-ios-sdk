@@ -41,6 +41,6 @@
  The resulting dictionary. Return nil if one the 3 properties has not been defined. They are all required
  to invite a third party ID.
  */
-@property (nonatomic, readonly) NSDictionary *dictionary;
+@property (nonatomic, readonly) NSDictionary<NSString *, id> *dictionary;
 
 @end

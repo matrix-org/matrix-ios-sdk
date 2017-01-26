@@ -18,7 +18,7 @@
 
 @interface MXInvite3PID()
 {
-    NSMutableDictionary *dictionary;
+    NSMutableDictionary<NSString *, id> *dictionary;
 }
 @end
 
@@ -52,7 +52,7 @@
     _address = address;
 }
 
-- (NSDictionary*)dictionary
+- (NSDictionary<NSString *, id> *)dictionary
 {
     if (dictionary.count == 3)
     {
