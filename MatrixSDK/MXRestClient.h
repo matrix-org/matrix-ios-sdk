@@ -16,6 +16,12 @@
 
 #import <Foundation/Foundation.h>
 
+#if TARGET_OS_IPHONE
+#import <UIKit/UIKit.h>
+#elif TARGET_OS_OSX
+#import <Cocoa/Cocoa.h>
+#endif
+
 #import "MXHTTPClient.h"
 #import "MXEvent.h"
 #import "MXRoomEventFilter.h"

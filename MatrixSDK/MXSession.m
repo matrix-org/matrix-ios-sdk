@@ -17,6 +17,8 @@
 #import "MXSession.h"
 #import "MatrixSDK.h"
 
+#import <AFNetworking/AFNetworking.h>
+
 #import "MXSessionEventListener.h"
 
 #import "MXTools.h"
