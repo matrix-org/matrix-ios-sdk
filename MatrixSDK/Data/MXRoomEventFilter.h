@@ -70,6 +70,6 @@
 /**
  The resulting dictionary.
  */
-@property (nonatomic, readonly) NSDictionary *dictionary;
+@property (nonatomic, readonly) NSDictionary<NSString *, id> *dictionary;
 
 @end
