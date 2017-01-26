@@ -33,6 +33,8 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     {
         _roomId = theRoomId;
         _mxSession = matrixSession;
+        _stateOthers = [NSMutableDictionary dictionary];
+        _lastEventOthers = [NSMutableDictionary dictionary];
         _others = [NSMutableDictionary dictionary];
 
         // Listen to the event sent state changes
@@ -82,10 +84,13 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     // Reset data
     MXRoom *room = self.room;
 
-    // @TODO: Manage all summary properties
+    // @TODO: Manage all summary state properties
     _avatar = room.state.avatar;
     _displayname = room.state.displayname;
     _topic = room.state.topic;
+    [_stateOthers removeAllObjects];
+
+    // @TODO: How to call the update?
 }
 
 
@@ -120,7 +125,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     _lastEventId = nil;
     _lastEventString = nil;
     _lastEventAttribytedString = nil;
-    // _others = nil;   // @TODO: hmm? or _lastEventOthers (and _stateOthers and _others?)
+    [_lastEventOthers removeAllObjects];
 
     MXHTTPOperation *operation;
     [self fetchLastEvent:complete failure:failure lastEventIdChecked:nil operation:&operation];

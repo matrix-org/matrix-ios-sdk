@@ -31,7 +31,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 /**
  `MXRoomSummary` exposes information about a room.
  
- `MXRoomSummary` contains 3 kinds of data:
+ `MXRoomSummary` contains several kinds of data:
 
      * Room state data:
        This is data provided by room state events but it is cached to avoid to 
@@ -42,9 +42,10 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
        This is lastEventId plus the string or/and attributed string computed for the event.
 
      * Business logic data:
-
-
- The data is cached to avoid to recompute everything everytime from the room state.
+       This is data that is used internally by the sdk.
+ 
+     * Other data:
+       Other information shared between the sdk and sdk user.
  */
 @interface MXRoomSummary : NSObject <NSCoding>
 
@@ -107,14 +108,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
  */
 @property (nonatomic) NSString *topic;
 
-/**
- Reset data related to room state.
- 
- It recomputes every data related to the room state from the current room state.
- */
-- (void)resetRoomStateData;
-
-
 // @TODO: Add:
 
 /*
@@ -123,6 +116,19 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
  isDirect;
  looksLikeDirect;
  */
+
+
+/**
+ Placeholder to store more information related to the room state.
+ */
+@property (nonatomic) NSMutableDictionary<NSString*, id<NSCoding>> *stateOthers;
+
+/**
+ Reset data related to room state.
+ 
+ It recomputes every data related to the room state from the current room state.
+ */
+- (void)resetRoomStateData;
 
 
 
@@ -139,6 +145,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
  */
 @property (nonatomic) NSString *lastEventString;
 @property (nonatomic) NSAttributedString *lastEventAttribytedString;
+
+/**
+ Placeholder to store more information about the last event.
+ */
+@property (nonatomic) NSMutableDictionary<NSString*, id<NSCoding>> *lastEventOthers;
 
 /**
  The shortcut to the last event.
