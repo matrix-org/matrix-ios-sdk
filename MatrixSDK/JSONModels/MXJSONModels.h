@@ -92,7 +92,7 @@ FOUNDATION_EXPORT NSString *const kMX3PIDMediumMSISDN;
 /**
  Login flow types
  */
-typedef NSString* MXLoginFlowType;
+typedef NSString* MXLoginFlowType NS_REFINED_FOR_SWIFT;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypePassword;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeRecaptcha;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeOAuth2;
