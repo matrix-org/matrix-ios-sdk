@@ -17,6 +17,7 @@
 #import <Foundation/Foundation.h>
 
 #import "MXJSONModels.h"
+#import "MXHTTPOperation.h"
 
 @class MXSession, MXRoom, MXRoomState, MXEvent;
 
@@ -29,6 +30,19 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 
 /**
  `MXRoomSummary` exposes information about a room.
+ 
+ `MXRoomSummary` contains 3 kinds of data:
+
+     * Room state data:
+       This is data provided by room state events but it is cached to avoid to 
+       recompute everything everytime from the state events.
+       Ex: the displayname of the room.
+
+     * Last event data:
+       This is lastEventId plus the string or/and attributed string computed for the event.
+
+     * Business logic data:
+
 
  The data is cached to avoid to recompute everything everytime from the room state.
  */
@@ -68,11 +82,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 - (void)setMatrixSession:(MXSession*)mxSession;
 
 /**
- Reset and recompute summary data.
- */
-- (void)reset;
-
-/**
  Save room summary data.
  
  This method must be called when data is modified outside the `MXRoomSummaryUpdating` callbacks.
@@ -99,40 +108,23 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 @property (nonatomic) NSString *topic;
 
 /**
- The number of unread messages that match the push notification rules.
- It is based on the notificationCount field in /sync response.
- (kMXRoomDidUpdateUnreadNotification is posted when this property is updated)
+ Reset data related to room state.
+ 
+ It recomputes every data related to the room state from the current room state.
  */
-//@property (nonatomic) NSUInteger notificationCount;
+- (void)resetRoomStateData;
 
-/**
- The number of highlighted unread messages (subset of notifications).
- It is based on the notificationCount field in /sync response.
- (kMXRoomDidUpdateUnreadNotification is posted when this property is updated)
- */
-//@property (nonatomic) NSUInteger highlightCount;
 
 // @TODO: Add:
 
 /*
+ @TODO
  isEncrypted;
  isDirect;
  looksLikeDirect;
- additional NSDictionary or id<NSCoding> ?
  */
 
-// @TODO (from Android)
-//// defines the late
-//private String mLatestReadEventId;
-//
-//private int mUnreadEventsCount;
 
-//private boolean mIsHighlighted = false;
-
-/**
- Placeholder to store more information in the room summary
- */
-@property (nonatomic) NSMutableDictionary<NSString*, id<NSCoding>> *others;
 
 
 #pragma mark - Data related to the last event
@@ -152,6 +144,51 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
  The shortcut to the last event.
  */
 @property (nonatomic, readonly) MXEvent *lastEvent;
+
+/**
+ Reset the last event.
+ 
+ The operation is asynchronous as it may require pagination from the homeserver.
+ 
+ @param success A block object called when the operation completes.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)resetLastEvent:(void (^)())complete failure:(void (^)(NSError *))failure;
+
+
+#pragma mark - Data related to business logic
+// @TODO: paginationToken, hasReachedHomeServerPaginationEnd, etc
+
+
+#pragma mark - Other data
+
+/**
+ The number of unread messages that match the push notification rules.
+ It is based on the notificationCount field in /sync response.
+ (kMXRoomDidUpdateUnreadNotification is posted when this property is updated)
+ */
+//@property (nonatomic) NSUInteger notificationCount;
+
+/**
+ The number of highlighted unread messages (subset of notifications).
+ It is based on the notificationCount field in /sync response.
+ (kMXRoomDidUpdateUnreadNotification is posted when this property is updated)
+ */
+//@property (nonatomic) NSUInteger highlightCount;
+
+
+// @TODO (from Android)
+//
+//private int mUnreadEventsCount;
+
+//private boolean mIsHighlighted = false;
+
+/**
+ Placeholder to store more information in the room summary.
+ */
+@property (nonatomic) NSMutableDictionary<NSString*, id<NSCoding>> *others;
 
 
 #pragma mark - Server sync

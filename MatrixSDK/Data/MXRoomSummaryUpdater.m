@@ -58,7 +58,9 @@
     {
         if ([event.redacts isEqualToString:summary.lastEventId])
         {
-            [summary reset];
+            [summary resetLastEvent:nil failure:^(NSError *error) {
+                NSLog(@"[MXRoomSummaryUpdater] updateRoomSummary: Cannot reset last event after redaction. Room: %@", summary.roomId);
+            }];
         }
         return NO;
     }

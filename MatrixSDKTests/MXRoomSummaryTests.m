@@ -23,6 +23,14 @@
 
 #import "MXRoomSummaryUpdater.h"
 
+#import "MXTools.h"
+
+
+// Do not bother with retain cycles warnings in tests
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-retain-cycles"
+
+
 @interface MXRoomSummaryTests : XCTestCase <MXRoomSummaryUpdating>
 {
     MatrixSDKTestsData *matrixSDKTestsData;
@@ -168,6 +176,66 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
             [expectation fulfill];
         }];
         
+    }];
+}
+
+- (void)testGetLastEventFromPagination
+{
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+
+        MXRestClient *bobRestClient = mxSession.matrixRestClient;
+        NSString *roomId = room.roomId;
+
+        MXRoomSummary *summary = [mxSession roomSummaryWithRoomId:roomId];
+        XCTAssert(summary);
+        XCTAssert(summary.lastEventId);
+
+        [mxSession close];
+
+        MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [mxSession2 setStore:[[MXMemoryStore alloc] init] success:^{
+
+            // Start a new session by loading no message
+            [mxSession2 startWithMessagesLimit:0 onServerSyncDone:^{
+
+                MXRoomSummary *summary2 = [mxSession2 roomSummaryWithRoomId:roomId];
+
+                XCTAssert(summary2);
+                XCTAssertNil(summary2.lastEventId, @"We asked for loading 0 message. So, we cannot know the last event yet");
+
+                id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary2 queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                    [[NSNotificationCenter defaultCenter] removeObserver:observer];
+
+                    XCTAssert(summary2);
+                    XCTAssert(summary2.lastEventId, @"We must have an event now");
+
+                    MXEvent *event2 = summary2.lastEvent;
+
+                    XCTAssert(event2);
+                    XCTAssertEqual(event2.eventType, MXEventTypeRoomMessage);
+
+                    [expectation fulfill];
+                }];
+
+                // Force the summary to fetch events from the homeserver to get the last one
+                MXHTTPOperation *operation = [summary2 resetLastEvent:nil failure:^(NSError *error) {
+
+                    XCTFail(@"The operation should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                    
+                }];
+
+                XCTAssert(operation, @"An HTTP operation is required for that");
+
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
     }];
 }
 
@@ -481,3 +549,5 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
 }
 
 @end
+
+#pragma clang diagnostic pop
