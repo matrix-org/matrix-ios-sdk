@@ -135,9 +135,9 @@
 
 // According to the direction of the instance, we are interested either by
 // the content of the event or its prev_content
-- (NSDictionary*)contentOfEvent:(MXEvent*)event
+- (NSDictionary<NSString *, id> *)contentOfEvent:(MXEvent*)event
 {
-    NSDictionary *content;
+    NSDictionary<NSString *, id> *content;
     if (event)
     {
         if (_isLive)
@@ -152,9 +152,9 @@
     return content;
 }
 
-- (NSArray *)stateEvents
+- (NSArray<MXEvent *> *)stateEvents
 {
-    NSMutableArray *state = [NSMutableArray arrayWithArray:[stateEvents allValues]];
+    NSMutableArray<MXEvent *> *state = [NSMutableArray arrayWithArray:[stateEvents allValues]];
 
     // Members are also state events
     for (MXRoomMember *roomMember in self.members)
@@ -177,7 +177,7 @@
     return state;
 }
 
-- (NSArray *)members
+- (NSArray<MXRoomMember *> *)members
 {
     return [members allValues];
 }
@@ -192,15 +192,15 @@
     return [thirdPartyInvites allValues];
 }
 
-- (NSArray *)aliases
+- (NSArray<NSString *> *)aliases
 {
-    NSMutableArray *aliases = [NSMutableArray array];
+    NSMutableArray<NSString *> *aliases = [NSMutableArray array];
     
     // Merge here all the bunches of aliases (one bunch by domain)
     for (MXEvent *event in roomAliases.allValues)
     {
-        NSDictionary *eventContent = [self contentOfEvent:event];
-        NSArray *aliasesBunch = eventContent[@"aliases"];
+        NSDictionary<NSString *, id> *eventContent = [self contentOfEvent:event];
+        NSArray<NSString *> *aliasesBunch = eventContent[@"aliases"];
         
         if (aliasesBunch.count)
         {
@@ -325,7 +325,7 @@
     if (!alias)
     {
         // For rooms where canonical alias is not defined, we use the 1st alias as a workaround
-        NSArray *aliases = self.aliases;
+        NSArray<NSString *> *aliases = self.aliases;
         
         if (aliases.count)
         {
@@ -549,7 +549,7 @@
             powerLevels = [MXRoomPowerLevels modelFromJSON:[self contentOfEvent:event]];
             // Compute max power level
             maxPowerLevel = powerLevels.usersDefault;
-            NSArray *array = powerLevels.users.allValues;
+            NSArray<NSNumber *> *array = powerLevels.users.allValues;
             for (NSNumber *powerLevel in array)
             {
                 NSInteger level = 0;
@@ -731,7 +731,7 @@
 
 - (NSArray<MXRoomMember *> *)membersWithoutConferenceUser
 {
-    NSArray *membersWithoutConferenceUser;
+    NSArray<MXRoomMember *> *membersWithoutConferenceUser;
 
     if (self.isConferenceUserRoom)
     {
@@ -746,7 +746,7 @@
     else
     {
         // Filter the conference user from the list
-        NSMutableDictionary *membersWithoutConferenceUserDict = [NSMutableDictionary dictionaryWithDictionary:members];
+        NSMutableDictionary<NSString*, MXRoomMember*> *membersWithoutConferenceUserDict = [NSMutableDictionary dictionaryWithDictionary:members];
         [membersWithoutConferenceUserDict removeObjectForKey:self.conferenceUserId];
         membersWithoutConferenceUser = membersWithoutConferenceUserDict.allValues;
     }
@@ -756,7 +756,7 @@
 
 - (NSArray<MXRoomMember *> *)membersWithMembership:(MXMembership)theMembership includeConferenceUser:(BOOL)includeConferenceUser
 {
-    NSArray *membersWithMembership;
+    NSArray<MXRoomMember *> *membersWithMembership;
 
     if (includeConferenceUser || self.isConferenceUserRoom)
     {

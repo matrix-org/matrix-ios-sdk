@@ -208,7 +208,7 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     return _clearEvent ? _clearEvent.wireEventType : _wireEventType;
 }
 
-- (NSDictionary *)content
+- (NSDictionary<NSString *, id> *)content
 {
     // Return the decrypted version if any
     return _clearEvent ? _clearEvent.wireContent : _wireContent;

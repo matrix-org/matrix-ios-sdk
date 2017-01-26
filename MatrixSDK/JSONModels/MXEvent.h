@@ -256,7 +256,7 @@ extern NSString *const kMXEventIdentifierKey;
  If the event is encrypted and the decryption failed (check 'decryptionError' property),
   'content' will remain encrypted.
  */
-@property (nonatomic, readonly) NSDictionary *content;
+@property (nonatomic, readonly) NSDictionary<NSString *, id> *content;
 
 /**
  The string event (possibly encrypted) type as provided by the homeserver.
@@ -280,12 +280,12 @@ extern NSString *const kMXEventIdentifierKey;
  Do not access this property directly unless you absolutely have to. Prefer to use the
  'content' property that manages decryption.
  */
-@property (nonatomic) NSDictionary *wireContent;
+@property (nonatomic) NSDictionary<NSString *, id> *wireContent;
 
 /**
  Optional. Contains the previous content for this event. If there is no previous content, this key will be missing.
  */
-@property (nonatomic) NSDictionary *prevContent;
+@property (nonatomic) NSDictionary<NSString *, id> *prevContent;
 
 /**
  Contains the state key for this state event. If there is no state key for this state event, this will be an empty
