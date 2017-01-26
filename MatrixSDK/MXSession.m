@@ -1697,7 +1697,6 @@ typedef void (^MXOnResumeDone)();
         roomSummary =  roomsSummaries[roomId];
     }
 
-    NSLog(@"roomSummaryWithRoomId: %@", roomSummary);
     return roomSummary;
 }
 
@@ -1706,6 +1705,22 @@ typedef void (^MXOnResumeDone)();
     return [roomsSummaries allValues];
 }
 
+- (void)fixRoomsSummariesLastEvent
+{
+    for (MXRoomSummary *summary in self.roomsSummaries)
+    {
+        if (!summary.lastEventId)
+        {
+            NSLog(@"[MXSession] Fixing last event for room %@", summary.roomId);
+
+            [summary resetLastEvent:^{
+                NSLog(@"[MXSession] Fixing last event operation for room %@ has complete. LastEventId: %@", summary.roomId, summary.lastEventId);
+            } failure:^(NSError *error) {
+                NSLog(@"[MXSession] Cannot fix last event for room %@", summary.roomId);
+            }];
+        }
+    }
+}
 
 #pragma mark - Room peeking
 - (void)peekInRoomWithRoomId:(NSString*)roomId

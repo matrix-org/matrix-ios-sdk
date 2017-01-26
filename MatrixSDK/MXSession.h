@@ -647,6 +647,14 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (NSArray<MXRoomSummary*>*)roomsSummaries;
 
 /**
+ Make sure that all room summaries have a last event.
+ 
+ This may lead to pagination requests to the homeserver. Updated room summaries will be 
+ notified by `kMXRoomSummaryDidChangeNotification`.
+ */
+- (void)fixRoomsSummariesLastEvent;
+
+/**
  Delegate for updating room summaries.
  By default, it is the one returned by [MXRoomSummaryUpdater roomSummaryUpdaterForSession:].
  */
