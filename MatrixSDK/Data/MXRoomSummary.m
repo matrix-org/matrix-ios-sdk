@@ -77,6 +77,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     return [_mxSession roomWithRoomId:_roomId];
 }
 
+
 #pragma mark - Data related to room state
 
 - (void)resetRoomStateData
@@ -267,6 +268,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     }
 }
 
+
 #pragma mark - Server sync
 - (void)handleJoinedRoomSync:(MXRoomSync*)roomSync
 {
@@ -318,8 +320,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     BOOL updated = [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withStateEvents:invitedRoomSync.inviteState.events];
 
     // Fake the last message with the invitation event contained in invitedRoomSync.inviteState
-    // @TODO: Make sure that is true
-    [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withLastEvent:invitedRoomSync.inviteState.events.lastObject oldState:self.room.state];
+    updated |= [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withLastEvent:invitedRoomSync.inviteState.events.lastObject oldState:self.room.state];
 
     if (updated)
     {
@@ -329,7 +330,6 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 
 
 #pragma mark - Single update
-
 - (void)handleEvent:(MXEvent*)event
 {
     MXRoom *room = self.room;

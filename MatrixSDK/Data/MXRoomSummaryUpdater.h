@@ -57,12 +57,4 @@
  */
 @property (nonatomic) BOOL ignoreRedactedEvent;
 
-
-#pragma mark - Methods
-
-/**
- Reset room summary data related to the room state.
- */
-- (void)updateSummaryFromRoomState:(MXRoomSummary*)summary;
-
 @end

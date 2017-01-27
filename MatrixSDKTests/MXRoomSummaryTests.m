@@ -449,6 +449,15 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
 
             [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
+            XCTFail(@"The last message should not change if ignoreMemberProfileChanges == YES");
+            [expectation fulfill];
+        }];
+
+        // Wait to check that no notification happens
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+
+            [[NSNotificationCenter defaultCenter] removeObserver:observer];
+
             MXEvent *event = summary.lastMessageEvent;
 
             XCTAssert(event);
@@ -456,7 +465,8 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
             XCTAssertNotEqual(event.eventType, MXEventTypeRoomMember, @"The last message must not be the change of Bob's displayname");
 
             [expectation fulfill];
-        }];
+
+        });
 
         [mxSession.myUser setDisplayName:userDisplayName success:nil failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
