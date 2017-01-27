@@ -212,7 +212,7 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)registerWithParameters:(NSDictionary*)parameters
                                    success:(void (^)(NSDictionary *JSONResponse))success
-                                   failure:(void (^)(NSError *error))failure;
+                                   failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Register a user.
@@ -229,14 +229,14 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)registerWithLoginType:(NSString*)loginType username:(NSString*)username password:(NSString*)password
                                   success:(void (^)(MXCredentials *credentials))success
-                                  failure:(void (^)(NSError *error))failure;
+                                  failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Get the register fallback page to make registration via a web browser or a web view.
 
  @return the fallback page URL.
  */
-- (NSString*)registerFallback;
+- (NSString*)registerFallback NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - Login operations

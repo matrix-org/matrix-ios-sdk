@@ -213,12 +213,61 @@ extension MXRestClient {
     }
 
     
+    /**
+     Generic registration action request.
+     
+     As described in [the specification](http://matrix.org/docs/spec/client_server/r0.2.0.html#client-authentication),
+     some registration flows require to complete several stages in order to complete user registration.
+     This can lead to make several requests to the home server with different kinds of parameters.
+     This generic method with open parameters and response exists to handle any kind of registration flow stage.
+     
+     At the end of the registration process, the SDK user should be able to construct a MXCredentials object
+     from the response of the last registration action request.
+     
+     - parameter parameters: the parameters required for the current registration stage
+     - parameter completion: A block object called when the operation completes. 
+     - parameter response: Provides the raw JSON response from the server.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func register(parameters: [String: Any], completion: @escaping (_ response: MXResponse<[String: Any]>) -> Void) -> MXHTTPOperation? {
+        return __register(withParameters: parameters, success: success(completion), failure: error(completion))
+    }
+    
+    
+    
+    // TODO: This method accepts a nil username. Maybe this should be called "anonymous registration"? Would it make sense to have a separate API for that case?
+    // We could also create an enum called "MXRegistrationType" with associated values, e.g. `.username(String)` and `.anonymous`
+    /**
+     Register a user.
+     
+     This method manages the full flow for simple login types and returns the credentials of the newly created matrix user.
+     
+     - parameter loginType: the login type. Only `MXLoginFlowType.password` and `MXLoginFlowType.dummy` (m.login.password and m.login.dummy) are supported.
+     - parameter username: the user id (ex: "@bob:matrix.org") or the user id localpart (ex: "bob") of the user to register. Can be nil.
+     - parameter password: the user's password.
+     - parameter completion: A block object called when the operation completes.
+     - parameter response: Provides credentials to use to create a `MXRestClient`.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func register(loginType: MXLoginFlowType = .password, username: String?, password: String, completion: @escaping (_ response: MXResponse<MXCredentials>) -> Void) -> MXHTTPOperation? {
+        return __register(withLoginType: loginType.rawValue, username: username, password: password, success: success(completion), failure: error(completion))
+    }
+    
+    
+    /// The register fallback page to make registration via a web browser or a web view.
+    var registerFallbackURL: URL {
+        let fallbackString = __registerFallback()!
+        return URL(string: fallbackString)!
+    }
     
     
     
     
     
     
+    // MARK: - Login Operation
     
     
     /**
