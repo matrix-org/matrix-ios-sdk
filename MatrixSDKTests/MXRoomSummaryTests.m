@@ -608,10 +608,6 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
                 [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
                 XCTAssertEqualObjects(summary.lastMessageEventId, invitationEvent.eventId);
-
-                // @TODO: Fix it (or fix the test) (is it testable?)
-                //XCTAssertEqualObjects(summary.displayname, newRoomName);
-                //XCTAssertEqualObjects(summary.topic, newRoomTopic);
                 
                 [expectation fulfill];
             }];

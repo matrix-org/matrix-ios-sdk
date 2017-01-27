@@ -29,7 +29,7 @@
  Get the room summary updater for the given session.
  
  @param mxSession the session to use.
- @return the update for this session.
+ @return the updater for this session.
  */
 + (instancetype)roomSummaryUpdaterForSession:(MXSession*)mxSession;
 

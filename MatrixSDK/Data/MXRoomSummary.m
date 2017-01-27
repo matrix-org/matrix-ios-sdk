@@ -85,13 +85,13 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     // Reset data
     MXRoom *room = self.room;
 
-    // @TODO: Manage all summary state properties
+    // @TODO(summary): Manage all summary state properties
     _avatar = room.state.avatar;
     _displayname = room.state.displayname;
     _topic = room.state.topic;
     [_stateOthers removeAllObjects];
 
-    // @TODO: How to call the update?
+    // @TODO(summary): How to call the update?
 }
 
 
@@ -101,7 +101,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 {
     MXEvent *lastMessageEvent;
 
-    // Is it a true matrix event or a local echo?
+    // The storage of the event depends if it is a true matrix event or a local echo
     if (![_lastMessageEventId hasPrefix:kMXEventLocalEventIdPrefix])
     {
         lastMessageEvent = [_mxSession.store eventWithEventId:_lastMessageEventId inRoom:_roomId];
@@ -136,7 +136,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 
  @param success A block object called when the operation completes.
  @param failure A block object called when the operation fails.
- @param lastEventIdChecked the id of the event candidate to be the room last message.
+ @param lastEventIdChecked the id of the last candidate event checked to be the last message.
         Nil means we will start checking from the last event in the store.
  @param operation the current http operation if any.
         The method may need several requests before fetching the right last message.
@@ -186,7 +186,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     {
         if (event.isState)
         {
-            // @TODO: udpate state
+            // @TODO(summary): udpate state
         }
 
         // Decrypt event if necessary
@@ -299,7 +299,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     {
         if (event.isState)
         {
-            // @TODO: udpate state
+            // @TODO(summary): udpate state
         }
 
         lastMessageUpdated = [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withLastEvent:event oldState:state];

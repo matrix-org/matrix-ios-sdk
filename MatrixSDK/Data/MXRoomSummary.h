@@ -65,7 +65,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 @property (nonatomic, readonly) MXRoom *room;
 
 /**
- Create a `MXRoom` instance.
+ Create a `MXRoomSummary` instance.
 
  @param roomId the id of the room.
  @param mxSession the session to use.
@@ -108,10 +108,9 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
  */
 @property (nonatomic) NSString *topic;
 
-// @TODO: Add:
+/* 
+ @TODO(summary): Add:
 
-/*
- @TODO
  isEncrypted;
  isDirect;
  looksLikeDirect;
@@ -129,8 +128,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
  It recomputes every data related to the room state from the current room state.
  */
 - (void)resetRoomStateData;
-
-
 
 
 #pragma mark - Data related to the last message
@@ -170,7 +167,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 
 
 #pragma mark - Data related to business logic
-// @TODO: paginationToken, hasReachedHomeServerPaginationEnd, etc
+// @TODO(summary): paginationToken, hasReachedHomeServerPaginationEnd, etc
 
 
 #pragma mark - Other data
@@ -190,7 +187,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 //@property (nonatomic) NSUInteger highlightCount;
 
 
-// @TODO (from Android)
+// @TODO(summary) (from Android)
 //
 //private int mUnreadEventsCount;
 

@@ -445,8 +445,6 @@ NSMutableArray *roomsToClean;
         } failure:^(NSError *error) {
             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
         }];
-
-
     }];
 }
 

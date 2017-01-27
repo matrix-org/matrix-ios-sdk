@@ -435,7 +435,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  This impacts the rooms ordering based on their last message.
  Ignoring the profile changes in last message handling prevents an irrelevant reordering of the room list.
  */
-// @TODO: deprecated
+// @TODO(summary): deprecated
 @property (nonatomic) BOOL ignoreProfileChangesDuringLastMessageProcessing;
 
 /**

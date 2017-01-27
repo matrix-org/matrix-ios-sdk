@@ -115,7 +115,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 #pragma mark - Properties implementation
 - (MXRoomSummary *)summary
 {
-    // That makes self.room a really weak reference
+    // That makes self.summary a really weak reference
     return [mxSession roomSummaryWithRoomId:_roomId];
 }
 

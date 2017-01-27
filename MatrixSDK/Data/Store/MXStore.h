@@ -108,21 +108,21 @@
 /**
  Store/retrieve the current pagination token of a room.
  */
-// @TODO: Move to MXRoomSummary
+// @TODO(summary): Move to MXRoomSummary
 - (void)storePaginationTokenOfRoom:(NSString*)roomId andToken:(NSString*)token;
 - (NSString*)paginationTokenOfRoom:(NSString*)roomId;
 
 /**
  Store/retrieve the current number of unread messages that match the push notification rules of a room.
  */
-// @TODO: Move to MXRoomSummary
+// @TODO(summary): Move to MXRoomSummary
 - (void)storeNotificationCountOfRoom:(NSString*)roomId count:(NSUInteger)notificationCount;
 - (NSUInteger)notificationCountOfRoom:(NSString*)roomId;
 
 /**
  Store/retrieve the current number of highlighted unread messages (subset of notifications) of a room.
  */
-// @TODO: Move to MXRoomSummary
+// @TODO(summary): Move to MXRoomSummary
 - (void)storeHighlightCountOfRoom:(NSString*)roomId count:(NSUInteger)highlightCount;
 - (NSUInteger)highlightCountOfRoom:(NSString*)roomId;
 
@@ -130,7 +130,7 @@
  Store/retrieve the flag indicating that the SDK has reached the end of pagination
  in its pagination requests to the home server.
  */
-// @TODO: Move to MXRoomSummary
+// @TODO(summary): Move to MXRoomSummary
 - (void)storeHasReachedHomeServerPaginationEndForRoom:(NSString*)roomId andValue:(BOOL)value;
 - (BOOL)hasReachedHomeServerPaginationEndForRoom:(NSString*)roomId;
 
@@ -181,7 +181,7 @@
  @param roomId the id of the room.
  @param partialTextMessage the text to store. Nil to reset it.
  */
-// @TODO: Move to MXRoomSummary
+// @TODO(summary): Move to MXRoomSummary
 - (void)storePartialTextMessageForRoom:(NSString*)roomId partialTextMessage:(NSString*)partialTextMessage;
 
 /**
