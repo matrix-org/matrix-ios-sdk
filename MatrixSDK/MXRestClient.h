@@ -190,7 +190,7 @@ typedef enum : NSUInteger
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)getRegisterSession:(void (^)(MXAuthenticationSession *authSession))success
-                               failure:(void (^)(NSError *error))failure;
+                               failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Generic registration action request.

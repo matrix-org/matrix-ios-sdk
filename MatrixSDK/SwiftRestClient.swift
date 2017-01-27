@@ -77,6 +77,38 @@ enum MXResponse<T> {
     }
 }
 
+fileprivate extension MXResponse {
+    
+    /**
+     Take the value from an optional, if it's available.
+     Otherwise, return a failure with _MXUnknownError
+     
+     - parameter value: to be captured in a `.success` case, if it's not `nil` and the type is correct.
+     
+     - returns: `.success(value)` if the value is not `nil`, otherwise `.failure(_MXUnkownError())`
+     */
+    static func fromOptional(value: Any?) -> MXResponse<T> {
+        if let value = value as? T {
+            return .success(value)
+        } else {
+            return .failure(_MXUnknownError())
+        }
+    }
+    
+    /**
+     Take the error from an optional, if it's available.
+     Otherwise, return a failure with _MXUnknownError
+     
+     - parameter error: to be captured in a `.failure` case, if it's not `nil`.
+     
+     - returns: `.failure(error)` if the value is not `nil`, otherwise `.failure(_MXUnkownError())`
+     */
+    static func fromOptional(error: Error?) -> MXResponse<T> {
+        return .failure(error ?? _MXUnknownError())
+    }
+}
+
+
 
 /**
  Represents an error that was unexpectedly nil.
@@ -92,8 +124,6 @@ struct _MXUnknownError : Error {
 }
 
 
-
-
 /// Represents a login flow
 enum MXLoginFlowType : String {
     case password = "m.login.password"
@@ -107,7 +137,26 @@ enum MXLoginFlowType : String {
 
 
 
+
+
+
+
+
+/// Return a closure that accepts any object, converts it to a MXResponse value, and then executes the provded completion block
+fileprivate func success<T>(_ completion: @escaping (MXResponse<T>) -> Void) -> (Any?) -> Void {
+    return { completion(.fromOptional(value: $0)) }
+}
+
+/// Return a closure that accepts any error, converts it to a MXResponse value, and then executes the provded completion block
+fileprivate func error<T>(_ completion: @escaping (MXResponse<T>) -> Void) -> (Error?) -> Void {
+    return { completion(.fromOptional(error: $0)) }
+}
+
+
 extension MXRestClient {
+    
+    
+    // MARK: - Initialization
     
     /**
      Create an instance based on homeserver url.
@@ -136,6 +185,8 @@ extension MXRestClient {
     
     
     
+    // MARK: - Registration Operations
+    
     /**
      Check whether a username is already in use.
      
@@ -146,9 +197,28 @@ extension MXRestClient {
      - returns: a `MXHTTPOperation` instance.
      */
     @nonobjc @discardableResult func isUserNameInUse(_ username: String, completion: @escaping (_ inUse: Bool) -> Void) -> MXHTTPOperation? {
-        let operation = __isUserName(inUse: username, callback: completion)
-        return operation
+        return __isUserName(inUse: username, callback: completion)
     }
+    
+    /**
+     Get the list of register flows supported by the home server.
+     
+     - parameter completion: A block object called when the operation is completed.
+     - parameter response: Provides the server response as an `MXAuthenticationSession` instance.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func getRegisterSession(completion: @escaping (_ response: MXResponse<MXAuthenticationSession>) -> Void) -> MXHTTPOperation? {
+        return __getRegisterSession(success(completion), failure: error(completion))
+    }
+
+    
+    
+    
+    
+    
+    
+    
     
     
     /**
@@ -159,16 +229,10 @@ extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func publicRooms(completion: @escaping (_ response: MXResponse<[MXPublicRoom]>) -> ()) -> MXHTTPOperation? {
-        let operation = __publicRooms({ (roomObjects) in
-            let publicRooms = roomObjects?.flatMap({ return $0 as? MXPublicRoom }) ?? []
-            completion(.success(publicRooms))
-        }) { (error) in
-            completion(.failure(error ?? _MXUnknownError()))
-        }
-        
-        return operation
+    @nonobjc @discardableResult func publicRooms(completion: @escaping (_ response: MXResponse<[MXPublicRoom]>) -> Void) -> MXHTTPOperation? {
+        return __publicRooms(success(completion), failure: error(completion))
     }
+    
     
     /**
      Log a user in.
@@ -184,17 +248,7 @@ extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func login(type loginType: MXLoginFlowType = .password, username: String, password: String, completion: @escaping (_ response: MXResponse<MXCredentials>) -> ()) -> MXHTTPOperation? {
-        let operation = __login(withLoginType: loginType.rawValue, username: username, password: password, success: { (credentials) in
-            if let credentials = credentials {
-                completion(.success(credentials))
-            } else {
-                completion(.failure(_MXUnknownError()))
-            }
-        }) { (error) in
-            completion(.failure(error ?? _MXUnknownError()))
-        }
-        
-        return operation
+    @nonobjc @discardableResult func login(type loginType: MXLoginFlowType = .password, username: String, password: String, completion: @escaping (_ response: MXResponse<MXCredentials>) -> Void) -> MXHTTPOperation? {
+        return __login(withLoginType: loginType.rawValue, username: username, password: password, success: success(completion), failure: error(completion))
     }
 }
