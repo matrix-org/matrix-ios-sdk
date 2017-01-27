@@ -135,8 +135,22 @@ enum MXLoginFlowType : String {
     case emailCode = "m.login.email.code"
 }
 
-
-
+/// Represents account data type
+enum MXAccountDataType {
+    case direct
+    case pushRules
+    case ignoredUserList
+    case custom(String)
+    
+    var rawValue: String {
+        switch self {
+        case .direct:               return kMXAccountDataTypeDirect
+        case .pushRules:            return kMXAccountDataTypePushRules
+        case .ignoredUserList:      return kMXAccountDataKeyIgnoredUser
+        case .custom(let value):    return value
+        }
+    }
+}
 
 
 
@@ -358,7 +372,7 @@ extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func changePassword(old: String, new: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func changePassword(from old: String, to new: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
         return __changePassword(old, with: new, success: success(completion), failure: error(completion))
     }
     
@@ -378,9 +392,21 @@ extension MXRestClient {
     
     
     
-    // TODO: - Account data
+    // MARK: - Account data
     
-    
+    /**
+     Set some account_data for the client.
+     
+     - parameter data: the new data to set for this event type.
+     - parameter type: The event type of the account_data to set. Custom types should be namespaced to avoid clashes.
+     - parameter completion: A block object called when the operation completes
+     - parameter response: indicates whether the request succeeded or not
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func setAccountData(_ data: [String: Any], for type: MXAccountDataType, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __setAccountData(data, forType: type.rawValue, success: success(completion), failure: error(completion))
+    }
     
     
     // TODO: - Push Notifications
