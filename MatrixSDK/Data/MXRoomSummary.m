@@ -272,18 +272,21 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 {
     // Handle first changes due to state events
     BOOL updated = NO;
-    for (MXEvent *event in roomSync.state.events)
-    {
-        updated |= [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withStateEvent:event];
-    }
+
+    NSMutableArray<MXEvent*> *stateEvents = [NSMutableArray arrayWithArray:roomSync.state.events];
 
     // There may be state events in the timeline too
     for (MXEvent *event in roomSync.timeline.events)
     {
         if (event.isState)
         {
-            updated |= [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withStateEvent:event];
+            [stateEvents addObject:event];
         }
+    }
+
+    if (stateEvents.count)
+    {
+        updated = [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withStateEvents:stateEvents];
     }
 
     // Handle the last message starting by the most recent event.
@@ -312,12 +315,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync*)invitedRoomSync
 {
-    BOOL updated = NO;
-
-    for (MXEvent *event in invitedRoomSync.inviteState.events)
-    {
-        updated |= [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withStateEvent:event];
-    }
+    BOOL updated = [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withStateEvents:invitedRoomSync.inviteState.events];
 
     // Fake the last message with the invitation event contained in invitedRoomSync.inviteState
     // @TODO: Make sure that is true
@@ -346,7 +344,6 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         }
     }
 }
-
 
 
 #pragma mark - NSCoding
@@ -391,7 +388,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        
+
         propertyKeys = [NSMutableArray array];
         Class class = [self class];
         while (class != [NSObject class])
@@ -435,6 +432,5 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 {
     return [NSString stringWithFormat:@"%@ %@: %@ - %@", super.description, _roomId, _displayname, _lastMessageString];
 }
-
 
 @end

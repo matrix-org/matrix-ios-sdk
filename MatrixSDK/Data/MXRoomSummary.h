@@ -252,11 +252,9 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 
  @param session the session the room belongs to.
  @param summary the room summary.
- @param event a state event that may change the room summary.
+ @param stateEvents state events that may change the room summary.
  @return YES if the room summary has changed.
  */
-- (BOOL)session:(MXSession*)session updateRoomSummary:(MXRoomSummary*)summary withStateEvent:(MXEvent*)event;
+- (BOOL)session:(MXSession*)session updateRoomSummary:(MXRoomSummary*)summary withStateEvents:(NSArray<MXEvent*>*)stateEvents;
 
 @end
-
-

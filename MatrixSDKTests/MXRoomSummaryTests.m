@@ -111,11 +111,11 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
     return updated;
 }
 
-- (BOOL)session:(MXSession *)session updateRoomSummary:(MXRoomSummary *)summary withStateEvent:(MXEvent *)event
+- (BOOL)session:(MXSession *)session updateRoomSummary:(MXRoomSummary *)summary withStateEvents:(NSArray<MXEvent *> *)stateEvents
 {
     // Do a classic update
     MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:session];
-    return [updater session:session updateRoomSummary:summary withStateEvent:event];
+    return [updater session:session updateRoomSummary:summary withStateEvents:stateEvents];
 }
 
 - (void)test

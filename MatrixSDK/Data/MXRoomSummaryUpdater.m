@@ -87,7 +87,7 @@
     return updated;
 }
 
-- (BOOL)session:(MXSession *)session updateRoomSummary:(MXRoomSummary *)summary withStateEvent:(MXEvent *)event
+- (BOOL)session:(MXSession *)session updateRoomSummary:(MXRoomSummary *)summary withStateEvents:(NSArray<MXEvent *> *)stateEvents
 {
     // @TODO: this call is a bit too much, no?
     [self updateSummaryFromRoomState:summary];
