@@ -127,9 +127,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     _lastEventAttribytedString = nil;
     [_lastEventOthers removeAllObjects];
 
-    MXHTTPOperation *operation;
-    [self fetchLastEvent:complete failure:failure lastEventIdChecked:nil operation:&operation];
-    return operation;
+    return [self fetchLastEvent:complete failure:failure lastEventIdChecked:nil operation:nil];
 }
 
 /**
@@ -143,7 +141,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         The method may need several requests before fetching the right last event. 
         If it happens, the first one is mutated with [MXHTTPOperation mutateTo:].
  */
-- (void)fetchLastEvent:(void (^)())complete failure:(void (^)(NSError *))failure lastEventIdChecked:(NSString*)lastEventIdChecked operation:(MXHTTPOperation **)operation
+- (MXHTTPOperation *)fetchLastEvent:(void (^)())complete failure:(void (^)(NSError *))failure lastEventIdChecked:(NSString*)lastEventIdChecked operation:(MXHTTPOperation *)operation
 {
     MXRoom *room = self.room;
     if (!room)
@@ -154,19 +152,27 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         }
     }
 
+    MXHTTPOperation *newOperation;
+
     // Start by checking events we have in the store
     MXRoomState *state = self.room.state;
     id<MXEventsEnumerator> messagesEnumerator = room.enumeratorForStoredMessages;
+    NSUInteger messagesInStore = messagesEnumerator.remaining;
     MXEvent *event = messagesEnumerator.nextEvent;
 
     // 1.1 Find where we stopped at the previous call
+    BOOL firstIteration = YES;
     if (lastEventIdChecked)
     {
+        firstIteration = NO;
         while (event)
         {
-            if ([event.eventId isEqualToString:lastEventIdChecked])
+            NSString *eventId = event.eventId;
+
+            event = messagesEnumerator.nextEvent;
+
+            if ([eventId isEqualToString:lastEventIdChecked])
             {
-                event = messagesEnumerator.nextEvent;
                 break;
             }
         }
@@ -205,29 +211,32 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     // If lastEventId is still nil, fetch events from the homeserver
     if (!_lastEventId && [room.liveTimeline canPaginate:MXTimelineDirectionBackwards])
     {
+        NSUInteger messagesToPaginate = 30;
+
         // Reset pagination the first time
-        if (!*operation)
+        if (firstIteration)
         {
             [room.liveTimeline resetPagination];
+
+            // Make sure we paginate more than the events we have already in the store
+            messagesToPaginate += messagesInStore;
         }
 
         // Paginate events from the homeserver
-        MXHTTPOperation *newOperation;
-        newOperation = [room.liveTimeline paginate:30 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+        // XXX: Pagination on the timeline may conflict with request from the app
+        newOperation = [room.liveTimeline paginate:messagesToPaginate direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
 
             // Received messages have been stored in the store. We can make a new loop
-            [self fetchLastEvent:complete failure:failure lastEventIdChecked:lastEventIdChecked operation:operation];
+            [self fetchLastEvent:complete failure:failure
+              lastEventIdChecked:lastEventIdChecked
+                       operation:(operation ? operation : newOperation)];
 
         } failure:failure];
 
         // Update the current HTTP operation
-        if (!*operation)
+        if (operation)
         {
-            *operation = newOperation;
-        }
-        else
-        {
-            [(*operation) mutateTo:newOperation];
+            [operation mutateTo:newOperation];
         }
 
     }
@@ -241,6 +250,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         [self save];
     }
 
+    return operation ? operation : newOperation;
 }
 
 - (void)eventDidChangeSentState:(NSNotification *)notif

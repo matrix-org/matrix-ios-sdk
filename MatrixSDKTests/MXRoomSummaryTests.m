@@ -91,6 +91,18 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
         // Force a kMXRoomSummaryDidChangeNotification
         [summary save];
     }
+    else if ([self.description containsString:@"testGetLastEventFromSeveralPaginations"])
+    {
+        if (event.eventType == MXEventTypeRoomMessage)
+        {
+            updated = NO;
+        }
+        else
+        {
+            summary.lastEventId = event.eventId;
+            updated = YES;
+        }
+    }
     else
     {
         XCTFail(@"Unexpected delegate call in %@", self);
@@ -227,6 +239,7 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
                 }];
 
                 XCTAssert(operation, @"An HTTP operation is required for that");
+                XCTAssert([operation isKindOfClass:MXHTTPOperation.class]);
 
             } failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -238,6 +251,80 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
         }];
     }];
 }
+
+- (void)testGetLastEventFromSeveralPaginations
+{
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+
+        MXRestClient *bobRestClient = mxSession.matrixRestClient;
+        NSString *roomId = room.roomId;
+
+        // Add more messages than a single pagination can retrieve
+        [matrixSDKTestsData for:bobRestClient andRoom:roomId sendMessages:80 success:^{
+
+            MXRoomSummary *summary = [mxSession roomSummaryWithRoomId:roomId];
+            XCTAssert(summary);
+            XCTAssert(summary.lastEventId);
+
+            [mxSession close];
+
+            MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+
+            // Configure the updater so that it refuses room messages as last event
+            mxSession2.roomSummaryUpdateDelegate = self;
+
+            [mxSession2 setStore:[[MXMemoryStore alloc] init] success:^{
+
+                // Start a new session by loading no message
+                [mxSession2 startWithMessagesLimit:0 onServerSyncDone:^{
+
+                    MXRoomSummary *summary2 = [mxSession2 roomSummaryWithRoomId:roomId];
+
+                    XCTAssert(summary2);
+                    XCTAssertNil(summary2.lastEventId, @"We asked for loading 0 message. So, we cannot know the last event yet");
+
+
+                    // Force the summary to fetch events from the homeserver to get the last one
+                    MXHTTPOperation *operation = [summary2 resetLastEvent:nil failure:^(NSError *error) {
+
+                        XCTFail(@"The operation should not fail - NSError: %@", error);
+                        [expectation fulfill];
+
+                    }];
+
+                    XCTAssert(operation, @"An HTTP operation is required for that");
+                    XCTAssert([operation isKindOfClass:MXHTTPOperation.class]);
+
+                    NSURLSessionDataTask *urlSessionDataTask = operation.operation;
+
+                    id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary2 queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                        [[NSNotificationCenter defaultCenter] removeObserver:observer];
+
+                        XCTAssert(summary2);
+                        XCTAssert(summary2.lastEventId, @"We must have an event now");
+
+                        MXEvent *event2 = summary2.lastEvent;
+                        XCTAssert(event2);
+
+                        XCTAssertNotEqual(urlSessionDataTask, operation.operation, @"operation should have mutated as several http requests are required");
+                        
+                        [expectation fulfill];
+                    }];
+                    
+                } failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+
+        }];
+    }];
+}
+
 
 - (void)testFixRoomsSummariesLastEvent
 {
