@@ -85,13 +85,15 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     // Reset data
     MXRoom *room = self.room;
 
-    // @TODO(summary): Manage all summary state properties
-    _avatar = room.state.avatar;
-    _displayname = room.state.displayname;
-    _topic = room.state.topic;
+    _avatar = nil;
+    _displayname = nil;
+    _topic = nil;
     [_stateOthers removeAllObjects];
 
-    // @TODO(summary): How to call the update?
+    if ([_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withStateEvents:room.state.stateEvents])
+    {
+        [self save];
+    }
 }
 
 
