@@ -179,7 +179,7 @@ typedef enum : NSUInteger
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)isUserNameInUse:(NSString*)username
-                           callback:(void (^)(BOOL isUserNameInUse))callback;
+                           callback:(void (^)(BOOL isUserNameInUse))callback NS_REFINED_FOR_SWIFT;
 /**
  Get the list of register flows supported by the home server.
 
