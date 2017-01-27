@@ -269,19 +269,38 @@ extension MXRestClient {
     
     // MARK: - Login Operation
     
-    
     /**
-     Get the list of public rooms hosted by the home server.
+     Get the list of login flows supported by the home server.
      
-     - parameter completion: A block object called when the operation is complete.
-     - parameter response: Provides an array of the public rooms on this server on `success`
+     - parameter completion: A block object called when the operation completes. 
+     - parameter response: Provides the server response as an MXAuthenticationSession instance.
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func publicRooms(completion: @escaping (_ response: MXResponse<[MXPublicRoom]>) -> Void) -> MXHTTPOperation? {
-        return __publicRooms(success(completion), failure: error(completion))
+    @nonobjc @discardableResult func getLoginSession(completion: @escaping (_ response: MXResponse<MXAuthenticationSession>) -> Void) -> MXHTTPOperation? {
+        return __getLoginSession(success(completion), failure: error(completion))
     }
     
+    /**
+     Generic login action request.
+     
+     As described in [the specification](http://matrix.org/docs/spec/client_server/r0.2.0.html#client-authentication),
+     some login flows require to complete several stages in order to complete authentication.
+     This can lead to make several requests to the home server with different kinds of parameters.
+     This generic method with open parameters and response exists to handle any kind of authentication flow stage.
+     
+     At the end of the registration process, the SDK user should be able to construct a MXCredentials object
+     from the response of the last authentication action request.
+     
+     - parameter parameters: the parameters required for the current login stage
+     - parameter completion: A block object called when the operation completes.
+     - parameter response: Provides the raw JSON response from the server.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func login(parameters: [String: Any], completion: @escaping (_ response: MXResponse<[String: Any]>) -> Void) -> MXHTTPOperation? {
+        return __login(parameters, success: success(completion), failure: error(completion))
+    }
     
     /**
      Log a user in.
@@ -300,4 +319,152 @@ extension MXRestClient {
     @nonobjc @discardableResult func login(type loginType: MXLoginFlowType = .password, username: String, password: String, completion: @escaping (_ response: MXResponse<MXCredentials>) -> Void) -> MXHTTPOperation? {
         return __login(withLoginType: loginType.rawValue, username: username, password: password, success: success(completion), failure: error(completion))
     }
+    
+    
+    /**
+     Get the login fallback page to make login via a web browser or a web view.
+     
+     Presently only server auth v1 is supported.
+     
+     - returns: the fallback page URL.
+     */
+    var loginFallbackURL: URL {
+        let fallbackString = __loginFallback()!
+        return URL(string: fallbackString)!
+    }
+
+    
+    /**
+     Reset the account password.
+     
+     - parameter parameters: a set of parameters containing a threepid credentials and the new password.
+     - parameter completion: A block object called when the operation completes.
+     - parameter response: indicates whether the operation succeeded or not.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func resetPassword(parameters: [String: Any], completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __resetPassword(withParameters: parameters, success: success(completion), failure: error(completion))
+    }
+    
+    
+    /**
+     Replace the account password.
+     
+     - parameter old: the current password to update.
+     - parameter new: the new password.
+     - parameter completion: A block object called when the operation completes
+     - parameter response: indicates whether the operation succeeded or not.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func changePassword(old: String, new: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __changePassword(old, with: new, success: success(completion), failure: error(completion))
+    }
+    
+    
+    /**
+     Invalidate the access token, so that it can no longer be used for authorization.
+     
+     - parameter completion: A block object called when the operation completes.
+     - parameter response: Indicates whether the operation succeeded or not.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func logout(completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __logout(success(completion), failure: error(completion))
+    }
+    
+    
+    
+    
+    // TODO: - Account data
+    
+    
+    
+    
+    // TODO: - Push Notifications
+    
+    
+    
+    
+    // TODO: - Room operations
+    
+    
+    
+    
+    // TODO: - Room tags operations
+    
+    
+    
+    
+    // TODO: - Profile operations
+    
+    
+    
+    
+    // TODO: - Presence operations
+    
+    
+
+    
+    // TODO: - Sync
+    
+    
+    
+
+    // TODO: - Directory operations
+    
+    /**
+     Get the list of public rooms hosted by the home server.
+     
+     - parameter completion: A block object called when the operation is complete.
+     - parameter response: Provides an array of the public rooms on this server on `success`
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func publicRooms(completion: @escaping (_ response: MXResponse<[MXPublicRoom]>) -> Void) -> MXHTTPOperation? {
+        return __publicRooms(success(completion), failure: error(completion))
+    }
+    
+    
+    // TODO: - Media Repository API
+    
+    
+    
+    
+    // TODO: - Identity server API
+    
+    
+    
+    
+    // TODO: - VoIP API
+    
+    
+    
+    
+    // TODO: - read receipts
+    
+    
+    
+    
+    // TODO: - Search
+    
+    
+    
+    // TODO: - Crypto
+    
+    
+    
+    // TODO: - Direct-to-device messaging
+    
+
+    
+    // TODO: - Device Management
+    
+    
+    
+
+    
+    
 }

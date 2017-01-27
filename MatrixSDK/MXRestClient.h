@@ -250,7 +250,7 @@ typedef enum : NSUInteger
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)getLoginSession:(void (^)(MXAuthenticationSession *authSession))success
-                            failure:(void (^)(NSError *error))failure;
+                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Generic login action request.
@@ -267,7 +267,7 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)login:(NSDictionary*)parameters
                   success:(void (^)(NSDictionary *JSONResponse))success
-                  failure:(void (^)(NSError *error))failure;
+                  failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Log a user in.
@@ -293,7 +293,7 @@ typedef enum : NSUInteger
 
  @return the fallback page URL.
  */
-- (NSString*)loginFallback;
+- (NSString*)loginFallback NS_REFINED_FOR_SWIFT;
 
 /**
  Reset the account password.
@@ -306,7 +306,7 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)resetPasswordWithParameters:(NSDictionary*)parameters
                                         success:(void (^)())success
-                                        failure:(void (^)(NSError *error))failure;
+                                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Replace the account password.
@@ -320,7 +320,7 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)changePassword:(NSString*)oldPassword with:(NSString*)newPassword
                            success:(void (^)())success
-                           failure:(void (^)(NSError *error))failure;
+                           failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Invalidate the access token, so that it can no longer be used for authorization.
@@ -331,7 +331,7 @@ typedef enum : NSUInteger
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)logout:(void (^)())success
-                   failure:(void (^)(NSError *error))failure;
+                   failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 #pragma mark - Account data
 /**
