@@ -38,8 +38,8 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
        recompute everything everytime from the state events.
        Ex: the displayname of the room.
 
-     * Last event data:
-       This is lastEventId plus the string or/and attributed string computed for the event.
+     * Last message data:
+       This is lastMessageEventId plus the string or/and attributed string computed for the last message.
 
      * Business logic data:
        This is data that is used internally by the sdk.
@@ -133,31 +133,31 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 
 
 
-#pragma mark - Data related to the last event
+#pragma mark - Data related to the last message
 
 /**
- The last event id.
+ The last message event id.
  */
-@property (nonatomic) NSString *lastEventId;
+@property (nonatomic) NSString *lastMessageEventId;
 
 /**
- String representation of this last event.
+ String representation of this last message.
  */
-@property (nonatomic) NSString *lastEventString;
-@property (nonatomic) NSAttributedString *lastEventAttribytedString;
+@property (nonatomic) NSString *lastMessageString;
+@property (nonatomic) NSAttributedString *lastMessageAttributedString;
 
 /**
- Placeholder to store more information about the last event.
+ Placeholder to store more information about the last message.
  */
-@property (nonatomic) NSMutableDictionary<NSString*, id<NSCoding>> *lastEventOthers;
+@property (nonatomic) NSMutableDictionary<NSString*, id<NSCoding>> *lastMessageOthers;
 
 /**
- The shortcut to the last event.
+ The shortcut to the last message event.
  */
-@property (nonatomic, readonly) MXEvent *lastEvent;
+@property (nonatomic, readonly) MXEvent *lastMessageEvent;
 
 /**
- Reset the last event.
+ Reset the last message.
  
  The operation is asynchronous as it may require pagination from the homeserver.
  
@@ -166,7 +166,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)resetLastEvent:(void (^)())complete failure:(void (^)(NSError *))failure;
+- (MXHTTPOperation*)resetLastMessage:(void (^)())complete failure:(void (^)(NSError *))failure;
 
 
 #pragma mark - Data related to business logic
@@ -224,7 +224,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 /**
  Update room summary with this event.
 
- @param event an candidate for the last event.
+ @param event an candidate for the last message.
  */
 - (void)handleEvent:(MXEvent*)event;
 
@@ -237,12 +237,12 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 @protocol MXRoomSummaryUpdating
 
 /**
- Called to update the last event of the room summary.
+ Called to update the last message of the room summary.
 
  @param session the session the room belongs to.
  @param summary the room summary.
- @param event the candidate event for the room last event.
- @return YES if the delegate accepted the event as last event.
+ @param event the candidate event for the room last message event.
+ @return YES if the delegate accepted the event as last message.
          Returning NO can lead to a new call of this method with another candidate event.
  */
 - (BOOL)session:(MXSession*)session updateRoomSummary:(MXRoomSummary*)summary withLastEvent:(MXEvent*)event oldState:(MXRoomState*)oldState;

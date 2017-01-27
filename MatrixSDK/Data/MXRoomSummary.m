@@ -34,7 +34,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         _roomId = theRoomId;
         _mxSession = matrixSession;
         _stateOthers = [NSMutableDictionary dictionary];
-        _lastEventOthers = [NSMutableDictionary dictionary];
+        _lastMessageOthers = [NSMutableDictionary dictionary];
         _others = [NSMutableDictionary dictionary];
 
         // Listen to the event sent state changes
@@ -94,54 +94,55 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 }
 
 
-#pragma mark - Data related to the last event
+#pragma mark - Data related to the last message
 
-- (MXEvent *)lastEvent
+- (MXEvent *)lastMessageEvent
 {
-    MXEvent *lastEvent;
+    MXEvent *lastMessageEvent;
 
     // Is it a true matrix event or a local echo?
-    if (![_lastEventId hasPrefix:kMXEventLocalEventIdPrefix])
+    if (![_lastMessageEventId hasPrefix:kMXEventLocalEventIdPrefix])
     {
-        lastEvent = [_mxSession.store eventWithEventId:_lastEventId inRoom:_roomId];
+        lastMessageEvent = [_mxSession.store eventWithEventId:_lastMessageEventId inRoom:_roomId];
     }
     else
     {
         for (MXEvent *event in [_mxSession.store outgoingMessagesInRoom:_roomId])
         {
-            if ([event.eventId isEqualToString:_lastEventId])
+            if ([event.eventId isEqualToString:_lastMessageEventId])
             {
-                lastEvent = event;
+                lastMessageEvent = event;
                 break;
             }
         }
     }
 
-    return lastEvent;
+    return lastMessageEvent;
 }
 
-- (MXHTTPOperation *)resetLastEvent:(void (^)())complete failure:(void (^)(NSError *))failure
+- (MXHTTPOperation *)resetLastMessage:(void (^)())complete failure:(void (^)(NSError *))failure
 {
-    _lastEventId = nil;
-    _lastEventString = nil;
-    _lastEventAttribytedString = nil;
-    [_lastEventOthers removeAllObjects];
+    _lastMessageEventId = nil;
+    _lastMessageString = nil;
+    _lastMessageAttributedString = nil;
+    [_lastMessageOthers removeAllObjects];
 
-    return [self fetchLastEvent:complete failure:failure lastEventIdChecked:nil operation:nil];
+    return [self fetchLastMessage:complete failure:failure lastEventIdChecked:nil operation:nil];
 }
 
 /**
- Find the event to be used as last event.
+ Find the event to be used as last message.
 
  @param success A block object called when the operation completes.
  @param failure A block object called when the operation fails.
- @param lastEventIdChecked the id of the event candidate to be the room last event.
+ @param lastEventIdChecked the id of the event candidate to be the room last message.
         Nil means we will start checking from the last event in the store.
  @param operation the current http operation if any.
-        The method may need several requests before fetching the right last event. 
+        The method may need several requests before fetching the right last message.
         If it happens, the first one is mutated with [MXHTTPOperation mutateTo:].
+ @return a MXHTTPOperation
  */
-- (MXHTTPOperation *)fetchLastEvent:(void (^)())complete failure:(void (^)(NSError *))failure lastEventIdChecked:(NSString*)lastEventIdChecked operation:(MXHTTPOperation *)operation
+- (MXHTTPOperation *)fetchLastMessage:(void (^)())complete failure:(void (^)(NSError *))failure lastEventIdChecked:(NSString*)lastEventIdChecked operation:(MXHTTPOperation *)operation
 {
     MXRoom *room = self.room;
     if (!room)
@@ -178,8 +179,8 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         }
     }
 
-    // Check events one by one until finding the right last event for the room
-    BOOL lastEventUpdated = NO;
+    // Check events one by one until finding the right last message for the room
+    BOOL lastMessageUpdated = NO;
     while (event)
     {
         if (event.isState)
@@ -192,15 +193,15 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         {
             if (![self.mxSession decryptEvent:event inTimeline:nil])
             {
-                NSLog(@"[MXKRoomDataSource] lastMessageWithEventFormatter: Warning: Unable to decrypt event: %@\nError: %@", event.content[@"body"], event.decryptionError);
+                NSLog(@"[MXRoomSummary] fetchLastMessage: Warning: Unable to decrypt event: %@\nError: %@", event.content[@"body"], event.decryptionError);
             }
         }
 
         lastEventIdChecked = event.eventId;
 
-        // Propose the event as last event
-        lastEventUpdated = [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withLastEvent:event oldState:state];
-        if (lastEventUpdated)
+        // Propose the event as last message
+        lastMessageUpdated = [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withLastEvent:event oldState:state];
+        if (lastMessageUpdated)
         {
             break;
         }
@@ -208,8 +209,8 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         event = messagesEnumerator.nextEvent;
     }
 
-    // If lastEventId is still nil, fetch events from the homeserver
-    if (!_lastEventId && [room.liveTimeline canPaginate:MXTimelineDirectionBackwards])
+    // If lastMessageEventId is still nil, fetch events from the homeserver
+    if (!_lastMessageEventId && [room.liveTimeline canPaginate:MXTimelineDirectionBackwards])
     {
         NSUInteger messagesToPaginate = 30;
 
@@ -227,9 +228,9 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         newOperation = [room.liveTimeline paginate:messagesToPaginate direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
 
             // Received messages have been stored in the store. We can make a new loop
-            [self fetchLastEvent:complete failure:failure
-              lastEventIdChecked:lastEventIdChecked
-                       operation:(operation ? operation : newOperation)];
+            [self fetchLastMessage:complete failure:failure
+                lastEventIdChecked:lastEventIdChecked
+                         operation:(operation ? operation : newOperation)];
 
         } failure:failure];
 
@@ -257,10 +258,10 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 {
     MXEvent *event = notif.object;
 
-    // If the last event is a local echo, update it.
-    // Do nothing when its sentState becomes sent. In this case, the last event will be
+    // If the last message is a local echo, update it.
+    // Do nothing when its sentState becomes sent. In this case, the last message will be
     // updated by the true event coming back from the homeserver.
-    if (event.sentState != MXEventSentStateSent && [event.eventId isEqualToString:_lastEventId])
+    if (event.sentState != MXEventSentStateSent && [event.eventId isEqualToString:_lastMessageEventId])
     {
         [self handleEvent:event];
     }
@@ -285,9 +286,9 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         }
     }
 
-    // Handle the last event starting by the more recent one
-    // Then, if the delegate refuses it as last event, pass the previous event.
-    BOOL lastEventUpdated = NO;
+    // Handle the last message starting by the most recent event.
+    // Then, if the delegate refuses it as last message, pass the previous event.
+    BOOL lastMessageUpdated = NO;
     MXRoomState *state = self.room.state;
     for (MXEvent *event in roomSync.timeline.events.reverseObjectEnumerator)
     {
@@ -296,14 +297,14 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
             // @TODO: udpate state
         }
 
-        lastEventUpdated = [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withLastEvent:event oldState:state];
-        if (lastEventUpdated)
+        lastMessageUpdated = [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withLastEvent:event oldState:state];
+        if (lastMessageUpdated)
         {
             break;
         }
     }
 
-    if (updated || lastEventUpdated)
+    if (updated || lastMessageUpdated)
     {
         [self save];
     }
@@ -318,7 +319,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         updated |= [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withStateEvent:event];
     }
 
-    // Fake the last event with the invitation event contained in invitedRoomSync.inviteState
+    // Fake the last message with the invitation event contained in invitedRoomSync.inviteState
     // @TODO: Make sure that is true
     [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withLastEvent:invitedRoomSync.inviteState.events.lastObject oldState:self.room.state];
 
@@ -432,7 +433,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 
 - (NSString *)description
 {
-    return [NSString stringWithFormat:@"%@ %@: %@ - %@", super.description, _roomId, _displayname, _lastEventString];
+    return [NSString stringWithFormat:@"%@ %@: %@ - %@", super.description, _roomId, _displayname, _lastMessageString];
 }
 
 

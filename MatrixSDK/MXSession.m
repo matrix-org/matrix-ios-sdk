@@ -1705,18 +1705,18 @@ typedef void (^MXOnResumeDone)();
     return [roomsSummaries allValues];
 }
 
-- (void)fixRoomsSummariesLastEvent
+- (void)fixRoomsSummariesLastMessage
 {
     for (MXRoomSummary *summary in self.roomsSummaries)
     {
-        if (!summary.lastEventId)
+        if (!summary.lastMessageEventId)
         {
-            NSLog(@"[MXSession] Fixing last event for room %@", summary.roomId);
+            NSLog(@"[MXSession] Fixing last message for room %@", summary.roomId);
 
-            [summary resetLastEvent:^{
-                NSLog(@"[MXSession] Fixing last event operation for room %@ has complete. LastEventId: %@", summary.roomId, summary.lastEventId);
+            [summary resetLastMessage:^{
+                NSLog(@"[MXSession] Fixing last message operation for room %@ has complete. lastMessageEventId: %@", summary.roomId, summary.lastMessageEventId);
             } failure:^(NSError *error) {
-                NSLog(@"[MXSession] Cannot fix last event for room %@", summary.roomId);
+                NSLog(@"[MXSession] Cannot fix last message for room %@", summary.roomId);
             }];
         }
     }

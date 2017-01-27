@@ -42,7 +42,7 @@
 
 @end
 
-NSString *testDelegateLastEventString = @"The string I decider to render for this event";
+NSString *testDelegateLastMessageString = @"The string I decider to render for this event";
 
 @implementation MXRoomSummaryTests
 
@@ -71,16 +71,16 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
 
     if ([self.description containsString:@"testDelegate"])
     {
-        XCTAssertNotEqualObjects(summary.lastEventId, event.eventId);
+        XCTAssertNotEqualObjects(summary.lastMessageEventId, event.eventId);
 
         // Do a classic update
         MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:session];
         updated = [updater session:session updateRoomSummary:summary withLastEvent:event oldState:oldState];
 
-        summary.lastEventString = testDelegateLastEventString;
+        summary.lastMessageString = testDelegateLastMessageString;
 
         XCTAssert(updated);
-        XCTAssertEqualObjects(summary.lastEventId, event.eventId);
+        XCTAssertEqualObjects(summary.lastMessageEventId, event.eventId);
 
         testDelegate = YES;
     }
@@ -91,7 +91,7 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
         // Force a kMXRoomSummaryDidChangeNotification
         [summary save];
     }
-    else if ([self.description containsString:@"testGetLastEventFromSeveralPaginations"])
+    else if ([self.description containsString:@"testGetLastMessageFromSeveralPaginations"])
     {
         if (event.eventType == MXEventTypeRoomMessage)
         {
@@ -99,7 +99,7 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
         }
         else
         {
-            summary.lastEventId = event.eventId;
+            summary.lastMessageEventId = event.eventId;
             updated = YES;
         }
     }
@@ -126,7 +126,7 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
         XCTAssert(summary);
 
         XCTAssertEqualObjects(summary.roomId, room.roomId);
-        XCTAssert(summary.lastEventId);
+        XCTAssert(summary.lastMessageEventId);
 
         [expectation fulfill];
 
@@ -140,21 +140,21 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
         MXRoomSummary *summary = room.summary;
         mxSession.roomSummaryUpdateDelegate = self;
 
-        __block NSString *lastEventId;
+        __block NSString *lastMessageEventId;
 
         id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
             [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
             XCTAssert(testDelegate);
-            XCTAssertEqualObjects(summary.lastEventId, lastEventId);
-            XCTAssertEqualObjects(summary.lastEventString, testDelegateLastEventString);
+            XCTAssertEqualObjects(summary.lastMessageEventId, lastMessageEventId);
+            XCTAssertEqualObjects(summary.lastMessageString, testDelegateLastMessageString);
 
             [expectation fulfill];
         }];
 
         [room sendTextMessage:@"new message" success:^(NSString *eventId) {
-            lastEventId = eventId;
+            lastMessageEventId = eventId;
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
@@ -170,7 +170,7 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
         MXRoomSummary *summary = room.summary;
         mxSession.roomSummaryUpdateDelegate = self;
 
-        MXEvent *lastEvent = summary.lastEvent;
+        MXEvent *lastMessageEvent = summary.lastMessageEvent;
 
 
         id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
@@ -178,7 +178,7 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
             [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
             XCTAssert(testNoChangeDelegate);
-            XCTAssertEqualObjects(summary.lastEvent.eventId, lastEvent.eventId);
+            XCTAssertEqualObjects(summary.lastMessageEvent.eventId, lastMessageEvent.eventId);
 
             [expectation fulfill];
         }];
@@ -191,7 +191,7 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
     }];
 }
 
-- (void)testGetLastEventFromPagination
+- (void)testGetLastMessageFromPagination
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
@@ -200,7 +200,7 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
 
         MXRoomSummary *summary = [mxSession roomSummaryWithRoomId:roomId];
         XCTAssert(summary);
-        XCTAssert(summary.lastEventId);
+        XCTAssert(summary.lastMessageEventId);
 
         [mxSession close];
 
@@ -213,16 +213,16 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
                 MXRoomSummary *summary2 = [mxSession2 roomSummaryWithRoomId:roomId];
 
                 XCTAssert(summary2);
-                XCTAssertNil(summary2.lastEventId, @"We asked for loading 0 message. So, we cannot know the last event yet");
+                XCTAssertNil(summary2.lastMessageEventId, @"We asked for loading 0 message. So, we cannot know the last message yet");
 
                 id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary2 queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
                     [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
                     XCTAssert(summary2);
-                    XCTAssert(summary2.lastEventId, @"We must have an event now");
+                    XCTAssert(summary2.lastMessageEventId, @"We must have an event now");
 
-                    MXEvent *event2 = summary2.lastEvent;
+                    MXEvent *event2 = summary2.lastMessageEvent;
 
                     XCTAssert(event2);
                     XCTAssertEqual(event2.eventType, MXEventTypeRoomMessage);
@@ -231,7 +231,7 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
                 }];
 
                 // Force the summary to fetch events from the homeserver to get the last one
-                MXHTTPOperation *operation = [summary2 resetLastEvent:nil failure:^(NSError *error) {
+                MXHTTPOperation *operation = [summary2 resetLastMessage:nil failure:^(NSError *error) {
 
                     XCTFail(@"The operation should not fail - NSError: %@", error);
                     [expectation fulfill];
@@ -252,7 +252,7 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
     }];
 }
 
-- (void)testGetLastEventFromSeveralPaginations
+- (void)testGetLastMessageFromSeveralPaginations
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
@@ -264,13 +264,13 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
 
             MXRoomSummary *summary = [mxSession roomSummaryWithRoomId:roomId];
             XCTAssert(summary);
-            XCTAssert(summary.lastEventId);
+            XCTAssert(summary.lastMessageEventId);
 
             [mxSession close];
 
             MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
-            // Configure the updater so that it refuses room messages as last event
+            // Configure the updater so that it refuses room messages as last message
             mxSession2.roomSummaryUpdateDelegate = self;
 
             [mxSession2 setStore:[[MXMemoryStore alloc] init] success:^{
@@ -281,11 +281,11 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
                     MXRoomSummary *summary2 = [mxSession2 roomSummaryWithRoomId:roomId];
 
                     XCTAssert(summary2);
-                    XCTAssertNil(summary2.lastEventId, @"We asked for loading 0 message. So, we cannot know the last event yet");
+                    XCTAssertNil(summary2.lastMessageEventId, @"We asked for loading 0 message. So, we cannot know the last message yet");
 
 
                     // Force the summary to fetch events from the homeserver to get the last one
-                    MXHTTPOperation *operation = [summary2 resetLastEvent:nil failure:^(NSError *error) {
+                    MXHTTPOperation *operation = [summary2 resetLastMessage:nil failure:^(NSError *error) {
 
                         XCTFail(@"The operation should not fail - NSError: %@", error);
                         [expectation fulfill];
@@ -302,9 +302,9 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
                         [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
                         XCTAssert(summary2);
-                        XCTAssert(summary2.lastEventId, @"We must have an event now");
+                        XCTAssert(summary2.lastMessageEventId, @"We must have an event now");
 
-                        MXEvent *event2 = summary2.lastEvent;
+                        MXEvent *event2 = summary2.lastMessageEvent;
                         XCTAssert(event2);
 
                         XCTAssertNotEqual(urlSessionDataTask, operation.operation, @"operation should have mutated as several http requests are required");
@@ -326,7 +326,7 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
 }
 
 
-- (void)testFixRoomsSummariesLastEvent
+- (void)testFixRoomsSummariesLastMessage
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
@@ -335,7 +335,7 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
 
         MXRoomSummary *summary = [mxSession roomSummaryWithRoomId:roomId];
         XCTAssert(summary);
-        XCTAssert(summary.lastEventId);
+        XCTAssert(summary.lastMessageEventId);
 
         [mxSession close];
 
@@ -348,16 +348,16 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
                 MXRoomSummary *summary2 = [mxSession2 roomSummaryWithRoomId:roomId];
 
                 XCTAssert(summary2);
-                XCTAssertNil(summary2.lastEventId, @"We asked for loading 0 message. So, we cannot know the last event yet");
+                XCTAssertNil(summary2.lastMessageEventId, @"We asked for loading 0 message. So, we cannot know the last message yet");
 
                 id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary2 queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
                     [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
                     XCTAssert(summary2);
-                    XCTAssert(summary2.lastEventId, @"We must have an event now");
+                    XCTAssert(summary2.lastMessageEventId, @"We must have an event now");
 
-                    MXEvent *event2 = summary2.lastEvent;
+                    MXEvent *event2 = summary2.lastMessageEvent;
 
                     XCTAssert(event2);
                     XCTAssertEqual(event2.eventType, MXEventTypeRoomMessage);
@@ -366,7 +366,7 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
                 }];
 
                 // Force the summary to fetch events from the homeserver to get the last one
-                [mxSession2 fixRoomsSummariesLastEvent];
+                [mxSession2 fixRoomsSummariesLastMessage];
 
             } failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -417,7 +417,7 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
 
             [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
-            MXEvent *event = summary.lastEvent;
+            MXEvent *event = summary.lastMessageEvent;
 
             XCTAssert(event);
             XCTAssertFalse(event.isLocalEvent);
@@ -449,11 +449,11 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
 
             [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
-            MXEvent *event = summary.lastEvent;
+            MXEvent *event = summary.lastMessageEvent;
 
             XCTAssert(event);
             XCTAssertFalse(event.isLocalEvent);
-            XCTAssertNotEqual(event.eventType, MXEventTypeRoomMember, @"The last event must not be the change of Bob's displayname");
+            XCTAssertNotEqual(event.eventType, MXEventTypeRoomMember, @"The last message must not be the change of Bob's displayname");
 
             [expectation fulfill];
         }];
@@ -472,20 +472,20 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
 
         MXRoomSummary *summary = room.summary;
 
-        __block NSString *lastEventId;
+        __block NSString *lastMessageEventId;
         MXEvent *localEcho;
 
         __block NSUInteger notifCount = 0;
         id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-            MXEvent *event = summary.lastEvent;
+            MXEvent *event = summary.lastMessageEvent;
 
             switch (notifCount++)
             {
                 case 0:
                 {
                     // First notif is for the echo
-                    XCTAssert([summary.lastEventId hasPrefix:kMXEventLocalEventIdPrefix]);
+                    XCTAssert([summary.lastMessageEventId hasPrefix:kMXEventLocalEventIdPrefix]);
 
                     XCTAssert(event);
                     XCTAssert(event.isLocalEvent);
@@ -500,7 +500,7 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
                     XCTAssertFalse(event.isLocalEvent);
                     XCTAssertEqual(event.sentState, MXEventSentStateSent);
 
-                    XCTAssertEqualObjects(summary.lastEventId, lastEventId);
+                    XCTAssertEqualObjects(summary.lastMessageEventId, lastMessageEventId);
 
                     [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
@@ -512,7 +512,7 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
         }];
 
         [room sendTextMessage:@"new message" formattedText:nil localEcho:&localEcho success:^(NSString *eventId) {
-            lastEventId = eventId;
+            lastMessageEventId = eventId;
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
@@ -533,14 +533,14 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
         __block NSUInteger notifCount = 0;
         id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-            MXEvent *event = summary.lastEvent;
+            MXEvent *event = summary.lastMessageEvent;
 
             switch (notifCount++)
             {
                 case 0:
                 {
                     // First notif is for the echo
-                    XCTAssert([summary.lastEventId hasPrefix:kMXEventLocalEventIdPrefix]);
+                    XCTAssert([summary.lastMessageEventId hasPrefix:kMXEventLocalEventIdPrefix]);
 
                     XCTAssert(event);
                     XCTAssert(event.isLocalEvent);
@@ -597,7 +597,7 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
 
                 [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
-                XCTAssertEqualObjects(summary.lastEventId, invitationEvent.eventId);
+                XCTAssertEqualObjects(summary.lastMessageEventId, invitationEvent.eventId);
 
                 // @TODO: Fix it (or fix the test) (is it testable?)
                 //XCTAssertEqualObjects(summary.displayname, newRoomName);
@@ -636,9 +636,9 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
         MXRoomSummary *summary = room.summary;
 
         __block NSString *newEventId;
-        NSString *lastEventId = summary.lastEventId;
+        NSString *lastMessageEventId = summary.lastMessageEventId;
 
-        XCTAssert(lastEventId);
+        XCTAssert(lastMessageEventId);
 
         __block NSUInteger notifCount = 0;
         id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
@@ -651,7 +651,7 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
 
                 case 1:
                 {
-                    XCTAssertEqualObjects(summary.lastEventId, newEventId);
+                    XCTAssertEqualObjects(summary.lastMessageEventId, newEventId);
 
                     // Redact the last event
                     [room redactEvent:newEventId reason:nil success:nil failure:^(NSError *error) {
@@ -666,7 +666,7 @@ NSString *testDelegateLastEventString = @"The string I decider to render for thi
                 {
                     [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
-                    XCTAssertEqualObjects(summary.lastEventId, lastEventId, @"We must come back to the previous event");
+                    XCTAssertEqualObjects(summary.lastMessageEventId, lastMessageEventId, @"We must come back to the previous event");
 
                     [expectation fulfill];
                     break;
