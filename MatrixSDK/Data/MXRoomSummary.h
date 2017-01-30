@@ -29,7 +29,18 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 
 
 /**
- `MXRoomSummary` exposes information about a room.
+ `MXRoomSummary` exposes and caches data for a room.
+
+ Data is updated on every incoming events in the room through the
+ roomSummaryUpdateDelegate object of the MXSession instance.
+
+ By default MXSession uses a default implementation of MXRoomSummaryUpdating, MXRoomSummaryUpdater.
+ But the application is free to provide its own so that, for example, in the case
+ where the room has no displayname, the app can format the display name with a
+ different manner.
+
+ At any time, the application can also change the value as long as it is done on the
+ main thread.
  
  `MXRoomSummary` contains several kinds of data:
 
@@ -39,7 +50,8 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
        Ex: the displayname of the room.
 
      * Last message data:
-       This is lastMessageEventId plus the string or/and attributed string computed for the last message.
+       This is lastMessageEventId plus the string or/and attributed string computed for
+       this last message event.
 
      * Business logic data:
        This is data that is used internally by the sdk.
@@ -115,12 +127,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
  isDirect;
  looksLikeDirect;
  */
-
-
-/**
- Placeholder to store more information related to the room state.
- */
-@property (nonatomic) NSMutableDictionary<NSString*, id<NSCoding>> *stateOthers;
 
 /**
  Reset data related to room state.
@@ -253,6 +259,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
  @param stateEvents state events that may change the room summary.
  @return YES if the room summary has changed.
  */
+ssss
 - (BOOL)session:(MXSession*)session updateRoomSummary:(MXRoomSummary*)summary withStateEvents:(NSArray<MXEvent*>*)stateEvents;
 
 @end

@@ -34,7 +34,6 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     {
         _roomId = theRoomId;
         _mxSession = matrixSession;
-        _stateOthers = [NSMutableDictionary dictionary];
         _lastMessageOthers = [NSMutableDictionary dictionary];
         _others = [NSMutableDictionary dictionary];
 
@@ -89,7 +88,6 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     _avatar = nil;
     _displayname = nil;
     _topic = nil;
-    [_stateOthers removeAllObjects];
 
     if ([_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withStateEvents:room.state.stateEvents])
     {
