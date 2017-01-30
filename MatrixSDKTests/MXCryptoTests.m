@@ -1491,6 +1491,105 @@
     }];
 }
 
+// Test for https://github.com/vector-im/riot-ios/issues/955
+- (void)testLeftAndJoinedBob
+{
+    NSString *messageFromAlice = @"Hello I'm Alice!";
+    NSString *message2FromAlice = @"I'm still Alice!";
+
+    [self doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
+
+        [aliceSession createRoom:nil visibility:kMXRoomDirectoryVisibilityPublic roomAlias:nil topic:nil success:^(MXRoom *roomFromAlicePOV) {
+
+            [roomFromAlicePOV enableEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm success:^{
+
+                [bobSession joinRoom:roomFromAlicePOV.roomId success:^(MXRoom *roomFromBobPOV) {
+
+                    [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                        [roomFromBobPOV.liveTimeline removeAllListeners];
+
+                        XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomFromBobPOV.roomId clearMessage:messageFromAlice senderSession:aliceSession]);
+
+                        [roomFromBobPOV leave:^{
+
+                            // Make Bob come back to the room with a new device
+                            MXRestClient *bobRestClient2 = [[MXRestClient alloc] initWithCredentials: bobSession.matrixRestClient.credentials andOnUnrecognizedCertificateBlock:nil];
+                            [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+
+                            MXSession *bobSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+
+                            [bobSession2 start:^{
+
+                                [bobSession2 joinRoom:roomFromAlicePOV.roomId success:^(MXRoom *roomFromBobPOV2) {
+
+                                    // Bob should be able to receive the message from Alice
+                                    __block BOOL receivedByBob = NO;
+                                    [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                                        XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomFromBobPOV2.roomId clearMessage:message2FromAlice senderSession:aliceSession]);
+
+                                        receivedByBob = YES;
+
+                                    }];
+
+                                    [roomFromAlicePOV sendTextMessage:message2FromAlice success:^(NSString *eventId) {
+
+                                        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+
+                                            XCTAssert(receivedByBob, @"Bob should have received and decrypted the 2nd message from Alice");
+                                            [expectation fulfill];
+                                            
+                                        });
+
+                                    } failure:^(NSError *error) {
+                                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                        [expectation fulfill];
+                                    }];
+
+
+                                } failure:^(NSError *error) {
+                                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                    [expectation fulfill];
+                                }];
+
+                            } failure:^(NSError *error) {
+                                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                [expectation fulfill];
+                            }];
+
+                            [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
+
+                        } failure:^(NSError *error) {
+                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                            [expectation fulfill];
+                        }];
+
+                    }];
+
+                    [roomFromAlicePOV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop
