@@ -103,6 +103,14 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
             updated = YES;
         }
     }
+    else if ([self.description containsString:@"testStateUpdate"])
+    {
+        XCTAssertNotEqualObjects(oldState.displayname, @"A room", @"The passed state must be the state of room when the event occured, not the current room state");
+
+        // Do a classic update
+        MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:session];
+        updated = [updater session:session updateRoomSummary:summary withLastEvent:event oldState:oldState];
+    }
     else
     {
         XCTFail(@"Unexpected delegate call in %@", self);
@@ -720,6 +728,34 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
             newEventId = eventId;
 
         } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+// A copy of testDisplaynameUpdate but here, we check the state passed in the updater is correct
+- (void)testStateUpdate
+{
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+
+        mxSession.roomSummaryUpdateDelegate = self;
+
+        MXRoomSummary *summary = room.summary;
+
+        NSString *displayName = @"A room";
+
+        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+            [[NSNotificationCenter defaultCenter] removeObserver:observer];
+
+            XCTAssertEqualObjects(room.state.displayname, displayName);
+            XCTAssertEqualObjects(summary.displayname, displayName, @"Room summary must be updated");
+
+            [expectation fulfill];
+        }];
+
+        [room setName:displayName success:nil failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];

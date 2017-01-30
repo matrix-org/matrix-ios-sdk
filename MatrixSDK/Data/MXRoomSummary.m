@@ -17,6 +17,7 @@
 #import "MXRoomSummary.h"
 
 #import "MXRoom.h"
+#import "MXRoomState.h"
 #import "MXSession.h"
 
 #import <objc/runtime.h>
@@ -188,7 +189,14 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     {
         if (event.isState)
         {
-            // @TODO(summary): udpate state
+            // Need to go backward in the state to provide it as it was when the event occured
+            if (state.isLive)
+            {
+                state = [state copy];
+                state.isLive = NO;
+            }
+
+            [state handleStateEvent:event];
         }
 
         // Decrypt event if necessary
@@ -301,7 +309,14 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     {
         if (event.isState)
         {
-            // @TODO(summary): udpate state
+            // Need to go backward in the state to provide it as it was when the event occured
+            if (state.isLive)
+            {
+                state = [state copy];
+                state.isLive = NO;
+            }
+
+            [state handleStateEvent:event];
         }
 
         lastMessageUpdated = [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withLastEvent:event oldState:state];
