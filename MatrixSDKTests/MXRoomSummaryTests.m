@@ -103,7 +103,7 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
             updated = YES;
         }
     }
-    else if ([self.description containsString:@"testStateUpdate"])
+    else if ([self.description containsString:@"testStatePassedToMXRoomSummaryUpdating"])
     {
         XCTAssertNotEqualObjects(state.displayname, @"A room", @"The passed state must be the state of room when the event occured, not the current room state");
 
