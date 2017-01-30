@@ -59,7 +59,7 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
      [super tearDown];
 }
 
-- (BOOL)session:(MXSession *)session updateRoomSummary:(MXRoomSummary *)summary withLastEvent:(MXEvent *)event oldState:(MXRoomState *)oldState
+- (BOOL)session:(MXSession *)session updateRoomSummary:(MXRoomSummary *)summary withLastEvent:(MXEvent *)event state:(MXRoomState *)state
 {
     BOOL updated = NO;
 
@@ -75,7 +75,7 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
 
         // Do a classic update
         MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:session];
-        updated = [updater session:session updateRoomSummary:summary withLastEvent:event oldState:oldState];
+        updated = [updater session:session updateRoomSummary:summary withLastEvent:event state:state];
 
         summary.lastMessageString = testDelegateLastMessageString;
 
@@ -105,11 +105,11 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
     }
     else if ([self.description containsString:@"testStateUpdate"])
     {
-        XCTAssertNotEqualObjects(oldState.displayname, @"A room", @"The passed state must be the state of room when the event occured, not the current room state");
+        XCTAssertNotEqualObjects(state.displayname, @"A room", @"The passed state must be the state of room when the event occured, not the current room state");
 
         // Do a classic update
         MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:session];
-        updated = [updater session:session updateRoomSummary:summary withLastEvent:event oldState:oldState];
+        updated = [updater session:session updateRoomSummary:summary withLastEvent:event state:state];
     }
     else
     {
@@ -735,7 +735,7 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
 }
 
 // A copy of testDisplaynameUpdate but here, we check the state passed in the updater is correct
-- (void)testStateUpdate
+- (void)testStatePassedToMXRoomSummaryUpdating
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
