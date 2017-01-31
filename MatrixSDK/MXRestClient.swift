@@ -152,7 +152,57 @@ enum MXAccountDataType {
     }
 }
 
+/// Represents a mode for forwarding push notifications.
+enum MXPusherKind {
+    case http, none, custom(String)
 
+    var objectValue: NSObject {
+        switch self {
+        case .http: return "http" as NSString
+        case .none: return NSNull()
+        case .custom(let value): return value as NSString
+        }
+    }
+}
+
+
+/**
+ Push rules kind.
+ 
+ Push rules are separated into different kinds of rules. These categories have a priority order: verride rules
+ have the highest priority.
+ Some category may define implicit conditions.
+ */
+enum MXPushRuleKind {
+    case override, content, room, sender, underride
+
+    var objc: __MXPushRuleKind {
+        switch self  {
+        case .override: return __MXPushRuleKindOverride
+        case .content: return __MXPushRuleKindContent
+        case .room: return __MXPushRuleKindRoom
+        case .sender: return __MXPushRuleKindSender
+        case .underride: return __MXPushRuleKindUnderride
+        }
+    }
+}
+
+
+/**
+ Scope for a specific push rule.
+ 
+ Push rules can be applied globally, or to a spefific device given a `profileTag`
+ */
+enum MXPushRuleScope {
+    case global, device(profileTag: String)
+
+    var identifier: String {
+        switch self {
+        case .global: return "global"
+        case .device(let profileTag): return "device/\(profileTag)"
+        }
+    }
+}
 
 
 
@@ -175,8 +225,9 @@ extension MXRestClient {
     /**
      Create an instance based on homeserver url.
      
-     - parameter homeServer: The homeserver address.
-     - parameter handler: the block called to handle unrecognized certificate (`nil` if unrecognized certificates are ignored).
+     - parameters:
+         - homeServer: The homeserver address.
+         - handler: the block called to handle unrecognized certificate (`nil` if unrecognized certificates are ignored).
      
      - returns: a `MXRestClient` instance.
      */
@@ -187,8 +238,9 @@ extension MXRestClient {
     /**
      Create an instance based on existing user credentials.
      
-     - parameter credentials: A set of existing user credentials.
-     - parameter handler: the block called to handle unrecognized certificate (`nil` if unrecognized certificates are ignored).
+     - parameters:
+         - credentials: A set of existing user credentials.
+         - handler: the block called to handle unrecognized certificate (`nil` if unrecognized certificates are ignored).
      
      - returns: a `MXRestClient` instance.
      */
@@ -204,9 +256,10 @@ extension MXRestClient {
     /**
      Check whether a username is already in use.
      
-     - parameter username: The user name to test.
-     - parameter completion: A block object called when the operation is completed.
-     - parameter inUse: Whether the username is in use
+     - parameters:
+         - username: The user name to test.
+         - completion: A block object called when the operation is completed.
+         - inUse: Whether the username is in use
      
      - returns: a `MXHTTPOperation` instance.
      */
@@ -217,8 +270,9 @@ extension MXRestClient {
     /**
      Get the list of register flows supported by the home server.
      
-     - parameter completion: A block object called when the operation is completed.
-     - parameter response: Provides the server response as an `MXAuthenticationSession` instance.
+     - parameters:
+         - completion: A block object called when the operation is completed.
+         - response: Provides the server response as an `MXAuthenticationSession` instance.
      
      - returns: a `MXHTTPOperation` instance.
      */
@@ -238,9 +292,10 @@ extension MXRestClient {
      At the end of the registration process, the SDK user should be able to construct a MXCredentials object
      from the response of the last registration action request.
      
-     - parameter parameters: the parameters required for the current registration stage
-     - parameter completion: A block object called when the operation completes. 
-     - parameter response: Provides the raw JSON response from the server.
+     - parameters:
+         - parameters: the parameters required for the current registration stage
+         - completion: A block object called when the operation completes.
+         - response: Provides the raw JSON response from the server.
      
      - returns: a `MXHTTPOperation` instance.
      */
@@ -250,18 +305,21 @@ extension MXRestClient {
     
     
     
-    // TODO: This method accepts a nil username. Maybe this should be called "anonymous registration"? Would it make sense to have a separate API for that case?
-    // We could also create an enum called "MXRegistrationType" with associated values, e.g. `.username(String)` and `.anonymous`
+    /*
+     TODO: This method accepts a nil username. Maybe this should be called "anonymous registration"? Would it make sense to have a separate API for that case?
+     We could also create an enum called "MXRegistrationType" with associated values, e.g. `.username(String)` and `.anonymous`
+     */
     /**
      Register a user.
      
      This method manages the full flow for simple login types and returns the credentials of the newly created matrix user.
      
-     - parameter loginType: the login type. Only `MXLoginFlowType.password` and `MXLoginFlowType.dummy` (m.login.password and m.login.dummy) are supported.
-     - parameter username: the user id (ex: "@bob:matrix.org") or the user id localpart (ex: "bob") of the user to register. Can be nil.
-     - parameter password: the user's password.
-     - parameter completion: A block object called when the operation completes.
-     - parameter response: Provides credentials to use to create a `MXRestClient`.
+     - parameters:
+         - loginType: the login type. Only `MXLoginFlowType.password` and `MXLoginFlowType.dummy` (m.login.password and m.login.dummy) are supported.
+         - username: the user id (ex: "@bob:matrix.org") or the user id localpart (ex: "bob") of the user to register. Can be nil.
+         - password: the user's password.
+         - completion: A block object called when the operation completes.
+         - response: Provides credentials to use to create a `MXRestClient`.
      
      - returns: a `MXHTTPOperation` instance.
      */
@@ -286,8 +344,9 @@ extension MXRestClient {
     /**
      Get the list of login flows supported by the home server.
      
-     - parameter completion: A block object called when the operation completes. 
-     - parameter response: Provides the server response as an MXAuthenticationSession instance.
+     - parameters:
+         - completion: A block object called when the operation completes. 
+         - response: Provides the server response as an MXAuthenticationSession instance.
      
      - returns: a `MXHTTPOperation` instance.
      */
@@ -306,9 +365,10 @@ extension MXRestClient {
      At the end of the registration process, the SDK user should be able to construct a MXCredentials object
      from the response of the last authentication action request.
      
-     - parameter parameters: the parameters required for the current login stage
-     - parameter completion: A block object called when the operation completes.
-     - parameter response: Provides the raw JSON response from the server.
+     - parameters:
+         - parameters: the parameters required for the current login stage
+         - completion: A block object called when the operation completes.
+         - response: Provides the raw JSON response from the server.
      
      - returns: a `MXHTTPOperation` instance.
      */
@@ -321,12 +381,12 @@ extension MXRestClient {
      
      This method manages the full flow for simple login types and returns the credentials of the logged matrix user.
      
-     - parameter type: the login type. Only `MXLoginFlowType.password` (m.login.password) is supported.
-     - parameter username: the user id (ex: "@bob:matrix.org") or the user id localpart (ex: "bob") of the user to authenticate.
-     - parameter password: the user's password.
-     - parameter completion: A block object called when the operation succeeds.
-     
-     - parameter response: Provides credentials for this user on `success`
+     - parameters:
+         - type: the login type. Only `MXLoginFlowType.password` (m.login.password) is supported.
+         - username: the user id (ex: "@bob:matrix.org") or the user id localpart (ex: "bob") of the user to authenticate.
+         - password: the user's password.
+         - completion: A block object called when the operation succeeds.
+         - response: Provides credentials for this user on `success`
      
      - returns: a `MXHTTPOperation` instance.
      */
@@ -351,9 +411,10 @@ extension MXRestClient {
     /**
      Reset the account password.
      
-     - parameter parameters: a set of parameters containing a threepid credentials and the new password.
-     - parameter completion: A block object called when the operation completes.
-     - parameter response: indicates whether the operation succeeded or not.
+     - parameters:
+         - parameters: a set of parameters containing a threepid credentials and the new password.
+         - completion: A block object called when the operation completes.
+         - response: indicates whether the operation succeeded or not.
      
      - returns: a `MXHTTPOperation` instance.
      */
@@ -365,10 +426,11 @@ extension MXRestClient {
     /**
      Replace the account password.
      
-     - parameter old: the current password to update.
-     - parameter new: the new password.
-     - parameter completion: A block object called when the operation completes
-     - parameter response: indicates whether the operation succeeded or not.
+     - parameters:
+         - old: the current password to update.
+         - new: the new password.
+         - completion: A block object called when the operation completes
+         - response: indicates whether the operation succeeded or not.
      
      - returns: a `MXHTTPOperation` instance.
      */
@@ -380,8 +442,9 @@ extension MXRestClient {
     /**
      Invalidate the access token, so that it can no longer be used for authorization.
      
-     - parameter completion: A block object called when the operation completes.
-     - parameter response: Indicates whether the operation succeeded or not.
+     - parameters:
+         - completion: A block object called when the operation completes.
+         - response: Indicates whether the operation succeeded or not.
      
      - returns: a `MXHTTPOperation` instance.
      */
@@ -397,10 +460,11 @@ extension MXRestClient {
     /**
      Set some account_data for the client.
      
-     - parameter data: the new data to set for this event type.
-     - parameter type: The event type of the account_data to set. Custom types should be namespaced to avoid clashes.
-     - parameter completion: A block object called when the operation completes
-     - parameter response: indicates whether the request succeeded or not
+     - parameters:
+         - data: the new data to set for this event type.
+         - type: The event type of the account_data to set. Custom types should be namespaced to avoid clashes.
+         - completion: A block object called when the operation completes
+         - response: indicates whether the request succeeded or not
      
      - returns: a `MXHTTPOperation` instance.
      */
@@ -409,9 +473,143 @@ extension MXRestClient {
     }
     
     
-    // TODO: - Push Notifications
     
     
+    
+    
+    
+    
+    // MARK: - Push Notifications
+    
+    /**
+     Update the pusher for this device on the Home Server.
+     
+     - parameters:
+        - pushkey: The pushkey for this pusher. This should be the APNS token formatted as required for your push gateway (base64 is the recommended formatting).
+        - kind: The kind of pusher your push gateway requires. Generally `.http`. Specify `.none` to disable the pusher.
+        - appId: The app ID of this application as required by your push gateway.
+        - appDisplayName: A human readable display name for this app.
+        - deviceDisplayName: A human readable display name for this device.
+        - profileTag: The profile tag for this device. Identifies this device in push rules.
+        - lang: The user's preferred language for push, eg. 'en' or 'en-US'
+        - data: Dictionary of data as required by your push gateway (generally the notification URI and aps-environment for APNS).
+        - completion: A block object called when the operation succeeds.
+        - response: indicates whether the request succeeded or not.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func setPusher(pushKey: String, kind: MXPusherKind, appId: String, appDisplayName: String, deviceDisplayName: String, profileTag: String, lang: String, data: [String: Any], append: Bool, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __setPusherWithPushkey(pushKey, kind: kind.objectValue, appId: appId, appDisplayName: appDisplayName, deviceDisplayName: deviceDisplayName, profileTag: profileTag, lang: lang, data: data, append: append, success: success(completion), failure: error(completion))
+    }
+    // TODO: setPusherWithPushKey - futher refinement
+    /*
+     This method is very long. Some of the parameters seem related,
+     specifically: appId, appDisplayName, deviceDisplayName, and profileTag.
+     Perhaps these parameters can be lifted out into a sparate struct?
+     Something like "MXPusherDescriptor"?
+     */
+    
+    
+    /**
+     Get all push notifications rules.
+     
+     - parameters:
+        - completion: A block object called when the operation completes.
+        - response: Provides the push rules on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func pushRules(completion: @escaping (_ response: MXResponse<MXPushRulesResponse>) -> Void) -> MXHTTPOperation? {
+        return __pushRules(success(completion), failure: error(completion))
+    }
+    
+    
+    /*
+     TODO: Consider refactoring. The following three methods all contain (ruleId:, scope:, kind:).
+     
+     Option 1: Encapsulate those parameters as a tuple or struct called `MXPushRuleDescriptor`
+     This would be appropriate if these three parameters typically get passed around as a set,
+     or if the rule is uniquely identified by this combination of parameters. (eg. one `ruleId`
+     can have different settings for varying scopes and kinds).
+     
+     Option 2: Refactor all of these to a single function that takes a "MXPushRuleAction"
+     as the fourth paramerer. This approach might look like this:
+     
+         enum MXPushRuleAction {
+            case enable
+            case disable
+            case add(actions: [Any], pattern: String, conditions: [[String: Any]])
+            case remove
+         }
+         
+         func pushRule(ruleId: String, scope: MXPushRuleScope, kind: MXPushRuleKind, action: MXPushRuleAction, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation ? {
+             switch action {
+             case .enable:
+                 // ... Call the `enablePushRule` method
+             case .disable:
+                 // ... Call the `enablePushRule` method
+             case let .add(actions, pattern, conditions):
+                 // ... Call the `addPushRule` method
+             case let .remove:
+                 // ... Call the `removePushRule` method
+             }
+         }
+    
+     Option 3: Leave these APIs as-is.
+     */
+    
+    /**
+     Enable/Disable a push notification rule.
+     
+     - parameters:
+        - ruleId: The identifier for the rule.
+        - scope: Either 'global' or 'device/<profile_tag>' to specify global rules or device rules for the given profile_tag.
+        - kind: The kind of rule, ie. 'override', 'underride', 'sender', 'room', 'content' (see MXPushRuleKind).
+        - enabled: YES to enable
+        - completion: A block object called when the operation completes
+        - response: Indiciates whether the operation was successful
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func setPushRuleEnabled(ruleId: String, scope: MXPushRuleScope, kind: MXPushRuleKind, enabled: Bool, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __enablePushRule(ruleId, scope: scope.identifier, kind: kind.objc, enable: enabled, success: success(completion), failure: error(completion))
+    }
+    
+    
+    /**
+     Remove a push notification rule.
+     
+     - parameters:
+        - ruleId: The identifier for the rule.
+        - scope: Either `.global` or `.device(profileTag:)` to specify global rules or device rules for the given profile_tag.
+        - kind: The kind of rule, ie. `.override`, `.underride`, `.sender`, `.room`, `.content`.
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func removePushRule(ruleId: String, scope: MXPushRuleScope, kind: MXPushRuleKind, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __removePushRule(ruleId, scope: scope.identifier, kind: kind.objc, success: success(completion), failure: error(completion))
+    }
+    
+    /**
+     Create a new push rule.
+     
+     - parameters:
+        - ruleId: The identifier for the rule (it depends on rule kind: user id for sender rule, room id for room rule...).
+        - scope: Either `.global` or `.device(profileTag:)` to specify global rules or device rules for the given profile_tag.
+        - kind: The kind of rule, ie. `.override`, `.underride`, `.sender`, `.room`, `.content`.
+        - actions: The rule actions: notify, don't notify, set tweak...
+        - pattern: The pattern relevant for content rule.
+        - conditions: The conditions relevant for override and underride rule.
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func addPushRule(ruleId: String, scope: MXPushRuleScope, kind: MXPushRuleKind, actions: [Any], pattern: String, conditions: [[String: Any]], completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __addPushRule(ruleId, scope: scope.identifier, kind: kind.objc, actions: actions, pattern: pattern, conditions: conditions, success: success(completion), failure: error(completion))
+    }
     
     
     // TODO: - Room operations

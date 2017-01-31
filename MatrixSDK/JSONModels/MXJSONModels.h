@@ -454,7 +454,7 @@ typedef enum : NSUInteger
     MXPushRuleKindRoom,
     MXPushRuleKindSender,
     MXPushRuleKindUnderride
-} MXPushRuleKind;
+} MXPushRuleKind NS_REFINED_FOR_SWIFT;
 
 /**
  `MXPushRule` defines a push notification rule.

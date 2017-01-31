@@ -378,7 +378,7 @@ typedef enum : NSUInteger
                                     data:(NSDictionary *)data
                                   append:(BOOL)append
                                  success:(void (^)())success
-                                 failure:(void (^)(NSError *error))failure;
+                                 failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Get all push notifications rules.
@@ -389,7 +389,7 @@ typedef enum : NSUInteger
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)pushRules:(void (^)(MXPushRulesResponse *pushRules))success
-                      failure:(void (^)(NSError *error))failure;
+                      failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Enable/Disable a push notification rule.
@@ -406,7 +406,7 @@ typedef enum : NSUInteger
                                kind:(MXPushRuleKind)kind
                              enable:(BOOL)enable
                             success:(void (^)())success
-                            failure:(void (^)(NSError *error))failure;
+                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Remove a push notification rule.
@@ -421,7 +421,7 @@ typedef enum : NSUInteger
                               scope:(NSString*)scope
                                kind:(MXPushRuleKind)kind
                             success:(void (^)())success
-                            failure:(void (^)(NSError *error))failure;
+                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Create a new push rule.
@@ -442,7 +442,7 @@ typedef enum : NSUInteger
                          pattern:(NSString*)pattern
                       conditions:(NSArray<NSDictionary *> *)conditions
                          success:(void (^)())success
-                         failure:(void (^)(NSError *error))failure;
+                         failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - Room operations
