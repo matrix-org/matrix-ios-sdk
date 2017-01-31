@@ -31,8 +31,10 @@ typedef enum : NSUInteger
     MXMegolmExportErrorInvalidKeyFileHeaderNotFoundCode,
     MXMegolmExportErrorInvalidKeyFileTrailerNotFoundCode,
     MXMegolmExportErrorInvalidKeyFileAuthenticationFailedCode,
-    MXMegolmExportErrorCannotInitialiseDecryptorCode,
+    MXMegolmExportErrorCannotInitialiseCryptorCode,
     MXMegolmExportErrorCannotDecryptCode,
+    MXMegolmExportErrorCannotEncryptCode,
+    MXMegolmExportErrorCannotDeriveKeysCode,
 
 } MXMegolmExportErrorCode;
 
@@ -48,5 +50,17 @@ typedef enum : NSUInteger
  @return the decrypted content.
  */
 + (NSString*)decryptMegolmKeyFile:(NSData*)data withPassword:(NSString*)password error:(NSError**)error;
+
+/**
+ Encrypt a megolm key file.
+ 
+ @param data the data to encrypt.
+ @param password the password.
+ @param kdfRounds Number of iterations to perform of the key-derivation function.
+                  If 0, encryptMegolmKeyFile will use 100000 as default value.
+ @param error the output error.
+ @return the encrypted output.
+ */
++ (NSData*)encryptMegolmKeyFile:(NSString*)data withPassword:(NSString*)password kdfRounds:(NSUInteger)kdfRounds error:(NSError**)error;
 
 @end

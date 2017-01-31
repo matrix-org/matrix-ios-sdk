@@ -34,7 +34,7 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
     NSString *result;
 
     NSData *body = [MXMegolmExportEncryption unpackMegolmKeyFile:data error:error];
-    unsigned char *bodyBytes = (unsigned char*)body.bytes;
+    uint8_t *bodyBytes = (uint8_t*)body.bytes;
 
     if (!*error)
     {
@@ -49,7 +49,7 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
             return nil;
         }
 
-        unsigned char version = bodyBytes[0];
+        uint8_t version = bodyBytes[0];
         if (version != 1)
         {
             *error = [NSError errorWithDomain:MXMegolmExportEncryptionErrorDomain
@@ -106,7 +106,7 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
             if (status != kCCSuccess)
             {
                 *error = [NSError errorWithDomain:MXMegolmExportEncryptionErrorDomain
-                                             code:MXMegolmExportErrorCannotInitialiseDecryptorCode
+                                             code:MXMegolmExportErrorCannotInitialiseCryptorCode
                                          userInfo:@{
                                                     NSLocalizedDescriptionKey: @"Cannot initialise decryptor",
                                                     }];
@@ -140,9 +140,134 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
                 return nil;
             }
         }
+        else
+        {
+            *error = [NSError errorWithDomain:MXMegolmExportEncryptionErrorDomain
+                                         code:MXMegolmExportErrorCannotDeriveKeysCode
+                                     userInfo:@{
+                                                NSLocalizedDescriptionKey: @"Cannot derive keys",
+                                                }];
+            return nil;
+        }
     }
 
     return result;
+}
+
++ (NSData *)encryptMegolmKeyFile:(NSString *)data withPassword:(NSString *)password kdfRounds:(NSUInteger)kdfRounds error:(NSError *__autoreleasing *)error
+{
+    if (!kdfRounds)
+    {
+        kdfRounds = 100000;
+    }
+
+    NSMutableData *salt = [NSMutableData dataWithLength:16];
+    int r = SecRandomCopyBytes(kSecRandomDefault, 16, salt.mutableBytes);
+
+    NSMutableData *iv = [NSMutableData dataWithLength:16];
+    r += SecRandomCopyBytes(kSecRandomDefault, 16, iv.mutableBytes);
+
+    if (r != 0)
+    {
+        *error = [NSError errorWithDomain:MXMegolmExportEncryptionErrorDomain
+                                     code:MXMegolmExportErrorCannotInitialiseCryptorCode
+                                 userInfo:@{
+                                            NSLocalizedDescriptionKey: @"Cannot compute salt or iv",
+                                            }];
+        return nil;
+    }
+
+    // Clear bit 63 of the IV to stop us hitting the 64-bit counter boundary
+    // (which would mean we wouldn't be able to decrypt on Android). The loss
+    // of a single bit of iv is a price we have to pay.
+    uint8_t *ivBytes = (uint8_t*)iv.mutableBytes;
+    ivBytes[9] &= 0x7f;
+
+    NSData *aesKey, *hmacKey;
+    if (kCCSuccess == [MXMegolmExportEncryption deriveKeys:salt iterations:kdfRounds password:password aesKey:&aesKey hmacKey:&hmacKey])
+    {
+        // Encrypt
+        CCCryptorRef cryptor;
+        CCCryptorStatus status;
+
+        status = CCCryptorCreateWithMode(kCCEncrypt, kCCModeCTR, kCCAlgorithmAES,
+                                         ccNoPadding, iv.bytes, aesKey.bytes, kCCKeySizeAES256,
+                                         NULL, 0, 0, kCCModeOptionCTR_BE, &cryptor);
+        if (status != kCCSuccess)
+        {
+            *error = [NSError errorWithDomain:MXMegolmExportEncryptionErrorDomain
+                                         code:MXMegolmExportErrorCannotInitialiseCryptorCode
+                                     userInfo:@{
+                                                NSLocalizedDescriptionKey: @"Cannot initialise encryptor",
+                                                }];
+            return nil;
+        }
+
+        size_t bufferLength = CCCryptorGetOutputLength(cryptor, data.length, false);
+        NSMutableData *cipher = [NSMutableData dataWithLength:bufferLength];
+
+        NSData *dataData = [data dataUsingEncoding:NSUTF8StringEncoding];
+
+        size_t outLength;
+        status |= CCCryptorUpdate(cryptor,
+                                  dataData.bytes,
+                                  dataData.length,
+                                  [cipher mutableBytes],
+                                  [cipher length],
+                                  &outLength);
+
+        status |= CCCryptorRelease(cryptor);
+
+        if (status == kCCSuccess)
+        {
+            // Packetise
+            NSUInteger bodyLength = (1+salt.length+iv.length+4+cipher.length);
+
+            NSMutableData *result = [NSMutableData dataWithLength:bodyLength];
+            uint8_t *resultBuffer = (uint8_t*)result.mutableBytes;
+
+            NSUInteger idx = 0;
+            resultBuffer[idx++] = 1; // version
+            [result replaceBytesInRange:NSMakeRange(idx, salt.length) withBytes:salt.bytes]; idx += salt.length;
+            [result replaceBytesInRange:NSMakeRange(idx, iv.length) withBytes:iv.bytes]; idx += iv.length;
+            resultBuffer[idx++] = kdfRounds >> 24;
+            resultBuffer[idx++] = (kdfRounds >> 16) & 0xff;
+            resultBuffer[idx++] = (kdfRounds >> 8) & 0xff;
+            resultBuffer[idx++] = kdfRounds & 0xff;
+            [result replaceBytesInRange:NSMakeRange(idx, cipher.length) withBytes:cipher.bytes]; idx += cipher.length;
+
+            // Sign
+            NSData *toSign = result;
+
+            NSMutableData* hmac = [NSMutableData dataWithLength:CC_SHA256_DIGEST_LENGTH ];
+            CCHmac(kCCHmacAlgSHA256, hmacKey.bytes, hmacKey.length, toSign.bytes, toSign.length, hmac.mutableBytes);
+
+            [result appendData:hmac];
+
+            return [MXMegolmExportEncryption packMegolmKeyFile:result];
+        }
+        else
+        {
+            *error = [NSError errorWithDomain:MXMegolmExportEncryptionErrorDomain
+                                         code:MXMegolmExportErrorCannotEncryptCode
+                                     userInfo:@{
+                                                NSLocalizedDescriptionKey: @"Cannot encrypt",
+                                                }];
+            return nil;
+        }
+
+    }
+    else
+    {
+        *error = [NSError errorWithDomain:MXMegolmExportEncryptionErrorDomain
+                                     code:MXMegolmExportErrorCannotDeriveKeysCode
+                                 userInfo:@{
+                                            NSLocalizedDescriptionKey: @"Cannot derive keys",
+                                            }];
+        return nil;
+    }
+
+    return nil;
 }
 
 
@@ -165,7 +290,6 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
     NSData *passwordData = [password dataUsingEncoding:NSUTF8StringEncoding];
 
     NSMutableData *derivedKey = [NSMutableData dataWithLength:64];
-    [derivedKey resetBytesInRange:NSMakeRange(0, derivedKey.length)];
 
     result =  CCKeyDerivationPBKDF(kCCPBKDF2,
                                    passwordData.bytes,
@@ -181,6 +305,44 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
     *hmacKey = [derivedKey subdataWithRange:NSMakeRange(32, derivedKey.length - 32)];
 
     return result;
+}
+
+/**
+ ascii-armour a megolm key file.
+
+ base64s the content, and adds header and trailer lines.
+
+ @param {Uint8Array} data  raw data
+ @return {ArrayBuffer} formatted file
+ */
++ (NSData *)packMegolmKeyFile:(NSData*)data
+{
+    //NSString *dataString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+
+    NSMutableArray<NSString*> *lines = [NSMutableArray array];
+    [lines addObject:MXMegolmExportEncryptionHeaderLine];
+
+
+    // We split into lines before base64ing, because encodeBase64 doesn't deal
+    // terribly well with large arrays.
+    NSUInteger LINE_LENGTH = (72 * 4 / 3);
+    NSUInteger nLines = ceil((double)data.length / LINE_LENGTH);
+    NSUInteger o = 0;
+
+    for (NSUInteger i = 0; i < nLines; i++)
+    {
+        NSUInteger len = MIN(LINE_LENGTH, data.length - o);
+
+        NSData *lineData = [data subdataWithRange:NSMakeRange(o, len)];
+        [lines addObject:[lineData base64EncodedStringWithOptions:0]];
+
+        o += LINE_LENGTH;
+    }
+
+    [lines addObject:MXMegolmExportEncryptionTrailerLine];
+    [lines addObject:@""];
+
+    return [[lines componentsJoinedByString:@"\n"] dataUsingEncoding:NSUTF8StringEncoding];
 }
 
 /*
@@ -257,7 +419,7 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
 // @TODO: For dev. To remove
 + (void)logBytesDec:(NSData*)data
 {
-    unsigned char *bytes = (unsigned char*)data.bytes;
+    uint8_t *bytes = (uint8_t*)data.bytes;
 
     NSMutableString *s = [NSMutableString string];
     for (NSUInteger i = 0; i < data.length; i++)
