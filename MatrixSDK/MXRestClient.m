@@ -154,6 +154,7 @@ MXAuthAction;
     identityHttpClient = nil;
     
     processingQueue = nil;
+    completionQueue = nil;
 }
 
 - (void)setCredentials:(MXCredentials *)inCredentials
@@ -210,17 +211,20 @@ MXAuthAction;
                                  success:^(NSDictionary *JSONResponse) {
                                      
                                      // sanity check
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
 
                                              MXAuthenticationSession *authSession = [MXAuthenticationSession modelFromJSON:JSONResponse];
 
-                                             dispatch_async(completionQueue, ^{
-
-                                                 success(authSession);
-
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     
+                                                     success(authSession);
+                                                     
+                                                 });
+                                             }
                                          });
                                      }
                                  }
@@ -232,34 +236,36 @@ MXAuthAction;
                                      {
                                          JSONResponse = error.userInfo[MXHTTPClientErrorResponseDataKey];
                                      }
-
-                                     dispatch_async(processingQueue, ^{
-
-                                         MXAuthenticationSession *authSession;
-                                         if (JSONResponse)
-                                         {
-                                              authSession = [MXAuthenticationSession modelFromJSON:JSONResponse];
-                                         }
-
-                                         dispatch_async(completionQueue, ^{
-
-                                             if (authSession && success)
+                                     
+                                     if (processingQueue)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+                                             
+                                             MXAuthenticationSession *authSession;
+                                             if (JSONResponse)
                                              {
-                                                success(authSession);
+                                                 authSession = [MXAuthenticationSession modelFromJSON:JSONResponse];
                                              }
-                                             else if (failure)
+                                             
+                                             if (completionQueue)
                                              {
-                                                 dispatch_async(processingQueue, ^{
-                                                     dispatch_async(completionQueue, ^{
+                                                 dispatch_async(completionQueue, ^{
+                                                     
+                                                     if (authSession && success)
+                                                     {
+                                                         success(authSession);
+                                                     }
+                                                     else if (failure)
+                                                     {
                                                          failure(error);
-                                                     });
+                                                     }
+                                                     
                                                  });
                                              }
                                              
                                          });
-                                         
-                                     });
-
+                                     }
+                                     
                                  }];
 }
 
@@ -276,14 +282,20 @@ MXAuthAction;
 {
     if (![loginType isEqualToString:kMXLoginFlowTypePassword] && ![loginType isEqualToString:kMXLoginFlowTypeDummy])
     {
-        if (failure)
+        if (failure && processingQueue)
         {
             dispatch_async(processingQueue, ^{
-                dispatch_async(completionQueue, ^{
-                    failure(nil);
-                });
+                
+                if (completionQueue)
+                {
+                    dispatch_async(completionQueue, ^{
+                        
+                        failure(nil);
+                        
+                    });
+                }
+                
             });
-
         }
         return nil;
     }
@@ -306,35 +318,49 @@ MXAuthAction;
 
         MXHTTPOperation *operation2 = [self registerWithParameters: parameters success:^(NSDictionary *JSONResponse) {
 
-            // Move to the completionQueue thread as self.credentials could be used on this thread
-            dispatch_async(processingQueue, ^{
-                dispatch_async(completionQueue, ^{
-
-                    // Update our credentials
-                    self.credentials = [MXCredentials modelFromJSON:JSONResponse];
-
-                    // Workaround: HS does not return the right URL. Use the one we used to make the request
-                    credentials.homeServer = homeserver;
-
-                    // Report the certificate trusted by user (if any)
-                    credentials.allowedCertificate = httpClient.allowedCertificate;
-
-                    // sanity check
-                    if (success)
-                    {
-                        success(credentials);
-                    }
-
-                });
-            });
-
-        } failure:^(NSError *error) {
-            if (failure)
+            if (processingQueue)
             {
                 dispatch_async(processingQueue, ^{
-                    dispatch_async(completionQueue, ^{
-                        failure(error);
-                    });
+                    
+                    // Move to the completionQueue thread as self.credentials could be used on this thread
+                    if (completionQueue)
+                    {
+                        dispatch_async(completionQueue, ^{
+                            
+                            // Update our credentials
+                            self.credentials = [MXCredentials modelFromJSON:JSONResponse];
+                            
+                            // Workaround: HS does not return the right URL. Use the one we used to make the request
+                            credentials.homeServer = homeserver;
+                            
+                            // Report the certificate trusted by user (if any)
+                            credentials.allowedCertificate = httpClient.allowedCertificate;
+                            
+                            // sanity check
+                            if (success)
+                            {
+                                success(credentials);
+                            }
+                            
+                        });
+                    }
+                    
+                });
+            }
+
+        } failure:^(NSError *error) {
+            
+            if (failure && processingQueue)
+            {
+                dispatch_async(processingQueue, ^{
+                    
+                    if (completionQueue)
+                    {
+                        dispatch_async(completionQueue, ^{
+                            failure(error);
+                        });
+                    }
+                    
                 });
             }
         }];
@@ -343,12 +369,18 @@ MXAuthAction;
         [operation mutateTo:operation2];
 
     } failure:^(NSError *error) {
-        if (failure)
+        
+        if (failure && processingQueue)
         {
             dispatch_async(processingQueue, ^{
-                dispatch_async(completionQueue, ^{
-                    failure(error);
-                });
+                
+                if (completionQueue)
+                {
+                    dispatch_async(completionQueue, ^{
+                        failure(error);
+                    });
+                }
+                
             });
         }
     }];
@@ -370,29 +402,37 @@ MXAuthAction;
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
 
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
 
                                              MXAuthenticationSession *authSession = [MXAuthenticationSession modelFromJSON:JSONResponse];
 
-                                             dispatch_async(completionQueue, ^{
-
-                                                 success(authSession);
-                                                 
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     
+                                                     success(authSession);
+                                                     
+                                                 });
+                                             }
                                          });
                                      }
                                      
                                  }
                                  failure:^(NSError *error) {
                                      
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                      
@@ -412,12 +452,17 @@ MXAuthAction;
 {
     if (![loginType isEqualToString:kMXLoginFlowTypePassword])
     {
-        if (failure)
+        if (failure && processingQueue)
         {
             dispatch_async(processingQueue, ^{
-                dispatch_async(completionQueue, ^{
-                    failure(nil);
-                });
+                
+                if (completionQueue)
+                {
+                    dispatch_async(completionQueue, ^{
+                        failure(nil);
+                    });
+                }
+                
             });
         }
         return nil;
@@ -432,37 +477,51 @@ MXAuthAction;
     return [self login:parameters
                success:^(NSDictionary *JSONResponse) {
 
-                   // Move to the completionQueue thread as self.credentials could be used on this thread
-                   dispatch_async(processingQueue, ^{
-                       dispatch_async(completionQueue, ^{
-
-                           // Update our credentials
-                           self.credentials = [MXCredentials modelFromJSON:JSONResponse];
-
-                           // Workaround: HS does not return the right URL. Use the one we used to make the request
-                           credentials.homeServer = homeserver;
-
-                           // Report the certificate trusted by user (if any)
-                           credentials.allowedCertificate = httpClient.allowedCertificate;
-
-                           // sanity check
-                           if (success)
-                           {
-                               success(credentials);
-                           }
-
-                       });
-                   });
-                   
-               } failure:^(NSError *error) {
-                   if (failure)
+                   if (processingQueue)
                    {
                        dispatch_async(processingQueue, ^{
-                           dispatch_async(completionQueue, ^{
-                               failure(error);
-                           });
+                           
+                           // Move to the completionQueue thread as self.credentials could be used on this thread.
+                           if (completionQueue)
+                           {
+                               dispatch_async(completionQueue, ^{
+                                   
+                                   // Update our credentials
+                                   self.credentials = [MXCredentials modelFromJSON:JSONResponse];
+                                   
+                                   // Workaround: HS does not return the right URL. Use the one we used to make the request
+                                   credentials.homeServer = homeserver;
+                                   
+                                   // Report the certificate trusted by user (if any)
+                                   credentials.allowedCertificate = httpClient.allowedCertificate;
+                                   
+                                   // sanity check
+                                   if (success)
+                                   {
+                                       success(credentials);
+                                   }
+                                   
+                               });
+                           }
+                           
                        });
                    }
+                   
+               } failure:^(NSError *error) {
+                   
+                   if (failure && processingQueue)
+                   {
+                       dispatch_async(processingQueue, ^{
+                           
+                           if (completionQueue)
+                           {
+                               dispatch_async(completionQueue, ^{
+                                   failure(error);
+                               });
+                           }
+                       });
+                   }
+                   
                }];
 }
 
@@ -483,12 +542,17 @@ MXAuthAction;
     {
         NSError* error = [NSError errorWithDomain:@"Invalid params" code:500 userInfo:nil];
 
-        if (failure)
+        if (failure && processingQueue)
         {
             dispatch_async(processingQueue, ^{
-                dispatch_async(completionQueue, ^{
-                    failure(error);
-                });
+                
+                if (completionQueue)
+                {
+                    dispatch_async(completionQueue, ^{
+                        failure(error);
+                    });
+                }
+                
             });
         }
 
@@ -499,22 +563,33 @@ MXAuthAction;
                                     path:[NSString stringWithFormat:@"%@/account/password", apiPathPrefix]
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     
+                                     if (success && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 success();
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success();
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
                                          });
                                      }
                                  }];
@@ -529,12 +604,17 @@ MXAuthAction;
     {
         NSError* error = [NSError errorWithDomain:@"Invalid params" code:500 userInfo:nil];
 
-        if (failure)
+        if (failure && processingQueue)
         {
             dispatch_async(processingQueue, ^{
-                dispatch_async(completionQueue, ^{
-                    failure(error);
-                });
+                
+                if (completionQueue)
+                {
+                    dispatch_async(completionQueue, ^{
+                        failure(error);
+                    });
+                }
+                
             });
         }
 
@@ -554,22 +634,34 @@ MXAuthAction;
                                     path:[NSString stringWithFormat:@"%@/account/password", apiPathPrefix]
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     
+                                     if (success && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 success();
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success();
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -617,24 +709,34 @@ MXAuthAction;
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
                                      
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 success(JSONResponse);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success(JSONResponse);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                      
                                  }
                                  failure:^(NSError *error) {
                                      
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                      
@@ -649,23 +751,33 @@ MXAuthAction;
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
                                      
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 success();
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success();
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
                                      
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                      
@@ -685,28 +797,37 @@ MXAuthAction;
                               parameters:data
                                  success:^(NSDictionary *JSONResponse) {
 
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
                                              
-                                             dispatch_async(completionQueue, ^{
-                                                 
-                                                 success();
-                                                 
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     
+                                                     success();
+                                                     
+                                                 });
+                                             }
                                              
                                          });
                                      }
 
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -731,12 +852,17 @@ MXAuthAction;
     {
         NSError* error = [NSError errorWithDomain:@"Invalid params" code:500 userInfo:nil];
 
-        if (failure)
+        if (failure && processingQueue)
         {
             dispatch_async(processingQueue, ^{
-                dispatch_async(completionQueue, ^{
-                    failure(error);
-                });
+                
+                if (completionQueue)
+                {
+                    dispatch_async(completionQueue, ^{
+                        failure(error);
+                    });
+                }
+                
             });
         }
 
@@ -761,22 +887,33 @@ MXAuthAction;
                                     path:[NSString stringWithFormat:@"%@/pushers/set", apiPathPrefix]
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 success();
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success();
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -788,7 +925,7 @@ MXAuthAction;
                                     path:[NSString stringWithFormat:@"%@/pushrules/", apiPathPrefix]
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          @autoreleasepool
                                          {
@@ -796,20 +933,29 @@ MXAuthAction;
 
                                                  MXPushRulesResponse *pushRules = [MXPushRulesResponse modelFromJSON:JSONResponse];
 
-                                                 dispatch_async(completionQueue, ^{
-                                                     success(pushRules);
-                                                 });
+                                                 if (completionQueue)
+                                                 {
+                                                     dispatch_async(completionQueue, ^{
+                                                         success(pushRules);
+                                                     });
+                                                 }
+                                                 
                                              });
                                          }
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -854,22 +1000,32 @@ MXAuthAction;
                                  timeout:-1
                           uploadProgress:nil
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 success();
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success();
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -905,22 +1061,32 @@ MXAuthAction;
                                     path:[NSString stringWithFormat:@"%@/pushrules/%@/%@/%@", apiPathPrefix, scope, kindString, ruleId]
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 success();
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success();
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -994,34 +1160,49 @@ MXAuthAction;
                                         path:[NSString stringWithFormat:@"%@/pushrules/%@/%@/%@", apiPathPrefix, scope, kindString, ruleId]
                                   parameters:content
                                      success:^(NSDictionary *JSONResponse) {
-                                         if (success)
+                                         if (success && processingQueue)
                                          {
                                              dispatch_async(processingQueue, ^{
-                                                 dispatch_async(completionQueue, ^{
-                                                     success();
-                                                 });
+                                                 
+                                                 if (completionQueue)
+                                                 {
+                                                     dispatch_async(completionQueue, ^{
+                                                         success();
+                                                     });
+                                                 }
+                                                 
                                              });
                                          }
                                      }
                                      failure:^(NSError *error) {
-                                         if (failure)
+                                         if (failure && processingQueue)
                                          {
                                              dispatch_async(processingQueue, ^{
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
+                                                 
+                                                 if (completionQueue)
+                                                 {
+                                                     dispatch_async(completionQueue, ^{
+                                                         failure(error);
+                                                     });
+                                                 }
+                                                 
                                              });
                                          }
                                      }];
     }
     else
     {
-        if (failure)
+        if (failure && processingQueue)
         {
             dispatch_async(processingQueue, ^{
-                dispatch_async(completionQueue, ^{
-                    failure([NSError errorWithDomain:kMXRestClientErrorDomain code:0 userInfo:@{@"error": @"Invalid argument"}]);
-                });
+                
+                if (completionQueue)
+                {
+                    dispatch_async(completionQueue, ^{
+                        failure([NSError errorWithDomain:kMXRestClientErrorDomain code:0 userInfo:@{@"error": @"Invalid argument"}]);
+                    });
+                }
+                
             });
         }
         return nil;
@@ -1043,28 +1224,36 @@ MXAuthAction;
                               parameters:content
                                  success:^(NSDictionary *JSONResponse) {
                                      
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
                                              
                                             NSString *eventId;
                                             MXJSONModelSetString(eventId, JSONResponse[@"event_id"]);
 
-                                             dispatch_async(completionQueue, ^{
-                                                 success(eventId);
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success(eventId);
+                                                 });
+                                             }
                                              
                                          });
                                      }
                                      
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -1081,27 +1270,35 @@ MXAuthAction;
                                     path:path
                               parameters:content
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-
-                                                 NSString *eventId;
-                                                 MXJSONModelSetString(eventId, JSONResponse[@"event_id"]);
-
-                                             dispatch_async(completionQueue, ^{
-                                                 success(eventId);
-                                             });
+                                             
+                                             NSString *eventId;
+                                             MXJSONModelSetString(eventId, JSONResponse[@"event_id"]);
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success(eventId);
+                                                 });
+                                             }
                                              
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -1152,27 +1349,35 @@ MXAuthAction;
                                     path:path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
                                              
-                                             dispatch_async(completionQueue, ^{
-                                                 
-                                                 success();
-                                                 
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     
+                                                     success();
+                                                     
+                                                 });
+                                             }
                                              
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -1201,27 +1406,35 @@ MXAuthAction;
                               parameters:value
                                  success:^(NSDictionary *JSONResponse) {
 
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
 
-                                             dispatch_async(completionQueue, ^{
-
-                                                 success();
-
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     
+                                                     success();
+                                                     
+                                                 });
+                                             }
                                              
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -1247,27 +1460,35 @@ MXAuthAction;
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
 
-                                             dispatch_async(completionQueue, ^{
-
-                                                 success(JSONResponse);
-
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     
+                                                     success(JSONResponse);
+                                                     
+                                                 });
+                                             }
                                              
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -1293,16 +1514,20 @@ MXAuthAction;
     return [self valueOfStateEvent:kMXEventTypeStringRoomTopic
                             inRoom:roomId
                            success:^(NSDictionary *JSONResponse) {
-                               if (success)
+                               if (success && processingQueue)
                                {
                                    dispatch_async(processingQueue, ^{
 
                                        NSString *topic;
                                        MXJSONModelSetString(topic, JSONResponse[@"topic"]);
 
-                                       dispatch_async(completionQueue, ^{
-                                           success(topic);
-                                       });
+                                       if (completionQueue)
+                                       {
+                                           dispatch_async(completionQueue, ^{
+                                               success(topic);
+                                           });
+                                       }
+                                       
                                    });
                                }
                            } failure:failure];
@@ -1329,16 +1554,20 @@ MXAuthAction;
     return [self valueOfStateEvent:kMXEventTypeStringRoomAvatar
                             inRoom:roomId
                            success:^(NSDictionary *JSONResponse) {
-                               if (success)
+                               if (success && processingQueue)
                                {
                                    dispatch_async(processingQueue, ^{
 
                                        NSString *url;
                                        MXJSONModelSetString(url, JSONResponse[@"url"]);
 
-                                       dispatch_async(completionQueue, ^{
-                                           success(url);
-                                       });
+                                       if (completionQueue)
+                                       {
+                                           dispatch_async(completionQueue, ^{
+                                               success(url);
+                                           });
+                                       }
+                                       
                                    });
                                }
 
@@ -1365,16 +1594,20 @@ MXAuthAction;
     return [self valueOfStateEvent:kMXEventTypeStringRoomName
                             inRoom:roomId
                            success:^(NSDictionary *JSONResponse) {
-                               if (success)
+                               if (success && processingQueue)
                                {
                                    dispatch_async(processingQueue, ^{
 
                                        NSString *name;
                                        MXJSONModelSetString(name, JSONResponse[@"name"]);
 
-                                       dispatch_async(completionQueue, ^{
-                                           success(name);
-                                       });
+                                       if (completionQueue)
+                                       {
+                                           dispatch_async(completionQueue, ^{
+                                               success(name);
+                                           });
+                                       }
+                                       
                                    });
                                }
 
@@ -1401,16 +1634,20 @@ MXAuthAction;
     return [self valueOfStateEvent:kMXEventTypeStringRoomHistoryVisibility
                             inRoom:roomId
                            success:^(NSDictionary *JSONResponse) {
-                               if (success)
+                               if (success && processingQueue)
                                {
                                    dispatch_async(processingQueue, ^{
 
                                        NSString *historyVisibility;
                                        MXJSONModelSetString(historyVisibility, JSONResponse[@"history_visibility"]);
 
-                                       dispatch_async(completionQueue, ^{
-                                           success(historyVisibility);
-                                       });
+                                       if (completionQueue)
+                                       {
+                                           dispatch_async(completionQueue, ^{
+                                               success(historyVisibility);
+                                           });
+                                       }
+                                       
                                    });
                                }
 
@@ -1437,16 +1674,20 @@ MXAuthAction;
     return [self valueOfStateEvent:kMXEventTypeStringRoomJoinRules
                             inRoom:roomId
                            success:^(NSDictionary *JSONResponse) {
-                               if (success)
+                               if (success && processingQueue)
                                {
                                    dispatch_async(processingQueue, ^{
 
                                        MXRoomJoinRule joinRule;
                                        MXJSONModelSetString(joinRule, JSONResponse[@"join_rule"]);
 
-                                       dispatch_async(completionQueue, ^{
-                                           success(joinRule);
-                                       });
+                                       if (completionQueue)
+                                       {
+                                           dispatch_async(completionQueue, ^{
+                                               success(joinRule);
+                                           });
+                                       }
+                                       
                                    });
                                }
 
@@ -1473,16 +1714,20 @@ MXAuthAction;
     return [self valueOfStateEvent:kMXEventTypeStringRoomGuestAccess
                             inRoom:roomId
                            success:^(NSDictionary *JSONResponse) {
-                               if (success)
+                               if (success && processingQueue)
                                {
                                    dispatch_async(processingQueue, ^{
 
                                        MXRoomGuestAccess guestAccess;
                                        MXJSONModelSetString(guestAccess, JSONResponse[@"guest_access"]);
 
-                                       dispatch_async(completionQueue, ^{
-                                           success(guestAccess);
-                                       });
+                                       if (completionQueue)
+                                       {
+                                           dispatch_async(completionQueue, ^{
+                                               success(guestAccess);
+                                           });
+                                       }
+                                       
                                    });
                                }
 
@@ -1503,27 +1748,35 @@ MXAuthAction;
                                            }
                                  success:^(NSDictionary *JSONResponse) {
 
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
 
-                                             dispatch_async(completionQueue, ^{
-
-                                                 success();
-
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     
+                                                     success();
+                                                     
+                                                 });
+                                             }
 
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -1538,26 +1791,35 @@ MXAuthAction;
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
 
                                              MXRoomDirectoryVisibility directoryVisibility;
                                              MXJSONModelSetString(directoryVisibility, JSONResponse[@"visibility"]);
 
-                                             dispatch_async(completionQueue, ^{
-                                                 success(directoryVisibility);
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success(directoryVisibility);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -1577,23 +1839,33 @@ MXAuthAction;
                                            @"room_id": roomId
                                            }
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 success();
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success();
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -1610,23 +1882,33 @@ MXAuthAction;
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 success();
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success();
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -1652,16 +1934,20 @@ MXAuthAction;
     return [self valueOfStateEvent:kMXEventTypeStringRoomCanonicalAlias
                             inRoom:roomId
                            success:^(NSDictionary *JSONResponse) {
-                               if (success)
+                               if (success && processingQueue)
                                {
                                    dispatch_async(processingQueue, ^{
 
                                        NSString * alias;
                                        MXJSONModelSetString(alias, JSONResponse[@"alias"]);
 
-                                       dispatch_async(completionQueue, ^{
-                                           success(alias);
-                                       });
+                                       if (completionQueue)
+                                       {
+                                           dispatch_async(completionQueue, ^{
+                                               success(alias);
+                                           });
+                                       }
+                                       
                                    });
                                }
 
@@ -1695,32 +1981,40 @@ MXAuthAction;
                                     path:path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
                                              
-                                             dispatch_async(completionQueue, ^{
-                                                 
-                                                 NSString *roomId;
-                                                 MXJSONModelSetString(roomId, JSONResponse[@"room_id"]);
-                                                 if (!roomId.length) {
-                                                     roomId = roomIdOrAlias;
-                                                 }
-                                                 success(roomId);
-                                                 
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     
+                                                     NSString *roomId;
+                                                     MXJSONModelSetString(roomId, JSONResponse[@"room_id"]);
+                                                     if (!roomId.length) {
+                                                         roomId = roomIdOrAlias;
+                                                     }
+                                                     success(roomId);
+                                                     
+                                                 });
+                                             }
                                              
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -1769,13 +2063,18 @@ MXAuthAction;
     // The identity server must be defined
     if (!_identityServer)
     {
-        if (failure)
+        if (failure && processingQueue)
         {
             dispatch_async(processingQueue, ^{
-                dispatch_async(completionQueue, ^{
-                    MXError *error = [[MXError alloc] initWithErrorCode:kMXSDKErrCodeStringMissingParameters error:@"No supplied identity server URL"];
-                    failure([error createNSError]);
-                });
+                
+                if (completionQueue)
+                {
+                    dispatch_async(completionQueue, ^{
+                        MXError *error = [[MXError alloc] initWithErrorCode:kMXSDKErrCodeStringMissingParameters error:@"No supplied identity server URL"];
+                        failure([error createNSError]);
+                    });
+                }
+                
             });
         }
         return nil;
@@ -1800,27 +2099,35 @@ MXAuthAction;
                                     path:path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
 
-                                             dispatch_async(completionQueue, ^{
-
-                                                 success(JSONResponse);
-
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     
+                                                     success(JSONResponse);
+                                                     
+                                                 });
+                                             }
 
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -1846,27 +2153,35 @@ MXAuthAction;
                                     path:path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
                                              
-                                             dispatch_async(completionQueue, ^{
-                                                 
-                                                 success();
-                                                 
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     
+                                                     success();
+                                                     
+                                                 });
+                                             }
                                              
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -1999,29 +2314,37 @@ MXAuthAction;
                                     path:[NSString stringWithFormat:@"%@/createRoom", apiPathPrefix]
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Create model from JSON dictionary on processing queue
                                          dispatch_async(processingQueue, ^{
                                              
                                              MXCreateRoomResponse *response = [MXCreateRoomResponse modelFromJSON:JSONResponse];
                                              
-                                             dispatch_async(completionQueue, ^{
-                                                 
-                                                 success(response);
-                                                 
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     
+                                                     success(response);
+                                                     
+                                                 });
+                                             }
                                              
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -2064,29 +2387,37 @@ MXAuthAction;
                                     path:path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Create pagination response from JSON on processing queue
                                          dispatch_async(processingQueue, ^{
                                              
                                              MXPaginationResponse *paginatedResponse = [MXPaginationResponse modelFromJSON:JSONResponse];
                                              
-                                             dispatch_async(completionQueue, ^{
-                                                 
-                                                 success(paginatedResponse);
-                                                 
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     
+                                                     success(paginatedResponse);
+                                                     
+                                                 });
+                                             }
                                              
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -2102,7 +2433,7 @@ MXAuthAction;
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Create room member events array from JSON dictionary on processing queue
                                          dispatch_async(processingQueue, ^{
@@ -2115,22 +2446,30 @@ MXAuthAction;
                                                  [roomMemberEvents addObject:roomMemberEvent];
                                              }
                                              
-                                             dispatch_async(completionQueue, ^{
-                                                 
-                                                 success(roomMemberEvents);
-                                                 
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     
+                                                     success(roomMemberEvents);
+                                                     
+                                                 });
+                                             }
                                              
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -2146,27 +2485,35 @@ MXAuthAction;
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
                                              
-                                             dispatch_async(completionQueue, ^{
-                                                 
-                                                 success(JSONResponse);
-                                                 
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     
+                                                     success(JSONResponse);
+                                                     
+                                                 });
+                                             }
                                              
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -2193,27 +2540,32 @@ MXAuthAction;
                                                           path:path
                                                     parameters:parameters
                                                        success:^(NSDictionary *JSONResponse) {
-                                                           if (success)
+                                                           if (success && processingQueue)
                                                            {
                                                                // Use here the processing queue in order to keep the server response order
                                                                dispatch_async(processingQueue, ^{
                                                                    
-                                                                   dispatch_async(completionQueue, ^{
-                                                                       
-                                                                       success();
-                                                                       
-                                                                   });
+                                                                   if (completionQueue)
+                                                                   {
+                                                                       dispatch_async(completionQueue, ^{                                                                           success();
+                                                                       });
+                                                                   }
                                                                    
                                                                });
                                                            }
                                                        }
                                                        failure:^(NSError *error) {
-                                                           if (failure)
+                                                           if (failure && processingQueue)
                                                            {
                                                                dispatch_async(processingQueue, ^{
-                                                                   dispatch_async(completionQueue, ^{
-                                                                       failure(error);
-                                                                   });
+                                                                   
+                                                                   if (completionQueue)
+                                                                   {
+                                                                       dispatch_async(completionQueue, ^{
+                                                                           failure(error);
+                                                                       });
+                                                                   }
+                                                                   
                                                                });
                                                            }
                                                        }];
@@ -2243,27 +2595,35 @@ MXAuthAction;
                                     path:path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
                                              
-                                             dispatch_async(completionQueue, ^{
-                                                 
-                                                 success();
-                                                 
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     
+                                                     success();
+                                                     
+                                                 });
+                                             }
                                              
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -2291,27 +2651,35 @@ MXAuthAction;
                                     path:path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
 
-                                             dispatch_async(completionQueue, ^{
-
-                                                 success();
-
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     
+                                                     success();
+                                                     
+                                                 });
+                                             }
 
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -2330,29 +2698,37 @@ MXAuthAction;
                                            @"limit": [NSNumber numberWithInteger:limit]
                                            }
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Create model from JSON dictionary on the processing queue
                                          dispatch_async(processingQueue, ^{
                                              
                                              MXRoomInitialSync *roomInitialSync = [MXRoomInitialSync modelFromJSON:JSONResponse];
                                              
-                                             dispatch_async(completionQueue, ^{
-                                                 
-                                                 success(roomInitialSync);
-                                                 
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     
+                                                     success(roomInitialSync);
+                                                     
+                                                 });
+                                             }
                                              
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -2372,29 +2748,37 @@ MXAuthAction;
                                            @"limit": [NSNumber numberWithInteger:limit]
                                            }
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Create model from JSON dictionary on the processing queue
                                          dispatch_async(processingQueue, ^{
 
                                              MXEventContext *eventContext = [MXEventContext modelFromJSON:JSONResponse];
 
-                                             dispatch_async(completionQueue, ^{
-
-                                                 success(eventContext);
-
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     
+                                                     success(eventContext);
+                                                     
+                                                 });
+                                             }
 
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -2411,7 +2795,7 @@ MXAuthAction;
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
@@ -2424,21 +2808,30 @@ MXAuthAction;
                                                  [tags addObject:tag];
                                              }
 
-                                             dispatch_async(completionQueue, ^{
-
-                                                 success(tags);
-
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     
+                                                     success(tags);
+                                                     
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -2461,27 +2854,35 @@ MXAuthAction;
                                     path:path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
 
-                                             dispatch_async(completionQueue, ^{
-
-                                                 success();
-
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     
+                                                     success();
+                                                     
+                                                 });
+                                             }
 
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -2497,22 +2898,32 @@ MXAuthAction;
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 success();
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success();
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -2531,27 +2942,33 @@ MXAuthAction;
                                            @"displayname": displayname
                                            }
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
                                              
-                                             dispatch_async(completionQueue, ^{
-                                                 
-                                                 success();
-                                                 
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success();
+                                                 });
+                                             }
                                              
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -2571,31 +2988,39 @@ MXAuthAction;
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
                                              
                                              NSDictionary *cleanedJSONResponse = [MXJSONModel removeNullValuesInJSON:JSONResponse];
                                              
-                                             dispatch_async(completionQueue, ^{
-
-                                                 NSString *displayname;
-                                                 MXJSONModelSetString(displayname, cleanedJSONResponse[@"displayname"]);
-                                                 success(displayname);
-
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     
+                                                     NSString *displayname;
+                                                     MXJSONModelSetString(displayname, cleanedJSONResponse[@"displayname"]);
+                                                     success(displayname);
+                                                     
+                                                 });
+                                             }
                                              
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -2612,27 +3037,33 @@ MXAuthAction;
                                            @"avatar_url": avatarUrl
                                            }
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
                                              
-                                             dispatch_async(completionQueue, ^{
-                                                 
-                                                 success();
-                                                 
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success();
+                                                 });
+                                             }
                                              
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -2652,7 +3083,7 @@ MXAuthAction;
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
@@ -2661,20 +3092,28 @@ MXAuthAction;
                                              NSString *avatarUrl;
                                              MXJSONModelSetString(avatarUrl, cleanedJSONResponse[@"avatar_url"]);
                                              
-                                             dispatch_async(completionQueue, ^{
-                                                 success(avatarUrl);
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success(avatarUrl);
+                                                 });
+                                             }
                                              
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -2701,22 +3140,32 @@ MXAuthAction;
                                     path:path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 success();
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success();
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -2730,29 +3179,37 @@ MXAuthAction;
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
 
-                                             dispatch_async(completionQueue, ^{
-
-                                                 NSArray<MXThirdPartyIdentifier*> *threePIDs;
-                                                 MXJSONModelSetMXJSONModelArray(threePIDs, MXThirdPartyIdentifier, JSONResponse[@"threepids"]);
-                                                 success(threePIDs);
-
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     
+                                                     NSArray<MXThirdPartyIdentifier*> *threePIDs;
+                                                     MXJSONModelSetMXJSONModelArray(threePIDs, MXThirdPartyIdentifier, JSONResponse[@"threepids"]);
+                                                     success(threePIDs);
+                                                     
+                                                 });
+                                             }
 
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -2777,27 +3234,33 @@ MXAuthAction;
                                     path:path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
                                              
-                                             dispatch_async(completionQueue, ^{
-                                                 
-                                                 success();
-                                                 
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success();
+                                                 });
+                                             }
                                              
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -2817,29 +3280,35 @@ MXAuthAction;
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Create presence response from JSON dictionary on processing queue
                                          dispatch_async(processingQueue, ^{
                                              
                                              MXPresenceResponse *presence = [MXPresenceResponse modelFromJSON:JSONResponse];
                                              
-                                             dispatch_async(completionQueue, ^{
-                                                 
-                                                 success(presence);
-                                                 
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success(presence);
+                                                 });
+                                             }
                                              
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -2853,29 +3322,35 @@ MXAuthAction;
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Create presence response from JSON dictionary on processing queue
                                          dispatch_async(processingQueue, ^{
                                              
                                              MXPresenceResponse *presence = [MXPresenceResponse modelFromJSON:JSONResponse];
                                              
-                                             dispatch_async(completionQueue, ^{
-                                                 
-                                                 success(presence);
-                                                 
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success(presence);
+                                                 });
+                                             }
                                              
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -2894,27 +3369,33 @@ MXAuthAction;
                                     path:path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
                                              
-                                             dispatch_async(completionQueue, ^{
-                                                 
-                                                 success();
-                                                 
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success();
+                                                 });
+                                             }
                                              
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -2962,29 +3443,35 @@ MXAuthAction;
                                                           path:[NSString stringWithFormat:@"%@/sync", apiPathPrefix]
                                                     parameters:parameters timeout:clientTimeoutInSeconds
                                                        success:^(NSDictionary *JSONResponse) {
-                                                           if (success)
+                                                           if (success && processingQueue)
                                                            {
                                                                // Create model from JSON dictionary on processing queue
                                                                dispatch_async(processingQueue, ^{
                                                                    
                                                                    MXSyncResponse *syncResponse = [MXSyncResponse modelFromJSON:JSONResponse];
                                                                    
-                                                                   dispatch_async(completionQueue, ^{
-                                                                       
-                                                                       success(syncResponse);
-                                                                       
-                                                                   });
+                                                                   if (completionQueue)
+                                                                   {
+                                                                       dispatch_async(completionQueue, ^{
+                                                                           success(syncResponse);
+                                                                       });
+                                                                   }
                                                                    
                                                                });
                                                            }
                                                        }
                                                        failure:^(NSError *error) {
-                                                           if (failure)
+                                                           if (failure && processingQueue)
                                                            {
                                                                dispatch_async(processingQueue, ^{
-                                                                   dispatch_async(completionQueue, ^{
-                                                                       failure(error);
-                                                                   });
+                                                                   
+                                                                   if (completionQueue)
+                                                                   {
+                                                                       dispatch_async(completionQueue, ^{
+                                                                           failure(error);
+                                                                       });
+                                                                   }
+                                                                   
                                                                });
                                                            }
                                                        }];
@@ -3007,27 +3494,33 @@ MXAuthAction;
                                     path: [NSString stringWithFormat:@"%@/rooms/%@/receipt/m.read/%@", apiPathPrefix, roomId, eventId]
                               parameters:[[NSDictionary alloc] init]
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
                                              
-                                             dispatch_async(completionQueue, ^{
-                                                 
-                                                 success(eventId);
-                                                 
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success(eventId);
+                                                 });
+                                             }
                                              
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -3042,7 +3535,7 @@ MXAuthAction;
                                     path:[NSString stringWithFormat:@"%@/publicRooms", apiPathPrefix]
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          @autoreleasepool
                                          {
@@ -3052,23 +3545,29 @@ MXAuthAction;
                                                  NSArray *publicRooms;
                                                  MXJSONModelSetMXJSONModelArray(publicRooms, MXPublicRoom, JSONResponse[@"chunk"]);
 
-                                                 dispatch_async(completionQueue, ^{
-
-                                                     success(publicRooms);
-
-                                                 });
+                                                 if (completionQueue)
+                                                 {
+                                                     dispatch_async(completionQueue, ^{
+                                                         success(publicRooms);
+                                                     });
+                                                 }
 
                                              });
                                          }
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -3085,7 +3584,7 @@ MXAuthAction;
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
@@ -3093,20 +3592,28 @@ MXAuthAction;
                                              NSString *roomId;
                                              MXJSONModelSetString(roomId, JSONResponse[@"room_id"]);
                                              
-                                             dispatch_async(completionQueue, ^{
-                                                 success(roomId);
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success(roomId);
+                                                 });
+                                             }
                                              
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -3139,28 +3646,37 @@ MXAuthAction;
                                  timeout:timeoutInSeconds
                           uploadProgress:uploadProgress
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
 
                                              NSString *contentURL;
                                              MXJSONModelSetString(contentURL, JSONResponse[@"content_uri"]);
 
-                                             dispatch_async(completionQueue, ^{
-                                                 NSLog(@"[MXRestClient] uploadContent succeeded: %@",contentURL);
-                                                 success(contentURL);
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     NSLog(@"[MXRestClient] uploadContent succeeded: %@",contentURL);
+                                                     success(contentURL);
+                                                 });
+                                             }
+                                             
                                          });
 
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -3259,27 +3775,36 @@ MXAuthAction;
                                                    @"address": address
                                                    }
                                          success:^(NSDictionary *JSONResponse) {
-                                             if (success)
+                                             if (success && processingQueue)
                                              {
                                                  dispatch_async(processingQueue, ^{
 
                                                      NSString *mxid;
                                                      MXJSONModelSetString(mxid, JSONResponse[@"mxid"]);
 
-                                                     dispatch_async(completionQueue, ^{
-                                                         success(mxid);
-                                                     });
+                                                     if (completionQueue)
+                                                     {
+                                                         dispatch_async(completionQueue, ^{
+                                                             success(mxid);
+                                                         });
+                                                     }
+                                                     
                                                  });
 
                                              }
                                          }
                                          failure:^(NSError *error) {
-                                             if (failure)
+                                             if (failure && processingQueue)
                                              {
                                                  dispatch_async(processingQueue, ^{
-                                                     dispatch_async(completionQueue, ^{
-                                                         failure(error);
-                                                     });
+                                                     
+                                                     if (completionQueue)
+                                                     {
+                                                         dispatch_async(completionQueue, ^{
+                                                             failure(error);
+                                                         });
+                                                     }
+                                                     
                                                  });
                                              }
                                          }];
@@ -3304,7 +3829,7 @@ MXAuthAction;
                                   uploadProgress:nil
                                          success:^(NSDictionary *JSONResponse) {
                                              
-                                             if (success)
+                                             if (success && processingQueue)
                                              {
                                                  dispatch_async(processingQueue, ^{
                                                      
@@ -3313,19 +3838,28 @@ MXAuthAction;
                                                      NSArray *discoveredUsers;
                                                      MXJSONModelSetArray(discoveredUsers, JSONResponse[@"threepids"]);
                                                      
-                                                     dispatch_async(completionQueue, ^{
-                                                         success(discoveredUsers);
-                                                     });
+                                                     if (completionQueue)
+                                                     {
+                                                         dispatch_async(completionQueue, ^{
+                                                             success(discoveredUsers);
+                                                         });
+                                                     }
+                                                     
                                                  });
                                              }
                                          }
                                          failure:^(NSError *error) {
-                                             if (failure)
+                                             if (failure && processingQueue)
                                              {
                                                  dispatch_async(processingQueue, ^{
-                                                     dispatch_async(completionQueue, ^{
-                                                         failure(error);
-                                                     });
+                                                     
+                                                     if (completionQueue)
+                                                     {
+                                                         dispatch_async(completionQueue, ^{
+                                                             failure(error);
+                                                         });
+                                                     }
+                                                     
                                                  });
                                              }
                                          }];
@@ -3354,7 +3888,7 @@ MXAuthAction;
                                             path:@"validate/email/requestToken"
                                       parameters:parameters
                                          success:^(NSDictionary *JSONResponse) {
-                                             if (success)
+                                             if (success && processingQueue)
                                              {
                                                  dispatch_async(processingQueue, ^{
 
@@ -3369,20 +3903,29 @@ MXAuthAction;
                                                          MXJSONModelSetString(sid, JSONResponse[@"sid"]);
                                                      }
 
-                                                     dispatch_async(completionQueue, ^{
-                                                         success(sid);
-                                                     });
+                                                     if (completionQueue)
+                                                     {
+                                                         dispatch_async(completionQueue, ^{
+                                                             success(sid);
+                                                         });
+                                                     }
+                                                     
                                                  });
 
                                              }
                                          }
                                          failure:^(NSError *error) {
-                                             if (failure)
+                                             if (failure && processingQueue)
                                              {
                                                  dispatch_async(processingQueue, ^{
-                                                     dispatch_async(completionQueue, ^{
-                                                         failure(error);
-                                                     });
+                                                     
+                                                     if (completionQueue)
+                                                     {
+                                                         dispatch_async(completionQueue, ^{
+                                                             failure(error);
+                                                         });
+                                                     }
+                                                     
                                                  });
                                              }
                                          }];
@@ -3405,36 +3948,51 @@ MXAuthAction;
 
                                              if (!JSONResponse[@"errcode"])
                                              {
-                                                 if (success)
+                                                 if (success && processingQueue)
                                                  {
                                                      dispatch_async(processingQueue, ^{
-                                                         dispatch_async(completionQueue, ^{
-                                                             success();
-                                                         });
+                                                         
+                                                         if (completionQueue)
+                                                         {
+                                                             dispatch_async(completionQueue, ^{
+                                                                 success();
+                                                             });
+                                                         }
+                                                         
                                                      });
                                                  }
                                              }
                                              else
                                              {
                                                  // Build the error from the JSON data
-                                                 if (failure && JSONResponse[@"errcode"] && JSONResponse[@"error"])
+                                                 if (failure && JSONResponse[@"errcode"] && JSONResponse[@"error"] && processingQueue)
                                                  {
                                                      dispatch_async(processingQueue, ^{
-                                                         dispatch_async(completionQueue, ^{
-                                                             MXError *error = [[MXError alloc] initWithErrorCode:JSONResponse[@"errcode"] error:JSONResponse[@"error"]];
-                                                             failure([error createNSError]);
-                                                         });
+                                                         
+                                                         if (completionQueue)
+                                                         {
+                                                             dispatch_async(completionQueue, ^{
+                                                                 MXError *error = [[MXError alloc] initWithErrorCode:JSONResponse[@"errcode"] error:JSONResponse[@"error"]];
+                                                                 failure([error createNSError]);
+                                                             });
+                                                         }
+                                                         
                                                      });
                                                  }
                                              }
                                          }
                                          failure:^(NSError *error) {
-                                             if (failure)
+                                             if (failure && processingQueue)
                                              {
                                                  dispatch_async(processingQueue, ^{
-                                                     dispatch_async(completionQueue, ^{
-                                                         failure(error);
-                                                     });
+                                                     
+                                                     if (completionQueue)
+                                                     {
+                                                         dispatch_async(completionQueue, ^{
+                                                             failure(error);
+                                                         });
+                                                     }
+                                                     
                                                  });
                                              }
                                          }];
@@ -3450,26 +4008,33 @@ MXAuthAction;
                                             path:path
                                       parameters:nil
                                          success:^(NSDictionary *JSONResponse) {
-                                             if (success)
+                                             if (success && processingQueue)
                                              {
                                                  // Use here the processing queue in order to keep the server response order
                                                  dispatch_async(processingQueue, ^{
 
-                                                     dispatch_async(completionQueue, ^{
-
-                                                         success(JSONResponse);
-
-                                                     });
+                                                     if (completionQueue)
+                                                     {
+                                                         dispatch_async(completionQueue, ^{
+                                                             success(JSONResponse);
+                                                         });
+                                                     }
+                                                     
                                                      
                                                  });
                                              }                                         }
                                          failure:^(NSError *error) {
-                                             if (failure)
+                                             if (failure && processingQueue)
                                              {
                                                  dispatch_async(processingQueue, ^{
-                                                     dispatch_async(completionQueue, ^{
-                                                         failure(error);
-                                                     });
+                                                     
+                                                     if (completionQueue)
+                                                     {
+                                                         dispatch_async(completionQueue, ^{
+                                                             failure(error);
+                                                         });
+                                                     }
+                                                     
                                                  });
                                              }
                                          }];
@@ -3484,25 +4049,34 @@ MXAuthAction;
                                     path:[NSString stringWithFormat:@"%@/voip/turnServer", apiPathPrefix]
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
 
                                              MXTurnServerResponse *turnServerResponse = [MXTurnServerResponse modelFromJSON:JSONResponse];
 
-                                             dispatch_async(completionQueue, ^{
-                                                 success(turnServerResponse);
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success(turnServerResponse);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -3551,31 +4125,35 @@ MXAuthAction;
                                     path: path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
+                                             
+                                             MXSearchResponse *searchResponse = [MXSearchResponse modelFromJSON:JSONResponse];
 
-                                             dispatch_async(completionQueue, ^{
-
-                                                 MXSearchResponse *searchResponse = [MXSearchResponse modelFromJSON:JSONResponse];
-
-                                                 if (success)
-                                                 {
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
                                                      success(searchResponse.searchCategories.roomEvents);
-                                                 }
-                                             });
+                                                 });
+                                             }
 
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -3623,30 +4201,37 @@ MXAuthAction;
                                     path: path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     
+                                     if (success && processingQueue)
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
-
-                                            MXKeysUploadResponse *keysUploadResponse =  [MXKeysUploadResponse modelFromJSON:JSONResponse];
-
-                                             dispatch_async(completionQueue, ^{
-
-                                                 if (success)
-                                                 {
+                                             
+                                             MXKeysUploadResponse *keysUploadResponse =  [MXKeysUploadResponse modelFromJSON:JSONResponse];
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
                                                      success(keysUploadResponse);
-                                                 }
-                                             });
+                                                 });
+                                             }
+                                             
                                          });
                                      }
+                                     
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -3672,29 +4257,34 @@ MXAuthAction;
                                     path: path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
 
                                              MXKeysQueryResponse *keysQueryResponse = [MXKeysQueryResponse modelFromJSON:JSONResponse];
 
-                                             dispatch_async(completionQueue, ^{
-
-                                                 if (success)
-                                                 {
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
                                                      success(keysQueryResponse);
-                                                 }
-                                             });
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -3713,29 +4303,35 @@ MXAuthAction;
                                     path: path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
-                                     if (success)
+                                     
+                                     if (success && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
 
                                              MXKeysClaimResponse *keysClaimResponse = [MXKeysClaimResponse modelFromJSON:JSONResponse];
 
-                                             dispatch_async(completionQueue, ^{
-
-                                                 if (success)
-                                                 {
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
                                                      success(keysClaimResponse);
-                                                 }
-                                             });
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -3758,26 +4354,34 @@ MXAuthAction;
                               parameters:content
                                  success:^(NSDictionary *JSONResponse) {
 
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
 
-                                             dispatch_async(completionQueue, ^{
-
-                                                 success();
-
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success();
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure)
+                                     
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -3792,7 +4396,7 @@ MXAuthAction;
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
                                      
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Create devices array from JSON on processing queue
                                          dispatch_async(processingQueue, ^{
@@ -3800,22 +4404,29 @@ MXAuthAction;
                                              NSArray<MXDevice *> *devices;
                                              MXJSONModelSetMXJSONModelArray(devices, MXDevice, JSONResponse[@"devices"]);
                                              
-                                             dispatch_async(completionQueue, ^{
-                                                 
-                                                 success(devices);
-                                                 
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success(devices);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                      
                                  } failure:^(NSError *error) {
                                      
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                      
@@ -3831,7 +4442,7 @@ MXAuthAction;
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
                                      
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Create device from JSON on processing queue
                                          dispatch_async(processingQueue, ^{
@@ -3839,22 +4450,29 @@ MXAuthAction;
                                              MXDevice *device;
                                              MXJSONModelSetMXJSONModel(device, MXDevice, JSONResponse);
                                              
-                                             dispatch_async(completionQueue, ^{
-                                                 
-                                                 success(device);
-                                                 
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success(device);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                      
                                  } failure:^(NSError *error) {
                                      
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                      
@@ -3877,26 +4495,33 @@ MXAuthAction;
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
                                      
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          // Use here the processing queue in order to keep the server response order
                                          dispatch_async(processingQueue, ^{
                                              
-                                             dispatch_async(completionQueue, ^{
-                                                 
-                                                 success();
-                                                 
-                                             });
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success();
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                      
                                  } failure:^(NSError *error) {
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                  }];
@@ -3915,46 +4540,55 @@ MXAuthAction;
                                  success:^(NSDictionary *JSONResponse) {
                                      
                                      NSLog(@"[MXRestClient] Warning: get an authentication session to delete a device failed");
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 success(nil);
-                                             });
-                                         });
-                                     }
-                                     
-                                 } failure:^(NSError *error) {
-
-                                     dispatch_async(processingQueue, ^{
-
-                                         // The auth session should be available in response data in case of unauthorized request.
-                                         NSDictionary *JSONResponse = nil;
-                                         if (error.userInfo[MXHTTPClientErrorResponseDataKey])
-                                         {
-                                             JSONResponse = error.userInfo[MXHTTPClientErrorResponseDataKey];
-                                         }
-
-                                         dispatch_async(completionQueue, ^{
-
-                                             if (JSONResponse)
+                                             
+                                             if (completionQueue)
                                              {
-                                                 if (success)
-                                                 {
-                                                     success([MXAuthenticationSession modelFromJSON:JSONResponse]);
-                                                 }
-                                             }
-                                             else if (failure)
-                                             {
-                                                 dispatch_async(processingQueue, ^{
-                                                     dispatch_async(completionQueue, ^{
-                                                         failure(error);
-                                                     });
+                                                 dispatch_async(completionQueue, ^{
+                                                     success(nil);
                                                  });
                                              }
                                              
                                          });
-                                     });
+                                     }
+                                     
+                                 }
+                                 failure:^(NSError *error) {
+
+                                     if (processingQueue)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+                                             
+                                             // The auth session should be available in response data in case of unauthorized request.
+                                             NSDictionary *JSONResponse = nil;
+                                             if (error.userInfo[MXHTTPClientErrorResponseDataKey])
+                                             {
+                                                 JSONResponse = error.userInfo[MXHTTPClientErrorResponseDataKey];
+                                             }
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     
+                                                     if (JSONResponse)
+                                                     {
+                                                         if (success)
+                                                         {
+                                                             success([MXAuthenticationSession modelFromJSON:JSONResponse]);
+                                                         }
+                                                     }
+                                                     else if (failure)
+                                                     {
+                                                         failure(error);
+                                                     }
+                                                     
+                                                 });
+                                             }
+                                             
+                                         });
+                                     }
                                      
                                  }];
 }
@@ -3979,23 +4613,33 @@ MXAuthAction;
                           uploadProgress:nil
                                  success:^(NSDictionary *JSONResponse) {
                                      
-                                     if (success)
+                                     if (success && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 success();
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success();
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                      
                                  } failure:^(NSError *error) {
                                      
-                                     if (failure)
+                                     if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             dispatch_async(completionQueue, ^{
-                                                 failure(error);
-                                             });
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
                                          });
                                      }
                                      
