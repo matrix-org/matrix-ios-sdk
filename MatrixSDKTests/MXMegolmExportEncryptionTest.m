@@ -76,4 +76,25 @@
     }
 }
 
+- (void)testDecryptFailure
+{
+    NSError *error;
+    NSString *input, *decrypted;
+
+    input = @"-----";
+    decrypted = [MXMegolmExportEncryption decryptMegolmKeyFile:[input dataUsingEncoding:NSUTF8StringEncoding] withPassword:@"" error:&error];
+
+    XCTAssert(error);
+    XCTAssertEqual(error.code, MXMegolmExportErrorInvalidKeyFileHeaderNotFoundCode);
+    XCTAssertNil(decrypted);
+
+
+    input = @"-----BEGIN MEGOLM SESSION DATA-----\n-----";
+    decrypted = [MXMegolmExportEncryption decryptMegolmKeyFile:[input dataUsingEncoding:NSUTF8StringEncoding] withPassword:@"" error:&error];
+
+    XCTAssert(error);
+    XCTAssertEqual(error.code, MXMegolmExportErrorInvalidKeyFileTrailerNotFoundCode);
+    XCTAssertNil(decrypted);
+}
+
 @end

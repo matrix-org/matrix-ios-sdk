@@ -16,8 +16,37 @@
 
 #import <Foundation/Foundation.h>
 
+/**
+ The error domain for this class.
+ */
+FOUNDATION_EXPORT NSString *const MXMegolmExportEncryptionErrorDomain;
+
+/**
+ All associated error code.
+ */
+typedef enum : NSUInteger
+{
+    MXMegolmExportErrorInvalidKeyFileTooShortCode = 0,
+    MXMegolmExportErrorInvalidKeyFileUnsupportedVersionCode,
+    MXMegolmExportErrorInvalidKeyFileHeaderNotFoundCode,
+    MXMegolmExportErrorInvalidKeyFileTrailerNotFoundCode,
+    MXMegolmExportErrorInvalidKeyFileAuthenticationFailedCode,
+    MXMegolmExportErrorCannotInitialiseDecryptorCode,
+    MXMegolmExportErrorCannotDecryptCode,
+
+} MXMegolmExportErrorCode;
+
+
 @interface MXMegolmExportEncryption : NSObject
 
+/**
+ Decrypt a megolm key file.
+
+ @param data the key file data.
+ @param password the password.
+ @param error the output error.
+ @return the decrypted content.
+ */
 + (NSString*)decryptMegolmKeyFile:(NSData*)data withPassword:(NSString*)password error:(NSError**)error;
 
 @end

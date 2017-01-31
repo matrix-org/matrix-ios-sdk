@@ -21,7 +21,7 @@
 #import <CommonCrypto/CommonCryptor.h>
 #import <CommonCrypto/CommonKeyDerivation.h>
 
-NSString *const MXMegolmExportEncryptionDomain = @"org.matrix.sdk.megolm.export";
+NSString *const MXMegolmExportEncryptionErrorDomain = @"org.matrix.sdk.megolm.export";
 
 NSString *const MXMegolmExportEncryptionHeaderLine = @"-----BEGIN MEGOLM SESSION DATA-----";
 NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION DATA-----";
@@ -38,11 +38,11 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
 
     if (!*error)
     {
-        // check we have a version byte
+        // Check we have a version byte
         if (body.length < 1)
         {
-            *error = [NSError errorWithDomain:MXMegolmExportEncryptionDomain
-                                         code:0
+            *error = [NSError errorWithDomain:MXMegolmExportEncryptionErrorDomain
+                                         code:MXMegolmExportErrorInvalidKeyFileTooShortCode
                                      userInfo:@{
                                                 NSLocalizedDescriptionKey: @"Invalid file: too short",
                                                 }];
@@ -52,8 +52,8 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
         unsigned char version = bodyBytes[0];
         if (version != 1)
         {
-            *error = [NSError errorWithDomain:MXMegolmExportEncryptionDomain
-                                         code:0
+            *error = [NSError errorWithDomain:MXMegolmExportEncryptionErrorDomain
+                                         code:MXMegolmExportErrorInvalidKeyFileUnsupportedVersionCode
                                      userInfo:@{
                                                 NSLocalizedDescriptionKey: @"Unsupported version",
                                                 }];
@@ -63,8 +63,8 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
         NSInteger ciphertextLength = body.length-(1+16+16+4+32);
         if (ciphertextLength < 0)
         {
-            *error = [NSError errorWithDomain:MXMegolmExportEncryptionDomain
-                                         code:0
+            *error = [NSError errorWithDomain:MXMegolmExportEncryptionErrorDomain
+                                         code:MXMegolmExportErrorInvalidKeyFileTooShortCode
                                      userInfo:@{
                                                 NSLocalizedDescriptionKey: @"Invalid file: too short",
                                                 }];
@@ -88,8 +88,8 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
 
             if (![hash isEqualToData:hmac])
             {
-                *error = [NSError errorWithDomain:MXMegolmExportEncryptionDomain
-                                             code:0
+                *error = [NSError errorWithDomain:MXMegolmExportEncryptionErrorDomain
+                                             code:MXMegolmExportErrorInvalidKeyFileAuthenticationFailedCode
                                          userInfo:@{
                                                     NSLocalizedDescriptionKey: @"Authentication check failed: incorrect password?",
                                                     }];
@@ -105,8 +105,8 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
                                              NULL, 0, 0, kCCModeOptionCTR_BE, &cryptor);
             if (status != kCCSuccess)
             {
-                *error = [NSError errorWithDomain:MXMegolmExportEncryptionDomain
-                                             code:0
+                *error = [NSError errorWithDomain:MXMegolmExportEncryptionErrorDomain
+                                             code:MXMegolmExportErrorCannotInitialiseDecryptorCode
                                          userInfo:@{
                                                     NSLocalizedDescriptionKey: @"Cannot initialise decryptor",
                                                     }];
@@ -132,8 +132,8 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
             }
             else
             {
-                *error = [NSError errorWithDomain:MXMegolmExportEncryptionDomain
-                                             code:0
+                *error = [NSError errorWithDomain:MXMegolmExportEncryptionErrorDomain
+                                             code:MXMegolmExportErrorCannotDecryptCode
                                          userInfo:@{
                                                     NSLocalizedDescriptionKey: @"Cannot decrypt",
                                                     }];
@@ -149,14 +149,14 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
 #pragma mark - Private methods
 
 /**
- * Derive the AES and HMAC-SHA-256 keys for the file.
- *
- * @param salt for pbkdf.
- * @param iterations the number of pbkdf iterations.
- * @param password the password.
- * @param aesKey the aes key
- * @param hmacKey the hmac key
- * @return the derivation result. Should be kCCSuccess.
+ Derive the AES and HMAC-SHA-256 keys for the file.
+
+ @param salt for pbkdf.
+ @param iterations the number of pbkdf iterations.
+ @param password the password.
+ @param aesKey the aes key
+ @param hmacKey the hmac key
+ @return the derivation result. Should be kCCSuccess.
  */
 +(int)deriveKeys:(NSData*)salt iterations:(NSUInteger)iterations password:(NSString*)password aesKey:(NSData**)aesKey hmacKey:(NSData**)hmacKey
 {
@@ -194,14 +194,14 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
  */
 + (NSData *)unpackMegolmKeyFile:(NSData*)data error:(NSError *__autoreleasing *)error
 {
-    // parse the file as a great big String. This should be safe, because there
+    // Parse the file as a great big String. This should be safe, because there
     // should be no non-ASCII characters, and it means that we can do string
     // comparisons to find the header and footer, and feed it into window.atob.
     NSString *fileStr = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
 
     NSArray* lines = [fileStr componentsSeparatedByCharactersInSet: [NSCharacterSet newlineCharacterSet]];
 
-    // look for the start line
+    // Look for the start line
     NSUInteger lineStart = 0;
     for (lineStart = 0; lineStart < lines.count; lineStart++)
     {
@@ -215,15 +215,15 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
 
     if (lineStart == lines.count)
     {
-        *error = [NSError errorWithDomain:MXMegolmExportEncryptionDomain
-                                     code:0
+        *error = [NSError errorWithDomain:MXMegolmExportEncryptionErrorDomain
+                                     code:MXMegolmExportErrorInvalidKeyFileHeaderNotFoundCode
                                  userInfo:@{
                                             NSLocalizedDescriptionKey: @"Header line not found",
                                             }];
         return nil;
     }
 
-    // look for the start line
+    // Look for the end line
     NSUInteger lineEnd = 0;
     for (lineEnd = lineStart + 1; lineEnd < lines.count; lineEnd++)
     {
@@ -237,8 +237,8 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
 
     if (lineEnd == lines.count)
     {
-        *error = [NSError errorWithDomain:MXMegolmExportEncryptionDomain
-                                     code:0
+        *error = [NSError errorWithDomain:MXMegolmExportEncryptionErrorDomain
+                                     code:MXMegolmExportErrorInvalidKeyFileTrailerNotFoundCode
                                  userInfo:@{
                                             NSLocalizedDescriptionKey: @"Trailer line not found",
                                             }];
