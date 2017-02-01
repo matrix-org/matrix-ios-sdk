@@ -358,6 +358,11 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
     return inboundGroupSessions[senderKey][sessionId];
 }
 
+- (NSArray<MXOlmInboundGroupSession *> *)inboundGroupSessions
+{
+    return nil;
+}
+
 
 #pragma mark - Methods for unitary tests purpose
 - (void)removeInboundGroupSessionWithId:(NSString *)sessionId andSenderKey:(NSString *)senderKey

@@ -1590,6 +1590,29 @@
     }];
 }
 
+
+#pragma mark - import/export
+
+- (void)testExportRoomKeys
+{
+    [self doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        [bobSession.crypto exportRoomKeys:^(NSArray<NSDictionary *> *keys) {
+
+            XCTAssert(keys);
+            XCTAssertEqual(keys.count, 2, @"Bob has only one room with Alice. There are one inbound megolm session id from Alice and one from Bob himself");
+            XCTAssertEqualObjects(keys[0][@"room_id"], roomId);
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop

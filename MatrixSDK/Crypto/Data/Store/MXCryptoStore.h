@@ -183,6 +183,15 @@
  */
 - (MXOlmInboundGroupSession*)inboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey;
 
+/**
+ Retrieve all inbound group sessions.
+ 
+ @TODO: maybe too heavy.
+ 
+ @return the list of all inbound group sessions.
+ */
+- (NSArray<MXOlmInboundGroupSession*> *)inboundGroupSessions;
+
 
 #pragma mark - Methods for unitary tests purpose
 /**

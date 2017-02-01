@@ -172,6 +172,21 @@
  */
 + (void)deleteStoreWithCredentials:(MXCredentials*)credentials;
 
+
+#pragma mark - import/export
+
+/**
+ Get a list containing all of the room keys.
+
+ This should be encrypted before returning it to the user.
+
+ @param success A block object called when the operation succeeds with the list of session export objects.
+ @param failure A block object called when the operation fails.
+ */
+- (void)exportRoomKeys:(void (^)(NSArray<NSDictionary*> *keys))success
+               failure:(void (^)(NSError *error))failure;
+
+
 @end
 
 

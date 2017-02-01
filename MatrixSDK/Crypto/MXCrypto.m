@@ -587,6 +587,51 @@
 #endif
 }
 
+
+#pragma mark - import/export
+
+- (void)exportRoomKeys:(void (^)(NSArray<NSDictionary *> *))success failure:(void (^)(NSError *))failure
+{
+#ifdef MX_CRYPTO
+    dispatch_async(_decryptionQueue, ^{
+
+        NSMutableArray *keys = [NSMutableArray array];
+
+        for (MXOlmInboundGroupSession *session in [_store inboundGroupSessions])
+        {
+            NSError *error;
+            NSString *session_key = [session.session exportSessionAtMessageIndex:(NSUInteger*)session.session.firstKnownIndex error:&error];
+
+            if (!error)
+            {
+                NSDictionary *key = @{
+                                      @"sender_key": session.senderKey,
+                                      @"sender_claimed_keys": session.keysClaimed,
+                                      @"room_id": session.roomId,
+                                      @"session_id": session.session.sessionIdentifier,
+                                      @"session_key":session_key,
+                                      @"algorithm": kMXCryptoMegolmAlgorithm
+                                      };
+
+                [keys addObject:key];
+            }
+            else
+            {
+                NSLog(@"[MXCrypto] exportRoomKeys: ERROR: cannot export session with id %@", session.session.sessionIdentifier);
+            }
+        }
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+
+            success(keys);
+
+        });
+
+    });
+#endif
+}
+
+
 #pragma mark - Private API
 
 #ifdef MX_CRYPTO
