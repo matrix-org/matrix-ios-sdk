@@ -163,7 +163,30 @@
 
     [olmDevice addInboundGroupSession:sessionId sessionKey:sessionKey roomId:roomId senderKey:event.senderKey keysClaimed:event.keysClaimed];
 
-    NSString *k = [NSString stringWithFormat:@"%@|%@", event.senderKey, event.content[@"session_id"]];
+    [self retryDecryption:event.senderKey sessionId:event.content[@"session_id"]];
+}
+
+- (void)importRoomKey:(MXMegolmSessionData *)session
+{
+    [olmDevice importInboundGroupSession:session];
+
+    // Have another go at decrypting events sent with this session
+    [self retryDecryption:session.senderKey sessionId:session.sessionId];
+}
+
+
+#pragma mark - Private methods
+
+/**
+ Have another go at decrypting events after we receive a key.
+
+ @param senderKey the sender key.
+ @param sessionId the session id.
+ */
+- (void)retryDecryption:(NSString*)senderKey sessionId:(NSString*)sessionId
+{
+
+    NSString *k = [NSString stringWithFormat:@"%@|%@", senderKey, sessionId];
     NSDictionary *pending = pendingEvents[k];
     if (pending)
     {

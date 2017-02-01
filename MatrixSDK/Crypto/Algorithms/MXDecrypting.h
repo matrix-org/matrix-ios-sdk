@@ -19,7 +19,7 @@
 #import "MXEvent.h"
 #import "MXDecryptionResult.h"
 
-@class MXCrypto;
+@class MXCrypto, MXMegolmSessionData;
 
 
 @protocol MXDecrypting <NSObject>
@@ -51,5 +51,12 @@
  * @param event the key event.
  */
 - (void)onRoomKeyEvent:(MXEvent*)event;
+
+/**
+ Import a room key.
+
+ @param session the session data to import.
+ */
+- (void)importRoomKey:(MXMegolmSessionData*)session;
 
 @end

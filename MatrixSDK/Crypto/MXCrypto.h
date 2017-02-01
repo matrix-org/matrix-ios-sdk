@@ -186,6 +186,15 @@
 - (void)exportRoomKeys:(void (^)(NSArray<NSDictionary*> *keys))success
                failure:(void (^)(NSError *error))failure;
 
+/**
+ Import a list of room keys previously exported by exportRoomKeys.
+
+ @param success A block object called when the operation succeeds with the list of session export objects.
+ @param failure A block object called when the operation fails.
+ */
+- (void)importRoomKeys:(NSArray<NSDictionary*>*)keys
+               success:(void (^)())success
+               failure:(void (^)(NSError *error))failure;
 
 @end
 

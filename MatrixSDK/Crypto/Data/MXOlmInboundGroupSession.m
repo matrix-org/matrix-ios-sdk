@@ -65,10 +65,29 @@
     return sessionData;
 }
 
-
 - (MXMegolmSessionData *)exportSessionData
 {
     return [self exportSessionDataAtMessageIndex:_session.firstKnownIndex];
+}
+
+- (instancetype)initWithSessionData:(MXMegolmSessionData *)data
+{
+    self = [self init];
+    if (self)
+    {
+        NSError *error;
+        _session  = [[OLMInboundGroupSession alloc] initInboundGroupSessionWithImportedSession:data.sessionKey error:&error];
+        if (!_session)
+        {
+            NSLog(@"[MXOlmInboundGroupSession] initWithSessionData failed. Error: %@", error);
+            return nil;
+        }
+
+        _senderKey = data.senderKey;
+        _keysClaimed = data.senderClaimedKeys;
+        _roomId= data.roomId;
+    }
+    return self;
 }
 
 

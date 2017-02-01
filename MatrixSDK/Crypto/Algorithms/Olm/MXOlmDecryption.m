@@ -219,6 +219,11 @@
     // No impact for olm
 }
 
+- (void)importRoomKey:(MXMegolmSessionData *)session
+{
+    // No impact for olm
+}
+
 
 #pragma mark - Private methods
 /**

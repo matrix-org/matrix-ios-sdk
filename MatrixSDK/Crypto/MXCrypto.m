@@ -618,6 +618,36 @@
 #endif
 }
 
+- (void)importRoomKeys:(NSArray<NSDictionary *> *)keys success:(void (^)())success failure:(void (^)(NSError *))failure
+{
+#ifdef MX_CRYPTO
+    dispatch_async(_decryptionQueue, ^{
+
+        // Convert JSON to MXMegolmSessionData
+        NSArray<MXMegolmSessionData *> *sessions = [MXMegolmSessionData modelsFromJSON:keys];
+
+        for (MXMegolmSessionData *session in sessions)
+        {
+            if (!session.sessionId || !session.algorithm)
+            {
+                NSLog(@"MXCrypto] importRoomKeys: ignoring session entry with missing fields: %@", session);
+                continue;
+            }
+
+            // Import the session
+            id<MXDecrypting> alg = [self getRoomDecryptor:session.sessionId algorithm:session.algorithm];
+            [alg importRoomKey:session];
+        }
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+
+            success();
+
+        });
+    });
+#endif
+}
+
 
 #pragma mark - Private API
 

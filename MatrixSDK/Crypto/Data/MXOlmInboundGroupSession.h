@@ -79,6 +79,8 @@
  */
 - (MXMegolmSessionData *)exportSessionData;
 
+- (instancetype)initWithSessionData:(MXMegolmSessionData*)data;
+
 @end
 
 #endif // MX_CRYPTO
