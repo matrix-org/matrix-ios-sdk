@@ -462,7 +462,7 @@ typedef enum : NSUInteger
                           eventType:(MXEventTypeString)eventTypeString
                             content:(NSDictionary*)content
                             success:(void (^)(NSString *eventId))success
-                            failure:(void (^)(NSError *error))failure;
+                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Send a generic state event to a room.
@@ -480,7 +480,7 @@ typedef enum : NSUInteger
                                eventType:(MXEventTypeString)eventTypeString
                                  content:(NSDictionary*)content
                                  success:(void (^)(NSString *eventId))success
-                                 failure:(void (^)(NSError *error))failure;
+                                 failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Send a message to a room
@@ -498,7 +498,7 @@ typedef enum : NSUInteger
                               msgType:(MXMessageType)msgType
                               content:(NSDictionary*)content
                               success:(void (^)(NSString *eventId))success
-                              failure:(void (^)(NSError *error))failure;
+                              failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Send a text message to a room
@@ -514,7 +514,7 @@ typedef enum : NSUInteger
 - (MXHTTPOperation*)sendTextMessageToRoom:(NSString*)roomId
                                      text:(NSString*)text
                                   success:(void (^)(NSString *eventId))success
-                                  failure:(void (^)(NSError *error))failure;
+                                  failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 /**
@@ -530,7 +530,7 @@ typedef enum : NSUInteger
 - (MXHTTPOperation*)setRoomTopic:(NSString*)roomId
                            topic:(NSString*)topic
                          success:(void (^)())success
-                         failure:(void (^)(NSError *error))failure;
+                         failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Get the topic of a room.
@@ -543,7 +543,7 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)topicOfRoom:(NSString*)roomId
                         success:(void (^)(NSString *topic))success
-                        failure:(void (^)(NSError *error))failure;
+                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 /**
@@ -559,7 +559,7 @@ typedef enum : NSUInteger
 - (MXHTTPOperation*)setRoomAvatar:(NSString*)roomId
                            avatar:(NSString*)avatar
                           success:(void (^)())success
-                          failure:(void (^)(NSError *error))failure;
+                          failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Get the avatar of a room.
@@ -572,7 +572,7 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)avatarOfRoom:(NSString*)roomId
                          success:(void (^)(NSString *avatar))success
-                         failure:(void (^)(NSError *error))failure;
+                         failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Set the name of a room.
@@ -587,7 +587,7 @@ typedef enum : NSUInteger
 - (MXHTTPOperation*)setRoomName:(NSString*)roomId
                            name:(NSString*)name
                         success:(void (^)())success
-                        failure:(void (^)(NSError *error))failure;
+                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Get the name of a room.
@@ -600,7 +600,7 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)nameOfRoom:(NSString*)roomId
                        success:(void (^)(NSString *name))success
-                       failure:(void (^)(NSError *error))failure;
+                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Set the history visibility of a room.
@@ -615,7 +615,7 @@ typedef enum : NSUInteger
 - (MXHTTPOperation*)setRoomHistoryVisibility:(NSString*)roomId
                            historyVisibility:(MXRoomHistoryVisibility)historyVisibility
                                      success:(void (^)())success
-                                     failure:(void (^)(NSError *error))failure;
+                                     failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Get the history visibility of a room.
@@ -628,7 +628,7 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)historyVisibilityOfRoom:(NSString*)roomId
                                     success:(void (^)(MXRoomHistoryVisibility historyVisibility))success
-                                    failure:(void (^)(NSError *error))failure;
+                                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Set the join rule of a room.
@@ -643,7 +643,7 @@ typedef enum : NSUInteger
 - (MXHTTPOperation*)setRoomJoinRule:(NSString*)roomId
                            joinRule:(MXRoomJoinRule)joinRule
                             success:(void (^)())success
-                            failure:(void (^)(NSError *error))failure;
+                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Get the join rule of a room.
@@ -656,7 +656,7 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)joinRuleOfRoom:(NSString*)roomId
                            success:(void (^)(MXRoomJoinRule joinRule))success
-                           failure:(void (^)(NSError *error))failure;
+                           failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Set the guest access of a room.

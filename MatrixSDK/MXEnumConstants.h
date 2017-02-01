@@ -47,7 +47,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDirectoryVisibilityPublic;
  joined.
  The default homeserver value is shared.
  */
-typedef NSString* MXRoomHistoryVisibility;
+typedef NSString* MXRoomHistoryVisibility NS_REFINED_FOR_SWIFT;
 
 /**
  All events while this is the m.room.history_visibility value may be shared by any
@@ -81,7 +81,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomHistoryVisibilityJoined;
  Room join rule.
  The default homeserver value is invite.
  */
-typedef NSString* MXRoomJoinRule;
+typedef NSString* MXRoomJoinRule NS_REFINED_FOR_SWIFT;
 
 /**
  Anyone can join the room without any prior action.

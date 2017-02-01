@@ -58,7 +58,7 @@ typedef enum : NSUInteger
 
     // The event is a custom event. Refer to its `MXEventTypeString` version
     MXEventTypeCustom = 1000
-} MXEventType;
+} MXEventType NS_REFINED_FOR_SWIFT;
 
 /**
  Types of Matrix events - String version
@@ -97,7 +97,7 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallHangup;
 /**
  Types of room messages
  */
-typedef NSString* MXMessageType;
+typedef NSString* MXMessageType NS_REFINED_FOR_SWIFT;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeText;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeEmote;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeNotice;

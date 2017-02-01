@@ -43,7 +43,7 @@ import Foundation
      }
 
  */
-enum MXResponse<T> {
+public enum MXResponse<T> {
     case success(T)
     case failure(Error)
     
@@ -125,7 +125,7 @@ struct _MXUnknownError : Error {
 
 
 /// Represents a login flow
-enum MXLoginFlowType : String {
+public enum MXLoginFlowType : String {
     case password = "m.login.password"
     case recaptcha = "m.login.recaptcha"
     case OAuth2 = "m.login.oauth2"
@@ -136,7 +136,7 @@ enum MXLoginFlowType : String {
 }
 
 /// Represents account data type
-enum MXAccountDataType {
+public enum MXAccountDataType {
     case direct
     case pushRules
     case ignoredUserList
@@ -153,7 +153,7 @@ enum MXAccountDataType {
 }
 
 /// Represents a mode for forwarding push notifications.
-enum MXPusherKind {
+public enum MXPusherKind {
     case http, none, custom(String)
 
     var objectValue: NSObject {
@@ -173,7 +173,7 @@ enum MXPusherKind {
  have the highest priority.
  Some category may define implicit conditions.
  */
-enum MXPushRuleKind {
+public enum MXPushRuleKind {
     case override, content, room, sender, underride
 
     var objc: __MXPushRuleKind {
@@ -193,7 +193,7 @@ enum MXPushRuleKind {
  
  Push rules can be applied globally, or to a spefific device given a `profileTag`
  */
-enum MXPushRuleScope {
+public enum MXPushRuleScope {
     case global, device(profileTag: String)
 
     var identifier: String {
@@ -204,6 +204,159 @@ enum MXPushRuleScope {
     }
 }
 
+
+
+
+
+/**
+ Types of Matrix events
+ 
+ Matrix events types are exchanged as strings with the home server. The types
+ specified by the Matrix standard are listed here as NSUInteger enum in order
+ to ease the type handling.
+ 
+ Custom events types, out of the specification, may exist. In this case,
+ `MXEventTypeString` must be checked.
+ */
+public enum MXEventType {
+    case roomName
+    case roomTopic
+    case roomAvatar
+    case roomMember
+    case roomCreate
+    case roomJoinRules
+    case roomPowerLevels
+    case roomAliases
+    case roomCanonicalAlias
+    case roomEncrypted
+    case roomEncryption
+    case roomGuestAccess
+    case roomHistoryVisibility
+    case roomKey
+    case roomMessage
+    case roomMessageFeedback
+    case roomRedaction
+    case roomThirdPartyInvite
+    case roomTag
+    case presence
+    case typing
+    case newDevice
+    case callInvite
+    case callCandidates
+    case callAnswer
+    case callHangup
+    case receipt
+    
+    case custom(String)
+    
+    var identifier: String {
+        switch self {
+        case .roomName: return kMXEventTypeStringRoomName
+        case .roomTopic: return kMXEventTypeStringRoomTopic
+        case .roomAvatar: return kMXEventTypeStringRoomAvatar
+        case .roomMember: return kMXEventTypeStringRoomMember
+        case .roomCreate: return kMXEventTypeStringRoomCreate
+        case .roomJoinRules: return kMXEventTypeStringRoomJoinRules
+        case .roomPowerLevels: return kMXEventTypeStringRoomPowerLevels
+        case .roomAliases: return kMXEventTypeStringRoomAliases
+        case .roomCanonicalAlias: return kMXEventTypeStringRoomCanonicalAlias
+        case .roomEncrypted: return kMXEventTypeStringRoomEncrypted
+        case .roomEncryption: return kMXEventTypeStringRoomEncryption
+        case .roomGuestAccess: return kMXEventTypeStringRoomGuestAccess
+        case .roomHistoryVisibility: return kMXEventTypeStringRoomHistoryVisibility
+        case .roomKey: return kMXEventTypeStringRoomKey
+        case .roomMessage: return kMXEventTypeStringRoomMessage
+        case .roomMessageFeedback: return kMXEventTypeStringRoomMessageFeedback
+        case .roomRedaction: return kMXEventTypeStringRoomRedaction
+        case .roomThirdPartyInvite: return kMXEventTypeStringRoomThirdPartyInvite
+        case .roomTag: return kMXEventTypeStringRoomTag
+        case .presence: return kMXEventTypeStringPresence
+        case .newDevice: return kMXEventTypeStringNewDevice
+        case .callInvite: return kMXEventTypeStringCallInvite
+        case .callCandidates: return kMXEventTypeStringCallCandidates
+        case .callAnswer: return kMXEventTypeStringCallAnswer
+        case .callHangup: return kMXEventTypeStringCallHangup
+        case .receipt: return kMXEventTypeStringReceipt
+            
+        // Swift converts any constant with the suffix "Notification" as the type `Notification.Name`
+        // The original value can be reached using the `rawValue` property.
+        case .typing: return NSNotification.Name.mxEventTypeStringTyping.rawValue
+            
+        case .custom(let string): return string
+        }
+    }
+}
+
+/// Types of messages
+public enum MXMessageType {
+    case text, emote, notice, image, audio, video, location, file
+    
+    var identifier: String {
+        switch self {
+        case .text: return kMXMessageTypeText
+        case .emote: return kMXMessageTypeEmote
+        case .notice: return kMXMessageTypeNotice
+        case .image: return kMXMessageTypeImage
+        case .audio: return kMXMessageTypeAudio
+        case .video: return kMXMessageTypeVideo
+        case .location: return kMXMessageTypeLocation
+        case .file: return kMXMessageTypeFile
+        }
+    }
+}
+
+
+
+public enum MXRoomHistoryVisibility {
+    case worldReadable, shared, invited, joined
+    
+    var identifier: String {
+        switch self {
+        case .worldReadable: return kMXRoomHistoryVisibilityWorldReadable
+        case .shared: return kMXRoomHistoryVisibilityShared
+        case .invited: return kMXRoomHistoryVisibilityInvited
+        case .joined: return kMXRoomHistoryVisibilityJoined
+        }
+    }
+    
+    init?(identifier: String) {
+        let historyVisibilities: [MXRoomHistoryVisibility] = [.worldReadable, .shared, .invited, .joined]
+        guard let value = historyVisibilities.first(where: {$0.identifier == identifier}) else { return nil }
+        self = value
+    }
+}
+
+/**
+ Room join rule.
+ 
+ The default homeserver value is invite.
+ */
+public enum MXRoomJoinRule {
+    
+    /// Anyone can join the room without any prior action
+    case `public`
+    
+    /// A user who wishes to join the room must first receive an invite to the room from someone already inside of the room.
+    case invite
+    
+    /// Reserved keyword which is not implemented by homeservers.
+    case `private`, knock
+    
+    var identifier: String {
+        switch self {
+        case .public: return kMXRoomJoinRulePublic
+        case .invite: return kMXRoomJoinRuleInvite
+        case .private: return kMXRoomJoinRulePrivate
+        case .knock: return kMXRoomJoinRuleKnock
+        }
+    }
+    
+    init?(identifier: String) {
+        let joinRules: [MXRoomJoinRule] = [.public, .invite, .private, .knock]
+        guard let value = joinRules.first(where: { $0.identifier == identifier}) else { return nil }
+        self = value
+    }
+}
 
 
 /// Return a closure that accepts any object, converts it to a MXResponse value, and then executes the provded completion block
@@ -217,7 +370,7 @@ fileprivate func error<T>(_ completion: @escaping (MXResponse<T>) -> Void) -> (E
 }
 
 
-extension MXRestClient {
+public extension MXRestClient {
     
     
     // MARK: - Initialization
@@ -612,7 +765,280 @@ extension MXRestClient {
     }
     
     
+    
+    
+    
+    
+    
     // TODO: - Room operations
+    
+    /**
+     Send a generic non state event to a room.
+     
+     - parameters:
+        - roomId: the id of the room.
+        - eventType: the type of the event.
+        - content: the content that will be sent to the server as a JSON object.
+        - completion: A block object called when the operation completes.
+        - response: Provides the event id of the event generated on the home server on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     
+     */
+    @nonobjc @discardableResult func sendEvent(toRoom roomId: String, eventType: MXEventType, content: [String: Any], completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation? {
+        return __sendEvent(toRoom: roomId, eventType: eventType.identifier, content: content, success: success(completion), failure: error(completion))
+    }
+    /*
+     TODO: Consider refactoring.
+     
+     MXEventType could add associated values for different cases to
+     encapsulate the content in an expressive way. eg:
+     
+         .roomName("A New Room Name")
+         .roomMessage("a message", sender: "@bob:matrix.org")
+         .typing(true, sender: "@alice:matrix.org")
+         .custom(identifier: "custom.event.identifier", content: [String: Any])
+
+     Then we change the function to this:
+     
+         sendEvent(_ type: MXEventType, toRoomId roomId: String, completion: ...)
+     
+     So it can be called like this:
+     
+         mxRestClient.sendEvent(.roomMessage("a new message", sender: "@bob:matrix.org"), toRoomId: "123456ABCDEF") { response in
+            // Handle the response
+         }
+    */
+    
+    
+    /**
+     Send a generic state event to a room.
+     
+     - paramters:
+        - roomId: the id of the room.
+        - eventType: the type of the event. @see MXEventType.
+        - content: the content that will be sent to the server as a JSON object.
+        - completion: A block object called when the operation completes.
+        - response: Provides the event id of the event generated on the home server on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func sendStateEvent(toRoom roomId: String, eventType: MXEventType, content: [String: Any], completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation? {
+        return __sendStateEvent(toRoom: roomId, eventType: eventType.identifier, content: content, success: success(completion), failure: error(completion))
+    }
+    
+    /**
+     Send a message to a room
+     
+     - parameters:
+        - roomId: the id of the room.
+        - messageType: the type of the message.
+        - content: the message content that will be sent to the server as a JSON object.
+        - completion: A block object called when the operation completes. 
+        - response: Provides the event id of the event generated on the home server on success.
+     
+     -returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func sendMessage(toRoom roomId: String, messageType: MXMessageType, content: [String: Any], completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation? {
+        return __sendMessage(toRoom: roomId, msgType: messageType.identifier, content: content, success: success(completion), failure: error(completion))
+    }
+    
+    
+    /**
+     Send a text message to a room
+     
+     - parameters:
+        - roomId: the id of the room.
+        - text: the text to send.
+        - completion: A block object called when the operation completion. 
+        - response: Provides the event id of the event generated on the home server on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func sendTextMessage(toRoom roomId: String, text: String, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation? {
+        return __sendTextMessage(toRoom: roomId, text: text, success: success(completion), failure: error(completion))
+    }
+    
+    
+    
+    /**
+     Set the topic of a room.
+     
+     - parameters:
+        - roomId: the id of the room.
+        - topic: the topic to set.
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func setTopic(ofRoom roomId: String, topic: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __setRoomTopic(roomId, topic: topic, success: success(completion), failure: error(completion))
+    }
+    
+    /**
+     Get the topic of a room.
+     
+     - parameters:
+        - roomId: the id of the room.
+        - completion: A block object called when the operation completes.
+        - response: Provides the topic of the room on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func topic(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation? {
+        return __topic(ofRoom: roomId, success: success(completion), failure: error(completion))
+    }
+    
+    
+    
+    /**
+     Set the avatar of a room.
+     
+     - parameters:
+        - roomId: the id of the room.
+        - avatar: the avatar url to set.
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func setAvatar(ofRoom roomId: String, avatarUrl: URL, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __setRoomAvatar(roomId, avatar: avatarUrl.absoluteString, success: success(completion), failure: error(completion))
+    }
+    
+    /**
+     Get the avatar of a room.
+     
+     - parameters:
+        - roomId: the id of the room.
+        - completion: A block object called when the operation succeeds.
+        - response: Provides the room avatar url on success.
+     
+     - returns: a MXHTTPOperation instance.
+     */
+    @nonobjc @discardableResult func avatar(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<URL>) -> Void) -> MXHTTPOperation? {
+        return __avatar(ofRoom: roomId, success: { avatarUrlString in
+            
+            // The callback returns the URL as a string. We want to parse it into a URL.
+            if let avatarUrlString = avatarUrlString, let avatarUrl = URL(string: avatarUrlString) {
+                completion(.success(avatarUrl))
+            } else {
+                completion(.fromOptional(value: avatarUrlString))
+            }
+        }, failure: error(completion))
+    }
+    
+    
+    
+    
+    /**
+     Set the name of a room.
+     
+     - parameters:
+        - roomId: the id of the room.
+        - name: the name to set.
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func setName(ofRoom roomId: String, name: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __setRoomName(roomId, name: name, success: success(completion), failure: error(completion))
+    }
+    
+    /**
+     Get the name of a room.
+     
+     - parameters:
+        - roomId: the id of the room.
+        - completion: A block object called when the operation succeeds.
+        - response: Provides the room name on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func name(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation? {
+        return __name(ofRoom: roomId, success: success(completion), failure: error(completion))
+    }
+    
+    
+    
+    
+    /**
+     Set the history visibility of a room.
+     
+     - parameters:
+        - roomId: the id of the room
+        - historyVisibility: the visibily to set.
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func setHistoryVisibility(ofRoom roomId: String, historyVisibility: MXRoomHistoryVisibility, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __setRoomHistoryVisibility(roomId, historyVisibility: historyVisibility.identifier, success: success(completion), failure: error(completion))
+    }
+    
+    /**
+     Get the history visibility of a room.
+     
+     - parameters:
+        - roomId: the id of the room.
+        - completion: A block object called when the operation succeeds.
+        - response: Provides the room history visibility on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func historyVisibility(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<MXRoomHistoryVisibility>) -> Void) -> MXHTTPOperation? {
+        return __historyVisibility(ofRoom: roomId, success: { visibilityIdentifier in
+            if let visibilityIdentifier = visibilityIdentifier, let visibility = MXRoomHistoryVisibility(identifier: visibilityIdentifier) {
+                completion(.success(visibility))
+            } else {
+                completion(.fromOptional(value: visibilityIdentifier))
+            }
+        }, failure: error(completion))
+    }
+    
+    
+    
+    
+    
+    
+    
+    /**
+     Set the join rule of a room.
+     
+     - parameters:
+        - roomId: the id of the room.
+        - joinRule: the rule to set.
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func setJoinRule(ofRoom roomId: String, joinRule: MXRoomJoinRule, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __setRoomJoinRule(roomId, joinRule: joinRule.identifier, success: success(completion), failure: error(completion))
+    }
+    
+    /**
+     Get the join rule of a room.
+     
+     - parameters:
+        - roomId: the id of the room.
+        - completion: A block object called when the operation succeeds. 
+        - response: Provides the room join rule on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func joinRule(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<MXRoomJoinRule>) -> Void) -> MXHTTPOperation? {
+        return __joinRule(ofRoom: roomId, success: { joinRuleIdentifier in
+            if let joinRuleIdentifier = joinRuleIdentifier, let joinRule = MXRoomJoinRule(identifier: joinRuleIdentifier) {
+                completion(.success(joinRule))
+            } else {
+                completion(.fromOptional(value: joinRuleIdentifier))
+            }
+        }, failure: error(completion))
+    }
     
     
     
