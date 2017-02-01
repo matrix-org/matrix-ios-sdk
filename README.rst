@@ -181,12 +181,12 @@ We reuse the mxSession instance created before::
     MXRoom *room = [mxSession room:@"!room_id:matrix.org"];
     
     // Add a listener on events related to this room
-    [room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+    [room.liveTimeline listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
     
-        if (direction == MXEventDirectionForwards) {
+        if (direction == MXTimelineDirectionForwards) {
             // Live/New events come here
         }
-        else if (direction == MXEventDirectionBackwards) {
+        else if (direction == MXTimelineDirectionBackwards) {
             // Events that occured in the past will come here when requesting pagination.
             // roomState contains the state of the room just before this event occured.
         }
@@ -196,9 +196,9 @@ We reuse the mxSession instance created before::
 Let's load a bit of room history using paginateBackMessages::
 
     // Reset the pagination start point to now
-    [room resetBackState];
+    [room.liveTimeline resetPagination];
 
-    [room paginateBackMessages:10 complete:^{
+    [room.liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
         
         // At this point, the SDK has finished to enumerate the events to the attached listeners
         
@@ -212,7 +212,7 @@ Use case #4: Post a text message to a room
 This action does not require any business logic from MXSession: We can use
 MXRestClient directly::
 
-    [MXRestClient postTextMessage:@"the_room_id" text:@"Hello world!" success:^(NSString *event_id) {
+    [mxRestClient sendTextMessageToRoom:@"the_room_id" text:@"Hello world!" success:^(NSString *event_id) {
         
         // event_id is for reference
         // If you have registered events listener like in the previous use case, you will get
