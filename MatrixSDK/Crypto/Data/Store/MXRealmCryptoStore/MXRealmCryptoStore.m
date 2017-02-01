@@ -65,6 +65,7 @@ RLM_ARRAY_TYPE(MXRealmRoomAlgorithm)
 
 
 @interface MXRealmOlmSession : RLMObject
+@property NSString *sessionId;
 @property NSString *deviceKey;
 @property NSData *olmSessionData;
 @end
@@ -404,19 +405,35 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
 - (void)storeSession:(OLMSession*)session forDevice:(NSString*)deviceKey
 {
+    BOOL isNew = NO;
     NSDate *startDate = [NSDate date];
 
-    MXRealmOlmSession *realmOlmSession = [[MXRealmOlmSession alloc] initWithValue:@{
-                                                                                    @"deviceKey": deviceKey,
-                                                                                    @"olmSessionData": [NSKeyedArchiver archivedDataWithRootObject:session]
-                                                                                    }];
-
     RLMRealm *realm = self.realm;
-    [realm transactionWithBlock:^{
-        [realm addObject:realmOlmSession];
-    }];
 
-    NSLog(@"[MXRealmCryptoStore] storeSession in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    MXRealmOlmSession *realmOlmSession = [MXRealmOlmSession objectsInRealm:realm where:@"sessionId = %@ AND deviceKey = %@", session.sessionIdentifier, deviceKey].firstObject;
+    if (realmOlmSession)
+    {
+        // Update the existing one
+        [realm transactionWithBlock:^{
+            realmOlmSession.olmSessionData = [NSKeyedArchiver archivedDataWithRootObject:session];
+        }];
+    }
+    else
+    {
+        // Create it
+        isNew = YES;
+        realmOlmSession = [[MXRealmOlmSession alloc] initWithValue:@{
+                                                                     @"sessionId": session.sessionIdentifier,
+                                                                     @"deviceKey": deviceKey,
+                                                                     @"olmSessionData": [NSKeyedArchiver archivedDataWithRootObject:session]
+                                                                     }];
+
+        [realm transactionWithBlock:^{
+            [realm addObject:realmOlmSession];
+        }];
+    }
+
+    NSLog(@"[MXRealmCryptoStore] storeSession (%@) in %.0fms", (isNew?@"NEW":@"UPDATE"), [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (NSDictionary<NSString*, OLMSession*>*)sessionsWithDevice:(NSString*)deviceKey
@@ -439,20 +456,35 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
 - (void)storeInboundGroupSession:(MXOlmInboundGroupSession*)session
 {
+    BOOL isNew = NO;
     NSDate *startDate = [NSDate date];
 
-    MXRealmOlmInboundGroupSession *realmSession = [[MXRealmOlmInboundGroupSession alloc] initWithValue:@{
-                                                                                    @"sessionId": session.session.sessionIdentifier,
-                                                                                    @"senderKey": session.senderKey,
-                                                                                    @"olmInboundGroupSessionData": [NSKeyedArchiver archivedDataWithRootObject:session]
-                                                                                    }];
-
     RLMRealm *realm = self.realm;
-    [realm transactionWithBlock:^{
-        [realm addObject:realmSession];
-    }];
 
-    NSLog(@"[MXRealmCryptoStore] storeInboundGroupSession %@ in %.0fms", session.session.sessionIdentifier, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectsInRealm:realm where:@"sessionId = %@ AND senderKey = %@", session.session.sessionIdentifier, session.senderKey].firstObject;
+    if (realmSession)
+    {
+        // Update the existing one
+        [realm transactionWithBlock:^{
+            realmSession.olmInboundGroupSessionData = [NSKeyedArchiver archivedDataWithRootObject:session];
+        }];
+    }
+    else
+    {
+        // Create it
+        isNew = YES;
+        realmSession = [[MXRealmOlmInboundGroupSession alloc] initWithValue:@{
+                                                                              @"sessionId": session.session.sessionIdentifier,
+                                                                              @"senderKey": session.senderKey,
+                                                                              @"olmInboundGroupSessionData": [NSKeyedArchiver archivedDataWithRootObject:session]
+                                                                              }];
+
+        [realm transactionWithBlock:^{
+            [realm addObject:realmSession];
+        }];
+    }
+
+    NSLog(@"[MXRealmCryptoStore] storeInboundGroupSession (%@) %@ in %.0fms", (isNew?@"NEW":@"UPDATE"), session.session.sessionIdentifier, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (MXOlmInboundGroupSession*)inboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey
