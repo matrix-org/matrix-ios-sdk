@@ -29,6 +29,8 @@
 #import "MXFileCryptoStore.h"
 #import "MXRealmCryptoStore.h"
 
+#import "MXMegolmSessionData.h"
+
 /**
  The store to use for crypto.
  */
@@ -599,25 +601,10 @@
 
         for (MXOlmInboundGroupSession *session in [_store inboundGroupSessions])
         {
-            NSError *error;
-            NSString *session_key = [session.session exportSessionAtMessageIndex:(NSUInteger*)session.session.firstKnownIndex error:&error];
-
-            if (!error)
+            MXMegolmSessionData *sessionData = [session exportSessionData];
+            if (sessionData)
             {
-                NSDictionary *key = @{
-                                      @"sender_key": session.senderKey,
-                                      @"sender_claimed_keys": session.keysClaimed,
-                                      @"room_id": session.roomId,
-                                      @"session_id": session.session.sessionIdentifier,
-                                      @"session_key":session_key,
-                                      @"algorithm": kMXCryptoMegolmAlgorithm
-                                      };
-
-                [keys addObject:key];
-            }
-            else
-            {
-                NSLog(@"[MXCrypto] exportRoomKeys: ERROR: cannot export session with id %@", session.session.sessionIdentifier);
+                [keys addObject:sessionData.JSONDictionary];
             }
         }
 

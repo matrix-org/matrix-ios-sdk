@@ -18,6 +18,8 @@
 
 #ifdef MX_CRYPTO
 
+#import "MXCryptoConstants.h"
+
 @implementation MXOlmInboundGroupSession
 
 - (instancetype)initWithSessionKey:(NSString *)sessionKey
@@ -32,6 +34,41 @@
         }
     }
     return self;
+}
+
+
+#pragma mark - import/export
+- (MXMegolmSessionData *)exportSessionDataAtMessageIndex:(NSUInteger)messageIndex
+{
+    MXMegolmSessionData *sessionData;
+
+    NSError *error;
+    // TODO: Fix the API in OLMKit
+    NSString *sessionKey = [_session exportSessionAtMessageIndex:(NSUInteger*)messageIndex error:&error];
+
+    if (!error)
+    {
+        sessionData = [[MXMegolmSessionData alloc] init];
+
+        sessionData.senderKey = _senderKey;
+        sessionData.senderClaimedKeys = _keysClaimed;
+        sessionData.roomId = _roomId;
+        sessionData.sessionId = _session.sessionIdentifier;
+        sessionData.sessionKey = sessionKey;
+        sessionData.algorithm = kMXCryptoMegolmAlgorithm;
+    }
+    else
+    {
+        NSLog(@"[MXOlmInboundGroupSession] exportSessionData: Cannot export session with id %@-%@. Error: %@", _session.sessionIdentifier, _senderKey, error);
+    }
+
+    return sessionData;
+}
+
+
+- (MXMegolmSessionData *)exportSessionData
+{
+    return [self exportSessionDataAtMessageIndex:_session.firstKnownIndex];
 }
 
 

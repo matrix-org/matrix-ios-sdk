@@ -79,6 +79,8 @@
 		324BE45B1E3FA7A8008D99D4 /* MXMegolmExportEncryptionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 324BE45A1E3FA7A8008D99D4 /* MXMegolmExportEncryptionTest.m */; };
 		324BE4681E3FADB1008D99D4 /* MXMegolmExportEncryption.h in Headers */ = {isa = PBXBuildFile; fileRef = 324BE4661E3FADB1008D99D4 /* MXMegolmExportEncryption.h */; };
 		324BE4691E3FADB1008D99D4 /* MXMegolmExportEncryption.m in Sources */ = {isa = PBXBuildFile; fileRef = 324BE4671E3FADB1008D99D4 /* MXMegolmExportEncryption.m */; };
+		324BE46C1E422766008D99D4 /* MXMegolmSessionData.h in Headers */ = {isa = PBXBuildFile; fileRef = 324BE46A1E422766008D99D4 /* MXMegolmSessionData.h */; };
+		324BE46D1E422766008D99D4 /* MXMegolmSessionData.m in Sources */ = {isa = PBXBuildFile; fileRef = 324BE46B1E422766008D99D4 /* MXMegolmSessionData.m */; };
 		325653831A2E14ED00CC0423 /* MXStoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 325653821A2E14ED00CC0423 /* MXStoreTests.m */; };
 		3256E3811DCB91EB003C9718 /* MXCryptoConstants.h in Headers */ = {isa = PBXBuildFile; fileRef = 3256E37F1DCB91EB003C9718 /* MXCryptoConstants.h */; };
 		3256E3821DCB91EB003C9718 /* MXCryptoConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = 3256E3801DCB91EB003C9718 /* MXCryptoConstants.m */; };
@@ -308,6 +310,8 @@
 		324BE45A1E3FA7A8008D99D4 /* MXMegolmExportEncryptionTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXMegolmExportEncryptionTest.m; sourceTree = "<group>"; };
 		324BE4661E3FADB1008D99D4 /* MXMegolmExportEncryption.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXMegolmExportEncryption.h; sourceTree = "<group>"; };
 		324BE4671E3FADB1008D99D4 /* MXMegolmExportEncryption.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXMegolmExportEncryption.m; sourceTree = "<group>"; };
+		324BE46A1E422766008D99D4 /* MXMegolmSessionData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXMegolmSessionData.h; sourceTree = "<group>"; };
+		324BE46B1E422766008D99D4 /* MXMegolmSessionData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXMegolmSessionData.m; sourceTree = "<group>"; };
 		325653821A2E14ED00CC0423 /* MXStoreTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXStoreTests.m; sourceTree = "<group>"; };
 		3256E37F1DCB91EB003C9718 /* MXCryptoConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCryptoConstants.h; sourceTree = "<group>"; };
 		3256E3801DCB91EB003C9718 /* MXCryptoConstants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCryptoConstants.m; sourceTree = "<group>"; };
@@ -784,6 +788,8 @@
 				32A151511DAF8A7200400192 /* MXQueuedEncryption.m */,
 				32A151441DAF7C0C00400192 /* MXUsersDevicesMap.h */,
 				32A151451DAF7C0C00400192 /* MXUsersDevicesMap.m */,
+				324BE46A1E422766008D99D4 /* MXMegolmSessionData.h */,
+				324BE46B1E422766008D99D4 /* MXMegolmSessionData.m */,
 			);
 			path = Data;
 			sourceTree = "<group>";
@@ -994,6 +1000,7 @@
 				3291D4D41A68FFEB00C3BA41 /* MXFileRoomStore.h in Headers */,
 				320BBF431D6C81550079890E /* MXEventsEnumeratorOnArray.h in Headers */,
 				32C6F93319DD814400EA4E9C /* MatrixSDK.h in Headers */,
+				324BE46C1E422766008D99D4 /* MXMegolmSessionData.h in Headers */,
 				327187891DA7DCE50071C818 /* MXOlmEncryption.h in Headers */,
 				32A1514E1DAF897600400192 /* MXOlmSessionResult.h in Headers */,
 				320BBF3C1D6C7D9D0079890E /* MXEventsEnumerator.h in Headers */,
@@ -1323,6 +1330,7 @@
 				322A51C81D9BBD3C00C8536D /* MXOlmDevice.m in Sources */,
 				329FB17A1A0A74B100A5E88E /* MXTools.m in Sources */,
 				323B2AE01BCD4CB600B11F34 /* MXCoreDataAccount+CoreDataProperties.m in Sources */,
+				324BE46D1E422766008D99D4 /* MXMegolmSessionData.m in Sources */,
 				320DFDE519DD99B60068622A /* MXRestClient.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
