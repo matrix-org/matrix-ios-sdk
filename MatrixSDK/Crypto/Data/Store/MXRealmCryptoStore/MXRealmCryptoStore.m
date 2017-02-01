@@ -21,7 +21,7 @@
 #import <Realm/Realm.h>
 #import "MXSession.h"
 
-NSUInteger const kMXRealmCryptoStoreVersion = 1;
+NSUInteger const kMXRealmCryptoStoreVersion = 2;
 
 
 #pragma mark - Realm objects that encapsulate existing ones
@@ -532,14 +532,82 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     // Set the block which will be called automatically when opening a Realm with a
     // schema version lower than the one set above
     config.migrationBlock = ^(RLMMigration *migration, uint64_t oldSchemaVersion) {
-        
+
+        // Note: There is nothing to do most of the time
+        // Realm will automatically detect new properties and removed properties
+        // And will update the schema on disk automatically
+
         if (oldSchemaVersion < kMXRealmCryptoStoreVersion)
         {
             NSLog(@"[MXRealmCryptoStore] Required migration detected. oldSchemaVersion: %tu - current: %tu", oldSchemaVersion, kMXRealmCryptoStoreVersion);
 
-            // Note: There is nothing to do most of the time
-            // Realm will automatically detect new properties and removed properties
-            // And will update the schema on disk automatically
+            switch (oldSchemaVersion)
+            {
+                case 1:
+                {
+                    // There was a bug in schema version #1 where inbound group sessions
+                    // and olm sessions were duplicated:
+                    // https://github.com/matrix-org/matrix-ios-sdk/issues/227
+
+                    NSLog(@"[MXRealmCryptoStore] Migration from schema #1 -> #2");
+
+                    // We need to update the db because a sessionId property has been added MXRealmOlmSession
+                    // to ensure uniqueness
+                    NSLog(@"    Add sessionId field to all MXRealmOlmSession objects");
+                    [migration enumerateObjects:MXRealmOlmSession.className block:^(RLMObject *oldObject, RLMObject *newObject) {
+
+                        OLMSession *olmSession =  [NSKeyedUnarchiver unarchiveObjectWithData:oldObject[@"olmSessionData"]];
+
+                        newObject[@"sessionId"] = olmSession.sessionIdentifier;
+                    }];
+
+                    // We need to clean the db from duplicated MXRealmOlmSessions
+                    NSLog(@"    Make MXRealmOlmSession objects unique for the (sessionId, deviceKey) pair");
+                    __block NSUInteger deleteCount = 0;
+                    NSMutableArray<NSString*> *olmSessionUniquePairs = [NSMutableArray array];
+                    [migration enumerateObjects:MXRealmOlmSession.className block:^(RLMObject *oldObject, RLMObject *newObject) {
+
+                        NSString *olmSessionUniquePair = [NSString stringWithFormat:@"%@ - %@", newObject[@"sessionId"], newObject[@"deviceKey"]];
+
+                        if (NSNotFound == [olmSessionUniquePairs indexOfObject:olmSessionUniquePair])
+                        {
+                            [olmSessionUniquePairs addObject:olmSessionUniquePair];
+                        }
+                        else
+                        {
+                            NSLog(@"        - delete MXRealmOlmSession: %@", olmSessionUniquePair);
+                            [migration deleteObject:newObject];
+                            deleteCount++;
+                        }
+                    }];
+
+                    NSLog(@"    -> deleted %tu duplicated MXRealmOlmSession objects", deleteCount);
+
+                    // And from duplicated MXRealmOlmInboundGroupSessions
+                    NSLog(@"    Make MXRealmOlmInboundGroupSession objects unique for the (sessionId, senderKey) pair");
+                    deleteCount = 0;
+                    NSMutableArray<NSString*> *olmInboundGroupSessionUniquePairs = [NSMutableArray array];
+                    [migration enumerateObjects:MXRealmOlmInboundGroupSession.className block:^(RLMObject *oldObject, RLMObject *newObject) {
+
+                        NSString *olmInboundGroupSessionUniquePair = [NSString stringWithFormat:@"%@ - %@", newObject[@"sessionId"], newObject[@"senderKey"]];
+
+                        if (NSNotFound == [olmInboundGroupSessionUniquePairs indexOfObject:olmInboundGroupSessionUniquePair])
+                        {
+                            [olmInboundGroupSessionUniquePairs addObject:olmInboundGroupSessionUniquePair];
+                        }
+                        else
+                        {
+                            NSLog(@"        - delete MXRealmOlmInboundGroupSession: %@", olmInboundGroupSessionUniquePair);
+                            [migration deleteObject:newObject];
+                            deleteCount++;
+                        }
+                    }];
+
+                    NSLog(@"    -> deleted %tu duplicated MXRealmOlmInboundGroupSession objects", deleteCount);
+
+                    NSLog(@"[MXRealmCryptoStore] Migration from schema #1 -> #2 completed");
+                }
+            }
         }
     };
 
