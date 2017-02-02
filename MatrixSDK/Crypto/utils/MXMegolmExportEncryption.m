@@ -31,6 +31,8 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
 
 + (NSString *)decryptMegolmKeyFile:(NSData *)data withPassword:(NSString *)password error:(NSError *__autoreleasing *)error
 {
+    NSDate *startDate = [NSDate date];
+
     NSString *result;
 
     NSData *body = [MXMegolmExportEncryption unpackMegolmKeyFile:data error:error];
@@ -151,11 +153,15 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
         }
     }
 
+    NSLog(@"[MXMegolmExportEncryption] decryptMegolmKeyFile: decrypted %tu bytes in %.0fms", data.length, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+
     return result;
 }
 
 + (NSData *)encryptMegolmKeyFile:(NSString *)data withPassword:(NSString *)password kdfRounds:(NSUInteger)kdfRounds error:(NSError *__autoreleasing *)error
 {
+    NSDate *startDate = [NSDate date];
+
     if (!kdfRounds)
     {
         kdfRounds = 100000;
@@ -244,7 +250,11 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
 
             [result appendData:hmac];
 
-            return [MXMegolmExportEncryption packMegolmKeyFile:result];
+            NSData *keyFile = [MXMegolmExportEncryption packMegolmKeyFile:result];
+
+            NSLog(@"[MXMegolmExportEncryption] encryptMegolmKeyFile: encrypted %tu bytes in %.0fms", data.length, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+
+            return keyFile;
         }
         else
         {
