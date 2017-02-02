@@ -1043,7 +1043,7 @@
         }
     }
 
-    NSLog(@"[MXCrypto] ensureOlmSessionsForDevices (users count: %lu - devices: %tu)", devicesByUser.count, count);
+    NSLog(@"[MXCrypto] ensureOlmSessionsForDevices (users count: %tu - devices: %tu)", devicesByUser.count, count);
 
     if (devicesWithoutSession.count == 0)
     {
@@ -1066,12 +1066,12 @@
     //
     // That should eventually resolve itself, but it's poor form.
 
-    NSLog(@"[MXCrypto] ensureOlmSessionsForDevices: claimOneTimeKeysForUsersDevices (users count: %lu - devices: %tu)",
+    NSLog(@"[MXCrypto] ensureOlmSessionsForDevices: claimOneTimeKeysForUsersDevices (users count: %tu - devices: %tu)",
           usersDevicesToClaim.map.count, usersDevicesToClaim.count);
 
     return [_matrixRestClient claimOneTimeKeysForUsersDevices:usersDevicesToClaim success:^(MXKeysClaimResponse *keysClaimResponse) {
 
-        NSLog(@"[MXCrypto] keysClaimResponse.oneTimeKeys (users count: %lu - devices: %tu): %@",
+        NSLog(@"[MXCrypto] keysClaimResponse.oneTimeKeys (users count: %tu - devices: %tu): %@",
               keysClaimResponse.oneTimeKeys.map.count, keysClaimResponse.oneTimeKeys.count, keysClaimResponse.oneTimeKeys);
 
         for (NSString *userId in devicesByUser)
