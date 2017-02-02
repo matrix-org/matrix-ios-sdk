@@ -178,6 +178,16 @@ FOUNDATION_EXPORT uint64_t const kMXUndefinedTimestamp;
 FOUNDATION_EXPORT NSString *const kMXEventDidChangeSentStateNotification;
 
 /**
+ Posted when the MXEvent has updated its identifier.
+ This notification is triggered only for the temporary local events.
+ 
+ The `userInfo` dictionary contains the previous event identifier under the `kMXEventIdentifierKey` key.
+ 
+ The notification object is the MXEvent.
+ */
+FOUNDATION_EXPORT NSString *const kMXEventDidChangeIdentifierNotification;
+
+/**
  Posted when the MXEvent has been decrypted.
  
  The notification is sent for event that is received before the key to decrypt it.
@@ -185,6 +195,11 @@ FOUNDATION_EXPORT NSString *const kMXEventDidChangeSentStateNotification;
  The notification object is the MXEvent.
  */
 FOUNDATION_EXPORT NSString *const kMXEventDidDecryptNotification;
+
+/**
+ Notifications `userInfo` keys
+ */
+extern NSString *const kMXEventIdentifierKey;
 
 
 /**
