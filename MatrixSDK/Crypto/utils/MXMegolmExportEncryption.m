@@ -29,11 +29,11 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
 
 @implementation MXMegolmExportEncryption
 
-+ (NSString *)decryptMegolmKeyFile:(NSData *)data withPassword:(NSString *)password error:(NSError *__autoreleasing *)error
++ (NSData*)decryptMegolmKeyFile:(NSData*)data withPassword:(NSString*)password error:(NSError *__autoreleasing *)error
 {
     NSDate *startDate = [NSDate date];
 
-    NSString *result;
+    NSData *result;
 
     NSData *body = [MXMegolmExportEncryption unpackMegolmKeyFile:data error:error];
     uint8_t *bodyBytes = (uint8_t*)body.bytes;
@@ -130,7 +130,7 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
 
             if (status == kCCSuccess)
             {
-                result = [[NSString alloc] initWithData:buffer encoding:NSUTF8StringEncoding];
+                result = buffer;
             }
             else
             {
@@ -158,7 +158,7 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
     return result;
 }
 
-+ (NSData *)encryptMegolmKeyFile:(NSString *)data withPassword:(NSString *)password kdfRounds:(NSUInteger)kdfRounds error:(NSError *__autoreleasing *)error
++ (NSData*)encryptMegolmKeyFile:(NSData*)data withPassword:(NSString*)password kdfRounds:(NSUInteger)kdfRounds error:(NSError *__autoreleasing *)error
 {
     NSDate *startDate = [NSDate date];
 
@@ -212,12 +212,10 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
         size_t bufferLength = CCCryptorGetOutputLength(cryptor, data.length, false);
         NSMutableData *cipher = [NSMutableData dataWithLength:bufferLength];
 
-        NSData *dataData = [data dataUsingEncoding:NSUTF8StringEncoding];
-
         size_t outLength;
         status |= CCCryptorUpdate(cryptor,
-                                  dataData.bytes,
-                                  dataData.length,
+                                  data.bytes,
+                                  data.length,
                                   [cipher mutableBytes],
                                   [cipher length],
                                   &outLength);

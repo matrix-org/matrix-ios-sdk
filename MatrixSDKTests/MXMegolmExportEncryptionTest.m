@@ -67,19 +67,22 @@
         NSString *input = test[2];
 
         NSError *error;
-        NSString *decrypted = [MXMegolmExportEncryption decryptMegolmKeyFile:[input dataUsingEncoding:NSUTF8StringEncoding] withPassword:password error:&error];
+        NSData *decrypted = [MXMegolmExportEncryption decryptMegolmKeyFile:[input dataUsingEncoding:NSUTF8StringEncoding] withPassword:password error:&error];
 
         NSLog(@"testDecrypt test: %@", plain);
         XCTAssertNil(error);
         XCTAssert(decrypted);
-        XCTAssertEqualObjects(decrypted, plain);
+
+        NSString *decryptedString = [[NSString alloc] initWithData:decrypted encoding:NSUTF8StringEncoding];
+        XCTAssertEqualObjects(decryptedString, plain);
     }
 }
 
 - (void)testDecryptFailure
 {
     NSError *error;
-    NSString *input, *decrypted;
+    NSString *input;
+    NSData *decrypted;
 
     input = @"-----";
     error = nil;
@@ -115,11 +118,13 @@
     NSString *password = @"my super secret passphrase";
 
     NSError *error;
-    NSData *encrypted = [MXMegolmExportEncryption encryptMegolmKeyFile:input withPassword:password kdfRounds:1000 error:&error];
+    NSData *encrypted = [MXMegolmExportEncryption encryptMegolmKeyFile:[input dataUsingEncoding:NSUTF8StringEncoding] withPassword:password kdfRounds:1000 error:&error];
     XCTAssertNil(error);
     XCTAssert(encrypted);
 
-    NSString *plaintext = [MXMegolmExportEncryption decryptMegolmKeyFile:encrypted withPassword:password error:&error];
+    NSData *plainData = [MXMegolmExportEncryption decryptMegolmKeyFile:encrypted withPassword:password error:&error];
+    NSString *plaintext = [[NSString alloc] initWithData:plainData encoding:NSUTF8StringEncoding];
+
     XCTAssertNil(error);
     XCTAssert(plaintext);
     XCTAssertEqualObjects(plaintext, input);

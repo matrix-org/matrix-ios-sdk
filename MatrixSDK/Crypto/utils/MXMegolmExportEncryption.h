@@ -49,7 +49,7 @@ typedef enum : NSUInteger
  @param error the output error.
  @return the decrypted content.
  */
-+ (NSString*)decryptMegolmKeyFile:(NSData*)data withPassword:(NSString*)password error:(NSError**)error;
++ (NSData*)decryptMegolmKeyFile:(NSData*)data withPassword:(NSString*)password error:(NSError**)error;
 
 /**
  Encrypt a megolm key file.
@@ -61,6 +61,6 @@ typedef enum : NSUInteger
  @param error the output error.
  @return the encrypted output.
  */
-+ (NSData*)encryptMegolmKeyFile:(NSString*)data withPassword:(NSString*)password kdfRounds:(NSUInteger)kdfRounds error:(NSError**)error;
++ (NSData*)encryptMegolmKeyFile:(NSData*)data withPassword:(NSString*)password kdfRounds:(NSUInteger)kdfRounds error:(NSError**)error;
 
 @end

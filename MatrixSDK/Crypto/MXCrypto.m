@@ -657,8 +657,7 @@
             if (jsonData)
             {
                 // Encrypt them
-                NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-                keyFile = [MXMegolmExportEncryption encryptMegolmKeyFile:jsonString withPassword:password kdfRounds:0 error:&error];
+                keyFile = [MXMegolmExportEncryption encryptMegolmKeyFile:jsonData withPassword:password kdfRounds:0 error:&error];
             }
 
             NSLog(@"[MXCrypto] exportRoomKeysWithPassword: Exported and encrypted %tu keys in %.0fms", keys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
@@ -738,27 +737,23 @@
         NSError *error;
         NSDate *startDate = [NSDate date];
 
-        NSString *jsonString =[MXMegolmExportEncryption decryptMegolmKeyFile:keyFile withPassword:password error:&error];
-        if (jsonString)
+        NSData *jsonData = [MXMegolmExportEncryption decryptMegolmKeyFile:keyFile withPassword:password error:&error];
+        if(jsonData)
         {
-            NSData *jsonData = [jsonString dataUsingEncoding:NSUTF8StringEncoding];
-            if(jsonData)
+            NSArray *keys = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&error];
+            if (keys)
             {
-                NSArray *keys = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&error];
-                if (keys)
-                {
-                    [self importRoomKeys:keys success:^{
+                [self importRoomKeys:keys success:^{
 
-                        NSLog(@"[MXCrypto] importRoomKeys:withPassord: Imported %tu keys in %.0fms", keys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                    NSLog(@"[MXCrypto] importRoomKeys:withPassord: Imported %tu keys in %.0fms", keys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
-                        if (success)
-                        {
-                            success();
-                        }
+                    if (success)
+                    {
+                        success();
+                    }
 
-                    } failure:failure];
-                    return;
-                }
+                } failure:failure];
+                return;
             }
         }
 
