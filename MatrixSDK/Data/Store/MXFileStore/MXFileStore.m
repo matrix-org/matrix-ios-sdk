@@ -316,6 +316,12 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     {
         [roomsToCommitForDeletion addObject:roomId];
     }
+    
+    // Remove this room identifier from the other arrays.
+    [roomsToCommitForMessages removeObject:roomId];
+    [roomsToCommitForState removeObjectForKey:roomId];
+    [roomsToCommitForAccountData removeObjectForKey:roomId];
+    [roomsToCommitForReceipts removeObject:roomId];
 }
 
 - (void)deleteAllData
