@@ -109,12 +109,20 @@
     XCTAssert(error);
     XCTAssertEqual(error.code, MXMegolmExportErrorInvalidKeyFileTooShortCode);
     XCTAssertNil(decrypted);
+
+
+    input = @"-----BEGIN MEGOLM SESSION DATA-----\nAXNhbHRzYWx0c2FsdHNhbHSIiIiIiIiIiIiIiIiIiIiIAAAACmIRUW2OjZ3L2l6j9h0lHlV3M2dxcissyYBxjsfsAn\n-----END MEGOLM SESSION DATA-----\n";
+    error = nil;
+    decrypted = [MXMegolmExportEncryption decryptMegolmKeyFile:[input dataUsingEncoding:NSUTF8StringEncoding] withPassword:nil error:&error];
+
+    XCTAssert(error);
+    XCTAssertEqual(error.code, MXMegolmExportErrorInvalidKeyFileTooShortCode);
+    XCTAssertNil(decrypted);
 }
 
 - (void)testEncrypt
 {
     NSString *input = @"words words many words in plain text here"; //.repeat(100);
-
     NSString *password = @"my super secret passphrase";
 
     NSError *error;
@@ -128,6 +136,19 @@
     XCTAssertNil(error);
     XCTAssert(plaintext);
     XCTAssertEqualObjects(plaintext, input);
+}
+
+- (void)testEncryptFailure
+{
+    NSString *input = @"words words many words in plain text here"; //.repeat(100);
+    NSString *password = nil;
+
+    NSError *error;
+    NSData *encrypted = [MXMegolmExportEncryption encryptMegolmKeyFile:[input dataUsingEncoding:NSUTF8StringEncoding] withPassword:password kdfRounds:1000 error:&error];
+
+    XCTAssert(error);
+    XCTAssertEqual(error.code, MXMegolmExportErrorAuthenticationFailedCode);
+    XCTAssertNil(encrypted);
 }
 
 @end

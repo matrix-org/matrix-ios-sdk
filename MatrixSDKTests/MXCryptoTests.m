@@ -1786,7 +1786,7 @@
 
                 XCTAssert(error);
                 XCTAssertEqualObjects(error.domain, MXMegolmExportEncryptionErrorDomain);
-                XCTAssertEqual(error.code, MXMegolmExportErrorInvalidKeyFileAuthenticationFailedCode);
+                XCTAssertEqual(error.code, MXMegolmExportErrorAuthenticationFailedCode);
 
                 [expectation fulfill];
             }];

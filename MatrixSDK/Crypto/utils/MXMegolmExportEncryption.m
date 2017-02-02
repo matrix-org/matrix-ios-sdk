@@ -91,7 +91,7 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
             if (![hash isEqualToData:hmac])
             {
                 *error = [NSError errorWithDomain:MXMegolmExportEncryptionErrorDomain
-                                             code:MXMegolmExportErrorInvalidKeyFileAuthenticationFailedCode
+                                             code:MXMegolmExportErrorAuthenticationFailedCode
                                          userInfo:@{
                                                     NSLocalizedDescriptionKey: @"Authentication check failed: incorrect password?",
                                                     }];
@@ -161,6 +161,16 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
 + (NSData*)encryptMegolmKeyFile:(NSData*)data withPassword:(NSString*)password kdfRounds:(NSUInteger)kdfRounds error:(NSError *__autoreleasing *)error
 {
     NSDate *startDate = [NSDate date];
+
+    if (!password)
+    {
+        *error = [NSError errorWithDomain:MXMegolmExportEncryptionErrorDomain
+                                     code:MXMegolmExportErrorAuthenticationFailedCode
+                                 userInfo:@{
+                                            NSLocalizedDescriptionKey: @"Authentication check failed: password is mandatory",
+                                            }];
+        return nil;
+    }
 
     if (!kdfRounds)
     {

@@ -30,7 +30,7 @@ typedef enum : NSUInteger
     MXMegolmExportErrorInvalidKeyFileUnsupportedVersionCode,
     MXMegolmExportErrorInvalidKeyFileHeaderNotFoundCode,
     MXMegolmExportErrorInvalidKeyFileTrailerNotFoundCode,
-    MXMegolmExportErrorInvalidKeyFileAuthenticationFailedCode,
+    MXMegolmExportErrorAuthenticationFailedCode,
     MXMegolmExportErrorCannotInitialiseCryptorCode,
     MXMegolmExportErrorCannotDecryptCode,
     MXMegolmExportErrorCannotEncryptCode,
