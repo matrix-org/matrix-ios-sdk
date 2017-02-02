@@ -44,3 +44,6 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXMediaManager.h"
 
 #import "MXLRUCache.h"
+
+#import "MatrixSDK/MXCrypto.h"
+#import "MatrixSDK/MXMegolmExportEncryption.h"

@@ -288,6 +288,28 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
     return nil;
 }
 
++ (BOOL)isMegolmKeyFile:(NSURL *)fileURL
+{
+    BOOL isMegolmKeyFile = NO;
+
+    NSError *error;
+    NSFileHandle *fileHandle = [NSFileHandle fileHandleForReadingFromURL:fileURL error:&error];
+    if (fileHandle)
+    {
+        NSData *fileHeaderData = [fileHandle readDataOfLength:MXMegolmExportEncryptionHeaderLine.length];
+        NSString *fileHeader = [[NSString alloc] initWithData:fileHeaderData encoding:NSUTF8StringEncoding];
+
+        if ([fileHeader isEqualToString:MXMegolmExportEncryptionHeaderLine])
+        {
+            isMegolmKeyFile = YES;
+        }
+
+        [fileHandle closeFile];
+    }
+
+    return isMegolmKeyFile;
+}
+
 
 #pragma mark - Private methods
 

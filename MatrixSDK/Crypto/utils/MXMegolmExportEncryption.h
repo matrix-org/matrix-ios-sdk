@@ -63,4 +63,12 @@ typedef enum : NSUInteger
  */
 + (NSData*)encryptMegolmKeyFile:(NSData*)data withPassword:(NSString*)password kdfRounds:(NSUInteger)kdfRounds error:(NSError**)error;
 
+/**
+ Check that a file starts like a megolm key file.
+ 
+ @param fileURL the URL of the file to check.
+ @return YES if it lookslike a key file.
+ */
++ (BOOL)isMegolmKeyFile:(NSURL*)fileURL;
+
 @end
