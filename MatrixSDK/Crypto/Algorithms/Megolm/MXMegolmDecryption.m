@@ -185,7 +185,6 @@
  */
 - (void)retryDecryption:(NSString*)senderKey sessionId:(NSString*)sessionId
 {
-
     NSString *k = [NSString stringWithFormat:@"%@|%@", senderKey, sessionId];
     NSDictionary *pending = pendingEvents[k];
     if (pending)

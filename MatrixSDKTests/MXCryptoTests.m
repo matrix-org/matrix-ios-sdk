@@ -1613,6 +1613,83 @@
     }];
 }
 
+- (void)testImportRoomKeys
+{
+    [self doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        [bobSession.crypto exportRoomKeys:^(NSArray<NSDictionary *> *keys) {
+
+            // Clear bob crypto data
+            [bobSession enableCrypto:NO success:^{
+
+                XCTAssertFalse([bobSession.crypto.store.class hasDataForCredentials:bobSession.matrixRestClient.credentials], @"Bob's keys should have been deleted");
+
+                [bobSession enableCrypto:YES success:^{
+
+                    MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
+
+
+                    NSMutableArray *encryptedEvents = [NSMutableArray array];
+
+                    [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                        [encryptedEvents addObject:event];
+                    }];
+
+
+                    [roomFromBobPOV.liveTimeline resetPagination];
+                    [roomFromBobPOV.liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+
+                        XCTAssertEqual(encryptedEvents.count, 5, @"There are 5 encrypted messages in the room. They cannot be decrypted at this step in the test");
+
+
+                        // All these events must be decrypted once we import the keys
+                        __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXEventDidDecryptNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                            [encryptedEvents removeObject:note.object];
+                        }];
+
+                        // Import the exported keys
+                        [bobSession.crypto importRoomKeys:keys success:^{
+
+                            [[NSNotificationCenter defaultCenter] removeObserver:observer];
+
+                            XCTAssertEqual(encryptedEvents.count, 0, @"All events should have been decrypted after the keys import");
+
+                            [expectation fulfill];
+
+                        } failure:^(NSError *error) {
+
+                            [[NSNotificationCenter defaultCenter] removeObserver:observer];
+
+                            XCTFail(@"The operation should not fail - NSError: %@", error);
+                            [expectation fulfill];
+                        }];
+
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The operation should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The operation should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The operation should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop

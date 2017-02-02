@@ -20,8 +20,18 @@
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    NSAssert(NO, @"%@ must implement modelFromJSON", self);
-    return nil;
+    MXMegolmSessionData *sessionData = [[MXMegolmSessionData alloc] init];
+    if (sessionData)
+    {
+        MXJSONModelSetString(sessionData.senderKey, JSONDictionary[@"sender_key"]);
+        MXJSONModelSetDictionary(sessionData.senderClaimedKeys, JSONDictionary[@"sender_claimed_keys"]);
+        MXJSONModelSetString(sessionData.roomId, JSONDictionary[@"room_id"]);
+        MXJSONModelSetString(sessionData.sessionId, JSONDictionary[@"session_id"]);
+        MXJSONModelSetString(sessionData.sessionKey, JSONDictionary[@"session_key"]);
+        MXJSONModelSetString(sessionData.algorithm, JSONDictionary[@"algorithm"]);
+    }
+
+    return sessionData;
 }
 
 - (NSDictionary *)JSONDictionary

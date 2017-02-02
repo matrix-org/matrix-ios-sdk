@@ -678,14 +678,14 @@
 
         for (MXMegolmSessionData *session in sessions)
         {
-            if (!session.sessionId || !session.algorithm)
+            if (!session.roomId || !session.algorithm)
             {
                 NSLog(@"MXCrypto] importRoomKeys: ignoring session entry with missing fields: %@", session);
                 continue;
             }
 
             // Import the session
-            id<MXDecrypting> alg = [self getRoomDecryptor:session.sessionId algorithm:session.algorithm];
+            id<MXDecrypting> alg = [self getRoomDecryptor:session.roomId algorithm:session.algorithm];
             [alg importRoomKey:session];
         }
 
