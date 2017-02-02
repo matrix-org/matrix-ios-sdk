@@ -187,12 +187,35 @@
                failure:(void (^)(NSError *error))failure;
 
 /**
+ Get all room keys under an encrypted form.
+ 
+ @password the passphrase used to encrypt keys.
+ @param success A block object called when the operation succeeds with the encrypted key file data.
+ @param failure A block object called when the operation fails.
+ */
+- (void)exportRoomKeysWithPassword:(NSString*)password
+                           success:(void (^)(NSData *keyFile))success
+                           failure:(void (^)(NSError *error))failure;
+
+/**
  Import a list of room keys previously exported by exportRoomKeys.
 
- @param success A block object called when the operation succeeds with the list of session export objects.
+ @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
 - (void)importRoomKeys:(NSArray<NSDictionary*>*)keys
+               success:(void (^)())success
+               failure:(void (^)(NSError *error))failure;
+
+/**
+ Import an encrypted room keys file.
+
+ @param keyFile the encrypted keys file data.
+ @password the passphrase used to decrypts keys.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)importRoomKeys:(NSData *)keyFile withPassword:(NSString*)password
                success:(void (^)())success
                failure:(void (^)(NSError *error))failure;
 

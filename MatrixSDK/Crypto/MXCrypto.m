@@ -30,6 +30,7 @@
 #import "MXRealmCryptoStore.h"
 
 #import "MXMegolmSessionData.h"
+#import "MXMegolmExportEncryption.h"
 
 /**
  The store to use for crypto.
@@ -618,6 +619,55 @@
 #endif
 }
 
+- (void)exportRoomKeysWithPassword:(NSString *)password success:(void (^)(NSData *))success failure:(void (^)(NSError *))failure
+{
+#ifdef MX_CRYPTO
+
+        dispatch_async(_decryptionQueue, ^{
+
+            NSData *keyFile;
+            NSError *error;
+
+            // Export the keys
+            NSMutableArray *keys = [NSMutableArray array];
+            for (MXOlmInboundGroupSession *session in [_store inboundGroupSessions])
+            {
+                MXMegolmSessionData *sessionData = [session exportSessionData];
+                if (sessionData)
+                {
+                    [keys addObject:sessionData.JSONDictionary];
+                }
+            }
+
+            // Convert them to JSON
+            NSData *jsonData = [NSJSONSerialization dataWithJSONObject:keys
+                                                               options:NSJSONWritingPrettyPrinted
+                                                                 error:&error];
+            if (jsonData)
+            {
+                // Encrypt them
+                NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+                keyFile = [MXMegolmExportEncryption encryptMegolmKeyFile:jsonString withPassword:password kdfRounds:0 error:&error];
+            }
+
+            dispatch_async(dispatch_get_main_queue(), ^{
+
+                if (keyFile)
+                {
+                    success(keyFile);
+                }
+                else
+                {
+                    NSLog(@"[MXCrypto] exportRoomKeysWithPassword: Error: %@", error);
+                    failure(error);
+                }
+
+            });
+
+        });
+#endif
+}
+
 - (void)importRoomKeys:(NSArray<NSDictionary *> *)keys success:(void (^)())success failure:(void (^)(NSError *))failure
 {
 #ifdef MX_CRYPTO
@@ -648,6 +698,38 @@
 #endif
 }
 
+- (void)importRoomKeys:(NSData *)keyFile withPassword:(NSString *)password success:(void (^)())success failure:(void (^)(NSError *))failure
+{
+#ifdef MX_CRYPTO
+    dispatch_async(_decryptionQueue, ^{
+
+        NSError *error;
+
+        NSString *jsonString =[MXMegolmExportEncryption decryptMegolmKeyFile:keyFile withPassword:password error:&error];
+        if (jsonString)
+        {
+            NSData *jsonData = [jsonString dataUsingEncoding:NSUTF8StringEncoding];
+            if(jsonData)
+            {
+                NSArray *keys = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&error];
+                if (keys)
+                {
+                    [self importRoomKeys:keys success:success failure:failure];
+                    return;
+                }
+            }
+        }
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+
+            NSLog(@"[MXCrypto] importRoomKeys:withPassord: Error: %@", error);
+            failure(error);
+
+        });
+
+    });
+#endif
+}
 
 #pragma mark - Private API
 
