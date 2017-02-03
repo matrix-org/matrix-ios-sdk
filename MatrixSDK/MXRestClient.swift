@@ -319,7 +319,7 @@ public enum MXRoomHistoryVisibility {
         }
     }
     
-    init?(identifier: String) {
+    init?(identifier: String?) {
         let historyVisibilities: [MXRoomHistoryVisibility] = [.worldReadable, .shared, .invited, .joined]
         guard let value = historyVisibilities.first(where: {$0.identifier == identifier}) else { return nil }
         self = value
@@ -351,7 +351,7 @@ public enum MXRoomJoinRule {
         }
     }
     
-    init?(identifier: String) {
+    init?(identifier: String?) {
         let joinRules: [MXRoomJoinRule] = [.public, .invite, .private, .knock]
         guard let value = joinRules.first(where: { $0.identifier == identifier}) else { return nil }
         self = value
@@ -359,9 +359,143 @@ public enum MXRoomJoinRule {
 }
 
 
-/// Return a closure that accepts any object, converts it to a MXResponse value, and then executes the provded completion block
-fileprivate func success<T>(_ completion: @escaping (MXResponse<T>) -> Void) -> (Any?) -> Void {
-    return { completion(.fromOptional(value: $0)) }
+/// Room guest access. The default homeserver value is forbidden.
+public enum MXRoomGuestAccess {
+    
+    /// Guests can join the room
+    case canJoin
+    
+    /// Guest access is forbidden
+    case forbidden
+    
+    /// String identifier
+    var identifier: String {
+        switch self {
+        case .canJoin: return kMXRoomGuestAccessCanJoin
+        case .forbidden: return kMXRoomGuestAccessForbidden
+        }
+    }
+    
+    init?(identifier: String?) {
+        let accessRules: [MXRoomGuestAccess] = [.canJoin, .forbidden]
+        guard let value = accessRules.first(where: { $0.identifier == identifier}) else { return nil }
+        self = value
+    }
+}
+
+
+
+/**
+ Room visibility in the current homeserver directory.
+ The default homeserver value is private.
+ */
+public enum MXRoomDirectoryVisibility {
+    
+    /// The room is not listed in the homeserver directory
+    case `private`
+    
+    /// The room is listed in the homeserver directory
+    case `public`
+    
+    var identifier: String {
+        switch self {
+        case .private: return kMXRoomDirectoryVisibilityPrivate
+        case .public: return kMXRoomDirectoryVisibilityPublic
+        }
+    }
+    
+    init?(identifier: String?) {
+        let visibility: [MXRoomDirectoryVisibility] = [.public, .private]
+        guard let value = visibility.first(where: { $0.identifier == identifier}) else { return nil }
+        self = value
+    }
+}
+
+
+
+
+
+/// Method of inviting a user to a room
+public enum MXRoomInvitee {
+    
+    /// Invite a user by username
+    case userId(String)
+    
+    /// Invite a user by email
+    case email(String)
+    
+    /// Invite a user using a third-party mechanism.
+    /// `method` is the method to use, eg. "email".
+    /// `address` is the address of the user.
+    case thirdPartyId(medium: String, address: String)
+}
+
+
+
+
+/// Room presets.
+/// Define a set of state events applied during a new room creation.
+public enum MXRoomPreset {
+    
+    /// join_rules is set to invite. history_visibility is set to shared.
+    case privateChat
+    
+    /// join_rules is set to invite. history_visibility is set to shared. All invitees are given the same power level as the room creator.
+    case trustedPrivateChat
+    
+    /// join_rules is set to public. history_visibility is set to shared.
+    case publicChat
+    
+    
+    var identifier: String {
+        switch self {
+        case .privateChat: return kMXRoomPresetPrivateChat
+        case .trustedPrivateChat: return kMXRoomPresetTrustedPrivateChat
+        case .publicChat: return kMXRoomPresetPublicChat
+        }
+    }
+}
+
+
+
+
+
+
+/**
+ Return a closure that accepts any object, converts it to a MXResponse value, and then 
+ executes the provided completion block
+ 
+ The `transform` parameter is helpful in cases where `T` and `U` are different types, 
+ for instance when `U` is an enum, and `T` is it's identifier as a String.
+ 
+ - parameters:
+    - transform: A block that takes the output from the API and transforms it to the expected
+        type. The default block returns the input as-is.
+    - input: The value taken directly from the API call.
+    - completion: A block that gets called with the manufactured `MXResponse` variable.
+    - response: The API response wrapped in a `MXResponse` enum.
+ 
+ - returns: a block that accepts an optional value from the API, wraps it in an `MXResponse`, and then passes it to `completion`
+
+ 
+ ## Usage Example:
+ 
+ ```
+ func guestAccess(forRoom roomId: String, completion: @escaping (_ response: MXResponse<MXRoomGuestAccess>) -> Void) -> MXHTTPOperation? {
+    return __guestAccess(ofRoom: roomId, success: success(transform: MXRoomGuestAccess.init, completion), failure: error(completion))
+ }
+ ```
+ 
+ 1. The `success:` block of the `__guestAccess` function passes in a `String?` type from the API.
+ 2. That value gets fed into the `transform:` block – in this case, an initializer for `MXRoomGuestAccess`.
+ 3. The `MXRoomGuestAccess` value returned from the  `transform:` block is wrapped in a `MXResponse` enum.
+ 4. The newly created `MXResponse` is passed to the completion block.
+ 
+ */
+
+fileprivate func success<T, U>(transform: @escaping (_ input: T) -> Any? = { return $0 },
+                         _ completion: @escaping (_ response: MXResponse<U>) -> Void) -> (T) -> Void {
+    return { completion(.fromOptional(value: transform($0))) }
 }
 
 /// Return a closure that accepts any error, converts it to a MXResponse value, and then executes the provded completion block
@@ -770,7 +904,7 @@ public extension MXRestClient {
     
     
     
-    // TODO: - Room operations
+    // MARK: - Room operations
     
     /**
      Send a generic non state event to a room.
@@ -788,27 +922,6 @@ public extension MXRestClient {
     @nonobjc @discardableResult func sendEvent(toRoom roomId: String, eventType: MXEventType, content: [String: Any], completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation? {
         return __sendEvent(toRoom: roomId, eventType: eventType.identifier, content: content, success: success(completion), failure: error(completion))
     }
-    /*
-     TODO: Consider refactoring.
-     
-     MXEventType could add associated values for different cases to
-     encapsulate the content in an expressive way. eg:
-     
-         .roomName("A New Room Name")
-         .roomMessage("a message", sender: "@bob:matrix.org")
-         .typing(true, sender: "@alice:matrix.org")
-         .custom(identifier: "custom.event.identifier", content: [String: Any])
-
-     Then we change the function to this:
-     
-         sendEvent(_ type: MXEventType, toRoomId roomId: String, completion: ...)
-     
-     So it can be called like this:
-     
-         mxRestClient.sendEvent(.roomMessage("a new message", sender: "@bob:matrix.org"), toRoomId: "123456ABCDEF") { response in
-            // Handle the response
-         }
-    */
     
     
     /**
@@ -850,7 +963,7 @@ public extension MXRestClient {
      - parameters:
         - roomId: the id of the room.
         - text: the text to send.
-        - completion: A block object called when the operation completion. 
+        - completion: A block object called when the operation completes.
         - response: Provides the event id of the event generated on the home server on success.
      
      - returns: a `MXHTTPOperation` instance.
@@ -912,21 +1025,13 @@ public extension MXRestClient {
      
      - parameters:
         - roomId: the id of the room.
-        - completion: A block object called when the operation succeeds.
+        - completion: A block object called when the operation completes.
         - response: Provides the room avatar url on success.
      
      - returns: a MXHTTPOperation instance.
      */
     @nonobjc @discardableResult func avatar(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<URL>) -> Void) -> MXHTTPOperation? {
-        return __avatar(ofRoom: roomId, success: { avatarUrlString in
-            
-            // The callback returns the URL as a string. We want to parse it into a URL.
-            if let avatarUrlString = avatarUrlString, let avatarUrl = URL(string: avatarUrlString) {
-                completion(.success(avatarUrl))
-            } else {
-                completion(.fromOptional(value: avatarUrlString))
-            }
-        }, failure: error(completion))
+        return __avatar(ofRoom: roomId, success: success(transform: {return URL(string: $0 ?? "")}, completion), failure: error(completion))
     }
     
     
@@ -952,7 +1057,7 @@ public extension MXRestClient {
      
      - parameters:
         - roomId: the id of the room.
-        - completion: A block object called when the operation succeeds.
+        - completion: A block object called when the operation completes.
         - response: Provides the room name on success.
      
      - returns: a `MXHTTPOperation` instance.
@@ -984,19 +1089,13 @@ public extension MXRestClient {
      
      - parameters:
         - roomId: the id of the room.
-        - completion: A block object called when the operation succeeds.
+        - completion: A block object called when the operation completes.
         - response: Provides the room history visibility on success.
      
      - returns: a `MXHTTPOperation` instance.
      */
     @nonobjc @discardableResult func historyVisibility(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<MXRoomHistoryVisibility>) -> Void) -> MXHTTPOperation? {
-        return __historyVisibility(ofRoom: roomId, success: { visibilityIdentifier in
-            if let visibilityIdentifier = visibilityIdentifier, let visibility = MXRoomHistoryVisibility(identifier: visibilityIdentifier) {
-                completion(.success(visibility))
-            } else {
-                completion(.fromOptional(value: visibilityIdentifier))
-            }
-        }, failure: error(completion))
+        return __historyVisibility(ofRoom: roomId, success: success(transform: MXRoomHistoryVisibility.init, completion), failure: error(completion))
     }
     
     
@@ -1025,22 +1124,494 @@ public extension MXRestClient {
      
      - parameters:
         - roomId: the id of the room.
-        - completion: A block object called when the operation succeeds. 
+        - completion: A block object called when the operation completes.
         - response: Provides the room join rule on success.
      
      - returns: a `MXHTTPOperation` instance.
      */
     @nonobjc @discardableResult func joinRule(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<MXRoomJoinRule>) -> Void) -> MXHTTPOperation? {
-        return __joinRule(ofRoom: roomId, success: { joinRuleIdentifier in
-            if let joinRuleIdentifier = joinRuleIdentifier, let joinRule = MXRoomJoinRule(identifier: joinRuleIdentifier) {
-                completion(.success(joinRule))
-            } else {
-                completion(.fromOptional(value: joinRuleIdentifier))
-            }
-        }, failure: error(completion))
+        return __joinRule(ofRoom: roomId, success: success(transform: MXRoomJoinRule.init, completion), failure: error(completion))
     }
     
     
+    
+    
+    /**
+     Set the guest access of a room.
+     
+     - parameters:
+        - roomId: the id of the room.
+        - guestAccess: the guest access to set.
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func setGuestAccess(forRoom roomId: String, guestAccess: MXRoomGuestAccess, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __setRoomGuestAccess(roomId, guestAccess: guestAccess.identifier, success: success(completion), failure: error(completion))
+    }
+    
+    /**
+     Get the guest access of a room.
+     
+     - parameters:
+        - roomId the id of the room.
+        - completion: A block object called when the operation completes.
+        - response: Provides the room guest access on success.
+     
+     - return: a MXHTTPOperation instance.
+     */
+    @nonobjc @discardableResult func guestAccess(forRoom roomId: String, completion: @escaping (_ response: MXResponse<MXRoomGuestAccess>) -> Void) -> MXHTTPOperation? {
+        return __guestAccess(ofRoom: roomId, success: success(transform: MXRoomGuestAccess.init, completion), failure: error(completion))
+    }
+    
+    
+    
+    
+    
+    
+    /**
+     Set the directory visibility of a room on the current homeserver.
+     
+     - parameters:
+        - roomId: the id of the room.
+        - directoryVisibility: the directory visibility to set.
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a MXHTTPOperation instance.
+     */
+    @nonobjc @discardableResult func setDirectoryVisibility(ofRoom roomId: String, directoryVisibility: MXRoomDirectoryVisibility, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __setRoomDirectoryVisibility(roomId, directoryVisibility: directoryVisibility.identifier, success: success(completion), failure: error(completion))
+    }
+    
+    /**
+     Get the visibility of a room in the current HS's room directory.
+     
+     - parameters:
+        - roomId: the id of the room.
+        - completion: A block object called when the operation completes.
+        - response: Provides the room directory visibility on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func directoryVisibility(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<MXRoomDirectoryVisibility>) -> Void) -> MXHTTPOperation? {
+        return __directoryVisibility(ofRoom: roomId, success: success(transform: MXRoomDirectoryVisibility.init, completion), failure: error(completion))
+    }
+    
+    
+    
+    
+    
+    /**
+     Create a new mapping from room alias to room ID.
+     
+     - parameters:
+        - roomId: the id of the room.
+        - roomAlias: the alias to add.
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func addAlias(forRoom roomId: String, alias: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __addRoomAlias(roomId, alias: alias, success: success(completion), failure: error(completion))
+    }
+    
+    /**
+     Remove a mapping of room alias to room ID.
+     
+     - parameters:
+        - roomAlias: the alias to remove.
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func removeRoomAlias(_ roomAlias: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __removeRoomAlias(roomAlias, success: success(completion), failure: error(completion))
+    }
+    
+    
+    
+    
+    /**
+     Set the canonical alias of the room.
+     
+     - parameters:
+        - roomId: the id of the room.
+        - canonicalAlias: the canonical alias to set.
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func setCanonicalAlias(forRoom roomId: String, canonicalAlias: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __setRoomCanonicalAlias(roomId, canonicalAlias: canonicalAlias, success: success(completion), failure: error(completion));
+    }
+    
+    /**
+     Get the canonical alias.
+     
+     - parameters:
+        - roomId: the id of the room.
+        - completion: A block object called when the operation completes.
+        - response: Provides the canonical alias on success
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func canonicalAlias(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation? {
+        return __canonicalAlias(ofRoom: roomId, success: success(completion), failure: error(completion))
+    }
+    
+    
+    /**
+     Join a room, optionally where the user has been invited by a 3PID invitation.
+     
+     - parameters:
+        - roomIdOrAlias: The id or an alias of the room to join.
+        - thirdPartySigned: The signed data obtained by the validation of the 3PID invitation, if 3PID validation is used. The validation is made by `self.signUrl()`.
+        - completion: A block object called when the operation completes.
+        - response: Provides the room id on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func joinRoom(_ roomIdOrAlias: String, withThirdPartySigned dictionary: [String: Any]? = nil, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation? {
+        if let dictionary = dictionary {
+            return __joinRoom(roomIdOrAlias, withThirdPartySigned: dictionary, success: success(completion), failure: error(completion))
+        } else {
+            return __joinRoom(roomIdOrAlias, success: success(completion), failure: error(completion))
+        }
+    }
+
+    /**
+     Leave a room.
+     
+     - parameters:
+        - roomId: the id of the room to leave.
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func leaveRoom(_ roomId: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __leaveRoom(roomId, success: success(completion), failure: error(completion))
+    }
+    
+    
+    
+    
+    /**
+     Invite a user to a room.
+     
+     A user can be invited one of three ways:
+     1. By their user ID
+     2. By their email address
+     3. By a third party
+     
+     The `invitation` parameter specifies how this user should be reached.
+     
+     - parameters:
+        - invitation: the way to reach the user.
+        - roomId: the id of the room.
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func invite(_ invitation: MXRoomInvitee, toRoom roomId: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        switch invitation {
+        case .userId(let userId):
+            return __inviteUser(userId, toRoom: roomId, success: success(completion), failure: error(completion))
+        case .email(let emailAddress):
+            return __inviteUser(byEmail: emailAddress, toRoom: roomId, success: success(completion), failure: error(completion))
+        case .thirdPartyId(medium: let medium, address: let address):
+            return __invite(byThreePid: medium, address: address, toRoom: roomId, success: success(completion), failure: error(completion))
+        }
+    }
+    
+    
+    
+    
+    
+    /**
+     Kick a user from a room.
+     
+     - parameters:
+        - userId: the user id.
+        - roomId: the id of the room.
+        - reason: the reason for being kicked
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func kickUser(_ userId: String, fromRoom roomId: String, reason: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __kickUser(userId, fromRoom: roomId, reason: reason, success: success(completion), failure: error(completion))
+    }
+    
+    
+    /**
+     Ban a user in a room.
+     
+     - parameters:
+         - userId: the user id.
+         - roomId: the id of the room.
+         - reason: the reason for being banned
+         - completion: A block object called when the operation completes.
+         - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func banUser(_ userId: String, fromRoom roomId: String, reason: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __banUser(userId, inRoom: roomId, reason: reason, success: success(completion), failure: error(completion))
+    }
+    
+    /**
+     Unban a user in a room.
+     
+     - parameters:
+         - userId: the user id.
+         - roomId: the id of the room.
+         - completion: A block object called when the operation completes.
+         - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func unbanUser(_ userId: String, fromRoom roomId: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __unbanUser(userId, inRoom: roomId, success: success(completion), failure: error(completion))
+    }
+    
+    
+    
+    
+    
+    
+    
+    /**
+     Create a room.
+     
+     - parameters:
+        - name: The room name.
+        - visibility: The visibility of the room in the current HS's room directory.
+        - roomAlias: The room alias on the home server the room will be created.
+        - topic: The room topic.
+        - invite: A list of user IDs to invite to the room. This will tell the server to invite everyone in the list to the newly created room.
+        - invite3PID: A list of objects representing third party IDs to invite into the room.
+        - isDirect: This flag makes the server set the is_direct flag on the m.room.member events sent to the users in invite and invite_3pid.
+        - preset: Convenience parameter for setting various default state events based on a preset.
+     
+        - completion: A block object called when the operation completes.
+        - response: Provides a MXCreateRoomResponse object on success.
+     
+     - returns: a MXHTTPOperation instance.
+     */
+    @nonobjc @discardableResult func createRoom(name: String?,
+                                                visibility: MXRoomDirectoryVisibility?,
+                                                alias: String?,
+                                                topic: String?,
+                                                invite: [String]? = nil,
+                                                invite3PID: [MXInvite3PID]? = nil,
+                                                isDirect: Bool = false,
+                                                preset: MXRoomPreset?,
+                                                completion: @escaping (_ response: MXResponse<MXCreateRoomResponse>) -> Void) -> MXHTTPOperation? {
+        
+        return __createRoom(name, visibility: nil, roomAlias: alias, topic: topic,
+                            invite: invite, invite3PID: invite3PID,
+                            isDirect: isDirect, preset: preset?.identifier,
+                            success: success(completion), failure: error(completion));
+    }
+    
+    /**
+     Create a room.
+     
+     - parameters:
+        - parameters: The parameters. Refer to the matrix specification for details.
+        - completion: A block object called when the operation completes.
+        - response: Provides a MXCreateRoomResponse object on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func createRoom(parameters: [String: Any], completion: @escaping (_ response: MXResponse<MXCreateRoomResponse>) -> Void) -> MXHTTPOperation? {
+        return __createRoom(parameters, success: success(completion), failure: error(completion))
+    }
+    
+    
+    
+    
+    /**
+     Get a list of messages for this room.
+     
+     - parameters:
+        - roomId: the id of the room.
+        - from: the token to start getting results from.
+        - direction: `MXTimelineDirectionForwards` or `MXTimelineDirectionBackwards`
+        - limit: (optional, use -1 to not defined this value) the maximum nuber of messages to return.
+        - filter: to filter returned events with.
+        - completion: A block object called when the operation completes.
+        - response: Provides a `MXPaginationResponse` object on success.
+     
+     - returns: a MXHTTPOperation instance.
+     */
+    @nonobjc @discardableResult func messages(forRoom roomId: String, from: String, direction: MXTimelineDirection, limit: UInt?, filter: MXRoomEventFilter, completion: @escaping (_ response: MXResponse<MXPaginationResponse>) -> Void) -> MXHTTPOperation? {
+        
+        // The `limit` variable should be set to -1 if it's not provided.
+        let _limit: Int
+        if let limit = limit {
+            _limit = Int(limit)
+        } else {
+            _limit = -1;
+        }
+        return __messages(forRoom: roomId, from: from, direction: direction, limit: UInt(_limit), filter: filter, success: success(completion), failure: error(completion))
+    }
+    
+    /**
+     Get a list of members for this room.
+     
+     - parameters:
+        - roomId: the id of the room.
+        - completion: A block object called when the operation completes.
+        - response: Provides an array of `MXEvent` objects that are the type `m.room.member` on success.
+     
+     - returns: a MXHTTPOperation instance.
+     */
+    @nonobjc @discardableResult func members(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<[MXEvent]>) -> Void) -> MXHTTPOperation? {
+        return __members(ofRoom: roomId, success: success(completion), failure: error(completion))
+    }
+    
+    /**
+     Get a list of all the current state events for this room.
+     
+     This is equivalent to the events returned under the 'state' key for this room in initialSyncOfRoom.
+     
+     See [the matrix documentation on state events](http://matrix.org/docs/api/client-server/#!/-rooms/get_state_events)
+     for more detail.
+     
+     - parameters:
+        - roomId: the id of the room.
+        - completion: A block object called when the operation completes.
+        - response: Provides the raw home server JSON response on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func state(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<[String: Any]>) -> Void) -> MXHTTPOperation? {
+        return __state(ofRoom: roomId, success: success(completion), failure: error(completion))
+    }
+    
+    
+    
+    
+    
+    
+    /**
+     Inform the home server that the user is typing (or not) in this room.
+     
+     - parameters:
+        - roomId: the id of the room.
+        - typing: Use `true` if the user is currently typing.
+        - timeout: the length of time until the user should be treated as no longer typing. Can be set to `nil` if they are no longer typing.
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func sendTypingNotification(inRoom roomId: String, typing: Bool, timeout: TimeInterval?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        
+        // The `timeout` variable should be set to -1 if it's not provided.
+        let _timeout: Int
+        if let timeout = timeout {
+            // The `TimeInterval` type is a double value specified in seconds. Multiply by 1000 to get milliseconds.
+            _timeout = Int(timeout * 1000 /* milliseconds */)
+        } else {
+            _timeout = -1;
+        }
+        
+        return __sendTypingNotification(inRoom: roomId, typing: typing, timeout: UInt(_timeout), success: success(completion), failure: error(completion))
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    /**
+     Redact an event in a room.
+     
+     - parameters:
+        - eventId: the id of the redacted event.
+        - roomId: the id of the room.
+        - reason: the redaction reason.
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func redactEvent(_ eventId: String, inRoom roomId: String, reason: String?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __redactEvent(eventId, inRoom: roomId, reason: reason, success: success(completion), failure: error(completion))
+    }
+    
+    /**
+     Report an event.
+     
+     - parameters:
+        - eventId: the id of the event event.
+        - roomId: the id of the room.
+        - score: the metric to let the user rate the severity of the abuse. It ranges from -100 “most offensive” to 0 “inoffensive”.
+        - reason: the redaction reason.
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func reportEvent(_ eventId: String, inRoom roomId: String, score: Int, reason: String?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __reportEvent(eventId, inRoom: roomId, score: score, reason: reason, success: success(completion), failure: error(completion))
+    }
+    
+    
+    
+    
+    /**
+     Get all the current information for this room, including messages and state events.
+     
+     See [the matrix documentation](http://matrix.org/docs/api/client-server/#!/-rooms/get_room_sync_data)
+     for more detail.
+     
+     - parameters:
+        - roomId: the id of the room.
+        - limit: the maximum number of messages to return.
+        - completion: A block object called when the operation completes.
+        - response: Provides the model created from the homeserver JSON response on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func intialSync(ofRoom roomId: String, limit: UInt, completion: @escaping (_ response: MXResponse<MXRoomInitialSync>) -> Void) -> MXHTTPOperation? {
+        return __initialSync(ofRoom: roomId, withLimit: Int(limit), success: success(completion), failure: error(completion))
+    }
+    
+    
+    /**
+     Get the context surrounding an event.
+     
+     This API returns a number of events that happened just before and after the specified event.
+     
+     - parameters:
+        - eventId: the id of the event to get context around.
+        - roomId: the id of the room to get events from.
+        - limit: the maximum number of messages to return.
+        - completion: A block object called when the operation completes.
+        - response: Provides the model created from the homeserver JSON response on success.
+     
+     @param success A block object called when the operation succeeds. It provides the model created from
+     the homeserver JSON response.
+     @param failure A block object called when the operation fails.
+     
+     @return a MXHTTPOperation instance.
+     */
+    @nonobjc @discardableResult func context(ofEvent eventId: String, inRoom roomId: String, limit: UInt, completion: @escaping (_ response: MXResponse<MXEventContext>) -> Void) -> MXHTTPOperation? {
+        return __context(ofEvent: eventId, inRoom: roomId, limit: limit, success: success(completion), failure: error(completion))
+    }
     
     
     // TODO: - Room tags operations

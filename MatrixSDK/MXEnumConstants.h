@@ -28,7 +28,7 @@
  Room visibility in the current homeserver directory.
  The default homeserver value is private.
  */
-typedef NSString* MXRoomDirectoryVisibility;
+typedef NSString* MXRoomDirectoryVisibility NS_REFINED_FOR_SWIFT;
 
 /**
  The room is not listed in the homeserver directory.
@@ -104,7 +104,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomJoinRuleKnock;
  Room presets
  Define a set of state events applied during a new room creation.
  */
-typedef NSString* MXRoomPreset;
+typedef NSString* MXRoomPreset NS_REFINED_FOR_SWIFT;
 
 /**
  join_rules is set to invite. history_visibility is set to shared.
@@ -125,7 +125,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomPresetPublicChat;
  Room guest access.
  The default homeserver value is forbidden.
  */
-typedef NSString* MXRoomGuestAccess;
+typedef NSString* MXRoomGuestAccess NS_REFINED_FOR_SWIFT;
 
 /**
  Guests can join the room.
