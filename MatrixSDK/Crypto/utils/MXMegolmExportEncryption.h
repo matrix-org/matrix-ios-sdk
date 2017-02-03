@@ -57,7 +57,7 @@ typedef enum : NSUInteger
  @param data the data to encrypt.
  @param password the password.
  @param kdfRounds Number of iterations to perform of the key-derivation function.
-                  If 0, encryptMegolmKeyFile will use 100000 as default value.
+                  If 0, encryptMegolmKeyFile will use 500000 as default value.
  @param error the output error.
  @return the encrypted output.
  */

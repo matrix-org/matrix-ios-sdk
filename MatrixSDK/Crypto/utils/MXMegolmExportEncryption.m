@@ -174,7 +174,7 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
 
     if (!kdfRounds)
     {
-        kdfRounds = 100000;
+        kdfRounds = 500000;
     }
 
     NSMutableData *salt = [NSMutableData dataWithLength:16];
