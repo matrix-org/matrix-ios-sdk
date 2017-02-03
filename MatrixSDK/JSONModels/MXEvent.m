@@ -70,7 +70,10 @@ NSString *const kMXMembershipStringBan    = @"ban";
 uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 
 NSString *const kMXEventDidChangeSentStateNotification = @"kMXEventDidChangeSentStateNotification";
+NSString *const kMXEventDidChangeIdentifierNotification = @"kMXEventDidChangeIdentifierNotification";
 NSString *const kMXEventDidDecryptNotification = @"kMXEventDidDecryptNotification";
+
+NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
 
 #pragma mark - MXEvent
 @interface MXEvent ()
@@ -175,6 +178,21 @@ NSString *const kMXEventDidDecryptNotification = @"kMXEventDidDecryptNotificatio
         _sentState = sentState;
         
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXEventDidChangeSentStateNotification object:self userInfo:nil];
+    }
+}
+
+- (void)setEventId:(NSString *)eventId
+{
+    if (self.isLocalEvent && eventId && ![eventId isEqualToString:_eventId])
+    {
+        NSString *previousId = _eventId;
+        _eventId = eventId;
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXEventDidChangeIdentifierNotification object:self userInfo:@{kMXEventIdentifierKey:previousId}];
+    }
+    else
+    {
+        // Do not post the notification here, only the temporary local events are supposed to change their id.
+        _eventId = eventId;
     }
 }
 
