@@ -1134,7 +1134,7 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)tagsOfRoom:(NSString*)roomId
                        success:(void (^)(NSArray<MXRoomTag*> *tags))success
-                       failure:(void (^)(NSError *error))failure;
+                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Add a tag to a room.
@@ -1154,7 +1154,7 @@ typedef enum : NSUInteger
                  withOrder:(NSString*)order
                     toRoom:(NSString*)roomId
                    success:(void (^)())success
-                   failure:(void (^)(NSError *error))failure;
+                   failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 /**
  Remove a tag from a room.
 
@@ -1169,7 +1169,7 @@ typedef enum : NSUInteger
 - (MXHTTPOperation*)removeTag:(NSString*)tag
                      fromRoom:(NSString*)roomId
                       success:(void (^)())success
-                      failure:(void (^)(NSError *error))failure;
+                      failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - Profile operations

@@ -493,7 +493,7 @@ public enum MXRoomPreset {
  
  */
 
-fileprivate func success<T, U>(transform: @escaping (_ input: T) -> Any? = { return $0 },
+fileprivate func success<T, U>(transform: @escaping (_ input: T) -> U? = { return $0 as? U },
                          _ completion: @escaping (_ response: MXResponse<U>) -> Void) -> (T) -> Void {
     return { completion(.fromOptional(value: transform($0))) }
 }
@@ -1603,18 +1603,64 @@ public extension MXRestClient {
         - completion: A block object called when the operation completes.
         - response: Provides the model created from the homeserver JSON response on success.
      
-     @param success A block object called when the operation succeeds. It provides the model created from
-     the homeserver JSON response.
-     @param failure A block object called when the operation fails.
-     
-     @return a MXHTTPOperation instance.
+     - returns: a `MXHTTPOperation` instance.
      */
     @nonobjc @discardableResult func context(ofEvent eventId: String, inRoom roomId: String, limit: UInt, completion: @escaping (_ response: MXResponse<MXEventContext>) -> Void) -> MXHTTPOperation? {
         return __context(ofEvent: eventId, inRoom: roomId, limit: limit, success: success(completion), failure: error(completion))
     }
     
     
-    // TODO: - Room tags operations
+    // MARK: - Room tags operations
+    
+    /**
+     List the tags of a room.
+     
+     
+     - parameters:
+        - roomId: the id of the room.
+        - completion: A block object called when the operation completes.
+        - response: Provides an array of `MXRoomTag` objects on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func tags(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<[MXRoomTag]>) -> Void) -> MXHTTPOperation? {
+        return __tags(ofRoom: roomId, success: success(completion), failure: error(completion))
+    }
+    
+    /**
+     Add a tag to a room.
+     
+     Use this method to update the order of an existing tag.
+     
+     - parameters:
+        - tag: the new tag to add to the room.
+        - order: the order. @see MXRoomTag.order.
+        - roomId: the id of the room.
+        - completion: A block object called when the operation completes.
+        - response: Provides an array of `MXRoomTag` objects on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func addTag(_ tag: String, withOrder order: String, toRoom roomId: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __addTag(tag, withOrder: order, toRoom: roomId, success: success(completion), failure: error(completion))
+    }
+    
+    
+    /**
+     Remove a tag from a room.
+     
+     - parameters:
+        - tag: the tag to remove.
+        - roomId: the id of the room.
+        - completion: A block object called when the operation completes.
+        - response: Provides an array of `MXRoomTag` objects on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func removeTag(_ tag: String, fromRoom roomId: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __removeTag(tag, fromRoom: roomId, success: success(completion), failure: error(completion))
+    }
+    
     
     
     
