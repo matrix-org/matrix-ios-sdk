@@ -500,6 +500,18 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     return nil;
 }
 
+- (NSArray<MXOlmInboundGroupSession *> *)inboundGroupSessions
+{
+    NSMutableArray *sessions = [NSMutableArray array];
+
+    for (MXRealmOlmInboundGroupSession *realmSession in [MXRealmOlmInboundGroupSession allObjectsInRealm:self.realm])
+    {
+        [sessions addObject:[NSKeyedUnarchiver unarchiveObjectWithData:realmSession.olmInboundGroupSessionData]];
+    }
+
+    return sessions;
+}
+
 - (void)removeInboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey
 {
     RLMRealm *realm = self.realm;

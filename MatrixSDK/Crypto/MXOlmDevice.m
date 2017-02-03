@@ -337,6 +337,25 @@
     return YES;
 }
 
+- (void)importInboundGroupSession:(MXMegolmSessionData *)data
+{
+    NSError *error;
+    MXOlmInboundGroupSession *session = [self inboundGroupSessionWithId:data.sessionId senderKey:data.senderKey roomId:data.roomId error:&error];
+
+    if (session)
+    {
+        // If we already have this session, consider updating it
+        NSLog(@"[MXOlmDevice] importInboundGroupSession: Update for megolm session %@|%@", data.senderKey, data.sessionId);
+
+        // For now we just ignore updates. TODO: implement something here
+        return;
+    }
+
+    session = [[MXOlmInboundGroupSession alloc] initWithSessionData:data];
+
+    [store storeInboundGroupSession:session];
+}
+
 - (MXDecryptionResult *)decryptGroupMessage:(NSString *)body roomId:(NSString *)roomId
                                  inTimeline:(NSString *)timeline
                                   sessionId:(NSString *)sessionId senderKey:(NSString *)senderKey

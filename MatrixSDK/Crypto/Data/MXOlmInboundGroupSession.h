@@ -22,6 +22,8 @@
 
 #import <OLMKit/OLMKit.h>
 
+#import "MXMegolmSessionData.h"
+
 /**
  The 'MXOlmInboundGroupSession' class adds more context to a OLMInboundGroupSession
  object from OLMKit.
@@ -58,6 +60,26 @@
  Other keys the sender claims.
  */
 @property (nonatomic) NSDictionary<NSString*, NSString*> *keysClaimed;
+
+
+#pragma mark - import/export
+
+/**
+ Export the session data from a given message.
+ 
+ @param messageIndex the index of message from which to export the session.
+ @return the exported data.
+ */
+- (MXMegolmSessionData *)exportSessionDataAtMessageIndex:(NSUInteger)messageIndex;
+
+/**
+ Export the session data from the first known message.
+
+ @return the exported data.
+ */
+- (MXMegolmSessionData *)exportSessionData;
+
+- (instancetype)initWithSessionData:(MXMegolmSessionData*)data;
 
 @end
 

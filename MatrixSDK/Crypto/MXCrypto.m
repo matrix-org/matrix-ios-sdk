@@ -29,6 +29,9 @@
 #import "MXFileCryptoStore.h"
 #import "MXRealmCryptoStore.h"
 
+#import "MXMegolmSessionData.h"
+#import "MXMegolmExportEncryption.h"
+
 /**
  The store to use for crypto.
  */
@@ -584,6 +587,188 @@
     return _olmDevice.olmVersion;
 #else
     return nil;
+#endif
+}
+
+
+#pragma mark - import/export
+
+- (void)exportRoomKeys:(void (^)(NSArray<NSDictionary *> *))success failure:(void (^)(NSError *))failure
+{
+#ifdef MX_CRYPTO
+    dispatch_async(_decryptionQueue, ^{
+
+        NSDate *startDate = [NSDate date];
+
+        NSMutableArray *keys = [NSMutableArray array];
+
+        for (MXOlmInboundGroupSession *session in [_store inboundGroupSessions])
+        {
+            MXMegolmSessionData *sessionData = [session exportSessionData];
+            if (sessionData)
+            {
+                [keys addObject:sessionData.JSONDictionary];
+            }
+        }
+
+        NSLog(@"[MXCrypto] exportRoomKeys: Exported %tu keys in %.0fms", keys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+
+            if (success)
+            {
+                success(keys);
+            }
+
+        });
+
+    });
+#endif
+}
+
+- (void)exportRoomKeysWithPassword:(NSString *)password success:(void (^)(NSData *))success failure:(void (^)(NSError *))failure
+{
+#ifdef MX_CRYPTO
+
+        dispatch_async(_decryptionQueue, ^{
+
+            NSData *keyFile;
+            NSError *error;
+
+            NSDate *startDate = [NSDate date];
+
+            // Export the keys
+            NSMutableArray *keys = [NSMutableArray array];
+            for (MXOlmInboundGroupSession *session in [_store inboundGroupSessions])
+            {
+                MXMegolmSessionData *sessionData = [session exportSessionData];
+                if (sessionData)
+                {
+                    [keys addObject:sessionData.JSONDictionary];
+                }
+            }
+
+            NSLog(@"[MXCrypto] exportRoomKeysWithPassword: Exportion of %tu keys took %.0fms", keys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+
+            // Convert them to JSON
+            NSData *jsonData = [NSJSONSerialization dataWithJSONObject:keys
+                                                               options:NSJSONWritingPrettyPrinted
+                                                                 error:&error];
+            if (jsonData)
+            {
+                // Encrypt them
+                keyFile = [MXMegolmExportEncryption encryptMegolmKeyFile:jsonData withPassword:password kdfRounds:0 error:&error];
+            }
+
+            NSLog(@"[MXCrypto] exportRoomKeysWithPassword: Exported and encrypted %tu keys in %.0fms", keys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+
+            dispatch_async(dispatch_get_main_queue(), ^{
+
+                if (keyFile)
+                {
+                    if (success)
+                    {
+                        success(keyFile);
+                    }
+                }
+                else
+                {
+                    NSLog(@"[MXCrypto] exportRoomKeysWithPassword: Error: %@", error);
+                    if (failure)
+                    {
+                        failure(error);
+                    }
+                }
+
+            });
+
+        });
+#endif
+}
+
+- (void)importRoomKeys:(NSArray<NSDictionary *> *)keys success:(void (^)())success failure:(void (^)(NSError *))failure
+{
+#ifdef MX_CRYPTO
+    dispatch_async(_decryptionQueue, ^{
+
+        NSLog(@"[MXCrypto] importRoomKeys:");
+
+        NSDate *startDate = [NSDate date];
+
+        // Convert JSON to MXMegolmSessionData
+        NSArray<MXMegolmSessionData *> *sessionDatas = [MXMegolmSessionData modelsFromJSON:keys];
+
+        for (MXMegolmSessionData *sessionData in sessionDatas)
+        {
+            NSLog(@"  - importing %@|%@", sessionData.senderKey, sessionData.sessionId);
+
+            if (!sessionData.roomId || !sessionData.algorithm)
+            {
+                NSLog(@"        -> ignoring session entry with missing fields: %@", sessionData);
+                continue;
+            }
+
+            // Import the session
+            id<MXDecrypting> alg = [self getRoomDecryptor:sessionData.roomId algorithm:sessionData.algorithm];
+            [alg importRoomKey:sessionData];
+        }
+
+        NSLog(@"[MXCrypto] importRoomKeys: Imported %tu keys in %.0fms", keys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+
+            if (success)
+            {
+                success();
+            }
+
+        });
+    });
+#endif
+}
+
+- (void)importRoomKeys:(NSData *)keyFile withPassword:(NSString *)password success:(void (^)())success failure:(void (^)(NSError *))failure
+{
+#ifdef MX_CRYPTO
+    dispatch_async(_decryptionQueue, ^{
+
+        NSLog(@"[MXCrypto] importRoomKeys:withPassord:");
+
+        NSError *error;
+        NSDate *startDate = [NSDate date];
+
+        NSData *jsonData = [MXMegolmExportEncryption decryptMegolmKeyFile:keyFile withPassword:password error:&error];
+        if(jsonData)
+        {
+            NSArray *keys = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&error];
+            if (keys)
+            {
+                [self importRoomKeys:keys success:^{
+
+                    NSLog(@"[MXCrypto] importRoomKeys:withPassord: Imported %tu keys in %.0fms", keys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+
+                    if (success)
+                    {
+                        success();
+                    }
+
+                } failure:failure];
+                return;
+            }
+        }
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+
+            NSLog(@"[MXCrypto] importRoomKeys:withPassord: Error: %@", error);
+
+            if (failure)
+            {
+                failure(error);
+            }
+
+        });
+
+    });
 #endif
 }
 

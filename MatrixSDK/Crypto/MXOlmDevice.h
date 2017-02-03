@@ -225,6 +225,13 @@ Determine if an incoming messages is a prekey message matching an existing sessi
                      senderKey:(NSString*)senderKey keysClaimed:(NSDictionary<NSString*, NSString*>*)keysClaimed;
 
 /**
+ Add a previously-exported inbound group session to the session store.
+
+ @param data the session data
+ */
+- (void)importInboundGroupSession:(MXMegolmSessionData*)data;
+
+/**
  Decrypt a received message with an inbound group session.
  
  @param body the base64-encoded body of the encrypted message.
