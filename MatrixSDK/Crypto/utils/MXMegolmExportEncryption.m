@@ -323,9 +323,11 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
  @param hmacKey the hmac key
  @return the derivation result. Should be kCCSuccess.
  */
-+(int)deriveKeys:(NSData*)salt iterations:(NSUInteger)iterations password:(NSString*)password aesKey:(NSData**)aesKey hmacKey:(NSData**)hmacKey
++ (int)deriveKeys:(NSData*)salt iterations:(NSUInteger)iterations password:(NSString*)password aesKey:(NSData**)aesKey hmacKey:(NSData**)hmacKey
 {
     int result = kCCSuccess;
+
+    NSDate *startDate = [NSDate date];
 
     NSData *passwordData = [password dataUsingEncoding:NSUTF8StringEncoding];
 
@@ -343,6 +345,8 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
 
     *aesKey = [derivedKey subdataWithRange:NSMakeRange(0, 32)];
     *hmacKey = [derivedKey subdataWithRange:NSMakeRange(32, derivedKey.length - 32)];
+
+    NSLog(@"[MXMegolmExportEncryption] deriveKeys: %tu iterations took %.0fms", iterations, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
     return result;
 }
