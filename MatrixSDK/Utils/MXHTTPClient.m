@@ -116,7 +116,10 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
 #if TARGET_OS_IPHONE
         backgroundTaskIdentifier = UIBackgroundTaskInvalid;
 #endif
-        
+
+        // No need for caching. The sdk caches the data it needs
+        [httpManager.requestSerializer setCachePolicy:NSURLRequestReloadIgnoringLocalCacheData];
+
         // Send requests parameters in JSON format by default
         self.requestParametersInJSON = YES;
 

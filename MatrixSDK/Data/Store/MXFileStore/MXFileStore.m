@@ -182,6 +182,13 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
             else if (kMXFileVersion != metaData.version)
             {
                 NSLog(@"[MXFileStore] New MXFileStore version detected");
+
+                if (metaData.version <= 35)
+                {
+                    NSLog(@"[MXFileStore] Matrix SDK until the version of 35 of MXFileStore caches all NSURLRequests unnecessarily. Clear NSURLCache");
+                    [[NSURLCache sharedURLCache] removeAllCachedResponses];
+                }
+
                 [self deleteAllData];
             }
             // Check credentials
