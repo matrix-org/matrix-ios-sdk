@@ -35,7 +35,7 @@
 #import "GAIDictionaryBuilder.h"
 #endif
 
-NSUInteger const kMXFileVersion = 35;
+NSUInteger const kMXFileVersion = 36;
 
 NSString *const kMXFileStoreFolder = @"MXFileStore";
 NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -189,15 +189,6 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
             {
                 [self deleteAllData];
             }
-            // Check credentials
-            else if (NO == [metaData.homeServer isEqualToString:credentials.homeServer]
-                     || NO == [metaData.userId isEqualToString:credentials.userId]
-                     || NO == [metaData.accessToken isEqualToString:credentials.accessToken])
-
-            {
-                NSLog(@"[MXFileStore] Credentials do not match");
-                [self deleteAllData];
-            }
 
             // If metaData is still defined, we can load rooms data
             if (metaData)
@@ -227,12 +218,11 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
             }
 
             // Else, if credentials is valid, create and store it
-            if (nil == metaData && credentials.homeServer && credentials.userId && credentials.accessToken)
+            if (nil == metaData && credentials.homeServer && credentials.userId)
             {
                 metaData = [[MXFileStoreMetaData alloc] init];
                 metaData.homeServer = [credentials.homeServer copy];
                 metaData.userId = [credentials.userId copy];
-                metaData.accessToken = [credentials.accessToken copy];
                 metaData.version = kMXFileVersion;
                 metaDataHasChanged = YES;
                 [self saveMetaData];
