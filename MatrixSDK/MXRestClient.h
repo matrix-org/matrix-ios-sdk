@@ -1273,7 +1273,7 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)setPresence:(MXPresence)presence andStatusMessage:(NSString*)statusMessage
                         success:(void (^)())success
-                        failure:(void (^)(NSError *error))failure;
+                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Get the presence status of a user.
@@ -1287,7 +1287,7 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)presence:(NSString*)userId
                      success:(void (^)(MXPresenceResponse *presence))success
-                     failure:(void (^)(NSError *error))failure;
+                     failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - Sync

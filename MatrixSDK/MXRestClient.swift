@@ -1757,10 +1757,41 @@ public extension MXRestClient {
     }
     
     
-    // TODO: - Presence operations
+    // MARK: - Presence operations
     
     
-
+    // TODO: MXPresence could be refined to a Swift enum. presence+message could be combined in a struct, since they're closely related.
+    /**
+     Set the current user presence status.
+    
+     - parameters:
+        - presence: the new presence status.
+        - statusMessage: the new message status.
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func setPresence(_ presence: MXPresence, statusMessage: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __setPresence(presence, andStatusMessage: statusMessage, success: success(completion), failure: error(completion))
+    }
+    
+    // TODO: MXPresenceResponse smells like a tuple (_ presence: MXPresence, timeActiveAgo: NSTimeInterval). Consider refining further.
+    /**
+     Get the presence status of a user.
+     
+     - parameters:
+        - userId: the user id to look up.
+        - completion: A block object called when the operation completes.
+        - response: Provides the MXPresenceResponse on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func presence(forUser userId: String, completion: @escaping (_ response: MXResponse<MXPresenceResponse>) -> Void) -> MXHTTPOperation? {
+        return __presence(userId, success: success(completion), failure: error(completion))
+    }
+    
+    
     
     // TODO: - Sync
     
