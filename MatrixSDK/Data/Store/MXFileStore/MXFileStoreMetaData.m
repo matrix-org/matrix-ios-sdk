@@ -26,7 +26,6 @@
         NSDictionary *dict = [aDecoder decodeObjectForKey:@"dict"];
         _homeServer = dict[@"homeServer"];
         _userId = dict[@"userId"];
-        _accessToken = dict[@"accessToken"];
         _eventStreamToken = dict[@"eventStreamToken"];
         _userAccountData = dict[@"userAccountData"];
 
@@ -43,7 +42,6 @@
                                 @{
                                   @"homeServer": _homeServer,
                                   @"userId": _userId,
-                                  @"accessToken": _accessToken,
                                   @"version": @(_version),
                                   }];
 
@@ -65,7 +63,6 @@
 
     metaData->_homeServer = [_homeServer copyWithZone:zone];
     metaData->_userId = [_userId copyWithZone:zone];
-    metaData->_accessToken = [_accessToken copyWithZone:zone];
     metaData->_version = _version;
     metaData->_eventStreamToken = [_eventStreamToken copyWithZone:zone];
     metaData->_userAccountData = [_userAccountData copyWithZone:zone];
