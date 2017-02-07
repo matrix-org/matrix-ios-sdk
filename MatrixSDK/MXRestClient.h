@@ -1185,7 +1185,7 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)setDisplayName:(NSString*)displayname
                            success:(void (^)())success
-                           failure:(void (^)(NSError *error))failure;
+                           failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Get the display name of a user.
@@ -1199,7 +1199,7 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)displayNameForUser:(NSString*)userId
                                success:(void (^)(NSString *displayname))success
-                               failure:(void (^)(NSError *error))failure;
+                               failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Set the logged-in user avatar url.
@@ -1213,7 +1213,7 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)setAvatarUrl:(NSString*)avatarUrl
                          success:(void (^)())success
-                         failure:(void (^)(NSError *error))failure;
+                         failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Get the avatar url of a user.
@@ -1226,7 +1226,7 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)avatarUrlForUser:(NSString*)userId
                              success:(void (^)(NSString *avatarUrl))success
-                             failure:(void (^)(NSError *error))failure;
+                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Link an authenticated 3rd party id to the Matrix user.
@@ -1245,7 +1245,7 @@ typedef enum : NSUInteger
                clientSecret:(NSString*)clientSecret
                        bind:(BOOL)bind
                     success:(void (^)())success
-                    failure:(void (^)(NSError *error))failure;
+                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  List all 3PIDs linked to the Matrix user account.
@@ -1256,7 +1256,7 @@ typedef enum : NSUInteger
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)threePIDs:(void (^)(NSArray<MXThirdPartyIdentifier*> *threePIDs))success
-                      failure:(void (^)(NSError *error))failure;
+                      failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - Presence operations

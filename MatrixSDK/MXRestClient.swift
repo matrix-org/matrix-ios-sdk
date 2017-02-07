@@ -48,7 +48,7 @@ public enum MXResponse<T> {
     case failure(Error)
     
     /// Indicates whether the API call was successful
-    var isSuccess: Bool {
+    public var isSuccess: Bool {
         switch self {
         case .success:   return true
         default:        return false
@@ -56,7 +56,7 @@ public enum MXResponse<T> {
     }
     
     /// The response's success value, if applicable
-    var value: T? {
+    public var value: T? {
         switch self {
         case .success(let value): return value
         default: return nil
@@ -64,12 +64,12 @@ public enum MXResponse<T> {
     }
     
     /// Indicates whether the API call failed
-    var isFailure: Bool {
+    public var isFailure: Bool {
         return !isSuccess
     }
     
     /// The response's error value, if applicable
-    var error: Error? {
+    public var error: Error? {
         switch self {
         case .failure(let error): return error
         default: return nil
@@ -1665,9 +1665,96 @@ public extension MXRestClient {
     
     
     
-    // TODO: - Profile operations
+    // MARK: - Profile operations
+    
+    /**
+     Set the logged-in user display name.
+     
+     - parameters:
+        - displayname: the new display name.
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func setDisplayName(_ displayName: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __setDisplayName(displayName, success: success(completion), failure: error(completion))
+    }
+    
+    /**
+     Get the display name of a user.
+     
+     - parameters:
+        - userId: the user id to look up.
+        - completion: A block object called when the operation completes.
+        - response: Provides the display name on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func displayName(forUser userId: String, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation? {
+        return __displayName(forUser: userId, success: success(completion), failure: error(completion))
+    }
     
     
+    
+    
+    /**
+     Set the logged-in user avatar url.
+     
+     - parameters:
+        - urlString: The new avatar url.
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func setAvatarUrl(_ url: URL, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __setAvatarUrl(url.absoluteString, success: success(completion), failure: error(completion))
+    }
+    
+    /**
+     Get the avatar url of a user.
+     
+     - parameters:
+        - userId: the user id to look up.
+        - completion: A block object called when the operation completes.
+        - response: Provides the avatar url on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func avatarUrl(forUser userId: String, completion: @escaping (_ response: MXResponse<URL>) -> Void) -> MXHTTPOperation? {
+        return __avatarUrl(forUser: userId, success: success(transform: { return URL(string: $0 ?? "") }, completion), failure: error(completion))
+    }
+    
+    
+    /**
+     Link an authenticated 3rd party id to the Matrix user.
+     
+     - parameters:
+        - sid: the id provided during the 3PID validation session (MXRestClient.requestEmailValidation).
+        - clientSecret: the same secret key used in the validation session.
+        - bind: whether the homeserver should also bind this third party identifier to the account's Matrix ID with the identity server.
+        - completion: A block object called when the operation completes.
+        - response:  Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func addThirdPartyIdentifier(_ sid: String, clientSecret: String, bind: Bool, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __add3PID(sid, clientSecret: clientSecret, bind: bind, success: success(completion), failure: error(completion))
+    }
+    
+    /**
+     List all 3PIDs linked to the Matrix user account.
+     
+     - parameters:
+        - completion: A block object called when the operation completes.
+        - response: Provides the third-party identifiers on success
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func thirdPartyIdentifiers(_ completion: @escaping (_ response: MXResponse<[MXThirdPartyIdentifier]>) -> Void) -> MXHTTPOperation? {
+        return __threePIDs(success(completion), failure: error(completion))
+    }
     
     
     // TODO: - Presence operations
