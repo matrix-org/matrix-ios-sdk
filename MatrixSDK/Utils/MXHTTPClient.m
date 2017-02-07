@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
- 
+ Copyright 2017 Vector Creations Ltd
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -116,7 +117,10 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
 #if TARGET_OS_IPHONE
         backgroundTaskIdentifier = UIBackgroundTaskInvalid;
 #endif
-        
+
+        // No need for caching. The sdk caches the data it needs
+        [httpManager.requestSerializer setCachePolicy:NSURLRequestReloadIgnoringLocalCacheData];
+
         // Send requests parameters in JSON format by default
         self.requestParametersInJSON = YES;
 

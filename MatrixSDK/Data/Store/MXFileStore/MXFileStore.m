@@ -1,5 +1,6 @@
 /*
  Copyright 2014 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -182,6 +183,13 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
             else if (kMXFileVersion != metaData.version)
             {
                 NSLog(@"[MXFileStore] New MXFileStore version detected");
+
+                if (metaData.version <= 35)
+                {
+                    NSLog(@"[MXFileStore] Matrix SDK until the version of 35 of MXFileStore caches all NSURLRequests unnecessarily. Clear NSURLCache");
+                    [[NSURLCache sharedURLCache] removeAllCachedResponses];
+                }
+
                 [self deleteAllData];
             }
             // Check credentials
