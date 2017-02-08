@@ -1,3 +1,20 @@
+Changes in Matrix iOS SDK in 0.7.7 (2017-02-08)
+===============================================
+
+Improvements:
+ * MXFileStore: Do not store the access token. There is no reason for that.
+ * Improve disk usage: Do not use NSURLCache. The SDK does not need this cache. This may save hundreds of MB.
+ * Add E2E keys export & import. This is managed by the new MXMegolmExportEncryption class.
+
+Bug fixes:
+ * Fix a few examples in the README file, thanks to @aapierce0 (PR #230).
+ * Duplicated msg when going into room details  (https://github.com/vector-im/riot-ios#970).
+ * App crashes a few seconds after a successful login (https://github.com/vector-im/riot-ios#965).
+ * Got stuck syncing forever (https://github.com/vector-im/riot-ios#1008).
+ * Local echoes for typed messages stay (far) longer in grey (https://github.com/vector-im/riot-ios#1007).
+ * MXRealmCryptoStore: Prevent storeSession & storeInboundGroupSession from storing duplicates (#227).
+ * MXRealmCryptoStore: Force migration of the db to remove duplicate olm and megolm sessions (#227).
+ 
 Changes in Matrix iOS SDK in 0.7.6 (2017-01-24)
 ===============================================
 
@@ -14,7 +31,7 @@ Bug fixes:
 API breaks:
  * MXDecryptingErrorUnkwnownInboundSessionIdCode has been renamed to MXDecryptingErrorUnknownInboundSessionIdCode.
  * MXDecryptingErrorUnkwnownInboundSessionIdReason has been renamed to MXDecryptingErrorUnknownInboundSessionIdReason.
- * kMXRoomLocalEventIdPrefix has been renamed to kMXEventLocalEventIdPrefix
+ * kMXRoomLocalEventIdPrefix has been renamed to kMXEventLocalEventIdPrefix.
 
 Changes in Matrix iOS SDK in 0.7.5 (2017-01-19)
 ===============================================
