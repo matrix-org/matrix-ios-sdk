@@ -1,5 +1,6 @@
 /*
  Copyright 2016 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -36,7 +37,16 @@ typedef enum : NSUInteger
     /**
      The user has blocked the device.
      */
-    MXDeviceBlocked
+    MXDeviceBlocked,
+
+    /**
+     This is the first time the user sees the device.
+ 
+     Note: The position of this value in the enum does not reflect the life cycle of the verification
+     state. It is at the end because it was added afterwards and we need to stay compatible
+     with what was stored in the crypto store.
+     */
+    MXDeviceUnknown
 
 } MXDeviceVerification;
 

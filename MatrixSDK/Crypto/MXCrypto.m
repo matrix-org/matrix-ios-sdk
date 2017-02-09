@@ -1,5 +1,6 @@
 /*
  Copyright 2016 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -511,6 +512,40 @@
 #endif
 }
 
+- (void)setDevicesKnown:(MXUsersDevicesMap<MXDeviceInfo *> *)devices complete:(void (^)())complete
+{
+#ifdef MX_CRYPTO
+    dispatch_async(_cryptoQueue, ^{
+
+        for (NSString *userId in devices.userIds)
+        {
+            for (NSString *deviceID in [devices deviceIdsForUser:userId])
+            {
+                MXDeviceInfo *device = [devices objectForDevice:deviceID forUser:userId];
+
+                if (device.verified == MXDeviceUnknown)
+                {
+                    device.verified = MXDeviceUnverified;
+                    [_store storeDeviceForUser:device.userId device:device];
+                }
+            }
+        }
+
+        if (complete)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                complete();
+            });
+        }
+    });
+#else
+    if (complete)
+    {
+        complete();
+    }
+#endif
+}
+
 - (MXHTTPOperation*)downloadKeys:(NSArray<NSString*>*)userIds
                          success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap))success
                          failure:(void (^)(NSError *error))failure
@@ -786,6 +821,9 @@
         _cryptoQueue = theCryptoQueue;
         _store = store;
 
+        // Default configuration
+        _warnOnUnknowDevices = YES;
+
         _decryptionQueue = [MXCrypto dispatchQueueForUser:mxSession.matrixRestClient.credentials.userId];
 
         _olmDevice = [[MXOlmDevice alloc] initWithStore:_store];
@@ -799,6 +837,7 @@
 
         pendingUsersWithNewDevices = [NSMutableSet set];
         inProgressUsersWithNewDevices = [NSMutableSet set];
+
 
         // Build our device keys: they will later be uploaded
         NSString *deviceId = _store.deviceId;

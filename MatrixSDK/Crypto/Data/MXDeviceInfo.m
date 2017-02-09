@@ -1,5 +1,6 @@
 /*
  Copyright 2016 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -24,7 +25,7 @@
     if (self)
     {
         _deviceId = deviceId;
-        _verified = MXDeviceUnverified;
+        _verified = MXDeviceUnknown;
     }
     return self;
 }
@@ -52,7 +53,6 @@
     MXDeviceInfo *deviceInfo = [[MXDeviceInfo alloc] initWithDeviceId:JSONDictionary[@"device_id"]];
     if (deviceInfo)
     {
-        deviceInfo.verified = MXDeviceUnverified;
         MXJSONModelSetString(deviceInfo.userId, JSONDictionary[@"user_id"]);
         MXJSONModelSetArray(deviceInfo.algorithms, JSONDictionary[@"algorithms"]);
         MXJSONModelSetDictionary(deviceInfo.keys, JSONDictionary[@"keys"]);
