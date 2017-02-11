@@ -203,6 +203,7 @@
 		C6D5D6081E4FA6A700706C0F /* MXEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6D5D6071E4FA6A700706C0F /* MXEvent.swift */; };
 		C6D5D60A1E4FA74000706C0F /* MXEnumConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6D5D6091E4FA74000706C0F /* MXEnumConstants.swift */; };
 		C6D5D60C1E4FA97C00706C0F /* MX3PID.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6D5D60B1E4FA97C00706C0F /* MX3PID.swift */; };
+		C6D5D60E1E4FBD2900706C0F /* MXSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6D5D60D1E4FBD2900706C0F /* MXSession.swift */; };
 		D123DC2791F0EAF08F70C207 /* libPods-MatrixSDKTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3ABDD5D65684E6B7F52FB94E /* libPods-MatrixSDKTests.a */; };
 		F03EF4FE1DF014D9009DF592 /* MXMediaLoader.h in Headers */ = {isa = PBXBuildFile; fileRef = F03EF4FA1DF014D9009DF592 /* MXMediaLoader.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		F03EF4FF1DF014D9009DF592 /* MXMediaLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = F03EF4FB1DF014D9009DF592 /* MXMediaLoader.m */; };
@@ -450,6 +451,7 @@
 		C6D5D6071E4FA6A700706C0F /* MXEvent.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXEvent.swift; sourceTree = "<group>"; };
 		C6D5D6091E4FA74000706C0F /* MXEnumConstants.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXEnumConstants.swift; sourceTree = "<group>"; };
 		C6D5D60B1E4FA97C00706C0F /* MX3PID.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MX3PID.swift; sourceTree = "<group>"; };
+		C6D5D60D1E4FBD2900706C0F /* MXSession.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXSession.swift; sourceTree = "<group>"; };
 		E1674C6FF8BBF074E7F76059 /* libPods-MatrixSDK.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MatrixSDK.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F03EF4FA1DF014D9009DF592 /* MXMediaLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXMediaLoader.h; sourceTree = "<group>"; };
 		F03EF4FB1DF014D9009DF592 /* MXMediaLoader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXMediaLoader.m; sourceTree = "<group>"; };
@@ -856,6 +858,7 @@
 				C60165361E3AA32500B92CFA /* MXRestClient.swift */,
 				320DFDD019DD99B60068622A /* MXSession.h */,
 				320DFDD119DD99B60068622A /* MXSession.m */,
+				C6D5D60D1E4FBD2900706C0F /* MXSession.swift */,
 				320DFDD219DD99B60068622A /* MXError.h */,
 				320DFDD319DD99B60068622A /* MXError.m */,
 				32FE41341D0AB7070060835E /* MXEnumConstants.h */,
@@ -1307,6 +1310,7 @@
 				32D776821A27877300FC4AA2 /* MXMemoryRoomStore.m in Sources */,
 				32A151271DABB0CB00400192 /* MXMegolmDecryption.m in Sources */,
 				329B2AC01D3FB01D002D546F /* MXJingleCallStack.m in Sources */,
+				C6D5D60E1E4FBD2900706C0F /* MXSession.swift in Sources */,
 				320DFDE319DD99B60068622A /* MXError.m in Sources */,
 				C6D5D60C1E4FA97C00706C0F /* MX3PID.swift in Sources */,
 				327137281A24D50A00DB6757 /* MXMyUser.m in Sources */,

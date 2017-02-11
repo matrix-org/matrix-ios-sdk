@@ -297,7 +297,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  initial sync the session state is MXSessionStateInitialSyncFailed.
  */
 - (void)start:(void (^)())onServerSyncDone
-      failure:(void (^)(NSError *error))failure;
+      failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Start the session like `[MXSession start]` but preload the requested number of messages
@@ -311,7 +311,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  */
 - (void)startWithMessagesLimit:(NSUInteger)messagesLimit
               onServerSyncDone:(void (^)())onServerSyncDone
-                       failure:(void (^)(NSError *error))failure;
+                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Pause the session events stream.
@@ -342,7 +342,9 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 typedef void (^MXOnBackgroundSyncDone)();
 typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
-- (void)backgroundSync:(unsigned int)timeout success:(MXOnBackgroundSyncDone)backgroundSyncDone failure:(MXOnBackgroundSyncFail)backgroundSyncfails;
+- (void)backgroundSync:(unsigned int)timeout
+               success:(MXOnBackgroundSyncDone)backgroundSyncDone
+               failure:(MXOnBackgroundSyncFail)backgroundSyncfails NS_REFINED_FOR_SWIFT;
 
 /**
  Restart the session events stream.
@@ -367,7 +369,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)logout:(void (^)())success
-                   failure:(void (^)(NSError *error))failure;
+                   failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - MXSession pause prevention
@@ -412,7 +414,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @param failure A block object called when the operation fails.
  */
 - (void)setStore:(id<MXStore>)store success:(void (^)())onStoreDataReady
-         failure:(void (^)(NSError *error))failure;
+         failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  An array of event types for which read receipts are sent.
@@ -457,7 +459,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  
  @return the HTTP operation that may be required. Can be nil.
  */
-- (MXHTTPOperation*)enableCrypto:(BOOL)enableCrypto success:(void (^)())success failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)enableCrypto:(BOOL)enableCrypto success:(void (^)())success failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - Rooms operations
