@@ -1339,7 +1339,7 @@ typedef enum : NSUInteger
 
  @param roomAlias the alias of the room to look for.
 
- @param success A block object called when the operation succeeds. It provides an array of `MXRoomMember`.
+ @param success A block object called when the operation succeeds. It provides the ID of the room.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
