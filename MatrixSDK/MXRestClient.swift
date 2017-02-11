@@ -2118,7 +2118,52 @@ public extension MXRestClient {
     
     
     
-    // TODO: - Crypto
+    // MARK: - Crypto
+    
+    /**
+     Upload device and/or one-time keys.
+     
+     - parameters:
+        - deviceKeys: the device keys to send.
+        - oneTimeKeys: the one-time keys to send.
+        - deviceId: the explicit device_id to use for upload (pass `nil` to use the same as that used during auth).
+        - completion: A block object called when the operation completes.
+        - response: Provides information about the keys on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func uploadKeys(_ deviceKeys: [String: Any], oneTimeKeys: [String: Any], forDevice deviceId: String? = nil, completion: @escaping (_ response: MXResponse<MXKeysUploadResponse>) -> Void) -> MXHTTPOperation? {
+        return __uploadKeys(deviceKeys, oneTimeKeys: oneTimeKeys, forDevice: deviceId, success: success(completion), failure: error(completion))
+    }
+    
+    /**
+     Download device keys.
+     
+     - parameters:
+        - userIds: list of users to get keys for.
+        - completion: A block object called when the operation completes.
+        - response: Provides information about the keys on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func downloadKeys(forUsers userIds: [String], completion: @escaping (_ response: MXResponse<MXKeysQueryResponse>) -> Void) -> MXHTTPOperation? {
+        return __downloadKeys(forUsers: userIds, success: success(completion), failure: error(completion))
+    }
+    
+    
+    /**
+     Claim one-time keys.
+     
+     - parameters:
+        - usersDevices: a list of users, devices and key types to retrieve keys for.
+        - completion: A block object called when the operation completes.
+        - response: Provides information about the keys on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func claimOneTimeKeys(for usersDevices: MXUsersDevicesMap<NSString>, completion: @escaping (_ response: MXResponse<MXKeysClaimResponse>) -> Void) -> MXHTTPOperation? {
+        return __claimOneTimeKeys(forUsersDevices: usersDevices, success: success(completion), failure: error(completion))
+    }
     
     
     

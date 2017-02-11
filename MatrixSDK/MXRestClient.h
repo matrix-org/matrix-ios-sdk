@@ -1584,7 +1584,7 @@ typedef enum : NSUInteger
 - (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys oneTimeKeys:(NSDictionary*)oneTimeKeys
                      forDevice:(NSString*)deviceId
                        success:(void (^)(MXKeysUploadResponse *keysUploadResponse))success
-                       failure:(void (^)(NSError *error))failure;
+                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Download device keys.
@@ -1598,7 +1598,7 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)downloadKeysForUsers:(NSArray<NSString*>*)userIds
                                  success:(void (^)(MXKeysQueryResponse *keysQueryResponse))success
-                                 failure:(void (^)(NSError *error))failure;
+                                 failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  * Claim one-time keys.
@@ -1612,7 +1612,7 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)claimOneTimeKeysForUsersDevices:(MXUsersDevicesMap<NSString*>*)usersDevicesKeyTypesMap
                                             success:(void (^)(MXKeysClaimResponse *keysClaimResponse))success
-                                            failure:(void (^)(NSError *error))failure;
+                                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - Direct-to-device messaging
