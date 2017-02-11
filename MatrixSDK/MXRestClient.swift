@@ -16,117 +16,6 @@
 
 import Foundation
 
-/**
- Captures the result of an API call and it's associated success data.
- 
- # Examples:
- 
- Use a switch statement to handle both a success and an error:
- 
-     mxRestClient.publicRooms { response in
-        switch response {
-        case .success(let rooms):
-            // Do something useful with these rooms
-            break
-     
-        case .failure(let error):
-            // Handle the error in some way
-            break
-        }
-     }
- 
- Silently ignore the failure case:
- 
-     mxRestClient.publicRooms { response in
-         guard let rooms = response.value else { return }
-         // Do something useful with these rooms
-     }
-
- */
-public enum MXResponse<T> {
-    case success(T)
-    case failure(Error)
-    
-    /// Indicates whether the API call was successful
-    public var isSuccess: Bool {
-        switch self {
-        case .success:   return true
-        default:        return false
-        }
-    }
-    
-    /// The response's success value, if applicable
-    public var value: T? {
-        switch self {
-        case .success(let value): return value
-        default: return nil
-        }
-    }
-    
-    /// Indicates whether the API call failed
-    public var isFailure: Bool {
-        return !isSuccess
-    }
-    
-    /// The response's error value, if applicable
-    public var error: Error? {
-        switch self {
-        case .failure(let error): return error
-        default: return nil
-        }
-    }
-}
-
-public enum MXProgress<T> {
-    case progress(Progress)
-    case success(T)
-    case failure(Error)
-    
-    /// Indicates whether the call is complete.
-    public var isComplete: Bool {
-        switch self {
-        case .success, .failure: return true
-        default: return false
-        }
-    }
-    
-    /// The current progress. If the process is already complete, this will return nil.
-    public var progress: Progress? {
-        switch self {
-        case .progress(let progress): return progress
-        default: return nil
-        }
-    }
-    
-    /// Indicates whether the API call was successful
-    public var isSuccess: Bool {
-        switch self {
-        case .success:   return true
-        default:        return false
-        }
-    }
-    
-    /// The response's success value, if applicable
-    public var value: T? {
-        switch self {
-        case .success(let value): return value
-        default: return nil
-        }
-    }
-    
-    /// Indicates whether the API call failed
-    public var isFailure: Bool {
-        return !isSuccess
-    }
-    
-    /// The response's error value, if applicable
-    public var error: Error? {
-        switch self {
-        case .failure(let error): return error
-        default: return nil
-        }
-    }
-}
 
 fileprivate extension MXResponse {
     
@@ -168,300 +57,29 @@ fileprivate extension MXResponse {
  were created by ObjC headers that don't specify nullibility. Under
  normal controlled circumstances, this should probably never be used.
  */
-struct _MXUnknownError : Error {
+fileprivate struct _MXUnknownError : Error {
     var localizedDescription: String {
         return "error object was unexpectedly nil"
     }
 }
 
 
-/// Represents a login flow
-public enum MXLoginFlowType : String {
-    case password = "m.login.password"
-    case recaptcha = "m.login.recaptcha"
-    case OAuth2 = "m.login.oauth2"
-    case emailIdentity = "m.login.email.identity"
-    case token = "m.login.token"
-    case dummy = "m.login.dummy"
-    case emailCode = "m.login.email.code"
-}
-
 /// Represents account data type
 public enum MXAccountDataType {
     case direct
     case pushRules
     case ignoredUserList
-    case custom(String)
+    case other(String)
     
     var rawValue: String {
         switch self {
         case .direct:               return kMXAccountDataTypeDirect
         case .pushRules:            return kMXAccountDataTypePushRules
         case .ignoredUserList:      return kMXAccountDataKeyIgnoredUser
-        case .custom(let value):    return value
+        case .other(let value):     return value
         }
     }
 }
-
-/// Represents a mode for forwarding push notifications.
-public enum MXPusherKind {
-    case http, none, custom(String)
-
-    var objectValue: NSObject {
-        switch self {
-        case .http: return "http" as NSString
-        case .none: return NSNull()
-        case .custom(let value): return value as NSString
-        }
-    }
-}
-
-
-/**
- Push rules kind.
- 
- Push rules are separated into different kinds of rules. These categories have a priority order: verride rules
- have the highest priority.
- Some category may define implicit conditions.
- */
-public enum MXPushRuleKind {
-    case override, content, room, sender, underride
-
-    var objc: __MXPushRuleKind {
-        switch self  {
-        case .override: return __MXPushRuleKindOverride
-        case .content: return __MXPushRuleKindContent
-        case .room: return __MXPushRuleKindRoom
-        case .sender: return __MXPushRuleKindSender
-        case .underride: return __MXPushRuleKindUnderride
-        }
-    }
-}
-
-
-/**
- Scope for a specific push rule.
- 
- Push rules can be applied globally, or to a spefific device given a `profileTag`
- */
-public enum MXPushRuleScope {
-    case global, device(profileTag: String)
-
-    var identifier: String {
-        switch self {
-        case .global: return "global"
-        case .device(let profileTag): return "device/\(profileTag)"
-        }
-    }
-}
-
-
-
-
-
-/**
- Types of Matrix events
- 
- Matrix events types are exchanged as strings with the home server. The types
- specified by the Matrix standard are listed here as NSUInteger enum in order
- to ease the type handling.
- 
- Custom events types, out of the specification, may exist. In this case,
- `MXEventTypeString` must be checked.
- */
-public enum MXEventType {
-    case roomName
-    case roomTopic
-    case roomAvatar
-    case roomMember
-    case roomCreate
-    case roomJoinRules
-    case roomPowerLevels
-    case roomAliases
-    case roomCanonicalAlias
-    case roomEncrypted
-    case roomEncryption
-    case roomGuestAccess
-    case roomHistoryVisibility
-    case roomKey
-    case roomMessage
-    case roomMessageFeedback
-    case roomRedaction
-    case roomThirdPartyInvite
-    case roomTag
-    case presence
-    case typing
-    case newDevice
-    case callInvite
-    case callCandidates
-    case callAnswer
-    case callHangup
-    case receipt
-    
-    case custom(String)
-    
-    var identifier: String {
-        switch self {
-        case .roomName: return kMXEventTypeStringRoomName
-        case .roomTopic: return kMXEventTypeStringRoomTopic
-        case .roomAvatar: return kMXEventTypeStringRoomAvatar
-        case .roomMember: return kMXEventTypeStringRoomMember
-        case .roomCreate: return kMXEventTypeStringRoomCreate
-        case .roomJoinRules: return kMXEventTypeStringRoomJoinRules
-        case .roomPowerLevels: return kMXEventTypeStringRoomPowerLevels
-        case .roomAliases: return kMXEventTypeStringRoomAliases
-        case .roomCanonicalAlias: return kMXEventTypeStringRoomCanonicalAlias
-        case .roomEncrypted: return kMXEventTypeStringRoomEncrypted
-        case .roomEncryption: return kMXEventTypeStringRoomEncryption
-        case .roomGuestAccess: return kMXEventTypeStringRoomGuestAccess
-        case .roomHistoryVisibility: return kMXEventTypeStringRoomHistoryVisibility
-        case .roomKey: return kMXEventTypeStringRoomKey
-        case .roomMessage: return kMXEventTypeStringRoomMessage
-        case .roomMessageFeedback: return kMXEventTypeStringRoomMessageFeedback
-        case .roomRedaction: return kMXEventTypeStringRoomRedaction
-        case .roomThirdPartyInvite: return kMXEventTypeStringRoomThirdPartyInvite
-        case .roomTag: return kMXEventTypeStringRoomTag
-        case .presence: return kMXEventTypeStringPresence
-        case .newDevice: return kMXEventTypeStringNewDevice
-        case .callInvite: return kMXEventTypeStringCallInvite
-        case .callCandidates: return kMXEventTypeStringCallCandidates
-        case .callAnswer: return kMXEventTypeStringCallAnswer
-        case .callHangup: return kMXEventTypeStringCallHangup
-        case .receipt: return kMXEventTypeStringReceipt
-            
-        // Swift converts any constant with the suffix "Notification" as the type `Notification.Name`
-        // The original value can be reached using the `rawValue` property.
-        case .typing: return NSNotification.Name.mxEventTypeStringTyping.rawValue
-            
-        case .custom(let string): return string
-        }
-    }
-}
-
-/// Types of messages
-public enum MXMessageType {
-    case text, emote, notice, image, audio, video, location, file
-    
-    var identifier: String {
-        switch self {
-        case .text: return kMXMessageTypeText
-        case .emote: return kMXMessageTypeEmote
-        case .notice: return kMXMessageTypeNotice
-        case .image: return kMXMessageTypeImage
-        case .audio: return kMXMessageTypeAudio
-        case .video: return kMXMessageTypeVideo
-        case .location: return kMXMessageTypeLocation
-        case .file: return kMXMessageTypeFile
-        }
-    }
-}
-
-
-
-public enum MXRoomHistoryVisibility {
-    case worldReadable, shared, invited, joined
-    
-    var identifier: String {
-        switch self {
-        case .worldReadable: return kMXRoomHistoryVisibilityWorldReadable
-        case .shared: return kMXRoomHistoryVisibilityShared
-        case .invited: return kMXRoomHistoryVisibilityInvited
-        case .joined: return kMXRoomHistoryVisibilityJoined
-        }
-    }
-    
-    init?(identifier: String?) {
-        let historyVisibilities: [MXRoomHistoryVisibility] = [.worldReadable, .shared, .invited, .joined]
-        guard let value = historyVisibilities.first(where: {$0.identifier == identifier}) else { return nil }
-        self = value
-    }
-}
-
-/**
- Room join rule.
- 
- The default homeserver value is invite.
- */
-public enum MXRoomJoinRule {
-    
-    /// Anyone can join the room without any prior action
-    case `public`
-    
-    /// A user who wishes to join the room must first receive an invite to the room from someone already inside of the room.
-    case invite
-    
-    /// Reserved keyword which is not implemented by homeservers.
-    case `private`, knock
-    
-    var identifier: String {
-        switch self {
-        case .public: return kMXRoomJoinRulePublic
-        case .invite: return kMXRoomJoinRuleInvite
-        case .private: return kMXRoomJoinRulePrivate
-        case .knock: return kMXRoomJoinRuleKnock
-        }
-    }
-    
-    init?(identifier: String?) {
-        let joinRules: [MXRoomJoinRule] = [.public, .invite, .private, .knock]
-        guard let value = joinRules.first(where: { $0.identifier == identifier}) else { return nil }
-        self = value
-    }
-}
-
-
-/// Room guest access. The default homeserver value is forbidden.
-public enum MXRoomGuestAccess {
-    
-    /// Guests can join the room
-    case canJoin
-    
-    /// Guest access is forbidden
-    case forbidden
-    
-    /// String identifier
-    var identifier: String {
-        switch self {
-        case .canJoin: return kMXRoomGuestAccessCanJoin
-        case .forbidden: return kMXRoomGuestAccessForbidden
-        }
-    }
-    
-    init?(identifier: String?) {
-        let accessRules: [MXRoomGuestAccess] = [.canJoin, .forbidden]
-        guard let value = accessRules.first(where: { $0.identifier == identifier}) else { return nil }
-        self = value
-    }
-}
-
-
-
-/**
- Room visibility in the current homeserver directory.
- The default homeserver value is private.
- */
-public enum MXRoomDirectoryVisibility {
-    
-    /// The room is not listed in the homeserver directory
-    case `private`
-    
-    /// The room is listed in the homeserver directory
-    case `public`
-    
-    var identifier: String {
-        switch self {
-        case .private: return kMXRoomDirectoryVisibilityPrivate
-        case .public: return kMXRoomDirectoryVisibilityPublic
-        }
-    }
-    
-    init?(identifier: String?) {
-        let visibility: [MXRoomDirectoryVisibility] = [.public, .private]
-        guard let value = visibility.first(where: { $0.identifier == identifier}) else { return nil }
-        self = value
-    }
-}
-
 
 
 
@@ -478,50 +96,9 @@ public enum MXRoomInvitee {
     /// Invite a user using a third-party mechanism.
     /// `method` is the method to use, eg. "email".
     /// `address` is the address of the user.
-    case thirdPartyId(medium: String, address: String)
+    case thirdPartyId(MX3PID)
 }
 
-
-
-
-/// Room presets.
-/// Define a set of state events applied during a new room creation.
-public enum MXRoomPreset {
-    
-    /// join_rules is set to invite. history_visibility is set to shared.
-    case privateChat
-    
-    /// join_rules is set to invite. history_visibility is set to shared. All invitees are given the same power level as the room creator.
-    case trustedPrivateChat
-    
-    /// join_rules is set to public. history_visibility is set to shared.
-    case publicChat
-    
-    
-    var identifier: String {
-        switch self {
-        case .privateChat: return kMXRoomPresetPrivateChat
-        case .trustedPrivateChat: return kMXRoomPresetTrustedPrivateChat
-        case .publicChat: return kMXRoomPresetPublicChat
-        }
-    }
-}
-
-
-/// Types of third-party identifiers.
-public enum MX3PIDMedium {
-    case email
-    case msisdn
-    case other(String)
-    
-    var identifier: String {
-        switch self {
-        case .email: return kMX3PIDMediumEmail
-        case .msisdn: return kMX3PIDMediumMSISDN
-        case .other(let value): return value
-        }
-    }
-}
 
 
 
@@ -556,7 +133,6 @@ public enum MX3PIDMedium {
  4. The newly created `MXResponse` is passed to the completion block.
  
  */
-
 fileprivate func success<T, U>(transform: @escaping (_ input: T) -> U? = { return $0 as? U },
                          _ completion: @escaping (_ response: MXResponse<U>) -> Void) -> (T) -> Void {
     return { completion(.fromOptional(value: transform($0))) }
@@ -675,7 +251,7 @@ public extension MXRestClient {
      - returns: a `MXHTTPOperation` instance.
      */
     @nonobjc @discardableResult func register(loginType: MXLoginFlowType = .password, username: String?, password: String, completion: @escaping (_ response: MXResponse<MXCredentials>) -> Void) -> MXHTTPOperation? {
-        return __register(withLoginType: loginType.rawValue, username: username, password: password, success: success(completion), failure: error(completion))
+        return __register(withLoginType: loginType.identifier, username: username, password: password, success: success(completion), failure: error(completion))
     }
     
     
@@ -742,7 +318,7 @@ public extension MXRestClient {
      - returns: a `MXHTTPOperation` instance.
      */
     @nonobjc @discardableResult func login(type loginType: MXLoginFlowType = .password, username: String, password: String, completion: @escaping (_ response: MXResponse<MXCredentials>) -> Void) -> MXHTTPOperation? {
-        return __login(withLoginType: loginType.rawValue, username: username, password: password, success: success(completion), failure: error(completion))
+        return __login(withLoginType: loginType.identifier, username: username, password: password, success: success(completion), failure: error(completion))
     }
     
     
@@ -1389,8 +965,8 @@ public extension MXRestClient {
             return __inviteUser(userId, toRoom: roomId, success: success(completion), failure: error(completion))
         case .email(let emailAddress):
             return __inviteUser(byEmail: emailAddress, toRoom: roomId, success: success(completion), failure: error(completion))
-        case .thirdPartyId(medium: let medium, address: let address):
-            return __invite(byThreePid: medium, address: address, toRoom: roomId, success: success(completion), failure: error(completion))
+        case .thirdPartyId(let descriptor):
+            return __invite(byThreePid: descriptor.medium.identifier, address: descriptor.address, toRoom: roomId, success: success(completion), failure: error(completion))
         }
     }
     
@@ -1959,29 +1535,50 @@ public extension MXRestClient {
      Retrieve a user matrix id from a 3rd party id.
      
      - parameters:
-        - address: the id of the user in the 3rd party system.
-        - medium: the 3rd party system.
+        - descriptor: the 3PID descriptor of the user in the 3rd party system.
         - completion: A block object called when the operation completes.
         - response: Provides the Matrix user id (or `nil` if the user is not found) on success.
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func lookup3PID(_ address: String, for medium: MX3PIDMedium, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation? {
-        return __lookup3pid(address, forMedium: medium.identifier, success: success(completion), failure: error(completion))
+    @nonobjc @discardableResult func lookup3PID(_ descriptor: MX3PID, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation? {
+        return __lookup3pid(descriptor.address, forMedium: descriptor.medium.identifier, success: success(completion), failure: error(completion))
     }
     
     /**
      Retrieve user matrix ids from a list of 3rd party ids.
      
      - parameters:
-        - threepids: the list of 3rd party ids: [[<(MX3PIDMedium)media1>, <(NSString*)address1>], [<(MX3PIDMedium)media2>, <(NSString*)address2>], ...].
+        - descriptors: the list of 3rd party id descriptors
         - completion: A block object called when the operation completes.
-        - response: Provides the array of the discovered users returned by the identity server. [[<(MX3PIDMedium)media>, <(NSString*)address>, <(NSString*)userId>], ...].
+        - response: Provides the user ID for each MX3PID submitted.
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func lookup3PIDs(_ ids: [Any], completion: @escaping (_ response: MXResponse<[Any]>) -> Void) -> MXHTTPOperation? {
-        return __lookup3pids(ids, success: success(completion), failure: error(completion))
+    @nonobjc @discardableResult func lookup3PIDs(_ descriptors: [MX3PID], completion: @escaping (_ response: MXResponse<[MX3PID: String]>) -> Void) -> MXHTTPOperation? {
+        
+        // The API expects the form: [[<(MX3PIDMedium)media1>, <(NSString*)address1>], [<(MX3PIDMedium)media2>, <(NSString*)address2>], ...]
+        let ids = descriptors.map({ return [$0.medium.identifier, $0.address] as [String] })
+        
+        return __lookup3pids(ids, success: success(transform: { (triplets) -> [MX3PID : String]? in
+            
+            // The API returns the data as an array of arrays:
+            // [[<(MX3PIDMedium)media>, <(NSString*)address>, <(NSString*)userId>], ...].
+            var responseDictionary = [MX3PID: String]()
+            triplets?
+                .flatMap { return $0 as? [String] }
+                .forEach { triplet in
+                    
+                    // Make sure the array contains 3 items
+                    guard triplet.count >= 3 else { return }
+                    
+                    // Build the MX3PID struct, and add ito the dictionary
+                    let medium = MX3PID(medium: .init(identifier: triplet[0]), address: triplet[1])
+                    responseDictionary[medium] = triplet[2]
+                }
+            return responseDictionary
+            
+        }, completion), failure: error(completion))
     }
     
     
