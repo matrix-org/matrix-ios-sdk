@@ -1548,7 +1548,7 @@ typedef enum : NSUInteger
                                 afterLimit:(NSUInteger)afterLimit
                                  nextBatch:(NSString*)nextBatch
                                    success:(void (^)(MXSearchRoomEventResults *roomEventResults))success
-                                   failure:(void (^)(NSError *error))failure;
+                                   failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Make a search.
@@ -1564,7 +1564,7 @@ typedef enum : NSUInteger
 - (MXHTTPOperation*)search:(NSDictionary*)parameters
                  nextBatch:(NSString*)nextBatch
                    success:(void (^)(MXSearchRoomEventResults *roomEventResults))success
-                   failure:(void (^)(NSError *error))failure;
+                   failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - Crypto

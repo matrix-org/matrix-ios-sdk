@@ -2081,7 +2081,40 @@ public extension MXRestClient {
     }
     
     
-    // TODO: - Search
+    // MARK: - Search
+    
+    /**
+     Search a text in room messages.
+     
+     - parameters:
+        - textPattern: the text to search for in message body.
+        - roomEventFilter: a nullable dictionary which defines the room event filtering during the search request.
+        - beforeLimit: the number of events to get before the matching results.
+        - afterLimit: the number of events to get after the matching results.
+        - nextBatch: the token to pass for doing pagination from a previous response.
+        - completion: A block object called when the operation completes.
+        - response: Provides the search results on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func searchMessages(withPattern textPattern: String, roomEventFilter: MXRoomEventFilter? = nil, beforeLimit: UInt = 0, afterLimit: UInt = 0, nextBatch: String, completion: @escaping (_ response: MXResponse<MXSearchRoomEventResults>) -> Void) -> MXHTTPOperation? {
+        return __searchMessages(withText: textPattern, roomEventFilter: roomEventFilter, beforeLimit: beforeLimit, afterLimit: afterLimit, nextBatch: nextBatch, success: success(completion), failure: error(completion))
+    }
+    
+    /**
+     Make a search.
+     
+     - parameters:
+        - parameters: the search parameters as defined by the Matrix search spec (http://matrix.org/docs/api/client-server/#!/Search/post_search ).
+        - nextBatch: the token to pass for doing pagination from a previous response.
+        - completion: A block object called when the operation completes.
+        - response: Provides the search results on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func search(withParameters parameters: [String: Any], nextBatch: String, completion: @escaping (_ response: MXResponse<MXSearchRoomEventResults>) -> Void) -> MXHTTPOperation? {
+        return __search(parameters, nextBatch: nextBatch, success: success(completion), failure: error(completion))
+    }
     
     
     
