@@ -77,6 +77,57 @@ public enum MXResponse<T> {
     }
 }
 
+public enum MXProgress<T> {
+    case progress(Progress)
+    case success(T)
+    case failure(Error)
+    
+    /// Indicates whether the call is complete.
+    public var isComplete: Bool {
+        switch self {
+        case .success, .failure: return true
+        default: return false
+        }
+    }
+    
+    /// The current progress. If the process is already complete, this will return nil.
+    public var progress: Progress? {
+        switch self {
+        case .progress(let progress): return progress
+        default: return nil
+        }
+    }
+    
+    /// Indicates whether the API call was successful
+    public var isSuccess: Bool {
+        switch self {
+        case .success:   return true
+        default:        return false
+        }
+    }
+    
+    /// The response's success value, if applicable
+    public var value: T? {
+        switch self {
+        case .success(let value): return value
+        default: return nil
+        }
+    }
+    
+    /// Indicates whether the API call failed
+    public var isFailure: Bool {
+        return !isSuccess
+    }
+    
+    /// The response's error value, if applicable
+    public var error: Error? {
+        switch self {
+        case .failure(let error): return error
+        default: return nil
+        }
+    }
+}
+
 fileprivate extension MXResponse {
     
     /**
@@ -457,7 +508,20 @@ public enum MXRoomPreset {
 }
 
 
-
+/// Types of third-party identifiers.
+public enum MX3PIDMedium {
+    case email
+    case msisdn
+    case other(String)
+    
+    var identifier: String {
+        switch self {
+        case .email: return kMX3PIDMediumEmail
+        case .msisdn: return kMX3PIDMediumMSISDN
+        case .other(let value): return value
+        }
+    }
+}
 
 
 
@@ -1783,7 +1847,7 @@ public extension MXRestClient {
      - parameters:
         - userId: the user id to look up.
         - completion: A block object called when the operation completes.
-        - response: Provides the MXPresenceResponse on success.
+        - response: Provides the `MXPresenceResponse` on success.
      
      - returns: a `MXHTTPOperation` instance.
      */
@@ -1793,12 +1857,45 @@ public extension MXRestClient {
     
     
     
-    // TODO: - Sync
+    // MARK: - Sync
     
     
+    /*
+     TODO: This API could be further refined.
+     
+     `token` is an optional string, with nil meaning "initial sync".
+     This could be expressed better as an enum: .initial or .fromToken(String)
+     
+     `presence` appears to support only two possible values: nil or "offline".
+     This could be expressed better as an enum: .online, or .offline
+     (are there any other valid values for this field? why would it be typed as a string?)
+    */
+    
+    /**
+     Synchronise the client's state and receive new messages.
+     
+     Synchronise the client's state with the latest state on the server.
+     Client's use this API when they first log in to get an initial snapshot
+     of the state on the server, and then continue to call this API to get
+     incremental deltas to the state, and to receive new messages.
+     
+     - parameters:
+        - token: the token to stream from (nil in case of initial sync).
+        - serverTimeout: the maximum time in ms to wait for an event.
+        - clientTimeout: the maximum time in ms the SDK must wait for the server response.
+        - presence:  the optional parameter which controls whether the client is automatically marked as online by polling this API. If this parameter is omitted then the client is automatically marked as online when it uses this API. Otherwise if the parameter is set to "offline" then the client is not marked as being online when it uses this API.
+        - filterId: the ID of a filter created using the filter API (optinal).
+        - completion: A block object called when the operation completes.
+        - response: Provides the `MXSyncResponse` on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func sync(fromToken token: String?, serverTimeout: UInt, clientTimeout: UInt, setPresence presence: String?, filterId: String? = nil, completion: @escaping (_ response: MXResponse<MXSyncResponse>) -> Void) -> MXHTTPOperation? {
+        return __sync(fromToken: token, serverTimeout: serverTimeout, clientTimeout: clientTimeout, setPresence: presence, filter: filterId, success: success(completion), failure: error(completion))
+    }
     
 
-    // TODO: - Directory operations
+    // MARK: - Directory operations
     
     /**
      Get the list of public rooms hosted by the home server.
@@ -1812,15 +1909,125 @@ public extension MXRestClient {
         return __publicRooms(success(completion), failure: error(completion))
     }
     
+    /**
+     Get the room ID corresponding to this room alias
+     
+     - parameters:
+        - roomAlias: the alias of the room to look for.
+        - completion: A block object called when the operation completes.
+        - response: Provides the the ID of the room on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func roomId(forRoomAlias roomAlias: String, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation? {
+        return __roomID(forRoomAlias: roomAlias, success: success(completion), failure: error(completion))
+    }
     
-    // TODO: - Media Repository API
+    // Mark: - Media Repository API
     
-    
+    /**
+     Upload content to HomeServer
+     
+     - parameters:
+        - data: the content to upload.
+        - filename: optional filename
+        - mimetype: the content type (image/jpeg, audio/aac...)
+        - timeout: the maximum time the SDK must wait for the server response.
+        - uploadProgress: A block object called multiple times as the upload progresses. It's also called once the upload is complete
+        - progress: Provides the progress of the upload until it completes. This will provide the URL of the resource on successful completion, or an error message on unsuccessful completion.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func uploadContent(_ data: Data, filename: String? = nil, mimeType: String, timeout: TimeInterval, uploadProgress: @escaping (_ progress: MXProgress<URL>) -> Void) -> MXHTTPOperation? {
+        return __uploadContent(data, filename: filename, mimeType: mimeType, timeout: timeout, success: { (urlString) in
+            if let urlString = urlString, let url = URL(string: urlString) {
+                uploadProgress(.success(url))
+            } else {
+                uploadProgress(.failure(_MXUnknownError()))
+            }
+        }, failure: { (error) in
+            uploadProgress(.failure(error ?? _MXUnknownError()))
+        }, uploadProgress: { (progress) in
+            uploadProgress(.progress(progress!))
+        })
+    }
     
     
     // TODO: - Identity server API
     
+    /**
+     Retrieve a user matrix id from a 3rd party id.
+     
+     - parameters:
+        - address: the id of the user in the 3rd party system.
+        - medium: the 3rd party system.
+        - completion: A block object called when the operation completes.
+        - response: Provides the Matrix user id (or `nil` if the user is not found) on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func lookup3PID(_ address: String, for medium: MX3PIDMedium, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation? {
+        return __lookup3pid(address, forMedium: medium.identifier, success: success(completion), failure: error(completion))
+    }
     
+    /**
+     Retrieve user matrix ids from a list of 3rd party ids.
+     
+     - parameters:
+        - threepids: the list of 3rd party ids: [[<(MX3PIDMedium)media1>, <(NSString*)address1>], [<(MX3PIDMedium)media2>, <(NSString*)address2>], ...].
+        - completion: A block object called when the operation completes.
+        - response: Provides the array of the discovered users returned by the identity server. [[<(MX3PIDMedium)media>, <(NSString*)address>, <(NSString*)userId>], ...].
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func lookup3PIDs(_ ids: [Any], completion: @escaping (_ response: MXResponse<[Any]>) -> Void) -> MXHTTPOperation? {
+        return __lookup3pids(ids, success: success(completion), failure: error(completion))
+    }
+    
+    
+    
+    /**
+     Request the validation of an email address.
+     
+     The identity server will send an email to this address. The end user
+     will have to click on the link it contains to validate the address.
+     
+     Use the returned sid to complete operations that require authenticated email
+     like `MXRestClient.add3PID(_:)`.
+     
+     - parameters:
+        - email: the email address to validate.
+        - clientSecret: a secret key generated by the client. (`MXTools.generateSecret()` creates such key)
+        - sendAttempt: the number of the attempt for the validation request. Increment this value to make the identity server resend the email. Keep it to retry the request in case the previous request failed.
+        - nextLink: the link the validation page will automatically open. Can be nil
+        - completion: A block object called when the operation completes.
+        - response: Provides provides the id of the email validation session on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func requestEmailValidation(_ email: String, clientSecret: String, sendAttempt: UInt, nextLink: String?, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation? {
+        return __requestEmailValidation(email, clientSecret: clientSecret, sendAttempt: sendAttempt, nextLink: nextLink, success: success(completion), failure: error(completion))
+    }
+    
+    
+    
+    /**
+     Submit a token received by an email after the call of [self requestEmailValidation].
+     
+     In case of success, the email has been validated.
+     
+     - parameters:
+        - token: the token received in the email.
+        - clientSecret: the clientSecret in the email.
+        - sid: the email validation session id in the email.
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func submitEmailValidationToken(_ token: String, clientSecret: String, sid: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __submitEmailValidationToken(token, clientSecret: clientSecret, sid: sid, success: success(completion), failure: error(completion))
+    }
     
     
     // TODO: - VoIP API

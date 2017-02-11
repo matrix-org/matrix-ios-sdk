@@ -1319,7 +1319,7 @@ typedef enum : NSUInteger
                        setPresence:(NSString*)setPresence
                             filter:(NSString*)filterId
                            success:(void (^)(MXSyncResponse *syncResponse))success
-                           failure:(void (^)(NSError *error))failure;
+                           failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - Directory operations
@@ -1346,7 +1346,7 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)roomIDForRoomAlias:(NSString*)roomAlias
                                success:(void (^)(NSString *roomId))success
-                               failure:(void (^)(NSError *error))failure;
+                               failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - Media Repository API
@@ -1370,7 +1370,7 @@ typedef enum : NSUInteger
                           timeout:(NSTimeInterval)timeoutInSeconds
                           success:(void (^)(NSString *url))success
                           failure:(void (^)(NSError *error))failure
-                   uploadProgress:(void (^)(NSProgress *uploadProgress))uploadProgress;
+                   uploadProgress:(void (^)(NSProgress *uploadProgress))uploadProgress NS_REFINED_FOR_SWIFT;
 
 /**
  Resolve a Matrix media content URI (in the form of "mxc://...") into an HTTP URL.
@@ -1415,7 +1415,7 @@ typedef enum : NSUInteger
 - (MXHTTPOperation*)lookup3pid:(NSString*)address
                      forMedium:(MX3PIDMedium)medium
                        success:(void (^)(NSString *userId))success
-                       failure:(void (^)(NSError *error))failure;
+                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Retrieve user matrix ids from a list of 3rd party ids.
@@ -1429,7 +1429,7 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)lookup3pids:(NSArray*)threepids
                         success:(void (^)(NSArray *discoveredUsers))success
-                        failure:(void (^)(NSError *error))failure;
+                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Request the validation of an email address.
@@ -1458,7 +1458,7 @@ typedef enum : NSUInteger
                                sendAttempt:(NSUInteger)sendAttempt
                                   nextLink:(NSString*)nextLink
                                    success:(void (^)(NSString *sid))success
-                                   failure:(void (^)(NSError *error))failure;
+                                   failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Submit a token received by an email after the call of [self requestEmailValidation].
@@ -1478,7 +1478,7 @@ typedef enum : NSUInteger
                                   clientSecret:(NSString*)clientSecret
                                            sid:(NSString*)sid
                                        success:(void (^)())success
-                                       failure:(void (^)(NSError *error))failure;
+                                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Sign a 3PID URL.

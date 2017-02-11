@@ -32,7 +32,7 @@
  Types of third party media.
  The list is not exhautive and depends on the Identity server capabilities.
  */
-typedef NSString* MX3PIDMedium;
+typedef NSString* MX3PIDMedium NS_REFINED_FOR_SWIFT;
 FOUNDATION_EXPORT NSString *const kMX3PIDMediumEmail;
 FOUNDATION_EXPORT NSString *const kMX3PIDMediumMSISDN;
 
