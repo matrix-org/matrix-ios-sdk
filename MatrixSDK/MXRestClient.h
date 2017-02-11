@@ -1505,7 +1505,7 @@ typedef enum : NSUInteger
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)turnServer:(void (^)(MXTurnServerResponse *turnServerResponse))success
-                       failure:(void (^)(NSError *error))failure;
+                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - read receipts
@@ -1524,7 +1524,7 @@ typedef enum : NSUInteger
 - (MXHTTPOperation*)sendReadReceipts:(NSString*)roomId
                              eventId:(NSString*)eventId
                              success:(void (^)(NSString *eventId))success
-                             failure:(void (^)(NSError *error))failure;
+                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - Search

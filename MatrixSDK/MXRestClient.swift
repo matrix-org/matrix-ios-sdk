@@ -2046,14 +2046,39 @@ public extension MXRestClient {
     
     
     
-    // TODO: - VoIP API
+    // MARK: - VoIP API
+    
+    /**
+     Get the TURN server configuration advised by the homeserver.
+     
+     
+     - parameters:
+        - completion: A block object called when the operation completes.
+        - response: Provides a `MXTurnServerResponse` object (or nil if the HS has TURN config) on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func turnServer(_ completion: @escaping (_ response: MXResponse<MXTurnServerResponse?>) -> Void) -> MXHTTPOperation? {
+        return __turnServer(success(completion), failure: error(completion))
+    }
     
     
+    // MARK: - read receipts
     
-    
-    // TODO: - read receipts
-    
-    
+    /**
+     Send a read receipt.
+     
+     - parameters:
+        - roomId: the id of the room.
+        - eventId: the id of the event.
+        - completion: A block object called when the operation completes.
+        - response: Provides the event id of the event generated on the home server on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func sendReadReceipts(toRoom roomId: String, forEvent eventId: String, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation? {
+        return __sendReadReceipts(roomId, eventId: eventId, success: success(completion), failure: error(completion))
+    }
     
     
     // TODO: - Search
