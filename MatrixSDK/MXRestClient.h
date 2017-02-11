@@ -1492,7 +1492,7 @@ typedef enum : NSUInteger
 
 - (MXHTTPOperation*)signUrl:(NSString*)signUrl
                     success:(void (^)(NSDictionary *thirdPartySigned))success
-                    failure:(void (^)(NSError *error))failure;
+                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 #pragma mark - VoIP API
 /**

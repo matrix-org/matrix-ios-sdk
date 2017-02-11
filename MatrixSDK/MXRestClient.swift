@@ -1953,7 +1953,7 @@ public extension MXRestClient {
     }
     
     
-    // TODO: - Identity server API
+    // MARK: - Identity server API
     
     /**
      Retrieve a user matrix id from a 3rd party id.
@@ -2028,6 +2028,22 @@ public extension MXRestClient {
     @nonobjc @discardableResult func submitEmailValidationToken(_ token: String, clientSecret: String, sid: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
         return __submitEmailValidationToken(token, clientSecret: clientSecret, sid: sid, success: success(completion), failure: error(completion))
     }
+    
+    
+    /**
+     Sign a 3PID URL.
+     
+     - parameters:
+        - signUrl: the URL that will be called for signing.
+        - completion: A block object called when the operation completes.
+        - response: Provides the signed data on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func signUrl(_ signUrl: String, completion: @escaping (_ response: MXResponse<[String: Any]>) -> Void) -> MXHTTPOperation? {
+        return __signUrl(signUrl, success: success(completion), failure: error(completion))
+    }
+    
     
     
     // TODO: - VoIP API
