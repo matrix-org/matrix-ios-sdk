@@ -2167,15 +2167,98 @@ public extension MXRestClient {
     
     
     
-    // TODO: - Direct-to-device messaging
+    // MARK: - Direct-to-device messaging
+    
+    /**
+     Send an event to a specific list of devices
+     
+     - paramaeters:
+        - eventType: the type of event to send
+        - contentMap: content to send. Map from user_id to device_id to content dictionary.
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func sendDirectToDevice(eventType: String, contentMap: MXUsersDevicesMap<NSDictionary>, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __send(toDevice: eventType, contentMap: contentMap, success: success(completion), failure: error(completion))
+    }
+    
+    
+    // MARK: - Device Management
+    
+    /**
+     Get information about all devices for the current user.
+     
+     - parameters:
+        - completion: A block object called when the operation completes.
+        - response: Provides a list of devices on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func devices(completion: @escaping (_ response: MXResponse<[MXDevice]>) -> Void) -> MXHTTPOperation? {
+        return __devices(success(completion), failure: error(completion))
+    }
+    
+    /**
+     Get information on a single device, by device id.
+     
+     - parameters:
+        - deviceId: The device identifier.
+        - completion: A block object called when the operation completes.
+        - response: Provides the requested device on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func device(withId deviceId: String, completion: @escaping (_ response: MXResponse<MXDevice>) -> Void) -> MXHTTPOperation? {
+        return __device(byDeviceId: deviceId, success: success(completion), failure: error(completion))
+    }
     
 
+    /**
+     Update the display name of a given device.
+     
+     - parameters:
+        - deviceName: The new device name. If not given, the display name is unchanged.
+        - deviceId: The device identifier.
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func setDeviceName(_ deviceName: String, forDevice deviceId: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __setDeviceName(deviceName, forDeviceId: deviceId, success: success(completion), failure: error(completion))
+    }
     
-    // TODO: - Device Management
+    /**
+     Get an authentication session to delete a device.
+     
+     - parameters:
+        - deviceId: The device identifier.
+        - completion: A block object called when the operation completes.
+        - response: Provides the server response.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func getSession(toDeleteDevice deviceId: String, completion: @escaping (_ response: MXResponse<MXAuthenticationSession>) -> Void) -> MXHTTPOperation? {
+        return __getSessionToDeleteDevice(byDeviceId: deviceId, success: success(completion), failure: error(completion))
+    }
     
-    
-    
-
-    
+    /**
+     Delete the given device, and invalidates any access token associated with it.
+     
+     This API endpoint uses the User-Interactive Authentication API.
+     
+     - parameters:
+        - deviceId: The device identifier.
+        - authParameters: The additional authentication information for the user-interactive authentication API.
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func deleteDevice(_ deviceId: String, authParameters: [String: Any], completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __deleteDevice(byDeviceId: deviceId, authParams: authParameters, success: success(completion), failure: error(completion))
+    }
     
 }

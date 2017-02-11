@@ -1629,7 +1629,7 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)sendToDevice:(NSString*)eventType contentMap:(MXUsersDevicesMap<NSDictionary*>*)contentMap
                          success:(void (^)())success
-                         failure:(void (^)(NSError *error))failure;
+                         failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 #pragma mark - Device Management
 /**
@@ -1641,7 +1641,7 @@ typedef enum : NSUInteger
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)devices:(void (^)(NSArray<MXDevice *> *))success
-                    failure:(void (^)(NSError *error))failure;
+                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Get information on a single device, by device id.
@@ -1654,7 +1654,7 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)deviceByDeviceId:(NSString *)deviceId
                              success:(void (^)(MXDevice *))success
-                             failure:(void (^)(NSError *error))failure;
+                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Update the display name of a given device.
@@ -1669,7 +1669,7 @@ typedef enum : NSUInteger
 - (MXHTTPOperation*)setDeviceName:(NSString *)deviceName
                       forDeviceId:(NSString *)deviceId
                           success:(void (^)())success
-                          failure:(void (^)(NSError *error))failure;
+                          failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Get an authentication session to delete a device.
@@ -1682,7 +1682,7 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)getSessionToDeleteDeviceByDeviceId:(NSString *)deviceId
                                                success:(void (^)(MXAuthenticationSession *authSession))success
-                                               failure:(void (^)(NSError *error))failure;
+                                               failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Delete the given device, and invalidates any access token associated with it.
@@ -1699,5 +1699,5 @@ typedef enum : NSUInteger
 - (MXHTTPOperation*)deleteDeviceByDeviceId:(NSString *)deviceId
                                 authParams:(NSDictionary*)authParameters
                                    success:(void (^)())success
-                                   failure:(void (^)(NSError *error))failure;
+                                   failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 @end
