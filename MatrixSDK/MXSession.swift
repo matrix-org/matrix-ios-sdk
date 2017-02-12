@@ -208,6 +208,13 @@ public extension MXSession {
     
     
     
+    
+    /// list of all rooms.
+    @nonobjc var rooms: [MXRoom] {
+        return __rooms()
+    }
+    
+    
     /**
      Update the direct rooms list on homeserver side with the current value of the `directRooms` property.
      

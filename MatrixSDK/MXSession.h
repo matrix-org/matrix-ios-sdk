@@ -601,7 +601,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  
  @return an array of MXRooms.
  */
-- (NSArray<MXRoom*>*)rooms;
+- (NSArray<MXRoom*>*)rooms NS_REFINED_FOR_SWIFT;
 
 /**
  Return the first joined direct chat listed in account data for this user.
