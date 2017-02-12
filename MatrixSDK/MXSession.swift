@@ -65,7 +65,7 @@ public extension MXSession {
      
      - returns: an `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func logout(completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func logout(completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __logout(currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -138,7 +138,7 @@ public extension MXSession {
                                                 invite3PID: [MXInvite3PID]? = nil,
                                                 isDirect: Bool = false,
                                                 preset: MXRoomPreset?,
-                                                completion: @escaping (_ response: MXResponse<MXCreateRoomResponse>) -> Void) -> MXHTTPOperation? {
+                                                completion: @escaping (_ response: MXResponse<MXCreateRoomResponse>) -> Void) -> MXHTTPOperation {
         
         return __createRoom(name, visibility: nil, roomAlias: alias, topic: topic,
                             invite: invite, invite3PID: invite3PID,
@@ -162,7 +162,7 @@ public extension MXSession {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func createRoom(parameters: [String: Any], completion: @escaping (_ response: MXResponse<MXCreateRoomResponse>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func createRoom(parameters: [String: Any], completion: @escaping (_ response: MXResponse<MXCreateRoomResponse>) -> Void) -> MXHTTPOperation {
         return __createRoom(parameters, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -181,7 +181,7 @@ public extension MXSession {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func joinRoom(_ roomIdOrAlias: String, withSignUrl signUrl: URL? = nil, completion: @escaping (_ response: MXResponse<MXRoom>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func joinRoom(_ roomIdOrAlias: String, withSignUrl signUrl: URL? = nil, completion: @escaping (_ response: MXResponse<MXRoom>) -> Void) -> MXHTTPOperation {
         if let signUrl = signUrl {
             return __joinRoom(roomIdOrAlias, withSignUrl: signUrl.absoluteString, success: currySuccess(completion), failure: curryFailure(completion))
         } else {
@@ -200,7 +200,7 @@ public extension MXSession {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func leaveRoom(_ roomId: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func leaveRoom(_ roomId: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __leaveRoom(roomId, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -217,7 +217,7 @@ public extension MXSession {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func uploadDirectRooms(completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func uploadDirectRooms(completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __uploadDirectRooms(currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -252,7 +252,7 @@ public extension MXSession {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func ignore(users userIds: [String], completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func ignore(users userIds: [String], completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __ignoreUsers(userIds, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -266,7 +266,7 @@ public extension MXSession {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func unIgnore(users userIds: [String], completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func unIgnore(users userIds: [String], completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __unIgnoreUsers(userIds, success: currySuccess(completion), failure: curryFailure(completion))
     }
     

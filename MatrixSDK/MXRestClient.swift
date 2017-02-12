@@ -105,7 +105,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func isUserNameInUse(_ username: String, completion: @escaping (_ inUse: Bool) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func isUserNameInUse(_ username: String, completion: @escaping (_ inUse: Bool) -> Void) -> MXHTTPOperation {
         return __isUserName(inUse: username, callback: completion)
     }
     
@@ -118,7 +118,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func getRegisterSession(completion: @escaping (_ response: MXResponse<MXAuthenticationSession>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func getRegisterSession(completion: @escaping (_ response: MXResponse<MXAuthenticationSession>) -> Void) -> MXHTTPOperation {
         return __getRegisterSession(currySuccess(completion), failure: curryFailure(completion))
     }
 
@@ -141,7 +141,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func register(parameters: [String: Any], completion: @escaping (_ response: MXResponse<[String: Any]>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func register(parameters: [String: Any], completion: @escaping (_ response: MXResponse<[String: Any]>) -> Void) -> MXHTTPOperation {
         return __register(withParameters: parameters, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -165,7 +165,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func register(loginType: MXLoginFlowType = .password, username: String?, password: String, completion: @escaping (_ response: MXResponse<MXCredentials>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func register(loginType: MXLoginFlowType = .password, username: String?, password: String, completion: @escaping (_ response: MXResponse<MXCredentials>) -> Void) -> MXHTTPOperation {
         return __register(withLoginType: loginType.identifier, username: username, password: password, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -192,7 +192,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func getLoginSession(completion: @escaping (_ response: MXResponse<MXAuthenticationSession>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func getLoginSession(completion: @escaping (_ response: MXResponse<MXAuthenticationSession>) -> Void) -> MXHTTPOperation {
         return __getLoginSession(currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -214,7 +214,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func login(parameters: [String: Any], completion: @escaping (_ response: MXResponse<[String: Any]>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func login(parameters: [String: Any], completion: @escaping (_ response: MXResponse<[String: Any]>) -> Void) -> MXHTTPOperation {
         return __login(parameters, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -232,7 +232,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func login(type loginType: MXLoginFlowType = .password, username: String, password: String, completion: @escaping (_ response: MXResponse<MXCredentials>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func login(type loginType: MXLoginFlowType = .password, username: String, password: String, completion: @escaping (_ response: MXResponse<MXCredentials>) -> Void) -> MXHTTPOperation {
         return __login(withLoginType: loginType.identifier, username: username, password: password, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -260,7 +260,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func resetPassword(parameters: [String: Any], completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func resetPassword(parameters: [String: Any], completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __resetPassword(withParameters: parameters, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -276,7 +276,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func changePassword(from old: String, to new: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func changePassword(from old: String, to new: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __changePassword(old, with: new, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -290,7 +290,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func logout(completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func logout(completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __logout(currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -310,7 +310,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func setAccountData(_ data: [String: Any], for type: MXAccountDataType, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func setAccountData(_ data: [String: Any], for type: MXAccountDataType, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __setAccountData(data, forType: type.rawValue, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -340,7 +340,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func setPusher(pushKey: String, kind: MXPusherKind, appId: String, appDisplayName: String, deviceDisplayName: String, profileTag: String, lang: String, data: [String: Any], append: Bool, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func setPusher(pushKey: String, kind: MXPusherKind, appId: String, appDisplayName: String, deviceDisplayName: String, profileTag: String, lang: String, data: [String: Any], append: Bool, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __setPusherWithPushkey(pushKey, kind: kind.objectValue, appId: appId, appDisplayName: appDisplayName, deviceDisplayName: deviceDisplayName, profileTag: profileTag, lang: lang, data: data, append: append, success: currySuccess(completion), failure: curryFailure(completion))
     }
     // TODO: setPusherWithPushKey - futher refinement
@@ -361,7 +361,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func pushRules(completion: @escaping (_ response: MXResponse<MXPushRulesResponse>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func pushRules(completion: @escaping (_ response: MXResponse<MXPushRulesResponse>) -> Void) -> MXHTTPOperation {
         return __pushRules(currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -413,7 +413,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func setPushRuleEnabled(ruleId: String, scope: MXPushRuleScope, kind: MXPushRuleKind, enabled: Bool, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func setPushRuleEnabled(ruleId: String, scope: MXPushRuleScope, kind: MXPushRuleKind, enabled: Bool, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __enablePushRule(ruleId, scope: scope.identifier, kind: kind.identifier, enable: enabled, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -430,7 +430,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func removePushRule(ruleId: String, scope: MXPushRuleScope, kind: MXPushRuleKind, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func removePushRule(ruleId: String, scope: MXPushRuleScope, kind: MXPushRuleKind, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __removePushRule(ruleId, scope: scope.identifier, kind: kind.identifier, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -449,7 +449,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func addPushRule(ruleId: String, scope: MXPushRuleScope, kind: MXPushRuleKind, actions: [Any], pattern: String, conditions: [[String: Any]], completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func addPushRule(ruleId: String, scope: MXPushRuleScope, kind: MXPushRuleKind, actions: [Any], pattern: String, conditions: [[String: Any]], completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __addPushRule(ruleId, scope: scope.identifier, kind: kind.identifier, actions: actions, pattern: pattern, conditions: conditions, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -474,7 +474,7 @@ public extension MXRestClient {
      - returns: a `MXHTTPOperation` instance.
      
      */
-    @nonobjc @discardableResult func sendEvent(toRoom roomId: String, eventType: MXEventType, content: [String: Any], completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func sendEvent(toRoom roomId: String, eventType: MXEventType, content: [String: Any], completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation {
         return __sendEvent(toRoom: roomId, eventType: eventType.identifier, content: content, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -491,7 +491,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func sendStateEvent(toRoom roomId: String, eventType: MXEventType, content: [String: Any], completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func sendStateEvent(toRoom roomId: String, eventType: MXEventType, content: [String: Any], completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation {
         return __sendStateEvent(toRoom: roomId, eventType: eventType.identifier, content: content, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -507,7 +507,7 @@ public extension MXRestClient {
      
      -returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func sendMessage(toRoom roomId: String, messageType: MXMessageType, content: [String: Any], completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func sendMessage(toRoom roomId: String, messageType: MXMessageType, content: [String: Any], completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation {
         return __sendMessage(toRoom: roomId, msgType: messageType.identifier, content: content, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -523,7 +523,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func sendTextMessage(toRoom roomId: String, text: String, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func sendTextMessage(toRoom roomId: String, text: String, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation {
         return __sendTextMessage(toRoom: roomId, text: text, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -540,7 +540,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func setTopic(ofRoom roomId: String, topic: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func setTopic(ofRoom roomId: String, topic: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __setRoomTopic(roomId, topic: topic, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -554,7 +554,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func topic(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func topic(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation {
         return __topic(ofRoom: roomId, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -571,7 +571,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func setAvatar(ofRoom roomId: String, avatarUrl: URL, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func setAvatar(ofRoom roomId: String, avatarUrl: URL, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __setRoomAvatar(roomId, avatar: avatarUrl.absoluteString, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -585,7 +585,7 @@ public extension MXRestClient {
      
      - returns: a MXHTTPOperation instance.
      */
-    @nonobjc @discardableResult func avatar(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<URL>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func avatar(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<URL>) -> Void) -> MXHTTPOperation {
         return __avatar(ofRoom: roomId, success: currySuccess(transform: {return URL(string: $0 ?? "")}, completion), failure: curryFailure(completion))
     }
     
@@ -603,7 +603,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func setName(ofRoom roomId: String, name: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func setName(ofRoom roomId: String, name: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __setRoomName(roomId, name: name, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -617,7 +617,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func name(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func name(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation {
         return __name(ofRoom: roomId, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -635,7 +635,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func setHistoryVisibility(ofRoom roomId: String, historyVisibility: MXRoomHistoryVisibility, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func setHistoryVisibility(ofRoom roomId: String, historyVisibility: MXRoomHistoryVisibility, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __setRoomHistoryVisibility(roomId, historyVisibility: historyVisibility.identifier, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -649,7 +649,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func historyVisibility(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<MXRoomHistoryVisibility>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func historyVisibility(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<MXRoomHistoryVisibility>) -> Void) -> MXHTTPOperation {
         return __historyVisibility(ofRoom: roomId, success: currySuccess(transform: MXRoomHistoryVisibility.init, completion), failure: curryFailure(completion))
     }
     
@@ -670,7 +670,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func setJoinRule(ofRoom roomId: String, joinRule: MXRoomJoinRule, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func setJoinRule(ofRoom roomId: String, joinRule: MXRoomJoinRule, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __setRoomJoinRule(roomId, joinRule: joinRule.identifier, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -684,7 +684,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func joinRule(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<MXRoomJoinRule>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func joinRule(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<MXRoomJoinRule>) -> Void) -> MXHTTPOperation {
         return __joinRule(ofRoom: roomId, success: currySuccess(transform: MXRoomJoinRule.init, completion), failure: curryFailure(completion))
     }
     
@@ -702,7 +702,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func setGuestAccess(forRoom roomId: String, guestAccess: MXRoomGuestAccess, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func setGuestAccess(forRoom roomId: String, guestAccess: MXRoomGuestAccess, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __setRoomGuestAccess(roomId, guestAccess: guestAccess.identifier, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -716,7 +716,7 @@ public extension MXRestClient {
      
      - return: a MXHTTPOperation instance.
      */
-    @nonobjc @discardableResult func guestAccess(forRoom roomId: String, completion: @escaping (_ response: MXResponse<MXRoomGuestAccess>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func guestAccess(forRoom roomId: String, completion: @escaping (_ response: MXResponse<MXRoomGuestAccess>) -> Void) -> MXHTTPOperation {
         return __guestAccess(ofRoom: roomId, success: currySuccess(transform: MXRoomGuestAccess.init, completion), failure: curryFailure(completion))
     }
     
@@ -736,7 +736,7 @@ public extension MXRestClient {
      
      - returns: a MXHTTPOperation instance.
      */
-    @nonobjc @discardableResult func setDirectoryVisibility(ofRoom roomId: String, directoryVisibility: MXRoomDirectoryVisibility, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func setDirectoryVisibility(ofRoom roomId: String, directoryVisibility: MXRoomDirectoryVisibility, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __setRoomDirectoryVisibility(roomId, directoryVisibility: directoryVisibility.identifier, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -750,7 +750,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func directoryVisibility(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<MXRoomDirectoryVisibility>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func directoryVisibility(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<MXRoomDirectoryVisibility>) -> Void) -> MXHTTPOperation {
         return __directoryVisibility(ofRoom: roomId, success: currySuccess(transform: MXRoomDirectoryVisibility.init, completion), failure: curryFailure(completion))
     }
     
@@ -769,7 +769,7 @@ public extension MXRestClient {
      
      - returns a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func addAlias(forRoom roomId: String, alias: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func addAlias(forRoom roomId: String, alias: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __addRoomAlias(roomId, alias: alias, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -783,7 +783,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func removeRoomAlias(_ roomAlias: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func removeRoomAlias(_ roomAlias: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __removeRoomAlias(roomAlias, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -801,7 +801,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func setCanonicalAlias(forRoom roomId: String, canonicalAlias: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func setCanonicalAlias(forRoom roomId: String, canonicalAlias: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __setRoomCanonicalAlias(roomId, canonicalAlias: canonicalAlias, success: currySuccess(completion), failure: curryFailure(completion));
     }
     
@@ -815,7 +815,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func canonicalAlias(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func canonicalAlias(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation {
         return __canonicalAlias(ofRoom: roomId, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -831,7 +831,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func joinRoom(_ roomIdOrAlias: String, withThirdPartySigned dictionary: [String: Any]? = nil, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func joinRoom(_ roomIdOrAlias: String, withThirdPartySigned dictionary: [String: Any]? = nil, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation {
         if let dictionary = dictionary {
             return __joinRoom(roomIdOrAlias, withThirdPartySigned: dictionary, success: currySuccess(completion), failure: curryFailure(completion))
         } else {
@@ -849,7 +849,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func leaveRoom(_ roomId: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func leaveRoom(_ roomId: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __leaveRoom(roomId, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -874,7 +874,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func invite(_ invitation: MXRoomInvitee, toRoom roomId: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func invite(_ invitation: MXRoomInvitee, toRoom roomId: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         switch invitation {
         case .userId(let userId):
             return __inviteUser(userId, toRoom: roomId, success: currySuccess(completion), failure: curryFailure(completion))
@@ -901,7 +901,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func kickUser(_ userId: String, fromRoom roomId: String, reason: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func kickUser(_ userId: String, fromRoom roomId: String, reason: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __kickUser(userId, fromRoom: roomId, reason: reason, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -918,7 +918,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func banUser(_ userId: String, fromRoom roomId: String, reason: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func banUser(_ userId: String, fromRoom roomId: String, reason: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __banUser(userId, inRoom: roomId, reason: reason, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -933,7 +933,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func unbanUser(_ userId: String, fromRoom roomId: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func unbanUser(_ userId: String, fromRoom roomId: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __unbanUser(userId, inRoom: roomId, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -969,7 +969,7 @@ public extension MXRestClient {
                                                 invite3PID: [MXInvite3PID]? = nil,
                                                 isDirect: Bool = false,
                                                 preset: MXRoomPreset?,
-                                                completion: @escaping (_ response: MXResponse<MXCreateRoomResponse>) -> Void) -> MXHTTPOperation? {
+                                                completion: @escaping (_ response: MXResponse<MXCreateRoomResponse>) -> Void) -> MXHTTPOperation {
         
         return __createRoom(name, visibility: nil, roomAlias: alias, topic: topic,
                             invite: invite, invite3PID: invite3PID,
@@ -987,7 +987,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func createRoom(parameters: [String: Any], completion: @escaping (_ response: MXResponse<MXCreateRoomResponse>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func createRoom(parameters: [String: Any], completion: @escaping (_ response: MXResponse<MXCreateRoomResponse>) -> Void) -> MXHTTPOperation {
         return __createRoom(parameters, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1008,7 +1008,7 @@ public extension MXRestClient {
      
      - returns: a MXHTTPOperation instance.
      */
-    @nonobjc @discardableResult func messages(forRoom roomId: String, from: String, direction: MXTimelineDirection, limit: UInt?, filter: MXRoomEventFilter, completion: @escaping (_ response: MXResponse<MXPaginationResponse>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func messages(forRoom roomId: String, from: String, direction: MXTimelineDirection, limit: UInt?, filter: MXRoomEventFilter, completion: @escaping (_ response: MXResponse<MXPaginationResponse>) -> Void) -> MXHTTPOperation {
         
         // The `limit` variable should be set to -1 if it's not provided.
         let _limit: Int
@@ -1030,7 +1030,7 @@ public extension MXRestClient {
      
      - returns: a MXHTTPOperation instance.
      */
-    @nonobjc @discardableResult func members(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<[MXEvent]>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func members(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<[MXEvent]>) -> Void) -> MXHTTPOperation {
         return __members(ofRoom: roomId, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1049,7 +1049,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func state(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<[String: Any]>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func state(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<[String: Any]>) -> Void) -> MXHTTPOperation {
         return __state(ofRoom: roomId, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1070,7 +1070,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func sendTypingNotification(inRoom roomId: String, typing: Bool, timeout: TimeInterval?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func sendTypingNotification(inRoom roomId: String, typing: Bool, timeout: TimeInterval?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         
         // The `timeout` variable should be set to -1 if it's not provided.
         let _timeout: Int
@@ -1103,7 +1103,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func redactEvent(_ eventId: String, inRoom roomId: String, reason: String?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func redactEvent(_ eventId: String, inRoom roomId: String, reason: String?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __redactEvent(eventId, inRoom: roomId, reason: reason, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1120,7 +1120,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func reportEvent(_ eventId: String, inRoom roomId: String, score: Int, reason: String?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func reportEvent(_ eventId: String, inRoom roomId: String, score: Int, reason: String?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __reportEvent(eventId, inRoom: roomId, score: score, reason: reason, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1141,7 +1141,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func intialSync(ofRoom roomId: String, limit: UInt, completion: @escaping (_ response: MXResponse<MXRoomInitialSync>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func intialSync(ofRoom roomId: String, limit: UInt, completion: @escaping (_ response: MXResponse<MXRoomInitialSync>) -> Void) -> MXHTTPOperation {
         return __initialSync(ofRoom: roomId, withLimit: Int(limit), success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1160,7 +1160,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func context(ofEvent eventId: String, inRoom roomId: String, limit: UInt, completion: @escaping (_ response: MXResponse<MXEventContext>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func context(ofEvent eventId: String, inRoom roomId: String, limit: UInt, completion: @escaping (_ response: MXResponse<MXEventContext>) -> Void) -> MXHTTPOperation {
         return __context(ofEvent: eventId, inRoom: roomId, limit: limit, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1178,7 +1178,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func tags(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<[MXRoomTag]>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func tags(ofRoom roomId: String, completion: @escaping (_ response: MXResponse<[MXRoomTag]>) -> Void) -> MXHTTPOperation {
         return __tags(ofRoom: roomId, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1196,7 +1196,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func addTag(_ tag: String, withOrder order: String, toRoom roomId: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func addTag(_ tag: String, withOrder order: String, toRoom roomId: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __addTag(tag, withOrder: order, toRoom: roomId, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1212,7 +1212,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func removeTag(_ tag: String, fromRoom roomId: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func removeTag(_ tag: String, fromRoom roomId: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __removeTag(tag, fromRoom: roomId, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1232,7 +1232,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func setDisplayName(_ displayName: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func setDisplayName(_ displayName: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __setDisplayName(displayName, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1246,7 +1246,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func displayName(forUser userId: String, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func displayName(forUser userId: String, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation {
         return __displayName(forUser: userId, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1263,7 +1263,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func setAvatarUrl(_ url: URL, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func setAvatarUrl(_ url: URL, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __setAvatarUrl(url.absoluteString, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1277,7 +1277,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func avatarUrl(forUser userId: String, completion: @escaping (_ response: MXResponse<URL>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func avatarUrl(forUser userId: String, completion: @escaping (_ response: MXResponse<URL>) -> Void) -> MXHTTPOperation {
         return __avatarUrl(forUser: userId, success: currySuccess(transform: { return URL(string: $0 ?? "") }, completion), failure: curryFailure(completion))
     }
     
@@ -1294,7 +1294,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func addThirdPartyIdentifier(_ sid: String, clientSecret: String, bind: Bool, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func addThirdPartyIdentifier(_ sid: String, clientSecret: String, bind: Bool, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __add3PID(sid, clientSecret: clientSecret, bind: bind, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1307,7 +1307,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func thirdPartyIdentifiers(_ completion: @escaping (_ response: MXResponse<[MXThirdPartyIdentifier]>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func thirdPartyIdentifiers(_ completion: @escaping (_ response: MXResponse<[MXThirdPartyIdentifier]>) -> Void) -> MXHTTPOperation {
         return __threePIDs(currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1327,7 +1327,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func setPresence(_ presence: MXPresence, statusMessage: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func setPresence(_ presence: MXPresence, statusMessage: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __setPresence(presence, andStatusMessage: statusMessage, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1342,7 +1342,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func presence(forUser userId: String, completion: @escaping (_ response: MXResponse<MXPresenceResponse>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func presence(forUser userId: String, completion: @escaping (_ response: MXResponse<MXPresenceResponse>) -> Void) -> MXHTTPOperation {
         return __presence(userId, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1381,7 +1381,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func sync(fromToken token: String?, serverTimeout: UInt, clientTimeout: UInt, setPresence presence: String?, filterId: String? = nil, completion: @escaping (_ response: MXResponse<MXSyncResponse>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func sync(fromToken token: String?, serverTimeout: UInt, clientTimeout: UInt, setPresence presence: String?, filterId: String? = nil, completion: @escaping (_ response: MXResponse<MXSyncResponse>) -> Void) -> MXHTTPOperation {
         return __sync(fromToken: token, serverTimeout: serverTimeout, clientTimeout: clientTimeout, setPresence: presence, filter: filterId, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1396,7 +1396,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func publicRooms(completion: @escaping (_ response: MXResponse<[MXPublicRoom]>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func publicRooms(completion: @escaping (_ response: MXResponse<[MXPublicRoom]>) -> Void) -> MXHTTPOperation {
         return __publicRooms(currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1410,7 +1410,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func roomId(forRoomAlias roomAlias: String, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func roomId(forRoomAlias roomAlias: String, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation {
         return __roomID(forRoomAlias: roomAlias, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1429,7 +1429,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func uploadContent(_ data: Data, filename: String? = nil, mimeType: String, timeout: TimeInterval, uploadProgress: @escaping (_ progress: MXProgress<URL>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func uploadContent(_ data: Data, filename: String? = nil, mimeType: String, timeout: TimeInterval, uploadProgress: @escaping (_ progress: MXProgress<URL>) -> Void) -> MXHTTPOperation {
         return __uploadContent(data, filename: filename, mimeType: mimeType, timeout: timeout, success: { (urlString) in
             if let urlString = urlString, let url = URL(string: urlString) {
                 uploadProgress(.success(url))
@@ -1456,7 +1456,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func lookup3PID(_ descriptor: MX3PID, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func lookup3PID(_ descriptor: MX3PID, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
         return __lookup3pid(descriptor.address, forMedium: descriptor.medium.identifier, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1470,7 +1470,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func lookup3PIDs(_ descriptors: [MX3PID], completion: @escaping (_ response: MXResponse<[MX3PID: String]>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func lookup3PIDs(_ descriptors: [MX3PID], completion: @escaping (_ response: MXResponse<[MX3PID: String]>) -> Void) -> MXHTTPOperation {
         
         // The API expects the form: [[<(MX3PIDMedium)media1>, <(NSString*)address1>], [<(MX3PIDMedium)media2>, <(NSString*)address2>], ...]
         let ids = descriptors.map({ return [$0.medium.identifier, $0.address] as [String] })
@@ -1517,7 +1517,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func requestEmailValidation(_ email: String, clientSecret: String, sendAttempt: UInt, nextLink: String?, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func requestEmailValidation(_ email: String, clientSecret: String, sendAttempt: UInt, nextLink: String?, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation {
         return __requestEmailValidation(email, clientSecret: clientSecret, sendAttempt: sendAttempt, nextLink: nextLink, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1537,7 +1537,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func submitEmailValidationToken(_ token: String, clientSecret: String, sid: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func submitEmailValidationToken(_ token: String, clientSecret: String, sid: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __submitEmailValidationToken(token, clientSecret: clientSecret, sid: sid, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1552,7 +1552,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func signUrl(_ signUrl: String, completion: @escaping (_ response: MXResponse<[String: Any]>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func signUrl(_ signUrl: String, completion: @escaping (_ response: MXResponse<[String: Any]>) -> Void) -> MXHTTPOperation {
         return __signUrl(signUrl, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1570,7 +1570,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func turnServer(_ completion: @escaping (_ response: MXResponse<MXTurnServerResponse?>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func turnServer(_ completion: @escaping (_ response: MXResponse<MXTurnServerResponse?>) -> Void) -> MXHTTPOperation {
         return __turnServer(currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1588,7 +1588,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func sendReadReceipts(toRoom roomId: String, forEvent eventId: String, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func sendReadReceipts(toRoom roomId: String, forEvent eventId: String, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation {
         return __sendReadReceipts(roomId, eventId: eventId, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1609,7 +1609,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func searchMessages(withPattern textPattern: String, roomEventFilter: MXRoomEventFilter? = nil, beforeLimit: UInt = 0, afterLimit: UInt = 0, nextBatch: String, completion: @escaping (_ response: MXResponse<MXSearchRoomEventResults>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func searchMessages(withPattern textPattern: String, roomEventFilter: MXRoomEventFilter? = nil, beforeLimit: UInt = 0, afterLimit: UInt = 0, nextBatch: String, completion: @escaping (_ response: MXResponse<MXSearchRoomEventResults>) -> Void) -> MXHTTPOperation {
         return __searchMessages(withText: textPattern, roomEventFilter: roomEventFilter, beforeLimit: beforeLimit, afterLimit: afterLimit, nextBatch: nextBatch, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1624,7 +1624,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func search(withParameters parameters: [String: Any], nextBatch: String, completion: @escaping (_ response: MXResponse<MXSearchRoomEventResults>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func search(withParameters parameters: [String: Any], nextBatch: String, completion: @escaping (_ response: MXResponse<MXSearchRoomEventResults>) -> Void) -> MXHTTPOperation {
         return __search(parameters, nextBatch: nextBatch, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1644,7 +1644,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func uploadKeys(_ deviceKeys: [String: Any], oneTimeKeys: [String: Any], forDevice deviceId: String? = nil, completion: @escaping (_ response: MXResponse<MXKeysUploadResponse>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func uploadKeys(_ deviceKeys: [String: Any], oneTimeKeys: [String: Any], forDevice deviceId: String? = nil, completion: @escaping (_ response: MXResponse<MXKeysUploadResponse>) -> Void) -> MXHTTPOperation {
         return __uploadKeys(deviceKeys, oneTimeKeys: oneTimeKeys, forDevice: deviceId, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1658,7 +1658,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func downloadKeys(forUsers userIds: [String], completion: @escaping (_ response: MXResponse<MXKeysQueryResponse>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func downloadKeys(forUsers userIds: [String], completion: @escaping (_ response: MXResponse<MXKeysQueryResponse>) -> Void) -> MXHTTPOperation {
         return __downloadKeys(forUsers: userIds, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1673,7 +1673,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func claimOneTimeKeys(for usersDevices: MXUsersDevicesMap<NSString>, completion: @escaping (_ response: MXResponse<MXKeysClaimResponse>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func claimOneTimeKeys(for usersDevices: MXUsersDevicesMap<NSString>, completion: @escaping (_ response: MXResponse<MXKeysClaimResponse>) -> Void) -> MXHTTPOperation {
         return __claimOneTimeKeys(forUsersDevices: usersDevices, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1692,7 +1692,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func sendDirectToDevice(eventType: String, contentMap: MXUsersDevicesMap<NSDictionary>, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func sendDirectToDevice(eventType: String, contentMap: MXUsersDevicesMap<NSDictionary>, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __send(toDevice: eventType, contentMap: contentMap, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1708,7 +1708,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func devices(completion: @escaping (_ response: MXResponse<[MXDevice]>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func devices(completion: @escaping (_ response: MXResponse<[MXDevice]>) -> Void) -> MXHTTPOperation {
         return __devices(currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1722,7 +1722,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func device(withId deviceId: String, completion: @escaping (_ response: MXResponse<MXDevice>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func device(withId deviceId: String, completion: @escaping (_ response: MXResponse<MXDevice>) -> Void) -> MXHTTPOperation {
         return __device(byDeviceId: deviceId, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1738,7 +1738,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func setDeviceName(_ deviceName: String, forDevice deviceId: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func setDeviceName(_ deviceName: String, forDevice deviceId: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __setDeviceName(deviceName, forDeviceId: deviceId, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1752,7 +1752,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func getSession(toDeleteDevice deviceId: String, completion: @escaping (_ response: MXResponse<MXAuthenticationSession>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func getSession(toDeleteDevice deviceId: String, completion: @escaping (_ response: MXResponse<MXAuthenticationSession>) -> Void) -> MXHTTPOperation {
         return __getSessionToDeleteDevice(byDeviceId: deviceId, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -1769,7 +1769,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func deleteDevice(_ deviceId: String, authParameters: [String: Any], completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func deleteDevice(_ deviceId: String, authParameters: [String: Any], completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __deleteDevice(byDeviceId: deviceId, authParams: authParameters, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
