@@ -94,7 +94,7 @@ One file to import::
 Use case #1: Get public rooms of an homeserver
 -----------------------------------------------
 This API does not require the user to be authenticated. So, MXRestClient
-instantiated with initWithHomeServer does the job::
+instantiated with initWithHomeServer does the job:
 
 **Obj-C**::
 
