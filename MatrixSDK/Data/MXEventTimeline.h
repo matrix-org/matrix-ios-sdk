@@ -35,7 +35,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomInviteStateEventIdPrefix;
  @param direction the origin of the event.
  @param roomState the room state right before the event.
  */
-typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState);
+typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) NS_REFINED_FOR_SWIFT;
 
 @class MXRoom;
 @protocol MXStore;
@@ -133,7 +133,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
                   MXTimelineDirectionForwards to check if we can go forwards.
  @return true if we can paginate in the given direction.
  */
-- (BOOL)canPaginate:(MXTimelineDirection)direction;
+- (BOOL)canPaginate:(MXTimelineDirection)direction NS_REFINED_FOR_SWIFT;
 
 /**
  Reset the pagination so that future calls to paginate start from the most recent
@@ -154,7 +154,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
  */
 - (MXHTTPOperation*)resetPaginationAroundInitialEventWithLimit:(NSUInteger)limit
                                                        success:(void(^)())success
-                                                       failure:(void (^)(NSError *error))failure;
+                                                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Get more messages.
@@ -177,7 +177,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
                    direction:(MXTimelineDirection)direction
                onlyFromStore:(BOOL)onlyFromStore
                     complete:(void (^)())complete
-                     failure:(void (^)(NSError *error))failure;
+                     failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Get the number of messages we can still back paginate from the store.
@@ -211,7 +211,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
  @param onEvent the block that will called once a new event has been handled.
  @return a reference to use to unregister the listener
  */
-- (id)listenToEvents:(MXOnRoomEvent)onEvent;
+- (id)listenToEvents:(MXOnRoomEvent)onEvent NS_REFINED_FOR_SWIFT;
 
 /**
  Register a listener for some types of events.
@@ -220,7 +220,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
  @param onEvent the block that will called once a new event has been handled.
  @return a reference to use to unregister the listener
  */
-- (id)listenToEventsOfTypes:(NSArray<MXEventTypeString> *)types onEvent:(MXOnRoomEvent)onEvent;
+- (id)listenToEventsOfTypes:(NSArray<MXEventTypeString> *)types onEvent:(MXOnRoomEvent)onEvent NS_REFINED_FOR_SWIFT;
 
 /**
  Unregister a listener.

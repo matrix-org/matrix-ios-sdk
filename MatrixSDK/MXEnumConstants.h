@@ -156,7 +156,7 @@ typedef enum : NSUInteger
     // Backwards when the event is added to the start of the timeline.
     // These events come from a back pagination.
     MXTimelineDirectionBackwards
-} MXTimelineDirection;
+} MXTimelineDirection NS_REFINED_FOR_SWIFT;
 
 /**
  The matrix.to base URL.

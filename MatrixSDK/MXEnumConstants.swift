@@ -149,3 +149,31 @@ public enum MXRoomPreset {
         }
     }
 }
+
+
+
+/**
+ The direction of an event in the timeline.
+ */
+public enum MXTimelineDirection {
+    
+    /// Forwards when the event is added to the end of the timeline.
+    /// These events come from the /sync stream or from forwards pagination.
+    case forwards
+    
+    /// Backwards when the event is added to the start of the timeline.
+    /// These events come from a back pagination.
+    case backwards
+    
+    var identifier: __MXTimelineDirection {
+        switch self {
+        case .forwards: return __MXTimelineDirectionForwards
+        case .backwards: return __MXTimelineDirectionBackwards
+        }
+    }
+    
+    init(identifer _identifier: __MXTimelineDirection) {
+        self = (_identifier == __MXTimelineDirectionForwards ? .forwards : .backwards)
+    }
+}
+
