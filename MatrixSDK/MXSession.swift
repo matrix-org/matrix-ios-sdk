@@ -112,5 +112,162 @@ public extension MXSession {
     
     
     
+    /**
+     Create a room.
+     
+     - parameters:
+        - name: The room name.
+        - visibility: The visibility of the room in the current HS's room directory.
+        - roomAlias: The room alias on the home server the room will be created.
+        - topic: The room topic.
+        - invite: A list of user IDs to invite to the room. This will tell the server to invite everyone in the list to the newly created room.
+        - invite3PID: A list of objects representing third party IDs to invite into the room.
+        - isDirect: This flag makes the server set the is_direct flag on the m.room.member events sent to the users in invite and invite_3pid.
+        - preset: Convenience parameter for setting various default state events based on a preset.
+     
+        - completion: A block object called when the operation completes.
+        - response: Provides a MXCreateRoomResponse object on success.
+     
+     - returns: a MXHTTPOperation instance.
+     */
+    @nonobjc @discardableResult func createRoom(name: String?,
+                                                visibility: MXRoomDirectoryVisibility?,
+                                                alias: String?,
+                                                topic: String?,
+                                                invite: [String]? = nil,
+                                                invite3PID: [MXInvite3PID]? = nil,
+                                                isDirect: Bool = false,
+                                                preset: MXRoomPreset?,
+                                                completion: @escaping (_ response: MXResponse<MXCreateRoomResponse>) -> Void) -> MXHTTPOperation? {
+        
+        return __createRoom(name, visibility: nil, roomAlias: alias, topic: topic,
+                            invite: invite, invite3PID: invite3PID,
+                            isDirect: isDirect, preset: preset?.identifier,
+                            success: currySuccess(completion), failure: curryFailure(completion));
+    }
+    
+    
+    
+    
+    
+    
+    
+    /**
+     Create a room.
+     
+     - parameters:
+     - parameters: The parameters. Refer to the matrix specification for details.
+     - completion: A block object called when the operation completes.
+     - response: Provides a MXCreateRoomResponse object on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func createRoom(parameters: [String: Any], completion: @escaping (_ response: MXResponse<MXCreateRoomResponse>) -> Void) -> MXHTTPOperation? {
+        return __createRoom(parameters, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    
+    
+    
+    /**
+     Join a room, optionally where the user has been invited by a 3PID invitation.
+     
+     - parameters:
+        - roomIdOrAlias: The id or an alias of the room to join.
+        - signUrl: the url provided in an invitation.
+        - completion: A block object called when the operation completes.
+        - response: Provides the room on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func joinRoom(_ roomIdOrAlias: String, withSignUrl signUrl: URL? = nil, completion: @escaping (_ response: MXResponse<MXRoom>) -> Void) -> MXHTTPOperation? {
+        if let signUrl = signUrl {
+            return __joinRoom(roomIdOrAlias, withSignUrl: signUrl.absoluteString, success: currySuccess(completion), failure: curryFailure(completion))
+        } else {
+            return __joinRoom(roomIdOrAlias, success: currySuccess(completion), failure: curryFailure(completion))
+        }
+    }
+
+    
+    /**
+     Leave a room.
+     
+     - parameters:
+        - roomId: the id of the room to leave.
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func leaveRoom(_ roomId: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __leaveRoom(roomId, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    
+    
+    
+    /**
+     Update the direct rooms list on homeserver side with the current value of the `directRooms` property.
+     
+     - parameters:
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func uploadDirectRooms(completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __uploadDirectRooms(currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+
+    /**
+     Start peeking a room.
+     
+     The operation succeeds only if the history visibility for the room is world_readable.
+     
+     - parameters:
+        - roomId: The room id to the room.
+        - completion: A block object called when the operation completes.
+        - response: Provides the `MXPeekingRoom` to get the room data on success.
+    */
+    @nonobjc func peek(inRoom roomId: String, completion: @escaping (_ response: MXResponse<MXPeekingRoom>) -> Void) {
+        return __peekInRoom(withRoomId: roomId, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    
+    
+    
+    
+    /**
+     Ignore a list of users.
+     
+     - parameters:
+        - userIds: a list of users ids
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func ignore(users userIds: [String], completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __ignoreUsers(userIds, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    /**
+     Unignore a list of users.
+     
+     - parameters:
+        - userIds: a list of users ids
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func unIgnore(users userIds: [String], completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
+        return __unIgnoreUsers(userIds, success: currySuccess(completion), failure: curryFailure(completion))
+    }
     
 }
