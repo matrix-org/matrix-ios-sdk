@@ -87,9 +87,15 @@ demonstrates how to build a chat app on top of Matrix. You can refer to it,
 play with it, hack it to understand the full integration of the Matrix SDK.
 This section comes back to the basics with sample codes for basic use cases.
 
-One file to import::
+One file to import:
 
-      #import <MatrixSDK/MatrixSDK.h>
+**Obj-C**::
+
+    #import <MatrixSDK/MatrixSDK.h>
+
+**Swift**::
+
+    import MatrixSDK
 
 Use case #1: Get public rooms of an homeserver
 -----------------------------------------------
