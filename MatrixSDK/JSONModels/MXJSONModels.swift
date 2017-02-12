@@ -69,7 +69,7 @@ public enum MXPusherKind {
 public enum MXPushRuleKind {
     case override, content, room, sender, underride
     
-    var objc: __MXPushRuleKind {
+    var identifier: __MXPushRuleKind {
         switch self  {
         case .override: return __MXPushRuleKindOverride
         case .content: return __MXPushRuleKindContent

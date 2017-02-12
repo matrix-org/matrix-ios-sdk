@@ -414,7 +414,7 @@ public extension MXRestClient {
      - returns: a `MXHTTPOperation` instance.
      */
     @nonobjc @discardableResult func setPushRuleEnabled(ruleId: String, scope: MXPushRuleScope, kind: MXPushRuleKind, enabled: Bool, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
-        return __enablePushRule(ruleId, scope: scope.identifier, kind: kind.objc, enable: enabled, success: currySuccess(completion), failure: curryFailure(completion))
+        return __enablePushRule(ruleId, scope: scope.identifier, kind: kind.identifier, enable: enabled, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     
@@ -431,7 +431,7 @@ public extension MXRestClient {
      - returns: a `MXHTTPOperation` instance.
      */
     @nonobjc @discardableResult func removePushRule(ruleId: String, scope: MXPushRuleScope, kind: MXPushRuleKind, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
-        return __removePushRule(ruleId, scope: scope.identifier, kind: kind.objc, success: currySuccess(completion), failure: curryFailure(completion))
+        return __removePushRule(ruleId, scope: scope.identifier, kind: kind.identifier, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     /**
@@ -450,7 +450,7 @@ public extension MXRestClient {
      - returns: a `MXHTTPOperation` instance.
      */
     @nonobjc @discardableResult func addPushRule(ruleId: String, scope: MXPushRuleScope, kind: MXPushRuleKind, actions: [Any], pattern: String, conditions: [[String: Any]], completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
-        return __addPushRule(ruleId, scope: scope.identifier, kind: kind.objc, actions: actions, pattern: pattern, conditions: conditions, success: currySuccess(completion), failure: curryFailure(completion))
+        return __addPushRule(ruleId, scope: scope.identifier, kind: kind.identifier, actions: actions, pattern: pattern, conditions: conditions, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     

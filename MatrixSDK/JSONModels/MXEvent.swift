@@ -87,7 +87,7 @@ public enum MXEventType {
         case .callHangup: return kMXEventTypeStringCallHangup
         case .receipt: return kMXEventTypeStringReceipt
             
-            // Swift converts any constant with the suffix "Notification" as the type `Notification.Name`
+        // Swift converts any constant with the suffix "Notification" as the type `Notification.Name`
         // The original value can be reached using the `rawValue` property.
         case .typing: return NSNotification.Name.mxEventTypeStringTyping.rawValue
             
@@ -101,6 +101,7 @@ public enum MXEventType {
 /// Types of messages
 public enum MXMessageType {
     case text, emote, notice, image, audio, video, location, file
+    case custom(String)
     
     var identifier: String {
         switch self {
@@ -112,6 +113,7 @@ public enum MXMessageType {
         case .video: return kMXMessageTypeVideo
         case .location: return kMXMessageTypeLocation
         case .file: return kMXMessageTypeFile
+        case .custom(let value): return value
         }
     }
 }
