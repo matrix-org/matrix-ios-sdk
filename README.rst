@@ -129,7 +129,7 @@ Here the user needs to be authenticated. We will use
 [MXRestClient initWithCredentials].
 You'll normally create and initialise these two objects once the user has
 logged in, then keep them throughout the app's lifetime or until the user logs
-out::
+out:
 
 **Obj-C**::
 
@@ -181,7 +181,7 @@ Use case #2 (bis): Get the rooms the user has interacted with (using a permanent
 We use the same code as above but we add a MXFileStore that will be in charge of
 storing user's data on the file system. This will avoid to do a full sync with the
 homeserver each time the app is resumed. The app will be able to resume quickly.
-Plus, it will be able to run in offline mode while syncing with the homeserver::
+Plus, it will be able to run in offline mode while syncing with the homeserver:
 
 **Obj-C**::
 
@@ -247,7 +247,7 @@ Plus, it will be able to run in offline mode while syncing with the homeserver::
 
 Use case #3: Get messages of a room
 -----------------------------------
-We reuse the mxSession instance created before::
+We reuse the mxSession instance created before:
 
 **Obj-C**::
 
@@ -286,7 +286,7 @@ We reuse the mxSession instance created before::
     }
 
 
-Let's load a bit of room history using paginateBackMessages::
+Let's load a bit of room history using paginateBackMessages:
 
 **Obj-C**::
 
@@ -305,13 +305,18 @@ Let's load a bit of room history using paginateBackMessages::
     // Reset the pagination start point to now
     room?.liveTimeline.resetPagination()
 
+    room?.liveTimeline.paginate(10, direction: .backwards, onlyFromStore: false) { _ in
+        // At this point, the SDK has finished to enumerate the events to the attached listeners
+    }
 
 
 
 Use case #4: Post a text message to a room
 ------------------------------------------
 This action does not require any business logic from MXSession: We can use
-MXRestClient directly::
+MXRestClient directly:
+
+**Obj-C**::
 
     [mxRestClient sendTextMessageToRoom:@"the_room_id" text:@"Hello world!" success:^(NSString *event_id) {
 
@@ -323,6 +328,16 @@ MXRestClient directly::
     } failure:^(NSError *error) {
     }];
 
+**Swift**::
+
+    client.sendTextMessage(toRoom: "the_room_id", text: "Hello World!") { (response) in
+        if case .success(let eventId) = response {
+            // eventId is for reference
+            // If you have registered events listener like in the previous use case, you will get
+            // a notification for this event coming down from the homeserver events stream and
+            // now handled by MXSession.
+        }
+    }
 
 Push Notifications
 ==================
