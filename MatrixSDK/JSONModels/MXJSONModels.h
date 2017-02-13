@@ -64,7 +64,7 @@ FOUNDATION_EXPORT NSString *const kMX3PIDMediumMSISDN;
     /**
      The number of members joined to the room.
      */
-    @property (nonatomic) NSUInteger numJoinedMembers;
+    @property (nonatomic) NSInteger numJoinedMembers;
 
     /**
      Whether the room may be viewed by guest users without joining.
