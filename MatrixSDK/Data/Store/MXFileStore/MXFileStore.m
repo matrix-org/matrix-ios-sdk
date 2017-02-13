@@ -36,7 +36,7 @@
 #import "GAIDictionaryBuilder.h"
 #endif
 
-NSUInteger const kMXFileVersion = 36;
+NSUInteger const kMXFileVersion = 37;
 
 NSString *const kMXFileStoreFolder = @"MXFileStore";
 NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
