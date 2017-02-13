@@ -28,8 +28,8 @@
     self = [super initWithUserId:userId];
     if (self)
     {
-        self.displayname = [displayname copy];
-        self.avatarUrl = [avatarUrl copy];
+        _displayname = [displayname copy];
+        _avatarUrl = [avatarUrl copy];
     }
     return self;
 }
@@ -39,7 +39,7 @@
     [_mxSession.matrixRestClient setDisplayName:displayname success:^{
 
         // Update the information right now
-        self.displayname = [displayname copy];
+        _displayname = [displayname copy];
 
         [_mxSession.store storeUser:self];
         if ([_mxSession.store respondsToSelector:@selector(commit)])
@@ -65,7 +65,7 @@
     [_mxSession.matrixRestClient setAvatarUrl:avatarUrl success:^{
 
         // Update the information right now
-        self.avatarUrl = [avatarUrl copy];
+        _avatarUrl = [avatarUrl copy];
 
         [_mxSession.store storeUser:self];
         if ([_mxSession.store respondsToSelector:@selector(commit)])
@@ -111,32 +111,6 @@
             failure(error);
         }
     }];
-}
-
-- (void)setDisplayname:(NSString *)displayname
-{
-    if (_mxSession.store.isPermanent && _displayname != displayname && NO == [_displayname isEqualToString:displayname])
-    {
-        [_mxSession.store storeUser:self];
-        if ([_mxSession.store respondsToSelector:@selector(commit)])
-        {
-            [_mxSession.store commit];
-        }
-    }
-    _displayname = displayname;
-}
-
--(void)setAvatarUrl:(NSString *)avatarUrl
-{
-    if (_mxSession.store.isPermanent && _avatarUrl != avatarUrl && NO == [_avatarUrl isEqualToString:avatarUrl])
-    {
-        [_mxSession.store storeUser:self];
-        if ([_mxSession.store respondsToSelector:@selector(commit)])
-        {
-            [_mxSession.store commit];
-        }
-    }
-    _avatarUrl = avatarUrl;
 }
 
 @end
