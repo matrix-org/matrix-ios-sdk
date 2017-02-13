@@ -169,18 +169,9 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         {
             // Check the store and repair it if necessary
             [self checkStorageValidity];
-
-            [self loadMetaData];
-
-            // Do some validations
-
-            // Check if
-            if (nil == metaData)
-            {
-                [self deleteAllData];
-            }
+            
             // Check store version
-            else if (kMXFileVersion != metaData.version)
+            if (metaData && kMXFileVersion != metaData.version)
             {
                 NSLog(@"[MXFileStore] New MXFileStore version detected");
 
@@ -190,11 +181,6 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
                     [[NSURLCache sharedURLCache] removeAllCachedResponses];
                 }
 
-                [self deleteAllData];
-            }
-            // Check credentials
-            else if (nil == credentials)
-            {
                 [self deleteAllData];
             }
 
@@ -516,11 +502,6 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         NSLog(@"[MXFileStore commit] Background task #%tu started", backgroundTaskIdentifier);
 #endif // DEBUG
 #endif // TARGET_OS_IPHONE
-        
-        // Make sure the data will be backed up with the right events stream token
-        dispatch_async(dispatchQueue, ^(void){
-            backupEventStreamToken = self.eventStreamToken;
-        });
 
         [self saveRoomsDeletion];
         [self saveRoomsMessages];
@@ -534,8 +515,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         // Do it on the same GCD queue
         dispatch_async(dispatchQueue, ^(void){
             [[NSFileManager defaultManager] removeItemAtPath:storeBackupPath error:nil];
-            backupEventStreamToken = nil;
-
+            
 #if TARGET_OS_IPHONE
             // Release the background task
             dispatch_async(dispatch_get_main_queue(), ^(void){
@@ -635,7 +615,14 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     }
     else
     {
-        return [[storeBackupPath stringByAppendingPathComponent:backupEventStreamToken] stringByAppendingPathComponent:kMXFileStoreMedaDataFile];
+        if (backupEventStreamToken)
+        {
+            return [[storeBackupPath stringByAppendingPathComponent:backupEventStreamToken] stringByAppendingPathComponent:kMXFileStoreMedaDataFile];
+        }
+        else
+        {
+            return nil;
+        }
     }
 }
 
@@ -651,7 +638,14 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     }
     else
     {
-        return [[[storeBackupPath stringByAppendingPathComponent:backupEventStreamToken] stringByAppendingPathComponent:kMXFileStoreUsersFolder] stringByAppendingPathComponent:userGroup];
+        if (backupEventStreamToken)
+        {
+            return [[[storeBackupPath stringByAppendingPathComponent:backupEventStreamToken] stringByAppendingPathComponent:kMXFileStoreUsersFolder] stringByAppendingPathComponent:userGroup];
+        }
+        else
+        {
+            return nil;
+        }
     }
 }
 
@@ -703,8 +697,12 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
             if (checkStorageValidity)
             {
                 NSLog(@"[MXFileStore] Restore data: %tu files have been successfully restored in %.0fms", backupFiles.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                
+                // Load the event stream token.
+                [self loadMetaData];
 
-                self.eventStreamToken = prevSyncToken;
+                // Sanity check
+                checkStorageValidity = [self.eventStreamToken isEqualToString:prevSyncToken];
 
                 // The backup folder can be now released
                 [[NSFileManager defaultManager] removeItemAtPath:storeBackupPath error:nil];
@@ -721,6 +719,11 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
             NSLog(@"[MXFileStore] Restore data: Cannot restore previous data. Reset the store");
             [self deleteAllData];
         }
+    }
+    else
+    {
+        // Load the event stream token.
+        [self loadMetaData];
     }
 
     return checkStorageValidity;
@@ -1015,9 +1018,14 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         NSLog(@"[MXFileStore] Warning: MXFileStore metadata has been corrupted");
     }
 
-    if (metaData)
+    if (metaData.eventStreamToken)
     {
-        self.eventStreamToken = metaData.eventStreamToken;
+        [super setEventStreamToken:metaData.eventStreamToken];
+        backupEventStreamToken = self.eventStreamToken;
+    }
+    else
+    {
+        [self deleteAllData];
     }
 }
 
@@ -1045,11 +1053,21 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
             // Backup the file
             if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
             {
+                // Make sure the backup folder exists
+                NSString *storeBackupMetaDataPath = [storeBackupPath stringByAppendingPathComponent:backupEventStreamToken];
+                if (![NSFileManager.defaultManager fileExistsAtPath:storeBackupMetaDataPath])
+                {
+                    [[NSFileManager defaultManager] createDirectoryAtPath:storeBackupMetaDataPath withIntermediateDirectories:YES attributes:nil error:nil];
+                }
+                
                 [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
             }
 
             // Store new data
             [NSKeyedArchiver archiveRootObject:metaData2 toFile:file];
+            
+            // Make sure the data will be backed up with the right events stream token from here.
+            backupEventStreamToken = metaData2.eventStreamToken;
 #if DEBUG
             NSLog(@"[MXFileStore commit] lasted %.0fms for metadata", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 #endif
@@ -1130,7 +1148,11 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
                     usersByFiles[file] = group;
 
                     // Cache the backup file for this group
-                    usersByFilesBackupFiles[file] = [self usersFileForUser:userId forBackup:YES];
+                    NSString *usersFileForUser = [self usersFileForUser:userId forBackup:YES];
+                    if (usersFileForUser)
+                    {
+                        usersByFilesBackupFiles[file] = usersFileForUser;
+                    }
                 }
             }
 
