@@ -41,7 +41,9 @@ typedef enum : NSUInteger
 FOUNDATION_EXPORT NSString* const MXEncryptingErrorUnknownDeviceReason;
 
 /**
- The key in notification userInfo dictionary representating the event.
+ In case of MXEncryptingErrorUnknownDeviceCode error, the key in the notification userInfo
+ dictionary for the list of unknown devices.
+ There are provided as a MXUsersDevicesMap<MXDeviceInfo*> instance.
  */
 FOUNDATION_EXPORT NSString *const MXEncryptingErrorUnknownDeviceDevicesKey;
 
