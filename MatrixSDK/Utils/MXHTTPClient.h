@@ -140,13 +140,13 @@ typedef BOOL (^MXHTTPClientOnUnrecognizedCertificate)(NSData *certificate);
                           failure:(void (^)(NSError *error))failure;
 
 /**
- Return a random time to retry a request.
+ Return the amount of time to wait before retrying a request.
  
- a jitter is used to prevent all Matrix clients from retrying all in the same time
- if there is server side issue like server restart.
+ The time is based on an exponential backoff plus a jitter in order to prevent all Matrix clients 
+ from retrying all in the same time if there is server side issue like server restart.
  
- @return a random time in milliseconds between 5s and 8s.
+ @return a time in milliseconds like [2000, 4000, 8000, 16000, ...] + a jitter of 3000ms.
  */
-+ (NSUInteger)jitterTimeForRetry;
++ (NSUInteger)timeForRetry:(MXHTTPOperation*)httpOperation;
 
 @end

@@ -22,7 +22,7 @@
 /**
  The default max attempts.
  */
-#define MXHTTPOPERATION_DEFAULT_MAX_RETRIES 3
+#define MXHTTPOPERATION_DEFAULT_MAX_RETRIES 4
 
 /**
  The default max time a request can be retried.

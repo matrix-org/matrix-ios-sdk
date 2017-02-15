@@ -1040,7 +1040,7 @@ typedef void (^MXOnResumeDone)();
                     // Relaunch the request in a random near futur.
                     // Random time it used to avoid all Matrix clients to retry all in the same time
                     // if there is server side issue like server restart
-                    dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, [MXHTTPClient jitterTimeForRetry] * NSEC_PER_MSEC);
+                    dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, [MXHTTPClient timeForRetry:eventStreamRequest] * NSEC_PER_MSEC);
                     dispatch_after(delayTime, dispatch_get_main_queue(), ^(void) {
                         
                         if (eventStreamRequest)

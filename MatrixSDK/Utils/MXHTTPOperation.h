@@ -44,7 +44,7 @@
 
 /**
  Max number of times the request can be retried.
- Default is 3.
+ Default is 4.
  */
 @property (nonatomic) NSUInteger maxNumberOfTries;
 
