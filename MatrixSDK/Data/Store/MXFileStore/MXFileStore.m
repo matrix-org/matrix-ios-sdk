@@ -498,9 +498,8 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
             [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
             backgroundTaskIdentifier = UIBackgroundTaskInvalid;
         }];
-#if DEBUG
+
         NSLog(@"[MXFileStore commit] Background task #%tu started", backgroundTaskIdentifier);
-#endif // DEBUG
 #endif // TARGET_OS_IPHONE
 
         [self saveRoomsDeletion];
