@@ -1575,40 +1575,51 @@
                         [roomFromBobPOV leave:^{
 
                             // Make Bob come back to the room with a new device
-                            MXRestClient *bobRestClient2 = [[MXRestClient alloc] initWithCredentials: bobSession.matrixRestClient.credentials andOnUnrecognizedCertificateBlock:nil];
-                            [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+                            // Clear his crypto store
+                            [bobSession enableCrypto:NO success:^{
 
-                            MXSession *bobSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
+                                MXRestClient *bobRestClient2 = [[MXRestClient alloc] initWithCredentials: bobSession.matrixRestClient.credentials andOnUnrecognizedCertificateBlock:nil];
 
-                            [bobSession2 start:^{
+                                [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+                                MXSession *bobSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
 
-                                [bobSession2 joinRoom:roomFromAlicePOV.roomId success:^(MXRoom *roomFromBobPOV2) {
+                                [bobSession2 start:^{
 
-                                    // Bob should be able to receive the message from Alice
-                                    __block BOOL receivedByBob = NO;
-                                    [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                                    [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
-                                        XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomFromBobPOV2.roomId clearMessage:message2FromAlice senderSession:aliceSession]);
+                                    [bobSession2 joinRoom:roomFromAlicePOV.roomId success:^(MXRoom *roomFromBobPOV2) {
 
-                                        receivedByBob = YES;
+                                        // Bob should be able to receive the message from Alice
+                                        __block BOOL receivedByBob = NO;
+                                        [roomFromBobPOV2.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                                    }];
+                                            XCTAssert(event.clearEvent, @"Bob must be able to decrypt this new message on his new device");
 
-                                    [roomFromAlicePOV sendTextMessage:message2FromAlice success:^(NSString *eventId) {
+                                            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomFromBobPOV2.roomId clearMessage:message2FromAlice senderSession:aliceSession]);
 
-                                        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                                            receivedByBob = YES;
 
-                                            XCTAssert(receivedByBob, @"Bob should have received and decrypted the 2nd message from Alice");
+                                        }];
+
+                                        [roomFromAlicePOV sendTextMessage:message2FromAlice success:^(NSString *eventId) {
+
+                                            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+
+                                                XCTAssert(receivedByBob, @"Bob should have received and decrypted the 2nd message from Alice");
+                                                [expectation fulfill];
+
+                                            });
+
+                                        } failure:^(NSError *error) {
+                                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                                             [expectation fulfill];
-                                            
-                                        });
+                                        }];
 
                                     } failure:^(NSError *error) {
                                         XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                                         [expectation fulfill];
                                     }];
-
-
+                                    
                                 } failure:^(NSError *error) {
                                     XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                                     [expectation fulfill];
@@ -1618,8 +1629,6 @@
                                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                                 [expectation fulfill];
                             }];
-
-                            [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
                         } failure:^(NSError *error) {
                             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
