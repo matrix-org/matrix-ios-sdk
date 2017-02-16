@@ -78,11 +78,9 @@
  
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
- 
- @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)start:(void (^)())onComplete
-                  failure:(void (^)(NSError *error))failure;
+- (void)start:(void (^)())onComplete
+      failure:(void (^)(NSError *error))failure;
 
 /**
  Stop and release crypto objects.
