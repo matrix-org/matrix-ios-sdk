@@ -1050,7 +1050,7 @@
     NSLog(@"[MXCrypto] doKeyDownloadForUsers: %@", downloadUsers);
 
     // Download
-    return [_matrixRestClient downloadKeysForUsers:downloadUsers success:^(MXKeysQueryResponse *keysQueryResponse) {
+    return [_matrixRestClient downloadKeysForUsers:downloadUsers token:nil success:^(MXKeysQueryResponse *keysQueryResponse) {
 
         MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap = [[MXUsersDevicesMap alloc] init];
         NSMutableArray<NSString*> *failedUserIds = [NSMutableArray array];

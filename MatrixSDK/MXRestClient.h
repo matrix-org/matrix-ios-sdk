@@ -1,5 +1,6 @@
 /*
  Copyright 2014 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -1584,6 +1585,8 @@ typedef enum : NSUInteger
  Download device keys.
 
  @param userIds list of users to get keys for.
+ @param token sync token to pass in the query request, to help
+              the HS give the most recent results. It can be nil.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
@@ -1591,6 +1594,7 @@ typedef enum : NSUInteger
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)downloadKeysForUsers:(NSArray<NSString*>*)userIds
+                                   token:(NSString*)token
                                  success:(void (^)(MXKeysQueryResponse *keysQueryResponse))success
                                  failure:(void (^)(NSError *error))failure;
 

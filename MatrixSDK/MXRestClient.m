@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
- 
+ Copyright 2017 Vector Creations Ltd
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -4238,6 +4239,7 @@ MXAuthAction;
 }
 
 - (MXHTTPOperation*)downloadKeysForUsers:(NSArray<NSString*>*)userIds
+                                   token:(NSString *)token
                                  success:(void (^)(MXKeysQueryResponse *keysQueryResponse))success
                                  failure:(void (^)(NSError *error))failure
 {
@@ -4249,9 +4251,14 @@ MXAuthAction;
         downloadQuery[userID] = @{};
     }
 
-    NSDictionary *parameters = @{
-                                 @"device_keys": downloadQuery
-                                 };
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{
+                                                                                      @"device_keys": downloadQuery
+                                                                                      }];
+
+    if (token)
+    {
+        parameters[@"token"] = token;
+    }
 
     return [httpClient requestWithMethod:@"POST"
                                     path: path

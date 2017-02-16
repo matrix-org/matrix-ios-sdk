@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
- 
+ Copyright 2017 Vector Creations Ltd
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -1010,6 +1011,20 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 
 @end
 
+@implementation MXDeviceListResponse
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXDeviceListResponse *deviceListResponse = [[MXDeviceListResponse alloc] init];
+    if (deviceListResponse)
+    {
+        MXJSONModelSetArray(deviceListResponse.changed, JSONDictionary[@"changed"]);
+    }
+    return deviceListResponse;
+}
+
+@end
+
 @implementation MXRoomsSyncResponse
 
 // Override the default Mantle modelFromJSON method to convert room lists.
@@ -1058,6 +1073,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         MXJSONModelSetString(syncResponse.nextBatch, JSONDictionary[@"next_batch"]);
         MXJSONModelSetMXJSONModel(syncResponse.presence, MXPresenceSyncResponse, JSONDictionary[@"presence"]);
         MXJSONModelSetMXJSONModel(syncResponse.toDevice, MXToDeviceSyncResponse, JSONDictionary[@"to_device"]);
+        MXJSONModelSetMXJSONModel(syncResponse.deviceLists, MXDeviceListResponse, JSONDictionary[@"device_lists"]);
         MXJSONModelSetMXJSONModel(syncResponse.rooms, MXRoomsSyncResponse, JSONDictionary[@"rooms"]);
     }
 
