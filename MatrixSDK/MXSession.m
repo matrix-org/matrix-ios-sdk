@@ -1196,10 +1196,8 @@ typedef void (^MXOnResumeDone)();
     _callManager = [[MXCallManager alloc] initWithMatrixSession:self andCallStack:callStack];
 }
 
-- (MXHTTPOperation *)enableCrypto:(BOOL)enableCrypto success:(void (^)())success failure:(void (^)(NSError *))failure
+- (void)enableCrypto:(BOOL)enableCrypto success:(void (^)())success failure:(void (^)(NSError *))failure
 {
-    MXHTTPOperation *operation;
-
     NSLog(@"[MXSesion] enableCrypto: %@", @(enableCrypto));
 
     if (enableCrypto && !_crypto)
@@ -1208,7 +1206,7 @@ typedef void (^MXOnResumeDone)();
 
         if (_state == MXSessionStateRunning)
         {
-            operation = [_crypto start:success failure:failure];
+            [_crypto start:success failure:failure];
         }
         else
         {
@@ -1239,8 +1237,6 @@ typedef void (^MXOnResumeDone)();
             success();
         }
     }
-
-    return operation;
 }
 
 
@@ -2144,24 +2140,20 @@ typedef void (^MXOnResumeDone)();
 
  @param complete a block called in any case when the operation completes.
  */
-- (MXHTTPOperation*)startCrypto:(void (^)())success
-                        failure:(void (^)(NSError *error))failure
+- (void)startCrypto:(void (^)())success
+            failure:(void (^)(NSError *error))failure
 {
-    MXHTTPOperation *operation;
-
     NSLog(@"[MXSession] Start crypto");
 
     if (_crypto)
     {
-        operation = [_crypto start:success failure:failure];
+        [_crypto start:success failure:failure];
     }
     else
     {
         NSLog(@"[MXSession] Start crypto -> No crypto");
         success();
     }
-
-    return operation;
 }
 
 - (BOOL)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline

@@ -231,7 +231,7 @@
 
         XCTAssertFalse([mxSession.crypto.store.class hasDataForCredentials:mxSession.matrixRestClient.credentials]);
 
-        MXHTTPOperation *operation = [mxSession enableCrypto:YES success:^{
+        [mxSession enableCrypto:YES success:^{
 
             XCTAssert(mxSession.crypto);
             XCTAssert([mxSession.crypto.store.class hasDataForCredentials:mxSession.matrixRestClient.credentials]);
@@ -254,9 +254,6 @@
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
-
-        XCTAssert(operation, @"HTTP operations must be done when initialising crypto for the first time");
-
     }];
 }
 
