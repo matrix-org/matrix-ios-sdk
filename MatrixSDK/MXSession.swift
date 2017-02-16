@@ -138,7 +138,7 @@ public extension MXSession {
                                                 invite3PID: [MXInvite3PID]? = nil,
                                                 isDirect: Bool = false,
                                                 preset: MXRoomPreset?,
-                                                completion: @escaping (_ response: MXResponse<MXCreateRoomResponse>) -> Void) -> MXHTTPOperation {
+                                                completion: @escaping (_ response: MXResponse<MXRoom>) -> Void) -> MXHTTPOperation {
         
         return __createRoom(name, visibility: nil, roomAlias: alias, topic: topic,
                             invite: invite, invite3PID: invite3PID,
