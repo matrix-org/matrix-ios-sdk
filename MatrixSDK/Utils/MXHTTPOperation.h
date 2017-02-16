@@ -1,5 +1,6 @@
 /*
  Copyright 2015 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -44,7 +45,7 @@
 
 /**
  Max number of times the request can be retried.
- Default is 3.
+ Default is 4.
  */
 @property (nonatomic) NSUInteger maxNumberOfTries;
 
