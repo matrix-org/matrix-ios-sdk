@@ -19,6 +19,7 @@
 #import "MatrixSDKTestsData.h"
 
 #import "MXSession.h"
+#import "MXMediaManager.h"
 
 @interface MXSelfSignedHomeserverTests : XCTestCase
 {
@@ -40,6 +41,20 @@
 {
     [super tearDown];
 }
+
+- (UIImage *)anImageWithSize:(CGSize)size
+{
+    // Create a "canvas" (image context) to draw in.
+    UIGraphicsBeginImageContextWithOptions(size, NO, 0);
+
+    CGContextRef context = UIGraphicsGetCurrentContext();
+    CGContextSetInterpolationQuality(context, kCGInterpolationHigh);
+    UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+
+    return image;
+}
+
 
 - (void)testRegiter
 {
@@ -154,6 +169,52 @@
                 }];
 
             } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+// Create a room and upload an image
+- (void)testRoomAndMedia
+{
+    [matrixSDKTestsData doHttpsMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
+
+        [mxSession createRoom:@"A room" visibility:0 roomAlias:nil topic:nil success:^(MXRoom *room) {
+
+            XCTAssertNotNil(room);
+
+            [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                XCTAssertEqual(direction, MXTimelineDirectionForwards);
+                XCTAssertEqualObjects(event.content[@"msgtype"], kMXMessageTypeImage);
+
+                NSString *contentURL = event.content[@"url"];
+                XCTAssert(contentURL);
+
+                NSString *actualURL = [mxSession.matrixRestClient urlOfContent:contentURL];
+                XCTAssert(actualURL);
+
+                // Download back the image
+                [MXMediaManager downloadMediaFromURL:actualURL andSaveAtFilePath:nil success:^() {
+
+                    [expectation fulfill];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            }];
+
+            CGSize size = CGSizeMake(100, 100);
+            UIImage *image = [self anImageWithSize:size];
+
+            [room sendImage:UIImagePNGRepresentation(image) withImageSize:size mimeType:@"image/png" andThumbnail:nil localEcho:nil success:nil failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                 [expectation fulfill];
             }];

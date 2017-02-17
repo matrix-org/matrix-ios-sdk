@@ -44,6 +44,8 @@
 		322A51C81D9BBD3C00C8536D /* MXOlmDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 322A51C61D9BBD3C00C8536D /* MXOlmDevice.m */; };
 		322A51D81D9E846800C8536D /* MXCryptoTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 322A51D71D9E846800C8536D /* MXCryptoTests.m */; };
 		32322A481E57264E005DD155 /* MXSelfSignedHomeserverTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32322A471E57264E005DD155 /* MXSelfSignedHomeserverTests.m */; };
+		32322A4B1E575F65005DD155 /* MXAllowedCertificates.h in Headers */ = {isa = PBXBuildFile; fileRef = 32322A491E575F65005DD155 /* MXAllowedCertificates.h */; };
+		32322A4C1E575F65005DD155 /* MXAllowedCertificates.m in Sources */ = {isa = PBXBuildFile; fileRef = 32322A4A1E575F65005DD155 /* MXAllowedCertificates.m */; };
 		3233606F1A403A0D0071A488 /* MXFileStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 3233606D1A403A0D0071A488 /* MXFileStore.h */; };
 		323360701A403A0D0071A488 /* MXFileStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 3233606E1A403A0D0071A488 /* MXFileStore.m */; };
 		323B2ACF1BCD3EF000B11F34 /* MXCoreDataStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 323B2ACB1BCD3EF000B11F34 /* MXCoreDataStore.h */; };
@@ -275,6 +277,8 @@
 		322A51C61D9BBD3C00C8536D /* MXOlmDevice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXOlmDevice.m; sourceTree = "<group>"; };
 		322A51D71D9E846800C8536D /* MXCryptoTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCryptoTests.m; sourceTree = "<group>"; };
 		32322A471E57264E005DD155 /* MXSelfSignedHomeserverTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXSelfSignedHomeserverTests.m; sourceTree = "<group>"; };
+		32322A491E575F65005DD155 /* MXAllowedCertificates.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXAllowedCertificates.h; sourceTree = "<group>"; };
+		32322A4A1E575F65005DD155 /* MXAllowedCertificates.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXAllowedCertificates.m; sourceTree = "<group>"; };
 		3233606D1A403A0D0071A488 /* MXFileStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXFileStore.h; sourceTree = "<group>"; };
 		3233606E1A403A0D0071A488 /* MXFileStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXFileStore.m; sourceTree = "<group>"; };
 		323B2ACB1BCD3EF000B11F34 /* MXCoreDataStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCoreDataStore.h; sourceTree = "<group>"; };
@@ -554,6 +558,8 @@
 				329FB1781A0A74B100A5E88E /* MXTools.m */,
 				327E37B41A974F75007F026F /* MXLogger.h */,
 				327E37B51A974F75007F026F /* MXLogger.m */,
+				32322A491E575F65005DD155 /* MXAllowedCertificates.h */,
+				32322A4A1E575F65005DD155 /* MXAllowedCertificates.m */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -986,6 +992,7 @@
 				32114A8F1A262ECB00FF2EC4 /* MXNoStore.h in Headers */,
 				3259CD531DF860C300186944 /* MXRealmCryptoStore.h in Headers */,
 				32D776811A27877300FC4AA2 /* MXMemoryRoomStore.h in Headers */,
+				32322A4B1E575F65005DD155 /* MXAllowedCertificates.h in Headers */,
 				32A1515B1DB525DA00400192 /* NSObject+sortedKeys.h in Headers */,
 				32DC15CF1A8CF7AE006F9AD3 /* MXPushRuleConditionChecker.h in Headers */,
 				327187851DA7D0220071C818 /* MXOlmDecryption.h in Headers */,
@@ -1307,6 +1314,7 @@
 				32A151471DAF7C0C00400192 /* MXDeviceInfo.m in Sources */,
 				32A1515C1DB525DA00400192 /* NSObject+sortedKeys.m in Sources */,
 				F03EF5091DF071D5009DF592 /* MXEncryptedAttachments.m in Sources */,
+				32322A4C1E575F65005DD155 /* MXAllowedCertificates.m in Sources */,
 				F03EF5051DF01596009DF592 /* MXLRUCache.m in Sources */,
 				71DE22E01BC7C51200284153 /* MXReceiptData.m in Sources */,
 				327E37B71A974F75007F026F /* MXLogger.m in Sources */,
