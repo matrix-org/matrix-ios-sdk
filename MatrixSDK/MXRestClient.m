@@ -133,7 +133,30 @@ MXAuthAction;
         
         httpClient = [[MXHTTPClient alloc] initWithBaseURL:homeserver
                                                accessToken:credentials.accessToken
-                         andOnUnrecognizedCertificateBlock:onUnrecognizedCertBlock];
+                         andOnUnrecognizedCertificateBlock:^BOOL(NSData *certificate) {
+
+                             // Check whether the provided certificate is the already trusted by the user.
+                             if (inCredentials.allowedCertificate && [inCredentials.allowedCertificate isEqualToData:certificate])
+                             {
+                                 return YES;
+                             }
+
+                             // Check whether the user has already ignored this certificate change.
+                             if (inCredentials.ignoredCertificate && [inCredentials.ignoredCertificate isEqualToData:certificate])
+                             {
+                                 return NO;
+                             }
+
+                             // Let the app ask the end user to verify it
+                             if (onUnrecognizedCertBlock)
+                             {
+                                 return onUnrecognizedCertBlock(certificate);
+                             }
+                             else
+                             {
+                                 return NO;
+                             }
+                         }];
         
         // By default, use the same address for the identity server
         self.identityServer = homeserver;
