@@ -20,6 +20,8 @@
 #import "MXTools.h"
 #import "MXError.h"
 
+#import "MXAllowedCertificates.h"
+
 #pragma mark - Constants definitions
 /**
  Prefix used in path of home server API requests.
@@ -138,6 +140,8 @@ MXAuthAction;
                              // Check whether the provided certificate is the already trusted by the user.
                              if (inCredentials.allowedCertificate && [inCredentials.allowedCertificate isEqualToData:certificate])
                              {
+                                 // Store the allowed certificate for further requests (from MXMediaManager)
+                                 [[MXAllowedCertificates sharedInstance] addCertificate:certificate];
                                  return YES;
                              }
 
@@ -150,7 +154,15 @@ MXAuthAction;
                              // Let the app ask the end user to verify it
                              if (onUnrecognizedCertBlock)
                              {
-                                 return onUnrecognizedCertBlock(certificate);
+                                 BOOL allowed = onUnrecognizedCertBlock(certificate);
+
+                                 if (allowed)
+                                 {
+                                     // Store the allowed certificate for further requests (from MXMediaManager)
+                                     [[MXAllowedCertificates sharedInstance] addCertificate:certificate];
+                                 }
+
+                                 return allowed;
                              }
                              else
                              {
