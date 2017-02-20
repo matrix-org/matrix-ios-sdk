@@ -3928,15 +3928,7 @@ MXAuthAction;
                                                  dispatch_async(processingQueue, ^{
 
                                                      NSString *sid;
-                                                     // Temporary workaround for https://matrix.org/jira/browse/SYD-17
-                                                     if ([JSONResponse[@"sid"] isKindOfClass:NSNumber.class])
-                                                     {
-                                                         sid = [(NSNumber*)JSONResponse[@"sid"] stringValue];
-                                                     }
-                                                     else
-                                                     {
-                                                         MXJSONModelSetString(sid, JSONResponse[@"sid"]);
-                                                     }
+                                                     MXJSONModelSetString(sid, JSONResponse[@"sid"]);
 
                                                      if (completionQueue)
                                                      {
@@ -3966,21 +3958,101 @@ MXAuthAction;
                                          }];
 }
 
-- (MXHTTPOperation *)submitEmailValidationToken:(NSString *)token
-                                   clientSecret:(NSString *)clientSecret
-                                            sid:(NSString *)sid
-                                        success:(void (^)())success
-                                        failure:(void (^)(NSError *))failure
+- (MXHTTPOperation*)requestPhoneNumberValidation:(NSString*)phoneNumber
+                                     countryCode:(NSString*)countryCode
+                                    clientSecret:(NSString*)clientSecret
+                                     sendAttempt:(NSUInteger)sendAttempt
+                                        nextLink:(NSString *)nextLink
+                                         success:(void (^)(NSString *sid, NSString *msisdn))success
+                                         failure:(void (^)(NSError *error))failure
 {
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{
+                                                                                      @"phone_number": phoneNumber,
+                                                                                      @"country": countryCode,
+                                                                                      @"client_secret": clientSecret,
+                                                                                      @"send_attempt" : @(sendAttempt)
+                                                                                      }];
+    
+    if (nextLink)
+    {
+        parameters[@"next_link"] = nextLink;
+    }
+    
     return [identityHttpClient requestWithMethod:@"POST"
-                                            path:@"validate/email/submitToken"
+                                            path:@"validate/msisdn/requestToken"
+                                      parameters:parameters
+                                         success:^(NSDictionary *JSONResponse) {
+                                             if (success && processingQueue)
+                                             {
+                                                 dispatch_async(processingQueue, ^{
+                                                     
+                                                     NSString *sid, *msisdn;
+                                                     MXJSONModelSetString(sid, JSONResponse[@"sid"]);
+                                                     MXJSONModelSetString(msisdn, JSONResponse[@"msisdn"]);
+                                                     
+                                                     if (completionQueue)
+                                                     {
+                                                         dispatch_async(completionQueue, ^{
+                                                             success(sid, msisdn);
+                                                         });
+                                                     }
+                                                     
+                                                 });
+                                                 
+                                             }
+                                         }
+                                         failure:^(NSError *error) {
+                                             if (failure && processingQueue)
+                                             {
+                                                 dispatch_async(processingQueue, ^{
+                                                     
+                                                     if (completionQueue)
+                                                     {
+                                                         dispatch_async(completionQueue, ^{
+                                                             failure(error);
+                                                         });
+                                                     }
+                                                     
+                                                 });
+                                             }
+                                         }];
+}
+
+
+
+- (MXHTTPOperation *)submit3PIDValidationToken:(NSString *)token
+                                        medium:(NSString *)medium
+                                  clientSecret:(NSString *)clientSecret
+                                           sid:(NSString *)sid
+                                       success:(void (^)())success
+                                       failure:(void (^)(NSError *))failure
+{
+    NSString *path;
+    
+    if ([medium isEqualToString:kMX3PIDMediumEmail])
+    {
+        path = @"validate/email/submitToken";
+    }
+    else if ([medium isEqualToString:kMX3PIDMediumMSISDN])
+    {
+        path = @"validate/msisdn/submitToken";
+    }
+    
+    // Sanity check
+    if (!path)
+    {
+        return nil;
+    }
+    
+    return [identityHttpClient requestWithMethod:@"POST"
+                                            path:path
                                       parameters:@{
                                                    @"token": token,
                                                    @"client_secret": clientSecret,
                                                    @"sid": sid
                                                    }
                                          success:^(NSDictionary *JSONResponse) {
-
+                                             
                                              if (!JSONResponse[@"errcode"])
                                              {
                                                  if (success && processingQueue)
