@@ -200,7 +200,7 @@
     // have a list of the user's devices, then we already share an e2e room
     // with them, which means that they will have announced any new devices via
     // an m.new_device.
-    session.shareOperation = [crypto downloadKeys:users forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *devicesInRoom) {
+    session.shareOperation = [crypto.deviceList downloadKeys:users forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *devicesInRoom) {
 
         MXUsersDevicesMap<MXDeviceInfo*> *unknownDevices = [[MXUsersDevicesMap alloc] init];
 

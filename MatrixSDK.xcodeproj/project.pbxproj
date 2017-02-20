@@ -92,6 +92,8 @@
 		325D1C261DFECE0D0070B8BF /* MXCrypto_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 325D1C251DFECE0D0070B8BF /* MXCrypto_Private.h */; };
 		326056851C76FDF2009D44AD /* MXEventTimeline.h in Headers */ = {isa = PBXBuildFile; fileRef = 326056831C76FDF1009D44AD /* MXEventTimeline.h */; };
 		326056861C76FDF2009D44AD /* MXEventTimeline.m in Sources */ = {isa = PBXBuildFile; fileRef = 326056841C76FDF1009D44AD /* MXEventTimeline.m */; };
+		32637ED41E5B00400011E20D /* MXDeviceList.h in Headers */ = {isa = PBXBuildFile; fileRef = 32637ED21E5B00400011E20D /* MXDeviceList.h */; };
+		32637ED51E5B00400011E20D /* MXDeviceList.m in Sources */ = {isa = PBXBuildFile; fileRef = 32637ED31E5B00400011E20D /* MXDeviceList.m */; };
 		3264DB911CEC528D00B99881 /* MXAccountData.h in Headers */ = {isa = PBXBuildFile; fileRef = 3264DB8F1CEC528D00B99881 /* MXAccountData.h */; };
 		3264DB921CEC528D00B99881 /* MXAccountData.m in Sources */ = {isa = PBXBuildFile; fileRef = 3264DB901CEC528D00B99881 /* MXAccountData.m */; };
 		3264DB941CECA72900B99881 /* MXAccountDataTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3264DB931CECA72900B99881 /* MXAccountDataTests.m */; };
@@ -326,6 +328,8 @@
 		325D1C251DFECE0D0070B8BF /* MXCrypto_Private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCrypto_Private.h; sourceTree = "<group>"; };
 		326056831C76FDF1009D44AD /* MXEventTimeline.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXEventTimeline.h; sourceTree = "<group>"; };
 		326056841C76FDF1009D44AD /* MXEventTimeline.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXEventTimeline.m; sourceTree = "<group>"; };
+		32637ED21E5B00400011E20D /* MXDeviceList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXDeviceList.h; sourceTree = "<group>"; };
+		32637ED31E5B00400011E20D /* MXDeviceList.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXDeviceList.m; sourceTree = "<group>"; };
 		3264DB8F1CEC528D00B99881 /* MXAccountData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXAccountData.h; sourceTree = "<group>"; };
 		3264DB901CEC528D00B99881 /* MXAccountData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXAccountData.m; sourceTree = "<group>"; };
 		3264DB931CECA72900B99881 /* MXAccountDataTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXAccountDataTests.m; sourceTree = "<group>"; };
@@ -784,6 +788,8 @@
 				3256E3801DCB91EB003C9718 /* MXCryptoConstants.m */,
 				32A151401DAF7C0C00400192 /* MXDeviceInfo.h */,
 				32A151411DAF7C0C00400192 /* MXDeviceInfo.m */,
+				32637ED21E5B00400011E20D /* MXDeviceList.h */,
+				32637ED31E5B00400011E20D /* MXDeviceList.m */,
 				F03EF5061DF071D5009DF592 /* MXEncryptedAttachments.h */,
 				F03EF5071DF071D5009DF592 /* MXEncryptedAttachments.m */,
 				32A151421DAF7C0C00400192 /* MXKey.h */,
@@ -1014,6 +1020,7 @@
 				327187891DA7DCE50071C818 /* MXOlmEncryption.h in Headers */,
 				32A1514E1DAF897600400192 /* MXOlmSessionResult.h in Headers */,
 				320BBF3C1D6C7D9D0079890E /* MXEventsEnumerator.h in Headers */,
+				32637ED41E5B00400011E20D /* MXDeviceList.h in Headers */,
 				323D299A1D426F7000A80BE4 /* MXJingleVideoView.h in Headers */,
 				32F9FA7D1DBA0CF0009D98A6 /* MXDecryptionResult.h in Headers */,
 				323E0C571A2F6E7D00A31D73 /* MXRoomPowerLevels.h in Headers */,
@@ -1338,6 +1345,7 @@
 				322A51B71D9AB15900C8536D /* MXCrypto.m in Sources */,
 				32DC15D11A8CF7AE006F9AD3 /* MXNotificationCenter.m in Sources */,
 				3284A5AD1DB7CFA800A09972 /* MXFileCryptoStore.m in Sources */,
+				32637ED51E5B00400011E20D /* MXDeviceList.m in Sources */,
 				322A51C81D9BBD3C00C8536D /* MXOlmDevice.m in Sources */,
 				329FB17A1A0A74B100A5E88E /* MXTools.m in Sources */,
 				323B2AE01BCD4CB600B11F34 /* MXCoreDataAccount+CoreDataProperties.m in Sources */,
