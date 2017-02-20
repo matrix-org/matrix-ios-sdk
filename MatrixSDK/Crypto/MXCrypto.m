@@ -1,5 +1,6 @@
 /*
  Copyright 2016 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -68,6 +69,9 @@
     // Users with new devices
     NSMutableSet<NSString*> *pendingUsersWithNewDevices;
     NSMutableSet<NSString*> *inProgressUsersWithNewDevices;
+
+    // The operation used for crypto starting requests
+    MXHTTPOperation *startOperation;
 }
 @end
 
@@ -177,22 +181,31 @@
 #endif
 }
 
-- (MXHTTPOperation*)start:(void (^)())success
-                  failure:(void (^)(NSError *error))failure
+- (void)start:(void (^)())success
+      failure:(void (^)(NSError *error))failure
 {
-    __block MXHTTPOperation *operation;
 
 #ifdef MX_CRYPTO
     NSLog(@"[MXCrypto] start");
 
     // The session must be initialised enough before starting this module
-    NSParameterAssert(mxSession.myUser.userId);
+    if (!mxSession.myUser.userId)
+    {
+        NSLog(@"[MXCrypto] start. ERROR: mxSession.myUser.userId cannot be nil");
+        failure(nil);
+        return;
+    }
 
     // Check if announcement must be done and to who
     NSMutableDictionary *roomsByUser = [self usersToMakeAnnouncement];
 
     // Start uploading user device keys
-    operation = [self uploadKeys:5 success:^{
+    startOperation = [self uploadKeys:5 success:^{
+
+        if (!startOperation)
+        {
+            return;
+        }
 
         NSLog(@"[MXCrypto] start ###########################################################");
         NSLog(@" uploadKeys done for %@: ", mxSession.myUser.userId);
@@ -218,38 +231,43 @@
             [[NSRunLoop mainRunLoop] addTimer:uploadKeysTimer forMode:NSDefaultRunLoopMode];
 
             dispatch_async(dispatch_get_main_queue(), ^{
+                startOperation = nil;
                 success();
             });
 
         } failure:^(NSError *error) {
             dispatch_async(dispatch_get_main_queue(), ^{
+                startOperation = nil;
                 failure(error);
             });
         }];
 
         if (operation2)
         {
-            [operation mutateTo:operation2];
+            [startOperation mutateTo:operation2];
         }
 
     } failure:^(NSError *error) {
         NSLog(@"[MXCrypto] start. Error in uploadKeys");
         dispatch_async(dispatch_get_main_queue(), ^{
+            startOperation = nil;
             failure(error);
         });
     }];
 
 #endif
-    return operation;
 }
 
 - (void)close
 {
 #ifdef MX_CRYPTO
 
-    NSLog(@"[MXCrypto] close. store: %@",_store);
+    NSLog(@"[MXCrypto] close. store: %@", _store);
 
     [mxSession removeListener:roomMembershipEventsListener];
+
+    [startOperation cancel];
+    startOperation = nil;
 
     dispatch_async(_cryptoQueue, ^{
 
@@ -269,6 +287,7 @@
         
         myDevice = nil;
 
+        NSLog(@"[MXCrypto] close: done");
     });
 
 #endif
@@ -507,6 +526,40 @@
     if (success)
     {
         success();
+    }
+#endif
+}
+
+- (void)setDevicesKnown:(MXUsersDevicesMap<MXDeviceInfo *> *)devices complete:(void (^)())complete
+{
+#ifdef MX_CRYPTO
+    dispatch_async(_cryptoQueue, ^{
+
+        for (NSString *userId in devices.userIds)
+        {
+            for (NSString *deviceID in [devices deviceIdsForUser:userId])
+            {
+                MXDeviceInfo *device = [devices objectForDevice:deviceID forUser:userId];
+
+                if (device.verified == MXDeviceUnknown)
+                {
+                    device.verified = MXDeviceUnverified;
+                    [_store storeDeviceForUser:device.userId device:device];
+                }
+            }
+        }
+
+        if (complete)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                complete();
+            });
+        }
+    });
+#else
+    if (complete)
+    {
+        complete();
     }
 #endif
 }
@@ -786,6 +839,9 @@
         _cryptoQueue = theCryptoQueue;
         _store = store;
 
+        // Default configuration
+        _warnOnUnknowDevices = YES;
+
         _decryptionQueue = [MXCrypto dispatchQueueForUser:mxSession.matrixRestClient.credentials.userId];
 
         _olmDevice = [[MXOlmDevice alloc] initWithStore:_store];
@@ -799,6 +855,7 @@
 
         pendingUsersWithNewDevices = [NSMutableSet set];
         inProgressUsersWithNewDevices = [NSMutableSet set];
+
 
         // Build our device keys: they will later be uploaded
         NSString *deviceId = _store.deviceId;
@@ -1757,6 +1814,14 @@
  */
 - (MXHTTPOperation *)uploadDeviceKeys:(void (^)(MXKeysUploadResponse *keysUploadResponse))success failure:(void (^)(NSError *))failure
 {
+    // Sanity check
+    if (!_matrixRestClient.credentials.userId)
+    {
+        NSLog(@"[MXCrypto] uploadDeviceKeys. ERROR: _matrixRestClient.credentials.userId cannot be nil");
+        failure(nil);
+        return nil;
+    }
+
     // Prepare the device keys data to send
     // Sign it
     NSString *signature = [_olmDevice signJSON:myDevice.signalableJSONDictionary];

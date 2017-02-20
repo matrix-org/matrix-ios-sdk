@@ -336,8 +336,9 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         if (event)
         {
             // Update the local echo with the error state (This will trigger kMXEventDidChangeSentStateNotification notification).
+            event.sentError = error;
             event.sentState = MXEventSentStateFailed;
-            
+
             // Update the stored echo.
             [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
         }
@@ -624,8 +625,9 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         else
         {
             // Update the local echo with the error state (This will trigger kMXEventDidChangeSentStateNotification notification).
+            event.sentError = error;
             event.sentState = MXEventSentStateFailed;
-            
+
             // Update the stored echo.
             [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
         }
@@ -814,8 +816,9 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         else
         {
             // Update the local echo with the error state (This will trigger kMXEventDidChangeSentStateNotification notification).
+            event.sentError = error;
             event.sentState = MXEventSentStateFailed;
-            
+
             // Update the stored echo.
             [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
         }
@@ -1037,8 +1040,9 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         else
         {
             // Update the local echo with the error state (This will trigger kMXEventDidChangeSentStateNotification notification).
+            event.sentError = error;
             event.sentState = MXEventSentStateFailed;
-            
+
             // Update the stored echo.
             [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
         }

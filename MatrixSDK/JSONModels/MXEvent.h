@@ -152,9 +152,10 @@ typedef enum : NSUInteger
     MXEventSentStateSending,
     /**
      The event is an outgoing event which failed to be sent.
+     See the `sentError` property to check the failure reason.
      */
     MXEventSentStateFailed
-    
+
 } MXEventSentState;
 
 /**
@@ -335,6 +336,11 @@ extern NSString *const kMXEventIdentifierKey;
  In case of invite event, inviteRoomState contains a subset of the state of the room at the time of the invite.
  */
 @property (nonatomic) NSArray<MXEvent *> *inviteRoomState;
+
+/**
+ In case of sending failure (MXEventSentStateFailed), the error that occured.
+ */
+@property (nonatomic) NSError *sentError;
 
 /**
  Indicates if the event hosts state data.

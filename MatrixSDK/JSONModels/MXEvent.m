@@ -614,6 +614,7 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
         _redacts = [aDecoder decodeObjectForKey:@"redacts"];
         _redactedBecause = [aDecoder decodeObjectForKey:@"redactedBecause"];
         _inviteRoomState = [aDecoder decodeObjectForKey:@"inviteRoomState"];
+        _sentError = [aDecoder decodeObjectForKey:@"sentError"];
     }
     return self;
 }
@@ -634,6 +635,7 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     [aCoder encodeObject:_redacts forKey:@"redacts"];
     [aCoder encodeObject:_redactedBecause forKey:@"redactedBecause"];
     [aCoder encodeObject:_inviteRoomState forKey:@"inviteRoomState"];
+    [aCoder encodeObject:_sentError forKey:@"sentError"];
 }
 
 @end

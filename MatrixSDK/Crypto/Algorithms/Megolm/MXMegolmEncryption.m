@@ -1,5 +1,6 @@
 /*
  Copyright 2016 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -201,6 +202,8 @@
     // an m.new_device.
     session.shareOperation = [crypto downloadKeys:users forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *devicesInRoom) {
 
+        MXUsersDevicesMap<MXDeviceInfo*> *unknownDevices = [[MXUsersDevicesMap alloc] init];
+
         NSMutableDictionary<NSString* /* userId */, NSMutableArray<MXDeviceInfo*>*> *shareMap = [NSMutableDictionary dictionary];
 
         for (NSString *userId in devicesInRoom.userIds)
@@ -208,6 +211,13 @@
             for (NSString *deviceID in [devicesInRoom deviceIdsForUser:userId])
             {
                 MXDeviceInfo *deviceInfo = [devicesInRoom objectForDevice:deviceID forUser:userId];
+
+                if (crypto.warnOnUnknowDevices && deviceInfo.verified == MXDeviceUnknown)
+                {
+                    // The device is not yet known by the user
+                    [unknownDevices setObject:deviceInfo forUser:userId andDevice:deviceID];
+                    continue;
+                }
 
                 if (deviceInfo.verified == MXDeviceBlocked)
                 {
@@ -229,6 +239,20 @@
                     [shareMap[userId] addObject:deviceInfo];
                 }
             }
+        }
+
+        // Check if any of these devices are not yet known to the user.
+        // if so, warn the user so they can verify or ignore.
+        if (unknownDevices.count)
+        {
+            NSError *error = [NSError errorWithDomain:MXEncryptingErrorDomain
+                                                 code:MXEncryptingErrorUnknownDeviceCode
+                                             userInfo:@{
+                                                        NSLocalizedDescriptionKey: MXEncryptingErrorUnknownDeviceReason,
+                                                        @"MXEncryptingErrorUnknownDeviceDevicesKey": unknownDevices
+                                                        }];
+
+            failure(error);
         }
 
         MXHTTPOperation *operation = [self shareKey:session withDevices:shareMap success:^{

@@ -1,5 +1,6 @@
 /*
  Copyright 2016 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -19,6 +20,7 @@
 
 
 #import "MXDeviceInfo.h"
+#import "MXCryptoConstants.h"
 
 #import "MXRestClient.h"
 
@@ -76,11 +78,9 @@
  
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
- 
- @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)start:(void (^)())onComplete
-                  failure:(void (^)(NSError *error))failure;
+- (void)start:(void (^)())onComplete
+      failure:(void (^)(NSError *error))failure;
 
 /**
  Stop and release crypto objects.
@@ -139,10 +139,23 @@
  @param verificationStatus the new verification status.
  @param deviceId the unique identifier for the device.
  @param userId the owner of the device.
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
  */
 - (void)setDeviceVerification:(MXDeviceVerification)verificationStatus forDevice:(NSString*)deviceId ofUser:(NSString*)userId
                       success:(void (^)())success
                       failure:(void (^)(NSError *error))failure;
+
+/**
+ Move all the passed devices from the MXDeviceUnknown state to MXDeviceUnverified.
+
+ @param devices the list of devices.
+
+ @param complete A block object called when the operation completes.
+ */
+- (void)setDevicesKnown:(MXUsersDevicesMap<MXDeviceInfo*>*)devices
+               complete:(void (^)())complete;
 
 /**
  Download the device keys for a list of users and stores them into the crypto store.
@@ -218,6 +231,17 @@
 - (void)importRoomKeys:(NSData *)keyFile withPassword:(NSString*)password
                success:(void (^)())success
                failure:(void (^)(NSError *error))failure;
+
+
+#pragma mark - Crypto settings
+
+/**
+ Warn (generates a NSError) when the user wants to send a message in a room where
+ there is at least one device they have never seen.
+
+ Default is YES.
+ */
+@property (nonatomic) BOOL warnOnUnknowDevices;
 
 @end
 

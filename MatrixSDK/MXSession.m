@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
- 
+ Copyright 2017 Vector Creations Ltd
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -1042,7 +1043,7 @@ typedef void (^MXOnResumeDone)();
                     // Relaunch the request in a random near futur.
                     // Random time it used to avoid all Matrix clients to retry all in the same time
                     // if there is server side issue like server restart
-                    dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, [MXHTTPClient jitterTimeForRetry] * NSEC_PER_MSEC);
+                    dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, [MXHTTPClient timeForRetry:eventStreamRequest] * NSEC_PER_MSEC);
                     dispatch_after(delayTime, dispatch_get_main_queue(), ^(void) {
                         
                         if (eventStreamRequest)
@@ -1197,10 +1198,8 @@ typedef void (^MXOnResumeDone)();
     _callManager = [[MXCallManager alloc] initWithMatrixSession:self andCallStack:callStack];
 }
 
-- (MXHTTPOperation *)enableCrypto:(BOOL)enableCrypto success:(void (^)())success failure:(void (^)(NSError *))failure
+- (void)enableCrypto:(BOOL)enableCrypto success:(void (^)())success failure:(void (^)(NSError *))failure
 {
-    MXHTTPOperation *operation;
-
     NSLog(@"[MXSesion] enableCrypto: %@", @(enableCrypto));
 
     if (enableCrypto && !_crypto)
@@ -1209,7 +1208,7 @@ typedef void (^MXOnResumeDone)();
 
         if (_state == MXSessionStateRunning)
         {
-            operation = [_crypto start:success failure:failure];
+            [_crypto start:success failure:failure];
         }
         else
         {
@@ -1240,8 +1239,6 @@ typedef void (^MXOnResumeDone)();
             success();
         }
     }
-
-    return operation;
 }
 
 
@@ -2145,24 +2142,20 @@ typedef void (^MXOnResumeDone)();
 
  @param complete a block called in any case when the operation completes.
  */
-- (MXHTTPOperation*)startCrypto:(void (^)())success
-                        failure:(void (^)(NSError *error))failure
+- (void)startCrypto:(void (^)())success
+            failure:(void (^)(NSError *error))failure
 {
-    MXHTTPOperation *operation;
-
     NSLog(@"[MXSession] Start crypto");
 
     if (_crypto)
     {
-        operation = [_crypto start:success failure:failure];
+        [_crypto start:success failure:failure];
     }
     else
     {
         NSLog(@"[MXSession] Start crypto -> No crypto");
         success();
     }
-
-    return operation;
 }
 
 - (BOOL)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline
