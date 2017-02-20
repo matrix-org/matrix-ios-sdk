@@ -99,11 +99,9 @@ public extension MXSession {
         - isEnabled: `false` stops crypto and erases crypto data.
         - completion: A block called when the SDK has completed a catchup, or times out.
         - response: Indicates whether the sync was successful.
-     
-     - returns: the HTTP operation that may be required. Can be nil.
      */
-    @nonobjc @discardableResult func enableCrypto(_ isEnabled: Bool, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation? {
-        return __enableCrypto(isEnabled, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func enableCrypto(_ isEnabled: Bool, completion: @escaping (_ response: MXResponse<Void>) -> Void) {
+        __enableCrypto(isEnabled, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     
