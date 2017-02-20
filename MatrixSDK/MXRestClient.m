@@ -21,6 +21,8 @@
 #import "MXTools.h"
 #import "MXError.h"
 
+#import "MXAllowedCertificates.h"
+
 #pragma mark - Constants definitions
 /**
  Prefix used in path of home server API requests.
@@ -134,7 +136,40 @@ MXAuthAction;
         
         httpClient = [[MXHTTPClient alloc] initWithBaseURL:homeserver
                                                accessToken:credentials.accessToken
-                         andOnUnrecognizedCertificateBlock:onUnrecognizedCertBlock];
+                         andOnUnrecognizedCertificateBlock:^BOOL(NSData *certificate) {
+
+                             // Check whether the provided certificate is the already trusted by the user.
+                             if (inCredentials.allowedCertificate && [inCredentials.allowedCertificate isEqualToData:certificate])
+                             {
+                                 // Store the allowed certificate for further requests (from MXMediaManager)
+                                 [[MXAllowedCertificates sharedInstance] addCertificate:certificate];
+                                 return YES;
+                             }
+
+                             // Check whether the user has already ignored this certificate change.
+                             if (inCredentials.ignoredCertificate && [inCredentials.ignoredCertificate isEqualToData:certificate])
+                             {
+                                 return NO;
+                             }
+
+                             // Let the app ask the end user to verify it
+                             if (onUnrecognizedCertBlock)
+                             {
+                                 BOOL allowed = onUnrecognizedCertBlock(certificate);
+
+                                 if (allowed)
+                                 {
+                                     // Store the allowed certificate for further requests (from MXMediaManager)
+                                     [[MXAllowedCertificates sharedInstance] addCertificate:certificate];
+                                 }
+
+                                 return allowed;
+                             }
+                             else
+                             {
+                                 return NO;
+                             }
+                         }];
         
         // By default, use the same address for the identity server
         self.identityServer = homeserver;

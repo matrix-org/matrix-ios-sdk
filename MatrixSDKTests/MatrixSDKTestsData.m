@@ -32,6 +32,7 @@
  Here, we use one of the home servers launched by the ./demo/start.sh script
  */
 NSString *const kMXTestsHomeServerURL = @"http://localhost:8080";
+NSString *const kMXTestsHomeServerHttpsURL = @"https://localhost:8481";
 
 NSString * const kMXTestsAliceDisplayName = @"mxAlice";
 NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqmmttIQ";
@@ -590,6 +591,100 @@ NSMutableArray *roomsToClean;
             NSAssert(NO, @"Cannot create bobSession");
         }];
 
+    }];
+}
+
+
+#pragma mark - HTTPS mxBob
+- (void)getHttpsBobCredentials:(void (^)())success
+{
+    [self getHttpsBobCredentials:success onUnrecognizedCertificateBlock:^BOOL(NSData *certificate) {
+        return YES;
+    }];
+}
+
+- (void)getHttpsBobCredentials:(void (^)())success onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
+{
+    if (self.bobCredentials)
+    {
+        // Credentials are already here, they are ready
+        success();
+    }
+    else
+    {
+        // Use a different Bob each time so that tests are independent
+        NSString *bobUniqueUser = [NSString stringWithFormat:@"%@-%@", MXTESTS_BOB, [[NSUUID UUID] UUIDString]];
+
+        MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerHttpsURL
+                                            andOnUnrecognizedCertificateBlock:onUnrecognizedCertBlock];
+
+        // First, try register the user
+        [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:bobUniqueUser password:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
+
+            _bobCredentials = credentials;
+            success();
+
+        } failure:^(NSError *error) {
+            MXError *mxError = [[MXError alloc] initWithNSError:error];
+            if (mxError && [mxError.errcode isEqualToString:@"M_USER_IN_USE"])
+            {
+                // The user already exists. This error is normal.
+                // Log Bob in to get his keys
+                [mxRestClient loginWithLoginType:kMXLoginFlowTypeDummy username:bobUniqueUser password:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
+
+                    _bobCredentials = credentials;
+                    success();
+
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot log mxBOB in");
+                }];
+            }
+            else
+            {
+                NSAssert(NO, @"Cannot create mxBOB account. Make sure the homeserver at %@ is running", mxRestClient.homeserver);
+            }
+        }];
+    }
+}
+
+- (void)doHttpsMXRestClientTestWithBob:(XCTestCase*)testCase
+                           readyToTest:(void (^)(MXRestClient *bobRestClient, XCTestExpectation *expectation))readyToTest
+{
+    XCTestExpectation *expectation;
+    if (testCase)
+    {
+        expectation = [testCase expectationWithDescription:@"asyncTest"];
+    }
+
+    [self getHttpsBobCredentials:^{
+
+        MXRestClient *restClient = [[MXRestClient alloc] initWithCredentials:self.bobCredentials
+                                           andOnUnrecognizedCertificateBlock:^BOOL(NSData *certificate) {
+                                               return YES;
+                                           }];
+
+        readyToTest(restClient, expectation);
+    }];
+
+    if (testCase)
+    {
+        [testCase waitForExpectationsWithTimeout:10 handler:nil];
+    }
+}
+
+- (void)doHttpsMXSessionTestWithBob:(XCTestCase*)testCase
+                        readyToTest:(void (^)(MXSession *mxSession, XCTestExpectation *expectation))readyToTest
+{
+    [self doHttpsMXRestClientTestWithBob:testCase readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+
+        [mxSession start:^{
+
+            readyToTest(mxSession, expectation);
+            
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
     }];
 }
 
