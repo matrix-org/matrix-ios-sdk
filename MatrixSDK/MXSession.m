@@ -859,7 +859,13 @@ typedef void (^MXOnResumeDone)();
                 }
             }
         }
-        
+
+        // Handle crypto sync data
+        if (_crypto && syncResponse.deviceLists.changed.count)
+        {
+            [_crypto handleDeviceListsChanged:syncResponse.deviceLists.changed];
+        }
+
         // Update live event stream token
         _store.eventStreamToken = syncResponse.nextBatch;
         

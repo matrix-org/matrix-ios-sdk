@@ -294,7 +294,7 @@
     [pendingUsersWithNewDevices addObject:userId];
 }
 
-- (void)flushNewDeviceRequests
+- (void)refreshOutdatedDeviceLists
 {
     NSArray *users = pendingUsersWithNewDevices.allObjects;
     if (users.count == 0)

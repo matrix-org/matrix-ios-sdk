@@ -74,16 +74,17 @@
  Mark the cached device list for the given user outdated.
 
  This doesn't set off an update, so that several users can be batched
- together. Call flushDeviceListRequests for that.
+ together. Call refreshOutdatedDeviceLists for that.
 
  @param userId.
  */
 - (void)invalidateUserDeviceList:(NSString*)userId;
 
 /**
- Start device queries for any users who sent us an m.new_device recently
+ If there is not already a device list query in progress, and we have
+ users who have outdated device lists, start a query now.
  */
-- (void)flushNewDeviceRequests;
+- (void)refreshOutdatedDeviceLists;
 
 @end
 

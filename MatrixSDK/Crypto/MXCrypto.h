@@ -118,6 +118,13 @@
 - (BOOL)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline;
 
 /**
+ Handle list of changed users provided in the /sync response.
+
+ @param userIds the list of users who have a change in their devices.
+ */
+- (void)handleDeviceListsChanged:(NSArray<NSString*>*)userIds;
+
+/**
  Return the device information for an encrypted event.
 
  @param event The event.

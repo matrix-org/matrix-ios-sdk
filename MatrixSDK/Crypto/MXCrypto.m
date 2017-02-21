@@ -416,6 +416,18 @@
 #endif
 }
 
+- (void)handleDeviceListsChanged:(NSArray<NSString *>*)userIds
+{
+#ifdef MX_CRYPTO
+    for (NSString *userId in userIds)
+    {
+        [_deviceList invalidateUserDeviceList:userId];
+    }
+
+    [_deviceList refreshOutdatedDeviceLists];
+#endif
+}
+
 - (MXDeviceInfo *)eventDeviceInfo:(MXEvent *)event
 {
     __block MXDeviceInfo *device;
@@ -1387,7 +1399,7 @@
     if (!roomsByUser)
     {
         // Catch up on any m.new_device events which arrived during the initial sync.
-        [_deviceList flushNewDeviceRequests];
+        [_deviceList refreshOutdatedDeviceLists];
 
         NSLog(@"[MXCrypto] makeAnnoucementTo: Already done");
         success();
@@ -1397,7 +1409,7 @@
     // Catch up on any m.new_device events which arrived during the initial sync.
     // And force download all devices keys the user already has.
     [_deviceList invalidateUserDeviceList:myDevice.userId];
-    [_deviceList flushNewDeviceRequests];
+    [_deviceList refreshOutdatedDeviceLists];
 
     // Build a per-device message for each user
     MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];
@@ -1529,7 +1541,7 @@
     // can do all of them together.
     if (mxSession.state == MXSessionStateRunning)
     {
-        [_deviceList flushNewDeviceRequests];
+        [_deviceList refreshOutdatedDeviceLists];
     }
 }
 
