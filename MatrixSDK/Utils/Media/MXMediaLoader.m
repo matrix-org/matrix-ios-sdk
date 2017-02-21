@@ -254,6 +254,7 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
                 {
                     NSURLCredential *credential = [NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust];
                     [challenge.sender useCredential:credential forAuthenticationChallenge:challenge];
+                    break;
                 }
 
                 default:
