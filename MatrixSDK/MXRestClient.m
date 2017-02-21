@@ -3968,11 +3968,10 @@ MXAuthAction;
 {
     NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{
                                                                                       @"phone_number": phoneNumber,
-                                                                                      @"country": countryCode,
+                                                                                      @"country": (countryCode ? countryCode : @""),
                                                                                       @"client_secret": clientSecret,
                                                                                       @"send_attempt" : @(sendAttempt)
                                                                                       }];
-    
     if (nextLink)
     {
         parameters[@"next_link"] = nextLink;
@@ -4027,22 +4026,13 @@ MXAuthAction;
                                        success:(void (^)())success
                                        failure:(void (^)(NSError *))failure
 {
-    NSString *path;
-    
-    if ([medium isEqualToString:kMX3PIDMediumEmail])
-    {
-        path = @"validate/email/submitToken";
-    }
-    else if ([medium isEqualToString:kMX3PIDMediumMSISDN])
-    {
-        path = @"validate/msisdn/submitToken";
-    }
-    
     // Sanity check
-    if (!path)
+    if (!medium.length)
     {
         return nil;
     }
+    
+    NSString *path = [NSString stringWithFormat:@"validate/%@/submitToken", medium];
     
     return [identityHttpClient requestWithMethod:@"POST"
                                             path:path
