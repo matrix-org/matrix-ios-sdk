@@ -71,4 +71,9 @@
     return allowed;
 }
 
+- (void)reset
+{
+    [certificates removeAllObjects];
+}
+
 @end
