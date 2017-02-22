@@ -452,6 +452,7 @@
 		71DE22DC1BC7C51200284153 /* MXReceiptData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXReceiptData.m; sourceTree = "<group>"; };
 		71DE22DD1BC7C51200284153 /* MXReceiptData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXReceiptData.h; sourceTree = "<group>"; };
 		B1F1AE550CF4C15B653DDE6E /* Pods-MatrixSDKTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDKTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-MatrixSDKTests/Pods-MatrixSDKTests.debug.xcconfig"; sourceTree = "<group>"; };
+		C6CC43261E5CB0FD00DB9C34 /* MatrixSDKTests-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MatrixSDKTests-Bridging-Header.h"; sourceTree = "<group>"; };
 		C6D5D6091E4FA74000706C0F /* MXEnumConstants.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXEnumConstants.swift; sourceTree = "<group>"; };
 		C6D5D60D1E4FBD2900706C0F /* MXSession.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXSession.swift; sourceTree = "<group>"; };
 		C6F9357B1E5B39CA00FC34BF /* MXRestClient.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXRestClient.swift; sourceTree = "<group>"; };
@@ -920,6 +921,7 @@
 				3264DB931CECA72900B99881 /* MXAccountDataTests.m */,
 				322A51D71D9E846800C8536D /* MXCryptoTests.m */,
 				324BE45A1E3FA7A8008D99D4 /* MXMegolmExportEncryptionTest.m */,
+				C6CC43261E5CB0FD00DB9C34 /* MatrixSDKTests-Bridging-Header.h */,
 			);
 			path = MatrixSDKTests;
 			sourceTree = "<group>";
