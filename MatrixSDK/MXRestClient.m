@@ -3206,6 +3206,54 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation*)remove3PID:(NSString*)address
+                        medium:(NSString*)medium
+                       success:(void (^)())success
+                       failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/account/3pid/delete", kMXAPIPrefixPathUnstable];
+    return [httpClient requestWithMethod:@"POST"
+                                    path:path
+                              parameters:@{
+                                           @"medium": medium,
+                                           @"address": address
+                                           }
+                                 success:^(NSDictionary *JSONResponse) {
+                                     
+                                     if (success && processingQueue)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success();
+                                                 });
+                                             }
+                                             
+                                         });
+                                     }
+                                     
+                                 }
+                                 failure:^(NSError *error) {
+                                     
+                                     if (failure && processingQueue)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
+                                         });
+                                     }
+                                     
+                                 }];
+}
+
 - (MXHTTPOperation*)threePIDs:(void (^)(NSArray<MXThirdPartyIdentifier*> *threePIDs))success
                       failure:(void (^)(NSError *error))failure
 {
