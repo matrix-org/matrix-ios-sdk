@@ -416,15 +416,35 @@
 #endif
 }
 
-- (void)handleDeviceListsChanged:(NSArray<NSString *>*)userIds
+// This method is equivalent to the Crypto.prototype._onSyncCompleted in matrix-js-sdk
+- (void)handleDeviceListsChanged:(NSArray<NSString *>*)userIds oldSyncToken:(NSString *)oldSyncToken nextSyncToken:(NSString *)nextSyncToken
 {
 #ifdef MX_CRYPTO
-    for (NSString *userId in userIds)
-    {
-        [_deviceList invalidateUserDeviceList:userId];
-    }
 
-    [_deviceList refreshOutdatedDeviceLists];
+    NSLog(@"[MXCrypto] handleDeviceListsChanged: %@", userIds);
+
+    dispatch_async(_cryptoQueue, ^{
+
+        if (oldSyncToken)
+        {
+            // an initialsync
+            //[self endNewDeviceEvents];    // @TODO
+
+            // if we have a deviceSyncToken, we can tell the deviceList to
+            // invalidate devices which have changed since then.
+            // @TODO
+
+        }
+
+        // @TODO
+        for (NSString *userId in userIds)
+        {
+            [_deviceList invalidateUserDeviceList:userId];
+        }
+
+        [_deviceList refreshOutdatedDeviceLists];
+    });
+
 #endif
 }
 
@@ -1306,6 +1326,58 @@
 }
 
 /**
+ Get a list of the e2e-enabled rooms we are members of.
+ 
+ @returns an MXRoom array.
+ */
+- (NSArray<MXRoom*>*)e2eRooms
+{
+    NSMutableArray<MXRoom*> *e2eRooms = [NSMutableArray array];
+    for (MXRoom *room in mxSession.rooms)
+    {
+        // Check for rooms with encryption enabled
+        if (!room.state.isEncrypted)
+        {
+            continue;
+        }
+
+        // Ignore any rooms which we have left
+        MXRoomMember *me = [room.state memberWithUserId:_matrixRestClient.credentials.userId];
+        if (!me || (me.membership != MXMembershipJoin && me.membership !=MXMembershipInvite))
+        {
+            continue;
+        }
+
+        [e2eRooms addObject:room];
+    }
+
+    return e2eRooms;
+}
+
+/**
+ Get the users we share an e2e-enabled room with.
+
+ @return the list of rooms ids ordered by user id.
+ */
+- (NSMutableDictionary<NSString*, NSMutableArray*> *)e2eRoomMembers
+{
+    NSMutableDictionary<NSString*, NSMutableArray*> *roomsByUser = [NSMutableDictionary dictionary];
+
+    for (MXRoom *room in self.e2eRooms)
+    {
+        for (MXRoomMember *member in room.state.joinedMembers)
+        {
+            if (!roomsByUser[member.userId])
+            {
+                roomsByUser[member.userId] = [NSMutableArray array];
+            }
+            [roomsByUser[member.userId] addObject:room.roomId];
+        }
+    }
+    return roomsByUser;
+};
+
+/**
  Listen to events that change the signatures chain.
  */
 - (void)registerEventHandlers
@@ -1353,37 +1425,16 @@
     // We need to tell all the devices in all the rooms we are members of that
     // we have arrived.
     // Build a list of rooms for each user.
-    NSMutableDictionary<NSString*, NSMutableArray*> *roomsByUser = [NSMutableDictionary dictionary];
-    for (MXRoom *room in mxSession.rooms)
-    {
-        // Check for rooms with encryption enabled
-        if (!room.state.isEncrypted)
-        {
-            continue;
-        }
-
-        // Ignore any rooms which we have left
-        MXRoomMember *me = [room.state memberWithUserId:_matrixRestClient.credentials.userId];
-        if (!me || (me.membership != MXMembershipJoin && me.membership !=MXMembershipInvite))
-        {
-            continue;
-        }
-
-        for (MXRoomMember *member in room.state.members)
-        {
-            if (!roomsByUser[member.userId])
-            {
-                roomsByUser[member.userId] = [NSMutableArray array];
-            }
-            [roomsByUser[member.userId] addObject:room.roomId];
-        }
-    }
-
-    return roomsByUser;
+    return self.e2eRoomMembers;
 }
 
 /**
  Make device annoucement if required.
+
+ Send m.new_device messages to any devices we share a room with.
+
+ (TODO: we can get rid of this once a suitable number of homeservers and
+ clients support the more reliable device list update stream mechanism)
  
  @param roomsByUser the rooms and users to announce the device to.
  
