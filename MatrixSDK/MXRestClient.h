@@ -1242,6 +1242,21 @@ typedef enum : NSUInteger
                     failure:(void (^)(NSError *error))failure;
 
 /**
+ Remove a 3rd party id from the Matrix user information.
+ 
+ @param address the 3rd party id.
+ @param medium the type of the 3rd party id.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)remove3PID:(NSString*)address
+                        medium:(NSString*)medium
+                       success:(void (^)())success
+                       failure:(void (^)(NSError *error))failure;
+
+/**
  List all 3PIDs linked to the Matrix user account.
 
  @param success A block object called when the operation succeeds.
