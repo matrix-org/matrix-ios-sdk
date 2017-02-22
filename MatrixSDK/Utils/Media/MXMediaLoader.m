@@ -233,20 +233,54 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
     if ([protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust])
     {
         SecTrustRef trust = [protectionSpace serverTrust];
-        if (SecTrustGetCertificateCount(trust) > 0)
-        {
-            // Consider here the leaf certificate (the one at index 0).
-            SecCertificateRef certif = SecTrustGetCertificateAtIndex(trust, 0);
 
-            NSData *certificate = (__bridge NSData*)SecCertificateCopyData(certif);
-            if ([[MXAllowedCertificates sharedInstance] isCertificateAllowed:certificate])
+        // Re-evaluate the trust policy
+        SecTrustResultType secresult = kSecTrustResultInvalid;
+        if (SecTrustEvaluate(trust, &secresult) != errSecSuccess)
+        {
+            // Trust evaluation failed
+            [connection cancel];
+
+            // Generate same kind of error as AFNetworking
+            NSError *error = [NSError errorWithDomain:NSURLErrorDomain code:kCFURLErrorCancelled userInfo:nil];
+            [self connection:connection didFailWithError:error];
+        }
+        else
+        {
+            switch (secresult)
             {
-                NSURLCredential *credential = [NSURLCredential credentialForTrust:protectionSpace.serverTrust];
-                [[challenge sender] useCredential:credential forAuthenticationChallenge:challenge];
-            }
-            else
-            {
-                NSLog(@"[MXMediaLoader] Certificate check failed for %@", protectionSpace);
+                case kSecTrustResultUnspecified:    // The OS trusts this certificate implicitly.
+                case kSecTrustResultProceed:        // The user explicitly told the OS to trust it.
+                {
+                    NSURLCredential *credential = [NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust];
+                    [challenge.sender useCredential:credential forAuthenticationChallenge:challenge];
+                    break;
+                }
+
+                default:
+                {
+                    // Consider here the leaf certificate (the one at index 0).
+                    SecCertificateRef certif = SecTrustGetCertificateAtIndex(trust, 0);
+
+                    NSData *certificate = (__bridge NSData*)SecCertificateCopyData(certif);
+
+                    // Was it already trusted by the user ?
+                    if ([[MXAllowedCertificates sharedInstance] isCertificateAllowed:certificate])
+                    {
+                        NSURLCredential *credential = [NSURLCredential credentialForTrust:protectionSpace.serverTrust];
+                        [[challenge sender] useCredential:credential forAuthenticationChallenge:challenge];
+                    }
+                    else
+                    {
+                        NSLog(@"[MXMediaLoader] Certificate check failed for %@", protectionSpace);
+                        [connection cancel];
+
+                        // Generate same kind of error as AFNetworking
+                        NSError *error = [NSError errorWithDomain:NSURLErrorDomain code:kCFURLErrorCancelled userInfo:nil];
+                        [self connection:connection didFailWithError:error];
+                    }
+                    break;
+                }
             }
         }
     }

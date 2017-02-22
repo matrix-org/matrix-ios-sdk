@@ -42,4 +42,9 @@
  */
 - (BOOL)isCertificateAllowed:(NSData*)certificate;
 
+/**
+ Forget all allowed certificates.
+ */
+- (void)reset;
+
 @end
