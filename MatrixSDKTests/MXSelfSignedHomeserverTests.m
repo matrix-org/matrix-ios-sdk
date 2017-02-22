@@ -20,6 +20,7 @@
 
 #import "MXSession.h"
 #import "MXMediaManager.h"
+#import "MXAllowedCertificates.h"
 
 @interface MXSelfSignedHomeserverTests : XCTestCase
 {
@@ -225,5 +226,95 @@
         }];
     }];
 }
+
+- (void)testMediaWithCACertificate
+{
+    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
+
+    // Download back the image from a https server with a CA cert
+    [MXMediaManager downloadMediaFromURL:@"https://matrix.org/matrix.png" andSaveAtFilePath:nil success:^() {
+
+        [expectation fulfill];
+
+    } failure:^(NSError *error) {
+        XCTFail(@"The request should not fail - NSError: %@", error);
+        [expectation fulfill];
+    }];
+
+    [self waitForExpectationsWithTimeout:10 handler:nil];
+}
+
+- (void)testNotTrustedCertificate
+{
+    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
+
+    MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerHttpsURL
+                                        andOnUnrecognizedCertificateBlock:nil];
+
+    [mxRestClient publicRooms:^(NSArray *rooms) {
+
+        XCTFail(@"The operation must fail because the self-signed certficate was not trusted");
+        [expectation fulfill];
+
+    } failure:^(NSError *error) {
+
+        [expectation fulfill];
+
+    }];
+
+    [self waitForExpectationsWithTimeout:10 handler:nil];
+}
+
+- (void)testMediaWithNotTrustedCertificate
+{
+    // First, upload an image to our self-signed hs
+    [matrixSDKTestsData doHttpsMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
+
+        [mxSession createRoom:@"A room" visibility:0 roomAlias:nil topic:nil success:^(MXRoom *room) {
+
+            XCTAssertNotNil(room);
+
+            [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                XCTAssertEqual(direction, MXTimelineDirectionForwards);
+                XCTAssertEqualObjects(event.content[@"msgtype"], kMXMessageTypeImage);
+
+                NSString *contentURL = event.content[@"url"];
+                XCTAssert(contentURL);
+
+                NSString *actualURL = [mxSession.matrixRestClient urlOfContent:contentURL];
+                XCTAssert(actualURL);
+
+                [mxSession close];
+
+                // Fake the case where our server was never not trusted
+                [[MXAllowedCertificates sharedInstance] reset];
+
+                // Then, try to download back the image
+                [MXMediaManager downloadMediaFromURL:actualURL andSaveAtFilePath:nil success:^() {
+
+                    XCTFail(@"The operation must fail because the self-signed certficate was not trusted (anymore)");
+                    [expectation fulfill];
+
+                } failure:^(NSError *error) {
+                    [expectation fulfill];
+                }];
+            }];
+
+            CGSize size = CGSizeMake(100, 100);
+            UIImage *image = [self anImageWithSize:size];
+
+            [room sendImage:UIImagePNGRepresentation(image) withImageSize:size mimeType:@"image/png" andThumbnail:nil localEcho:nil success:nil failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 
 @end
