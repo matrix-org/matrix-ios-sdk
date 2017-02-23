@@ -35,6 +35,10 @@
 		3220094619EFBF30008DE41D /* MXSessionEventListener.m in Sources */ = {isa = PBXBuildFile; fileRef = 3220094419EFBF30008DE41D /* MXSessionEventListener.m */; };
 		322360521A8E610500A3CA81 /* MXPushRuleDisplayNameCondtionChecker.h in Headers */ = {isa = PBXBuildFile; fileRef = 322360501A8E610500A3CA81 /* MXPushRuleDisplayNameCondtionChecker.h */; };
 		322360531A8E610500A3CA81 /* MXPushRuleDisplayNameCondtionChecker.m in Sources */ = {isa = PBXBuildFile; fileRef = 322360511A8E610500A3CA81 /* MXPushRuleDisplayNameCondtionChecker.m */; };
+		322691321E5EF77D00966A6E /* MXDeviceListOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = 322691301E5EF77D00966A6E /* MXDeviceListOperation.h */; };
+		322691331E5EF77D00966A6E /* MXDeviceListOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 322691311E5EF77D00966A6E /* MXDeviceListOperation.m */; };
+		322691361E5EFF8700966A6E /* MXDeviceListOperationsPool.h in Headers */ = {isa = PBXBuildFile; fileRef = 322691341E5EFF8700966A6E /* MXDeviceListOperationsPool.h */; };
+		322691371E5EFF8700966A6E /* MXDeviceListOperationsPool.m in Sources */ = {isa = PBXBuildFile; fileRef = 322691351E5EFF8700966A6E /* MXDeviceListOperationsPool.m */; };
 		3226DC3819DEED3B00866530 /* MatrixSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32C6F92D19DD814400EA4E9C /* MatrixSDK.framework */; };
 		322A51B61D9AB15900C8536D /* MXCrypto.h in Headers */ = {isa = PBXBuildFile; fileRef = 322A51B41D9AB15900C8536D /* MXCrypto.h */; };
 		322A51B71D9AB15900C8536D /* MXCrypto.m in Sources */ = {isa = PBXBuildFile; fileRef = 322A51B51D9AB15900C8536D /* MXCrypto.m */; };
@@ -271,6 +275,10 @@
 		3220094419EFBF30008DE41D /* MXSessionEventListener.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXSessionEventListener.m; sourceTree = "<group>"; };
 		322360501A8E610500A3CA81 /* MXPushRuleDisplayNameCondtionChecker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXPushRuleDisplayNameCondtionChecker.h; sourceTree = "<group>"; };
 		322360511A8E610500A3CA81 /* MXPushRuleDisplayNameCondtionChecker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXPushRuleDisplayNameCondtionChecker.m; sourceTree = "<group>"; };
+		322691301E5EF77D00966A6E /* MXDeviceListOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXDeviceListOperation.h; sourceTree = "<group>"; };
+		322691311E5EF77D00966A6E /* MXDeviceListOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXDeviceListOperation.m; sourceTree = "<group>"; };
+		322691341E5EFF8700966A6E /* MXDeviceListOperationsPool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MXDeviceListOperationsPool.h; path = MatrixSDK/Crypto/Data/MXDeviceListOperationsPool.h; sourceTree = SOURCE_ROOT; };
+		322691351E5EFF8700966A6E /* MXDeviceListOperationsPool.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MXDeviceListOperationsPool.m; path = MatrixSDK/Crypto/Data/MXDeviceListOperationsPool.m; sourceTree = SOURCE_ROOT; };
 		322A51B41D9AB15900C8536D /* MXCrypto.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCrypto.h; sourceTree = "<group>"; };
 		322A51B51D9AB15900C8536D /* MXCrypto.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCrypto.m; sourceTree = "<group>"; };
 		322A51C11D9AC8FE00C8536D /* MXCryptoAlgorithms.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCryptoAlgorithms.h; sourceTree = "<group>"; };
@@ -790,6 +798,10 @@
 				32A151411DAF7C0C00400192 /* MXDeviceInfo.m */,
 				32637ED21E5B00400011E20D /* MXDeviceList.h */,
 				32637ED31E5B00400011E20D /* MXDeviceList.m */,
+				322691301E5EF77D00966A6E /* MXDeviceListOperation.h */,
+				322691311E5EF77D00966A6E /* MXDeviceListOperation.m */,
+				322691341E5EFF8700966A6E /* MXDeviceListOperationsPool.h */,
+				322691351E5EFF8700966A6E /* MXDeviceListOperationsPool.m */,
 				F03EF5061DF071D5009DF592 /* MXEncryptedAttachments.h */,
 				F03EF5071DF071D5009DF592 /* MXEncryptedAttachments.m */,
 				32A151421DAF7C0C00400192 /* MXKey.h */,
@@ -1004,6 +1016,7 @@
 				327187851DA7D0220071C818 /* MXOlmDecryption.h in Headers */,
 				32D7767D1A27860600FC4AA2 /* MXMemoryStore.h in Headers */,
 				32CE6FB81A409B1F00317F1E /* MXFileStoreMetaData.h in Headers */,
+				322691361E5EFF8700966A6E /* MXDeviceListOperationsPool.h in Headers */,
 				3281E8B719E42DFE00976E1A /* MXJSONModel.h in Headers */,
 				3284A5A01DB7C00600A09972 /* MXCryptoStore.h in Headers */,
 				32A1514A1DAF7C0C00400192 /* MXUsersDevicesMap.h in Headers */,
@@ -1033,6 +1046,7 @@
 				329FB1791A0A74B100A5E88E /* MXTools.h in Headers */,
 				F0AC734E1DA4F53B0011DAEE /* MXRoomEventFilter.h in Headers */,
 				323B2B001BCE9B6700B11F34 /* MXCoreDataEvent.h in Headers */,
+				322691321E5EF77D00966A6E /* MXDeviceListOperation.h in Headers */,
 				32481A841C03572900782AD3 /* MXRoomAccountData.h in Headers */,
 				F08B8D5C1E014711006171A8 /* NSData+MatrixSDK.h in Headers */,
 				3284A5AE1DB7CFA800A09972 /* MXFileCryptoStoreMetaData.h in Headers */,
@@ -1308,6 +1322,7 @@
 				32CE6FB91A409B1F00317F1E /* MXFileStoreMetaData.m in Sources */,
 				3264DB921CEC528D00B99881 /* MXAccountData.m in Sources */,
 				329B2AC21D3FB01D002D546F /* MXJingleCallStackCall.m in Sources */,
+				322691331E5EF77D00966A6E /* MXDeviceListOperation.m in Sources */,
 				3284A5AF1DB7CFA800A09972 /* MXFileCryptoStoreMetaData.m in Sources */,
 				F0AC734F1DA4F53B0011DAEE /* MXRoomEventFilter.m in Sources */,
 				323E0C5C1A306D7A00A31D73 /* MXEvent.m in Sources */,
@@ -1336,6 +1351,7 @@
 				F08B8D5D1E014711006171A8 /* NSData+MatrixSDK.m in Sources */,
 				3291D4D51A68FFEB00C3BA41 /* MXFileRoomStore.m in Sources */,
 				329FB1801A0B665800A5E88E /* MXUser.m in Sources */,
+				322691371E5EFF8700966A6E /* MXDeviceListOperationsPool.m in Sources */,
 				32169AA11BD4D0E30077868B /* MXCoreDataStore.xcdatamodeld in Sources */,
 				323B2AF91BCE8AC900B11F34 /* MXCoreDataRoom.m in Sources */,
 				32F9FA7E1DBA0CF0009D98A6 /* MXDecryptionResult.m in Sources */,

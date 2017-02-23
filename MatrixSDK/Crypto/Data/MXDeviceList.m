@@ -18,7 +18,9 @@
 
 #ifdef MX_CRYPTO
 
-#include "MXCrypto_Private.h"
+#import "MXCrypto_Private.h"
+
+#import "MXDeviceListOperationsPool.h"
 
 @interface MXDeviceList ()
 {
@@ -100,7 +102,8 @@
     else
     {
         // Download
-        return [self doKeyDownloadForUsers:downloadUsers success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSArray *failedUserIds) {
+        MXDeviceListOperationsPool *pool = [[MXDeviceListOperationsPool alloc] initWithCrypto:crypto];
+        MXDeviceListOperation *operation = [[MXDeviceListOperation alloc] initWithUserIds:userIds success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSArray<NSString *> *failedUserIds) {
 
             for (NSString *failedUserId in failedUserIds)
             {
@@ -115,145 +118,12 @@
             }
 
         } failure:failure];
+
+        [operation addToPool:pool];
+        [pool doKeyDownloadForUsers:downloadUsers];
+
+        return operation;
     }
-}
-
-- (MXHTTPOperation*)doKeyDownloadForUsers:(NSArray<NSString*>*)downloadUsers
-                                  success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap, NSArray<NSString*> *failedUserIds))success
-                                  failure:(void (^)(NSError *error))failure
-{
-    NSLog(@"[MXDeviceList] doKeyDownloadForUsers: %@", downloadUsers);
-
-    // Download
-    return [crypto.matrixRestClient downloadKeysForUsers:downloadUsers token:nil success:^(MXKeysQueryResponse *keysQueryResponse) {
-
-        MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap = [[MXUsersDevicesMap alloc] init];
-        NSMutableArray<NSString*> *failedUserIds = [NSMutableArray array];
-
-        for (NSString *userId in downloadUsers)
-        {
-            NSDictionary<NSString*, MXDeviceInfo*> *devices = keysQueryResponse.deviceKeys.map[userId];
-
-            NSLog(@"[MXDeviceList] Got keys for %@: %@", userId, devices);
-
-            if (!devices)
-            {
-                // This can happen when the user hs can not reach the other users hses
-                // TODO: do something with keysQueryResponse.failures
-                [failedUserIds addObject:userId];
-            }
-            else
-            {
-                NSMutableDictionary<NSString*, MXDeviceInfo*> *mutabledevices = [NSMutableDictionary dictionaryWithDictionary:devices];
-
-                for (NSString *deviceId in mutabledevices.allKeys)
-                {
-                    // Get the potential previously store device keys for this device
-                    MXDeviceInfo *previouslyStoredDeviceKeys = [crypto.store deviceWithDeviceId:deviceId forUser:userId];
-
-                    // Validate received keys
-                    if (![self validateDeviceKeys:mutabledevices[deviceId] forUser:userId andDevice:deviceId previouslyStoredDeviceKeys:previouslyStoredDeviceKeys])
-                    {
-                        // New device keys are not valid. Do not store them
-                        [mutabledevices removeObjectForKey:deviceId];
-
-                        if (previouslyStoredDeviceKeys)
-                        {
-                            // But keep old validated ones if any
-                            mutabledevices[deviceId] = previouslyStoredDeviceKeys;
-                        }
-                    }
-                    else if (previouslyStoredDeviceKeys)
-                    {
-                        // The verified status is not sync'ed with hs.
-                        // This is a client side information, valid only for this client.
-                        // So, transfer its previous value
-                        mutabledevices[deviceId].verified = previouslyStoredDeviceKeys.verified;
-                    }
-                }
-
-                // Update the store
-                // Note that devices which aren't in the response will be removed from the store
-                [crypto.store storeDevicesForUser:userId devices:mutabledevices];
-
-                // And the response result
-                [usersDevicesInfoMap setObjects:mutabledevices forUser:userId];
-            }
-        }
-        
-        if (success)
-        {
-            success(usersDevicesInfoMap, failedUserIds);
-        }
-        
-    } failure:failure];
-}
-
-/**
- Validate device keys.
-
- @param the device keys to validate.
- @param the id of the user of the device.
- @param the id of the device.
- @param previouslyStoredDeviceKeys the device keys we received before for this device
- @return YES if valid.
- */
-- (BOOL)validateDeviceKeys:(MXDeviceInfo*)deviceKeys forUser:(NSString*)userId andDevice:(NSString*)deviceId previouslyStoredDeviceKeys:(MXDeviceInfo*)previouslyStoredDeviceKeys
-{
-    if (!deviceKeys.keys)
-    {
-        // no keys?
-        return NO;
-    }
-
-    // Check that the user_id and device_id in the received deviceKeys are correct
-    if (![deviceKeys.userId isEqualToString:userId])
-    {
-        NSLog(@"[MXDeviceList] validateDeviceKeys: Mismatched user_id %@ in keys from %@:%@", deviceKeys.userId, userId, deviceId);
-        return NO;
-    }
-    if (![deviceKeys.deviceId isEqualToString:deviceId])
-    {
-        NSLog(@"[MXDeviceList] validateDeviceKeys: Mismatched device_id %@ in keys from %@:%@", deviceKeys.deviceId, userId, deviceId);
-        return NO;
-    }
-
-    NSString *signKeyId = [NSString stringWithFormat:@"ed25519:%@", deviceKeys.deviceId];
-    NSString* signKey = deviceKeys.keys[signKeyId];
-    if (!signKey)
-    {
-        NSLog(@"[MXDeviceList] validateDeviceKeys: Device %@:%@ has no ed25519 key", userId, deviceKeys.deviceId);
-        return NO;
-    }
-
-    NSString *signature = deviceKeys.signatures[userId][signKeyId];
-    if (!signature)
-    {
-        NSLog(@"[MXDeviceList] validateDeviceKeys: Device %@:%@ is not signed", userId, deviceKeys.deviceId);
-        return NO;
-    }
-
-    NSError *error;
-    if (![crypto.olmDevice verifySignature:signKey JSON:deviceKeys.signalableJSONDictionary signature:signature error:&error])
-    {
-        NSLog(@"[MXDeviceList] validateDeviceKeys: Unable to verify signature on device %@:%@", userId, deviceKeys.deviceId);
-        return NO;
-    }
-
-    if (previouslyStoredDeviceKeys)
-    {
-        if (![previouslyStoredDeviceKeys.fingerprint isEqualToString:signKey])
-        {
-            // This should only happen if the list has been MITMed; we are
-            // best off sticking with the original keys.
-            //
-            // Should we warn the user about it somehow?
-            NSLog(@"[MXDeviceList] validateDeviceKeys: WARNING:Ed25519 key for device %@:%@ has changed", userId, deviceKeys.deviceId);
-            return NO;
-        }
-    }
-    
-    return YES;
 }
 
 - (NSArray<MXDeviceInfo *> *)storedDevicesForUser:(NSString *)userId
@@ -309,7 +179,8 @@
     // Keep track of requests in progress
     [inProgressUsersWithNewDevices addObjectsFromArray:users];
 
-    [self doKeyDownloadForUsers:users success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSArray<NSString *> *failedUserIds) {
+    MXDeviceListOperationsPool *pool = [[MXDeviceListOperationsPool alloc] initWithCrypto:crypto];
+    MXDeviceListOperation *operation = [[MXDeviceListOperation alloc] initWithUserIds:users success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSArray<NSString *> *failedUserIds) {
 
         // Consider the request for these users as done
         for (NSString *userId in users)
@@ -328,10 +199,14 @@
         }
 
     } failure:^(NSError *error) {
-        NSLog(@"[MXDeviceList] flushNewDeviceRequests: ERROR updating device keys for users %@", pendingUsersWithNewDevices);
 
+        NSLog(@"[MXDeviceList] refreshOutdatedDeviceLists: ERROR updating device keys for users %@", pendingUsersWithNewDevices);
         [pendingUsersWithNewDevices addObjectsFromArray:users];
+
     }];
+
+    [operation addToPool:pool];
+    [pool doKeyDownloadForUsers:users];
 }
 
 @end
