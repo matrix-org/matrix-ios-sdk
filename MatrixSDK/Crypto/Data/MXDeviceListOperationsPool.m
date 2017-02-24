@@ -71,17 +71,17 @@
     }
 }
 
-- (void)downloadKeys:(void (^)(NSDictionary<NSString *, NSDictionary *> *failedUserIds))complete
+- (void)downloadKeys:(NSString *)token complete:(void (^)(NSDictionary<NSString *, NSDictionary *> *failedUserIds))complete
 {
-    [self doKeyDownloadForUsers:self.userIds.allObjects complete:complete];
+    [self doKeyDownloadForUsers:self.userIds.allObjects token:token complete:complete];
 }
 
-- (void)doKeyDownloadForUsers:(NSArray<NSString *> *)users complete:(void (^)(NSDictionary<NSString *, NSDictionary *> *failedUserIds))complete
+- (void)doKeyDownloadForUsers:(NSArray<NSString *> *)users token:(NSString *)token complete:(void (^)(NSDictionary<NSString *, NSDictionary *> *failedUserIds))complete
 {
     NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers: %@", users);
 
     // Download
-    _httpOperation = [crypto.matrixRestClient downloadKeysForUsers:users token:nil success:^(MXKeysQueryResponse *keysQueryResponse) {
+    _httpOperation = [crypto.matrixRestClient downloadKeysForUsers:users token:token success:^(MXKeysQueryResponse *keysQueryResponse) {
 
         NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers -> DONE");
 

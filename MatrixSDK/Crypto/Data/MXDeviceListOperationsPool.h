@@ -64,7 +64,7 @@
 /**
  Launch the download request for all users identified by all MXDeviceListOperation children.
  */
-- (void)downloadKeys:(void (^)(NSDictionary<NSString *, NSDictionary *> *failedUserIds))complete;
+- (void)downloadKeys:(NSString *)token complete:(void (^)(NSDictionary<NSString *, NSDictionary *> *failedUserIds))complete;
 
 @end
 

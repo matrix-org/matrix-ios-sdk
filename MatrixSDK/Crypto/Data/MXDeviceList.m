@@ -286,13 +286,21 @@
 
     if (currentQueryPool.userIds)
     {
+        NSString *token = _lastKnownSyncToken;
+
         // We've kicked off requests to these users: remove their
         // pending flag for now.
         [pendingUsersWithNewDevices minusSet:currentQueryPool.userIds];
 
-        [currentQueryPool downloadKeys:^(NSDictionary<NSString *,NSDictionary *> *failedUserIds) {
+        // Add token
+        [currentQueryPool downloadKeys:token complete:^(NSDictionary<NSString *,NSDictionary *> *failedUserIds) {
 
             NSLog(@"startCurrentPoolQuery -> DONE. failedUserIds: %@", failedUserIds);
+
+            if (token)
+            {
+                [crypto.store storeDeviceSyncToken:token];
+            }
 
             currentQueryPool = nil;
 
