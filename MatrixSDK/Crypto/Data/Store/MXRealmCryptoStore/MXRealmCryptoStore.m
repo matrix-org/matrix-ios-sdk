@@ -108,6 +108,11 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
  */
 @property (nonatomic) BOOL deviceAnnounced;
 
+/**
+ The sync token corresponding to the device list.
+ */
+@property (nonatomic) NSString *deviceSyncToken;
+
 @end
 
 @implementation MXRealmOlmAccount
@@ -276,6 +281,20 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 {
     MXRealmOlmAccount *account = self.accountInCurrentThread;
     return account.deviceAnnounced;
+}
+
+- (void)storeDeviceSyncToken:(NSString*)deviceSyncToken
+{
+    MXRealmOlmAccount *account = self.accountInCurrentThread;
+    [account.realm transactionWithBlock:^{
+        account.deviceSyncToken = deviceSyncToken;
+    }];
+}
+
+- (NSString*)deviceSyncToken
+{
+    MXRealmOlmAccount *account = self.accountInCurrentThread;
+    return account.deviceSyncToken;
 }
 
 - (void)storeDeviceForUser:(NSString*)userID device:(MXDeviceInfo*)device
