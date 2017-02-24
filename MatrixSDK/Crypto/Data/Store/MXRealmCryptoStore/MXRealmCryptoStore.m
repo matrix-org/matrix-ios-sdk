@@ -21,7 +21,7 @@
 #import <Realm/Realm.h>
 #import "MXSession.h"
 
-NSUInteger const kMXRealmCryptoStoreVersion = 2;
+NSUInteger const kMXRealmCryptoStoreVersion = 3;
 
 
 #pragma mark - Realm objects that encapsulate existing ones
@@ -637,6 +637,11 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                     NSLog(@"    -> deleted %tu duplicated MXRealmOlmInboundGroupSession objects", deleteCount);
 
                     NSLog(@"[MXRealmCryptoStore] Migration from schema #1 -> #2 completed");
+                }
+
+                case 2:
+                {
+                    NSLog(@"[MXRealmCryptoStore] Migration from schema #2 -> #3: Nothing to do (add MXRealmOlmAccount.deviceSyncToken)");
                 }
             }
         }
