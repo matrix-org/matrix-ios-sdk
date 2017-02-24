@@ -28,7 +28,22 @@
 
     // Users with new devices
     NSMutableSet<NSString*> *pendingUsersWithNewDevices;
-    NSMutableSet<NSString*> *inProgressUsersWithNewDevices;
+
+    /**
+     The pool which the http request is currenlty being processed.
+     (nil if there is no current request).
+
+     Note that currentPoolQuery.usersIds corresponds to the inProgressUsersWithNewDevices
+     ivar we used before.
+     */
+    MXDeviceListOperationsPool *currentQueryPool;
+
+    /**
+     When currentPoolQuery is already being processed, all download
+     requests go in this pool which will be launched once currentPoolQuery is
+     complete.
+     */
+    MXDeviceListOperationsPool *nextQueryPool;
 }
 @end
 
@@ -43,7 +58,6 @@
         crypto = theCrypto;
 
         pendingUsersWithNewDevices = [NSMutableSet set];
-        inProgressUsersWithNewDevices = [NSMutableSet set];
     }
     return self;
 }
@@ -54,64 +68,45 @@
 {
     NSLog(@"[MXDeviceList] downloadKeys(forceDownload: %tu) : %@", forceDownload, userIds);
 
-    // Map from userid -> deviceid -> DeviceInfo
-    MXUsersDevicesMap<MXDeviceInfo*> *stored = [[MXUsersDevicesMap<MXDeviceInfo*> alloc] init];
+    BOOL needsRefresh = NO;
+    BOOL waitForCurrentQuery = NO;
 
-    // List of user ids we need to download keys for
-    NSMutableArray *downloadUsers;
-
-    if (forceDownload)
+    for (NSString *userId in userIds)
     {
-        downloadUsers = [userIds mutableCopy];
-    }
-    else
-    {
-        downloadUsers = [NSMutableArray array];
-        for (NSString *userId in userIds)
+        if ([pendingUsersWithNewDevices containsObject:userId])
         {
-            NSDictionary<NSString *,MXDeviceInfo *> *devices = [crypto.store devicesForUser:userId];
-            if (!devices)
-            {
-                [downloadUsers addObject:userId];
-            }
-            else
-            {
-                // If we have some pending new devices for this user, force download their devices keys.
-                // The keys will be downloaded twice (in flushNewDeviceRequests and here)
-                // but this is better than no keys.
-                if ([pendingUsersWithNewDevices containsObject:userId] || [inProgressUsersWithNewDevices containsObject:userId])
-                {
-                    [downloadUsers addObject:userId];
-                }
-                else
-                {
-                    [stored setObjects:devices forUser:userId];
-                }
-            }
+            // we already know this user's devices are outdated
+            needsRefresh = YES;
+        }
+        else if ([currentQueryPool.userIds containsObject:userId])
+        {
+            // already a download in progress - just wait for it.
+            // (even if forceDownload is true)
+            waitForCurrentQuery = true;
+        }
+        else if (forceDownload)
+        {
+            NSLog(@"[MXDeviceList] downloadKeys: Invalidating device list for %@ for forceDownload", userId);
+            [self invalidateUserDeviceList:userId];
+            needsRefresh = true;
+        }
+        else if (![self storedDevicesForUser:userId])
+        {
+            NSLog(@"[MXDeviceList] downloadKeys: Invalidating device list for %@ due to empty cache", userId);
+            [self invalidateUserDeviceList:userId];
+            needsRefresh = true;
         }
     }
 
-    if (downloadUsers.count == 0)
+    MXDeviceListOperation *operation;
+
+    if (needsRefresh)
     {
-        if (success)
-        {
-            success(stored);
-        }
-        return nil;
-    }
-    else
-    {
-        // Download
-        MXDeviceListOperationsPool *pool = [[MXDeviceListOperationsPool alloc] initWithCrypto:crypto];
-        MXDeviceListOperation *operation = [[MXDeviceListOperation alloc] initWithUserIds:userIds success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSArray<NSString *> *failedUserIds) {
+        NSLog(@"[MXDeviceList] downloadKeys: waiting for next key query");
 
-            for (NSString *failedUserId in failedUserIds)
-            {
-                NSLog(@"[MXDeviceList] downloadKeys: Error downloading keys for user %@", failedUserId);
-            }
+        operation = [[MXDeviceListOperation alloc] initWithUserIds:userIds success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSArray<NSString *> *failedUserIds) {
 
-            [usersDevicesInfoMap addEntriesFromMap:stored];
-
+            NSLog(@"[MXDeviceList] downloadKeys: waiting for next key query -> DONE");
             if (success)
             {
                 success(usersDevicesInfoMap);
@@ -119,11 +114,37 @@
 
         } failure:failure];
 
-        [operation addToPool:pool];
-        [pool doKeyDownloadForUsers:downloadUsers];
+        [self startOrQueueDeviceQuery:operation];
 
         return operation;
     }
+    else if (waitForCurrentQuery)
+    {
+        NSLog(@"[MXDeviceList] downloadKeys: waiting for in-flight query to complete");
+
+        operation = [[MXDeviceListOperation alloc] initWithUserIds:userIds success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSArray<NSString *> *failedUserIds) {
+
+            NSLog(@"[MXDeviceList] downloadKeys: waiting for in-flight query to complete -> DONE");
+            if (success)
+            {
+                success(usersDevicesInfoMap);
+            }
+
+        } failure:failure];
+
+        [operation addToPool:currentQueryPool];
+
+        return operation;
+    }
+    else
+    {
+        if (success)
+        {
+            success([self devicesForUsers:userIds]);
+        }
+    }
+
+    return operation;
 }
 
 - (NSArray<MXDeviceInfo *> *)storedDevicesForUser:(NSString *)userId
@@ -172,41 +193,112 @@
         return;
     }
 
-    // We've kicked off requests to these users: remove their
-    // pending flag for now.
-    [pendingUsersWithNewDevices removeAllObjects];
+    if (pendingUsersWithNewDevices.count)
+    {
+        MXDeviceListOperation *operation = [[MXDeviceListOperation alloc] initWithUserIds:users success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSArray<NSString *> *failedUserIds) {
 
-    // Keep track of requests in progress
-    [inProgressUsersWithNewDevices addObjectsFromArray:users];
+            NSLog(@"[MXDeviceList] refreshOutdatedDeviceLists.  %@", usersDevicesInfoMap.userIds);
 
-    MXDeviceListOperationsPool *pool = [[MXDeviceListOperationsPool alloc] initWithCrypto:crypto];
-    MXDeviceListOperation *operation = [[MXDeviceListOperation alloc] initWithUserIds:users success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSArray<NSString *> *failedUserIds) {
+            if (failedUserIds.count)
+            {
+                NSLog(@"[MXDeviceList] refreshOutdatedDeviceLists. Error updating device keys for users %@", failedUserIds);
 
-        // Consider the request for these users as done
-        for (NSString *userId in users)
+                // Reinstate the pending flags on any users which failed; this will
+                // mean that we will do another download in the future, but won't
+                // tight-loop.
+                [pendingUsersWithNewDevices addObjectsFromArray:failedUserIds];
+            }
+
+        } failure:^(NSError *error) {
+
+            NSLog(@"[MXDeviceList] refreshOutdatedDeviceLists: ERROR updating device keys for users %@", pendingUsersWithNewDevices);
+            [pendingUsersWithNewDevices addObjectsFromArray:users];
+
+        } ];
+
+        [self startOrQueueDeviceQuery:operation];
+    }
+}
+
+/**
+ Get the stored device keys for a list of user ids.
+
+ @param userIds the list of users to list keys for.
+ @return users devices.
+*/
+- (MXUsersDevicesMap<MXDeviceInfo*> *)devicesForUsers:(NSArray<NSString*>*)userIds
+{
+    MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap = [[MXUsersDevicesMap alloc] init];
+
+    for (NSString *userId in userIds)
+    {
+        // Retrive the data from the store
+        NSDictionary<NSString*, MXDeviceInfo*> *devices = [crypto.store devicesForUser:userId];
+        if (devices)
         {
-            [inProgressUsersWithNewDevices removeObject:userId];
+            [usersDevicesInfoMap setObjects:devices forUser:userId];
+        }
+    }
+
+    return usersDevicesInfoMap;
+}
+
+- (void)startOrQueueDeviceQuery:(MXDeviceListOperation *)operation
+{
+    if (!currentQueryPool)
+    {
+        // Launch the query for the next pool if any
+        if (nextQueryPool)
+        {
+            currentQueryPool = nextQueryPool;
+            nextQueryPool = nil;
+        }
+        else
+        {
+            currentQueryPool = [[MXDeviceListOperationsPool alloc] initWithCrypto:crypto];
         }
 
-        if (failedUserIds.count)
+        // 
+        [operation addToPool:currentQueryPool];
+
+        [self startCurrentPoolQuery];
+    }
+    else
+    {
+        if (!nextQueryPool)
         {
-            NSLog(@"[MXDeviceList] flushNewDeviceRequests. Error updating device keys for users %@", failedUserIds);
-
-            // Reinstate the pending flags on any users which failed; this will
-            // mean that we will do another download in the future, but won't
-            // tight-loop.
-            [pendingUsersWithNewDevices addObjectsFromArray:failedUserIds];
+            nextQueryPool = [[MXDeviceListOperationsPool alloc] initWithCrypto:crypto];
         }
+        [operation addToPool:nextQueryPool];
+    }
+}
 
-    } failure:^(NSError *error) {
+- (void)startCurrentPoolQuery
+{
+    NSLog(@"startCurrentPoolQuery: %@: %@", currentQueryPool, currentQueryPool.userIds);
 
-        NSLog(@"[MXDeviceList] refreshOutdatedDeviceLists: ERROR updating device keys for users %@", pendingUsersWithNewDevices);
-        [pendingUsersWithNewDevices addObjectsFromArray:users];
+    if (currentQueryPool.userIds)
+    {
+        // We've kicked off requests to these users: remove their
+        // pending flag for now.
+        [pendingUsersWithNewDevices minusSet:currentQueryPool.userIds];
 
-    }];
+        [currentQueryPool downloadKeys:^(NSDictionary<NSString *,NSDictionary *> *failedUserIds) {
 
-    [operation addToPool:pool];
-    [pool doKeyDownloadForUsers:users];
+            NSLog(@"startCurrentPoolQuery -> DONE. failedUserIds: %@", failedUserIds);
+
+            currentQueryPool = nil;
+
+            // @TODO: failedUserIds
+
+            if (nextQueryPool)
+            {
+                currentQueryPool = nextQueryPool;
+                nextQueryPool = nil;
+                [self startCurrentPoolQuery];
+            }
+        }];
+    }
 }
 
 @end

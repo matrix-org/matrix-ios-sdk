@@ -37,6 +37,16 @@
     return self;
 }
 
+- (NSSet<NSString *> *)userIds
+{
+    NSMutableSet *userIds = [NSMutableSet set];
+    for (MXDeviceListOperation *operation in _operations)
+    {
+        [userIds addObjectsFromArray:operation.userIds];
+    }
+    return userIds;
+}
+
 - (void)cancel
 {
     [_httpOperation cancel];
@@ -61,12 +71,19 @@
     }
 }
 
-- (void)doKeyDownloadForUsers:(NSArray<NSString *> *)users
+- (void)downloadKeys:(void (^)(NSDictionary<NSString *, NSDictionary *> *failedUserIds))complete
+{
+    [self doKeyDownloadForUsers:self.userIds.allObjects complete:complete];
+}
+
+- (void)doKeyDownloadForUsers:(NSArray<NSString *> *)users complete:(void (^)(NSDictionary<NSString *, NSDictionary *> *failedUserIds))complete
 {
     NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers: %@", users);
 
     // Download
     _httpOperation = [crypto.matrixRestClient downloadKeysForUsers:users token:nil success:^(MXKeysQueryResponse *keysQueryResponse) {
+
+        NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers -> DONE");
 
         _httpOperation = nil;
 
@@ -112,43 +129,67 @@
             }
         }
 
-        for (MXDeviceListOperation *operation in _operations)
-        {
-            // Report the success to children
-            if (operation.success)
-            {
-                MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap = [[MXUsersDevicesMap alloc] init];
-                NSMutableArray<NSString*> *failedUserIds = [NSMutableArray array];
+        // Delay
+        dispatch_async(crypto.matrixRestClient.completionQueue, ^{
 
-                for (NSString *userId in operation.userIds)
+            for (MXDeviceListOperation *operation in _operations)
+            {
+                // Report the success to children
+                if (operation.success)
                 {
-                    // Retrive the data from the store
-                    NSDictionary<NSString*, MXDeviceInfo*> *devices = [crypto.store devicesForUser:userId];
-                    if (devices)
+                    MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap = [[MXUsersDevicesMap alloc] init];
+                    NSMutableArray<NSString*> *failedUserIds = [NSMutableArray array];
+
+                    for (NSString *userId in operation.userIds)
                     {
-                        [usersDevicesInfoMap setObjects:devices forUser:userId];
+                        // Retrive the data from the store
+                        NSDictionary<NSString*, MXDeviceInfo*> *devices = [crypto.store devicesForUser:userId];
+                        if (devices)
+                        {
+                            [usersDevicesInfoMap setObjects:devices forUser:userId];
+                        }
+                        else
+                        {
+                            // TODO: do something with keysQueryResponse.failures
+                            [failedUserIds addObject:userId];
+                        }
                     }
-                    else
-                    {
-                        // TODO: do something with keysQueryResponse.failures
-                        [failedUserIds addObject:userId];
-                    }
+                    operation.success(usersDevicesInfoMap, failedUserIds);
                 }
-                operation.success(usersDevicesInfoMap, failedUserIds);
             }
+
+        });
+
+        if (complete)
+        {
+            if (keysQueryResponse.failures.count)
+            {
+                NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers. Failures: %@", keysQueryResponse.failures);
+            }
+            complete(keysQueryResponse.failures);
         }
 
     } failure:^(NSError *error) {
 
         _httpOperation = nil;
 
-        for (MXDeviceListOperation *operation in _operations)
-        {
-            if (operation.failure)
+        NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers -> FAILED. Error: %@", error);
+
+        dispatch_async(crypto.matrixRestClient.completionQueue, ^{
+            for (MXDeviceListOperation *operation in _operations)
             {
-                operation.failure(error);
+                if (operation.failure)
+                {
+                    operation.failure(error);
+                }
             }
+        });
+
+        if (complete)
+        {
+            complete(nil);
         }
+        
     }];
 }
 

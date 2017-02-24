@@ -22,6 +22,7 @@
 #import "MXSession.h"
 #import "MXCrypto_Private.h"
 #import "MXMegolmExportEncryption.h"
+#import "MXDeviceListOperation.h"
 #import "MXFileStore.h"
 
 #import "MXSDKOptions.h"
@@ -444,6 +445,57 @@
 
     }];
 }
+
+- (void)testMultipleDownloadKeys
+{
+    [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        __block NSUInteger count = 0;
+        void(^onSuccess)() = ^(NSString *eventId) {
+
+            if (++count == 2)
+            {
+                MXHTTPOperation *operation = [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:nil failure:nil];
+
+                XCTAssertNil(operation, "@Alice shouldn't do another /query when the user devices are in the store");
+                [expectation fulfill];
+            }
+        };
+
+        MXHTTPOperation *operation1 = [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+
+            onSuccess();
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+        XCTAssert(operation1);
+        XCTAssert([operation1 isKindOfClass:MXDeviceListOperation.class], @"Returned object must be indeed a MXDeviceListOperation object");
+
+        // A parallel operation
+        MXHTTPOperation *operation2 = [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+
+            onSuccess();
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+        XCTAssert(operation2);
+        XCTAssert([operation2 isKindOfClass:MXDeviceListOperation.class], @"Returned object must be indeed a MXDeviceListOperation object");
+
+        XCTAssertEqual(operation1.operation, operation2.operation, @"The 2 MXDeviceListOperations must share the same http request query from the same MXDeviceListOperationsPool");
+    }];
+}
+
+// TODO: test others scenarii like
+//  - We are downloading keys for [a,b], ask the download for [b,c] in //.
+//  - We are downloading keys for [a,b], ask the download for [a] in //. The 1st download fails for network reason. The 2nd should then succeed.
+//  - We are downloading keys for [a,b,c], ask the download for [a,b] in //. The 1st download returns only keys for [a,b] because c'hs is down. The 2nd should succeed.
+//  - We are downloading keys for [a,b,c], ask the download for [c] in //. The 1st download returns only keys for [a,b] because c'hs is down. The 2nd should fail (or complete but with an indication TBD)
 
 - (void)testDownloadKeysForUserWithNoDevice
 {

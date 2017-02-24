@@ -40,6 +40,12 @@
 @property (nonatomic, readonly) MXHTTPOperation *httpOperation;
 
 /**
+ The list of users targetted by sub operations.
+ */
+@property (nonatomic, readonly) NSSet<NSString*> *userIds;
+
+
+/**
  Create a `MXDeviceListOperation` instance
 
  @param crypto the crypto module.
@@ -56,11 +62,9 @@
 - (void)removeOperation:(MXDeviceListOperation *)operation;
 
 /**
- Launch the download request on a set of users.
- 
- @param users the users to get devices keys.
+ Launch the download request for all users identified by all MXDeviceListOperation children.
  */
-- (void)doKeyDownloadForUsers:(NSArray<NSString*>*)users;
+- (void)downloadKeys:(void (^)(NSDictionary<NSString *, NSDictionary *> *failedUserIds))complete;
 
 @end
 
