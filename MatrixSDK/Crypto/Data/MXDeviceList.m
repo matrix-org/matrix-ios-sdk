@@ -192,6 +192,11 @@
     NSArray *users = pendingUsersWithNewDevices.allObjects;
     if (users.count == 0)
     {
+        // That means we're up-to-date with the lastKnownSyncToken
+        if (_lastKnownSyncToken)
+        {
+            [crypto.store storeDeviceSyncToken:_lastKnownSyncToken];
+        }
         return;
     }
 

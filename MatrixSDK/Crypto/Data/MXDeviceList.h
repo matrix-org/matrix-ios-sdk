@@ -30,6 +30,11 @@
 @interface MXDeviceList : NSObject
 
 /**
+ The last sync token.
+ */
+@property (nonatomic) NSString *lastKnownSyncToken;
+
+/**
  Constructor.
  
  @param crypto the MXCrypto instance.

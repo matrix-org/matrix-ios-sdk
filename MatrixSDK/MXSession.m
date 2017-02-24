@@ -861,7 +861,7 @@ typedef void (^MXOnResumeDone)();
         }
 
         // Handle crypto sync data
-        if (_crypto && syncResponse.deviceLists.changed.count)
+        if (_crypto && syncResponse.deviceLists.changed)
         {
             [_crypto handleDeviceListsChanged:syncResponse.deviceLists.changed
                                  oldSyncToken:_store.eventStreamToken

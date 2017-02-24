@@ -451,7 +451,7 @@
     [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         __block NSUInteger count = 0;
-        void(^onSuccess)() = ^(NSString *eventId) {
+        void(^onSuccess)() = ^() {
 
             if (++count == 2)
             {
@@ -855,7 +855,8 @@
 
                     XCTAssertEqual(direction, MXTimelineDirectionBackwards);
 
-                    switch (paginatedMessagesCount++) {
+                    switch (paginatedMessagesCount++)
+                    {
                         case 0:
                             XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromAlice[1] senderSession:aliceSession]);
                             break;
@@ -1653,20 +1654,19 @@
 
                                         }];
 
-                                        [roomFromAlicePOV sendTextMessage:message2FromAlice success:^(NSString *eventId) {
+                                        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
 
-                                            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                                            [roomFromAlicePOV sendTextMessage:message2FromAlice success:^(NSString *eventId) {
 
                                                 XCTAssert(receivedByBob, @"Bob should have received and decrypted the 2nd message from Alice");
                                                 [expectation fulfill];
 
-                                            });
-
-                                        } failure:^(NSError *error) {
-                                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                                            [expectation fulfill];
-                                        }];
-
+                                            } failure:^(NSError *error) {
+                                                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                                [expectation fulfill];
+                                            }];
+                                            
+                                        });
                                     } failure:^(NSError *error) {
                                         XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                                         [expectation fulfill];

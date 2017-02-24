@@ -68,6 +68,8 @@
 
     // The operation used for crypto starting requests
     MXHTTPOperation *startOperation;
+
+    BOOL initialDeviceListInvalidationDone;
 }
 @end
 
@@ -425,24 +427,61 @@
 
     dispatch_async(_cryptoQueue, ^{
 
-        if (oldSyncToken)
+        if (!oldSyncToken)
         {
             // an initialsync
-            //[self endNewDeviceEvents];    // @TODO
+            //[self sendNewDeviceEvents];    // TODO: To change but the current makeAnnoucement method is too much
+                                             // part of the enableCrypto flow.
 
-            // if we have a deviceSyncToken, we can tell the deviceList to
+            // If we have a deviceSyncToken, we can tell the deviceList to
             // invalidate devices which have changed since then.
-            // @TODO
+            NSString *oldDeviceSyncToken = _store.deviceSyncToken;
+            if (oldDeviceSyncToken)
+            {
+                [self invalidateDeviceListsSince:oldDeviceSyncToken to:nextSyncToken success:^(NSArray<NSString *> *changed) {
 
+                    initialDeviceListInvalidationDone = YES;
+                    _deviceList.lastKnownSyncToken = nextSyncToken;
+                    [_deviceList refreshOutdatedDeviceLists];
+
+                } failure:^(NSError *error) {
+
+                    // If that failed, we fall back to invalidating everyone.
+                    NSLog(@"[MXCrypto] handleDeviceListsChanged: Error fetching changed device list. Error: %@", error);
+                    [self invalidateDeviceListForAllActiveUsers];
+                    [_deviceList refreshOutdatedDeviceLists];
+                }];
+            }
+            else
+            {
+                // Otherwise, we have to invalidate all devices for all users we
+                // share a room with.
+                NSLog(@"[MXCrypto] handleDeviceListsChanged: Completed first initialsync; invalidating all device list caches");
+                [self invalidateDeviceListForAllActiveUsers];
+                initialDeviceListInvalidationDone = YES;
+            }
         }
+
+        if (initialDeviceListInvalidationDone)
+        {
+            // If we've got an up-to-date list of users with outdated device lists,
+            // tell the device list about the new sync token (but not otherwise, because
+            // otherwise we'll start thinking we're more in sync than we are.)
+            _deviceList.lastKnownSyncToken = nextSyncToken;
+
+            // Catch up on any new devices we got told about during the sync.
+            [_deviceList refreshOutdatedDeviceLists];
+        }
+
 
         // @TODO
-        for (NSString *userId in userIds)
-        {
-            [_deviceList invalidateUserDeviceList:userId];
-        }
-
-        [_deviceList refreshOutdatedDeviceLists];
+        // we don't start uploading one-time keys until we've caught up with
+        // to-device messages, to help us avoid throwing away one-time-keys that we
+        // are about to receive messages for
+        // (https://github.com/vector-im/riot-web/issues/2782).
+//        if (!syncData.catchingUp) {
+//            _maybeUploadOneTimeKeys(this);
+//        }
     });
 
 #endif
@@ -882,6 +921,8 @@
 
         roomEncryptors = [NSMutableDictionary dictionary];
         roomDecryptors = [NSMutableDictionary dictionary];
+
+        initialDeviceListInvalidationDone = NO;
 
         // Build our device keys: they will later be uploaded
         NSString *deviceId = _store.deviceId;
@@ -1326,12 +1367,61 @@
 }
 
 /**
+ * Ask the server which users have new devices since a given token,
+ * and invalidate them
+ *
+ * @param {String} oldSyncToken
+ * @param {String} lastKnownSyncToken
+ *
+ * @returns {Promise} resolves once the query is complete. Rejects if the
+ *   keyChange query fails.
+ */
+- (void)invalidateDeviceListsSince:(NSString*)oldSyncToken to:(NSString*)lastKnownSyncToken
+                           success:(void (^)(NSArray<NSString*> *changed))success
+                           failure:(void (^)(NSError *error))failure
+{
+    [_matrixRestClient keyChangesFrom:oldSyncToken to:lastKnownSyncToken success:^(NSArray<NSString *> *changed) {
+
+        if (changed.count)
+        {
+            // Only invalidate users we share an e2e room with - we don't
+            // care about users in non-e2e rooms.
+            NSArray<NSString*> *filteredUserIds = self.e2eRoomMembers.allKeys;
+            for (NSString *changedUser in changed)
+            {
+                if ([filteredUserIds containsObject:changedUser])
+                {
+                    [_deviceList invalidateUserDeviceList:changedUser];
+                }
+            }
+        }
+
+        success(changed);
+
+    } failure:failure];
+}
+
+/**
+ Invalidate any stored device list for any users we share an e2e room with
+ */
+- (void)invalidateDeviceListForAllActiveUsers
+{
+    for (NSString *userId in self.e2eRoomMembers.allKeys)
+    {
+        [_deviceList invalidateUserDeviceList:userId];
+    }
+}
+
+/**
  Get a list of the e2e-enabled rooms we are members of.
  
  @returns an MXRoom array.
  */
 - (NSArray<MXRoom*>*)e2eRooms
 {
+    // Following operations must be called from the main thread
+    NSParameterAssert([NSThread currentThread].isMainThread);
+
     NSMutableArray<MXRoom*> *e2eRooms = [NSMutableArray array];
     for (MXRoom *room in mxSession.rooms)
     {
@@ -1361,19 +1451,36 @@
  */
 - (NSMutableDictionary<NSString*, NSMutableArray*> *)e2eRoomMembers
 {
+    // Following operations must be called from the main thread
     NSMutableDictionary<NSString*, NSMutableArray*> *roomsByUser = [NSMutableDictionary dictionary];
 
-    for (MXRoom *room in self.e2eRooms)
-    {
-        for (MXRoomMember *member in room.state.joinedMembers)
+    void(^fillRoomsByUser)() = ^() {
+
+        for (MXRoom *room in self.e2eRooms)
         {
-            if (!roomsByUser[member.userId])
+            for (MXRoomMember *member in room.state.joinedMembers)
             {
-                roomsByUser[member.userId] = [NSMutableArray array];
+                if (!roomsByUser[member.userId])
+                {
+                    roomsByUser[member.userId] = [NSMutableArray array];
+                }
+                [roomsByUser[member.userId] addObject:room.roomId];
             }
-            [roomsByUser[member.userId] addObject:room.roomId];
         }
+    };
+
+    if ([NSThread currentThread].isMainThread)
+    {
+        fillRoomsByUser();
     }
+    else
+    {
+        dispatch_sync(dispatch_get_main_queue(), ^{
+
+            fillRoomsByUser();
+        });
+    }
+
     return roomsByUser;
 };
 
@@ -1762,5 +1869,3 @@
 #endif
 
 @end
-
-
