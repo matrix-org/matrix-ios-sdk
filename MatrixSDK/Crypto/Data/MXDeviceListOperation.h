@@ -47,7 +47,7 @@
 /**
  The block called in case of success.
  */
-@property (nonatomic, readonly) void (^success)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap, NSArray<NSString *> *failedUserIds);
+@property (nonatomic, readonly) void (^success)(NSArray<NSString *> *succeededUserIds, NSArray<NSString *> *failedUserIds);
 
 /**
 The block called in case of failure.
@@ -62,7 +62,7 @@ The block called in case of failure.
  @param failure the block called in case of failure.
  */
 - (id)initWithUserIds:(NSArray<NSString*>*)userIds
-              success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap, NSArray<NSString *> *failedUserIds))success
+              success:(void (^)(NSArray<NSString *> *succeededUserIds, NSArray<NSString *> *failedUserIds))success
               failure:(void (^)(NSError *error))failure;
 
 /**

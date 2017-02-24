@@ -104,11 +104,12 @@
     {
         NSLog(@"[MXDeviceList] downloadKeys: waiting for next key query");
 
-        operation = [[MXDeviceListOperation alloc] initWithUserIds:userIds success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSArray<NSString *> *failedUserIds) {
+        operation = [[MXDeviceListOperation alloc] initWithUserIds:userIds success:^(NSArray<NSString *> *succeededUserIds, NSArray<NSString *> *failedUserIds) {
 
             NSLog(@"[MXDeviceList] downloadKeys: waiting for next key query -> DONE");
             if (success)
             {
+                MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap = [self devicesForUsers:succeededUserIds];
                 success(usersDevicesInfoMap);
             }
 
@@ -122,11 +123,12 @@
     {
         NSLog(@"[MXDeviceList] downloadKeys: waiting for in-flight query to complete");
 
-        operation = [[MXDeviceListOperation alloc] initWithUserIds:userIds success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSArray<NSString *> *failedUserIds) {
+        operation = [[MXDeviceListOperation alloc] initWithUserIds:userIds success:^(NSArray<NSString *> *succeededUserIds, NSArray<NSString *> *failedUserIds) {
 
             NSLog(@"[MXDeviceList] downloadKeys: waiting for in-flight query to complete -> DONE");
             if (success)
             {
+                MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap = [self devicesForUsers:succeededUserIds];
                 success(usersDevicesInfoMap);
             }
 
@@ -195,9 +197,9 @@
 
     if (pendingUsersWithNewDevices.count)
     {
-        MXDeviceListOperation *operation = [[MXDeviceListOperation alloc] initWithUserIds:users success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSArray<NSString *> *failedUserIds) {
+        MXDeviceListOperation *operation = [[MXDeviceListOperation alloc] initWithUserIds:users success:^(NSArray<NSString *> *succeededUserIds, NSArray<NSString *> *failedUserIds) {
 
-            NSLog(@"[MXDeviceList] refreshOutdatedDeviceLists.  %@", usersDevicesInfoMap.userIds);
+            NSLog(@"[MXDeviceList] refreshOutdatedDeviceLists: %@", succeededUserIds);
 
             if (failedUserIds.count)
             {

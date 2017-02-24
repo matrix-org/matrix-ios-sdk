@@ -28,7 +28,7 @@
 @implementation MXDeviceListOperation
 
 - (id)initWithUserIds:(NSArray<NSString*>*)userIds
-              success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap, NSArray<NSString *> *failedUserIds))success
+              success:(void (^)(NSArray<NSString *> *succeededUserIds, NSArray<NSString *> *failedUserIds))success
               failure:(void (^)(NSError *error))failure
 {
     self = [super init];

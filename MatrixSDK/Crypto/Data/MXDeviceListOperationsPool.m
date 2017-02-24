@@ -137,16 +137,15 @@
                 // Report the success to children
                 if (operation.success)
                 {
-                    MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap = [[MXUsersDevicesMap alloc] init];
+                    NSMutableArray<NSString*> *succeededUserIds = [NSMutableArray array];
                     NSMutableArray<NSString*> *failedUserIds = [NSMutableArray array];
 
                     for (NSString *userId in operation.userIds)
                     {
-                        // Retrive the data from the store
-                        NSDictionary<NSString*, MXDeviceInfo*> *devices = [crypto.store devicesForUser:userId];
-                        if (devices)
+                        // Check we got a response for this user
+                        if (keysQueryResponse.deviceKeys.map[userId])
                         {
-                            [usersDevicesInfoMap setObjects:devices forUser:userId];
+                            [succeededUserIds addObject:userId];
                         }
                         else
                         {
@@ -154,7 +153,7 @@
                             [failedUserIds addObject:userId];
                         }
                     }
-                    operation.success(usersDevicesInfoMap, failedUserIds);
+                    operation.success(succeededUserIds, failedUserIds);
                 }
             }
 
