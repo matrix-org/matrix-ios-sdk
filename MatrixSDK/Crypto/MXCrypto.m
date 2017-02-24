@@ -1419,11 +1419,11 @@
  */
 - (NSArray<MXRoom*>*)e2eRooms
 {
-    // Following operations must be called from the main thread
-    NSParameterAssert([NSThread currentThread].isMainThread);
-
     NSMutableArray<MXRoom*> *e2eRooms = [NSMutableArray array];
-    for (MXRoom *room in mxSession.rooms)
+    
+    // TODO: mxSession.rooms should be accessed from the main thread
+    NSArray *rooms = mxSession.rooms;
+    for (MXRoom *room in rooms)
     {
         // Check for rooms with encryption enabled
         if (!room.state.isEncrypted)
@@ -1451,34 +1451,19 @@
  */
 - (NSMutableDictionary<NSString*, NSMutableArray*> *)e2eRoomMembers
 {
-    // Following operations must be called from the main thread
     NSMutableDictionary<NSString*, NSMutableArray*> *roomsByUser = [NSMutableDictionary dictionary];
 
-    void(^fillRoomsByUser)() = ^() {
-
-        for (MXRoom *room in self.e2eRooms)
+    // TODO: self.e2eRooms, room.state should be accessed from the main thread
+    for (MXRoom *room in self.e2eRooms)
+    {
+        for (MXRoomMember *member in room.state.joinedMembers)
         {
-            for (MXRoomMember *member in room.state.joinedMembers)
+            if (!roomsByUser[member.userId])
             {
-                if (!roomsByUser[member.userId])
-                {
-                    roomsByUser[member.userId] = [NSMutableArray array];
-                }
-                [roomsByUser[member.userId] addObject:room.roomId];
+                roomsByUser[member.userId] = [NSMutableArray array];
             }
+            [roomsByUser[member.userId] addObject:room.roomId];
         }
-    };
-
-    if ([NSThread currentThread].isMainThread)
-    {
-        fillRoomsByUser();
-    }
-    else
-    {
-        dispatch_sync(dispatch_get_main_queue(), ^{
-
-            fillRoomsByUser();
-        });
     }
 
     return roomsByUser;
