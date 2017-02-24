@@ -1659,6 +1659,23 @@ typedef enum : NSUInteger
                                             success:(void (^)(MXKeysClaimResponse *keysClaimResponse))success
                                             failure:(void (^)(NSError *error))failure;
 
+/**
+ Ask the server for a list of users who have changed their device lists
+ between a pair of sync tokens
+
+ @param fromToken the old token.
+ @param toToken the new token.
+
+ @param success A block object called when the operation succeeds. changed is the
+                list of users with a change in their devices.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)keyChangesFrom:(NSString*)fromToken to:(NSString*)toToken
+                           success:(void (^)(NSArray<NSString*> *changed))success
+                           failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - Direct-to-device messaging
 /**

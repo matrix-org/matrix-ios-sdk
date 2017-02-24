@@ -4489,6 +4489,55 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation *)keyChangesFrom:(NSString *)fromToken to:(NSString *)toToken
+                            success:(void (^)(NSArray<NSString*> *changed))success
+                            failure:(void (^)(NSError *))failure
+{
+    return [httpClient requestWithMethod:@"GET"
+                                    path:[NSString stringWithFormat:@"%@/keys/changes", kMXAPIPrefixPathUnstable]
+                              parameters:@{
+                                           @"from": fromToken,
+                                           @"to": toToken
+                                           }
+                                 success:^(NSDictionary *JSONResponse) {
+
+                                     if (success && processingQueue)
+                                     {
+                                         // Create devices array from JSON on processing queue
+                                         dispatch_async(processingQueue, ^{
+
+                                             NSArray<NSString*> *changed;
+                                             MXJSONModelSetArray(changed, JSONResponse [@"changed" ]);
+
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success(changed);
+                                                 });
+                                             }
+
+                                         });
+                                     }
+
+                                 } failure:^(NSError *error) {
+
+                                     if (failure && processingQueue)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+
+                                         });
+                                     }
+
+                                 }];
+}
+
 
 #pragma mark - Direct-to-device messaging
 - (MXHTTPOperation *)sendToDevice:(NSString *)eventType contentMap:(MXUsersDevicesMap<NSDictionary *> *)contentMap
