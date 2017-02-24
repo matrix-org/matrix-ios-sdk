@@ -109,7 +109,7 @@
             NSLog(@"[MXDeviceList] downloadKeys: waiting for next key query -> DONE");
             if (success)
             {
-                MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap = [self devicesForUsers:succeededUserIds];
+                MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap = [self devicesForUsers:userIds];
                 success(usersDevicesInfoMap);
             }
 
@@ -128,7 +128,7 @@
             NSLog(@"[MXDeviceList] downloadKeys: waiting for in-flight query to complete -> DONE");
             if (success)
             {
-                MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap = [self devicesForUsers:succeededUserIds];
+                MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap = [self devicesForUsers:userIds];
                 success(usersDevicesInfoMap);
             }
 
