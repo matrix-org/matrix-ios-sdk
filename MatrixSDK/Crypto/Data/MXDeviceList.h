@@ -27,6 +27,9 @@
 
 @class MXCrypto;
 
+/**
+ `MXDeviceList` manages the list of other users' devices.
+ */
 @interface MXDeviceList : NSObject
 
 /**

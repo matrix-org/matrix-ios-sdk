@@ -197,10 +197,8 @@
         {
             [crypto.store storeDeviceSyncToken:_lastKnownSyncToken];
         }
-        return;
     }
-
-    if (pendingUsersWithNewDevices.count)
+    else
     {
         MXDeviceListOperation *operation = [[MXDeviceListOperation alloc] initWithUserIds:users success:^(NSArray<NSString *> *succeededUserIds, NSArray<NSString *> *failedUserIds) {
 
@@ -254,24 +252,25 @@
 {
     if (!currentQueryPool)
     {
-        // Launch the query for the next pool if any
+        // No pool is currently being queried
         if (nextQueryPool)
         {
+            // Launch the query for the existing next pool
             currentQueryPool = nextQueryPool;
             nextQueryPool = nil;
         }
         else
         {
+            // Create a new pool to query right now
             currentQueryPool = [[MXDeviceListOperationsPool alloc] initWithCrypto:crypto];
         }
 
-        // 
         [operation addToPool:currentQueryPool];
-
         [self startCurrentPoolQuery];
     }
     else
     {
+        // Append the device list operation to the next pool
         if (!nextQueryPool)
         {
             nextQueryPool = [[MXDeviceListOperationsPool alloc] initWithCrypto:crypto];
@@ -303,9 +302,6 @@
             }
 
             currentQueryPool = nil;
-
-            // @TODO: failedUserIds
-
             if (nextQueryPool)
             {
                 currentQueryPool = nextQueryPool;

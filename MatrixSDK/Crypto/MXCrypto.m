@@ -436,8 +436,10 @@
         if (!oldSyncToken)
         {
             // an initialsync
-            //[self sendNewDeviceEvents];    // TODO: To change but the current makeAnnoucement method is too much
-                                             // part of the enableCrypto flow.
+            // matrix-js-sdk make the device annoucement here.
+            // matrix-ios-sdk does it within the enableCrypto method call flow.
+            // TODO: do like matrix-js-sdk if it worths
+            //[self sendNewDeviceEvents];
 
             // If we have a deviceSyncToken, we can tell the deviceList to
             // invalidate devices which have changed since then.
@@ -478,7 +480,6 @@
             // Catch up on any new devices we got told about during the sync.
             [_deviceList refreshOutdatedDeviceLists];
         }
-
 
         // @TODO
         // we don't start uploading one-time keys until we've caught up with

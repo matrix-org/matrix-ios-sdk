@@ -25,7 +25,7 @@
 
 /**
  `MXDeviceListOperationsPool` manages a pool of `MXDeviceListOperation` operations
- in order to gather keys downloads into one single `MXHTTPOperation`.
+ in order to gather keys downloads into one single `MXHTTPOperation` query.
  */
 @interface MXDeviceListOperationsPool : NSObject
 
