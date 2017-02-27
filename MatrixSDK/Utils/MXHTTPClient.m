@@ -359,7 +359,8 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
                 }
                 else if (mxHTTPOperation.numberOfTries < mxHTTPOperation.maxNumberOfTries
                          && mxHTTPOperation.age < mxHTTPOperation.maxRetriesTime
-                         && response.statusCode != 400 && response.statusCode != 401 && response.statusCode != 403 // No amount of retrying will save you now
+                         && !([error.domain isEqualToString:NSURLErrorDomain] && error.code == kCFURLErrorCancelled)    // No need to retry a cancelation (which can also happen on SSL error)
+                         && response.statusCode != 400 && response.statusCode != 401 && response.statusCode != 403      // No amount of retrying will save you now
                          )
                 {
                     // Check if it is a network connectivity issue
