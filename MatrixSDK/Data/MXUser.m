@@ -31,7 +31,7 @@
     uint64_t lastActiveLocalTS;
 
     // The list of update listeners (`MXOnUserUpdate`) in this room
-    NSMutableArray *updateListeners;
+    NSMutableArray<MXOnUserUpdate> *updateListeners;
 }
 
 @property (nonatomic) NSString *displayname;
@@ -182,7 +182,7 @@
     // Notify all listeners
     // The SDK client may remove a listener while calling them by enumeration
     // So, use a copy of them
-    NSArray *listeners = [updateListeners copy];
+    NSArray<MXOnUserUpdate> *listeners = [updateListeners copy];
 
     for (MXOnUserUpdate listener in listeners)
     {

@@ -20,7 +20,9 @@
 
 #import "MXSession.h"
 #import "MXMediaManager.h"
+#import "MXSDKOptions.h"
 #import "MXAllowedCertificates.h"
+
 
 @interface MXSelfSignedHomeserverTests : XCTestCase
 {

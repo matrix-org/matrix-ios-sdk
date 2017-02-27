@@ -17,7 +17,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXSDKOptions.h"
+
 
 #import "MXDeviceInfo.h"
 #import "MXCryptoConstants.h"

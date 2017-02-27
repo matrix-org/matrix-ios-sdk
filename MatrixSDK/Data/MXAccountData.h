@@ -36,6 +36,6 @@
 /**
  The account data as sent by the homeserver /sync response.
  */
-@property (nonatomic, readonly) NSDictionary *accountData;
+@property (nonatomic, readonly) NSDictionary<NSString *, id> *accountData;
 
 @end

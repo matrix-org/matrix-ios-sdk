@@ -28,7 +28,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 @interface MXEventTimeline ()
 {
     // The list of event listeners (`MXEventListener`) of this timeline.
-    NSMutableArray *eventListeners;
+    NSMutableArray<MXEventListener *> *eventListeners;
 
     // The historical state of the room when paginating back.
     MXRoomState *backState;
@@ -227,7 +227,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     if (direction == MXTimelineDirectionBackwards)
     {
         // For back pagination, try to get messages from the store first
-        NSArray *messagesFromStore = [storeMessagesEnumerator nextEventsBatch:numItems];
+        NSArray<MXEvent *> *messagesFromStore = [storeMessagesEnumerator nextEventsBatch:numItems];
 
         if (messagesFromStore)
         {
@@ -766,7 +766,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     return [self listenToEventsOfTypes:nil onEvent:onEvent];
 }
 
-- (id)listenToEventsOfTypes:(NSArray*)types onEvent:(MXOnRoomEvent)onEvent
+- (id)listenToEventsOfTypes:(NSArray<MXEventTypeString> *)types onEvent:(MXOnRoomEvent)onEvent
 {
     MXEventListener *listener = [[MXEventListener alloc] initWithSender:self andEventTypes:types andListenerBlock:onEvent];
 
@@ -809,7 +809,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     // Notify all listeners
     // The SDK client may remove a listener while calling them by enumeration
     // So, use a copy of them
-    NSArray *listeners = [eventListeners copy];
+    NSArray<MXEventListener *> *listeners = [eventListeners copy];
 
     for (MXEventListener *listener in listeners)
     {

@@ -17,7 +17,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import <AFNetworking/AFNetworking.h>
+
 
 /**
  The `MXHTTPOperation` objects manage pending HTTP requests.

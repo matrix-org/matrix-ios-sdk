@@ -30,7 +30,7 @@
 }
 
 - (instancetype)initWithMXEvent:(MXEvent*)roomMemberEvent
-                andEventContent:(NSDictionary*)roomMemberEventContent
+                andEventContent:(NSDictionary<NSString *, id>*)roomMemberEventContent
 {
     self = [super init];
     if (self)

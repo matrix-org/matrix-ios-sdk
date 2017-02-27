@@ -21,20 +21,20 @@
  */
 FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 
-#import <MatrixSDK/MXRestClient.h>
-#import <MatrixSDK/MXSession.h>
-#import <MatrixSDK/MXError.h>
+#import "MXRestClient.h"
+#import "MXSession.h"
+#import "MXError.h"
 
-#import <MatrixSDK/MXStore.h>
-#import <MatrixSDK/MXNoStore.h>
-#import <MatrixSDK/MXMemoryStore.h>
-#import <MatrixSDK/MXFileStore.h>
-#import <MatrixSDK/MXCoreDataStore.h>
+#import "MXStore.h"
+#import "MXNoStore.h"
+#import "MXMemoryStore.h"
+#import "MXFileStore.h"
+#import "MXCoreDataStore.h"
 
-#import <MatrixSDK/MXEventsEnumeratorOnArray.h>
-#import <MatrixSDK/MXEventsByTypesEnumeratorOnArray.h>
+#import "MXEventsEnumeratorOnArray.h"
+#import "MXEventsByTypesEnumeratorOnArray.h"
 
-#import <MatrixSDK/MXLogger.h>
+#import "MXLogger.h"
 
 #import "MXTools.h"
 #import "NSData+MatrixSDK.h"
@@ -45,5 +45,5 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 
 #import "MXLRUCache.h"
 
-#import "MatrixSDK/MXCrypto.h"
-#import "MatrixSDK/MXMegolmExportEncryption.h"
+#import "MXCrypto.h"
+#import "MXMegolmExportEncryption.h"
