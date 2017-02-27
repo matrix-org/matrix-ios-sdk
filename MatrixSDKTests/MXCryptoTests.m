@@ -1631,50 +1631,35 @@
                             // Clear his crypto store
                             [bobSession enableCrypto:NO success:^{
 
-                                MXRestClient *bobRestClient2 = [[MXRestClient alloc] initWithCredentials: bobSession.matrixRestClient.credentials andOnUnrecognizedCertificateBlock:nil];
-
+                                // Relog bob to simulate a new device
                                 [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
-                                MXSession *bobSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
-
-                                [bobSession2 start:^{
+                                [matrixSDKTestsData relogUserSession:bobSession withPassword:MXTESTS_BOB_PWD onComplete:^(MXSession *bobSession2) {
 
                                     [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
                                     [bobSession2 joinRoom:roomFromAlicePOV.roomId success:^(MXRoom *roomFromBobPOV2) {
 
                                         // Bob should be able to receive the message from Alice
-                                        __block BOOL receivedByBob = NO;
                                         [roomFromBobPOV2.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                                             XCTAssert(event.clearEvent, @"Bob must be able to decrypt this new message on his new device");
 
                                             XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomFromBobPOV2.roomId clearMessage:message2FromAlice senderSession:aliceSession]);
 
-                                            receivedByBob = YES;
+                                            [expectation fulfill];
 
                                         }];
 
-                                        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                                        [roomFromAlicePOV sendTextMessage:message2FromAlice success:nil failure:^(NSError *error) {
+                                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                            [expectation fulfill];
+                                        }];
 
-                                            [roomFromAlicePOV sendTextMessage:message2FromAlice success:^(NSString *eventId) {
-
-                                                XCTAssert(receivedByBob, @"Bob should have received and decrypted the 2nd message from Alice");
-                                                [expectation fulfill];
-
-                                            } failure:^(NSError *error) {
-                                                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                                                [expectation fulfill];
-                                            }];
-                                            
-                                        });
                                     } failure:^(NSError *error) {
                                         XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                                         [expectation fulfill];
                                     }];
                                     
-                                } failure:^(NSError *error) {
-                                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                                    [expectation fulfill];
                                 }];
 
                             } failure:^(NSError *error) {
