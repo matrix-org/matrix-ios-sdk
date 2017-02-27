@@ -427,6 +427,12 @@
 
     dispatch_async(_cryptoQueue, ^{
 
+        // Flag users to refresh
+        for (NSString *userId in userIds)
+        {
+            [_deviceList invalidateUserDeviceList:userId];
+        }
+
         if (!oldSyncToken)
         {
             // an initialsync
