@@ -482,7 +482,7 @@
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
-            XCTAssertEqualObjects(room.state.guestAccess, kMXRoomGuestAccessForbidden, @"The default room guest access should be forbidden");
+            XCTAssertEqualObjects(room.state.guestAccess, kMXRoomGuestAccessCanJoin, @"The default room guest access should be forbidden");
 
             // Listen to live event. We should receive only one: a m.room.name event
             [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
@@ -490,14 +490,14 @@
                 XCTAssertEqual(event.eventType, MXEventTypeRoomGuestAccess);
 
                 XCTAssertNotNil(room.state.guestAccess);
-                XCTAssertEqualObjects(room.state.guestAccess, kMXRoomGuestAccessCanJoin, @"The room guest access is wrong");
+                XCTAssertEqualObjects(room.state.guestAccess, kMXRoomGuestAccessForbidden, @"The room guest access is wrong");
 
                 [expectation fulfill];
 
             }];
 
             // Change the guest access
-            [room setGuestAccess:kMXRoomGuestAccessCanJoin success:^{
+            [room setGuestAccess:kMXRoomGuestAccessForbidden success:^{
 
             } failure:^(NSError *error) {
                 XCTFail(@"The request should not fail - NSError: %@", error);
