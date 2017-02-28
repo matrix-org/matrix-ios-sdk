@@ -16,6 +16,8 @@
 
 #import "MXDeviceListOperation.h"
 
+#ifdef MX_CRYPTO
+
 #import "MXDeviceListOperationsPool.h"
 
 @interface MXDeviceListOperation ()
@@ -102,3 +104,5 @@
 }
 
 @end
+
+#endif

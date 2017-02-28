@@ -16,6 +16,8 @@
 
 #import "MXDeviceListOperationsPool.h"
 
+#ifdef MX_CRYPTO
+
 #import "MXCrypto_Private.h"
 
 @interface MXDeviceListOperationsPool ()
@@ -260,3 +262,5 @@
 }
 
 @end
+
+#endif
