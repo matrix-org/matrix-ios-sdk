@@ -118,6 +118,17 @@
 - (BOOL)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline;
 
 /**
+ Handle list of changed users provided in the /sync response.
+
+ @param userIds the list of users who have a change in their devices.
+ @param oldSyncToken  The 'since' token passed to /sync. nil for the first successful
+                      sync since this client was started.
+ @param nextSyncToken The 'next_batch' result from /sync, which will become the 'since'
+                      token for the next call to /sync.
+ */
+- (void)handleDeviceListsChanged:(NSArray<NSString*>*)userIds oldSyncToken:(NSString*)oldSyncToken nextSyncToken:(NSString*)nextSyncToken;
+
+/**
  Return the device information for an encrypted event.
 
  @param event The event.

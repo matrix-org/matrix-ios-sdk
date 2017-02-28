@@ -103,6 +103,23 @@
 - (BOOL)deviceAnnounced;
 
 /**
+ Store the sync token corresponding to the device list.
+
+ This is used when starting the client, to get a list of the users who
+ have changed their device list since the list time we were running.
+
+ @param deviceSyncToken the token.
+ */
+- (void)storeDeviceSyncToken:(NSString*)deviceSyncToken;
+
+/**
+ Get the sync token corresponding to the device list.
+ 
+ @return the token.
+ */
+- (NSString*)deviceSyncToken;
+
+/**
  Store a device for a user.
 
  @param userId The user's id.

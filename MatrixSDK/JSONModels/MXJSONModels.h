@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
- 
+ Copyright 2017 Vector Creations Ltd
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -1139,7 +1140,20 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
     /**
      List of direct-to-device events.
      */
-@property (nonatomic) NSArray<MXEvent*> *events;
+    @property (nonatomic) NSArray<MXEvent*> *events;
+
+@end
+
+
+/**
+ `MXDeviceListResponse` represents the devices that have changed.
+ */
+@interface MXDeviceListResponse : MXJSONModel
+
+    /**
+     List of user ids whose devices have changed (new, removed).
+     */
+    @property (nonatomic) NSArray<NSString*> *changed;
 
 @end
 
@@ -1167,6 +1181,11 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
      Data directly sent to one of user's devices.
      */
     @property (nonatomic) MXToDeviceSyncResponse *toDevice;
+
+    /**
+     Devices list update.
+     */
+    @property (nonatomic) MXDeviceListResponse *deviceLists;
 
     /**
      List of rooms.

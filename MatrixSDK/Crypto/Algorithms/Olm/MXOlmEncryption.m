@@ -64,7 +64,7 @@
 
         for (NSString *userId in users)
         {
-            NSArray<MXDeviceInfo *> *devices = [crypto storedDevicesForUser:userId];
+            NSArray<MXDeviceInfo *> *devices = [crypto.deviceList storedDevicesForUser:userId];
             for (MXDeviceInfo *device in devices)
             {
                 if ([device.identityKey isEqualToString:crypto.olmDevice.deviceCurve25519Key])
@@ -118,7 +118,7 @@
     // TODO: Avoid to do this request for every message. Instead, manage a queue of messages waiting for encryption
     // XXX: This class is not used so fix it later
     MXHTTPOperation *operation;
-    operation = [crypto downloadKeys:users forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+    operation = [crypto.deviceList downloadKeys:users forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
 
         MXHTTPOperation *operation2 = [crypto ensureOlmSessionsForUsers:users success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {
             success();

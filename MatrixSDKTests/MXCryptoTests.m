@@ -22,6 +22,7 @@
 #import "MXSession.h"
 #import "MXCrypto_Private.h"
 #import "MXMegolmExportEncryption.h"
+#import "MXDeviceListOperation.h"
 #import "MXFileStore.h"
 
 #import "MXSDKOptions.h"
@@ -321,7 +322,7 @@
             NSString *deviceCurve25519Key = mxSession2.crypto.olmDevice.deviceCurve25519Key;
             NSString *deviceEd25519Key = mxSession2.crypto.olmDevice.deviceEd25519Key;
 
-            NSArray<MXDeviceInfo *> *myUserDevices = [mxSession2.crypto storedDevicesForUser:mxSession.myUser.userId];
+            NSArray<MXDeviceInfo *> *myUserDevices = [mxSession2.crypto.deviceList storedDevicesForUser:mxSession.myUser.userId];
             XCTAssertEqual(myUserDevices.count, 1);
 
             MXRestClient *bobRestClient = mxSession2.matrixRestClient;
@@ -339,7 +340,7 @@
                 XCTAssertEqualObjects(deviceCurve25519Key, mxSession2.crypto.olmDevice.deviceCurve25519Key);
                 XCTAssertEqualObjects(deviceEd25519Key, mxSession2.crypto.olmDevice.deviceEd25519Key);
 
-                NSArray<MXDeviceInfo *> *myUserDevices2 = [mxSession2.crypto storedDevicesForUser:mxSession2.myUser.userId];
+                NSArray<MXDeviceInfo *> *myUserDevices2 = [mxSession2.crypto.deviceList storedDevicesForUser:mxSession2.myUser.userId];
                 XCTAssertEqual(myUserDevices2.count, 1);
 
                 XCTAssertEqualObjects(myUserDevices[0].deviceId, myUserDevices2[0].deviceId);
@@ -370,7 +371,7 @@
 
                 [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
-                [mxSession.crypto downloadKeys:@[mxSession.myUser.userId, aliceSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+                [mxSession.crypto.deviceList downloadKeys:@[mxSession.myUser.userId, aliceSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
 
                     XCTAssertEqual(usersDevicesInfoMap.userIds.count, 2, @"BobDevice must be obtain from the cache and AliceDevice from the hs");
 
@@ -381,7 +382,7 @@
                     XCTAssertEqualObjects(aliceDeviceFromBobPOV.fingerprint, aliceSession.crypto.olmDevice.deviceEd25519Key);
 
                     // Continue testing other methods
-                    XCTAssertEqualObjects([mxSession.crypto deviceWithIdentityKey:aliceSession.crypto.olmDevice.deviceCurve25519Key forUser:aliceSession.myUser.userId andAlgorithm:kMXCryptoOlmAlgorithm].description, aliceDeviceFromBobPOV.description);
+                    XCTAssertEqualObjects([mxSession.crypto.deviceList deviceWithIdentityKey:aliceSession.crypto.olmDevice.deviceCurve25519Key forUser:aliceSession.myUser.userId andAlgorithm:kMXCryptoOlmAlgorithm].description, aliceDeviceFromBobPOV.description);
 
                     XCTAssertEqual(aliceDeviceFromBobPOV.verified, MXDeviceUnknown, @"This is the first time Alice sees this device");
 
@@ -400,16 +401,16 @@
                         MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
                         [mxSession2 setStore:store success:^{
 
-                            MXDeviceInfo *aliceDeviceFromBobPOV2 = [mxSession2.crypto deviceWithIdentityKey:aliceSession.crypto.olmDevice.deviceCurve25519Key forUser:aliceSession.myUser.userId andAlgorithm:kMXCryptoOlmAlgorithm];
+                            MXDeviceInfo *aliceDeviceFromBobPOV2 = [mxSession2.crypto.deviceList deviceWithIdentityKey:aliceSession.crypto.olmDevice.deviceCurve25519Key forUser:aliceSession.myUser.userId andAlgorithm:kMXCryptoOlmAlgorithm];
 
                             XCTAssert(aliceDeviceFromBobPOV2);
                             XCTAssertEqualObjects(aliceDeviceFromBobPOV2.fingerprint, aliceSession.crypto.olmDevice.deviceEd25519Key);
                             XCTAssertEqual(aliceDeviceFromBobPOV2.verified, MXDeviceBlocked, @"AliceDevice must still be blocked");
 
                             // Download again alice device
-                            [mxSession2.crypto downloadKeys:@[aliceSession.myUser.userId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap2) {
+                            [mxSession2.crypto.deviceList downloadKeys:@[aliceSession.myUser.userId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap2) {
 
-                                MXDeviceInfo *aliceDeviceFromBobPOV3 = [mxSession2.crypto deviceWithIdentityKey:aliceSession.crypto.olmDevice.deviceCurve25519Key forUser:aliceSession.myUser.userId andAlgorithm:kMXCryptoOlmAlgorithm];
+                                MXDeviceInfo *aliceDeviceFromBobPOV3 = [mxSession2.crypto.deviceList deviceWithIdentityKey:aliceSession.crypto.olmDevice.deviceCurve25519Key forUser:aliceSession.myUser.userId andAlgorithm:kMXCryptoOlmAlgorithm];
 
                                 XCTAssert(aliceDeviceFromBobPOV3);
                                 XCTAssertEqualObjects(aliceDeviceFromBobPOV3.fingerprint, aliceSession.crypto.olmDevice.deviceEd25519Key);
@@ -445,19 +446,70 @@
     }];
 }
 
+- (void)testMultipleDownloadKeys
+{
+    [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        __block NSUInteger count = 0;
+        void(^onSuccess)() = ^() {
+
+            if (++count == 2)
+            {
+                MXHTTPOperation *operation = [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:nil failure:nil];
+
+                XCTAssertNil(operation, "@Alice shouldn't do another /query when the user devices are in the store");
+                [expectation fulfill];
+            }
+        };
+
+        MXHTTPOperation *operation1 = [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+
+            onSuccess();
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+        XCTAssert(operation1);
+        XCTAssert([operation1 isKindOfClass:MXDeviceListOperation.class], @"Returned object must be indeed a MXDeviceListOperation object");
+
+        // A parallel operation
+        MXHTTPOperation *operation2 = [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+
+            onSuccess();
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+        XCTAssert(operation2);
+        XCTAssert([operation2 isKindOfClass:MXDeviceListOperation.class], @"Returned object must be indeed a MXDeviceListOperation object");
+
+        XCTAssertEqual(operation1.operation, operation2.operation, @"The 2 MXDeviceListOperations must share the same http request query from the same MXDeviceListOperationsPool");
+    }];
+}
+
+// TODO: test others scenarii like
+//  - We are downloading keys for [a,b], ask the download for [b,c] in //.
+//  - We are downloading keys for [a,b], ask the download for [a] in //. The 1st download fails for network reason. The 2nd should then succeed.
+//  - We are downloading keys for [a,b,c], ask the download for [a,b] in //. The 1st download returns only keys for [a,b] because c'hs is down. The 2nd should succeed.
+//  - We are downloading keys for [a,b,c], ask the download for [c] in //. The 1st download returns only keys for [a,b] because c'hs is down. The 2nd should fail (or complete but with an indication TBD)
+
 - (void)testDownloadKeysForUserWithNoDevice
 {
     // No device = non-e2e-capable device
 
     [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:NO warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
-        [aliceSession.crypto downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+        [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
 
             NSArray *bobDevices = [usersDevicesInfoMap deviceIdsForUser:bobSession.myUser.userId];
             XCTAssertNotNil(bobDevices, @"[MXCrypto downloadKeys] should return @[] for Bob to distinguish him from an unknown user");
             XCTAssertEqual(0, bobDevices.count);
 
-            MXHTTPOperation *operation = [aliceSession.crypto downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:nil failure:^(NSError *error) {
+            MXHTTPOperation *operation = [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:nil failure:^(NSError *error) {
                 XCTFail(@"The request should not fail - NSError: %@", error);
                 [expectation fulfill];
             }];
@@ -479,7 +531,7 @@
 
         // Try to get info from a user on matrix.org.
         // The local hs we use for tests is not federated and is not able to talk with matrix.org
-        [aliceSession.crypto downloadKeys:@[bobSession.myUser.userId, @"@auser:matrix.org"] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+        [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId, @"@auser:matrix.org"] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
 
             // We can get info only for Bob
             XCTAssertEqual(1, usersDevicesInfoMap.map.count);
@@ -509,7 +561,7 @@
 
                 [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
-                [mxSession.crypto downloadKeys:@[mxSession.myUser.userId, aliceSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+                [mxSession.crypto.deviceList downloadKeys:@[mxSession.myUser.userId, aliceSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
 
 
                     // Start the test
@@ -803,7 +855,8 @@
 
                     XCTAssertEqual(direction, MXTimelineDirectionBackwards);
 
-                    switch (paginatedMessagesCount++) {
+                    switch (paginatedMessagesCount++)
+                    {
                         case 0:
                             XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromAlice[1] senderSession:aliceSession]);
                             break;
@@ -1578,39 +1631,26 @@
                             // Clear his crypto store
                             [bobSession enableCrypto:NO success:^{
 
-                                MXRestClient *bobRestClient2 = [[MXRestClient alloc] initWithCredentials: bobSession.matrixRestClient.credentials andOnUnrecognizedCertificateBlock:nil];
-
+                                // Relog bob to simulate a new device
                                 [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
-                                MXSession *bobSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient2];
-
-                                [bobSession2 start:^{
+                                [matrixSDKTestsData relogUserSession:bobSession withPassword:MXTESTS_BOB_PWD onComplete:^(MXSession *bobSession2) {
 
                                     [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
                                     [bobSession2 joinRoom:roomFromAlicePOV.roomId success:^(MXRoom *roomFromBobPOV2) {
 
                                         // Bob should be able to receive the message from Alice
-                                        __block BOOL receivedByBob = NO;
                                         [roomFromBobPOV2.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                                             XCTAssert(event.clearEvent, @"Bob must be able to decrypt this new message on his new device");
 
                                             XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomFromBobPOV2.roomId clearMessage:message2FromAlice senderSession:aliceSession]);
 
-                                            receivedByBob = YES;
+                                            [expectation fulfill];
 
                                         }];
 
-                                        [roomFromAlicePOV sendTextMessage:message2FromAlice success:^(NSString *eventId) {
-
-                                            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-
-                                                XCTAssert(receivedByBob, @"Bob should have received and decrypted the 2nd message from Alice");
-                                                [expectation fulfill];
-
-                                            });
-
-                                        } failure:^(NSError *error) {
+                                        [roomFromAlicePOV sendTextMessage:message2FromAlice success:nil failure:^(NSError *error) {
                                             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                                             [expectation fulfill];
                                         }];
@@ -1620,9 +1660,6 @@
                                         [expectation fulfill];
                                     }];
                                     
-                                } failure:^(NSError *error) {
-                                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                                    [expectation fulfill];
                                 }];
 
                             } failure:^(NSError *error) {

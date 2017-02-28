@@ -1,5 +1,6 @@
 /*
  Copyright 2014 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -1637,6 +1638,8 @@ typedef enum : NSUInteger
  Download device keys.
 
  @param userIds list of users to get keys for.
+ @param token sync token to pass in the query request, to help
+              the HS give the most recent results. It can be nil.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
@@ -1644,6 +1647,7 @@ typedef enum : NSUInteger
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)downloadKeysForUsers:(NSArray<NSString*>*)userIds
+                                   token:(NSString*)token
                                  success:(void (^)(MXKeysQueryResponse *keysQueryResponse))success
                                  failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
@@ -1660,6 +1664,23 @@ typedef enum : NSUInteger
 - (MXHTTPOperation*)claimOneTimeKeysForUsersDevices:(MXUsersDevicesMap<NSString*>*)usersDevicesKeyTypesMap
                                             success:(void (^)(MXKeysClaimResponse *keysClaimResponse))success
                                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Ask the server for a list of users who have changed their device lists
+ between a pair of sync tokens
+
+ @param fromToken the old token.
+ @param toToken the new token.
+
+ @param success A block object called when the operation succeeds. changed is the
+                list of users with a change in their devices.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)keyChangesFrom:(NSString*)fromToken to:(NSString*)toToken
+                           success:(void (^)(NSArray<NSString*> *changed))success
+                           failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Direct-to-device messaging

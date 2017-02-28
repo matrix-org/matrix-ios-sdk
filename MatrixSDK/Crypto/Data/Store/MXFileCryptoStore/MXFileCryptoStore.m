@@ -273,6 +273,16 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
     return metaData.deviceAnnounced;
 }
 
+- (void)storeDeviceSyncToken:(NSString *)deviceSyncToken
+{
+
+}
+
+- (NSString *)deviceSyncToken
+{
+    return nil;
+}
+
 - (void)storeDeviceForUser:(NSString *)userId device:(MXDeviceInfo *)device
 {
     [usersDevicesInfoMap setObject:device forUser:userId andDevice:device.deviceId];
