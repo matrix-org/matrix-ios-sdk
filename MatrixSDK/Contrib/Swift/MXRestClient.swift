@@ -1653,13 +1653,14 @@ public extension MXRestClient {
      
      - parameters:
         - userIds: list of users to get keys for.
+        - token: sync token to pass in the query request, to help the HS give the most recent results. It can be nil.
         - completion: A block object called when the operation completes.
         - response: Provides information about the keys on success.
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func downloadKeys(forUsers userIds: [String], completion: @escaping (_ response: MXResponse<MXKeysQueryResponse>) -> Void) -> MXHTTPOperation {
-        return __downloadKeys(forUsers: userIds, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func downloadKeys(forUsers userIds: [String], token: String? = nil, completion: @escaping (_ response: MXResponse<MXKeysQueryResponse>) -> Void) -> MXHTTPOperation {
+        return __downloadKeys(forUsers: userIds, token: token, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     
