@@ -1524,12 +1524,13 @@ public extension MXRestClient {
     
     
     /**
-     Submit a token received by an email after the call of [self requestEmailValidation].
-     
-     In case of success, the email has been validated.
+     Submit the validation token received by an email or a sms.
+
+     In case of success, the related third-party id has been validated
      
      - parameters:
         - token: the token received in the email.
+        - medium the type of the third-party id (see kMX3PIDMediumEmail, kMX3PIDMediumMSISDN).
         - clientSecret: the clientSecret in the email.
         - sid: the email validation session id in the email.
         - completion: A block object called when the operation completes.
@@ -1537,14 +1538,13 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func submitEmailValidationToken(_ token: String, clientSecret: String, sid: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
-        return __submitEmailValidationToken(token, clientSecret: clientSecret, sid: sid, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func submit3PIDValidationToken(_ token: String, medium: String, clientSecret: String, sid: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __submit3PIDValidationToken(token, medium: medium, clientSecret: clientSecret, sid: sid, success: currySuccess(completion), failure: curryFailure(completion))
     }
-    
-    
+
     /**
      Sign a 3PID URL.
-     
+
      - parameters:
         - signUrl: the URL that will be called for signing.
         - completion: A block object called when the operation completes.
