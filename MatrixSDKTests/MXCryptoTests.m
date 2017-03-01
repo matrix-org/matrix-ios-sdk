@@ -1731,8 +1731,9 @@
 
                             MXRoom *roomFromNewBobPOV = [newBobSession roomWithRoomId:roomFromAlicePOV.roomId];
 
-                            NSDictionary<NSString*, MXDeviceInfo*> *bobDevices = [aliceSession.crypto.store devicesForUser:newBobSession.myUser.userId];
-                            XCTAssertEqual(bobDevices.count, 0, @"Alice should not have needed Bob's keys at this time");
+                            // Test disabled because [MXCrypto handleDeviceListsChanged] even invalidates devices of users we do not have 2e2 rooms with 
+                            //NSDictionary<NSString*, MXDeviceInfo*> *bobDevices = [aliceSession.crypto.store devicesForUser:newBobSession.myUser.userId];
+                            //XCTAssertEqual(bobDevices.count, 0, @"Alice should not have needed Bob's keys at this time");
 
                             // Turn the crypto ON in the room
                             [roomFromAlicePOV enableEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm success:^{
