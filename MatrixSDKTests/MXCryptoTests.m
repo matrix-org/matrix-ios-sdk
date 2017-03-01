@@ -1697,6 +1697,93 @@
     }];
 }
 
+// Test for https://github.com/matrix-org/matrix-js-sdk/pull/359
+// - Alice sends a message to Bob to a non encrypted room
+// - Bob logs in with a new device
+// - Alice turns the crypto ON in the room
+// - Alice sends a message
+// -> Bob must be able to decrypt this message
+- (void)testEnableEncryptionAfterNonCryptedMessages
+{
+    NSString *messageFromAlice = @"Hello I'm Alice!";
+    NSString *encryptedMessageFromAlice = @"I'm still Alice!";
+
+    [self doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
+
+        aliceSession.crypto.warnOnUnknowDevices = NO;
+        bobSession.crypto.warnOnUnknowDevices = NO;
+
+        [aliceSession createRoom:nil visibility:kMXRoomDirectoryVisibilityPublic roomAlias:nil topic:nil success:^(MXRoom *roomFromAlicePOV) {
+
+            [bobSession joinRoom:roomFromAlicePOV.roomId success:^(MXRoom *room) {
+
+                [roomFromAlicePOV sendTextMessage:messageFromAlice success:^(NSString *eventId) {
+
+                    // Make Bob come back to the room with a new device
+                    // Clear his crypto store
+                    [bobSession enableCrypto:NO success:^{
+
+                        // Relog bob to simulate a new device
+                        [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+                        [matrixSDKTestsData relogUserSession:bobSession withPassword:MXTESTS_BOB_PWD onComplete:^(MXSession *newBobSession) {
+
+                            [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
+
+                            MXRoom *roomFromNewBobPOV = [newBobSession roomWithRoomId:roomFromAlicePOV.roomId];
+
+                            NSDictionary<NSString*, MXDeviceInfo*> *bobDevices = [aliceSession.crypto.store devicesForUser:newBobSession.myUser.userId];
+                            XCTAssertEqual(bobDevices.count, 0, @"Alice should not have needed Bob's keys at this time");
+
+                            // Turn the crypto ON in the room
+                            [roomFromAlicePOV enableEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm success:^{
+
+                                [roomFromNewBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                                    XCTAssert(event.clearEvent, @"Bob must be able to decrypt message from his new device after the crypto is ON");
+
+                                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomFromNewBobPOV.roomId clearMessage:encryptedMessageFromAlice senderSession:aliceSession]);
+
+                                    NSDictionary<NSString*, MXDeviceInfo*> *bobDevices = [aliceSession.crypto.store devicesForUser:newBobSession.myUser.userId];
+                                    XCTAssertEqual(bobDevices.count, 2, @"Alice must now know Bob's device keys");  // TODO: Should be 1. The HS should have removed the 1st Bob's device on logout but this is not yet the case
+
+                                    [expectation fulfill];
+
+                                }];
+
+                                // Post an encrypted message
+                                [roomFromAlicePOV sendTextMessage:encryptedMessageFromAlice success:nil failure:^(NSError *error) {
+                                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                    [expectation fulfill];
+                                }];
+                                
+                            } failure:^(NSError *error) {
+                                XCTFail(@"The operation should not fail - NSError: %@", error);
+                                [expectation fulfill];
+                            }];
+                        }];
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The operation should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The operation should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The operation should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        
+    }];
+}
+
 
 #pragma mark - import/export
 
