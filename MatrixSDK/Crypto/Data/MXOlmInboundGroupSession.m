@@ -43,8 +43,7 @@
     MXMegolmSessionData *sessionData;
 
     NSError *error;
-    // TODO: Fix the API in OLMKit
-    NSString *sessionKey = [_session exportSessionAtMessageIndex:(NSUInteger*)messageIndex error:&error];
+    NSString *sessionKey = [_session exportSessionAtMessageIndex:messageIndex error:&error];
 
     if (!error)
     {
