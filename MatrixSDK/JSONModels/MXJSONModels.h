@@ -100,6 +100,7 @@ FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeOAuth2;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeEmailIdentity;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeToken;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeDummy;
+FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeMSISDN;
 
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeEmailCode; // Deprecated
 

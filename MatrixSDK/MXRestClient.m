@@ -2084,7 +2084,7 @@ MXAuthAction;
                               success:(void (^)())success
                               failure:(void (^)(NSError *error))failure
 {
-    return [self inviteByThreePid:@"email"
+    return [self inviteByThreePid:kMX3PIDMediumEmail
                           address:email
                            toRoom:roomId
                           success:success failure:failure];

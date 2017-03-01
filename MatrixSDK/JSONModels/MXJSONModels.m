@@ -79,6 +79,7 @@ NSString *const kMXLoginFlowTypeEmailIdentity = @"m.login.email.identity";
 NSString *const kMXLoginFlowTypeToken = @"m.login.token";
 NSString *const kMXLoginFlowTypeDummy = @"m.login.dummy";
 NSString *const kMXLoginFlowTypeEmailCode = @"m.login.email.code";
+NSString *const kMXLoginFlowTypeMSISDN = @"m.login.msisdn";
 
 @implementation MXLoginFlow
 
