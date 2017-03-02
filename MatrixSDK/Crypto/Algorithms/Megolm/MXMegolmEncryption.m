@@ -236,12 +236,12 @@
 }
 
 /**
- * @private
- *
- * @param {module:models/room} room
- *
- * @return {module:client.Promise} Promise which resolves to the megolm
- *   sessionId when setup is complete.
+ Ensure that we have an outbound session ready for the devices in the room.
+
+ @param devicesInRoom the devices in the room.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
  */
 - (MXHTTPOperation *)ensureOutboundSession:(MXUsersDevicesMap<MXDeviceInfo *> *)devicesInRoom
                                    success:(void (^)(MXOutboundSessionInfo *session))success
