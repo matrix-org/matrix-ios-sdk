@@ -113,6 +113,10 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
  */
 @property (nonatomic) NSString *deviceSyncToken;
 
+/**
+ */
+@property (nonatomic) BOOL globalBlacklistUnverifiedDevices;
+
 @end
 
 @implementation MXRealmOlmAccount
@@ -166,6 +170,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                                                                           @"userId" : credentials.userId,
                                                                           }];
     account.deviceId = credentials.deviceId;
+    account.globalBlacklistUnverifiedDevices = NO;
 
     [realm beginWriteTransaction];
     [realm addObject:account];
@@ -542,6 +547,20 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     }];
 }
 
+#pragma mark - Crypto settings
+
+- (BOOL)globalBlacklistUnverifiedDevices
+{
+    MXRealmOlmAccount *account = self.accountInCurrentThread;
+    return account.globalBlacklistUnverifiedDevices;
+}
+- (void)setGlobalBlacklistUnverifiedDevices:(BOOL)globalBlacklistUnverifiedDevices
+{
+    MXRealmOlmAccount *account = self.accountInCurrentThread;
+    [account.realm transactionWithBlock:^{
+        account.globalBlacklistUnverifiedDevices = globalBlacklistUnverifiedDevices;
+    }];
+}
 
 #pragma mark - Private methods
 + (RLMRealm*)realmForUser:(NSString*)userId

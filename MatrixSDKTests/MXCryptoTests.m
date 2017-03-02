@@ -129,7 +129,7 @@
             aliceSession.crypto.warnOnUnknowDevices = warnOnUnknowDevices;
             bobSession.crypto.warnOnUnknowDevices = warnOnUnknowDevices;
 
-            // Listen to Alice's MXSessionNewRoomNotification event
+            // Listen to Bob MXSessionNewRoomNotification event
             __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
                 [[NSNotificationCenter defaultCenter] removeObserver:observer];
@@ -193,6 +193,52 @@
 
     }];
 }
+
+- (void)doE2ETestWithAliceAndBobAndSamInARoom:(XCTestCase*)testCase
+                                   cryptedBob:(BOOL)cryptedBob
+                                   cryptedSam:(BOOL)cryptedSam
+                    warnOnUnknowDevices:(BOOL)warnOnUnknowDevices
+                            readyToTest:(void (^)(MXSession *aliceSession, MXSession *bobSession, MXSession *samSession, NSString *roomId, XCTestExpectation *expectation))readyToTest
+{
+    [self doE2ETestWithAliceAndBobInARoom:testCase cryptedBob:cryptedBob warnOnUnknowDevices:warnOnUnknowDevices readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+
+        MXRoom *room = [aliceSession roomWithRoomId:roomId];
+
+        [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = cryptedSam;
+
+        // Ugly hack: Create a bob from another MatrixSDKTestsData instance and call him Sam...
+        MatrixSDKTestsData *matrixSDKTestsData2 = [[MatrixSDKTestsData alloc] init];
+        [matrixSDKTestsData2 doMXSessionTestWithBob:nil readyToTest:^(MXSession *samSession, XCTestExpectation *expectation2) {
+
+            [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
+
+            aliceSession.crypto.warnOnUnknowDevices = warnOnUnknowDevices;
+            bobSession.crypto.warnOnUnknowDevices = warnOnUnknowDevices;
+            samSession.crypto.warnOnUnknowDevices = warnOnUnknowDevices;
+
+            // Listen to Sam MXSessionNewRoomNotification event
+            __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:samSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                [[NSNotificationCenter defaultCenter] removeObserver:observer];
+
+                [samSession joinRoom:note.userInfo[kMXSessionNotificationRoomIdKey] success:^(MXRoom *room) {
+
+                    readyToTest(aliceSession, bobSession, samSession, room.roomId, expectation);
+
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot join a room - error: %@", error);
+                }];
+            }];
+
+            [room inviteUser:samSession.myUser.userId success:nil failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot invite Alice - error: %@", error);
+            }];
+
+        }];
+    }];
+}
+
 
 
 - (NSUInteger)checkEncryptedEvent:(MXEvent*)event roomId:(NSString*)roomId clearMessage:(NSString*)clearMessage senderSession:(MXSession*)senderSession
@@ -1355,49 +1401,132 @@
     }];
 }
 
-- (void)testWarnOnUnknownDevices
+// Test un
+
+// Bob, Alice and Sam are in an encrypted room
+// Alice sends a message #0
+// The message sending fails because of unknown devices (Bob and Sam ones)
+
+// Alice marks the Bob and Sam devices as known (UNVERIFIED)
+// Alice sends another message #1
+// Checks that the Bob and Sam devices receive the message and can decrypt it.
+
+// Alice black lists the unverified devices
+// Alice sends a message #2
+// checks that the Sam and the Bob devices receive the message but it cannot be decrypted
+
+// Alice unblack-lists the unverified devices
+// Alice sends a message #3
+// checks that the Sam and the Bob devices receive the message and it can be decrypted on the both devices
+
+// Alice verifies the Bob device and black lists the unverified devices in the current room.
+// Alice sends a message #4
+// Check that the message can be decrypted by Bob's device but not by Sam's device
+
+// Alice unblack-lists the unverified devices in the current room
+// Alice sends a message #5
+// Check that the message can be decrypted by the Bob's device and the Sam's device
+- (void)testBlackListUnverifiedDevices
 {
-    [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    NSArray *aliceMessages = @[
+                               @"0",
+                               @"1",
+                               @"2",
+                               @"3",
+                               @"4",
+                               @"5"
+                               ];
+
+    [self doE2ETestWithAliceAndBobAndSamInARoom:self cryptedBob:YES cryptedSam:YES warnOnUnknowDevices:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, MXSession *samSession, NSString *roomId, XCTestExpectation *expectation) {
 
         MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
         MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
+        MXRoom *roomFromSamPOV = [samSession roomWithRoomId:roomId];
 
-        [roomFromAlicePOV sendTextMessage:@"Hello I'm Alice!" success:^(NSString *eventId) {
-            XCTFail(@"The sending must fail");
+        __block NSUInteger bobMessageCount = 1;
+        __block NSUInteger samMessageCount = 1;
+
+        [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+            switch (bobMessageCount++)
+            {
+                case 1:
+                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:aliceMessages[1] senderSession:aliceSession]);
+                    break;
+
+                case 2:
+                    XCTAssertEqual(event.eventType, MXEventTypeRoomEncrypted);
+                    XCTAssertNil(event.clearEvent);
+                    XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorUnknownInboundSessionIdCode);
+                    //break; // @TODO: TBC
+                    
+                default:
+                    [expectation fulfill];
+                    break;
+            }
+        }];
+
+        [roomFromSamPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+            // @TODO
+        }];
+
+
+        // Let alice sends messages and control this test flow
+        [roomFromAlicePOV sendTextMessage:aliceMessages[0] success:^(NSString *eventId) {
+
+            XCTFail(@"Sending of message #0 should fail due to unkwnown devices");
             [expectation fulfill];
+
         } failure:^(NSError *error) {
 
+            XCTAssert(error);
             XCTAssertEqualObjects(error.domain, MXEncryptingErrorDomain);
             XCTAssertEqual(error.code, MXEncryptingErrorUnknownDeviceCode);
 
-            MXUsersDevicesMap<MXDeviceInfo*> *unknownDevices = error.userInfo[MXEncryptingErrorUnknownDeviceDevicesKey];
-            XCTAssert(unknownDevices);
-            XCTAssertEqual(unknownDevices.count, 1);
+            MXUsersDevicesMap<MXDeviceInfo *> *unknownDevices = error.userInfo[MXEncryptingErrorUnknownDeviceDevicesKey];
+            XCTAssertEqual(unknownDevices.count, 2);
 
-            MXDeviceInfo *unknownDevice = unknownDevices.map.allValues[0].allValues[0];
-            XCTAssertEqual(unknownDevice.verified, MXDeviceUnknown);
-            XCTAssertEqualObjects(unknownDevice.userId, bobSession.myUser.userId);
 
+            __block NSUInteger aliceMessageCount = 1;
+            [roomFromAlicePOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                switch (aliceMessageCount++)
+                {
+                    case 1:
+                    {
+                        // Alice black lists the unverified devices
+                        aliceSession.crypto.globalBlacklistUnverifiedDevices = YES;
+
+                        [roomFromAlicePOV sendTextMessage:aliceMessages[2] success:nil failure:^(NSError *error) {
+                            XCTFail(@"Alice should be able to send message #2 - error: %@", error);
+                            [expectation fulfill];
+                        }];
+
+                        break;
+                    }
+
+                    // @TODO: TBC
+
+                    default:
+                        break;
+                }
+
+            }];
+
+            // Alice marks the Bob and Sam devices as known (UNVERIFIED)
             [aliceSession.crypto setDevicesKnown:unknownDevices complete:^{
 
-                MXDeviceInfo *unknownDevice2 = [aliceSession.crypto.store deviceWithDeviceId:unknownDevice.deviceId forUser:unknownDevice.userId];
-                XCTAssertEqual(unknownDevice2.verified, MXDeviceUnverified);
-
-                [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-
-                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:@"Hello I'm Alice!"  senderSession:aliceSession]);
-                    
+                [roomFromAlicePOV sendTextMessage:aliceMessages[1] success:nil failure:^(NSError *error) {
+                    XCTFail(@"Alice should be able to send message #1 - error: %@", error);
                     [expectation fulfill];
                 }];
 
-                // Retry sending
-                [roomFromAlicePOV sendTextMessage:@"Hello I'm Alice!" success:nil failure:^(NSError *error) {
-                    XCTFail(@"The operation should not fail this time- NSError: %@", error);
-                    [expectation fulfill];
-                }];
             }];
+
         }];
     }];
+
 }
 
 

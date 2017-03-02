@@ -900,6 +900,29 @@
 #endif
 }
 
+
+#pragma mark - Crypto settings
+- (BOOL)globalBlacklistUnverifiedDevices
+{
+    return _store.globalBlacklistUnverifiedDevices;
+}
+
+- (void)setGlobalBlacklistUnverifiedDevices:(BOOL)globalBlacklistUnverifiedDevices
+{
+    _store.globalBlacklistUnverifiedDevices = globalBlacklistUnverifiedDevices;
+}
+
+- (BOOL)isBlacklistUnverifiedDevicesInRoom:(NSString *)roomId
+{
+    return NO;
+}
+
+- (void)setBlacklistUnverifiedDevicesInRoom:(NSString *)roomId blacklist:(BOOL)blacklist
+{
+    
+}
+
+
 #pragma mark - Private API
 
 #ifdef MX_CRYPTO

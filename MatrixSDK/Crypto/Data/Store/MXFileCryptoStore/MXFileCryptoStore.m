@@ -280,6 +280,7 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 
 - (NSString *)deviceSyncToken
 {
+    // MXFileCryptoStore is no more supported
     return nil;
 }
 
@@ -613,6 +614,10 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 
     return description;
 }
+
+#pragma mark - Crypto settings
+
+@synthesize globalBlacklistUnverifiedDevices;
 
 @end
 
