@@ -181,6 +181,8 @@
     // an m.new_device.
     return [crypto.deviceList downloadKeys:users forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *devices) {
 
+        BOOL encryptToVerifiedDevicesOnly = crypto.globalBlacklistUnverifiedDevices;// || [crypto isBlacklistUnverifiedDevicesInRoom:roomId];
+
         MXUsersDevicesMap<MXDeviceInfo*> *devicesInRoom = [[MXUsersDevicesMap alloc] init];
         MXUsersDevicesMap<MXDeviceInfo*> *unknownDevices = [[MXUsersDevicesMap alloc] init];
 
@@ -197,7 +199,8 @@
                     continue;
                 }
 
-                if (deviceInfo.verified == MXDeviceBlocked)
+                if (deviceInfo.verified == MXDeviceBlocked
+                    || (deviceInfo.verified != MXDeviceVerified && encryptToVerifiedDevicesOnly))
                 {
                     // Remove any blocked devices
                     continue;

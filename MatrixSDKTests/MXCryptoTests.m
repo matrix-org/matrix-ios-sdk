@@ -1411,19 +1411,19 @@
 // Alice sends another message #1
 // Checks that the Bob and Sam devices receive the message and can decrypt it.
 
-// Alice black lists the unverified devices
+// Alice blacklists the unverified devices
 // Alice sends a message #2
 // checks that the Sam and the Bob devices receive the message but it cannot be decrypted
 
-// Alice unblack-lists the unverified devices
+// Alice unblacklists the unverified devices
 // Alice sends a message #3
 // checks that the Sam and the Bob devices receive the message and it can be decrypted on the both devices
 
-// Alice verifies the Bob device and black lists the unverified devices in the current room.
+// Alice verifies the Bob device and blacklists the unverified devices in the current room.
 // Alice sends a message #4
 // Check that the message can be decrypted by Bob's device but not by Sam's device
 
-// Alice unblack-lists the unverified devices in the current room
+// Alice unblacklists the unverified devices in the current room
 // Alice sends a message #5
 // Check that the message can be decrypted by the Bob's device and the Sam's device
 - (void)testBlackListUnverifiedDevices
@@ -1458,17 +1458,67 @@
                     XCTAssertEqual(event.eventType, MXEventTypeRoomEncrypted);
                     XCTAssertNil(event.clearEvent);
                     XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorUnknownInboundSessionIdCode);
-                    //break; // @TODO: TBC
-                    
+                    break;
+
+                case 3:
+                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:aliceMessages[3] senderSession:aliceSession]);
+                    break;
+
+                case 4:
+                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:aliceMessages[4] senderSession:aliceSession]);
+                    break;
+
+                case 5:
+                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:aliceMessages[5] senderSession:aliceSession]);
+
+                    if (samMessageCount > 5)
+                    {
+                        [expectation fulfill];
+                    }
+                    break;
+
                 default:
-                    [expectation fulfill];
                     break;
             }
         }];
 
         [roomFromSamPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-            // @TODO
+
+            switch (samMessageCount++)
+            {
+                case 1:
+                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:aliceMessages[1] senderSession:aliceSession]);
+                    break;
+
+                case 2:
+                    XCTAssertEqual(event.eventType, MXEventTypeRoomEncrypted);
+                    XCTAssertNil(event.clearEvent);
+                    XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorUnknownInboundSessionIdCode);
+                    break;
+
+                case 3:
+                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:aliceMessages[3] senderSession:aliceSession]);
+                    break;
+
+                case 4:
+                    XCTAssertEqual(event.eventType, MXEventTypeRoomEncrypted);
+                    XCTAssertNil(event.clearEvent);
+                    XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorUnknownInboundSessionIdCode);
+                    break;
+
+                case 5:
+                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:aliceMessages[5] senderSession:aliceSession]);
+
+                    if (bobMessageCount > 5)
+                    {
+                        [expectation fulfill];
+                    }
+                    break;
+
+                default:
+                    break;
+            }
         }];
 
 
@@ -1495,7 +1545,7 @@
                 {
                     case 1:
                     {
-                        // Alice black lists the unverified devices
+                        // Alice blacklists the unverified devices
                         aliceSession.crypto.globalBlacklistUnverifiedDevices = YES;
 
                         [roomFromAlicePOV sendTextMessage:aliceMessages[2] success:nil failure:^(NSError *error) {
@@ -1506,7 +1556,52 @@
                         break;
                     }
 
-                    // @TODO: TBC
+                    case 2:
+                    {
+                        // Alice unblacklists the unverified devices
+                        aliceSession.crypto.globalBlacklistUnverifiedDevices = NO;
+
+                        [roomFromAlicePOV sendTextMessage:aliceMessages[3] success:nil failure:^(NSError *error) {
+                            XCTFail(@"Alice should be able to send message #3 - error: %@", error);
+                            [expectation fulfill];
+                        }];
+
+                        break;
+                    }
+
+                    case 3:
+                    {
+                        // Alice verifies the Bob device and blacklists the unverified devices in the current room
+                        aliceSession.crypto.globalBlacklistUnverifiedDevices = YES;
+
+                        NSString *bobDeviceId = [unknownDevices deviceIdsForUser:bobSession.myUser.userId][0];
+                        [aliceSession.crypto setDeviceVerification:MXDeviceVerified forDevice:bobDeviceId ofUser:bobSession.myUser.userId success:^{
+
+                            [roomFromAlicePOV sendTextMessage:aliceMessages[4] success:nil failure:^(NSError *error) {
+                                XCTFail(@"Alice should be able to send message #4 - error: %@", error);
+                                [expectation fulfill];
+                            }];
+
+                        } failure:^(NSError *error) {
+                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                            [expectation fulfill];
+                        }];
+
+                        break;
+                    }
+
+                    case 4:
+                    {
+                        // Alice unblacklists the unverified devices
+                        aliceSession.crypto.globalBlacklistUnverifiedDevices = NO;
+
+                        [roomFromAlicePOV sendTextMessage:aliceMessages[5] success:nil failure:^(NSError *error) {
+                            XCTFail(@"Alice should be able to send message #5 - error: %@", error);
+                            [expectation fulfill];
+                        }];
+
+                        break;
+                    }
 
                     default:
                         break;
