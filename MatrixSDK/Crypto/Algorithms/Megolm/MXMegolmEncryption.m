@@ -42,6 +42,15 @@
  */
 - (BOOL)needsRotation:(NSUInteger)rotationPeriodMsgs rotationPeriodMs:(NSUInteger)rotationPeriodMs;
 
+/**
+ Determine if this session has been shared with devices which it shouldn't
+ have been.
+
+ @param devicesInRoom userId -> {deviceId -> object} devices we should shared the session with.
+ @return YES if we have shared the session with devices which aren't in devicesInRoom.
+ */
+- (BOOL)sharedWithTooManyDevices:(MXUsersDevicesMap<MXDeviceInfo *> *)devicesInRoom;
+
 // The id of the session
 @property (nonatomic, readonly) NSString *sessionId;
 
@@ -127,90 +136,59 @@
 
     NSDate *startDate = [NSDate date];
 
-    return [self ensureOutboundSessionWithUsers:users success:^(MXOutboundSessionInfo *session) {
+    MXHTTPOperation *operation = [self getDevicesInRoom:users success:^(MXUsersDevicesMap<MXDeviceInfo *> *devicesInRoom) {
 
-        NSLog(@"[MXMegolmEncryption] ensureOutboundSessionInRoom took %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
-        
-        [self processPendingEncryptionsInSession:session withError:nil];
+        MXHTTPOperation *operation2 = [self ensureOutboundSession:devicesInRoom success:^(MXOutboundSessionInfo *session) {
+
+            NSLog(@"[MXMegolmEncryption] ensureOutboundSessionInRoom took %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+
+            [self processPendingEncryptionsInSession:session withError:nil];
+
+        } failure:^(NSError *error) {
+            [self processPendingEncryptionsInSession:nil withError:error];
+        }];
+
+        if (operation2)
+        {
+            [operation mutateTo:operation2];
+        }
 
     } failure:^(NSError *error) {
         [self processPendingEncryptionsInSession:nil withError:error];
     }];
-}
 
-- (void)onRoomMembership:(NSString*)userId oldMembership:(MXMembership)oldMembership newMembership:(MXMembership)newMembership;
-{
-    if (newMembership == MXMembershipJoin || newMembership == MXMembershipInvite)
-    {
-        return;
-    }
-
-    // Otherwise we assume the user is leaving, and start a new outbound session.
-    NSLog(@"[MXMegolmEncryption] Discarding outbound megolm session in %@ due to change in membership of %@ (%tu -> %tu)", roomId, userId, oldMembership, newMembership);
-
-    // This ensures that we will start a new session on the next message.
-    outboundSession = nil;
-}
-
-- (void)onDeviceVerification:(MXDeviceInfo*)device oldVerified:(MXDeviceVerification)oldVerified
-{
-    if (device.verified == MXDeviceBlocked)
-    {
-        NSLog(@"[MXMegolmEncryption] Discarding outbound megolm session in %@ due to the blacklisting of %@", roomId, device);
-        outboundSession = nil;
-    }
-
-    // In other cases, the key will be shared to this device on the next
-    // message thanks to [self ensureOutboundSessionInRoom]
+    return operation;
 }
 
 
 #pragma mark - Private methods
 
-/**
- * @private
- *
- * @param {module:models/room} room
- *
- * @return {module:client.Promise} Promise which resolves to the megolm
- *   sessionId when setup is complete.
- */
-- (MXHTTPOperation *)ensureOutboundSessionWithUsers:(NSArray<NSString*>*)users
-                                            success:(void (^)(MXOutboundSessionInfo *session))success
-                                            failure:(void (^)(NSError *))failure
+/*
+ Get the list of devices which can encrypt data to.
+
+ @param users the users whose devices must be checked.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+*/
+- (MXHTTPOperation *)getDevicesInRoom:(NSArray<NSString*>*)users
+                              success:(void (^)(MXUsersDevicesMap<MXDeviceInfo *> *devicesInRoom))success
+                              failure:(void (^)(NSError *))failure
 {
-    MXOutboundSessionInfo *session = outboundSession;
-
-    // Need to make a brand new session?
-    if (!session || [session needsRotation:sessionRotationPeriodMsgs rotationPeriodMs:sessionRotationPeriodMs])
-    {
-        outboundSession = session = [self prepareNewSession];
-   }
-
-    if (session.shareOperation)
-    {
-        // Prep already in progress
-        return session.shareOperation;
-    }
-
-    // No share in progress: check if we need to share with any devices
-
-    // Get all keys of all users devices
     // We are happy to use a cached version here: we assume that if we already
     // have a list of the user's devices, then we already share an e2e room
     // with them, which means that they will have announced any new devices via
     // an m.new_device.
-    session.shareOperation = [crypto.deviceList downloadKeys:users forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *devicesInRoom) {
+    return [crypto.deviceList downloadKeys:users forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *devices) {
 
+        MXUsersDevicesMap<MXDeviceInfo*> *devicesInRoom = [[MXUsersDevicesMap alloc] init];
         MXUsersDevicesMap<MXDeviceInfo*> *unknownDevices = [[MXUsersDevicesMap alloc] init];
 
-        NSMutableDictionary<NSString* /* userId */, NSMutableArray<MXDeviceInfo*>*> *shareMap = [NSMutableDictionary dictionary];
-
-        for (NSString *userId in devicesInRoom.userIds)
+        for (NSString *userId in devices.userIds)
         {
-            for (NSString *deviceID in [devicesInRoom deviceIdsForUser:userId])
+            for (NSString *deviceID in [devices deviceIdsForUser:userId])
             {
-                MXDeviceInfo *deviceInfo = [devicesInRoom objectForDevice:deviceID forUser:userId];
+                MXDeviceInfo *deviceInfo = [devices objectForDevice:deviceID forUser:userId];
 
                 if (crypto.warnOnUnknowDevices && deviceInfo.verified == MXDeviceUnknown)
                 {
@@ -221,6 +199,7 @@
 
                 if (deviceInfo.verified == MXDeviceBlocked)
                 {
+                    // Remove any blocked devices
                     continue;
                 }
 
@@ -230,20 +209,17 @@
                     continue;
                 }
 
-                if (![session.sharedWithDevices objectForDevice:deviceID forUser:userId])
-                {
-                    if (!shareMap[userId])
-                    {
-                        shareMap[userId] = [NSMutableArray array];
-                    }
-                    [shareMap[userId] addObject:deviceInfo];
-                }
+                [devicesInRoom setObject:deviceInfo forUser:userId andDevice:deviceID];
             }
         }
 
         // Check if any of these devices are not yet known to the user.
         // if so, warn the user so they can verify or ignore.
-        if (unknownDevices.count)
+        if (!unknownDevices.count)
+        {
+            success(devicesInRoom);
+        }
+        else
         {
             NSError *error = [NSError errorWithDomain:MXEncryptingErrorDomain
                                                  code:MXEncryptingErrorUnknownDeviceCode
@@ -251,31 +227,79 @@
                                                         NSLocalizedDescriptionKey: MXEncryptingErrorUnknownDeviceReason,
                                                         @"MXEncryptingErrorUnknownDeviceDevicesKey": unknownDevices
                                                         }];
-
+            
             failure(error);
         }
 
-        MXHTTPOperation *operation = [self shareKey:session withDevices:shareMap success:^{
+    } failure: failure];
 
-            session.shareOperation = nil;
-            success(session);
+}
 
-        } failure:^(NSError *error) {
+/**
+ Ensure that we have an outbound session ready for the devices in the room.
 
-            session.shareOperation = nil;
-            failure(error);
-        }];
+ @param devicesInRoom the devices in the room.
 
-        if (operation)
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (MXHTTPOperation *)ensureOutboundSession:(MXUsersDevicesMap<MXDeviceInfo *> *)devicesInRoom
+                                   success:(void (^)(MXOutboundSessionInfo *session))success
+                                   failure:(void (^)(NSError *))failure
+{
+    MXOutboundSessionInfo *session = outboundSession;
+
+    // Need to make a brand new session?
+    if (session && [session needsRotation:sessionRotationPeriodMsgs rotationPeriodMs:sessionRotationPeriodMs])
+    {
+        session = nil;
+    }
+
+    // Determine if we have shared with anyone we shouldn't have
+    if (session && [session sharedWithTooManyDevices:devicesInRoom])
+    {
+        session = nil;
+    }
+
+    if (!session)
+    {
+        outboundSession = session = [self prepareNewSession];
+    }
+
+    if (session.shareOperation)
+    {
+        // Prep already in progress
+        return session.shareOperation;
+    }
+
+    // No share in progress: Share the current setup
+
+    NSMutableDictionary<NSString* /* userId */, NSMutableArray<MXDeviceInfo*>*> *shareMap = [NSMutableDictionary dictionary];
+
+    for (NSString *userId in devicesInRoom.userIds)
+    {
+        for (NSString *deviceID in [devicesInRoom deviceIdsForUser:userId])
         {
-            [session.shareOperation mutateTo:operation];
+            MXDeviceInfo *deviceInfo = [devicesInRoom objectForDevice:deviceID forUser:userId];
+
+            if (![session.sharedWithDevices objectForDevice:deviceID forUser:userId])
+            {
+                if (!shareMap[userId])
+                {
+                    shareMap[userId] = [NSMutableArray array];
+                }
+                [shareMap[userId] addObject:deviceInfo];
+            }
         }
-        else
-        {
-            session.shareOperation = nil;
-        }
+    }
+
+    session.shareOperation = [self shareKey:session withDevices:shareMap success:^{
+
+        session.shareOperation = nil;
+        success(session);
 
     } failure:^(NSError *error) {
+
         session.shareOperation = nil;
         failure(error);
     }];
@@ -474,6 +498,30 @@
     }
 
     return needsRotation;
+}
+
+- (BOOL)sharedWithTooManyDevices:(MXUsersDevicesMap<MXDeviceInfo *> *)devicesInRoom
+{
+    for (NSString *userId in _sharedWithDevices.userIds)
+    {
+        if (![devicesInRoom deviceIdsForUser:userId])
+        {
+            NSLog(@"Starting new session because we shared with %@",  userId);
+            return YES;
+        }
+
+        for (NSString *deviceId in [_sharedWithDevices deviceIdsForUser:userId])
+        {
+
+            if (! [devicesInRoom objectForDevice:deviceId forUser:userId])
+            {
+                NSLog(@"Starting new session because we shared with %@:%@", userId, deviceId);
+                return YES;
+            }
+        }
+    }
+
+    return NO;
 }
 
 @end
