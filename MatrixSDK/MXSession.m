@@ -33,12 +33,6 @@
 
 #import "MXAccountData.h"
 
-#ifdef MX_GA
-#import "GAI.h"
-#import "GAIFields.h"
-#import "GAIDictionaryBuilder.h"
-#endif
-
 #pragma mark - Constants definitions
 
 const NSString *MatrixSDKVersion = @"0.7.7";
@@ -279,19 +273,10 @@ typedef void (^MXOnResumeDone)();
 
                 NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
 
-                NSTimeInterval durationMs = [[NSDate date] timeIntervalSinceDate:startDate] * 1000;
-                NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", durationMs);
+                NSTimeInterval duration = [[NSDate date] timeIntervalSinceDate:startDate];
+                NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", duration * 1000);
 
-#ifdef MX_GA
-                if ([MXSDKOptions sharedInstance].enableGoogleAnalytics)
-                {
-                    id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
-                    [tracker send:[[GAIDictionaryBuilder createTimingWithCategory:kMXGoogleAnalyticsStartupCategory
-                                                                         interval:@((int)durationMs)
-                                                                             name:kMXGoogleAnalyticsStartupMountData
-                                                                            label:nil] build]];
-                }
-#endif
+                [[MXSDKOptions sharedInstance].analyticsDelegate trackStartupMountDataDuration:duration];
 
                 [self setState:MXSessionStateStoreDataReady];
 
@@ -711,29 +696,17 @@ typedef void (^MXOnResumeDone)();
             return;
         }
 
-        NSTimeInterval durationMs = [[NSDate date] timeIntervalSinceDate:startDate] * 1000;
-        NSLog(@"[MXSession] Received %tu joined rooms, %tu invited rooms, %tu left rooms in %.0fms", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, durationMs);
+        NSTimeInterval duration = [[NSDate date] timeIntervalSinceDate:startDate];
+        NSLog(@"[MXSession] Received %tu joined rooms, %tu invited rooms, %tu left rooms in %.0fms", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, duration * 1000);
 
         // Check whether this is the initial sync
         BOOL isInitialSync = !_store.eventStreamToken;
 
-#ifdef MX_GA
         if (!firstSyncDone)
         {
             firstSyncDone = YES;
-
-            // Send stat on the first sync.
-            // This is either an initial sync or an incremental sync from the data of the store
-            if ([MXSDKOptions sharedInstance].enableGoogleAnalytics)
-            {
-                id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
-                [tracker send:[[GAIDictionaryBuilder createTimingWithCategory:kMXGoogleAnalyticsStartupCategory
-                                                                     interval:@((int)durationMs)
-                                                                         name:(isInitialSync ? kMXGoogleAnalyticsStartupInititialSync : kMXGoogleAnalyticsStartupIncrementalSync)
-                                                                        label:nil] build]];
-            }
+            [[MXSDKOptions sharedInstance].analyticsDelegate trackStartupSyncDuration:duration isInitial:isInitialSync];
         }
-#endif
 
         // Handle top-level account data
         if (syncResponse.accountData)
@@ -937,16 +910,7 @@ typedef void (^MXOnResumeDone)();
         // Pursue live events listening (long polling)
         [self serverSyncWithServerTimeout:SERVER_TIMEOUT_MS success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
 
-#ifdef MX_GA
-        if ([MXSDKOptions sharedInstance].enableGoogleAnalytics && isInitialSync)
-        {
-            id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
-            [tracker send:[[GAIDictionaryBuilder createEventWithCategory:kMXGoogleAnalyticsStatsCategory
-                                                                  action:kMXGoogleAnalyticsStatsRooms
-                                                                   label:nil
-                                                                   value:@(rooms.count)] build]];
-        }
-#endif
+        [[MXSDKOptions sharedInstance].analyticsDelegate trackRoomCount:rooms.count];
 
         // Broadcast that a server sync has been processed.
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidSyncNotification

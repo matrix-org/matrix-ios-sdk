@@ -30,11 +30,7 @@
 
 #import "MXEnumConstants.h"
 
-#ifdef MX_GA
-#import "GAI.h"
-#import "GAIFields.h"
-#import "GAIDictionaryBuilder.h"
-#endif
+#import "MXSDKOptions.h"
 
 NSUInteger const kMXFileVersion = 37;
 
@@ -196,19 +192,10 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
                 [self loadReceipts];
                 [self loadUsers];
 
-                NSTimeInterval durationMs = [[NSDate date] timeIntervalSinceDate:startDate] * 1000;
-                NSLog(@"[MXFileStore] Data loaded from files in %.0fms", durationMs);
+                NSTimeInterval duration = [[NSDate date] timeIntervalSinceDate:startDate];
+                NSLog(@"[MXFileStore] Data loaded from files in %.0fms", duration * 1000);
 
-#ifdef MX_GA
-                if ([MXSDKOptions sharedInstance].enableGoogleAnalytics)
-                {
-                    id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
-                    [tracker send:[[GAIDictionaryBuilder createTimingWithCategory:kMXGoogleAnalyticsStartupCategory
-                                                                         interval:@((int)durationMs)
-                                                                             name:kMXGoogleAnalyticsStartupStorePreload
-                                                                            label:nil] build]];
-                }
-#endif
+                [[MXSDKOptions sharedInstance].analyticsDelegate trackStartupStorePreloadDuration:duration];
             }
 
             // Else, if credentials is valid, create and store it

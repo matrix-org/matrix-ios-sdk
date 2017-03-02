@@ -1,5 +1,5 @@
 /*
- Copyright 2015 OpenMarket Ltd
+ Copyright 2017 Avery Pierce
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -14,28 +14,14 @@
  limitations under the License.
  */
 
-#import "MXSDKOptions.h"
-#import "MXGoogleAnalytics.h"
+#import <Foundation/Foundation.h>
+#import "MXAnalyticsDelegate.h"
 
-static MXSDKOptions *sharedOnceInstance = nil;
-
-@implementation MXSDKOptions
-
-+ (MXSDKOptions *)sharedInstance
-{
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{ sharedOnceInstance = [[self alloc] init]; });
-    return sharedOnceInstance;
-}
-
-- (instancetype)init
-{
-    self = [super init];
-    if (self)
-    {
-        self.analyticsDelegate = [[MXGoogleAnalytics alloc] init];
-    }
-    return self;
-}
-
+/**
+ The `MXGoogleAnalytics` class is an implementation of the 
+ `MXAnalyticsDelegate` that reports stats to Google analytics.
+ If the Google Analytics library is not available at runtime,
+ this class does nothing.
+ */
+@interface MXGoogleAnalytics : NSObject <MXAnalyticsDelegate>
 @end
