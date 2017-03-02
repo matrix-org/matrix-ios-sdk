@@ -160,14 +160,6 @@
     return operation;
 }
 
-- (void)onRoomMembership:(NSString*)userId oldMembership:(MXMembership)oldMembership newMembership:(MXMembership)newMembership;
-{
-}
-
-- (void)onDeviceVerification:(MXDeviceInfo*)device oldVerified:(MXDeviceVerification)oldVerified
-{
-}
-
 
 #pragma mark - Private methods
 

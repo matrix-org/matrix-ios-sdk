@@ -49,21 +49,4 @@
                                 success:(void (^)(NSDictionary *encryptedContent))success
                                 failure:(void (^)(NSError *error))failure;
 
-/**
- Called when the membership of a member of the room changes.
-
- @param userId the user whose membership changed.
- @param oldMembership the previous membership.
- @param newMembership the new membership.
- */
-- (void)onRoomMembership:(NSString*)userId oldMembership:(MXMembership)oldMembership newMembership:(MXMembership)newMembership;
-
-/**
- Called when the verification status of a device changes.
- 
- @param device the device which the 'verified' property changed.
- @param oldVerified the old verification status.
- */
-- (void)onDeviceVerification:(MXDeviceInfo*)device oldVerified:(MXDeviceVerification)oldVerified;
-
 @end
