@@ -15,7 +15,6 @@
  */
 
 #import "MXSDKOptions.h"
-#import "MXGoogleAnalytics.h"
 
 static MXSDKOptions *sharedOnceInstance = nil;
 
@@ -33,7 +32,15 @@ static MXSDKOptions *sharedOnceInstance = nil;
     self = [super init];
     if (self)
     {
-        self.analyticsDelegate = [[MXGoogleAnalytics alloc] init];
+        Class mxGoogleAnalyticsClass = NSClassFromString(@"MXGoogleAnalytics");
+        if (mxGoogleAnalyticsClass != nil)
+        {
+            self.analyticsDelegate = [[mxGoogleAnalyticsClass alloc] init];
+        }
+        else
+        {
+            self.analyticsDelegate = nil;
+        }
     }
     return self;
 }

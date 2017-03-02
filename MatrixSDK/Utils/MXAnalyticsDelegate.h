@@ -31,6 +31,10 @@
  which sends timing events in milliseconds to Google Analytics. If you
  do not have the Google Analytics framework/library included in your client
  project, the MXGoogleAnalytics class does nothing.
+ 
+ If you are using the Swift-enabled variation of MatrixSDK (named
+ "SwiftMatrixSDK"), the MXGoogleAnalytics class will be unavailable and the
+ default analyticsDelegate will be nil.
  */
 @protocol MXAnalyticsDelegate <NSObject>
 
