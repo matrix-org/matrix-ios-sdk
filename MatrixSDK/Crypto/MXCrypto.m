@@ -574,20 +574,8 @@
 
         if (device.verified != verificationStatus)
         {
-            MXDeviceVerification oldVerified = device.verified;
-
             device.verified = verificationStatus;
             [_store storeDeviceForUser:userId device:device];
-
-            // Report the change to all outbound sessions with this device
-            for (NSString *roomId in userRooms)
-            {
-                id<MXEncrypting> alg = roomEncryptors[roomId];
-                if (alg)
-                {
-                    [alg onDeviceVerification:device oldVerified:oldVerified];
-                }
-            }
         }
 
         if (success)
@@ -1530,17 +1518,13 @@
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onToDeviceEvent:) name:kMXSessionOnToDeviceEventNotification object:mxSession];
 
         // Observe membership changes
-        roomMembershipEventsListener = [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption, kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
+        roomMembershipEventsListener = [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
 
             if (direction == MXTimelineDirectionForwards)
             {
                 if (event.eventType == MXEventTypeRoomEncryption)
                 {
                     [self onCryptoEvent:event];
-                }
-                if (event.eventType == MXEventTypeRoomMember)
-                {
-                    [self onRoomMembership:event];
                 }
             }
         }];
@@ -1752,42 +1736,6 @@
         });
     }
 };
-
-/**
- Handle a change in the membership state of a member of a room.
- 
- @param event the membership event causing the change
- */
-- (void)onRoomMembership:(MXEvent*)event
-{
-    id<MXEncrypting> alg = roomEncryptors[event.roomId];
-    if (!alg)
-    {
-        // No encrypting in this room
-        return;
-    }
-
-    NSString *userId = event.stateKey;
-    MXRoomMember *roomMember = [[mxSession roomWithRoomId:event.roomId].state memberWithUserId:userId];
-
-    if (roomMember)
-    {
-        MXRoomMemberEventContent *roomMemberPrevContent = [MXRoomMemberEventContent modelFromJSON:event.prevContent];
-        MXMembership oldMembership = [MXTools membership:roomMemberPrevContent.membership];
-        MXMembership newMembership = roomMember.membership;
-
-        if (_cryptoQueue)
-        {
-            dispatch_async(_cryptoQueue, ^{
-                [alg onRoomMembership:userId oldMembership:oldMembership newMembership:newMembership];
-            });
-        }
-    }
-    else
-    {
-        NSLog(@"[MXCrypto] onRoomMembership: Error cannot find the room member in event: %@", event);
-    }
-}
 
 /**
  Upload my user's device keys.

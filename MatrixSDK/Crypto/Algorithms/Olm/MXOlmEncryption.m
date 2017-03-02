@@ -94,21 +94,6 @@
     } failure:failure];
 }
 
-- (void)onRoomMembership:(NSString*)userId oldMembership:(MXMembership)oldMembership newMembership:(MXMembership)newMembership;
-{
-    // No impact for olm
-}
-
-- (void)onNewDevice:(NSString *)deviceId forUser:(NSString *)userId
-{
-    // No impact for olm
-}
-
-- (void)onDeviceVerification:(MXDeviceInfo *)device oldVerified:(MXDeviceVerification)oldVerified
-{
-    // No impact for olm
-}
-
 
 #pragma mark - Private methods
 - (MXHTTPOperation*)ensureSession:(NSArray<NSString*>*)users
