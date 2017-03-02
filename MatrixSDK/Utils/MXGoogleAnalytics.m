@@ -31,7 +31,6 @@
 
 - (void)trackStartupStorePreloadDuration: (NSTimeInterval)duration
 {
-    NSLog(@"Tracking Startup Duration (GA enabled)");
     if ([MXSDKOptions sharedInstance].enableGoogleAnalytics)
     {
         int milliseconds = (duration * 1000);
@@ -88,9 +87,7 @@
 // The Google Analytics Library is unavailable, so these methods are stubs.
 
 - (void)trackStartupStorePreloadDuration: (NSTimeInterval)duration
-{
-NSLog(@"Tracking Startup Duration (GA disabled)");
-}
+{}
 
 - (void)trackStartupMountDataDuration: (NSTimeInterval)duration
 {}
