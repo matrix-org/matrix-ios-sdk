@@ -240,6 +240,16 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 @property (nonatomic, readonly) MXSessionState state;
 
 /**
+ The flag indicating that we are trying to establish the event streams (/sync)
+ as quick as possible, even if there are no events queued. This is required in
+ some situations:
+    - When the connection dies, we want to know asap when it comes back (We don't
+      want to have to wait for an event or a timeout).
+    - We want to know if the server has any to-device messages queued up for us.
+ */
+@property (nonatomic, readonly) BOOL catchingUp;
+
+/**
  The profile of the current user.
  It is available only after the `onStoreDataReady` callback of `start` is called.
  */
