@@ -4092,7 +4092,7 @@ MXAuthAction;
                                                    }
                                          success:^(NSDictionary *JSONResponse) {
                                              
-                                             BOOL successValue;
+                                             BOOL successValue = NO;
                                              MXJSONModelSetBoolean(successValue, JSONResponse[@"success"]);
                                              if (successValue)
                                              {
