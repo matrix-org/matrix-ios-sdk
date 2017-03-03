@@ -4092,7 +4092,9 @@ MXAuthAction;
                                                    }
                                          success:^(NSDictionary *JSONResponse) {
                                              
-                                             if (!JSONResponse[@"errcode"])
+                                             BOOL successValue;
+                                             MXJSONModelSetBoolean(successValue, JSONResponse[@"success"]);
+                                             if (successValue)
                                              {
                                                  if (success && processingQueue)
                                                  {
@@ -4110,15 +4112,15 @@ MXAuthAction;
                                              }
                                              else
                                              {
-                                                 // Build the error from the JSON data
-                                                 if (failure && JSONResponse[@"errcode"] && JSONResponse[@"error"] && processingQueue)
+                                                 // Suppose here the token is invalid
+                                                 if (failure && processingQueue)
                                                  {
                                                      dispatch_async(processingQueue, ^{
                                                          
                                                          if (completionQueue)
                                                          {
                                                              dispatch_async(completionQueue, ^{
-                                                                 MXError *error = [[MXError alloc] initWithErrorCode:JSONResponse[@"errcode"] error:JSONResponse[@"error"]];
+                                                                 MXError *error = [[MXError alloc] initWithErrorCode:kMXErrCodeStringUnknownToken error:kMXErrorStringInvalidToken];
                                                                  failure([error createNSError]);
                                                              });
                                                          }
