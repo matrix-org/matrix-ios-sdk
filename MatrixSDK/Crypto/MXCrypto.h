@@ -254,6 +254,41 @@
  */
 @property (nonatomic) BOOL warnOnUnknowDevices;
 
+/**
+ The global override for whether the client should ever send encrypted
+ messages to unverified devices.
+ 
+ This settings is stored in the crypto store.
+
+ If NO, it can still be overridden per-room.
+ If YES, it overrides the per-room settings.
+
+ Default is NO.
+ */
+@property (nonatomic) BOOL globalBlacklistUnverifiedDevices;
+
+/**
+ Tells whether the client should encrypt messages only for the verified devices
+ in this room.
+ 
+ Will be ignored if globalBlacklistUnverifiedDevices is YES.
+ This settings is stored in the crypto store.
+
+ The default value is NO.
+
+ @param roomId the room id.
+ @return YES if the client should encrypt messages only for the verified devices.
+ */
+- (BOOL)isBlacklistUnverifiedDevicesInRoom:(NSString *)roomId;
+
+/**
+ Set the blacklist of unverified devices in a room.
+ 
+ @param roomId the room id.
+ @param blacklist YES to encrypt messsages for only verified devices.
+ */
+- (void)setBlacklistUnverifiedDevicesInRoom:(NSString *)roomId blacklist:(BOOL)blacklist;
+
 @end
 
 
