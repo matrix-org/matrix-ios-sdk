@@ -706,7 +706,7 @@ typedef void (^MXOnResumeDone)();
     }
 
     // Determine if we are catching up
-	_catchingUp = (0 == serverTimeout);
+    _catchingUp = (0 == serverTimeout);
 
     eventStreamRequest = [matrixRestClient syncFromToken:_store.eventStreamToken serverTimeout:serverTimeout clientTimeout:clientTimeout setPresence:setPresence filter:inlineFilter success:^(MXSyncResponse *syncResponse) {
         
@@ -716,7 +716,7 @@ typedef void (^MXOnResumeDone)();
             return;
         }
 
-        // By default, the next sync will a long polling (with the default server timeout value)
+        // By default, the next sync will be a long polling (with the default server timeout value)
         NSUInteger nextServerTimeout = SERVER_TIMEOUT_MS;
 
         NSTimeInterval durationMs = [[NSDate date] timeIntervalSinceDate:startDate] * 1000;
@@ -758,7 +758,7 @@ typedef void (^MXOnResumeDone)();
 
         if (_catchingUp && syncResponse.toDevice.events.count)
         {
-            // We may have not received all to-device events
+            // We may have not received all to-device events in a single /sync response
             // Pursue /sync with short timeout
             NSLog(@"[MXSession] Continue /sync with short timeout to get all to-device events (%@)", _myUser.userId);
             nextServerTimeout = 0;
