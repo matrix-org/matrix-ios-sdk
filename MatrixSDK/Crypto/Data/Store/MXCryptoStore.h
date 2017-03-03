@@ -225,27 +225,27 @@
  */
 @property (nonatomic) BOOL globalBlacklistUnverifiedDevices;
 
-///**
-// Tells whether the client should encrypt messages only for the verified devices
-// in this room.
-//
-// Will be ignored if globalBlacklistUnverifiedDevices is YES.
-// This settings is stored in the crypto store.
-//
-// The default value is NO.
-//
-// @param roomId the room id.
-// @return YES if the client should encrypt messages only for the verified devices.
-// */
-//- (BOOL)isBlacklistUnverifiedDevicesInRoom:(NSString *)roomId;
-//
-///**
-// Set the blacklist of unverified devices in a room.
-//
-// @param roomId the room id.
-// @param blacklist YES to encrypt messsages for only verified devices.
-// */
-//- (void)setBlacklistUnverifiedDevicesInRoom:(NSString *)roomId blacklist:(BOOL)blacklist;
+/**
+ Tells whether the client should encrypt messages only for the verified devices
+ in this room.
+
+ Will be ignored if globalBlacklistUnverifiedDevices is YES.
+ This settings is stored in the crypto store.
+
+ The default value is NO.
+
+ @param roomId the room id.
+ @return YES if the client should encrypt messages only for the verified devices.
+ */
+- (BOOL)blacklistUnverifiedDevicesInRoom:(NSString *)roomId;
+
+/**
+ Set the blacklist of unverified devices in a room.
+
+ @param roomId the room id.
+ @param blacklist YES to encrypt messsages for only verified devices.
+ */
+- (void)storeBlacklistUnverifiedDevicesInRoom:(NSString *)roomId blacklist:(BOOL)blacklist;
 
 
 #pragma mark - Methods for unitary tests purpose

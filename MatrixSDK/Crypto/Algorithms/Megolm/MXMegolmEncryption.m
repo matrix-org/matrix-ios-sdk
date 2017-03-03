@@ -181,7 +181,7 @@
     // an m.new_device.
     return [crypto.deviceList downloadKeys:users forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *devices) {
 
-        BOOL encryptToVerifiedDevicesOnly = crypto.globalBlacklistUnverifiedDevices;// || [crypto isBlacklistUnverifiedDevicesInRoom:roomId];
+        BOOL encryptToVerifiedDevicesOnly = crypto.globalBlacklistUnverifiedDevices || [crypto isBlacklistUnverifiedDevicesInRoom:roomId];
 
         MXUsersDevicesMap<MXDeviceInfo*> *devicesInRoom = [[MXUsersDevicesMap alloc] init];
         MXUsersDevicesMap<MXDeviceInfo*> *unknownDevices = [[MXUsersDevicesMap alloc] init];

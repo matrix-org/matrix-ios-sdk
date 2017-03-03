@@ -902,12 +902,12 @@
 
 - (BOOL)isBlacklistUnverifiedDevicesInRoom:(NSString *)roomId
 {
-    return NO;
+    return [_store blacklistUnverifiedDevicesInRoom:roomId];
 }
 
 - (void)setBlacklistUnverifiedDevicesInRoom:(NSString *)roomId blacklist:(BOOL)blacklist
 {
-    
+    [_store storeBlacklistUnverifiedDevicesInRoom:roomId blacklist:blacklist];
 }
 
 

@@ -21,7 +21,7 @@
 #import <Realm/Realm.h>
 #import "MXSession.h"
 
-NSUInteger const kMXRealmCryptoStoreVersion = 3;
+NSUInteger const kMXRealmCryptoStoreVersion = 4;
 
 
 #pragma mark - Realm objects that encapsulate existing ones
@@ -53,9 +53,21 @@ RLM_ARRAY_TYPE(MXRealmUser)
 @interface MXRealmRoomAlgorithm : RLMObject
 @property NSString *roomId;
 @property NSString *algorithm;
+@property BOOL blacklistUnverifiedDevices;
 @end
 
 @implementation MXRealmRoomAlgorithm
+
+- (instancetype)init
+{
+    self = [super init];
+    if (self)
+    {
+        _blacklistUnverifiedDevices = NO;
+    }
+    return self;
+}
+
 + (NSString *)primaryKey
 {
     return @"roomId";
@@ -114,12 +126,23 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 @property (nonatomic) NSString *deviceSyncToken;
 
 /**
+ Settings for blacklisting unverified devices.
  */
 @property (nonatomic) BOOL globalBlacklistUnverifiedDevices;
-
 @end
 
 @implementation MXRealmOlmAccount
+
+- (instancetype)init
+{
+    self = [super init];
+    if (self)
+    {
+        _globalBlacklistUnverifiedDevices = NO;
+    }
+    return self;
+}
+
 + (NSString *)primaryKey
 {
     return @"userId";
@@ -170,7 +193,6 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                                                                           @"userId" : credentials.userId,
                                                                           }];
     account.deviceId = credentials.deviceId;
-    account.globalBlacklistUnverifiedDevices = NO;
 
     [realm beginWriteTransaction];
     [realm addObject:account];
@@ -408,24 +430,81 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
 - (void)storeAlgorithmForRoom:(NSString*)roomId algorithm:(NSString*)algorithm
 {
+    BOOL isNew = NO;
     NSDate *startDate = [NSDate date];
 
-    MXRealmRoomAlgorithm *roomAlgorithm = [[MXRealmRoomAlgorithm alloc] initWithValue:@{
-                                                                              @"roomId": roomId,
-                                                                              @"algorithm": algorithm
-                                                                              }];
     RLMRealm *realm = self.realm;
-    [realm transactionWithBlock:^{
-        [realm addObject:roomAlgorithm];
-    }];
 
-    NSLog(@"[MXRealmCryptoStore] storeAlgorithmForRoom in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    MXRealmRoomAlgorithm *roomAlgorithm = [self realmRoomAlgorithmForRoom:roomId inRealm:realm];
+    if (roomAlgorithm)
+    {
+        // Update the existing one
+        [realm transactionWithBlock:^{
+            roomAlgorithm.algorithm = algorithm;
+        }];
+    }
+    else
+    {
+        // Create it
+        isNew = YES;
+        roomAlgorithm = [[MXRealmRoomAlgorithm alloc] initWithValue:@{
+                                                                     @"roomId": roomId,
+                                                                     @"algorithm": algorithm
+                                                                     }];
+        [realm transactionWithBlock:^{
+            [realm addObject:roomAlgorithm];
+        }];
+    }
+
+    NSLog(@"[MXRealmCryptoStore] storeAlgorithmForRoom (%@) in %.0fms", (isNew?@"NEW":@"UPDATE"), [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (NSString*)algorithmForRoom:(NSString*)roomId
 {
-    return ((MXRealmRoomAlgorithm *)[MXRealmRoomAlgorithm objectsInRealm:self.realm where:@"roomId = %@", roomId].firstObject).algorithm;
+    return [self realmRoomAlgorithmForRoom:roomId inRealm:self.realm].algorithm;
 }
+
+- (void)storeBlacklistUnverifiedDevicesInRoom:(NSString *)roomId blacklist:(BOOL)blacklist
+{
+    BOOL isNew = NO;
+    NSDate *startDate = [NSDate date];
+
+    RLMRealm *realm = self.realm;
+
+    MXRealmRoomAlgorithm *roomAlgorithm = [self realmRoomAlgorithmForRoom:roomId inRealm:realm];
+    if (roomAlgorithm)
+    {
+        // Update the existing one
+        [realm transactionWithBlock:^{
+            roomAlgorithm.blacklistUnverifiedDevices = blacklist;
+        }];
+    }
+    else
+    {
+        // Create it
+        isNew = YES;
+        roomAlgorithm =     [[MXRealmRoomAlgorithm alloc] initWithValue:@{
+                                                                          @"roomId": roomId,
+                                                                          @"blacklist": @(blacklist)
+                                                                          }];
+        [realm transactionWithBlock:^{
+            [realm addObject:roomAlgorithm];
+        }];
+    }
+
+    NSLog(@"[MXRealmCryptoStore] storeBlacklistUnverifiedDevicesInRoom (%@) in %.0fms", (isNew?@"NEW":@"UPDATE"), [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+}
+
+- (BOOL)blacklistUnverifiedDevicesInRoom:(NSString *)roomId
+{
+    return [self realmRoomAlgorithmForRoom:roomId inRealm:self.realm].blacklistUnverifiedDevices;
+}
+
+- (MXRealmRoomAlgorithm *)realmRoomAlgorithmForRoom:(NSString*)roomId inRealm:(RLMRealm*)realm
+{
+    return [MXRealmRoomAlgorithm objectsInRealm:realm where:@"roomId = %@", roomId].firstObject;
+}
+
 
 - (void)storeSession:(OLMSession*)session forDevice:(NSString*)deviceKey
 {
@@ -554,6 +633,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     MXRealmOlmAccount *account = self.accountInCurrentThread;
     return account.globalBlacklistUnverifiedDevices;
 }
+
 - (void)setGlobalBlacklistUnverifiedDevices:(BOOL)globalBlacklistUnverifiedDevices
 {
     MXRealmOlmAccount *account = self.accountInCurrentThread;
@@ -661,6 +741,11 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                 case 2:
                 {
                     NSLog(@"[MXRealmCryptoStore] Migration from schema #2 -> #3: Nothing to do (add MXRealmOlmAccount.deviceSyncToken)");
+                }
+
+                case 3:
+                {
+                    NSLog(@"[MXRealmCryptoStore] Migration from schema #3 -> #4: Nothing to do (add MXRealmOlmAccount.globalBlacklistUnverifiedDevices & MXRealmRoomAlgortithm.blacklistUnverifiedDevices)");
                 }
             }
         }

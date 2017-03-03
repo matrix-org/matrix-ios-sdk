@@ -275,12 +275,12 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 
 - (void)storeDeviceSyncToken:(NSString *)deviceSyncToken
 {
-
+    // MXFileCryptoStore is still available for backward compatibility but it is no more supported
 }
 
 - (NSString *)deviceSyncToken
 {
-    // MXFileCryptoStore is no more supported
+    // MXFileCryptoStore is still available for backward compatibility but it is no more supported
     return nil;
 }
 
@@ -617,7 +617,19 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 
 #pragma mark - Crypto settings
 
+// MXFileCryptoStore is still available for backward compatibility but it is no more supported
 @synthesize globalBlacklistUnverifiedDevices;
+
+- (BOOL)blacklistUnverifiedDevicesInRoom:(NSString *)roomId
+{
+    // MXFileCryptoStore is still available for backward compatibility but it is no more supported
+    return NO;
+}
+
+- (void)storeBlacklistUnverifiedDevicesInRoom:(NSString *)roomId blacklist:(BOOL)blacklist
+{
+    // MXFileCryptoStore is still available for backward compatibility but it is no more supported
+}
 
 @end
 

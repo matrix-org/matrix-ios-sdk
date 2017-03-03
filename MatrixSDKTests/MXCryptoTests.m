@@ -1572,7 +1572,9 @@
                     case 3:
                     {
                         // Alice verifies the Bob device and blacklists the unverified devices in the current room
-                        aliceSession.crypto.globalBlacklistUnverifiedDevices = YES;
+                        XCTAssertFalse([aliceSession.crypto isBlacklistUnverifiedDevicesInRoom:roomId]);
+                        [aliceSession.crypto setBlacklistUnverifiedDevicesInRoom:roomId blacklist:YES];
+                        XCTAssert([aliceSession.crypto isBlacklistUnverifiedDevicesInRoom:roomId]);
 
                         NSString *bobDeviceId = [unknownDevices deviceIdsForUser:bobSession.myUser.userId][0];
                         [aliceSession.crypto setDeviceVerification:MXDeviceVerified forDevice:bobDeviceId ofUser:bobSession.myUser.userId success:^{
@@ -1593,7 +1595,9 @@
                     case 4:
                     {
                         // Alice unblacklists the unverified devices
-                        aliceSession.crypto.globalBlacklistUnverifiedDevices = NO;
+                        XCTAssert([aliceSession.crypto isBlacklistUnverifiedDevicesInRoom:roomId]);
+                        [aliceSession.crypto setBlacklistUnverifiedDevicesInRoom:roomId blacklist:NO];
+                        XCTAssertFalse([aliceSession.crypto isBlacklistUnverifiedDevicesInRoom:roomId]);
 
                         [roomFromAlicePOV sendTextMessage:aliceMessages[5] success:nil failure:^(NSError *error) {
                             XCTFail(@"Alice should be able to send message #5 - error: %@", error);
