@@ -892,22 +892,34 @@
 #pragma mark - Crypto settings
 - (BOOL)globalBlacklistUnverifiedDevices
 {
+#ifdef MX_CRYPTO
     return _store.globalBlacklistUnverifiedDevices;
+#else
+    return NO;
+#endif
 }
 
 - (void)setGlobalBlacklistUnverifiedDevices:(BOOL)globalBlacklistUnverifiedDevices
 {
+#ifdef MX_CRYPTO
     _store.globalBlacklistUnverifiedDevices = globalBlacklistUnverifiedDevices;
+#endif
 }
 
 - (BOOL)isBlacklistUnverifiedDevicesInRoom:(NSString *)roomId
 {
+#ifdef MX_CRYPTO
     return [_store blacklistUnverifiedDevicesInRoom:roomId];
+#else
+    return NO;
+#endif
 }
 
 - (void)setBlacklistUnverifiedDevicesInRoom:(NSString *)roomId blacklist:(BOOL)blacklist
 {
+#ifdef MX_CRYPTO
     [_store storeBlacklistUnverifiedDevicesInRoom:roomId blacklist:blacklist];
+#endif
 }
 
 
