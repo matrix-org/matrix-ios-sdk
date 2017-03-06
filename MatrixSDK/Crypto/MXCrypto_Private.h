@@ -76,20 +76,6 @@
  */
 @property (nonatomic, readonly) dispatch_queue_t decryptionQueue;
 
-/**
- Upload the device keys to the homeserver and ensure that the
- homeserver has enough one-time keys.
-
- @param maxKeys The maximum number of keys to generate.
- 
- @param success A block object called when the operation succeeds.
- @param failure A block object called when the operation fails.
-
- @return a MXHTTPOperation instance.
- */
-- (MXHTTPOperation*)uploadKeys:(NSUInteger)maxKeys
-                       success:(void (^)())success
-                       failure:(void (^)(NSError *))failure;
 
 /**
  Get the device which sent an event.

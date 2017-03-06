@@ -696,7 +696,11 @@ typedef void (^MXOnResumeDone)();
                         setPresence:(NSString*)setPresence
 {
     NSDate *startDate = [NSDate date];
-    NSLog(@"[MXSession] Do a server sync");
+
+    // Determine if we are catching up
+    _catchingUp = (0 == serverTimeout);
+
+    NSLog(@"[MXSession] Do a server sync%@", _catchingUp ? @" (catching up)" : @"");
 
     NSString *inlineFilter;
     if (-1 != syncMessagesLimit)
@@ -704,9 +708,6 @@ typedef void (^MXOnResumeDone)();
         // If requested by the app, use a limit for /sync.
         inlineFilter = [NSString stringWithFormat:@"{\"room\":{\"timeline\":{\"limit\":%tu}}}", syncMessagesLimit];
     }
-
-    // Determine if we are catching up
-    _catchingUp = (0 == serverTimeout);
 
     eventStreamRequest = [matrixRestClient syncFromToken:_store.eventStreamToken serverTimeout:serverTimeout clientTimeout:clientTimeout setPresence:setPresence filter:inlineFilter success:^(MXSyncResponse *syncResponse) {
         

@@ -41,6 +41,9 @@
 
 #ifdef MX_CRYPTO
 
+// Frequency with which to check & upload one-time keys
+NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
+
 @interface MXCrypto ()
 {
     // The Matrix session.
@@ -63,8 +66,11 @@
     // @TODO: could be removed
     NSDictionary *lastPublishedOneTimeKeys;
 
-    // Timer to periodically upload keys
-    NSTimer *uploadKeysTimer;
+    // Last time we check available one-time keys on the homeserver
+    NSDate *lastOneTimeKeyCheck;
+
+    // The current one-time key operation, if any
+    MXHTTPOperation *uploadOneTimeKeysOperation;
 
     // The operation used for crypto starting requests
     MXHTTPOperation *startOperation;
@@ -198,7 +204,7 @@
     NSMutableDictionary *roomsByUser = [self usersToMakeAnnouncement];
 
     // Start uploading user device keys
-    startOperation = [self uploadKeys:5 success:^{
+    startOperation = [self uploadDeviceKeys:^(MXKeysUploadResponse *keysUploadResponse) {
 
         if (!startOperation)
         {
@@ -206,7 +212,7 @@
         }
 
         NSLog(@"[MXCrypto] start ###########################################################");
-        NSLog(@" uploadKeys done for %@: ", mxSession.myUser.userId);
+        NSLog(@" uploadDeviceKeys done for %@: ", mxSession.myUser.userId);
 
         NSLog(@"   - device id  : %@", _store.deviceId);
         NSLog(@"   - ed25519    : %@", _olmDevice.deviceEd25519Key);
@@ -218,16 +224,6 @@
 
         // Once keys are uploaded, make sure we announce ourselves
         MXHTTPOperation *operation2 = [self makeAnnoucement:roomsByUser success:^{
-
-            // Start periodic timer for uploading keys
-            uploadKeysTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:10 * 60]
-                                                       interval:10 * 60   // 10 min
-                                                         target:self
-                                                       selector:@selector(uploadKeys)
-                                                       userInfo:nil
-                                                        repeats:YES];
-            [[NSRunLoop mainRunLoop] addTimer:uploadKeysTimer forMode:NSDefaultRunLoopMode];
-
             dispatch_async(dispatch_get_main_queue(), ^{
                 startOperation = nil;
                 success();
@@ -246,7 +242,7 @@
         }
 
     } failure:^(NSError *error) {
-        NSLog(@"[MXCrypto] start. Error in uploadKeys");
+        NSLog(@"[MXCrypto] start. Error in uploadDeviceKeys");
         dispatch_async(dispatch_get_main_queue(), ^{
             startOperation = nil;
             failure(error);
@@ -269,9 +265,9 @@
 
     dispatch_async(_cryptoQueue, ^{
 
-        // Stop timer
-        [uploadKeysTimer invalidate];
-        uploadKeysTimer = nil;
+        // Cancel pending one-time keys upload
+        [uploadOneTimeKeysOperation cancel];
+        uploadOneTimeKeysOperation = nil;
 
         _olmDevice = nil;
         _cryptoQueue = nil;
@@ -425,6 +421,8 @@
 
     NSLog(@"[MXCrypto] handleDeviceListsChanged: %@", userIds);
 
+    BOOL isCatchingUp = mxSession.catchingUp;
+
     dispatch_async(_cryptoQueue, ^{
 
         // Flag users to refresh
@@ -482,14 +480,14 @@
             [_deviceList refreshOutdatedDeviceLists];
         }
 
-        // @TODO
-        // we don't start uploading one-time keys until we've caught up with
+        // We don't start uploading one-time keys until we've caught up with
         // to-device messages, to help us avoid throwing away one-time-keys that we
         // are about to receive messages for
         // (https://github.com/vector-im/riot-web/issues/2782).
-//        if (!syncData.catchingUp) {
-//            _maybeUploadOneTimeKeys(this);
-//        }
+        if (!isCatchingUp)
+        {
+            [self maybeUploadOneTimeKeys];
+        }
     });
 
 #endif
@@ -987,86 +985,6 @@
         
     }
     return self;
-}
-
-- (MXHTTPOperation *)uploadKeys:(NSUInteger)maxKeys
-                        success:(void (^)())success
-                        failure:(void (^)(NSError *))failure
-{
-    MXHTTPOperation *operation;
-    operation = [self uploadDeviceKeys:^(MXKeysUploadResponse *keysUploadResponse) {
-
-        // We need to keep a pool of one time public keys on the server so that
-        // other devices can start conversations with us. But we can only store
-        // a finite number of private keys in the olm Account object.
-        // To complicate things further then can be a delay between a device
-        // claiming a public one time key from the server and it sending us a
-        // message. We need to keep the corresponding private key locally until
-        // we receive the message.
-        // But that message might never arrive leaving us stuck with duff
-        // private keys clogging up our local storage.
-        // So we need some kind of enginering compromise to balance all of
-        // these factors.
-
-        // We first find how many keys the server has for us.
-        NSUInteger keyCount = [keysUploadResponse oneTimeKeyCountsForAlgorithm:@"signed_curve25519"];
-
-        // We then check how many keys we can store in the Account object.
-        CGFloat maxOneTimeKeys = _olmDevice.maxNumberOfOneTimeKeys;
-
-        // Try to keep at most half that number on the server. This leaves the
-        // rest of the slots free to hold keys that have been claimed from the
-        // server but we haven't recevied a message for.
-        // If we run out of slots when generating new keys then olm will
-        // discard the oldest private keys first. This will eventually clean
-        // out stale private keys that won't receive a message.
-        NSUInteger keyLimit = floor(maxOneTimeKeys / 2);
-
-        // We work out how many new keys we need to create to top up the server
-        // If there are too many keys on the server then we don't need to
-        // create any more keys.
-        NSUInteger numberToGenerate = MAX(keyLimit - keyCount, 0);
-
-        if (maxKeys)
-        {
-            // Creating keys can be an expensive operation so we limit the
-            // number we generate in one go to avoid blocking the application
-            // for too long.
-            numberToGenerate = MIN(numberToGenerate, maxKeys);
-
-            // Ask olm to generate new one time keys, then upload them to synapse.
-            [_olmDevice generateOneTimeKeys:numberToGenerate];
-            MXHTTPOperation *operation2 = [self uploadOneTimeKeys:success failure:failure];
-
-            // Mutate MXHTTPOperation so that the user can cancel this new operation
-            [operation mutateTo:operation2];
-        }
-        else
-        {
-            // If we don't need to generate any keys then we are done.
-            success();
-        }
-
-        if (numberToGenerate <= 0) {
-            return;
-        }
-
-    } failure:^(NSError *error) {
-        NSLog(@"[MXCrypto] uploadDeviceKeys fails.");
-        failure(error);
-    }];
-
-    return operation;
-}
-
-- (void)uploadKeys
-{
-    NSLog(@"[MXCrypto] Periodic uploadKeys");
-
-    [self uploadKeys:5 success:^{
-    } failure:^(NSError *error) {
-        NSLog(@"[MXCrypto] Periodic uploadKeys failed.");
-    }];
 }
 
 - (MXDeviceInfo *)eventSenderDeviceOfEvent:(MXEvent *)event
@@ -1774,6 +1692,94 @@
     // For now, we set the device id explicitly, as we may not be using the
     // same one as used in login.
     return [_matrixRestClient uploadKeys:myDevice.JSONDictionary oneTimeKeys:nil forDevice:myDevice.deviceId success:success failure:failure];
+}
+
+/**
+ Check if it's time to upload one-time keys, and do so if so.
+ */
+- (void)maybeUploadOneTimeKeys
+{
+    if (uploadOneTimeKeysOperation)
+    {
+        return;
+    }
+
+    NSDate *now = [NSDate date];
+    if (lastOneTimeKeyCheck && [now timeIntervalSinceDate:lastOneTimeKeyCheck] < kMXCryptoUploadOneTimeKeysPeriod)
+    {
+        // We've done a key upload recently.
+        return;
+    }
+
+    lastOneTimeKeyCheck = now;
+
+    NSLog(@"[MXCrypto] maybeUploadOneTimeKeys: Checking available one-time keys on the homeserver");
+
+    uploadOneTimeKeysOperation = [_matrixRestClient uploadKeys:myDevice.JSONDictionary oneTimeKeys:nil forDevice:myDevice.deviceId success:^(MXKeysUploadResponse *keysUploadResponse) {
+
+        if (!uploadOneTimeKeysOperation)
+        {
+            return;
+        }
+
+        // We need to keep a pool of one time public keys on the server so that
+        // other devices can start conversations with us. But we can only store
+        // a finite number of private keys in the olm Account object.
+        // To complicate things further then can be a delay between a device
+        // claiming a public one time key from the server and it sending us a
+        // message. We need to keep the corresponding private key locally until
+        // we receive the message.
+        // But that message might never arrive leaving us stuck with duff
+        // private keys clogging up our local storage.
+        // So we need some kind of enginering compromise to balance all of
+        // these factors.
+
+        // We first find how many keys the server has for us.
+        NSUInteger keyCount = [keysUploadResponse oneTimeKeyCountsForAlgorithm:@"signed_curve25519"];
+
+        NSLog(@"[MXCrypto] maybeUploadOneTimeKeys: one-time keys on the homeserver: %tu", keyCount);
+
+        // We then check how many keys we can store in the Account object.
+        CGFloat maxOneTimeKeys = _olmDevice.maxNumberOfOneTimeKeys;
+
+        // Try to keep at most half that number on the server. This leaves the
+        // rest of the slots free to hold keys that have been claimed from the
+        // server but we haven't recevied a message for.
+        // If we run out of slots when generating new keys then olm will
+        // discard the oldest private keys first. This will eventually clean
+        // out stale private keys that won't receive a message.
+        NSUInteger keyLimit = floor(maxOneTimeKeys / 2);
+
+        // We work out how many new keys we need to create to top up the server
+        // If there are too many keys on the server then we don't need to
+        // create any more keys.
+        NSUInteger numberToGenerate = MAX(keyLimit - keyCount, 0);
+        if (numberToGenerate)
+        {
+            // Ask olm to generate new one time keys, then upload them to synapse.
+            [_olmDevice generateOneTimeKeys:numberToGenerate];
+            MXHTTPOperation *operation2 = [self uploadOneTimeKeys:^(MXKeysUploadResponse *keysUploadResponse) {
+
+                uploadOneTimeKeysOperation = nil;
+
+            } failure:^(NSError *error) {
+                NSLog(@"[MXCrypto] maybeUploadOneTimeKeys: Failed to publish one-time keys. Error: %@", error);
+                uploadOneTimeKeysOperation = nil;
+            } ];
+
+            // Mutate MXHTTPOperation so that the user can cancel this new operation
+            [uploadOneTimeKeysOperation mutateTo:operation2];
+        }
+        else
+        {
+            // If we don't need to generate any keys then we are done.
+            uploadOneTimeKeysOperation = nil;
+        }
+
+    } failure:^(NSError *error) {
+        NSLog(@"[MXCrypto] maybeUploadOneTimeKeys: Get published one-time keys count failed. Error: %@", error);
+        uploadOneTimeKeysOperation = nil;
+    }];
 }
 
 /**
