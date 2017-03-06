@@ -196,6 +196,8 @@ typedef void (^MXOnResumeDone)();
                               kMXEventTypeStringCallInvite
                               ];
 
+        _catchingUp = NO;
+
         [self setState:MXSessionStateInitialised];
     }
     return self;
@@ -688,8 +690,8 @@ typedef void (^MXOnResumeDone)();
 #pragma mark - Server sync
 
 - (void)serverSyncWithServerTimeout:(NSUInteger)serverTimeout
-                      success:(void (^)())success
-                      failure:(void (^)(NSError *error))failure
+                            success:(void (^)())success
+                            failure:(void (^)(NSError *error))failure
                       clientTimeout:(NSUInteger)clientTimeout
                         setPresence:(NSString*)setPresence
 {
@@ -703,6 +705,9 @@ typedef void (^MXOnResumeDone)();
         inlineFilter = [NSString stringWithFormat:@"{\"room\":{\"timeline\":{\"limit\":%tu}}}", syncMessagesLimit];
     }
 
+    // Determine if we are catching up
+    _catchingUp = (0 == serverTimeout);
+
     eventStreamRequest = [matrixRestClient syncFromToken:_store.eventStreamToken serverTimeout:serverTimeout clientTimeout:clientTimeout setPresence:setPresence filter:inlineFilter success:^(MXSyncResponse *syncResponse) {
         
         // Make sure [MXSession close] or [MXSession pause] has not been called before the server response
@@ -710,6 +715,9 @@ typedef void (^MXOnResumeDone)();
         {
             return;
         }
+
+        // By default, the next sync will be a long polling (with the default server timeout value)
+        NSUInteger nextServerTimeout = SERVER_TIMEOUT_MS;
 
         NSTimeInterval durationMs = [[NSDate date] timeIntervalSinceDate:startDate] * 1000;
         NSLog(@"[MXSession] Received %tu joined rooms, %tu invited rooms, %tu left rooms in %.0fms", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, durationMs);
@@ -746,6 +754,14 @@ typedef void (^MXOnResumeDone)();
         for (MXEvent *toDeviceEvent in syncResponse.toDevice.events)
         {
             [self handleToDeviceEvent:toDeviceEvent];
+        }
+
+        if (_catchingUp && syncResponse.toDevice.events.count)
+        {
+            // We may have not received all to-device events in a single /sync response
+            // Pursue /sync with short timeout
+            NSLog(@"[MXSession] Continue /sync with short timeout to get all to-device events (%@)", _myUser.userId);
+            nextServerTimeout = 0;
         }
         
         // Handle first joined rooms
@@ -934,8 +950,8 @@ typedef void (^MXOnResumeDone)();
             return;
         }
         
-        // Pursue live events listening (long polling)
-        [self serverSyncWithServerTimeout:SERVER_TIMEOUT_MS success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+        // Pursue live events listening
+        [self serverSyncWithServerTimeout:nextServerTimeout success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
 
 #ifdef MX_GA
         if ([MXSDKOptions sharedInstance].enableGoogleAnalytics && isInitialSync)
@@ -1058,7 +1074,7 @@ typedef void (^MXOnResumeDone)();
                         {
                             NSLog(@"[MXSession] Retry resuming events stream");
                             [self setState:MXSessionStateSyncInProgress];
-                            [self serverSyncWithServerTimeout:serverTimeout success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+                            [self serverSyncWithServerTimeout:0 success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
                         }
                     });
                 }
@@ -1074,7 +1090,7 @@ typedef void (^MXOnResumeDone)();
                             
                             NSLog(@"[MXSession] Retry resuming events stream");
                             [self setState:MXSessionStateSyncInProgress];
-                            [self serverSyncWithServerTimeout:serverTimeout success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+                            [self serverSyncWithServerTimeout:0 success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
                         }
                     }];
                 }
