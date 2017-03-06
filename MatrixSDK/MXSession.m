@@ -1074,7 +1074,7 @@ typedef void (^MXOnResumeDone)();
                         {
                             NSLog(@"[MXSession] Retry resuming events stream");
                             [self setState:MXSessionStateSyncInProgress];
-                            [self serverSyncWithServerTimeout:serverTimeout success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+                            [self serverSyncWithServerTimeout:0 success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
                         }
                     });
                 }
@@ -1090,7 +1090,7 @@ typedef void (^MXOnResumeDone)();
                             
                             NSLog(@"[MXSession] Retry resuming events stream");
                             [self setState:MXSessionStateSyncInProgress];
-                            [self serverSyncWithServerTimeout:serverTimeout success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+                            [self serverSyncWithServerTimeout:0 success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
                         }
                     }];
                 }
