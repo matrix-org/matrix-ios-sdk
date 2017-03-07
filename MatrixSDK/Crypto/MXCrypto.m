@@ -233,6 +233,11 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                 MXHTTPOperation *operation2 = [self makeAnnoucement:roomsByUser success:^{
                     dispatch_async(dispatch_get_main_queue(), ^{
                         startOperation = nil;
+
+                        // Make sure we are refreshing devices lists right instead
+                        // of waiting for the next /sync that may occur in 30s.
+                        [_deviceList refreshOutdatedDeviceLists];
+
                         success();
                     });
 
