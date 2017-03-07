@@ -222,23 +222,45 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         NSLog(@"Store: %@", _store);
         NSLog(@"");
 
-        // Once keys are uploaded, make sure we announce ourselves
-        MXHTTPOperation *operation2 = [self makeAnnoucement:roomsByUser success:^{
+        // Anounce ourselves if not already done
+        if (roomsByUser)
+        {
+            // But upload our one-time keys before.
+            // Thus, other devices can download them once they receive our to-device annoucement event
+            [self maybeUploadOneTimeKeys:^{
+
+                // Once keys are uploaded, announce ourselves
+                MXHTTPOperation *operation2 = [self makeAnnoucement:roomsByUser success:^{
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        startOperation = nil;
+                        success();
+                    });
+
+                } failure:^(NSError *error) {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        startOperation = nil;
+                        failure(error);
+                    });
+                }];
+
+                if (operation2)
+                {
+                    [startOperation mutateTo:operation2];
+                }
+            } failure:^(NSError *error) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    startOperation = nil;
+                    failure(error);
+                });
+            }];
+        }
+        else
+        {
+            // No annoucement require
             dispatch_async(dispatch_get_main_queue(), ^{
                 startOperation = nil;
                 success();
             });
-
-        } failure:^(NSError *error) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                startOperation = nil;
-                failure(error);
-            });
-        }];
-
-        if (operation2)
-        {
-            [startOperation mutateTo:operation2];
         }
 
     } failure:^(NSError *error) {
@@ -484,9 +506,11 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         // to-device messages, to help us avoid throwing away one-time-keys that we
         // are about to receive messages for
         // (https://github.com/vector-im/riot-web/issues/2782).
-        if (!isCatchingUp)
+        // Also, do not upload them if we have not announced our device yet.
+        // They will be uploaded just before the announcement in [self start].
+        if (!isCatchingUp && _store.deviceAnnounced)
         {
-            [self maybeUploadOneTimeKeys];
+            [self maybeUploadOneTimeKeys:nil failure:nil];
         }
     });
 
@@ -1697,7 +1721,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 /**
  Check if it's time to upload one-time keys, and do so if so.
  */
-- (void)maybeUploadOneTimeKeys
+- (void)maybeUploadOneTimeKeys:(void (^)())success failure:(void (^)(NSError *))failure
 {
     if (uploadOneTimeKeysOperation)
     {
@@ -1760,12 +1784,24 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             [_olmDevice generateOneTimeKeys:numberToGenerate];
             MXHTTPOperation *operation2 = [self uploadOneTimeKeys:^(MXKeysUploadResponse *keysUploadResponse) {
 
-                uploadOneTimeKeysOperation = nil;
+                if (success)
+                {
+                    success();
+                }
+                else
+                {
+                    uploadOneTimeKeysOperation = nil;
+                }
 
             } failure:^(NSError *error) {
                 NSLog(@"[MXCrypto] maybeUploadOneTimeKeys: Failed to publish one-time keys. Error: %@", error);
                 uploadOneTimeKeysOperation = nil;
-            } ];
+
+                if (failure)
+                {
+                    failure(error);
+                }
+            }];
 
             // Mutate MXHTTPOperation so that the user can cancel this new operation
             [uploadOneTimeKeysOperation mutateTo:operation2];
