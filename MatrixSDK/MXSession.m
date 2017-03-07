@@ -895,6 +895,12 @@ typedef void (^MXOnResumeDone)();
         {
             [_store commit];
         }
+
+        // Do a loop of /syncs until catching up is done
+        if (nextServerTimeout == 0)
+        {
+            [self serverSyncWithServerTimeout:nextServerTimeout success:success failure:failure clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+        }
         
         // there is a pending backgroundSync
         if (onBackgroundSyncDone)
