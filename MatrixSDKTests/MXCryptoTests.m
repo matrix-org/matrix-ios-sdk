@@ -258,7 +258,7 @@
     XCTAssert(event.eventId);
     XCTAssertEqualObjects(event.roomId, roomId);
     XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
-    XCTAssertLessThan(event.age, 2000);
+    XCTAssertLessThan(event.age, 10000);
     XCTAssertEqualObjects(event.content[@"body"], clearMessage);
     XCTAssertEqualObjects(event.sender, senderSession.myUser.userId);
     XCTAssertNil(event.decryptionError);
@@ -402,92 +402,6 @@
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
-    }];
-}
-
-- (void)testKeysUploadAndDownload
-{
-    [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
-
-    [matrixSDKTestsData doMXSessionTestWithAlice:self readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
-
-        [aliceSession.crypto uploadKeys:10 success:^{
-
-            [matrixSDKTestsData doMXSessionTestWithBob:nil readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation2) {
-
-                [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
-
-                [mxSession.crypto.deviceList downloadKeys:@[mxSession.myUser.userId, aliceSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
-
-                    XCTAssertEqual(usersDevicesInfoMap.userIds.count, 2, @"BobDevice must be obtain from the cache and AliceDevice from the hs");
-
-                    XCTAssertEqual([usersDevicesInfoMap deviceIdsForUser:aliceSession.myUser.userId].count, 1);
-
-                    __block MXDeviceInfo *aliceDeviceFromBobPOV = [usersDevicesInfoMap objectForDevice:aliceSession.matrixRestClient.credentials.deviceId forUser:aliceSession.myUser.userId];
-                    XCTAssert(aliceDeviceFromBobPOV);
-                    XCTAssertEqualObjects(aliceDeviceFromBobPOV.fingerprint, aliceSession.crypto.olmDevice.deviceEd25519Key);
-
-                    // Continue testing other methods
-                    XCTAssertEqualObjects([mxSession.crypto.deviceList deviceWithIdentityKey:aliceSession.crypto.olmDevice.deviceCurve25519Key forUser:aliceSession.myUser.userId andAlgorithm:kMXCryptoOlmAlgorithm].description, aliceDeviceFromBobPOV.description);
-
-                    XCTAssertEqual(aliceDeviceFromBobPOV.verified, MXDeviceUnknown, @"This is the first time Alice sees this device");
-
-                    [mxSession.crypto setDeviceVerification:MXDeviceBlocked forDevice:aliceDeviceFromBobPOV.deviceId ofUser:aliceSession.myUser.userId success:^{
-
-                        aliceDeviceFromBobPOV = [mxSession.crypto.store deviceWithDeviceId:aliceDeviceFromBobPOV.deviceId forUser:aliceSession.myUser.userId];
-                        XCTAssertEqual(aliceDeviceFromBobPOV.verified, MXDeviceBlocked);
-
-                        MXRestClient *bobRestClient = mxSession.matrixRestClient;
-                        [mxSession close];
-
-
-                        // Test storage: Reopen the session
-                        MXFileStore *store = [[MXFileStore alloc] init];
-
-                        MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
-                        [mxSession2 setStore:store success:^{
-
-                            MXDeviceInfo *aliceDeviceFromBobPOV2 = [mxSession2.crypto.deviceList deviceWithIdentityKey:aliceSession.crypto.olmDevice.deviceCurve25519Key forUser:aliceSession.myUser.userId andAlgorithm:kMXCryptoOlmAlgorithm];
-
-                            XCTAssert(aliceDeviceFromBobPOV2);
-                            XCTAssertEqualObjects(aliceDeviceFromBobPOV2.fingerprint, aliceSession.crypto.olmDevice.deviceEd25519Key);
-                            XCTAssertEqual(aliceDeviceFromBobPOV2.verified, MXDeviceBlocked, @"AliceDevice must still be blocked");
-
-                            // Download again alice device
-                            [mxSession2.crypto.deviceList downloadKeys:@[aliceSession.myUser.userId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap2) {
-
-                                MXDeviceInfo *aliceDeviceFromBobPOV3 = [mxSession2.crypto.deviceList deviceWithIdentityKey:aliceSession.crypto.olmDevice.deviceCurve25519Key forUser:aliceSession.myUser.userId andAlgorithm:kMXCryptoOlmAlgorithm];
-
-                                XCTAssert(aliceDeviceFromBobPOV3);
-                                XCTAssertEqualObjects(aliceDeviceFromBobPOV3.fingerprint, aliceSession.crypto.olmDevice.deviceEd25519Key);
-                                XCTAssertEqual(aliceDeviceFromBobPOV3.verified, MXDeviceBlocked, @"AliceDevice must still be blocked.");
-
-                                [expectation fulfill];
-
-                            } failure:^(NSError *error) {
-                                XCTFail(@"The request should not fail - NSError: %@", error);
-                                [expectation fulfill];
-                            }];
-                        } failure:^(NSError *error) {
-                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                            [expectation fulfill];
-                        }];
-
-                    } failure:^(NSError *error) {
-                        XCTFail(@"The request should not fail - NSError: %@", error);
-                        [expectation fulfill];
-                    }];
-
-                 } failure:^(NSError *error) {
-                    XCTFail(@"The request should not fail - NSError: %@", error);
-                    [expectation fulfill];
-                }];
-
-            }];
-        } failure:^(NSError *error) {
-            XCTFail(@"The request should not fail - NSError: %@", error);
-            [expectation fulfill];
-        }];
 
     }];
 }
@@ -592,81 +506,6 @@
             [expectation fulfill];
         }];
 
-    }];
-}
-
-- (void)testEnsureOlmSessionsForUsers
-{
-    [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
-
-    [matrixSDKTestsData doMXSessionTestWithAlice:self readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
-
-        [aliceSession.crypto uploadKeys:10 success:^{
-
-            [matrixSDKTestsData doMXSessionTestWithBob:nil readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation2) {
-
-                [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
-
-                [mxSession.crypto.deviceList downloadKeys:@[mxSession.myUser.userId, aliceSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
-
-
-                    // Start the test
-                    MXHTTPOperation *httpOperation = [mxSession.crypto ensureOlmSessionsForUsers:@[mxSession.myUser.userId, aliceSession.myUser.userId] success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {
-
-                        XCTAssertEqual(results.userIds.count, 1, @"Only a session with Alice must be created. No mean to create on with oneself(Bob)");
-
-                        MXOlmSessionResult *sessionWithAliceDevice = [results objectForDevice:aliceSession.matrixRestClient.credentials.deviceId forUser:aliceSession.myUser.userId];
-                        XCTAssert(sessionWithAliceDevice);
-                        XCTAssert(sessionWithAliceDevice.sessionId);
-                        XCTAssertEqualObjects(sessionWithAliceDevice.device.deviceId, aliceSession.matrixRestClient.credentials.deviceId);
-
-
-                        // Test persistence
-                        MXRestClient *bobRestClient = mxSession.matrixRestClient;
-                        [mxSession close];
-
-                        MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
-                        [mxSession2 setStore:[[MXFileStore alloc] init] success:^{
-
-                            MXHTTPOperation *httpOperation2 = [mxSession2.crypto ensureOlmSessionsForUsers:@[mxSession2.myUser.userId, aliceSession.myUser.userId] success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {
-
-                                XCTAssertEqual(results.userIds.count, 1, @"Only a session with Alice must be created. No mean to create on with oneself(Bob)");
-
-                                MXOlmSessionResult *sessionWithAliceDevice = [results objectForDevice:aliceSession.matrixRestClient.credentials.deviceId forUser:aliceSession.myUser.userId];
-                                XCTAssert(sessionWithAliceDevice);
-                                XCTAssert(sessionWithAliceDevice.sessionId);
-                                XCTAssertEqualObjects(sessionWithAliceDevice.device.deviceId, aliceSession.matrixRestClient.credentials.deviceId);
-
-                                [expectation fulfill];
-
-                            } failure:^(NSError *error) {
-                                XCTFail(@"The request should not fail - NSError: %@", error);
-                                [expectation fulfill];
-                            }];
-
-                            XCTAssertNil(httpOperation2, @"The session must be in cache. No need to make a request");
-
-                        } failure:^(NSError *error) {
-                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                            [expectation fulfill];
-                        }];
-
-                    } failure:^(NSError *error) {
-                        XCTFail(@"The request should not fail - NSError: %@", error);
-                        [expectation fulfill];
-                    }];
-
-                    XCTAssert(httpOperation);
-
-                } failure:^(NSError *error) {
-                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                    [expectation fulfill];
-                }];
-            }];
-        } failure:^(NSError *error) {
-            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-            [expectation fulfill];
-        }];
     }];
 }
 
@@ -1175,7 +1014,6 @@
 - (void)testAliceWithNewDeviceAndBob
 {
     [self doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
-//    [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         // Relog alice to simulate a new device
         [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
