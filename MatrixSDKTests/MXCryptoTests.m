@@ -258,7 +258,7 @@
     XCTAssert(event.eventId);
     XCTAssertEqualObjects(event.roomId, roomId);
     XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
-    XCTAssertLessThan(event.age, 2000);
+    XCTAssertLessThan(event.age, 10000);
     XCTAssertEqualObjects(event.content[@"body"], clearMessage);
     XCTAssertEqualObjects(event.sender, senderSession.myUser.userId);
     XCTAssertNil(event.decryptionError);
