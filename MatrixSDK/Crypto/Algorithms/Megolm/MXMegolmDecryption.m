@@ -23,6 +23,9 @@
 
 @interface MXMegolmDecryption ()
 {
+    // The crypto module
+    MXCrypto *crypto;
+
     // The olm device interface
     MXOlmDevice *olmDevice;
 
@@ -42,12 +45,13 @@
 }
 
 #pragma mark - MXDecrypting
-- (instancetype)initWithCrypto:(MXCrypto *)crypto
+- (instancetype)initWithCrypto:(MXCrypto *)theCrypto
 {
     self = [super init];
     if (self)
     {
-        olmDevice = crypto.olmDevice;
+        crypto = theCrypto;
+        olmDevice = theCrypto.olmDevice;
         pendingEvents = [NSMutableDictionary dictionary];
     }
     return self;
@@ -58,6 +62,9 @@
     NSString *senderKey = event.content[@"sender_key"];
     NSString *ciphertext = event.content[@"ciphertext"];
     NSString *sessionId = event.content[@"session_id"];
+
+    // TODO: Remove this requirement after fixing https://github.com/matrix-org/matrix-ios-sdk/issues/205
+    NSParameterAssert([NSThread currentThread].isMainThread);
 
     if (!senderKey || !sessionId || !ciphertext)
     {
@@ -75,18 +82,7 @@
     if (result)
     {
         MXEvent *clearedEvent = [MXEvent modelFromJSON:result.payload];
-
-        // @TODO: We should always be on the crypto queue
-        if ([NSThread currentThread].isMainThread)
-        {
-            [event setClearData:clearedEvent keysProved:result.keysProved keysClaimed:result.keysClaimed];
-        }
-        else
-        {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [event setClearData:clearedEvent keysProved:result.keysProved keysClaimed:result.keysClaimed];
-            });
-        }
+        [event setClearData:clearedEvent keysProved:result.keysProved keysClaimed:result.keysClaimed];
     }
     else
     {
@@ -185,28 +181,37 @@
  */
 - (void)retryDecryption:(NSString*)senderKey sessionId:(NSString*)sessionId
 {
-    NSString *k = [NSString stringWithFormat:@"%@|%@", senderKey, sessionId];
-    NSDictionary *pending = pendingEvents[k];
-    if (pending)
-    {
-        // Have another go at decrypting events sent with this session.
-        [pendingEvents removeObjectForKey:k];
+    // Do the retry is the same threads conditions as [MXCrypto decryptEvent]
+    // ie, lock the main thread while decrypting events
+    // TODO: Remove this after fixing https://github.com/matrix-org/matrix-ios-sdk/issues/205
+    dispatch_async(dispatch_get_main_queue(), ^{
 
-        for (NSString *timelineId in pending)
-        {
-            for (MXEvent *event in pending[timelineId])
+        dispatch_sync(crypto.decryptionQueue, ^{
+
+            NSString *k = [NSString stringWithFormat:@"%@|%@", senderKey, sessionId];
+            NSDictionary *pending = pendingEvents[k];
+            if (pending)
             {
-                if ([self decryptEvent:event inTimeline:(timelineId.length ? timelineId : nil)])
+                // Have another go at decrypting events sent with this session.
+                [pendingEvents removeObjectForKey:k];
+
+                for (NSString *timelineId in pending)
                 {
-                    NSLog(@"[MXMegolmDecryption] onRoomKeyEvent: successful re-decryption of %@", event.eventId);
-                }
-                else
-                {
-                    NSLog(@"[MXMegolmDecryption] onRoomKeyEvent: Still can't decrypt %@. Error: %@", event.eventId, event.decryptionError);
+                    for (MXEvent *event in pending[timelineId])
+                    {
+                        if ([self decryptEvent:event inTimeline:(timelineId.length ? timelineId : nil)])
+                        {
+                            NSLog(@"[MXMegolmDecryption] retryDecryption: successful re-decryption of %@", event.eventId);
+                        }
+                        else
+                        {
+                            NSLog(@"[MXMegolmDecryption] retryDecryption: Still can't decrypt %@. Error: %@", event.eventId, event.decryptionError);
+                        }
+                    }
                 }
             }
-        }
-    }
+        });
+    });
 }
 
 @end

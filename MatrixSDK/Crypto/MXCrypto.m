@@ -410,7 +410,9 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
     __block BOOL result = NO;
 
-    // @TODO: dispatch_async
+    // TODO: dispatch_async (https://github.com/matrix-org/matrix-ios-sdk/issues/205)
+    // At the moment, we lock the main thread while decrypting events.
+    // Fortunately, decrypting is far quicker that encrypting.
     dispatch_sync(_decryptionQueue, ^{
         id<MXDecrypting> alg = [self getRoomDecryptor:event.roomId algorithm:event.content[@"algorithm"]];
         if (!alg)
