@@ -208,10 +208,8 @@
             {
                 NSLog(@"[MXDeviceList] refreshOutdatedDeviceLists. Error updating device keys for users %@", failedUserIds);
 
-                // Reinstate the pending flags on any users which failed; this will
-                // mean that we will do another download in the future, but won't
-                // tight-loop.
-                [pendingUsersWithNewDevices addObjectsFromArray:failedUserIds];
+                // TODO: What to do with failed devices?
+                // For now, ignore them like matrix-js-sdk
             }
 
         } failure:^(NSError *error) {
