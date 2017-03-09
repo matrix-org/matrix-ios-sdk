@@ -1,5 +1,6 @@
 /*
  Copyright 2016 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -32,7 +33,8 @@
     // Events which we couldn't decrypt due to unknown sessions / indexes: map from
     // senderKey|sessionId to timelines to list of MatrixEvents
     NSMutableDictionary<NSString* /* senderKey|sessionId */,
-        NSMutableDictionary<NSString* /* timelineId */, NSMutableArray<MXEvent*>*>*> *pendingEvents;
+        NSMutableDictionary<NSString* /* timelineId */,
+            NSMutableDictionary<NSString* /* eventId */, MXEvent*>*>*> *pendingEvents;
 }
 @end
 
@@ -136,11 +138,11 @@
 
     if (!pendingEvents[k][timelineId])
     {
-        pendingEvents[k][timelineId] = [NSMutableArray array];
+        pendingEvents[k][timelineId] = [NSMutableDictionary dictionary];
     }
 
     NSLog(@"[MXMegolmDecryption] addEventToPendingList: %@", event);
-    [pendingEvents[k][timelineId] addObject:event];
+    pendingEvents[k][timelineId][event.eventId] = event;
 }
 
 - (void)onRoomKeyEvent:(MXEvent *)event
@@ -189,7 +191,7 @@
         dispatch_sync(crypto.decryptionQueue, ^{
 
             NSString *k = [NSString stringWithFormat:@"%@|%@", senderKey, sessionId];
-            NSDictionary *pending = pendingEvents[k];
+            NSDictionary<NSString*, NSDictionary<NSString*,MXEvent*>*> *pending = pendingEvents[k];
             if (pending)
             {
                 // Have another go at decrypting events sent with this session.
@@ -197,9 +199,14 @@
 
                 for (NSString *timelineId in pending)
                 {
-                    for (MXEvent *event in pending[timelineId])
+                    for (MXEvent *event in pending[timelineId].allValues)
                     {
-                        if ([self decryptEvent:event inTimeline:(timelineId.length ? timelineId : nil)])
+                        if (event.clearEvent)
+                        {
+                            // This can happen when the event is in several timelines
+                            NSLog(@"[MXMegolmDecryption] retryDecryption: %@ already decrypted", event.eventId);
+                        }
+                        else if ([self decryptEvent:event inTimeline:(timelineId.length ? timelineId : nil)])
                         {
                             NSLog(@"[MXMegolmDecryption] retryDecryption: successful re-decryption of %@", event.eventId);
                         }
