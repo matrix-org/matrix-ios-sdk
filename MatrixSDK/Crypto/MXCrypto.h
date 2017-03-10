@@ -190,6 +190,16 @@
 - (void)resetReplayAttackCheckInTimeline:(NSString*)timeline;
 
 /**
+ Reset stored devices keys.
+ 
+ This method, to take effect, must be called before [MXSession start] when MXSession 
+ is going to do an initial /sync, ie when the app cleared its cache.
+
+ It helps the end user to fix UISIs that other people get from his messages.
+ */
+- (void)resetDeviceKeys;
+
+/**
  Delete the crypto store for the passed credentials.
 
  @param credentials the credentials of the account.

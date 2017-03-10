@@ -1851,6 +1851,119 @@
     }];
 }
 
+// Test that clearing devices keys makes crypto work again:
+// - Alice and Bob are in an encrypted room
+
+// - Do a hack to make Alice forget Bob's device (this mimics a buggy situation that may still happen in real life).
+// - Alice sends a message to Bob -> Bob receives an UISI for this message.
+
+// - Alice does a new MXSession (which is what apps do when clearing cache). This leads to an initial /sync.
+// - Alice sends a message to Bob -> Bob still receives an UISI for this message.
+
+// - Alice resets her devices keys
+// - Alice does a new MXSession (which is what apps do when clearing cache). This leads to an initial /sync.
+// - Alice sends a message to Bob -> Bob can decrypt this message.
+- (void)testClearCache
+{
+    NSArray *aliceMessages = @[
+                               @"I am alice but I do not have bob keys",
+                               @"I am alice but I do not have bob keys even after full initial /sync",
+                               @"I'm still Alice and I have bob keys now"
+                               ];
+
+    [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
+
+        __block MXSession *aliceSession2;
+        __block MXSession *aliceSession3;
+        MXRestClient *aliceRestClient = aliceSession.matrixRestClient;
+
+        // Hack
+        [aliceSession.crypto.store storeDevicesForUser:bobSession.myUser.userId devices:[NSDictionary dictionary]];
+
+        __block NSUInteger messageCount = 0;
+        [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+            switch (messageCount++)
+            {
+                case 0:
+                {
+                    XCTAssert(event.isEncrypted, "Bob must get an UISI because Alice did have his devices keys");
+                    XCTAssertNil(event.clearEvent);
+                    XCTAssert(event.decryptionError);
+                    XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorUnknownInboundSessionIdCode);
+
+                    [aliceSession close];
+
+                    aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+                    [aliceSession2 start:^{
+
+                        aliceSession2.crypto.warnOnUnknowDevices = NO;
+
+                        MXRoom *roomFromAlicePOV2 = [aliceSession2 roomWithRoomId:roomId];
+                        [roomFromAlicePOV2 sendTextMessage:aliceMessages[1] success:nil failure:^(NSError *error) {
+                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                            [expectation fulfill];
+                        }];
+
+                    } failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+
+                    break;
+                }
+
+                case 1:
+                {
+                    XCTAssert(event.isEncrypted, "Bob must get an UISI because Alice did have his devices keys even after a full initial sync");
+                    XCTAssertNil(event.clearEvent);
+                    XCTAssert(event.decryptionError);
+                    XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorUnknownInboundSessionIdCode);
+
+
+                    [aliceSession2.crypto resetDeviceKeys];
+                    [aliceSession2 close];
+
+                    aliceSession3 = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+                    [aliceSession3 start:^{
+
+                        aliceSession3.crypto.warnOnUnknowDevices = NO;
+
+                        MXRoom *roomFromAlicePOV3 = [aliceSession3 roomWithRoomId:roomId];
+                        [roomFromAlicePOV3 sendTextMessage:aliceMessages[2] success:nil failure:^(NSError *error) {
+                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                            [expectation fulfill];
+                        }];
+
+                    } failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+
+                    break;
+                }
+
+                case 2:
+                {
+                    XCTAssert(event.clearEvent, @"Bob must now be able to decrypt Alice's message");
+
+                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:aliceMessages[2] senderSession:aliceSession3]);
+
+                    [expectation fulfill];
+                    break;
+                }
+            }
+        }];
+
+        MXRoom *roomFromAlicePOV1 = [aliceSession roomWithRoomId:roomId];
+        [roomFromAlicePOV1 sendTextMessage:aliceMessages[0] success:nil failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
 
 #pragma mark - import/export
 

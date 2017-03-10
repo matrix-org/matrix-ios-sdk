@@ -474,6 +474,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             NSString *oldDeviceSyncToken = _store.deviceSyncToken;
             if (oldDeviceSyncToken)
             {
+                NSLog(@"[MXCrypto] handleDeviceListsChanged: Completed initialsync; invalidating device list from deviceSyncToken: %@", oldDeviceSyncToken);
+
                 [self invalidateDeviceListsSince:oldDeviceSyncToken to:nextSyncToken success:^(NSArray<NSString *> *changed) {
 
                     initialDeviceListInvalidationDone = YES;
@@ -704,6 +706,18 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 #ifdef MX_CRYPTO
     dispatch_async(_decryptionQueue, ^{
         [_olmDevice resetReplayAttackCheckInTimeline:timeline];
+    });
+#endif
+}
+
+- (void)resetDeviceKeys
+{
+#ifdef MX_CRYPTO
+    dispatch_sync(_decryptionQueue, ^{
+
+        // Reset the sync token
+        // [self handleDeviceListsChanged] will download all keys at the coming initial /sync
+        [_store storeDeviceSyncToken:nil];
     });
 #endif
 }
