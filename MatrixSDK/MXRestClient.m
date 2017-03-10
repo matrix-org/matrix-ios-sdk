@@ -506,7 +506,10 @@ MXAuthAction;
 
     NSDictionary *parameters = @{
                                  @"type": loginType,
-                                 @"user": username,
+                                 @"identifier": @{
+                                         @"type": kMXLoginIdentifierTypeUser,
+                                         @"user": username
+                                         },
                                  @"password": password
                                  };
 
