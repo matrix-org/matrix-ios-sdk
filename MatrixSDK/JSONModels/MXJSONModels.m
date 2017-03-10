@@ -81,6 +81,10 @@ NSString *const kMXLoginFlowTypeDummy = @"m.login.dummy";
 NSString *const kMXLoginFlowTypeEmailCode = @"m.login.email.code";
 NSString *const kMXLoginFlowTypeMSISDN = @"m.login.msisdn";
 
+NSString *const kMXLoginIdentifierTypeUser = @"m.id.user";
+NSString *const kMXLoginIdentifierTypeThirdParty = @"m.id.thirdparty";
+NSString *const kMXLoginIdentifierTypePhone = @"m.id.phone";
+
 @implementation MXLoginFlow
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary

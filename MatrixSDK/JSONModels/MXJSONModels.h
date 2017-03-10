@@ -105,6 +105,14 @@ FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeMSISDN;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeEmailCode; // Deprecated
 
 /**
+ Identifier types
+ */
+typedef NSString* MXLoginIdentifierType;
+FOUNDATION_EXPORT NSString *const kMXLoginIdentifierTypeUser;
+FOUNDATION_EXPORT NSString *const kMXLoginIdentifierTypeThirdParty;
+FOUNDATION_EXPORT NSString *const kMXLoginIdentifierTypePhone;
+
+/**
  `MXLoginFlow` represents a login or a register flow supported by the home server.
  */
 @interface MXLoginFlow : MXJSONModel
