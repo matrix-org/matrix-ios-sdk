@@ -510,7 +510,11 @@ MXAuthAction;
                                          @"type": kMXLoginIdentifierTypeUser,
                                          @"user": username
                                          },
-                                 @"password": password
+                                 @"password": password,
+
+                                 // Patch: add the old login api parameters to make dummy login
+                                 // still working
+                                 @"user": username
                                  };
 
     return [self login:parameters
