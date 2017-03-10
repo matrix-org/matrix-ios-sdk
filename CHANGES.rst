@@ -1,3 +1,35 @@
+Changes in Matrix iOS SDK in 0.7.8 (2017-03-07)
+===============================================
+
+Improvements:
+ * Add a Swift API to most of SDK classes, thanks to @aapierce0 (PR #241).
+ * MXEvent: Add sentError property
+ * MXSession: add catchingUp flag in to order to indicate we are restarting the events stream ASAP, ie /sync with serverTimeout = 0
+ * MXRestClient: Support phone number validation.
+ * MXRestClient: Add API to remove 3rd party identifiers from user's information
+ * Crypto: Upgrade OLMKit(2.2.2).
+ * Crypto: Support of the devices list CS API. It should fix a lot of Unknown Inbound Session Ids.
+ * Crypto: Warn on unknown devices: Generate an error when the user sends a message to a room where there is unknown devices.
+ * Crypto: Support for blacklisting unverified devices, both per-room and globally.
+ * Crypto: Upload one-time keys on /sync rather than a timer.
+ * Crypto: Add [MXCrypto resetDeviceKeys] to clear devices keys. This should fix unexpected UISIs from our user.
+ * MXMyUser: do not force store update in case of user profile change. Let the store be updated once at the end of the sync.
+
+Bug fixes:
+ * Corrupted room state: some joined rooms appear in Invites section (https://github.com/vector-im/riot-ios#1029).
+ * MXRestClient: submit3PIDValidationToken: The invalid token was not correctly handled.
+ * MXRestClient: Update HTTP retry policy (#245).
+ * MXRestClient: Self-signed homeserver: Fix regression on media hosted by server with CA certificate.
+ * Crypto: app may crash on clear cache because of the periodic uploadKeys (#234).
+ * Crypto: Invalidate device lists when encryption is enabled in a room (https://github.com/vector-im/riot-web#2672).
+ * Crypto: Sometimes some events are not decrypted when importing keys (#261).
+ * Crypto: After importing keys, the newly decrypted msg have a forbidden icon (https://github.com/vector-im/riot-ios#1028).
+ * Crypto: Tight loop of /keys/query requests (#264).
+
+API breaks:
+ * MXPublicRoom: numJoinedMembers is now a signed integer.
+ * Rename [MXHTTPClient jitterTimeForRetry] into [MXHTTPClient timeForRetry:]
+
 Changes in Matrix iOS SDK in 0.7.7 (2017-02-08)
 ===============================================
 
@@ -8,7 +40,7 @@ Improvements:
 
 Bug fixes:
  * Fix a few examples in the README file, thanks to @aapierce0 (PR #230).
- * Duplicated msg when going into room details  (https://github.com/vector-im/riot-ios#970).
+ * Duplicated msg when going into room details (https://github.com/vector-im/riot-ios#970).
  * App crashes a few seconds after a successful login (https://github.com/vector-im/riot-ios#965).
  * Got stuck syncing forever (https://github.com/vector-im/riot-ios#1008).
  * Local echoes for typed messages stay (far) longer in grey (https://github.com/vector-im/riot-ios#1007).
