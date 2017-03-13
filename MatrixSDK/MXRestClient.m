@@ -240,10 +240,15 @@ MXAuthAction;
 {
     // For registration, use POST with no params to get the login mechanism to use
     // The request will fail with Unauthorized status code, but the login mechanism will be available in response data.
+    NSDictionary* parameters = nil;
+    
+    // Patch: Tell the server we support the msisdn login flow.
+    // Caution: parameters are JSON serialized in http body, we must use a NSNumber created with a boolean for typing value.
+    parameters = @{@"x_show_msisdn":[NSNumber numberWithBool:YES]};
     
     return [httpClient requestWithMethod:@"POST"
                                     path:[self authActionPath:MXAuthActionRegister]
-                              parameters:@{}
+                              parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
                                      
                                      // sanity check
@@ -746,6 +751,12 @@ MXAuthAction;
         newParameters[@"initial_device_display_name"] = deviceName;
         parameters = newParameters;
     }
+    
+    // Patch: Tell the server we support the msisdn login flow.
+    NSMutableDictionary *newParameters = [NSMutableDictionary dictionaryWithDictionary:parameters];
+    // Caution: parameters are JSON serialized in http body, we must use a NSNumber created with a boolean for typing value.
+    newParameters[@"x_show_msisdn"] = [NSNumber numberWithBool:YES];
+    parameters = newParameters;
 
     return [httpClient requestWithMethod:@"POST"
                                     path:[self authActionPath:authAction]
