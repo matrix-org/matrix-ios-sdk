@@ -1,3 +1,9 @@
+Changes in Matrix iOS SDK in 0.7.9 (2017-03-13)
+===============================================
+
+Bug fixes:
+ * MXCrypto: Fix a crash due to a signedness issue in the count of one-time keys to upload.
+
 Changes in Matrix iOS SDK in 0.7.8 (2017-03-07)
 ===============================================
 
