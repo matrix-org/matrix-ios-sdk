@@ -136,7 +136,8 @@
 
     NSDate *startDate = [NSDate date];
 
-    MXHTTPOperation *operation = [self getDevicesInRoom:users success:^(MXUsersDevicesMap<MXDeviceInfo *> *devicesInRoom) {
+    MXHTTPOperation *operation;
+    operation = [self getDevicesInRoom:users success:^(MXUsersDevicesMap<MXDeviceInfo *> *devicesInRoom) {
 
         MXHTTPOperation *operation2 = [self ensureOutboundSession:devicesInRoom success:^(MXOutboundSessionInfo *session) {
 
