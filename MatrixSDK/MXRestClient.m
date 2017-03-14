@@ -244,7 +244,7 @@ MXAuthAction;
     
     // Patch: Tell the server we support the msisdn login flow.
     // Caution: parameters are JSON serialized in http body, we must use a NSNumber created with a boolean for typing value.
-    parameters = @{@"x_show_msisdn":[NSNumber numberWithBool:YES]};
+    parameters = @{@"x_show_msisdn":@(YES)};
     
     return [httpClient requestWithMethod:@"POST"
                                     path:[self authActionPath:MXAuthActionRegister]
@@ -755,7 +755,7 @@ MXAuthAction;
     // Patch: Tell the server we support the msisdn login flow.
     NSMutableDictionary *newParameters = [NSMutableDictionary dictionaryWithDictionary:parameters];
     // Caution: parameters are JSON serialized in http body, we must use a NSNumber created with a boolean for typing value.
-    newParameters[@"x_show_msisdn"] = [NSNumber numberWithBool:YES];
+    newParameters[@"x_show_msisdn"] = @(YES);
     parameters = newParameters;
 
     return [httpClient requestWithMethod:@"POST"
