@@ -751,10 +751,13 @@ MXAuthAction;
         parameters = newParameters;
     }
     
-    // Patch: Add the temporary `x_show_msisdn` flag to not filter the msisdn login type in the supported authentication flows.
-    NSMutableDictionary *newParameters = [NSMutableDictionary dictionaryWithDictionary:parameters];
-    newParameters[@"x_show_msisdn"] = @(YES);
-    parameters = newParameters;
+    if (MXAuthActionRegister == authAction)
+    {
+        // Patch: Add the temporary `x_show_msisdn` flag to not filter the msisdn login type in the supported authentication flows.
+        NSMutableDictionary *newParameters = [NSMutableDictionary dictionaryWithDictionary:parameters];
+        newParameters[@"x_show_msisdn"] = @(YES);
+        parameters = newParameters;
+    }
 
     return [httpClient requestWithMethod:@"POST"
                                     path:[self authActionPath:authAction]
