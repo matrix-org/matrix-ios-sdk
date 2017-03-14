@@ -242,8 +242,7 @@ MXAuthAction;
     // The request will fail with Unauthorized status code, but the login mechanism will be available in response data.
     NSDictionary* parameters = nil;
     
-    // Patch: Tell the server we support the msisdn login flow.
-    // Caution: parameters are JSON serialized in http body, we must use a NSNumber created with a boolean for typing value.
+    // Patch: Add the temporary `x_show_msisdn` flag to not filter the msisdn login type in the supported authentication flows.
     parameters = @{@"x_show_msisdn":@(YES)};
     
     return [httpClient requestWithMethod:@"POST"
@@ -752,9 +751,8 @@ MXAuthAction;
         parameters = newParameters;
     }
     
-    // Patch: Tell the server we support the msisdn login flow.
+    // Patch: Add the temporary `x_show_msisdn` flag to not filter the msisdn login type in the supported authentication flows.
     NSMutableDictionary *newParameters = [NSMutableDictionary dictionaryWithDictionary:parameters];
-    // Caution: parameters are JSON serialized in http body, we must use a NSNumber created with a boolean for typing value.
     newParameters[@"x_show_msisdn"] = @(YES);
     parameters = newParameters;
 
