@@ -46,8 +46,10 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     return self;
 }
 
-- (void)dealloc
+- (void)destroy
 {
+    NSLog(@"[MXKRoomSummary] Destroy %p - room id: %@", self, _roomId);
+
     [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXEventDidChangeSentStateNotification object:nil];
 }
 

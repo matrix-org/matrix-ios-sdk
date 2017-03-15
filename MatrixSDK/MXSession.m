@@ -626,6 +626,10 @@ typedef void (^MXOnResumeDone)();
     [peekingRooms removeAllObjects];
 
     // Clean summaries
+    for (MXRoomSummary *summary in roomsSummaries.allValues)
+    {
+        [summary destroy];
+    }
     [roomsSummaries removeAllObjects];
 
     // Clean notification center

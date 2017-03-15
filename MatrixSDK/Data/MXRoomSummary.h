@@ -86,6 +86,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 - (instancetype)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession;
 
 /**
+ Dispose any resources and listener.
+ */
+- (void)destroy;
+
+/**
  Set the Matrix session.
 
  Must be used for MXRoomSummary instance loaded from the store.
