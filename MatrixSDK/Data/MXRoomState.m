@@ -455,7 +455,7 @@
 
 - (BOOL)isEncrypted
 {
-    return (nil != stateEvents[kMXEventTypeStringRoomEncryption]);
+    return (0 != self.encryptionAlgorithm.length);
 }
 
 - (NSString *)encryptionAlgorithm
