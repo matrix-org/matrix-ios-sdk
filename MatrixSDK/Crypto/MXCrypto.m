@@ -443,6 +443,94 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 #endif
 }
 
+- (MXHTTPOperation*)ensureEncryptionInRoom:(NSString*)roomId
+                                   success:(void (^)())success
+                                   failure:(void (^)(NSError *error))failure
+{
+
+    // Create an empty operation that will be mutated later
+    MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
+
+#ifdef MX_CRYPTO
+    MXRoom *room = [mxSession roomWithRoomId:roomId];
+    if (room.state.isEncrypted)
+    {
+        // Get user ids in this room
+        NSMutableArray *userIds = [NSMutableArray array];
+        for (MXRoomMember *member in room.state.joinedMembers)
+        {
+            [userIds addObject:member.userId];
+        }
+
+        dispatch_async(_cryptoQueue, ^{
+
+            NSString *algorithm;
+            id<MXEncrypting> alg = roomEncryptors[room.roomId];
+
+            if (!alg)
+            {
+                // The algorithm has not been initialised yet. So, do it now from room state information
+                algorithm = room.state.encryptionAlgorithm;
+                if (algorithm)
+                {
+                    [self setEncryptionInRoom:room.roomId withAlgorithm:algorithm];
+                    alg = roomEncryptors[room.roomId];
+                }
+            }
+
+            if (alg)
+            {
+                // Check we have everything to encrypt events
+                MXHTTPOperation *operation2 = [alg ensureSessionForUsers:userIds success:^(NSObject *sessionInfo) {
+
+                    if (success)
+                    {
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            success();
+                        });
+                    }
+
+                } failure:^(NSError *error) {
+                    if (failure)
+                    {
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            failure(error);
+                        });
+                    }
+                }];
+
+                if (operation2)
+                {
+                    [operation mutateTo:operation2];
+                }
+            }
+            else if (failure)
+            {
+                NSError *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                                     code:MXDecryptingErrorUnableToEncryptCode
+                                                 userInfo:@{
+                                                            NSLocalizedDescriptionKey: MXDecryptingErrorUnableToEncrypt,
+                                                            NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToEncryptReason, algorithm]
+                                                            }];
+
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    failure(error);
+                });
+            }
+        });
+    }
+    else
+#endif
+    {
+        if (success)
+        {
+            success();
+        }
+    }
+
+    return operation;
+}
+
 // This method is equivalent to the Crypto.prototype._onSyncCompleted in matrix-js-sdk
 - (void)handleDeviceListsChanged:(NSArray<NSString *>*)userIds oldSyncToken:(NSString *)oldSyncToken nextSyncToken:(NSString *)nextSyncToken
 {

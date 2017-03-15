@@ -295,49 +295,71 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
     if (self.state == MXCallStateRinging)
     {
-        // The incoming call is accepted
-        if (inviteExpirationTimer)
-        {
-            [inviteExpirationTimer invalidate];
-            inviteExpirationTimer = nil;
-        }
+        void(^answer)() = ^() {
 
-        [self setState:MXCallStateWaitLocalMedia reason:nil];
-        
-        
-        // Create a sdp answer from the offer we got
-        [self setState:MXCallStateCreateAnswer reason:nil];
-        [self setState:MXCallStateConnecting reason:nil];
+            NSLog(@"[MXCall] answer: answering...");
 
-        [callStackCall createAnswer:^(NSString *sdpAnswer) {
+            // The incoming call is accepted
+            if (inviteExpirationTimer)
+            {
+                [inviteExpirationTimer invalidate];
+                inviteExpirationTimer = nil;
+            }
 
-            NSLog(@"[MXCall] answer - Created SDP:\n%@", sdpAnswer);
-            
-            // The call invite can sent to the HS
-            NSDictionary *content = @{
-                                      @"call_id": _callId,
-                                      @"answer": @{
-                                              @"type": @"answer",
-                                              @"sdp": sdpAnswer
-                                              },
-                                      @"version": @(0),
-                                      };
-            [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallAnswer content:content localEcho:nil success:^(NSString *eventId) {
+            [self setState:MXCallStateWaitLocalMedia reason:nil];
 
-                // @TODO: This is false
-                [self setState:MXCallStateConnected reason:nil];
-                
+
+            // Create a sdp answer from the offer we got
+            [self setState:MXCallStateCreateAnswer reason:nil];
+            [self setState:MXCallStateConnecting reason:nil];
+
+            [callStackCall createAnswer:^(NSString *sdpAnswer) {
+
+                NSLog(@"[MXCall] answer - Created SDP:\n%@", sdpAnswer);
+
+                // The call invite can sent to the HS
+                NSDictionary *content = @{
+                                          @"call_id": _callId,
+                                          @"answer": @{
+                                                  @"type": @"answer",
+                                                  @"sdp": sdpAnswer
+                                                  },
+                                          @"version": @(0),
+                                          };
+                [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallAnswer content:content localEcho:nil success:^(NSString *eventId) {
+
+                    // @TODO: This is false
+                    [self setState:MXCallStateConnected reason:nil];
+
+                } failure:^(NSError *error) {
+                    NSLog(@"[MXCall] answer: ERROR: Cannot send m.call.answer event.");
+                    [self didEncounterError:error];
+                }];
+
             } failure:^(NSError *error) {
-                NSLog(@"[MXCall] answer: ERROR: Cannot send m.call.answer event.");
+                NSLog(@"[MXCall] answer: ERROR: Cannot create offer. Error: %@", error);
                 [self didEncounterError:error];
             }];
             
-        } failure:^(NSError *error) {
-            NSLog(@"[MXCall] answer: ERROR: Cannot create offer. Error: %@", error);
-            [self didEncounterError:error];
-        }];
-        
-        callInviteEventContent = nil;
+            callInviteEventContent = nil;
+        };
+
+        // If the room is encrypted, we need to check that encryption is set up
+        // in the room before actually answering.
+        // That will allow MXCall to send ICE candidates events without encryption errors like
+        // MXEncryptingErrorUnknownDeviceReason.
+        if (_callSignalingRoom.state.isEncrypted)
+        {
+            NSLog(@"[MXCall] answer: ensuring encryption is ready to use ...");
+            [callManager.mxSession.crypto ensureEncryptionInRoom:_callSignalingRoom.roomId success:answer failure:^(NSError *error) {
+                NSLog(@"[MXCall] answer: ERROR: [MXCrypto ensureEncryptionInRoom] failed. Error: %@", error);
+                [self didEncounterError:error];
+            }];
+        }
+        else
+        {
+            answer();
+        }
     }
 }
 
