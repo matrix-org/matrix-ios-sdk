@@ -499,7 +499,6 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                     }
                 }];
 
-
                 if (operation2)
                 {
                     [operation mutateTo:operation2];

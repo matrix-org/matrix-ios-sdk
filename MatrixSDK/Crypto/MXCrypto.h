@@ -120,7 +120,7 @@
 /**
  Ensure that the outbound session is ready to encrypt events.
  
- Thus, the next [MXCrypto encryptEvent] should be sent without HTTP requests.
+ Thus, the next [MXCrypto encryptEvent] should be encrypted without any HTTP requests.
  
  Note: There is no guarantee about this because a new device can still appear before
  the call of [MXCrypto encryptEvent]. Use this method with caution.
