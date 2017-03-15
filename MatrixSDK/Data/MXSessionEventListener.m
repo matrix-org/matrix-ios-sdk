@@ -24,13 +24,13 @@
     // A global listener needs to listen to each MXRoom new events
     // roomEventListeners is the list of all MXRoom listener for this MXSessionEventListener
     // The key is the roomId. The valuse, the registered MXEventListener of the MXRoom
-    NSMutableDictionary *roomEventListeners;
+    NSMutableDictionary<NSString *, id> *roomEventListeners;
 }
 @end
 
 @implementation MXSessionEventListener
 
-- (instancetype)initWithSender:(id)sender andEventTypes:(NSArray *)eventTypes andListenerBlock:(MXOnEvent)listenerBlock
+- (instancetype)initWithSender:(id)sender andEventTypes:(NSArray<MXEventTypeString> *)eventTypes andListenerBlock:(MXOnEvent)listenerBlock
 {
     self = [super initWithSender:sender andEventTypes:eventTypes andListenerBlock:listenerBlock];
     if (self)

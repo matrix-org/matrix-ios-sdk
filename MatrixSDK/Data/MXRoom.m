@@ -64,7 +64,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     return [self initWithRoomId:roomId matrixSession:mxSession2 andStore:nil];
 }
 
-- (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession2 andStateEvents:(NSArray *)stateEvents andAccountData:(MXRoomAccountData*)accountData
+- (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession2 andStateEvents:(NSArray<MXEvent *> *)stateEvents andAccountData:(MXRoomAccountData*)accountData
 {
     self = [self initWithRoomId:roomId andMatrixSession:mxSession2];
     if (self)
@@ -259,12 +259,12 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     return [mxSession.store messagesEnumeratorForRoom:self.roomId];
 }
 
-- (id<MXEventsEnumerator>)enumeratorForStoredMessagesWithTypeIn:(NSArray *)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
+- (id<MXEventsEnumerator>)enumeratorForStoredMessagesWithTypeIn:(NSArray<MXEventTypeString> *)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
 {
     return [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:types ignoreMemberProfileChanges:mxSession.ignoreProfileChangesDuringLastMessageProcessing];
 }
 
-- (MXEvent *)lastMessageWithTypeIn:(NSArray*)types
+- (MXEvent *)lastMessageWithTypeIn:(NSArray<MXEventTypeString> *)types
 {
     MXEvent *lastMessage;
 
@@ -342,8 +342,9 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         if (event)
         {
             // Update the local echo with the error state (This will trigger kMXEventDidChangeSentStateNotification notification).
+            event.sentError = error;
             event.sentState = MXEventSentStateFailed;
-            
+
             // Update the stored echo.
             [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
         }
@@ -630,8 +631,9 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         else
         {
             // Update the local echo with the error state (This will trigger kMXEventDidChangeSentStateNotification notification).
+            event.sentError = error;
             event.sentState = MXEventSentStateFailed;
-            
+
             // Update the stored echo.
             [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
         }
@@ -820,8 +822,9 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         else
         {
             // Update the local echo with the error state (This will trigger kMXEventDidChangeSentStateNotification notification).
+            event.sentError = error;
             event.sentState = MXEventSentStateFailed;
-            
+
             // Update the stored echo.
             [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
         }
@@ -1043,8 +1046,9 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         else
         {
             // Update the local echo with the error state (This will trigger kMXEventDidChangeSentStateNotification notification).
+            event.sentError = error;
             event.sentState = MXEventSentStateFailed;
-            
+
             // Update the stored echo.
             [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
         }
@@ -1606,7 +1610,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 {
     BOOL managedEvents = false;
     
-    NSArray* eventIds = [event.content allKeys];
+    NSArray<NSString*>* eventIds = [event.content allKeys];
     
     for(NSString* eventId in eventIds)
     {
@@ -1615,11 +1619,11 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         
         if (readDict)
         {
-            NSArray* userIds = [readDict allKeys];
+            NSArray<NSString*>* userIds = [readDict allKeys];
             
             for(NSString* userId in userIds)
             {
-                NSDictionary* params = [readDict objectForKey:userId];
+                NSDictionary<NSString*, id>* params = [readDict objectForKey:userId];
                 
                 if ([params valueForKey:@"ts"])
                 {
@@ -1862,7 +1866,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         if (!directUserId)
         {
             // By default mark as direct this room for the oldest joined member.
-            NSArray *members = self.state.joinedMembers;
+            NSArray<MXRoomMember *> *members = self.state.joinedMembers;
             MXRoomMember *oldestJoinedMember;
             
             for (MXRoomMember *member in members)
@@ -1951,7 +1955,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     NSString *directUserId;
     
     // Enumerate all the user identifiers for which a direct chat is defined.
-    NSArray *userIdWithDirectRoom = mxSession.directRooms.allKeys;
+    NSArray<NSString *> *userIdWithDirectRoom = mxSession.directRooms.allKeys;
     
     for (NSString *userId in userIdWithDirectRoom)
     {

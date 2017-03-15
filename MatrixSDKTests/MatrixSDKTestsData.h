@@ -23,6 +23,7 @@
 
 // The URL of your test home server
 FOUNDATION_EXPORT NSString * const kMXTestsHomeServerURL;
+FOUNDATION_EXPORT NSString * const kMXTestsHomeServerHttpsURL;
 
 // Alice has a displayname and an avatar
 FOUNDATION_EXPORT NSString * const kMXTestsAliceDisplayName;
@@ -109,6 +110,16 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
 
 - (void)doMXSessionTestWithBobAndAliceInARoom:(XCTestCase*)testCase
                                   readyToTest:(void (^)(MXSession *bobSession,  MXRestClient *aliceRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest;
+
+
+#pragma mark - HTTPS mxBob
+- (void)getHttpsBobCredentials:(void (^)())success;
+- (void)getHttpsBobCredentials:(void (^)())success onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock;
+
+- (void)doHttpsMXRestClientTestWithBob:(XCTestCase*)testCase
+                           readyToTest:(void (^)(MXRestClient *bobRestClient, XCTestExpectation *expectation))readyToTest;
+- (void)doHttpsMXSessionTestWithBob:(XCTestCase*)testCase
+                        readyToTest:(void (^)(MXSession *mxSession, XCTestExpectation *expectation))readyToTest;
 
 
 #pragma mark - tools

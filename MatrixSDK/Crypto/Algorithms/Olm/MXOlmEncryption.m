@@ -58,13 +58,13 @@
                                 success:(void (^)(NSDictionary *encryptedContent))success
                                 failure:(void (^)(NSError *error))failure
 {
-    return [self ensureSession:users success:^{
+    return [self ensureSessionForUsers:users success:^(NSObject *sessionInfo) {
 
         NSMutableArray *participantDevices = [NSMutableArray array];
 
         for (NSString *userId in users)
         {
-            NSArray<MXDeviceInfo *> *devices = [crypto storedDevicesForUser:userId];
+            NSArray<MXDeviceInfo *> *devices = [crypto.deviceList storedDevicesForUser:userId];
             for (MXDeviceInfo *device in devices)
             {
                 if ([device.identityKey isEqualToString:crypto.olmDevice.deviceCurve25519Key])
@@ -94,34 +94,17 @@
     } failure:failure];
 }
 
-- (void)onRoomMembership:(NSString*)userId oldMembership:(MXMembership)oldMembership newMembership:(MXMembership)newMembership;
-{
-    // No impact for olm
-}
-
-- (void)onNewDevice:(NSString *)deviceId forUser:(NSString *)userId
-{
-    // No impact for olm
-}
-
-- (void)onDeviceVerification:(MXDeviceInfo *)device oldVerified:(MXDeviceVerification)oldVerified
-{
-    // No impact for olm
-}
-
-
-#pragma mark - Private methods
-- (MXHTTPOperation*)ensureSession:(NSArray<NSString*>*)users
-                          success:(void (^)())success
-                          failure:(void (^)(NSError *))failure
+- (MXHTTPOperation*)ensureSessionForUsers:(NSArray<NSString*>*)users
+                                  success:(void (^)(NSObject *sessionInfo))success
+                                  failure:(void (^)(NSError *error))failure
 {
     // TODO: Avoid to do this request for every message. Instead, manage a queue of messages waiting for encryption
     // XXX: This class is not used so fix it later
     MXHTTPOperation *operation;
-    operation = [crypto downloadKeys:users forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+    operation = [crypto.deviceList downloadKeys:users forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
 
         MXHTTPOperation *operation2 = [crypto ensureOlmSessionsForUsers:users success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {
-            success();
+            success(nil);
         } failure:failure];
 
         [operation mutateTo:operation2];

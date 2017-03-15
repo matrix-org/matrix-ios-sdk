@@ -1,0 +1,278 @@
+//
+//  MXSession.swift
+//  MatrixSDK
+//
+//  Created by Avery Pierce on 2/11/17.
+//  Copyright © 2017 matrix.org. All rights reserved.
+//
+
+import Foundation
+
+
+public extension MXSession {
+    
+    /**
+     Start fetching events from the home server.
+     
+     If the attached MXStore does not cache data permanently, the function will begin by making
+     an initialSync request to the home server to get information about the rooms the user has
+     interactions with.
+     Then, it will start the events streaming, a long polling connection to the home server to
+     listen to new coming events.
+     
+     If the attached MXStore caches data permanently, the function will do an initialSync only at
+     the first launch. Then, for next app launches, the SDK will load events from the MXStore and
+     will resume the events streaming from where it had been stopped the time before.
+     
+     - parameters:
+        - limit: The number of messages to retrieve in each room. If `nil`, this preloads 10 messages.
+     Use this argument to use a custom limit.
+        - completion: A block object called when the operation completes. In case of failure during
+     the initial sync, the session state is `MXSessionStateInitialSyncFailed`.
+        - response: Indicates whether the operation was successful.
+     */
+    @nonobjc func start(withMessagesLimit limit: UInt? = nil, completion: @escaping (_ response: MXResponse<Void>) -> Void) {
+        if let limit = limit {
+            __start(withMessagesLimit: limit, onServerSyncDone: currySuccess(completion), failure: curryFailure(completion))
+        } else {
+            __start(currySuccess(completion), failure: curryFailure(completion))
+        }
+    }
+    
+    
+    /**
+     Perform an events stream catchup in background (by keeping user offline).
+     
+     - parameters:
+        - timeout: the max time to perform the catchup
+        - completion: A block called when the SDK has completed a catchup, or times out.
+        - response: Indicates whether the sync was successful.
+     */
+    @nonobjc func backgroundSync(withTimeout timeout: TimeInterval, completion: @escaping (_ response: MXResponse<Void>) -> Void) {
+        let timeoutMilliseconds = UInt32(timeout * 1000)
+        __backgroundSync(timeoutMilliseconds, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    
+    
+    /**
+     Invalidate the access token, so that it can no longer be used for authorization.
+     
+     - parameters:
+        - completion: A block called when the SDK has completed a catchup, or times out.
+        - response: Indicates whether the sync was successful.
+     
+     - returns: an `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func logout(completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __logout(currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    
+    /**
+     Define the Matrix storage component to use.
+     
+     It must be set before calling [MXSession start].
+     Else, by default, the MXSession instance will use MXNoStore as storage.
+     
+     - parameters:
+        - store: the store to use for the session.
+        - completion: A block object called when the operation completes. If the operation was
+     successful, the SDK is then able to serve this data to its client. Note the data may not
+     be up-to-date. You need to call [MXSession start] to ensure the sync with the home server.
+        - response: indicates whether the operation was successful.
+     */
+    @nonobjc func setStore(_ store: MXStore, completion: @escaping (_ response: MXResponse<Void>) -> Void) {
+        __setStore(store, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    /**
+     Enable End-to-End encryption.
+     
+     In case of enabling, the operation will complete when the session will be ready
+     to make encrytion with other users devices
+     
+     - parameters:
+        - isEnabled: `false` stops crypto and erases crypto data.
+        - completion: A block called when the SDK has completed a catchup, or times out.
+        - response: Indicates whether the sync was successful.
+     */
+    @nonobjc @discardableResult func enableCrypto(_ isEnabled: Bool, completion: @escaping (_ response: MXResponse<Void>) -> Void) {
+        __enableCrypto(isEnabled, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    
+    
+    
+    
+    
+    /**
+     Create a room.
+     
+     - parameters:
+        - name: The room name.
+        - visibility: The visibility of the room in the current HS's room directory.
+        - roomAlias: The room alias on the home server the room will be created.
+        - topic: The room topic.
+        - invite: A list of user IDs to invite to the room. This will tell the server to invite everyone in the list to the newly created room.
+        - invite3PID: A list of objects representing third party IDs to invite into the room.
+        - isDirect: This flag makes the server set the is_direct flag on the m.room.member events sent to the users in invite and invite_3pid.
+        - preset: Convenience parameter for setting various default state events based on a preset.
+     
+        - completion: A block object called when the operation completes.
+        - response: Provides a MXCreateRoomResponse object on success.
+     
+     - returns: a MXHTTPOperation instance.
+     */
+    @nonobjc @discardableResult func createRoom(name: String?,
+                                                visibility: MXRoomDirectoryVisibility?,
+                                                alias: String?,
+                                                topic: String?,
+                                                invite: [String]? = nil,
+                                                invite3PID: [MXInvite3PID]? = nil,
+                                                isDirect: Bool = false,
+                                                preset: MXRoomPreset?,
+                                                completion: @escaping (_ response: MXResponse<MXRoom>) -> Void) -> MXHTTPOperation {
+        
+        return __createRoom(name, visibility: nil, roomAlias: alias, topic: topic,
+                            invite: invite, invite3PID: invite3PID,
+                            isDirect: isDirect, preset: preset?.identifier,
+                            success: currySuccess(completion), failure: curryFailure(completion));
+    }
+    
+    
+    
+    
+    
+    
+    
+    /**
+     Create a room.
+     
+     - parameters:
+     - parameters: The parameters. Refer to the matrix specification for details.
+     - completion: A block object called when the operation completes.
+     - response: Provides a MXCreateRoomResponse object on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func createRoom(parameters: [String: Any], completion: @escaping (_ response: MXResponse<MXCreateRoomResponse>) -> Void) -> MXHTTPOperation {
+        return __createRoom(parameters, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    
+    
+    
+    /**
+     Join a room, optionally where the user has been invited by a 3PID invitation.
+     
+     - parameters:
+        - roomIdOrAlias: The id or an alias of the room to join.
+        - signUrl: the url provided in an invitation.
+        - completion: A block object called when the operation completes.
+        - response: Provides the room on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func joinRoom(_ roomIdOrAlias: String, withSignUrl signUrl: URL? = nil, completion: @escaping (_ response: MXResponse<MXRoom>) -> Void) -> MXHTTPOperation {
+        if let signUrl = signUrl {
+            return __joinRoom(roomIdOrAlias, withSignUrl: signUrl.absoluteString, success: currySuccess(completion), failure: curryFailure(completion))
+        } else {
+            return __joinRoom(roomIdOrAlias, success: currySuccess(completion), failure: curryFailure(completion))
+        }
+    }
+
+    
+    /**
+     Leave a room.
+     
+     - parameters:
+        - roomId: the id of the room to leave.
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func leaveRoom(_ roomId: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __leaveRoom(roomId, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    
+    
+    
+    
+    /// list of all rooms.
+    @nonobjc var rooms: [MXRoom] {
+        return __rooms()
+    }
+    
+    
+    /**
+     Update the direct rooms list on homeserver side with the current value of the `directRooms` property.
+     
+     - parameters:
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func uploadDirectRooms(completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __uploadDirectRooms(currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+
+    /**
+     Start peeking a room.
+     
+     The operation succeeds only if the history visibility for the room is world_readable.
+     
+     - parameters:
+        - roomId: The room id to the room.
+        - completion: A block object called when the operation completes.
+        - response: Provides the `MXPeekingRoom` to get the room data on success.
+    */
+    @nonobjc func peek(inRoom roomId: String, completion: @escaping (_ response: MXResponse<MXPeekingRoom>) -> Void) {
+        return __peekInRoom(withRoomId: roomId, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    
+    
+    
+    
+    /**
+     Ignore a list of users.
+     
+     - parameters:
+        - userIds: a list of users ids
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func ignore(users userIds: [String], completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __ignoreUsers(userIds, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    /**
+     Unignore a list of users.
+     
+     - parameters:
+        - userIds: a list of users ids
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func unIgnore(users userIds: [String], completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __unIgnoreUsers(userIds, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+}

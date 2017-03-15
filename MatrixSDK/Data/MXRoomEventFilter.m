@@ -18,7 +18,7 @@
 
 @interface MXRoomEventFilter()
 {
-    NSMutableDictionary *dictionary;
+    NSMutableDictionary<NSString *, id> *dictionary;
 }
 @end
 
@@ -81,7 +81,7 @@
     dictionary[@"limit"] = [NSNumber numberWithUnsignedInteger:limit];
 }
 
-- (NSDictionary*)dictionary
+- (NSDictionary<NSString *, id>*)dictionary
 {
     return dictionary;
 }

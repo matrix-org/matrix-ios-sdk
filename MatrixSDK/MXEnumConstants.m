@@ -16,6 +16,8 @@
 
 #import "MXEnumConstants.h"
 
+#import "MXSDKOptions.h"
+
 /**
  Room visibility in the homeserver directory.
  */

@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
- 
+ Copyright 2017 Vector Creations Ltd
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -16,6 +17,8 @@
 
 #import "MXSession.h"
 #import "MatrixSDK.h"
+
+#import <AFNetworking/AFNetworking.h>
 
 #import "MXSessionEventListener.h"
 
@@ -41,7 +44,7 @@
 
 #pragma mark - Constants definitions
 
-const NSString *MatrixSDKVersion = @"0.7.6";
+const NSString *MatrixSDKVersion = @"0.7.8";
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
@@ -203,6 +206,8 @@ typedef void (^MXOnResumeDone)();
                               kMXEventTypeStringRoomMessage,
                               kMXEventTypeStringCallInvite
                               ];
+
+        _catchingUp = NO;
 
         [self setState:MXSessionStateInitialised];
     }
@@ -714,13 +719,17 @@ typedef void (^MXOnResumeDone)();
 #pragma mark - Server sync
 
 - (void)serverSyncWithServerTimeout:(NSUInteger)serverTimeout
-                      success:(void (^)())success
-                      failure:(void (^)(NSError *error))failure
+                            success:(void (^)())success
+                            failure:(void (^)(NSError *error))failure
                       clientTimeout:(NSUInteger)clientTimeout
                         setPresence:(NSString*)setPresence
 {
     NSDate *startDate = [NSDate date];
-    NSLog(@"[MXSession] Do a server sync");
+
+    // Determine if we are catching up
+    _catchingUp = (0 == serverTimeout);
+
+    NSLog(@"[MXSession] Do a server sync%@", _catchingUp ? @" (catching up)" : @"");
 
     NSString *inlineFilter;
     if (-1 != syncMessagesLimit)
@@ -736,6 +745,9 @@ typedef void (^MXOnResumeDone)();
         {
             return;
         }
+
+        // By default, the next sync will be a long polling (with the default server timeout value)
+        NSUInteger nextServerTimeout = SERVER_TIMEOUT_MS;
 
         NSTimeInterval durationMs = [[NSDate date] timeIntervalSinceDate:startDate] * 1000;
         NSLog(@"[MXSession] Received %tu joined rooms, %tu invited rooms, %tu left rooms in %.0fms", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, durationMs);
@@ -772,6 +784,14 @@ typedef void (^MXOnResumeDone)();
         for (MXEvent *toDeviceEvent in syncResponse.toDevice.events)
         {
             [self handleToDeviceEvent:toDeviceEvent];
+        }
+
+        if (_catchingUp && syncResponse.toDevice.events.count)
+        {
+            // We may have not received all to-device events in a single /sync response
+            // Pursue /sync with short timeout
+            NSLog(@"[MXSession] Continue /sync with short timeout to get all to-device events (%@)", _myUser.userId);
+            nextServerTimeout = 0;
         }
         
         // Handle first joined rooms
@@ -879,7 +899,15 @@ typedef void (^MXOnResumeDone)();
                 }
             }
         }
-        
+
+        // Handle crypto sync data
+        if (_crypto && syncResponse.deviceLists.changed)
+        {
+            [_crypto handleDeviceListsChanged:syncResponse.deviceLists.changed
+                                 oldSyncToken:_store.eventStreamToken
+                                nextSyncToken:syncResponse.nextBatch];
+        }
+
         // Update live event stream token
         _store.eventStreamToken = syncResponse.nextBatch;
         
@@ -887,6 +915,12 @@ typedef void (^MXOnResumeDone)();
         if ([_store respondsToSelector:@selector(commit)])
         {
             [_store commit];
+        }
+
+        // Do a loop of /syncs until catching up is done
+        if (nextServerTimeout == 0)
+        {
+            [self serverSyncWithServerTimeout:nextServerTimeout success:success failure:failure clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
         }
         
         // there is a pending backgroundSync
@@ -944,8 +978,8 @@ typedef void (^MXOnResumeDone)();
             return;
         }
         
-        // Pursue live events listening (long polling)
-        [self serverSyncWithServerTimeout:SERVER_TIMEOUT_MS success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+        // Pursue live events listening
+        [self serverSyncWithServerTimeout:nextServerTimeout success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
 
 #ifdef MX_GA
         if ([MXSDKOptions sharedInstance].enableGoogleAnalytics && isInitialSync)
@@ -1061,14 +1095,14 @@ typedef void (^MXOnResumeDone)();
                     // Relaunch the request in a random near futur.
                     // Random time it used to avoid all Matrix clients to retry all in the same time
                     // if there is server side issue like server restart
-                    dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, [MXHTTPClient jitterTimeForRetry] * NSEC_PER_MSEC);
+                    dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, [MXHTTPClient timeForRetry:eventStreamRequest] * NSEC_PER_MSEC);
                     dispatch_after(delayTime, dispatch_get_main_queue(), ^(void) {
                         
                         if (eventStreamRequest)
                         {
                             NSLog(@"[MXSession] Retry resuming events stream");
                             [self setState:MXSessionStateSyncInProgress];
-                            [self serverSyncWithServerTimeout:serverTimeout success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+                            [self serverSyncWithServerTimeout:0 success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
                         }
                     });
                 }
@@ -1084,7 +1118,7 @@ typedef void (^MXOnResumeDone)();
                             
                             NSLog(@"[MXSession] Retry resuming events stream");
                             [self setState:MXSessionStateSyncInProgress];
-                            [self serverSyncWithServerTimeout:serverTimeout success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+                            [self serverSyncWithServerTimeout:0 success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
                         }
                     }];
                 }
@@ -1216,10 +1250,8 @@ typedef void (^MXOnResumeDone)();
     _callManager = [[MXCallManager alloc] initWithMatrixSession:self andCallStack:callStack];
 }
 
-- (MXHTTPOperation *)enableCrypto:(BOOL)enableCrypto success:(void (^)())success failure:(void (^)(NSError *))failure
+- (void)enableCrypto:(BOOL)enableCrypto success:(void (^)())success failure:(void (^)(NSError *))failure
 {
-    MXHTTPOperation *operation;
-
     NSLog(@"[MXSesion] enableCrypto: %@", @(enableCrypto));
 
     if (enableCrypto && !_crypto)
@@ -1228,7 +1260,7 @@ typedef void (^MXOnResumeDone)();
 
         if (_state == MXSessionStateRunning)
         {
-            operation = [_crypto start:success failure:failure];
+            [_crypto start:success failure:failure];
         }
         else
         {
@@ -1259,8 +1291,6 @@ typedef void (^MXOnResumeDone)();
             success();
         }
     }
-
-    return operation;
 }
 
 
@@ -2209,24 +2239,20 @@ typedef void (^MXOnResumeDone)();
 
  @param complete a block called in any case when the operation completes.
  */
-- (MXHTTPOperation*)startCrypto:(void (^)())success
-                        failure:(void (^)(NSError *error))failure
+- (void)startCrypto:(void (^)())success
+            failure:(void (^)(NSError *error))failure
 {
-    MXHTTPOperation *operation;
-
     NSLog(@"[MXSession] Start crypto");
 
     if (_crypto)
     {
-        operation = [_crypto start:success failure:failure];
+        [_crypto start:success failure:failure];
     }
     else
     {
         NSLog(@"[MXSession] Start crypto -> No crypto");
         success();
     }
-
-    return operation;
 }
 
 - (BOOL)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline

@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
- 
+ Copyright 2017 Vector Creations Ltd
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -35,7 +36,7 @@
         MXJSONModelSetString(publicRoom.name , sanitisedJSONDictionary[@"name"]);
         MXJSONModelSetArray(publicRoom.aliases , sanitisedJSONDictionary[@"aliases"]);
         MXJSONModelSetString(publicRoom.topic , sanitisedJSONDictionary[@"topic"]);
-        MXJSONModelSetUInteger(publicRoom.numJoinedMembers, sanitisedJSONDictionary[@"num_joined_members"]);
+        MXJSONModelSetInteger(publicRoom.numJoinedMembers, sanitisedJSONDictionary[@"num_joined_members"]);
         MXJSONModelSetBoolean(publicRoom.worldReadable, sanitisedJSONDictionary[@"world_readable"]);
         MXJSONModelSetBoolean(publicRoom.guestCanJoin, sanitisedJSONDictionary[@"guest_can_join"]);
         MXJSONModelSetString(publicRoom.avatarUrl , sanitisedJSONDictionary[@"avatar_url"]);
@@ -78,6 +79,11 @@ NSString *const kMXLoginFlowTypeEmailIdentity = @"m.login.email.identity";
 NSString *const kMXLoginFlowTypeToken = @"m.login.token";
 NSString *const kMXLoginFlowTypeDummy = @"m.login.dummy";
 NSString *const kMXLoginFlowTypeEmailCode = @"m.login.email.code";
+NSString *const kMXLoginFlowTypeMSISDN = @"m.login.msisdn";
+
+NSString *const kMXLoginIdentifierTypeUser = @"m.id.user";
+NSString *const kMXLoginIdentifierTypeThirdParty = @"m.id.thirdparty";
+NSString *const kMXLoginIdentifierTypePhone = @"m.id.phone";
 
 @implementation MXLoginFlow
 
@@ -1010,6 +1016,20 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 
 @end
 
+@implementation MXDeviceListResponse
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXDeviceListResponse *deviceListResponse = [[MXDeviceListResponse alloc] init];
+    if (deviceListResponse)
+    {
+        MXJSONModelSetArray(deviceListResponse.changed, JSONDictionary[@"changed"]);
+    }
+    return deviceListResponse;
+}
+
+@end
+
 @implementation MXRoomsSyncResponse
 
 // Override the default Mantle modelFromJSON method to convert room lists.
@@ -1058,6 +1078,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         MXJSONModelSetString(syncResponse.nextBatch, JSONDictionary[@"next_batch"]);
         MXJSONModelSetMXJSONModel(syncResponse.presence, MXPresenceSyncResponse, JSONDictionary[@"presence"]);
         MXJSONModelSetMXJSONModel(syncResponse.toDevice, MXToDeviceSyncResponse, JSONDictionary[@"to_device"]);
+        MXJSONModelSetMXJSONModel(syncResponse.deviceLists, MXDeviceListResponse, JSONDictionary[@"device_lists"]);
         MXJSONModelSetMXJSONModel(syncResponse.rooms, MXRoomsSyncResponse, JSONDictionary[@"rooms"]);
     }
 

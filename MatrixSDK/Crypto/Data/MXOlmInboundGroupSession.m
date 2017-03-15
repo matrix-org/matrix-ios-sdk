@@ -18,6 +18,8 @@
 
 #ifdef MX_CRYPTO
 
+#import "MXCryptoConstants.h"
+
 @implementation MXOlmInboundGroupSession
 
 - (instancetype)initWithSessionKey:(NSString *)sessionKey
@@ -30,6 +32,59 @@
         {
             return nil;
         }
+    }
+    return self;
+}
+
+
+#pragma mark - import/export
+- (MXMegolmSessionData *)exportSessionDataAtMessageIndex:(NSUInteger)messageIndex
+{
+    MXMegolmSessionData *sessionData;
+
+    NSError *error;
+    NSString *sessionKey = [_session exportSessionAtMessageIndex:messageIndex error:&error];
+
+    if (!error)
+    {
+        sessionData = [[MXMegolmSessionData alloc] init];
+
+        sessionData.senderKey = _senderKey;
+        sessionData.senderClaimedKeys = _keysClaimed;
+        sessionData.roomId = _roomId;
+        sessionData.sessionId = _session.sessionIdentifier;
+        sessionData.sessionKey = sessionKey;
+        sessionData.algorithm = kMXCryptoMegolmAlgorithm;
+    }
+    else
+    {
+        NSLog(@"[MXOlmInboundGroupSession] exportSessionData: Cannot export session with id %@-%@. Error: %@", _session.sessionIdentifier, _senderKey, error);
+    }
+
+    return sessionData;
+}
+
+- (MXMegolmSessionData *)exportSessionData
+{
+    return [self exportSessionDataAtMessageIndex:_session.firstKnownIndex];
+}
+
+- (instancetype)initWithSessionData:(MXMegolmSessionData *)data
+{
+    self = [self init];
+    if (self)
+    {
+        NSError *error;
+        _session  = [[OLMInboundGroupSession alloc] initInboundGroupSessionWithImportedSession:data.sessionKey error:&error];
+        if (!_session)
+        {
+            NSLog(@"[MXOlmInboundGroupSession] initWithSessionData failed. Error: %@", error);
+            return nil;
+        }
+
+        _senderKey = data.senderKey;
+        _keysClaimed = data.senderClaimedKeys;
+        _roomId= data.roomId;
     }
     return self;
 }

@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
- 
+ Copyright 2017 Vector Creations Ltd
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -24,11 +25,6 @@
  The max time in milliseconds a request can be retried in the case of rate limiting errors.
  */
 #define MXHTTPCLIENT_RATE_LIMIT_MAX_MS 20000
-
-/**
- The base time in milliseconds between 2 retries.
- */
-#define MXHTTPCLIENT_RETRY_AFTER_MS 5000
 
 /**
  The jitter value to apply to compute a random retry time.
@@ -116,7 +112,10 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
 #if TARGET_OS_IPHONE
         backgroundTaskIdentifier = UIBackgroundTaskInvalid;
 #endif
-        
+
+        // No need for caching. The sdk caches the data it needs
+        [httpManager.requestSerializer setCachePolicy:NSURLRequestReloadIgnoringLocalCacheData];
+
         // Send requests parameters in JSON format by default
         self.requestParametersInJSON = YES;
 
@@ -358,7 +357,11 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
                         }
                     }
                 }
-                else if (mxHTTPOperation.numberOfTries < mxHTTPOperation.maxNumberOfTries && mxHTTPOperation.age < mxHTTPOperation.maxRetriesTime)
+                else if (mxHTTPOperation.numberOfTries < mxHTTPOperation.maxNumberOfTries
+                         && mxHTTPOperation.age < mxHTTPOperation.maxRetriesTime
+                         && !([error.domain isEqualToString:NSURLErrorDomain] && error.code == kCFURLErrorCancelled)    // No need to retry a cancelation (which can also happen on SSL error)
+                         && response.statusCode != 400 && response.statusCode != 401 && response.statusCode != 403      // No amount of retrying will save you now
+                         )
                 {
                     // Check if it is a network connectivity issue
                     AFNetworkReachabilityManager *networkReachabilityManager = [AFNetworkReachabilityManager sharedManager];
@@ -367,7 +370,7 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
                     if (networkReachabilityManager.isReachable)
                     {
                         // The problem is not the network, do simple retry later
-                        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, [MXHTTPClient jitterTimeForRetry] * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
+                        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, [MXHTTPClient timeForRetry:mxHTTPOperation] * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
 
                             NSLog(@"[MXHTTPClient] Retry request %p. Try #%tu/%tu. Age: %tums. Max retries time: %tums", mxHTTPOperation, mxHTTPOperation.numberOfTries + 1, mxHTTPOperation.maxNumberOfTries, mxHTTPOperation.age, mxHTTPOperation.maxRetriesTime);
 
@@ -478,10 +481,12 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
     [mxHTTPOperation.operation resume];
 }
 
-+ (NSUInteger)jitterTimeForRetry
++ (NSUInteger)timeForRetry:(MXHTTPOperation *)httpOperation
 {
     NSUInteger jitter = arc4random_uniform(MXHTTPCLIENT_RETRY_JITTER_MS);
-    return  (MXHTTPCLIENT_RETRY_AFTER_MS + jitter);
+
+    NSUInteger retry = (2 << (httpOperation.numberOfTries - 1)) * 1000 + jitter;
+    return retry;
 }
 
 

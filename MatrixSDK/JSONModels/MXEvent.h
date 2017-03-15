@@ -58,7 +58,7 @@ typedef enum : NSUInteger
 
     // The event is a custom event. Refer to its `MXEventTypeString` version
     MXEventTypeCustom = 1000
-} MXEventType;
+} MXEventType NS_REFINED_FOR_SWIFT;
 
 /**
  Types of Matrix events - String version
@@ -97,7 +97,7 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallHangup;
 /**
  Types of room messages
  */
-typedef NSString* MXMessageType;
+typedef NSString* MXMessageType NS_REFINED_FOR_SWIFT;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeText;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeEmote;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeNotice;
@@ -152,9 +152,10 @@ typedef enum : NSUInteger
     MXEventSentStateSending,
     /**
      The event is an outgoing event which failed to be sent.
+     See the `sentError` property to check the failure reason.
      */
     MXEventSentStateFailed
-    
+
 } MXEventSentState;
 
 /**
@@ -178,6 +179,16 @@ FOUNDATION_EXPORT uint64_t const kMXUndefinedTimestamp;
 FOUNDATION_EXPORT NSString *const kMXEventDidChangeSentStateNotification;
 
 /**
+ Posted when the MXEvent has updated its identifier.
+ This notification is triggered only for the temporary local events.
+ 
+ The `userInfo` dictionary contains the previous event identifier under the `kMXEventIdentifierKey` key.
+ 
+ The notification object is the MXEvent.
+ */
+FOUNDATION_EXPORT NSString *const kMXEventDidChangeIdentifierNotification;
+
+/**
  Posted when the MXEvent has been decrypted.
  
  The notification is sent for event that is received before the key to decrypt it.
@@ -185,6 +196,11 @@ FOUNDATION_EXPORT NSString *const kMXEventDidChangeSentStateNotification;
  The notification object is the MXEvent.
  */
 FOUNDATION_EXPORT NSString *const kMXEventDidDecryptNotification;
+
+/**
+ Notifications `userInfo` keys
+ */
+extern NSString *const kMXEventIdentifierKey;
 
 
 /**
@@ -241,7 +257,7 @@ FOUNDATION_EXPORT NSString *const kMXEventDidDecryptNotification;
  If the event is encrypted and the decryption failed (check 'decryptionError' property),
   'content' will remain encrypted.
  */
-@property (nonatomic, readonly) NSDictionary *content;
+@property (nonatomic, readonly) NSDictionary<NSString *, id> *content;
 
 /**
  The string event (possibly encrypted) type as provided by the homeserver.
@@ -265,12 +281,12 @@ FOUNDATION_EXPORT NSString *const kMXEventDidDecryptNotification;
  Do not access this property directly unless you absolutely have to. Prefer to use the
  'content' property that manages decryption.
  */
-@property (nonatomic) NSDictionary *wireContent;
+@property (nonatomic) NSDictionary<NSString *, id> *wireContent;
 
 /**
  Optional. Contains the previous content for this event. If there is no previous content, this key will be missing.
  */
-@property (nonatomic) NSDictionary *prevContent;
+@property (nonatomic) NSDictionary<NSString *, id> *prevContent;
 
 /**
  Contains the state key for this state event. If there is no state key for this state event, this will be an empty
@@ -320,6 +336,11 @@ FOUNDATION_EXPORT NSString *const kMXEventDidDecryptNotification;
  In case of invite event, inviteRoomState contains a subset of the state of the room at the time of the invite.
  */
 @property (nonatomic) NSArray<MXEvent *> *inviteRoomState;
+
+/**
+ In case of sending failure (MXEventSentStateFailed), the error that occured.
+ */
+@property (nonatomic) NSError *sentError;
 
 /**
  Indicates if the event hosts state data.

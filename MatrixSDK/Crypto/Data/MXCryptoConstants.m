@@ -1,5 +1,6 @@
 /*
  Copyright 2016 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,3 +19,12 @@
 
 NSString *const kMXCryptoOlmAlgorithm = @"m.olm.v1.curve25519-aes-sha2";
 NSString *const kMXCryptoMegolmAlgorithm = @"m.megolm.v1.aes-sha2";
+
+
+#pragma mark - Encrypting error
+
+NSString *const MXEncryptingErrorDomain = @"org.matrix.sdk.encryption";
+
+NSString* const MXEncryptingErrorUnknownDeviceReason = @"This room contains unknown devices which have not been verified. We strongly recommend you verify them before continuing.";
+
+NSString* const MXEncryptingErrorUnknownDeviceDevicesKey = @"MXEncryptingErrorUnknownDeviceDevicesKey";

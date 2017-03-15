@@ -1,5 +1,6 @@
 /*
  Copyright 2016 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -25,4 +26,24 @@ FOUNDATION_EXPORT NSString *const kMXCryptoOlmAlgorithm;
  Matrix algorithm tag for megolm.
  */
 FOUNDATION_EXPORT NSString *const kMXCryptoMegolmAlgorithm;
+
+
+#pragma mark - Encrypting error
+
+FOUNDATION_EXPORT NSString *const MXEncryptingErrorDomain;
+
+typedef enum : NSUInteger
+{
+    // Note: The list of unknown devices is passed into the MXEncryptingErrorUnknownDeviceDevicesKey key in userInfo
+    MXEncryptingErrorUnknownDeviceCode
+} MXEncryptingErrorCode;
+
+FOUNDATION_EXPORT NSString* const MXEncryptingErrorUnknownDeviceReason;
+
+/**
+ In case of MXEncryptingErrorUnknownDeviceCode error, the key in the notification userInfo
+ dictionary for the list of unknown devices.
+ There are provided as a MXUsersDevicesMap<MXDeviceInfo*> instance.
+ */
+FOUNDATION_EXPORT NSString *const MXEncryptingErrorUnknownDeviceDevicesKey;
 

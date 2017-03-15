@@ -1,5 +1,6 @@
 /*
  Copyright 2016 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -23,13 +24,17 @@
 
 @interface MXMegolmDecryption ()
 {
+    // The crypto module
+    MXCrypto *crypto;
+
     // The olm device interface
     MXOlmDevice *olmDevice;
 
     // Events which we couldn't decrypt due to unknown sessions / indexes: map from
     // senderKey|sessionId to timelines to list of MatrixEvents
     NSMutableDictionary<NSString* /* senderKey|sessionId */,
-        NSMutableDictionary<NSString* /* timelineId */, NSMutableArray<MXEvent*>*>*> *pendingEvents;
+        NSMutableDictionary<NSString* /* timelineId */,
+            NSMutableDictionary<NSString* /* eventId */, MXEvent*>*>*> *pendingEvents;
 }
 @end
 
@@ -42,12 +47,13 @@
 }
 
 #pragma mark - MXDecrypting
-- (instancetype)initWithCrypto:(MXCrypto *)crypto
+- (instancetype)initWithCrypto:(MXCrypto *)theCrypto
 {
     self = [super init];
     if (self)
     {
-        olmDevice = crypto.olmDevice;
+        crypto = theCrypto;
+        olmDevice = theCrypto.olmDevice;
         pendingEvents = [NSMutableDictionary dictionary];
     }
     return self;
@@ -58,6 +64,9 @@
     NSString *senderKey = event.content[@"sender_key"];
     NSString *ciphertext = event.content[@"ciphertext"];
     NSString *sessionId = event.content[@"session_id"];
+
+    // TODO: Remove this requirement after fixing https://github.com/matrix-org/matrix-ios-sdk/issues/205
+    NSParameterAssert([NSThread currentThread].isMainThread);
 
     if (!senderKey || !sessionId || !ciphertext)
     {
@@ -75,18 +84,7 @@
     if (result)
     {
         MXEvent *clearedEvent = [MXEvent modelFromJSON:result.payload];
-
-        // @TODO: We should always be on the crypto queue
-        if ([NSThread currentThread].isMainThread)
-        {
-            [event setClearData:clearedEvent keysProved:result.keysProved keysClaimed:result.keysClaimed];
-        }
-        else
-        {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [event setClearData:clearedEvent keysProved:result.keysProved keysClaimed:result.keysClaimed];
-            });
-        }
+        [event setClearData:clearedEvent keysProved:result.keysProved keysClaimed:result.keysClaimed];
     }
     else
     {
@@ -140,11 +138,11 @@
 
     if (!pendingEvents[k][timelineId])
     {
-        pendingEvents[k][timelineId] = [NSMutableArray array];
+        pendingEvents[k][timelineId] = [NSMutableDictionary dictionary];
     }
 
     NSLog(@"[MXMegolmDecryption] addEventToPendingList: %@", event);
-    [pendingEvents[k][timelineId] addObject:event];
+    pendingEvents[k][timelineId][event.eventId] = event;
 }
 
 - (void)onRoomKeyEvent:(MXEvent *)event
@@ -163,28 +161,64 @@
 
     [olmDevice addInboundGroupSession:sessionId sessionKey:sessionKey roomId:roomId senderKey:event.senderKey keysClaimed:event.keysClaimed];
 
-    NSString *k = [NSString stringWithFormat:@"%@|%@", event.senderKey, event.content[@"session_id"]];
-    NSDictionary *pending = pendingEvents[k];
-    if (pending)
-    {
-        // Have another go at decrypting events sent with this session.
-        [pendingEvents removeObjectForKey:k];
+    [self retryDecryption:event.senderKey sessionId:event.content[@"session_id"]];
+}
 
-        for (NSString *timelineId in pending)
-        {
-            for (MXEvent *event in pending[timelineId])
+- (void)importRoomKey:(MXMegolmSessionData *)session
+{
+    [olmDevice importInboundGroupSession:session];
+
+    // Have another go at decrypting events sent with this session
+    [self retryDecryption:session.senderKey sessionId:session.sessionId];
+}
+
+
+#pragma mark - Private methods
+
+/**
+ Have another go at decrypting events after we receive a key.
+
+ @param senderKey the sender key.
+ @param sessionId the session id.
+ */
+- (void)retryDecryption:(NSString*)senderKey sessionId:(NSString*)sessionId
+{
+    // Do the retry is the same threads conditions as [MXCrypto decryptEvent]
+    // ie, lock the main thread while decrypting events
+    // TODO: Remove this after fixing https://github.com/matrix-org/matrix-ios-sdk/issues/205
+    dispatch_async(dispatch_get_main_queue(), ^{
+
+        dispatch_sync(crypto.decryptionQueue, ^{
+
+            NSString *k = [NSString stringWithFormat:@"%@|%@", senderKey, sessionId];
+            NSDictionary<NSString*, NSDictionary<NSString*,MXEvent*>*> *pending = pendingEvents[k];
+            if (pending)
             {
-                if ([self decryptEvent:event inTimeline:(timelineId.length ? timelineId : nil)])
+                // Have another go at decrypting events sent with this session.
+                [pendingEvents removeObjectForKey:k];
+
+                for (NSString *timelineId in pending)
                 {
-                    NSLog(@"[MXMegolmDecryption] onRoomKeyEvent: successful re-decryption of %@", event.eventId);
-                }
-                else
-                {
-                    NSLog(@"[MXMegolmDecryption] onRoomKeyEvent: Still can't decrypt %@. Error: %@", event.eventId, event.decryptionError);
+                    for (MXEvent *event in pending[timelineId].allValues)
+                    {
+                        if (event.clearEvent)
+                        {
+                            // This can happen when the event is in several timelines
+                            NSLog(@"[MXMegolmDecryption] retryDecryption: %@ already decrypted", event.eventId);
+                        }
+                        else if ([self decryptEvent:event inTimeline:(timelineId.length ? timelineId : nil)])
+                        {
+                            NSLog(@"[MXMegolmDecryption] retryDecryption: successful re-decryption of %@", event.eventId);
+                        }
+                        else
+                        {
+                            NSLog(@"[MXMegolmDecryption] retryDecryption: Still can't decrypt %@. Error: %@", event.eventId, event.decryptionError);
+                        }
+                    }
                 }
             }
-        }
-    }
+        });
+    });
 }
 
 @end

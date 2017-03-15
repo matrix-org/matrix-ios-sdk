@@ -21,7 +21,7 @@
     /**
      This dictionary stores "account_data" data in a flat manner.
      */
-    NSMutableDictionary *accountDataDict;
+    NSMutableDictionary<NSString *, id> *accountDataDict;
 }
 @end
 
@@ -37,15 +37,15 @@
     return self;
 }
 
-- (void)updateWithEvent:(NSDictionary *)event
+- (void)updateWithEvent:(NSDictionary<NSString *, id> *)event
 {
     accountDataDict[event[@"type"]] = event[@"content"];
 }
 
-- (NSDictionary *)accountData
+- (NSDictionary<NSString *, id> *)accountData
 {
     // Rebuild the dictionary as sent by the homeserver
-    NSMutableArray *events = [NSMutableArray array];
+    NSMutableArray<NSDictionary<NSString *, id> *> *events = [NSMutableArray array];
     for (NSString *type in accountDataDict)
     {
         [events addObject:@{

@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
- 
+ Copyright 2017 Vector Creations Ltd
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -32,7 +33,7 @@
  Types of third party media.
  The list is not exhautive and depends on the Identity server capabilities.
  */
-typedef NSString* MX3PIDMedium;
+typedef NSString* MX3PIDMedium NS_REFINED_FOR_SWIFT;
 FOUNDATION_EXPORT NSString *const kMX3PIDMediumEmail;
 FOUNDATION_EXPORT NSString *const kMX3PIDMediumMSISDN;
 
@@ -64,7 +65,7 @@ FOUNDATION_EXPORT NSString *const kMX3PIDMediumMSISDN;
     /**
      The number of members joined to the room.
      */
-    @property (nonatomic) NSUInteger numJoinedMembers;
+    @property (nonatomic) NSInteger numJoinedMembers;
 
     /**
      Whether the room may be viewed by guest users without joining.
@@ -92,15 +93,24 @@ FOUNDATION_EXPORT NSString *const kMX3PIDMediumMSISDN;
 /**
  Login flow types
  */
-typedef NSString* MXLoginFlowType;
+typedef NSString* MXLoginFlowType NS_REFINED_FOR_SWIFT;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypePassword;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeRecaptcha;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeOAuth2;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeEmailIdentity;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeToken;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeDummy;
+FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeMSISDN;
 
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeEmailCode; // Deprecated
+
+/**
+ Identifier types
+ */
+typedef NSString* MXLoginIdentifierType;
+FOUNDATION_EXPORT NSString *const kMXLoginIdentifierTypeUser;
+FOUNDATION_EXPORT NSString *const kMXLoginIdentifierTypeThirdParty;
+FOUNDATION_EXPORT NSString *const kMXLoginIdentifierTypePhone;
 
 /**
  `MXLoginFlow` represents a login or a register flow supported by the home server.
@@ -454,7 +464,7 @@ typedef enum : NSUInteger
     MXPushRuleKindRoom,
     MXPushRuleKindSender,
     MXPushRuleKindUnderride
-} MXPushRuleKind;
+} MXPushRuleKind NS_REFINED_FOR_SWIFT;
 
 /**
  `MXPushRule` defines a push notification rule.
@@ -1139,7 +1149,20 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
     /**
      List of direct-to-device events.
      */
-@property (nonatomic) NSArray<MXEvent*> *events;
+    @property (nonatomic) NSArray<MXEvent*> *events;
+
+@end
+
+
+/**
+ `MXDeviceListResponse` represents the devices that have changed.
+ */
+@interface MXDeviceListResponse : MXJSONModel
+
+    /**
+     List of user ids whose devices have changed (new, removed).
+     */
+    @property (nonatomic) NSArray<NSString*> *changed;
 
 @end
 
@@ -1167,6 +1190,11 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
      Data directly sent to one of user's devices.
      */
     @property (nonatomic) MXToDeviceSyncResponse *toDevice;
+
+    /**
+     Devices list update.
+     */
+    @property (nonatomic) MXDeviceListResponse *deviceLists;
 
     /**
      List of rooms.

@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
- 
+ Copyright 2017 Vector Creations Ltd
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -239,6 +240,16 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 @property (nonatomic, readonly) MXSessionState state;
 
 /**
+ The flag indicating that we are trying to establish the event streams (/sync)
+ as quick as possible, even if there are no events queued. This is required in
+ some situations:
+    - When the connection dies, we want to know asap when it comes back (We don't
+      want to have to wait for an event or a timeout).
+    - We want to know if the server has any to-device messages queued up for us.
+ */
+@property (nonatomic, readonly) BOOL catchingUp;
+
+/**
  The profile of the current user.
  It is available only after the `onStoreDataReady` callback of `start` is called.
  */
@@ -297,7 +308,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  initial sync the session state is MXSessionStateInitialSyncFailed.
  */
 - (void)start:(void (^)())onServerSyncDone
-      failure:(void (^)(NSError *error))failure;
+      failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Start the session like `[MXSession start]` but preload the requested number of messages
@@ -311,7 +322,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  */
 - (void)startWithMessagesLimit:(NSUInteger)messagesLimit
               onServerSyncDone:(void (^)())onServerSyncDone
-                       failure:(void (^)(NSError *error))failure;
+                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Pause the session events stream.
@@ -342,7 +353,9 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 typedef void (^MXOnBackgroundSyncDone)();
 typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
-- (void)backgroundSync:(unsigned int)timeout success:(MXOnBackgroundSyncDone)backgroundSyncDone failure:(MXOnBackgroundSyncFail)backgroundSyncfails;
+- (void)backgroundSync:(unsigned int)timeout
+               success:(MXOnBackgroundSyncDone)backgroundSyncDone
+               failure:(MXOnBackgroundSyncFail)backgroundSyncfails NS_REFINED_FOR_SWIFT;
 
 /**
  Restart the session events stream.
@@ -367,7 +380,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)logout:(void (^)())success
-                   failure:(void (^)(NSError *error))failure;
+                   failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - MXSession pause prevention
@@ -412,7 +425,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @param failure A block object called when the operation fails.
  */
 - (void)setStore:(id<MXStore>)store success:(void (^)())onStoreDataReady
-         failure:(void (^)(NSError *error))failure;
+         failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  An array of event types for which read receipts are sent.
@@ -455,10 +468,8 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
- 
- @return the HTTP operation that may be required. Can be nil.
  */
-- (MXHTTPOperation*)enableCrypto:(BOOL)enableCrypto success:(void (^)())success failure:(void (^)(NSError *error))failure;
+- (void)enableCrypto:(BOOL)enableCrypto success:(void (^)())success failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - Rooms operations
@@ -481,7 +492,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                      roomAlias:(NSString*)roomAlias
                          topic:(NSString*)topic
                        success:(void (^)(MXRoom *room))success
-                       failure:(void (^)(NSError *error))failure;
+                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Create a room.
@@ -513,7 +524,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                       isDirect:(BOOL)isDirect
                         preset:(MXRoomPreset)preset
                        success:(void (^)(MXRoom *room))success
-                       failure:(void (^)(NSError *error))failure;
+                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Create a room.
@@ -528,7 +539,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 - (MXHTTPOperation*)createRoom:(NSDictionary*)parameters
                        success:(void (^)(MXRoom *room))success
-                       failure:(void (^)(NSError *error))failure;
+                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Join a room.
@@ -542,7 +553,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 - (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
                      success:(void (^)(MXRoom *room))success
-                     failure:(void (^)(NSError *error))failure;
+                     failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Join a room where the user has been invited by a 3PID invitation.
@@ -558,7 +569,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
                  withSignUrl:(NSString*)signUrl
                      success:(void (^)(MXRoom *room))success
-                     failure:(void (^)(NSError *error))failure;
+                     failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Leave a room.
@@ -573,7 +584,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 - (MXHTTPOperation*)leaveRoom:(NSString*)roomId
                       success:(void (^)())success
-                      failure:(void (^)(NSError *error))failure;
+                      failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - The user's rooms
@@ -600,7 +611,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  
  @return an array of MXRooms.
  */
-- (NSArray<MXRoom*>*)rooms;
+- (NSArray<MXRoom*>*)rooms NS_REFINED_FOR_SWIFT;
 
 /**
  Return the first joined direct chat listed in account data for this user.
@@ -626,7 +637,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)uploadDirectRooms:(void (^)())success
-                              failure:(void (^)(NSError *error))failure;
+                              failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - Rooms summaries
@@ -674,7 +685,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 - (void)peekInRoomWithRoomId:(NSString*)roomId
                      success:(void (^)(MXPeekingRoom *peekingRoom))success
-                     failure:(void (^)(NSError *error))failure;
+                     failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Stop peeking a room.
@@ -735,7 +746,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 - (MXHTTPOperation*)ignoreUsers:(NSArray<NSString*>*)userIds
                         success:(void (^)())success
-                        failure:(void (^)(NSError *error))failure;
+                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Unignore a list of users.
@@ -748,7 +759,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 - (MXHTTPOperation*)unIgnoreUsers:(NSArray<NSString*>*)userIds
                         success:(void (^)())success
-                        failure:(void (^)(NSError *error))failure;
+                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - User's recents

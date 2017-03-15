@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
- 
+ Copyright 2017 Vector Creations Ltd
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -136,9 +137,9 @@
     [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
-- (void)testJitterTimeForRetry
+- (void)testTimeForRetry
 {
-    XCTAssertNotEqual([MXHTTPClient jitterTimeForRetry], [MXHTTPClient jitterTimeForRetry], @"[MXHTTPClient jitterTimeForRetry] cannot return the same value twice");
+    XCTAssertNotEqual([MXHTTPClient timeForRetry:nil], [MXHTTPClient timeForRetry:nil], @"[MXHTTPClient timeForRetry] cannot return the same value twice");
 }
 
 @end

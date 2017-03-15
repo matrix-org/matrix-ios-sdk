@@ -9,7 +9,7 @@ This SDK implements an interface to communicate with the Matrix Client/Server
 API which is defined at http://matrix.org/docs/api/client-server/.
 
 
-Use the SDK in your app 
+Use the SDK in your app
 =======================
 
 The SDK uses CocoaPods (http://cocoapods.org/) as library dependency manager.
@@ -50,7 +50,7 @@ Matrix API level
 ----------------
 :``MXRestClient``:
     Exposes the Matrix Client-Server API as specified by the Matrix standard to
-    make requests to a homeserver. 
+    make requests to a homeserver.
 
 
 Business logic and data model
@@ -70,10 +70,10 @@ They contain logic to maintain consistent chat room data.
 :``MXRoomState``:
      This is the state of room at a certain point in time: its name, topic,
      visibility (public/private), members, etc.
-     
+
 :``MXRoomMember``:
      Represents a member of a room.
-     
+
 :``MXUser``:
      This is a user known by the current user, outside of the context of a
      room. MXSession exposes and maintains the list of MXUsers. It provides
@@ -87,67 +87,115 @@ demonstrates how to build a chat app on top of Matrix. You can refer to it,
 play with it, hack it to understand the full integration of the Matrix SDK.
 This section comes back to the basics with sample codes for basic use cases.
 
-One file to import::
+One file to import:
 
-      #import <MatrixSDK/MatrixSDK.h>
-  
+**Obj-C**::
+
+    #import <MatrixSDK/MatrixSDK.h>
+
+**Swift**::
+
+    import MatrixSDK
+
 Use case #1: Get public rooms of an homeserver
 -----------------------------------------------
 This API does not require the user to be authenticated. So, MXRestClient
-instantiated with initWithHomeServer does the job::
+instantiated with initWithHomeServer does the job:
+
+**Obj-C**::
 
     MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:@"http://matrix.org"];
     [mxRestClient publicRooms:^(NSArray *rooms) {
-        
+
         // rooms is an array of MXPublicRoom objects containing information like room id
         NSLog(@"The public rooms are: %@", rooms);
-        
+
     } failure:^(MXError *error) {
     }];
+
+**Swift**::
+
+    let homeServerUrl = URL(string: "http://matrix.org")!
+    let mxRestClient = MXRestClient(homeServer: homeServerUrl, unrecognizedCertificateHandler: nil)
+    mxRestClient.publicRooms { response in
+        switch response {
+        case .success(let rooms):
+
+            // rooms is an array of MXPublicRoom objects containing information like room id
+            print("The public rooms are: \(rooms)")
+
+        case .failure: break
+        }
+    }
 
 
 Use case #2: Get the rooms the user has interacted with
 -------------------------------------------------------
-Here the user needs to be authenticated. We will use 
+Here the user needs to be authenticated. We will use
 [MXRestClient initWithCredentials].
 You'll normally create and initialise these two objects once the user has
 logged in, then keep them throughout the app's lifetime or until the user logs
-out::
+out:
+
+**Obj-C**::
 
     MXCredentials *credentials = [[MXCredentials alloc] initWithHomeServer:@"http://matrix.org"
                                                                     userId:@"@your_user_id:matrix.org"
-                                                               accessToken:@"your_access_tokem"];
+                                                               accessToken:@"your_access_token"];
+
+    // Create a matrix client
+    MXRestClient *mxRestClient = [[MXRestClient alloc] initWithCredentials:credentials];
 
     // Create a matrix session
-    MXRestClient *mxRestClient = [[MXRestClient alloc] initWithCredentials:credentials];
-    
-    // Create a matrix session
     MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:mxRestClient];
-    
+
     // Launch mxSession: it will first make an initial sync with the homeserver
     // Then it will listen to new coming events and update its data
     [mxSession start:^{
-        
+
         // mxSession is ready to be used
         // Now we can get all rooms with:
         mxSession.rooms;
-        
+
     } failure:^(NSError *error) {
     }];
-    
-    
+
+**Swift**::
+
+    let credentials = MXCredentials(homeServer: "http://matrix.org",
+                                    userId: "@your_user_id:matrix.org",
+                                    accessToken: "your_access_token")
+
+    // Create a matrix client
+    let mxRestClient = MXRestClient(credentials: credentials, unrecognizedCertificateHandler: nil)
+
+    // Create a matrix session
+    let mxSession = MXSession(matrixRestClient: mxRestClient)
+
+    // Launch mxSession: it will first make an initial sync with the homeserver
+    mxSession.start { response in
+        guard response.isSuccess else { return }
+
+        // mxSession is ready to be used
+        // now wer can get all rooms with:
+        mxSession.rooms
+    }
+
+
 Use case #2 (bis): Get the rooms the user has interacted with (using a permanent MXStore)
 -----------------------------------------------------------------------------------------
-We use the same code as below but we add a MXFileStore that will be in charge of
-storing user's data on the file system. This will avoid to do a full sync with the 
+We use the same code as above but we add a MXFileStore that will be in charge of
+storing user's data on the file system. This will avoid to do a full sync with the
 homeserver each time the app is resumed. The app will be able to resume quickly.
-Plus, it will be able to run in offline mode while syncing with the homeserver::
+Plus, it will be able to run in offline mode while syncing with the homeserver:
+
+**Obj-C**::
 
     MXCredentials *credentials = [[MXCredentials alloc] initWithHomeServer:@"http://matrix.org"
                                                                     userId:@"@your_user_id:matrix.org"
-                                                               accessToken:@"your_access_tokem"];
+                                                               accessToken:@"your_access_token"];
 
-    // Create a matrix session
+    // Create a matrix client
     MXRestClient *mxRestClient = [[MXRestClient alloc] initWithCredentials:credentials];
 
     // Create a matrix session
@@ -157,71 +205,145 @@ Plus, it will be able to run in offline mode while syncing with the homeserver::
     // This will preload user's messages and other data
     MXFileStore *store = [[MXFileStore alloc] init];
     [mxSession setStore:store success:^{
-    
+
         // Launch mxSession: it will sync with the homeserver from the last stored data
         // Then it will listen to new coming events and update its data
         [mxSession start:^{
-    
+
             // mxSession is ready to be used
             // Now we can get all rooms with:
             mxSession.rooms;
-    
+
         } failure:^(NSError *error) {
         }];
     } failure:^(NSError *error) {
     }];
 
+**Swift**::
 
-    
+    let credentials = MXCredentials(homeServer: "http://matrix.org",
+                                    userId: "@your_user_id:matrix.org",
+                                    accessToken: "your_access_token")
+
+    // Create a matrix client
+    let mxRestClient = MXRestClient(credentials: credentials, unrecognizedCertificateHandler: nil)
+
+    // Create a matrix session
+    let mxSession = MXSession(matrixRestClient: mxRestClient)
+
+    // Make the matrix session open the file store
+    // This will preload user's messages and other data
+    let store = MXFileStore()
+    mxSession.setStore(store) { response in
+        guard response.isSuccess else { return }
+
+        // Launch mxSession: it will sync with the homeserver from the last stored data
+        // Then it will listen to new coming events and update its data
+        mxSession.start { response in
+            guard response.isSuccess else { return }
+
+            // mxSession is ready to be used
+            // now we can get all rooms with:
+            mxSession.rooms()
+        }
+    }
+
+
+
+
 Use case #3: Get messages of a room
 -----------------------------------
-We reuse the mxSession instance created before::
+We reuse the mxSession instance created before:
+
+**Obj-C**::
 
     // Retrieve the room from its room id
     MXRoom *room = [mxSession room:@"!room_id:matrix.org"];
-    
+
     // Add a listener on events related to this room
-    [room listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
-    
-        if (direction == MXEventDirectionForwards) {
+    [room.liveTimeline listenToEvents:^(MXEvent *event, MXEventDirection direction, MXRoomState *roomState) {
+
+        if (direction == MXTimelineDirectionForwards) {
             // Live/New events come here
         }
-        else if (direction == MXEventDirectionBackwards) {
-            // Events that occured in the past will come here when requesting pagination.
-            // roomState contains the state of the room just before this event occured.
+        else if (direction == MXTimelineDirectionBackwards) {
+            // Events that occurred in the past will come here when requesting pagination.
+            // roomState contains the state of the room just before this event occurred.
         }
     }];
 
-    
-Let's load a bit of room history using paginateBackMessages::
+**Swift**::
+
+    // Retrieve the room from its room id
+    let room = mxSession.room(withRoomId: "!room_id:matrix.org")
+
+    // Add a listener on events related to this room
+    _ = room?.liveTimeline.listenToEvents { (event, direction, roomState) in
+        switch direction {
+        case .forwards:
+            // Live/New events come here
+            break
+
+        case .backwards:
+            // Events that occurred in the past will come here when requesting pagination.
+            // roomState contains the state of the room just before this event occurred.
+            break
+        }
+    }
+
+
+Let's load a bit of room history using paginateBackMessages:
+
+**Obj-C**::
 
     // Reset the pagination start point to now
-    [room resetBackState];
+    [room.liveTimeline resetPagination];
 
-    [room paginateBackMessages:10 complete:^{
-        
+    [room.liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+
         // At this point, the SDK has finished to enumerate the events to the attached listeners
-        
+
     } failure:^(NSError *error) {
     }];
-    
+
+**Swift**::
+
+    // Reset the pagination start point to now
+    room?.liveTimeline.resetPagination()
+
+    room?.liveTimeline.paginate(10, direction: .backwards, onlyFromStore: false) { _ in
+        // At this point, the SDK has finished to enumerate the events to the attached listeners
+    }
+
 
 
 Use case #4: Post a text message to a room
 ------------------------------------------
 This action does not require any business logic from MXSession: We can use
-MXRestClient directly::
+MXRestClient directly:
 
-    [MXRestClient postTextMessage:@"the_room_id" text:@"Hello world!" success:^(NSString *event_id) {
-        
+**Obj-C**::
+
+    [mxRestClient sendTextMessageToRoom:@"the_room_id" text:@"Hello world!" success:^(NSString *event_id) {
+
         // event_id is for reference
         // If you have registered events listener like in the previous use case, you will get
         // a notification for this event coming down from the homeserver events stream and
         // now handled by MXSession.
-        
+
     } failure:^(NSError *error) {
     }];
-    
+
+**Swift**::
+
+    client.sendTextMessage(toRoom: "the_room_id", text: "Hello World!") { (response) in
+        if case .success(let eventId) = response {
+            // eventId is for reference
+            // If you have registered events listener like in the previous use case, you will get
+            // a notification for this event coming down from the homeserver events stream and
+            // now handled by MXSession.
+        }
+    }
 
 Push Notifications
 ==================
@@ -341,7 +463,7 @@ SDK workspace::
 
         $ pod install
 
-Then, open ``MatrixSDK.xcworkspace``. 
+Then, open ``MatrixSDK.xcworkspace``.
 
 Tests
 =====
@@ -362,7 +484,7 @@ MatrixSDKTests scheme and click on the "Test" action.
 Known issues
 ============
 
-CocoaPods may fail to install on OSX 10.8.x with "i18n requires Ruby version 
+CocoaPods may fail to install on OSX 10.8.x with "i18n requires Ruby version
 >= 1.9.3.".  This is a known problem similar to
 https://github.com/CocoaPods/CocoaPods/issues/2458 that needs to be raised with
 the cocoapods team.
@@ -388,5 +510,3 @@ Licensed under the Apache License, Version 2.0 (the "License"); you may not use 
 http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
-
-

@@ -70,7 +70,10 @@ NSString *const kMXMembershipStringBan    = @"ban";
 uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 
 NSString *const kMXEventDidChangeSentStateNotification = @"kMXEventDidChangeSentStateNotification";
+NSString *const kMXEventDidChangeIdentifierNotification = @"kMXEventDidChangeIdentifierNotification";
 NSString *const kMXEventDidDecryptNotification = @"kMXEventDidDecryptNotification";
+
+NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
 
 #pragma mark - MXEvent
 @interface MXEvent ()
@@ -178,6 +181,21 @@ NSString *const kMXEventDidDecryptNotification = @"kMXEventDidDecryptNotificatio
     }
 }
 
+- (void)setEventId:(NSString *)eventId
+{
+    if (self.isLocalEvent && eventId && ![eventId isEqualToString:_eventId])
+    {
+        NSString *previousId = _eventId;
+        _eventId = eventId;
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXEventDidChangeIdentifierNotification object:self userInfo:@{kMXEventIdentifierKey:previousId}];
+    }
+    else
+    {
+        // Do not post the notification here, only the temporary local events are supposed to change their id.
+        _eventId = eventId;
+    }
+}
+
 - (MXEventTypeString)type
 {
     // Return the decrypted version if any
@@ -190,7 +208,7 @@ NSString *const kMXEventDidDecryptNotification = @"kMXEventDidDecryptNotificatio
     return _clearEvent ? _clearEvent.wireEventType : _wireEventType;
 }
 
-- (NSDictionary *)content
+- (NSDictionary<NSString *, id> *)content
 {
     // Return the decrypted version if any
     return _clearEvent ? _clearEvent.wireContent : _wireContent;
@@ -596,6 +614,7 @@ NSString *const kMXEventDidDecryptNotification = @"kMXEventDidDecryptNotificatio
         _redacts = [aDecoder decodeObjectForKey:@"redacts"];
         _redactedBecause = [aDecoder decodeObjectForKey:@"redactedBecause"];
         _inviteRoomState = [aDecoder decodeObjectForKey:@"inviteRoomState"];
+        _sentError = [aDecoder decodeObjectForKey:@"sentError"];
     }
     return self;
 }
@@ -616,6 +635,7 @@ NSString *const kMXEventDidDecryptNotification = @"kMXEventDidDecryptNotificatio
     [aCoder encodeObject:_redacts forKey:@"redacts"];
     [aCoder encodeObject:_redactedBecause forKey:@"redactedBecause"];
     [aCoder encodeObject:_inviteRoomState forKey:@"inviteRoomState"];
+    [aCoder encodeObject:_sentError forKey:@"sentError"];
 }
 
 @end

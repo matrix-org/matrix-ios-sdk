@@ -49,7 +49,7 @@
 /**
  A copy of the list of state events (actually MXEvent instances).
  */
-@property (nonatomic, readonly) NSArray *stateEvents;
+@property (nonatomic, readonly) NSArray<MXEvent *> *stateEvents;
 
 /**
  A copy of the list of room members.
@@ -74,7 +74,7 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
 /**
  The aliases of this room.
  */
-@property (nonatomic, readonly) NSArray *aliases;
+@property (nonatomic, readonly) NSArray<NSString *> *aliases;
 
 /**
  Informs which alias is the canonical one.

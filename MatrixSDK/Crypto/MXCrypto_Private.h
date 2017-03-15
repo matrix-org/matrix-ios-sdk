@@ -23,6 +23,7 @@
 #import "MXCryptoStore.h"
 #import "MXRestClient.h"
 #import "MXOlmDevice.h"
+#import "MXDeviceList.h"
 #import "MXCryptoAlgorithms.h"
 #import "MXUsersDevicesMap.h"
 #import "MXOlmSessionResult.h"
@@ -57,6 +58,11 @@
 @property (nonatomic, readonly) dispatch_queue_t cryptoQueue;
 
 /**
+ The list of devices.
+ */
+@property (nonatomic, readonly) MXDeviceList *deviceList;
+
+/**
  The queue used for decryption.
 
  A less busy queue that can respond quicker to the UI.
@@ -70,53 +76,6 @@
  */
 @property (nonatomic, readonly) dispatch_queue_t decryptionQueue;
 
-/**
- Upload the device keys to the homeserver and ensure that the
- homeserver has enough one-time keys.
-
- @param maxKeys The maximum number of keys to generate.
- 
- @param success A block object called when the operation succeeds.
- @param failure A block object called when the operation fails.
-
- @return a MXHTTPOperation instance.
- */
-- (MXHTTPOperation*)uploadKeys:(NSUInteger)maxKeys
-                       success:(void (^)())success
-                       failure:(void (^)(NSError *))failure;
-
-/**
- Download the device keys for a list of users and stores the keys in the MXStore.
-
- @param userIds The users to fetch.
- @param forceDownload Always download the keys even if cached.
- 
- @param success A block object called when the operation succeeds.
- @param failure A block object called when the operation fails.
- 
- @return a MXHTTPOperation instance. May be nil if the data is already in the store.
- */
-- (MXHTTPOperation*)downloadKeys:(NSArray<NSString*>*)userIds forceDownload:(BOOL)forceDownload
-                         success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap))success
-                         failure:(void (^)(NSError *error))failure;
-
-/**
- Get the stored device keys for a user.
-
- @param userId the user to list keys for.
- @return the list of devices.
- */
-- (NSArray<MXDeviceInfo*>*)storedDevicesForUser:(NSString*)userId;
-
-/**
- Find a device by curve25519 identity key
-
- @param userId the owner of the device.
- @param algorithm the encryption algorithm.
- @param senderKey the curve25519 key to match.
- @return the device info.
- */
-- (MXDeviceInfo*)deviceWithIdentityKey:(NSString*)senderKey forUser:(NSString*)userId andAlgorithm:(NSString*)algorithm;
 
 /**
  Get the device which sent an event.
@@ -170,7 +129,6 @@
  @return the content for an m.room.encrypted event.
  */
 - (NSDictionary*)encryptMessage:(NSDictionary*)payloadFields forDevices:(NSArray<MXDeviceInfo*>*)devices;
-
 
 @end
 

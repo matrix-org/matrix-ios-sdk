@@ -17,3 +17,4 @@ Matthew Hodgson <matthew at matrix.org>
  
 Avery Pierce <aapierce0 at gmail.com>
  * MacOS compatibility
+ * Swift refinements

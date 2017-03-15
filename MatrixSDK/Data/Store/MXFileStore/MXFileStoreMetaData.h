@@ -29,11 +29,6 @@
 @property (nonatomic) NSString *userId;
 
 /**
- The access token to create a MXRestClient.
- */
-@property (nonatomic) NSString *accessToken;
-
-/**
  The token indicating from where to start listening event stream to get
  live events.
  */
