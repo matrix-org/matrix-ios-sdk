@@ -58,7 +58,7 @@
                                 success:(void (^)(NSDictionary *encryptedContent))success
                                 failure:(void (^)(NSError *error))failure
 {
-    return [self ensureSession:users success:^{
+    return [self ensureSessionForUsers:users success:^(NSObject *sessionInfo) {
 
         NSMutableArray *participantDevices = [NSMutableArray array];
 
@@ -94,11 +94,9 @@
     } failure:failure];
 }
 
-
-#pragma mark - Private methods
-- (MXHTTPOperation*)ensureSession:(NSArray<NSString*>*)users
-                          success:(void (^)())success
-                          failure:(void (^)(NSError *))failure
+- (MXHTTPOperation*)ensureSessionForUsers:(NSArray<NSString*>*)users
+                                  success:(void (^)(NSObject *sessionInfo))success
+                                  failure:(void (^)(NSError *error))failure
 {
     // TODO: Avoid to do this request for every message. Instead, manage a queue of messages waiting for encryption
     // XXX: This class is not used so fix it later
@@ -106,7 +104,7 @@
     operation = [crypto.deviceList downloadKeys:users forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
 
         MXHTTPOperation *operation2 = [crypto ensureOlmSessionsForUsers:users success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {
-            success();
+            success(nil);
         } failure:failure];
 
         [operation mutateTo:operation2];

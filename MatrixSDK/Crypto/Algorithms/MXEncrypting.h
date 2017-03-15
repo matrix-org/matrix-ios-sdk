@@ -49,4 +49,19 @@
                                 success:(void (^)(NSDictionary *encryptedContent))success
                                 failure:(void (^)(NSError *error))failure;
 
+/**
+ Ensure the set up of the session.
+ 
+ @param users the room members events will be sent to.
+
+ @param success A block object called when the operation succeeds. 
+                sessionInfo is an internal object, specific to the algorithm.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance. May be nil if all required materials is already in place.
+ */
+- (MXHTTPOperation*)ensureSessionForUsers:(NSArray<NSString*>*)users
+                                  success:(void (^)(NSObject *sessionInfo))success
+                                  failure:(void (^)(NSError *error))failure;
+
 @end

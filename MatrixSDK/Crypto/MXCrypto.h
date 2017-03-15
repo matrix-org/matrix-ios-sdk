@@ -93,7 +93,7 @@
  @param eventContent the content of the event.
  @param eventType the type of the event.
  @param room the room the event will be sent.
- *
+
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
 
@@ -116,6 +116,24 @@
  @return YES if the decryption was successful.
  */
 - (BOOL)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline;
+
+/**
+ Ensure that the outbound session is ready to encrypt events.
+ 
+ Thus, the next [MXCrypto encryptEvent] should be sent without HTTP requests.
+ 
+ Note: There is no guarantee about this because a new device can still appear before
+ the call of [MXCrypto encryptEvent]. Use this method with caution.
+ 
+ @param roomId the id of the room.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance. May be nil if all required materials is already in place.
+ */
+- (MXHTTPOperation*)ensureEncryptionInRoom:(NSString*)roomId
+                                   success:(void (^)())success
+                                   failure:(void (^)(NSError *error))failure;
 
 /**
  Handle list of changed users provided in the /sync response.
