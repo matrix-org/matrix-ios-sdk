@@ -166,7 +166,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     NSUInteger messagesInStore = messagesEnumerator.remaining;
     MXEvent *event = messagesEnumerator.nextEvent;
 
-    // 1.1 Find where we stopped at the previous call
+    // 1.1 Find where we stopped at the previous call in the fetchLastMessage calls loop
     BOOL firstIteration = YES;
     if (lastEventIdChecked)
     {
