@@ -443,6 +443,94 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 #endif
 }
 
+- (MXHTTPOperation*)ensureEncryptionInRoom:(NSString*)roomId
+                                   success:(void (^)())success
+                                   failure:(void (^)(NSError *error))failure
+{
+
+    // Create an empty operation that will be mutated later
+    MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
+
+#ifdef MX_CRYPTO
+    MXRoom *room = [mxSession roomWithRoomId:roomId];
+    if (room.state.isEncrypted)
+    {
+        // Get user ids in this room
+        NSMutableArray *userIds = [NSMutableArray array];
+        for (MXRoomMember *member in room.state.joinedMembers)
+        {
+            [userIds addObject:member.userId];
+        }
+
+        dispatch_async(_cryptoQueue, ^{
+
+            NSString *algorithm;
+            id<MXEncrypting> alg = roomEncryptors[room.roomId];
+
+            if (!alg)
+            {
+                // The algorithm has not been initialised yet. So, do it now from room state information
+                algorithm = room.state.encryptionAlgorithm;
+                if (algorithm)
+                {
+                    [self setEncryptionInRoom:room.roomId withAlgorithm:algorithm];
+                    alg = roomEncryptors[room.roomId];
+                }
+            }
+
+            if (alg)
+            {
+                // Check we have everything to encrypt events
+                MXHTTPOperation *operation2 = [alg ensureSessionForUsers:userIds success:^(NSObject *sessionInfo) {
+
+                    if (success)
+                    {
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            success();
+                        });
+                    }
+
+                } failure:^(NSError *error) {
+                    if (failure)
+                    {
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            failure(error);
+                        });
+                    }
+                }];
+
+                if (operation2)
+                {
+                    [operation mutateTo:operation2];
+                }
+            }
+            else if (failure)
+            {
+                NSError *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                                     code:MXDecryptingErrorUnableToEncryptCode
+                                                 userInfo:@{
+                                                            NSLocalizedDescriptionKey: MXDecryptingErrorUnableToEncrypt,
+                                                            NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToEncryptReason, algorithm]
+                                                            }];
+
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    failure(error);
+                });
+            }
+        });
+    }
+    else
+#endif
+    {
+        if (success)
+        {
+            success();
+        }
+    }
+
+    return operation;
+}
+
 // This method is equivalent to the Crypto.prototype._onSyncCompleted in matrix-js-sdk
 - (void)handleDeviceListsChanged:(NSArray<NSString *>*)userIds oldSyncToken:(NSString *)oldSyncToken nextSyncToken:(NSString *)nextSyncToken
 {
@@ -1780,12 +1868,12 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         // these factors.
 
         // We first find how many keys the server has for us.
-        NSUInteger keyCount = [keysUploadResponse oneTimeKeyCountsForAlgorithm:@"signed_curve25519"];
+        NSInteger keyCount = [keysUploadResponse oneTimeKeyCountsForAlgorithm:@"signed_curve25519"];
 
         NSLog(@"[MXCrypto] maybeUploadOneTimeKeys: one-time keys on the homeserver: %tu", keyCount);
 
         // We then check how many keys we can store in the Account object.
-        CGFloat maxOneTimeKeys = _olmDevice.maxNumberOfOneTimeKeys;
+        NSInteger maxOneTimeKeys = _olmDevice.maxNumberOfOneTimeKeys;
 
         // Try to keep at most half that number on the server. This leaves the
         // rest of the slots free to hold keys that have been claimed from the
@@ -1793,7 +1881,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         // If we run out of slots when generating new keys then olm will
         // discard the oldest private keys first. This will eventually clean
         // out stale private keys that won't receive a message.
-        NSUInteger keyLimit = floor(maxOneTimeKeys / 2);
+        NSInteger keyLimit = maxOneTimeKeys / 2;
 
         // We work out how many new keys we need to create to top up the server
         // If there are too many keys on the server then we don't need to
