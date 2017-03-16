@@ -143,7 +143,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         Nil means we will start checking from the last event in the store.
  @param operation the current http operation if any.
         The method may need several requests before fetching the right last message.
-        If it happens, the first one is mutated with [MXHTTPOperation mutateTo:].
+        If it happens, the first one is mutated to the others with [MXHTTPOperation mutateTo:].
  @return a MXHTTPOperation
  */
 - (MXHTTPOperation *)fetchLastMessage:(void (^)())complete failure:(void (^)(NSError *))failure lastEventIdChecked:(NSString*)lastEventIdChecked operation:(MXHTTPOperation *)operation
@@ -155,6 +155,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         {
             failure(nil);
         }
+        return nil;
     }
 
     MXHTTPOperation *newOperation;
@@ -183,7 +184,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         }
     }
 
-    // Check events one by one until finding the right last message for the room
+    // 1.2 Check events one by one until finding the right last message for the room
     BOOL lastMessageUpdated = NO;
     while (event)
     {
@@ -214,13 +215,15 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         lastMessageUpdated = [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withLastEvent:event state:state];
         if (lastMessageUpdated)
         {
+            // The event is accepted. We have our last message
+            // The roomSummaryUpdateDelegate has stored the _lastMessageEventId
             break;
         }
 
         event = messagesEnumerator.nextEvent;
     }
 
-    // If lastMessageEventId is still nil, fetch events from the homeserver
+    // 2.1 If lastMessageEventId is still nil, fetch events from the homeserver
     if (!_lastMessageEventId && [room.liveTimeline canPaginate:MXTimelineDirectionBackwards])
     {
         NSUInteger messagesToPaginate = 30;

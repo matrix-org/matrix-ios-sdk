@@ -57,7 +57,7 @@
     }
 
     // Accept redacted event only if configured
-    if (_ignoreRedactedEvent && event.redactedBecause)
+    if (_ignoreRedactedEvent && event.isRedactedEvent)
     {
         return NO;
     }
