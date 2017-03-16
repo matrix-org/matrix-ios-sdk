@@ -1,8 +1,14 @@
-Changes in Matrix iOS SDK in 0.7.9 (2017-03-13)
+Changes in Matrix iOS SDK in 0.7.9 (2017-03-16)
 ===============================================
+
+Improvements:
+ * MXRestClient: Tell the server we support the msisdn flow login (with x_show_msisdn parameter).
+ * MXRoomState: Make isEncrypted implementation more robust.
+ * MXCrypto: add ensureEncryptionInRoom method.
 
 Bug fixes:
  * MXCrypto: Fix a crash due to a signedness issue in the count of one-time keys to upload.
+ * MXCall: In case of encrypted room, make sure that encryption is fully set up before answering (https://github.com/vector-im/riot-ios#1058)
 
 Changes in Matrix iOS SDK in 0.7.8 (2017-03-07)
 ===============================================
