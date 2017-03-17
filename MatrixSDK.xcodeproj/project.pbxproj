@@ -30,9 +30,9 @@
 		32169AA11BD4D0E30077868B /* MXCoreDataStore.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 32169A9F1BD4D0E30077868B /* MXCoreDataStore.xcdatamodeld */; };
 		32169AA21BD4D1B00077868B /* MXCoreDataStore.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 32169A9F1BD4D0E30077868B /* MXCoreDataStore.xcdatamodeld */; };
 		321809B919EEBF3000377451 /* MXEventTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 321809B819EEBF3000377451 /* MXEventTests.m */; };
-		321B413F1E09937E009EEEC7 /* MXRoomSummary.h in Headers */ = {isa = PBXBuildFile; fileRef = 321B413D1E09937E009EEEC7 /* MXRoomSummary.h */; };
+		321B413F1E09937E009EEEC7 /* MXRoomSummary.h in Headers */ = {isa = PBXBuildFile; fileRef = 321B413D1E09937E009EEEC7 /* MXRoomSummary.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		321B41401E09937E009EEEC7 /* MXRoomSummary.m in Sources */ = {isa = PBXBuildFile; fileRef = 321B413E1E09937E009EEEC7 /* MXRoomSummary.m */; };
-		3220093819EFA4C9008DE41D /* MXEventListener.h in Headers */ = {isa = PBXBuildFile; fileRef = 3220093619EFA4C9008DE41D /* MXEventListener.h */; };
+		3220093819EFA4C9008DE41D /* MXEventListener.h in Headers */ = {isa = PBXBuildFile; fileRef = 3220093619EFA4C9008DE41D /* MXEventListener.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3220093919EFA4C9008DE41D /* MXEventListener.m in Sources */ = {isa = PBXBuildFile; fileRef = 3220093719EFA4C9008DE41D /* MXEventListener.m */; };
 		3220094519EFBF30008DE41D /* MXSessionEventListener.h in Headers */ = {isa = PBXBuildFile; fileRef = 3220094319EFBF30008DE41D /* MXSessionEventListener.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3220094619EFBF30008DE41D /* MXSessionEventListener.m in Sources */ = {isa = PBXBuildFile; fileRef = 3220094419EFBF30008DE41D /* MXSessionEventListener.m */; };
@@ -152,9 +152,9 @@
 		329B2AC01D3FB01D002D546F /* MXJingleCallStack.m in Sources */ = {isa = PBXBuildFile; fileRef = 329B2ABC1D3FB01D002D546F /* MXJingleCallStack.m */; };
 		329B2AC11D3FB01D002D546F /* MXJingleCallStackCall.h in Headers */ = {isa = PBXBuildFile; fileRef = 329B2ABD1D3FB01D002D546F /* MXJingleCallStackCall.h */; };
 		329B2AC21D3FB01D002D546F /* MXJingleCallStackCall.m in Sources */ = {isa = PBXBuildFile; fileRef = 329B2ABE1D3FB01D002D546F /* MXJingleCallStackCall.m */; };
-		329D3E621E251027002E2F1E /* MXRoomSummaryUpdater.h in Headers */ = {isa = PBXBuildFile; fileRef = 329D3E601E251027002E2F1E /* MXRoomSummaryUpdater.h */; };
+		329D3E621E251027002E2F1E /* MXRoomSummaryUpdater.h in Headers */ = {isa = PBXBuildFile; fileRef = 329D3E601E251027002E2F1E /* MXRoomSummaryUpdater.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		329D3E631E251027002E2F1E /* MXRoomSummaryUpdater.m in Sources */ = {isa = PBXBuildFile; fileRef = 329D3E611E251027002E2F1E /* MXRoomSummaryUpdater.m */; };
-		329FB1751A0A3A1600A5E88E /* MXRoomMember.h in Headers */ = {isa = PBXBuildFile; fileRef = 329FB1731A0A3A1600A5E88E /* MXRoomMember.h */; };
+		329FB1751A0A3A1600A5E88E /* MXRoomMember.h in Headers */ = {isa = PBXBuildFile; fileRef = 329FB1731A0A3A1600A5E88E /* MXRoomMember.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		329FB1761A0A3A1600A5E88E /* MXRoomMember.m in Sources */ = {isa = PBXBuildFile; fileRef = 329FB1741A0A3A1600A5E88E /* MXRoomMember.m */; };
 		329FB1791A0A74B100A5E88E /* MXTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 329FB1771A0A74B100A5E88E /* MXTools.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		329FB17A1A0A74B100A5E88E /* MXTools.m in Sources */ = {isa = PBXBuildFile; fileRef = 329FB1781A0A74B100A5E88E /* MXTools.m */; };
