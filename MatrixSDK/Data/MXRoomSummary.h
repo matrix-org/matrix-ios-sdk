@@ -104,9 +104,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
  
  This method must be called when data is modified outside the `MXRoomSummaryUpdating` callbacks.
  It will generate a `kMXRoomSummaryDidChangeNotification`.
+ 
+ @param commit YES to force flush it to the store. Use NO when a more
+                global [MXStore commit] will happen. This optimises IO.
  */
-- (void)save;
-
+- (void)save:(BOOL)commit;
 
 #pragma mark - Data related to room state
 

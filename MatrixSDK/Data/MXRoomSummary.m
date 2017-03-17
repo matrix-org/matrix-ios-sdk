@@ -58,13 +58,13 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     _mxSession = mxSession;
 }
 
-- (void)save
+- (void)save:(BOOL)commit
 {
     if ([_mxSession.store respondsToSelector:@selector(storeSummaryForRoom:summary:)])
     {
         [_mxSession.store storeSummaryForRoom:_roomId summary:self];
     }
-    if ([_mxSession.store respondsToSelector:@selector(commit)])
+    if (commit && [_mxSession.store respondsToSelector:@selector(commit)])
     {
         [_mxSession.store commit];
     }
@@ -93,7 +93,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 
     if ([_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withStateEvents:room.state.stateEvents])
     {
-        [self save];
+        [self save:YES];
     }
 }
 
@@ -262,7 +262,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
             complete();
         }
 
-        [self save];
+        [self save:YES];
     }
 
     return operation ? operation : newOperation;
@@ -331,7 +331,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 
     if (updated || lastMessageUpdated)
     {
-        [self save];
+        [self save:NO];
     }
 }
 
@@ -344,7 +344,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 
     if (updated)
     {
-        [self save];
+        [self save:NO];
     }
 }
 
@@ -360,7 +360,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 
         if (updated)
         {
-            [self save];
+            [self save:YES];
         }
     }
 }

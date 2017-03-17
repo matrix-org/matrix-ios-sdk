@@ -89,7 +89,7 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
         testNoChangeDelegate = YES;
 
         // Force a kMXRoomSummaryDidChangeNotification
-        [summary save];
+        [summary save:NO];
     }
     else if ([self.description containsString:@"testGetLastMessageFromSeveralPaginations"])
     {
