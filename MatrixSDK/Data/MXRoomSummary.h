@@ -244,7 +244,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 /**
  The `MXRoomSummaryUpdating` allows delegation of the update of room summaries.
  */
-@protocol MXRoomSummaryUpdating
+@protocol MXRoomSummaryUpdating <NSObject>
 
 /**
  Called to update the last message of the room summary.

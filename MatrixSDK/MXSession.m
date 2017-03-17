@@ -1739,6 +1739,18 @@ typedef void (^MXOnResumeDone)();
     return [roomsSummaries allValues];
 }
 
+-(void)resetRoomsSummariesLastMessage
+{
+    NSLog(@"[MXSession] resetRoomsSummariesLastMessage");
+
+    for (MXRoomSummary *summary in self.roomsSummaries)
+    {
+        [summary resetLastMessage:nil failure:^(NSError *error) {
+            NSLog(@"[MXSession] Cannot reset last message for room %@", summary.roomId);
+        }];
+    }
+}
+
 - (void)fixRoomsSummariesLastMessage
 {
     for (MXRoomSummary *summary in self.roomsSummaries)

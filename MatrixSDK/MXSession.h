@@ -658,6 +658,14 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (NSArray<MXRoomSummary*>*)roomsSummaries;
 
 /**
+ Recompute all room summaries last message.
+
+ This may lead to pagination requests to the homeserver. Updated room summaries will be
+ notified by `kMXRoomSummaryDidChangeNotification`.
+ */
+- (void)resetRoomsSummariesLastMessage;
+
+/**
  Make sure that all room summaries have a last message.
  
  This may lead to pagination requests to the homeserver. Updated room summaries will be 
