@@ -876,10 +876,14 @@
                             XCTAssert([alice.originUserId isEqualToString:bobRestClient.credentials.userId], @"Wrong inviter: %@", alice.originUserId);
 
                             // The last message should be an invite m.room.member
-                            MXEvent *lastMessage = newRoom.summary.lastMessageEvent;
-                            XCTAssertNotNil(lastMessage);
-                            XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMember, @"The last message should be an invite m.room.member");
-                            XCTAssertLessThan([[NSDate date] timeIntervalSince1970] * 1000 - lastMessage.originServerTs, 3000);
+                            dispatch_async(dispatch_get_main_queue(), ^{    // We could also wait for kMXRoomSummaryDidChangeNotification
+
+                                MXEvent *lastMessage = newRoom.summary.lastMessageEvent;
+                                XCTAssertNotNil(lastMessage);
+                                XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMember, @"The last message should be an invite m.room.member");
+                                XCTAssertLessThan([[NSDate date] timeIntervalSince1970] * 1000 - lastMessage.originServerTs, 3000);
+
+                            });
                         }
                     }
                     

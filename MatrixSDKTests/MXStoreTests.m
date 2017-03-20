@@ -625,16 +625,18 @@
 
     [room.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-        // @TODO(summary): no
-        // dispatch_async(dispatch_get_main_queue(), ^{
-            
+        // The room summary is handled afterwards
+        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:room.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+            [[NSNotificationCenter defaultCenter] removeObserver:observer];
+
             MXEvent *lastMessage2 = room.summary.lastMessageEvent;
             XCTAssertNotNil(lastMessage2);
             XCTAssertEqual(lastMessage2.eventType, MXEventTypeRoomMember);
             XCTAssertNotEqualObjects(lastMessage2.eventId, lastMessage.eventId);
 
             [expectation fulfill];
-        //});
+        }];
     }];
 
     [room.mxSession.myUser setDisplayName:@"Toto" success:nil failure:^(NSError *error) {
@@ -658,6 +660,13 @@
         XCTAssertNotNil(lastMessage2);
         XCTAssertEqual(lastMessage2.eventType, MXEventTypeRoomMessage);
         XCTAssertEqualObjects(lastMessage2.eventId, lastMessage.eventId);
+
+        // The room.summary.lastMessageEvent must no be updated in this case
+        [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:room.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+            XCTFail(@"The room.summary.lastMessageEvent must no be updated in this case");
+            
+        }];
 
         [expectation fulfill];
     }];
