@@ -770,29 +770,6 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                         failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
-#pragma mark - User's recents
-/**
- Get the list of all last messages of all rooms.
- The returned array is time ordered: the first item is the more recent message.
- 
- The SDK will find the last event which type is among the requested event types. If
- no event matches `types`, the true last event, whatever its type, will be returned.
-
- @param types an array of event types strings (MXEventTypeString) the app is interested in.
- @return an array of MXEvents.
- */
-- (NSArray<MXEvent*>*)recentsWithTypeIn:(NSArray<MXEventTypeString>*)types;
-
-/**
- Sort a list of rooms according to their last messages time stamp.
- 
- @param rooms the rooms to sort.
- @param types an array of event types strings (MXEventTypeString) the app is interested in.
- @return an array where rooms are ordered.
- */
-- (NSArray<MXRoom*>*)sortRooms:(NSArray<MXRoom*>*)rooms byLastMessageWithTypeIn:(NSArray<MXEventTypeString>*)types;
-
-
 #pragma mark - User's special rooms
 /**
  Get the list of rooms where the user has a pending invitation.

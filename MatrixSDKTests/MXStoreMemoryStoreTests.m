@@ -358,33 +358,6 @@
     }];
 }
 
-- (void)testMXMemoryStoreLastMessage
-{
-    [self doTestWithMXMemoryStore:^(MXRoom *room) {
-
-        [room.liveTimeline resetPagination];
-        [room.liveTimeline paginate:8 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
-
-            MXEvent *lastMessage = [room lastMessageWithTypeIn:nil];
-            XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
-
-            lastMessage = [room lastMessageWithTypeIn:@[kMXEventTypeStringRoomMessage]];
-            XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
-
-            lastMessage = [room lastMessageWithTypeIn:@[kMXEventTypeStringRoomMember]];
-            XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMember);
-
-            [expectation fulfill];
-
-        } failure:^(NSError *error) {
-            XCTFail(@"The request should not fail - NSError: %@", error);
-            [expectation fulfill];
-        }];
-
-    }];
-
-}
-
 @end
 
 #pragma clang diagnostic pop

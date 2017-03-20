@@ -596,16 +596,16 @@
 
 - (void)checkLastMessageAfterPaginate:(MXRoom*)room
 {
-    MXEvent *lastMessage = [room lastMessageWithTypeIn:nil];
+    MXEvent *lastMessage = room.summary.lastMessageEvent;
     XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
 
     [room.liveTimeline resetPagination];
-    MXEvent *lastMessage2 = [room lastMessageWithTypeIn:nil];
+    MXEvent *lastMessage2 = room.summary.lastMessageEvent;
     XCTAssertEqualObjects(lastMessage2.eventId, lastMessage.eventId,  @"The last message should stay the same");
 
     [room.liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 
-        MXEvent *lastMessage3 = [room lastMessageWithTypeIn:nil];
+        MXEvent *lastMessage3 = room.summary.lastMessageEvent;
         XCTAssertEqualObjects(lastMessage3.eventId, lastMessage.eventId,  @"The last message should stay the same");
 
         [expectation fulfill];
@@ -618,16 +618,16 @@
 
 - (void)checkLastMessageProfileChange:(MXRoom*)room
 {
-    MXEvent *lastMessage = [room lastMessageWithTypeIn:nil];
+    MXEvent *lastMessage = room.summary.lastMessageEvent;
     XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
 
     [room.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-        MXEvent *lastMessage2 = [room lastMessageWithTypeIn:nil];
+        MXEvent *lastMessage2 = room.summary.lastMessageEvent;
         XCTAssertEqual(lastMessage2.eventType, MXEventTypeRoomMember);
 
         room.mxSession.ignoreProfileChangesDuringLastMessageProcessing = YES;
-        MXEvent *lastMessage3 = [room lastMessageWithTypeIn:nil];
+        MXEvent *lastMessage3 = room.summary.lastMessageEvent;
         XCTAssertEqualObjects(lastMessage3.eventId, lastMessage.eventId);
 
         [expectation fulfill];
@@ -1183,7 +1183,7 @@
 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
 
-                MXEvent *event = [room lastMessageWithTypeIn:nil];
+                MXEvent *event = room.summary.lastMessageEvent;
 
                 NSUInteger age = event.age;
                 uint64_t ageLocalTs = event.ageLocalTs;

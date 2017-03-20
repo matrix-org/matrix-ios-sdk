@@ -90,20 +90,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSUInteger)remainingMessagesForPagination;
 
 /**
- The last message of the room.
-
- An optional array of event types may be provided to filter room events. When this array is not nil,
- the type of the returned last event should match with one of the provided types.
-
- CAUTION: All rooms must have a last message. If no event matches with the provided event types, the
- first event is returned whatever its type.
-
- @param types an array of event types strings (MXEventTypeString) to filter room's events.
- @return a MXEvent instance.
- */
-- (MXEvent*)lastMessageWithTypeIn:(NSArray*)types;
-
-/**
  Store the state of the room.
 
  @param stateEvents the state events that define the room state.

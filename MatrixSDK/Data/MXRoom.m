@@ -264,25 +264,6 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     return [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:types ignoreMemberProfileChanges:mxSession.ignoreProfileChangesDuringLastMessageProcessing];
 }
 
-- (MXEvent *)lastMessageWithTypeIn:(NSArray<MXEventTypeString> *)types
-{
-    MXEvent *lastMessage;
-
-    @autoreleasepool
-    {
-        id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:types ignoreMemberProfileChanges:mxSession.ignoreProfileChangesDuringLastMessageProcessing];
-        lastMessage = messagesEnumerator.nextEvent;
-
-        if (!lastMessage)
-        {
-            // If no messages match the filter contraints, return the last whatever is its type
-            lastMessage = self.enumeratorForStoredMessages.nextEvent;
-        }
-    }
-
-    return lastMessage;
-}
-
 - (NSUInteger)storedMessagesCount
 {
     NSUInteger storedMessagesCount = 0;
@@ -2049,11 +2030,8 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     return operation;
 }
 
+
 #pragma mark - Utils
-- (NSComparisonResult)compareOriginServerTs:(MXRoom *)otherRoom
-{
-    return [[otherRoom lastMessageWithTypeIn:nil] compareOriginServerTs:[self lastMessageWithTypeIn:nil]];
-}
 
 - (NSString *)description
 {

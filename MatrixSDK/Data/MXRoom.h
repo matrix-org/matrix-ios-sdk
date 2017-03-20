@@ -230,17 +230,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 - (id<MXEventsEnumerator>)enumeratorForStoredMessagesWithTypeIn:(NSArray<MXEventTypeString> *)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
 
 /**
- The last message of the requested types.
- This value depends on mxSession.ignoreProfileChangesDuringLastMessageProcessing.
-
- @param types an array of event types strings (MXEventTypeString).
- @return the last event of the requested types or the true last event if no event of the requested type is found.
- (CAUTION: All rooms must have a last message. For this reason, the returned event may be a profile change even if it should be ignored).
- */
-// @TODO(summary): deprecated
-- (MXEvent*)lastMessageWithTypeIn:(NSArray<MXEventTypeString> *)type;
-
-/**
  The count of stored messages for this room.
  */
 @property (nonatomic, readonly) NSUInteger storedMessagesCount;
@@ -929,18 +918,5 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 - (MXHTTPOperation*)enableEncryptionWithAlgorithm:(NSString*)algorithm
                                           success:(void (^)())success
                                           failure:(void (^)(NSError *error))failure;
-
-#pragma mark - Utils
-
-/**
- Comparator to use to order array of rooms by their lastest originServerTs value.
- This sorting is based on the last message of the room.
- 
- Arrays are then sorting so that the oldest room is set at position 0.
- 
- @param otherRoom the MXRoom object to compare with.
- @return a NSComparisonResult value: NSOrderedDescending if otherRoom is newer than self.
- */
-- (NSComparisonResult)compareOriginServerTs:(MXRoom *)otherRoom;
 
 @end
