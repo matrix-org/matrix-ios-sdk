@@ -259,9 +259,9 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     return [mxSession.store messagesEnumeratorForRoom:self.roomId];
 }
 
-- (id<MXEventsEnumerator>)enumeratorForStoredMessagesWithTypeIn:(NSArray<MXEventTypeString> *)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
+- (id<MXEventsEnumerator>)enumeratorForStoredMessagesWithTypeIn:(NSArray<MXEventTypeString> *)types
 {
-    return [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:types ignoreMemberProfileChanges:mxSession.ignoreProfileChangesDuringLastMessageProcessing];
+    return [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:types];
 }
 
 - (NSUInteger)storedMessagesCount
@@ -1656,7 +1656,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         @autoreleasepool
         {
             // Enumerate all the acknowledgeable events of the room
-            id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:mxSession.acknowledgableEventTypes ignoreMemberProfileChanges:NO];
+            id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:mxSession.acknowledgableEventTypes];
 
             MXEvent *nextEvent;
             while ((nextEvent = messagesEnumerator.nextEvent))
@@ -1717,7 +1717,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 {
     @autoreleasepool
     {
-        id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:mxSession.acknowledgableEventTypes ignoreMemberProfileChanges:NO];
+        id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:mxSession.acknowledgableEventTypes];
 
         // Acknowledge the lastest valid event
         MXEvent *event;

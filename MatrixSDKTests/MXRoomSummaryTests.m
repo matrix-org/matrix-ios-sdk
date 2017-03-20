@@ -397,9 +397,8 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
 
         id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-            [[NSNotificationCenter defaultCenter] removeObserver:observer];
+             [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
-             XCTAssertEqualObjects(room.state.displayname, displayName);
              XCTAssertEqualObjects(summary.displayname, displayName, @"Room summary must be updated");
 
              [expectation fulfill];

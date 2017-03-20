@@ -330,7 +330,7 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     return nil;
 }
 
-- (id<MXStoreEventsEnumerator>)messagesEnumeratorForRoom:(NSString*)roomId withTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
+- (id<MXStoreEventsEnumerator>)messagesEnumeratorForRoom:(NSString*)roomId withTypeIn:(NSArray*)types
 {
     // TODO
     return nil;

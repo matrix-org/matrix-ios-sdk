@@ -224,10 +224,9 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 
  @param roomId the id of the room.
  @param types an array of event types strings (MXEventTypeString).
- @param ignoreProfileChanges tell whether the profile changes should be ignored.
  @return the events enumerator.
  */
-- (id<MXEventsEnumerator>)enumeratorForStoredMessagesWithTypeIn:(NSArray<MXEventTypeString> *)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
+- (id<MXEventsEnumerator>)enumeratorForStoredMessagesWithTypeIn:(NSArray<MXEventTypeString> *)types;
 
 /**
  The count of stored messages for this room.

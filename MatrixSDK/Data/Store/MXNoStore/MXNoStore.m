@@ -213,7 +213,7 @@
     return [[MXEventsEnumeratorOnArray alloc] initWithMessages:@[]];
 }
 
-- (id<MXEventsEnumerator>)messagesEnumeratorForRoom:(NSString *)roomId withTypeIn:(NSArray *)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
+- (id<MXEventsEnumerator>)messagesEnumeratorForRoom:(NSString *)roomId withTypeIn:(NSArray *)types
 {
     // [MXStore messagesEnumeratorForRoom: withTypeIn: ignoreMemberProfileChanges:] is used
     // to get the last message of the room which must not be nil.

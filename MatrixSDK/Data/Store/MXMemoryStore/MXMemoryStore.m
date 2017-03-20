@@ -157,10 +157,10 @@
     return roomStore.messagesEnumerator;
 }
 
-- (id<MXEventsEnumerator>)messagesEnumeratorForRoom:(NSString *)roomId withTypeIn:(NSArray *)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
+- (id<MXEventsEnumerator>)messagesEnumeratorForRoom:(NSString *)roomId withTypeIn:(NSArray *)types
 {
     MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    return [roomStore enumeratorForMessagesWithTypeIn:types ignoreMemberProfileChanges:ignoreProfileChanges];
+    return [roomStore enumeratorForMessagesWithTypeIn:types];
 }
 
 - (void)storePartialTextMessageForRoom:(NSString *)roomId partialTextMessage:(NSString *)partialTextMessage

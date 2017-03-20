@@ -440,18 +440,6 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 @property (nonatomic) NSArray<MXEventTypeString> *unreadEventTypes;
 
 /**
- Tell whether the profiles changes of the room members should be ignored in the last message processing.
- NO by default.
- 
- @discussion An event (with MXEventTypeRoomMember type) is added in room history each time a room member changes his profile.
- This event replaces the last message of all the rooms to which the member belongs.
- This impacts the rooms ordering based on their last message.
- Ignoring the profile changes in last message handling prevents an irrelevant reordering of the room list.
- */
-// @TODO(summary): deprecated
-@property (nonatomic) BOOL ignoreProfileChangesDuringLastMessageProcessing;
-
-/**
  Enable VoIP by setting the external VoIP stack to use.
  
  @param callStack the VoIP call stack to use.

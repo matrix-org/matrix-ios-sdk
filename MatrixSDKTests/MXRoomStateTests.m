@@ -877,6 +877,7 @@
 
                             // The last message should be an invite m.room.member
                             MXEvent *lastMessage = newRoom.summary.lastMessageEvent;
+                            XCTAssertNotNil(lastMessage);
                             XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMember, @"The last message should be an invite m.room.member");
                             XCTAssertLessThan([[NSDate date] timeIntervalSince1970] * 1000 - lastMessage.originServerTs, 3000);
                         }
@@ -1002,7 +1003,7 @@
                         XCTAssert([newRoom.state.topic isEqualToString:@"We test room invitation here"], @"Wrong topic. Found: %@", newRoom.state.topic);
                         
                         XCTAssertEqual(newRoom.state.membership, MXMembershipJoin);
-                        
+                        XCTAssertNotNil(newRoom.summary.lastMessageEvent);
                         XCTAssertEqual(newRoom.summary.lastMessageEvent.eventType, MXEventTypeRoomMember, @"The last should be a m.room.member event indicating Alice joining the room");
                         
                         [expectation fulfill];

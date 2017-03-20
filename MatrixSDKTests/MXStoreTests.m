@@ -22,6 +22,8 @@
 #import "MXMemoryStore.h"
 #import "MXFileStore.h"
 
+#import "MXRoomSummaryUpdater.h"
+
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-retain-cycles"
@@ -623,15 +625,41 @@
 
     [room.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-        MXEvent *lastMessage2 = room.summary.lastMessageEvent;
-        XCTAssertEqual(lastMessage2.eventType, MXEventTypeRoomMember);
+        // @TODO(summary): no
+        // dispatch_async(dispatch_get_main_queue(), ^{
+            
+            MXEvent *lastMessage2 = room.summary.lastMessageEvent;
+            XCTAssertNotNil(lastMessage2);
+            XCTAssertEqual(lastMessage2.eventType, MXEventTypeRoomMember);
+            XCTAssertNotEqualObjects(lastMessage2.eventId, lastMessage.eventId);
 
-        room.mxSession.ignoreProfileChangesDuringLastMessageProcessing = YES;
-        MXEvent *lastMessage3 = room.summary.lastMessageEvent;
-        XCTAssertEqualObjects(lastMessage3.eventId, lastMessage.eventId);
+            [expectation fulfill];
+        //});
+    }];
+
+    [room.mxSession.myUser setDisplayName:@"Toto" success:nil failure:^(NSError *error) {
+        XCTFail(@"The request should not fail - NSError: %@", error);
+        [expectation fulfill];
+    }];
+}
+
+- (void)checkLastMessageIgnoreProfileChange:(MXRoom*)room
+{
+    MXEvent *lastMessage = room.summary.lastMessageEvent;
+    XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
+
+    // Ignore profile change
+    MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:room.mxSession];
+    updater.ignoreMemberProfileChanges = YES;
+
+    [room.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+        MXEvent *lastMessage2 = room.summary.lastMessageEvent;
+        XCTAssertNotNil(lastMessage2);
+        XCTAssertEqual(lastMessage2.eventType, MXEventTypeRoomMessage);
+        XCTAssertEqualObjects(lastMessage2.eventId, lastMessage.eventId);
 
         [expectation fulfill];
-
     }];
 
     [room.mxSession.myUser setDisplayName:@"Toto" success:nil failure:^(NSError *error) {

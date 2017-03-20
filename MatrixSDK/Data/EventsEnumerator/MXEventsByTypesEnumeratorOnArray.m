@@ -27,22 +27,18 @@
 
     // The event types to filter in
     NSArray *types;
-
-    // Tell whether the profile changes should be ignored
-    BOOL ignoreMemberProfileChanges;
 }
 
 @end
 
 @implementation MXEventsByTypesEnumeratorOnArray
 
-- (instancetype)initWithMessages:(NSArray<MXEvent *> *)messages andTypesIn:(NSArray *)theTypes ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
+- (instancetype)initWithMessages:(NSArray<MXEvent *> *)messages andTypesIn:(NSArray *)theTypes
 {
     self = [super init];
     if (self)
     {
         types = theTypes;
-        ignoreMemberProfileChanges = ignoreProfileChanges;
         allMessagesEnumerator = [[MXEventsEnumeratorOnArray alloc] initWithMessages:messages];
     }
 
@@ -78,11 +74,7 @@
     {
         if (event.eventId && (!types || (NSNotFound != [types indexOfObject:event.type])))
         {
-            if (!ignoreMemberProfileChanges || !event.isUserProfileChange)
-            {
-                nextEvent = event;
-                break;
-            }
+            nextEvent = event;
         }
     }
 

@@ -98,10 +98,9 @@
 
  @param roomId the id of the room.
  @param types an array of event types strings (MXEventTypeString).
- @param ignoreProfileChanges tell whether the profile changes should be ignored.
  @return the events enumerator.
  */
-- (id<MXEventsEnumerator>)enumeratorForMessagesWithTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
+- (id<MXEventsEnumerator>)enumeratorForMessagesWithTypeIn:(NSArray*)types;
 
 /**
  Get all events newer than the event with the passed id.

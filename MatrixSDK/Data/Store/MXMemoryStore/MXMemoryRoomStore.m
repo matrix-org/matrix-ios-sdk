@@ -89,9 +89,9 @@
     return [[MXEventsEnumeratorOnArray alloc] initWithMessages:messages];
 }
 
-- (id<MXEventsEnumerator>)enumeratorForMessagesWithTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
+- (id<MXEventsEnumerator>)enumeratorForMessagesWithTypeIn:(NSArray*)types
 {
-    return [[MXEventsByTypesEnumeratorOnArray alloc] initWithMessages:messages andTypesIn:types ignoreMemberProfileChanges:ignoreProfileChanges];
+    return [[MXEventsByTypesEnumeratorOnArray alloc] initWithMessages:messages andTypesIn:types];
 }
 
 - (NSArray*)eventsAfter:(NSString *)eventId except:(NSString*)userId withTypeIn:(NSSet*)types
