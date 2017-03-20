@@ -25,6 +25,14 @@
 
 NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeNotification";
 
+@interface MXRoomSummary ()
+{
+    // Cache for the last event to avoid to read it from the store everytime
+    MXEvent *lastMessageEvent;
+}
+
+@end
+
 @implementation MXRoomSummary
 
 - (instancetype)initWithRoomId:(NSString *)theRoomId andMatrixSession:(MXSession *)matrixSession
@@ -102,8 +110,11 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 
 - (MXEvent *)lastMessageEvent
 {
-    MXEvent *lastMessageEvent;
-
+    if (lastMessageEvent)
+    {
+        return lastMessageEvent;
+    }
+    
     // The storage of the event depends if it is a true matrix event or a local echo
     if (![_lastMessageEventId hasPrefix:kMXEventLocalEventIdPrefix])
     {
@@ -122,6 +133,12 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     }
 
     return lastMessageEvent;
+}
+
+- (void)setLastMessageEvent:(MXEvent *)event
+{
+    lastMessageEvent = event;
+    _lastMessageEventId = lastMessageEvent.eventId;
 }
 
 - (MXHTTPOperation *)resetLastMessage:(void (^)())complete failure:(void (^)(NSError *))failure

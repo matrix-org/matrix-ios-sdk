@@ -148,7 +148,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 /**
  The last message event id.
  */
-@property (nonatomic) NSString *lastMessageEventId;
+@property (nonatomic, readonly) NSString *lastMessageEventId;
 
 /**
  String representation of this last message.
@@ -164,7 +164,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 /**
  The shortcut to the last message event.
  */
-@property (nonatomic, readonly) MXEvent *lastMessageEvent;
+@property (nonatomic) MXEvent *lastMessageEvent;
 
 /**
  Reset the last message.

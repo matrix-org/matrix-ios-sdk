@@ -70,7 +70,7 @@
         // Accept event related to profile change only if the flag is NO
         if (!_ignoreMemberProfileChanges || !event.isUserProfileChange)
         {
-            summary.lastMessageEventId = event.eventId;
+            summary.lastMessageEvent = event;
             updated = YES;
         }
     }

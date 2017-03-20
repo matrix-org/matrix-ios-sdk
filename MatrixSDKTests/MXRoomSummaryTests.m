@@ -99,7 +99,7 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
         }
         else
         {
-            summary.lastMessageEventId = event.eventId;
+            summary.lastMessageEvent = event;
             updated = YES;
         }
     }
