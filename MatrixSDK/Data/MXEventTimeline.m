@@ -429,9 +429,13 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     if (isRoomInitialSync)
     {
         // Notify that room has been sync'ed
-        [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomInitialSyncNotification
+        // Delay it so that MXRoom.summary is computed before sending it
+        dispatch_async(dispatch_get_main_queue(), ^{
+
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomInitialSyncNotification
                                                             object:room
                                                           userInfo:nil];
+        });
     }
     else if (roomSync.timeline.limited)
     {
