@@ -1,3 +1,9 @@
+Changes in Matrix iOS SDK in 0.7.10 (2017-03-21)
+===============================================
+
+Bug fix:
+ * Registration with email failed when the email address is validated on the mobile phone.
+
 Changes in Matrix iOS SDK in 0.7.9 (2017-03-16)
 ===============================================
 
