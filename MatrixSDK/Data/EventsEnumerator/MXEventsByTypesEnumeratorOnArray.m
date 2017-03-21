@@ -75,6 +75,7 @@
         if (event.eventId && (!types || (NSNotFound != [types indexOfObject:event.type])))
         {
             nextEvent = event;
+            break;
         }
     }
 
