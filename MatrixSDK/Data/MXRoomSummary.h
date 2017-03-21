@@ -24,6 +24,12 @@
 
 /**
  Posted when a room summary has changed.
+ 
+ Note that MXRoom.summary data is handled after MXRoom.liveTimeline and MXRoom.state.
+ That means that MXRoom.summary may not be up-to-date on events forecasted by 
+ [MXRoom.liveTimeline listenToEvents] blocks.
+ 
+ You must check for `kMXRoomSummaryDidChangeNotification` to get up-to-date MXRoom.summary.
  */
 FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 
