@@ -355,9 +355,9 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     }
 
     // Store notification counts from unreadNotifications field in /sync response
-    if (roomSync.unreadNotifications
-        && _notificationCount != roomSync.unreadNotifications.notificationCount
-        && _highlightCount != roomSync.unreadNotifications.highlightCount)
+    if (roomSync.unreadNotifications &&
+            (_notificationCount != roomSync.unreadNotifications.notificationCount
+             || _highlightCount != roomSync.unreadNotifications.highlightCount))
     {
         _notificationCount = roomSync.unreadNotifications.notificationCount;
         _highlightCount = roomSync.unreadNotifications.highlightCount;
