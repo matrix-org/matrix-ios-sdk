@@ -79,8 +79,6 @@
     MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
     [roomStore removeAllMessages];
     roomStore.paginationToken = nil;
-    roomStore.notificationCount = 0;
-    roomStore.highlightCount = 0;
     roomStore.hasReachedHomeServerPaginationEnd = NO;
 }
 
@@ -112,30 +110,6 @@
 {
     MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
     return roomStore.paginationToken;
-}
-
-- (void)storeNotificationCountOfRoom:(NSString*)roomId count:(NSUInteger)notificationCount
-{
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    roomStore.notificationCount = notificationCount;
-}
-
-- (NSUInteger)notificationCountOfRoom:(NSString*)roomId
-{
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    return roomStore.notificationCount;
-}
-
-- (void)storeHighlightCountOfRoom:(NSString*)roomId count:(NSUInteger)highlightCount
-{
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    roomStore.highlightCount = highlightCount;
-}
-
-- (NSUInteger)highlightCountOfRoom:(NSString*)roomId
-{
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    return roomStore.highlightCount;
 }
 
 - (void)storeHasReachedHomeServerPaginationEndForRoom:(NSString*)roomId andValue:(BOOL)value

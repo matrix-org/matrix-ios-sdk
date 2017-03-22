@@ -63,18 +63,6 @@
 @property (nonatomic) NSString *paginationToken;
 
 /**
- The current number of unread messages that match the push notification rules.
- It is based on the notificationCount field in /sync response.
- */
-@property (nonatomic) NSUInteger notificationCount;
-
-/**
- The current number of highlighted unread messages (subset of notifications).
- It is based on the notificationCount field in /sync response.
- */
-@property (nonatomic) NSUInteger highlightCount;
-
-/**
  The flag indicating that the SDK has reached the end of pagination
  in its pagination requests to the home server.
  */

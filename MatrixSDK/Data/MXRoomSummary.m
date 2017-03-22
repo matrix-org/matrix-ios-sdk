@@ -299,6 +299,14 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 }
 
 
+#pragma mark - Others
+- (NSUInteger)localUnreadEventCount
+{
+    // Check for unread events in store
+    return [_mxSession.store localUnreadEventCount:_roomId withTypeIn:_mxSession.unreadEventTypes];
+}
+
+
 #pragma mark - Server sync
 - (void)handleJoinedRoomSync:(MXRoomSync*)roomSync
 {
@@ -344,6 +352,16 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         {
             break;
         }
+    }
+
+    // Store notification counts from unreadNotifications field in /sync response
+    if (roomSync.unreadNotifications
+        && _notificationCount != roomSync.unreadNotifications.notificationCount
+        && _highlightCount != roomSync.unreadNotifications.highlightCount)
+    {
+        _notificationCount = roomSync.unreadNotifications.notificationCount;
+        _highlightCount = roomSync.unreadNotifications.highlightCount;
+        updated = YES;
     }
 
     if (updated || lastMessageUpdated)

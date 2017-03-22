@@ -113,20 +113,6 @@
 - (NSString*)paginationTokenOfRoom:(NSString*)roomId;
 
 /**
- Store/retrieve the current number of unread messages that match the push notification rules of a room.
- */
-// @TODO(summary): Move to MXRoomSummary
-- (void)storeNotificationCountOfRoom:(NSString*)roomId count:(NSUInteger)notificationCount;
-- (NSUInteger)notificationCountOfRoom:(NSString*)roomId;
-
-/**
- Store/retrieve the current number of highlighted unread messages (subset of notifications) of a room.
- */
-// @TODO(summary): Move to MXRoomSummary
-- (void)storeHighlightCountOfRoom:(NSString*)roomId count:(NSUInteger)highlightCount;
-- (NSUInteger)highlightCountOfRoom:(NSString*)roomId;
-
-/**
  Store/retrieve the flag indicating that the SDK has reached the end of pagination
  in its pagination requests to the home server.
  */

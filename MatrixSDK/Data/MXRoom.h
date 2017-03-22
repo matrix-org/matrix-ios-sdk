@@ -57,13 +57,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomInitialSyncNotification;
 FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 
 /**
- Posted when the number of unread notifications ('notificationCount' and 'highlightCount' properties) are updated.
- 
- The notification object is the concerned room (MXRoom instance).
- */
-FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
-
-/**
  `MXRoom` is the class
  */
 @interface MXRoom : NSObject
@@ -111,30 +104,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  This array is updated on each received m.typing event (MXEventTypeTypingNotification).
  */
 @property (nonatomic, readonly) NSArray<NSString *> *typingUsers;
-
-/**
- The number of unread events wrote in the store which have their type listed in the MXSession.unreadEventType.
- 
- @discussion: The returned count is relative to the local storage. The actual unread messages
- for a room may be higher than the returned value.
- */
-@property (nonatomic, readonly) NSUInteger localUnreadEventCount;
-
-/**
- The number of unread messages that match the push notification rules.
- It is based on the notificationCount field in /sync response.
- (kMXRoomDidUpdateUnreadNotification is posted when this property is updated)
- */
-// @TODO(summary): Move to MXRoomSummary
-@property (nonatomic, readonly) NSUInteger notificationCount;
-
-/**
- The number of highlighted unread messages (subset of notifications).
- It is based on the notificationCount field in /sync response.
- (kMXRoomDidUpdateUnreadNotification is posted when this property is updated)
- */
-// @TODO(summary): Move to MXRoomSummary
-@property (nonatomic, readonly) NSUInteger highlightCount;
 
 /**
  Indicate if the room is tagged as a direct chat.

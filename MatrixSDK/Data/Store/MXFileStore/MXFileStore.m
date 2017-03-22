@@ -36,7 +36,7 @@
 #import "GAIDictionaryBuilder.h"
 #endif
 
-NSUInteger const kMXFileVersion = 38;
+NSUInteger const kMXFileVersion = 39;
 
 NSString *const kMXFileStoreFolder = @"MXFileStore";
 NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -339,26 +339,6 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 {
     [super storePaginationTokenOfRoom:roomId andToken:token];
 
-    if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
-    {
-        [roomsToCommitForMessages addObject:roomId];
-    }
-}
-
-- (void)storeNotificationCountOfRoom:(NSString *)roomId count:(NSUInteger)notificationCount
-{
-    [super storeNotificationCountOfRoom:roomId count:notificationCount];
-    
-    if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
-    {
-        [roomsToCommitForMessages addObject:roomId];
-    }
-}
-
-- (void)storeHighlightCountOfRoom:(NSString *)roomId count:(NSUInteger)highlightCount
-{
-    [super storeHighlightCountOfRoom:roomId count:highlightCount];
-    
     if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
     {
         [roomsToCommitForMessages addObject:roomId];

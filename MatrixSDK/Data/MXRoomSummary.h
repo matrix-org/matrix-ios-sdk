@@ -192,25 +192,24 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 #pragma mark - Other data
 
 /**
+ The number of unread events wrote in the store which have their type listed in the MXSession.unreadEventType.
+
+ @discussion: The returned count is relative to the local storage. The actual unread messages
+ for a room may be higher than the returned value.
+ */
+@property (nonatomic, readonly) NSUInteger localUnreadEventCount;
+
+/**
  The number of unread messages that match the push notification rules.
  It is based on the notificationCount field in /sync response.
- (kMXRoomDidUpdateUnreadNotification is posted when this property is updated)
  */
-//@property (nonatomic) NSUInteger notificationCount;
+@property (nonatomic, readonly) NSUInteger notificationCount;
 
 /**
  The number of highlighted unread messages (subset of notifications).
  It is based on the notificationCount field in /sync response.
- (kMXRoomDidUpdateUnreadNotification is posted when this property is updated)
  */
-//@property (nonatomic) NSUInteger highlightCount;
-
-
-// @TODO(summary) (from Android)
-//
-//private int mUnreadEventsCount;
-
-//private boolean mIsHighlighted = false;
+@property (nonatomic, readonly) NSUInteger highlightCount;
 
 /**
  Placeholder to store more information in the room summary.

@@ -162,26 +162,6 @@
     return paginationTokens[roomId];
 }
 
-- (void)storeNotificationCountOfRoom:(NSString*)roomId count:(NSUInteger)notificationCount
-{
-    notificationCounts[roomId] = @(notificationCount);
-}
-
-- (NSUInteger)notificationCountOfRoom:(NSString*)roomId
-{
-    return [notificationCounts[roomId] unsignedIntegerValue];
-}
-
-- (void)storeHighlightCountOfRoom:(NSString*)roomId count:(NSUInteger)highlightCount
-{
-    highlightCounts[roomId] = @(highlightCount);
-}
-
-- (NSUInteger)highlightCountOfRoom:(NSString*)roomId
-{
-    return [highlightCounts[roomId] unsignedIntegerValue];
-}
-
 - (void)storeHasReachedHomeServerPaginationEndForRoom:(NSString*)roomId andValue:(BOOL)value
 {
     hasReachedHomeServerPaginations[roomId] = [NSNumber numberWithBool:value];
