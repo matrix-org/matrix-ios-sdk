@@ -409,14 +409,17 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     {
         _roomId = [aDecoder decodeObjectForKey:@"roomId"];
 
-        for (NSString *key in [MXRoomSummary propertyKeys])
-        {
-            id value = [aDecoder decodeObjectForKey:key];
-            if (value)
-            {
-                [self setValue:value forKey:key];
-            }
-        }
+        _avatar = [aDecoder decodeObjectForKey:@"avatar"];
+        _displayname = [aDecoder decodeObjectForKey:@"displayname"];
+        _topic = [aDecoder decodeObjectForKey:@"topic"];
+        _lastMessageEventId = [aDecoder decodeObjectForKey:@"lastMessageEventId"];
+        _lastMessageString = [aDecoder decodeObjectForKey:@"lastMessageString"];
+        _lastMessageAttributedString = [aDecoder decodeObjectForKey:@"lastMessageAttributedString"];
+        _lastMessageOthers = [aDecoder decodeObjectForKey:@"lastMessageOthers"];
+
+        _others = [aDecoder decodeObjectForKey:@"others"];
+        _notificationCount = [((NSNumber*)[aDecoder decodeObjectForKey:@"notificationCount"]) unsignedIntegerValue];
+        _highlightCount = [((NSNumber*)[aDecoder decodeObjectForKey:@"highlightCount"]) unsignedIntegerValue];
     }
     return self;
 }
@@ -425,62 +428,17 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 {
     [aCoder encodeObject:_roomId forKey:@"roomId"];
 
-    for (NSString *key in [MXRoomSummary propertyKeys])
-    {
-        id value = [self valueForKey:key];
-        if (value)
-        {
-            [aCoder encodeObject:value forKey:key];
-        }
-    }
-}
+    [aCoder encodeObject:_avatar forKey:@"avatar"];
+    [aCoder encodeObject:_displayname forKey:@"displayname"];
+    [aCoder encodeObject:_topic forKey:@"topic"];
+    [aCoder encodeObject:_lastMessageEventId forKey:@"lastMessageEventId"];
+    [aCoder encodeObject:_lastMessageString forKey:@"lastMessageString"];
+    [aCoder encodeObject:_lastMessageAttributedString forKey:@"lastMessageAttributedString"];
+    [aCoder encodeObject:_lastMessageOthers forKey:@"lastMessageOthers"];
 
-// Took at http://stackoverflow.com/a/8938097
-// in order to automatically NSCoding the class properties
-+ (NSArray *)propertyKeys
-{
-    static NSMutableArray *propertyKeys;
-
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-
-        propertyKeys = [NSMutableArray array];
-        Class class = [self class];
-        while (class != [NSObject class])
-        {
-            unsigned int propertyCount;
-            objc_property_t *properties = class_copyPropertyList(class, &propertyCount);
-            for (int i = 0; i < propertyCount; i++)
-            {
-                //get property
-                objc_property_t property = properties[i];
-                const char *propertyName = property_getName(property);
-                NSString *key = [NSString stringWithCString:propertyName encoding:NSUTF8StringEncoding];
-
-                //check if read-only
-                BOOL readonly = NO;
-                const char *attributes = property_getAttributes(property);
-                NSString *encoding = [NSString stringWithCString:attributes encoding:NSUTF8StringEncoding];
-                if ([[encoding componentsSeparatedByString:@","] containsObject:@"R"])
-                {
-                    readonly = YES;
-                }
-
-                if (!readonly)
-                {
-                    //exclude read-only properties
-                    [propertyKeys addObject:key];
-                }
-            }
-            free(properties);
-            class = [class superclass];
-        }
-
-
-        NSLog(@"[MXRoomSummary] Stored properties: %@", propertyKeys);
-    });
-
-    return propertyKeys;
+    [aCoder encodeObject:_others forKey:@"others"];
+    [aCoder encodeObject:@(_notificationCount) forKey:@"notificationCount"];
+    [aCoder encodeObject:@(_highlightCount) forKey:@"highlightCount"];
 }
 
 - (NSString *)description
