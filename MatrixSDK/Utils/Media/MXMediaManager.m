@@ -28,7 +28,7 @@
 #import "MXLRUCache.h"
 #import "MXTools.h"
 
-NSString *const kMXMediaCacheVersionString = @"v1";
+NSString *const kMXMediaCacheVersionString = @"v2";
 
 NSString *const kMXMediaManagerAvatarThumbnailFolder = @"kMXMediaManagerAvatarThumbnailFolder";
 NSString *const kMXMediaManagerDefaultCacheFolder = @"kMXMediaManagerDefaultCacheFolder";
