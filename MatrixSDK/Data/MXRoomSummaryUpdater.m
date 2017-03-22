@@ -109,6 +109,11 @@
                 updated = YES;
                 break;
 
+            case MXEventTypeRoomEncryption:
+                summary.isEncrypted = room.state.isEncrypted;
+                updated = YES;
+                break;
+
             default:
                 break;
         }

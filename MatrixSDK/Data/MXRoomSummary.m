@@ -418,6 +418,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         _lastMessageOthers = [aDecoder decodeObjectForKey:@"lastMessageOthers"];
 
         _others = [aDecoder decodeObjectForKey:@"others"];
+        _isEncrypted = [((NSNumber*)[aDecoder decodeObjectForKey:@"isEncrypted"]) boolValue];
         _notificationCount = [((NSNumber*)[aDecoder decodeObjectForKey:@"notificationCount"]) unsignedIntegerValue];
         _highlightCount = [((NSNumber*)[aDecoder decodeObjectForKey:@"highlightCount"]) unsignedIntegerValue];
     }
@@ -437,6 +438,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     [aCoder encodeObject:_lastMessageOthers forKey:@"lastMessageOthers"];
 
     [aCoder encodeObject:_others forKey:@"others"];
+    [aCoder encodeObject:@(_isEncrypted) forKey:@"isEncrypted"];
     [aCoder encodeObject:@(_notificationCount) forKey:@"notificationCount"];
     [aCoder encodeObject:@(_highlightCount) forKey:@"highlightCount"];
 }

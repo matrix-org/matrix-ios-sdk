@@ -133,14 +133,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
  */
 @property (nonatomic) NSString *topic;
 
-/* 
- @TODO(summary): Add:
-
- isEncrypted;
- isDirect;
- looksLikeDirect;
- */
-
 /**
  Reset data related to room state.
  
@@ -190,6 +182,18 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 
 
 #pragma mark - Other data
+
+/**
+ Indicate whether encryption is enabled for this room.
+ */
+@property (nonatomic) BOOL isEncrypted;
+
+/*
+ @TODO(summary): Add:
+
+ isDirect;
+ looksLikeDirect;
+ */
 
 /**
  The number of unread events wrote in the store which have their type listed in the MXSession.unreadEventType.
