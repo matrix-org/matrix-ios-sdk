@@ -18,6 +18,7 @@
 #import <XCTest/XCTest.h>
 
 #import "MatrixSDKTestsData.h"
+#import "MatrixSDKTestsE2EData.h"
 
 #import "MXSession.h"
 #import "MXCrypto_Private.h"
@@ -27,8 +28,7 @@
 
 #import "MXSDKOptions.h"
 
-#if 1 // MX_CRYPTO autamatic definiton does not work well for tests so force it
-//#ifdef MX_CRYPTO
+#ifdef MX_CRYPTO
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -37,9 +37,7 @@
 @interface MXCryptoTests : XCTestCase
 {
     MatrixSDKTestsData *matrixSDKTestsData;
-
-    NSArray *messagesFromAlice;
-    NSArray *messagesFromBob;
+    MatrixSDKTestsE2EData *matrixSDKTestsE2EData;
 }
 @end
 
@@ -50,196 +48,13 @@
     [super setUp];
     
     matrixSDKTestsData = [[MatrixSDKTestsData alloc] init];
-
-    messagesFromAlice = @[
-                          @"0 - Hello I'm Alice!",
-                          @"4 - Go!"
-                          ];
-
-    messagesFromBob = @[
-                        @"1 - Hello I'm Bob!",
-                        @"2 - Isn't life grand?",
-                        @"3 - Let's go to the opera."
-                        ];
+    matrixSDKTestsE2EData = [[MatrixSDKTestsE2EData alloc] initWithMatrixSDKTestsData:matrixSDKTestsData];
 }
 
 - (void)tearDown
 {
     [super tearDown];
 }
-
-- (void)doE2ETestWithBobAndAlice:(XCTestCase*)testCase
-                                  readyToTest:(void (^)(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation))readyToTest
-{
-    [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
-
-    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation) {
-
-        [matrixSDKTestsData doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
-
-            [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
-
-            readyToTest(bobSession, aliceSession, expectation);
-
-        }];
-    }];
-}
-
-- (void)doE2ETestWithAliceInARoom:(XCTestCase*)testCase
-                    readyToTest:(void (^)(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation))readyToTest
-{
-    [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
-
-    [matrixSDKTestsData doMXSessionTestWithAlice:self readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation) {
-
-        [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
-
-        [aliceSession createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil success:^(MXRoom *room) {
-
-            [room enableEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm success:^{
-
-                readyToTest(aliceSession, room.roomId, expectation);
-
-            } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot enable encryption in room - error: %@", error);
-            }];
-
-        } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot create a room - error: %@", error);
-        }];
-
-    }];
-}
-
-- (void)doE2ETestWithAliceAndBobInARoom:(XCTestCase*)testCase
-                             cryptedBob:(BOOL)cryptedBob
-                    warnOnUnknowDevices:(BOOL)warnOnUnknowDevices
-                            readyToTest:(void (^)(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation))readyToTest
-{
-    [self doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
-
-        MXRoom *room = [aliceSession roomWithRoomId:roomId];
-
-        [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = cryptedBob;
-
-        [matrixSDKTestsData doMXSessionTestWithBob:nil readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation2) {
-
-            [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
-
-            aliceSession.crypto.warnOnUnknowDevices = warnOnUnknowDevices;
-            bobSession.crypto.warnOnUnknowDevices = warnOnUnknowDevices;
-
-            // Listen to Bob MXSessionNewRoomNotification event
-            __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
-
-                [[NSNotificationCenter defaultCenter] removeObserver:observer];
-
-                [bobSession joinRoom:note.userInfo[kMXSessionNotificationRoomIdKey] success:^(MXRoom *room) {
-
-                    readyToTest(aliceSession, bobSession, room.roomId, expectation);
-
-                } failure:^(NSError *error) {
-                    NSAssert(NO, @"Cannot join a room - error: %@", error);
-                }];
-            }];
-
-            [room inviteUser:bobSession.myUser.userId success:nil failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot invite Alice - error: %@", error);
-            }];
-
-        }];
-
-    }];
-}
-
-- (void)doE2ETestWithAliceAndBobInARoomWithCryptedMessages:(XCTestCase*)testCase
-                                                cryptedBob:(BOOL)cryptedBob
-                                               readyToTest:(void (^)(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation))readyToTest
-{
-    [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:cryptedBob warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
-
-        MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
-        MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
-
-        __block NSUInteger messagesCount = 0;
-
-        [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-            if (++messagesCount == 5)
-            {
-                readyToTest(aliceSession, bobSession, roomId, expectation);
-            }
-        }];
-
-        // Send messages in expected order
-        [roomFromAlicePOV sendTextMessage:messagesFromAlice[0] success:^(NSString *eventId) {
-
-            [roomFromBobPOV sendTextMessage:messagesFromBob[0] success:^(NSString *eventId) {
-
-                [roomFromBobPOV sendTextMessage:messagesFromBob[1] success:^(NSString *eventId) {
-
-                    [roomFromBobPOV sendTextMessage:messagesFromBob[2] success:^(NSString *eventId) {
-
-                        [roomFromAlicePOV sendTextMessage:messagesFromAlice[1] success:nil failure:nil];
-
-                    } failure:nil];
-                    
-                } failure:nil];
-
-            } failure:nil];
-
-        } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
-        }];
-
-    }];
-}
-
-- (void)doE2ETestWithAliceAndBobAndSamInARoom:(XCTestCase*)testCase
-                                   cryptedBob:(BOOL)cryptedBob
-                                   cryptedSam:(BOOL)cryptedSam
-                    warnOnUnknowDevices:(BOOL)warnOnUnknowDevices
-                            readyToTest:(void (^)(MXSession *aliceSession, MXSession *bobSession, MXSession *samSession, NSString *roomId, XCTestExpectation *expectation))readyToTest
-{
-    [self doE2ETestWithAliceAndBobInARoom:testCase cryptedBob:cryptedBob warnOnUnknowDevices:warnOnUnknowDevices readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
-
-
-        MXRoom *room = [aliceSession roomWithRoomId:roomId];
-
-        [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = cryptedSam;
-
-        // Ugly hack: Create a bob from another MatrixSDKTestsData instance and call him Sam...
-        MatrixSDKTestsData *matrixSDKTestsData2 = [[MatrixSDKTestsData alloc] init];
-        [matrixSDKTestsData2 doMXSessionTestWithBob:nil readyToTest:^(MXSession *samSession, XCTestExpectation *expectation2) {
-
-            [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
-
-            aliceSession.crypto.warnOnUnknowDevices = warnOnUnknowDevices;
-            bobSession.crypto.warnOnUnknowDevices = warnOnUnknowDevices;
-            samSession.crypto.warnOnUnknowDevices = warnOnUnknowDevices;
-
-            // Listen to Sam MXSessionNewRoomNotification event
-            __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:samSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
-
-                [[NSNotificationCenter defaultCenter] removeObserver:observer];
-
-                [samSession joinRoom:note.userInfo[kMXSessionNotificationRoomIdKey] success:^(MXRoom *room) {
-
-                    readyToTest(aliceSession, bobSession, samSession, room.roomId, expectation);
-
-                } failure:^(NSError *error) {
-                    NSAssert(NO, @"Cannot join a room - error: %@", error);
-                }];
-            }];
-
-            [room inviteUser:samSession.myUser.userId success:nil failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot invite Alice - error: %@", error);
-            }];
-
-        }];
-    }];
-}
-
-
 
 - (NSUInteger)checkEncryptedEvent:(MXEvent*)event roomId:(NSString*)roomId clearMessage:(NSString*)clearMessage senderSession:(MXSession*)senderSession
 {
@@ -408,7 +223,7 @@
 
 - (void)testMultipleDownloadKeys
 {
-    [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         __block NSUInteger count = 0;
         void(^onSuccess)() = ^() {
@@ -461,7 +276,7 @@
 {
     // No device = non-e2e-capable device
 
-    [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:NO warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:NO warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
 
@@ -487,7 +302,7 @@
 
 - (void)testDownloadKeysWithUnreachableHS
 {
-    [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         // Try to get info from a user on matrix.org.
         // The local hs we use for tests is not federated and is not able to talk with matrix.org
@@ -548,7 +363,7 @@
 
 - (void)testAliceInACryptedRoom
 {
-    [self doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
 
         NSString *message = @"Hello myself!";
 
@@ -574,7 +389,7 @@
 
 - (void)testAliceInACryptedRoomAfterInitialSync
 {
-    [self doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
 
         MXRestClient *aliceRestClient = aliceSession.matrixRestClient;
         [aliceSession close];
@@ -623,7 +438,7 @@
 
 - (void)testAliceAndBobInACryptedRoom
 {
-    [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         NSString *messageFromAlice = @"Hello I'm Alice!";
 
@@ -650,7 +465,7 @@
 // Test with more messages
 - (void)testAliceAndBobInACryptedRoom2
 {
-    [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         __block NSUInteger receivedMessagesFromAlice = 0;
         __block NSUInteger receivedMessagesFromBob = 0;
@@ -668,16 +483,16 @@
                 return;
             }
 
-            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromAlice[receivedMessagesFromAlice++] senderSession:aliceSession]);
+            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:matrixSDKTestsE2EData.messagesFromAlice[receivedMessagesFromAlice++] senderSession:aliceSession]);
 
             switch (receivedMessagesFromAlice)
             {
                 case 1:
                 {
                     // Send messages in expected order
-                    [roomFromBobPOV sendTextMessage:messagesFromBob[0] success:^(NSString *eventId) {
-                        [roomFromBobPOV sendTextMessage:messagesFromBob[1] success:^(NSString *eventId) {
-                            [roomFromBobPOV sendTextMessage:messagesFromBob[2] success:nil failure:nil];
+                    [roomFromBobPOV sendTextMessage:matrixSDKTestsE2EData.messagesFromBob[0] success:^(NSString *eventId) {
+                        [roomFromBobPOV sendTextMessage:matrixSDKTestsE2EData.messagesFromBob[1] success:^(NSString *eventId) {
+                            [roomFromBobPOV sendTextMessage:matrixSDKTestsE2EData.messagesFromBob[2] success:nil failure:nil];
                         } failure:nil];
                     } failure:nil];
 
@@ -699,15 +514,15 @@
                 return;
             }
 
-            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromBob[receivedMessagesFromBob++] senderSession:bobSession]);
+            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:matrixSDKTestsE2EData.messagesFromBob[receivedMessagesFromBob++] senderSession:bobSession]);
 
             if (receivedMessagesFromBob == 3)
             {
-                [roomFromAlicePOV sendTextMessage:messagesFromAlice[1] success:nil failure:nil];
+                [roomFromAlicePOV sendTextMessage:matrixSDKTestsE2EData.messagesFromAlice[1] success:nil failure:nil];
             }
         }];
 
-        [roomFromAlicePOV sendTextMessage:messagesFromAlice[0] success:nil failure:^(NSError *error) {
+        [roomFromAlicePOV sendTextMessage:matrixSDKTestsE2EData.messagesFromAlice[0] success:nil failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
@@ -716,7 +531,7 @@
 
 - (void)testAliceAndBobInACryptedRoomFromInitialSync
 {
-    [self doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         MXRestClient *bobRestClient = bobSession.matrixRestClient;
 
@@ -743,23 +558,23 @@
                     switch (paginatedMessagesCount++)
                     {
                         case 0:
-                            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromAlice[1] senderSession:aliceSession]);
+                            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:matrixSDKTestsE2EData.messagesFromAlice[1] senderSession:aliceSession]);
                             break;
 
                         case 1:
-                            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromBob[2] senderSession:bobSession]);
+                            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:matrixSDKTestsE2EData.messagesFromBob[2] senderSession:bobSession]);
                             break;
 
                         case 2:
-                            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromBob[1] senderSession:bobSession]);
+                            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:matrixSDKTestsE2EData.messagesFromBob[1] senderSession:bobSession]);
                             break;
 
                         case 3:
-                            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromBob[0] senderSession:bobSession]);
+                            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:matrixSDKTestsE2EData.messagesFromBob[0] senderSession:bobSession]);
                             break;
 
                         case 4:
-                            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromAlice[0] senderSession:aliceSession]);
+                            XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:matrixSDKTestsE2EData.messagesFromAlice[0] senderSession:aliceSession]);
                             break;
 
                         default:
@@ -795,7 +610,7 @@
 
 - (void)testAliceAndBobInACryptedRoomBackPaginationFromMemoryStore
 {
-    [self doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         __block NSUInteger paginatedMessagesCount = 0;
 
@@ -809,23 +624,23 @@
 
             switch (paginatedMessagesCount++) {
                 case 0:
-                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromAlice[1] senderSession:aliceSession]);
+                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:matrixSDKTestsE2EData.messagesFromAlice[1] senderSession:aliceSession]);
                     break;
 
                 case 1:
-                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromBob[2] senderSession:bobSession]);
+                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:matrixSDKTestsE2EData.messagesFromBob[2] senderSession:bobSession]);
                     break;
 
                 case 2:
-                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromBob[1] senderSession:bobSession]);
+                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:matrixSDKTestsE2EData.messagesFromBob[1] senderSession:bobSession]);
                     break;
 
                 case 3:
-                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromBob[0] senderSession:bobSession]);
+                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:matrixSDKTestsE2EData.messagesFromBob[0] senderSession:bobSession]);
                     break;
 
                 case 4:
-                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromAlice[0] senderSession:aliceSession]);
+                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:matrixSDKTestsE2EData.messagesFromAlice[0] senderSession:aliceSession]);
                     break;
 
                 default:
@@ -852,7 +667,7 @@
 
 - (void)testAliceAndBobInACryptedRoomBackPaginationFromHomeServer
 {
-    [self doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         __block NSUInteger paginatedMessagesCount = 0;
 
@@ -872,23 +687,23 @@
 
             switch (paginatedMessagesCount++) {
                 case 0:
-                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromAlice[1] senderSession:aliceSession]);
+                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:matrixSDKTestsE2EData.messagesFromAlice[1] senderSession:aliceSession]);
                     break;
 
                 case 1:
-                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromBob[2] senderSession:bobSession]);
+                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:matrixSDKTestsE2EData.messagesFromBob[2] senderSession:bobSession]);
                     break;
 
                 case 2:
-                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromBob[1] senderSession:bobSession]);
+                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:matrixSDKTestsE2EData.messagesFromBob[1] senderSession:bobSession]);
                     break;
 
                 case 3:
-                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromBob[0] senderSession:bobSession]);
+                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:matrixSDKTestsE2EData.messagesFromBob[0] senderSession:bobSession]);
                     break;
 
                 case 4:
-                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messagesFromAlice[0] senderSession:aliceSession]);
+                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:matrixSDKTestsE2EData.messagesFromAlice[0] senderSession:aliceSession]);
                     break;
 
                 default:
@@ -915,7 +730,7 @@
 
 - (void)testAliceAndNotCryptedBobInACryptedRoom
 {
-    [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:NO warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:NO warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         NSString *messageFromAlice = @"Hello I'm Alice!";
 
@@ -974,7 +789,7 @@
 // when using a new device.
 - (void)testAliceDecryptOldMessageWithANewDeviceInACryptedRoom
 {
-    [self doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
 
         NSString *message = @"Hello myself!";
 
@@ -1013,7 +828,7 @@
 
 - (void)testAliceWithNewDeviceAndBob
 {
-    [self doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         // Relog alice to simulate a new device
         [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
@@ -1047,7 +862,7 @@
 
 - (void)testAliceAndBobWithNewDevice
 {
-    [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
         MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
@@ -1098,7 +913,7 @@
 
 - (void)testAliceWithNewDeviceAndBobWithNewDevice
 {
-    [self doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         // Relog alice to simulate a new device
         [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
@@ -1151,7 +966,7 @@
 
 - (void)testAliceAndBlockedBob
 {
-    [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
         MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
@@ -1275,7 +1090,7 @@
                                @"5"
                                ];
 
-    [self doE2ETestWithAliceAndBobAndSamInARoom:self cryptedBob:YES cryptedSam:YES warnOnUnknowDevices:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, MXSession *samSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobAndSamInARoom:self cryptedBob:YES cryptedSam:YES warnOnUnknowDevices:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, MXSession *samSession, NSString *roomId, XCTestExpectation *expectation) {
 
         MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
         MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
@@ -1471,7 +1286,7 @@
 
 - (void)testReplayAttack
 {
-    [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         NSString *messageFromAlice = @"Hello I'm Alice!";
 
@@ -1509,7 +1324,7 @@
 
 - (void)testRoomKeyReshare
 {
-    [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         NSString *messageFromAlice = @"Hello I'm Alice!";
 
@@ -1567,7 +1382,7 @@
 
 - (void)testLateRoomKey
 {
-    [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         NSString *messageFromAlice = @"Hello I'm Alice!";
 
@@ -1633,7 +1448,7 @@
 // Test for https://github.com/vector-im/riot-ios/issues/913
 - (void)testFirstMessageSentWhileSessionWasPaused
 {
-    [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         NSString *messageFromAlice = @"Hello I'm Alice!";
 
@@ -1674,7 +1489,7 @@
     NSString *messageFromAlice = @"Hello I'm Alice!";
     NSString *message2FromAlice = @"I'm still Alice!";
 
-    [self doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
 
         aliceSession.crypto.warnOnUnknowDevices = NO;
         bobSession.crypto.warnOnUnknowDevices = NO;
@@ -1774,7 +1589,7 @@
     NSString *messageFromAlice = @"Hello I'm Alice!";
     NSString *encryptedMessageFromAlice = @"I'm still Alice!";
 
-    [self doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
 
         aliceSession.crypto.warnOnUnknowDevices = NO;
         bobSession.crypto.warnOnUnknowDevices = NO;
@@ -1871,7 +1686,7 @@
                                @"I'm still Alice and I have bob keys now"
                                ];
 
-    [self doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
 
@@ -1969,7 +1784,7 @@
 
 - (void)testExportRoomKeys
 {
-    [self doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         [bobSession.crypto exportRoomKeys:^(NSArray<NSDictionary *> *keys) {
 
@@ -1989,7 +1804,7 @@
 
 - (void)testImportRoomKeys
 {
-    [self doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         [bobSession.crypto exportRoomKeys:^(NSArray<NSDictionary *> *keys) {
 
@@ -2067,7 +1882,7 @@
 // Almost same code as testImportRoomKeys
 - (void)testExportImportRoomKeysWithPassword
 {
-    [self doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         NSString *password = @"motdepasse";
 
@@ -2146,7 +1961,7 @@
 
 - (void)testImportRoomKeysWithWrongPassword
 {
-    [self doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         [bobSession.crypto exportRoomKeysWithPassword:@"APassword" success:^(NSData *keyFile) {
 
