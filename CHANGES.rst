@@ -1,3 +1,10 @@
+Changes in Matrix iOS SDK in 0.7.11 (2017-03-23)
+===============================================
+
+Improvements:
+ * MXSDKOptions: Let the application define its own media cache version (see `mediaCacheAppVersion`).
+ * MXMediaManager: Consider a cache version based on the version defined by the application and the one defined at the SDK level.
+
 Changes in Matrix iOS SDK in 0.7.10 (2017-03-21)
 ===============================================
 
