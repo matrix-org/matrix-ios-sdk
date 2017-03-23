@@ -1,5 +1,6 @@
 /*
  Copyright 2016 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -25,10 +26,12 @@
 
 #import "MXMediaManager.h"
 
+#import "MXSDKOptions.h"
+
 #import "MXLRUCache.h"
 #import "MXTools.h"
 
-NSString *const kMXMediaCacheVersionString = @"v2";
+NSUInteger const kMXMediaCacheSDKVersion = 1;
 
 NSString *const kMXMediaManagerAvatarThumbnailFolder = @"kMXMediaManagerAvatarThumbnailFolder";
 NSString *const kMXMediaManagerDefaultCacheFolder = @"kMXMediaManagerDefaultCacheFolder";
@@ -803,17 +806,11 @@ static NSMutableDictionary* fileBaseFromMimeType = nil;
     
     if (mediaCachePath)
     {
+        NSLog(@"[MXMediaManager] Delete media cache directory");
+        
         if (![[NSFileManager defaultManager] removeItemAtPath:mediaCachePath error:&error])
         {
             NSLog(@"[MXMediaManager] Failed to delete media cache dir: %@", error);
-        }
-        else
-        {
-            NSLog(@"[MXMediaManager] Media cache has been deleted");
-            
-            // Add the cache version file
-            NSString *cacheVersionFile = [mediaCachePath stringByAppendingPathComponent:kMXMediaCacheVersionString];
-            [[NSFileManager defaultManager]createFileAtPath:cacheVersionFile contents:nil attributes:nil];
         }
     }
     else
@@ -822,6 +819,7 @@ static NSMutableDictionary* fileBaseFromMimeType = nil;
     }
     
     mediaCachePath = nil;
+    
     // force to recompute the cache size at next cacheSize call
     storageCacheSize = 0;
 }
@@ -834,6 +832,7 @@ static NSMutableDictionary* fileBaseFromMimeType = nil;
     {
         NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
         NSString *cacheRoot = [paths objectAtIndex:0];
+        NSString *mediaCacheVersionString = [MXMediaManager getCacheVersionString];
         
         mediaCachePath = [cacheRoot stringByAppendingPathComponent:mediaDir];
         
@@ -842,13 +841,13 @@ static NSMutableDictionary* fileBaseFromMimeType = nil;
             [[NSFileManager defaultManager] createDirectoryAtPath:mediaCachePath withIntermediateDirectories:NO attributes:nil error:nil];
             
             // Add the cache version file
-            NSString *cacheVersionFile = [mediaCachePath stringByAppendingPathComponent:kMXMediaCacheVersionString];
+            NSString *cacheVersionFile = [mediaCachePath stringByAppendingPathComponent:mediaCacheVersionString];
             [[NSFileManager defaultManager]createFileAtPath:cacheVersionFile contents:nil attributes:nil];
         }
         else
         {
             // Check the cache version
-            NSString *cacheVersionFile = [mediaCachePath stringByAppendingPathComponent:kMXMediaCacheVersionString];
+            NSString *cacheVersionFile = [mediaCachePath stringByAppendingPathComponent:mediaCacheVersionString];
             if (![[NSFileManager defaultManager] fileExistsAtPath:cacheVersionFile])
             {
                 NSLog(@"[MXMediaManager] New media cache version detected");
@@ -859,6 +858,11 @@ static NSMutableDictionary* fileBaseFromMimeType = nil;
     cachePath = mediaCachePath;
     
     return cachePath;
+}
+
++ (NSString*)getCacheVersionString
+{
+    return [NSString stringWithFormat:@"v%tu.%tu", [MXSDKOptions sharedInstance].mediaCacheAppVersion, kMXMediaCacheSDKVersion];
 }
 
 @end
