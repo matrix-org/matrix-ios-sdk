@@ -19,5 +19,5 @@ Avery Pierce <aapierce0 at gmail.com>
  * MacOS compatibility
  * Swift refinements
  
-Tkachenko Ivan <iv.tkachenko17@gmail.com>
+Tkachenko Ivan <iv.tkachenko17 at gmail.com>
  * Add isCancelled property to MXHTTPOperation
