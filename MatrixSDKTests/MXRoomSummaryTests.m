@@ -17,6 +17,7 @@
 #import <XCTest/XCTest.h>
 
 #import "MatrixSDKTestsData.h"
+#import "MatrixSDKTestsE2EData.h"
 
 #import "MXMemoryStore.h"
 #import "MXFileStore.h"
@@ -34,6 +35,7 @@
 @interface MXRoomSummaryTests : XCTestCase <MXRoomSummaryUpdating>
 {
     MatrixSDKTestsData *matrixSDKTestsData;
+    MatrixSDKTestsE2EData *matrixSDKTestsE2EData;
 
     // Flags to check the delegate has been called
     BOOL testDelegate;
@@ -51,6 +53,7 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
     [super setUp];
 
     matrixSDKTestsData = [[MatrixSDKTestsData alloc] init];
+    matrixSDKTestsE2EData = [[MatrixSDKTestsE2EData alloc] initWithMatrixSDKTestsData:matrixSDKTestsData];
 }
 
 
@@ -110,6 +113,14 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
         // Do a classic update
         MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:session];
         updated = [updater session:session updateRoomSummary:summary withLastEvent:event state:state];
+    }
+    else if ([self.description containsString:@"testDoNotStoreDecryptedData"])
+    {
+        // Do a classic update
+        MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:session];
+        updated = [updater session:session updateRoomSummary:summary withLastEvent:event state:state];
+
+        summary.lastMessageString = event.content[@"body"];
     }
     else
     {
@@ -758,6 +769,98 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
+    }];
+}
+
+- (void)testDoNotStoreDecryptedData
+{
+    // Test it on a permanent store
+    [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self
+                                            andStore:[[MXFileStore alloc] init]
+                                         readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        aliceSession.roomSummaryUpdateDelegate = self;
+
+        NSString *message = @"new message";
+
+        MXRoom *room = [aliceSession roomWithRoomId:roomId];
+        MXRoomSummary *summary = room.summary;
+
+        __block NSString *lastMessageEventId;
+        MXEvent *localEcho;
+
+        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+            [[NSNotificationCenter defaultCenter] removeObserver:observer];
+
+            MXEvent *event = summary.lastMessageEvent;
+
+            XCTAssert(event);
+            XCTAssertFalse(event.isLocalEvent);
+            XCTAssertEqual(event.sentState, MXEventSentStateSent);
+
+            XCTAssert(event.isEncrypted);
+
+            XCTAssertEqualObjects(summary.lastMessageEventId, lastMessageEventId);
+            XCTAssertEqualObjects(summary.lastMessageString, message);
+
+            XCTAssert(event.isEncrypted);
+            XCTAssert(summary.isEncrypted);
+
+            // Close the session
+            MXRestClient *aliceRestClient = aliceSession.matrixRestClient;
+            [aliceSession close];
+
+            // And check the store
+            id<MXStore> store = [[MXFileStore alloc] init];
+            [store openWithCredentials:aliceRestClient.credentials onComplete:^{
+
+                MXRoomSummary *storedSummary = [store summaryOfRoom:roomId];
+
+                XCTAssert(storedSummary.isEncrypted);
+                XCTAssertEqualObjects(storedSummary.lastMessageEventId, lastMessageEventId);
+                XCTAssertNil(storedSummary.lastMessageString, @"We must not stored decrypted data");
+
+                [store close];
+
+                // Then reopen a session on this store
+                MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+                [aliceSession2 setStore:[[MXFileStore alloc] init] success:^{
+
+                    [aliceSession2 start:^{
+
+                        MXRoomSummary *summary2 = [aliceSession2.store summaryOfRoom:roomId];
+
+                        XCTAssert(summary2.isEncrypted);
+                        XCTAssertEqualObjects(summary2.lastMessageEventId, lastMessageEventId);
+                        XCTAssertNil(summary2.lastMessageString, @"Once the session is started, the message should be decrypted (in memory)");
+
+                        [expectation fulfill];
+
+                    } failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+
+        }];
+
+        [room sendTextMessage:message formattedText:nil localEcho:&localEcho success:^(NSString *eventId) {
+            lastMessageEventId = eventId;
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+        
     }];
 }
 
