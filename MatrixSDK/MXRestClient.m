@@ -748,14 +748,13 @@ MXAuthAction;
         NSString *deviceName = [NSHost currentHost].localizedName;
 #endif
         newParameters[@"initial_device_display_name"] = deviceName;
-        parameters = newParameters;
-    }
-    
-    if (MXAuthActionRegister == authAction)
-    {
-        // Patch: Add the temporary `x_show_msisdn` flag to not filter the msisdn login type in the supported authentication flows.
-        NSMutableDictionary *newParameters = [NSMutableDictionary dictionaryWithDictionary:parameters];
-        newParameters[@"x_show_msisdn"] = @(YES);
+        
+        if (MXAuthActionRegister == authAction)
+        {
+            // Patch: Add the temporary `x_show_msisdn` flag to not filter the msisdn login type in the supported authentication flows.
+            newParameters[@"x_show_msisdn"] = @(YES);
+        }
+        
         parameters = newParameters;
     }
 

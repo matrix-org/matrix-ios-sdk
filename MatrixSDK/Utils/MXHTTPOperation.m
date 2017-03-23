@@ -50,6 +50,7 @@
         _numberOfTries = 0;
         _maxNumberOfTries = MXHTTPOPERATION_DEFAULT_MAX_RETRIES;
         _maxRetriesTime = MXHTTPOPERATION_DEFAULT_MAX_TIME_MS;
+        _canceled = NO;
     }
     return self;
 }
@@ -59,7 +60,7 @@
     // Prevent further retry on this operation
     _maxNumberOfTries = 0;
     _maxRetriesTime = 0;
-
+    _canceled = YES;
     [_operation cancel];
 }
 
@@ -76,6 +77,7 @@
     _numberOfTries = operation.numberOfTries;
     _maxNumberOfTries = operation.maxRetriesTime;
     _maxRetriesTime = operation.maxRetriesTime;
+    _canceled = operation.canceled;
 }
 
 @end

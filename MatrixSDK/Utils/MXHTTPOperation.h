@@ -56,6 +56,11 @@
 @property (nonatomic) NSUInteger maxRetriesTime;
 
 /**
+ Cancel status.
+ */
+@property (nonatomic, readonly, getter=isCancelled) BOOL canceled;
+
+/**
  Cancel the HTTP request.
  */
 - (void)cancel;

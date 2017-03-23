@@ -180,6 +180,7 @@
 		32A1515B1DB525DA00400192 /* NSObject+sortedKeys.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A151591DB525DA00400192 /* NSObject+sortedKeys.h */; };
 		32A1515C1DB525DA00400192 /* NSObject+sortedKeys.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A1515A1DB525DA00400192 /* NSObject+sortedKeys.m */; };
 		32A27D1F19EC335300BAFADE /* MXRoomTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A27D1E19EC335300BAFADE /* MXRoomTests.m */; };
+		32BD34BE1E84134A006EDC0D /* MatrixSDKTestsE2EData.m in Sources */ = {isa = PBXBuildFile; fileRef = 32BD34BD1E84134A006EDC0D /* MatrixSDKTestsE2EData.m */; };
 		32BED28F1B00A23F00E668FE /* MXCallStack.h in Headers */ = {isa = PBXBuildFile; fileRef = 32BED28E1B00A23F00E668FE /* MXCallStack.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32C6F93319DD814400EA4E9C /* MatrixSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C6F93219DD814400EA4E9C /* MatrixSDK.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32CAB1071A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.h in Headers */ = {isa = PBXBuildFile; fileRef = 32CAB1051A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.h */; };
@@ -440,6 +441,8 @@
 		32A151591DB525DA00400192 /* NSObject+sortedKeys.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSObject+sortedKeys.h"; path = "Lib/NSObject+sortedKeys.h"; sourceTree = "<group>"; };
 		32A1515A1DB525DA00400192 /* NSObject+sortedKeys.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSObject+sortedKeys.m"; path = "Lib/NSObject+sortedKeys.m"; sourceTree = "<group>"; };
 		32A27D1E19EC335300BAFADE /* MXRoomTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = MXRoomTests.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
+		32BD34BC1E84134A006EDC0D /* MatrixSDKTestsE2EData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MatrixSDKTestsE2EData.h; sourceTree = "<group>"; };
+		32BD34BD1E84134A006EDC0D /* MatrixSDKTestsE2EData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MatrixSDKTestsE2EData.m; sourceTree = "<group>"; };
 		32BED28E1B00A23F00E668FE /* MXCallStack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallStack.h; sourceTree = "<group>"; };
 		32C6F92D19DD814400EA4E9C /* MatrixSDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MatrixSDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		32C6F93119DD814400EA4E9C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -934,6 +937,8 @@
 				32C6F93A19DD814400EA4E9C /* Supporting Files */,
 				3281E8A619E41A2000976E1A /* MatrixSDKTestsData.h */,
 				3281E8A719E41A2000976E1A /* MatrixSDKTestsData.m */,
+				32BD34BC1E84134A006EDC0D /* MatrixSDKTestsE2EData.h */,
+				32BD34BD1E84134A006EDC0D /* MatrixSDKTestsE2EData.m */,
 				32D8CAC119DEE6ED002AF8A0 /* MXRestClientNoAuthAPITests.m */,
 				32FCAB4C19E578860049C555 /* MXRestClientTests.m */,
 				3281E89D19E299C000976E1A /* MXErrorTests.m */,
@@ -1475,6 +1480,7 @@
 				3281E8A819E41A2000976E1A /* MatrixSDKTestsData.m in Sources */,
 				322A51D81D9E846800C8536D /* MXCryptoTests.m in Sources */,
 				323B2AD31BCD3F1400B11F34 /* MXStoreCoreDataStoreTests.m in Sources */,
+				32BD34BE1E84134A006EDC0D /* MatrixSDKTestsE2EData.m in Sources */,
 				32832B5D1BCC048300241108 /* MXStoreMemoryStoreTests.m in Sources */,
 				32114A7F1A24E15500FF2EC4 /* MXMyUserTests.m in Sources */,
 				32832B5E1BCC048300241108 /* MXStoreNoStoreTests.m in Sources */,
