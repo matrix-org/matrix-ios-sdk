@@ -139,10 +139,12 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 {
     lastMessageEvent = event;
     _lastMessageEventId = lastMessageEvent.eventId;
+    _isLastMessageEncrypted = event.isEncrypted;
 }
 
 - (MXHTTPOperation *)resetLastMessage:(void (^)())complete failure:(void (^)(NSError *))failure
 {
+    lastMessageEvent = nil;
     _lastMessageEventId = nil;
     _lastMessageString = nil;
     _lastMessageAttributedString = nil;
@@ -412,15 +414,29 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         _avatar = [aDecoder decodeObjectForKey:@"avatar"];
         _displayname = [aDecoder decodeObjectForKey:@"displayname"];
         _topic = [aDecoder decodeObjectForKey:@"topic"];
-        _lastMessageEventId = [aDecoder decodeObjectForKey:@"lastMessageEventId"];
-        _lastMessageString = [aDecoder decodeObjectForKey:@"lastMessageString"];
-        _lastMessageAttributedString = [aDecoder decodeObjectForKey:@"lastMessageAttributedString"];
-        _lastMessageOthers = [aDecoder decodeObjectForKey:@"lastMessageOthers"];
 
         _others = [aDecoder decodeObjectForKey:@"others"];
         _isEncrypted = [((NSNumber*)[aDecoder decodeObjectForKey:@"isEncrypted"]) boolValue];
         _notificationCount = [((NSNumber*)[aDecoder decodeObjectForKey:@"notificationCount"]) unsignedIntegerValue];
         _highlightCount = [((NSNumber*)[aDecoder decodeObjectForKey:@"highlightCount"]) unsignedIntegerValue];
+
+        _lastMessageEventId = [aDecoder decodeObjectForKey:@"lastMessageEventId"];
+        _isLastMessageEncrypted = [((NSNumber*)[aDecoder decodeObjectForKey:@"isLastMessageEncrypted"]) boolValue];
+
+        NSDictionary *lastMessageData;
+        if (_isLastMessageEncrypted)
+        {
+            NSData *lastMessageEncryptedData = [aDecoder decodeObjectForKey:@"lastMessageEncryptedData"];
+            NSData *lastMessageDataData = [self decrypt:lastMessageEncryptedData];
+            lastMessageData = [NSKeyedUnarchiver unarchiveObjectWithData:lastMessageDataData];
+        }
+        else
+        {
+            lastMessageData = [aDecoder decodeObjectForKey:@"lastMessageData"];
+        }
+        _lastMessageString = lastMessageData[@"lastMessageString"];
+        _lastMessageAttributedString = lastMessageData[@"lastMessageAttributedString"];
+        _lastMessageOthers = lastMessageData[@"lastMessageOthers"];
     }
     return self;
 }
@@ -432,16 +448,64 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     [aCoder encodeObject:_avatar forKey:@"avatar"];
     [aCoder encodeObject:_displayname forKey:@"displayname"];
     [aCoder encodeObject:_topic forKey:@"topic"];
-    [aCoder encodeObject:_lastMessageEventId forKey:@"lastMessageEventId"];
-    [aCoder encodeObject:_lastMessageString forKey:@"lastMessageString"];
-    [aCoder encodeObject:_lastMessageAttributedString forKey:@"lastMessageAttributedString"];
-    [aCoder encodeObject:_lastMessageOthers forKey:@"lastMessageOthers"];
 
     [aCoder encodeObject:_others forKey:@"others"];
     [aCoder encodeObject:@(_isEncrypted) forKey:@"isEncrypted"];
     [aCoder encodeObject:@(_notificationCount) forKey:@"notificationCount"];
     [aCoder encodeObject:@(_highlightCount) forKey:@"highlightCount"];
+
+    // Store last message metadata
+    [aCoder encodeObject:_lastMessageEventId forKey:@"lastMessageEventId"];
+    [aCoder encodeObject:@(_isLastMessageEncrypted) forKey:@"isLastMessageEncrypted"];
+
+    // Build last message sensitive data
+    NSMutableDictionary *lastMessageData = [NSMutableDictionary dictionary];
+    if (_lastMessageString)
+    {
+        lastMessageData[@"lastMessageString"] = _lastMessageString;
+    }
+    if (_lastMessageAttributedString)
+    {
+        lastMessageData[@"lastMessageAttributedString"] = _lastMessageAttributedString;
+    }
+    if (_lastMessageString)
+    {
+        lastMessageData[@"lastMessageOthers"] = _lastMessageOthers;
+    }
+
+    // And encrypt it if necessary
+    if (_isLastMessageEncrypted)
+    {
+        NSData *lastMessageDataData = [NSKeyedArchiver archivedDataWithRootObject:lastMessageData];
+        NSData *lastMessageEncryptedData = [self encrypt:lastMessageDataData];
+        [aCoder encodeObject:lastMessageEncryptedData forKey:@"lastMessageEncryptedData"];
+    }
+    else
+    {
+        [aCoder encodeObject:lastMessageData forKey:@"lastMessageData"];
+    }
 }
+
+
+#pragma mark - Last message data encryption
+- (NSData*)encrypt:(NSData*)data
+{
+    // TODO
+    return data;
+}
+
+- (NSData*)decrypt:(NSData*)encryptedData
+{
+    // TODO
+    return encryptedData;
+}
+
++ (NSData*)encryptionKey
+{
+    // TODO
+    return nil;
+}
+
 
 - (NSString *)description
 {

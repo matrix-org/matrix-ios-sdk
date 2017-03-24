@@ -240,6 +240,7 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
 
                     XCTAssert(summary2);
                     XCTAssert(summary2.lastMessageEventId, @"We must have an event now");
+                    XCTAssertFalse(summary.isLastMessageEncrypted);
 
                     MXEvent *event2 = summary2.lastMessageEvent;
 
@@ -803,6 +804,7 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
 
             XCTAssertEqualObjects(summary.lastMessageEventId, lastMessageEventId);
             XCTAssertEqualObjects(summary.lastMessageString, message);
+            XCTAssert(summary.isLastMessageEncrypted);
 
             XCTAssert(event.isEncrypted);
             XCTAssert(summary.isEncrypted);
@@ -820,6 +822,7 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
 
                     // A hack to directly read the file built by MXFileStore
                     NSString *roomSummaryFile = [store performSelector:@selector(summaryFileForRoom:forBackup:) withObject:roomId withObject:NSNull.null];
+                    XCTAssert(roomSummaryFile.length);
                     [store close];
 
                     NSData *roomSummaryFileData = [[NSData alloc] initWithContentsOfFile:roomSummaryFile];
@@ -844,6 +847,7 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
 
                             XCTAssert(summary2.isEncrypted);
                             XCTAssertEqualObjects(summary2.lastMessageEventId, lastMessageEventId);
+                            XCTAssert(summary.isLastMessageEncrypted);
                             XCTAssertEqualObjects(summary2.lastMessageString, message, @"Once the session is started, the message should be decrypted (in memory)");
 
                             XCTAssertNil(summary2.lastMessageAttributedString, @"We did not stored an attributed string");

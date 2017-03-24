@@ -149,6 +149,16 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 @property (nonatomic, readonly) NSString *lastMessageEventId;
 
 /**
+ Indicates if the last message is encrypted.
+ 
+ @discussion
+ An unencrypted message can be sent to an encrypted room.
+ When the last message is encrypted, its summary data (lastMessageString, lastMessageAttributedString,
+ lastMessageOthers) is stored encrypted in the room summary cache.
+ */
+@property (nonatomic, readonly) BOOL isLastMessageEncrypted;
+
+/**
  String representation of this last message.
  */
 @property (nonatomic) NSString *lastMessageString;
