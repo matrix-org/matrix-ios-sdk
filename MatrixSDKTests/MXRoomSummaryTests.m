@@ -807,50 +807,67 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
             XCTAssert(event.isEncrypted);
             XCTAssert(summary.isEncrypted);
 
-            // Close the session
-            MXRestClient *aliceRestClient = aliceSession.matrixRestClient;
-            [aliceSession close];
+            // Use dispatch_async for not closing the session in the middle of stg
+            dispatch_async(dispatch_get_main_queue(), ^{
 
-            // And check the store
-            id<MXStore> store = [[MXFileStore alloc] init];
-            [store openWithCredentials:aliceRestClient.credentials onComplete:^{
+                // Close the session
+                MXRestClient *aliceRestClient = aliceSession.matrixRestClient;
+                [aliceSession close];
 
-                MXRoomSummary *storedSummary = [store summaryOfRoom:roomId];
+                // And check the store
+                id<MXStore> store = [[MXFileStore alloc] init];
+                [store openWithCredentials:aliceRestClient.credentials onComplete:^{
 
-                XCTAssert(storedSummary.isEncrypted);
-                XCTAssertEqualObjects(storedSummary.lastMessageEventId, lastMessageEventId);
-                XCTAssertNil(storedSummary.lastMessageString, @"We must not stored decrypted data");
+                    // A hack to directly read the file built by MXFileStore
+                    NSString *roomSummaryFile = [store performSelector:@selector(summaryFileForRoom:forBackup:) withObject:roomId withObject:NSNull.null];
+                    [store close];
 
-                [store close];
+                    NSData *roomSummaryFileData = [[NSData alloc] initWithContentsOfFile:roomSummaryFile];
+                    XCTAssert(roomSummaryFileData.length);
 
-                // Then reopen a session on this store
-                MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
-                [aliceSession2 setStore:[[MXFileStore alloc] init] success:^{
+                    NSData *pattern = [lastMessageEventId dataUsingEncoding:NSUTF8StringEncoding];
+                    NSRange range = [roomSummaryFileData rangeOfData:pattern options:0 range:NSMakeRange(0, roomSummaryFileData.length)];
+                    XCTAssertNotEqual(range.location, NSNotFound, @"We must find the event id in this file. Else this test is not valid");
 
-                    [aliceSession2 start:^{
+                    pattern = [message dataUsingEncoding:NSUTF8StringEncoding];
+                    range = [roomSummaryFileData rangeOfData:pattern options:0 range:NSMakeRange(0, roomSummaryFileData.length)];
+                    XCTAssertEqual(range.location, NSNotFound, @"We must not stored decrypted data");
 
-                        MXRoomSummary *summary2 = [aliceSession2.store summaryOfRoom:roomId];
 
-                        XCTAssert(summary2.isEncrypted);
-                        XCTAssertEqualObjects(summary2.lastMessageEventId, lastMessageEventId);
-                        XCTAssertNil(summary2.lastMessageString, @"Once the session is started, the message should be decrypted (in memory)");
+                    // Then reopen a session on this store
+                    MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+                    [aliceSession2 setStore:[[MXFileStore alloc] init] success:^{
 
-                        [expectation fulfill];
+                        [aliceSession2 start:^{
+
+                            MXRoomSummary *summary2 = [aliceSession2.store summaryOfRoom:roomId];
+
+                            XCTAssert(summary2.isEncrypted);
+                            XCTAssertEqualObjects(summary2.lastMessageEventId, lastMessageEventId);
+                            XCTAssertEqualObjects(summary2.lastMessageString, message, @"Once the session is started, the message should be decrypted (in memory)");
+
+                            XCTAssertNil(summary2.lastMessageAttributedString, @"We did not stored an attributed string");
+                            XCTAssertEqual(summary2.lastMessageOthers.count, 0, @"We did not stored any others");
+
+                            [expectation fulfill];
+
+                        } failure:^(NSError *error) {
+                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                            [expectation fulfill];
+                        }];
 
                     } failure:^(NSError *error) {
                         XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                         [expectation fulfill];
                     }];
-
+                    
                 } failure:^(NSError *error) {
                     XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                     [expectation fulfill];
                 }];
 
-            } failure:^(NSError *error) {
-                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                [expectation fulfill];
-            }];
+            });
+
 
         }];
 
