@@ -123,6 +123,7 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         roomsToCommitForDeletion = [NSMutableArray array];
         usersToCommit = [NSMutableDictionary dictionary];
         preloadedRoomsStates = [NSMutableDictionary dictionary];
+        preloadedRoomSummary = [NSMutableDictionary dictionary];
         preloadedRoomAccountData = [NSMutableDictionary dictionary];
 
         metaDataHasChanged = NO;
