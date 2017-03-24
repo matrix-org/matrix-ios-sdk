@@ -132,6 +132,15 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         }
     }
 
+    // Decrypt event if necessary
+    if (lastMessageEvent.eventType == MXEventTypeRoomEncrypted)
+    {
+        if (![_mxSession decryptEvent:lastMessageEvent inTimeline:nil])
+        {
+            NSLog(@"[MXTimeline] lastMessageEvent: Warning: Unable to decrypt event. Error: %@", lastMessageEvent.decryptionError);
+        }
+    }
+
     return lastMessageEvent;
 }
 

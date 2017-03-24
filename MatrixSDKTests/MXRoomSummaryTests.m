@@ -114,7 +114,8 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
         MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:session];
         updated = [updater session:session updateRoomSummary:summary withLastEvent:event state:state];
     }
-    else if ([self.description containsString:@"testDoNotStoreDecryptedData"])
+    else if ([self.description containsString:@"testDoNotStoreDecryptedData"]
+             || [self.description containsString:@"testEncryptedLastMessageEvent"])
     {
         // Do a classic update
         MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:session];
@@ -869,10 +870,7 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
                     XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                     [expectation fulfill];
                 }];
-
             });
-
-
         }];
 
         [room sendTextMessage:message formattedText:nil localEcho:&localEcho success:^(NSString *eventId) {
@@ -881,7 +879,81 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
-        
+    }];
+}
+
+- (void)testEncryptedLastMessageEvent
+{
+    // Test it on a permanent store
+    [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        aliceSession.roomSummaryUpdateDelegate = self;
+
+        NSString *message = @"new message";
+
+        MXRoom *room = [aliceSession roomWithRoomId:roomId];
+        MXRoomSummary *summary = room.summary;
+
+        __block NSString *lastMessageEventId;
+        MXEvent *localEcho;
+
+        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+            [[NSNotificationCenter defaultCenter] removeObserver:observer];
+
+            MXEvent *event = summary.lastMessageEvent;
+
+            XCTAssert(event);
+            XCTAssertEqualObjects(event.eventId, lastMessageEventId);
+            XCTAssert(event.clearEvent, @"The event must have been decrypted by MXRoomSummary.lastMessageEvent");
+            XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
+            XCTAssertEqualObjects(event.content[@"body"], message);
+
+            // Use dispatch_async for not closing the session in the middle of stg
+            dispatch_async(dispatch_get_main_queue(), ^{
+
+                // Close the session
+                MXRestClient *aliceRestClient = aliceSession.matrixRestClient;
+                [aliceSession close];
+
+                // Then reopen a session
+                MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+                [aliceSession2 setStore:[[MXFileStore alloc] init] success:^{
+
+                    [aliceSession2 start:^{
+
+                        MXRoomSummary *summary2 = [aliceSession2 roomSummaryWithRoomId:roomId];
+
+                        XCTAssert(summary2.isEncrypted);
+                        XCTAssertEqualObjects(summary2.lastMessageString, message, @"Once the session is started, the message should be decrypted (in memory)");
+
+                        MXEvent *event2 = summary2.lastMessageEvent;
+                        XCTAssert(event2);
+                        XCTAssertEqualObjects(event2.eventId, lastMessageEventId);
+                        XCTAssert(event2.clearEvent, @"The event must have been decrypted by MXRoomSummary.lastMessageEvent");
+                        XCTAssertEqual(event2.eventType, MXEventTypeRoomMessage);
+                        XCTAssertEqualObjects(event2.content[@"body"], message);
+
+                        [expectation fulfill];
+
+                    } failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+            });
+        }];
+
+        [room sendTextMessage:message formattedText:nil localEcho:&localEcho success:^(NSString *eventId) {
+            lastMessageEventId = eventId;
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
     }];
 }
 
