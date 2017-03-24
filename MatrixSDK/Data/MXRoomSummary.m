@@ -20,8 +20,8 @@
 #import "MXRoomState.h"
 #import "MXSession.h"
 
-#import <objc/runtime.h>
-#import <objc/message.h>
+#import <Security/Security.h>
+#import <CommonCrypto/CommonCryptor.h>
 
 NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeNotification";
 
@@ -478,7 +478,11 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     {
         NSData *lastMessageDataData = [NSKeyedArchiver archivedDataWithRootObject:lastMessageData];
         NSData *lastMessageEncryptedData = [self encrypt:lastMessageDataData];
-        [aCoder encodeObject:lastMessageEncryptedData forKey:@"lastMessageEncryptedData"];
+
+        if (lastMessageEncryptedData)
+        {
+            [aCoder encodeObject:lastMessageEncryptedData forKey:@"lastMessageEncryptedData"];
+        }
     }
     else
     {
@@ -488,22 +492,111 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 
 
 #pragma mark - Last message data encryption
++ (NSData*)encryptionKey
+{
+    static NSMutableData *encryptionKey;
+
+    if (!encryptionKey)
+    {
+        // Generate an AES key
+        encryptionKey = [[NSMutableData alloc] initWithLength:kCCKeySizeAES256];
+        int retval = SecRandomCopyBytes(kSecRandomDefault, kCCKeySizeAES256, encryptionKey.mutableBytes);
+
+        if (retval != 0)
+        {
+            NSLog(@"[MXRoomSummary] encryptionKey: Cannot generate key. retval: %tu", retval);
+        }
+    }
+
+    return encryptionKey;
+}
+
 - (NSData*)encrypt:(NSData*)data
 {
-    // TODO
-    return data;
+    NSData *encryptedData;
+    
+    CCCryptorRef cryptor;
+    CCCryptorStatus status;
+
+    NSData *key = [MXRoomSummary encryptionKey];
+
+    status = CCCryptorCreateWithMode(kCCDecrypt, kCCModeCTR, kCCAlgorithmAES,
+                                     ccNoPadding, NULL, key.bytes, key.length,
+                                     NULL, 0, 0, kCCModeOptionCTR_BE, &cryptor);
+    if (status == kCCSuccess)
+    {
+        size_t bufferLength = CCCryptorGetOutputLength(cryptor, data.length, false);
+        NSMutableData *buffer = [NSMutableData dataWithLength:bufferLength];
+
+        size_t outLength;
+        status |= CCCryptorUpdate(cryptor,
+                                  data.bytes,
+                                  data.length,
+                                  [buffer mutableBytes],
+                                  [buffer length],
+                                  &outLength);
+
+        status |= CCCryptorRelease(cryptor);
+
+        if (status == kCCSuccess)
+        {
+            encryptedData = buffer;
+        }
+        else
+        {
+            NSLog(@"[MXRoomSummary] encrypt: CCCryptorUpdate failed. status: %tu", status);
+        }
+    }
+    else
+    {
+        NSLog(@"[MXRoomSummary] encrypt: CCCryptorCreateWithMode failed. status: %tu", status);
+    }
+
+    return encryptedData;
 }
 
 - (NSData*)decrypt:(NSData*)encryptedData
 {
-    // TODO
-    return encryptedData;
-}
+    NSData *data;
 
-+ (NSData*)encryptionKey
-{
-    // TODO
-    return nil;
+    CCCryptorRef cryptor;
+    CCCryptorStatus status;
+
+    NSData *key = [MXRoomSummary encryptionKey];
+
+    status = CCCryptorCreateWithMode(kCCDecrypt, kCCModeCTR, kCCAlgorithmAES,
+                                     ccNoPadding, NULL, key.bytes, key.length,
+                                     NULL, 0, 0, kCCModeOptionCTR_BE, &cryptor);
+    if (status == kCCSuccess)
+    {
+        size_t bufferLength = CCCryptorGetOutputLength(cryptor, encryptedData.length, false);
+        NSMutableData *buffer = [NSMutableData dataWithLength:bufferLength];
+
+        size_t outLength;
+        status |= CCCryptorUpdate(cryptor,
+                                  encryptedData.bytes,
+                                  encryptedData.length,
+                                  [buffer mutableBytes],
+                                  [buffer length],
+                                  &outLength);
+
+        status |= CCCryptorRelease(cryptor);
+
+        if (status == kCCSuccess)
+        {
+            data = buffer;
+        }
+        else
+        {
+            NSLog(@"[MXRoomSummary] decrypt: CCCryptorUpdate failed. status: %tu", status);
+        }
+    }
+    else
+    {
+        NSLog(@"[MXRoomSummary] decrypt: CCCryptorCreateWithMode failed. status: %tu", status);
+    }
+    
+    return data;
 }
 
 
