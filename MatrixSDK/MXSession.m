@@ -209,6 +209,8 @@ typedef void (^MXOnResumeDone)();
 
         _catchingUp = NO;
 
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onDidDecryptEvent:) name:kMXEventDidDecryptNotification object:nil];
+
         [self setState:MXSessionStateInitialised];
     }
     return self;
@@ -2257,6 +2259,19 @@ typedef void (^MXOnResumeDone)();
     }
 }
 
+// Called when an event finally got decrypted after a late room key reception
+- (void)onDidDecryptEvent:(NSNotification *)notification
+{
+    MXEvent *event = notification.object;
+
+    // Check if this event can interest the room summary
+    MXRoomSummary *summary = [self roomSummaryWithRoomId:event.roomId];
+    if (summary &&
+        summary.lastMessageEvent.ageLocalTs <= event.ageLocalTs)
+    {
+        [summary resetLastMessage:nil failure:nil];
+    }
+}
 
 #pragma mark - Global events listeners
 - (id)listenToEvents:(MXOnSessionEvent)onEvent

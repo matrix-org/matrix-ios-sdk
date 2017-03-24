@@ -24,6 +24,8 @@
 
 #import "MXRoomSummaryUpdater.h"
 
+#import "MXCrypto_Private.h"
+
 #import "MXTools.h"
 
 
@@ -45,6 +47,8 @@
 @end
 
 NSString *testDelegateLastMessageString = @"The string I decider to render for this event";
+NSString *uisiString = @"The sender's device has not sent us the keys for this message.";
+
 
 @implementation MXRoomSummaryTests
 
@@ -55,7 +59,6 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
     matrixSDKTestsData = [[MatrixSDKTestsData alloc] init];
     matrixSDKTestsE2EData = [[MatrixSDKTestsE2EData alloc] initWithMatrixSDKTestsData:matrixSDKTestsData];
 }
-
 
 - (void)tearDown
 {
@@ -122,6 +125,21 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
         updated = [updater session:session updateRoomSummary:summary withLastEvent:event state:state];
 
         summary.lastMessageString = event.content[@"body"];
+    }
+    else if ([self.description containsString:@"testLateRoomKey"])
+    {
+        // Do a classic update
+        MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:session];
+        updated = [updater session:session updateRoomSummary:summary withLastEvent:event state:state];
+
+        if (event.eventType == MXEventTypeRoomEncrypted)
+        {
+            summary.lastMessageString = uisiString;
+        }
+        else
+        {
+            summary.lastMessageString = event.content[@"body"];
+        }
     }
     else
     {
@@ -191,7 +209,6 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
         mxSession.roomSummaryUpdateDelegate = self;
 
         MXEvent *lastMessageEvent = summary.lastMessageEvent;
-
 
         id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
@@ -774,6 +791,9 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
     }];
 }
 
+
+#pragma mark - Tests with encryption
+
 - (void)testDoNotStoreDecryptedData
 {
     // Test it on a permanent store
@@ -949,6 +969,105 @@ NSString *testDelegateLastMessageString = @"The string I decider to render for t
         }];
 
         [room sendTextMessage:message formattedText:nil localEcho:&localEcho success:^(NSString *eventId) {
+            lastMessageEventId = eventId;
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+// The same test as MXCryptoTests but dedicated to MXRoomSummary
+- (void)testLateRoomKey
+{
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self
+                                                cryptedBob:YES
+                                       warnOnUnknowDevices:NO
+                                                aliceStore:[[MXMemoryStore alloc] init]
+                                                  bobStore:[[MXMemoryStore alloc] init]
+                                               readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        bobSession.roomSummaryUpdateDelegate = self;
+
+        NSString *messageFromAlice = @"Hello I'm Alice!";
+
+        MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
+        MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
+
+        // Some hack to set up test conditions
+        __block MXEvent *toDeviceEvent;
+
+        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionOnToDeviceEventNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+
+            toDeviceEvent = notif.userInfo[kMXSessionNotificationEventKey];
+
+            [[NSNotificationCenter defaultCenter] removeObserver:observer];
+        }];
+
+        [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+            // Make crypto forget the inbound group session now
+            // MXRoomSummary will not be able to decrypt it
+            XCTAssert(toDeviceEvent);
+            NSString *sessionId = toDeviceEvent.content[@"session_id"];
+
+            id<MXCryptoStore> bobCryptoStore = (id<MXCryptoStore>)[bobSession.crypto.olmDevice valueForKey:@"store"];
+            [bobCryptoStore removeInboundGroupSessionWithId:sessionId andSenderKey:toDeviceEvent.senderKey];
+
+            // So that we cannot decrypt it anymore right now
+            [event setClearData:nil keysProved:nil keysClaimed:nil];
+            BOOL b = [bobSession decryptEvent:event inTimeline:nil];
+
+            XCTAssertFalse(b, @"Failed to set up test condition");
+        }];
+
+
+        MXRoomSummary *roomSummaryFromBobPOV = roomFromBobPOV.summary;
+
+        __block NSString *lastMessageEventId;
+        __block NSUInteger notifCount = 0;
+
+        id summaryObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:roomSummaryFromBobPOV queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+            switch (notifCount++)
+            {
+                case 0:
+                {
+                    XCTAssertEqualObjects(roomSummaryFromBobPOV.lastMessageEventId, lastMessageEventId);
+                    XCTAssertEqualObjects(roomSummaryFromBobPOV.lastMessageString, uisiString, @"Without the key, we have a UISI");
+
+                    MXEvent *event = roomSummaryFromBobPOV.lastMessageEvent;
+                    XCTAssertNil(event.clearEvent);
+
+                    // Reinject the m.room_key event. This mimics a room_key event that arrives after message events.
+                    [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionOnToDeviceEventNotification
+                                                                        object:bobSession
+                                                                      userInfo:@{
+                                                                                 kMXSessionNotificationEventKey: toDeviceEvent
+                                                                                 }];
+                    break;
+                }
+
+                case 1:
+                {
+                    // The last message must be decrypted now
+                    XCTAssertEqualObjects(roomSummaryFromBobPOV.lastMessageEventId, lastMessageEventId);
+                    XCTAssertEqualObjects(roomSummaryFromBobPOV.lastMessageString, messageFromAlice, @"The message must be now decrypted");
+
+                    MXEvent *event = roomSummaryFromBobPOV.lastMessageEvent;
+                    XCTAssert(event.clearEvent);
+
+                    [[NSNotificationCenter defaultCenter] removeObserver:summaryObserver];
+                    [expectation fulfill];
+                    break;
+                }
+
+                default:
+                    break;
+            }
+        }];
+
+        [roomFromAlicePOV sendTextMessage:messageFromAlice success:^(NSString *eventId) {
             lastMessageEventId = eventId;
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
