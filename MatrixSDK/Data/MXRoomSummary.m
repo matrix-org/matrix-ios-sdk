@@ -492,20 +492,62 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 
 
 #pragma mark - Last message data encryption
+/**
+ The AES-256 key used for encrypting MXRoomSummary sensitive data.
+ */
 + (NSData*)encryptionKey
 {
-    static NSMutableData *encryptionKey;
+    NSData *encryptionKey;
 
-    if (!encryptionKey)
+    // Create a dictionary to look up the key in the keychain
+    NSDictionary *searchDict = @{
+                                 (__bridge id)kSecClass: (__bridge id)kSecClassGenericPassword,
+                                 (__bridge id)kSecAttrService: @"org.matrix.sdk.keychain",
+                                 (__bridge id)kSecAttrAccount: @"MXRoomSummary",
+                                 (__bridge id)kSecReturnData: (__bridge id)kCFBooleanTrue,
+                                 };
+
+    // Make the search
+    CFDataRef foundKey;
+    OSStatus status = SecItemCopyMatching((__bridge CFDictionaryRef)searchDict, (CFTypeRef*)&foundKey);
+
+    if (status == errSecSuccess)
     {
-        // Generate an AES key
-        encryptionKey = [[NSMutableData alloc] initWithLength:kCCKeySizeAES256];
-        int retval = SecRandomCopyBytes(kSecRandomDefault, kCCKeySizeAES256, encryptionKey.mutableBytes);
+        // Use the found key
+        encryptionKey = (__bridge NSData*)(foundKey);
+    }
+    else if (status == errSecItemNotFound)
+    {
+        NSLog(@"[MXRoomSummary] encryptionKey: Generate the key and store it to the keychain");
 
-        if (retval != 0)
+        // There is not yet a key in the keychain
+        // Generate an AES key
+        NSMutableData *newEncryptionKey = [[NSMutableData alloc] initWithLength:kCCKeySizeAES256];
+        int retval = SecRandomCopyBytes(kSecRandomDefault, kCCKeySizeAES256, newEncryptionKey.mutableBytes);
+        if (retval == 0)
         {
-            NSLog(@"[MXRoomSummary] encryptionKey: Cannot generate key. retval: %tu", retval);
+            encryptionKey = [NSData dataWithData:newEncryptionKey];
+
+            // Store it to the keychain
+            NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithDictionary:searchDict];
+            dict[(__bridge id)kSecValueData] = encryptionKey;
+
+            status = SecItemAdd((__bridge CFDictionaryRef)dict, NULL);
+            if (status != errSecSuccess)
+            {
+                // TODO: The iOS 10 simulator returns the -34018 (errSecMissingEntitlement) error.
+                // We need to fix it but there is no issue with the app on real device nor with iOS 9 simulator.
+                NSLog(@"[MXRoomSummary] encryptionKey: SecItemAdd failed. status: %i", status);
+            }
         }
+        else
+        {
+            NSLog(@"[MXRoomSummary] encryptionKey: Cannot generate key. retval: %i", retval);
+        }
+    }
+    else
+    {
+        NSLog(@"[MXRoomSummary] encryptionKey: Keychain failed. OSStatus: %i", status);
     }
 
     return encryptionKey;
@@ -514,7 +556,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 - (NSData*)encrypt:(NSData*)data
 {
     NSData *encryptedData;
-    
+
     CCCryptorRef cryptor;
     CCCryptorStatus status;
 
@@ -544,12 +586,12 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         }
         else
         {
-            NSLog(@"[MXRoomSummary] encrypt: CCCryptorUpdate failed. status: %tu", status);
+            NSLog(@"[MXRoomSummary] encrypt: CCCryptorUpdate failed. status: %i", status);
         }
     }
     else
     {
-        NSLog(@"[MXRoomSummary] encrypt: CCCryptorCreateWithMode failed. status: %tu", status);
+        NSLog(@"[MXRoomSummary] encrypt: CCCryptorCreateWithMode failed. status: %i", status);
     }
 
     return encryptedData;
@@ -588,12 +630,12 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         }
         else
         {
-            NSLog(@"[MXRoomSummary] decrypt: CCCryptorUpdate failed. status: %tu", status);
+            NSLog(@"[MXRoomSummary] decrypt: CCCryptorUpdate failed. status: %i", status);
         }
     }
     else
     {
-        NSLog(@"[MXRoomSummary] decrypt: CCCryptorCreateWithMode failed. status: %tu", status);
+        NSLog(@"[MXRoomSummary] decrypt: CCCryptorCreateWithMode failed. status: %i", status);
     }
     
     return data;
