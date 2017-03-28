@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
- 
+ Copyright 2017 Vector Creations Ltd
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -289,14 +290,16 @@
 {
     [matrixSDKTestsData doMXRestClientTestWithBobAndThePublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
-        [mxRestClient publicRooms:^(NSArray *rooms) {
+        [bobRestClient publicRoomsOnServer:nil limit:-1 since:nil filter:nil thirdPartyInstanceId:nil includeAllNetworks:NO success:^(MXPublicRoomsResponse *publicRoomsResponse) {
             
-            XCTAssertTrue(0 < rooms.count, @"Valid init");
+            XCTAssertGreaterThan(publicRoomsResponse.chunk.count, 0);
+            XCTAssertGreaterThan(publicRoomsResponse.totalRoomCountEstimate, 0);
+            XCTAssertNil(publicRoomsResponse.nextBatch, @"We requested all rooms. There must not be a pagination token");
             
             MXPublicRoom *theMXPublicRoom;
-            for (MXPublicRoom *room in rooms)
+            for (MXPublicRoom *room in publicRoomsResponse.chunk)
             {
-                // Find the Matrix HQ room (#matrix:matrix.org) by its ID
+                // Find the created public room
                 if ([room.roomId isEqualToString:roomId])
                 {
                     theMXPublicRoom = room;
@@ -327,7 +330,7 @@
     MXRestClient *client = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL
                                   andOnUnrecognizedCertificateBlock:nil];
 
-    [client publicRooms:^(NSArray *rooms) {
+    [client publicRoomsOnServer:nil limit:-1 since:nil filter:nil thirdPartyInstanceId:nil includeAllNetworks:NO success:^(MXPublicRoomsResponse *publicRoomsResponse) {
 
         // Result must be returned on the main queue by default
         XCTAssert([[NSThread currentThread] isMainThread]);
@@ -352,7 +355,7 @@
 
     client.completionQueue = dispatch_queue_create("aQueueFromAnotherThread", DISPATCH_QUEUE_SERIAL);
 
-    [client publicRooms:^(NSArray *rooms) {
+    [client publicRoomsOnServer:nil limit:-1 since:nil filter:nil thirdPartyInstanceId:nil includeAllNetworks:NO success:^(MXPublicRoomsResponse *publicRoomsResponse) {
 
         XCTAssertFalse([[NSThread currentThread] isMainThread]);
         XCTAssertEqual(dispatch_get_current_queue(), client.completionQueue);

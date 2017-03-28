@@ -91,6 +91,29 @@ FOUNDATION_EXPORT NSString *const kMX3PIDMediumMSISDN;
 
 
 /**
+  `MXPublicRoomsResponse` represents the response of a publicRoom request.
+ */
+@interface MXPublicRoomsResponse : MXJSONModel
+
+/**
+ A batch of MXPublicRoom instances.
+ */
+@property (nonatomic) NSArray<MXPublicRoom*> *chunk;
+
+/**
+ Token that can be used to get the next batch of results.
+ */
+@property (nonatomic) NSString *nextBatch;
+
+/**
+ An estimated count of public rooms matching the request.
+ */
+@property (nonatomic) NSUInteger totalRoomCountEstimate;
+
+@end
+
+
+/**
  Login flow types
  */
 typedef NSString* MXLoginFlowType NS_REFINED_FOR_SWIFT;

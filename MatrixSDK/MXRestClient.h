@@ -976,7 +976,7 @@ typedef enum : NSUInteger
  @param roomId the id of the room.
  @param from the token to start getting results from.
  @param direction `MXTimelineDirectionForwards` or `MXTimelineDirectionBackwards`
- @param limit (optional, use -1 to not defined this value) the maximum nuber of messages to return.
+ @param limit (optional, use -1 to not defined this value) the maximum number of messages to return.
  @param filter to filter returned events with.
 
  @param success A block object called when the operation succeeds. It provides a `MXPaginationResponse` object.
@@ -1340,15 +1340,35 @@ typedef enum : NSUInteger
 
 #pragma mark - Directory operations
 /**
- Get the list of public rooms hosted by the home server.
+ Get the list of public rooms hosted by a home server.
+ 
+ @discussion
+ Pagination parameters (`limit` and `since`) should be used in order to limit
+ homeserver resources usage.
+ 
+ @param server (optional) the remote server to query for the room list. If nil, get the user
+               homeserver's public room list.
+ @param limit (optional, use -1 to not defined this value) the maximum number of entries to return.
+ @param since (optional) token to paginate from.
+ @param filter (optional) the string to search for.
+ @param thirdPartyInstanceId (optional) returns rooms published to specific lists on 
+                             a third party instance (like an IRC bridge).
+ @param includeAllNetworks if YES, returns all rooms that have been published to any list. 
+                           NO to return rooms on the main, default list.
 
- @param success A block object called when the operation succeeds. rooms is an array of MXPublicRoom objects
+ @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)publicRooms:(void (^)(NSArray *rooms))success
-                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+- (MXHTTPOperation*)publicRoomsOnServer:(NSString*)server
+                                  limit:(NSUInteger)limit
+                                  since:(NSString*)since
+                                 filter:(NSString*)filter
+                   thirdPartyInstanceId:(NSString*)thirdPartyInstanceId
+                     includeAllNetworks:(BOOL)includeAllNetworks
+                                success:(void (^)(MXPublicRoomsResponse *publicRoomsResponse))success
+                                failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Get the room ID corresponding to this room alias
