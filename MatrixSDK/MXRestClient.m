@@ -3657,7 +3657,9 @@ MXAuthAction;
     }
     if (filter)
     {
-        parameters[@"filter"] = filter;
+        parameters[@"filter"] = @{
+                                  @"generic_search_term": filter
+                                  };
     }
     if (thirdPartyInstanceId)
     {

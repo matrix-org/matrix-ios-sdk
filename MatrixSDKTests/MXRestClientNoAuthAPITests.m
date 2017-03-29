@@ -321,6 +321,42 @@
     }];
 }
 
+- (void)testSearchPublicRooms
+{
+    [matrixSDKTestsData doMXRestClientTestWithBobAndThePublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        // Search for "mxPublic"
+        // Room created by doMXRestClientTestWithBobAndThePublicRoom is mxPublic-something
+        [bobRestClient publicRoomsOnServer:nil limit:10 since:nil filter:@"mxPublic" thirdPartyInstanceId:nil includeAllNetworks:NO success:^(MXPublicRoomsResponse *publicRoomsResponse) {
+
+            XCTAssertGreaterThan(publicRoomsResponse.chunk.count, 0);
+            XCTAssertGreaterThan(publicRoomsResponse.totalRoomCountEstimate, 0);
+            XCTAssertNil(publicRoomsResponse.nextBatch, @"We requested all rooms. There must not be a pagination token");
+
+            MXPublicRoom *theMXPublicRoom;
+            for (MXPublicRoom *room in publicRoomsResponse.chunk)
+            {
+                // Find the created public room
+                if ([room.roomId isEqualToString:roomId])
+                {
+                    theMXPublicRoom = room;
+                }
+            }
+
+            XCTAssertNotNil(theMXPublicRoom);
+            XCTAssertEqualObjects(theMXPublicRoom.name, @"MX Public Room test");
+            XCTAssertEqualObjects(theMXPublicRoom.topic, @"The public room used by SDK tests");
+            XCTAssertGreaterThan(theMXPublicRoom.numJoinedMembers, 0, @"The is at least mxBob at #matrix:matrix.org");
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+    }];
+}
 
 #pragma mark - completionQueue
 - (void)testCompletionQueueDefaultValue
