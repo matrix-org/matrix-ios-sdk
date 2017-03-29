@@ -3687,12 +3687,45 @@ MXAuthAction;
 }
 
 #pragma mark - Directory operations
-- (MXHTTPOperation*)publicRooms:(void (^)(NSArray *rooms))success
-                        failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation *)publicRoomsOnServer:(NSString *)server
+                                   limit:(NSUInteger)limit
+                                   since:(NSString *)since
+                                  filter:(NSString *)filter
+                    thirdPartyInstanceId:(NSString *)thirdPartyInstanceId
+                      includeAllNetworks:(BOOL)includeAllNetworks
+                                 success:(void (^)(MXPublicRoomsResponse *))success
+                                 failure:(void (^)(NSError *))failure
 {
-    return [httpClient requestWithMethod:@"GET"
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{
+                                                                                      @"include_all_networks": @(includeAllNetworks)
+                                                                                      }];
+
+    if (server)
+    {
+        parameters[@"server"] = server;
+    }
+    if (-1 != limit)
+    {
+        parameters[@"limit"] = @(limit);
+    }
+    if (since)
+    {
+        parameters[@"since"] = since;
+    }
+    if (filter)
+    {
+        parameters[@"filter"] = @{
+                                  @"generic_search_term": filter
+                                  };
+    }
+    if (thirdPartyInstanceId)
+    {
+        parameters[@"thirdPartyInstanceId"] = thirdPartyInstanceId;
+    }
+
+    return [httpClient requestWithMethod:@"POST"
                                     path:[NSString stringWithFormat:@"%@/publicRooms", apiPathPrefix]
-                              parameters:nil
+                              parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
                                      if (success && processingQueue)
                                      {
@@ -3701,13 +3734,13 @@ MXAuthAction;
                                              // Create public rooms array from JSON on processing queue
                                              dispatch_async(processingQueue, ^{
 
-                                                 NSArray *publicRooms;
-                                                 MXJSONModelSetMXJSONModelArray(publicRooms, MXPublicRoom, JSONResponse[@"chunk"]);
+                                                 MXPublicRoomsResponse *publicRoomsResponse;
+                                                 MXJSONModelSetMXJSONModel(publicRoomsResponse, MXPublicRoomsResponse, JSONResponse);
 
                                                  if (completionQueue)
                                                  {
                                                      dispatch_async(completionQueue, ^{
-                                                         success(publicRooms);
+                                                         success(publicRoomsResponse);
                                                      });
                                                  }
 

@@ -253,7 +253,7 @@
     MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerHttpsURL
                                         andOnUnrecognizedCertificateBlock:nil];
 
-    [mxRestClient publicRooms:^(NSArray *rooms) {
+    [mxRestClient publicRoomsOnServer:nil limit:-1 since:nil filter:nil thirdPartyInstanceId:nil includeAllNetworks:NO success:^(MXPublicRoomsResponse *publicRoomsResponse) {
 
         XCTFail(@"The operation must fail because the self-signed certficate was not trusted");
         [expectation fulfill];

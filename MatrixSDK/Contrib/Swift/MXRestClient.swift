@@ -1,6 +1,7 @@
 /*
  Copyright 2017 Avery Pierce
- 
+ Copyright 2017 Vector Creations Ltd
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -1391,13 +1392,33 @@ public extension MXRestClient {
     /**
      Get the list of public rooms hosted by the home server.
      
-     - parameter completion: A block object called when the operation is complete.
-     - parameter response: Provides an array of the public rooms on this server on `success`
+     Pagination parameters (`limit` and `since`) should be used in order to limit
+     homeserver resources usage.
+
+     - parameters:
+        - server: (optional) the remote server to query for the room list. If nil, get the user homeserver's public room list.
+        - limit:  (optional, use -1 to not defined this value) the maximum number of entries to return.
+        - since: (optional) token to paginate from.
+        - filter: (optional) the string to search for.
+        - thirdPartyInstanceId: (optional) returns rooms published to specific lists on a third party instance (like an IRC bridge).
+        - includeAllNetworks: if YES, returns all rooms that have been published to any list. NO to return rooms on the main, default list.
+
+        - completion: A block object called when the operation is complete.
+        - response: Provides an publicRoomsResponse instance on `success`
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func publicRooms(completion: @escaping (_ response: MXResponse<[MXPublicRoom]>) -> Void) -> MXHTTPOperation {
-        return __publicRooms(currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func publicRooms(onServer server: String, limit:UInt?, since: String? = nil, filter: String? = nil, thirdPartyInstanceId: String? = nil, includeAllNetworks: Bool? = false, completion: @escaping (_ response: MXResponse<MXPublicRoomsResponse>) -> Void) -> MXHTTPOperation {
+
+        // The `limit` variable should be set to -1 if it's not provided.
+        let _limit: Int
+        if let limit = limit {
+            _limit = Int(limit)
+        } else {
+            _limit = -1;
+        }
+
+        return __publicRooms(onServer: server, limit: UInt(_limit), since: since, filter: filter, thirdPartyInstanceId: thirdPartyInstanceId, includeAllNetworks: includeAllNetworks!, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     /**

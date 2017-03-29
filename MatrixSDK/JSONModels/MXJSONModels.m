@@ -72,6 +72,23 @@
 @end
 
 
+@implementation MXPublicRoomsResponse
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXPublicRoomsResponse *publicRoomsResponse = [[MXPublicRoomsResponse alloc] init];
+    if (publicRoomsResponse)
+    {
+        MXJSONModelSetMXJSONModelArray(publicRoomsResponse.chunk, MXPublicRoom, JSONDictionary[@"chunk"]);
+        MXJSONModelSetString(publicRoomsResponse.nextBatch , JSONDictionary[@"next_batch"]);
+        MXJSONModelSetUInteger(publicRoomsResponse.totalRoomCountEstimate , JSONDictionary[@"total_room_count_estimate"]);
+    }
+
+    return publicRoomsResponse;
+}
+@end
+
+
 NSString *const kMXLoginFlowTypePassword = @"m.login.password";
 NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
 NSString *const kMXLoginFlowTypeOAuth2 = @"m.login.oauth2";
