@@ -271,11 +271,12 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
  @param session the session the room belongs to.
  @param summary the room summary.
  @param event the candidate event for the room last message event.
- @param state the room state when the event occured.
+ @param eventState the room state when the event occured.
+ @param roomState the current state of the room.
  @return YES if the delegate accepted the event as last message.
          Returning NO can lead to a new call of this method with another candidate event.
  */
-- (BOOL)session:(MXSession*)session updateRoomSummary:(MXRoomSummary*)summary withLastEvent:(MXEvent*)event state:(MXRoomState*)state;
+- (BOOL)session:(MXSession*)session updateRoomSummary:(MXRoomSummary*)summary withLastEvent:(MXEvent*)event eventState:(MXRoomState*)eventState roomState:(MXRoomState*)roomState;
 
 /**
  Called to update the room summary on a received state event.

@@ -249,7 +249,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         lastEventIdChecked = event.eventId;
 
         // Propose the event as last message
-        lastMessageUpdated = [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withLastEvent:event state:state];
+        lastMessageUpdated = [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withLastEvent:event eventState:state roomState:self.room.state];
         if (lastMessageUpdated)
         {
             // The event is accepted. We have our last message
@@ -366,7 +366,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
             [state handleStateEvent:event];
         }
 
-        lastMessageUpdated = [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withLastEvent:event state:state];
+        lastMessageUpdated = [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withLastEvent:event eventState:state roomState:self.room.state];
         if (lastMessageUpdated)
         {
             break;
@@ -393,8 +393,10 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 {
     BOOL updated = [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withStateEvents:invitedRoomSync.inviteState.events];
 
+    MXRoom *room = self.room;
+
     // Fake the last message with the invitation event contained in invitedRoomSync.inviteState
-    updated |= [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withLastEvent:invitedRoomSync.inviteState.events.lastObject state:self.room.state];
+    updated |= [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withLastEvent:invitedRoomSync.inviteState.events.lastObject eventState:nil roomState:room.state];
 
     if (updated)
     {
@@ -410,7 +412,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 
     if (room)
     {
-        BOOL updated = [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withLastEvent:event state:room.state];
+        BOOL updated = [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withLastEvent:event eventState:nil roomState:room.state];
 
         if (updated)
         {

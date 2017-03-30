@@ -42,7 +42,7 @@
 
 #pragma mark - MXRoomSummaryUpdating
 
-- (BOOL)session:(MXSession *)session updateRoomSummary:(MXRoomSummary *)summary withLastEvent:(MXEvent *)event state:(MXRoomState *)state
+- (BOOL)session:(MXSession *)session updateRoomSummary:(MXRoomSummary *)summary withLastEvent:(MXEvent *)event eventState:(MXRoomState *)eventState roomState:(MXRoomState *)roomState
 {
     // Do not show redaction events
     if (event.eventType == MXEventTypeRoomRedaction)
