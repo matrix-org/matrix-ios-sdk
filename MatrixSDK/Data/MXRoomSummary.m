@@ -557,7 +557,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
             {
                 // TODO: The iOS 10 simulator returns the -34018 (errSecMissingEntitlement) error.
                 // We need to fix it but there is no issue with the app on real device nor with iOS 9 simulator.
-                NSLog(@"[MXRoomSummary] encryptionKey: SecItemAdd failed. status: %i", status);
+                NSLog(@"[MXRoomSummary] encryptionKey: SecItemAdd failed. status: %i", (int)status);
             }
         }
         else
@@ -567,7 +567,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     }
     else
     {
-        NSLog(@"[MXRoomSummary] encryptionKey: Keychain failed. OSStatus: %i", status);
+        NSLog(@"[MXRoomSummary] encryptionKey: Keychain failed. OSStatus: %i", (int)status);
     }
 
     return encryptionKey;
