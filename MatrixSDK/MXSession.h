@@ -440,17 +440,6 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 @property (nonatomic) NSArray<MXEventTypeString> *unreadEventTypes;
 
 /**
- Tell whether the profiles changes of the room members should be ignored in the last message processing.
- NO by default.
- 
- @discussion An event (with MXEventTypeRoomMember type) is added in room history each time a room member changes his profile.
- This event replaces the last message of all the rooms to which the member belongs.
- This impacts the rooms ordering based on their last message.
- Ignoring the profile changes in last message handling prevents an irrelevant reordering of the room list.
- */
-@property (nonatomic) BOOL ignoreProfileChangesDuringLastMessageProcessing;
-
-/**
  Enable VoIP by setting the external VoIP stack to use.
  
  @param callStack the VoIP call stack to use.
@@ -638,6 +627,47 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (MXHTTPOperation*)uploadDirectRooms:(void (^)())success
                               failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+
+#pragma mark - Rooms summaries
+/**
+ Get the MXRoomSummary instance of a room.
+
+ @param roomId The room id to the room.
+
+ @return the MXRoomSummary instance.
+ */
+- (MXRoomSummary *)roomSummaryWithRoomId:(NSString*)roomId;
+
+/**
+ Get the list of all rooms summaries.
+
+ @return an array of MXRoomSummary.
+ */
+- (NSArray<MXRoomSummary*>*)roomsSummaries;
+
+/**
+ Recompute all room summaries last message.
+
+ This may lead to pagination requests to the homeserver. Updated room summaries will be
+ notified by `kMXRoomSummaryDidChangeNotification`.
+ */
+- (void)resetRoomsSummariesLastMessage;
+
+/**
+ Make sure that all room summaries have a last message.
+ 
+ This may lead to pagination requests to the homeserver. Updated room summaries will be 
+ notified by `kMXRoomSummaryDidChangeNotification`.
+ */
+- (void)fixRoomsSummariesLastMessage;
+
+/**
+ Delegate for updating room summaries.
+ By default, it is the one returned by [MXRoomSummaryUpdater roomSummaryUpdaterForSession:].
+ */
+@property id<MXRoomSummaryUpdating> roomSummaryUpdateDelegate;
+
+
 #pragma mark - Room peeking
 /**
  Start peeking a room.
@@ -726,29 +756,6 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (MXHTTPOperation*)unIgnoreUsers:(NSArray<NSString*>*)userIds
                         success:(void (^)())success
                         failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
-
-
-#pragma mark - User's recents
-/**
- Get the list of all last messages of all rooms.
- The returned array is time ordered: the first item is the more recent message.
- 
- The SDK will find the last event which type is among the requested event types. If
- no event matches `types`, the true last event, whatever its type, will be returned.
-
- @param types an array of event types strings (MXEventTypeString) the app is interested in.
- @return an array of MXEvents.
- */
-- (NSArray<MXEvent*>*)recentsWithTypeIn:(NSArray<MXEventTypeString>*)types;
-
-/**
- Sort a list of rooms according to their last messages time stamp.
- 
- @param rooms the rooms to sort.
- @param types an array of event types strings (MXEventTypeString) the app is interested in.
- @return an array where rooms are ordered.
- */
-- (NSArray<MXRoom*>*)sortRooms:(NSArray<MXRoom*>*)rooms byLastMessageWithTypeIn:(NSArray<MXEventTypeString>*)types;
 
 
 #pragma mark - User's special rooms

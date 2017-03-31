@@ -1,5 +1,6 @@
 /*
  Copyright 2014 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -19,6 +20,7 @@
 #import "MXEvent.h"
 #import "MXReceiptData.h"
 #import "MXUser.h"
+#import "MXRoomSummary.h"
 #import "MXRoomAccountData.h"
 
 #import "MXEventsEnumerator.h"
@@ -107,25 +109,15 @@
 /**
  Store/retrieve the current pagination token of a room.
  */
+// @TODO(summary): Move to MXRoomSummary
 - (void)storePaginationTokenOfRoom:(NSString*)roomId andToken:(NSString*)token;
 - (NSString*)paginationTokenOfRoom:(NSString*)roomId;
-
-/**
- Store/retrieve the current number of unread messages that match the push notification rules of a room.
- */
-- (void)storeNotificationCountOfRoom:(NSString*)roomId count:(NSUInteger)notificationCount;
-- (NSUInteger)notificationCountOfRoom:(NSString*)roomId;
-
-/**
- Store/retrieve the current number of highlighted unread messages (subset of notifications) of a room.
- */
-- (void)storeHighlightCountOfRoom:(NSString*)roomId count:(NSUInteger)highlightCount;
-- (NSUInteger)highlightCountOfRoom:(NSString*)roomId;
 
 /**
  Store/retrieve the flag indicating that the SDK has reached the end of pagination
  in its pagination requests to the home server.
  */
+// @TODO(summary): Move to MXRoomSummary
 - (void)storeHasReachedHomeServerPaginationEndForRoom:(NSString*)roomId andValue:(BOOL)value;
 - (BOOL)hasReachedHomeServerPaginationEndForRoom:(NSString*)roomId;
 
@@ -142,10 +134,9 @@
 
  @param roomId the id of the room.
  @param types an array of event types strings (MXEventTypeString).
- @param ignoreProfileChanges tell whether the profile changes should be ignored.
  @return the events enumerator.
  */
-- (id<MXEventsEnumerator>)messagesEnumeratorForRoom:(NSString*)roomId withTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
+- (id<MXEventsEnumerator>)messagesEnumeratorForRoom:(NSString*)roomId withTypeIn:(NSArray*)types;
 
 
 #pragma mark - Matrix users
@@ -176,6 +167,7 @@
  @param roomId the id of the room.
  @param partialTextMessage the text to store. Nil to reset it.
  */
+// @TODO(summary): Move to MXRoomSummary
 - (void)storePartialTextMessageForRoom:(NSString*)roomId partialTextMessage:(NSString*)partialTextMessage;
 
 /**
@@ -289,6 +281,28 @@
  @return the stored state events that define the room state.
  */
 - (NSArray*)stateOfRoom:(NSString*)roomId;
+
+
+/**
+ Store the summary for a room.
+
+ Note: this method is required in permanent storage implementation.
+
+ @param roomId the id of the room.
+ @param summary the room summary.
+ */
+- (void)storeSummaryForRoom:(NSString*)roomId summary:(MXRoomSummary*)summary;
+
+/**
+ Get the summary a room.
+
+ Note: this method is required in permanent storage implementation.
+
+ @param roomId the id of the room.
+ @return the user private data for this room.
+ */
+- (MXRoomSummary*)summaryOfRoom:(NSString*)roomId;
+
 
 /**
  Store the user data for a room.

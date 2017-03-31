@@ -1,5 +1,6 @@
 /*
  Copyright 2014 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -30,11 +31,13 @@
                 + {roomId1}
                     L messages: The room messages
                     L state: The room state events
+                    L summary: The room summary
                     L accountData: The account data for this room
                     L receipts: The read receipts for this room
                 + {roomId2}
                     L messages
                     L state
+                    L summary
                     L accountData
                     L receipts
                 + ...

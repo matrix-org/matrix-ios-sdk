@@ -112,13 +112,23 @@
                     warnOnUnknowDevices:(BOOL)warnOnUnknowDevices
                             readyToTest:(void (^)(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation))readyToTest
 {
-    [self doE2ETestWithAliceInARoom:testCase readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+    [self doE2ETestWithAliceAndBobInARoom:testCase cryptedBob:cryptedBob warnOnUnknowDevices:warnOnUnknowDevices aliceStore:[[MXNoStore alloc] init] bobStore:[[MXNoStore alloc] init] readyToTest:readyToTest];
+}
+
+- (void)doE2ETestWithAliceAndBobInARoom:(XCTestCase*)testCase
+                             cryptedBob:(BOOL)cryptedBob
+                    warnOnUnknowDevices:(BOOL)warnOnUnknowDevices
+                             aliceStore:(id<MXStore>)aliceStore
+                               bobStore:(id<MXStore>)bobStore
+                            readyToTest:(void (^)(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation))readyToTest
+{
+    [self doE2ETestWithAliceInARoom:testCase andStore:aliceStore readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
 
         MXRoom *room = [aliceSession roomWithRoomId:roomId];
 
         [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = cryptedBob;
 
-        [matrixSDKTestsData doMXSessionTestWithBob:nil readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation2) {
+        [matrixSDKTestsData doMXSessionTestWithBob:nil andStore:bobStore readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation2) {
 
             [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 

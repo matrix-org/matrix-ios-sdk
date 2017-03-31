@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
- 
+ Copyright 2017 Vector Creations Ltd
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -24,6 +25,7 @@
 
 #import "MXEvent.h"
 #import "MXJSONModels.h"
+#import "MXRoomSummary.h"
 #import "MXRoomMember.h"
 #import "MXEventListener.h"
 #import "MXRoomState.h"
@@ -56,13 +58,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomInitialSyncNotification;
 FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 
 /**
- Posted when the number of unread notifications ('notificationCount' and 'highlightCount' properties) are updated.
- 
- The notification object is the concerned room (MXRoom instance).
- */
-FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
-
-/**
  `MXRoom` is the class
  */
 @interface MXRoom : NSObject
@@ -71,6 +66,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  The Matrix id of the room.
  */
 @property (nonatomic, readonly) NSString *roomId;
+
+/**
+ Shortcut to the room summary.
+ */
+@property (nonatomic, readonly) MXRoomSummary *summary;
 
 /**
  The related matrix session.
@@ -97,6 +97,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  The value is stored by the session store. Thus, it can be retrieved
  when the application restarts.
  */
+// @TODO(summary): Move to MXRoomSummary
 @property (nonatomic) NSString *partialTextMessage;
 
 /**
@@ -104,28 +105,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
  This array is updated on each received m.typing event (MXEventTypeTypingNotification).
  */
 @property (nonatomic, readonly) NSArray<NSString *> *typingUsers;
-
-/**
- The number of unread events wrote in the store which have their type listed in the MXSession.unreadEventType.
- 
- @discussion: The returned count is relative to the local storage. The actual unread messages
- for a room may be higher than the returned value.
- */
-@property (nonatomic, readonly) NSUInteger localUnreadEventCount;
-
-/**
- The number of unread messages that match the push notification rules.
- It is based on the notificationCount field in /sync response.
- (kMXRoomDidUpdateUnreadNotification is posted when this property is updated)
- */
-@property (nonatomic, readonly) NSUInteger notificationCount;
-
-/**
- The number of highlighted unread messages (subset of notifications).
- It is based on the notificationCount field in /sync response.
- (kMXRoomDidUpdateUnreadNotification is posted when this property is updated)
- */
-@property (nonatomic, readonly) NSUInteger highlightCount;
 
 /**
  Indicate if the room is tagged as a direct chat.
@@ -215,20 +194,9 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 
  @param roomId the id of the room.
  @param types an array of event types strings (MXEventTypeString).
- @param ignoreProfileChanges tell whether the profile changes should be ignored.
  @return the events enumerator.
  */
-- (id<MXEventsEnumerator>)enumeratorForStoredMessagesWithTypeIn:(NSArray<MXEventTypeString> *)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
-
-/**
- The last message of the requested types.
- This value depends on mxSession.ignoreProfileChangesDuringLastMessageProcessing.
-
- @param types an array of event types strings (MXEventTypeString).
- @return the last event of the requested types or the true last event if no event of the requested type is found.
- (CAUTION: All rooms must have a last message. For this reason, the returned event may be a profile change even if it should be ignored).
- */
-- (MXEvent*)lastMessageWithTypeIn:(NSArray<MXEventTypeString> *)type;
+- (id<MXEventsEnumerator>)enumeratorForStoredMessagesWithTypeIn:(NSArray<MXEventTypeString> *)types;
 
 /**
  The count of stored messages for this room.
@@ -919,18 +887,5 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidUpdateUnreadNotification;
 - (MXHTTPOperation*)enableEncryptionWithAlgorithm:(NSString*)algorithm
                                           success:(void (^)())success
                                           failure:(void (^)(NSError *error))failure;
-
-#pragma mark - Utils
-
-/**
- Comparator to use to order array of rooms by their lastest originServerTs value.
- This sorting is based on the last message of the room.
- 
- Arrays are then sorting so that the oldest room is set at position 0.
- 
- @param otherRoom the MXRoom object to compare with.
- @return a NSComparisonResult value: NSOrderedDescending if otherRoom is newer than self.
- */
-- (NSComparisonResult)compareOriginServerTs:(MXRoom *)otherRoom;
 
 @end

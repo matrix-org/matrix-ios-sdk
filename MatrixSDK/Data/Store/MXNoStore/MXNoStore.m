@@ -1,5 +1,6 @@
 /*
  Copyright 2014 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -162,26 +163,6 @@
     return paginationTokens[roomId];
 }
 
-- (void)storeNotificationCountOfRoom:(NSString*)roomId count:(NSUInteger)notificationCount
-{
-    notificationCounts[roomId] = @(notificationCount);
-}
-
-- (NSUInteger)notificationCountOfRoom:(NSString*)roomId
-{
-    return [notificationCounts[roomId] unsignedIntegerValue];
-}
-
-- (void)storeHighlightCountOfRoom:(NSString*)roomId count:(NSUInteger)highlightCount
-{
-    highlightCounts[roomId] = @(highlightCount);
-}
-
-- (NSUInteger)highlightCountOfRoom:(NSString*)roomId
-{
-    return [highlightCounts[roomId] unsignedIntegerValue];
-}
-
 - (void)storeHasReachedHomeServerPaginationEndForRoom:(NSString*)roomId andValue:(BOOL)value
 {
     hasReachedHomeServerPaginations[roomId] = [NSNumber numberWithBool:value];
@@ -213,7 +194,7 @@
     return [[MXEventsEnumeratorOnArray alloc] initWithMessages:@[]];
 }
 
-- (id<MXEventsEnumerator>)messagesEnumeratorForRoom:(NSString *)roomId withTypeIn:(NSArray *)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
+- (id<MXEventsEnumerator>)messagesEnumeratorForRoom:(NSString *)roomId withTypeIn:(NSArray *)types
 {
     // [MXStore messagesEnumeratorForRoom: withTypeIn: ignoreMemberProfileChanges:] is used
     // to get the last message of the room which must not be nil.

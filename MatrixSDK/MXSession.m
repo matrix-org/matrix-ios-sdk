@@ -33,11 +33,14 @@
 
 #import "MXAccountData.h"
 
+#import "MXRoomSummaryUpdater.h"
+
 #ifdef MX_GA
 #import "GAI.h"
 #import "GAIFields.h"
 #import "GAIDictionaryBuilder.h"
 #endif
+
 
 #pragma mark - Constants definitions
 
@@ -71,9 +74,15 @@ typedef void (^MXOnResumeDone)();
 {
     /**
      Rooms data
-     Each key is a room ID. Each value, the MXRoom instance.
+     Each key is a room id. Each value, the MXRoom instance.
      */
     NSMutableDictionary<NSString*, MXRoom*> *rooms;
+
+    /**
+     Rooms summaries
+     Each key is a room id. Each value, the MXRoomSummary instance.
+     */
+    NSMutableDictionary<NSString*, MXRoomSummary*> *roomsSummaries;
 
     /**
      The current request of the event stream.
@@ -157,6 +166,8 @@ typedef void (^MXOnResumeDone)();
     {
         matrixRestClient = mxRestClient;
         rooms = [NSMutableDictionary dictionary];
+        roomsSummaries = [NSMutableDictionary dictionary];
+        _roomSummaryUpdateDelegate = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:self];
         _directRooms = [NSMutableDictionary dictionary];
         globalEventListeners = [NSMutableArray array];
         syncMessagesLimit = -1;
@@ -198,6 +209,8 @@ typedef void (^MXOnResumeDone)();
 
         _catchingUp = NO;
 
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onDidDecryptEvent:) name:kMXEventDidDecryptNotification object:nil];
+
         [self setState:MXSessionStateInitialised];
     }
     return self;
@@ -228,6 +241,7 @@ typedef void (^MXOnResumeDone)();
         NSParameterAssert([_store respondsToSelector:@selector(rooms)]);
         NSParameterAssert([_store respondsToSelector:@selector(storeStateForRoom:stateEvents:)]);
         NSParameterAssert([_store respondsToSelector:@selector(stateOfRoom:)]);
+        NSParameterAssert([_store respondsToSelector:@selector(summaryOfRoom:)]);
     }
 
     NSDate *startDate = [NSDate date];
@@ -267,8 +281,22 @@ typedef void (^MXOnResumeDone)();
                 // Load user account data
                 [self handleAccountData:_store.userAccountData];
 
-                // Create MXRooms from their states stored in the store
+                // Load MXRoomSummaries from the store
                 NSDate *startDate2 = [NSDate date];
+                for (NSString *roomId in _store.rooms)
+                {
+                    @autoreleasepool
+                    {
+                        MXRoomSummary *summary = [_store summaryOfRoom:roomId];
+                        [summary setMatrixSession:self];
+                        roomsSummaries[roomId] = summary;
+                    }
+                }
+
+                NSLog(@"[MXSession] Built %lu MXRoomSummaries in %.0fms", (unsigned long)roomsSummaries.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+
+                // Create MXRooms from their states stored in the store
+                NSDate *startDate3 = [NSDate date];
                 for (NSString *roomId in _store.rooms)
                 {
                     @autoreleasepool
@@ -279,7 +307,7 @@ typedef void (^MXOnResumeDone)();
                     }
                 }
 
-                NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+                NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate3] * 1000);
 
                 NSTimeInterval durationMs = [[NSDate date] timeIntervalSinceDate:startDate] * 1000;
                 NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", durationMs);
@@ -599,6 +627,13 @@ typedef void (^MXOnResumeDone)();
     }
     [peekingRooms removeAllObjects];
 
+    // Clean summaries
+    for (MXRoomSummary *summary in roomsSummaries.allValues)
+    {
+        [summary destroy];
+    }
+    [roomsSummaries removeAllObjects];
+
     // Clean notification center
     [_notificationCenter removeAllListeners];
     _notificationCenter = nil;
@@ -773,15 +808,11 @@ typedef void (^MXOnResumeDone)();
             @autoreleasepool {
                 
                 // Retrieve existing room or create a new one
-                MXRoom *room = [self roomWithRoomId:roomId];
-                if (nil == room)
-                {
-                    room = [[MXRoom alloc] initWithRoomId:roomId andMatrixSession:self];
-                    [self addRoom:room notify:!isInitialSync];
-                }
+                MXRoom *room = [self getOrCreateRoom:roomId notify:!isInitialSync];
                 
                 // Sync room
                 [room handleJoinedRoomSync:roomSync];
+                [room.summary handleJoinedRoomSync:roomSync];
 
             }
         }
@@ -794,16 +825,11 @@ typedef void (^MXOnResumeDone)();
             @autoreleasepool {
                 
                 // Retrieve existing room or create a new one
-                MXRoom *room = [self roomWithRoomId:roomId];
-                if (nil == room)
-                {
-                    room = [[MXRoom alloc] initWithRoomId:roomId andMatrixSession:self];
-                    [self addRoom:room notify:!isInitialSync];
-                }
+                MXRoom *room = [self getOrCreateRoom:roomId notify:!isInitialSync];
                 
                 // Prepare invited room
                 [room handleInvitedRoomSync:invitedRoomSync];
-                
+                [room.summary handleInvitedRoomSync:invitedRoomSync];
             }
         }
         
@@ -826,6 +852,7 @@ typedef void (^MXOnResumeDone)();
                     // use 'handleJoinedRoomSync' to pass the last events to the room before leaving it.
                     // The room will then able to notify its listeners.
                     [room handleJoinedRoomSync:leftRoomSync];
+                    [room.summary handleJoinedRoomSync:leftRoomSync];
 
                     // Look for the last room member event
                     MXEvent *roomMemberEvent;
@@ -1648,6 +1675,14 @@ typedef void (^MXOnResumeDone)();
 
     [rooms setObject:room forKey:room.state.roomId];
 
+    // Create the room summary if does not exist yet
+    MXRoomSummary *summary = roomsSummaries[room.roomId];
+    if (!summary)
+    {
+        summary = [[MXRoomSummary alloc] initWithRoomId:room.roomId andMatrixSession:self];
+        roomsSummaries[room.roomId] = summary;
+    }
+
     if (notify)
     {
         // Broadcast the new room available in the MXSession.rooms array
@@ -1674,8 +1709,9 @@ typedef void (^MXOnResumeDone)();
         // Clean the store
         [_store deleteRoom:roomId];
 
-        // And remove the room from the list
+        // And remove the room and its summary from the list
         [rooms removeObjectForKey:roomId];
+        [roomsSummaries removeObjectForKey:roomId];
 
         // Broadcast the left room
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidLeaveRoomNotification
@@ -1683,6 +1719,54 @@ typedef void (^MXOnResumeDone)();
                                                           userInfo:@{
                                                                      kMXSessionNotificationRoomIdKey: roomId
                                                                      }];
+    }
+}
+
+
+#pragma mark - Rooms summaries
+- (MXRoomSummary *)roomSummaryWithRoomId:(NSString*)roomId
+{
+    MXRoomSummary *roomSummary;
+
+    if (roomId)
+    {
+        roomSummary =  roomsSummaries[roomId];
+    }
+
+    return roomSummary;
+}
+
+- (NSArray<MXRoomSummary*>*)roomsSummaries
+{
+    return [roomsSummaries allValues];
+}
+
+-(void)resetRoomsSummariesLastMessage
+{
+    NSLog(@"[MXSession] resetRoomsSummariesLastMessage");
+
+    for (MXRoomSummary *summary in self.roomsSummaries)
+    {
+        [summary resetLastMessage:nil failure:^(NSError *error) {
+            NSLog(@"[MXSession] Cannot reset last message for room %@", summary.roomId);
+        }];
+    }
+}
+
+- (void)fixRoomsSummariesLastMessage
+{
+    for (MXRoomSummary *summary in self.roomsSummaries)
+    {
+        if (!summary.lastMessageEventId)
+        {
+            NSLog(@"[MXSession] Fixing last message for room %@", summary.roomId);
+
+            [summary resetLastMessage:^{
+                NSLog(@"[MXSession] Fixing last message operation for room %@ has complete. lastMessageEventId: %@", summary.roomId, summary.lastMessageEventId);
+            } failure:^(NSError *error) {
+                NSLog(@"[MXSession] Cannot fix last message for room %@", summary.roomId);
+            }];
+        }
     }
 }
 
@@ -1828,51 +1912,6 @@ typedef void (^MXOnResumeDone)();
         }
 
     } failure:failure];
-}
-
-
-#pragma mark - User's recents
-- (NSArray<MXEvent*>*)recentsWithTypeIn:(NSArray<MXEventTypeString>*)types
-{
-    NSMutableArray *recents = [NSMutableArray arrayWithCapacity:rooms.count];
-    for (MXRoom *room in rooms.allValues)
-    {
-        // All rooms should have a last message
-        [recents addObject:[room lastMessageWithTypeIn:types]];
-    }
-    
-    // Order them by origin_server_ts
-    [recents sortUsingSelector:@selector(compareOriginServerTs:)];
-    
-    return recents;
-}
-
-- (NSArray<MXRoom*>*)sortRooms:(NSArray<MXRoom*>*)roomsToSort byLastMessageWithTypeIn:(NSArray<MXEventTypeString>*)types
-{
-    NSMutableArray<MXRoom*> *sortedRooms = [NSMutableArray arrayWithCapacity:roomsToSort.count];
-
-    NSMutableArray<MXEvent*>  *sortedLastMessages = [NSMutableArray arrayWithCapacity:roomsToSort.count];
-    NSMapTable<MXEvent*, MXRoom*> *roomsByLastMessages = [[NSMapTable alloc] initWithKeyOptions:NSPointerFunctionsObjectPointerPersonality valueOptions:NSPointerFunctionsObjectPointerPersonality capacity:roomsToSort.count];
-
-    // Get all last messages
-    for (MXRoom *room in roomsToSort)
-    {
-        MXEvent *lastRoomMessage = [room lastMessageWithTypeIn:types];
-        [sortedLastMessages addObject:lastRoomMessage];
-
-        [roomsByLastMessages setObject:room forKey:lastRoomMessage];
-    }
-
-    // Order them by origin_server_ts
-    [sortedLastMessages sortUsingSelector:@selector(compareOriginServerTs:)];
-
-    // Build the ordered room list
-    for (MXEvent *lastRoomMessage in sortedLastMessages)
-    {
-        [sortedRooms addObject:[roomsByLastMessages objectForKey:lastRoomMessage]];
-    }
-
-    return sortedRooms;
 }
 
 
@@ -2090,7 +2129,7 @@ typedef void (^MXOnResumeDone)();
     // In case of same order, order rooms by their last event
     if (NSOrderedSame == result)
     {
-        result = [[room1 lastMessageWithTypeIn:nil] compareOriginServerTs:[room2 lastMessageWithTypeIn:nil]];
+        result = [room1.summary.lastMessageEvent compareOriginServerTs:room2.summary.lastMessageEvent];
     }
 
     return result;
@@ -2220,6 +2259,19 @@ typedef void (^MXOnResumeDone)();
     }
 }
 
+// Called when an event finally got decrypted after a late room key reception
+- (void)onDidDecryptEvent:(NSNotification *)notification
+{
+    MXEvent *event = notification.object;
+
+    // Check if this event can interest the room summary
+    MXRoomSummary *summary = [self roomSummaryWithRoomId:event.roomId];
+    if (summary &&
+        summary.lastMessageEvent.ageLocalTs <= event.ageLocalTs)
+    {
+        [summary resetLastMessage:nil failure:nil];
+    }
+}
 
 #pragma mark - Global events listeners
 - (id)listenToEvents:(MXOnSessionEvent)onEvent

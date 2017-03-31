@@ -1,5 +1,6 @@
 /*
  Copyright 2015 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -144,44 +145,6 @@
 - (NSUInteger)remainingMessagesForPagination
 {
     return paginatedMessagesEntities.count - paginationOffset;
-}
-
-- (MXEvent*)lastMessageWithTypeIn:(NSArray*)types
-{
-    NSError *error;
-    MXCoreDataEvent *cdEvent;
-
-    NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
-    NSEntityDescription *entity = [NSEntityDescription entityForName:@"MXCoreDataEvent"
-                                              inManagedObjectContext:self.managedObjectContext];
-    [fetchRequest setEntity:entity];
-
-    NSPredicate *predicate;
-    if (types)
-    {
-        predicate = [NSPredicate predicateWithFormat:@"room.roomId == %@ AND type IN %@", self.roomId, types];
-    }
-    else
-    {
-        predicate = [NSPredicate predicateWithFormat:@"room.roomId == %@", self.roomId];
-    }
-
-    fetchRequest.predicate = predicate;
-    fetchRequest.fetchBatchSize = 1;
-    fetchRequest.fetchLimit = 1;
-
-    // Sort by age
-    fetchRequest.sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"ageLocalTs" ascending:NO]];
-
-    NSArray *fetchedObjects = [self.managedObjectContext executeFetchRequest:fetchRequest error:&error];
-    if (fetchedObjects.count)
-    {
-        cdEvent = fetchedObjects[0];
-    }
-
-    MXEvent *event = [MXCoreDataRoom eventFromCoreDataEvent:cdEvent];
-    
-    return event;
 }
 
 - (void)storeState:(NSArray*)stateEvents

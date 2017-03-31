@@ -1,5 +1,6 @@
 /*
  Copyright 2015 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -142,6 +143,13 @@
     }];
 }
 
+- (void)testMXMFileStoreLastMessageIgnoreProfileChange
+{
+    [self doTestWithMXFileStore:^(MXRoom *room) {
+        [self checkLastMessageIgnoreProfileChange:room];
+    }];
+}
+
 - (void)testMXFileStorePaginateWhenJoiningAgainAfterLeft
 {
     [self doTestWithMXFileStoreAndMessagesLimit:100 readyToTest:^(MXRoom *room) {
@@ -249,6 +257,11 @@
 - (void)testMXFileStoreRoomAccountDataTags
 {
     [self checkRoomAccountDataTags:MXFileStore.class];
+}
+
+- (void)testMXFileStoreRoomSummary
+{
+    [self checkRoomSummary:MXFileStore.class];
 }
 
 @end

@@ -1,5 +1,6 @@
 /*
  Copyright 2015 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -88,20 +89,6 @@ NS_ASSUME_NONNULL_BEGIN
  @return the count of stored events we can still paginate.
  */
 - (NSUInteger)remainingMessagesForPagination;
-
-/**
- The last message of the room.
-
- An optional array of event types may be provided to filter room events. When this array is not nil,
- the type of the returned last event should match with one of the provided types.
-
- CAUTION: All rooms must have a last message. If no event matches with the provided event types, the
- first event is returned whatever its type.
-
- @param types an array of event types strings (MXEventTypeString) to filter room's events.
- @return a MXEvent instance.
- */
-- (MXEvent*)lastMessageWithTypeIn:(NSArray*)types;
 
 /**
  Store the state of the room.

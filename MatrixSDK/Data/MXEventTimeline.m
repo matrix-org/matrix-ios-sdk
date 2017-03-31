@@ -1,5 +1,6 @@
 /*
  Copyright 2016 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -429,9 +430,13 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     if (isRoomInitialSync)
     {
         // Notify that room has been sync'ed
-        [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomInitialSyncNotification
+        // Delay it so that MXRoom.summary is computed before sending it
+        dispatch_async(dispatch_get_main_queue(), ^{
+
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomInitialSyncNotification
                                                             object:room
                                                           userInfo:nil];
+        });
     }
     else if (roomSync.timeline.limited)
     {

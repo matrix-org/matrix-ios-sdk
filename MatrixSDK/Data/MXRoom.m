@@ -1,5 +1,6 @@
 /*
  Copyright 2014 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -29,7 +30,6 @@
 
 NSString *const kMXRoomDidFlushDataNotification = @"kMXRoomDidFlushDataNotification";
 NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotification";
-NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNotification";
 
 @interface MXRoom ()
 {
@@ -113,6 +113,12 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 }
 
 #pragma mark - Properties implementation
+- (MXRoomSummary *)summary
+{
+    // That makes self.summary a really weak reference
+    return [mxSession roomSummaryWithRoomId:_roomId];
+}
+
 - (MXRoomState *)state
 {
     return _liveTimeline.state;
@@ -160,15 +166,6 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
             [self handleReceiptEvent:event direction:MXTimelineDirectionForwards];
         }
     }
-    
-    // Store notification counts from unreadNotifications field in /sync response
-    [mxSession.store storeNotificationCountOfRoom:self.roomId count:roomSync.unreadNotifications.notificationCount];
-    [mxSession.store storeHighlightCountOfRoom:self.roomId count:roomSync.unreadNotifications.highlightCount];
-    
-    // Notify that unread counts have been sync'ed
-    [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomDidUpdateUnreadNotification
-                                                        object:self
-                                                      userInfo:nil];
 
     // Handle account data events (if any)
     [self handleAccounDataEvents:roomSync.accountData.events direction:MXTimelineDirectionForwards];
@@ -253,28 +250,9 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     return [mxSession.store messagesEnumeratorForRoom:self.roomId];
 }
 
-- (id<MXEventsEnumerator>)enumeratorForStoredMessagesWithTypeIn:(NSArray<MXEventTypeString> *)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
+- (id<MXEventsEnumerator>)enumeratorForStoredMessagesWithTypeIn:(NSArray<MXEventTypeString> *)types
 {
-    return [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:types ignoreMemberProfileChanges:mxSession.ignoreProfileChangesDuringLastMessageProcessing];
-}
-
-- (MXEvent *)lastMessageWithTypeIn:(NSArray<MXEventTypeString> *)types
-{
-    MXEvent *lastMessage;
-
-    @autoreleasepool
-    {
-        id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:types ignoreMemberProfileChanges:mxSession.ignoreProfileChangesDuringLastMessageProcessing];
-        lastMessage = messagesEnumerator.nextEvent;
-
-        if (!lastMessage)
-        {
-            // If no messages match the filter contraints, return the last whatever is its type
-            lastMessage = self.enumeratorForStoredMessages.nextEvent;
-        }
-    }
-
-    return lastMessage;
+    return [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:types];
 }
 
 - (NSUInteger)storedMessagesCount
@@ -1442,10 +1420,13 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     // Create a room message event.
     MXEvent *localEcho = [self fakeRoomMessageEventWithEventId:nil andContent:msgContent];
     localEcho.sentState = eventState;
-    
+
     // Register the echo as pending for its future deletion
     [self storeOutgoingMessage:localEcho];
-    
+
+    // Update the room summary
+    [self.summary handleEvent:localEcho];
+
     return localEcho;
 }
 
@@ -1666,7 +1647,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         @autoreleasepool
         {
             // Enumerate all the acknowledgeable events of the room
-            id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:mxSession.acknowledgableEventTypes ignoreMemberProfileChanges:NO];
+            id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:mxSession.acknowledgableEventTypes];
 
             MXEvent *nextEvent;
             while ((nextEvent = messagesEnumerator.nextEvent))
@@ -1727,7 +1708,7 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 {
     @autoreleasepool
     {
-        id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:mxSession.acknowledgableEventTypes ignoreMemberProfileChanges:NO];
+        id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:mxSession.acknowledgableEventTypes];
 
         // Acknowledge the lastest valid event
         MXEvent *event;
@@ -1776,22 +1757,6 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     }
 
     return NO;
-}
-
-- (NSUInteger)localUnreadEventCount
-{
-    // Check for unread events in store
-    return [mxSession.store localUnreadEventCount:self.roomId withTypeIn:mxSession.unreadEventTypes];
-}
-
-- (NSUInteger)notificationCount
-{
-    return [mxSession.store notificationCountOfRoom:self.roomId];
-}
-
-- (NSUInteger)highlightCount
-{
-    return [mxSession.store highlightCountOfRoom:self.roomId];
 }
 
 - (BOOL)isDirect
@@ -2040,11 +2005,8 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     return operation;
 }
 
+
 #pragma mark - Utils
-- (NSComparisonResult)compareOriginServerTs:(MXRoom *)otherRoom
-{
-    return [[otherRoom lastMessageWithTypeIn:nil] compareOriginServerTs:[self lastMessageWithTypeIn:nil]];
-}
 
 - (NSString *)description
 {
