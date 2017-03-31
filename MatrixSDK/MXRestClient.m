@@ -433,6 +433,63 @@ MXAuthAction;
     return [[NSURL URLWithString:@"_matrix/static/client/register/" relativeToURL:[NSURL URLWithString:homeserver]] absoluteString];
 }
 
+- (MXHTTPOperation *)forgetPasswordForEmail:(NSString *)email
+                               clientSecret:(NSString *)clientSecret
+                                sendAttempt:(NSUInteger)sendAttempt
+                                    success:(void (^)(NSString *sid))success
+                                    failure:(void (^)(NSError *error))failure
+{
+    NSString *identityServer = _identityServer;
+    if ([identityServer hasPrefix:@"http://"] || [identityServer hasPrefix:@"https://"])
+    {
+        identityServer = [identityServer substringFromIndex:[identityServer rangeOfString:@"://"].location + 3];
+    }
+    
+    NSDictionary *parameters = @{
+                                 @"email" : email,
+                                 @"client_secret" : clientSecret,
+                                 @"send_attempt" : @(sendAttempt),
+                                 @"id_server" : identityServer
+                                 };
+    
+    return [httpClient requestWithMethod:@"POST"
+                                    path:[NSString stringWithFormat:@"%@/account/password/email/requestToken", apiPathPrefix]
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success && processingQueue)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+                                             
+                                             NSString *sid;
+                                             MXJSONModelSetString(sid, JSONResponse[@"sid"]);
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success(sid);
+                                                 });
+                                             }
+                                             
+                                         });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure && processingQueue)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
+                                         });
+                                     }
+                                 }];
+}
+
 #pragma mark - Login operations
 - (MXHTTPOperation*)getLoginSession:(void (^)(MXAuthenticationSession *authSession))success
                             failure:(void (^)(NSError *error))failure
@@ -3630,12 +3687,45 @@ MXAuthAction;
 }
 
 #pragma mark - Directory operations
-- (MXHTTPOperation*)publicRooms:(void (^)(NSArray *rooms))success
-                        failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation *)publicRoomsOnServer:(NSString *)server
+                                   limit:(NSUInteger)limit
+                                   since:(NSString *)since
+                                  filter:(NSString *)filter
+                    thirdPartyInstanceId:(NSString *)thirdPartyInstanceId
+                      includeAllNetworks:(BOOL)includeAllNetworks
+                                 success:(void (^)(MXPublicRoomsResponse *))success
+                                 failure:(void (^)(NSError *))failure
 {
-    return [httpClient requestWithMethod:@"GET"
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{
+                                                                                      @"include_all_networks": @(includeAllNetworks)
+                                                                                      }];
+
+    if (server)
+    {
+        parameters[@"server"] = server;
+    }
+    if (-1 != limit)
+    {
+        parameters[@"limit"] = @(limit);
+    }
+    if (since)
+    {
+        parameters[@"since"] = since;
+    }
+    if (filter)
+    {
+        parameters[@"filter"] = @{
+                                  @"generic_search_term": filter
+                                  };
+    }
+    if (thirdPartyInstanceId)
+    {
+        parameters[@"thirdPartyInstanceId"] = thirdPartyInstanceId;
+    }
+
+    return [httpClient requestWithMethod:@"POST"
                                     path:[NSString stringWithFormat:@"%@/publicRooms", apiPathPrefix]
-                              parameters:nil
+                              parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
                                      if (success && processingQueue)
                                      {
@@ -3644,13 +3734,13 @@ MXAuthAction;
                                              // Create public rooms array from JSON on processing queue
                                              dispatch_async(processingQueue, ^{
 
-                                                 NSArray *publicRooms;
-                                                 MXJSONModelSetMXJSONModelArray(publicRooms, MXPublicRoom, JSONResponse[@"chunk"]);
+                                                 MXPublicRoomsResponse *publicRoomsResponse;
+                                                 MXJSONModelSetMXJSONModel(publicRoomsResponse, MXPublicRoomsResponse, JSONResponse);
 
                                                  if (completionQueue)
                                                  {
                                                      dispatch_async(completionQueue, ^{
-                                                         success(publicRooms);
+                                                         success(publicRoomsResponse);
                                                      });
                                                  }
 

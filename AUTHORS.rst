@@ -21,3 +21,6 @@ Avery Pierce <aapierce0 at gmail.com>
  
 Tkachenko Ivan <iv.tkachenko17 at gmail.com>
  * Add isCancelled property to MXHTTPOperation
+ 
+Denis Morozov <dmorozkn at gmail.com>
+ * PR #277 Add new server method for password reseting
