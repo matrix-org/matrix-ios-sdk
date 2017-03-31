@@ -65,7 +65,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
      [super tearDown];
 }
 
-- (BOOL)session:(MXSession *)session updateRoomSummary:(MXRoomSummary *)summary withLastEvent:(MXEvent *)event state:(MXRoomState *)state
+- (BOOL)session:(MXSession *)session updateRoomSummary:(MXRoomSummary *)summary withLastEvent:(MXEvent *)event eventState:(MXRoomState *)eventState roomState:(MXRoomState *)roomState
 {
     BOOL updated = NO;
 
@@ -81,7 +81,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         // Do a classic update
         MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:session];
-        updated = [updater session:session updateRoomSummary:summary withLastEvent:event state:state];
+        updated = [updater session:session updateRoomSummary:summary withLastEvent:event eventState:eventState roomState:roomState];
 
         summary.lastMessageString = testDelegateLastMessageString;
 
@@ -111,18 +111,18 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
     }
     else if ([self.description containsString:@"testStatePassedToMXRoomSummaryUpdating"])
     {
-        XCTAssertNotEqualObjects(state.displayname, @"A room", @"The passed state must be the state of room when the event occured, not the current room state");
+        XCTAssertNotEqualObjects(eventState.displayname, @"A room", @"The passed state must be the state of room when the event occured, not the current room state");
 
         // Do a classic update
         MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:session];
-        updated = [updater session:session updateRoomSummary:summary withLastEvent:event state:state];
+        updated = [updater session:session updateRoomSummary:summary withLastEvent:event eventState:eventState roomState:roomState];
     }
     else if ([self.description containsString:@"testDoNotStoreDecryptedData"]
              || [self.description containsString:@"testEncryptedLastMessageEvent"])
     {
         // Do a classic update
         MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:session];
-        updated = [updater session:session updateRoomSummary:summary withLastEvent:event state:state];
+        updated = [updater session:session updateRoomSummary:summary withLastEvent:event eventState:eventState roomState:roomState];
 
         summary.lastMessageString = event.content[@"body"];
     }
@@ -130,7 +130,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
     {
         // Do a classic update
         MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:session];
-        updated = [updater session:session updateRoomSummary:summary withLastEvent:event state:state];
+        updated = [updater session:session updateRoomSummary:summary withLastEvent:event eventState:eventState roomState:roomState];
 
         if (event.eventType == MXEventTypeRoomEncrypted)
         {
