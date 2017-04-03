@@ -1968,7 +1968,7 @@ typedef void (^MXOnResumeDone)();
         }
 
         // Order them by origin_server_ts
-        [invitedRooms sortUsingSelector:@selector(compareOriginServerTs:)];
+        [invitedRooms sortUsingSelector:@selector(compareLastMessageEventOriginServerTs:)];
 
         // Add a listener in order to update the app about invitation list change
         [self listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {

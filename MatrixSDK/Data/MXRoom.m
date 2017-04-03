@@ -2037,4 +2037,9 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     return [NSString stringWithFormat:@"<MXRoom: %p> %@: %@ - %@", self, self.roomId, self.state.name, self.state.topic];
 }
 
+- (NSComparisonResult)compareLastMessageEventOriginServerTs:(MXRoom *)otherRoom
+{
+    return [self.summary.lastMessageEvent compareOriginServerTs:otherRoom.summary.lastMessageEvent];
+}
+
 @end
