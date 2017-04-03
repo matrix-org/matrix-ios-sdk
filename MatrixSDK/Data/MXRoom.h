@@ -888,4 +888,14 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
                                           success:(void (^)())success
                                           failure:(void (^)(NSError *error))failure;
 
+/**
+ Comparator to use to order array of rooms by their last message event.
+ 
+ Arrays are then sorting so that the room with the most recent message will be positionned at index 0.
+ 
+ @param otherRoom the MXRoom object to compare with self.
+ @return a NSComparisonResult value: NSOrderedDescending if otherRoom is more recent than self.
+ */
+- (NSComparisonResult)compareLastMessageEventOriginServerTs:(MXRoom *)otherRoom;
+
 @end
