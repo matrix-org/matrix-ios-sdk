@@ -1331,6 +1331,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         [mxSession.store removeAllOutgoingMessagesFromRoom:self.roomId];
         [mxSession.store commit];
     }
+
+    // If required, update the last message
+    MXEvent *lastMessageEvent = self.summary.lastMessageEvent;
+    if (lastMessageEvent.sentState != MXEventSentStateSent)
+    {
+        [self.summary resetLastMessage:nil failure:nil];
+    }
 }
 
 - (void)removeOutgoingMessage:(NSString*)outgoingMessageEventId
@@ -1341,14 +1348,31 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         [mxSession.store removeOutgoingMessageFromRoom:self.roomId outgoingMessage:outgoingMessageEventId];
         [mxSession.store commit];
     }
+
+    // If required, update the last message
+    if ([self.summary.lastMessageEvent.eventId isEqualToString:outgoingMessageEventId])
+    {
+        [self.summary resetLastMessage:nil failure:nil];
+    }
 }
 
 - (void)updateOutgoingMessage:(NSString *)outgoingMessageEventId withOutgoingMessage:(MXEvent *)outgoingMessage
 {
     // Do the update by removing the existing one and create a new one
     // Thus, `outgoingMessage` will go at the end of the outgoing messages list
-    [self removeOutgoingMessage:outgoingMessageEventId];
-    [self storeOutgoingMessage:outgoingMessage];
+    if ([mxSession.store respondsToSelector:@selector(removeOutgoingMessageFromRoom:outgoingMessage:)])
+    {
+        [mxSession.store removeOutgoingMessageFromRoom:self.roomId outgoingMessage:outgoingMessageEventId];
+    }
+    if ([mxSession.store respondsToSelector:@selector(storeOutgoingMessageForRoom:outgoingMessage:)])
+    {
+        [mxSession.store storeOutgoingMessageForRoom:self.roomId outgoingMessage:outgoingMessage];
+    }
+
+    if ([mxSession.store respondsToSelector:@selector(commit)])
+    {
+        [mxSession.store commit];
+    }
 }
 
 - (NSArray<MXEvent*>*)outgoingMessages
