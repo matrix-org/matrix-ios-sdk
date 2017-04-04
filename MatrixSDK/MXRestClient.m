@@ -3723,7 +3723,15 @@ MXAuthAction;
         parameters[@"thirdPartyInstanceId"] = thirdPartyInstanceId;
     }
 
-    return [httpClient requestWithMethod:@"POST"
+    NSString *method = @"POST";
+    if (parameters.count == 1)
+    {
+        // If there is no parameter, use the legacy API. It does not required an access token.
+        method = @"GET";
+        parameters = nil;
+    }
+
+    return [httpClient requestWithMethod:method
                                     path:[NSString stringWithFormat:@"%@/publicRooms", apiPathPrefix]
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
