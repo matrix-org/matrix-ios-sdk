@@ -363,6 +363,10 @@
                 XCTAssertEqualObjects(roomTag.name, tag);
                 XCTAssertEqualObjects(roomTag.order, order);
 
+                [room removeTag:tag success:nil failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
             }
             else if (tagEventUpdata == 2)
             {
@@ -375,12 +379,7 @@
         }];
 
         // Do the test
-        [room addTag:tag withOrder:order success:^{
-            [room removeTag:tag success:nil failure:^(NSError *error) {
-                XCTFail(@"The request should not fail - NSError: %@", error);
-                [expectation fulfill];
-            }];
-        } failure:^(NSError *error) {
+        [room addTag:tag withOrder:order success:nil failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
