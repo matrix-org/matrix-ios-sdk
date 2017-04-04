@@ -181,7 +181,8 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         __block NSString *lastMessageEventId;
 
-        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        id observer;
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
             [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
@@ -211,7 +212,8 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         MXEvent *lastMessageEvent = summary.lastMessageEvent;
 
-        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        id observer;
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
             [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
@@ -426,7 +428,8 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         NSString *displayName = @"A room";
 
-        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        id observer;
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
              [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
@@ -483,7 +486,8 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         NSString *userDisplayName = @"NewBob";
 
-        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        id observer;
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
             [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
@@ -515,7 +519,8 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         NSString *userDisplayName = @"NewBob";
 
-        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        id observer;
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
             [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
@@ -556,7 +561,8 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         MXEvent *localEcho;
 
         __block NSUInteger notifCount = 0;
-        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        id observer;
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
             MXEvent *event = summary.lastMessageEvent;
 
@@ -611,7 +617,8 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         MXEvent *localEcho;
 
         __block NSUInteger notifCount = 0;
-        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        id observer;
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
             MXEvent *event = summary.lastMessageEvent;
 
@@ -664,7 +671,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         NSString *newRoomTopic = @"An interesting topic";
 
         // Required to make kMXSessionInvitedRoomsDidChangeNotification work
-        bobSession.invitedRooms;
+        NSLog(@"%@", bobSession.invitedRooms);
 
         [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionInvitedRoomsDidChangeNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
@@ -673,7 +680,8 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
             MXRoomSummary *summary = newInvitedRoom.summary;
 
-            id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+            id observer;
+            observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
                 [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
@@ -956,7 +964,8 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         __block NSString *lastMessageEventId;
         MXEvent *localEcho;
 
-        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        id observer;
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
             [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
@@ -1062,7 +1071,8 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         __block NSString *lastMessageEventId;
         MXEvent *localEcho;
 
-        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        id observer;
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
             [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
@@ -1142,7 +1152,8 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         // Some hack to set up test conditions
         __block MXEvent *toDeviceEvent;
 
-        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionOnToDeviceEventNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+        id observer;
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionOnToDeviceEventNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
 
             toDeviceEvent = notif.userInfo[kMXSessionNotificationEventKey];
 
@@ -1172,7 +1183,8 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         __block NSString *lastMessageEventId;
         __block NSUInteger notifCount = 0;
 
-        id summaryObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:roomSummaryFromBobPOV queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        id summaryObserver;
+        summaryObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:roomSummaryFromBobPOV queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
             switch (notifCount++)
             {

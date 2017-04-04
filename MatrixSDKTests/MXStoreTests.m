@@ -627,7 +627,8 @@
     [room.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
         // The room summary is handled afterwards
-        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:room.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        id observer;
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:room.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
             [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
