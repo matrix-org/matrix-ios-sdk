@@ -150,7 +150,7 @@
             }];
 
             [room inviteUser:bobSession.myUser.userId success:nil failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot invite Alice - error: %@", error);
+                NSAssert(NO, @"Cannot invite Bob (%@) - error: %@", bobSession.myUser.userId, error);
             }];
 
         }];
