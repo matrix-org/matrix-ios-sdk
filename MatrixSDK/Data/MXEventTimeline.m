@@ -195,16 +195,16 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         // Reset pagination state from here
         [self resetPagination];
 
-        [self addEvent:eventContext.event direction:MXTimelineDirectionForwards fromStore:NO];
+        [self addEvent:eventContext.event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:NO];
 
         for (MXEvent *event in eventContext.eventsBefore)
         {
-            [self addEvent:event direction:MXTimelineDirectionBackwards fromStore:NO];
+            [self addEvent:event direction:MXTimelineDirectionBackwards fromStore:NO isRoomInitialSync:NO];
         }
 
         for (MXEvent *event in eventContext.eventsAfter)
         {
-            [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO];
+            [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:NO];
         }
 
         [store storePaginationTokenOfRoom:room.roomId andToken:eventContext.start];
@@ -246,7 +246,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                 for (NSInteger i = messagesFromStoreCount - 1; i >= 0; i--)
                 {
                     MXEvent *event = messagesFromStore[i];
-                    [self addEvent:event direction:MXTimelineDirectionBackwards fromStore:YES];
+                    [self addEvent:event direction:MXTimelineDirectionBackwards fromStore:YES isRoomInitialSync:NO];
                 }
 
                 numItems -= messagesFromStoreCount;
@@ -392,7 +392,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             event.roomId = _state.roomId;
 
             // Add the event to the end of the timeline
-            [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO];
+            [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:isRoomInitialSync];
         }
 
         // Check whether we got all history from the home server
@@ -416,7 +416,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             event.roomId = _state.roomId;
 
             // Add the event to the end of the timeline
-            [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO];
+            [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:isRoomInitialSync];
         }
     }
 
@@ -461,7 +461,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         // Report the room id in the event as it is skipped in /sync response
         event.roomId = _state.roomId;
 
-        [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO];
+        [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:YES];
     }
 }
 
@@ -485,7 +485,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     for (MXEvent *event in paginatedResponse.chunk)
     {
         // Make sure we have not processed this event yet
-		[self addEvent:event direction:direction fromStore:NO];
+		[self addEvent:event direction:direction fromStore:NO isRoomInitialSync:NO];
     }
 
     // And update pagination tokens
@@ -513,9 +513,10 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
  @param event the event to add.
  @param direction the direction indicates if the event must added to the start or to the end of the timeline.
  @param fromStore YES if the messages have been loaded from the store. In this case, there is no need to store
-                  it again in the store
+                  it again in the store.
+ @param isRoomInitialSync YES we are managing the first sync of this room.
  */
-- (void)addEvent:(MXEvent*)event direction:(MXTimelineDirection)direction fromStore:(BOOL)fromStore
+- (void)addEvent:(MXEvent*)event direction:(MXTimelineDirection)direction fromStore:(BOOL)fromStore isRoomInitialSync:(BOOL)isRoomInitialSync
 {
     // Make sure we have not processed this event yet
     if (fromStore == NO && [store eventExistsWithEventId:event.eventId inRoom:room.roomId])
@@ -551,7 +552,9 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     if (_isLiveTimeline && direction == MXTimelineDirectionForwards)
     {
         // Handle here live redaction
-        if (event.eventType == MXEventTypeRoomRedaction)
+        // There is nothing to manage locally if we are getting the 1st sync for the room
+        // as the homeserver provides sanitised data in this situation
+        if (!isRoomInitialSync && event.eventType == MXEventTypeRoomRedaction)
         {
             [self handleRedaction:event];
         }
