@@ -53,6 +53,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         _typingUsers = [NSArray array];
         
         shouldCheckDirectStatusOnJoin = NO;
+        
+        _directUserId = nil;
     }
     
     return self;
@@ -106,10 +108,19 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             _liveTimeline = [[MXEventTimeline alloc] initWithRoom:self andInitialEventId:nil];
         }
         
+        // Observe changes in the direct rooms list to keep update the direct user id.
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(updateDirectUserId) name:kMXSessionDirectRoomsDidChangeNotification object:nil];
+        [self updateDirectUserId];
+        
         // Update the stored outgoing messages, by removing the sent messages and tagging as failed the others.
         [self refreshOutgoingMessages];
     }
     return self;
+}
+
+- (void)dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXSessionDirectRoomsDidChangeNotification object:nil];
 }
 
 #pragma mark - Properties implementation
@@ -1786,7 +1797,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 - (BOOL)isDirect
 {
     // Check whether this room is tagged as direct for one of the room members.
-    return ([self getDirectUserId] != nil);
+    return (_directUserId != nil);
 }
 
 - (BOOL)looksLikeDirect
@@ -1815,35 +1826,33 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                         success:(void (^)())success
                         failure:(void (^)(NSError *error))failure
 {
-    NSString *currentDirectUserId = [self getDirectUserId];
-    
     if (isDirect == NO)
     {
-        if (currentDirectUserId)
+        if (_directUserId)
         {
-            NSMutableArray *roomLists = [NSMutableArray arrayWithArray:mxSession.directRooms[currentDirectUserId]];
+            NSMutableArray *roomLists = [NSMutableArray arrayWithArray:mxSession.directRooms[_directUserId]];
             
             [roomLists removeObject:self.roomId];
             
             if (roomLists.count)
             {
-                [mxSession.directRooms setObject:roomLists forKey:currentDirectUserId];
+                [mxSession.directRooms setObject:roomLists forKey:_directUserId];
             }
             else
             {
-                [mxSession.directRooms removeObjectForKey:currentDirectUserId];
+                [mxSession.directRooms removeObjectForKey:_directUserId];
             }
             
             // Note: mxSession will post the 'kMXSessionDirectRoomsDidChangeNotification' notification on account data update.
             return [mxSession uploadDirectRooms:success failure:failure];
         }
     }
-    else if (!currentDirectUserId || (userId && ![userId isEqualToString:currentDirectUserId]))
+    else if (!_directUserId || (userId && ![userId isEqualToString:_directUserId]))
     {
         // Here the room is not direct yet, or it is direct with the wrong user
-        NSString *directUserId = userId;
+        NSString *newDirectUserId = userId;
         
-        if (!directUserId)
+        if (!newDirectUserId)
         {
             // By default mark as direct this room for the oldest joined member.
             NSArray<MXRoomMember *> *members = self.state.joinedMembers;
@@ -1864,8 +1873,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 }
             }
             
-            directUserId = oldestJoinedMember.userId;
-            if (!directUserId)
+            newDirectUserId = oldestJoinedMember.userId;
+            if (!newDirectUserId)
             {
                 // Consider the first invited member if none has joined
                 members = [self.state membersWithMembership:MXMembershipInvite];
@@ -1886,33 +1895,33 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                     }
                 }
                 
-                directUserId = oldestInvitedMember.userId;
+                newDirectUserId = oldestInvitedMember.userId;
             }
             
-            if (!directUserId)
+            if (!newDirectUserId)
             {
                 // Use the current user by default
-                directUserId = mxSession.myUser.userId;
+                newDirectUserId = mxSession.myUser.userId;
             }
         }
         
         // Add the room id in the direct chats list for this user
-        NSMutableArray *roomLists = (mxSession.directRooms[directUserId] ? [NSMutableArray arrayWithArray:mxSession.directRooms[directUserId]] : [NSMutableArray array]);
+        NSMutableArray *roomLists = (mxSession.directRooms[newDirectUserId] ? [NSMutableArray arrayWithArray:mxSession.directRooms[newDirectUserId]] : [NSMutableArray array]);
         [roomLists addObject:self.roomId];
-        [mxSession.directRooms setObject:roomLists forKey:directUserId];
+        [mxSession.directRooms setObject:roomLists forKey:newDirectUserId];
         
         // Remove the room id for the current direct user if any
-        if (currentDirectUserId)
+        if (_directUserId)
         {
-            roomLists = [NSMutableArray arrayWithArray:mxSession.directRooms[currentDirectUserId]];
+            roomLists = [NSMutableArray arrayWithArray:mxSession.directRooms[_directUserId]];
             [roomLists removeObject:self.roomId];
             if (roomLists.count)
             {
-                [mxSession.directRooms setObject:roomLists forKey:currentDirectUserId];
+                [mxSession.directRooms setObject:roomLists forKey:_directUserId];
             }
             else
             {
-                [mxSession.directRooms removeObjectForKey:currentDirectUserId];
+                [mxSession.directRooms removeObjectForKey:_directUserId];
             }
         }
         
@@ -1929,10 +1938,10 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     return nil;
 }
 
-- (NSString*)getDirectUserId
+- (void)updateDirectUserId
 {
-    // Return the user identifier for who this room is tagged as direct if any.
-    NSString *directUserId;
+    // Refresh the user identifier for whom this room is tagged as direct if any.
+    _directUserId = nil;
     
     // Enumerate all the user identifiers for which a direct chat is defined.
     NSArray<NSString *> *userIdWithDirectRoom = mxSession.directRooms.allKeys;
@@ -1946,13 +1955,11 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             if ([mxSession.directRooms[userId] indexOfObject:self.roomId] != NSNotFound)
             {
                 // Matched!
-                directUserId = userId;
+                _directUserId = userId;
                 break;
             }
         }
     }
-    
-    return directUserId;
 }
 
 - (NSArray*)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort

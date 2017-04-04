@@ -112,6 +112,12 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 @property (nonatomic, readonly) BOOL isDirect;
 
 /**
+ Return the user identifier for whom this room is tagged as direct (if any).
+ Return nil if the room is not a direct chat.
+ */
+@property (nonatomic, readonly) NSString *directUserId;
+
+/**
  Indicate whether the room looks like a direct room ("heuritic method").
  */
 @property (nonatomic, readonly) BOOL looksLikeDirect;
