@@ -765,6 +765,148 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
     }];
 }
 
+- (void)testStateEventRedaction
+{
+    // Need a store to roll back the last message when the redaction happens
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+
+        MXRoomSummaryUpdater *defaultUpdater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:mxSession];
+        defaultUpdater.ignoreRedactedEvent = YES;
+
+        MXRoomSummary *summary = room.summary;
+
+        NSString *lastMessageEventId = summary.lastMessageEventId;
+        XCTAssert(lastMessageEventId);
+
+        __block NSUInteger notifCount = 0;
+        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+            switch (notifCount++)
+            {
+                case 0:
+                {
+                    // This is the display name change
+                    XCTAssertEqual(summary.lastMessageEvent.eventType, MXEventTypeRoomMember);
+
+                    // Redact its event
+                    [room redactEvent:summary.lastMessageEventId reason:nil success:nil failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+
+                    break;
+                }
+
+                case 1:
+                {
+                    [[NSNotificationCenter defaultCenter] removeObserver:observer];
+
+                    XCTAssertEqualObjects(summary.lastMessageEventId, lastMessageEventId, @"We must come back to the previous event");
+
+                    [expectation fulfill];
+                    break;
+                }
+
+                default:
+                    break;
+            }
+        }];
+
+
+        [mxSession.myUser setDisplayName:@"NewBob" success:^{
+
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+// Check that we have still the right last message after a full initial sync
+- (void)testClearCacheAfterStateEventRedaction
+{
+    // Need a store to roll back the last message when the redaction happens
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+
+        MXRoomSummaryUpdater *defaultUpdater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:mxSession];
+        defaultUpdater.ignoreRedactedEvent = YES;
+
+        NSString *roomId = room.roomId;
+
+        MXRoomSummary *summary = room.summary;
+
+        NSString *lastMessageEventId = summary.lastMessageEventId;
+        XCTAssert(lastMessageEventId);
+
+        __block NSUInteger notifCount = 0;
+        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+            switch (notifCount++)
+            {
+                case 0:
+                {
+                    // This is the display name change
+                    XCTAssertEqual(summary.lastMessageEvent.eventType, MXEventTypeRoomMember);
+
+                    // Redact its event
+                    [room redactEvent:summary.lastMessageEventId reason:nil success:nil failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+
+                    break;
+                }
+
+                case 1:
+                {
+                    [[NSNotificationCenter defaultCenter] removeObserver:observer];
+
+                    MXRestClient *bobRestClient = mxSession.matrixRestClient;
+                    [mxSession close];
+
+                    // Restarting the session with a new MXMemoryStore is equivalent to
+                    // clearing the cache of MXFileStore
+                    MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                    [mxSession2 setStore:[[MXMemoryStore alloc] init] success:^{
+
+                        MXRoomSummaryUpdater *defaultUpdater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:mxSession2];
+                        defaultUpdater.ignoreRedactedEvent = YES;
+
+                        // Start a new session by loading no message
+                        [mxSession2 startWithMessagesLimit:10 onServerSyncDone:^{
+
+                            MXRoomSummary *summary2 = [mxSession2 roomSummaryWithRoomId:roomId];
+
+                            XCTAssert(summary2);
+                            XCTAssertEqualObjects(summary2.lastMessageEventId, lastMessageEventId, @"We must come back to the previous event");
+
+                            [expectation fulfill];
+
+                        } failure:^(NSError *error) {
+                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                            [expectation fulfill];
+                        }];
+                    } failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+
+                    break;
+                }
+
+                default:
+                    break;
+            }
+        }];
+
+
+        [mxSession.myUser setDisplayName:@"NewBob" success:nil failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 // A copy of testDisplaynameUpdate but here, we check the state passed in the updater is correct
 - (void)testStatePassedToMXRoomSummaryUpdating
 {
