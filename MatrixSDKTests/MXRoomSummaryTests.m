@@ -722,10 +722,11 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             switch (notifCount++)
             {
                 case 0:
-                    // Do not care about the local echo
+                    case 1:
+                    // Do not care about the local echo update for MXEventSentStateSending and then MXEventSentStateSent
                     break;
 
-                case 1:
+                case 2:
                 {
                     XCTAssertEqualObjects(summary.lastMessageEventId, newEventId);
 
@@ -738,7 +739,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                     break;
                 }
 
-                case 2:
+                case 3:
                 {
                     [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
@@ -775,7 +776,8 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         NSString *displayName = @"A room";
 
-        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        id observer;
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
             [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
