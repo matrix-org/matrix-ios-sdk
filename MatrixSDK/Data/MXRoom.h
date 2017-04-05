@@ -118,7 +118,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 @property (nonatomic) NSString *directUserId;
 
 /**
- Indicate whether the room looks like a direct room ("heuritic method").
+ Indicate whether the room looks like a direct room ("heuristic method").
  */
 @property (nonatomic, readonly) BOOL looksLikeDirect;
 
