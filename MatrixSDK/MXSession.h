@@ -791,6 +791,13 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (NSDictionary<NSString*, NSArray<MXRoom*>*>*)roomsByTags;
 
 /**
+ Comparator used to sort the list of rooms with the same tag name, according to their tag order.
+ 
+ @param tag the tag for which the tag order must be compared for these 2 rooms.
+ */
+- (NSComparisonResult)compareRoomsByTag:(NSString*)tag room1:(MXRoom*)room1 room2:(MXRoom*)room2;
+
+/**
  Compute the tag order to use for a room tag so that the room will appear in the expected position
  in the list of rooms stamped with this tag.
 
