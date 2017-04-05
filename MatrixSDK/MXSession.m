@@ -147,6 +147,11 @@ typedef void (^MXOnResumeDone)();
      For debug, indicate if the first sync after the MXSession startup is done.
      */
     BOOL firstSyncDone;
+    
+    /**
+     Tell whether the direct rooms list has been updated during last account data parsing.
+     */
+    BOOL didDirectRoomsChange;
 }
 
 /**
@@ -175,6 +180,10 @@ typedef void (^MXOnResumeDone)();
         accountData = [[MXAccountData alloc] init];
         peekingRooms = [NSMutableArray array];
         _preventPauseCount = 0;
+        
+        firstSyncDone = NO;
+        didDirectRoomsChange = NO;
+        
 #if TARGET_OS_IPHONE
         backgroundTaskIdentifier = UIBackgroundTaskInvalid;
 #endif
@@ -323,6 +332,8 @@ typedef void (^MXOnResumeDone)();
                 }
 #endif
 
+                [self updateDirectRoomsData];
+                
                 [self setState:MXSessionStateStoreDataReady];
 
                 // The SDK client can use this data
@@ -780,6 +791,7 @@ typedef void (^MXOnResumeDone)();
 #endif
 
         // Handle top-level account data
+        didDirectRoomsChange = NO;
         if (syncResponse.accountData)
         {
             [self handleAccountData:syncResponse.accountData];
@@ -904,6 +916,16 @@ typedef void (^MXOnResumeDone)();
                     }];
                 }
             }
+        }
+        else if (didDirectRoomsChange)
+        {
+            [self updateDirectRoomsData];
+            
+            didDirectRoomsChange = NO;
+            
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDirectRoomsDidChangeNotification
+                                                                object:self
+                                                              userInfo:nil];
         }
 
         // Handle crypto sync data
@@ -1215,9 +1237,8 @@ typedef void (^MXOnResumeDone)();
                     [_directRooms removeAllObjects];
                 }
                 
-                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDirectRoomsDidChangeNotification
-                                                                    object:self
-                                                                  userInfo:nil];
+                // Update the information of the direct rooms.
+                didDirectRoomsChange = YES;
             }
 
             // Update the corresponding part of account data
@@ -1245,6 +1266,36 @@ typedef void (^MXOnResumeDone)();
                                                       userInfo:@{
                                                                  kMXSessionNotificationEventKey: event
                                                                  }];
+}
+
+- (void)updateDirectRoomsData
+{
+    // Update for each room the user identifier for whom the room is tagged as direct if any.
+    
+    // Reset first the current data
+    for (MXRoom *room in self.rooms)
+    {
+        room.directUserId = nil;
+    }
+    
+    // Enumerate all the user identifiers for which a direct chat is defined.
+    NSArray<NSString *> *userIdWithDirectRoom = self.directRooms.allKeys;
+    
+    for (NSString *userId in userIdWithDirectRoom)
+    {
+        // Retrieve the direct chats
+        NSArray *directRoomIds = self.directRooms[userId];
+        
+        // Check whether the room is still existing, then set its direct user id.
+        for (NSString* directRoomId in directRoomIds)
+        {
+            MXRoom *directRoom = [rooms objectForKey:directRoomId];
+            if (directRoom)
+            {
+                directRoom.directUserId = userId;
+            }
+        }
+    }
 }
 
 #pragma mark - Options
