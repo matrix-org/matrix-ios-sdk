@@ -1411,6 +1411,19 @@ typedef enum : NSUInteger
                                failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
+#pragma mark - Third party Lookup API
+/**
+ Get the third party protocols that can be reached using this HS.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)thirdpartyProtocols:(void (^)(MXThirdpartyProtocolsResponse *thirdpartyProtocolsResponse))success
+                                failure:(void (^)(NSError *error))failure;
+
+
 #pragma mark - Media Repository API
 /**
  Upload content to HomeServer

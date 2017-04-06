@@ -3820,6 +3820,52 @@ MXAuthAction;
 }
 
 
+#pragma mark - Third party Lookup API
+- (MXHTTPOperation*)thirdpartyProtocols:(void (^)(MXThirdpartyProtocolsResponse *thirdpartyProtocolsResponse))success
+                                failure:(void (^)(NSError *error))failure;
+{
+    return [httpClient requestWithMethod:@"GET"
+                                    path:[NSString stringWithFormat:@"%@/thirdparty/protocols", kMXAPIPrefixPathUnstable]
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success && processingQueue)
+                                     {
+                                         @autoreleasepool
+                                         {
+                                             dispatch_async(processingQueue, ^{
+
+                                                 MXThirdpartyProtocolsResponse *thirdpartyProtocolsResponse;
+                                                 MXJSONModelSetMXJSONModel(thirdpartyProtocolsResponse, MXThirdpartyProtocolsResponse, JSONResponse);
+
+                                                 if (completionQueue)
+                                                 {
+                                                     dispatch_async(completionQueue, ^{
+                                                         success(thirdpartyProtocolsResponse);
+                                                     });
+                                                 }
+
+                                             });
+                                         }
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure && processingQueue)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+
+                                         });
+                                     }
+                                 }];
+}
+
+
 #pragma mark - Media Repository API
 - (MXHTTPOperation*) uploadContent:(NSData *)data
                           filename:(NSString*)filename
