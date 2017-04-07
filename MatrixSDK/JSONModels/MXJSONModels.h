@@ -151,7 +151,7 @@ FOUNDATION_EXPORT NSString *const kMX3PIDMediumMSISDN;
 @end
 
 /**
- * This class describes a third party server protocol.
+ This class describes a third party server protocol.
  */
 @interface MXThirdPartyProtocol : MXJSONModel
 
