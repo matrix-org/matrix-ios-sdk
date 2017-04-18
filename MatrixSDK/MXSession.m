@@ -1843,7 +1843,7 @@ typedef void (^MXOnResumeDone)();
 {
     NSUInteger roomCount = 0;
     
-    // Sum here all the room with missed notifications.
+    // Sum here all the rooms with missed notifications.
     for (MXRoomSummary *roomSummary in self.roomsSummaries)
     {
         if (roomSummary.notificationCount)
@@ -1859,7 +1859,7 @@ typedef void (^MXOnResumeDone)();
 {
     NSUInteger roomCount = 0;
     
-    // Sum here all the room with unread highlighted messages.
+    // Sum here all the rooms with unread highlighted messages.
     for (MXRoomSummary *roomSummary in self.roomsSummaries)
     {
         if (roomSummary.highlightCount)
