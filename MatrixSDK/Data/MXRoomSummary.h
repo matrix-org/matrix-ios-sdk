@@ -199,13 +199,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
  */
 @property (nonatomic) BOOL isEncrypted;
 
-/*
- @TODO(summary): Add:
-
- isDirect;
- looksLikeDirect;
- */
-
 /**
  The number of unread events wrote in the store which have their type listed in the MXSession.unreadEventType.
 
@@ -231,6 +224,10 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
  */
 @property (nonatomic) NSMutableDictionary<NSString*, id<NSCoding>> *others;
 
+/**
+ Mark all messages as read.
+ */
+- (void)markAllAsRead;
 
 #pragma mark - Server sync
 

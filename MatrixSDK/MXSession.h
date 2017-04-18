@@ -667,6 +667,29 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 @property id<MXRoomSummaryUpdating> roomSummaryUpdateDelegate;
 
+#pragma mark - Missed notifications
+
+/**
+ The total number of the missed notifications in this session.
+ */
+- (NSUInteger)missedNotificationsCount;
+
+/**
+ The current number of the rooms with some missed notifications.
+ Note: the invites are not taken into account in the returned count.
+ */
+- (NSUInteger)missedDiscussionsCount;
+
+/**
+ The current number of the rooms with some unread highlighted messages.
+ */
+- (NSUInteger)missedHighlightDiscussionsCount;
+
+/**
+ Mark all messages as read.
+ */
+- (void)markAllMessagesAsRead;
+
 
 #pragma mark - Room peeking
 /**
