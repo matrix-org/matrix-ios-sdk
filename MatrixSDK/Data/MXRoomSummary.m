@@ -326,6 +326,17 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     return [_mxSession.store localUnreadEventCount:_roomId withTypeIn:_mxSession.unreadEventTypes];
 }
 
+- (void)markAllAsRead
+{
+    if ([self.room acknowledgeLatestEvent:YES])
+    {
+        _notificationCount = 0;
+        _highlightCount = 0;
+        
+        // Broadcast the change
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomSummaryDidChangeNotification object:self userInfo:nil];
+    }
+}
 
 #pragma mark - Server sync
 - (void)handleJoinedRoomSync:(MXRoomSync*)roomSync

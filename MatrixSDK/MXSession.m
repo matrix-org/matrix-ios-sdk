@@ -1821,6 +1821,65 @@ typedef void (^MXOnResumeDone)();
     }
 }
 
+#pragma  mark - Missed notifications
+
+- (NSUInteger)missedNotificationsCount
+{
+    NSUInteger notificationCount = 0;
+    
+    // Sum here all the notification counts from room summaries.
+    for (MXRoomSummary *roomSummary in self.roomsSummaries)
+    {
+        if (roomSummary.notificationCount)
+        {
+            notificationCount += roomSummary.notificationCount;
+        }
+    }
+    
+    return notificationCount;
+}
+
+- (NSUInteger)missedDiscussionsCount
+{
+    NSUInteger roomCount = 0;
+    
+    // Sum here all the room with missed notifications.
+    for (MXRoomSummary *roomSummary in self.roomsSummaries)
+    {
+        if (roomSummary.notificationCount)
+        {
+            roomCount ++;
+        }
+    }
+    
+    return roomCount;
+}
+
+- (NSUInteger)missedHighlightDiscussionsCount
+{
+    NSUInteger roomCount = 0;
+    
+    // Sum here all the room with unread highlighted messages.
+    for (MXRoomSummary *roomSummary in self.roomsSummaries)
+    {
+        if (roomSummary.highlightCount)
+        {
+            roomCount ++;
+        }
+    }
+    
+    return roomCount;
+}
+
+- (void)markAllMessagesAsRead
+{
+    // Reset the unread count in all the existing room summaries.
+    for (MXRoomSummary *roomSummary in self.roomsSummaries)
+    {
+        [roomSummary markAllAsRead];
+    }
+}
+
 #pragma mark - Room peeking
 - (void)peekInRoomWithRoomId:(NSString*)roomId
                      success:(void (^)(MXPeekingRoom *peekingRoom))success
@@ -2004,7 +2063,7 @@ typedef void (^MXOnResumeDone)();
 
 - (NSArray<MXRoom *> *)invitedRooms
 {
-    if (nil == invitedRooms)
+    if (nil == invitedRooms && self.state > MXSessionStateInitialised)
     {
         // On the first call, set up the invitation list and mechanism to update it
         invitedRooms = [NSMutableArray array];
