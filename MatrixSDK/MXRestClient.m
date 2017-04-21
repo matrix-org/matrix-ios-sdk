@@ -3696,14 +3696,13 @@ MXAuthAction;
                                  success:(void (^)(MXPublicRoomsResponse *))success
                                  failure:(void (^)(NSError *))failure
 {
-    NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{
-                                                                                      @"include_all_networks": @(includeAllNetworks)
-                                                                                      }];
-
+    NSString* path = [NSString stringWithFormat:@"%@/publicRooms", apiPathPrefix];
     if (server)
     {
-        parameters[@"server"] = server;
+        path = [NSString stringWithFormat:@"%@?server=%@", path, server];
     }
+
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     if (-1 != limit)
     {
         parameters[@"limit"] = @(limit);
@@ -3720,11 +3719,15 @@ MXAuthAction;
     }
     if (thirdPartyInstanceId)
     {
-        parameters[@"thirdPartyInstanceId"] = thirdPartyInstanceId;
+        parameters[@"third_party_instance_id"] = thirdPartyInstanceId;
+    }
+    if (includeAllNetworks)
+    {
+        parameters[@"include_all_networks"] = @(YES);
     }
 
     NSString *method = @"POST";
-    if (parameters.count == 1)
+    if (parameters.count == 0)
     {
         // If there is no parameter, use the legacy API. It does not required an access token.
         method = @"GET";
@@ -3732,7 +3735,7 @@ MXAuthAction;
     }
 
     return [httpClient requestWithMethod:method
-                                    path:[NSString stringWithFormat:@"%@/publicRooms", apiPathPrefix]
+                                    path:path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
                                      if (success && processingQueue)
