@@ -266,9 +266,14 @@ FOUNDATION_EXPORT NSString *const kMXLoginIdentifierTypePhone;
 @interface MXCredentials : MXJSONModel
 
     /**
-     The home server name.
+     The home server url (ex: "https://matrix.org").
      */
     @property (nonatomic) NSString *homeServer;
+
+    /**
+     The home server name (ex: "matrix.org").
+     */
+    @property (nonatomic, readonly) NSString *homeServerName;
 
     /**
      The obtained user id.

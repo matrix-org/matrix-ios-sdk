@@ -227,6 +227,11 @@ NSString *const kMXLoginIdentifierTypePhone = @"m.id.phone";
     return self;
 }
 
+- (NSString *)homeServerName
+{
+    return [NSURL URLWithString:_homeServer].host;
+}
+
 @end
 
 @implementation MXThirdPartyIdentifier
