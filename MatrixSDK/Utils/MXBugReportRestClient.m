@@ -87,6 +87,8 @@
     if (sendLogs)
     {
         NSDate *startDate = [NSDate date];
+        NSUInteger size = 0, zipSize = 0;
+
         NSArray *logFiles = [MXLogger logFiles];
         for (NSString *logFile in logFiles)
         {
@@ -98,6 +100,9 @@
             NSData *logData = [NSData dataWithContentsOfFile:logFile];
             NSData *logZipData = [logData gzippedData];
 
+            size += logData.length;
+            zipSize += logZipData.length;
+
             if ([logZipData writeToURL:logZipFile atomically:YES])
             {
                 [logZipFiles addObject:logZipFile];
@@ -108,7 +113,10 @@
             }
         }
 
-        NSLog(@"[MXBugReport] sendBugReport: Zipped %tu logs in %.3fms", logFiles.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+        NSLog(@"[MXBugReport] sendBugReport: Zipped %tu logs (%@ to %@) in %.3fms", logFiles.count,
+              [NSByteCountFormatter stringFromByteCount:size countStyle:NSByteCountFormatterCountStyleFile],
+              [NSByteCountFormatter stringFromByteCount:zipSize countStyle:NSByteCountFormatterCountStyleFile],
+              [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
     }
 
     NSDate *startDate = [NSDate date];
