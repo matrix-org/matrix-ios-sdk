@@ -62,6 +62,8 @@
 
         logZipFiles = [NSMutableArray array];
 
+        _state = MXBugReportStateReady;
+
         _userAgent = @"iOS";
         _deviceModel = [[UIDevice currentDevice] model];
         _deviceOS = [NSString stringWithFormat:@"%@ %@", [[UIDevice currentDevice] systemName], [[UIDevice currentDevice] systemVersion]];
@@ -72,10 +74,9 @@
 
 - (void)sendBugReport:(NSString *)text sendLogs:(BOOL)sendLogs success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
-    // TODO: To update
-    if (manager.tasks.count)
+    if (_state != MXBugReportStateReady)
     {
-        NSLog(@"[MXBugReport] sendBugReport failed. There is already a submission in progress");
+        NSLog(@"[MXBugReport] sendBugReport failed. There is already a submission in progress. state: %@", @(_state));
 
         if (failure)
         {
@@ -101,6 +102,8 @@
 {
     // The bugreport api needs at least app and version to render well
     NSParameterAssert(_appName && _version);
+
+    _state = MXBugReportStateProgressUploading;
 
     NSString *apiPath = [NSString stringWithFormat:@"%@/api/submit", bugReportEndpoint];
 
@@ -174,6 +177,9 @@
     if (error)
     {
         NSLog(@"[MXBugReport] sendBugReport: multipartFormRequestWithMethod failed. Error: %@", error);
+
+        _state = MXBugReportStateReady;
+
         if (failure)
         {
             failure(error);
@@ -196,6 +202,8 @@
                                           completionHandler:^(NSURLResponse * _Nonnull response, id  _Nullable responseObject, NSError * _Nullable error) {
 
                                               [self deleteZipZiles];
+
+                                              _state = MXBugReportStateReady;
 
                                               if (error)
                                               {
@@ -224,6 +232,8 @@
 {
     [manager invalidateSessionCancelingTasks:YES];
 
+    _state = MXBugReportStateReady;
+
     [self deleteZipZiles];
 }
 
@@ -231,6 +241,8 @@
 #pragma mark - Private methods
 - (void)zipLogFiles:(void (^)())complete
 {
+    _state = MXBugReportStateProgressZipping;
+
     dispatch_async(dispatchQueue, ^{
 
         NSDate *startDate = [NSDate date];

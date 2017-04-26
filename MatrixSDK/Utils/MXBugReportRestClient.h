@@ -17,6 +17,21 @@
 #import <Foundation/Foundation.h>
 
 /**
+ Call states.
+ */
+typedef enum : NSUInteger
+{
+    // The `MXBugReportRestClient` instance is ready to send a bug report
+    MXBugReportStateReady,
+
+    // Log files are being zipped
+    MXBugReportStateProgressZipping,
+
+    // Bug report data is being sent
+    MXBugReportStateProgressUploading
+} MXBugReportState;
+
+/**
  `MXBugReportRestClient` allows to report bugs.
  
  Bug reports are sent to the bugreport API (https://github.com/matrix-org/rageshake).
@@ -24,6 +39,11 @@
  not responsive (which may be the cause of the bug).
  */
 @interface MXBugReportRestClient : NSObject
+
+/**
+ The state of the instance.
+ */
+@property (nonatomic, readonly) MXBugReportState state;
 
 /**
  Create an instance based on an endpoint url.
