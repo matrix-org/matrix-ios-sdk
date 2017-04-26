@@ -72,7 +72,7 @@
     return self;
 }
 
-- (void)sendBugReport:(NSString *)text sendLogs:(BOOL)sendLogs success:(void (^)(void))success failure:(void (^)(NSError *))failure
+- (void)sendBugReport:(NSString *)text sendLogs:(BOOL)sendLogs progress:(void (^)(MXBugReportState, NSProgress *))progress success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
     if (_state != MXBugReportStateReady)
     {
@@ -88,17 +88,17 @@
     if (sendLogs)
     {
         // Zip log files into temporary files
-        [self zipLogFiles:^{
-            [self sendBugReport:text success:success failure:failure];
+        [self zipLogFiles:progress complete:^{
+            [self sendBugReport:text progress:progress success:success failure:failure];
         }];
     }
     else
     {
-        [self sendBugReport:text success:success failure:failure];
+        [self sendBugReport:text progress:progress success:success failure:failure];
     }
 }
 
-- (void)sendBugReport:(NSString *)text success:(void (^)(void))success failure:(void (^)(NSError *))failure
+-(void)sendBugReport:(NSString *)text progress:(void (^)(MXBugReportState, NSProgress *))progress success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
     // The bugreport api needs at least app and version to render well
     NSParameterAssert(_appName && _version);
@@ -192,12 +192,16 @@
                                           uploadTaskWithStreamedRequest:request
                                           progress:^(NSProgress * _Nonnull uploadProgress) {
 
-                                              // Move to the main queue
-                                              dispatch_async(dispatch_get_main_queue(), ^{
+                                              NSLog(@"[MXBugReport] sendBugReport: uploadProgress: %@", @(uploadProgress.fractionCompleted));
 
-                                                  // TODO
-                                                  NSLog(@"[MXBugReport] sendBugReport: uploadProgress: %@", @(uploadProgress.fractionCompleted));
-                                              });
+                                              if (progress)
+                                              {
+                                                  // Move to the main queue
+                                                  dispatch_async(dispatch_get_main_queue(), ^{
+
+                                                      progress(_state, uploadProgress);
+                                                  });
+                                              }
                                           }
                                           completionHandler:^(NSURLResponse * _Nonnull response, id  _Nullable responseObject, NSError * _Nullable error) {
 
@@ -239,48 +243,68 @@
 
 
 #pragma mark - Private methods
-- (void)zipLogFiles:(void (^)())complete
+- (void)zipLogFiles:(void (^)(MXBugReportState, NSProgress *))progress complete:(void (^)())complete
 {
-    _state = MXBugReportStateProgressZipping;
+    NSArray *logFiles = [MXLogger logFiles];
 
-    dispatch_async(dispatchQueue, ^{
+    if (logFiles.count)
+    {
+        _state = MXBugReportStateProgressZipping;
 
-        NSDate *startDate = [NSDate date];
-        NSUInteger size = 0, zipSize = 0;
+        NSProgress *zipProgress = [NSProgress progressWithTotalUnitCount:logFiles.count];
+        progress(_state, zipProgress);
 
-        NSArray *logFiles = [MXLogger logFiles];
-        for (NSString *logFile in logFiles)
-        {
-            // Use a temporary file for the export
-            NSURL *logZipFile = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:logFile.lastPathComponent]];
+        dispatch_async(dispatchQueue, ^{
 
-            [[NSFileManager defaultManager] removeItemAtURL:logZipFile error:nil];
+            NSDate *startDate = [NSDate date];
+            NSUInteger size = 0, zipSize = 0;
 
-            NSData *logData = [NSData dataWithContentsOfFile:logFile];
-            NSData *logZipData = [logData gzippedData];
-
-            size += logData.length;
-            zipSize += logZipData.length;
-
-            if ([logZipData writeToURL:logZipFile atomically:YES])
+            for (NSString *logFile in logFiles)
             {
-                [logZipFiles addObject:logZipFile];
-            }
-            else
-            {
-                NSLog(@"[MXBugReport] zipLogFiles: Failed to zip %@", logFile);
-            }
-        }
+                // Use a temporary file for the export
+                NSURL *logZipFile = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:logFile.lastPathComponent]];
 
-        NSLog(@"[MXBugReport] zipLogFiles: Zipped %tu logs (%@ to %@) in %.3fms", logFiles.count,
-              [NSByteCountFormatter stringFromByteCount:size countStyle:NSByteCountFormatterCountStyleFile],
-              [NSByteCountFormatter stringFromByteCount:zipSize countStyle:NSByteCountFormatterCountStyleFile],
-              [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                [[NSFileManager defaultManager] removeItemAtURL:logZipFile error:nil];
 
-        dispatch_async(dispatch_get_main_queue(), ^{
-            complete();
+                NSData *logData = [NSData dataWithContentsOfFile:logFile];
+                NSData *logZipData = [logData gzippedData];
+
+                size += logData.length;
+                zipSize += logZipData.length;
+
+                if ([logZipData writeToURL:logZipFile atomically:YES])
+                {
+                    [logZipFiles addObject:logZipFile];
+                }
+                else
+                {
+                    NSLog(@"[MXBugReport] zipLogFiles: Failed to zip %@", logFile);
+                }
+
+                if (progress)
+                {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+
+                        zipProgress.completedUnitCount++;
+                        progress(_state, zipProgress);
+                    });
+                }
+            }
+
+            NSLog(@"[MXBugReport] zipLogFiles: Zipped %tu logs (%@ to %@) in %.3fms", logFiles.count,
+                  [NSByteCountFormatter stringFromByteCount:size countStyle:NSByteCountFormatterCountStyleFile],
+                  [NSByteCountFormatter stringFromByteCount:zipSize countStyle:NSByteCountFormatterCountStyleFile],
+                  [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
+                complete();
+            });
         });
-    });
+    }
+    else
+    {
+        complete();
+    }
 }
 
 - (void)deleteZipZiles
