@@ -38,6 +38,9 @@
     // Use AFNetworking as HTTP client.
     AFURLSessionManager *manager;
 
+    // The queue where log files are zipped.
+    dispatch_queue_t dispatchQueue;
+
     // The temporary zipped log files.
     NSMutableArray<NSURL*> *logZipFiles;
 }
@@ -55,6 +58,8 @@
 
         manager = [[AFURLSessionManager alloc] initWithSessionConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
 
+        dispatchQueue = dispatch_queue_create("MXBugReportRestClient", DISPATCH_QUEUE_SERIAL);
+
         logZipFiles = [NSMutableArray array];
 
         _userAgent = @"iOS";
@@ -67,11 +72,7 @@
 
 - (void)sendBugReport:(NSString *)text sendLogs:(BOOL)sendLogs success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
-    // The bugreport api needs at least app and version to render well
-    NSParameterAssert(_appName && _version);
-
-    NSString *apiPath = [NSString stringWithFormat:@"%@/api/submit", bugReportEndpoint];
-
+    // TODO: To update
     if (manager.tasks.count)
     {
         NSLog(@"[MXBugReport] sendBugReport failed. There is already a submission in progress");
@@ -83,41 +84,25 @@
         return;
     }
 
-    // Zip log files into temporary files
     if (sendLogs)
     {
-        NSDate *startDate = [NSDate date];
-        NSUInteger size = 0, zipSize = 0;
-
-        NSArray *logFiles = [MXLogger logFiles];
-        for (NSString *logFile in logFiles)
-        {
-            // Use a temporary file for the export
-            NSURL *logZipFile = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:logFile.lastPathComponent]];
-
-            [[NSFileManager defaultManager] removeItemAtURL:logZipFile error:nil];
-
-            NSData *logData = [NSData dataWithContentsOfFile:logFile];
-            NSData *logZipData = [logData gzippedData];
-
-            size += logData.length;
-            zipSize += logZipData.length;
-
-            if ([logZipData writeToURL:logZipFile atomically:YES])
-            {
-                [logZipFiles addObject:logZipFile];
-            }
-            else
-            {
-                NSLog(@"[MXBugReport] sendBugReport: Failed to zip %@", logFile);
-            }
-        }
-
-        NSLog(@"[MXBugReport] sendBugReport: Zipped %tu logs (%@ to %@) in %.3fms", logFiles.count,
-              [NSByteCountFormatter stringFromByteCount:size countStyle:NSByteCountFormatterCountStyleFile],
-              [NSByteCountFormatter stringFromByteCount:zipSize countStyle:NSByteCountFormatterCountStyleFile],
-              [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+        // Zip log files into temporary files
+        [self zipLogFiles:^{
+            [self sendBugReport:text success:success failure:failure];
+        }];
     }
+    else
+    {
+        [self sendBugReport:text success:success failure:failure];
+    }
+}
+
+- (void)sendBugReport:(NSString *)text success:(void (^)(void))success failure:(void (^)(NSError *))failure
+{
+    // The bugreport api needs at least app and version to render well
+    NSParameterAssert(_appName && _version);
+
+    NSString *apiPath = [NSString stringWithFormat:@"%@/api/submit", bugReportEndpoint];
 
     NSDate *startDate = [NSDate date];
 
@@ -244,14 +229,58 @@
 
 
 #pragma mark - Private methods
+- (void)zipLogFiles:(void (^)())complete
+{
+    dispatch_async(dispatchQueue, ^{
+
+        NSDate *startDate = [NSDate date];
+        NSUInteger size = 0, zipSize = 0;
+
+        NSArray *logFiles = [MXLogger logFiles];
+        for (NSString *logFile in logFiles)
+        {
+            // Use a temporary file for the export
+            NSURL *logZipFile = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:logFile.lastPathComponent]];
+
+            [[NSFileManager defaultManager] removeItemAtURL:logZipFile error:nil];
+
+            NSData *logData = [NSData dataWithContentsOfFile:logFile];
+            NSData *logZipData = [logData gzippedData];
+
+            size += logData.length;
+            zipSize += logZipData.length;
+
+            if ([logZipData writeToURL:logZipFile atomically:YES])
+            {
+                [logZipFiles addObject:logZipFile];
+            }
+            else
+            {
+                NSLog(@"[MXBugReport] zipLogFiles: Failed to zip %@", logFile);
+            }
+        }
+
+        NSLog(@"[MXBugReport] zipLogFiles: Zipped %tu logs (%@ to %@) in %.3fms", logFiles.count,
+              [NSByteCountFormatter stringFromByteCount:size countStyle:NSByteCountFormatterCountStyleFile],
+              [NSByteCountFormatter stringFromByteCount:zipSize countStyle:NSByteCountFormatterCountStyleFile],
+              [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            complete();
+        });
+    });
+}
+
 - (void)deleteZipZiles
 {
-    for (NSURL *logZipFile in logZipFiles)
-    {
-        [[NSFileManager defaultManager] removeItemAtURL:logZipFile error:nil];
-    }
+    dispatch_async(dispatchQueue, ^{
+        for (NSURL *logZipFile in logZipFiles)
+        {
+            [[NSFileManager defaultManager] removeItemAtURL:logZipFile error:nil];
+        }
 
-    [logZipFiles removeAllObjects];
+        [logZipFiles removeAllObjects];
+    });
 }
 
 @end
