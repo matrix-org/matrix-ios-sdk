@@ -109,6 +109,13 @@
 
     NSDate *startDate = [NSDate date];
 
+    if (progress)
+    {
+        // Inform about t0 of the upload
+        NSProgress *progressT0 = [NSProgress progressWithTotalUnitCount:1];
+        progress(_state, progressT0);
+    }
+
     // Populate multipart form data
     NSError *error;
     NSMutableURLRequest *request = [[AFHTTPRequestSerializer serializer] multipartFormRequestWithMethod:@"POST" URLString:apiPath parameters:nil constructingBodyWithBlock:^(id<AFMultipartFormData> formData) {
