@@ -22,6 +22,12 @@
 #import <AFNetworking/AFNetworking.h>
 #import <GZIP/GZIP.h>
 
+#if TARGET_OS_IPHONE
+#import <UIKit/UIKit.h>
+#elif TARGET_OS_OSX
+#import <Cocoa/Cocoa.h>
+#endif
+
 #ifdef MX_CRYPTO
 #import <OLMKit/OLMKit.h>
 #endif
