@@ -61,6 +61,7 @@ typedef enum : NSUInteger
  
  @param text the bug description.
  @param sendLogs flag to indicate to attached log files or not.
+ @param sendCrashLog flag to indicate to attached crash log or not.
  @param progress A block object called to indicate the progress in the step of
                  MXBugReportStateProgressZipping or MXBugReportStateProgressUploading.
  @param success A block object called when the operation succeeds.
@@ -68,6 +69,7 @@ typedef enum : NSUInteger
  */
 - (void)sendBugReport:(NSString*)text
              sendLogs:(BOOL)sendLogs
+             sendCrashLog:(BOOL)sendCrashLog
              progress:(void (^)(MXBugReportState state, NSProgress *progress))progress
               success:(void (^)(void))success
               failure:(void (^)(NSError *error))failure;

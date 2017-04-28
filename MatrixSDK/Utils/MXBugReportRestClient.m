@@ -43,6 +43,9 @@
 
     // The temporary zipped log files.
     NSMutableArray<NSURL*> *logZipFiles;
+
+    // The zip file within `logZipFiles` that is used for the crash log.
+    NSURL *crashLogZipFile;
 }
 
 @end
@@ -72,7 +75,7 @@
     return self;
 }
 
-- (void)sendBugReport:(NSString *)text sendLogs:(BOOL)sendLogs progress:(void (^)(MXBugReportState, NSProgress *))progress success:(void (^)(void))success failure:(void (^)(NSError *))failure
+- (void)sendBugReport:(NSString *)text sendLogs:(BOOL)sendLogs sendCrashLog:(BOOL)sendCrashLog progress:(void (^)(MXBugReportState, NSProgress *))progress success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
     if (_state != MXBugReportStateReady)
     {
@@ -85,10 +88,10 @@
         return;
     }
 
-    if (sendLogs)
+    if (sendLogs || sendCrashLog)
     {
         // Zip log files into temporary files
-        [self zipLogFiles:progress complete:^{
+        [self zipFiles:sendLogs crashLog:sendCrashLog progress:progress complete:^{
             [self sendBugReport:text progress:progress success:success failure:failure];
         }];
     }
@@ -146,6 +149,10 @@
                                    fileName:logZipFile.absoluteString.lastPathComponent
                                    mimeType:@"application/octet-stream"
                                       error:nil];
+
+            // TODO: indicate crash log to the bug report API
+            // But it does not support it
+            // The issue is that bug report API will rename it to logs-0000.log.gz
         }
 
         // Add iOS specific params
@@ -250,9 +257,20 @@
 
 
 #pragma mark - Private methods
-- (void)zipLogFiles:(void (^)(MXBugReportState, NSProgress *))progress complete:(void (^)())complete
+- (void)zipFiles:(BOOL)logs crashLog:(BOOL)crashLog progress:(void (^)(MXBugReportState, NSProgress *))progress complete:(void (^)())complete
 {
-    NSArray *logFiles = [MXLogger logFiles];
+    // Put all files to send in the same array
+    NSMutableArray *logFiles = [NSMutableArray array];
+
+    NSString *crashLogFile = [MXLogger crashLog];
+    if (crashLog && crashLogFile)
+    {
+        [logFiles addObject:crashLogFile];
+    }
+    if (logs)
+    {
+        [logFiles addObjectsFromArray:[MXLogger logFiles]];
+    }
 
     if (logFiles.count)
     {
@@ -261,51 +279,62 @@
         NSProgress *zipProgress = [NSProgress progressWithTotalUnitCount:logFiles.count];
         progress(_state, zipProgress);
 
+        __weak typeof(self) weakSelf = self;
         dispatch_async(dispatchQueue, ^{
 
-            NSDate *startDate = [NSDate date];
-            NSUInteger size = 0, zipSize = 0;
-
-            for (NSString *logFile in logFiles)
+            typeof(self) self = weakSelf;
+            if (self)
             {
-                // Use a temporary file for the export
-                NSURL *logZipFile = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:logFile.lastPathComponent]];
+                NSDate *startDate = [NSDate date];
+                NSUInteger size = 0, zipSize = 0;
 
-                [[NSFileManager defaultManager] removeItemAtURL:logZipFile error:nil];
-
-                NSData *logData = [NSData dataWithContentsOfFile:logFile];
-                NSData *logZipData = [logData gzippedData];
-
-                size += logData.length;
-                zipSize += logZipData.length;
-
-                if ([logZipData writeToURL:logZipFile atomically:YES])
+                for (NSString *logFile in logFiles)
                 {
-                    [logZipFiles addObject:logZipFile];
-                }
-                else
-                {
-                    NSLog(@"[MXBugReport] zipLogFiles: Failed to zip %@", logFile);
+                    // Use a temporary file for the export
+                    NSURL *logZipFile = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:logFile.lastPathComponent]];
+
+                    [[NSFileManager defaultManager] removeItemAtURL:logZipFile error:nil];
+
+                    NSData *logData = [NSData dataWithContentsOfFile:logFile];
+                    NSData *logZipData = [logData gzippedData];
+
+                    size += logData.length;
+                    zipSize += logZipData.length;
+
+                    if ([logZipData writeToURL:logZipFile atomically:YES])
+                    {
+                        [self->logZipFiles addObject:logZipFile];
+
+                        if ([logFile isEqualToString:crashLogFile])
+                        {
+                            // Tag the crash log. It
+                            self->crashLogZipFile = logZipFile;
+                        }
+                    }
+                    else
+                    {
+                        NSLog(@"[MXBugReport] zipLogFiles: Failed to zip %@", logFile);
+                    }
+
+                    if (progress)
+                    {
+                        dispatch_async(dispatch_get_main_queue(), ^{
+
+                            zipProgress.completedUnitCount++;
+                            progress(self.state, zipProgress);
+                        });
+                    }
                 }
 
-                if (progress)
-                {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-
-                        zipProgress.completedUnitCount++;
-                        progress(_state, zipProgress);
-                    });
-                }
+                NSLog(@"[MXBugReport] zipLogFiles: Zipped %tu logs (%@ to %@) in %.3fms", logFiles.count,
+                      [NSByteCountFormatter stringFromByteCount:size countStyle:NSByteCountFormatterCountStyleFile],
+                      [NSByteCountFormatter stringFromByteCount:zipSize countStyle:NSByteCountFormatterCountStyleFile],
+                      [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    complete();
+                });
             }
-
-            NSLog(@"[MXBugReport] zipLogFiles: Zipped %tu logs (%@ to %@) in %.3fms", logFiles.count,
-                  [NSByteCountFormatter stringFromByteCount:size countStyle:NSByteCountFormatterCountStyleFile],
-                  [NSByteCountFormatter stringFromByteCount:zipSize countStyle:NSByteCountFormatterCountStyleFile],
-                  [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
-            
-            dispatch_async(dispatch_get_main_queue(), ^{
-                complete();
-            });
         });
     }
     else
