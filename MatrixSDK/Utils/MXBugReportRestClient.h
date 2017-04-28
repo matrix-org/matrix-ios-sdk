@@ -99,7 +99,7 @@ typedef enum : NSUInteger
 
 /**
  The app user agent.
- Default is "iOS".
+ Default is "iOS" or "MacOS".
  */
 @property (nonatomic) NSString *userAgent;
 

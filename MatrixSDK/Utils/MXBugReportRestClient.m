@@ -26,6 +26,7 @@
 #import <UIKit/UIKit.h>
 #elif TARGET_OS_OSX
 #import <Cocoa/Cocoa.h>
+#include <sys/sysctl.h>
 #endif
 
 #ifdef MX_CRYPTO
@@ -73,9 +74,25 @@
 
         _state = MXBugReportStateReady;
 
+#if TARGET_OS_IPHONE
         _userAgent = @"iOS";
         _deviceModel = [[UIDevice currentDevice] model];
         _deviceOS = [NSString stringWithFormat:@"%@ %@", [[UIDevice currentDevice] systemName], [[UIDevice currentDevice] systemVersion]];
+#elif TARGET_OS_OSX
+        _userAgent = @"MacOS";
+        _deviceOS = [NSString stringWithFormat:@"Mac OS X %@", [[NSProcessInfo processInfo] operatingSystemVersionString]];
+
+        size_t len = 0;
+        sysctlbyname("hw.model", NULL, &len, NULL, 0);
+        if (len)
+        {
+            char *model = malloc(len*sizeof(char));
+            sysctlbyname("hw.model", model, &len, NULL, 0);
+            _deviceModel = [NSString stringWithUTF8String:model];
+            free(model);
+        }
+#endif
+
     }
 
     return self;
