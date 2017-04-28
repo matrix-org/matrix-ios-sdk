@@ -69,7 +69,7 @@ typedef enum : NSUInteger
  */
 - (void)sendBugReport:(NSString*)text
              sendLogs:(BOOL)sendLogs
-             sendCrashLog:(BOOL)sendCrashLog
+         sendCrashLog:(BOOL)sendCrashLog
              progress:(void (^)(MXBugReportState state, NSProgress *progress))progress
               success:(void (^)(void))success
               failure:(void (^)(NSError *error))failure;

@@ -150,9 +150,9 @@
                                    mimeType:@"application/octet-stream"
                                       error:nil];
 
-            // TODO: indicate crash log to the bug report API
-            // But it does not support it
+            // TODO: indicate file containing crash log to the bug report API
             // The issue is that bug report API will rename it to logs-0000.log.gz
+            // This needs an update of the API.
         }
 
         // Add iOS specific params
