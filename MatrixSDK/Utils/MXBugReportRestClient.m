@@ -108,7 +108,7 @@
 
     _state = MXBugReportStateProgressUploading;
 
-    NSString *apiPath = [NSString stringWithFormat:@"%@/api/submit", bugReportEndpoint];
+    NSString *apiPath = [NSString stringWithFormat:@"%@/submit", bugReportEndpoint];
 
     NSDate *startDate = [NSDate date];
 
