@@ -200,7 +200,7 @@ static NSRegularExpression *isMatrixEventIdentifierRegex;
     {
         return (nil != [isEmailAddressRegex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
     }
-    return nil;
+    return NO;
 }
 
 + (BOOL)isMatrixUserIdentifier:(NSString *)inputString
@@ -209,7 +209,7 @@ static NSRegularExpression *isMatrixEventIdentifierRegex;
     {
         return (nil != [isMatrixUserIdentifierRegex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
     }
-    return nil;
+    return NO;
 }
 
 + (BOOL)isMatrixRoomAlias:(NSString *)inputString
@@ -218,7 +218,7 @@ static NSRegularExpression *isMatrixEventIdentifierRegex;
     {
         return (nil != [isMatrixRoomAliasRegex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
     }
-    return nil;
+    return NO;
 }
 
 + (BOOL)isMatrixRoomIdentifier:(NSString *)inputString
@@ -227,7 +227,7 @@ static NSRegularExpression *isMatrixEventIdentifierRegex;
     {
         return (nil != [isMatrixRoomIdentifierRegex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
     }
-    return nil;
+    return NO;
 }
 
 + (BOOL)isMatrixEventIdentifier:(NSString *)inputString
@@ -236,7 +236,7 @@ static NSRegularExpression *isMatrixEventIdentifierRegex;
     {
         return (nil != [isMatrixEventIdentifierRegex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
     }
-    return nil;
+    return NO;
 }
 
 
