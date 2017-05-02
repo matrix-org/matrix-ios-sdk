@@ -213,7 +213,8 @@ typedef void (^MXOnResumeDone)();
         _unreadEventTypes = @[kMXEventTypeStringRoomName,
                               kMXEventTypeStringRoomTopic,
                               kMXEventTypeStringRoomMessage,
-                              kMXEventTypeStringCallInvite
+                              kMXEventTypeStringCallInvite,
+                              kMXEventTypeStringRoomEncrypted
                               ];
 
         _catchingUp = NO;

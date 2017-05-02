@@ -435,7 +435,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
 /**
  The list of event types considered for counting unread messages returned by MXRoom.localUnreadEventCount.
- By default [m.room.name, m.room.topic, m.room.message, m.call.invite].
+ By default [m.room.name, m.room.topic, m.room.message, m.call.invite, m.room.encrypted].
  */
 @property (nonatomic) NSArray<MXEventTypeString> *unreadEventTypes;
 
