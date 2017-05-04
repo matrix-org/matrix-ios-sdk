@@ -161,7 +161,16 @@
         }
         if (_version)
         {
-            [formData appendPartWithFormData:[_version dataUsingEncoding:NSUTF8StringEncoding] name:@"version"];
+            NSData *versionData = [_version dataUsingEncoding:NSUTF8StringEncoding];
+            [formData appendPartWithFormData:versionData name:@"version"];
+
+            // Add a Github label giving the version
+            [formData appendPartWithFormData:versionData name:@"label"];
+        }
+        if (crashLogZipFile)
+        {
+            // Label the GH issue as "crash"
+            [formData appendPartWithFormData:[@"crash" dataUsingEncoding:NSUTF8StringEncoding] name:@"label"];
         }
 
         // Add each zipped log file
@@ -172,10 +181,6 @@
                                    fileName:logZipFile.absoluteString.lastPathComponent
                                    mimeType:@"application/octet-stream"
                                       error:nil];
-
-            // TODO: indicate file containing crash log to the bug report API
-            // The issue is that bug report API will rename it to logs-0000.log.gz
-            // This needs an update of the API.
         }
 
         // Add iOS specific params
