@@ -98,7 +98,7 @@
     return self;
 }
 
-- (void)sendBugReport:(NSString *)text sendLogs:(BOOL)sendLogs sendCrashLog:(BOOL)sendCrashLog progress:(void (^)(MXBugReportState, NSProgress *))progress success:(void (^)(void))success failure:(void (^)(NSError *))failure
+- (void)sendBugReport:(NSString *)text sendLogs:(BOOL)sendLogs sendCrashLog:(BOOL)sendCrashLog sendFiles:(NSArray<NSURL*>*)files attachGitHubLabels:(NSArray<NSString*>*)gitHubLabels progress:(void (^)(MXBugReportState, NSProgress *))progress success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
     if (_state != MXBugReportStateReady)
     {
@@ -115,16 +115,16 @@
     {
         // Zip log files into temporary files
         [self zipFiles:sendLogs crashLog:sendCrashLog progress:progress complete:^{
-            [self sendBugReport:text progress:progress success:success failure:failure];
+            [self sendBugReport:text sendFiles:files attachGitHubLabels:gitHubLabels progress:progress success:success failure:failure];
         }];
     }
     else
     {
-        [self sendBugReport:text progress:progress success:success failure:failure];
+        [self sendBugReport:text sendFiles:files attachGitHubLabels:gitHubLabels progress:progress success:success failure:failure];
     }
 }
 
--(void)sendBugReport:(NSString *)text progress:(void (^)(MXBugReportState, NSProgress *))progress success:(void (^)(void))success failure:(void (^)(NSError *))failure
+-(void)sendBugReport:(NSString *)text sendFiles:(NSArray<NSURL*>*)files attachGitHubLabels:(NSArray<NSString*>*)gitHubLabels progress:(void (^)(MXBugReportState, NSProgress *))progress success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
     // The bugreport api needs at least app and version to render well
     NSParameterAssert(_appName && _version);
@@ -172,10 +172,22 @@
                                    fileName:logZipFile.absoluteString.lastPathComponent
                                    mimeType:@"application/octet-stream"
                                       error:nil];
+        }
 
-            // TODO: indicate file containing crash log to the bug report API
-            // The issue is that bug report API will rename it to logs-0000.log.gz
-            // This needs an update of the API.
+        // Add additional files
+        for (NSURL *fileURL in files)
+        {
+            [formData appendPartWithFileURL:fileURL
+                                       name:@"file"
+                                   fileName:fileURL.absoluteString.lastPathComponent
+                                   mimeType:@"application/octet-stream"
+                                      error:nil];
+        }
+
+        // Attach GitHub labels
+        for (NSString *label in gitHubLabels)
+        {
+            [formData appendPartWithFormData:[label dataUsingEncoding:NSUTF8StringEncoding] name:@"label"];
         }
 
         // Add iOS specific params
