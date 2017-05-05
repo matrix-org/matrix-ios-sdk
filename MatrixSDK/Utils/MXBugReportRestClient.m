@@ -98,7 +98,7 @@
     return self;
 }
 
-- (void)sendBugReport:(NSString *)text sendLogs:(BOOL)sendLogs sendCrashLog:(BOOL)sendCrashLog sendFiles:(NSArray<NSURL*>*)files progress:(void (^)(MXBugReportState, NSProgress *))progress success:(void (^)(void))success failure:(void (^)(NSError *))failure
+- (void)sendBugReport:(NSString *)text sendLogs:(BOOL)sendLogs sendCrashLog:(BOOL)sendCrashLog sendFiles:(NSArray<NSURL*>*)files attachGitHubLabels:(NSArray<NSString*>*)gitHubLabels progress:(void (^)(MXBugReportState, NSProgress *))progress success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
     if (_state != MXBugReportStateReady)
     {
@@ -115,16 +115,16 @@
     {
         // Zip log files into temporary files
         [self zipFiles:sendLogs crashLog:sendCrashLog progress:progress complete:^{
-            [self sendBugReport:text sendFiles:files progress:progress success:success failure:failure];
+            [self sendBugReport:text sendFiles:files attachGitHubLabels:gitHubLabels progress:progress success:success failure:failure];
         }];
     }
     else
     {
-        [self sendBugReport:text sendFiles:files progress:progress success:success failure:failure];
+        [self sendBugReport:text sendFiles:files attachGitHubLabels:gitHubLabels progress:progress success:success failure:failure];
     }
 }
 
--(void)sendBugReport:(NSString *)text sendFiles:(NSArray<NSURL*>*)files progress:(void (^)(MXBugReportState, NSProgress *))progress success:(void (^)(void))success failure:(void (^)(NSError *))failure
+-(void)sendBugReport:(NSString *)text sendFiles:(NSArray<NSURL*>*)files attachGitHubLabels:(NSArray<NSString*>*)gitHubLabels progress:(void (^)(MXBugReportState, NSProgress *))progress success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
     // The bugreport api needs at least app and version to render well
     NSParameterAssert(_appName && _version);
@@ -162,29 +162,6 @@
         if (_version)
         {
             [formData appendPartWithFormData:[_version dataUsingEncoding:NSUTF8StringEncoding] name:@"version"];
-
-            // Add a Github label giving information about the version
-            NSString *versionLabel = _version;
-
-            // If this is not the app store version, be more accurate on the build origin
-            if ([_build isEqualToString:@"No build info"])
-            {
-                // This is a debug session from Xcode
-                versionLabel = [versionLabel stringByAppendingString:@"-debug"];
-            }
-            else if (_build && ![_build containsString:@"master"])
-            {
-                // This is a Jenkins build. Add the branch and the build number
-                NSString *buildString = [_build stringByReplacingOccurrencesOfString:@" " withString:@"-"];
-                versionLabel = [[versionLabel stringByAppendingString:@"-"] stringByAppendingString:buildString];
-            }
-
-            [formData appendPartWithFormData:[versionLabel dataUsingEncoding:NSUTF8StringEncoding] name:@"label"];
-        }
-        if (crashLogZipFile)
-        {
-            // Label the GH issue as "crash"
-            [formData appendPartWithFormData:[@"crash" dataUsingEncoding:NSUTF8StringEncoding] name:@"label"];
         }
 
         // Add each zipped log file
@@ -205,6 +182,12 @@
                                    fileName:fileURL.absoluteString.lastPathComponent
                                    mimeType:@"application/octet-stream"
                                       error:nil];
+        }
+
+        // Attach GitHub labels
+        for (NSString *label in gitHubLabels)
+        {
+            [formData appendPartWithFormData:[label dataUsingEncoding:NSUTF8StringEncoding] name:@"label"];
         }
 
         // Add iOS specific params
