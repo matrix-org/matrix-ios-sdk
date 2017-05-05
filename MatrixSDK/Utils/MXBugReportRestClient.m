@@ -161,11 +161,25 @@
         }
         if (_version)
         {
-            NSData *versionData = [_version dataUsingEncoding:NSUTF8StringEncoding];
-            [formData appendPartWithFormData:versionData name:@"version"];
+            [formData appendPartWithFormData:[_version dataUsingEncoding:NSUTF8StringEncoding] name:@"version"];
 
-            // Add a Github label giving the version
-            [formData appendPartWithFormData:versionData name:@"label"];
+            // Add a Github label giving information about the version
+            NSString *versionLabel = _version;
+
+            // If this is not the app store version, be more accurate on the build origin
+            if ([_build isEqualToString:@"No build info"])
+            {
+                // This is a debug session from Xcode
+                versionLabel = [versionLabel stringByAppendingString:@"-debug"];
+            }
+            else if (_build && ![_build containsString:@"master"])
+            {
+                // This is a Jenkins build. Add the branch and the build number
+                NSString *buildString = [_build stringByReplacingOccurrencesOfString:@" " withString:@"-"];
+                versionLabel = [[versionLabel stringByAppendingString:@"-"] stringByAppendingString:buildString];
+            }
+
+            [formData appendPartWithFormData:[versionLabel dataUsingEncoding:NSUTF8StringEncoding] name:@"label"];
         }
         if (crashLogZipFile)
         {
