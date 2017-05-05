@@ -98,7 +98,7 @@
     return self;
 }
 
-- (void)sendBugReport:(NSString *)text sendLogs:(BOOL)sendLogs sendCrashLog:(BOOL)sendCrashLog progress:(void (^)(MXBugReportState, NSProgress *))progress success:(void (^)(void))success failure:(void (^)(NSError *))failure
+- (void)sendBugReport:(NSString *)text sendLogs:(BOOL)sendLogs sendCrashLog:(BOOL)sendCrashLog sendFiles:(NSArray<NSURL*>*)files progress:(void (^)(MXBugReportState, NSProgress *))progress success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
     if (_state != MXBugReportStateReady)
     {
@@ -115,16 +115,16 @@
     {
         // Zip log files into temporary files
         [self zipFiles:sendLogs crashLog:sendCrashLog progress:progress complete:^{
-            [self sendBugReport:text progress:progress success:success failure:failure];
+            [self sendBugReport:text sendFiles:files progress:progress success:success failure:failure];
         }];
     }
     else
     {
-        [self sendBugReport:text progress:progress success:success failure:failure];
+        [self sendBugReport:text sendFiles:files progress:progress success:success failure:failure];
     }
 }
 
--(void)sendBugReport:(NSString *)text progress:(void (^)(MXBugReportState, NSProgress *))progress success:(void (^)(void))success failure:(void (^)(NSError *))failure
+-(void)sendBugReport:(NSString *)text sendFiles:(NSArray<NSURL*>*)files progress:(void (^)(MXBugReportState, NSProgress *))progress success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
     // The bugreport api needs at least app and version to render well
     NSParameterAssert(_appName && _version);
@@ -179,6 +179,16 @@
             [formData appendPartWithFileURL:logZipFile
                                        name:@"compressed-log"
                                    fileName:logZipFile.absoluteString.lastPathComponent
+                                   mimeType:@"application/octet-stream"
+                                      error:nil];
+        }
+
+        // Add additional files
+        for (NSURL *fileURL in files)
+        {
+            [formData appendPartWithFileURL:fileURL
+                                       name:@"file"
+                                   fileName:fileURL.absoluteString.lastPathComponent
                                    mimeType:@"application/octet-stream"
                                       error:nil];
         }
