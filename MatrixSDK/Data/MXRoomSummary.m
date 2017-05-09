@@ -386,13 +386,27 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     }
 
     // Store notification counts from unreadNotifications field in /sync response
-    if (roomSync.unreadNotifications &&
-            (_notificationCount != roomSync.unreadNotifications.notificationCount
-             || _highlightCount != roomSync.unreadNotifications.highlightCount))
+    if (roomSync.unreadNotifications)
     {
-        _notificationCount = roomSync.unreadNotifications.notificationCount;
-        _highlightCount = roomSync.unreadNotifications.highlightCount;
-        updated = YES;
+        // Caution: the server may provide a not null count whereas we know locally the user has read all room messages
+        // (see for example this issue https://github.com/matrix-org/synapse/issues/2193).
+        // Patch: Ignore the server information when the user has read all messages.
+        if (roomSync.unreadNotifications.notificationCount && self.localUnreadEventCount == 0)
+        {
+            if (_notificationCount != 0)
+            {
+                _notificationCount = 0;
+                _highlightCount = 0;
+                updated = YES;
+            }
+        }
+        else if (_notificationCount != roomSync.unreadNotifications.notificationCount
+                 || _highlightCount != roomSync.unreadNotifications.highlightCount)
+        {
+            _notificationCount = roomSync.unreadNotifications.notificationCount;
+            _highlightCount = roomSync.unreadNotifications.highlightCount;
+            updated = YES;
+        }
     }
 
     if (updated || lastMessageUpdated)
