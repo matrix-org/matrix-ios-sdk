@@ -552,7 +552,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
             sessionsWithDevice = [NSMutableDictionary dictionary];
         }
 
-        sessionsWithDevice[realmOlmSession.deviceKey] = [NSKeyedUnarchiver unarchiveObjectWithData:realmOlmSession.olmSessionData];
+        sessionsWithDevice[realmOlmSession.sessionId] = [NSKeyedUnarchiver unarchiveObjectWithData:realmOlmSession.olmSessionData];
     }
 
     return sessionsWithDevice;
