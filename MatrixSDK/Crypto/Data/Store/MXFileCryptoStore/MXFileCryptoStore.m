@@ -315,6 +315,16 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
     return usersDevicesInfoMap.map[userId];
 }
 
+- (NSDictionary<NSString*, NSNumber*>*)deviceTrackingStatus
+{
+    return nil;
+}
+
+- (void)storeDeviceTrackingStatus:(NSDictionary<NSString*, NSNumber*>*)statusMap
+{
+
+}
+
 - (void)storeAlgorithmForRoom:(NSString *)roomId algorithm:(NSString *)algorithm
 {
     roomsAlgorithms[roomId] = algorithm;

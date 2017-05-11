@@ -75,7 +75,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     // The operation used for crypto starting requests
     MXHTTPOperation *startOperation;
 
-    BOOL initialDeviceListInvalidationDone;
+    BOOL initialDeviceListInvalidationPending;
 }
 @end
 
@@ -290,7 +290,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     [startOperation cancel];
     startOperation = nil;
 
-    dispatch_async(_cryptoQueue, ^{
+    dispatch_sync(_cryptoQueue, ^{
 
         // Cancel pending one-time keys upload
         [uploadOneTimeKeysOperation cancel];
@@ -299,13 +299,14 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         _olmDevice = nil;
         _cryptoQueue = nil;
         _store = nil;
+        _deviceList = nil;
 
         [roomEncryptors removeAllObjects];
         roomEncryptors = nil;
 
         [roomDecryptors removeAllObjects];
         roomDecryptors = nil;
-        
+
         myDevice = nil;
 
         NSLog(@"[MXCrypto] close: done");
@@ -347,7 +348,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             algorithm = room.state.encryptionAlgorithm;
             if (algorithm)
             {
-                [self setEncryptionInRoom:room.roomId withAlgorithm:algorithm];
+                [self setEncryptionInRoom:room.roomId withAlgorithm:algorithm inhibitDeviceQuery:NO];
                 alg = roomEncryptors[room.roomId];
             }
         }
@@ -473,7 +474,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                 algorithm = room.state.encryptionAlgorithm;
                 if (algorithm)
                 {
-                    [self setEncryptionInRoom:room.roomId withAlgorithm:algorithm];
+                    [self setEncryptionInRoom:room.roomId withAlgorithm:algorithm inhibitDeviceQuery:NO];
                     alg = roomEncryptors[room.roomId];
                 }
             }
@@ -564,9 +565,10 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             {
                 NSLog(@"[MXCrypto] handleDeviceListsChanged: Completed initialsync; invalidating device list from deviceSyncToken: %@", oldDeviceSyncToken);
 
+                initialDeviceListInvalidationPending = YES;
+
                 [self invalidateDeviceListsSince:oldDeviceSyncToken to:nextSyncToken success:^(NSArray<NSString *> *changed) {
 
-                    initialDeviceListInvalidationDone = YES;
                     _deviceList.lastKnownSyncToken = nextSyncToken;
                     [_deviceList refreshOutdatedDeviceLists];
 
@@ -574,30 +576,31 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
                     // If that failed, we fall back to invalidating everyone.
                     NSLog(@"[MXCrypto] handleDeviceListsChanged: Error fetching changed device list. Error: %@", error);
-                    [self invalidateDeviceListForAllActiveUsers];
-                    [_deviceList refreshOutdatedDeviceLists];
+                    [_deviceList invalidateAllDeviceLists];
                 }];
             }
             else
             {
                 // Otherwise, we have to invalidate all devices for all users we
-                // share a room with.
+                // are tracking.
                 NSLog(@"[MXCrypto] handleDeviceListsChanged: Completed first initialsync; invalidating all device list caches");
-                [self invalidateDeviceListForAllActiveUsers];
-                initialDeviceListInvalidationDone = YES;
+                [_deviceList invalidateAllDeviceLists];
             }
         }
 
-        if (initialDeviceListInvalidationDone)
+        if (!initialDeviceListInvalidationPending)
         {
-            // If we've got an up-to-date list of users with outdated device lists,
-            // tell the device list about the new sync token (but not otherwise, because
-            // otherwise we'll start thinking we're more in sync than we are.)
-            _deviceList.lastKnownSyncToken = nextSyncToken;
-
-            // Catch up on any new devices we got told about during the sync.
-            [_deviceList refreshOutdatedDeviceLists];
+            // we can now store our sync token so that we can get an update on
+            // restart rather than having to invalidate everyone.
+            //
+            // (we don't really need to do this on every sync - we could just
+            // do it periodically)
+            [_store storeDeviceSyncToken:nextSyncToken];
         }
+
+        // catch up on any new devices we got told about during the sync.
+        _deviceList.lastKnownSyncToken = nextSyncToken;
+        [_deviceList refreshOutdatedDeviceLists];
 
         // We don't start uploading one-time keys until we've caught up with
         // to-device messages, to help us avoid throwing away one-time-keys that we
@@ -802,6 +805,9 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 {
 #ifdef MX_CRYPTO
     dispatch_sync(_decryptionQueue, ^{
+
+        // Reset tracking status
+        [_store storeDeviceTrackingStatus:nil];
 
         // Reset the sync token
         // [self handleDeviceListsChanged] will download all keys at the coming initial /sync
@@ -1084,7 +1090,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         roomEncryptors = [NSMutableDictionary dictionary];
         roomDecryptors = [NSMutableDictionary dictionary];
 
-        initialDeviceListInvalidationDone = NO;
+        initialDeviceListInvalidationPending = NO;
 
         // Build our device keys: they will later be uploaded
         NSString *deviceId = _store.deviceId;
@@ -1163,7 +1169,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     return device;
 }
 
--(BOOL)setEncryptionInRoom:(NSString*)roomId withAlgorithm:(NSString*)algorithm
+- (BOOL)setEncryptionInRoom:(NSString*)roomId withAlgorithm:(NSString*)algorithm inhibitDeviceQuery:(BOOL)inhibitDeviceQuery
 {
     // If we already have encryption in this room, we should ignore this event
     // (for now at least. Maybe we should alert the user somehow?)
@@ -1190,23 +1196,18 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
     roomEncryptors[roomId] = alg;
 
-    // if encryption was not previously enabled in this room, we will have been
-    // ignoring new device events for these users so far. We may well have
-    // up-to-date lists for some users, for instance if we were sharing other
-    // e2e rooms with them, so there is room for optimisation here, but for now
-    // we just invalidate everyone in the room.
-    if (!existingAlgorithm)
+    // make sure we are tracking the device lists for all users in this room.
+    NSLog(@"[MXCrypto] setEncryptionInRoom: Enabling encryption in %@; starting to track device lists for all users therein", roomId);
+
+    MXRoom *room = [mxSession roomWithRoomId:roomId];
+    for (MXRoomMember *member in room.state.joinedMembers)
     {
-        NSLog(@"[MXCrypto] setEncryptionInRoom: Enabling encryption in %@ for the first time; invalidating device lists for all users therein", roomId);
+        [_deviceList startTrackingDeviceList:member.userId];
+    }
 
-        MXRoom *room = [mxSession roomWithRoomId:roomId];
-        for (MXRoomMember *member in room.state.joinedMembers)
-        {
-            [_deviceList invalidateUserDeviceList:member.userId];
-        }
-
-        // the actual refresh happens once we've finished processing the sync,
-        // in _onSyncCompleted.
+    if (!inhibitDeviceQuery)
+    {
+        [_deviceList refreshOutdatedDeviceLists];
     }
 
     return YES;
@@ -1483,34 +1484,16 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 {
     [_matrixRestClient keyChangesFrom:oldSyncToken to:lastKnownSyncToken success:^(NSArray<NSString *> *changed) {
 
-        if (changed.count)
+        NSLog(@"[MXCrypto] invalidateDeviceListsSince: got key changes since %@: %@", oldSyncToken, changed);
+
+        for (NSString *userId in changed)
         {
-            // Only invalidate users we share an e2e room with - we don't
-            // care about users in non-e2e rooms.
-            NSArray<NSString*> *filteredUserIds = self.e2eRoomMembers.allKeys;
-            for (NSString *changedUser in changed)
-            {
-                if ([filteredUserIds containsObject:changedUser])
-                {
-                    [_deviceList invalidateUserDeviceList:changedUser];
-                }
-            }
+            [_deviceList invalidateUserDeviceList:userId];
         }
 
         success(changed);
 
     } failure:failure];
-}
-
-/**
- Invalidate any stored device list for any users we share an e2e room with
- */
-- (void)invalidateDeviceListForAllActiveUsers
-{
-    for (NSString *userId in self.e2eRoomMembers.allKeys)
-    {
-        [_deviceList invalidateUserDeviceList:userId];
-    }
 }
 
 /**
@@ -1581,13 +1564,17 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onToDeviceEvent:) name:kMXSessionOnToDeviceEventNotification object:mxSession];
 
         // Observe membership changes
-        roomMembershipEventsListener = [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
+        roomMembershipEventsListener = [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption, kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
 
             if (direction == MXTimelineDirectionForwards)
             {
                 if (event.eventType == MXEventTypeRoomEncryption)
                 {
                     [self onCryptoEvent:event];
+                }
+                else if (event.eventType == MXEventTypeRoomMember)
+                {
+                    [self onRoomMembership:event];
                 }
             }
         }];
@@ -1795,10 +1782,42 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     if (_cryptoQueue)
     {
         dispatch_async(_cryptoQueue, ^{
-            [self setEncryptionInRoom:event.roomId withAlgorithm:event.content[@"algorithm"]];
+            [self setEncryptionInRoom:event.roomId withAlgorithm:event.content[@"algorithm"] inhibitDeviceQuery:YES];
         });
     }
-};
+}
+
+/**
+ Handle a change in the membership state of a member of a room.
+
+ @param event the membership event causing the change
+ */
+- (void)onRoomMembership:(MXEvent*)event
+{
+    id<MXEncrypting> alg = roomEncryptors[event.roomId];
+    if (!alg)
+    {
+        // No encrypting in this room
+        return;
+    }
+
+    NSString *userId = event.stateKey;
+    MXRoomMember *member = [[mxSession roomWithRoomId:event.roomId].state memberWithUserId:userId];
+
+    if (member && member.membership == MXMembershipJoin)
+    {
+        NSLog(@"[MXCrypto] onRoomMembership: Join event for %@ in %@", member.userId, event.roomId);
+
+        if (_cryptoQueue)
+        {
+            dispatch_async(_cryptoQueue, ^{
+
+                // make sure we are tracking the deviceList for this user
+                [_deviceList startTrackingDeviceList:member.userId ];
+            });
+        }
+    }
+}
 
 /**
  Upload my user's device keys.

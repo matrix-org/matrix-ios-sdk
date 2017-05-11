@@ -22,7 +22,7 @@
 #import <Realm/Realm.h>
 #import "MXSession.h"
 
-NSUInteger const kMXRealmCryptoStoreVersion = 4;
+NSUInteger const kMXRealmCryptoStoreVersion = 5;
 
 
 #pragma mark - Realm objects that encapsulate existing ones
@@ -125,6 +125,12 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
  The sync token corresponding to the device list.
  */
 @property (nonatomic) NSString *deviceSyncToken;
+
+/**
+ NSData serialisation of users we are tracking device status for.
+ userId -> MXDeviceTrackingStatus*
+ */
+@property (nonatomic)  NSData *deviceTrackingStatusData;
 
 /**
  Settings for blacklisting unverified devices.
@@ -427,6 +433,21 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     }
 
     return devicesForUser;
+}
+
+- (NSDictionary<NSString*, NSNumber*>*)deviceTrackingStatus
+{
+    MXRealmOlmAccount *account = self.accountInCurrentThread;
+    return [NSKeyedUnarchiver unarchiveObjectWithData:account.deviceTrackingStatusData];
+}
+
+- (void)storeDeviceTrackingStatus:(NSDictionary<NSString*, NSNumber*>*)statusMap
+{
+    MXRealmOlmAccount *account = self.accountInCurrentThread;
+    [account.realm transactionWithBlock:^{
+
+        account.deviceTrackingStatusData = [NSKeyedArchiver archivedDataWithRootObject:statusMap];
+    }];
 }
 
 - (void)storeAlgorithmForRoom:(NSString*)roomId algorithm:(NSString*)algorithm
@@ -747,6 +768,11 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                 case 3:
                 {
                     NSLog(@"[MXRealmCryptoStore] Migration from schema #3 -> #4: Nothing to do (add MXRealmOlmAccount.globalBlacklistUnverifiedDevices & MXRealmRoomAlgortithm.blacklistUnverifiedDevices)");
+                }
+
+                case 4:
+                {
+                    NSLog(@"[MXRealmCryptoStore] Migration from schema #4 -> #5: Nothing to do (add deviceTrackingStatusData)");
                 }
             }
         }
