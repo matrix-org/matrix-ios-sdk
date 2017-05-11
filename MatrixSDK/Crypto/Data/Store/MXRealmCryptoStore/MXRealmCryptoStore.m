@@ -127,6 +127,12 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 @property (nonatomic) NSString *deviceSyncToken;
 
 /**
+ NSData serialisation of users we are tracking device status for.
+ userId -> MXDeviceTrackingStatus*
+ */
+@property (nonatomic)  NSData *deviceTrackingStatusData;
+
+/**
  Settings for blacklisting unverified devices.
  */
 @property (nonatomic) BOOL globalBlacklistUnverifiedDevices;
@@ -427,6 +433,21 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     }
 
     return devicesForUser;
+}
+
+- (NSDictionary<NSString*, NSNumber*>*)deviceTrackingStatus
+{
+    MXRealmOlmAccount *account = self.accountInCurrentThread;
+    return [NSKeyedUnarchiver unarchiveObjectWithData:account.deviceTrackingStatusData];
+}
+
+- (void)storeDeviceTrackingStatus:(NSDictionary<NSString*, NSNumber*>*)statusMap
+{
+    MXRealmOlmAccount *account = self.accountInCurrentThread;
+    [account.realm transactionWithBlock:^{
+
+        account.deviceTrackingStatusData = [NSKeyedArchiver archivedDataWithRootObject:statusMap];
+    }];
 }
 
 - (void)storeAlgorithmForRoom:(NSString*)roomId algorithm:(NSString*)algorithm

@@ -155,6 +155,20 @@
 - (NSDictionary<NSString*, MXDeviceInfo*>*)devicesForUser:(NSString*)userId;
 
 /**
+ The device tracking status.
+
+ @return A map from user id to MXDeviceTrackingStatus.
+ */
+- (NSDictionary<NSString*, NSNumber*>*)deviceTrackingStatus;
+
+/**
+ Store the device tracking status.
+
+ @param statusMap A map from user id to MXDeviceTrackingStatus.
+ */
+- (void)storeDeviceTrackingStatus:(NSDictionary<NSString*, NSNumber*>*)statusMap;
+
+/**
  Store the crypto algorithm for a room.
 
  @param roomId the id of the room.

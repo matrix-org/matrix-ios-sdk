@@ -22,12 +22,17 @@
 
 #import "MXDeviceListOperationsPool.h"
 
+// Helper to transform a NSNumber stored in a NSDictionary to MXDeviceTrackingStatus
+#define MXDeviceTrackingStatusFromNSNumber(aNSNumberObject) ((MXDeviceTrackingStatus)[aNSNumberObject integerValue])
+
+
 @interface MXDeviceList ()
 {
     MXCrypto *crypto;
 
-    // Users with new devices
-    NSMutableSet<NSString*> *pendingUsersWithNewDevices;
+    // Users we are tracking device status for.
+    // userId -> MXDeviceTrackingStatus*
+    NSMutableDictionary<NSString*, NSNumber*> *deviceTrackingStatus;
 
     /**
      The pool which the http request is currenlty being processed.
@@ -57,7 +62,17 @@
     {
         crypto = theCrypto;
 
-        pendingUsersWithNewDevices = [NSMutableSet set];
+        // Retrieve tracking status from the store
+        deviceTrackingStatus = [NSMutableDictionary dictionaryWithDictionary:[crypto.store deviceTrackingStatus]];
+
+        for (NSString *userId in deviceTrackingStatus)
+        {
+            // if a download was in progress when we got shut down, it isn't any more.
+            if (MXDeviceTrackingStatusFromNSNumber(deviceTrackingStatus[userId]) == MXDeviceTrackingStatusDownloadInProgress)
+            {
+                deviceTrackingStatus[userId] = @(MXDeviceTrackingStatusPendingDownload);
+            }
+        }
     }
     return self;
 }
@@ -68,45 +83,52 @@
 {
     NSLog(@"[MXDeviceList] downloadKeys(forceDownload: %tu) : %@", forceDownload, userIds);
 
-    BOOL needsRefresh = NO;
-    BOOL waitForCurrentQuery = NO;
+    NSMutableArray *usersToDownload = [NSMutableArray array];
+    BOOL doANewQuery = NO;
 
     for (NSString *userId in userIds)
     {
-        if ([pendingUsersWithNewDevices containsObject:userId])
+        MXDeviceTrackingStatus trackingStatus = MXDeviceTrackingStatusFromNSNumber(deviceTrackingStatus[userId]);
+
+        if ([currentQueryPool.userIds containsObject:userId]) // equivalent to (trackingStatus == MXDeviceTrackingStatusDownloadInProgress)
         {
-            // we already know this user's devices are outdated
-            needsRefresh = YES;
+            // already a key download in progress/queued for this user; its results
+            // will be good enough for us.
+            [usersToDownload addObject:userId];
         }
-        else if ([currentQueryPool.userIds containsObject:userId])
+        else if (forceDownload || trackingStatus != MXDeviceTrackingStatusUpToDate)
         {
-            // already a download in progress - just wait for it.
-            // (even if forceDownload is true)
-            waitForCurrentQuery = true;
-        }
-        else if (forceDownload)
-        {
-            NSLog(@"[MXDeviceList] downloadKeys: Invalidating device list for %@ for forceDownload", userId);
-            [self invalidateUserDeviceList:userId];
-            needsRefresh = true;
-        }
-        else if (![self storedDevicesForUser:userId])
-        {
-            NSLog(@"[MXDeviceList] downloadKeys: Invalidating device list for %@ due to empty cache", userId);
-            [self invalidateUserDeviceList:userId];
-            needsRefresh = true;
+            [usersToDownload addObject:userId];
+            doANewQuery = YES;
         }
     }
 
     MXDeviceListOperation *operation;
 
-    if (needsRefresh)
+    if (usersToDownload.count)
     {
-        NSLog(@"[MXDeviceList] downloadKeys: waiting for next key query");
+        for (NSString *userId in usersToDownload)
+        {
+            deviceTrackingStatus[userId] = @(MXDeviceTrackingStatusDownloadInProgress);
+        }
 
-        operation = [[MXDeviceListOperation alloc] initWithUserIds:userIds success:^(NSArray<NSString *> *succeededUserIds, NSArray<NSString *> *failedUserIds) {
+        operation = [[MXDeviceListOperation alloc] initWithUserIds:usersToDownload success:^(NSArray<NSString *> *succeededUserIds, NSArray<NSString *> *failedUserIds) {
 
-            NSLog(@"[MXDeviceList] downloadKeys: waiting for next key query -> DONE");
+            NSLog(@"[MXDeviceList] downloadKeys -> DONE");
+
+            for (NSString *userId in succeededUserIds)
+            {
+                MXDeviceTrackingStatus trackingStatus = MXDeviceTrackingStatusFromNSNumber(deviceTrackingStatus[userId]);
+                if (trackingStatus == MXDeviceTrackingStatusDownloadInProgress)
+                {
+                    // we didn't get any new invalidations since this download started:
+                    // this user's device list is now up to date.
+                    deviceTrackingStatus[userId] = @(MXDeviceTrackingStatusUpToDate);
+                }
+            }
+
+            [self persistDeviceTrackingStatus];
+
             if (success)
             {
                 MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap = [self devicesForUsers:userIds];
@@ -115,28 +137,19 @@
 
         } failure:failure];
 
-        [self startOrQueueDeviceQuery:operation];
+        if (doANewQuery)
+        {
+            NSLog(@"[MXDeviceList] downloadKeys: waiting for next key query");
 
-        return operation;
-    }
-    else if (waitForCurrentQuery)
-    {
-        NSLog(@"[MXDeviceList] downloadKeys: waiting for in-flight query to complete");
+            [self startOrQueueDeviceQuery:operation];
+        }
+        else
+        {
 
-        operation = [[MXDeviceListOperation alloc] initWithUserIds:userIds success:^(NSArray<NSString *> *succeededUserIds, NSArray<NSString *> *failedUserIds) {
-
-            NSLog(@"[MXDeviceList] downloadKeys: waiting for in-flight query to complete -> DONE");
-            if (success)
-            {
-                MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap = [self devicesForUsers:userIds];
-                success(usersDevicesInfoMap);
-            }
-
-        } failure:failure];
-
-        [operation addToPool:currentQueryPool];
-
-        return operation;
+            NSLog(@"[MXDeviceList] downloadKeys: waiting for in-flight query to complete");
+            
+            [operation addToPool:currentQueryPool];
+        }
     }
     else
     {
@@ -182,24 +195,60 @@
     return nil;
 }
 
+- (void)startTrackingDeviceList:(NSString*)userId
+{
+    MXDeviceTrackingStatus trackingStatus = MXDeviceTrackingStatusFromNSNumber(deviceTrackingStatus[userId]);
+
+    if (!trackingStatus)
+    {
+        NSLog(@"[MXDeviceList] Now tracking device list for %@", userId);
+        deviceTrackingStatus[userId] = @(MXDeviceTrackingStatusPendingDownload);
+    }
+    // we don't yet persist the tracking status, since there may be a lot
+    // of calls; instead we wait for the forthcoming
+    // refreshOutdatedDeviceLists.
+}
+
 - (void)invalidateUserDeviceList:(NSString *)userId
 {
-    [pendingUsersWithNewDevices addObject:userId];
+    MXDeviceTrackingStatus trackingStatus = MXDeviceTrackingStatusFromNSNumber(deviceTrackingStatus[userId]);
+
+    if (trackingStatus)
+    {
+        NSLog(@"[MXDeviceList] Marking device list outdated for %@", userId);
+        deviceTrackingStatus[userId] = @(MXDeviceTrackingStatusPendingDownload);
+    }
+    // we don't yet persist the tracking status, since there may be a lot
+    // of calls; instead we wait for the forthcoming
+    // refreshOutdatedDeviceLists.
+}
+
+- (void)invalidateAllDeviceLists;
+{
+    for (NSString *userId in deviceTrackingStatus.allKeys)
+    {
+        [self invalidateUserDeviceList:userId];
+    }
 }
 
 - (void)refreshOutdatedDeviceLists
 {
-    NSArray *users = pendingUsersWithNewDevices.allObjects;
-    if (users.count == 0)
+    NSMutableArray *users = [NSMutableArray array];
+    for (NSString *userId in deviceTrackingStatus)
     {
-        // That means we're up-to-date with the lastKnownSyncToken
-        if (_lastKnownSyncToken)
+        MXDeviceTrackingStatus trackingStatus = MXDeviceTrackingStatusFromNSNumber(deviceTrackingStatus[userId]);
+        if (trackingStatus == MXDeviceTrackingStatusPendingDownload)
         {
-            [crypto.store storeDeviceSyncToken:_lastKnownSyncToken];
+            [users addObject:userId];
         }
     }
-    else
+
+    if (users)
     {
+        // we didn't persist the tracking status during
+        // invalidateUserDeviceList, so do it now.
+        [self persistDeviceTrackingStatus];
+
         MXDeviceListOperation *operation = [[MXDeviceListOperation alloc] initWithUserIds:users success:^(NSArray<NSString *> *succeededUserIds, NSArray<NSString *> *failedUserIds) {
 
             NSLog(@"[MXDeviceList] refreshOutdatedDeviceLists: %@", succeededUserIds);
@@ -214,13 +263,22 @@
 
         } failure:^(NSError *error) {
 
-            NSLog(@"[MXDeviceList] refreshOutdatedDeviceLists: ERROR updating device keys for users %@", pendingUsersWithNewDevices);
-            [pendingUsersWithNewDevices addObjectsFromArray:users];
+            NSLog(@"[MXDeviceList] refreshOutdatedDeviceLists: ERROR updating device keys for users %@", users);
+            for (NSString *userId in users)
+            {
+                deviceTrackingStatus[userId] = @(MXDeviceTrackingStatusPendingDownload);
+            }
 
+            [self persistDeviceTrackingStatus];
         } ];
 
         [self startOrQueueDeviceQuery:operation];
     }
+}
+
+- (void)persistDeviceTrackingStatus
+{
+    [crypto.store storeDeviceTrackingStatus:deviceTrackingStatus];
 }
 
 /**
@@ -284,10 +342,6 @@
     if (currentQueryPool.userIds)
     {
         NSString *token = _lastKnownSyncToken;
-
-        // We've kicked off requests to these users: remove their
-        // pending flag for now.
-        [pendingUsersWithNewDevices minusSet:currentQueryPool.userIds];
 
         // Add token
         [currentQueryPool downloadKeys:token complete:^(NSDictionary<NSString *,NSDictionary *> *failedUserIds) {

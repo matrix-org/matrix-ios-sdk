@@ -90,9 +90,10 @@
 
  @param roomId the room id to enable encryption in.
  @param algorithm the encryption config for the room.
+ @param inhibitDeviceQuery YES to suppress device list query for users in the room (for now)
  @return YES if the operation succeeds.
  */
-- (BOOL)setEncryptionInRoom:(NSString*)roomId withAlgorithm:(NSString*)algorithm;
+- (BOOL)setEncryptionInRoom:(NSString*)roomId withAlgorithm:(NSString*)algorithm inhibitDeviceQuery:(BOOL)inhibitDeviceQuery;
 
 /**
  Try to make sure we have established olm sessions for the given users.
