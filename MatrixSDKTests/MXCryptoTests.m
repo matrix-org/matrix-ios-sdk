@@ -251,6 +251,12 @@
                 MXHTTPOperation *operation = [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:nil failure:nil];
 
                 XCTAssertNil(operation, "@Alice shouldn't do another /query when the user devices are in the store");
+
+                // Check deviceTrackingStatus in store
+                NSDictionary<NSString*, NSNumber*> *deviceTrackingStatus = [aliceSession.crypto.store deviceTrackingStatus];
+                MXDeviceTrackingStatus bobTrackingStatus = MXDeviceTrackingStatusFromNSNumber(deviceTrackingStatus[bobSession.myUser.userId]);
+                XCTAssertEqual(bobTrackingStatus, MXDeviceTrackingStatusUpToDate);
+
                 [expectation fulfill];
             }
         };
@@ -266,6 +272,12 @@
 
         XCTAssert(operation1);
         XCTAssert([operation1 isKindOfClass:MXDeviceListOperation.class], @"Returned object must be indeed a MXDeviceListOperation object");
+
+        // Check deviceTrackingStatus in store
+        NSDictionary<NSString*, NSNumber*> *deviceTrackingStatus = [aliceSession.crypto.store deviceTrackingStatus];
+        MXDeviceTrackingStatus bobTrackingStatus = MXDeviceTrackingStatusFromNSNumber(deviceTrackingStatus[bobSession.myUser.userId]);
+        XCTAssertEqual(bobTrackingStatus, MXDeviceTrackingStatusDownloadInProgress);
+        
 
         // A parallel operation
         MXHTTPOperation *operation2 = [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {

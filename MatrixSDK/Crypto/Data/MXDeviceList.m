@@ -22,10 +22,6 @@
 
 #import "MXDeviceListOperationsPool.h"
 
-// Helper to transform a NSNumber stored in a NSDictionary to MXDeviceTrackingStatus
-#define MXDeviceTrackingStatusFromNSNumber(aNSNumberObject) ((MXDeviceTrackingStatus)[aNSNumberObject integerValue])
-
-
 @interface MXDeviceList ()
 {
     MXCrypto *crypto;
@@ -111,6 +107,9 @@
         {
             deviceTrackingStatus[userId] = @(MXDeviceTrackingStatusDownloadInProgress);
         }
+
+        // Persist the tracking status before launching download
+        [self persistDeviceTrackingStatus];
 
         operation = [[MXDeviceListOperation alloc] initWithUserIds:usersToDownload success:^(NSArray<NSString *> *succeededUserIds, NSArray<NSString *> *failedUserIds) {
 

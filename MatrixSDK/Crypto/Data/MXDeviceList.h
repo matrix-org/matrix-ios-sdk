@@ -37,6 +37,10 @@ typedef enum : NSUInteger
 
 } MXDeviceTrackingStatus;
 
+// Helper to transform a NSNumber stored in a NSDictionary to MXDeviceTrackingStatus
+#define MXDeviceTrackingStatusFromNSNumber(aNSNumberObject) ((MXDeviceTrackingStatus)[aNSNumberObject integerValue])
+
+
 /**
  `MXDeviceList` manages the list of other users' devices.
  */
