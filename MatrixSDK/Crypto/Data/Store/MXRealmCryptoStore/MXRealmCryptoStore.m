@@ -22,7 +22,7 @@
 #import <Realm/Realm.h>
 #import "MXSession.h"
 
-NSUInteger const kMXRealmCryptoStoreVersion = 4;
+NSUInteger const kMXRealmCryptoStoreVersion = 5;
 
 
 #pragma mark - Realm objects that encapsulate existing ones
@@ -768,6 +768,11 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                 case 3:
                 {
                     NSLog(@"[MXRealmCryptoStore] Migration from schema #3 -> #4: Nothing to do (add MXRealmOlmAccount.globalBlacklistUnverifiedDevices & MXRealmRoomAlgortithm.blacklistUnverifiedDevices)");
+                }
+
+                case 4:
+                {
+                    NSLog(@"[MXRealmCryptoStore] Migration from schema #4 -> #5: Nothing to do (add deviceTrackingStatusData)");
                 }
             }
         }
