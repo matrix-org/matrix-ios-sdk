@@ -290,7 +290,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     [startOperation cancel];
     startOperation = nil;
 
-    dispatch_async(_cryptoQueue, ^{
+    dispatch_sync(_cryptoQueue, ^{
 
         // Cancel pending one-time keys upload
         [uploadOneTimeKeysOperation cancel];
@@ -299,13 +299,14 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         _olmDevice = nil;
         _cryptoQueue = nil;
         _store = nil;
+        _deviceList = nil;
 
         [roomEncryptors removeAllObjects];
         roomEncryptors = nil;
 
         [roomDecryptors removeAllObjects];
         roomDecryptors = nil;
-        
+
         myDevice = nil;
 
         NSLog(@"[MXCrypto] close: done");
