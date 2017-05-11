@@ -241,7 +241,7 @@
 
 - (void)testMultipleDownloadKeys
 {
-    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
 
         __block NSUInteger count = 0;
         void(^onSuccess)() = ^() {
@@ -270,7 +270,7 @@
             [expectation fulfill];
         }];
 
-        XCTAssert(operation1);
+        XCTAssertNotNil(operation1);
         XCTAssert([operation1 isKindOfClass:MXDeviceListOperation.class], @"Returned object must be indeed a MXDeviceListOperation object");
 
         // Check deviceTrackingStatus in store
@@ -335,7 +335,7 @@
 
 - (void)testDownloadKeysWithUnreachableHS
 {
-    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
 
         aliceSessionToClose = aliceSession;
         bobSessionToClose = bobSession;
