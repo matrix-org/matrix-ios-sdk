@@ -61,10 +61,12 @@
         // Retrieve tracking status from the store
         deviceTrackingStatus = [NSMutableDictionary dictionaryWithDictionary:[crypto.store deviceTrackingStatus]];
 
-        for (NSString *userId in deviceTrackingStatus)
+        for (NSString *userId in deviceTrackingStatus.allKeys)
         {
-            // if a download was in progress when we got shut down, it isn't any more.
-            if (MXDeviceTrackingStatusFromNSNumber(deviceTrackingStatus[userId]) == MXDeviceTrackingStatusDownloadInProgress)
+            // if a download was in progress or failed when we got shut down, it isn't any more.
+            MXDeviceTrackingStatus trackingStatus = MXDeviceTrackingStatusFromNSNumber(deviceTrackingStatus[userId]);
+            if (trackingStatus == MXDeviceTrackingStatusDownloadInProgress
+                || trackingStatus == MXDeviceTrackingStatusUnreachableServer)
             {
                 deviceTrackingStatus[userId] = @(MXDeviceTrackingStatusPendingDownload);
             }
@@ -77,7 +79,7 @@
                          success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap))success
                          failure:(void (^)(NSError *error))failure
 {
-    NSLog(@"[MXDeviceList] downloadKeys(forceDownload: %tu) : %@", forceDownload, userIds);
+    NSLog(@"[MXDeviceList] downloadKeys(forceDownload: %tu) for %tu users", forceDownload, userIds.count);
 
     NSMutableArray *usersToDownload = [NSMutableArray array];
     BOOL doANewQuery = NO;
@@ -86,13 +88,14 @@
     {
         MXDeviceTrackingStatus trackingStatus = MXDeviceTrackingStatusFromNSNumber(deviceTrackingStatus[userId]);
 
-        if ([currentQueryPool.userIds containsObject:userId]) // equivalent to (trackingStatus == MXDeviceTrackingStatusDownloadInProgress)
+        if (trackingStatus == MXDeviceTrackingStatusDownloadInProgress)
         {
             // already a key download in progress/queued for this user; its results
             // will be good enough for us.
             [usersToDownload addObject:userId];
         }
-        else if (forceDownload || trackingStatus != MXDeviceTrackingStatusUpToDate)
+        else if (forceDownload
+                    || (trackingStatus != MXDeviceTrackingStatusUpToDate && trackingStatus != MXDeviceTrackingStatusUnreachableServer))
         {
             [usersToDownload addObject:userId];
             doANewQuery = YES;
@@ -103,6 +106,8 @@
 
     if (usersToDownload.count)
     {
+        NSLog(@"[MXDeviceList] downloadKeys: %@", userIds);
+
         for (NSString *userId in usersToDownload)
         {
             deviceTrackingStatus[userId] = @(MXDeviceTrackingStatusDownloadInProgress);
@@ -123,6 +128,20 @@
                     // we didn't get any new invalidations since this download started:
                     // this user's device list is now up to date.
                     deviceTrackingStatus[userId] = @(MXDeviceTrackingStatusUpToDate);
+                }
+            }
+
+            if (failedUserIds.count)
+            {
+                NSLog(@"[MXDeviceList] downloadKeys. Error updating device keys for users %@", failedUserIds);
+
+                for (NSString *userId in failedUserIds)
+                {
+                    MXDeviceTrackingStatus trackingStatus = MXDeviceTrackingStatusFromNSNumber(deviceTrackingStatus[userId]);
+                    if (trackingStatus == MXDeviceTrackingStatusDownloadInProgress)
+                    {
+                        deviceTrackingStatus[userId] = @(MXDeviceTrackingStatusUnreachableServer);
+                    }
                 }
             }
 
@@ -237,41 +256,20 @@
     {
         MXDeviceTrackingStatus trackingStatus = MXDeviceTrackingStatusFromNSNumber(deviceTrackingStatus[userId]);
         if (trackingStatus == MXDeviceTrackingStatusPendingDownload)
+            // || trackingStatus == MXDeviceTrackingStatusUnreachableServer)  // TODO: It would be nice to retry them sometimes.
+                                                                              // At the moment, they are retried after app restart
         {
             [users addObject:userId];
         }
     }
 
-    if (users)
+    if (users.count)
     {
-        // we didn't persist the tracking status during
-        // invalidateUserDeviceList, so do it now.
-        [self persistDeviceTrackingStatus];
-
-        MXDeviceListOperation *operation = [[MXDeviceListOperation alloc] initWithUserIds:users success:^(NSArray<NSString *> *succeededUserIds, NSArray<NSString *> *failedUserIds) {
-
-            NSLog(@"[MXDeviceList] refreshOutdatedDeviceLists: %@", succeededUserIds);
-
-            if (failedUserIds.count)
-            {
-                NSLog(@"[MXDeviceList] refreshOutdatedDeviceLists. Error updating device keys for users %@", failedUserIds);
-
-                // TODO: What to do with failed devices?
-                // For now, ignore them like matrix-js-sdk
-            }
-
+        [self downloadKeys:users forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+            NSLog(@"[MXDeviceList] refreshOutdatedDeviceLists: %@", usersDevicesInfoMap.userIds);
         } failure:^(NSError *error) {
-
             NSLog(@"[MXDeviceList] refreshOutdatedDeviceLists: ERROR updating device keys for users %@", users);
-            for (NSString *userId in users)
-            {
-                deviceTrackingStatus[userId] = @(MXDeviceTrackingStatusPendingDownload);
-            }
-
-            [self persistDeviceTrackingStatus];
-        } ];
-
-        [self startOrQueueDeviceQuery:operation];
+        }];
     }
 }
 

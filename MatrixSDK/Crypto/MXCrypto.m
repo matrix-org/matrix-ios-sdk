@@ -806,6 +806,9 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 #ifdef MX_CRYPTO
     dispatch_sync(_decryptionQueue, ^{
 
+        // Reset tracking status
+        [_store storeDeviceTrackingStatus:nil];
+
         // Reset the sync token
         // [self handleDeviceListsChanged] will download all keys at the coming initial /sync
         [_store storeDeviceSyncToken:nil];

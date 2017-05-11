@@ -33,6 +33,7 @@ typedef enum : NSUInteger
     MXDeviceTrackingStatusNotTracked = 0,
     MXDeviceTrackingStatusPendingDownload,
     MXDeviceTrackingStatusDownloadInProgress,
+    MXDeviceTrackingStatusUnreachableServer,
     MXDeviceTrackingStatusUpToDate
 
 } MXDeviceTrackingStatus;
