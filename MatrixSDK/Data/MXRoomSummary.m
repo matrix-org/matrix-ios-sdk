@@ -138,7 +138,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     {
         if (![_mxSession decryptEvent:lastMessageEvent inTimeline:nil])
         {
-            NSLog(@"[MXTimeline] lastMessageEvent: Warning: Unable to decrypt event. Error: %@", lastMessageEvent.decryptionError);
+            NSLog(@"[MXRoomSummary] lastMessageEvent: Warning: Unable to decrypt event. Error: %@", lastMessageEvent.decryptionError);
         }
     }
 
@@ -152,7 +152,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     _isLastMessageEncrypted = event.isEncrypted;
 }
 
-- (MXHTTPOperation *)resetLastMessage:(void (^)())complete failure:(void (^)(NSError *))failure
+- (MXHTTPOperation *)resetLastMessage:(void (^)())complete failure:(void (^)(NSError *))failure commit:(BOOL)commit
 {
     lastMessageEvent = nil;
     _lastMessageEventId = nil;
@@ -160,7 +160,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     _lastMessageAttributedString = nil;
     [_lastMessageOthers removeAllObjects];
 
-    return [self fetchLastMessage:complete failure:failure lastEventIdChecked:nil operation:nil];
+    return [self fetchLastMessage:complete failure:failure lastEventIdChecked:nil operation:nil commit:commit];
 }
 
 /**
@@ -173,9 +173,11 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
  @param operation the current http operation if any.
         The method may need several requests before fetching the right last message.
         If it happens, the first one is mutated to the others with [MXHTTPOperation mutateTo:].
+ @param commit tell whether the updated room summary must be committed to the store. Use NO when a more
+ global [MXStore commit] will happen. This optimises IO.
  @return a MXHTTPOperation
  */
-- (MXHTTPOperation *)fetchLastMessage:(void (^)())complete failure:(void (^)(NSError *))failure lastEventIdChecked:(NSString*)lastEventIdChecked operation:(MXHTTPOperation *)operation
+- (MXHTTPOperation *)fetchLastMessage:(void (^)())complete failure:(void (^)(NSError *))failure lastEventIdChecked:(NSString*)lastEventIdChecked operation:(MXHTTPOperation *)operation commit:(BOOL)commit
 {
     MXRoom *room = self.room;
     if (!room)
@@ -222,7 +224,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         {
             if (![_mxSession decryptEvent:event inTimeline:nil])
             {
-                NSLog(@"[MXTimeline] lastMessageEvent: Warning: Unable to decrypt event. Error: %@", event.decryptionError);
+                NSLog(@"[MXRoomSummary] fetchLastMessage: Warning: Unable to decrypt event: %@\nError: %@", event.content[@"body"], event.decryptionError);
             }
         }
 
@@ -236,15 +238,6 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
             }
 
             [state handleStateEvent:event];
-        }
-
-        // Decrypt event if necessary
-        if (event.eventType == MXEventTypeRoomEncrypted)
-        {
-            if (![self.mxSession decryptEvent:event inTimeline:nil])
-            {
-                NSLog(@"[MXRoomSummary] fetchLastMessage: Warning: Unable to decrypt event: %@\nError: %@", event.content[@"body"], event.decryptionError);
-            }
         }
 
         lastEventIdChecked = event.eventId;
@@ -282,7 +275,8 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
             // Received messages have been stored in the store. We can make a new loop
             [self fetchLastMessage:complete failure:failure
                 lastEventIdChecked:lastEventIdChecked
-                         operation:(operation ? operation : newOperation)];
+                         operation:(operation ? operation : newOperation)
+                            commit:commit];
 
         } failure:failure];
 
@@ -299,7 +293,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
             complete();
         }
 
-        [self save:YES];
+        [self save:commit];
     }
 
     return operation ? operation : newOperation;

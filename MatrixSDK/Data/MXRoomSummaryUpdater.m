@@ -52,7 +52,7 @@
         {
             [summary resetLastMessage:nil failure:^(NSError *error) {
                 NSLog(@"[MXRoomSummaryUpdater] updateRoomSummary: Cannot reset last message after redaction. Room: %@", summary.roomId);
-            }];
+            } commit:YES];
         }
         return NO;
     }

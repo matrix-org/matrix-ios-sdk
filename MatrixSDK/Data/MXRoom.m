@@ -1338,7 +1338,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     MXEvent *lastMessageEvent = self.summary.lastMessageEvent;
     if (lastMessageEvent.sentState != MXEventSentStateSent)
     {
-        [self.summary resetLastMessage:nil failure:nil];
+        [self.summary resetLastMessage:nil failure:nil commit:YES];
     }
 }
 
@@ -1354,7 +1354,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     // If required, update the last message
     if ([self.summary.lastMessageEvent.eventId isEqualToString:outgoingMessageEventId])
     {
-        [self.summary resetLastMessage:nil failure:nil];
+        [self.summary resetLastMessage:nil failure:nil commit:YES];
     }
 }
 

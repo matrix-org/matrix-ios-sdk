@@ -1801,7 +1801,13 @@ typedef void (^MXOnResumeDone)();
     {
         [summary resetLastMessage:nil failure:^(NSError *error) {
             NSLog(@"[MXSession] Cannot reset last message for room %@", summary.roomId);
-        }];
+        } commit:NO];
+    }
+    
+    // Commit store changes done
+    if ([_store respondsToSelector:@selector(commit)])
+    {
+        [_store commit];
     }
 }
 
@@ -1812,13 +1818,20 @@ typedef void (^MXOnResumeDone)();
         if (!summary.lastMessageEventId)
         {
             NSLog(@"[MXSession] Fixing last message for room %@", summary.roomId);
-
+            
             [summary resetLastMessage:^{
                 NSLog(@"[MXSession] Fixing last message operation for room %@ has complete. lastMessageEventId: %@", summary.roomId, summary.lastMessageEventId);
             } failure:^(NSError *error) {
                 NSLog(@"[MXSession] Cannot fix last message for room %@", summary.roomId);
-            }];
+            }
+                               commit:NO];
         }
+    }
+    
+    // Commit store changes done
+    if ([_store respondsToSelector:@selector(commit)])
+    {
+        [_store commit];
     }
 }
 
@@ -2380,7 +2393,7 @@ typedef void (^MXOnResumeDone)();
     if (summary &&
         summary.lastMessageEvent.ageLocalTs <= event.ageLocalTs)
     {
-        [summary resetLastMessage:nil failure:nil];
+        [summary resetLastMessage:nil failure:nil commit:YES];
     }
 }
 

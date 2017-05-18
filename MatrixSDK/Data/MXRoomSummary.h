@@ -31,6 +31,8 @@
  [MXRoom.liveTimeline listenToEvents] blocks.
  
  You must check for `kMXRoomSummaryDidChangeNotification` to get up-to-date MXRoom.summary.
+ 
+ The notification object is the concerned room summary, nil when the change concerns all the room summaries.
  */
 FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 
@@ -182,10 +184,12 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
  
  @param success A block object called when the operation completes.
  @param failure A block object called when the operation fails.
+ @param commit  Tell whether the updated room summary must be committed to the store. Use NO when a more
+ global [MXStore commit] will happen. This optimises IO.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)resetLastMessage:(void (^)())complete failure:(void (^)(NSError *))failure;
+- (MXHTTPOperation*)resetLastMessage:(void (^)())complete failure:(void (^)(NSError *))failure commit:(BOOL)commit;
 
 
 #pragma mark - Data related to business logic
