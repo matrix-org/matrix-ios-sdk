@@ -63,6 +63,8 @@
 
 #pragma mark - Launch time options
 
+@protocol MXBackgroundModeHandler;
+
 /**
  SDK options that can be set at the launch time.
  */
@@ -98,5 +100,10 @@
  The default version value is 0.
  */
 @property (nonatomic) NSUInteger mediaCacheAppVersion;
+
+/**
+ Object that handle enabling background mode
+ */
+@property (nonatomic) id<MXBackgroundModeHandler> backgroundModeHandler;
 
 @end

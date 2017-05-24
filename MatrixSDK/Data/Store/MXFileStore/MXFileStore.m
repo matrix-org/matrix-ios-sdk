@@ -29,6 +29,8 @@
 #import "MXFileStoreMetaData.h"
 
 #import "MXEnumConstants.h"
+#import "MXSDKOptions.h"
+#import "MXBackgroundModeHandler.h"
 
 #ifdef MX_GA
 #import "GAI.h"
@@ -146,15 +148,12 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
     storeBackupPath = [storePath stringByAppendingPathComponent:kMXFileStoreBackupFolder];
 
-#if TARGET_OS_IPHONE
-    // Load the data even if the app goes in background
-    __block UIBackgroundTaskIdentifier backgroundTaskIdentifier = [[UIApplication sharedApplication] beginBackgroundTaskWithName:@"openWithCredentials" expirationHandler:^{
-
+    id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
+    __block NSUInteger backgroundTaskIdentifier = [handler startBackgroundTaskWithName:@"openWithCredentials" completion:^{
         NSLog(@"[MXFileStore] Background task is going to expire in openWithCredentials");
-        [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
-        backgroundTaskIdentifier = UIBackgroundTaskInvalid;
+        [handler endBackgrounTaskWithIdentifier:backgroundTaskIdentifier];
+        backgroundTaskIdentifier = [handler invalidIdentifier];
     }];
-#endif
 
     /*
     Mount data corresponding to the account credentials.
@@ -231,11 +230,11 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         }
         
         dispatch_async(dispatch_get_main_queue(), ^{
-#if TARGET_OS_IPHONE
-            [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
-            backgroundTaskIdentifier = UIBackgroundTaskInvalid;
-#endif
-
+            id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
+            if (handler && backgroundTaskIdentifier == [handler invalidIdentifier]) {
+                [handler endBackgrounTaskWithIdentifier:backgroundTaskIdentifier];
+                backgroundTaskIdentifier = [handler invalidIdentifier];
+            }
             onComplete();
         });
         
@@ -505,19 +504,15 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     // Save data only if metaData exists
     if (metaData)
     {
-#if TARGET_OS_IPHONE
         NSDate *startDate = [NSDate date];
-        // Commit the data even if the app goes in background
-        __block UIBackgroundTaskIdentifier backgroundTaskIdentifier = [[UIApplication sharedApplication] beginBackgroundTaskWithName:@"commit" expirationHandler:^{
-
+        id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
+        __block NSUInteger backgroundTaskIdentifier = [handler startBackgroundTaskWithName:@"commit" completion:^{
             NSLog(@"[MXFileStore commit] Background task #%tu is going to expire after %.0fms - ending it",
                   backgroundTaskIdentifier, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
-            [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
-            backgroundTaskIdentifier = UIBackgroundTaskInvalid;
+            [handler endBackgrounTaskWithIdentifier:backgroundTaskIdentifier];
+            backgroundTaskIdentifier = [handler invalidIdentifier];
         }];
-
         NSLog(@"[MXFileStore commit] Background task #%tu started", backgroundTaskIdentifier);
-#endif // TARGET_OS_IPHONE
 
         [self saveRoomsDeletion];
         [self saveRoomsMessages];
@@ -538,8 +533,9 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
             dispatch_async(dispatch_get_main_queue(), ^(void){
                 NSLog(@"[MXFileStore commit] Background task #%tu is complete - lasted %.0fms",
                       backgroundTaskIdentifier, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
-                [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
-                backgroundTaskIdentifier = UIBackgroundTaskInvalid;
+                id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
+                [handler endBackgrounTaskWithIdentifier:backgroundTaskIdentifier];
+                backgroundTaskIdentifier = [handler invalidIdentifier];
             });
 #endif
         });

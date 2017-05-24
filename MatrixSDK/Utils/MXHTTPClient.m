@@ -17,6 +17,8 @@
 
 #import "MXHTTPClient.h"
 #import "MXError.h"
+#import "MXSDKOptions.h"
+#import "MXBackgroundModeHandler.h"
 
 #import <AFNetworking/AFNetworking.h>
 
@@ -515,15 +517,10 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
  */
 - (void)startBackgroundTask
 {
-#if TARGET_OS_IPHONE
-    // Create the bg task if it does not exist yet
-    if (backgroundTaskIdentifier == UIBackgroundTaskInvalid)
-    {
-        UIApplication *application = [UIApplication sharedApplication];
+    id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
+    if (handler && backgroundTaskIdentifier == [handler invalidIdentifier]) {
         __weak __typeof(self)weakSelf = self;
-
-        backgroundTaskIdentifier = [application beginBackgroundTaskWithExpirationHandler:^{
-
+        backgroundTaskIdentifier = [handler startBackgroundTaskWithName:nil completion:^{
             __strong __typeof(weakSelf)strongSelf = weakSelf;
             if (strongSelf)
             {
@@ -533,12 +530,11 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
                 {
                     [sessionTask cancel];
                 }
-                
+
                 [strongSelf cleanupBackgroundTask];
             }
         }];
     }
-#endif
 }
 
 
@@ -549,13 +545,11 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
  */
 - (void)cleanupBackgroundTask
 {
-#if TARGET_OS_IPHONE
-    if (backgroundTaskIdentifier != UIBackgroundTaskInvalid && httpManager.tasks.count == 0)
-    {
-        [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
-        backgroundTaskIdentifier = UIBackgroundTaskInvalid;
+    id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
+    if (handler && backgroundTaskIdentifier != [handler invalidIdentifier] && httpManager.tasks.count == 0) {
+        [handler endBackgrounTaskWithIdentifier:backgroundTaskIdentifier];
+        backgroundTaskIdentifier = [handler invalidIdentifier];
     }
-#endif
 }
 
 
