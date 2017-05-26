@@ -16,8 +16,6 @@
 
 #import "MXJingleCallStackCall.h"
 
-#ifdef MX_CALL_STACK_JINGLE
-
 #import <UIKit/UIKit.h>
 #import <AVFoundation/AVCaptureDevice.h>
 #import <AVFoundation/AVMediaFormat.h>
@@ -523,5 +521,3 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
 }
 
 @end
-
-#endif  // MX_CALL_STACK_JINGLE

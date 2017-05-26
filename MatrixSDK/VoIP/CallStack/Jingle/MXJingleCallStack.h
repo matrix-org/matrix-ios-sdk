@@ -18,8 +18,6 @@
 
 #import "MXSDKOptions.h"
 
-#ifdef MX_CALL_STACK_JINGLE
-
 #import <WebRTC/WebRTC.h>
 
 #import "MXCallStack.h"
@@ -33,5 +31,3 @@
 @interface MXJingleCallStack : NSObject <MXCallStack>
 
 @end
-
-#endif // MX_CALL_STACK_JINGLE

@@ -16,8 +16,6 @@
 
 #import "MXJingleCallStack.h"
 
-#ifdef MX_CALL_STACK_JINGLE
-
 #import "MXJingleCallStackCall.h"
 
 @interface MXJingleCallStack ()
@@ -45,5 +43,3 @@
 }
 
 @end
-
-#endif  // MX_CALL_STACK_JINGLE

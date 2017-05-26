@@ -18,8 +18,6 @@
 
 #import "MXJingleCallStack.h"
 
-#ifdef MX_CALL_STACK_JINGLE
-
 #import "MXCallStackCall.h"
 
 #import <WebRTC/WebRTC.h>
@@ -37,5 +35,3 @@
 - (instancetype)initWithFactory:(RTCPeerConnectionFactory*)factory;
 
 @end
-
-#endif  // MX_CALL_STACK_JINGLE
