@@ -3644,10 +3644,10 @@ MXAuthAction;
 
 
 #pragma mark - read receipts
-- (MXHTTPOperation*)sendReadReceipts:(NSString*)roomId
-                             eventId:(NSString*)eventId
-                             success:(void (^)(NSString *eventId))success
-                             failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)sendReadReceipt:(NSString*)roomId
+                            eventId:(NSString*)eventId
+                            success:(void (^)())success
+                            failure:(void (^)(NSError *error))failure
 {
     return [httpClient requestWithMethod:@"POST"
                                     path: [NSString stringWithFormat:@"%@/rooms/%@/receipt/m.read/%@", apiPathPrefix, roomId, eventId]
@@ -3661,7 +3661,7 @@ MXAuthAction;
                                              if (completionQueue)
                                              {
                                                  dispatch_async(completionQueue, ^{
-                                                     success(eventId);
+                                                     success();
                                                  });
                                              }
                                              
@@ -3684,6 +3684,59 @@ MXAuthAction;
                                      }
                                  }];
     
+}
+
+#pragma mark - read marker
+- (MXHTTPOperation*)sendReadMarker:(NSString*)roomId
+                 readMarkerEventId:(NSString*)readMarkerEventId
+                readReceiptEventId:(NSString*)readReceiptEventId
+                           success:(void (^)())success
+                           failure:(void (^)(NSError *error))failure
+{
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+    if (readMarkerEventId)
+    {
+        parameters[@"m.fully_read"] = readMarkerEventId;
+    }
+    if (readReceiptEventId)
+    {
+        parameters[@"m.read"] = readReceiptEventId;
+    }
+    
+    return [httpClient requestWithMethod:@"POST"
+                                    path:[NSString stringWithFormat:@"%@/rooms/%@/read_markers", apiPathPrefix, roomId]
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success && processingQueue)
+                                     {
+                                         // Use here the processing queue in order to keep the server response order
+                                         dispatch_async(processingQueue, ^{
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success();
+                                                 });
+                                             }
+                                             
+                                         });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure && processingQueue)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
+                                         });
+                                     }
+                                 }];
 }
 
 #pragma mark - Directory operations

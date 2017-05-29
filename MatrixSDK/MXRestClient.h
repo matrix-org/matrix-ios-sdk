@@ -477,7 +477,7 @@ typedef enum : NSUInteger
  Send a generic non state event to a room.
 
  @param roomId the id of the room.
- @param eventType the type of the event. @see MXEventType.
+ @param eventTypeString the type of the event. @see MXEventType.
  @param content the content that will be sent to the server as a JSON object.
  @param success A block object called when the operation succeeds. It returns
  the event id of the event generated on the home server
@@ -495,7 +495,7 @@ typedef enum : NSUInteger
  Send a generic state event to a room.
 
  @param roomId the id of the room.
- @param eventType the type of the event. @see MXEventType.
+ @param eventTypeString the type of the event. @see MXEventType.
  @param content the content that will be sent to the server as a JSON object.
  @param success A block object called when the operation succeeds. It returns
  the event id of the event generated on the home server
@@ -1614,24 +1614,40 @@ typedef enum : NSUInteger
                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
-#pragma mark - read receipts
+#pragma mark - read receipt
 /**
  Send a read receipt.
 
  @param roomId the id of the room.
  @param eventId the id of the event.
 
- @param success A block object called when the operation succeeds. It returns
- the event id of the event generated on the home server
+ @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)sendReadReceipts:(NSString*)roomId
-                             eventId:(NSString*)eventId
-                             success:(void (^)(NSString *eventId))success
-                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+- (MXHTTPOperation*)sendReadReceipt:(NSString*)roomId
+                            eventId:(NSString*)eventId
+                            success:(void (^)())success
+                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+#pragma mark - read marker
+/**
+ Send a read marker with an optional read receipt.
+ 
+ @param roomId the id of the room.
+ @param readMarkerEventId the read marker event Id.
+ @param readReceiptEventId the nullable read receipt event Id.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)sendReadMarker:(NSString*)roomId
+                 readMarkerEventId:(NSString*)readMarkerEventId
+                readReceiptEventId:(NSString*)readReceiptEventId
+                           success:(void (^)())success
+                           failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 #pragma mark - Search
 /**

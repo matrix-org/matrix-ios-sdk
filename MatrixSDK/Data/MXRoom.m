@@ -1717,7 +1717,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 [mxSession.store commit];
             }
             
-            [mxSession.matrixRestClient sendReadReceipts:self.roomId eventId:event.eventId success:^(NSString *eventId) {
+            [mxSession.matrixRestClient sendReadReceipt:self.roomId eventId:event.eventId success:^() {
                 
             } failure:^(NSError *error) {
                 
@@ -1769,7 +1769,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
                     if (sendReceipt)
                     {
-                        [mxSession.matrixRestClient sendReadReceipts:self.roomId eventId:event.eventId success:^(NSString *eventId) {
+                        [mxSession.matrixRestClient sendReadReceipt:self.roomId eventId:event.eventId success:^() {
                             
                         } failure:^(NSError *error) {
                             
