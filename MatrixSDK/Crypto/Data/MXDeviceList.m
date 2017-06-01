@@ -30,6 +30,10 @@
     // userId -> MXDeviceTrackingStatus*
     NSMutableDictionary<NSString*, NSNumber*> *deviceTrackingStatus;
 
+    // The current request for each user.
+    // userId -> MXDeviceListOperation
+    NSMutableDictionary<NSString*, MXDeviceListOperation*> *keyDownloadsInProgressByUser;
+
     /**
      The pool which the http request is currenlty being processed.
      (nil if there is no current request).
@@ -60,6 +64,8 @@
 
         // Retrieve tracking status from the store
         deviceTrackingStatus = [NSMutableDictionary dictionaryWithDictionary:[crypto.store deviceTrackingStatus]];
+
+        keyDownloadsInProgressByUser = [NSMutableDictionary dictionary];
 
         for (NSString *userId in deviceTrackingStatus.allKeys)
         {
@@ -102,7 +108,7 @@
         }
     }
 
-    MXDeviceListOperation *operation;
+    __block MXDeviceListOperation *operation;
 
     if (usersToDownload.count)
     {
@@ -122,6 +128,16 @@
 
             for (NSString *userId in succeededUserIds)
             {
+                // we may have queued up another download request for this user
+                // since we started this request. If that happens, we should
+                // ignore the completion of the first one.
+                if (keyDownloadsInProgressByUser[userId] != operation)
+                {
+                    NSLog(@"[MXDeviceList] downloadKeys: Another update in the queue for %@ - not marking up-to-date", userId);
+                    continue;
+                }
+                [keyDownloadsInProgressByUser removeObjectForKey:userId];
+
                 MXDeviceTrackingStatus trackingStatus = MXDeviceTrackingStatusFromNSNumber(deviceTrackingStatus[userId]);
                 if (trackingStatus == MXDeviceTrackingStatusDownloadInProgress)
                 {
@@ -154,6 +170,11 @@
             }
 
         } failure:failure];
+
+        for (NSString *userId in usersToDownload)
+        {
+            keyDownloadsInProgressByUser[userId] = operation;
+        }
 
         if (doANewQuery)
         {
