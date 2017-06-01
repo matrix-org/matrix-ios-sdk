@@ -277,7 +277,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                     XCTFail(@"The operation should not fail - NSError: %@", error);
                     [expectation fulfill];
                     
-                }];
+                } commit:YES];
 
                 XCTAssert(operation, @"An HTTP operation is required for that");
                 XCTAssert([operation isKindOfClass:MXHTTPOperation.class]);
@@ -331,7 +331,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                         XCTFail(@"The operation should not fail - NSError: %@", error);
                         [expectation fulfill];
 
-                    }];
+                    } commit:YES];
 
                     XCTAssert(operation, @"An HTTP operation is required for that");
                     XCTAssert([operation isKindOfClass:MXHTTPOperation.class]);
