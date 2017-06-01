@@ -27,6 +27,10 @@
         case MXEventTypeRoomTag:
             _tags = [MXRoomTag roomTagsWithTagEvent:event];
             break;
+            
+        case MXEventTypeReadMarker:
+            _readMarkerEventId = event.content[@"event_id"];
+            break;
 
         default:
             break;
@@ -40,6 +44,7 @@
     if (self)
     {
         _tags = [aDecoder decodeObjectForKey:@"tags"];
+        _readMarkerEventId = [aDecoder decodeObjectForKey:@"readMarkerEventId"];
     }
     return self;
 }
@@ -47,6 +52,7 @@
 - (void)encodeWithCoder:(NSCoder *)aCoder
 {
     [aCoder encodeObject:_tags forKey:@"tags"];
+    [aCoder encodeObject:_readMarkerEventId forKey:@"readMarkerEventId"];
 }
 
 @end

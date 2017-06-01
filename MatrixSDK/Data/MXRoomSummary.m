@@ -328,14 +328,13 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 
 - (void)markAllAsRead
 {
-    if ([self.room acknowledgeLatestEvent:YES])
-    {
-        _notificationCount = 0;
-        _highlightCount = 0;
-        
-        // Broadcast the change
-        [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomSummaryDidChangeNotification object:self userInfo:nil];
-    }
+    [self.room markAllAsRead];
+    
+    _notificationCount = 0;
+    _highlightCount = 0;
+    
+    // Broadcast the change
+    [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomSummaryDidChangeNotification object:self userInfo:nil];
 }
 
 #pragma mark - Server sync

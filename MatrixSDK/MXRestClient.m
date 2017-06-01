@@ -3643,7 +3643,7 @@ MXAuthAction;
 }
 
 
-#pragma mark - read receipts
+#pragma mark - read receipt
 - (MXHTTPOperation*)sendReadReceipt:(NSString*)roomId
                             eventId:(NSString*)eventId
                             success:(void (^)())success
