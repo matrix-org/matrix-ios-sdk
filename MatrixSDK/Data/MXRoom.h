@@ -739,7 +739,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  If the store used by the MXSession is based on a permanent storage, the application
  will be able to retrieve messages that failed to be sent in a previous app session.
 
- @param event the MXEvent object of the message.
+ @param outgoingMessage the MXEvent object of the message.
  */
 - (void)storeOutgoingMessage:(MXEvent*)outgoingMessage;
 
@@ -839,32 +839,30 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  Handle a receipt event.
  
  @param event the event to handle.
- @param the direction
- @param
+ @param direction the timeline direction.
  */
 - (BOOL)handleReceiptEvent:(MXEvent *)event direction:(MXTimelineDirection)direction;
 
 /**
  If the event was not acknowledged yet, this method acknowlegdes it by sending a receipt event.
- This will indicate to the homeserver that the user has read up to this event.
+ This will indicate to the homeserver that the user has read this event.
+ Set YES the boolean updateReadMarker to let know the homeserver the user has read up to this event.
  
  @discussion If the type of the provided event is not defined in MXSession.acknowledgableEventTypes,
  this method acknowlegdes the first prior event of type defined in MXSession.acknowledgableEventTypes.
+ The updated read marker (if any) will refer to the provided event.
  
  @param event the event to acknowlegde.
- @return true if there is an update
+ @param updateReadMarker tell whether the read marker should be moved to this event.
  */
-- (BOOL)acknowledgeEvent:(MXEvent*)event;
+- (void)acknowledgeEvent:(MXEvent*)event andUpdateReadMarker:(BOOL)updateReadMarker;
 
 /**
- Acknowlegde the latest event of type defined in MXSession.acknowledgableEventTypes.
- Put sendReceipt YES to send a receipt event if the latest event was not yet acknowledged.
- This is will indicate to the homeserver that the user has read up to this event.
-
- @param sendReceipt YES to send a receipt event if required
- @return true if there is an update
+ Move the read marker to the latest event.
+ Update the read receipt by acknowledging the latest event of type defined in MXSession.acknowledgableEventTypes.
+ This is will indicate to the homeserver that the user has read all the events.
  */
-- (BOOL)acknowledgeLatestEvent:(BOOL)sendReceipt;
+- (void)markAllAsRead;
 
 /**
  Returns the read receipts list for an event, excluding the read receipt from the current user.
@@ -875,6 +873,19 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  */
 - (NSArray*)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort;
 
+#pragma mark - Read marker handling
+
+/**
+ This will indicate to the homeserver that the user has read up to this event.
+ 
+ @param event the last read event.
+ */
+- (void)moveReadMarkerToEvent:(MXEvent*)event;
+
+/**
+ Update the read-up-to marker to match the read receipt.
+ */
+- (void)forgetReadMarker;
 
 #pragma mark - Crypto
 

@@ -30,6 +30,11 @@
 @property (nonatomic, readonly) NSDictionary <NSString*, MXRoomTag*> *tags;
 
 /**
+ The event identifier which marks the last event read by the user.
+ */
+@property (nonatomic) NSString* readMarkerEventId;
+
+/**
  Process an event that modifies room account data (like m.tag event).
 
  @param event an event

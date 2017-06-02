@@ -76,7 +76,8 @@ static NSRegularExpression *isMatrixEventIdentifierRegex;
                           kMXEventTypeStringCallCandidates: @(MXEventTypeCallCandidates),
                           kMXEventTypeStringCallAnswer: @(MXEventTypeCallAnswer),
                           kMXEventTypeStringCallHangup: @(MXEventTypeCallHangup),
-                          kMXEventTypeStringReceipt: @(MXEventTypeReceipt)
+                          kMXEventTypeStringReceipt: @(MXEventTypeReceipt),
+                          kMXEventTypeStringReadMarker: @(MXEventTypeReadMarker)
                           };
 
         isEmailAddressRegex =  [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"^%@$", kMXToolsRegexStringForEmailAddress]

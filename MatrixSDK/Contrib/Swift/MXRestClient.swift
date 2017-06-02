@@ -1596,7 +1596,7 @@ public extension MXRestClient {
     }
     
     
-    // MARK: - read receipts
+    // MARK: - read receipt
     
     /**
      Send a read receipt.
@@ -1605,12 +1605,12 @@ public extension MXRestClient {
         - roomId: the id of the room.
         - eventId: the id of the event.
         - completion: A block object called when the operation completes.
-        - response: Provides the event id of the event generated on the home server on success.
+        - response: Indicates whether the operation was successful.
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func sendReadReceipts(toRoom roomId: String, forEvent eventId: String, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation {
-        return __sendReadReceipts(roomId, eventId: eventId, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func sendReadReceipt(toRoom roomId: String, forEvent eventId: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __sendReadReceipt(roomId, eventId: eventId, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     

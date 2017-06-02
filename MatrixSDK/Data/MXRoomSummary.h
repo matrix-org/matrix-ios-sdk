@@ -182,7 +182,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
  
  The operation is asynchronous as it may require pagination from the homeserver.
  
- @param success A block object called when the operation completes.
+ @param complete A block object called when the operation completes.
  @param failure A block object called when the operation fails.
  @param commit  Tell whether the updated room summary must be committed to the store. Use NO when a more
  global [MXStore commit] will happen. This optimises IO.
@@ -245,7 +245,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 /**
  Update the invited room state according to the provided data.
 
- @param invitedRoom information to update the room state.
+ @param invitedRoomSync information to update the room state.
  */
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync*)invitedRoomSync;
 
