@@ -1881,8 +1881,6 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     }
 }
 
-/* update the read-up-to marker to match the read receipt
- */
 - (void)forgetReadMarker
 {
     // Retrieve the current position
