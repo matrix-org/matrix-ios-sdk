@@ -21,22 +21,6 @@
 #pragma mark - Build time options
 
 #pragma mark Automatic enabling
-/**
- These flags are automatically enabled if the application Xcode workspace contains
- their associated Cocoa pods.
- */
-
-/**
- VoIP with libjingle.
-
- Application can use the libjingle build pod provided at
- https://github.com/Anakros/WebRTC.git :
-
-     pod 'WebRTC'
- */
-#if __has_include(<WebRTC/RTCPeerConnection.h>)
-#define MX_CALL_STACK_JINGLE
-#endif
 
 /**
  Crypto.
@@ -56,7 +40,7 @@
  The Matrix SDK will send some stats to Google Analytics if the application imports
  the GoogleAnalytics library (like pod 'GoogleAnalytics') and if 'enableGoogleAnalytics' is YES.
  */
-#if __has_include(<GoogleAnalytics/GAI.h>)
+#if __has_include(<GoogleAnalytics/GAI.h>) && defined(GA_ENABLED)
 #define MX_GA
 #endif
 

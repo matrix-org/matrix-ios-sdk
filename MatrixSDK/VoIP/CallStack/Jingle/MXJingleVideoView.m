@@ -16,8 +16,6 @@
 
 #import "MXJingleVideoView.h"
 
-#ifdef MX_CALL_STACK_JINGLE
-
 #import <AVFoundation/AVFoundation.h>
 
 @interface MXJingleVideoView ()
@@ -107,5 +105,3 @@
 }
 
 @end
-
-#endif  // MX_CALL_STACK_JINGLE

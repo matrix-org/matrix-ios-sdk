@@ -30,5 +30,6 @@ Pod::Spec.new do |s|
 
   s.dependency 'AFNetworking', '~> 3.1.0'
   s.dependency 'GZIP', '~> 1.1.1'
+  s.dependency 'WebRTC', '~> 56.10'
 
 end

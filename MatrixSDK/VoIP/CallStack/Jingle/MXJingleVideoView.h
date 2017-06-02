@@ -17,8 +17,6 @@
 
 #import "MXJingleCallStack.h"
 
-#ifdef MX_CALL_STACK_JINGLE
-
 #import <WebRTC/WebRTC.h>
 
 /**
@@ -32,5 +30,3 @@
 - (instancetype)initWithContainerView:(UIView*)containerView;
 
 @end
-
-#endif  //MX_CALL_STACK_JINGLE
