@@ -158,18 +158,18 @@ extern NSString *const kMXCallStateDidChange;
  The UIView that receives frames from the user's camera.
  */
 #if TARGET_OS_IPHONE
-@property (nonatomic) UIView *selfVideoView;
+@property (nonatomic, nullable) UIView *selfVideoView;
 #elif TARGET_OS_OSX
-@property (nonatomic) NSView *selfVideoView;
+@property (nonatomic, nullable) NSView *selfVideoView;
 #endif
 
 /**
  The UIView that receives frames from the remote camera.
  */
 #if TARGET_OS_IPHONE
-@property (nonatomic) UIView *remoteVideoView;
+@property (nonatomic, nullable) UIView *remoteVideoView;
 #elif TARGET_OS_OSX
-@property (nonatomic) NSView *remoteVideoView;
+@property (nonatomic, nullable) NSView *remoteVideoView;
 #endif
 
 /**

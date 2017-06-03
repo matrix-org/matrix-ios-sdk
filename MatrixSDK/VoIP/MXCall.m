@@ -59,7 +59,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     /**
      A queue of gathered local ICE candidates waiting to be sent to the other peer.
      */
-    NSMutableArray<NSDictionary*> *localICECandidates;
+    NSMutableArray<NSDictionary *> *localICECandidates;
 
     /**
      Timer for sending local ICE candidates.
@@ -427,9 +427,9 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 }
 
 #if TARGET_OS_IPHONE
-- (void)setSelfVideoView:(UIView *)selfVideoView
+- (void)setSelfVideoView:(nullable UIView *)selfVideoView
 #elif TARGET_OS_OSX
-- (void)setSelfVideoView:(NSView *)selfVideoView
+- (void)setSelfVideoView:(nullable NSView *)selfVideoView
 #endif
 {
     if (selfVideoView != _selfVideoView)
@@ -440,9 +440,9 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 }
 
 #if TARGET_OS_IPHONE
-- (void)setRemoteVideoView:(UIView *)remoteVideoView
+- (void)setRemoteVideoView:(nullable UIView *)remoteVideoView
 #elif TARGET_OS_OSX
-- (void)setRemoteVideoView:(NSView *)remoteVideoView
+- (void)setRemoteVideoView:(nullable NSView *)remoteVideoView
 #endif
 {
     if (remoteVideoView != _remoteVideoView)

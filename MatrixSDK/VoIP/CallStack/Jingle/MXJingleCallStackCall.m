@@ -357,14 +357,14 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
 
 #pragma mark - Properties
 
-- (void)setSelfVideoView:(UIView *)selfVideoView2
+- (void)setSelfVideoView:(nullable UIView *)selfVideoView2
 {
     selfVideoView = selfVideoView2;
     
     [self checkStartGetCaptureSourcesForVideo];
 }
 
-- (void)setRemoteVideoView:(UIView *)remoteVideoView2
+- (void)setRemoteVideoView:(nullable UIView *)remoteVideoView2
 {
     remoteVideoView = remoteVideoView2;
     
