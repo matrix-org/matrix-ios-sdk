@@ -19,6 +19,7 @@
 #ifdef MX_CALL_STACK_JINGLE
 
 #import "MXJingleCallStackCall.h"
+#import <WebRTC/RTCPeerConnectionFactory.h>
 
 @interface MXJingleCallStack ()
 {
