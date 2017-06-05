@@ -215,6 +215,8 @@
 		32FE41371D0AB7070060835E /* MXEnumConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = 32FE41351D0AB7070060835E /* MXEnumConstants.m */; };
 		71DE22E01BC7C51200284153 /* MXReceiptData.m in Sources */ = {isa = PBXBuildFile; fileRef = 71DE22DC1BC7C51200284153 /* MXReceiptData.m */; };
 		71DE22E11BC7C51200284153 /* MXReceiptData.h in Headers */ = {isa = PBXBuildFile; fileRef = 71DE22DD1BC7C51200284153 /* MXReceiptData.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		9274AFE81EE580240009BEB6 /* MXCallKitAdapter.h in Headers */ = {isa = PBXBuildFile; fileRef = 9274AFE61EE580240009BEB6 /* MXCallKitAdapter.h */; };
+		9274AFE91EE580240009BEB6 /* MXCallKitAdapter.m in Sources */ = {isa = PBXBuildFile; fileRef = 9274AFE71EE580240009BEB6 /* MXCallKitAdapter.m */; };
 		A23A8594855481FEFA0E9A22 /* libPods-MatrixSDK.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E1674C6FF8BBF074E7F76059 /* libPods-MatrixSDK.a */; };
 		C60165381E3AA57900B92CFA /* MXSDKOptions.h in Headers */ = {isa = PBXBuildFile; fileRef = F0C34CB91C18C80000C36F09 /* MXSDKOptions.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		C61A4AF41E5DD88400442158 /* Dummy.swift in Sources */ = {isa = PBXBuildFile; fileRef = C61A4AF31E5DD88400442158 /* Dummy.swift */; };
@@ -491,6 +493,8 @@
 		3ABDD5D65684E6B7F52FB94E /* libPods-MatrixSDKTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MatrixSDKTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		71DE22DC1BC7C51200284153 /* MXReceiptData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXReceiptData.m; sourceTree = "<group>"; };
 		71DE22DD1BC7C51200284153 /* MXReceiptData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXReceiptData.h; sourceTree = "<group>"; };
+		9274AFE61EE580240009BEB6 /* MXCallKitAdapter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallKitAdapter.h; sourceTree = "<group>"; };
+		9274AFE71EE580240009BEB6 /* MXCallKitAdapter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCallKitAdapter.m; sourceTree = "<group>"; };
 		B1F1AE550CF4C15B653DDE6E /* Pods-MatrixSDKTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDKTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-MatrixSDKTests/Pods-MatrixSDKTests.debug.xcconfig"; sourceTree = "<group>"; };
 		C61A4AF31E5DD88400442158 /* Dummy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Dummy.swift; sourceTree = "<group>"; };
 		C61A4CC31E5F38CB00442158 /* SwiftMatrixSDK.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SwiftMatrixSDK.h; sourceTree = "<group>"; };
@@ -739,6 +743,7 @@
 		3245A74B1AF7B2930001D8A7 /* VoIP */ = {
 			isa = PBXGroup;
 			children = (
+				9274AFE51EE580240009BEB6 /* CallKit */,
 				3240951D1AFA432F00D81C97 /* CallStack */,
 				3245A74C1AF7B2930001D8A7 /* MXCall.h */,
 				3245A74D1AF7B2930001D8A7 /* MXCall.m */,
@@ -1039,6 +1044,15 @@
 			path = Checker;
 			sourceTree = "<group>";
 		};
+		9274AFE51EE580240009BEB6 /* CallKit */ = {
+			isa = PBXGroup;
+			children = (
+				9274AFE61EE580240009BEB6 /* MXCallKitAdapter.h */,
+				9274AFE71EE580240009BEB6 /* MXCallKitAdapter.m */,
+			);
+			path = CallKit;
+			sourceTree = "<group>";
+		};
 		9F1F634E8B36B1ED6D163B04 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -1209,6 +1223,7 @@
 				327137271A24D50A00DB6757 /* MXMyUser.h in Headers */,
 				3220093819EFA4C9008DE41D /* MXEventListener.h in Headers */,
 				71DE22E11BC7C51200284153 /* MXReceiptData.h in Headers */,
+				9274AFE81EE580240009BEB6 /* MXCallKitAdapter.h in Headers */,
 				32DC15D01A8CF7AE006F9AD3 /* MXNotificationCenter.h in Headers */,
 				329FB17F1A0B665800A5E88E /* MXUser.h in Headers */,
 				320DFDE219DD99B60068622A /* MXError.h in Headers */,
@@ -1451,6 +1466,7 @@
 				329B2AC21D3FB01D002D546F /* MXJingleCallStackCall.m in Sources */,
 				322691331E5EF77D00966A6E /* MXDeviceListOperation.m in Sources */,
 				3283F7791EAF30F700C1688C /* MXBugReportRestClient.m in Sources */,
+				9274AFE91EE580240009BEB6 /* MXCallKitAdapter.m in Sources */,
 				3284A5AF1DB7CFA800A09972 /* MXFileCryptoStoreMetaData.m in Sources */,
 				F0AC734F1DA4F53B0011DAEE /* MXRoomEventFilter.m in Sources */,
 				323E0C5C1A306D7A00A31D73 /* MXEvent.m in Sources */,
